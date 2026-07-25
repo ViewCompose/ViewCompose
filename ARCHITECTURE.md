@@ -199,6 +199,10 @@ flowchart TD
 12. 传给 `rememberCoroutineScope`、`collectAsState*` 与动画的附加 `CoroutineContext` 不得包含 `Job`，防止脱离组合父任务。
 13. 组合阶段若先写 snapshot-backed mirror state 再立刻读回，该读值可能仍是旧快照；控制流判定必须基于实时内核值，不得依赖同帧 mirror 回读。
 14. 组合事务保证 slot/观察/Effect/VNode 提交一致性；组合体内主动写入的全局 snapshot state 仍遵循 snapshot 自身事务，不承诺与 Android View patch 跨系统原子回滚。
+15. 组合事务使用 touched-scope journal：只有本轮实际执行或输入变化的 Scope 才复制回滚状态，禁止恢复为每帧全 SlotTree checkpoint。
+16. 相同帧到达同一 Scope 的重复失效必须合并；组合进行中的失效仍须递增版本，保证本轮结束后保留下一次重组。
+17. 脏 Scope 若生成 type/key/spec/modifier/children 引用均等价的 VNode，必须沿用旧 VNode 引用，为 renderer 提供 O(1) `SkipSubtree`。
+18. 无编译器自动 restart group；跨多个兄弟 VNode 的业务组件应按需使用无原生节点的 `RecomposeBoundary`，普通捕获值显式声明为 inputs。
 
 ### 4.9 Render 调度边界
 
@@ -210,6 +214,10 @@ flowchart TD
 6. renderer 的递归 patch 必须共享一次 apply transaction；删除资源只能在整棵树成功后释放。
 7. patch 失败必须尽力恢复旧 `VNode`、mounted children、布局参数与 View 顺序，并释放本轮新建节点。
 8. `AndroidView.update/onReset` 中写入框架外部系统的副作用不属于可回滚边界；失败恢复仅保证重新绑定旧节点的 best-effort 语义。
+9. renderer transaction 使用 mutation journal，只记录实际绑定、移动、插入或删除的 MountedNode/ViewGroup；稳定子树不得进入回滚快照。
+10. `AnimatedSizeNodeWrapper` 必须保留未变化 VNode/List 的引用，且整帧只转换一次；禁止无动画节点的递归 copy。
+11. `NodeBindingDiffer` 必须先于 Modifier/LayoutParams 解析执行；`SkipSubtree` 不得解析或重复 preflight。
+12. 结构深度统计与逐 NodeType 绑定统计只在 debug/诊断回调启用时收集。
 
 ### 4.10 Renderer 绑定复杂度边界
 

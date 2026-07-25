@@ -145,10 +145,21 @@ Button(
         scope.launch { repository.save() }
     },
 )
+
+RecomposeBoundary(
+    key = "profile-section",
+    inputs = listOf(userId),
+) {
+    Text(profileState.value.name)
+    Text(profileState.value.description)
+}
 ```
 
 `LaunchedEffect`、`produceState` 和 `rememberCoroutineScope` 的任务均属于当前 `RenderSession`；Key 变化、移出组合或 Session 销毁会取消对应任务。传入自定义 `CoroutineContext` 时不得携带独立 `Job`。
 Tasks created by `LaunchedEffect`, `produceState`, and `rememberCoroutineScope` belong to the current `RenderSession`; key changes, leaving composition, or session disposal cancel them. Custom coroutine contexts must not contain a detached `Job`.
+
+`RecomposeBoundary` 不创建原生 View，用于显式隔离一个可输出多个兄弟节点的重组区域。其内部读取的 snapshot state 会自动失效；普通 Kotlin 捕获值必须放入 `inputs`。
+`RecomposeBoundary` emits no native View and explicitly isolates a restartable region that may output multiple siblings. Snapshot state reads invalidate it automatically; ordinary captured Kotlin values must be declared in `inputs`.
 
 ## 预览与截图回归 | Preview & Snapshot Regression
 
