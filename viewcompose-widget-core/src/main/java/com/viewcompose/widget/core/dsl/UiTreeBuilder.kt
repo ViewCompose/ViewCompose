@@ -42,16 +42,16 @@ open class UiTreeBuilder {
         }
         val parentSnapshot = LocalContext.snapshot()
         val node = composer.runGroup(
-            signature = EmitGroupSignature(
+            signature = emitGroupSignature(
                 type = type,
                 key = key,
                 hasContent = content != null,
             ),
-            inputs = listOf(
+            inputs = EmitInputs(
                 spec,
                 modifier,
-                closureSensitiveSpecToken(spec),
             ),
+            reuseResult = ::canReuseVNode,
         ) { scope ->
             val restoreSnapshot = (scope.localSnapshotOrNull() as? LocalSnapshot) ?: parentSnapshot
             var nextNode: VNode? = null
@@ -99,39 +99,128 @@ open class UiTreeBuilder {
         val hasContent: Boolean,
     )
 
-    private fun closureSensitiveSpecToken(spec: NodeSpec): Any? {
-        return when (spec) {
-            is LazyColumnNodeProps -> spec.items.sessionIdentityRefs()
-            is LazyRowNodeProps -> spec.items.sessionIdentityRefs()
-            is LazyVerticalGridNodeProps -> spec.items.sessionIdentityRefs()
-            is HorizontalPagerNodeProps -> spec.pages.sessionIdentityRefs()
-            is VerticalPagerNodeProps -> spec.pages.sessionIdentityRefs()
-            is TabRowNodeProps -> spec.tabs.tabSessionIdentityRefs()
-            else -> null
+    private fun emitGroupSignature(
+        type: NodeType,
+        key: Any?,
+        hasContent: Boolean,
+    ): EmitGroupSignature {
+        if (key != null) {
+            return EmitGroupSignature(
+                type = type,
+                key = key,
+                hasContent = hasContent,
+            )
+        }
+        return if (hasContent) {
+            unkeyedContentSignatures.getOrPut(type) {
+                EmitGroupSignature(
+                    type = type,
+                    key = null,
+                    hasContent = true,
+                )
+            }
+        } else {
+            unkeyedLeafSignatures.getOrPut(type) {
+                EmitGroupSignature(
+                    type = type,
+                    key = null,
+                    hasContent = false,
+                )
+            }
         }
     }
 
-    private fun List<TabRowTab>.tabSessionIdentityRefs(): List<SessionIdentityRefs> {
-        return map { tab -> tab.item.toSessionIdentityRefs() }
+    private class EmitInputs(
+        private val spec: NodeSpec,
+        private val modifier: Modifier,
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is EmitInputs) return false
+            return spec == other.spec &&
+                modifier == other.modifier &&
+                hasSameSessionIdentity(spec, other.spec)
+        }
+
+        override fun hashCode(): Int = 31 * spec.hashCode() + modifier.hashCode()
     }
 
-    private fun List<LazyListItem>.sessionIdentityRefs(): List<SessionIdentityRefs> {
-        return map { item -> item.toSessionIdentityRefs() }
+    private companion object {
+        val unkeyedContentSignatures =
+            java.util.concurrent.ConcurrentHashMap<NodeType, EmitGroupSignature>()
+        val unkeyedLeafSignatures =
+            java.util.concurrent.ConcurrentHashMap<NodeType, EmitGroupSignature>()
     }
-
-    private fun LazyListItem.toSessionIdentityRefs(): SessionIdentityRefs {
-        return SessionIdentityRefs(
-            sessionFactory = sessionFactory,
-            sessionUpdater = sessionUpdater,
-        )
-    }
-
-    private data class SessionIdentityRefs(
-        val sessionFactory: Any,
-        val sessionUpdater: Any?,
-    )
 }
 
 fun buildVNodeTree(content: UiTreeBuilder.() -> Unit): List<VNode> {
     return UiTreeBuilder().apply(content).build()
+}
+
+private fun canReuseVNode(
+    previous: VNode,
+    next: VNode,
+): Boolean {
+    return previous.type == next.type &&
+        previous.key == next.key &&
+        previous.spec == next.spec &&
+        hasSameSessionIdentity(previous.spec, next.spec) &&
+        previous.modifier == next.modifier &&
+        previous.children.hasSameElementReferences(next.children)
+}
+
+private fun List<VNode>.hasSameElementReferences(other: List<VNode>): Boolean {
+    if (size != other.size) return false
+    return indices.all { index -> this[index] === other[index] }
+}
+
+private fun hasSameSessionIdentity(
+    previous: NodeSpec,
+    next: NodeSpec,
+): Boolean {
+    return when {
+        previous is LazyColumnNodeProps && next is LazyColumnNodeProps -> {
+            previous.items.hasSameSessionIdentity(next.items)
+        }
+
+        previous is LazyRowNodeProps && next is LazyRowNodeProps -> {
+            previous.items.hasSameSessionIdentity(next.items)
+        }
+
+        previous is LazyVerticalGridNodeProps && next is LazyVerticalGridNodeProps -> {
+            previous.items.hasSameSessionIdentity(next.items)
+        }
+
+        previous is HorizontalPagerNodeProps && next is HorizontalPagerNodeProps -> {
+            previous.pages.hasSameSessionIdentity(next.pages)
+        }
+
+        previous is VerticalPagerNodeProps && next is VerticalPagerNodeProps -> {
+            previous.pages.hasSameSessionIdentity(next.pages)
+        }
+
+        previous is TabRowNodeProps && next is TabRowNodeProps -> {
+            previous.tabs.hasSameTabSessionIdentity(next.tabs)
+        }
+
+        else -> true
+    }
+}
+
+private fun List<LazyListItem>.hasSameSessionIdentity(other: List<LazyListItem>): Boolean {
+    if (size != other.size) return false
+    return indices.all { index ->
+        this[index].sessionFactory === other[index].sessionFactory &&
+            this[index].sessionUpdater === other[index].sessionUpdater
+    }
+}
+
+private fun List<TabRowTab>.hasSameTabSessionIdentity(other: List<TabRowTab>): Boolean {
+    if (size != other.size) return false
+    return indices.all { index ->
+        val previous = this[index].item
+        val next = other[index].item
+        previous.sessionFactory === next.sessionFactory &&
+            previous.sessionUpdater === next.sessionUpdater
+    }
 }

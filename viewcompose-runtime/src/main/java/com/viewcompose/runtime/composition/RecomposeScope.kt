@@ -23,7 +23,7 @@ class RecomposeScope internal constructor(
     @Volatile
     internal var disposed: Boolean = false
     internal var localSnapshot: Any? = null
-    internal var latestInputs: List<Any?> = emptyList()
+    internal var latestInputs: Any? = NoInputs
     internal var childCursor: Int = 0
     internal var rememberCursor: Int = 0
     internal var effectCursor: Int = 0
@@ -84,7 +84,7 @@ class RecomposeScope internal constructor(
         dirty = true
         composed = false
         localSnapshot = null
-        latestInputs = emptyList()
+        latestInputs = NoInputs
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
             throw first
@@ -121,7 +121,7 @@ class RecomposeScope internal constructor(
         dirty = true
         composed = false
         localSnapshot = null
-        latestInputs = emptyList()
+        latestInputs = NoInputs
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
             throw first
@@ -182,7 +182,7 @@ class RecomposeScope internal constructor(
         val composed: Boolean,
         val disposed: Boolean,
         val localSnapshot: Any?,
-        val latestInputs: List<Any?>,
+        val latestInputs: Any?,
         val childCursor: Int,
         val rememberCursor: Int,
         val effectCursor: Int,
@@ -230,4 +230,6 @@ class RecomposeScope internal constructor(
     }
 
     internal object Unset
+
+    internal object NoInputs
 }

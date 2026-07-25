@@ -86,31 +86,34 @@ class ComposerLite(
 
     fun <T> runGroup(
         signature: Any,
-        inputs: List<Any?> = emptyList(),
+        inputs: Any? = RecomposeScope.NoInputs,
+        reuseResult: ((previous: T, next: T) -> Boolean)? = null,
         block: (RecomposeScope) -> T,
     ): T {
         val parent = currentScope
-        val normalizedSignature = GroupSignature(
-            keyStack = keyStack.toList(),
-            signature = signature,
-        )
         val index = parent.childCursor++
         val existing = parent.children.getOrNull(index)
         val scope = when {
-            existing == null -> RecomposeScope(
-                signature = normalizedSignature,
-                parent = parent,
-                saveablePath = childSaveablePath(
-                    parent = parent,
-                    index = index,
+            existing == null -> {
+                val normalizedSignature = newGroupSignature(signature)
+                RecomposeScope(
                     signature = normalizedSignature,
-                ),
-            ).also { scope ->
-                parent.children += scope
-                currentAttempt().newScopes += scope
+                    parent = parent,
+                    saveablePath = childSaveablePath(
+                        parent = parent,
+                        index = index,
+                        signature = normalizedSignature,
+                    ),
+                ).also { scope ->
+                    parent.children += scope
+                    currentAttempt().newScopes += scope
+                }
             }
 
-            existing.signature == normalizedSignature -> existing
+            groupSignatureMatches(
+                existing = existing.signature,
+                signature = signature,
+            ) -> existing
 
             else -> {
                 warnStructureDriftOnce(
@@ -120,6 +123,7 @@ class ComposerLite(
                 while (parent.children.size > index) {
                     parent.children.removeAt(parent.children.lastIndex)
                 }
+                val normalizedSignature = newGroupSignature(signature)
                 RecomposeScope(
                     signature = normalizedSignature,
                     parent = parent,
@@ -144,6 +148,7 @@ class ComposerLite(
         return try {
             composeScope(
                 scope = scope,
+                reuseResult = reuseResult,
                 block = { block(scope) },
             )
         } finally {
@@ -299,6 +304,7 @@ class ComposerLite(
 
     private fun <T> composeScope(
         scope: RecomposeScope,
+        reuseResult: ((previous: T, next: T) -> Boolean)? = null,
         block: () -> T,
     ): T {
         val hasCached = scope.cachedResult !== RecomposeScope.Unset
@@ -319,12 +325,28 @@ class ComposerLite(
         ) {
             block()
         }
+        val previousResult = scope.cachedResult
+        val reusableResult = if (
+            previousResult !== RecomposeScope.Unset &&
+            reuseResult != null
+        ) {
+            @Suppress("UNCHECKED_CAST")
+            reuseResult(previousResult as T, result)
+        } else {
+            false
+        }
+        val finalResult = if (reusableResult) {
+            @Suppress("UNCHECKED_CAST")
+            previousResult as T
+        } else {
+            result
+        }
         scope.observation = nextObservation
-        scope.cachedResult = result
+        scope.cachedResult = finalResult
         scope.clearDirtyIfUnchanged(invalidationVersion)
         scope.composed = true
         scope.trimAfterCompose()
-        return result
+        return finalResult
     }
 
     private fun checkpointScope(scope: RecomposeScope) {
@@ -542,6 +564,26 @@ class ComposerLite(
     ): String {
         val signatureHash = stableHash(signature).toUInt().toString(16)
         return "${parent.saveablePath}/$index:$signatureHash"
+    }
+
+    private fun newGroupSignature(signature: Any): GroupSignature {
+        return GroupSignature(
+            keyStack = if (keyStack.isEmpty()) emptyList() else keyStack.toList(),
+            signature = signature,
+        )
+    }
+
+    private fun groupSignatureMatches(
+        existing: Any,
+        signature: Any,
+    ): Boolean {
+        val group = existing as? GroupSignature ?: return false
+        if (group.signature != signature || group.keyStack.size != keyStack.size) {
+            return false
+        }
+        return group.keyStack.indices.all { index ->
+            group.keyStack[index] == keyStack[index]
+        }
     }
 
     private fun stableHash(value: Any?): Int {
