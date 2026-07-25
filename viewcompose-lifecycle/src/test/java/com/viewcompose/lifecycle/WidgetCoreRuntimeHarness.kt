@@ -5,6 +5,7 @@ import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.buildVNodeTree
 import java.lang.reflect.Method
+import kotlinx.coroutines.Dispatchers
 
 internal class WidgetCoreRuntimeHarness {
     private val composer = ComposerLite()
@@ -14,7 +15,7 @@ internal class WidgetCoreRuntimeHarness {
     )
     private val withComposer = composerContextClass.findMethodPrefix(
         prefix = "withComposer",
-        paramCount = 2,
+        paramCount = 3,
     )
 
     fun <T> render(
@@ -48,6 +49,7 @@ internal class WidgetCoreRuntimeHarness {
         val result = withComposer.invoke(
             composerContextInstance,
             composer,
+            Dispatchers.Unconfined,
             callback,
         ) as T
         composer.commitSideEffects()
