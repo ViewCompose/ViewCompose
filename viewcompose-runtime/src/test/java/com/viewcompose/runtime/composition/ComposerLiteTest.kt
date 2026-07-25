@@ -213,6 +213,45 @@ class ComposerLiteTest {
     }
 
     @Test
+    fun `saveable slot keys are deterministic across composer recreation`() {
+        fun collectKeys(): List<String> {
+            val composer = ComposerLite()
+            return buildList {
+                composer.composeRoot {
+                    add(composer.nextSaveableKey())
+                    composer.runGroup(signature = "child") {
+                        add(composer.nextSaveableKey())
+                        composer.withKeys(listOf("stable-item")) {
+                            add(composer.nextSaveableKey())
+                        }
+                    }
+                }
+            }
+        }
+
+        assertEquals(collectKeys(), collectKeys())
+    }
+
+    @Test
+    fun `saveable slot keys distinguish positions and explicit keys`() {
+        val composer = ComposerLite()
+        val keys = buildList {
+            composer.composeRoot {
+                add(composer.nextSaveableKey())
+                add(composer.nextSaveableKey())
+                composer.withKeys(listOf("first")) {
+                    add(composer.nextSaveableKey())
+                }
+                composer.withKeys(listOf("second")) {
+                    add(composer.nextSaveableKey())
+                }
+            }
+        }
+
+        assertEquals(keys.size, keys.toSet().size)
+    }
+
+    @Test
     fun `dispose clears pending invalidations and stops future enqueue`() {
         val state = mutableStateOf(0)
         val composer = ComposerLite()

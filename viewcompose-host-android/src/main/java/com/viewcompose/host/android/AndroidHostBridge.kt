@@ -16,6 +16,7 @@ import com.viewcompose.widget.core.ProvideAnimationCoroutineContext
 import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.ProvideMonotonicFrameClock
+import com.viewcompose.widget.core.ProvideSaveableStateRegistry
 import com.viewcompose.widget.core.ProvideLocal
 import com.viewcompose.widget.core.RenderStats
 import com.viewcompose.widget.core.RenderTreeResult
@@ -41,6 +42,8 @@ fun Fragment.setUiContent(
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
+    FragmentRenderSessionRegistry.clear(this)
+    val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
     val root = buildUiContentRoot(
         context = requireContext(),
     )
@@ -56,6 +59,7 @@ fun Fragment.setUiContent(
             root = root,
             lifecycleOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
+            saveableStateRegistry = saveableStateRegistry,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -75,6 +79,8 @@ fun ComponentActivity.setUiContent(
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
+    ActivityRenderSessionRegistry.clear(this)
+    val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
     val root = buildUiContentRoot(
         context = this,
     )
@@ -91,6 +97,7 @@ fun ComponentActivity.setUiContent(
             root = root,
             lifecycleOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
+            saveableStateRegistry = saveableStateRegistry,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -117,16 +124,19 @@ private fun UiTreeBuilder.withHostEnvironment(
     root: ViewGroup,
     lifecycleOwner: LifecycleOwner,
     viewModelStoreOwner: ViewModelStoreOwner,
+    saveableStateRegistry: com.viewcompose.widget.core.SaveableStateRegistry,
     onRenderResult: ((RenderTreeResult) -> Unit)?,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
     ProvideLifecycleOwner(lifecycleOwner) {
         ProvideViewModelStoreOwner(viewModelStoreOwner) {
-            ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
-                ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
-                    ProvideLocal(LocalRenderResultListener, onRenderResult) {
-                        UiEnvironment(androidContext = root.context) {
-                            content(root)
+            ProvideSaveableStateRegistry(saveableStateRegistry) {
+                ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
+                    ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
+                        ProvideLocal(LocalRenderResultListener, onRenderResult) {
+                            UiEnvironment(androidContext = root.context) {
+                                content(root)
+                            }
                         }
                     }
                 }
@@ -139,12 +149,16 @@ private object ActivityRenderSessionRegistry {
     private val sessions = WeakHashMap<ComponentActivity, RenderSession>()
     private val observers = WeakHashMap<ComponentActivity, DefaultLifecycleObserver>()
 
+    fun clear(activity: ComponentActivity) {
+        sessions.remove(activity)?.dispose()
+        observers.remove(activity)?.let(activity.lifecycle::removeObserver)
+    }
+
     fun bind(
         activity: ComponentActivity,
         session: RenderSession,
     ) {
-        sessions.remove(activity)?.dispose()
-        observers.remove(activity)?.let(activity.lifecycle::removeObserver)
+        clear(activity)
 
         val observer = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
@@ -219,7 +233,7 @@ private object FragmentRenderSessionRegistry {
         binding.viewLifecycleBinding?.bind(owner)
     }
 
-    private fun clear(
+    fun clear(
         fragment: Fragment,
     ) {
         val binding = bindings.remove(fragment) ?: return

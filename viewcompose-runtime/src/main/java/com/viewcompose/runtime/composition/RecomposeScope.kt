@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong
 class RecomposeScope internal constructor(
     internal var signature: Any,
     internal val parent: RecomposeScope?,
+    internal val saveablePath: String = parent?.saveablePath ?: "root",
 ) {
     internal val children: MutableList<RecomposeScope> = mutableListOf()
     internal val rememberSlots: MutableList<RememberSlot> = mutableListOf()
@@ -26,12 +27,14 @@ class RecomposeScope internal constructor(
     internal var childCursor: Int = 0
     internal var rememberCursor: Int = 0
     internal var effectCursor: Int = 0
+    internal var saveableCursor: Int = 0
     private val invalidationVersion = AtomicLong(0L)
 
     internal fun beginCompose() {
         childCursor = 0
         rememberCursor = 0
         effectCursor = 0
+        saveableCursor = 0
     }
 
     internal fun trimAfterCompose() {

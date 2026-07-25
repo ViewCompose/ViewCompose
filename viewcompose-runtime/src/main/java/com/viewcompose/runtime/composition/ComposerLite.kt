@@ -71,6 +71,11 @@ class ComposerLite(
             existing == null -> RecomposeScope(
                 signature = normalizedSignature,
                 parent = parent,
+                saveablePath = childSaveablePath(
+                    parent = parent,
+                    index = index,
+                    signature = normalizedSignature,
+                ),
             ).also(parent.children::add)
 
             existing.signature == normalizedSignature -> existing
@@ -86,6 +91,11 @@ class ComposerLite(
                 RecomposeScope(
                     signature = normalizedSignature,
                     parent = parent,
+                    saveablePath = childSaveablePath(
+                        parent = parent,
+                        index = index,
+                        signature = normalizedSignature,
+                    ),
                 ).also(parent.children::add)
             }
         }
@@ -162,6 +172,22 @@ class ComposerLite(
 
     fun sideEffect(effect: () -> Unit) {
         pendingSideEffects += effect
+    }
+
+    /**
+     * Returns a deterministic key for the next saveable slot in the current composition scope.
+     *
+     * The key is based on the node-group path, the local saveable slot position, and any explicit
+     * [withKeys] values. Callers that provide custom key objects must keep their `hashCode` stable
+     * across host recreation.
+     */
+    fun nextSaveableKey(): String {
+        check(composing) {
+            "Automatic rememberSaveable keys require an active composition."
+        }
+        val slot = currentScope.saveableCursor++
+        val explicitKeyHash = stableHash(keyStack)
+        return "auto:${currentScope.saveablePath}:$slot:${explicitKeyHash.toUInt().toString(16)}"
     }
 
     fun commitSideEffects() {
@@ -244,6 +270,28 @@ class ComposerLite(
     ) {
         if (!warningKeys.add(key)) return
         warningLogger?.invoke(message)
+    }
+
+    private fun childSaveablePath(
+        parent: RecomposeScope,
+        index: Int,
+        signature: GroupSignature,
+    ): String {
+        val signatureHash = stableHash(signature).toUInt().toString(16)
+        return "${parent.saveablePath}/$index:$signatureHash"
+    }
+
+    private fun stableHash(value: Any?): Int {
+        return when (value) {
+            null -> 0
+            is Iterable<*> -> value.fold(1) { result, item ->
+                31 * result + stableHash(item)
+            }
+            is Array<*> -> value.fold(1) { result, item ->
+                31 * result + stableHash(item)
+            }
+            else -> value.hashCode()
+        }
     }
 
     private data class GroupSignature(
