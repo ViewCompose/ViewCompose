@@ -49,8 +49,8 @@ class RenderSession(
         if (disposed) return
         var preparedComposition:
             ComposerLite.PreparedComposition<List<com.viewcompose.ui.node.VNode>>? = null
-        try {
-            var tree: List<com.viewcompose.ui.node.VNode> = emptyList()
+        var tree: List<com.viewcompose.ui.node.VNode> = emptyList()
+        val frame = try {
             if (!composer.hasPendingInvalidations()) {
                 // External render requests (e.g. lazy/pager sessionUpdater) must recompose root even
                 // without runtime state invalidation signals.
@@ -69,28 +69,46 @@ class RenderSession(
                     }
                 }
             }
-            val frame = CoreRenderEngineProvider.engine.renderInto(
+            CoreRenderEngineProvider.engine.renderInto(
                 container = container,
                 previousMountedNodes = mountedNodes,
                 nodes = tree,
             )
-            mountedNodes = frame.mountedNodes
+        } catch (error: Exception) {
+            preparedComposition?.abort()
+            Log.e(debugTag, "Render failed, restored previous composition and view tree", error)
+            return
+        }
+
+        mountedNodes = frame.mountedNodes
+        try {
+            checkNotNull(preparedComposition).commit()
+        } catch (error: Exception) {
+            Log.e(debugTag, "Composition lifecycle callback failed during commit", error)
+        }
+        try {
+            composer.commitSideEffects()
+        } catch (error: Exception) {
+            Log.e(debugTag, "Post-commit composition effect failed", error)
+        }
+        try {
             overlayHost.commit(
                 sessionId = overlaySessionId,
                 requests = overlayRequestStore.currentRequests(),
             )
-            checkNotNull(preparedComposition).commit()
-            composer.commitSideEffects()
-            if (debug && frame.renderResult == null) {
-                Log.d(debugTag, "Rendered ${tree.size} root nodes")
-            }
+        } catch (error: Exception) {
+            Log.e(debugTag, "Overlay commit failed after view render", error)
+        }
+        if (debug && frame.renderResult == null) {
+            Log.d(debugTag, "Rendered ${tree.size} root nodes")
+        }
+        try {
             onRenderStats?.invoke(frame.renderStats)
             frame.renderResult?.let { result ->
                 onRenderResult?.invoke(result)
             }
-        } catch (e: Exception) {
-            preparedComposition?.abort()
-            Log.e(debugTag, "Render failed, keeping previous view tree", e)
+        } catch (error: Exception) {
+            Log.e(debugTag, "Render diagnostics callback failed", error)
         }
     }
 

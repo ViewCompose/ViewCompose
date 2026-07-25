@@ -21,6 +21,7 @@ lifecycle = "2.8.7"
 composeUi = "1.7.8"
 paparazzi = "2.0.0-alpha01"
 dynamicanimation = "1.0.0"
+robolectric = "4.14.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +51,7 @@ androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref 
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "composeUi" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "composeUi" }
 paparazzi = { group = "app.cash.paparazzi", name = "paparazzi", version.ref = "paparazzi" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

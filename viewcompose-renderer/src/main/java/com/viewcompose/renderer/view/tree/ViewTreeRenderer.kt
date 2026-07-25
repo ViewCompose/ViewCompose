@@ -37,6 +37,41 @@ object ViewTreeRenderer {
         nodes: List<VNode>,
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
+        val transaction = ViewTreePatchPipeline.beginTransaction(
+            container = container,
+            previous = previous,
+        )
+        val result = try {
+            renderIntoTransaction(
+                container = container,
+                previous = previous,
+                nodes = nodes,
+                transaction = transaction,
+                collectWarnings = onReconcile != null,
+            )
+        } catch (error: Throwable) {
+            ViewTreePatchPipeline.rollbackTransaction(
+                transaction = transaction,
+                cause = error,
+                defaultRippleColor = DEFAULT_RIPPLE_COLOR,
+            )
+            throw error
+        }
+        ViewTreePatchPipeline.commitTransaction(
+            transaction = transaction,
+            warningTag = WARNING_TAG,
+        )
+        onReconcile?.invoke(result)
+        return result
+    }
+
+    private fun renderIntoTransaction(
+        container: ViewGroup,
+        previous: List<MountedNode>,
+        nodes: List<VNode>,
+        transaction: ViewTreePatchPipeline.RenderTransaction,
+        collectWarnings: Boolean,
+    ): RenderTreeResult {
         val renderNodes = AnimatedSizeNodeWrapper.wrapTree(nodes)
         val reconcileResult = ChildReconciler.reconcile(
             previous = previous.map { mountedNode ->
@@ -53,11 +88,14 @@ object ViewTreeRenderer {
             defaultRippleColor = DEFAULT_RIPPLE_COLOR,
             warningTag = WARNING_TAG,
             emittedModifierWarnings = cappedModifierWarnings(),
+            transaction = transaction,
             renderChildren = { childContainer, childPrevious, childNodes ->
-                renderInto(
+                renderIntoTransaction(
                     container = childContainer,
                     previous = childPrevious,
                     nodes = childNodes,
+                    transaction = transaction,
+                    collectWarnings = false,
                 )
             },
         )
@@ -65,7 +103,7 @@ object ViewTreeRenderer {
             nodes = renderNodes,
             mountedNodes = pipelineResult.mountedNodes,
         )
-        val warnings = if (onReconcile == null) {
+        val warnings = if (!collectWarnings) {
             emptyList()
         } else {
             collectRenderWarnings(
@@ -80,7 +118,7 @@ object ViewTreeRenderer {
             stats = pipelineResult.stats,
             structure = structure,
             warnings = warnings,
-        ).also { onReconcile?.invoke(it) }
+        )
     }
 
     private fun cappedModifierWarnings(): MutableSet<String> {

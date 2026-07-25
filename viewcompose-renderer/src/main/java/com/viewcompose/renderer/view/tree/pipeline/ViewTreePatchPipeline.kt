@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import com.viewcompose.ui.node.NodeType
@@ -28,15 +29,166 @@ internal object ViewTreePatchPipeline {
         val stats: RenderStats,
     )
 
+    internal class RenderTransaction internal constructor(
+        internal val mountedCheckpoints: List<MountedCheckpoint>,
+        internal val containerCheckpoints: List<ContainerCheckpoint>,
+    ) {
+        internal val insertedNodes = LinkedHashSet<MountedNode>()
+        internal val deferredRemovals = LinkedHashSet<MountedNode>()
+    }
+
+    internal data class MountedCheckpoint(
+        val mountedNode: MountedNode,
+        val vnode: VNode,
+        val children: List<MountedNode>,
+        val layoutParams: ViewGroup.LayoutParams?,
+        val disposed: Boolean,
+    )
+
+    internal data class ContainerCheckpoint(
+        val container: ViewGroup,
+        val children: List<View>,
+    )
+
+    internal fun beginTransaction(
+        container: ViewGroup,
+        previous: List<MountedNode>,
+    ): RenderTransaction {
+        val mountedCheckpoints = mutableListOf<MountedCheckpoint>()
+        val containerCheckpoints = LinkedHashMap<ViewGroup, ContainerCheckpoint>()
+
+        fun captureContainer(target: ViewGroup) {
+            val childHost = resolveChildHost(target)
+            if (containerCheckpoints.containsKey(childHost)) return
+            containerCheckpoints[childHost] = ContainerCheckpoint(
+                container = childHost,
+                children = List(childHost.childCount, childHost::getChildAt),
+            )
+        }
+
+        fun captureNode(mountedNode: MountedNode) {
+            mountedCheckpoints += MountedCheckpoint(
+                mountedNode = mountedNode,
+                vnode = mountedNode.vnode,
+                children = mountedNode.children.toList(),
+                layoutParams = mountedNode.view.layoutParams,
+                disposed = mountedNode.disposed,
+            )
+            (mountedNode.view as? ViewGroup)?.let(::captureContainer)
+            mountedNode.children.forEach(::captureNode)
+        }
+
+        captureContainer(container)
+        previous.forEach(::captureNode)
+        return RenderTransaction(
+            mountedCheckpoints = mountedCheckpoints,
+            containerCheckpoints = containerCheckpoints.values.toList(),
+        )
+    }
+
+    internal fun commitTransaction(
+        transaction: RenderTransaction,
+        warningTag: String,
+    ) {
+        transaction.deferredRemovals.forEach { mountedNode ->
+            try {
+                ViewTreeDisposer.disposeMountedNode(mountedNode)
+            } catch (error: Throwable) {
+                Log.e(
+                    warningTag,
+                    "Failed to release removed ${mountedNode.vnode.type} node after render commit.",
+                    error,
+                )
+            }
+        }
+        transaction.deferredRemovals.clear()
+        transaction.insertedNodes.clear()
+    }
+
+    internal fun rollbackTransaction(
+        transaction: RenderTransaction,
+        cause: Throwable,
+        defaultRippleColor: Int,
+    ) {
+        fun bestEffort(block: () -> Unit) {
+            try {
+                block()
+            } catch (rollbackError: Throwable) {
+                cause.addSuppressed(rollbackError)
+            }
+        }
+
+        transaction.insertedNodes.toList().asReversed().forEach { mountedNode ->
+            bestEffort {
+                (mountedNode.view.parent as? ViewGroup)?.removeView(mountedNode.view)
+            }
+        }
+
+        transaction.mountedCheckpoints.forEach { checkpoint ->
+            checkpoint.mountedNode.vnode = checkpoint.vnode
+            checkpoint.mountedNode.children = checkpoint.children
+            checkpoint.mountedNode.disposed = checkpoint.disposed
+            checkpoint.mountedNode.view.layoutParams = checkpoint.layoutParams
+        }
+
+        transaction.mountedCheckpoints.forEach { checkpoint ->
+            bestEffort {
+                bindView(
+                    view = checkpoint.mountedNode.view,
+                    node = checkpoint.vnode,
+                    defaultRippleColor = defaultRippleColor,
+                    resolved = checkpoint.vnode.modifier.resolve(),
+                )
+                checkpoint.mountedNode.view.layoutParams = checkpoint.layoutParams
+            }
+        }
+
+        transaction.containerCheckpoints.asReversed().forEach { checkpoint ->
+            checkpoint.children.forEachIndexed { index, child ->
+                bestEffort {
+                    val currentParent = child.parent as? ViewGroup
+                    if (currentParent !== checkpoint.container) {
+                        currentParent?.removeView(child)
+                        checkpoint.container.addView(
+                            child,
+                            index.coerceAtMost(checkpoint.container.childCount),
+                        )
+                    } else {
+                        moveViewToIndex(
+                            container = checkpoint.container,
+                            view = child,
+                            targetIndex = index,
+                        )
+                    }
+                }
+            }
+        }
+
+        transaction.insertedNodes.toList().asReversed().forEach { mountedNode ->
+            bestEffort {
+                ViewTreeDisposer.disposeMountedNode(mountedNode)
+            }
+        }
+        transaction.deferredRemovals.clear()
+        transaction.insertedNodes.clear()
+    }
+
     fun execute(
         container: ViewGroup,
         reconcileResult: ReconcileResult<MountedNode>,
         defaultRippleColor: Int,
         warningTag: String,
         emittedModifierWarnings: MutableSet<String>,
+        transaction: RenderTransaction,
         renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
     ): ExecutionResult {
         val mountContainer = resolveChildHost(container)
+        preflight(
+            container = mountContainer,
+            reconcileResult = reconcileResult,
+            warningTag = warningTag,
+            emittedModifierWarnings = emittedModifierWarnings,
+        )
         var stats = RenderStats()
         val nextMounted = mutableListOf<MountedNode>()
         reconcileResult.patches.forEach { patch ->
@@ -46,6 +198,7 @@ internal object ViewTreePatchPipeline {
                 defaultRippleColor = defaultRippleColor,
                 warningTag = warningTag,
                 emittedModifierWarnings = emittedModifierWarnings,
+                transaction = transaction,
                 renderChildren = renderChildren,
             )
             stats = stats.mergeWith(patchResult.stats)
@@ -55,6 +208,7 @@ internal object ViewTreePatchPipeline {
             applyRemoval(
                 container = mountContainer,
                 removal = removal,
+                transaction = transaction,
             )
             stats = stats.withRemoval()
         }
@@ -70,6 +224,7 @@ internal object ViewTreePatchPipeline {
         defaultRippleColor: Int,
         warningTag: String,
         emittedModifierWarnings: MutableSet<String>,
+        transaction: RenderTransaction,
         renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
     ): PatchApplicationResult {
         return when (patch) {
@@ -80,6 +235,7 @@ internal object ViewTreePatchPipeline {
                     node = patch.nextVNode,
                     defaultRippleColor = defaultRippleColor,
                     resolved = resolved,
+                    transaction = transaction,
                     renderChildren = renderChildren,
                 )
                 container.addView(
@@ -192,9 +348,10 @@ internal object ViewTreePatchPipeline {
     private fun applyRemoval(
         container: ViewGroup,
         removal: RemovePatch<MountedNode>,
+        transaction: RenderTransaction,
     ) {
-        ViewTreeDisposer.disposeMountedNode(removal.payload)
         container.removeView(removal.payload.view)
+        transaction.deferredRemovals += removal.payload
     }
 
     private fun reconcileChildren(
@@ -238,6 +395,7 @@ internal object ViewTreePatchPipeline {
         node: VNode,
         defaultRippleColor: Int,
         resolved: ResolvedModifiers,
+        transaction: RenderTransaction,
         renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
     ): MountedNode {
         val view = ViewNodeFactory.createView(
@@ -248,6 +406,11 @@ internal object ViewTreePatchPipeline {
                 else -> null
             },
         )
+        val mountedNode = MountedNode(
+            vnode = node,
+            view = view,
+        )
+        transaction.insertedNodes += mountedNode
         ViewModifierApplier.cacheOriginalBackground(view)
         ViewModifierApplier.cacheOriginalForeground(view)
         bindView(
@@ -265,11 +428,39 @@ internal object ViewTreePatchPipeline {
         } else {
             emptyList()
         }
-        return MountedNode(
-            vnode = node,
-            view = view,
-            children = children,
-        )
+        mountedNode.children = children
+        return mountedNode
+    }
+
+    private fun preflight(
+        container: ViewGroup,
+        reconcileResult: ReconcileResult<MountedNode>,
+        warningTag: String,
+        emittedModifierWarnings: MutableSet<String>,
+    ) {
+        reconcileResult.patches.forEach { patch ->
+            val nextNode = when (patch) {
+                is InsertPatch -> patch.nextVNode
+                is ReusePatch -> patch.nextVNode
+            }
+            val resolved = nextNode.modifier.resolve()
+            ViewLayoutParamsFactory.createLayoutParams(
+                parent = container,
+                node = nextNode,
+                warningTag = warningTag,
+                emittedModifierWarnings = emittedModifierWarnings,
+                resolved = resolved,
+            )
+            if (nextNode.type == NodeType.AndroidView) {
+                nextNode.requireSpec<AndroidViewNodeProps>()
+            }
+            if (patch is ReusePatch) {
+                NodeBindingDiffer.plan(
+                    previous = patch.payload.vnode,
+                    next = nextNode,
+                )
+            }
+        }
     }
 
     private fun bindView(
