@@ -19,6 +19,8 @@ class RecomposeScope internal constructor(
     internal var cachedResult: Any? = Unset
     @Volatile
     internal var dirty: Boolean = true
+    @Volatile
+    internal var composing: Boolean = false
     internal var composed: Boolean = false
     @Volatile
     internal var disposed: Boolean = false
@@ -31,10 +33,15 @@ class RecomposeScope internal constructor(
     private val invalidationVersion = AtomicLong(0L)
 
     internal fun beginCompose() {
+        composing = true
         childCursor = 0
         rememberCursor = 0
         effectCursor = 0
         saveableCursor = 0
+    }
+
+    internal fun endCompose() {
+        composing = false
     }
 
     internal fun trimAfterCompose() {
@@ -128,10 +135,12 @@ class RecomposeScope internal constructor(
         }
     }
 
-    internal fun markDirty() {
-        if (disposed) return
+    internal fun markDirty(): Boolean {
+        if (disposed) return false
+        if (dirty && !composing) return false
         invalidationVersion.incrementAndGet()
         dirty = true
+        return true
     }
 
     internal fun currentInvalidationVersion(): Long = invalidationVersion.get()
@@ -148,12 +157,14 @@ class RecomposeScope internal constructor(
         }
     }
 
-    internal fun markDirtyWithAncestors() {
+    internal fun markDirtyWithAncestors(): Boolean {
         var current: RecomposeScope? = this
+        var changed = false
         while (current != null) {
-            current.markDirty()
+            changed = current.markDirty() || changed
             current = current.parent
         }
+        return changed
     }
 
     fun localSnapshotOrNull(): Any? = localSnapshot

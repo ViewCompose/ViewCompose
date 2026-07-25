@@ -17,6 +17,44 @@ import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 open class UiTreeBuilder {
     private val children = mutableListOf<VNode>()
 
+    /**
+     * Creates an explicit restart boundary without emitting an Android View.
+     *
+     * Snapshot state read by [content] invalidates only this boundary and its ancestors. Values
+     * captured from ordinary Kotlin variables must be included in [inputs] so the cached result is
+     * refreshed when they change.
+     */
+    fun RecomposeBoundary(
+        key: Any? = null,
+        inputs: List<Any?> = emptyList(),
+        content: UiTreeBuilder.() -> Unit,
+    ) {
+        val composer = ComposerContext.currentComposer()
+        if (composer == null) {
+            children += UiTreeBuilder().apply(content).build()
+            return
+        }
+        val parentSnapshot = LocalContext.snapshot()
+        val boundaryNodes = composer.runGroup(
+            signature = if (key == null) {
+                unkeyedBoundarySignature
+            } else {
+                BoundaryGroupSignature(key)
+            },
+            inputs = inputs,
+            reuseResult = List<VNode>::hasSameElementReferences,
+        ) { scope ->
+            val restoreSnapshot = (scope.localSnapshotOrNull() as? LocalSnapshot) ?: parentSnapshot
+            var nextNodes: List<VNode>? = null
+            LocalContext.withSnapshot(restoreSnapshot) {
+                nextNodes = UiTreeBuilder().apply(content).build()
+                scope.updateLocalSnapshot(LocalContext.snapshot())
+            }
+            checkNotNull(nextNodes)
+        }
+        children += boundaryNodes
+    }
+
     fun emit(
         type: NodeType,
         key: Any? = null,
@@ -99,6 +137,10 @@ open class UiTreeBuilder {
         val hasContent: Boolean,
     )
 
+    private data class BoundaryGroupSignature(
+        val key: Any?,
+    )
+
     private fun emitGroupSignature(
         type: NodeType,
         key: Any?,
@@ -150,6 +192,7 @@ open class UiTreeBuilder {
             java.util.concurrent.ConcurrentHashMap<NodeType, EmitGroupSignature>()
         val unkeyedLeafSignatures =
             java.util.concurrent.ConcurrentHashMap<NodeType, EmitGroupSignature>()
+        val unkeyedBoundarySignature = BoundaryGroupSignature(key = null)
     }
 }
 

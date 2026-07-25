@@ -315,38 +315,44 @@ class ComposerLite(
         checkpointScope(scope)
         val invalidationVersion = scope.currentInvalidationVersion()
         scope.beginCompose()
-        val (result, nextObservation) = RuntimeObservation.observeReads(
-            onInvalidated = {
-                if (scope.disposed) return@observeReads
-                scope.markDirtyWithAncestors()
-                invalidationQueue.enqueue(scope)
-                onInvalidated?.invoke()
-            },
-        ) {
-            block()
+        return try {
+            val (result, nextObservation) = RuntimeObservation.observeReads(
+                onInvalidated = {
+                    if (scope.disposed) return@observeReads
+                    val newlyInvalidated = scope.markDirtyWithAncestors()
+                    invalidationQueue.enqueue(scope)
+                    if (newlyInvalidated) {
+                        onInvalidated?.invoke()
+                    }
+                },
+            ) {
+                block()
+            }
+            val previousResult = scope.cachedResult
+            val reusableResult = if (
+                previousResult !== RecomposeScope.Unset &&
+                reuseResult != null
+            ) {
+                @Suppress("UNCHECKED_CAST")
+                reuseResult(previousResult as T, result)
+            } else {
+                false
+            }
+            val finalResult = if (reusableResult) {
+                @Suppress("UNCHECKED_CAST")
+                previousResult as T
+            } else {
+                result
+            }
+            scope.observation = nextObservation
+            scope.cachedResult = finalResult
+            scope.clearDirtyIfUnchanged(invalidationVersion)
+            scope.composed = true
+            scope.trimAfterCompose()
+            finalResult
+        } finally {
+            scope.endCompose()
         }
-        val previousResult = scope.cachedResult
-        val reusableResult = if (
-            previousResult !== RecomposeScope.Unset &&
-            reuseResult != null
-        ) {
-            @Suppress("UNCHECKED_CAST")
-            reuseResult(previousResult as T, result)
-        } else {
-            false
-        }
-        val finalResult = if (reusableResult) {
-            @Suppress("UNCHECKED_CAST")
-            previousResult as T
-        } else {
-            result
-        }
-        scope.observation = nextObservation
-        scope.cachedResult = finalResult
-        scope.clearDirtyIfUnchanged(invalidationVersion)
-        scope.composed = true
-        scope.trimAfterCompose()
-        return finalResult
     }
 
     private fun checkpointScope(scope: RecomposeScope) {

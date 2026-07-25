@@ -9,6 +9,26 @@ import org.junit.Test
 
 class ComposerLiteTest {
     @Test
+    fun `coalesces repeated invalidation callbacks before next composition`() {
+        val state = mutableStateOf(0)
+        var invalidationCallbacks = 0
+        val composer = ComposerLite(
+            onInvalidated = { invalidationCallbacks += 1 },
+        )
+
+        composer.composeRoot {
+            state.value
+        }
+
+        state.value = 1
+        state.value = 2
+        state.value = 3
+
+        assertEquals(1, invalidationCallbacks)
+        assertEquals(1, composer.drainInvalidations().size)
+    }
+
+    @Test
     fun `compacts invalidations to nearest dirty ancestor`() {
         val parentState = mutableStateOf(0)
         val childState = mutableStateOf(0)

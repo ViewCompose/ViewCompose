@@ -139,6 +139,68 @@ class SubtreeRecompositionTest {
         assertNotSame(first, second)
     }
 
+    @Test
+    fun `explicit boundary skips stable multi-node component`() {
+        val inside = mutableStateOf("inside-0")
+        val outside = mutableStateOf("outside-0")
+        val composer = ComposerLite()
+        var boundaryRuns = 0
+
+        fun compose(): List<VNode> =
+            ComposerContext.withComposer(composer) {
+                composer.composeRoot {
+                    buildVNodeTree {
+                        RecomposeBoundary(key = "section") {
+                            boundaryRuns += 1
+                            Text(inside.value)
+                            Text("stable")
+                        }
+                        Text(outside.value)
+                    }
+                }
+            }
+
+        val first = compose()
+        outside.value = "outside-1"
+        val outsideUpdate = compose()
+
+        assertEquals(1, boundaryRuns)
+        assertSame(first[0], outsideUpdate[0])
+        assertSame(first[1], outsideUpdate[1])
+
+        inside.value = "inside-1"
+        val insideUpdate = compose()
+
+        assertEquals(2, boundaryRuns)
+        assertNotSame(outsideUpdate[0], insideUpdate[0])
+        assertSame(outsideUpdate[1], insideUpdate[1])
+    }
+
+    @Test
+    fun `explicit boundary refreshes ordinary captures declared as inputs`() {
+        val composer = ComposerLite()
+        var label = "first"
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        RecomposeBoundary(inputs = listOf(label)) {
+                            Text(label)
+                        }
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        label = "second"
+        val second = compose()
+
+        assertNotSame(first, second)
+        assertEquals("second", (second.spec as TextNodeProps).text)
+    }
+
     private fun textSpec(text: String): TextNodeProps {
         return TextNodeProps(
             text = text,
