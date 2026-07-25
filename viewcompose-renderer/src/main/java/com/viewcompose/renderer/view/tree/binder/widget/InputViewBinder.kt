@@ -1,16 +1,13 @@
 package com.viewcompose.renderer.view.tree
 
 import android.content.res.ColorStateList
-import android.text.Editable
 import android.text.InputType
 import android.text.Selection
-import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.widget.CheckBox
 import android.widget.CompoundButton
-import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.SeekBar
 import android.widget.Switch
@@ -30,8 +27,6 @@ import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 
 internal object InputViewBinder {
-    private val frameworkComposingSpan = Any()
-
     data class TextFieldSpec(
         val state: TextFieldState,
         val value: TextFieldValue,
@@ -75,33 +70,23 @@ internal object InputViewBinder {
     )
 
     fun bindTextField(
-        view: EditText,
+        view: ViewComposeEditText,
         spec: TextFieldSpec,
     ) {
-        if (readTextFieldValue(view) != spec.value) {
-            applyTextFieldValue(view, spec.value)
-        }
         view.hint = spec.placeholder
         view.isEnabled = spec.enabled
         view.isSingleLine = spec.singleLine
         view.minLines = if (spec.singleLine) 1 else spec.minLines
         view.maxLines = if (spec.singleLine) 1 else spec.maxLines
-        view.inputType = spec.inputType
-        view.imeOptions = spec.editorOptions
-        view.setHintTextColor(spec.hintColor)
-        if (spec.cursorColor != 0) {
-            view.highlightColor = spec.cursorColor
-        }
-        applyReadOnly(view, spec.readOnly)
-        bindTextWatcher(
-            view = view,
-            state = spec.state,
-            currentValue = spec.value,
-            inputTransformation = spec.inputTransformation,
+        view.textController.updateEditorConfiguration(
+            inputType = spec.inputType,
+            editorOptions = spec.editorOptions,
         )
-        bindEditorAction(view, spec.imeAction, spec.onKeyboardAction)
-        view.setOnFocusChangeListener { _, focused -> spec.onFocusChange?.invoke(focused) }
+        view.setHintTextColor(spec.hintColor)
+        applyCursorColor(view, spec.cursorColor)
+        applyReadOnly(view, spec.readOnly)
         applyAutofillHints(view, spec.autofillHints)
+        view.textController.bind(spec)
     }
 
     fun bindCheckbox(
@@ -197,7 +182,10 @@ internal object InputViewBinder {
     }
 
     fun readTextFieldSpec(node: VNode): TextFieldSpec {
-        val spec = node.requireSpec<TextFieldNodeProps>()
+        return readTextFieldSpec(node.requireSpec())
+    }
+
+    fun readTextFieldSpec(spec: TextFieldNodeProps): TextFieldSpec {
         return TextFieldSpec(
             state = spec.state,
             value = spec.value,
@@ -294,22 +282,8 @@ internal object InputViewBinder {
         return options.imeAction.toEditorAction() or forceAscii
     }
 
-    internal fun bindTextWatcher(
-        view: EditText,
-        state: TextFieldState,
-        currentValue: TextFieldValue,
-        inputTransformation: InputTransformation?,
-    ) {
-        attachTextWatcher(
-            view = view,
-            state = state,
-            currentValue = currentValue,
-            inputTransformation = inputTransformation,
-        )
-    }
-
     internal fun applyReadOnly(
-        view: EditText,
+        view: ViewComposeEditText,
         readOnly: Boolean,
     ) {
         updateReadOnly(
@@ -331,51 +305,7 @@ internal object InputViewBinder {
         }
     }
 
-    private fun attachTextWatcher(
-        view: EditText,
-        state: TextFieldState,
-        currentValue: TextFieldValue,
-        inputTransformation: InputTransformation?,
-    ) {
-        val previousWatcher = view.getTag(R.id.viewcompose_text_watcher) as? TextWatcher
-        if (previousWatcher != null) {
-            view.removeTextChangedListener(previousWatcher)
-        }
-        val watcher = object : TextWatcher {
-            override fun beforeTextChanged(
-                s: CharSequence?,
-                start: Int,
-                count: Int,
-                after: Int,
-            ) = Unit
-
-            override fun onTextChanged(
-                s: CharSequence?,
-                start: Int,
-                before: Int,
-                count: Int,
-            ) = Unit
-
-            override fun afterTextChanged(s: Editable?) {
-                val nextValue = readTextFieldValue(view)
-                if (nextValue != currentValue) {
-                    val accepted = state.updateFromInput(
-                        proposedValue = nextValue,
-                        inputTransformation = inputTransformation,
-                    )
-                    if (accepted != nextValue) {
-                        view.removeTextChangedListener(this)
-                        applyTextFieldValue(view, accepted)
-                        view.addTextChangedListener(this)
-                    }
-                }
-            }
-        }
-        view.addTextChangedListener(watcher)
-        view.setTag(R.id.viewcompose_text_watcher, watcher)
-    }
-
-    internal fun readTextFieldValue(view: EditText): TextFieldValue {
+    internal fun readTextFieldValue(view: ViewComposeEditText): TextFieldValue {
         val editable = view.text
         val text = editable?.toString().orEmpty()
         val selectionStart = view.selectionStart.coerceIn(0, text.length)
@@ -400,22 +330,42 @@ internal object InputViewBinder {
     }
 
     internal fun applyTextFieldValue(
-        view: EditText,
+        view: ViewComposeEditText,
         value: TextFieldValue,
     ) {
         if (view.text?.toString() != value.text) {
-            view.setText(value.text)
+            val editable = view.editableText
+            val oldText = editable.toString()
+            val prefixLength = commonPrefixLength(oldText, value.text)
+            val suffixLength = commonSuffixLength(
+                oldText = oldText,
+                newText = value.text,
+                prefixLength = prefixLength,
+            )
+            editable.replace(
+                prefixLength,
+                oldText.length - suffixLength,
+                value.text,
+                prefixLength,
+                value.text.length - suffixLength,
+            )
         }
         val editable = view.text ?: return
         BaseInputConnection.removeComposingSpans(editable)
         value.composition?.let { range ->
-            editable.setSpan(
-                frameworkComposingSpan,
-                range.min,
-                range.max,
-                android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE or
-                    android.text.Spanned.SPAN_COMPOSING,
-            )
+            BaseInputConnection.setComposingSpans(editable)
+            editable.getSpans(0, editable.length, Any::class.java)
+                .filter { span ->
+                    editable.getSpanFlags(span) and android.text.Spanned.SPAN_COMPOSING != 0
+                }
+                .forEach { span ->
+                    editable.setSpan(
+                        span,
+                        range.min,
+                        range.max,
+                        editable.getSpanFlags(span),
+                    )
+                }
         }
         Selection.setSelection(
             editable,
@@ -424,18 +374,8 @@ internal object InputViewBinder {
         )
     }
 
-    internal fun bindEditorAction(
-        view: EditText,
-        action: TextFieldImeAction,
-        onKeyboardAction: ((TextFieldImeAction) -> Boolean)?,
-    ) {
-        view.setOnEditorActionListener { _, _, _ ->
-            onKeyboardAction?.invoke(action) ?: false
-        }
-    }
-
     internal fun applyAutofillHints(
-        view: EditText,
+        view: ViewComposeEditText,
         hints: Set<TextFieldAutofillHint>,
     ) {
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) return
@@ -458,14 +398,55 @@ internal object InputViewBinder {
         )
     }
 
+    internal fun applyCursorColor(
+        view: ViewComposeEditText,
+        cursorColor: Int,
+    ) {
+        if (cursorColor == 0 || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q) {
+            return
+        }
+        view.textCursorDrawable = view.textCursorDrawable?.mutate()?.apply {
+            setTint(cursorColor)
+        }
+    }
+
     private fun updateReadOnly(
-        view: EditText,
+        view: ViewComposeEditText,
         readOnly: Boolean,
     ) {
-        view.isFocusable = !readOnly
-        view.isFocusableInTouchMode = !readOnly
-        view.isCursorVisible = !readOnly
-        view.isLongClickable = !readOnly
+        view.setReadOnlyMode(readOnly)
         view.setTextIsSelectable(readOnly)
+        view.isFocusable = true
+        view.isFocusableInTouchMode = true
+        view.isCursorVisible = !readOnly
+        view.isLongClickable = true
+    }
+
+    private fun commonPrefixLength(
+        oldText: String,
+        newText: String,
+    ): Int {
+        val limit = minOf(oldText.length, newText.length)
+        var index = 0
+        while (index < limit && oldText[index] == newText[index]) {
+            index += 1
+        }
+        return index
+    }
+
+    private fun commonSuffixLength(
+        oldText: String,
+        newText: String,
+        prefixLength: Int,
+    ): Int {
+        val limit = minOf(oldText.length, newText.length) - prefixLength
+        var count = 0
+        while (
+            count < limit &&
+            oldText[oldText.length - 1 - count] == newText[newText.length - 1 - count]
+        ) {
+            count += 1
+        }
+        return count
     }
 }

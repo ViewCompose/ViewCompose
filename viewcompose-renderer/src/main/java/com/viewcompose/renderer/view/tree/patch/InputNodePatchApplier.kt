@@ -2,7 +2,6 @@ package com.viewcompose.renderer.view.tree.patch
 
 import android.content.res.ColorStateList
 import android.widget.CompoundButton
-import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.Switch
 import com.viewcompose.renderer.R
@@ -12,25 +11,18 @@ import com.viewcompose.renderer.view.tree.SliderNodePatch
 import com.viewcompose.renderer.view.tree.TextFieldNodePatch
 import com.viewcompose.renderer.view.tree.ToggleNodePatch
 import com.viewcompose.renderer.view.tree.ViewModifierApplier
+import com.viewcompose.renderer.view.tree.ViewComposeEditText
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 
 internal object InputNodePatchApplier {
     fun applyTextFieldPatch(
-        view: EditText,
+        view: ViewComposeEditText,
         patch: TextFieldNodePatch,
     ) {
         val previous = patch.previous
         val next = patch.next
-        if (
-            previous.value != next.value &&
-            InputViewBinder.readTextFieldValue(view) != next.value
-        ) {
-            val previousWatcher = view.getTag(R.id.viewcompose_text_watcher) as? android.text.TextWatcher
-            previousWatcher?.let(view::removeTextChangedListener)
-            InputViewBinder.applyTextFieldValue(view, next.value)
-            previousWatcher?.let(view::addTextChangedListener)
-        }
+        val nextSpec = InputViewBinder.readTextFieldSpec(next)
         if (previous.placeholder != next.placeholder) {
             view.hint = next.placeholder
         }
@@ -56,51 +48,24 @@ internal object InputNodePatchApplier {
             previous.keyboardOptions != next.keyboardOptions ||
             previous.singleLine != next.singleLine
         ) {
-            view.inputType = InputViewBinder.resolveInputType(
-                options = next.keyboardOptions,
-                singleLine = next.singleLine,
+            view.textController.updateEditorConfiguration(
+                inputType = nextSpec.inputType,
+                editorOptions = nextSpec.editorOptions,
             )
-        }
-        if (previous.keyboardOptions != next.keyboardOptions) {
-            view.imeOptions = InputViewBinder.resolveEditorOptions(next.keyboardOptions)
         }
         if (previous.hintColor != next.hintColor) {
             view.setHintTextColor(next.hintColor)
         }
         if (previous.cursorColor != next.cursorColor && next.cursorColor != 0) {
-            view.highlightColor = next.cursorColor
+            InputViewBinder.applyCursorColor(view, next.cursorColor)
         }
         if (previous.readOnly != next.readOnly) {
             InputViewBinder.applyReadOnly(view, next.readOnly)
         }
-        if (
-            previous.state !== next.state ||
-            previous.value != next.value ||
-            previous.inputTransformation !== next.inputTransformation
-        ) {
-            InputViewBinder.bindTextWatcher(
-                view = view,
-                state = next.state,
-                currentValue = next.value,
-                inputTransformation = next.inputTransformation,
-            )
-        }
-        if (
-            previous.keyboardOptions.imeAction != next.keyboardOptions.imeAction ||
-            previous.onKeyboardAction !== next.onKeyboardAction
-        ) {
-            InputViewBinder.bindEditorAction(
-                view = view,
-                action = next.keyboardOptions.imeAction,
-                onKeyboardAction = next.onKeyboardAction,
-            )
-        }
-        if (previous.onFocusChange !== next.onFocusChange) {
-            view.setOnFocusChangeListener { _, focused -> next.onFocusChange?.invoke(focused) }
-        }
         if (previous.autofillHints != next.autofillHints) {
             InputViewBinder.applyAutofillHints(view, next.autofillHints)
         }
+        view.textController.bind(nextSpec)
         if (hasTextAppearanceChange(previous, next)) {
             ContentViewBinder.applyTextAppearance(
                 view = view,
