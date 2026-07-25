@@ -39,10 +39,7 @@ object ViewTreeRenderer {
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
         val renderNodes = AnimatedSizeNodeWrapper.wrapTree(nodes)
-        val transaction = ViewTreePatchPipeline.beginTransaction(
-            container = container,
-            previous = previous,
-        )
+        val transaction = ViewTreePatchPipeline.beginTransaction()
         val result = try {
             renderIntoTransaction(
                 container = container,

@@ -39,10 +39,9 @@ internal object ViewTreePatchPipeline {
         val updatesLayoutParams: Boolean = false,
     )
 
-    internal class RenderTransaction internal constructor(
-        internal val mountedCheckpoints: List<MountedCheckpoint>,
-        internal val containerCheckpoints: List<ContainerCheckpoint>,
-    ) {
+    internal class RenderTransaction internal constructor() {
+        internal val mountedCheckpoints = LinkedHashMap<MountedNode, MountedCheckpoint>()
+        internal val containerCheckpoints = LinkedHashMap<ViewGroup, ContainerCheckpoint>()
         internal val insertedNodes = LinkedHashSet<MountedNode>()
         internal val deferredRemovals = LinkedHashSet<MountedNode>()
     }
@@ -60,41 +59,7 @@ internal object ViewTreePatchPipeline {
         val children: List<View>,
     )
 
-    internal fun beginTransaction(
-        container: ViewGroup,
-        previous: List<MountedNode>,
-    ): RenderTransaction {
-        val mountedCheckpoints = mutableListOf<MountedCheckpoint>()
-        val containerCheckpoints = LinkedHashMap<ViewGroup, ContainerCheckpoint>()
-
-        fun captureContainer(target: ViewGroup) {
-            val childHost = resolveChildHost(target)
-            if (containerCheckpoints.containsKey(childHost)) return
-            containerCheckpoints[childHost] = ContainerCheckpoint(
-                container = childHost,
-                children = List(childHost.childCount, childHost::getChildAt),
-            )
-        }
-
-        fun captureNode(mountedNode: MountedNode) {
-            mountedCheckpoints += MountedCheckpoint(
-                mountedNode = mountedNode,
-                vnode = mountedNode.vnode,
-                children = mountedNode.children.toList(),
-                layoutParams = mountedNode.view.layoutParams,
-                disposed = mountedNode.disposed,
-            )
-            (mountedNode.view as? ViewGroup)?.let(::captureContainer)
-            mountedNode.children.forEach(::captureNode)
-        }
-
-        captureContainer(container)
-        previous.forEach(::captureNode)
-        return RenderTransaction(
-            mountedCheckpoints = mountedCheckpoints,
-            containerCheckpoints = containerCheckpoints.values.toList(),
-        )
-    }
+    internal fun beginTransaction(): RenderTransaction = RenderTransaction()
 
     internal fun commitTransaction(
         transaction: RenderTransaction,
@@ -134,14 +99,14 @@ internal object ViewTreePatchPipeline {
             }
         }
 
-        transaction.mountedCheckpoints.forEach { checkpoint ->
+        transaction.mountedCheckpoints.values.forEach { checkpoint ->
             checkpoint.mountedNode.vnode = checkpoint.vnode
             checkpoint.mountedNode.children = checkpoint.children
             checkpoint.mountedNode.disposed = checkpoint.disposed
             checkpoint.mountedNode.view.layoutParams = checkpoint.layoutParams
         }
 
-        transaction.mountedCheckpoints.forEach { checkpoint ->
+        transaction.mountedCheckpoints.values.forEach { checkpoint ->
             bestEffort {
                 bindView(
                     view = checkpoint.mountedNode.view,
@@ -153,7 +118,7 @@ internal object ViewTreePatchPipeline {
             }
         }
 
-        transaction.containerCheckpoints.asReversed().forEach { checkpoint ->
+        transaction.containerCheckpoints.values.toList().asReversed().forEach { checkpoint ->
             checkpoint.children.forEachIndexed { index, child ->
                 bestEffort {
                     val currentParent = child.parent as? ViewGroup
@@ -252,6 +217,10 @@ internal object ViewTreePatchPipeline {
                     transaction = transaction,
                     renderChildren = renderChildren,
                 )
+                captureContainer(
+                    transaction = transaction,
+                    target = container,
+                )
                 container.addView(
                     mountedNode.view,
                     patch.targetIndex.coerceAtMost(container.childCount),
@@ -266,6 +235,28 @@ internal object ViewTreePatchPipeline {
             is ReusePatch -> {
                 val mountedNode = patch.payload
                 val bindingPlan = checkNotNull(preparedPatch.bindingPlan)
+                val reusesExactVNode = bindingPlan == NodeBindingPlan.SkipSubtree &&
+                    mountedNode.vnode === patch.nextVNode
+                val needsMove = container.indexOfChild(mountedNode.view) != patch.targetIndex
+                if (reusesExactVNode && !needsMove) {
+                    return PatchApplicationResult(
+                        mountedNode = mountedNode,
+                        stats = if (collectStats) {
+                            emptyStats.withReuse(
+                                result = ReuseBindingResult.SkippedSubtree,
+                                nodeType = patch.nextVNode.type,
+                            )
+                        } else {
+                            emptyStats
+                        },
+                    )
+                }
+                if (!reusesExactVNode) {
+                    captureNode(
+                        transaction = transaction,
+                        mountedNode = mountedNode,
+                    )
+                }
                 if (patch.nextVNode.type == NodeType.AndroidView &&
                     mountedNode.vnode.spec != patch.nextVNode.spec
                 ) {
@@ -322,6 +313,12 @@ internal object ViewTreePatchPipeline {
                 }
                 mountedNode.children = childResult.mountedNodes
                 mountedNode.vnode = patch.nextVNode
+                if (needsMove) {
+                    captureContainer(
+                        transaction = transaction,
+                        target = container,
+                    )
+                }
                 moveViewToIndex(
                     container = container,
                     view = mountedNode.view,
@@ -352,6 +349,10 @@ internal object ViewTreePatchPipeline {
         removal: RemovePatch<MountedNode>,
         transaction: RenderTransaction,
     ) {
+        captureContainer(
+            transaction = transaction,
+            target = container,
+        )
         container.removeView(removal.payload.view)
         transaction.deferredRemovals += removal.payload
     }
@@ -525,6 +526,34 @@ internal object ViewTreePatchPipeline {
             defaultRippleColor = defaultRippleColor,
             resolved = resolved,
         )
+    }
+
+    private fun captureNode(
+        transaction: RenderTransaction,
+        mountedNode: MountedNode,
+    ) {
+        transaction.mountedCheckpoints.getOrPut(mountedNode) {
+            MountedCheckpoint(
+                mountedNode = mountedNode,
+                vnode = mountedNode.vnode,
+                children = mountedNode.children.toList(),
+                layoutParams = mountedNode.view.layoutParams,
+                disposed = mountedNode.disposed,
+            )
+        }
+    }
+
+    private fun captureContainer(
+        transaction: RenderTransaction,
+        target: ViewGroup,
+    ) {
+        val container = resolveChildHost(target)
+        transaction.containerCheckpoints.getOrPut(container) {
+            ContainerCheckpoint(
+                container = container,
+                children = List(container.childCount, container::getChildAt),
+            )
+        }
     }
 
     private fun moveViewToIndex(
