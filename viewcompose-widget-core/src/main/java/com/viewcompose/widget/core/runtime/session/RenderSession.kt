@@ -41,6 +41,8 @@ class RenderSession(
 
     private fun renderNow() {
         if (disposed) return
+        var preparedComposition:
+            ComposerLite.PreparedComposition<List<com.viewcompose.ui.node.VNode>>? = null
         try {
             var tree: List<com.viewcompose.ui.node.VNode> = emptyList()
             if (!composer.hasPendingInvalidations()) {
@@ -51,9 +53,10 @@ class RenderSession(
             LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
                 OverlayRequestContext.withStore(overlayRequestStore) {
                     ComposerContext.withComposer(composer) {
-                        tree = composer.composeRoot {
+                        preparedComposition = composer.prepareRoot {
                             buildVNodeTree(content)
                         }
+                        tree = checkNotNull(preparedComposition).value
                     }
                 }
             }
@@ -67,6 +70,8 @@ class RenderSession(
                 sessionId = overlaySessionId,
                 requests = overlayRequestStore.currentRequests(),
             )
+            checkNotNull(preparedComposition).commit()
+            composer.commitSideEffects()
             if (debug && frame.renderResult == null) {
                 Log.d(debugTag, "Rendered ${tree.size} root nodes")
             }
@@ -74,8 +79,8 @@ class RenderSession(
             frame.renderResult?.let { result ->
                 onRenderResult?.invoke(result)
             }
-            composer.commitSideEffects()
         } catch (e: Exception) {
+            preparedComposition?.abort()
             Log.e(debugTag, "Render failed, keeping previous view tree", e)
         }
     }

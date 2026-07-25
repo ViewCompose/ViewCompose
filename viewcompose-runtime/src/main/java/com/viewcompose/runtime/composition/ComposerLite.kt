@@ -20,6 +20,7 @@ class ComposerLite(
     private val pendingSideEffects = mutableListOf<() -> Unit>()
     private var currentScope: RecomposeScope = slotTable.root
     private var composing: Boolean = false
+    private var activeAttempt: CompositionAttempt? = null
 
     fun hasPendingInvalidations(): Boolean = invalidationQueue.isNotEmpty()
 
@@ -30,24 +31,49 @@ class ComposerLite(
     }
 
     fun <T> composeRoot(block: () -> T): T {
+        val prepared = prepareRoot(block)
+        prepared.commit()
+        return prepared.value
+    }
+
+    /**
+     * Composes a candidate result without committing slot-table or observer changes.
+     *
+     * Hosts that apply the result to another mutable tree should call [PreparedComposition.commit]
+     * only after that apply succeeds, or [PreparedComposition.abort] when it fails.
+     */
+    fun <T> prepareRoot(block: () -> T): PreparedComposition<T> {
         if (composing) {
             error("Re-entrant composeRoot() is not supported.")
         }
+        check(activeAttempt == null) {
+            "A prepared composition must be committed or aborted before composing again."
+        }
         composing = true
-        pendingDisposableEffects.clear()
-        pendingSideEffects.clear()
-        drainInvalidations()
+        val attempt = CompositionAttempt(
+            checkpoints = checkpointScopes(),
+            drainedInvalidations = drainInvalidations(),
+        )
+        activeAttempt = attempt
         val root = slotTable.root
         val previous = currentScope
         currentScope = root
         val snapshot = Snapshot.takeSnapshot()
         return try {
-            snapshot.enter {
+            val result = snapshot.enter {
                 composeScope(
                     scope = root,
                     block = { block() },
                 )
             }
+            PreparedComposition(
+                value = result,
+                onCommit = { commitAttempt(attempt) },
+                onAbort = { abortAttempt(attempt) },
+            )
+        } catch (error: Throwable) {
+            abortAttempt(attempt)
+            throw error
         } finally {
             snapshot.dispose()
             currentScope = previous
@@ -86,7 +112,7 @@ class ComposerLite(
                     message = "Composition structure drift at group index=$index; fallback to nearest ancestor subtree recomposition.",
                 )
                 while (parent.children.size > index) {
-                    parent.children.removeAt(parent.children.lastIndex).disposeRecursively()
+                    parent.children.removeAt(parent.children.lastIndex)
                 }
                 RecomposeScope(
                     signature = normalizedSignature,
@@ -151,10 +177,13 @@ class ComposerLite(
         if (existing != null && existing.keys == scopedKeys) {
             return
         }
-        pendingDisposableEffects += commitEffect@{
+        currentAttempt().pendingDisposableEffects += commitEffect@{
             if (scope.disposed) return@commitEffect
             val current = scope.effectSlots.getOrNull(index)
-            current?.onDispose?.invoke()
+            current?.onDispose?.also { onDispose ->
+                current.onDispose = null
+                onDispose()
+            }
             val slot = RecomposeScope.DisposableEffectSlot(
                 keys = scopedKeys,
                 onDispose = effect(),
@@ -171,7 +200,7 @@ class ComposerLite(
     }
 
     fun sideEffect(effect: () -> Unit) {
-        pendingSideEffects += effect
+        currentAttempt().pendingSideEffects += effect
     }
 
     /**
@@ -223,6 +252,7 @@ class ComposerLite(
     }
 
     fun dispose() {
+        activeAttempt?.let(::abortAttempt)
         pendingDisposableEffects.clear()
         pendingSideEffects.clear()
         invalidationQueue.clear()
@@ -240,21 +270,15 @@ class ComposerLite(
         }
         val invalidationVersion = scope.currentInvalidationVersion()
         scope.beginCompose()
-        scope.observation?.dispose()
-        val (result, nextObservation) = try {
-            RuntimeObservation.observeReads(
-                onInvalidated = {
-                    if (scope.disposed) return@observeReads
-                    scope.markDirtyWithAncestors()
-                    invalidationQueue.enqueue(scope)
-                    onInvalidated?.invoke()
-                },
-            ) {
-                block()
-            }
-        } catch (error: Throwable) {
-            scope.markDirty()
-            throw error
+        val (result, nextObservation) = RuntimeObservation.observeReads(
+            onInvalidated = {
+                if (scope.disposed) return@observeReads
+                scope.markDirtyWithAncestors()
+                invalidationQueue.enqueue(scope)
+                onInvalidated?.invoke()
+            },
+        ) {
+            block()
         }
         scope.observation = nextObservation
         scope.cachedResult = result
@@ -262,6 +286,118 @@ class ComposerLite(
         scope.composed = true
         scope.trimAfterCompose()
         return result
+    }
+
+    private fun checkpointScopes(): LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint> {
+        val checkpoints = LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint>()
+
+        fun visit(scope: RecomposeScope) {
+            checkpoints[scope] = scope.checkpoint()
+            scope.children.forEach(::visit)
+        }
+
+        visit(slotTable.root)
+        return checkpoints
+    }
+
+    private fun currentScopes(): LinkedHashSet<RecomposeScope> {
+        val scopes = LinkedHashSet<RecomposeScope>()
+
+        fun visit(scope: RecomposeScope) {
+            if (!scopes.add(scope)) return
+            scope.children.forEach(::visit)
+        }
+
+        visit(slotTable.root)
+        return scopes
+    }
+
+    private fun currentAttempt(): CompositionAttempt {
+        return checkNotNull(activeAttempt) {
+            "Composition operation requires an active composition attempt."
+        }
+    }
+
+    private fun commitAttempt(attempt: CompositionAttempt) {
+        check(activeAttempt === attempt) {
+            "Prepared composition is no longer active."
+        }
+        activeAttempt = null
+
+        val finalScopes = currentScopes()
+        pendingDisposableEffects += attempt.pendingDisposableEffects
+        pendingSideEffects += attempt.pendingSideEffects
+
+        var firstFailure: Throwable? = null
+        fun cleanup(block: () -> Unit) {
+            try {
+                block()
+            } catch (error: Throwable) {
+                if (firstFailure == null) {
+                    firstFailure = error
+                } else {
+                    firstFailure?.addSuppressed(error)
+                }
+            }
+        }
+
+        attempt.checkpoints.forEach { (scope, checkpoint) ->
+            if (scope !in finalScopes) return@forEach
+            if (scope.observation !== checkpoint.observation) {
+                checkpoint.observation?.dispose()
+            }
+            checkpoint.effectSlots
+                .drop(scope.effectSlots.size)
+                .forEach { slot ->
+                    slot.onDispose?.also { onDispose ->
+                        slot.onDispose = null
+                        cleanup(onDispose)
+                    }
+                }
+        }
+
+        val removedScopes = attempt.checkpoints.keys - finalScopes
+        removedScopes
+            .filter { scope -> scope.parent !in removedScopes }
+            .forEach { scope ->
+                cleanup(scope::disposeRecursively)
+            }
+
+        firstFailure?.let { throw it }
+    }
+
+    private fun abortAttempt(attempt: CompositionAttempt) {
+        if (activeAttempt !== attempt) return
+        activeAttempt = null
+
+        val scopesBeforeRestore = currentScopes()
+        val queuedDuringAttempt = invalidationQueue.drainAll()
+        val invalidatedExistingScopes = attempt.checkpoints
+            .filter { (scope, checkpoint) ->
+                scope.currentInvalidationVersion() != checkpoint.invalidationVersion
+            }
+            .keys
+        val newScopeRoots = scopesBeforeRestore
+            .filter { scope ->
+                scope !in attempt.checkpoints && scope.parent in attempt.checkpoints
+            }
+
+        attempt.checkpoints.forEach { (scope, checkpoint) ->
+            if (scope.observation !== checkpoint.observation) {
+                scope.observation?.dispose()
+            }
+            scope.restore(checkpoint)
+        }
+        newScopeRoots.forEach(RecomposeScope::disposeRecursively)
+
+        (attempt.drainedInvalidations + queuedDuringAttempt)
+            .distinct()
+            .filterNot(RecomposeScope::disposed)
+            .forEach(invalidationQueue::enqueue)
+        invalidatedExistingScopes.forEach { scope ->
+            scope.markDirtyWithAncestors()
+            invalidationQueue.enqueue(scope)
+        }
     }
 
     private fun warnStructureDriftOnce(
@@ -298,4 +434,33 @@ class ComposerLite(
         val keyStack: List<Any?>,
         val signature: Any,
     )
+
+    private class CompositionAttempt(
+        val checkpoints: LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint>,
+        val drainedInvalidations: List<RecomposeScope>,
+        val pendingDisposableEffects: MutableList<() -> Unit> = mutableListOf(),
+        val pendingSideEffects: MutableList<() -> Unit> = mutableListOf(),
+    )
+
+    class PreparedComposition<T> internal constructor(
+        val value: T,
+        private val onCommit: () -> Unit,
+        private val onAbort: () -> Unit,
+    ) {
+        private var completed: Boolean = false
+
+        fun commit() {
+            check(!completed) {
+                "Prepared composition is already completed."
+            }
+            completed = true
+            onCommit()
+        }
+
+        fun abort() {
+            if (completed) return
+            completed = true
+            onAbort()
+        }
+    }
 }

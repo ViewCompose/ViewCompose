@@ -18,6 +18,14 @@ class InvalidationQueue {
     }
 
     @Synchronized
+    internal fun drainAll(): List<RecomposeScope> {
+        if (pending.isEmpty()) return emptyList()
+        return pending.toList().also {
+            pending.clear()
+        }
+    }
+
+    @Synchronized
     fun drainCompacted(): List<RecomposeScope> {
         if (pending.isEmpty()) return emptyList()
         val drained = pending.toList()

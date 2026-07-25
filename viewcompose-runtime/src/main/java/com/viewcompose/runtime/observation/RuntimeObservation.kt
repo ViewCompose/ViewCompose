@@ -51,6 +51,9 @@ object RuntimeObservation {
         currentObservation.set(observation)
         return try {
             block() to observation
+        } catch (error: Throwable) {
+            observation.dispose()
+            throw error
         } finally {
             currentObservation.set(previous)
         }

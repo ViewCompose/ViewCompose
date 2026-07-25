@@ -2,6 +2,7 @@ package com.viewcompose.runtime.composition
 
 import com.viewcompose.runtime.mutableStateOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -210,6 +211,133 @@ class ComposerLiteTest {
 
         composer.dispose()
         assertEquals(2, disposals)
+    }
+
+    @Test
+    fun `aborting prepared composition restores remember slots`() {
+        val composer = ComposerLite()
+        val original = composer.composeRoot {
+            composer.remember(keys = listOf("stable")) { Any() }
+        }
+        lateinit var abandoned: Any
+
+        composer.requestRootRecompose()
+        val prepared = composer.prepareRoot {
+            abandoned = composer.remember(keys = listOf("replacement")) { Any() }
+            abandoned
+        }
+        prepared.abort()
+
+        composer.requestRootRecompose()
+        val restored = composer.composeRoot {
+            composer.remember(keys = listOf("stable")) { Any() }
+        }
+
+        assertSame(original, restored)
+        assertFalse(abandoned === restored)
+    }
+
+    @Test
+    fun `aborting prepared composition keeps old effect and discards side effects`() {
+        val observed = mutableStateOf(0)
+        val composer = ComposerLite()
+        var effectKey = 1
+        var starts = 0
+        var disposals = 0
+        var sideEffects = 0
+
+        fun prepare(): ComposerLite.PreparedComposition<Unit> {
+            return composer.prepareRoot {
+                observed.value
+                composer.disposableEffect(keys = listOf(effectKey)) {
+                    starts += 1
+                    { disposals += 1 }
+                }
+                composer.sideEffect {
+                    sideEffects += 1
+                }
+            }
+        }
+
+        prepare().commit()
+        composer.commitSideEffects()
+        assertEquals(1, starts)
+        assertEquals(0, disposals)
+        assertEquals(1, sideEffects)
+
+        observed.value = 1
+        effectKey = 2
+        prepare().abort()
+        composer.commitSideEffects()
+
+        assertEquals(1, starts)
+        assertEquals(0, disposals)
+        assertEquals(1, sideEffects)
+        assertTrue(composer.hasPendingInvalidations())
+
+        effectKey = 1
+        prepare().commit()
+        composer.commitSideEffects()
+        assertEquals(1, starts)
+        assertEquals(0, disposals)
+        assertEquals(2, sideEffects)
+    }
+
+    @Test
+    fun `aborting structure removal does not dispose retained child`() {
+        val composer = ComposerLite()
+        var includeChild = true
+        var starts = 0
+        var disposals = 0
+
+        fun prepare(): ComposerLite.PreparedComposition<Unit> {
+            composer.requestRootRecompose()
+            return composer.prepareRoot {
+                if (includeChild) {
+                    composer.runGroup(signature = "child") {
+                        composer.disposableEffect(keys = emptyList()) {
+                            starts += 1
+                            { disposals += 1 }
+                        }
+                    }
+                }
+            }
+        }
+
+        prepare().commit()
+        composer.commitSideEffects()
+        assertEquals(1, starts)
+
+        includeChild = false
+        prepare().abort()
+        assertEquals(0, disposals)
+
+        includeChild = true
+        prepare().commit()
+        composer.commitSideEffects()
+        assertEquals(1, starts)
+        assertEquals(0, disposals)
+    }
+
+    @Test
+    fun `throwing composition automatically restores previous observation`() {
+        val observed = mutableStateOf(0)
+        val composer = ComposerLite()
+        composer.composeRoot {
+            observed.value
+        }
+
+        composer.requestRootRecompose()
+        runCatching {
+            composer.prepareRoot {
+                observed.value
+                error("boom")
+            }
+        }
+
+        observed.value = 1
+
+        assertTrue(composer.hasPendingInvalidations())
     }
 
     @Test

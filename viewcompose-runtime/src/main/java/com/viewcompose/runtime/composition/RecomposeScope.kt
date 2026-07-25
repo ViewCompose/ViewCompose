@@ -39,10 +39,10 @@ class RecomposeScope internal constructor(
 
     internal fun trimAfterCompose() {
         while (children.size > childCursor) {
-            children.removeAt(children.lastIndex).disposeRecursively()
+            children.removeAt(children.lastIndex)
         }
         while (effectSlots.size > effectCursor) {
-            effectSlots.removeAt(effectSlots.lastIndex).onDispose?.invoke()
+            effectSlots.removeAt(effectSlots.lastIndex)
         }
         while (rememberSlots.size > rememberCursor) {
             rememberSlots.removeAt(rememberSlots.lastIndex)
@@ -78,6 +78,10 @@ class RecomposeScope internal constructor(
 
     internal fun currentInvalidationVersion(): Long = invalidationVersion.get()
 
+    internal fun restoreInvalidationVersion(version: Long) {
+        invalidationVersion.set(version)
+    }
+
     internal fun clearDirtyIfUnchanged(version: Long) {
         if (invalidationVersion.get() != version) return
         dirty = false
@@ -109,6 +113,63 @@ class RecomposeScope internal constructor(
         var keys: List<Any?>,
         var onDispose: (() -> Unit)?,
     )
+
+    internal data class Checkpoint(
+        val children: List<RecomposeScope>,
+        val rememberSlots: List<RememberSlot>,
+        val effectSlots: List<DisposableEffectSlot>,
+        val observation: Observation?,
+        val cachedResult: Any?,
+        val dirty: Boolean,
+        val composed: Boolean,
+        val disposed: Boolean,
+        val localSnapshot: Any?,
+        val latestInputs: List<Any?>,
+        val childCursor: Int,
+        val rememberCursor: Int,
+        val effectCursor: Int,
+        val saveableCursor: Int,
+        val invalidationVersion: Long,
+    )
+
+    internal fun checkpoint(): Checkpoint = Checkpoint(
+        children = children.toList(),
+        rememberSlots = rememberSlots.toList(),
+        effectSlots = effectSlots.toList(),
+        observation = observation,
+        cachedResult = cachedResult,
+        dirty = dirty,
+        composed = composed,
+        disposed = disposed,
+        localSnapshot = localSnapshot,
+        latestInputs = latestInputs,
+        childCursor = childCursor,
+        rememberCursor = rememberCursor,
+        effectCursor = effectCursor,
+        saveableCursor = saveableCursor,
+        invalidationVersion = currentInvalidationVersion(),
+    )
+
+    internal fun restore(checkpoint: Checkpoint) {
+        children.clear()
+        children += checkpoint.children
+        rememberSlots.clear()
+        rememberSlots += checkpoint.rememberSlots
+        effectSlots.clear()
+        effectSlots += checkpoint.effectSlots
+        observation = checkpoint.observation
+        cachedResult = checkpoint.cachedResult
+        dirty = checkpoint.dirty
+        composed = checkpoint.composed
+        disposed = checkpoint.disposed
+        localSnapshot = checkpoint.localSnapshot
+        latestInputs = checkpoint.latestInputs
+        childCursor = checkpoint.childCursor
+        rememberCursor = checkpoint.rememberCursor
+        effectCursor = checkpoint.effectCursor
+        saveableCursor = checkpoint.saveableCursor
+        restoreInvalidationVersion(checkpoint.invalidationVersion)
+    }
 
     internal object Unset
 }
