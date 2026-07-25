@@ -6,7 +6,7 @@ import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
 import com.viewcompose.ui.state.LazyListConnector
-import com.viewcompose.ui.state.LazyListPosition
+import com.viewcompose.ui.state.LazyListStateSnapshot
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -176,12 +176,16 @@ class RememberSaveableTest {
         }
         firstState.attach(
             object : LazyListConnector {
-                override fun scrollToPosition(index: Int, smooth: Boolean) = Unit
+                override fun scrollToItem(
+                    index: Int,
+                    scrollOffset: Int,
+                    animated: Boolean,
+                ) = Unit
 
-                override fun currentPosition(): LazyListPosition {
-                    return LazyListPosition(
-                        index = 18,
-                        scrollOffset = 31,
+                override fun currentSnapshot(): LazyListStateSnapshot {
+                    return LazyListStateSnapshot.initial(
+                        firstVisibleItemIndex = 18,
+                        firstVisibleItemScrollOffset = 31,
                     )
                 }
             },
@@ -201,14 +205,12 @@ class RememberSaveableTest {
         }
         restoredState.attach(
             object : LazyListConnector {
-                override fun scrollToPosition(index: Int, smooth: Boolean) = Unit
-
-                override fun scrollToPosition(
+                override fun scrollToItem(
                     index: Int,
                     scrollOffset: Int,
-                    smooth: Boolean,
+                    animated: Boolean,
                 ) {
-                    restoredCalls += Triple(index, scrollOffset, smooth)
+                    restoredCalls += Triple(index, scrollOffset, animated)
                 }
             },
         )

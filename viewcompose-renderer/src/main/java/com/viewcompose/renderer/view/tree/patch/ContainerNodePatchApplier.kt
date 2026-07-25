@@ -177,7 +177,12 @@ internal object ContainerNodePatchApplier {
         }
         if (previous.state !== next.state) {
             previous.state?.attach(null)
-            next.state?.attach(UiLazyListConnector(view))
+            next.state?.attach(
+                UiLazyListConnector(
+                    recyclerView = view,
+                    mainAxisItemSpacing = next.spacing,
+                ),
+            )
         }
     }
 
@@ -217,7 +222,12 @@ internal object ContainerNodePatchApplier {
         }
         if (previous.state !== next.state) {
             previous.state?.attach(null)
-            next.state?.attach(UiLazyListConnector(view))
+            next.state?.attach(
+                UiLazyListConnector(
+                    recyclerView = view,
+                    mainAxisItemSpacing = next.spacing,
+                ),
+            )
         }
     }
 

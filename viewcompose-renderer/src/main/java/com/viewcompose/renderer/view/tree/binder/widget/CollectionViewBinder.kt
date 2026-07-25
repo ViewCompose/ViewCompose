@@ -88,7 +88,12 @@ internal object CollectionViewBinder {
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.VERTICAL)
         adapter.submitItems(spec.items)
-        spec.state?.attach(UiLazyListConnector(view))
+        spec.state?.attach(
+            UiLazyListConnector(
+                recyclerView = view,
+                mainAxisItemSpacing = spec.spacing,
+            ),
+        )
     }
 
     fun bindLazyRow(
@@ -115,7 +120,12 @@ internal object CollectionViewBinder {
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.HORIZONTAL)
         adapter.submitItems(spec.items)
-        spec.state?.attach(UiLazyListConnector(view))
+        spec.state?.attach(
+            UiLazyListConnector(
+                recyclerView = view,
+                mainAxisItemSpacing = spec.spacing,
+            ),
+        )
     }
 
     fun bindNavigationBar(

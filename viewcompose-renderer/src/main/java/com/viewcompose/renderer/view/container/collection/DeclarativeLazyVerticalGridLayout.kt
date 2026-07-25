@@ -65,7 +65,12 @@ internal class DeclarativeLazyVerticalGridLayout(
             listState?.attach(null)
             listState = state
         }
-        listState?.attach(UiLazyListConnector(this))
+        listState?.attach(
+            UiLazyListConnector(
+                recyclerView = this,
+                mainAxisItemSpacing = verticalSpacing,
+            ),
+        )
     }
 
     fun dispose() {

@@ -47,7 +47,7 @@ class SaveableStateRestorationUiTest {
     fun rememberLazyListState_restoresVisibleItemAfterActivityRecreation() {
         ActivityScenario.launch(SaveableLazyListStateTestActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
-                activity.listState.scrollToPosition(
+                activity.listState.scrollToItem(
                     SaveableLazyListStateTestActivity.RESTORE_TARGET,
                 )
             }

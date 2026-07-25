@@ -114,6 +114,12 @@ internal class LazyListAdapter(
         return key?.hashCode()?.toLong() ?: position.toLong()
     }
 
+    fun itemKeyAt(position: Int): Any? = items.getOrNull(position)?.key
+
+    fun itemContentTypeAt(position: Int): Any? = items.getOrNull(position)?.contentToken?.let {
+        it::class
+    }
+
     fun submitItems(items: List<LazyListItem>) {
         warnAboutIdentityIssues(items)
         val result = LazyListDiff.calculate(
