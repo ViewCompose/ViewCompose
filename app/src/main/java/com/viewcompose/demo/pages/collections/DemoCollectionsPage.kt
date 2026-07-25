@@ -58,7 +58,6 @@ internal fun UiTreeBuilder.CollectionPage(
         reversedState.value,
     ) {
         value = if (reversedState.value) "列表顺序: C-B-A" else "列表顺序: A-B-C"
-        null
     }
     val keyedItems = if (reversedState.value) {
         listOf("C", "B", "A")

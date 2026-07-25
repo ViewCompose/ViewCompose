@@ -1,6 +1,7 @@
 package com.viewcompose.widget.core
 
 import com.viewcompose.runtime.composition.ComposerLite
+import kotlinx.coroutines.Dispatchers
 
 internal class ComposerRuntimeHarness {
     private val composer = ComposerLite()
@@ -9,7 +10,10 @@ internal class ComposerRuntimeHarness {
         if (!composer.hasPendingInvalidations()) {
             composer.requestRootRecompose()
         }
-        val result = ComposerContext.withComposer(composer) {
+        val result = ComposerContext.withComposer(
+            composer = composer,
+            coroutineContext = Dispatchers.Unconfined,
+        ) {
             composer.composeRoot(block)
         }
         composer.commitSideEffects()

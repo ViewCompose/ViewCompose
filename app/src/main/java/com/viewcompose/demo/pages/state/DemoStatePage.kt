@@ -69,7 +69,6 @@ internal fun UiTreeBuilder.StatePage(
         clickCountState.value,
     ) {
         value = "最近更新: 已提交 ${clickCountState.value} 次点击"
-        null
     }
     val vmStateHandle = savedStateHandle(key = "state_page_vm_counter")
     val vmCounterState = vmStateHandle
