@@ -51,7 +51,6 @@ class ComposerLite(
         }
         composing = true
         val attempt = CompositionAttempt(
-            checkpoints = checkpointScopes(),
             drainedInvalidations = drainInvalidations(),
         )
         activeAttempt = attempt
@@ -106,7 +105,10 @@ class ComposerLite(
                     index = index,
                     signature = normalizedSignature,
                 ),
-            ).also(parent.children::add)
+            ).also { scope ->
+                parent.children += scope
+                currentAttempt().newScopes += scope
+            }
 
             existing.signature == normalizedSignature -> existing
 
@@ -126,10 +128,14 @@ class ComposerLite(
                         index = index,
                         signature = normalizedSignature,
                     ),
-                ).also(parent.children::add)
+                ).also { scope ->
+                    parent.children += scope
+                    currentAttempt().newScopes += scope
+                }
             }
         }
         if (scope.latestInputs != inputs) {
+            checkpointScope(scope)
             scope.latestInputs = inputs
             scope.markDirty()
         }
@@ -300,6 +306,7 @@ class ComposerLite(
             @Suppress("UNCHECKED_CAST")
             return scope.cachedResult as T
         }
+        checkpointScope(scope)
         val invalidationVersion = scope.currentInvalidationVersion()
         scope.beginCompose()
         val (result, nextObservation) = RuntimeObservation.observeReads(
@@ -320,28 +327,10 @@ class ComposerLite(
         return result
     }
 
-    private fun checkpointScopes(): LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint> {
-        val checkpoints = LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint>()
-
-        fun visit(scope: RecomposeScope) {
-            checkpoints[scope] = scope.checkpoint()
-            scope.children.forEach(::visit)
-        }
-
-        visit(slotTable.root)
-        return checkpoints
-    }
-
-    private fun currentScopes(): LinkedHashSet<RecomposeScope> {
-        val scopes = LinkedHashSet<RecomposeScope>()
-
-        fun visit(scope: RecomposeScope) {
-            if (!scopes.add(scope)) return
-            scope.children.forEach(::visit)
-        }
-
-        visit(slotTable.root)
-        return scopes
+    private fun checkpointScope(scope: RecomposeScope) {
+        val attempt = currentAttempt()
+        if (scope in attempt.newScopes) return
+        attempt.checkpoints.getOrPut(scope, scope::checkpoint)
     }
 
     private fun currentAttempt(): CompositionAttempt {
@@ -356,9 +345,36 @@ class ComposerLite(
         }
         activeAttempt = null
 
-        val finalScopes = currentScopes()
         pendingDisposableEffects += attempt.pendingDisposableEffects
         pendingSideEffects += attempt.pendingSideEffects
+        val attachedScopes = attempt.checkpoints.keys
+            .filterTo(LinkedHashSet(), ::isAttachedToRoot)
+        val attachedNewScopes = attempt.newScopes
+            .filterTo(LinkedHashSet(), ::isAttachedToRoot)
+        val removedScopeCandidates = LinkedHashSet<RecomposeScope>()
+        attempt.checkpoints.forEach { (scope, checkpoint) ->
+            checkpoint.children.forEach { previousChild ->
+                if (previousChild !in scope.children) {
+                    removedScopeCandidates += previousChild
+                }
+            }
+        }
+        val removedScopeRoots = removedScopeCandidates.filter { scope ->
+            var ancestor = scope.parent
+            var nestedBelowRemovedScope = false
+            while (ancestor != null) {
+                if (ancestor in removedScopeCandidates) {
+                    nestedBelowRemovedScope = true
+                    break
+                }
+                ancestor = ancestor.parent
+            }
+            !nestedBelowRemovedScope
+        }
+        val abandonedNewScopes = attempt.newScopes - attachedNewScopes
+        val abandonedNewRoots = abandonedNewScopes.filter { scope ->
+            scope.parent !in abandonedNewScopes
+        }
 
         var firstFailure: Throwable? = null
         fun cleanup(block: () -> Unit) {
@@ -374,10 +390,12 @@ class ComposerLite(
         }
 
         attempt.checkpoints.forEach { (scope, checkpoint) ->
-            if (scope !in finalScopes) return@forEach
             if (scope.observation !== checkpoint.observation) {
-                checkpoint.observation?.dispose()
+                checkpoint.observation?.let { observation ->
+                    cleanup(observation::dispose)
+                }
             }
+            val attached = scope in attachedScopes
             val sharedRememberSlots = minOf(
                 checkpoint.rememberSlots.size,
                 scope.rememberSlots.size,
@@ -389,8 +407,10 @@ class ComposerLite(
                     (previous as? RememberObserver)?.let { observer ->
                         cleanup(observer::onForgotten)
                     }
-                    (current as? RememberObserver)?.let { observer ->
-                        cleanup(observer::onRemembered)
+                    if (attached) {
+                        (current as? RememberObserver)?.let { observer ->
+                            cleanup(observer::onRemembered)
+                        }
                     }
                 }
             }
@@ -401,13 +421,15 @@ class ComposerLite(
                         cleanup(observer::onForgotten)
                     }
                 }
-            scope.rememberSlots
-                .drop(checkpoint.rememberSlots.size)
-                .forEach { slot ->
-                    (slot.value as? RememberObserver)?.let { observer ->
-                        cleanup(observer::onRemembered)
+            if (attached) {
+                scope.rememberSlots
+                    .drop(checkpoint.rememberSlots.size)
+                    .forEach { slot ->
+                        (slot.value as? RememberObserver)?.let { observer ->
+                            cleanup(observer::onRemembered)
+                        }
                     }
-                }
+            }
             checkpoint.effectSlots
                 .drop(scope.effectSlots.size)
                 .forEach { slot ->
@@ -418,7 +440,7 @@ class ComposerLite(
                 }
         }
 
-        (finalScopes - attempt.checkpoints.keys).forEach { scope ->
+        attachedNewScopes.forEach { scope ->
             scope.rememberSlots.forEach { slot ->
                 (slot.value as? RememberObserver)?.let { observer ->
                     cleanup(observer::onRemembered)
@@ -426,12 +448,12 @@ class ComposerLite(
             }
         }
 
-        val removedScopes = attempt.checkpoints.keys - finalScopes
-        removedScopes
-            .filter { scope -> scope.parent !in removedScopes }
-            .forEach { scope ->
-                cleanup(scope::disposeRecursively)
-            }
+        abandonedNewRoots.forEach { scope ->
+            cleanup(scope::abandonRecursively)
+        }
+        removedScopeRoots.forEach { scope ->
+            cleanup(scope::disposeRecursively)
+        }
 
         firstFailure?.let { throw it }
     }
@@ -440,17 +462,15 @@ class ComposerLite(
         if (activeAttempt !== attempt) return
         activeAttempt = null
 
-        val scopesBeforeRestore = currentScopes()
         val queuedDuringAttempt = invalidationQueue.drainAll()
         val invalidatedExistingScopes = attempt.checkpoints
             .filter { (scope, checkpoint) ->
                 scope.currentInvalidationVersion() != checkpoint.invalidationVersion
             }
             .keys
-        val newScopeRoots = scopesBeforeRestore
-            .filter { scope ->
-                scope !in attempt.checkpoints && scope.parent in attempt.checkpoints
-            }
+        val newScopeRoots = attempt.newScopes.filter { scope ->
+            scope.parent !in attempt.newScopes
+        }
 
         val failures = mutableListOf<Throwable>()
         fun cleanup(block: () -> Unit) {
@@ -461,8 +481,7 @@ class ComposerLite(
             }
         }
 
-        scopesBeforeRestore.forEach { scope ->
-            val checkpoint = attempt.checkpoints[scope] ?: return@forEach
+        attempt.checkpoints.forEach { (scope, checkpoint) ->
             scope.rememberSlots.forEachIndexed { index, slot ->
                 val previous = checkpoint.rememberSlots.getOrNull(index)?.value
                 if (slot.value !== previous) {
@@ -474,7 +493,9 @@ class ComposerLite(
         }
         attempt.checkpoints.forEach { (scope, checkpoint) ->
             if (scope.observation !== checkpoint.observation) {
-                scope.observation?.dispose()
+                scope.observation?.let { observation ->
+                    cleanup(observation::dispose)
+                }
             }
             scope.restore(checkpoint)
         }
@@ -493,6 +514,16 @@ class ComposerLite(
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
             throw first
+        }
+    }
+
+    private fun isAttachedToRoot(scope: RecomposeScope): Boolean {
+        if (scope.disposed) return false
+        var current = scope
+        while (true) {
+            val parent = current.parent ?: return current === slotTable.root
+            if (current !in parent.children) return false
+            current = parent
         }
     }
 
@@ -532,8 +563,9 @@ class ComposerLite(
     )
 
     private class CompositionAttempt(
-        val checkpoints: LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint>,
         val drainedInvalidations: List<RecomposeScope>,
+        val checkpoints: LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint> = LinkedHashMap(),
+        val newScopes: LinkedHashSet<RecomposeScope> = LinkedHashSet(),
         val pendingDisposableEffects: MutableList<() -> Unit> = mutableListOf(),
         val pendingSideEffects: MutableList<() -> Unit> = mutableListOf(),
     )
