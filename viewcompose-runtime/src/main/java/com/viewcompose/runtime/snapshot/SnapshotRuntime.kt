@@ -3,8 +3,22 @@ package com.viewcompose.runtime
 import com.viewcompose.runtime.observation.Observation
 import com.viewcompose.runtime.state.SnapshotStateObject
 import java.util.ArrayDeque
+import java.util.TreeMap
+import java.util.WeakHashMap
 
 internal object SnapshotRuntime {
+    private data class PendingValue(
+        val value: Any?,
+    )
+
+    private sealed interface ApplyValue {
+        data class Resolved(
+            val value: Any?,
+        ) : ApplyValue
+
+        data object Conflict : ApplyValue
+    }
+
     private data class SnapshotContext(
         val snapshot: Snapshot,
         val mutableSnapshot: MutableSnapshot?,
@@ -12,24 +26,42 @@ internal object SnapshotRuntime {
 
     private val runtimeLock = Any()
     private val contextStack = ThreadLocal<ArrayDeque<SnapshotContext>?>()
+    private val activeReadIds = TreeMap<Int, Int>()
+    private val statesPendingPrune = WeakHashMap<SnapshotStateObject, Unit>()
     private var globalSnapshotId: Int = 0
     private var nextSnapshotId: Int = 1
 
     fun currentGlobalId(): Int = synchronized(runtimeLock) { globalSnapshotId }
 
-    fun takeSnapshot(): Snapshot = Snapshot(readId = currentReadId())
+    fun takeSnapshot(): Snapshot = synchronized(runtimeLock) {
+        val readId = currentContextReadId() ?: globalSnapshotId
+        registerSnapshotLocked(readId)
+        Snapshot(readId = readId)
+    }
 
     fun takeMutableSnapshot(): MutableSnapshot {
         val parent = currentMutableSnapshot()
-        val readId = parent?.readId ?: currentReadId()
-        val token = synchronized(runtimeLock) {
-            nextSnapshotId++
+        return synchronized(runtimeLock) {
+            val readId = parent?.readId ?: currentContextReadId() ?: globalSnapshotId
+            registerSnapshotLocked(readId)
+            MutableSnapshot(
+                readId = readId,
+                parent = parent,
+                tokenId = nextSnapshotId++,
+            )
         }
-        return MutableSnapshot(
-            readId = readId,
-            parent = parent,
-            tokenId = token,
-        )
+    }
+
+    fun disposeSnapshot(readId: Int) {
+        synchronized(runtimeLock) {
+            val count = activeReadIds[readId] ?: return
+            if (count == 1) {
+                activeReadIds.remove(readId)
+            } else {
+                activeReadIds[readId] = count - 1
+            }
+            prunePendingStatesLocked()
+        }
     }
 
     fun <R> enterSnapshot(
@@ -65,7 +97,7 @@ internal object SnapshotRuntime {
     fun readStateValue(state: SnapshotStateObject): Any? {
         val mutable = currentMutableSnapshot()
         if (mutable != null) {
-            readPendingValue(mutable, state)?.let { return it }
+            readPendingValue(mutable, state)?.let { return it.value }
         }
         return state.readAny(currentReadId())
     }
@@ -126,12 +158,16 @@ internal object SnapshotRuntime {
                 previousValue = previousValue,
                 currentValue = currentValue,
                 appliedValue = appliedValue,
+                hasConcurrentChange = parent.writes.containsKey(state),
             )
-            if (resolved == null) {
-                conflicts += 1
-                continue
+            when (resolved) {
+                ApplyValue.Conflict -> {
+                    conflicts += 1
+                    continue
+                }
+
+                is ApplyValue.Resolved -> mergedWrites[state] = resolved.value
             }
-            mergedWrites[state] = resolved
         }
         if (conflicts > 0) {
             return SnapshotApplyResult.Failure(conflictCount = conflicts)
@@ -161,12 +197,16 @@ internal object SnapshotRuntime {
                     previousValue = previousValue,
                     currentValue = currentValue,
                     appliedValue = appliedValue,
+                    hasConcurrentChange = state.latestSnapshotId() > snapshot.readId,
                 )
-                if (resolved == null) {
-                    conflicts += 1
-                    continue
+                when (resolved) {
+                    ApplyValue.Conflict -> {
+                        conflicts += 1
+                        continue
+                    }
+
+                    is ApplyValue.Resolved -> resolvedWrites[state] = resolved.value
                 }
-                resolvedWrites[state] = resolved
             }
             if (conflicts > 0) {
                 return SnapshotApplyResult.Failure(conflictCount = conflicts)
@@ -183,6 +223,7 @@ internal object SnapshotRuntime {
             globalSnapshotId = commitId
             changedStates.forEach { state ->
                 invalidations += state.snapshotObservers()
+                trackStateForPruningLocked(state)
             }
         }
         invalidations.forEach { observer -> observer.invalidate() }
@@ -194,15 +235,21 @@ internal object SnapshotRuntime {
         previousValue: Any?,
         currentValue: Any?,
         appliedValue: Any?,
-    ): Any? {
-        if (state.equivalentAny(previousValue, appliedValue)) {
-            return currentValue
+        hasConcurrentChange: Boolean,
+    ): ApplyValue {
+        if (!hasConcurrentChange) {
+            return ApplyValue.Resolved(currentValue)
         }
-        return state.mergeAny(
+        val merged = state.mergeAny(
             previous = previousValue,
             current = currentValue,
             applied = appliedValue,
         )
+        return if (merged != null) {
+            ApplyValue.Resolved(merged)
+        } else {
+            ApplyValue.Conflict
+        }
     }
 
     private fun writeInMutableSnapshot(
@@ -222,15 +269,17 @@ internal object SnapshotRuntime {
         snapshot: MutableSnapshot,
         state: SnapshotStateObject,
     ): Any? {
-        readPendingValue(snapshot, state)?.let { return it }
+        readPendingValue(snapshot, state)?.let { return it.value }
         return state.readAny(snapshot.readId)
     }
 
     private fun readPendingValue(
         snapshot: MutableSnapshot,
         state: SnapshotStateObject,
-    ): Any? {
-        snapshot.writes[state]?.let { return it }
+    ): PendingValue? {
+        if (snapshot.writes.containsKey(state)) {
+            return PendingValue(snapshot.writes[state])
+        }
         val parent = snapshot.parent
         return if (parent != null) {
             readPendingValue(parent, state)
@@ -240,16 +289,49 @@ internal object SnapshotRuntime {
     }
 
     private fun currentReadId(): Int {
+        currentContextReadId()?.let { return it }
+        return synchronized(runtimeLock) { globalSnapshotId }
+    }
+
+    private fun currentContextReadId(): Int? {
         val stack = contextStack.get()
         if (stack != null && stack.isNotEmpty()) {
             return stack.last().snapshot.readId
         }
-        return synchronized(runtimeLock) { globalSnapshotId }
+        return null
     }
 
     private fun currentMutableSnapshot(): MutableSnapshot? {
         val stack = contextStack.get() ?: return null
         if (stack.isEmpty()) return null
         return stack.last().mutableSnapshot
+    }
+
+    private fun registerSnapshotLocked(readId: Int) {
+        activeReadIds[readId] = (activeReadIds[readId] ?: 0) + 1
+    }
+
+    private fun trackStateForPruningLocked(state: SnapshotStateObject) {
+        if (state.pruneRecords(activeReadIds.firstKeyOrNull())) {
+            statesPendingPrune[state] = Unit
+        } else {
+            statesPendingPrune.remove(state)
+        }
+    }
+
+    private fun prunePendingStatesLocked() {
+        if (statesPendingPrune.isEmpty()) return
+        val minActiveReadId = activeReadIds.firstKeyOrNull()
+        val iterator = statesPendingPrune.keys.iterator()
+        while (iterator.hasNext()) {
+            val state = iterator.next()
+            if (!state.pruneRecords(minActiveReadId)) {
+                iterator.remove()
+            }
+        }
+    }
+
+    private fun TreeMap<Int, Int>.firstKeyOrNull(): Int? {
+        return if (isEmpty()) null else firstKey()
     }
 }

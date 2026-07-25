@@ -115,6 +115,35 @@ class ComposerLiteTest {
     }
 
     @Test
+    fun `state invalidated during composition remains dirty for next pass`() {
+        val state = mutableStateOf(0)
+        val composer = ComposerLite()
+        var runs = 0
+
+        val first = composer.composeRoot {
+            runs += 1
+            val current = state.value
+            if (current == 0) {
+                state.value = 1
+            }
+            current
+        }
+
+        assertEquals(0, first)
+        assertEquals(1, state.value)
+        assertTrue(composer.hasPendingInvalidations())
+
+        val second = composer.composeRoot {
+            runs += 1
+            state.value
+        }
+
+        assertEquals(1, second)
+        assertEquals(2, runs)
+        assertTrue(!composer.hasPendingInvalidations())
+    }
+
+    @Test
     fun `composeRoot rejects re-entrant invocation`() {
         val composer = ComposerLite()
 
@@ -140,6 +169,47 @@ class ComposerLiteTest {
         assertEquals(0, executions)
         composer.commitSideEffects()
         assertEquals(1, executions)
+    }
+
+    @Test
+    fun `disposable effect starts and replaces only after commit`() {
+        val composer = ComposerLite()
+        var starts = 0
+        var disposals = 0
+        var key = 1
+
+        fun compose() {
+            composer.requestRootRecompose()
+            composer.composeRoot {
+                composer.disposableEffect(keys = listOf(key)) {
+                    starts += 1
+                    { disposals += 1 }
+                }
+                Unit
+            }
+        }
+
+        compose()
+        assertEquals(0, starts)
+        composer.commitSideEffects()
+        assertEquals(1, starts)
+        assertEquals(0, disposals)
+
+        compose()
+        composer.commitSideEffects()
+        assertEquals(1, starts)
+        assertEquals(0, disposals)
+
+        key = 2
+        compose()
+        assertEquals(1, starts)
+        assertEquals(0, disposals)
+        composer.commitSideEffects()
+        assertEquals(2, starts)
+        assertEquals(1, disposals)
+
+        composer.dispose()
+        assertEquals(2, disposals)
     }
 
     @Test

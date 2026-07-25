@@ -1,6 +1,7 @@
 package com.viewcompose.runtime.composition
 
 import com.viewcompose.runtime.observation.Observation
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Internal composition node for SlotTable-lite runtime.
@@ -15,14 +16,17 @@ class RecomposeScope internal constructor(
     internal val effectSlots: MutableList<DisposableEffectSlot> = mutableListOf()
     internal var observation: Observation? = null
     internal var cachedResult: Any? = Unset
+    @Volatile
     internal var dirty: Boolean = true
     internal var composed: Boolean = false
+    @Volatile
     internal var disposed: Boolean = false
     internal var localSnapshot: Any? = null
     internal var latestInputs: List<Any?> = emptyList()
     internal var childCursor: Int = 0
     internal var rememberCursor: Int = 0
     internal var effectCursor: Int = 0
+    private val invalidationVersion = AtomicLong(0L)
 
     internal fun beginCompose() {
         childCursor = 0
@@ -65,7 +69,18 @@ class RecomposeScope internal constructor(
 
     internal fun markDirty() {
         if (disposed) return
+        invalidationVersion.incrementAndGet()
         dirty = true
+    }
+
+    internal fun currentInvalidationVersion(): Long = invalidationVersion.get()
+
+    internal fun clearDirtyIfUnchanged(version: Long) {
+        if (invalidationVersion.get() != version) return
+        dirty = false
+        if (invalidationVersion.get() != version) {
+            dirty = true
+        }
     }
 
     internal fun markDirtyWithAncestors() {

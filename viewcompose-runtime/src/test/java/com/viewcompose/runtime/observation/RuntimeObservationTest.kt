@@ -2,7 +2,12 @@ package com.viewcompose.runtime.observation
 
 import com.viewcompose.runtime.mutableStateOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class RuntimeObservationTest {
     @Test
@@ -63,5 +68,52 @@ class RuntimeObservationTest {
         state.value = 1
 
         assertEquals(0, invalidations)
+    }
+
+    @Test
+    fun `observer churn is safe while state writes snapshot subscriptions`() {
+        val state = mutableStateOf(0)
+        val persistent = List(128) {
+            RuntimeObservation.observeReads(onInvalidated = {}) {
+                state.value
+            }.second
+        }
+        val executor = Executors.newFixedThreadPool(2)
+        val start = CountDownLatch(1)
+        val failure = AtomicReference<Throwable?>()
+
+        try {
+            val writer = executor.submit {
+                start.await()
+                runCatching {
+                    repeat(5_000) { value ->
+                        state.value = value + 1
+                    }
+                }.exceptionOrNull()?.let { error ->
+                    failure.compareAndSet(null, error)
+                }
+            }
+            val churn = executor.submit {
+                start.await()
+                runCatching {
+                    repeat(10_000) {
+                        val observation = RuntimeObservation.observeReads(onInvalidated = {}) {
+                            state.value
+                        }.second
+                        observation.dispose()
+                    }
+                }.exceptionOrNull()?.let { error ->
+                    failure.compareAndSet(null, error)
+                }
+            }
+
+            start.countDown()
+            writer.get(20, TimeUnit.SECONDS)
+            churn.get(20, TimeUnit.SECONDS)
+            assertNull(failure.get())
+        } finally {
+            persistent.forEach(Observation::dispose)
+            executor.shutdownNow()
+        }
     }
 }

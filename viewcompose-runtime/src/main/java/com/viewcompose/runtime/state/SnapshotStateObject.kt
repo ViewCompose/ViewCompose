@@ -5,6 +5,8 @@ import com.viewcompose.runtime.observation.Observation
 internal interface SnapshotStateObject {
     fun readAny(readId: Int): Any?
 
+    fun latestSnapshotId(): Int
+
     fun equivalentAny(
         a: Any?,
         b: Any?,
@@ -20,6 +22,8 @@ internal interface SnapshotStateObject {
         snapshotId: Int,
         value: Any?,
     ): Boolean
+
+    fun pruneRecords(minActiveReadId: Int?): Boolean
 
     fun snapshotObservers(): List<Observation>
 }

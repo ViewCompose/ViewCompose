@@ -1,5 +1,7 @@
 package com.viewcompose.runtime
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 sealed interface SnapshotApplyResult {
     data object Success : SnapshotApplyResult
 
@@ -15,10 +17,10 @@ class SnapshotApplyConflictException(
 open class Snapshot internal constructor(
     internal val readId: Int,
 ) : AutoCloseable {
-    private var disposed: Boolean = false
+    private val disposed = AtomicBoolean(false)
 
     fun <R> enter(block: () -> R): R {
-        check(!disposed) { "Snapshot is disposed." }
+        ensureActive()
         return SnapshotRuntime.enterSnapshot(this, block)
     }
 
@@ -27,11 +29,13 @@ open class Snapshot internal constructor(
     }
 
     open fun dispose() {
-        disposed = true
+        if (disposed.compareAndSet(false, true)) {
+            SnapshotRuntime.disposeSnapshot(readId)
+        }
     }
 
     internal fun ensureActive() {
-        check(!disposed) { "Snapshot is disposed." }
+        check(!disposed.get()) { "Snapshot is disposed." }
     }
 
     companion object {

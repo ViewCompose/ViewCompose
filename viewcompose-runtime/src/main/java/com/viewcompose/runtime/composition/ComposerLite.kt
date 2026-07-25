@@ -16,6 +16,7 @@ class ComposerLite(
 ) {
     private val keyStack = mutableListOf<Any?>()
     private val warningKeys = HashSet<String>()
+    private val pendingDisposableEffects = mutableListOf<() -> Unit>()
     private val pendingSideEffects = mutableListOf<() -> Unit>()
     private var currentScope: RecomposeScope = slotTable.root
     private var composing: Boolean = false
@@ -33,6 +34,7 @@ class ComposerLite(
             error("Re-entrant composeRoot() is not supported.")
         }
         composing = true
+        pendingDisposableEffects.clear()
         pendingSideEffects.clear()
         drainInvalidations()
         val root = slotTable.root
@@ -139,21 +141,22 @@ class ComposerLite(
         if (existing != null && existing.keys == scopedKeys) {
             return
         }
-        // 当前实现：effect 在组合阶段执行（非 apply 阶段），因此与 Compose 的 RememberObserver
-        // 时序不同；调用侧若依赖“最新快照已提交”语义，需要显式规避同帧读取陷阱。
-        // Current behavior: effect runs during composition (not apply phase), which differs from
-        // Compose RememberObserver timing. Callers needing "latest snapshot already applied" semantics
-        // must avoid same-frame read traps explicitly.
-        existing?.onDispose?.invoke()
-        val onDispose = effect()
-        val slot = RecomposeScope.DisposableEffectSlot(
-            keys = scopedKeys,
-            onDispose = onDispose,
-        )
-        if (existing != null) {
-            scope.effectSlots[index] = slot
-        } else {
-            scope.effectSlots += slot
+        pendingDisposableEffects += commitEffect@{
+            if (scope.disposed) return@commitEffect
+            val current = scope.effectSlots.getOrNull(index)
+            current?.onDispose?.invoke()
+            val slot = RecomposeScope.DisposableEffectSlot(
+                keys = scopedKeys,
+                onDispose = effect(),
+            )
+            if (current != null) {
+                scope.effectSlots[index] = slot
+            } else {
+                check(index == scope.effectSlots.size) {
+                    "DisposableEffect slot order changed before commit."
+                }
+                scope.effectSlots += slot
+            }
         }
     }
 
@@ -162,10 +165,15 @@ class ComposerLite(
     }
 
     fun commitSideEffects() {
-        if (pendingSideEffects.isEmpty()) return
-        val operations = pendingSideEffects.toList()
+        if (pendingDisposableEffects.isEmpty() && pendingSideEffects.isEmpty()) return
+        val disposableOperations = pendingDisposableEffects.toList()
+        val sideEffectOperations = pendingSideEffects.toList()
+        pendingDisposableEffects.clear()
         pendingSideEffects.clear()
-        operations.forEach { operation ->
+        disposableOperations.forEach { operation ->
+            operation()
+        }
+        sideEffectOperations.forEach { operation ->
             operation()
         }
     }
@@ -189,6 +197,7 @@ class ComposerLite(
     }
 
     fun dispose() {
+        pendingDisposableEffects.clear()
         pendingSideEffects.clear()
         invalidationQueue.clear()
         slotTable.dispose()
@@ -203,21 +212,27 @@ class ComposerLite(
             @Suppress("UNCHECKED_CAST")
             return scope.cachedResult as T
         }
+        val invalidationVersion = scope.currentInvalidationVersion()
         scope.beginCompose()
         scope.observation?.dispose()
-        val (result, nextObservation) = RuntimeObservation.observeReads(
-            onInvalidated = {
-                if (scope.disposed) return@observeReads
-                scope.markDirtyWithAncestors()
-                invalidationQueue.enqueue(scope)
-                onInvalidated?.invoke()
-            },
-        ) {
-            block()
+        val (result, nextObservation) = try {
+            RuntimeObservation.observeReads(
+                onInvalidated = {
+                    if (scope.disposed) return@observeReads
+                    scope.markDirtyWithAncestors()
+                    invalidationQueue.enqueue(scope)
+                    onInvalidated?.invoke()
+                },
+            ) {
+                block()
+            }
+        } catch (error: Throwable) {
+            scope.markDirty()
+            throw error
         }
         scope.observation = nextObservation
         scope.cachedResult = result
-        scope.dirty = false
+        scope.clearDirtyIfUnchanged(invalidationVersion)
         scope.composed = true
         scope.trimAfterCompose()
         return result
