@@ -191,9 +191,14 @@ flowchart TD
 4. `ComposerLite` 每轮 compose 必须运行在一致性读快照中，保证同一轮读取不漂移。
 5. `DerivedState` 缓存失效必须感知 snapshot 读版本，禁止仅靠全局 dirty 布尔。
 6. `rememberUpdatedState` 只保证“重组后可见”，不保证“同一组合阶段 effect 立即读取到最新值”。
-7. 当前 runtime 的 `DisposableEffect` 执行时机在组合阶段（非 apply 阶段）；涉及动画/协程启动路径时，若要求读取最新目标值，优先直接使用当前参数，或改为提交后时机执行。
-8. 若后续将 effect 时序升级到 Compose `RememberObserver` apply 语义，必须同步回归 `animate*AsState`、`AnimatedVisibility`、`collectAsState`、`produceState`。
-9. 组合阶段若先写 snapshot-backed mirror state 再立刻读回，该读值可能仍是旧快照；控制流判定（如动画协程启动、segment version 选择）必须基于实时内核值，不得依赖同帧 mirror 回读。
+7. `ComposerLite.prepareRoot()` 只生成候选组合；slot、观察订阅、`RememberObserver` 与 Effect 生命周期必须在 renderer 成功后提交，失败时统一 abort。
+8. `DisposableEffect`、`SideEffect` 与 `RememberObserver.onRemembered` 只允许在提交阶段执行；失败候选中的 remembered value 必须收到 `onAbandoned`。
+9. `RenderSession` 是组合协程树的唯一根 owner：根使用 `SupervisorJob` 隔离子任务，Session 销毁必须取消全部后代。
+10. `LaunchedEffect` 的启动/Key 重启/遗忘取消必须由 `RememberObserver` 提交生命周期驱动，失败组合不得启动任务。
+11. `produceState` 固定为 suspend producer，并通过 `awaitDispose` 清理；`collectAsState*` 与动画不得创建独立根 Job。
+12. 传给 `rememberCoroutineScope`、`collectAsState*` 与动画的附加 `CoroutineContext` 不得包含 `Job`，防止脱离组合父任务。
+13. 组合阶段若先写 snapshot-backed mirror state 再立刻读回，该读值可能仍是旧快照；控制流判定必须基于实时内核值，不得依赖同帧 mirror 回读。
+14. 组合事务保证 slot/观察/Effect/VNode 提交一致性；组合体内主动写入的全局 snapshot state 仍遵循 snapshot 自身事务，不承诺与 Android View patch 跨系统原子回滚。
 
 ### 4.9 Render 调度边界
 
@@ -202,6 +207,9 @@ flowchart TD
 3. 同一帧内多次 invalidation 只能触发一次 `RenderSession` 渲染提交。
 4. `dispose()` 必须取消未执行帧回调，禁止 session 销毁后延迟渲染。
 5. lazy item session 与 overlay surface session 继续复用 `RenderSession.render()` 的立即语义，避免首显空白。
+6. renderer 的递归 patch 必须共享一次 apply transaction；删除资源只能在整棵树成功后释放。
+7. patch 失败必须尽力恢复旧 `VNode`、mounted children、布局参数与 View 顺序，并释放本轮新建节点。
+8. `AndroidView.update/onReset` 中写入框架外部系统的副作用不属于可回滚边界；失败恢复仅保证重新绑定旧节点的 best-effort 语义。
 
 ### 4.10 Renderer 绑定复杂度边界
 

@@ -30,6 +30,8 @@
   Capability modules evolve independently: animation, gesture, graphics, and constraint layout.
 - 内建开发预览与截图回归链路（Compose Preview bridge + Paparazzi）。  
   Built-in dev preview and snapshot regression flow (Compose Preview bridge + Paparazzi).
+- 组合事务与结构化协程：失败渲染恢复旧组合/View 树，副作用与协程只在提交后启动。
+  Transactional composition and structured coroutines: failed renders restore the previous composition/View tree, and effects start only after commit.
 
 ## 架构总览 | Architecture Overview
 
@@ -122,6 +124,31 @@ class SampleActivity : AppCompatActivity() {
 
 核心入口 API 在 `viewcompose-host-android`：`ComponentActivity.setUiContent(...)` 与 `Fragment.setUiContent(...)`。  
 Core entry APIs are in `viewcompose-host-android`: `ComponentActivity.setUiContent(...)` and `Fragment.setUiContent(...)`.
+
+### 状态与协程副作用 | State & Coroutine Effects
+
+```kotlin
+val uiState = flow.collectAsStateWithLifecycle(initial = UiState.Loading)
+val produced = produceState(initialValue = 0, sourceId) {
+    source.observe(sourceId) { value = it }
+    awaitDispose { source.removeObserver(sourceId) }
+}
+
+LaunchedEffect(uiState.value) {
+    analytics.track(uiState.value)
+}
+
+val scope = rememberCoroutineScope()
+Button(
+    text = "Save",
+    onClick = {
+        scope.launch { repository.save() }
+    },
+)
+```
+
+`LaunchedEffect`、`produceState` 和 `rememberCoroutineScope` 的任务均属于当前 `RenderSession`；Key 变化、移出组合或 Session 销毁会取消对应任务。传入自定义 `CoroutineContext` 时不得携带独立 `Job`。
+Tasks created by `LaunchedEffect`, `produceState`, and `rememberCoroutineScope` belong to the current `RenderSession`; key changes, leaving composition, or session disposal cancel them. Custom coroutine contexts must not contain a detached `Job`.
 
 ## 预览与截图回归 | Preview & Snapshot Regression
 
