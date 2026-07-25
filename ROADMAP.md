@@ -74,7 +74,7 @@
 | Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + 基础分页容器可用 | sticky headers、list state 抽象 |
 | Overlay | Dialog/Popup/ModalBottomSheet/Snackbar/Toast 主链路已打通 | Popup 锚点定位增强、反馈队列策略收口 |
 | Theming | 已完成 token 收口升级（语义色、tier typography、interactive shape、defaults 语义守卫），并新增 `Diagnostics -> 主题诊断` 作为当前主题语义的权威人工验证入口 | Android 动态色/shape 桥接与 token 生命周期治理 |
-| Interop | `AndroidView` 可用 | 强化复杂原生 View 场景与主题/生命周期协同 |
+| Interop | `AndroidView` 支持 update、复用 reset、释放 release 与 nativeView patch 更新 | 强化复杂原生 View 场景与主题协同 |
 | Diagnostics | 基础 render/layout 诊断已落地，并补齐 `主题诊断` 页用于 token/defaults/关键组件视觉映射验证 | locals/render tree/patch 可视化与告警可读性 |
 | UI Testing | 核心 instrumentation 路径已建立 | 扩展容器专项、overlay 宿主专项、主题断言覆盖 |
 | Developer Preview | Compose Preview bridge + Paparazzi 快照链路已建立（`qaPreview` 可执行） | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |

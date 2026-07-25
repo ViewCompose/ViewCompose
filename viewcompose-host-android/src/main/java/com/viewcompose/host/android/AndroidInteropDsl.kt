@@ -13,6 +13,8 @@ fun UiTreeBuilder.AndroidView(
     update: (View) -> Unit = {},
     key: Any? = null,
     modifier: Modifier = Modifier,
+    onReset: ((View) -> Unit)? = null,
+    onRelease: ((View) -> Unit)? = null,
 ) {
     emit(
         type = NodeType.AndroidView,
@@ -23,6 +25,12 @@ fun UiTreeBuilder.AndroidView(
             },
             update = { view ->
                 update(view as View)
+            },
+            onReset = onReset?.let { reset ->
+                { view -> reset(view as View) }
+            },
+            onRelease = onRelease?.let { release ->
+                { view -> release(view as View) }
             },
         ),
         modifier = modifier,

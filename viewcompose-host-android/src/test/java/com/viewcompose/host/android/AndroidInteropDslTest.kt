@@ -29,6 +29,23 @@ class AndroidInteropDslTest {
     }
 
     @Test
+    fun `android view stores reset and release callbacks`() {
+        val tree = buildVNodeTree {
+            AndroidView(
+                factory = { _: android.content.Context ->
+                    throw IllegalStateException("factory should not be invoked during tree build")
+                },
+                onReset = { _: View -> Unit },
+                onRelease = { _: View -> Unit },
+            )
+        }
+
+        val spec = tree.single().spec as AndroidViewNodeProps
+        assertTrue(spec.onReset != null)
+        assertTrue(spec.onRelease != null)
+    }
+
+    @Test
     fun `nativeView adds native view modifier element`() {
         val modifier = Modifier.nativeView(key = "host") { _: View -> Unit }
         assertEquals(1, modifier.elements.size)

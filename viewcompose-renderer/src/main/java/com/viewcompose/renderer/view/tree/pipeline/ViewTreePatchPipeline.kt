@@ -103,6 +103,14 @@ internal object ViewTreePatchPipeline {
                 val mountedNode = patch.payload
                 val nextResolved = patch.nextVNode.modifier.resolve()
                 val bindingPlan = NodeBindingDiffer.plan(mountedNode.vnode, patch.nextVNode)
+                if (patch.nextVNode.type == NodeType.AndroidView &&
+                    mountedNode.vnode.spec != patch.nextVNode.spec
+                ) {
+                    patch.nextVNode
+                        .requireSpec<AndroidViewNodeProps>()
+                        .onReset
+                        ?.invoke(mountedNode.view)
+                }
                 when (bindingPlan) {
                     NodeBindingPlan.Rebind -> bindView(
                         view = mountedNode.view,
@@ -127,6 +135,12 @@ internal object ViewTreePatchPipeline {
                             view = mountedNode.view,
                             patch = bindingPlan.patch,
                         )
+                        if (bindingPlan.modifierChanged) {
+                            ModifierInteractionApplier.applyNativeViewConfigs(
+                                view = mountedNode.view,
+                                node = patch.nextVNode,
+                            )
+                        }
                     }
                 }
                 val previousResolved = mountedNode.vnode.modifier.resolve()

@@ -71,7 +71,16 @@ internal object ViewNodeFactory {
             NodeType.Spacer, NodeType.Divider -> View(context)
             NodeType.Canvas -> DeclarativeCanvasLayout(context)
             NodeType.Image -> ImageView(context)
-            NodeType.AndroidView -> (createAndroidView?.invoke(context) as? View) ?: View(context)
+            NodeType.AndroidView -> {
+                val factory = requireNotNull(createAndroidView) {
+                    "AndroidView node requires a factory."
+                }
+                val created = factory(context)
+                require(created is View) {
+                    "AndroidView factory must return android.view.View, but returned ${created::class.java.name}."
+                }
+                created
+            }
             NodeType.LazyColumn -> RecyclerView(context).apply {
                 layoutManager = LazyLinearLayoutManager(context)
                 adapter = LazyListAdapter()

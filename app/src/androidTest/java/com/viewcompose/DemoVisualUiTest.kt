@@ -165,6 +165,13 @@ class DemoVisualUiTest {
                 assertViewFullyVisible(nativeMirror)
                 assertTextNotEllipsized(toggle)
                 assertTextNotEllipsized(reset)
+                assertEquals("原生 benchmark TextView: 主要", nativeMirror.text.toString())
+                activity.clickByTestTag(DemoTestTags.INTEROP_BENCHMARK_TOGGLE)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val nativeMirror = activity.requireTextViewByTestTag(DemoTestTags.INTEROP_BENCHMARK_NATIVE_TEXT)
+                assertEquals("原生 benchmark TextView: 替代", nativeMirror.text.toString())
             }
         }
     }
