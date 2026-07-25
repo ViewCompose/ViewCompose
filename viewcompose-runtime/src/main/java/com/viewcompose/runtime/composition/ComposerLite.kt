@@ -346,6 +346,36 @@ class ComposerLite(
             if (scope.observation !== checkpoint.observation) {
                 checkpoint.observation?.dispose()
             }
+            val sharedRememberSlots = minOf(
+                checkpoint.rememberSlots.size,
+                scope.rememberSlots.size,
+            )
+            repeat(sharedRememberSlots) { index ->
+                val previous = checkpoint.rememberSlots[index].value
+                val current = scope.rememberSlots[index].value
+                if (previous !== current) {
+                    (previous as? RememberObserver)?.let { observer ->
+                        cleanup(observer::onForgotten)
+                    }
+                    (current as? RememberObserver)?.let { observer ->
+                        cleanup(observer::onRemembered)
+                    }
+                }
+            }
+            checkpoint.rememberSlots
+                .drop(scope.rememberSlots.size)
+                .forEach { slot ->
+                    (slot.value as? RememberObserver)?.let { observer ->
+                        cleanup(observer::onForgotten)
+                    }
+                }
+            scope.rememberSlots
+                .drop(checkpoint.rememberSlots.size)
+                .forEach { slot ->
+                    (slot.value as? RememberObserver)?.let { observer ->
+                        cleanup(observer::onRemembered)
+                    }
+                }
             checkpoint.effectSlots
                 .drop(scope.effectSlots.size)
                 .forEach { slot ->
@@ -354,6 +384,14 @@ class ComposerLite(
                         cleanup(onDispose)
                     }
                 }
+        }
+
+        (finalScopes - attempt.checkpoints.keys).forEach { scope ->
+            scope.rememberSlots.forEach { slot ->
+                (slot.value as? RememberObserver)?.let { observer ->
+                    cleanup(observer::onRemembered)
+                }
+            }
         }
 
         val removedScopes = attempt.checkpoints.keys - finalScopes
@@ -382,13 +420,22 @@ class ComposerLite(
                 scope !in attempt.checkpoints && scope.parent in attempt.checkpoints
             }
 
+        scopesBeforeRestore.forEach { scope ->
+            val checkpoint = attempt.checkpoints[scope] ?: return@forEach
+            scope.rememberSlots.forEachIndexed { index, slot ->
+                val previous = checkpoint.rememberSlots.getOrNull(index)?.value
+                if (slot.value !== previous) {
+                    (slot.value as? RememberObserver)?.onAbandoned()
+                }
+            }
+        }
         attempt.checkpoints.forEach { (scope, checkpoint) ->
             if (scope.observation !== checkpoint.observation) {
                 scope.observation?.dispose()
             }
             scope.restore(checkpoint)
         }
-        newScopeRoots.forEach(RecomposeScope::disposeRecursively)
+        newScopeRoots.forEach(RecomposeScope::abandonRecursively)
 
         (attempt.drainedInvalidations + queuedDuringAttempt)
             .distinct()

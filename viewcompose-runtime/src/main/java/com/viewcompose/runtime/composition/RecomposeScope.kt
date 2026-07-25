@@ -58,9 +58,33 @@ class RecomposeScope internal constructor(
             slot.onDispose?.invoke()
         }
         effectSlots.clear()
+        rememberSlots.forEach { slot ->
+            (slot.value as? RememberObserver)?.onForgotten()
+        }
         rememberSlots.clear()
         children.forEach { child ->
             child.disposeRecursively()
+        }
+        children.clear()
+        cachedResult = Unset
+        dirty = true
+        composed = false
+        localSnapshot = null
+        latestInputs = emptyList()
+    }
+
+    internal fun abandonRecursively() {
+        if (disposed) return
+        disposed = true
+        observation?.dispose()
+        observation = null
+        effectSlots.clear()
+        rememberSlots.forEach { slot ->
+            (slot.value as? RememberObserver)?.onAbandoned()
+        }
+        rememberSlots.clear()
+        children.forEach { child ->
+            child.abandonRecursively()
         }
         children.clear()
         cachedResult = Unset

@@ -19,6 +19,12 @@ class RenderSession(
     private var disposed: Boolean = false
     private val overlayRequestStore = OverlayRequestStore()
     private var requestRender: (() -> Unit)? = null
+    private val compositionCoroutineScope = CompositionCoroutineScopeOwner(
+        parentContext = renderSessionCoroutineContext(),
+        onError = { error ->
+            Log.e(debugTag, "Composition coroutine failed", error)
+        },
+    )
     private val composer = ComposerLite(
         warningLogger = { message -> Log.w(debugTag, message) },
         onInvalidated = { requestRender?.invoke() },
@@ -52,7 +58,10 @@ class RenderSession(
             }
             LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
                 OverlayRequestContext.withStore(overlayRequestStore) {
-                    ComposerContext.withComposer(composer) {
+                    ComposerContext.withComposer(
+                        composer = composer,
+                        coroutineContext = compositionCoroutineScope.coroutineContext,
+                    ) {
                         preparedComposition = composer.prepareRoot {
                             buildVNodeTree(content)
                         }
@@ -89,6 +98,7 @@ class RenderSession(
         if (disposed) return
         disposed = true
         requestRender = null
+        compositionCoroutineScope.cancel()
         CoreRenderEngineProvider.engine.disposeMounted(
             container = container,
             mountedNodes = mountedNodes,

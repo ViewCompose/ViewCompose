@@ -341,6 +341,67 @@ class ComposerLiteTest {
     }
 
     @Test
+    fun `remember observer follows commit forget and abandon lifecycle`() {
+        val composer = ComposerLite()
+        val events = mutableListOf<String>()
+        var key = 1
+
+        fun observer(name: String) = object : RememberObserver {
+            override fun onRemembered() {
+                events += "$name:remembered"
+            }
+
+            override fun onForgotten() {
+                events += "$name:forgotten"
+            }
+
+            override fun onAbandoned() {
+                events += "$name:abandoned"
+            }
+        }
+
+        val first = observer("first")
+        val second = observer("second")
+        val abandoned = observer("abandoned")
+
+        composer.prepareRoot {
+            composer.remember(keys = listOf(key)) { first }
+        }.commit()
+        assertEquals(listOf("first:remembered"), events)
+
+        key = 2
+        composer.requestRootRecompose()
+        composer.prepareRoot {
+            composer.remember(keys = listOf(key)) { abandoned }
+        }.abort()
+        assertEquals(
+            listOf(
+                "first:remembered",
+                "abandoned:abandoned",
+            ),
+            events,
+        )
+
+        composer.requestRootRecompose()
+        composer.prepareRoot {
+            composer.remember(keys = listOf(key)) { second }
+        }.commit()
+        assertEquals(
+            listOf(
+                "first:remembered",
+                "abandoned:abandoned",
+                "first:forgotten",
+                "second:remembered",
+            ),
+            events,
+        )
+
+        composer.requestRootRecompose()
+        composer.prepareRoot { Unit }.commit()
+        assertEquals("second:forgotten", events.last())
+    }
+
+    @Test
     fun `saveable slot keys are deterministic across composer recreation`() {
         fun collectKeys(): List<String> {
             val composer = ComposerLite()
