@@ -9,16 +9,13 @@ import com.viewcompose.animation.core.sampleAnimationValue
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.DisposableEffect
+import com.viewcompose.widget.core.LaunchedEffect
 import com.viewcompose.widget.core.LocalAnimationCoroutineContext
 import com.viewcompose.widget.core.LocalMonotonicFrameClock
 import com.viewcompose.widget.core.remember
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class Transition<S> internal constructor(
     initialState: S,
@@ -241,13 +238,15 @@ fun <S> updateTransition(
     val animationCoroutineContext = LocalAnimationCoroutineContext.current
     val running = transition.runtimeIsRunning()
     val segmentVersion = transition.runtimeSegmentVersion()
-    DisposableEffect(transition, running, segmentVersion, frameClock, animationCoroutineContext) {
+    require(animationCoroutineContext[Job] == null) {
+        "Animation coroutine context must not contain a Job."
+    }
+    LaunchedEffect(transition, running, segmentVersion, frameClock, animationCoroutineContext) {
         if (!running) {
-            return@DisposableEffect { }
+            return@LaunchedEffect
         }
-        val scope = CoroutineScope(SupervisorJob() + animationCoroutineContext)
         val launchedVersion = segmentVersion
-        val job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+        withContext(animationCoroutineContext) {
             val startNanos = frameClock.withFrameNanos { it }
             while (isActive && transition.isRunningOn(launchedVersion)) {
                 val frameNanos = frameClock.withFrameNanos { it }
@@ -257,10 +256,6 @@ fun <S> updateTransition(
                     playTimeNanos = playTime,
                 )
             }
-        }
-        return@DisposableEffect {
-            job.cancel()
-            scope.cancel()
         }
     }
     return transition

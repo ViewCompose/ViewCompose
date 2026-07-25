@@ -43,10 +43,10 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.DisposableEffect
 import com.viewcompose.widget.core.Button
 import com.viewcompose.widget.core.ButtonVariant
 import com.viewcompose.widget.core.Column
+import com.viewcompose.widget.core.LaunchedEffect
 import com.viewcompose.widget.core.LocalAnimationCoroutineContext
 import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.Row
@@ -59,11 +59,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.sp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal fun UiTreeBuilder.AnimationPage(
     initialPageIndex: Int = 0,
@@ -101,43 +97,40 @@ internal fun UiTreeBuilder.AnimationPage(
         else -> listOf("page", "filter", "infinite_animatable", "verify")
     }
 
-    DisposableEffect(
+    LaunchedEffect(
         animatableCommandState.value,
         animatableCommandNonceState.value,
         animationCoroutineContext,
     ) {
-        val scope = CoroutineScope(SupervisorJob() + animationCoroutineContext)
         val command = animatableCommandState.value
-        val job = when (command) {
-            AnimatableCommand.None,
-            AnimatableCommand.Stop,
-            -> null
+        withContext(animationCoroutineContext) {
+            when (command) {
+                AnimatableCommand.None,
+                AnimatableCommand.Stop,
+                -> Unit
 
-            AnimatableCommand.AnimateToHigh -> scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                animatable.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(durationMillis = 420),
-                )
-            }
+                AnimatableCommand.AnimateToHigh -> {
+                    animatable.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(durationMillis = 420),
+                    )
+                }
 
-            AnimatableCommand.AnimateToLow -> scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                animatable.animateTo(
-                    targetValue = 0f,
-                    animationSpec = spring(durationMillis = 520),
-                )
-            }
+                AnimatableCommand.AnimateToLow -> {
+                    animatable.animateTo(
+                        targetValue = 0f,
+                        animationSpec = spring(durationMillis = 520),
+                    )
+                }
 
-            AnimatableCommand.SnapToHigh -> scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                animatable.snapTo(1f)
-            }
+                AnimatableCommand.SnapToHigh -> {
+                    animatable.snapTo(1f)
+                }
 
-            AnimatableCommand.SnapToLow -> scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                animatable.snapTo(0f)
+                AnimatableCommand.SnapToLow -> {
+                    animatable.snapTo(0f)
+                }
             }
-        }
-        return@DisposableEffect {
-            job?.cancel()
-            scope.cancel()
         }
     }
 

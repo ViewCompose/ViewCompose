@@ -7,15 +7,12 @@ import com.viewcompose.animation.core.runAnimation
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.DisposableEffect
+import com.viewcompose.widget.core.LaunchedEffect
 import com.viewcompose.widget.core.LocalAnimationCoroutineContext
 import com.viewcompose.widget.core.LocalMonotonicFrameClock
 import com.viewcompose.widget.core.remember
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
 
 fun <T> animateValueAsState(
     targetValue: T,
@@ -27,12 +24,11 @@ fun <T> animateValueAsState(
     }
     val frameClock = LocalMonotonicFrameClock.current
     val animationCoroutineContext = LocalAnimationCoroutineContext.current
-    DisposableEffect(targetValue, animationSpec, converter, frameClock, animationCoroutineContext) {
-        val scope = CoroutineScope(SupervisorJob() + animationCoroutineContext)
-        val job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
-            // 直接使用当前参数值启动动画，避免通过 rememberUpdatedState 在同帧 effect 读取旧快照。
-            // Use current parameters directly to avoid same-frame stale snapshot reads when using
-            // rememberUpdatedState under composition-phase DisposableEffect timing.
+    require(animationCoroutineContext[Job] == null) {
+        "Animation coroutine context must not contain a Job."
+    }
+    LaunchedEffect(targetValue, animationSpec, converter, frameClock, animationCoroutineContext) {
+        withContext(animationCoroutineContext) {
             runAnimation(
                 frameClock = frameClock,
                 startValue = state.value,
@@ -42,10 +38,6 @@ fun <T> animateValueAsState(
             ) { next ->
                 state.value = next
             }
-        }
-        return@DisposableEffect {
-            job.cancel()
-            scope.cancel()
         }
     }
     return state
