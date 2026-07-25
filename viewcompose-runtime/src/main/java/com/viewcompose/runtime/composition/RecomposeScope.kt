@@ -52,18 +52,32 @@ class RecomposeScope internal constructor(
     internal fun disposeRecursively() {
         if (disposed) return
         disposed = true
-        observation?.dispose()
+        val failures = mutableListOf<Throwable>()
+        fun cleanup(block: () -> Unit) {
+            try {
+                block()
+            } catch (error: Throwable) {
+                failures += error
+            }
+        }
+        observation?.let { currentObservation ->
+            cleanup(currentObservation::dispose)
+        }
         observation = null
         effectSlots.forEach { slot ->
-            slot.onDispose?.invoke()
+            slot.onDispose?.let { onDispose ->
+                cleanup(onDispose)
+            }
         }
         effectSlots.clear()
         rememberSlots.forEach { slot ->
-            (slot.value as? RememberObserver)?.onForgotten()
+            (slot.value as? RememberObserver)?.let { observer ->
+                cleanup(observer::onForgotten)
+            }
         }
         rememberSlots.clear()
         children.forEach { child ->
-            child.disposeRecursively()
+            cleanup(child::disposeRecursively)
         }
         children.clear()
         cachedResult = Unset
@@ -71,20 +85,36 @@ class RecomposeScope internal constructor(
         composed = false
         localSnapshot = null
         latestInputs = emptyList()
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
+        }
     }
 
     internal fun abandonRecursively() {
         if (disposed) return
         disposed = true
-        observation?.dispose()
+        val failures = mutableListOf<Throwable>()
+        fun cleanup(block: () -> Unit) {
+            try {
+                block()
+            } catch (error: Throwable) {
+                failures += error
+            }
+        }
+        observation?.let { currentObservation ->
+            cleanup(currentObservation::dispose)
+        }
         observation = null
         effectSlots.clear()
         rememberSlots.forEach { slot ->
-            (slot.value as? RememberObserver)?.onAbandoned()
+            (slot.value as? RememberObserver)?.let { observer ->
+                cleanup(observer::onAbandoned)
+            }
         }
         rememberSlots.clear()
         children.forEach { child ->
-            child.abandonRecursively()
+            cleanup(child::abandonRecursively)
         }
         children.clear()
         cachedResult = Unset
@@ -92,6 +122,10 @@ class RecomposeScope internal constructor(
         composed = false
         localSnapshot = null
         latestInputs = emptyList()
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
+        }
     }
 
     internal fun markDirty() {

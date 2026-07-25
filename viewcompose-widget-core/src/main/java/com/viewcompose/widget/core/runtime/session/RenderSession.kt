@@ -75,7 +75,11 @@ class RenderSession(
                 nodes = tree,
             )
         } catch (error: Exception) {
-            preparedComposition?.abort()
+            try {
+                preparedComposition?.abort()
+            } catch (abortError: Throwable) {
+                error.addSuppressed(abortError)
+            }
             Log.e(debugTag, "Render failed, restored previous composition and view tree", error)
             return
         }

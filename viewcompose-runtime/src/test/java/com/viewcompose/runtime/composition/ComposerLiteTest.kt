@@ -402,6 +402,58 @@ class ComposerLiteTest {
     }
 
     @Test
+    fun `abandon callback failure does not prevent transaction rollback`() {
+        val composer = ComposerLite()
+        val retained = composer.composeRoot {
+            composer.remember(keys = listOf("retained")) { Any() }
+        }
+        val throwingObserver = object : RememberObserver {
+            override fun onRemembered() = Unit
+
+            override fun onForgotten() = Unit
+
+            override fun onAbandoned() {
+                error("abandon failed")
+            }
+        }
+
+        composer.requestRootRecompose()
+        val prepared = composer.prepareRoot {
+            composer.remember(keys = listOf("replacement")) {
+                throwingObserver
+            }
+        }
+        val error = runCatching(prepared::abort).exceptionOrNull()
+
+        composer.requestRootRecompose()
+        val restored = composer.composeRoot {
+            composer.remember(keys = listOf("retained")) { Any() }
+        }
+        assertTrue(error is IllegalStateException)
+        assertSame(retained, restored)
+    }
+
+    @Test
+    fun `side effect failure does not skip later committed effects`() {
+        val composer = ComposerLite()
+        val events = mutableListOf<String>()
+        composer.composeRoot {
+            composer.sideEffect {
+                events += "first"
+                error("side effect failed")
+            }
+            composer.sideEffect {
+                events += "second"
+            }
+        }
+
+        val error = runCatching(composer::commitSideEffects).exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertEquals(listOf("first", "second"), events)
+    }
+
+    @Test
     fun `saveable slot keys are deterministic across composer recreation`() {
         fun collectKeys(): List<String> {
             val composer = ComposerLite()

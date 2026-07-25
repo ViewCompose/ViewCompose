@@ -72,7 +72,11 @@ class ComposerLite(
                 onAbort = { abortAttempt(attempt) },
             )
         } catch (error: Throwable) {
-            abortAttempt(attempt)
+            try {
+                abortAttempt(attempt)
+            } catch (abortError: Throwable) {
+                error.addSuppressed(abortError)
+            }
             throw error
         } finally {
             snapshot.dispose()
@@ -225,11 +229,24 @@ class ComposerLite(
         val sideEffectOperations = pendingSideEffects.toList()
         pendingDisposableEffects.clear()
         pendingSideEffects.clear()
+        val failures = mutableListOf<Throwable>()
         disposableOperations.forEach { operation ->
-            operation()
+            try {
+                operation()
+            } catch (error: Throwable) {
+                failures += error
+            }
         }
         sideEffectOperations.forEach { operation ->
-            operation()
+            try {
+                operation()
+            } catch (error: Throwable) {
+                failures += error
+            }
+        }
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
         }
     }
 
@@ -252,11 +269,26 @@ class ComposerLite(
     }
 
     fun dispose() {
-        activeAttempt?.let(::abortAttempt)
+        val failures = mutableListOf<Throwable>()
+        activeAttempt?.let { attempt ->
+            try {
+                abortAttempt(attempt)
+            } catch (error: Throwable) {
+                failures += error
+            }
+        }
         pendingDisposableEffects.clear()
         pendingSideEffects.clear()
         invalidationQueue.clear()
-        slotTable.dispose()
+        try {
+            slotTable.dispose()
+        } catch (error: Throwable) {
+            failures += error
+        }
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
+        }
     }
 
     private fun <T> composeScope(
@@ -420,12 +452,23 @@ class ComposerLite(
                 scope !in attempt.checkpoints && scope.parent in attempt.checkpoints
             }
 
+        val failures = mutableListOf<Throwable>()
+        fun cleanup(block: () -> Unit) {
+            try {
+                block()
+            } catch (error: Throwable) {
+                failures += error
+            }
+        }
+
         scopesBeforeRestore.forEach { scope ->
             val checkpoint = attempt.checkpoints[scope] ?: return@forEach
             scope.rememberSlots.forEachIndexed { index, slot ->
                 val previous = checkpoint.rememberSlots.getOrNull(index)?.value
                 if (slot.value !== previous) {
-                    (slot.value as? RememberObserver)?.onAbandoned()
+                    (slot.value as? RememberObserver)?.let { observer ->
+                        cleanup(observer::onAbandoned)
+                    }
                 }
             }
         }
@@ -435,7 +478,9 @@ class ComposerLite(
             }
             scope.restore(checkpoint)
         }
-        newScopeRoots.forEach(RecomposeScope::abandonRecursively)
+        newScopeRoots.forEach { scope ->
+            cleanup(scope::abandonRecursively)
+        }
 
         (attempt.drainedInvalidations + queuedDuringAttempt)
             .distinct()
@@ -444,6 +489,10 @@ class ComposerLite(
         invalidatedExistingScopes.forEach { scope ->
             scope.markDirtyWithAncestors()
             invalidationQueue.enqueue(scope)
+        }
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
         }
     }
 
