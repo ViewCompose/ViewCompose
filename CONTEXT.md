@@ -17,7 +17,9 @@
 5. [MODIFIER.md](/Users/gzq/AndroidStudioProjects/UIFramework/MODIFIER.md)
 6. [NODE_PROPS.md](/Users/gzq/AndroidStudioProjects/UIFramework/NODE_PROPS.md)
 7. [PERFORMANCE.md](/Users/gzq/AndroidStudioProjects/UIFramework/PERFORMANCE.md)
-8. [SESSION_CONTAINER_CHECKLIST.md](/Users/gzq/AndroidStudioProjects/UIFramework/SESSION_CONTAINER_CHECKLIST.md)
+8. [TEXT_INPUT.md](/Users/gzq/AndroidStudioProjects/UIFramework/TEXT_INPUT.md)
+9. [LAZY_COLLECTIONS.md](/Users/gzq/AndroidStudioProjects/UIFramework/LAZY_COLLECTIONS.md)
+10. [SESSION_CONTAINER_CHECKLIST.md](/Users/gzq/AndroidStudioProjects/UIFramework/SESSION_CONTAINER_CHECKLIST.md)
 
 ## 3. 当前“有效文档”边界
 
@@ -30,7 +32,9 @@
 5. `MODIFIER.md`：Modifier/NodeSpec/Theme 边界
 6. `NODE_PROPS.md`：NodeSpec-only 语义规范
 7. `PERFORMANCE.md`：性能基线与优化主线
-8. `SESSION_CONTAINER_CHECKLIST.md`：延迟 session 容器专项检查表
+8. `TEXT_INPUT.md`：完整纯文本编辑模型与原生桥接边界
+9. `LAZY_COLLECTIONS.md`：Lazy 状态、结构化条目与 RecyclerView 映射
+10. `SESSION_CONTAINER_CHECKLIST.md`：延迟 session 容器专项检查表
 
 ## 4. 历史文档策略
 

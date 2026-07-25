@@ -43,6 +43,7 @@
 18. renderer apply transaction 已落地：递归 patch 共享事务、延迟释放 removal，并对绑定/插入失败执行旧树 best-effort 恢复。
 19. 无编译器重组性能收口已落地：VNode 引用保持、等价结果规范化、同帧失效合并、显式 `RecomposeBoundary`、组合/View mutation journal、renderer 快速跳过与按需诊断。
 20. 完整纯文本编辑模型已硬切落地：`viewcompose-text-core` 提供 text/selection/composition、原子 EditingBuffer、输入变换和撤销/重做；Android renderer 通过专用 `AppCompatEditText/InputConnection` 控制器同步，`rememberTextFieldState` 保存 text + selection。
+21. Lazy 容器 P1 已落地：`LazyListState` 提供完整可观察 layout snapshot、边界与滚动控制；结构化 DSL 支持稳定 key、sticky header、contentType、Grid span、非对称 padding、reverse layout、用户滚动开关和预取策略。
 
 ### 2.2 Demo 与验证层
 
@@ -56,7 +57,7 @@
 | Milestone | 状态 | 完成态字段（C/U/D/UI） | 说明 |
 | --- | --- | --- | --- |
 | A：Overlay 稳定性收口 | Completed | C:✅ U:✅ D:✅ UI:✅ | Overlay host 已统一 reconcile 模板，Dialog/Popup/ModalBottomSheet/反馈流均已回归 |
-| B：Collections 与容器扩展 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 已补 `LazyVerticalGrid/HorizontalPager/VerticalPager` 专项回归，并新增 rotate-order 可见刷新断言（`qaFull` 21/21）；下一步聚焦 sticky headers 与 list state 抽象 |
+| B：Collections 与容器扩展 | Completed | C:✅ U:✅ D:✅ UI:✅ | Lazy/Pager 基线、结构化条目、完整 list state、sticky headers、contentType/span、预取与保存恢复均已落地 |
 | C：Input 与表单态增强 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | `TextFieldState` 硬切、selection/composition、IME batch、撤销历史、输入变换、键盘动作、autofill 与保存恢复已落地；仍需真实设备 IME/无障碍矩阵 |
 | D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 已补 `DiffUtil + payload`、`SlotTable Lite` 子树重组与 `SkipSubtree/skippedSubtrees` 主路径，下一步聚焦可视化与发布态优化 |
 | E：开发预览与截图回归 | In Progress | C:✅ U:✅ D:✅ UI:✅ | `viewcompose-preview` + Compose Preview + Paparazzi + `qaPreview` 已落地；下一步补全新增组件自动缺口提示与深色快照集 |
@@ -79,7 +80,7 @@
 | Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、suspend `produceState` 与 renderer 失败恢复已落地 | 增强异常诊断，并继续约束 `AndroidView` 外部副作用边界 |
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
 | Lifecycle / ViewModel Integration | 模块拆分与 API 硬切已完成（`viewcompose-lifecycle` / `viewcompose-viewmodel`） | 继续补强生命周期边界态与 SavedState 复杂场景回归 |
-| Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + 基础分页容器可用 | sticky headers、list state 抽象 |
+| Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 list state、sticky headers、contentType/span 与预取已落地 | Paging 3 适配保持可选集成，不进入核心契约 |
 | Overlay | Dialog/Popup/ModalBottomSheet/Snackbar/Toast 主链路已打通 | Popup 锚点定位增强、反馈队列策略收口 |
 | Theming | 已完成 token 收口升级（语义色、tier typography、interactive shape、defaults 语义守卫），并新增 `Diagnostics -> 主题诊断` 作为当前主题语义的权威人工验证入口 | Android 动态色/shape 桥接与 token 生命周期治理 |
 | Interop | `AndroidView` 支持 update、复用 reset、释放 release 与 nativeView patch 更新 | 强化复杂原生 View 场景与主题协同 |
@@ -138,12 +139,15 @@
 1. `LazyRow`、`LazyVerticalGrid`、`HorizontalPager/VerticalPager` 最小可用实现
 2. 新增容器纳入 [SESSION_CONTAINER_CHECKLIST.md](/Users/gzq/AndroidStudioProjects/UIFramework/SESSION_CONTAINER_CHECKLIST.md)
 3. 结构稳定 + 闭包变化刷新路径专项测试
+4. `LazyListState` 完整布局快照、边界状态和滚动控制
+5. 结构化 item DSL、sticky header、contentType、Grid span 与预取策略
 
 完成标准：
 
 1. 容器级空 diff 刷新能力可验证
 2. keyed reorder 与本地状态保持稳定
 3. demo 提供 stress 场景可人工验证
+4. sticky header 推挤、稳定 ID、view type 分区与状态恢复有自动化回归
 
 ### Milestone C：Input 与表单态增强
 

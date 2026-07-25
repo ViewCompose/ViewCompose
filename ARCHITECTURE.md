@@ -95,6 +95,8 @@ renderer 侧避免“单目录平铺”，按职责拆到二级目录：
    - TextField 固定通过 `ViewComposeEditText + AndroidTextFieldController` 同步完整编辑快照；禁止在普通重组补丁中无条件 `setText()` 或把光标移动到末尾
 4. `viewcompose-renderer/src/main/java/.../view/lazy/{adapter,focus,layout,reuse,session,state}`
    - 延迟容器子系统按能力拆分（适配器、焦点跟随、间距布局、复用策略、session、状态）
+   - `LazyListState` 由 RecyclerView scroll/layout/adapter observer 推送不可变布局快照；绑定同一 RecyclerView 时禁止重置 anchor
+   - item key/contentType/span/sticky kind 属于 `ui-contract`，Android 侧分别映射 stable ID、view type、SpanSizeLookup 与 pinned header decoration
 
 ## 3. 核心调用链
 
@@ -288,7 +290,7 @@ flowchart TD
 1. `ViewTreeRenderer` 仍是复杂度热点，新增能力优先拆辅助对象，不继续堆主类。
 2. 当前是“节点组级重组 + 根级遍历调度”模型；后续优化重点是提升组键稳定性诊断与更细粒度跳过命中率。
 3. `viewcompose-widget-core` 已解除对 `renderer` 的直依赖；后续演进优先维持 `runtime/ui-contract/widget-core/renderer/host-android` 分层，不回流耦合。
-4. 延迟 session 容器专项回归已覆盖 `LazyVerticalGrid/HorizontalPager/VerticalPager`；后续重点转向 sticky headers 与复杂 list state 组合场景。
+4. 延迟 session 容器专项回归已覆盖 `LazyVerticalGrid/HorizontalPager/VerticalPager`；Lazy P1 已补齐结构化 item DSL、完整可观察 layout state、sticky headers、contentType/span、预取和边界能力。
 5. `AndroidHostBridge` 已迁至 `viewcompose-host-android`；若后续目标扩展到跨平台，下一步重点是进一步收口 `widget-core` 内 Android 专属 bridge（theme/environment）边界。
 
 ## 6. 变更落地清单（必须执行）

@@ -51,6 +51,20 @@ class LazyListState(
     val lastScrolledForward: Boolean
         get() = snapshot.lastScrolledForward
 
+    val firstVisibleItemKey: Any?
+        get() = layoutInfo.visibleItemsInfo
+            .firstOrNull { item -> item.index == firstVisibleItemIndex }
+            ?.key
+
+    val lastVisibleItemIndex: Int
+        get() = layoutInfo.visibleItemsInfo.maxOfOrNull { item -> item.index } ?: 0
+
+    val isAtStart: Boolean
+        get() = !canScrollBackward
+
+    val isAtEnd: Boolean
+        get() = layoutInfo.totalItemsCount > 0 && !canScrollForward
+
     /**
      * Immediately places [index] at the start edge, shifted by [scrollOffset] pixels.
      */

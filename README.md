@@ -192,6 +192,31 @@ Button(text = "Undo", enabled = username.canUndo, onClick = { username.undo() })
 
 `TextFieldState` owns text, directional selection, and the ephemeral IME composing range. Native `AppCompatEditText` remains the platform editor while the framework synchronizes complete edit snapshots atomically.
 
+### Lazy 容器状态 | Lazy Collection State
+
+```kotlin
+val listState = rememberLazyListState()
+
+LazyColumn(
+    state = listState,
+    contentPadding = LazyContentPadding.symmetric(horizontal = 16.dp, vertical = 8.dp),
+    prefetchPolicy = LazyLayoutPrefetchPolicy(initialPrefetchItemCount = 4),
+) {
+    stickyHeader(key = "header", contentType = "header") {
+        Text("Header")
+    }
+    items(
+        items = rows,
+        key = { row -> row.id },
+        contentType = { "row" },
+    ) { row ->
+        RowContent(row)
+    }
+}
+```
+
+`LazyListState` 可观察首尾可见项、完整 viewport、滚动态和边界能力，并提供立即/动画滚动与停止控制。结构化 DSL 支持 sticky header、content type、Grid span、非对称 padding、reverse layout、用户滚动开关和预取策略。详见 [LAZY_COLLECTIONS.md](./LAZY_COLLECTIONS.md)。
+
 ## 预览与截图回归 | Preview & Snapshot Regression
 
 - 预览模块：`viewcompose-preview`  
@@ -212,6 +237,7 @@ Button(text = "Undo", enabled = username.canUndo, onClick = { username.undo() })
 - [WORKFLOW.md](./WORKFLOW.md): 开发流程与门禁 / Development workflow and quality gates
 - [PERFORMANCE.md](./PERFORMANCE.md): 性能基线与约束 / Performance baseline and constraints
 - [TEXT_INPUT.md](./TEXT_INPUT.md): 文本编辑模型与原生桥接 / Text editing model and native bridge
+- [LAZY_COLLECTIONS.md](./LAZY_COLLECTIONS.md): Lazy 状态与高级容器能力 / Lazy state and advanced collection capabilities
 - [THEMING.md](./THEMING.md): 主题系统 / Theming system
 - [PREVIEW.md](./PREVIEW.md): 开发预览说明 / Dev preview guide
 - [ROADMAP.md](./ROADMAP.md): 路线图 / Roadmap
