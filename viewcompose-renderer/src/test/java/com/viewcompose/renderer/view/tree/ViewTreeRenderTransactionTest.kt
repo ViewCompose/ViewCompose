@@ -3,12 +3,17 @@ package com.viewcompose.renderer.view.tree
 import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
+import com.viewcompose.text.TextRange
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.ColumnNodeProps
+import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -172,6 +177,56 @@ class ViewTreeRenderTransactionTest {
         assertEquals(1, releases)
     }
 
+    @Test
+    fun `failed frame restores text value selection and composing snapshot`() {
+        val container = FrameLayout(context)
+        val state = TextFieldState(
+            TextFieldValue(
+                text = "old",
+                selection = TextRange(1, 3),
+                composition = TextRange(0, 3),
+            ),
+        )
+        val previous = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                textFieldNode(state),
+                androidNode(key = "failure", value = "stable"),
+            ),
+        ).mountedNodes
+
+        state.setTextAndPlaceCursorAtEnd("new value")
+        val error = runCatching {
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = previous,
+                nodes = listOf(
+                    textFieldNode(state),
+                    androidNode(
+                        key = "failure",
+                        value = "broken",
+                        failUpdate = true,
+                    ),
+                ),
+            )
+        }.exceptionOrNull()
+
+        val view = previous[0].view as ViewComposeEditText
+        assertTrue(error is IllegalStateException)
+        assertEquals("old", view.text.toString())
+        assertEquals(1, view.selectionStart)
+        assertEquals(3, view.selectionEnd)
+        assertEquals(
+            0,
+            android.view.inputmethod.BaseInputConnection.getComposingSpanStart(view.editableText),
+        )
+        assertEquals(
+            3,
+            android.view.inputmethod.BaseInputConnection.getComposingSpanEnd(view.editableText),
+        )
+    }
+
     private fun androidNode(
         key: Any,
         value: String,
@@ -210,6 +265,38 @@ class ViewTreeRenderTransactionTest {
                 horizontalAlignment = HorizontalAlignment.Start,
             ),
             children = children.toList(),
+        )
+    }
+
+    private fun textFieldNode(state: TextFieldState): VNode {
+        return VNode(
+            type = NodeType.TextField,
+            key = "text-field",
+            spec = TextFieldNodeProps(
+                state = state,
+                value = state.value,
+                placeholder = "",
+                enabled = true,
+                singleLine = true,
+                minLines = 1,
+                maxLines = 1,
+                keyboardOptions = TextFieldKeyboardOptions(),
+                inputTransformation = null,
+                onKeyboardAction = null,
+                onFocusChange = null,
+                autofillHints = emptySet(),
+                hintColor = 0,
+                readOnly = false,
+                textColor = 0xFF000000.toInt(),
+                textSizeSp = 16,
+                backgroundColor = 0,
+                borderWidth = 0,
+                borderColor = 0,
+                cornerRadius = 0,
+                minHeight = 0,
+                paddingHorizontal = 0,
+                paddingVertical = 0,
+            ),
         )
     }
 }

@@ -8,7 +8,7 @@ import com.viewcompose.runtime.mutableStateOf
  */
 class TextFieldState(
     initialValue: TextFieldValue = TextFieldValue(""),
-    private val historyLimit: Int = DEFAULT_HISTORY_LIMIT,
+    val historyLimit: Int = DEFAULT_HISTORY_LIMIT,
 ) {
     init {
         require(historyLimit > 0) { "historyLimit must be greater than zero." }

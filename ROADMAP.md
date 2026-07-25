@@ -42,6 +42,7 @@
 17. 结构化协程已落地：`RenderSession` 统一持有组合父 Job，提供 `LaunchedEffect/rememberCoroutineScope`，`produceState` 已硬切 suspend + `awaitDispose`，Flow 与动画已移除独立根 Job。
 18. renderer apply transaction 已落地：递归 patch 共享事务、延迟释放 removal，并对绑定/插入失败执行旧树 best-effort 恢复。
 19. 无编译器重组性能收口已落地：VNode 引用保持、等价结果规范化、同帧失效合并、显式 `RecomposeBoundary`、组合/View mutation journal、renderer 快速跳过与按需诊断。
+20. 完整纯文本编辑模型已硬切落地：`viewcompose-text-core` 提供 text/selection/composition、原子 EditingBuffer、输入变换和撤销/重做；Android renderer 通过专用 `AppCompatEditText/InputConnection` 控制器同步，`rememberTextFieldState` 保存 text + selection。
 
 ### 2.2 Demo 与验证层
 
@@ -56,7 +57,7 @@
 | --- | --- | --- | --- |
 | A：Overlay 稳定性收口 | Completed | C:✅ U:✅ D:✅ UI:✅ | Overlay host 已统一 reconcile 模板，Dialog/Popup/ModalBottomSheet/反馈流均已回归 |
 | B：Collections 与容器扩展 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 已补 `LazyVerticalGrid/HorizontalPager/VerticalPager` 专项回归，并新增 rotate-order 可见刷新断言（`qaFull` 21/21）；下一步聚焦 sticky headers 与 list state 抽象 |
-| C：Input 与表单态增强 | Next | C:✅ U:✅ D:✅ UI:⚠ | 已补 Input/Navigation smoke 基线；focus/IME/表单组合专项仍待系统化补齐 |
+| C：Input 与表单态增强 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | `TextFieldState` 硬切、selection/composition、IME batch、撤销历史、输入变换、键盘动作、autofill 与保存恢复已落地；仍需真实设备 IME/无障碍矩阵 |
 | D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 已补 `DiffUtil + payload`、`SlotTable Lite` 子树重组与 `SkipSubtree/skippedSubtrees` 主路径，下一步聚焦可视化与发布态优化 |
 | E：开发预览与截图回归 | In Progress | C:✅ U:✅ D:✅ UI:✅ | `viewcompose-preview` + Compose Preview + Paparazzi + `qaPreview` 已落地；下一步补全新增组件自动缺口提示与深色快照集 |
 | F：动画与手势首轮覆盖 | Completed | C:✅ U:✅ D:✅ UI:✅ | 已完成 `viewcompose-animation-core` + `viewcompose-animation` 分层、`Transition` 共享时钟重构、`AnimatedVisibility` Compose 语义对齐、`animateContentSize` 布局级动画落地、`Animatable` 易用性重构、`InfiniteTransition` typed API、Android interop（MotionLayout/TransitionManager/ObjectAnimator/ViewPropertyAnimator/DynamicAnimation）与 demo+preview+回归测试收口 |
@@ -74,6 +75,7 @@
 | 方向 | 当前状态 | 下一阶段重点 |
 | --- | --- | --- |
 | Foundations / Input / Layout / State | 已形成 v1 主能力 | 聚焦边界态、表单/焦点态与复杂组合场景 |
+| Text Editing | `TextFieldState + EditingBuffer + InputTransformation + AppCompatEditText/InputConnection bridge` 已落地，支持 selection/composition/undo/save | 真实设备覆盖主流中文/日文 IME、TalkBack、硬件键盘；富文本/附件作为独立文档模型推进 |
 | Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、suspend `produceState` 与 renderer 失败恢复已落地 | 增强异常诊断，并继续约束 `AndroidView` 外部副作用边界 |
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
 | Lifecycle / ViewModel Integration | 模块拆分与 API 硬切已完成（`viewcompose-lifecycle` / `viewcompose-viewmodel`） | 继续补强生命周期边界态与 SavedState 复杂场景回归 |
@@ -148,13 +150,16 @@
 交付：
 
 1. focus/IME action 回调链增强
-2. 表单校验与只读/错误态组合场景
-3. 主题和状态切换下输入控件视觉一致性回归
+2. `TextFieldState` 完整值模型（text/selection/composition）与输入事务
+3. 输入变换、撤销/重做、autofill 与保存恢复
+4. 表单校验与只读/错误态组合场景
+5. 主题和状态切换下输入控件视觉一致性回归
 
 完成标准：
 
 1. 输入交互路径可预测且无跨控件串扰
 2. 文案裁剪与控件高度问题可通过 UI 测试稳定复现和防回归
+3. 中文/日文组合输入、方向选区、外部状态更新和进程恢复均不跳光标、不丢文本
 
 ### Milestone D：Diagnostics + Performance 联动
 

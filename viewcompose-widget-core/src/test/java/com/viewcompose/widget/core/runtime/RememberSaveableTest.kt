@@ -2,6 +2,9 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
+import com.viewcompose.text.TextRange
 import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.ui.state.LazyListPosition
 import org.junit.Assert.assertEquals
@@ -214,6 +217,37 @@ class RememberSaveableTest {
         secondHarness.dispose()
     }
 
+    @Test
+    fun `remember text field state restores text and directional selection only`() {
+        val firstRegistry = bundleLikeRegistry()
+        val firstHarness = ComposerRuntimeHarness()
+        val firstState = renderTextFieldState(
+            harness = firstHarness,
+            registry = firstRegistry,
+        )
+        firstState.updateFromInput(
+            TextFieldValue(
+                text = "ni",
+                selection = TextRange(2, 0),
+                composition = TextRange(0, 2),
+            ),
+        )
+        val saved = firstRegistry.performSave()
+        firstHarness.dispose()
+
+        val secondHarness = ComposerRuntimeHarness()
+        val restoredState = renderTextFieldState(
+            harness = secondHarness,
+            registry = bundleLikeRegistry(saved),
+        )
+
+        assertEquals("ni", restoredState.text)
+        assertEquals(TextRange(2, 0), restoredState.selection)
+        assertNull(restoredState.composition)
+        assertTrue(!restoredState.canUndo)
+        secondHarness.dispose()
+    }
+
     private fun renderCounter(
         harness: ComposerRuntimeHarness,
         registry: SaveableStateRegistry,
@@ -243,6 +277,21 @@ class RememberSaveableTest {
                     state = rememberSaveable(input) {
                         mutableStateOf(input)
                     }
+                }
+            }
+        }
+        return state
+    }
+
+    private fun renderTextFieldState(
+        harness: ComposerRuntimeHarness,
+        registry: SaveableStateRegistry,
+    ): TextFieldState {
+        lateinit var state: TextFieldState
+        harness.render {
+            UiTreeBuilder().apply {
+                ProvideSaveableStateRegistry(registry) {
+                    state = rememberTextFieldState(initialText = "fallback")
                 }
             }
         }

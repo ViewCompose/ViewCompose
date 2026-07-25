@@ -24,8 +24,8 @@
 
 - 声明式 DSL + Android View 宿主，兼顾可读性与传统 View 生态互操作。  
   Declarative DSL + Android View host, balancing readability and interoperability with the classic View ecosystem.
-- 明确的模块分层：`runtime / ui-contract / widget-core / renderer / host-android`。  
-  Clear module layering: `runtime / ui-contract / widget-core / renderer / host-android`.
+- 明确的模块分层：`runtime / text-core / ui-contract / widget-core / renderer / host-android`。
+  Clear module layering: `runtime / text-core / ui-contract / widget-core / renderer / host-android`.
 - 能力模块化：动画、手势、图形、约束布局均独立演进。  
   Capability modules evolve independently: animation, gesture, graphics, and constraint layout.
 - 内建开发预览与截图回归链路（Compose Preview bridge + Paparazzi）。  
@@ -51,6 +51,7 @@
 | 模块 Module | 说明 Description |
 | --- | --- |
 | `viewcompose-runtime` | 状态系统与观察机制（纯 Kotlin/JVM）。 / State system and observation (pure Kotlin/JVM). |
+| `viewcompose-text-core` | 文本、选区、IME 组合区、编辑事务与撤销历史（纯 Kotlin/JVM）。 / Text, selection, IME composition, edit transactions, and undo history. |
 | `viewcompose-ui-contract` | 节点语义契约（NodeSpec）。 / Node semantic contract (NodeSpec). |
 | `viewcompose-widget-core` | DSL、Theme、Defaults、Locals。 / DSL, Theme, Defaults, Locals. |
 | `viewcompose-renderer` | Android View 渲染实现（reconcile/binder/patch/container）。 / Android View renderer implementation (reconcile/binder/patch/container). |
@@ -161,6 +162,36 @@ Tasks created by `LaunchedEffect`, `produceState`, and `rememberCoroutineScope` 
 `RecomposeBoundary` 不创建原生 View，用于显式隔离一个可输出多个兄弟节点的重组区域。其内部读取的 snapshot state 会自动失效；普通 Kotlin 捕获值必须放入 `inputs`。
 `RecomposeBoundary` emits no native View and explicitly isolates a restartable region that may output multiple siblings. Snapshot state reads invalidate it automatically; ordinary captured Kotlin values must be declared in `inputs`.
 
+### 文本编辑状态 | Text Editing State
+
+```kotlin
+val username = rememberTextFieldState(initialText = "ViewCompose")
+
+TextField(
+    state = username,
+    label = "Username",
+    inputTransformation = InputTransformation.maxCodePoints(32),
+    keyboardOptions = TextFieldKeyboardOptions(
+        capitalization = TextFieldCapitalization.Words,
+        imeAction = TextFieldImeAction.Done,
+    ),
+    onKeyboardAction = { action ->
+        if (action == TextFieldImeAction.Done) {
+            submit(username.text)
+            true
+        } else {
+            false
+        }
+    },
+)
+
+Button(text = "Undo", enabled = username.canUndo, onClick = { username.undo() })
+```
+
+`TextFieldState` 同时拥有文本、方向选区和临时 IME 组合区。原生 `AppCompatEditText` 继续负责输入法、无障碍、硬件键盘与系统选区交互；框架控制器以原子方式同步完整编辑值，外部编辑采用最小 `Editable.replace()`。`rememberTextFieldState` 跨宿主重建保存文本与选区，但不会恢复失效的 IME 组合会话或撤销历史。详见 [TEXT_INPUT.md](./TEXT_INPUT.md)。
+
+`TextFieldState` owns text, directional selection, and the ephemeral IME composing range. Native `AppCompatEditText` remains the platform editor while the framework synchronizes complete edit snapshots atomically.
+
 ## 预览与截图回归 | Preview & Snapshot Regression
 
 - 预览模块：`viewcompose-preview`  
@@ -180,6 +211,7 @@ Tasks created by `LaunchedEffect`, `produceState`, and `rememberCoroutineScope` 
 - [ARCHITECTURE.md](./ARCHITECTURE.md): 架构边界与模块职责 / Architecture boundaries and module responsibilities
 - [WORKFLOW.md](./WORKFLOW.md): 开发流程与门禁 / Development workflow and quality gates
 - [PERFORMANCE.md](./PERFORMANCE.md): 性能基线与约束 / Performance baseline and constraints
+- [TEXT_INPUT.md](./TEXT_INPUT.md): 文本编辑模型与原生桥接 / Text editing model and native bridge
 - [THEMING.md](./THEMING.md): 主题系统 / Theming system
 - [PREVIEW.md](./PREVIEW.md): 开发预览说明 / Dev preview guide
 - [ROADMAP.md](./ROADMAP.md): 路线图 / Roadmap
