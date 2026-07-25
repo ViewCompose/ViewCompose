@@ -13,6 +13,7 @@ interface CoreRenderEngine {
         container: ViewGroup,
         previousMountedNodes: List<Any>,
         nodes: List<VNode>,
+        collectDiagnostics: Boolean,
     ): CoreRenderFrame
 
     fun disposeMounted(
@@ -69,6 +70,7 @@ internal object CoreRenderEngineProvider {
             container: ViewGroup,
             previousMountedNodes: List<Any>,
             nodes: List<VNode>,
+            collectDiagnostics: Boolean,
         ): CoreRenderFrame {
             return CoreRenderFrame(
                 mountedNodes = previousMountedNodes,

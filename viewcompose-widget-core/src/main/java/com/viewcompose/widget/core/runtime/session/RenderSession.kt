@@ -73,6 +73,7 @@ class RenderSession(
                 container = container,
                 previousMountedNodes = mountedNodes,
                 nodes = tree,
+                collectDiagnostics = debug || onRenderStats != null || onRenderResult != null,
             )
         } catch (error: Exception) {
             try {

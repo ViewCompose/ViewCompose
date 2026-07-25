@@ -19,6 +19,8 @@ import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.ChildHostViewGroup
 
 internal object ViewTreePatchPipeline {
+    private val emptyStats = RenderStats()
+
     data class ExecutionResult(
         val mountedNodes: List<MountedNode>,
         val stats: RenderStats,
@@ -27,6 +29,14 @@ internal object ViewTreePatchPipeline {
     private data class PatchApplicationResult(
         val mountedNode: MountedNode,
         val stats: RenderStats,
+    )
+
+    private data class PreparedPatch(
+        val patch: RenderPatch<MountedNode>,
+        val bindingPlan: NodeBindingPlan? = null,
+        val nextResolved: ResolvedModifiers? = null,
+        val layoutParams: ViewGroup.LayoutParams? = null,
+        val updatesLayoutParams: Boolean = false,
     )
 
     internal class RenderTransaction internal constructor(
@@ -180,28 +190,30 @@ internal object ViewTreePatchPipeline {
         warningTag: String,
         emittedModifierWarnings: MutableSet<String>,
         transaction: RenderTransaction,
+        collectStats: Boolean,
         renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
     ): ExecutionResult {
         val mountContainer = resolveChildHost(container)
-        preflight(
+        val preparedPatches = preflight(
             container = mountContainer,
             reconcileResult = reconcileResult,
             warningTag = warningTag,
             emittedModifierWarnings = emittedModifierWarnings,
         )
-        var stats = RenderStats()
+        var stats = emptyStats
         val nextMounted = mutableListOf<MountedNode>()
-        reconcileResult.patches.forEach { patch ->
+        preparedPatches.forEach { preparedPatch ->
             val patchResult = applyPatch(
                 container = mountContainer,
-                patch = patch,
+                preparedPatch = preparedPatch,
                 defaultRippleColor = defaultRippleColor,
-                warningTag = warningTag,
-                emittedModifierWarnings = emittedModifierWarnings,
                 transaction = transaction,
+                collectStats = collectStats,
                 renderChildren = renderChildren,
             )
-            stats = stats.mergeWith(patchResult.stats)
+            if (collectStats) {
+                stats = stats.mergeWith(patchResult.stats)
+            }
             nextMounted += patchResult.mountedNode
         }
         reconcileResult.removals.forEach { removal ->
@@ -210,7 +222,9 @@ internal object ViewTreePatchPipeline {
                 removal = removal,
                 transaction = transaction,
             )
-            stats = stats.withRemoval()
+            if (collectStats) {
+                stats = stats.withRemoval()
+            }
         }
         return ExecutionResult(
             mountedNodes = nextMounted,
@@ -220,16 +234,16 @@ internal object ViewTreePatchPipeline {
 
     private fun applyPatch(
         container: ViewGroup,
-        patch: RenderPatch<MountedNode>,
+        preparedPatch: PreparedPatch,
         defaultRippleColor: Int,
-        warningTag: String,
-        emittedModifierWarnings: MutableSet<String>,
         transaction: RenderTransaction,
+        collectStats: Boolean,
         renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
     ): PatchApplicationResult {
+        val patch = preparedPatch.patch
         return when (patch) {
             is InsertPatch -> {
-                val resolved = patch.nextVNode.modifier.resolve()
+                val resolved = checkNotNull(preparedPatch.nextResolved)
                 val mountedNode = mountNode(
                     context = container.context,
                     node = patch.nextVNode,
@@ -241,24 +255,17 @@ internal object ViewTreePatchPipeline {
                 container.addView(
                     mountedNode.view,
                     patch.targetIndex.coerceAtMost(container.childCount),
-                    ViewLayoutParamsFactory.createLayoutParams(
-                        parent = container,
-                        node = patch.nextVNode,
-                        warningTag = warningTag,
-                        emittedModifierWarnings = emittedModifierWarnings,
-                        resolved = resolved,
-                    ),
+                    checkNotNull(preparedPatch.layoutParams),
                 )
                 PatchApplicationResult(
                     mountedNode = mountedNode,
-                    stats = RenderStats(inserts = 1),
+                    stats = if (collectStats) RenderStats(inserts = 1) else emptyStats,
                 )
             }
 
             is ReusePatch -> {
                 val mountedNode = patch.payload
-                val nextResolved = patch.nextVNode.modifier.resolve()
-                val bindingPlan = NodeBindingDiffer.plan(mountedNode.vnode, patch.nextVNode)
+                val bindingPlan = checkNotNull(preparedPatch.bindingPlan)
                 if (patch.nextVNode.type == NodeType.AndroidView &&
                     mountedNode.vnode.spec != patch.nextVNode.spec
                 ) {
@@ -272,7 +279,7 @@ internal object ViewTreePatchPipeline {
                         view = mountedNode.view,
                         node = patch.nextVNode,
                         defaultRippleColor = defaultRippleColor,
-                        resolved = nextResolved,
+                        resolved = checkNotNull(preparedPatch.nextResolved),
                     )
 
                     NodeBindingPlan.SkipSelfOnly,
@@ -284,7 +291,7 @@ internal object ViewTreePatchPipeline {
                                 view = mountedNode.view,
                                 node = patch.nextVNode,
                                 defaultRippleColor = defaultRippleColor,
-                                resolved = nextResolved,
+                                resolved = checkNotNull(preparedPatch.nextResolved),
                             )
                         }
                         NodeViewBinderRegistry.applyPatch(
@@ -299,17 +306,8 @@ internal object ViewTreePatchPipeline {
                         }
                     }
                 }
-                val previousResolved = mountedNode.vnode.modifier.resolve()
-                if (bindingPlan is NodeBindingPlan.Rebind ||
-                    layoutModifiersChanged(previousResolved, nextResolved)
-                ) {
-                    mountedNode.view.layoutParams = ViewLayoutParamsFactory.createLayoutParams(
-                        parent = container,
-                        node = patch.nextVNode,
-                        warningTag = warningTag,
-                        emittedModifierWarnings = emittedModifierWarnings,
-                        resolved = nextResolved,
-                    )
+                if (preparedPatch.updatesLayoutParams) {
+                    mountedNode.view.layoutParams = checkNotNull(preparedPatch.layoutParams)
                     (container as? DeclarativeConstraintLayout)?.requestConstraintRebuild()
                 }
                 val childResult = if (shouldReconcileChildren(bindingPlan)) {
@@ -331,15 +329,19 @@ internal object ViewTreePatchPipeline {
                 )
                 PatchApplicationResult(
                     mountedNode = mountedNode,
-                    stats = childResult.stats.withReuse(
-                        result = when (bindingPlan) {
-                            NodeBindingPlan.Rebind -> ReuseBindingResult.Rebound
-                            NodeBindingPlan.SkipSelfOnly -> ReuseBindingResult.Skipped
-                            NodeBindingPlan.SkipSubtree -> ReuseBindingResult.SkippedSubtree
-                            is NodeBindingPlan.Patch -> ReuseBindingResult.Patched
-                        },
-                        nodeType = patch.nextVNode.type,
-                    ),
+                    stats = if (collectStats) {
+                        childResult.stats.withReuse(
+                            result = when (bindingPlan) {
+                                NodeBindingPlan.Rebind -> ReuseBindingResult.Rebound
+                                NodeBindingPlan.SkipSelfOnly -> ReuseBindingResult.Skipped
+                                NodeBindingPlan.SkipSubtree -> ReuseBindingResult.SkippedSubtree
+                                is NodeBindingPlan.Patch -> ReuseBindingResult.Patched
+                            },
+                            nodeType = patch.nextVNode.type,
+                        )
+                    } else {
+                        emptyStats
+                    },
                 )
             }
         }
@@ -366,7 +368,7 @@ internal object ViewTreePatchPipeline {
                 patches = emptyList(),
                 removals = emptyList(),
             ),
-            stats = RenderStats(),
+            stats = emptyStats,
         )
         return renderChildren(
             resolveChildHost(viewGroup),
@@ -386,7 +388,7 @@ internal object ViewTreePatchPipeline {
                 patches = emptyList(),
                 removals = emptyList(),
             ),
-            stats = RenderStats(),
+            stats = emptyStats,
         )
     }
 
@@ -437,28 +439,76 @@ internal object ViewTreePatchPipeline {
         reconcileResult: ReconcileResult<MountedNode>,
         warningTag: String,
         emittedModifierWarnings: MutableSet<String>,
-    ) {
-        reconcileResult.patches.forEach { patch ->
-            val nextNode = when (patch) {
-                is InsertPatch -> patch.nextVNode
-                is ReusePatch -> patch.nextVNode
-            }
-            val resolved = nextNode.modifier.resolve()
-            ViewLayoutParamsFactory.createLayoutParams(
-                parent = container,
-                node = nextNode,
-                warningTag = warningTag,
-                emittedModifierWarnings = emittedModifierWarnings,
-                resolved = resolved,
-            )
-            if (nextNode.type == NodeType.AndroidView) {
-                nextNode.requireSpec<AndroidViewNodeProps>()
-            }
-            if (patch is ReusePatch) {
-                NodeBindingDiffer.plan(
-                    previous = patch.payload.vnode,
-                    next = nextNode,
-                )
+    ): List<PreparedPatch> {
+        return reconcileResult.patches.map { patch ->
+            when (patch) {
+                is InsertPatch -> {
+                    val nextNode = patch.nextVNode
+                    val resolved = nextNode.modifier.resolve()
+                    if (nextNode.type == NodeType.AndroidView) {
+                        nextNode.requireSpec<AndroidViewNodeProps>()
+                    }
+                    PreparedPatch(
+                        patch = patch,
+                        nextResolved = resolved,
+                        layoutParams = ViewLayoutParamsFactory.createLayoutParams(
+                            parent = container,
+                            node = nextNode,
+                            warningTag = warningTag,
+                            emittedModifierWarnings = emittedModifierWarnings,
+                            resolved = resolved,
+                        ),
+                        updatesLayoutParams = true,
+                    )
+                }
+
+                is ReusePatch -> {
+                    val nextNode = patch.nextVNode
+                    val previousNode = patch.payload.vnode
+                    val bindingPlan = NodeBindingDiffer.plan(
+                        previous = previousNode,
+                        next = nextNode,
+                    )
+                    if (nextNode.type == NodeType.AndroidView) {
+                        nextNode.requireSpec<AndroidViewNodeProps>()
+                    }
+                    val nextResolved = when {
+                        bindingPlan == NodeBindingPlan.Rebind -> nextNode.modifier.resolve()
+                        bindingPlan is NodeBindingPlan.Patch && bindingPlan.modifierChanged -> {
+                            nextNode.modifier.resolve()
+                        }
+
+                        else -> null
+                    }
+                    val updatesLayoutParams = when {
+                        bindingPlan == NodeBindingPlan.Rebind -> true
+                        bindingPlan is NodeBindingPlan.Patch && bindingPlan.modifierChanged -> {
+                            layoutModifiersChanged(
+                                previous = previousNode.modifier.resolve(),
+                                next = checkNotNull(nextResolved),
+                            )
+                        }
+
+                        else -> false
+                    }
+                    PreparedPatch(
+                        patch = patch,
+                        bindingPlan = bindingPlan,
+                        nextResolved = nextResolved,
+                        layoutParams = if (updatesLayoutParams) {
+                            ViewLayoutParamsFactory.createLayoutParams(
+                                parent = container,
+                                node = nextNode,
+                                warningTag = warningTag,
+                                emittedModifierWarnings = emittedModifierWarnings,
+                                resolved = checkNotNull(nextResolved),
+                            )
+                        } else {
+                            null
+                        },
+                        updatesLayoutParams = updatesLayoutParams,
+                    )
+                }
             }
         }
     }

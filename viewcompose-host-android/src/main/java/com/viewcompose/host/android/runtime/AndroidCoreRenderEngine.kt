@@ -16,16 +16,18 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         container: ViewGroup,
         previousMountedNodes: List<Any>,
         nodes: List<VNode>,
+        collectDiagnostics: Boolean,
     ): CoreRenderFrame {
         val result = ViewTreeRenderer.renderInto(
             container = container,
             previous = previousMountedNodes.filterIsInstance<MountedNode>(),
             nodes = nodes,
+            collectDiagnostics = collectDiagnostics,
         )
         return CoreRenderFrame(
             mountedNodes = result.mountedNodes,
             renderStats = result.stats.toCoreStats(),
-            renderResult = result.toCoreResult(),
+            renderResult = if (collectDiagnostics) result.toCoreResult() else null,
         )
     }
 

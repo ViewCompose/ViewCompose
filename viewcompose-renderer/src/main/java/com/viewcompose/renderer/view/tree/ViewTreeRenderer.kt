@@ -35,8 +35,10 @@ object ViewTreeRenderer {
         container: ViewGroup,
         previous: List<MountedNode>,
         nodes: List<VNode>,
+        collectDiagnostics: Boolean = true,
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
+        val renderNodes = AnimatedSizeNodeWrapper.wrapTree(nodes)
         val transaction = ViewTreePatchPipeline.beginTransaction(
             container = container,
             previous = previous,
@@ -45,9 +47,11 @@ object ViewTreeRenderer {
             renderIntoTransaction(
                 container = container,
                 previous = previous,
-                nodes = nodes,
+                nodes = renderNodes,
                 transaction = transaction,
-                collectWarnings = onReconcile != null,
+                collectStats = collectDiagnostics,
+                collectStructure = collectDiagnostics,
+                collectWarnings = collectDiagnostics && onReconcile != null,
             )
         } catch (error: Throwable) {
             ViewTreePatchPipeline.rollbackTransaction(
@@ -70,9 +74,10 @@ object ViewTreeRenderer {
         previous: List<MountedNode>,
         nodes: List<VNode>,
         transaction: ViewTreePatchPipeline.RenderTransaction,
+        collectStats: Boolean,
+        collectStructure: Boolean,
         collectWarnings: Boolean,
     ): RenderTreeResult {
-        val renderNodes = AnimatedSizeNodeWrapper.wrapTree(nodes)
         val reconcileResult = ChildReconciler.reconcile(
             previous = previous.map { mountedNode ->
                 ReconcileNode(
@@ -80,7 +85,7 @@ object ViewTreeRenderer {
                     payload = mountedNode,
                 )
             },
-            nodes = renderNodes,
+            nodes = nodes,
         )
         val pipelineResult = ViewTreePatchPipeline.execute(
             container = container,
@@ -89,25 +94,32 @@ object ViewTreeRenderer {
             warningTag = WARNING_TAG,
             emittedModifierWarnings = cappedModifierWarnings(),
             transaction = transaction,
+            collectStats = collectStats,
             renderChildren = { childContainer, childPrevious, childNodes ->
                 renderIntoTransaction(
                     container = childContainer,
                     previous = childPrevious,
                     nodes = childNodes,
                     transaction = transaction,
+                    collectStats = collectStats,
+                    collectStructure = false,
                     collectWarnings = false,
                 )
             },
         )
-        val structure = RenderStructureStats.from(
-            nodes = renderNodes,
-            mountedNodes = pipelineResult.mountedNodes,
-        )
+        val structure = if (collectStructure) {
+            RenderStructureStats.from(
+                nodes = nodes,
+                mountedNodes = pipelineResult.mountedNodes,
+            )
+        } else {
+            RenderStructureStats()
+        }
         val warnings = if (!collectWarnings) {
             emptyList()
         } else {
             collectRenderWarnings(
-                nodes = renderNodes,
+                nodes = nodes,
                 structure = structure,
                 stats = pipelineResult.stats,
             )
