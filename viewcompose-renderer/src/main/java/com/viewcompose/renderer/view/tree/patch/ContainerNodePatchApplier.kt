@@ -42,11 +42,11 @@ import com.viewcompose.renderer.view.tree.SegmentedControlNodePatch
 import com.viewcompose.renderer.view.tree.TabRowNodePatch
 import com.viewcompose.renderer.view.tree.ContainerViewSpecReader
 import com.viewcompose.renderer.view.tree.VerticalPagerNodePatch
-import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
+import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 
 internal object ContainerNodePatchApplier {
     fun applyRowPatch(
@@ -177,17 +177,7 @@ internal object ContainerNodePatchApplier {
         }
         if (previous.state !== next.state) {
             previous.state?.attach(null)
-            next.state?.attach(
-                object : LazyListConnector {
-                    override fun scrollToPosition(index: Int, smooth: Boolean) {
-                        if (smooth) {
-                            view.smoothScrollToPosition(index)
-                        } else {
-                            view.scrollToPosition(index)
-                        }
-                    }
-                },
-            )
+            next.state?.attach(UiLazyListConnector(view))
         }
     }
 
@@ -227,17 +217,7 @@ internal object ContainerNodePatchApplier {
         }
         if (previous.state !== next.state) {
             previous.state?.attach(null)
-            next.state?.attach(
-                object : LazyListConnector {
-                    override fun scrollToPosition(index: Int, smooth: Boolean) {
-                        if (smooth) {
-                            view.smoothScrollToPosition(index)
-                        } else {
-                            view.scrollToPosition(index)
-                        }
-                    }
-                },
-            )
+            next.state?.attach(UiLazyListConnector(view))
         }
     }
 

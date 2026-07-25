@@ -7,21 +7,56 @@ import org.junit.Test
 class StateConnectorContractTest {
     @Test
     fun `lazy list state routes scroll commands to attached connector`() {
-        val state = LazyListState()
-        val calls = mutableListOf<Pair<Int, Boolean>>()
+        val state = LazyListState(
+            initialFirstVisibleItemIndex = 2,
+            initialFirstVisibleItemScrollOffset = 8,
+        )
+        val calls = mutableListOf<Triple<Int, Int, Boolean>>()
         val connector = object : LazyListConnector {
             override fun scrollToPosition(index: Int, smooth: Boolean) {
-                calls += index to smooth
+                calls += Triple(index, 0, smooth)
+            }
+
+            override fun scrollToPosition(index: Int, scrollOffset: Int, smooth: Boolean) {
+                calls += Triple(index, scrollOffset, smooth)
             }
         }
 
         state.attach(connector)
-        state.scrollToPosition(3)
+        state.scrollToPosition(index = 3, scrollOffset = 12)
         state.smoothScrollToPosition(5)
         state.attach(null)
         state.scrollToPosition(9)
 
-        assertEquals(listOf(3 to false, 5 to true), calls)
+        assertEquals(
+            listOf(
+                Triple(2, 8, false),
+                Triple(3, 12, false),
+                Triple(5, 0, true),
+            ),
+            calls,
+        )
+    }
+
+    @Test
+    fun `lazy list state captures visible position when connector detaches`() {
+        val state = LazyListState()
+        val connector = object : LazyListConnector {
+            override fun scrollToPosition(index: Int, smooth: Boolean) = Unit
+
+            override fun currentPosition(): LazyListPosition {
+                return LazyListPosition(
+                    index = 7,
+                    scrollOffset = 24,
+                )
+            }
+        }
+
+        state.attach(connector)
+        state.attach(null)
+
+        assertEquals(7, state.firstVisibleItemIndex)
+        assertEquals(24, state.firstVisibleItemScrollOffset)
     }
 
     @Test

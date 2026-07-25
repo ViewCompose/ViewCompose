@@ -16,9 +16,9 @@ import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
 import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
-import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
+import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 
 internal object CollectionViewBinder {
     data class LazyColumnSpec(
@@ -88,17 +88,7 @@ internal object CollectionViewBinder {
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.VERTICAL)
         adapter.submitItems(spec.items)
-        spec.state?.attach(
-            object : LazyListConnector {
-                override fun scrollToPosition(index: Int, smooth: Boolean) {
-                    if (smooth) {
-                        view.smoothScrollToPosition(index)
-                    } else {
-                        view.scrollToPosition(index)
-                    }
-                }
-            },
-        )
+        spec.state?.attach(UiLazyListConnector(view))
     }
 
     fun bindLazyRow(
@@ -125,17 +115,7 @@ internal object CollectionViewBinder {
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.HORIZONTAL)
         adapter.submitItems(spec.items)
-        spec.state?.attach(
-            object : LazyListConnector {
-                override fun scrollToPosition(index: Int, smooth: Boolean) {
-                    if (smooth) {
-                        view.smoothScrollToPosition(index)
-                    } else {
-                        view.scrollToPosition(index)
-                    }
-                }
-            },
-        )
+        spec.state?.attach(UiLazyListConnector(view))
     }
 
     fun bindNavigationBar(

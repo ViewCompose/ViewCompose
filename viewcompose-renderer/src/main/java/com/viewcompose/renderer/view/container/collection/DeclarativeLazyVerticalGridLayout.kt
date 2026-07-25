@@ -9,9 +9,9 @@ import com.viewcompose.renderer.view.lazy.focus.LazyGridLayoutManager
 import com.viewcompose.renderer.view.lazy.layout.LazyGridSpacingDecoration
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
-import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 
 internal class DeclarativeLazyVerticalGridLayout(
     context: Context,
@@ -65,17 +65,7 @@ internal class DeclarativeLazyVerticalGridLayout(
             listState?.attach(null)
             listState = state
         }
-        listState?.attach(
-            object : LazyListConnector {
-                override fun scrollToPosition(index: Int, smooth: Boolean) {
-                    if (smooth) {
-                        smoothScrollToPosition(index)
-                    } else {
-                        scrollToPosition(index)
-                    }
-                }
-            },
-        )
+        listState?.attach(UiLazyListConnector(this))
     }
 
     fun dispose() {
