@@ -1,20 +1,27 @@
 package com.viewcompose.ui.node.spec
 
+import com.viewcompose.text.InputTransformation
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
+import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.node.TextFieldImeAction
-import com.viewcompose.ui.node.TextFieldType
+import com.viewcompose.ui.node.TextFieldKeyboardOptions
 
 data class TextFieldNodeProps(
-    val value: String,
+    val state: TextFieldState,
+    val value: TextFieldValue,
     val placeholder: String,
     val enabled: Boolean,
     val singleLine: Boolean,
     val minLines: Int,
     val maxLines: Int,
-    val keyboardType: TextFieldType,
-    val imeAction: TextFieldImeAction,
+    val keyboardOptions: TextFieldKeyboardOptions,
+    val inputTransformation: InputTransformation?,
+    val onKeyboardAction: ((TextFieldImeAction) -> Boolean)?,
+    val onFocusChange: ((Boolean) -> Unit)?,
+    val autofillHints: Set<TextFieldAutofillHint>,
     val hintColor: Int,
     val readOnly: Boolean,
-    val onValueChange: ((String) -> Unit)?,
     val textColor: Int,
     val textSizeSp: Int,
     val fontWeight: Int? = null,
@@ -29,6 +36,5 @@ data class TextFieldNodeProps(
     val minHeight: Int,
     val paddingHorizontal: Int,
     val paddingVertical: Int,
-    val maxLength: Int? = null,
     val cursorColor: Int = 0,
 ) : NodeSpec

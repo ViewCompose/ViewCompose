@@ -37,6 +37,7 @@ import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.key
 import com.viewcompose.widget.core.produceState
 import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.widget.core.sp
 import com.viewcompose.viewmodel.savedStateHandle
 
@@ -49,7 +50,7 @@ internal fun UiTreeBuilder.StatePage(
     val panelVisibleState = remember { mutableStateOf(true) }
     val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 3)) }
     val patchStepState = remember { mutableStateOf(0) }
-    val patchFieldValueState = remember { mutableStateOf("value-0") }
+    val patchFieldValueState = rememberTextFieldState("value-0")
     val patchSegmentIndexState = remember { mutableStateOf(0) }
     val patchTabIndexState = remember { mutableStateOf(0) }
     val stableTabIndexState = remember { mutableStateOf(0) }
@@ -267,7 +268,7 @@ internal fun UiTreeBuilder.StatePage(
                         onClick = {
                             val nextStep = patchStepState.value + 1
                             patchStepState.value = nextStep
-                            patchFieldValueState.value = "value-$nextStep"
+                            patchFieldValueState.setTextAndPlaceCursorAtEnd("value-$nextStep")
                             patchSegmentIndexState.value = nextStep % 3
                             patchTabIndexState.value = nextStep % 2
                         },
@@ -276,7 +277,7 @@ internal fun UiTreeBuilder.StatePage(
                         text = "重置 Patch 状态",
                         onClick = {
                             patchStepState.value = 0
-                            patchFieldValueState.value = "value-0"
+                            patchFieldValueState.setTextAndPlaceCursorAtEnd("value-0")
                             patchSegmentIndexState.value = 0
                             patchTabIndexState.value = 0
                         },
@@ -295,8 +296,7 @@ internal fun UiTreeBuilder.StatePage(
                         .testTag(DemoTestTags.STATE_PATCH_OPEN_DIAGNOSTICS),
                 )
                 TextField(
-                    value = patchFieldValueState.value,
-                    onValueChange = { patchFieldValueState.value = it },
+                    state = patchFieldValueState,
                     label = "已 Patch 字段",
                     supportingText = "当前 Patch 步骤: $step",
                     modifier = Modifier.margin(bottom = 12.dp),

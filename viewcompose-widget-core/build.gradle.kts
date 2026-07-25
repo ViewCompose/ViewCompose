@@ -22,6 +22,7 @@ android {
 }
 
 dependencies {
+    api(project(":viewcompose-text-core"))
     implementation(project(":viewcompose-runtime"))
     implementation(project(":viewcompose-ui-contract"))
     implementation(libs.androidx.core.ktx)

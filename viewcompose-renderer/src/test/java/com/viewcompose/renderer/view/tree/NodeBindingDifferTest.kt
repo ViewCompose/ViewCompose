@@ -1,5 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.ImageSource
@@ -505,17 +507,23 @@ class NodeBindingDifferTest {
         return VNode(
             type = NodeType.TextField,
             spec = TextFieldNodeProps(
-                value = value,
+                state = TextFieldState(TextFieldValue(value)),
+                value = TextFieldValue(value),
                 placeholder = "Hint",
                 enabled = true,
                 singleLine = true,
                 minLines = 1,
                 maxLines = 1,
-                keyboardType = com.viewcompose.ui.node.TextFieldType.Text,
-                imeAction = com.viewcompose.ui.node.TextFieldImeAction.Done,
+                keyboardOptions = com.viewcompose.ui.node.TextFieldKeyboardOptions(
+                    keyboardType = com.viewcompose.ui.node.TextFieldType.Text,
+                    imeAction = com.viewcompose.ui.node.TextFieldImeAction.Done,
+                ),
+                inputTransformation = null,
+                onKeyboardAction = null,
+                onFocusChange = null,
+                autofillHints = emptySet(),
                 hintColor = 0xFF888888.toInt(),
                 readOnly = false,
-                onValueChange = null,
                 textColor = textColor,
                 textSizeSp = 16,
                 backgroundColor = 0xFFEEEEEE.toInt(),

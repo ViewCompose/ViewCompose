@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
@@ -53,8 +55,7 @@ class AdditionalWidgetCoverageTest {
     fun `search bar emits text field child with search ime action`() {
         val tree = buildVNodeTree {
             SearchBar(
-                query = "query",
-                onQueryChange = {},
+                state = TextFieldState(TextFieldValue("query")),
                 onSearch = {},
                 placeholder = "Type keyword",
                 leadingIcon = ImageSource.Resource(11),
@@ -71,9 +72,9 @@ class AdditionalWidgetCoverageTest {
         assertEquals(NodeType.Row, node.type)
         assertEquals(SearchBarDefaults.iconSpacing(), rowSpec.spacing)
         assertEquals(VerticalAlignment.Center, rowSpec.verticalAlignment)
-        assertEquals("query", textField.value)
+        assertEquals(TextFieldValue("query"), textField.value)
         assertEquals("Type keyword", textField.placeholder)
-        assertEquals(TextFieldImeAction.Search, textField.imeAction)
+        assertEquals(TextFieldImeAction.Search, textField.keyboardOptions.imeAction)
     }
 
     @Test

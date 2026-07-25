@@ -1,7 +1,10 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextFieldImeAction
+import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.TextFieldType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.TextNodeProps
@@ -44,13 +47,14 @@ class TextFieldTest {
         val tree = buildVNodeTree {
             UiTheme(customTheme) {
                 TextField(
-                    value = "hello",
-                    onValueChange = {},
+                    state = textState("hello"),
                     hint = "Type here",
                     label = "Display name",
                     supportingText = "Shown in profile",
                     maxLines = 3,
-                    imeAction = TextFieldImeAction.Next,
+                    keyboardOptions = TextFieldKeyboardOptions(
+                        imeAction = TextFieldImeAction.Next,
+                    ),
                 )
             }
         }
@@ -61,14 +65,14 @@ class TextFieldTest {
 
         assertEquals(NodeType.Column, root.type)
         assertEquals(NodeType.TextField, node.type)
-        assertEquals("hello", spec.value)
+        assertEquals(TextFieldValue("hello"), spec.value)
         assertEquals("Type here", spec.placeholder)
         assertTrue(collectTextNodes(root).any { it.text == "Display name" })
         assertTrue(collectTextNodes(root).any { it.text == "Shown in profile" })
         assertEquals(true, spec.singleLine)
-        assertEquals(TextFieldType.Text, spec.keyboardType)
+        assertEquals(TextFieldType.Text, spec.keyboardOptions.keyboardType)
         assertEquals(3, spec.maxLines)
-        assertEquals(TextFieldImeAction.Next, spec.imeAction)
+        assertEquals(TextFieldImeAction.Next, spec.keyboardOptions.imeAction)
         assertEquals(customTheme.colors.onSurfaceVariant, spec.hintColor)
         assertEquals(customTheme.colors.onSurface, spec.textColor)
         assertEquals(customTheme.typography.bodyMedium.fontSizeSp, spec.textSizeSp)
@@ -86,8 +90,7 @@ class TextFieldTest {
     fun `password field uses password input type`() {
         val tree = buildVNodeTree {
             PasswordField(
-                value = "secret",
-                onValueChange = {},
+                state = textState("secret"),
                 hint = "Password",
                 label = "Password",
                 supportingText = "At least 8 characters",
@@ -98,7 +101,7 @@ class TextFieldTest {
         val spec = node.spec as TextFieldNodeProps
 
         assertEquals(NodeType.TextField, node.type)
-        assertEquals(TextFieldType.Password, spec.keyboardType)
+        assertEquals(TextFieldType.Password, spec.keyboardOptions.keyboardType)
         assertTrue(collectTextNodes(tree.single()).any { it.text == "Password" })
         assertTrue(collectTextNodes(tree.single()).any { it.text == "At least 8 characters" })
         assertTrue(spec.singleLine)
@@ -108,14 +111,15 @@ class TextFieldTest {
     fun `text area exposes read only and multiline semantics`() {
         val tree = buildVNodeTree {
             TextArea(
-                value = "Line 1",
-                onValueChange = {},
+                state = textState("Line 1"),
                 label = "Bio",
                 supportingText = "Visible to collaborators",
                 readOnly = true,
                 minLines = 4,
                 maxLines = 6,
-                imeAction = TextFieldImeAction.Done,
+                keyboardOptions = TextFieldKeyboardOptions(
+                    imeAction = TextFieldImeAction.Done,
+                ),
             )
         }
 
@@ -126,7 +130,7 @@ class TextFieldTest {
         assertEquals(true, spec.readOnly)
         assertEquals(4, spec.minLines)
         assertEquals(6, spec.maxLines)
-        assertEquals(TextFieldImeAction.Done, spec.imeAction)
+        assertEquals(TextFieldImeAction.Done, spec.keyboardOptions.imeAction)
         assertTrue(collectTextNodes(tree.single()).any { it.text == "Bio" })
         assertTrue(collectTextNodes(tree.single()).any { it.text == "Visible to collaborators" })
     }
@@ -136,8 +140,7 @@ class TextFieldTest {
         val tree = buildVNodeTree {
             UiTheme(UiThemeDefaults.light()) {
                 TextField(
-                    value = "hello",
-                    onValueChange = {},
+                    state = textState("hello"),
                     variant = TextFieldVariant.Outlined,
                 )
             }
@@ -155,8 +158,7 @@ class TextFieldTest {
         val tree = buildVNodeTree {
             UiTheme(UiThemeDefaults.light()) {
                 TextField(
-                    value = "hello",
-                    onValueChange = {},
+                    state = textState("hello"),
                     size = TextFieldSize.Compact,
                 )
             }
@@ -184,8 +186,7 @@ class TextFieldTest {
                     ),
                 ) {
                     TextField(
-                        value = "hello",
-                        onValueChange = {},
+                        state = textState("hello"),
                         enabled = false,
                     )
                 }
@@ -200,8 +201,7 @@ class TextFieldTest {
                     ),
                 ) {
                     TextField(
-                        value = "hello",
-                        onValueChange = {},
+                        state = textState("hello"),
                         variant = TextFieldVariant.Outlined,
                         isError = true,
                     )
@@ -223,6 +223,10 @@ class TextFieldTest {
         field.isAccessible = true
         @Suppress("UNCHECKED_CAST")
         return field.get(this) as List<Any?>
+    }
+
+    private fun textState(text: String): TextFieldState {
+        return TextFieldState(TextFieldValue(text))
     }
 
     private fun findFirstTextFieldNode(tree: List<VNode>): VNode {

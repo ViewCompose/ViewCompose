@@ -11,6 +11,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextFieldImeAction
+import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.runtime.derivedStateOf
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.widget.core.Button
@@ -50,17 +51,18 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.VerticalPager
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.widget.core.sp
 
 internal fun UiTreeBuilder.InputPage(
     initialPageIndex: Int = 0,
 ) {
     val benchmarkExpandedState = remember { mutableStateOf(false) }
-    val nameState = remember { mutableStateOf("GZQ") }
-    val emailState = remember { mutableStateOf("demo@viewcompose.dev") }
-    val passwordState = remember { mutableStateOf("") }
-    val ageState = remember { mutableStateOf("3") }
-    val bioState = remember { mutableStateOf("基于虚拟节点、键控 diff 和 Android View 互操作构建。") }
+    val nameState = rememberTextFieldState("GZQ")
+    val emailState = rememberTextFieldState("demo@viewcompose.dev")
+    val passwordState = rememberTextFieldState()
+    val ageState = rememberTextFieldState("3")
+    val bioState = rememberTextFieldState("基于虚拟节点、键控 diff 和 Android View 互操作构建。")
     val notificationsEnabledState = remember { mutableStateOf(true) }
     val analyticsEnabledState = remember { mutableStateOf(false) }
     val selectedTierState = remember { mutableStateOf("Alpha") }
@@ -68,18 +70,25 @@ internal fun UiTreeBuilder.InputPage(
     val stressExpandedState = remember { mutableStateOf(false) }
     val stressReadonlyState = remember { mutableStateOf(true) }
     val stressErrorState = remember { mutableStateOf(true) }
-    val searchQueryState = remember { mutableStateOf("") }
+    val searchQueryState = rememberTextFieldState()
+    val searchHistoryState = rememberTextFieldState()
+    val disabledSearchState = rememberTextFieldState()
     val searchResultState = remember { mutableStateOf("") }
-    val scrollableSearchQueryState = remember { mutableStateOf("") }
-    val verticalPagerSearchQueryState = remember { mutableStateOf("") }
-    val pullRefreshSearchQueryState = remember { mutableStateOf("") }
+    val scrollableSearchQueryState = rememberTextFieldState()
+    val verticalPagerSearchQueryState = rememberTextFieldState()
+    val pullRefreshSearchQueryState = rememberTextFieldState()
+    val benchmarkFieldState = rememberTextFieldState("紧凑数据")
+    val disabledEmailState = rememberTextFieldState("disabled@viewcompose.dev")
+    val stressTitleFieldState = rememberTextFieldState("紧凑标题")
+    val stressNotesFieldState = rememberTextFieldState("只读笔记")
+    val stressPasswordFieldState = rememberTextFieldState()
     val focusFollowVerticalPagerPageState = remember { mutableStateOf(0) }
     val pullRefreshFocusRefreshingState = remember { mutableStateOf(false) }
     val summaryState = remember {
         derivedStateOf {
-            "预览: ${nameState.value.ifBlank { "匿名" }} · " +
-                "${emailState.value.ifBlank { "无邮箱" }} · " +
-                "${ageState.value.ifBlank { "-" }}y"
+            "预览: ${nameState.text.ifBlank { "匿名" }} · " +
+                "${emailState.text.ifBlank { "无邮箱" }} · " +
+                "${ageState.text.ifBlank { "-" }}y"
         }
     }
     val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 4)) }
@@ -128,7 +137,16 @@ internal fun UiTreeBuilder.InputPage(
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
                         .testTag(DemoTestTags.INPUT_BENCHMARK_TOGGLE),
-                    onClick = { benchmarkExpandedState.value = !benchmarkExpandedState.value },
+                    onClick = {
+                        benchmarkExpandedState.value = !benchmarkExpandedState.value
+                        benchmarkFieldState.setTextAndPlaceCursorAtEnd(
+                            if (benchmarkExpandedState.value) {
+                                "展开的 benchmark 数据"
+                            } else {
+                                "紧凑数据"
+                            },
+                        )
+                    },
                 )
                 Button(
                     text = "重置输入 Benchmark",
@@ -137,11 +155,13 @@ internal fun UiTreeBuilder.InputPage(
                         .fillMaxWidth()
                         .margin(bottom = 8.dp)
                         .testTag(DemoTestTags.INPUT_BENCHMARK_RESET),
-                    onClick = { benchmarkExpandedState.value = false },
+                    onClick = {
+                        benchmarkExpandedState.value = false
+                        benchmarkFieldState.setTextAndPlaceCursorAtEnd("紧凑数据")
+                    },
                 )
                 TextField(
-                    value = if (benchmarkExpandedState.value) "展开的 benchmark 数据" else "紧凑数据",
-                    onValueChange = {},
+                    state = benchmarkFieldState,
                     label = "Benchmark 字段",
                     supportingText = if (benchmarkExpandedState.value) {
                         "展开的辅助文案保持场景确定性，同时压力测试 TextField 容器布局。"
@@ -175,12 +195,13 @@ internal fun UiTreeBuilder.InputPage(
                 subtitle = "所有字段由状态驱动，更新同一个 render session。",
             ) {
                 TextField(
-                    value = nameState.value,
-                    onValueChange = { nameState.value = it },
+                    state = nameState,
                     hint = "姓名",
                     label = "显示名称",
                     supportingText = "显示在个人资料头部",
-                    imeAction = TextFieldImeAction.Next,
+                    keyboardOptions = TextFieldKeyboardOptions(
+                        imeAction = TextFieldImeAction.Next,
+                    ),
                     variant = TextFieldVariant.Filled,
                     size = TextFieldSize.Large,
                     modifier = Modifier
@@ -188,12 +209,14 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 )
                 EmailField(
-                    value = emailState.value,
-                    onValueChange = { emailState.value = it },
+                    state = emailState,
                     hint = "邮箱",
                     label = "工作邮箱",
                     supportingText = "仅用于通知",
-                    imeAction = TextFieldImeAction.Next,
+                    keyboardOptions = TextFieldKeyboardOptions(
+                        keyboardType = com.viewcompose.ui.node.TextFieldType.Email,
+                        imeAction = TextFieldImeAction.Next,
+                    ),
                     variant = TextFieldVariant.Tonal,
                     size = TextFieldSize.Medium,
                     modifier = Modifier
@@ -201,22 +224,24 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 )
                 PasswordField(
-                    value = passwordState.value,
-                    onValueChange = { passwordState.value = it },
+                    state = passwordState,
                     hint = "密码",
                     label = "访问密钥",
                     supportingText = "留空保持当前密码",
-                    imeAction = TextFieldImeAction.Done,
+                    keyboardOptions = TextFieldKeyboardOptions(
+                        keyboardType = com.viewcompose.ui.node.TextFieldType.Password,
+                        imeAction = TextFieldImeAction.Done,
+                        autoCorrectEnabled = false,
+                    ),
                     variant = TextFieldVariant.Outlined,
                     size = TextFieldSize.Medium,
-                    isError = passwordState.value.isBlank(),
+                    isError = passwordState.text.isBlank(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(bottom = 12.dp),
                 )
                 NumberField(
-                    value = ageState.value,
-                    onValueChange = { ageState.value = it },
+                    state = ageState,
                     hint = "版本年龄",
                     label = "项目年龄",
                     supportingText = "语义版本代数",
@@ -227,8 +252,7 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 )
                 EmailField(
-                    value = "disabled@viewcompose.dev",
-                    onValueChange = {},
+                    state = disabledEmailState,
                     hint = "禁用邮箱",
                     label = "只读联系人",
                     supportingText = "从组织设置继承",
@@ -240,13 +264,14 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 )
                 TextArea(
-                    value = bioState.value,
-                    onValueChange = { bioState.value = it },
+                    state = bioState,
                     hint = "简介",
                     label = "摘要",
                     supportingText = "支持多行编辑和本地状态更新",
                     maxLines = 6,
-                    imeAction = TextFieldImeAction.Done,
+                    keyboardOptions = TextFieldKeyboardOptions(
+                        imeAction = TextFieldImeAction.Done,
+                    ),
                     variant = TextFieldVariant.Filled,
                     size = TextFieldSize.Large,
                     modifier = Modifier
@@ -260,11 +285,13 @@ internal fun UiTreeBuilder.InputPage(
                     trailingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
                     size = ButtonSize.Large,
                     onClick = {
-                        nameState.value = "GZQ"
-                        emailState.value = "demo@viewcompose.dev"
-                        passwordState.value = ""
-                        ageState.value = "3"
-                        bioState.value = "基于虚拟节点、键控 diff 和 Android View 互操作构建。"
+                        nameState.setTextAndPlaceCursorAtEnd("GZQ")
+                        emailState.setTextAndPlaceCursorAtEnd("demo@viewcompose.dev")
+                        passwordState.clearText()
+                        ageState.setTextAndPlaceCursorAtEnd("3")
+                        bioState.setTextAndPlaceCursorAtEnd(
+                            "基于虚拟节点、键控 diff 和 Android View 互操作构建。",
+                        )
                     },
                 )
             }
@@ -376,7 +403,26 @@ internal fun UiTreeBuilder.InputPage(
                         text = if (stressExpandedState.value) "紧凑文案" else "展开文案",
                         size = ButtonSize.Compact,
                         modifier = Modifier.testTag(DemoTestTags.INPUT_STRESS_EXPAND),
-                        onClick = { stressExpandedState.value = !stressExpandedState.value },
+                        onClick = {
+                            stressExpandedState.value = !stressExpandedState.value
+                            stressTitleFieldState.setTextAndPlaceCursorAtEnd(
+                                if (stressExpandedState.value) {
+                                    "一个很长的项目标题，应该仍然保持标签、占位符和辅助文案可读而不被裁切。"
+                                } else {
+                                    "紧凑标题"
+                                },
+                            )
+                            stressNotesFieldState.setTextAndPlaceCursorAtEnd(
+                                if (stressExpandedState.value) {
+                                    "只读压力笔记:\n" +
+                                        "- 本地主题覆盖保持活跃\n" +
+                                        "- 多行容器应保持 padding 稳定\n" +
+                                        "- 长文案不应把辅助文本推出卡片"
+                                } else {
+                                    "只读笔记"
+                                },
+                            )
+                        },
                     )
                     Button(
                         text = if (stressReadonlyState.value) "可编辑" else "只读",
@@ -390,16 +436,18 @@ internal fun UiTreeBuilder.InputPage(
                         size = ButtonSize.Compact,
                         variant = ButtonVariant.Tonal,
                         modifier = Modifier.testTag(DemoTestTags.INPUT_STRESS_ERROR),
-                        onClick = { stressErrorState.value = !stressErrorState.value },
+                        onClick = {
+                            stressErrorState.value = !stressErrorState.value
+                            if (stressErrorState.value) {
+                                stressPasswordFieldState.clearText()
+                            } else {
+                                stressPasswordFieldState.setTextAndPlaceCursorAtEnd("stable-password")
+                            }
+                        },
                     )
                 }
                 TextField(
-                    value = if (stressExpandedState.value) {
-                        "一个很长的项目标题，应该仍然保持标签、占位符和辅助文案可读而不被裁切。"
-                    } else {
-                        "紧凑标题"
-                    },
-                    onValueChange = {},
+                    state = stressTitleFieldState,
                     readOnly = true,
                     label = "发布渠道显示名称",
                     supportingText = if (stressExpandedState.value) {
@@ -414,12 +462,7 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 )
                 TextArea(
-                    value = if (stressExpandedState.value) {
-                        "只读压力笔记:\n- 本地主题覆盖保持活跃\n- 多行容器应保持 padding 稳定\n- 长文案不应把辅助文本推出卡片"
-                    } else {
-                        "只读笔记"
-                    },
-                    onValueChange = {},
+                    state = stressNotesFieldState,
                     label = "审阅者笔记",
                     supportingText = "切换只读和展开文案检查多行稳定性。",
                     readOnly = stressReadonlyState.value,
@@ -432,8 +475,7 @@ internal fun UiTreeBuilder.InputPage(
                         .margin(bottom = 12.dp),
                 )
                 PasswordField(
-                    value = if (stressErrorState.value) "" else "stable-password",
-                    onValueChange = {},
+                    state = stressPasswordFieldState,
                     label = "受保护字段",
                     supportingText = if (stressErrorState.value) {
                         "错误态必须在主题切换和页面变化中保持可见。"
@@ -460,8 +502,7 @@ internal fun UiTreeBuilder.InputPage(
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 SearchBar(
-                    query = searchQueryState.value,
-                    onQueryChange = { searchQueryState.value = it },
+                    state = searchQueryState,
                     onSearch = { query -> searchResultState.value = "搜索: $query" },
                     placeholder = "搜索商品…",
                     leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
@@ -484,17 +525,16 @@ internal fun UiTreeBuilder.InputPage(
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 SearchBar(
-                    query = searchQueryState.value,
-                    onQueryChange = { searchQueryState.value = it },
+                    state = searchHistoryState,
                     onSearch = { query -> searchResultState.value = "搜索: $query" },
                     placeholder = "搜索历史…",
                     leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
                     trailingIcon = {
-                        if (searchQueryState.value.isNotEmpty()) {
+                        if (searchHistoryState.text.isNotEmpty()) {
                             IconButton(
                                 icon = ImageSource.Resource(R.drawable.demo_media_icon),
                                 contentDescription = "清除",
-                                onClick = { searchQueryState.value = "" },
+                                onClick = searchHistoryState::clearText,
                             )
                         }
                     },
@@ -508,8 +548,7 @@ internal fun UiTreeBuilder.InputPage(
                     modifier = Modifier.margin(bottom = 8.dp),
                 )
                 SearchBar(
-                    query = "",
-                    onQueryChange = {},
+                    state = disabledSearchState,
                     placeholder = "搜索不可用",
                     enabled = false,
                     modifier = Modifier.fillMaxWidth(),
@@ -536,8 +575,7 @@ internal fun UiTreeBuilder.InputPage(
                         color = TextDefaults.secondaryColor(),
                     )
                     SearchBar(
-                        query = scrollableSearchQueryState.value,
-                        onQueryChange = { scrollableSearchQueryState.value = it },
+                        state = scrollableSearchQueryState,
                         placeholder = "ScrollableColumn 内搜索…",
                         modifier = Modifier
                             .fillMaxWidth()
@@ -580,8 +618,7 @@ internal fun UiTreeBuilder.InputPage(
                                 color = TextDefaults.secondaryColor(),
                             )
                             SearchBar(
-                                query = verticalPagerSearchQueryState.value,
-                                onQueryChange = { verticalPagerSearchQueryState.value = it },
+                                state = verticalPagerSearchQueryState,
                                 placeholder = "VerticalPager 页内搜索…",
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -628,8 +665,7 @@ internal fun UiTreeBuilder.InputPage(
                             .padding(12.dp),
                     ) {
                         SearchBar(
-                            query = pullRefreshSearchQueryState.value,
-                            onQueryChange = { pullRefreshSearchQueryState.value = it },
+                            state = pullRefreshSearchQueryState,
                             placeholder = "PullToRefresh 子容器搜索…",
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -671,7 +707,7 @@ internal fun UiTreeBuilder.InputPage(
                     style = UiTextStyle(fontSizeSp = 13.sp),
                 )
                 Text(
-                    text = bioState.value,
+                    text = bioState.text,
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                 )

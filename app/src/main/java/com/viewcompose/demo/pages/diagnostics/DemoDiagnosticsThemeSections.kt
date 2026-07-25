@@ -59,6 +59,7 @@ import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.widget.core.sp
 import com.viewcompose.runtime.mutableStateOf
 
@@ -342,7 +343,10 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
 }
 
 private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
-    val searchQueryState = remember { mutableStateOf("Theme token") }
+    val searchQueryState = rememberTextFieldState("Theme token")
+    val normalFieldState = rememberTextFieldState("theme@viewcompose.dev")
+    val errorFieldState = rememberTextFieldState("error@viewcompose.dev")
+    val disabledFieldState = rememberTextFieldState("Disabled field")
     val checkboxState = remember { mutableStateOf(true) }
     val switchState = remember { mutableStateOf(true) }
     val radioState = remember { mutableStateOf(true) }
@@ -353,8 +357,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
         subtitle = "验证 field container、error container、outline variant 和 selection controls 的默认语义。",
     ) {
         TextField(
-            value = "theme@viewcompose.dev",
-            onValueChange = {},
+            state = normalFieldState,
             variant = TextFieldVariant.Outlined,
             size = TextFieldSize.Medium,
             modifier = Modifier
@@ -362,8 +365,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
                 .padding(bottom = 8.dp),
         )
         TextField(
-            value = "error@viewcompose.dev",
-            onValueChange = {},
+            state = errorFieldState,
             variant = TextFieldVariant.Tonal,
             size = TextFieldSize.Medium,
             isError = true,
@@ -373,8 +375,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
                 .padding(bottom = 8.dp),
         )
         TextField(
-            value = "Disabled field",
-            onValueChange = {},
+            state = disabledFieldState,
             enabled = false,
             size = TextFieldSize.Compact,
             modifier = Modifier
@@ -382,8 +383,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
                 .padding(bottom = 8.dp),
         )
         SearchBar(
-            query = searchQueryState.value,
-            onQueryChange = { searchQueryState.value = it },
+            state = searchQueryState,
             onSearch = {},
             placeholder = "Search token",
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
@@ -496,6 +496,12 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
 }
 
 private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
+    val compactFieldState = rememberTextFieldState(
+        "Compact / Medium / Large use Theme.controls.textField.*",
+    )
+    val mediumFieldState = rememberTextFieldState("Medium TextField")
+    val largeFieldState = rememberTextFieldState("Large TextField")
+    val searchState = rememberTextFieldState("Large shape sample")
     ScenarioSection(
         kind = ScenarioKind.Visual,
         title = "Shape / Size 诊断",
@@ -534,24 +540,21 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
             Button(text = "Large", onClick = {}, size = ButtonSize.Large, modifier = Modifier.weight(1f))
         }
         TextField(
-            value = "Compact / Medium / Large use Theme.controls.textField.*",
-            onValueChange = {},
+            state = compactFieldState,
             size = TextFieldSize.Compact,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
         )
         TextField(
-            value = "Medium TextField",
-            onValueChange = {},
+            state = mediumFieldState,
             size = TextFieldSize.Medium,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
         )
         TextField(
-            value = "Large TextField",
-            onValueChange = {},
+            state = largeFieldState,
             size = TextFieldSize.Large,
             modifier = Modifier
                 .fillMaxWidth()
@@ -567,8 +570,7 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
                 .padding(bottom = 8.dp),
         )
         SearchBar(
-            query = "Large shape sample",
-            onQueryChange = {},
+            state = searchState,
             placeholder = "Search shape",
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
             modifier = Modifier.fillMaxWidth(),

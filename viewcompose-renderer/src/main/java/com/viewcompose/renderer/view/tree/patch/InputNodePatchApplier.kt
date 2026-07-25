@@ -22,9 +22,14 @@ internal object InputNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
-        if (previous.value != next.value && view.text?.toString() != next.value) {
-            view.setText(next.value)
-            view.setSelection(next.value.length)
+        if (
+            previous.value != next.value &&
+            InputViewBinder.readTextFieldValue(view) != next.value
+        ) {
+            val previousWatcher = view.getTag(R.id.viewcompose_text_watcher) as? android.text.TextWatcher
+            previousWatcher?.let(view::removeTextChangedListener)
+            InputViewBinder.applyTextFieldValue(view, next.value)
+            previousWatcher?.let(view::addTextChangedListener)
         }
         if (previous.placeholder != next.placeholder) {
             view.hint = next.placeholder
@@ -48,16 +53,16 @@ internal object InputNodePatchApplier {
             view.maxLines = if (next.singleLine) 1 else next.maxLines
         }
         if (
-            previous.keyboardType != next.keyboardType ||
+            previous.keyboardOptions != next.keyboardOptions ||
             previous.singleLine != next.singleLine
         ) {
             view.inputType = InputViewBinder.resolveInputType(
-                type = next.keyboardType,
+                options = next.keyboardOptions,
                 singleLine = next.singleLine,
             )
         }
-        if (previous.imeAction != next.imeAction) {
-            view.imeOptions = InputViewBinder.toEditorAction(next.imeAction)
+        if (previous.keyboardOptions != next.keyboardOptions) {
+            view.imeOptions = InputViewBinder.resolveEditorOptions(next.keyboardOptions)
         }
         if (previous.hintColor != next.hintColor) {
             view.setHintTextColor(next.hintColor)
@@ -68,18 +73,33 @@ internal object InputNodePatchApplier {
         if (previous.readOnly != next.readOnly) {
             InputViewBinder.applyReadOnly(view, next.readOnly)
         }
-        if (previous.maxLength != next.maxLength) {
-            InputViewBinder.applyMaxLength(view, next.maxLength)
-        }
         if (
+            previous.state !== next.state ||
             previous.value != next.value ||
-            previous.onValueChange != next.onValueChange
+            previous.inputTransformation !== next.inputTransformation
         ) {
             InputViewBinder.bindTextWatcher(
                 view = view,
+                state = next.state,
                 currentValue = next.value,
-                onValueChange = next.onValueChange,
+                inputTransformation = next.inputTransformation,
             )
+        }
+        if (
+            previous.keyboardOptions.imeAction != next.keyboardOptions.imeAction ||
+            previous.onKeyboardAction !== next.onKeyboardAction
+        ) {
+            InputViewBinder.bindEditorAction(
+                view = view,
+                action = next.keyboardOptions.imeAction,
+                onKeyboardAction = next.onKeyboardAction,
+            )
+        }
+        if (previous.onFocusChange !== next.onFocusChange) {
+            view.setOnFocusChangeListener { _, focused -> next.onFocusChange?.invoke(focused) }
+        }
+        if (previous.autofillHints != next.autofillHints) {
+            InputViewBinder.applyAutofillHints(view, next.autofillHints)
         }
         if (hasTextAppearanceChange(previous, next)) {
             ContentViewBinder.applyTextAppearance(

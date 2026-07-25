@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
@@ -11,11 +12,10 @@ import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextFieldImeAction
-import com.viewcompose.ui.node.TextFieldType
+import com.viewcompose.ui.node.TextFieldKeyboardOptions
 
 fun UiTreeBuilder.SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
+    state: TextFieldState,
     onSearch: ((String) -> Unit)? = null,
     placeholder: String = "",
     leadingIcon: ImageSource? = null,
@@ -48,15 +48,31 @@ fun UiTreeBuilder.SearchBar(
             )
         }
         BasicTextField(
-            value = query,
-            onValueChange = onQueryChange,
+            state = state,
             placeholder = placeholder,
             enabled = enabled,
             singleLine = true,
             minLines = 1,
             maxLines = 1,
-            keyboardType = TextFieldType.Text,
-            imeAction = if (onSearch != null) TextFieldImeAction.Search else TextFieldImeAction.Default,
+            keyboardOptions = TextFieldKeyboardOptions(
+                imeAction = if (onSearch != null) {
+                    TextFieldImeAction.Search
+                } else {
+                    TextFieldImeAction.Default
+                },
+            ),
+            onKeyboardAction = if (onSearch == null) {
+                null
+            } else {
+                { action ->
+                    if (action == TextFieldImeAction.Search) {
+                        onSearch(state.text)
+                        true
+                    } else {
+                        false
+                    }
+                }
+            },
             hintColor = SearchBarDefaults.placeholderColor(),
             textColor = SearchBarDefaults.contentColor(),
             textStyle = SearchBarDefaults.textStyle(),

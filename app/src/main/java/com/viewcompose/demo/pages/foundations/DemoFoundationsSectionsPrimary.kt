@@ -34,6 +34,7 @@ import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiThemeOverride
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
+import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.widget.core.sp
 import com.viewcompose.widget.core.provides
 import com.viewcompose.widget.core.uiLocalOf
@@ -378,8 +379,7 @@ internal fun UiTreeBuilder.FoundationsOverridesSection() {
                             Button(text = "禁用 Outline", variant = ButtonVariant.Outlined, enabled = false, modifier = Modifier.weight(1f))
                         }
                         TextField(
-                            value = "error@token.dev",
-                            onValueChange = {},
+                            state = rememberTextFieldState("error@token.dev"),
                             variant = TextFieldVariant.Outlined,
                             isError = true,
                             modifier = Modifier.fillMaxWidth(),

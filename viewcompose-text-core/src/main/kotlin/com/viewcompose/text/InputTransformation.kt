@@ -11,27 +11,44 @@ fun interface InputTransformation {
     companion object {
         fun maxCodePoints(maxCodePoints: Int): InputTransformation {
             require(maxCodePoints >= 0) { "maxCodePoints must be non-negative." }
-            return InputTransformation { buffer ->
-                val count = buffer.text.codePointCount(0, buffer.length)
-                if (count > maxCodePoints) {
-                    buffer.revertAllChanges()
-                }
-            }
+            return MaxCodePointsTransformation(maxCodePoints)
         }
 
         fun digitsOnly(): InputTransformation {
-            return InputTransformation { buffer ->
-                if (buffer.text.any { !it.isDigit() }) {
-                    buffer.revertAllChanges()
-                }
-            }
+            return DigitsOnlyTransformation
         }
     }
 }
 
 fun InputTransformation.then(next: InputTransformation): InputTransformation {
-    return InputTransformation { buffer ->
-        transformInput(buffer)
-        next.transformInput(buffer)
+    return ChainedInputTransformation(this, next)
+}
+
+private data class MaxCodePointsTransformation(
+    val maxCodePoints: Int,
+) : InputTransformation {
+    override fun transformInput(buffer: TextFieldBuffer) {
+        val count = buffer.text.codePointCount(0, buffer.length)
+        if (count > maxCodePoints) {
+            buffer.revertAllChanges()
+        }
+    }
+}
+
+private data object DigitsOnlyTransformation : InputTransformation {
+    override fun transformInput(buffer: TextFieldBuffer) {
+        if (buffer.text.any { !it.isDigit() }) {
+            buffer.revertAllChanges()
+        }
+    }
+}
+
+private data class ChainedInputTransformation(
+    val first: InputTransformation,
+    val second: InputTransformation,
+) : InputTransformation {
+    override fun transformInput(buffer: TextFieldBuffer) {
+        first.transformInput(buffer)
+        second.transformInput(buffer)
     }
 }
