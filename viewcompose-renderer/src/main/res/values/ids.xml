@@ -5,6 +5,7 @@
     <item name="viewcompose_seek_listener" type="id" />
     <item name="viewcompose_lazy_spacing_decoration" type="id" />
     <item name="viewcompose_lazy_grid_spacing_decoration" type="id" />
+    <item name="viewcompose_lazy_sticky_header_decoration" type="id" />
     <item name="viewcompose_test_tag" type="id" />
     <item name="viewcompose_constraint_layout_id" type="id" />
     <item name="viewcompose_constraint_item_spec" type="id" />

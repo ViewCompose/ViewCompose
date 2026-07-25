@@ -28,7 +28,8 @@ internal class LazyLinearLayoutManager(
 internal class LazyGridLayoutManager(
     context: Context,
     spanCount: Int,
-) : GridLayoutManager(context, spanCount) {
+    reverseLayout: Boolean = false,
+) : GridLayoutManager(context, spanCount, RecyclerView.VERTICAL, reverseLayout) {
     override fun requestChildRectangleOnScreen(
         parent: RecyclerView,
         child: View,

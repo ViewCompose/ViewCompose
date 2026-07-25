@@ -26,6 +26,7 @@ import com.viewcompose.renderer.view.container.DeclarativeFlowColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeHorizontalPagerLayout
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
+import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -80,12 +81,12 @@ internal object ViewNodeFactory {
                 }
                 created
             }
-            NodeType.LazyColumn -> RecyclerView(context).apply {
+            NodeType.LazyColumn -> DeclarativeLazyListView(context).apply {
                 layoutManager = LazyLinearLayoutManager(context)
                 adapter = LazyListAdapter()
                 FrameworkRecyclerViewDefaults.applyLazyColumnDefaults(this)
             }
-            NodeType.LazyRow -> RecyclerView(context).apply {
+            NodeType.LazyRow -> DeclarativeLazyListView(context).apply {
                 layoutManager = LazyLinearLayoutManager(
                     context = context,
                     orientation = LinearLayoutManager.HORIZONTAL,

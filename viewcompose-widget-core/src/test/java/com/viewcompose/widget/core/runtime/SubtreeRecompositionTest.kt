@@ -123,10 +123,13 @@ class SubtreeRecompositionTest {
                 composer.composeRoot {
                     buildVNodeTree {
                         val version = contentVersion.value
-                        LazyColumn(
-                            items = listOf("item"),
-                        ) { item ->
-                            Text("$item:$version")
+                        LazyColumn {
+                            items(
+                                items = listOf("item"),
+                                key = { item -> item },
+                            ) { item ->
+                                Text("$item:$version")
+                            }
                         }
                     }.single()
                 }

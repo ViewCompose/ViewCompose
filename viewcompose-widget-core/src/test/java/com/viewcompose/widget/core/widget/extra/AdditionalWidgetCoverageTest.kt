@@ -154,14 +154,17 @@ class AdditionalWidgetCoverageTest {
         )
         val tree = buildVNodeTree {
             LazyRow(
-                items = listOf("A", "B"),
-                key = { it },
-                contentPadding = 14.dp,
+                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(14.dp),
                 spacing = 6.dp,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
-            ) { item ->
-                Text(item)
+            ) {
+                items(
+                    items = listOf("A", "B"),
+                    key = { item -> item },
+                ) { item ->
+                    Text(item)
+                }
             }
         }
 
@@ -169,7 +172,10 @@ class AdditionalWidgetCoverageTest {
         val spec = node.spec as LazyRowNodeProps
 
         assertEquals(NodeType.LazyRow, node.type)
-        assertEquals(14.dp, spec.contentPadding)
+        assertEquals(
+            com.viewcompose.ui.node.policy.LazyContentPadding.all(14.dp),
+            spec.contentPadding,
+        )
         assertEquals(6.dp, spec.spacing)
         assertEquals("A", spec.items[0].key)
         assertEquals("B", spec.items[1].key)
@@ -235,19 +241,39 @@ class AdditionalWidgetCoverageTest {
         )
         val gridTree = buildVNodeTree {
             LazyVerticalGrid(
-                items = listOf("A", "B"),
                 spanCount = 2,
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
                 focusFollowKeyboard = true,
-            ) { item ->
-                Text(item)
+            ) {
+                items(
+                    items = listOf("A", "B"),
+                    key = { item -> item },
+                ) { item ->
+                    Text(item)
+                }
             }
         }
         val gridSpec = gridTree.single().spec as LazyVerticalGridNodeProps
         assertEquals(reusePolicy, gridSpec.reusePolicy)
         assertEquals(motionPolicy, gridSpec.motionPolicy)
         assertTrue(gridSpec.focusFollowKeyboard)
+
+        val spannedGridTree = buildVNodeTree {
+            LazyVerticalGrid(spanCount = 3) {
+                stickyHeader(key = "header") { Text("Header") }
+                items(
+                    items = listOf(1, 2),
+                    key = { item -> item },
+                    span = { item -> item },
+                ) { item ->
+                    Text(item.toString())
+                }
+            }
+        }
+        val spannedItems =
+            (spannedGridTree.single().spec as LazyVerticalGridNodeProps).items
+        assertEquals(listOf(Int.MAX_VALUE, 1, 2), spannedItems.map { item -> item.span })
 
         val horizontalPagerTree = buildVNodeTree {
             HorizontalPager(

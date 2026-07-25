@@ -568,7 +568,7 @@ class NodeBindingDifferTest {
         return VNode(
             type = NodeType.LazyColumn,
             spec = LazyColumnNodeProps(
-                contentPadding = 12,
+                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(12),
                 spacing = spacing,
                 items = emptyList(),
             ),
@@ -583,7 +583,7 @@ class NodeBindingDifferTest {
             type = NodeType.LazyVerticalGrid,
             spec = LazyVerticalGridNodeProps(
                 spanCount = spanCount,
-                contentPadding = 8,
+                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(8),
                 horizontalSpacing = 8,
                 verticalSpacing = 8,
                 items = listOf(

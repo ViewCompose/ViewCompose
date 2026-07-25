@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.renderer.reconcile.LazyListDiff
 import com.viewcompose.renderer.reconcile.LazyListIdentityInspector
@@ -32,6 +33,12 @@ internal class LazyListAdapter(
     }
     private var lastIdentityWarning: String? = null
     private var attachedRecyclerView: RecyclerView? = null
+    private val stableIds = linkedMapOf<Any, Long>()
+    private val viewTypes = linkedMapOf<Any, Int>()
+    private var nextStableId = 0L
+    private var nextViewType = 1
+    private var itemsVersion = 0L
+    private var stickyHeaderDisposer: (() -> Unit)? = null
 
     init {
         setHasStableIds(true)
@@ -107,17 +114,67 @@ internal class LazyListAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    override fun getItemViewType(position: Int): Int = orientation
+    override fun getItemViewType(position: Int): Int {
+        val item = items[position]
+        val typeKey = item.kind to item.contentType
+        return viewTypes.getOrPut(typeKey) { nextViewType++ }
+    }
 
     override fun getItemId(position: Int): Long {
-        val key = items[position].key
-        return key?.hashCode()?.toLong() ?: position.toLong()
+        val key = items[position].key ?: return Long.MIN_VALUE + position
+        return stableIds.getOrPut(key) { nextStableId++ }
     }
 
     fun itemKeyAt(position: Int): Any? = items.getOrNull(position)?.key
 
-    fun itemContentTypeAt(position: Int): Any? = items.getOrNull(position)?.contentToken?.let {
-        it::class
+    fun itemContentTypeAt(position: Int): Any? = items.getOrNull(position)?.contentType
+
+    fun itemSpanAt(position: Int): Int = items.getOrNull(position)?.span ?: 1
+
+    fun isStickyHeader(position: Int): Boolean {
+        return items.getOrNull(position)?.kind == LazyListItemKind.StickyHeader
+    }
+
+    fun hasStickyHeaders(): Boolean = items.any { item ->
+        item.kind == LazyListItemKind.StickyHeader
+    }
+
+    fun findStickyHeaderPosition(itemPosition: Int): Int {
+        if (itemPosition < 0 || items.isEmpty()) {
+            return RecyclerView.NO_POSITION
+        }
+        for (position in itemPosition.coerceAtMost(items.lastIndex) downTo 0) {
+            if (isStickyHeader(position)) {
+                return position
+            }
+        }
+        return RecyclerView.NO_POSITION
+    }
+
+    fun currentItemsVersion(): Long = itemsVersion
+
+    fun createDetachedHolder(
+        parent: ViewGroup,
+        position: Int,
+    ): LazyListViewHolder {
+        return onCreateViewHolder(parent, getItemViewType(position)).also { holder ->
+            holder.bind(items[position])
+        }
+    }
+
+    fun rebindDetachedHolder(
+        holder: LazyListViewHolder,
+        position: Int,
+    ) {
+        holder.bind(items[position])
+    }
+
+    fun recycleDetachedHolder(holder: LazyListViewHolder) {
+        holder.recycle()
+    }
+
+    fun setStickyHeaderDisposer(disposer: (() -> Unit)?) {
+        stickyHeaderDisposer = disposer
     }
 
     fun submitItems(items: List<LazyListItem>) {
@@ -132,6 +189,7 @@ internal class LazyListAdapter(
             null
         }
         this.items = result.items
+        itemsVersion += 1
         if (result.diffResult != null) {
             result.diffResult.dispatchUpdatesTo(this)
         } else {
@@ -164,8 +222,12 @@ internal class LazyListAdapter(
     }
 
     fun disposeAll() {
+        val disposeStickyHeader = stickyHeaderDisposer
+        stickyHeaderDisposer = null
+        disposeStickyHeader?.invoke()
         holderRegistry.disposeAll()
         items = emptyList()
+        itemsVersion += 1
     }
 
     private fun bindHolder(
