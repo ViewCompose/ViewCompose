@@ -15,7 +15,7 @@
         <activity
             android:name=".NavigationBackTestActivity"
             android:enableOnBackInvokedCallback="true"
-            android:exported="false"
+            android:exported="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true" />
     </application>
