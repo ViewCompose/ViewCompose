@@ -48,6 +48,7 @@
 23. 宿主平台能力已收口为原子安装：渲染引擎、帧调度 runtime 与组合协程上下文作为同一不可变快照注册，移除空渲染、即时调度和空协程上下文的半安装降级路径。
 24. 结构化无障碍语义已落地：`Modifier.semantics` 覆盖描述、状态、role、heading、live region、选择/勾选/启用、错误、进度与子树策略；renderer 映射原生 Accessibility，并在 View 复用时恢复原始语义。
 25. 结构化渲染失败与原生副作用边界已落地：`RenderFailure/RenderFrameReport` 覆盖阶段、恢复结果、帧号与 AndroidView 操作；不可重放动作通过事务成功后发布的 `AndroidView.onCommit` 执行。
+26. Overlay P2 完整度已增强：Popup 使用平台无关 positioner 支持四向精确锚定、RTL、翻转/夹取和滚动跟随；Snackbar/Toast 使用统一队列策略与结构化结束原因。
 
 ### 2.2 Demo 与验证层
 
@@ -86,7 +87,7 @@
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
 | Lifecycle / ViewModel Integration | 模块拆分与 API 硬切已完成（`viewcompose-lifecycle` / `viewcompose-viewmodel`） | 继续补强生命周期边界态与 SavedState 复杂场景回归 |
 | Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 list state、sticky headers、contentType/span 与预取已落地 | Paging 3 适配保持可选集成，不进入核心契约 |
-| Overlay | Dialog/Popup/ModalBottomSheet/Snackbar/Toast 主链路已打通 | Popup 锚点定位增强、反馈队列策略收口 |
+| Overlay | Popup 精确锚点、滚动跟随、RTL、翻转/夹取，以及 Snackbar/Toast 统一队列与结构化结束原因已落地 | 扩展多窗口、IME 与自由窗真实设备矩阵 |
 | Theming | 已完成 token 收口升级（语义色、tier typography、interactive shape、defaults 语义守卫），并新增 `Diagnostics -> 主题诊断` 作为当前主题语义的权威人工验证入口 | Android 动态色/shape 桥接与 token 生命周期治理 |
 | Interop | `AndroidView` 支持 replay-safe update/reset/nativeView、提交期 onCommit 与一次性 release | 强化复杂原生 View、第三方控件与主题协同 |
 | Diagnostics | 基础 render/layout 诊断已落地，并补齐 `主题诊断` 页用于 token/defaults/关键组件视觉映射验证 | locals/render tree/patch 可视化与告警可读性 |

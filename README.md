@@ -38,6 +38,8 @@
   Unified nested scrolling: pre/post scroll and fling phases connect lazy containers, pagers, scrolling Views, and custom drags.
 - 结构化渲染失败与原生副作用边界：失败阶段/恢复结果可观测，`AndroidView.onCommit` 只在树事务成功后执行。
   Structured render failures and native effect boundaries: failure phase/recovery is observable, and `AndroidView.onCommit` runs only after a successful tree transaction.
+- 精确浮层与统一反馈队列：Popup 可随锚点移动并自动翻转/夹取，Snackbar/Toast 共享可配置的确定性队列。
+  Precise overlays and unified feedback queues: popups track moving anchors with flip/clamp positioning, while Snackbar/Toast share a configurable deterministic queue.
 
 ## 架构总览 | Architecture Overview
 
@@ -131,6 +133,8 @@ class SampleActivity : AppCompatActivity() {
 
 核心入口 API 在 `viewcompose-host-android`：`ComponentActivity.setUiContent(...)` 与 `Fragment.setUiContent(...)`。  
 Core entry APIs are in `viewcompose-host-android`: `ComponentActivity.setUiContent(...)` and `Fragment.setUiContent(...)`.
+
+Overlay positioning and transient feedback policies are documented in [OVERLAYS.md](OVERLAYS.md).
 
 ### 状态与协程副作用 | State & Coroutine Effects
 
