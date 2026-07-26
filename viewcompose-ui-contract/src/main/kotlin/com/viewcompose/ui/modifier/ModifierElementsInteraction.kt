@@ -2,6 +2,7 @@ package com.viewcompose.ui.modifier
 
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.GesturePriority
+import com.viewcompose.ui.gesture.GestureCancellationReason
 import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
 import com.viewcompose.ui.gesture.TransformDelta
@@ -34,6 +35,7 @@ data class DraggableModifierElement(
     val onDragStarted: (() -> Unit)?,
     val onDragStopped: ((velocity: Float) -> Unit)?,
     val onDelta: (delta: Float) -> Unit,
+    val onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ) : ModifierElement
 
 data class AnchoredDraggableModifierElement(
@@ -43,11 +45,15 @@ data class AnchoredDraggableModifierElement(
     val currentOffsetPx: Float?,
     val onDelta: (delta: Float) -> Unit,
     val onSettleToOffset: (offsetPx: Float) -> Unit,
+    val onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ) : ModifierElement
 
 data class TransformableModifierElement(
     val enabled: Boolean,
     val onTransform: (TransformDelta) -> Unit,
+    val onTransformStarted: (() -> Unit)? = null,
+    val onTransformStopped: (() -> Unit)? = null,
+    val onTransformCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ) : ModifierElement
 
 data class GesturePriorityModifierElement(

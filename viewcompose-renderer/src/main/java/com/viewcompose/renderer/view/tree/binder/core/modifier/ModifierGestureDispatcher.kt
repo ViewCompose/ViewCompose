@@ -15,6 +15,7 @@ import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.GesturePriority
+import com.viewcompose.ui.gesture.GestureCancellationReason
 import com.viewcompose.ui.gesture.PointerChange
 import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
@@ -79,6 +80,8 @@ private class ViewGestureDispatcher(
     private var pointerStreamActive = false
     private var transformStreamActive = false
     private var transformPastTouchSlop = false
+    private var transformGestureStarted = false
+    private var dragBlockedUntilNextDown = false
     private var transformMidX = Float.NaN
     private var transformMidY = Float.NaN
     private var transformAngle = Float.NaN
@@ -125,12 +128,22 @@ private class ViewGestureDispatcher(
     )
 
     fun update(resolved: ResolvedModifiers) {
+        if (dragStarted && dragParticipationChanged(this.resolved, resolved)) {
+            cancelDrag(GestureCancellationReason.ModifierChanged)
+        }
+        if (transformGestureStarted &&
+            this.resolved.transformable?.enabled == true &&
+            resolved.transformable?.enabled != true
+        ) {
+            cancelTransform(GestureCancellationReason.ModifierChanged)
+        }
         this.resolved = resolved
     }
 
     fun dispose() {
-        velocityTracker?.recycle()
-        velocityTracker = null
+        cancelDrag(GestureCancellationReason.Disposed)
+        cancelTransform(GestureCancellationReason.Disposed)
+        resetTrackingState()
         pointerStreamActive = false
     }
 
@@ -145,6 +158,13 @@ private class ViewGestureDispatcher(
         }
         val pointerConsumed = dispatchPointerInput(event)
         if (pointerConsumed) {
+            val cancellationReason = if (action == MotionEvent.ACTION_CANCEL) {
+                GestureCancellationReason.SystemCancelled
+            } else {
+                GestureCancellationReason.PointerInputConsumed
+            }
+            cancelDrag(cancellationReason)
+            cancelTransform(cancellationReason)
             if (action == MotionEvent.ACTION_DOWN &&
                 resolved.gesturePriority?.priority == GesturePriority.High
             ) {
@@ -152,6 +172,7 @@ private class ViewGestureDispatcher(
             }
             if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
                 combinedTapConsumed = false
+                pointerStreamActive = false
                 resetTrackingState()
             }
             return true
@@ -213,8 +234,13 @@ private class ViewGestureDispatcher(
         var dispatched = false
         when (event.actionMasked) {
             MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_DOWN -> {
-                if (initializeTransformPointers(event) && captureTransformBaseline(event)) {
+                if (!transformStreamActive &&
+                    initializeTransformPointers(event) &&
+                    captureTransformBaseline(event)
+                ) {
                     transformStreamActive = true
+                    dragBlockedUntilNextDown = true
+                    cancelDrag(GestureCancellationReason.TransformTookOver)
                     debugLog {
                         "transform-start pointers=${event.pointerCount} " +
                             "mid=(${transformMidX.format(1)}, ${transformMidY.format(1)}) " +
@@ -254,6 +280,8 @@ private class ViewGestureDispatcher(
                         )
                     ) {
                         transformPastTouchSlop = true
+                        transformGestureStarted = true
+                        transform.onTransformStarted?.invoke()
                         hostView.parent?.requestDisallowInterceptTouchEvent(true)
                         debugLog {
                             "transform-active panMotion=${transformPanMotion.format(2)} " +
@@ -299,6 +327,13 @@ private class ViewGestureDispatcher(
             }
 
             MotionEvent.ACTION_POINTER_UP -> {
+                val liftedPointerId = event.getPointerId(event.actionIndex)
+                if (liftedPointerId != primaryTransformPointerId &&
+                    liftedPointerId != secondaryTransformPointerId
+                ) {
+                    return dispatched
+                }
+                val wasStarted = transformGestureStarted
                 val hasRemainingPair = initializeTransformPointers(
                     event = event,
                     excludeActionIndex = event.actionIndex,
@@ -307,14 +342,21 @@ private class ViewGestureDispatcher(
                     excludeActionIndex = event.actionIndex,
                 )
                 if (!hasRemainingPair) {
-                    resetTransformTracking()
+                    finishTransform()
                     debugLog { "transform-end action=${event.actionMasked} pointers=${event.pointerCount}" }
+                } else if (wasStarted) {
+                    transformPastTouchSlop = true
                 }
             }
 
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                resetTransformTracking()
+            MotionEvent.ACTION_UP -> {
+                finishTransform()
                 debugLog { "transform-end action=${event.actionMasked} pointers=${event.pointerCount}" }
+            }
+
+            MotionEvent.ACTION_CANCEL -> {
+                cancelTransform(GestureCancellationReason.SystemCancelled)
+                debugLog { "transform-cancel pointers=${event.pointerCount}" }
             }
         }
         return dispatched
@@ -323,12 +365,18 @@ private class ViewGestureDispatcher(
     private fun dispatchDragAndSwipe(event: MotionEvent): Boolean {
         val draggable = resolved.draggable?.takeIf { it.enabled }
         val anchoredDraggable = resolved.anchoredDraggable?.takeIf { it.enabled }
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            dragBlockedUntilNextDown = false
+        }
         if (draggable == null && anchoredDraggable == null) {
             // Do not clear transform tracking here; transformable may coexist without drag/swipe.
             if (transformStreamActive) {
                 debugLog { "drag-swipe bypassed while transform stream is active" }
             }
             resetDragSwipeTracking()
+            return false
+        }
+        if (dragBlockedUntilNextDown) {
             return false
         }
         if (transformStreamActive && event.pointerCount > 1) {
@@ -408,7 +456,13 @@ private class ViewGestureDispatcher(
                 return true
             }
 
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+            MotionEvent.ACTION_CANCEL -> {
+                val dragConsumed = dragStarted
+                cancelDrag(GestureCancellationReason.SystemCancelled)
+                return dragConsumed
+            }
+
+            MotionEvent.ACTION_UP -> {
                 tracker.addMovement(event)
                 val axis = lockAxis
                 tracker.computeCurrentVelocity(1000)
@@ -465,6 +519,7 @@ private class ViewGestureDispatcher(
     private fun resetTrackingState() {
         resetDragSwipeTracking()
         resetTransformTracking()
+        dragBlockedUntilNextDown = false
     }
 
     private fun resetDragSwipeTracking() {
@@ -486,9 +541,45 @@ private class ViewGestureDispatcher(
         transformZoomMotion = 0f
         transformRotationMotion = 0f
         transformStreamActive = false
+        transformGestureStarted = false
         primaryTransformPointerId = INVALID_POINTER_ID
         secondaryTransformPointerId = INVALID_POINTER_ID
-        pointerStreamActive = false
+    }
+
+    private fun cancelDrag(reason: GestureCancellationReason) {
+        if (dragStarted) {
+            resolved.draggable?.onDragCancelled?.invoke(reason)
+            resolved.anchoredDraggable?.onDragCancelled?.invoke(reason)
+        }
+        resetDragSwipeTracking()
+    }
+
+    private fun finishTransform() {
+        if (transformGestureStarted) {
+            resolved.transformable?.onTransformStopped?.invoke()
+        }
+        resetTransformTracking()
+    }
+
+    private fun cancelTransform(reason: GestureCancellationReason) {
+        if (transformGestureStarted) {
+            resolved.transformable?.onTransformCancelled?.invoke(reason)
+        }
+        resetTransformTracking()
+    }
+
+    private fun dragParticipationChanged(
+        previous: ResolvedModifiers,
+        next: ResolvedModifiers,
+    ): Boolean {
+        val previousDraggable = previous.draggable?.takeIf { it.enabled }
+        val nextDraggable = next.draggable?.takeIf { it.enabled }
+        val previousAnchored = previous.anchoredDraggable?.takeIf { it.enabled }
+        val nextAnchored = next.anchoredDraggable?.takeIf { it.enabled }
+        return (previousDraggable != null) != (nextDraggable != null) ||
+            (previousAnchored != null) != (nextAnchored != null) ||
+            previousDraggable?.orientation != nextDraggable?.orientation ||
+            previousAnchored?.orientation != nextAnchored?.orientation
     }
 
     private fun resolveGestureOrientation(
