@@ -36,11 +36,56 @@ internal data class NavHostTransitionResult(
     val outcome: NavHostTransitionOutcome,
 )
 
+@JvmInline
+internal value class NavHostBackPreviewId(
+    val value: Long,
+)
+
+internal enum class NavHostBackSwipeEdge {
+    Left,
+    Right,
+    None,
+}
+
+internal data class NavHostBackEvent(
+    val touchX: Float,
+    val touchY: Float,
+    val progress: Float,
+    val swipeEdge: NavHostBackSwipeEdge,
+    val frameTimeMillis: Long,
+) {
+    init {
+        require(progress.isFinite() && progress in 0f..1f) {
+            "Back progress must be finite and within 0..1; value=$progress."
+        }
+    }
+}
+
+internal data class NavHostBackPreview(
+    val id: NavHostBackPreviewId,
+    val snapshot: NavBackStackSnapshot,
+    val outgoingEntry: NavEntry,
+    val incomingEntry: NavEntry,
+    val visibleEntryIds: Set<NavEntryId>,
+    val layerOrder: List<NavEntryId>,
+)
+
 internal fun interface NavHostTransitionHandle {
     fun cancel()
 }
 
-internal fun interface NavHostTransitionDriver {
+internal interface NavHostBackPreviewHandle {
+    fun update(event: NavHostBackEvent)
+
+    fun cancel()
+
+    fun commit(
+        transition: NavHostTransition,
+        onCompleted: () -> Unit,
+    ): NavHostTransitionHandle
+}
+
+internal interface NavHostTransitionDriver {
     /**
      * Starts visual work for [transition].
      *
@@ -51,6 +96,11 @@ internal fun interface NavHostTransitionDriver {
         transition: NavHostTransition,
         onCompleted: () -> Unit,
     ): NavHostTransitionHandle
+
+    fun startBackPreview(
+        preview: NavHostBackPreview,
+        initialEvent: NavHostBackEvent,
+    ): NavHostBackPreviewHandle
 }
 
 internal object ImmediateNavHostTransitionDriver : NavHostTransitionDriver {
@@ -60,5 +110,24 @@ internal object ImmediateNavHostTransitionDriver : NavHostTransitionDriver {
     ): NavHostTransitionHandle {
         onCompleted()
         return NavHostTransitionHandle {}
+    }
+
+    override fun startBackPreview(
+        preview: NavHostBackPreview,
+        initialEvent: NavHostBackEvent,
+    ): NavHostBackPreviewHandle {
+        return object : NavHostBackPreviewHandle {
+            override fun update(event: NavHostBackEvent) = Unit
+
+            override fun cancel() = Unit
+
+            override fun commit(
+                transition: NavHostTransition,
+                onCompleted: () -> Unit,
+            ): NavHostTransitionHandle {
+                onCompleted()
+                return NavHostTransitionHandle {}
+            }
+        }
     }
 }

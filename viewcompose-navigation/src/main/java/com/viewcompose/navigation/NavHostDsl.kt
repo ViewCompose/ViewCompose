@@ -17,11 +17,15 @@ import com.viewcompose.widget.core.captureUiLocalSnapshot
  *
  * Destination content receives the active [NavEntry]. Its lifecycle, ViewModel store, saved-state
  * namespace, and child render session are owned by this host rather than an Activity or Fragment.
+ * When [systemBackEnabled] is true, the host participates in the nearest AndroidX back dispatcher
+ * only while its stack can pop. Predictive-back progress previews the previous destination without
+ * changing the committed stack until the gesture completes.
  */
 fun UiTreeBuilder.NavHost(
     controller: NavHostController,
     modifier: Modifier = Modifier,
     transitionSpec: NavTransitionSpec = NavTransitionSpec.Default,
+    systemBackEnabled: Boolean = true,
     debug: Boolean = false,
     debugTag: String = "ViewComposeNavigation",
     overlayHostFactory: (ViewGroup) -> OverlayHost = defaultNavOverlayHostFactory,
@@ -37,6 +41,7 @@ fun UiTreeBuilder.NavHost(
         localSnapshot = captureUiLocalSnapshot(),
         lifecycleOwner = lifecycleOwner,
         transitionSpec = transitionSpec,
+        systemBackEnabled = systemBackEnabled,
         onFailure = onFailure,
         content = content,
     )

@@ -166,6 +166,71 @@ class AndroidViewNavHostTransitionDriverTest {
     }
 
     @Test
+    fun `predictive back progress and cancellation restore native view properties`() {
+        val root = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        val details = coordinator.snapshot.top
+        attachAndLayoutHost()
+
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(
+                backEvent(
+                    progress = 0.5f,
+                    swipeEdge = NavHostBackSwipeEdge.Left,
+                ),
+            ),
+        )
+        val incoming = session(root.id).container
+        val outgoing = session(details.id).container
+
+        assertEquals(-60f, incoming.translationX)
+        assertEquals(0.5f, incoming.alpha)
+        assertEquals(60f, outgoing.translationX)
+        assertEquals(0.5f, outgoing.alpha)
+
+        coordinator.cancelBackPreview(preview.id)
+
+        assertEquals(0f, incoming.translationX)
+        assertEquals(1f, incoming.alpha)
+        assertEquals(0f, outgoing.translationX)
+        assertEquals(1f, outgoing.alpha)
+        assertEquals(View.GONE, incoming.visibility)
+        assertEquals(View.VISIBLE, outgoing.visibility)
+    }
+
+    @Test
+    fun `predictive back commit continues native motion and settles pop`() {
+        val root = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        val details = coordinator.snapshot.top
+        attachAndLayoutHost()
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(
+                backEvent(
+                    progress = 0.5f,
+                    swipeEdge = NavHostBackSwipeEdge.Left,
+                ),
+            ),
+        )
+
+        val result = coordinator.commitBackPreview(
+            preview.id,
+        ) as NavHostNavigationResult.Committed
+
+        assertEquals(NavCommand.Pop, result.command)
+        assertTrue(coordinator.activeTransition != null)
+        assertEquals(listOf("home"), coordinator.snapshot.entries.map { it.route.name })
+
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(1, TimeUnit.SECONDS)
+
+        assertNull(coordinator.activeTransition)
+        assertNull(sessionStore.sessionOrNull(details.id))
+        assertEquals(View.VISIBLE, session(root.id).container.visibility)
+        assertEquals(0f, session(root.id).container.translationX)
+        assertEquals(1f, session(root.id).container.alpha)
+    }
+
+    @Test
     fun `motion direction follows command and host layout direction`() {
         assertEquals(
             1f,
@@ -194,6 +259,51 @@ class AndroidViewNavHostTransitionDriverTest {
                 command = NavCommand.Pop,
                 layoutDirection = View.LAYOUT_DIRECTION_RTL,
             ),
+        )
+    }
+
+    @Test
+    fun `predictive back motion follows swipe edge with layout fallback`() {
+        assertEquals(
+            1f,
+            backPreviewOutgoingDirection(
+                swipeEdge = NavHostBackSwipeEdge.Left,
+                layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            ),
+        )
+        assertEquals(
+            -1f,
+            backPreviewOutgoingDirection(
+                swipeEdge = NavHostBackSwipeEdge.Right,
+                layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            ),
+        )
+        assertEquals(
+            1f,
+            backPreviewOutgoingDirection(
+                swipeEdge = NavHostBackSwipeEdge.None,
+                layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            ),
+        )
+        assertEquals(
+            -1f,
+            backPreviewOutgoingDirection(
+                swipeEdge = NavHostBackSwipeEdge.None,
+                layoutDirection = View.LAYOUT_DIRECTION_RTL,
+            ),
+        )
+    }
+
+    private fun backEvent(
+        progress: Float,
+        swipeEdge: NavHostBackSwipeEdge,
+    ): NavHostBackEvent {
+        return NavHostBackEvent(
+            touchX = 8f,
+            touchY = 16f,
+            progress = progress,
+            swipeEdge = swipeEdge,
+            frameTimeMillis = 24L,
         )
     }
 

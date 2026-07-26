@@ -243,6 +243,145 @@ class NavHostTransitionCoordinatorTest {
     }
 
     @Test
+    fun `predictive back preview exposes previous page without mutating stack`() {
+        val root = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        transitionDriver.completeLatest()
+        val details = coordinator.snapshot.top
+
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(backEvent(progress = 0f)),
+        )
+
+        assertSame(preview, coordinator.activeBackPreview)
+        assertEquals(listOf("home", "details"), coordinator.routeNames())
+        assertEquals(root, preview.incomingEntry)
+        assertEquals(details, preview.outgoingEntry)
+        assertEquals(setOf(root.id, details.id), preview.visibleEntryIds)
+        assertEquals(View.VISIBLE, session(root).container.visibility)
+        assertEquals(View.VISIBLE, session(details).container.visibility)
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
+
+        assertTrue(
+            coordinator.updateBackPreview(
+                previewId = preview.id,
+                event = backEvent(progress = 0.4f),
+            ),
+        )
+        assertEquals(0.4f, transitionDriver.latestBackPreview.events.last().progress)
+        assertEquals(listOf("home", "details"), coordinator.routeNames())
+    }
+
+    @Test
+    fun `predictive back cancellation restores settled page`() {
+        val root = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        transitionDriver.completeLatest()
+        val details = coordinator.snapshot.top
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(backEvent(progress = 0.3f)),
+        )
+        val previewRun = transitionDriver.latestBackPreview
+
+        assertTrue(coordinator.cancelBackPreview(preview.id))
+
+        assertTrue(previewRun.cancelled)
+        assertNull(coordinator.activeBackPreview)
+        assertEquals(listOf("home", "details"), coordinator.routeNames())
+        assertEquals(View.GONE, session(root).container.visibility)
+        assertEquals(View.VISIBLE, session(details).container.visibility)
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
+        assertFalse(coordinator.cancelBackPreview(preview.id))
+    }
+
+    @Test
+    fun `predictive back commit mutates stack only on commit and reuses preview motion`() {
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        transitionDriver.completeLatest()
+        val details = coordinator.snapshot.top
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(backEvent(progress = 0f)),
+        )
+        val previewRun = transitionDriver.latestBackPreview
+        coordinator.updateBackPreview(
+            previewId = preview.id,
+            event = backEvent(progress = 0.6f),
+        )
+
+        assertEquals(listOf("home", "details"), coordinator.routeNames())
+
+        val result = coordinator.commitBackPreview(
+            preview.id,
+        ) as NavHostNavigationResult.Committed
+        val root = coordinator.snapshot.top
+
+        assertEquals(listOf("home"), coordinator.routeNames())
+        assertEquals(NavCommand.Pop, result.command)
+        assertSame(result.transition, coordinator.activeTransition)
+        assertSame(result.transition, previewRun.committedTransition)
+        assertEquals(View.VISIBLE, session(root).container.visibility)
+        assertEquals(View.VISIBLE, session(details).container.visibility)
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+
+        transitionDriver.completeLatest()
+
+        assertNull(coordinator.activeTransition)
+        assertNull(sessionStore.sessionOrNull(details.id))
+        assertNull(ownerStore.ownerOrNull(details.id))
+        assertEquals(View.VISIBLE, session(root).container.visibility)
+    }
+
+    @Test
+    fun `root cannot begin predictive back`() {
+        assertNull(coordinator.beginBackPreview(backEvent(progress = 0f)))
+        assertNull(coordinator.activeBackPreview)
+        assertTrue(transitionDriver.backPreviews.isEmpty())
+        assertEquals(listOf("home"), coordinator.routeNames())
+    }
+
+    @Test
+    fun `application navigation cancels active predictive preview before next transaction`() {
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        transitionDriver.completeLatest()
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(backEvent(progress = 0.2f)),
+        )
+        val previewRun = transitionDriver.latestBackPreview
+
+        val result = coordinator.navigate(
+            NavCommand.Push(NavRoute("confirmation")),
+        )
+
+        assertTrue(result is NavHostNavigationResult.Committed)
+        assertTrue(previewRun.cancelled)
+        assertNull(coordinator.activeBackPreview)
+        assertFalse(coordinator.updateBackPreview(preview.id, backEvent(progress = 0.8f)))
+        assertEquals(listOf("home", "details", "confirmation"), coordinator.routeNames())
+    }
+
+    @Test
+    fun `host lifecycle caps both pages during predictive preview`() {
+        val root = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        transitionDriver.completeLatest()
+        val details = coordinator.snapshot.top
+        coordinator.beginBackPreview(backEvent(progress = 0.1f))
+
+        coordinator.moveHostTo(NavHostLifecycleState.Created)
+
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(details))
+
+        coordinator.moveHostTo(NavHostLifecycleState.Started)
+
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+    }
+
+    @Test
     fun `destroy cancels active transition and tears down every retained page`() {
         val root = coordinator.snapshot.top
         coordinator.navigate(NavCommand.Push(NavRoute("details")))
@@ -264,6 +403,40 @@ class NavHostTransitionCoordinatorTest {
         assertEquals(0, coordinator.hostView.childCount)
     }
 
+    @Test
+    fun `destroy cancels predictive preview and tears down every page`() {
+        val root = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        transitionDriver.completeLatest()
+        val details = coordinator.snapshot.top
+        coordinator.beginBackPreview(backEvent(progress = 0.5f))
+        val previewRun = transitionDriver.latestBackPreview
+
+        coordinator.destroy()
+
+        assertTrue(previewRun.cancelled)
+        assertEquals(NavHostCoordinatorState.Destroyed, coordinator.state)
+        assertNull(coordinator.activeBackPreview)
+        assertNull(sessionStore.sessionOrNull(root.id))
+        assertNull(sessionStore.sessionOrNull(details.id))
+        assertNull(ownerStore.ownerOrNull(root.id))
+        assertNull(ownerStore.ownerOrNull(details.id))
+        assertEquals(0, coordinator.hostView.childCount)
+    }
+
+    private fun backEvent(
+        progress: Float,
+        swipeEdge: NavHostBackSwipeEdge = NavHostBackSwipeEdge.Left,
+    ): NavHostBackEvent {
+        return NavHostBackEvent(
+            touchX = 12f,
+            touchY = 24f,
+            progress = progress,
+            swipeEdge = swipeEdge,
+            frameTimeMillis = 32L,
+        )
+    }
+
     private fun session(entry: NavEntry): NavDestinationSession {
         return checkNotNull(sessionStore.sessionOrNull(entry.id))
     }
@@ -279,18 +452,40 @@ class NavHostTransitionCoordinatorTest {
 
 private class RecordingTransitionDriver : NavHostTransitionDriver {
     val runs = mutableListOf<RecordingTransitionRun>()
+    val backPreviews = mutableListOf<RecordingBackPreviewRun>()
 
     val latest: RecordingTransitionRun
         get() = runs.last()
+
+    val latestBackPreview: RecordingBackPreviewRun
+        get() = backPreviews.last()
 
     override fun start(
         transition: NavHostTransition,
         onCompleted: () -> Unit,
     ): NavHostTransitionHandle {
-        val run = RecordingTransitionRun(
+        return recordTransition(
             transition = transition,
             onCompleted = onCompleted,
         )
+    }
+
+    override fun startBackPreview(
+        preview: NavHostBackPreview,
+        initialEvent: NavHostBackEvent,
+    ): NavHostBackPreviewHandle {
+        return RecordingBackPreviewRun(
+            preview = preview,
+            initialEvent = initialEvent,
+            commitTransition = ::recordTransition,
+        ).also(backPreviews::add)
+    }
+
+    private fun recordTransition(
+        transition: NavHostTransition,
+        onCompleted: () -> Unit,
+    ): NavHostTransitionHandle {
+        val run = RecordingTransitionRun(transition, onCompleted)
         runs += run
         return NavHostTransitionHandle {
             run.cancelled = true
@@ -299,6 +494,35 @@ private class RecordingTransitionDriver : NavHostTransitionDriver {
 
     fun completeLatest() {
         latest.complete()
+    }
+}
+
+private class RecordingBackPreviewRun(
+    val preview: NavHostBackPreview,
+    initialEvent: NavHostBackEvent,
+    private val commitTransition: (
+        transition: NavHostTransition,
+        onCompleted: () -> Unit,
+    ) -> NavHostTransitionHandle,
+) : NavHostBackPreviewHandle {
+    val events = mutableListOf(initialEvent)
+    var cancelled: Boolean = false
+    var committedTransition: NavHostTransition? = null
+
+    override fun update(event: NavHostBackEvent) {
+        events += event
+    }
+
+    override fun cancel() {
+        cancelled = true
+    }
+
+    override fun commit(
+        transition: NavHostTransition,
+        onCompleted: () -> Unit,
+    ): NavHostTransitionHandle {
+        committedTransition = transition
+        return commitTransition(transition, onCompleted)
     }
 }
 

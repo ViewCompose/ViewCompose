@@ -42,6 +42,9 @@ internal class TransactionalNavHostCoordinator(
     val activeTransition: NavHostTransition?
         get() = activeTransitionRecord?.transition
 
+    val activeBackPreview: NavHostBackPreview?
+        get() = activeBackPreviewRecord?.preview
+
     var lastTransitionResult: NavHostTransitionResult? = null
         private set
 
@@ -51,7 +54,9 @@ internal class TransactionalNavHostCoordinator(
     private val queuedCommands = ArrayDeque<NavCommand>()
     private var executing = false
     private var nextTransitionId = 0L
+    private var nextBackPreviewId = 0L
     private var activeTransitionRecord: ActiveNavHostTransition? = null
+    private var activeBackPreviewRecord: ActiveNavHostBackPreview? = null
 
     @MainThread
     fun attach(
@@ -163,6 +168,169 @@ internal class TransactionalNavHostCoordinator(
     }
 
     @MainThread
+    fun beginBackPreview(event: NavHostBackEvent): NavHostBackPreview? {
+        requireMainThread()
+        check(state == NavHostCoordinatorState.Attached) {
+            "Predictive back requires an attached host; current=$state."
+        }
+        check(!executing) {
+            "Predictive back cannot start during another host operation."
+        }
+        executing = true
+        return try {
+            redirectActiveBackPreview()
+            redirectActiveTransition()
+            val currentSnapshot = controller.snapshot()
+            if (currentSnapshot.entries.size == 1) {
+                return null
+            }
+            val preview = NavHostBackPreview(
+                id = NavHostBackPreviewId(++nextBackPreviewId),
+                snapshot = currentSnapshot,
+                outgoingEntry = currentSnapshot.top,
+                incomingEntry = currentSnapshot.entries[currentSnapshot.entries.lastIndex - 1],
+                visibleEntryIds = linkedSetOf(
+                    currentSnapshot.entries[currentSnapshot.entries.lastIndex - 1].id,
+                    currentSnapshot.top.id,
+                ),
+                layerOrder = currentSnapshot.entries.map(NavEntry::id),
+            )
+            val active = ActiveNavHostBackPreview(preview)
+            activeBackPreviewRecord = active
+            try {
+                applyBackPreviewState(preview)
+                active.handle = transitionDriver.startBackPreview(
+                    preview = preview,
+                    initialEvent = event,
+                )
+                preview
+            } catch (throwable: Throwable) {
+                if (activeBackPreviewRecord === active) {
+                    activeBackPreviewRecord = null
+                    runCatching { active.handle?.cancel() }
+                        .exceptionOrNull()
+                        ?.let(throwable::addSuppressed)
+                    runCatching { applySettledState(currentSnapshot) }
+                        .exceptionOrNull()
+                        ?.let(throwable::addSuppressed)
+                }
+                throw throwable
+            }
+        } finally {
+            executing = false
+        }
+    }
+
+    @MainThread
+    fun updateBackPreview(
+        previewId: NavHostBackPreviewId,
+        event: NavHostBackEvent,
+    ): Boolean {
+        requireMainThread()
+        val active = activeBackPreviewRecord
+            ?.takeIf { record -> record.preview.id == previewId }
+            ?: return false
+        check(!executing) {
+            "Predictive back cannot update during another host operation."
+        }
+        check(state == NavHostCoordinatorState.Attached) {
+            "Predictive back can update only while attached; current=$state."
+        }
+        active.handle?.update(event)
+        return true
+    }
+
+    @MainThread
+    fun cancelBackPreview(previewId: NavHostBackPreviewId): Boolean {
+        requireMainThread()
+        val active = activeBackPreviewRecord
+            ?.takeIf { record -> record.preview.id == previewId }
+            ?: return false
+        check(!executing) {
+            "Predictive back cannot cancel during another host operation."
+        }
+        executing = true
+        return try {
+            finishBackPreview(active)
+            drainQueuedCommandsWhileExecuting()
+            true
+        } catch (throwable: Throwable) {
+            state = NavHostCoordinatorState.Failed
+            queuedCommands.clear()
+            throw throwable
+        } finally {
+            executing = false
+        }
+    }
+
+    @MainThread
+    fun commitBackPreview(
+        previewId: NavHostBackPreviewId,
+    ): NavHostNavigationResult {
+        requireMainThread()
+        val active = checkNotNull(
+            activeBackPreviewRecord
+                ?.takeIf { record -> record.preview.id == previewId },
+        ) {
+            "Only the active predictive-back preview can commit."
+        }
+        check(!executing) {
+            "Predictive back cannot commit during another host operation."
+        }
+        check(state == NavHostCoordinatorState.Attached) {
+            "Predictive back can commit only while attached; current=$state."
+        }
+        executing = true
+        activeBackPreviewRecord = null
+        return try {
+            val result = when (val preparation = controller.prepare(NavCommand.Pop)) {
+                is NavPreparation.NoChange -> {
+                    active.handle?.cancel()
+                    applySettledState(controller.snapshot())
+                    NavHostNavigationResult.NoChange(
+                        command = NavCommand.Pop,
+                        reason = preparation.reason,
+                        snapshot = preparation.snapshot,
+                    )
+                }
+
+                is NavPreparation.Ready -> {
+                    val committed = execute(
+                        transaction = preparation.transaction,
+                        backPreviewHandle = checkNotNull(active.handle),
+                    )
+                    if (
+                        committed is NavHostNavigationResult.Failed &&
+                        !committed.stackCommitted
+                    ) {
+                        active.handle?.cancel()
+                        applySettledState(controller.snapshot())
+                    }
+                    committed
+                }
+            }
+            if (result is NavHostNavigationResult.Failed) {
+                queuedCommands.clear()
+            } else {
+                drainQueuedCommandsWhileExecuting()
+            }
+            result
+        } catch (throwable: Throwable) {
+            runCatching { active.handle?.cancel() }
+                .exceptionOrNull()
+                ?.let(throwable::addSuppressed)
+            runCatching { applySettledState(controller.snapshot()) }
+                .exceptionOrNull()
+                ?.let(throwable::addSuppressed)
+            state = NavHostCoordinatorState.Failed
+            queuedCommands.clear()
+            throw throwable
+        } finally {
+            executing = false
+        }
+    }
+
+    @MainThread
     fun refresh(
         localSnapshot: UiLocalSnapshot,
         content: NavDestinationContent,
@@ -229,11 +397,16 @@ internal class TransactionalNavHostCoordinator(
         }
         executing = true
         try {
-            val transition = activeTransitionRecord?.transition
-            if (transition == null) {
-                reconcileOwners(controller.snapshot())
-            } else {
-                reconcileOwners(transition)
+            when {
+                activeTransitionRecord != null -> {
+                    reconcileOwners(checkNotNull(activeTransitionRecord).transition)
+                }
+                activeBackPreviewRecord != null -> {
+                    reconcileOwners(checkNotNull(activeBackPreviewRecord).preview)
+                }
+                else -> {
+                    reconcileOwners(controller.snapshot())
+                }
             }
             drainQueuedCommandsWhileExecuting()
         } catch (throwable: Throwable) {
@@ -253,6 +426,12 @@ internal class TransactionalNavHostCoordinator(
         }
         queuedCommands.clear()
         val failures = mutableListOf<Throwable>()
+        activeBackPreviewRecord?.let { active ->
+            activeBackPreviewRecord = null
+            runCatching {
+                active.handle?.cancel()
+            }.exceptionOrNull()?.let(failures::add)
+        }
         activeTransitionRecord?.let { active ->
             activeTransitionRecord = null
             runCatching {
@@ -331,6 +510,7 @@ internal class TransactionalNavHostCoordinator(
     }
 
     private fun execute(command: NavCommand): NavHostNavigationResult {
+        redirectActiveBackPreview()
         redirectActiveTransition()
         return when (val preparation = controller.prepare(command)) {
             is NavPreparation.NoChange -> {
@@ -345,7 +525,10 @@ internal class TransactionalNavHostCoordinator(
         }
     }
 
-    private fun execute(transaction: NavTransaction): NavHostNavigationResult {
+    private fun execute(
+        transaction: NavTransaction,
+        backPreviewHandle: NavHostBackPreviewHandle? = null,
+    ): NavHostNavigationResult {
         val mutation = transaction.mutation
         check(mutation.added.size <= 1) {
             "A navigation command cannot add more than one destination."
@@ -451,6 +634,7 @@ internal class TransactionalNavHostCoordinator(
             val transition = beginTransition(
                 transaction = transaction,
                 committedSnapshot = committedSnapshot,
+                backPreviewHandle = backPreviewHandle,
             )
             NavHostNavigationResult.Committed(
                 command = transaction.command,
@@ -494,6 +678,7 @@ internal class TransactionalNavHostCoordinator(
     private fun beginTransition(
         transaction: NavTransaction,
         committedSnapshot: NavBackStackSnapshot,
+        backPreviewHandle: NavHostBackPreviewHandle?,
     ): NavHostTransition {
         check(activeTransitionRecord == null) {
             "A navigation transition must be terminal before another transition starts."
@@ -529,8 +714,20 @@ internal class TransactionalNavHostCoordinator(
         activeTransitionRecord = active
         try {
             applyTransitionState(transition)
-            val handle = transitionDriver.start(transition) {
+            val completion = {
                 completeTransition(transition.id)
+                Unit
+            }
+            val handle = if (backPreviewHandle == null) {
+                transitionDriver.start(
+                    transition = transition,
+                    onCompleted = completion,
+                )
+            } else {
+                backPreviewHandle.commit(
+                    transition = transition,
+                    onCompleted = completion,
+                )
             }
             if (activeTransitionRecord === active) {
                 active.handle = handle
@@ -563,6 +760,23 @@ internal class TransactionalNavHostCoordinator(
             retainedEntries = transition.retainedEntries,
             visibleEntryIds = transition.visibleEntryIds,
             interactiveEntryId = transition.incomingEntry.id,
+            hostState = hostLifecycleState,
+        )
+    }
+
+    private fun applyBackPreviewState(preview: NavHostBackPreview) {
+        sessionStore.present(
+            layerOrder = preview.layerOrder,
+            visibleEntryIds = preview.visibleEntryIds,
+        )
+        reconcileOwners(preview)
+    }
+
+    private fun reconcileOwners(preview: NavHostBackPreview) {
+        ownerStore.reconcile(
+            retainedEntries = preview.snapshot.entries,
+            visibleEntryIds = preview.visibleEntryIds,
+            interactiveEntryId = preview.outgoingEntry.id,
             hostState = hostLifecycleState,
         )
     }
@@ -612,6 +826,29 @@ internal class TransactionalNavHostCoordinator(
             outcome = NavHostTransitionOutcome.Redirected,
             cancelDriver = true,
         )
+    }
+
+    private fun redirectActiveBackPreview() {
+        val active = activeBackPreviewRecord ?: return
+        finishBackPreview(active)
+    }
+
+    private fun finishBackPreview(active: ActiveNavHostBackPreview) {
+        check(activeBackPreviewRecord === active) {
+            "Only the active predictive-back preview can reach a terminal state."
+        }
+        activeBackPreviewRecord = null
+        val failures = mutableListOf<Throwable>()
+        runCatching {
+            active.handle?.cancel()
+        }.exceptionOrNull()?.let(failures::add)
+        runCatching {
+            applySettledState(active.preview.snapshot)
+        }.exceptionOrNull()?.let(failures::add)
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
+        }
     }
 
     private fun finishActiveTransition(
@@ -743,6 +980,11 @@ internal class TransactionalNavHostCoordinator(
 private class ActiveNavHostTransition(
     val transition: NavHostTransition,
     var handle: NavHostTransitionHandle? = null,
+)
+
+private class ActiveNavHostBackPreview(
+    val preview: NavHostBackPreview,
+    var handle: NavHostBackPreviewHandle? = null,
 )
 
 private const val MAX_REENTRANT_COMMANDS_PER_DRAIN = 64

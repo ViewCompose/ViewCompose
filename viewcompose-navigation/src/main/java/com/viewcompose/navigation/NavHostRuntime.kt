@@ -17,6 +17,7 @@ internal data class NavHostRuntimeConfig(
     val localSnapshot: UiLocalSnapshot,
     val lifecycleOwner: LifecycleOwner,
     val transitionSpec: NavTransitionSpec,
+    val systemBackEnabled: Boolean,
     val onFailure: ((NavFailure) -> Unit)?,
     val content: NavDestinationContent,
 )
@@ -32,6 +33,36 @@ internal class NavHostRuntime private constructor(
     private var committedConfig: NavHostRuntimeConfig? = null
     private var boundLifecycleOwner: LifecycleOwner? = null
     private var destroyed = false
+    private val backAdapter = AndroidNavHostBackAdapter(
+        hostView = hostView,
+        canHandleBack = {
+            !destroyed &&
+                coordinator.state == NavHostCoordinatorState.Attached &&
+                coordinator.snapshot.entries.size > 1
+        },
+        isPreviewActive = { previewId ->
+            coordinator.activeBackPreview?.id == previewId
+        },
+        onBackPressed = {
+            publishNavigationResult(coordinator.navigate(NavCommand.Pop))
+            Unit
+        },
+        onBackStarted = { event ->
+            coordinator.beginBackPreview(event)?.id
+        },
+        onBackProgressed = { previewId, event ->
+            coordinator.updateBackPreview(previewId, event)
+            Unit
+        },
+        onBackCancelled = { previewId ->
+            coordinator.cancelBackPreview(previewId)
+            Unit
+        },
+        onBackCommitted = { previewId ->
+            publishNavigationResult(coordinator.commitBackPreview(previewId))
+            Unit
+        },
+    )
     private val lifecycleObserver = LifecycleEventObserver { owner, _ ->
         if (destroyed || boundLifecycleOwner !== owner) {
             return@LifecycleEventObserver
@@ -70,11 +101,18 @@ internal class NavHostRuntime private constructor(
                 error("A destroyed NavHost cannot render again.")
             }
         }
+        backAdapter.updateEnabled(config.systemBackEnabled)
     }
 
     override fun navigate(command: NavCommand): NavResult {
-        val result = coordinator.navigate(command)
+        return publishNavigationResult(coordinator.navigate(command))
+    }
+
+    private fun publishNavigationResult(
+        result: NavHostNavigationResult,
+    ): NavResult {
         val publicResult = result.toPublicResult(coordinator.snapshot)
+        backAdapter.onNavigationStateChanged()
         if (publicResult is NavResult.Failed) {
             committedConfig?.onFailure?.invoke(publicResult.failure)
         }
@@ -99,6 +137,7 @@ internal class NavHostRuntime private constructor(
         if (destroyed) {
             return
         }
+        backAdapter.destroy()
         val retainedState = runCatching(::saveState)
         destroyed = true
         boundLifecycleOwner?.let { owner ->
@@ -138,6 +177,7 @@ internal class NavHostRuntime private constructor(
             ) {
                 is NavHostAttachmentResult.Attached -> {
                     attached = true
+                    backAdapter.attach(config.lifecycleOwner)
                 }
 
                 is NavHostAttachmentResult.Failed -> {

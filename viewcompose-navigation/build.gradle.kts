@@ -32,6 +32,7 @@ dependencies {
     implementation(project(":viewcompose-host-android"))
     implementation(project(":viewcompose-lifecycle"))
     implementation(project(":viewcompose-viewmodel"))
+    implementation(libs.androidx.activity)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.savedstate)
