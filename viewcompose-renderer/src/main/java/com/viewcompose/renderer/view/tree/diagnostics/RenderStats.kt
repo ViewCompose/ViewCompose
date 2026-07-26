@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.spec.AndroidViewOperation
 
 data class RenderStats(
     val inserts: Int = 0,
@@ -71,6 +72,20 @@ data class RenderTreeResult(
     val stats: RenderStats,
     val structure: RenderStructureStats = RenderStructureStats(),
     val warnings: List<String> = emptyList(),
+    val commitEffects: List<RenderTreeCommitEffect> = emptyList(),
+    val commitFailures: List<RenderTreeCommitFailure> = emptyList(),
+)
+
+data class RenderTreeCommitEffect(
+    val operation: AndroidViewOperation,
+    val nodeKey: Any?,
+    val commit: () -> Unit,
+)
+
+data class RenderTreeCommitFailure(
+    val operation: AndroidViewOperation?,
+    val nodeKey: Any?,
+    val cause: Throwable,
 )
 
 enum class ReuseBindingResult {

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
+import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.layoutModifiersChanged
 import com.viewcompose.renderer.modifier.resolve
@@ -44,6 +45,7 @@ internal object ViewTreePatchPipeline {
         internal val containerCheckpoints = LinkedHashMap<ViewGroup, ContainerCheckpoint>()
         internal val insertedNodes = LinkedHashSet<MountedNode>()
         internal val deferredRemovals = LinkedHashSet<MountedNode>()
+        internal val commitEffects = mutableListOf<RenderTreeCommitEffect>()
     }
 
     internal data class MountedCheckpoint(
@@ -64,11 +66,15 @@ internal object ViewTreePatchPipeline {
     internal fun commitTransaction(
         transaction: RenderTransaction,
         warningTag: String,
-    ) {
+    ): List<RenderTreeCommitFailure> {
+        val failures = mutableListOf<RenderTreeCommitFailure>()
         transaction.deferredRemovals.forEach { mountedNode ->
             try {
                 ViewTreeDisposer.disposeMountedNode(mountedNode)
             } catch (error: Throwable) {
+                failures += error.toRenderTreeCommitFailures(
+                    fallbackNodeKey = mountedNode.vnode.key,
+                )
                 Log.e(
                     warningTag,
                     "Failed to release removed ${mountedNode.vnode.type} node after render commit.",
@@ -78,6 +84,7 @@ internal object ViewTreePatchPipeline {
         }
         transaction.deferredRemovals.clear()
         transaction.insertedNodes.clear()
+        return failures
     }
 
     internal fun rollbackTransaction(
@@ -146,6 +153,7 @@ internal object ViewTreePatchPipeline {
         }
         transaction.deferredRemovals.clear()
         transaction.insertedNodes.clear()
+        transaction.commitEffects.clear()
     }
 
     fun execute(
@@ -260,18 +268,27 @@ internal object ViewTreePatchPipeline {
                 if (patch.nextVNode.type == NodeType.AndroidView &&
                     mountedNode.vnode.spec != patch.nextVNode.spec
                 ) {
-                    patch.nextVNode
-                        .requireSpec<AndroidViewNodeProps>()
-                        .onReset
-                        ?.invoke(mountedNode.view)
+                    patch.nextVNode.runAndroidViewOperation(AndroidViewOperation.Reset) {
+                        patch.nextVNode
+                            .requireSpec<AndroidViewNodeProps>()
+                            .onReset
+                            ?.invoke(mountedNode.view)
+                    }
                 }
                 when (bindingPlan) {
-                    NodeBindingPlan.Rebind -> bindView(
-                        view = mountedNode.view,
-                        node = patch.nextVNode,
-                        defaultRippleColor = defaultRippleColor,
-                        resolved = checkNotNull(preparedPatch.nextResolved),
-                    )
+                    NodeBindingPlan.Rebind -> {
+                        bindView(
+                            view = mountedNode.view,
+                            node = patch.nextVNode,
+                            defaultRippleColor = defaultRippleColor,
+                            resolved = checkNotNull(preparedPatch.nextResolved),
+                        )
+                        scheduleAndroidViewCommit(
+                            transaction = transaction,
+                            view = mountedNode.view,
+                            node = patch.nextVNode,
+                        )
+                    }
 
                     NodeBindingPlan.SkipSelfOnly,
                     NodeBindingPlan.SkipSubtree,
@@ -405,7 +422,14 @@ internal object ViewTreePatchPipeline {
             context = context,
             node = node,
             createAndroidView = when (node.type) {
-                NodeType.AndroidView -> node.requireSpec<AndroidViewNodeProps>().factory
+                NodeType.AndroidView -> {
+                    val factory = node.requireSpec<AndroidViewNodeProps>().factory
+                    { rawContext ->
+                        node.runAndroidViewOperation(AndroidViewOperation.Factory) {
+                            factory(rawContext)
+                        }
+                    }
+                }
                 else -> null
             },
         )
@@ -421,6 +445,11 @@ internal object ViewTreePatchPipeline {
             node = node,
             defaultRippleColor = defaultRippleColor,
             resolved = resolved,
+        )
+        scheduleAndroidViewCommit(
+            transaction = transaction,
+            view = view,
+            node = node,
         )
         val children = if (view is ViewGroup) {
             renderChildren(
@@ -525,6 +554,24 @@ internal object ViewTreePatchPipeline {
             node = node,
             defaultRippleColor = defaultRippleColor,
             resolved = resolved,
+        )
+    }
+
+    private fun scheduleAndroidViewCommit(
+        transaction: RenderTransaction,
+        view: View,
+        node: VNode,
+    ) {
+        if (node.type != NodeType.AndroidView) return
+        val onCommit = node.requireSpec<AndroidViewNodeProps>().onCommit ?: return
+        transaction.commitEffects += RenderTreeCommitEffect(
+            operation = AndroidViewOperation.Commit,
+            nodeKey = node.key,
+            commit = {
+                node.runAndroidViewOperation(AndroidViewOperation.Commit) {
+                    onCommit(view)
+                }
+            },
         )
     }
 

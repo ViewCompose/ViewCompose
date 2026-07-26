@@ -36,6 +36,8 @@
   Declarative focus and hardware keys: requesters, directional navigation, focus groups, and preview/bubble dispatch map to native Views.
 - 统一嵌套滚动：pre/post scroll 与 fling 协议贯通 Lazy、Pager、滚动容器和自定义拖拽。
   Unified nested scrolling: pre/post scroll and fling phases connect lazy containers, pagers, scrolling Views, and custom drags.
+- 结构化渲染失败与原生副作用边界：失败阶段/恢复结果可观测，`AndroidView.onCommit` 只在树事务成功后执行。
+  Structured render failures and native effect boundaries: failure phase/recovery is observable, and `AndroidView.onCommit` runs only after a successful tree transaction.
 
 ## 架构总览 | Architecture Overview
 
@@ -240,6 +242,7 @@ LazyColumn(
 - [ARCHITECTURE.md](./ARCHITECTURE.md): 架构边界与模块职责 / Architecture boundaries and module responsibilities
 - [WORKFLOW.md](./WORKFLOW.md): 开发流程与门禁 / Development workflow and quality gates
 - [PERFORMANCE.md](./PERFORMANCE.md): 性能基线与约束 / Performance baseline and constraints
+- [RENDER_FAILURES.md](./RENDER_FAILURES.md): 结构化渲染失败与 AndroidView 副作用边界 / Structured render failures and AndroidView effect boundary
 - [TEXT_INPUT.md](./TEXT_INPUT.md): 文本编辑模型与原生桥接 / Text editing model and native bridge
 - [LAZY_COLLECTIONS.md](./LAZY_COLLECTIONS.md): Lazy 状态与高级容器能力 / Lazy state and advanced collection capabilities
 - [THEMING.md](./THEMING.md): 主题系统 / Theming system

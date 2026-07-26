@@ -12,6 +12,8 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
+import com.viewcompose.ui.node.spec.AndroidViewOperation
+import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.node.spec.ColumnNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import org.junit.Assert.assertEquals
@@ -59,7 +61,7 @@ class ViewTreeRenderTransactionTest {
             )
         }.exceptionOrNull()
 
-        assertTrue(error is IllegalStateException)
+        assertAndroidViewUpdateFailure(error)
         assertEquals(2, container.childCount)
         previousViews.forEachIndexed { index, view ->
             assertSame(view, container.getChildAt(index))
@@ -102,7 +104,7 @@ class ViewTreeRenderTransactionTest {
             )
         }.exceptionOrNull()
 
-        assertTrue(error is IllegalStateException)
+        assertAndroidViewUpdateFailure(error)
         assertEquals(1, insertedReleases)
         assertEquals(1, container.childCount)
         assertSame(stableView, container.getChildAt(0))
@@ -143,7 +145,7 @@ class ViewTreeRenderTransactionTest {
             )
         }.exceptionOrNull()
 
-        assertTrue(error is IllegalStateException)
+        assertAndroidViewUpdateFailure(error)
         assertSame(previousRootVNode, previous.single().vnode)
         assertEquals(previousChildren, previous.single().children)
         assertEquals("old-first", previousChildren[0].view.tag)
@@ -213,7 +215,7 @@ class ViewTreeRenderTransactionTest {
         }.exceptionOrNull()
 
         val view = previous[0].view as ViewComposeEditText
-        assertTrue(error is IllegalStateException)
+        assertAndroidViewUpdateFailure(error)
         assertEquals("old", view.text.toString())
         assertEquals(1, view.selectionStart)
         assertEquals(3, view.selectionEnd)
@@ -227,11 +229,97 @@ class ViewTreeRenderTransactionTest {
         )
     }
 
+    @Test
+    fun `android view commit effect is published only after a successful tree transaction`() {
+        val container = FrameLayout(context)
+        var commits = 0
+
+        val result = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                androidNode(
+                    key = "committed",
+                    value = "value",
+                    onCommit = { commits += 1 },
+                ),
+            ),
+        )
+
+        assertEquals(0, commits)
+        assertEquals(1, result.commitEffects.size)
+        result.commitEffects.single().commit()
+        assertEquals(1, commits)
+
+        val error = runCatching {
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = result.mountedNodes,
+                nodes = listOf(
+                    androidNode(
+                        key = "committed",
+                        value = "next",
+                        onCommit = { commits += 10 },
+                    ),
+                    androidNode(
+                        key = "failure",
+                        value = "broken",
+                        failUpdate = true,
+                    ),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertAndroidViewUpdateFailure(error)
+        assertEquals(1, commits)
+    }
+
+    @Test
+    fun `android view commit and release failures keep structured operation context`() {
+        val container = FrameLayout(context)
+        val mounted = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                androidNode(
+                    key = "interop",
+                    value = "value",
+                    onCommit = { error("commit failed") },
+                    onRelease = { error("release failed") },
+                ),
+            ),
+        )
+
+        val commitError = runCatching {
+            mounted.commitEffects.single().commit()
+        }.exceptionOrNull()
+        assertTrue(commitError is AndroidViewOperationException)
+        assertEquals(
+            AndroidViewOperation.Commit,
+            (commitError as AndroidViewOperationException).operation,
+        )
+        assertEquals("interop", commitError.nodeKey)
+
+        val removed = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = mounted.mountedNodes,
+            nodes = emptyList(),
+        )
+
+        val releaseFailure = removed.commitFailures.single()
+        assertEquals(AndroidViewOperation.Release, releaseFailure.operation)
+        assertEquals("interop", releaseFailure.nodeKey)
+        assertTrue(releaseFailure.cause is AndroidViewOperationException)
+        assertTrue(removed.mountedNodes.isEmpty())
+        assertEquals(0, container.childCount)
+    }
+
     private fun androidNode(
         key: Any,
         value: String,
         failUpdate: Boolean = false,
         onRelease: (() -> Unit)? = null,
+        onCommit: (() -> Unit)? = null,
     ): VNode {
         return VNode(
             type = NodeType.AndroidView,
@@ -251,8 +339,22 @@ class ViewTreeRenderTransactionTest {
                 } else {
                     { onRelease() }
                 },
+                onCommit = if (onCommit == null) {
+                    null
+                } else {
+                    { onCommit() }
+                },
             ),
         )
+    }
+
+    private fun assertAndroidViewUpdateFailure(error: Throwable?) {
+        assertTrue(error is AndroidViewOperationException)
+        assertEquals(
+            AndroidViewOperation.Update,
+            (error as AndroidViewOperationException).operation,
+        )
+        assertTrue(error.cause is IllegalStateException)
     }
 
     private fun columnNode(vararg children: VNode): VNode {

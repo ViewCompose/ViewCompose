@@ -2,6 +2,7 @@ package com.viewcompose.renderer.view.tree
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
@@ -220,7 +221,9 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
             nodeType = NodeType.AndroidView,
             bind = { view, node ->
                 val update = ContainerViewBinder.readAndroidViewSpec(node).update
-                update?.invoke(view)
+                node.runAndroidViewOperation(AndroidViewOperation.Update) {
+                    update?.invoke(view)
+                }
             },
         ),
     )

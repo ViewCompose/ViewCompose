@@ -20,6 +20,7 @@ import com.viewcompose.widget.core.ProvideSaveableStateRegistry
 import com.viewcompose.widget.core.ProvideLocal
 import com.viewcompose.widget.core.RenderStats
 import com.viewcompose.widget.core.RenderTreeResult
+import com.viewcompose.widget.core.RenderFailure
 import com.viewcompose.widget.core.LocalRenderResultListener
 import com.viewcompose.widget.core.UiEnvironment
 import com.viewcompose.widget.core.UiTreeBuilder
@@ -40,6 +41,7 @@ fun Fragment.setUiContent(
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> OverlayHostDefaults.androidOrNoOp(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
+    onRenderFailure: ((RenderFailure) -> Unit)? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
     FragmentRenderSessionRegistry.clear(this)
@@ -54,6 +56,7 @@ fun Fragment.setUiContent(
         overlayHost = overlayHostFactory(root),
         onRenderStats = onRenderStats,
         onRenderResult = onRenderResult,
+        onRenderFailure = onRenderFailure,
     ) {
         withHostEnvironment(
             root = root,
@@ -77,6 +80,7 @@ fun ComponentActivity.setUiContent(
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> OverlayHostDefaults.androidOrNoOp(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
+    onRenderFailure: ((RenderFailure) -> Unit)? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
     ActivityRenderSessionRegistry.clear(this)
@@ -92,6 +96,7 @@ fun ComponentActivity.setUiContent(
         overlayHost = overlayHostFactory(root),
         onRenderStats = onRenderStats,
         onRenderResult = onRenderResult,
+        onRenderFailure = onRenderFailure,
     ) {
         withHostEnvironment(
             root = root,

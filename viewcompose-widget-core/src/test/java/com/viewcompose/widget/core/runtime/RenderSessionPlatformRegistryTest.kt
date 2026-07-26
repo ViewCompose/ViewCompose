@@ -68,7 +68,7 @@ class RenderSessionPlatformRegistryTest {
         override fun disposeMounted(
             container: ViewGroup,
             mountedNodes: List<Any>,
-        ) = Unit
+        ): List<CoreRenderCommitFailure> = emptyList()
     }
 
     private class FakeRuntime : RenderSessionRuntime {

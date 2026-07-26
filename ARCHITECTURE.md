@@ -230,11 +230,12 @@ flowchart TD
 5. lazy item session 与 overlay surface session 继续复用 `RenderSession.render()` 的立即语义，避免首显空白。
 6. renderer 的递归 patch 必须共享一次 apply transaction；删除资源只能在整棵树成功后释放。
 7. patch 失败必须尽力恢复旧 `VNode`、mounted children、布局参数与 View 顺序，并释放本轮新建节点。
-8. `AndroidView.update/onReset` 中写入框架外部系统的副作用不属于可回滚边界；失败恢复仅保证重新绑定旧节点的 best-effort 语义。
+8. `AndroidView.update/onReset/nativeView` 仅允许可重放的 View 内配置；不可重放的外部动作必须放入事务成功后才发布的 `onCommit`。
 9. renderer transaction 使用 mutation journal，只记录实际绑定、移动、插入或删除的 MountedNode/ViewGroup；稳定子树不得进入回滚快照。
 10. `AnimatedSizeNodeWrapper` 必须保留未变化 VNode/List 的引用，且整帧只转换一次；禁止无动画节点的递归 copy。
 11. `NodeBindingDiffer` 必须先于 Modifier/LayoutParams 解析执行；`SkipSubtree` 不得解析或重复 preflight。
 12. 结构深度统计与逐 NodeType 绑定统计只在 debug/诊断回调启用时收集。
+13. 所有可恢复失败必须通过 `RenderFailure(phase/recovery/frameId/operation/nodeKey)` 上报；日志不是可观测性 API。
 
 ### 4.11 Renderer 绑定复杂度边界
 

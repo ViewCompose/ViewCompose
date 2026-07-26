@@ -24,11 +24,25 @@ object ViewTreeRenderer {
     fun disposeMounted(
         container: ViewGroup,
         mountedNodes: List<MountedNode>,
-    ) {
+    ): List<RenderTreeCommitFailure> {
+        val failures = mutableListOf<RenderTreeCommitFailure>()
         mountedNodes.forEach { mountedNode ->
-            ViewTreeDisposer.disposeMountedNode(mountedNode)
-            container.removeView(mountedNode.view)
+            try {
+                ViewTreeDisposer.disposeMountedNode(mountedNode)
+            } catch (error: Throwable) {
+                failures += error.toRenderTreeCommitFailures(
+                    fallbackNodeKey = mountedNode.vnode.key,
+                )
+                Log.e(
+                    WARNING_TAG,
+                    "Failed to dispose ${mountedNode.vnode.type} node.",
+                    error,
+                )
+            } finally {
+                container.removeView(mountedNode.view)
+            }
         }
+        return failures
     }
 
     fun renderInto(
@@ -60,12 +74,17 @@ object ViewTreeRenderer {
             )
             throw error
         }
-        ViewTreePatchPipeline.commitTransaction(
+        val commitEffects = transaction.commitEffects.toList()
+        val commitFailures = ViewTreePatchPipeline.commitTransaction(
             transaction = transaction,
             warningTag = WARNING_TAG,
         )
-        onReconcile?.invoke(result)
-        return result
+        val committedResult = result.copy(
+            commitEffects = commitEffects,
+            commitFailures = commitFailures,
+        )
+        onReconcile?.invoke(committedResult)
+        return committedResult
     }
 
     private fun renderIntoTransaction(

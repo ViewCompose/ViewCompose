@@ -29,7 +29,7 @@ class AndroidInteropDslTest {
     }
 
     @Test
-    fun `android view stores reset and release callbacks`() {
+    fun `android view stores reset release and commit callbacks`() {
         val tree = buildVNodeTree {
             AndroidView(
                 factory = { _: android.content.Context ->
@@ -37,12 +37,14 @@ class AndroidInteropDslTest {
                 },
                 onReset = { _: View -> Unit },
                 onRelease = { _: View -> Unit },
+                onCommit = { _: View -> Unit },
             )
         }
 
         val spec = tree.single().spec as AndroidViewNodeProps
         assertTrue(spec.onReset != null)
         assertTrue(spec.onRelease != null)
+        assertTrue(spec.onCommit != null)
     }
 
     @Test
