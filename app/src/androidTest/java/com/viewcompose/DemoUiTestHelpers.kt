@@ -26,6 +26,7 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.lifecycle.Lifecycle
+import com.google.android.material.shape.MaterialShapeDrawable
 import com.viewcompose.renderer.R as RendererR
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -611,6 +612,7 @@ private fun resolveDrawableColor(drawable: Drawable?): Int? {
             }
             null
         }
+        is MaterialShapeDrawable -> drawable.fillColor?.defaultColor
         is GradientDrawable -> drawable.color?.defaultColor
         else -> null
     }

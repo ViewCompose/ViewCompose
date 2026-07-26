@@ -3,7 +3,6 @@ package com.viewcompose
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Rect
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.os.SystemClock
 import android.view.View
@@ -11,6 +10,7 @@ import android.view.ViewGroup
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.android.material.shape.MaterialShapeDrawable
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -143,7 +143,10 @@ class DemoVisualUiTest {
                 val drawablePreferred = activity.requireViewByTestTagVisible(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_SAMPLE)
                 assertViewFullyVisible(colorOnly)
                 assertViewFullyVisible(drawablePreferred)
-                assertTrue("Expected color-only sample to use GradientDrawable background", colorOnly.background is GradientDrawable)
+                assertTrue(
+                    "Expected color-only sample to use MaterialShapeDrawable background",
+                    colorOnly.background is MaterialShapeDrawable,
+                )
                 assertTrue("Expected drawable sample to use layered drawable background", drawablePreferred.background is LayerDrawable)
                 assertFalse("Expected color-only sample to keep non-clipped outline by default", colorOnly.clipToOutline)
                 assertTrue("Expected drawable sample to auto-clip when cornerRadius is set", drawablePreferred.clipToOutline)
