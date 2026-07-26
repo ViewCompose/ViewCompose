@@ -33,6 +33,8 @@ Current feature-branch status:
 - Stage 4 public `NavHost`: complete
 - Stage 5 complete host restoration: complete
 - Stage 5 platform back and predictive back: complete
+- Stage 6 Android 13 real-device back baseline: complete
+- Stage 6 Android 14+ platform gesture-progress validation: pending compatible hardware
 
 ## 2. P0 delivery plan
 
@@ -173,6 +175,29 @@ Host detachment, callback disablement, and host destruction cancel the preview a
 scene. This keeps platform Back, gesture Back, and application navigation on one stack and lifecycle
 ownership model.
 
+### Stage 6: real-device validation
+
+The debug application contains an isolated `NavigationBackTestActivity` and connected-device suite.
+On a Samsung SM-G991B running Android 13/API 33, the suite validates:
+
+- real system Back pops the framework stack and delegates at the root;
+- predictive progress updates, cancellation, and commit drive real native destination Views through
+  AndroidX's dispatcher test surface;
+- programmatic navigation redirects an active preview before the next system Back;
+- `systemBackEnabled` changes callback participation without replacing the stack;
+- Activity recreation restores stable entry IDs before system Back;
+- 30 consecutive push/immediate-system-Back rounds preserve the transaction and ownership
+  invariants.
+
+The connected run also validates that a `NavHost` can be mounted normally from `Activity.onCreate`.
+At that point AndroidX still reports the host as `INITIALIZED`; destination sessions now remain
+`INITIALIZED` until the Activity advances, instead of requiring the application to delay first
+content until `CREATED`.
+
+API 33 does not expose real platform predictive-gesture progress callbacks. The native View progress
+driver is exercised on hardware through AndroidX, while an Android 14/API 34 or newer gesture-mode
+device remains required to certify the complete OS edge-gesture start/progress/cancel/commit path.
+
 ## 3. Transaction invariants
 
 Navigation is a two-phase operation:
@@ -207,12 +232,13 @@ The destination lifecycle is framework-owned but capped by the root host lifecyc
 | interactive top destination | `RESUMED` |
 | visible non-interactive/transition destination | `STARTED` |
 | retained hidden destination | `CREATED` |
-| prepared but not committed destination | `CREATED` |
+| prepared but not committed destination | `INITIALIZED` while the host is `INITIALIZED`; otherwise `CREATED` |
 | permanently removed destination | `DESTROYED` |
 
 When ownership changes, current interactive destinations are downgraded before a new destination is
 upgraded. This prevents two destinations from being `RESUMED` at the same time.
 
+Mounting during `Activity.onCreate` is valid while the platform lifecycle is still `INITIALIZED`.
 Host `DESTROYED` destroys every destination. A destroyed `NavEntryId` cannot be reintroduced.
 
 ## 5. Initial non-goals
