@@ -6,6 +6,7 @@ import com.viewcompose.host.android.renderInto
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.RenderFailure
@@ -33,6 +34,7 @@ internal class NavDestinationSessionStore(
     fun prepare(
         entry: NavEntry,
         localSnapshot: UiLocalSnapshot,
+        hostLifecycleState: NavHostLifecycleState,
         content: NavDestinationContent,
     ): NavDestinationPreparation {
         check(!destroyed) {
@@ -49,7 +51,16 @@ internal class NavDestinationSessionStore(
         }
         pendingEntryId = entry.id
         val owner = ownerStore.ownerFor(entry)
-        owner.moveTo(NavEntryLifecycleState.Created)
+        when (hostLifecycleState) {
+            NavHostLifecycleState.Initialized -> Unit
+            NavHostLifecycleState.Created,
+            NavHostLifecycleState.Started,
+            NavHostLifecycleState.Resumed,
+            -> owner.moveTo(NavEntryLifecycleState.Created)
+            NavHostLifecycleState.Destroyed -> {
+                error("A destroyed navigation host cannot prepare a destination.")
+            }
+        }
         val container = destinationContainer(hostView.context)
         val renderEnvironment = NavDestinationRenderEnvironment(
             localSnapshot = localSnapshot,

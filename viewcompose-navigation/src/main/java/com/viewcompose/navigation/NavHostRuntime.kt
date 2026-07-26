@@ -160,8 +160,8 @@ internal class NavHostRuntime private constructor(
 
     private fun attach(config: NavHostRuntimeConfig) {
         val lifecycleState = config.lifecycleOwner.lifecycle.currentState
-        check(lifecycleState.isAtLeast(Lifecycle.State.CREATED)) {
-            "NavHost requires a LifecycleOwner that has reached CREATED; current=$lifecycleState."
+        check(lifecycleState != Lifecycle.State.DESTROYED) {
+            "NavHost cannot attach to a destroyed LifecycleOwner."
         }
         controller.bind(this)
         boundLifecycleOwner = config.lifecycleOwner

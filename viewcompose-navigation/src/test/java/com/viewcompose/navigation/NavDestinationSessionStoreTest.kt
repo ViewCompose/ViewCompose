@@ -6,6 +6,7 @@ import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.viewmodel.LocalViewModelStoreOwner
 import com.viewcompose.widget.core.LocalSaveableStateRegistry
@@ -56,6 +57,7 @@ class NavDestinationSessionStoreTest {
         val candidate = sessionStore.prepare(
             entry = entry,
             localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
         ) {
             Text("Home")
         }.readyCandidate()
@@ -85,12 +87,32 @@ class NavDestinationSessionStoreTest {
     }
 
     @Test
+    fun `candidate remains initialized when platform host is still initializing`() {
+        val entry = entry("root", "home")
+
+        val candidate = sessionStore.prepare(
+            entry = entry,
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Initialized,
+        ) {
+            Text("Home")
+        }.readyCandidate()
+        val owner = checkNotNull(ownerStore.ownerOrNull(entry.id))
+
+        assertEquals(NavEntryLifecycleState.Initialized, owner.entryLifecycleState)
+        assertEquals(Lifecycle.State.INITIALIZED, owner.lifecycle.currentState)
+        assertTrue(candidate.destinationSession.container.childCount > 0)
+        candidate.rollback()
+    }
+
+    @Test
     fun `failed first render rolls back session and page owner`() {
         val entry = entry("broken", "broken")
 
         val result = sessionStore.prepare(
             entry = entry,
             localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
         ) {
             error("destination failed")
         }
@@ -121,6 +143,7 @@ class NavDestinationSessionStoreTest {
         val candidate = sessionStore.prepare(
             entry = entry,
             localSnapshot = checkNotNull(localSnapshot),
+            hostLifecycleState = NavHostLifecycleState.Created,
         ) {
             observedBusinessValue = UiLocals.current(businessLocal)
             observedLifecycleOwner = LocalLifecycleOwner.current
@@ -147,6 +170,7 @@ class NavDestinationSessionStoreTest {
         val candidate = sessionStore.prepare(
             entry = entry,
             localSnapshot = firstSnapshot,
+            hostLifecycleState = NavHostLifecycleState.Created,
         ) {
             observedValues += "initial:${UiLocals.current(businessLocal)}"
             Text("Initial")
@@ -170,6 +194,7 @@ class NavDestinationSessionStoreTest {
         val candidate = sessionStore.prepare(
             entry = entry,
             localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
         ) {
             Text("Candidate")
         }.readyCandidate()
@@ -218,6 +243,7 @@ class NavDestinationSessionStoreTest {
         val first = sessionStore.prepare(
             entry = entry("first", "first"),
             localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
         ) {
             Text("First")
         }.readyCandidate()
@@ -226,6 +252,7 @@ class NavDestinationSessionStoreTest {
             sessionStore.prepare(
                 entry = entry("second", "second"),
                 localSnapshot = captureUiLocalSnapshot(),
+                hostLifecycleState = NavHostLifecycleState.Created,
             ) {
                 Text("Second")
             }
@@ -255,6 +282,7 @@ class NavDestinationSessionStoreTest {
         val candidate = sessionStore.prepare(
             entry = entry,
             localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
         ) {
             Text(text)
         }.readyCandidate()

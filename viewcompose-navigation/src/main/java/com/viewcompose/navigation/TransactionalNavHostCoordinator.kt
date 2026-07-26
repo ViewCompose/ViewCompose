@@ -67,9 +67,6 @@ internal class TransactionalNavHostCoordinator(
         check(state == NavHostCoordinatorState.Detached) {
             "Navigation host can attach only from Detached; current=$state."
         }
-        check(hostLifecycleState != NavHostLifecycleState.Initialized) {
-            "Navigation host pages cannot attach before the platform host reaches Created."
-        }
         check(hostLifecycleState != NavHostLifecycleState.Destroyed) {
             "A destroyed platform host cannot attach navigation pages."
         }
@@ -467,6 +464,7 @@ internal class TransactionalNavHostCoordinator(
                 val preparation = sessionStore.prepare(
                     entry = entry,
                     localSnapshot = currentLocalSnapshot,
+                    hostLifecycleState = hostLifecycleState,
                     content = currentContent,
                 )
             ) {
@@ -541,6 +539,7 @@ internal class TransactionalNavHostCoordinator(
                     sessionStore.prepare(
                         entry = addedEntry,
                         localSnapshot = checkNotNull(localSnapshot),
+                        hostLifecycleState = hostLifecycleState,
                         content = checkNotNull(destinationContent),
                     )
                 }.getOrElse { throwable ->

@@ -83,6 +83,37 @@ class NavHostPublicApiTest {
     }
 
     @Test
+    fun `public host can attach during activity onCreate lifecycle state`() {
+        val application = RuntimeEnvironment.getApplication()
+        val root = FrameLayout(application)
+        val lifecycleOwner = TestLifecycleOwner()
+        val controller = deterministicController()
+        var destinationOwner: LifecycleOwner? = null
+
+        val session = renderInto(root) {
+            ProvideLifecycleOwner(lifecycleOwner) {
+                NavHost(
+                    controller = controller,
+                    transitionSpec = NavTransitionSpec.None,
+                    overlayHostFactory = { OverlayHostDefaults.noOp },
+                ) { entry ->
+                    destinationOwner = LocalLifecycleOwner.current
+                    Text(entry.route.name)
+                }
+            }
+        }
+        val owner = checkNotNull(destinationOwner)
+
+        assertTrue(controller.isAttached)
+        assertEquals(Lifecycle.State.INITIALIZED, owner.lifecycle.currentState)
+
+        lifecycleOwner.moveTo(Lifecycle.State.CREATED)
+
+        assertEquals(Lifecycle.State.CREATED, owner.lifecycle.currentState)
+        session.dispose()
+    }
+
+    @Test
     fun `parent rerender refreshes destination content without replacing host`() {
         var renderCount = 0
         val fixture = renderPublicHost { entry ->

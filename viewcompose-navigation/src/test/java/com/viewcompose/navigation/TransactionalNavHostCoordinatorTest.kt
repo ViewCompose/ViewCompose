@@ -89,6 +89,25 @@ class TransactionalNavHostCoordinatorTest {
     }
 
     @Test
+    fun `attach at initialized keeps page initialized until host is created`() {
+        coordinator.moveHostTo(NavHostLifecycleState.Initialized)
+
+        val result = attach()
+        val root = coordinator.snapshot.top
+        val owner = checkNotNull(ownerStore.ownerOrNull(root.id))
+
+        assertTrue(result is NavHostAttachmentResult.Attached)
+        assertEquals(NavHostCoordinatorState.Attached, coordinator.state)
+        assertEquals(NavEntryLifecycleState.Initialized, owner.entryLifecycleState)
+        assertEquals(Lifecycle.State.INITIALIZED, owner.lifecycle.currentState)
+
+        coordinator.moveHostTo(NavHostLifecycleState.Created)
+
+        assertEquals(NavEntryLifecycleState.Created, owner.entryLifecycleState)
+        assertEquals(Lifecycle.State.CREATED, owner.lifecycle.currentState)
+    }
+
+    @Test
     fun `failed initial page leaves host detached and can attach again`() {
         val failed = coordinator.attach(
             localSnapshot = captureUiLocalSnapshot(),
