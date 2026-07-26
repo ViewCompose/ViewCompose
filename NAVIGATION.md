@@ -28,7 +28,8 @@ Current feature-branch status:
 - Stage 3 Android page owner cluster: complete
 - Stage 3 destination `RenderSession`: complete
 - Stage 4 transactional coordinator: complete
-- Stage 4 transition retention and public `NavHost`: next
+- Stage 4 transition retention protocol: complete
+- Stage 4 public `NavHost`: next
 - Stage 5: pending
 
 ## 2. P0 delivery plan
@@ -81,9 +82,22 @@ revealed by `pop`, applies host lifecycle caps, and serializes navigation reques
 page is rendering. A destination render failure rolls back the pure back-stack transaction and
 discards commands emitted by that failed candidate.
 
-Animated transition retention and the public `NavHost`/navigation handle remain intentionally
-closed. Until the transition completion protocol exists, a committed settled-state transaction
-removes outgoing pages synchronously.
+The coordinator also owns transition retention. After the stack commits, it publishes an immutable
+transition scene containing the outgoing page, incoming page, retained entries, visibility set, and
+layer order. Both transition participants remain visible; the incoming page is the only interactive
+`RESUMED` destination and the outgoing page remains `STARTED`. Permanently removed sessions are
+destroyed only when the transition reaches a terminal result.
+
+Transition drivers are cancellable policy adapters. Completion settles the committed target;
+explicit cancellation also settles that target and never rolls the stack back. A newer navigation
+command redirects the active transition by cancelling its visual work, settling its committed
+target, and then preparing the next transaction. Stale completion callbacks are ignored by
+transition ID. Host destruction cancels visual work and destroys every retained page immediately.
+
+The default internal driver completes synchronously, preserving the settled behavior for hosts that
+do not install animation. The public `NavHost`/navigation handle remains intentionally closed until
+the next stage wires a concrete View transition driver and the platform back/restoration adapters to
+this same coordinator boundary.
 
 ### Stage 5: restoration and platform back
 
@@ -109,6 +123,12 @@ ViewModel, overlay, or result ownership from being attached to a later page.
 Failures before back-stack commit preserve the old stack, visible page, and lifecycle ownership.
 An unexpected failure while applying effects after stack commit marks the coordinator `Failed`;
 further commands are rejected until the host is destroyed instead of continuing on partial state.
+
+A visual transition begins only after the candidate page and back-stack transaction commit. Visual
+cancellation cannot undo application state: all terminal paths converge on the committed target
+snapshot. Removed entry resources remain addressable during the transition and are cleared in
+top-first order at its terminal boundary. Only the active transition ID may complete; callbacks from
+redirected or destroyed transitions have no effect.
 
 ## 4. Lifecycle invariants
 
