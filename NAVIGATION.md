@@ -19,7 +19,7 @@ The navigation subsystem is split into two layers:
    - back dispatch, transitions, and destination container Views
 
 The Android integration remains isolated from existing application entry points during incubation.
-It does not expose `NavHost` until page rendering and navigation commit share one rollback boundary.
+The public surface delegates to the same coordinator used by the internal transaction tests.
 
 Current feature-branch status:
 
@@ -31,7 +31,8 @@ Current feature-branch status:
 - Stage 4 transition retention protocol: complete
 - Stage 4 native View transition driver: complete
 - Stage 4 public `NavHost`: complete
-- Stage 5 restoration and platform back: next
+- Stage 5 complete host restoration: complete
+- Stage 5 platform back: next
 
 ## 2. P0 delivery plan
 
@@ -104,7 +105,7 @@ session and unbinds the controller.
 `NavHostController` is the only application-facing mutation handle. It can bind to exactly one host,
 rejects commands while detached, and maps coordinator results to public `Committed`, `NoChange`,
 `Queued`, and `Failed` results without exposing transition internals. The same controller can mount a
-new host after release while retaining its pure back-stack snapshot.
+new host after release while retaining its back stack and destination saveable state.
 
 ```kotlin
 val navController = rememberNavHostController(
@@ -128,9 +129,25 @@ so invisible animation can never retain removed page resources indefinitely.
 
 ### Stage 5: restoration and platform back
 
-- save and restore the back stack and each entry state across host recreation/process death
+- save and restore the back stack and each entry state across host recreation/process death: complete
 - connect Android back dispatch without making Activity/Fragment a destination owner
 - define root-pop delegation to the platform host
+
+`rememberNavHostController` now registers one versioned, Bundle-safe state envelope in the current
+ViewCompose saveable-state registry. Saving captures the committed back-stack snapshot, stable entry
+IDs, every typed route argument, and the Android saved-state bundle for each entry still present in
+that snapshot. Entry bundles include both destination `rememberSaveable` providers and AndroidX
+`SavedStateHandle` providers.
+
+Restoration creates the pure back-stack controller directly from the saved snapshot before `NavHost`
+attaches. Each destination owner then consumes only the bundle matching its restored entry ID. State
+for an outgoing page retained solely by a running transition is excluded when that page is no longer
+in the committed stack. Releasing and remounting the same controller also preserves destination state
+without requiring process recreation.
+
+The codec rejects unknown formats, empty or duplicate stacks, malformed routes, and invalid typed
+arguments. Invalid restored data falls back to the declared start destination instead of partially
+publishing a damaged stack.
 
 ## 3. Transaction invariants
 
