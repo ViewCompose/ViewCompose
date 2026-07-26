@@ -100,4 +100,52 @@ class ModifierContractTest {
         assertEquals("hero-card", constraintElement.referenceId)
         assertEquals(12, constraintElement.constraint.top?.margin)
     }
+
+    @Test
+    fun `semantics captures structured accessibility properties`() {
+        val modifier = Modifier.semantics(mergeDescendants = true) {
+            contentDescription = "Download"
+            stateDescription = "In progress"
+            paneTitle = "Downloads"
+            error = "Network unavailable"
+            clickLabel = "Retry"
+            role = SemanticsRole.Button
+            liveRegion = SemanticsLiveRegion.Polite
+            progressRange = SemanticsProgressRange(
+                current = 0.5f,
+                start = 0f,
+                endInclusive = 1f,
+                steps = 10,
+            )
+            heading = true
+            selected = true
+            checked = false
+            disabled()
+        }
+
+        val semantics = (modifier.elements.single() as SemanticsModifierElement).configuration
+
+        assertEquals("Download", semantics.contentDescription)
+        assertEquals("In progress", semantics.stateDescription)
+        assertEquals("Downloads", semantics.paneTitle)
+        assertEquals("Network unavailable", semantics.error)
+        assertEquals("Retry", semantics.clickLabel)
+        assertEquals(SemanticsRole.Button, semantics.role)
+        assertEquals(SemanticsLiveRegion.Polite, semantics.liveRegion)
+        assertEquals(0.5f, semantics.progressRange?.current)
+        assertEquals(true, semantics.heading)
+        assertEquals(true, semantics.selected)
+        assertEquals(false, semantics.checked)
+        assertEquals(false, semantics.enabled)
+        assertEquals(true, semantics.mergeDescendants)
+    }
+
+    @Test
+    fun `contentDescription uses the structured semantics contract`() {
+        val modifier = Modifier.contentDescription("Avatar")
+
+        val element = modifier.elements.single() as SemanticsModifierElement
+
+        assertEquals("Avatar", element.configuration.contentDescription)
+    }
 }

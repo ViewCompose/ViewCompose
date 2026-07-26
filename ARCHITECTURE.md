@@ -287,6 +287,14 @@ flowchart TD
 7. `DrawImage` 的 `Drawable` 分支必须应用 `DrawPaint` 组合语义（alpha/blend/colorFilter/imageFilter），并在绘制后恢复原始 `bounds`。
 8. `ImageFilterModel.Chain` 必须在执行层可生效；当前 `Blur + Chain` 路径采用递归合并半径（高斯方差累加）后下发到平台滤镜，禁止直接忽略 `Chain`。
 
+### 4.16 Semantics 与无障碍边界
+
+1. 无障碍声明统一使用 `Modifier.semantics { ... }` 与 `SemanticsConfiguration`；`contentDescription` 只是该结构化契约的便捷入口，禁止新增平行单字段 Modifier。
+2. 平台无关契约必须覆盖描述、状态、role、heading、live region、选中/勾选/启用、错误、进度、pane title、点击标签、合并后代与隐藏子树。
+3. renderer 必须通过 Android 原生 View 属性与 `AccessibilityNodeInfoCompat` 映射语义，不建立自有无障碍树。
+4. 同一 View 被 patch 或复用时，移除 semantics 必须恢复该 View 原有的 content/state/delegate/heading/live-region/importance，禁止把上一节点语义泄漏到下一节点。
+5. TextField、列表、滑块等原生控件的内建语义优先保留；结构化 semantics 只覆盖显式声明的属性。
+
 ## 5. 当前热点与风险
 
 1. `ViewTreeRenderer` 仍是复杂度热点，新增能力优先拆辅助对象，不继续堆主类。

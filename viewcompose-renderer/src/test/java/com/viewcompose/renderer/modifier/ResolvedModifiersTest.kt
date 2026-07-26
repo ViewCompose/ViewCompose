@@ -10,6 +10,8 @@ import com.viewcompose.ui.modifier.layoutId
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
 import com.viewcompose.ui.modifier.ConstraintModifierElement
 import com.viewcompose.ui.modifier.GesturePriorityModifierElement
+import com.viewcompose.ui.modifier.SemanticsRole
+import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.gesture.GesturePriority
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.node.spec.ConstraintAnchor
@@ -108,5 +110,25 @@ class ResolvedModifiersTest {
         assertEquals("card", resolved.layoutId?.layoutId)
         assertEquals("card", resolved.constraint?.referenceId)
         assertEquals(16, resolved.constraint?.constraint?.start?.margin)
+    }
+
+    @Test
+    fun `resolve merges structured semantics modifiers`() {
+        val resolved = Modifier
+            .semantics {
+                contentDescription = "Account"
+                role = SemanticsRole.Button
+                selected = false
+            }
+            .semantics {
+                stateDescription = "Signed in"
+                selected = true
+            }
+            .resolve()
+
+        assertEquals("Account", resolved.semantics.contentDescription)
+        assertEquals("Signed in", resolved.semantics.stateDescription)
+        assertEquals(SemanticsRole.Button, resolved.semantics.role)
+        assertEquals(true, resolved.semantics.selected)
     }
 }

@@ -22,4 +22,5 @@
     <item name="viewcompose_focus_follow_enabled" type="id" />
     <item name="viewcompose_focus_follow_warning_emitted" type="id" />
     <item name="viewcompose_gesture_dispatcher" type="id" />
+    <item name="viewcompose_semantics_state" type="id" />
 </resources>

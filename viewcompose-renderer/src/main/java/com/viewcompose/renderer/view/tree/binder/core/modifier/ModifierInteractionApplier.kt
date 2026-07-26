@@ -40,7 +40,6 @@ internal object ModifierInteractionApplier {
         applyTransformOrigin(view, layer?.transformOrigin)
         view.minimumHeight = minHeight
         view.minimumWidth = minWidth
-        view.contentDescription = resolved.contentDescription?.contentDescription
         view.setTag(
             R.id.viewcompose_constraint_layout_id,
             resolved.layoutId?.layoutId ?: resolved.constraint?.referenceId,

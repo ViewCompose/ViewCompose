@@ -46,6 +46,7 @@
 21. Lazy 容器 P1 已落地：`LazyListState` 提供完整可观察 layout snapshot、边界与滚动控制；结构化 DSL 支持稳定 key、sticky header、contentType、Grid span、非对称 padding、reverse layout、用户滚动开关和预取策略。
 22. 组合 API 已硬切到 `ComposerLite` 单一路径：移除备用 remember/effect/key 上下文，所有组合外调用立即失败，避免无编译器约束下的静默状态丢失与副作用遗漏。
 23. 宿主平台能力已收口为原子安装：渲染引擎、帧调度 runtime 与组合协程上下文作为同一不可变快照注册，移除空渲染、即时调度和空协程上下文的半安装降级路径。
+24. 结构化无障碍语义已落地：`Modifier.semantics` 覆盖描述、状态、role、heading、live region、选择/勾选/启用、错误、进度与子树策略；renderer 映射原生 Accessibility，并在 View 复用时恢复原始语义。
 
 ### 2.2 Demo 与验证层
 
@@ -78,6 +79,7 @@
 | 方向 | 当前状态 | 下一阶段重点 |
 | --- | --- | --- |
 | Foundations / Input / Layout / State | 已形成 v1 主能力 | 聚焦边界态、表单/焦点态与复杂组合场景 |
+| Accessibility / Semantics | 结构化 semantics 契约与 Android 原生 Accessibility 映射已落地，支持状态、role、heading、live region、错误和进度等核心语义 | 扩展真实设备 TalkBack、Switch Access 与字体放大回归矩阵 |
 | Text Editing | `TextFieldState + EditingBuffer + InputTransformation + AppCompatEditText/InputConnection bridge` 已落地，支持 selection/composition/undo/save | 真实设备覆盖主流中文/日文 IME、TalkBack、硬件键盘；富文本/附件作为独立文档模型推进 |
 | Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、suspend `produceState` 与 renderer 失败恢复已落地 | 增强异常诊断，并继续约束 `AndroidView` 外部副作用边界 |
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |

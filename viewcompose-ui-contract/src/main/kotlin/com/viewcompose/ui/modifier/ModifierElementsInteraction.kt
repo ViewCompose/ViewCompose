@@ -48,8 +48,8 @@ data class GesturePriorityModifierElement(
     val priority: GesturePriority,
 ) : ModifierElement
 
-data class ContentDescriptionModifierElement(
-    val contentDescription: String?,
+data class SemanticsModifierElement(
+    val configuration: SemanticsConfiguration,
 ) : ModifierElement
 
 data class TestTagModifierElement(

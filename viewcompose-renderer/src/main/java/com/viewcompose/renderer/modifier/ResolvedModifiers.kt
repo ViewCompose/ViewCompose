@@ -12,7 +12,7 @@ internal class ResolvedModifiers(
     var backgroundColor: BackgroundColorModifierElement? = null,
     var backgroundDrawableRes: BackgroundDrawableResModifierElement? = null,
     var clickable: ClickableModifierElement? = null,
-    var contentDescription: ContentDescriptionModifierElement? = null,
+    var semantics: SemanticsConfiguration = SemanticsConfiguration.Empty,
     var testTag: TestTagModifierElement? = null,
     var overlayAnchor: OverlayAnchorModifierElement? = null,
     var layoutId: LayoutIdModifierElement? = null,
@@ -69,7 +69,9 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is BackgroundColorModifierElement -> result.backgroundColor = element
             is BackgroundDrawableResModifierElement -> result.backgroundDrawableRes = element
             is ClickableModifierElement -> result.clickable = element
-            is ContentDescriptionModifierElement -> result.contentDescription = element
+            is SemanticsModifierElement -> {
+                result.semantics = result.semantics.merge(element.configuration)
+            }
             is TestTagModifierElement -> result.testTag = element
             is OverlayAnchorModifierElement -> result.overlayAnchor = element
             is LayoutIdModifierElement -> result.layoutId = element

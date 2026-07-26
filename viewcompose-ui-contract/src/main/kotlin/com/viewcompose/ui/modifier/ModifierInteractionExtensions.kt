@@ -7,9 +7,9 @@ fun Modifier.clickable(onClick: () -> Unit): Modifier {
 }
 
 fun Modifier.contentDescription(description: String?): Modifier {
-    return then(
-        ContentDescriptionModifierElement(description),
-    )
+    return semantics {
+        contentDescription = description
+    }
 }
 
 fun Modifier.testTag(tag: String): Modifier {

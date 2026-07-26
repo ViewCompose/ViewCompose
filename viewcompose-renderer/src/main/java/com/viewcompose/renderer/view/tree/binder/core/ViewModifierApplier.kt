@@ -80,6 +80,10 @@ internal object ViewModifierApplier {
             minHeight = hostStyle.minHeight,
             minWidth = hostStyle.minWidth,
         )
+        ModifierSemanticsApplier.apply(
+            view = view,
+            semantics = resolved.semantics,
+        )
         ModifierInteractionApplier.applyClickAndFocusState(
             view = view,
             node = node,
