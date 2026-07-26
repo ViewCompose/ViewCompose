@@ -2,7 +2,11 @@ package com.viewcompose
 
 import android.os.Build
 import android.os.Bundle
+import android.view.Choreographer
+import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.viewcompose.host.android.setUiContent
@@ -25,6 +29,17 @@ import com.viewcompose.widget.core.Text
 class NavigationBackTestActivity : AppCompatActivity() {
     private val systemBackEnabledState = mutableStateOf(true)
     private val failures = mutableListOf<NavFailure>()
+    private val destinationViewSamples = mutableListOf<DestinationViewSample>()
+    private var destinationViewSampling = false
+    private val destinationViewSampleFrameCallback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            if (!destinationViewSampling) {
+                return
+            }
+            captureDestinationViewSample()?.let(destinationViewSamples::add)
+            Choreographer.getInstance().postFrameCallback(this)
+        }
+    }
 
     lateinit var navController: NavHostController
         private set
@@ -99,6 +114,66 @@ class NavigationBackTestActivity : AppCompatActivity() {
     fun entryIds(): List<String> {
         return navController.snapshot.entries.map { entry -> entry.id.value }
     }
+
+    fun beginDestinationViewSampling() {
+        destinationViewSamples.clear()
+        destinationViewSampling = true
+        captureDestinationViewSample()?.let(destinationViewSamples::add)
+        Choreographer.getInstance().postFrameCallback(destinationViewSampleFrameCallback)
+    }
+
+    fun endDestinationViewSampling(): List<DestinationViewSample> {
+        destinationViewSampling = false
+        Choreographer.getInstance().removeFrameCallback(destinationViewSampleFrameCallback)
+        captureDestinationViewSample()?.let(destinationViewSamples::add)
+        return destinationViewSamples.toList()
+    }
+
+    private fun captureDestinationViewSample(): DestinationViewSample? {
+        val home = destinationContainerOrNull(HOME_ROUTE) ?: return null
+        val details = destinationContainerOrNull(DETAILS_ROUTE) ?: return null
+        return DestinationViewSample(
+            homeVisibility = home.visibility,
+            detailsVisibility = details.visibility,
+            homeTranslationX = home.translationX,
+            detailsTranslationX = details.translationX,
+            homeAlpha = home.alpha,
+            detailsAlpha = details.alpha,
+        )
+    }
+
+    private fun destinationContainerOrNull(routeName: String): View? {
+        val root = findViewById<ViewGroup>(android.R.id.content)
+        return findTextViewByText(
+            root = root,
+            text = destinationText(routeName),
+        )?.parent as? View
+    }
+
+    private fun findTextViewByText(
+        root: View,
+        text: String,
+    ): TextView? {
+        if (root is TextView && root.text?.toString() == text) {
+            return root
+        }
+        if (root !is ViewGroup) {
+            return null
+        }
+        for (index in 0 until root.childCount) {
+            findTextViewByText(root.getChildAt(index), text)?.let { return it }
+        }
+        return null
+    }
+
+    data class DestinationViewSample(
+        val homeVisibility: Int,
+        val detailsVisibility: Int,
+        val homeTranslationX: Float,
+        val detailsTranslationX: Float,
+        val homeAlpha: Float,
+        val detailsAlpha: Float,
+    )
 
     companion object {
         const val HOME_ROUTE = "home"
