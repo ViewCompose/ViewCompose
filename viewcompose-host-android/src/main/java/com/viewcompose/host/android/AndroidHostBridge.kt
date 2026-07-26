@@ -18,11 +18,15 @@ import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.ProvideMonotonicFrameClock
 import com.viewcompose.widget.core.ProvideSaveableStateRegistry
 import com.viewcompose.widget.core.ProvideLocal
+import com.viewcompose.widget.core.AndroidDynamicColorPolicy
+import com.viewcompose.widget.core.AndroidResolvedTheme
+import com.viewcompose.widget.core.AndroidThemeBridge
 import com.viewcompose.widget.core.RenderStats
 import com.viewcompose.widget.core.RenderTreeResult
 import com.viewcompose.widget.core.RenderFailure
 import com.viewcompose.widget.core.LocalRenderResultListener
 import com.viewcompose.widget.core.UiEnvironment
+import com.viewcompose.widget.core.UiTheme
 import com.viewcompose.widget.core.UiTreeBuilder
 import java.util.WeakHashMap
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +42,7 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
 fun Fragment.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
+    dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> OverlayHostDefaults.androidOrNoOp(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -50,8 +55,12 @@ fun Fragment.setUiContent(
     )
     FragmentRenderSessionRegistry.clear(this)
     val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
-    val root = buildUiContentRoot(
+    val resolvedTheme = AndroidThemeBridge.resolveContext(
         context = requireContext(),
+        dynamicColorPolicy = dynamicColorPolicy,
+    )
+    val root = buildUiContentRoot(
+        context = resolvedTheme.context,
     )
     val session = renderInto(
         container = root,
@@ -67,6 +76,7 @@ fun Fragment.setUiContent(
             lifecycleOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
             saveableStateRegistry = saveableStateRegistry,
+            resolvedTheme = resolvedTheme,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -81,6 +91,7 @@ fun Fragment.setUiContent(
 fun ComponentActivity.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
+    dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> OverlayHostDefaults.androidOrNoOp(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -93,8 +104,12 @@ fun ComponentActivity.setUiContent(
     )
     ActivityRenderSessionRegistry.clear(this)
     val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
-    val root = buildUiContentRoot(
+    val resolvedTheme = AndroidThemeBridge.resolveContext(
         context = this,
+        dynamicColorPolicy = dynamicColorPolicy,
+    )
+    val root = buildUiContentRoot(
+        context = resolvedTheme.context,
     )
     setContentView(root)
     val session = renderInto(
@@ -111,6 +126,7 @@ fun ComponentActivity.setUiContent(
             lifecycleOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
             saveableStateRegistry = saveableStateRegistry,
+            resolvedTheme = resolvedTheme,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -138,6 +154,7 @@ private fun UiTreeBuilder.withHostEnvironment(
     lifecycleOwner: LifecycleOwner,
     viewModelStoreOwner: ViewModelStoreOwner,
     saveableStateRegistry: com.viewcompose.widget.core.SaveableStateRegistry,
+    resolvedTheme: AndroidResolvedTheme,
     onRenderResult: ((RenderTreeResult) -> Unit)?,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
@@ -148,7 +165,9 @@ private fun UiTreeBuilder.withHostEnvironment(
                     ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
                         ProvideLocal(LocalRenderResultListener, onRenderResult) {
                             UiEnvironment(androidContext = root.context) {
-                                content(root)
+                                UiTheme(resolvedAndroidTheme = resolvedTheme) {
+                                    content(root)
+                                }
                             }
                         }
                     }

@@ -1,7 +1,6 @@
 package com.viewcompose
 
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import com.viewcompose.image.coil.CoilRemoteImageLoader
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
@@ -31,13 +30,14 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
 ) {
     val themeModeState = remember { mutableStateOf(DemoThemeSession.mode) }
     val remoteImageLoader = remember { CoilRemoteImageLoader(root.context.applicationContext) }
-    val activity = root.context as? AppCompatActivity
-    val resolvedTheme = DemoThemeTokens.resolve(
-        mode = themeModeState.value,
-        context = root.context,
-    )
+    val activity = root.context.findAppCompatActivity()
+    val overrideTheme = when (themeModeState.value) {
+        DemoThemeMode.System -> null
+        DemoThemeMode.Light -> DemoThemeTokens.light
+        DemoThemeMode.Dark -> DemoThemeTokens.dark
+    }
     ProvideRemoteImageLoader(remoteImageLoader) {
-        UiTheme(tokens = resolvedTheme) {
+        val scaffoldContent: UiTreeBuilder.() -> Unit = {
             SideEffect {
                 activity?.title = "$title · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
             }
@@ -69,6 +69,11 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
                     content(this)
                 }
             }
+        }
+        if (overrideTheme == null) {
+            scaffoldContent()
+        } else {
+            UiTheme(tokens = overrideTheme, content = scaffoldContent)
         }
     }
 }

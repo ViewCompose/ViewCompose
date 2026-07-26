@@ -10,30 +10,61 @@ enum class AndroidDynamicColorPolicy {
     UseIfAvailable,
 }
 
+/**
+ * The Android context and semantic origin selected for one ViewCompose tree.
+ *
+ * Hosts must use [context] to create the root view as well as every overlay so
+ * framework tokens and native widgets resolve the same Android theme.
+ */
+class AndroidResolvedTheme internal constructor(
+    val context: Context,
+    val origin: UiThemeOrigin,
+)
+
 object AndroidThemeBridge {
+    fun resolveContext(
+        context: Context,
+        dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
+    ): AndroidResolvedTheme {
+        val useDynamicColor = dynamicColorPolicy == AndroidDynamicColorPolicy.UseIfAvailable &&
+            DynamicColors.isDynamicColorAvailable()
+        return AndroidResolvedTheme(
+            context = if (useDynamicColor) {
+                DynamicColors.wrapContextIfAvailable(context)
+            } else {
+                context
+            },
+            origin = if (useDynamicColor) {
+                UiThemeOrigin.AndroidDynamicColor
+            } else {
+                UiThemeOrigin.AndroidTheme
+            },
+        )
+    }
+
     fun fromContext(
         context: Context,
         dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
     ): UiThemeTokens {
-        val useDynamicColor = dynamicColorPolicy == AndroidDynamicColorPolicy.UseIfAvailable &&
-            DynamicColors.isDynamicColorAvailable()
-        val resolvedContext = if (useDynamicColor) {
-            DynamicColors.wrapContextIfAvailable(context)
-        } else {
-            context
-        }
-        val isDark = isNightMode(resolvedContext)
-        val snapshot = AndroidThemeSnapshotReader.read(resolvedContext)
+        return fromResolvedTheme(
+            resolveContext(
+                context = context,
+                dynamicColorPolicy = dynamicColorPolicy,
+            ),
+        )
+    }
+
+    fun fromResolvedTheme(
+        resolvedTheme: AndroidResolvedTheme,
+    ): UiThemeTokens {
+        val isDark = isNightMode(resolvedTheme.context)
+        val snapshot = AndroidThemeSnapshotReader.read(resolvedTheme.context)
         return ThemeTokenMapper.fromSnapshot(
             snapshot = snapshot,
             isDarkMode = isDark,
         ).copy(
             metadata = UiThemeMetadata(
-                origin = if (useDynamicColor) {
-                    UiThemeOrigin.AndroidDynamicColor
-                } else {
-                    UiThemeOrigin.AndroidTheme
-                },
+                origin = resolvedTheme.origin,
                 isDark = isDark,
             ),
         )

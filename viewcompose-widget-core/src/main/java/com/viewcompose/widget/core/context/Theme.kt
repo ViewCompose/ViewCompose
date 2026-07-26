@@ -38,10 +38,29 @@ object Theme {
 fun UiTreeBuilder.UiTheme(
     tokens: UiThemeTokens? = null,
     androidContext: Context? = null,
+    resolvedAndroidTheme: AndroidResolvedTheme? = null,
     dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
     content: UiTreeBuilder.() -> Unit,
 ) {
+    val sourceCount = listOfNotNull(tokens, androidContext, resolvedAndroidTheme).size
+    require(sourceCount <= 1) {
+        "UiTheme accepts only one source: tokens, androidContext, or resolvedAndroidTheme."
+    }
     val resolvedTokens = tokens
+        ?: resolvedAndroidTheme?.let { resolvedTheme ->
+            if (ComposerContext.currentComposer() == null) {
+                AndroidThemeBridge.fromResolvedTheme(resolvedTheme)
+            } else {
+                val lifecycle = remember(resolvedTheme) {
+                    AndroidThemeTokenLifecycle(resolvedTheme)
+                }
+                DisposableEffect(lifecycle) {
+                    lifecycle.start()
+                    lifecycle::close
+                }
+                lifecycle.tokens.value
+            }
+        }
         ?: androidContext?.let { context ->
             if (ComposerContext.currentComposer() == null) {
                 AndroidThemeBridge.fromContext(
@@ -72,12 +91,21 @@ fun UiTreeBuilder.UiTheme(
 internal class AndroidThemeTokenLifecycle(
     context: Context,
     private val dynamicColorPolicy: AndroidDynamicColorPolicy,
+    private val resolvedOrigin: UiThemeOrigin? = null,
 ) : ComponentCallbacks {
     private val contextReference = WeakReference(context)
     private val callbackContext = context.applicationContext
     private var started = false
     private var revision = 0L
     val tokens: MutableState<UiThemeTokens> = mutableStateOf(readTokens(context))
+
+    constructor(
+        resolvedTheme: AndroidResolvedTheme,
+    ) : this(
+        context = resolvedTheme.context,
+        dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+        resolvedOrigin = resolvedTheme.origin,
+    )
 
     fun start() {
         if (started) {
@@ -108,7 +136,14 @@ internal class AndroidThemeTokenLifecycle(
     override fun onLowMemory() = Unit
 
     private fun readTokens(context: Context): UiThemeTokens {
-        val resolved = AndroidThemeBridge.fromContext(
+        val resolved = resolvedOrigin?.let { origin ->
+            AndroidThemeBridge.fromResolvedTheme(
+                AndroidResolvedTheme(
+                    context = context,
+                    origin = origin,
+                ),
+            )
+        } ?: AndroidThemeBridge.fromContext(
             context = context,
             dynamicColorPolicy = dynamicColorPolicy,
         )
