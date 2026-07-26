@@ -10,5 +10,23 @@
 
     <style name="ViewComposeTestTheme">
         <item name="shapeAppearanceSmallComponent">@style/ViewComposeTestShapeAppearance</item>
+        <item name="colorPrimary">#FF102030</item>
+        <item name="colorTertiary">#FF304050</item>
+        <item name="colorOnTertiary">#FFF0F1F2</item>
+        <item name="colorTertiaryContainer">#FF506070</item>
+        <item name="colorOnTertiaryContainer">#FFE0E1E2</item>
+        <item name="colorSurfaceDim">#FF111213</item>
+        <item name="colorSurfaceBright">#FFFAFBFC</item>
+        <item name="colorSurfaceContainerLowest">#FF212223</item>
+        <item name="colorSurfaceContainerLow">#FF313233</item>
+        <item name="colorSurfaceContainer">#FF414243</item>
+        <item name="colorSurfaceContainerHigh">#FF515253</item>
+        <item name="colorSurfaceContainerHighest">#FF616263</item>
+        <item name="colorPrimaryInverse">#FF718293</item>
+        <item name="android:textColorPrimary">@color/viewcompose_test_primary_text</item>
+        <item name="android:textColorSecondary">@color/viewcompose_test_secondary_text</item>
+        <item name="colorControlNormal">@color/viewcompose_test_control</item>
+        <item name="colorControlActivated">@color/viewcompose_test_control_activated</item>
+        <item name="colorControlHighlight">@color/viewcompose_test_control_highlight</item>
     </style>
 </resources>

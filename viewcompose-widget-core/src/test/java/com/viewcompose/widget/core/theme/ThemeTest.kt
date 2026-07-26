@@ -116,6 +116,7 @@ class ThemeTest {
     fun `theme override rebases derived domains when colors change`() {
         val baseTheme = UiThemeDefaults.light()
         var primary = 0
+        var activatedControl = 0
         var bodySize = 0
 
         buildVNodeTree {
@@ -124,13 +125,34 @@ class ThemeTest {
                     colors = baseTheme.colors.copy(primary = 0xFF225577.toInt()),
                 ) {
                     primary = Theme.colors.primary
+                    activatedControl = Theme.stateColors.controlActivated.defaultColor
                     bodySize = Theme.typography.bodyMedium.fontSizeSp
                 }
             }
         }
 
         assertEquals(0xFF225577.toInt(), primary)
+        assertEquals(0xFF225577.toInt(), activatedControl)
         assertEquals(baseTheme.typography.bodyMedium.fontSizeSp, bodySize)
+    }
+
+    @Test
+    fun `state color resolution follows Android state precedence`() {
+        val colors = UiStateColor(
+            defaultColor = 1,
+            disabledColor = 2,
+            pressedColor = 3,
+            focusedColor = 4,
+            checkedColor = 5,
+            selectedColor = 6,
+        )
+
+        assertEquals(1, colors.resolve())
+        assertEquals(2, colors.resolve(enabled = false, pressed = true))
+        assertEquals(3, colors.resolve(pressed = true, focused = true))
+        assertEquals(4, colors.resolve(focused = true, checked = true))
+        assertEquals(5, colors.resolve(checked = true, selected = true))
+        assertEquals(6, colors.resolve(selected = true))
     }
 
     @Test

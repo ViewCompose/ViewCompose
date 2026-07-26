@@ -31,8 +31,8 @@ object TextFieldDefaults {
     ): Int {
         return when {
             isError -> Theme.colors.onErrorContainer
-            enabled -> Theme.colors.onSurface
-            else -> Theme.colors.onSurfaceVariant
+            enabled -> Theme.stateColors.primaryText.resolve()
+            else -> Theme.stateColors.primaryText.resolve(enabled = false)
         }
     }
 
@@ -42,8 +42,8 @@ object TextFieldDefaults {
     ): Int {
         return when {
             isError -> Theme.colors.onErrorContainer
-            enabled -> Theme.colors.onSurfaceVariant
-            else -> Theme.colors.outlineVariant
+            enabled -> Theme.stateColors.secondaryText.resolve()
+            else -> Theme.stateColors.secondaryText.resolve(enabled = false)
         }
     }
 
@@ -100,10 +100,10 @@ object TextFieldDefaults {
                 override?.outlinedErrorBorder ?: Theme.colors.error
 
             variant == TextFieldVariant.Outlined && enabled ->
-                override?.outlinedBorder ?: Theme.colors.outline
+                override?.outlinedBorder ?: Theme.stateColors.control.resolve()
 
             variant == TextFieldVariant.Outlined ->
-                override?.outlinedDisabledBorder ?: Theme.colors.outlineVariant
+                override?.outlinedDisabledBorder ?: Theme.stateColors.control.resolve(enabled = false)
 
             else -> 0x00000000
         }
@@ -150,7 +150,7 @@ object TextFieldDefaults {
         }
     }
 
-    fun pressedColor(): Int = Theme.colors.ripple
+    fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
 
-    fun cursorColor(): Int = Theme.colors.primary
+    fun cursorColor(): Int = Theme.stateColors.controlActivated.resolve()
 }

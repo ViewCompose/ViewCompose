@@ -51,6 +51,21 @@ class ThemeTokenUsageAuditTest {
     }
 
     @Test
+    fun `state color tokens are consumed by component defaults`() {
+        val expected = parseDataClassFields(themeTokensFile, "UiStateColors").toSet()
+        val used = scanThemeUsage(
+            roots = sourceRoots,
+            regex = Regex("""Theme\.stateColors\.([A-Za-z0-9_]+)"""),
+        )
+        val missing = expected - used
+
+        assertTrue(
+            "Unconsumed state color tokens: $missing. Used=$used",
+            missing.isEmpty(),
+        )
+    }
+
+    @Test
     fun `shape tokens are consumed or explicitly whitelisted`() {
         val expected = parseDataClassFields(themeTokensFile, "UiShapes").toSet()
         val used = scanThemeUsage(
@@ -193,6 +208,20 @@ class ThemeTokenUsageAuditTest {
 
     companion object {
         private val reservedColorTokens = setOf(
+            "onBackground",
+            "surfaceDim",
+            "surfaceBright",
+            "surfaceContainerLowest",
+            "surfaceContainerLow",
+            "surfaceContainer",
+            "surfaceContainerHigh",
+            "surfaceContainerHighest",
+            "tertiary",
+            "onTertiary",
+            "tertiaryContainer",
+            "onTertiaryContainer",
+            "inversePrimary",
+            "scrim",
             "success",
             "warning",
             "info",

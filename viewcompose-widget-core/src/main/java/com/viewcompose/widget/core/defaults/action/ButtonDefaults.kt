@@ -56,31 +56,31 @@ object ButtonDefaults {
             ButtonVariant.Primary -> if (enabled) {
                 override?.primaryContent ?: Theme.colors.onPrimary
             } else {
-                override?.primaryDisabledContent ?: Theme.colors.onSurfaceVariant
+                override?.primaryDisabledContent ?: Theme.stateColors.primaryText.resolve(enabled = false)
             }
 
             ButtonVariant.Secondary -> if (enabled) {
                 override?.secondaryContent ?: Theme.colors.onSecondary
             } else {
-                override?.secondaryDisabledContent ?: Theme.colors.onSurfaceVariant
+                override?.secondaryDisabledContent ?: Theme.stateColors.primaryText.resolve(enabled = false)
             }
 
             ButtonVariant.Tonal -> if (enabled) {
                 override?.tonalContent ?: Theme.colors.onSecondaryContainer
             } else {
-                override?.tonalDisabledContent ?: Theme.colors.onSurfaceVariant
+                override?.tonalDisabledContent ?: Theme.stateColors.primaryText.resolve(enabled = false)
             }
 
             ButtonVariant.Outlined -> if (enabled) {
-                override?.outlinedContent ?: Theme.colors.onSurface
+                override?.outlinedContent ?: Theme.stateColors.primaryText.resolve()
             } else {
-                override?.outlinedDisabledContent ?: Theme.colors.onSurfaceVariant
+                override?.outlinedDisabledContent ?: Theme.stateColors.primaryText.resolve(enabled = false)
             }
 
             ButtonVariant.Text -> if (enabled) {
                 Theme.colors.primary
             } else {
-                Theme.colors.onSurfaceVariant
+                Theme.stateColors.primaryText.resolve(enabled = false)
             }
         }
     }
@@ -172,5 +172,5 @@ object ButtonDefaults {
         }
     }
 
-    fun pressedColor(): Int = Theme.colors.ripple
+    fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
 }

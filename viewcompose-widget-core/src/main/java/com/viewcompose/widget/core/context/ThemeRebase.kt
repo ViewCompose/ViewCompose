@@ -2,6 +2,7 @@ package com.viewcompose.widget.core
 
 fun UiThemeTokens.override(
     colors: UiColors? = null,
+    stateColors: UiStateColors? = null,
     typography: UiTypography? = null,
     shapes: UiShapes? = null,
     controls: UiControlSizing? = null,
@@ -9,6 +10,9 @@ fun UiThemeTokens.override(
 ): UiThemeTokens {
     return copy(
         colors = colors ?: this.colors,
+        stateColors = stateColors
+            ?: colors?.let(UiStateColorDefaults::from)
+            ?: this.stateColors,
         typography = typography ?: this.typography,
         shapes = shapes ?: this.shapes,
         controls = controls ?: this.controls,

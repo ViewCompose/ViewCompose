@@ -3,6 +3,7 @@ package com.viewcompose.widget.core
 import android.content.ComponentCallbacks
 import android.content.Context
 import android.content.res.Configuration
+import android.os.Looper
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 import java.lang.ref.WeakReference
@@ -15,12 +16,35 @@ private val LocalTheme = uiLocalOf(
     defaultFactory = UiThemeDefaults::light,
 )
 
+/**
+ * Explicit invalidation entry point for hosts that mutate Android theme
+ * resources at runtime (for example with Context.setTheme/applyStyle).
+ */
+class AndroidThemeRefreshController {
+    private val listeners = linkedSetOf<() -> Unit>()
+
+    fun refresh() {
+        check(Looper.myLooper() == Looper.getMainLooper()) {
+            "AndroidThemeRefreshController.refresh() must be called on the main thread."
+        }
+        listeners.toList().forEach { listener -> listener() }
+    }
+
+    internal fun subscribe(listener: () -> Unit): () -> Unit {
+        listeners += listener
+        return { listeners -= listener }
+    }
+}
+
 object Theme {
     val current: UiThemeTokens
         get() = UiLocals.current(LocalTheme)
 
     val colors: UiColors
         get() = current.colors
+
+    val stateColors: UiStateColors
+        get() = current.stateColors
 
     val typography: UiTypography
         get() = current.typography
@@ -40,6 +64,7 @@ fun UiTreeBuilder.UiTheme(
     androidContext: Context? = null,
     resolvedAndroidTheme: AndroidResolvedTheme? = null,
     dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
+    refreshController: AndroidThemeRefreshController? = null,
     content: UiTreeBuilder.() -> Unit,
 ) {
     val sourceCount = listOfNotNull(tokens, androidContext, resolvedAndroidTheme).size
@@ -54,9 +79,14 @@ fun UiTreeBuilder.UiTheme(
                 val lifecycle = remember(resolvedTheme) {
                     AndroidThemeTokenLifecycle(resolvedTheme)
                 }
-                DisposableEffect(lifecycle) {
+                DisposableEffect(lifecycle, refreshController) {
                     lifecycle.start()
-                    lifecycle::close
+                    val unsubscribe = refreshController?.subscribe(lifecycle::refresh)
+                    val disposeEffect: () -> Unit = {
+                        unsubscribe?.invoke()
+                        lifecycle.close()
+                    }
+                    disposeEffect
                 }
                 lifecycle.tokens.value
             }
@@ -74,9 +104,14 @@ fun UiTreeBuilder.UiTheme(
                         dynamicColorPolicy = dynamicColorPolicy,
                     )
                 }
-                DisposableEffect(lifecycle) {
+                DisposableEffect(lifecycle, refreshController) {
                     lifecycle.start()
-                    lifecycle::close
+                    val unsubscribe = refreshController?.subscribe(lifecycle::refresh)
+                    val disposeEffect: () -> Unit = {
+                        unsubscribe?.invoke()
+                        lifecycle.close()
+                    }
+                    disposeEffect
                 }
                 lifecycle.tokens.value
             }
@@ -91,7 +126,7 @@ fun UiTreeBuilder.UiTheme(
 internal class AndroidThemeTokenLifecycle(
     context: Context,
     private val dynamicColorPolicy: AndroidDynamicColorPolicy,
-    private val resolvedOrigin: UiThemeOrigin? = null,
+    private val resolvedTheme: AndroidResolvedTheme? = null,
 ) : ComponentCallbacks {
     private val contextReference = WeakReference(context)
     private val callbackContext = context.applicationContext
@@ -104,7 +139,7 @@ internal class AndroidThemeTokenLifecycle(
     ) : this(
         context = resolvedTheme.context,
         dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
-        resolvedOrigin = resolvedTheme.origin,
+        resolvedTheme = resolvedTheme,
     )
 
     fun start() {
@@ -124,10 +159,15 @@ internal class AndroidThemeTokenLifecycle(
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
+        refresh()
+    }
+
+    fun refresh() {
         val context = contextReference.get() ?: run {
             close()
             return
         }
+        resolvedTheme?.refreshContext()
         revision += 1
         tokens.value = readTokens(context)
     }
@@ -136,13 +176,8 @@ internal class AndroidThemeTokenLifecycle(
     override fun onLowMemory() = Unit
 
     private fun readTokens(context: Context): UiThemeTokens {
-        val resolved = resolvedOrigin?.let { origin ->
-            AndroidThemeBridge.fromResolvedTheme(
-                AndroidResolvedTheme(
-                    context = context,
-                    origin = origin,
-                ),
-            )
+        val resolved = resolvedTheme?.let { theme ->
+            AndroidThemeBridge.fromResolvedTheme(theme)
         } ?: AndroidThemeBridge.fromContext(
             context = context,
             dynamicColorPolicy = dynamicColorPolicy,
@@ -155,6 +190,7 @@ internal class AndroidThemeTokenLifecycle(
 
 fun UiTreeBuilder.UiThemeOverride(
     colors: UiColors? = null,
+    stateColors: UiStateColors? = null,
     typography: UiTypography? = null,
     shapes: UiShapes? = null,
     controls: UiControlSizing? = null,
@@ -165,6 +201,7 @@ fun UiTreeBuilder.UiThemeOverride(
         local = LocalTheme,
         value = Theme.current.override(
             colors = colors,
+            stateColors = stateColors,
             typography = typography,
             shapes = shapes,
             controls = controls,
@@ -177,6 +214,7 @@ fun UiTreeBuilder.UiThemeOverride(
 
 fun UiTreeBuilder.UiThemeOverride(
     colors: (UiColors.() -> UiColors)? = null,
+    stateColors: (UiStateColors.() -> UiStateColors)? = null,
     typography: (UiTypography.() -> UiTypography)? = null,
     shapes: (UiShapes.() -> UiShapes)? = null,
     controls: (UiControlSizing.() -> UiControlSizing)? = null,
@@ -185,6 +223,7 @@ fun UiTreeBuilder.UiThemeOverride(
 ) {
     UiThemeOverride(
         colors = colors?.invoke(Theme.colors),
+        stateColors = stateColors?.invoke(Theme.stateColors),
         typography = typography?.invoke(Theme.typography),
         shapes = shapes?.invoke(Theme.shapes),
         controls = controls?.invoke(Theme.controls),

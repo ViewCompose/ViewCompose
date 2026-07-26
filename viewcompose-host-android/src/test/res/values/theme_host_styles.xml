@@ -6,4 +6,9 @@
         <item name="colorSurface">#FF304050</item>
         <item name="colorOnSurface">#FFF1F2F3</item>
     </style>
+
+    <style name="ViewComposeHostAlternateTheme" parent="ViewComposeHostTestTheme">
+        <item name="colorPrimary">#FFAC6824</item>
+        <item name="colorSurface">#FF504030</item>
+    </style>
 </resources>

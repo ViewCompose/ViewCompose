@@ -18,11 +18,12 @@
 `UiThemeTokens` 当前核心字段保持为：
 
 1. `colors`
-2. `typography`
-3. `shapes`
-4. `controls`
-5. `overlays`
-6. `metadata`
+2. `stateColors`
+3. `typography`
+4. `shapes`
+5. `controls`
+6. `overlays`
+7. `metadata`
 
 关键原则：
 
@@ -33,11 +34,12 @@
 当前 token 语义补充：
 
 1. `colors` 同时承载基础色、`on*` 前景色、`*Container` 容器色、轮廓色、逆表面色与 ripple。
-2. `typography` 只保留 tiered `title*/body*/label*` 作为唯一主入口。
-3. `shapes` 只保留语义化 `small / medium / large` 三级形状作为唯一主入口；每个形状完整表达四角、圆角/切角与绝对/百分比尺寸。
-4. `controls` 仍是框架自有尺寸 token，不承诺与 Android 原主题系统一一对齐。
-5. `overlays` 当前由语义 token 承载跨组件蒙层配置。
-6. `metadata` 标记 token 来源、深色状态与配置修订号，用于生命周期刷新和诊断，不参与组件默认值推导。
+2. `stateColors` 承载文本、普通控件、激活控件和交互高亮的 default/disabled/pressed/focused/checked/selected 状态。
+3. `typography` 只保留 tiered `title*/body*/label*` 作为唯一主入口。
+4. `shapes` 只保留语义化 `small / medium / large` 三级形状作为唯一主入口；每个形状完整表达四角、圆角/切角与绝对/百分比尺寸。
+5. `controls` 仍是框架自有尺寸 token，不承诺与 Android 原主题系统一一对齐。
+6. `overlays` 当前由语义 token 承载跨组件蒙层配置。
+7. `metadata` 标记 token 来源、深色状态与配置修订号，用于生命周期刷新和诊断，不参与组件默认值推导。
 
 ## 2.3 Token 使用闭环
 
@@ -46,12 +48,12 @@
 1. 至少被一个 core defaults/composite 默认值明确消费。
 2. 被列入 whitelist，并在文档中说明原因。
 
-当前 whitelist 仅保留 `reserved semantic palette`：
+当前 whitelist 仅保留暂时没有核心组件直接消费的 `reserved semantic palette`：
 
-1. `success`
-2. `warning`
-3. `info`
-4. `surfaceTint`
+1. 扩展表面：`onBackground / surfaceDim / surfaceBright / surfaceContainer*`
+2. 第三强调色：`tertiary / onTertiary / tertiaryContainer / onTertiaryContainer`
+3. 反色与蒙层：`inversePrimary / scrim / surfaceTint`
+4. 业务语义：`success / warning / info`
 
 说明：本轮不强绑到现有核心组件，避免为了提高使用率污染语义。
 
@@ -136,31 +138,38 @@ Android 主题桥接只做“平台语义到框架语义”的映射，内部固
 1. `SnapshotReader` 负责批量读取 Android / AppCompat / Material 主题字段。
 2. `ThemeTokenMapper` 负责把平台字段映射到框架 token，并处理 fallback。
 3. bridge 不直接产出组件级默认值，不绕过 `Defaults` 层。
-4. `UiTheme(androidContext = ...)` 默认在平台支持时套用 Material 动态色；可通过 `AndroidDynamicColorPolicy.Disabled` 显式关闭。
-5. 组合内使用 Android 主题时会监听配置变化并重新读取 token；离开组合后注销回调，`metadata.revision` 随刷新递增。
+4. Android `ComponentActivity/Fragment.setUiContent` 默认解析并提供 Android Theme；根容器、框架原生 View、`AndroidView` 与 Overlay 共用同一个解析上下文。
+5. `UiTheme(androidContext = ...)` 默认在平台支持时套用 Material 动态色；可通过 `AndroidDynamicColorPolicy.Disabled` 显式关闭。
+6. 组合内使用 Android 主题时会监听配置变化并重新读取 token；离开组合后注销回调，`metadata.revision` 随刷新递增。
+7. 运行时调用 `setTheme/applyStyle` 后，可把 `AndroidThemeRefreshController` 传给 `setUiContent`，再在主线程调用 `refresh()`；控制器会重新解析动态色上下文并触发主题子树刷新。
 
 当前 bridge 覆盖矩阵：
 
 1. `colors`
-   - 已桥接：`background / surface / surfaceVariant / primary / secondary / error`
-   - 已桥接：`onPrimary / onSecondary / onError`
-   - 已桥接：`primaryContainer / secondaryContainer / errorContainer`
-   - 已桥接：`onPrimaryContainer / onSecondaryContainer / onErrorContainer`
-   - 已桥接：`outline / outlineVariant / inverseSurface / inverseOnSurface`
+   - 已桥接：`background / onBackground / surface / surfaceVariant / primary / secondary / tertiary / error`
+   - 已桥接：`surfaceDim / surfaceBright / surfaceContainerLowest/Low/Container/High/Highest`
+   - 已桥接：`onPrimary / onSecondary / onTertiary / onError`
+   - 已桥接：`primaryContainer / secondaryContainer / tertiaryContainer / errorContainer`
+   - 已桥接：`onPrimaryContainer / onSecondaryContainer / onTertiaryContainer / onErrorContainer`
+   - 已桥接：`outline / outlineVariant / inverseSurface / inverseOnSurface / inversePrimary`
    - 已桥接：`onSurface / onSurfaceVariant`
    - 已桥接：`ripple`（优先读 `colorControlHighlight`）
-   - best-effort：`surfaceTint` 当前优先对接 `colorAccent` 语义来源
-2. `typography`
+   - `surfaceTint` 按 Material 3 颜色角色回落到 `primary`，不再错误借用 AppCompat `colorAccent`
+2. `stateColors`
+   - 已桥接：`android:textColorPrimary / textColorSecondary`
+   - 已桥接：AppCompat `colorControlNormal / colorControlActivated / colorControlHighlight`
+   - 标准状态：`disabled / pressed / focused / checked / selected`
+3. `typography`
    - 已桥接：Material 3 `textAppearanceTitle*/Body*/Label*`
    - fallback：旧 Android `textAppearanceLarge/Medium/Small`
    - 已桥接字段：`fontSizeSp / fontWeight / fontFamily / letterSpacingEm / lineHeightSp / includeFontPadding`
-3. `shapes`
+4. `shapes`
    - 已桥接：`shapeAppearanceSmallComponent / Medium / Large`
    - 已桥接：四角独立尺寸、`rounded/cut` corner family、dimension/fraction corner size
    - Android 的物理 left/right 会按当前布局方向转换为框架的逻辑 start/end
-4. `overlays`
+5. `overlays`
    - 已桥接：`android:backgroundDimAmount -> scrimOpacity`
-5. `controls`
+6. `controls`
    - 当前不做主题级强桥接，继续走 framework defaults
    - 原因：Android 原主题系统没有与 `compact / medium / large` 一一对应的统一来源
 
@@ -175,6 +184,19 @@ Android 主题桥接只做“平台语义到框架语义”的映射，内部固
 1. bridge 的 fallback 必须显式落到 `UiThemeDefaults.light/dark()`，禁止散落字面量。
 2. 新增桥接字段时，必须同时定义“读取来源 + fallback 规则 + token 归属”。
 3. bridge 新能力若改变可视结果，必须补 `AndroidThemeBridgeTest` 或 Android 侧桥接测试。
+
+主动刷新示例：
+
+```kotlin
+val themeRefreshController = AndroidThemeRefreshController()
+
+setUiContent(themeRefreshController = themeRefreshController) {
+    // content
+}
+
+setTheme(R.style.AppTheme_Alternate)
+themeRefreshController.refresh()
+```
 
 ## 6. 与组件和 Modifier 的边界
 

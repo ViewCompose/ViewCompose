@@ -21,6 +21,7 @@ import com.viewcompose.widget.core.ProvideLocal
 import com.viewcompose.widget.core.AndroidDynamicColorPolicy
 import com.viewcompose.widget.core.AndroidResolvedTheme
 import com.viewcompose.widget.core.AndroidThemeBridge
+import com.viewcompose.widget.core.AndroidThemeRefreshController
 import com.viewcompose.widget.core.RenderStats
 import com.viewcompose.widget.core.RenderTreeResult
 import com.viewcompose.widget.core.RenderFailure
@@ -43,6 +44,7 @@ fun Fragment.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
+    themeRefreshController: AndroidThemeRefreshController? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> OverlayHostDefaults.androidOrNoOp(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -77,6 +79,7 @@ fun Fragment.setUiContent(
             viewModelStoreOwner = this@setUiContent,
             saveableStateRegistry = saveableStateRegistry,
             resolvedTheme = resolvedTheme,
+            themeRefreshController = themeRefreshController,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -92,6 +95,7 @@ fun ComponentActivity.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
+    themeRefreshController: AndroidThemeRefreshController? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> OverlayHostDefaults.androidOrNoOp(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -127,6 +131,7 @@ fun ComponentActivity.setUiContent(
             viewModelStoreOwner = this@setUiContent,
             saveableStateRegistry = saveableStateRegistry,
             resolvedTheme = resolvedTheme,
+            themeRefreshController = themeRefreshController,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -155,6 +160,7 @@ private fun UiTreeBuilder.withHostEnvironment(
     viewModelStoreOwner: ViewModelStoreOwner,
     saveableStateRegistry: com.viewcompose.widget.core.SaveableStateRegistry,
     resolvedTheme: AndroidResolvedTheme,
+    themeRefreshController: AndroidThemeRefreshController?,
     onRenderResult: ((RenderTreeResult) -> Unit)?,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
@@ -165,7 +171,10 @@ private fun UiTreeBuilder.withHostEnvironment(
                     ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
                         ProvideLocal(LocalRenderResultListener, onRenderResult) {
                             UiEnvironment(androidContext = root.context) {
-                                UiTheme(resolvedAndroidTheme = resolvedTheme) {
+                                UiTheme(
+                                    resolvedAndroidTheme = resolvedTheme,
+                                    refreshController = themeRefreshController,
+                                ) {
                                     content(root)
                                 }
                             }

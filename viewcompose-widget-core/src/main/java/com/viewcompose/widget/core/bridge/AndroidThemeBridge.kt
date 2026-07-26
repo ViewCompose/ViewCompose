@@ -1,6 +1,7 @@
 package com.viewcompose.widget.core
 
 import android.content.Context
+import android.content.MutableContextWrapper
 import android.content.res.Configuration
 import android.content.res.TypedArray
 import com.google.android.material.color.DynamicColors
@@ -17,28 +18,68 @@ enum class AndroidDynamicColorPolicy {
  * framework tokens and native widgets resolve the same Android theme.
  */
 class AndroidResolvedTheme internal constructor(
+    private val sourceContext: Context,
+    private val dynamicColorPolicy: AndroidDynamicColorPolicy,
+    initialContext: Context,
+    initialOrigin: UiThemeOrigin,
+) {
+    private val mutableContext = MutableContextWrapper(initialContext)
+
+    val context: Context
+        get() = mutableContext
+
+    var origin: UiThemeOrigin = initialOrigin
+        private set
+
+    internal fun refreshContext() {
+        val resolved = resolveAndroidThemeContext(
+            context = sourceContext,
+            dynamicColorPolicy = dynamicColorPolicy,
+        )
+        mutableContext.setBaseContext(resolved.context)
+        origin = resolved.origin
+    }
+}
+
+private data class ResolvedAndroidThemeContext(
     val context: Context,
     val origin: UiThemeOrigin,
 )
+
+private fun resolveAndroidThemeContext(
+    context: Context,
+    dynamicColorPolicy: AndroidDynamicColorPolicy,
+): ResolvedAndroidThemeContext {
+    val useDynamicColor = dynamicColorPolicy == AndroidDynamicColorPolicy.UseIfAvailable &&
+        DynamicColors.isDynamicColorAvailable()
+    return ResolvedAndroidThemeContext(
+        context = if (useDynamicColor) {
+            DynamicColors.wrapContextIfAvailable(context)
+        } else {
+            context
+        },
+        origin = if (useDynamicColor) {
+            UiThemeOrigin.AndroidDynamicColor
+        } else {
+            UiThemeOrigin.AndroidTheme
+        },
+    )
+}
 
 object AndroidThemeBridge {
     fun resolveContext(
         context: Context,
         dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
     ): AndroidResolvedTheme {
-        val useDynamicColor = dynamicColorPolicy == AndroidDynamicColorPolicy.UseIfAvailable &&
-            DynamicColors.isDynamicColorAvailable()
+        val resolved = resolveAndroidThemeContext(
+            context = context,
+            dynamicColorPolicy = dynamicColorPolicy,
+        )
         return AndroidResolvedTheme(
-            context = if (useDynamicColor) {
-                DynamicColors.wrapContextIfAvailable(context)
-            } else {
-                context
-            },
-            origin = if (useDynamicColor) {
-                UiThemeOrigin.AndroidDynamicColor
-            } else {
-                UiThemeOrigin.AndroidTheme
-            },
+            sourceContext = context,
+            dynamicColorPolicy = dynamicColorPolicy,
+            initialContext = resolved.context,
+            initialOrigin = resolved.origin,
         )
     }
 
@@ -86,7 +127,20 @@ internal object ThemeTokenMapper {
             readColor = { attr ->
                 when (attr) {
                     android.R.attr.colorBackground -> snapshot.colors.background
+                    com.google.android.material.R.attr.colorOnBackground -> snapshot.colors.onBackground
                     com.google.android.material.R.attr.colorSurface -> snapshot.colors.surface
+                    com.google.android.material.R.attr.colorSurfaceDim -> snapshot.colors.surfaceDim
+                    com.google.android.material.R.attr.colorSurfaceBright -> snapshot.colors.surfaceBright
+                    com.google.android.material.R.attr.colorSurfaceContainerLowest ->
+                        snapshot.colors.surfaceContainerLowest
+                    com.google.android.material.R.attr.colorSurfaceContainerLow ->
+                        snapshot.colors.surfaceContainerLow
+                    com.google.android.material.R.attr.colorSurfaceContainer ->
+                        snapshot.colors.surfaceContainer
+                    com.google.android.material.R.attr.colorSurfaceContainerHigh ->
+                        snapshot.colors.surfaceContainerHigh
+                    com.google.android.material.R.attr.colorSurfaceContainerHighest ->
+                        snapshot.colors.surfaceContainerHighest
                     com.google.android.material.R.attr.colorSurfaceVariant -> snapshot.colors.surfaceVariant
                     com.google.android.material.R.attr.colorOnSurface -> snapshot.colors.onSurface
                     com.google.android.material.R.attr.colorOnSurfaceVariant -> snapshot.colors.onSurfaceVariant
@@ -98,17 +152,32 @@ internal object ThemeTokenMapper {
                     com.google.android.material.R.attr.colorOnSecondary -> snapshot.colors.onSecondary
                     com.google.android.material.R.attr.colorSecondaryContainer -> snapshot.colors.secondaryContainer
                     com.google.android.material.R.attr.colorOnSecondaryContainer -> snapshot.colors.onSecondaryContainer
+                    com.google.android.material.R.attr.colorTertiary -> snapshot.colors.tertiary
+                    com.google.android.material.R.attr.colorOnTertiary -> snapshot.colors.onTertiary
+                    com.google.android.material.R.attr.colorTertiaryContainer -> snapshot.colors.tertiaryContainer
+                    com.google.android.material.R.attr.colorOnTertiaryContainer ->
+                        snapshot.colors.onTertiaryContainer
                     android.R.attr.colorError -> snapshot.colors.error
                     com.google.android.material.R.attr.colorOnError -> snapshot.colors.onError
                     com.google.android.material.R.attr.colorErrorContainer -> snapshot.colors.errorContainer
                     com.google.android.material.R.attr.colorOnErrorContainer -> snapshot.colors.onErrorContainer
                     com.google.android.material.R.attr.colorOutline -> snapshot.colors.outline
                     com.google.android.material.R.attr.colorOutlineVariant -> snapshot.colors.outlineVariant
-                    androidx.appcompat.R.attr.colorAccent -> snapshot.colors.surfaceTint
                     com.google.android.material.R.attr.colorSurfaceInverse -> snapshot.colors.inverseSurface
                     com.google.android.material.R.attr.colorOnSurfaceInverse -> snapshot.colors.inverseOnSurface
+                    com.google.android.material.R.attr.colorPrimaryInverse -> snapshot.colors.inversePrimary
                     android.R.attr.textColorPrimary -> snapshot.colors.onSurface
                     android.R.attr.textColorSecondary -> snapshot.colors.onSurfaceVariant
+                    else -> null
+                }
+            },
+            readStateColor = { attr ->
+                when (attr) {
+                    android.R.attr.textColorPrimary -> snapshot.colors.primaryText
+                    android.R.attr.textColorSecondary -> snapshot.colors.secondaryText
+                    androidx.appcompat.R.attr.colorControlNormal -> snapshot.colors.control
+                    androidx.appcompat.R.attr.colorControlActivated -> snapshot.colors.controlActivated
+                    androidx.appcompat.R.attr.colorControlHighlight -> snapshot.colors.controlHighlight
                     else -> null
                 }
             },
@@ -117,6 +186,10 @@ internal object ThemeTokenMapper {
             isDarkMode = isDarkMode,
         )
         return baseTokens.copy(
+            colors = baseTokens.colors.copy(
+                surfaceTint = snapshot.colors.surfaceTint ?: baseTokens.colors.primary,
+                scrim = snapshot.colors.scrim ?: fallback.colors.scrim,
+            ),
             typography = UiTypography(
                 titleMedium = resolveTextStyle(
                     snapshot.typography.titleMedium
@@ -158,57 +231,101 @@ internal object ThemeTokenMapper {
     fun fromThemeColors(
         readColor: (Int) -> Int?,
         readTextSizeSp: (Int) -> Int? = { null },
+        readStateColor: (Int) -> UiStateColor? = { null },
         readRippleColor: () -> Int? = { null },
         readScrimOpacity: () -> Float? = { null },
         isDarkMode: Boolean = false,
     ): UiThemeTokens {
         val fallback = if (isDarkMode) UiThemeDefaults.dark() else UiThemeDefaults.light()
+        val colors = UiColors(
+            background = readColor(android.R.attr.colorBackground) ?: fallback.colors.background,
+            onBackground = readColor(com.google.android.material.R.attr.colorOnBackground)
+                ?: fallback.colors.onBackground,
+            surface = readColor(com.google.android.material.R.attr.colorSurface) ?: fallback.colors.surface,
+            surfaceVariant = readColor(com.google.android.material.R.attr.colorSurfaceVariant)
+                ?: fallback.colors.surfaceVariant,
+            surfaceDim = readColor(com.google.android.material.R.attr.colorSurfaceDim)
+                ?: fallback.colors.surfaceDim,
+            surfaceBright = readColor(com.google.android.material.R.attr.colorSurfaceBright)
+                ?: fallback.colors.surfaceBright,
+            surfaceContainerLowest =
+                readColor(com.google.android.material.R.attr.colorSurfaceContainerLowest)
+                    ?: fallback.colors.surfaceContainerLowest,
+            surfaceContainerLow = readColor(com.google.android.material.R.attr.colorSurfaceContainerLow)
+                ?: fallback.colors.surfaceContainerLow,
+            surfaceContainer = readColor(com.google.android.material.R.attr.colorSurfaceContainer)
+                ?: fallback.colors.surfaceContainer,
+            surfaceContainerHigh = readColor(com.google.android.material.R.attr.colorSurfaceContainerHigh)
+                ?: fallback.colors.surfaceContainerHigh,
+            surfaceContainerHighest =
+                readColor(com.google.android.material.R.attr.colorSurfaceContainerHighest)
+                    ?: fallback.colors.surfaceContainerHighest,
+            onSurface = readColor(com.google.android.material.R.attr.colorOnSurface)
+                ?: readColor(android.R.attr.textColorPrimary)
+                ?: fallback.colors.onSurface,
+            onSurfaceVariant = readColor(com.google.android.material.R.attr.colorOnSurfaceVariant)
+                ?: readColor(android.R.attr.textColorSecondary)
+                ?: fallback.colors.onSurfaceVariant,
+            primary = readColor(androidx.appcompat.R.attr.colorPrimary) ?: fallback.colors.primary,
+            onPrimary = readColor(com.google.android.material.R.attr.colorOnPrimary)
+                ?: fallback.colors.onPrimary,
+            primaryContainer = readColor(com.google.android.material.R.attr.colorPrimaryContainer)
+                ?: fallback.colors.primaryContainer,
+            onPrimaryContainer = readColor(com.google.android.material.R.attr.colorOnPrimaryContainer)
+                ?: fallback.colors.onPrimaryContainer,
+            secondary = readColor(com.google.android.material.R.attr.colorSecondary)
+                ?: fallback.colors.secondary,
+            onSecondary = readColor(com.google.android.material.R.attr.colorOnSecondary)
+                ?: fallback.colors.onSecondary,
+            secondaryContainer = readColor(com.google.android.material.R.attr.colorSecondaryContainer)
+                ?: fallback.colors.secondaryContainer,
+            onSecondaryContainer = readColor(com.google.android.material.R.attr.colorOnSecondaryContainer)
+                ?: fallback.colors.onSecondaryContainer,
+            tertiary = readColor(com.google.android.material.R.attr.colorTertiary)
+                ?: fallback.colors.tertiary,
+            onTertiary = readColor(com.google.android.material.R.attr.colorOnTertiary)
+                ?: fallback.colors.onTertiary,
+            tertiaryContainer = readColor(com.google.android.material.R.attr.colorTertiaryContainer)
+                ?: fallback.colors.tertiaryContainer,
+            onTertiaryContainer = readColor(com.google.android.material.R.attr.colorOnTertiaryContainer)
+                ?: fallback.colors.onTertiaryContainer,
+            error = readColor(android.R.attr.colorError) ?: fallback.colors.error,
+            onError = readColor(com.google.android.material.R.attr.colorOnError) ?: fallback.colors.onError,
+            errorContainer = readColor(com.google.android.material.R.attr.colorErrorContainer)
+                ?: fallback.colors.errorContainer,
+            onErrorContainer = readColor(com.google.android.material.R.attr.colorOnErrorContainer)
+                ?: fallback.colors.onErrorContainer,
+            success = fallback.colors.success,
+            warning = fallback.colors.warning,
+            info = fallback.colors.info,
+            outline = readColor(com.google.android.material.R.attr.colorOutline) ?: fallback.colors.outline,
+            outlineVariant = readColor(com.google.android.material.R.attr.colorOutlineVariant)
+                ?: fallback.colors.outlineVariant,
+            surfaceTint = readColor(androidx.appcompat.R.attr.colorPrimary)
+                ?: fallback.colors.surfaceTint,
+            inverseSurface = readColor(com.google.android.material.R.attr.colorSurfaceInverse)
+                ?: fallback.colors.inverseSurface,
+            inverseOnSurface = readColor(com.google.android.material.R.attr.colorOnSurfaceInverse)
+                ?: fallback.colors.inverseOnSurface,
+            inversePrimary = readColor(com.google.android.material.R.attr.colorPrimaryInverse)
+                ?: fallback.colors.inversePrimary,
+            scrim = fallback.colors.scrim,
+            ripple = readRippleColor() ?: fallback.colors.ripple,
+        )
+        val fallbackStateColors = UiStateColorDefaults.from(colors)
         return UiThemeTokens(
-            colors = UiColors(
-                background = readColor(android.R.attr.colorBackground) ?: fallback.colors.background,
-                surface = readColor(com.google.android.material.R.attr.colorSurface) ?: fallback.colors.surface,
-                surfaceVariant = readColor(com.google.android.material.R.attr.colorSurfaceVariant)
-                    ?: fallback.colors.surfaceVariant,
-                onSurface = readColor(com.google.android.material.R.attr.colorOnSurface)
-                    ?: readColor(android.R.attr.textColorPrimary)
-                    ?: fallback.colors.onSurface,
-                onSurfaceVariant = readColor(com.google.android.material.R.attr.colorOnSurfaceVariant)
-                    ?: readColor(android.R.attr.textColorSecondary)
-                    ?: fallback.colors.onSurfaceVariant,
-                primary = readColor(androidx.appcompat.R.attr.colorPrimary) ?: fallback.colors.primary,
-                onPrimary = readColor(com.google.android.material.R.attr.colorOnPrimary)
-                    ?: fallback.colors.onPrimary,
-                primaryContainer = readColor(com.google.android.material.R.attr.colorPrimaryContainer)
-                    ?: fallback.colors.primaryContainer,
-                onPrimaryContainer = readColor(com.google.android.material.R.attr.colorOnPrimaryContainer)
-                    ?: fallback.colors.onPrimaryContainer,
-                secondary = readColor(com.google.android.material.R.attr.colorSecondary)
-                    ?: fallback.colors.secondary,
-                onSecondary = readColor(com.google.android.material.R.attr.colorOnSecondary)
-                    ?: fallback.colors.onSecondary,
-                secondaryContainer = readColor(com.google.android.material.R.attr.colorSecondaryContainer)
-                    ?: fallback.colors.secondaryContainer,
-                onSecondaryContainer = readColor(com.google.android.material.R.attr.colorOnSecondaryContainer)
-                    ?: fallback.colors.onSecondaryContainer,
-                error = readColor(android.R.attr.colorError) ?: fallback.colors.error,
-                onError = readColor(com.google.android.material.R.attr.colorOnError) ?: fallback.colors.onError,
-                errorContainer = readColor(com.google.android.material.R.attr.colorErrorContainer)
-                    ?: fallback.colors.errorContainer,
-                onErrorContainer = readColor(com.google.android.material.R.attr.colorOnErrorContainer)
-                    ?: fallback.colors.onErrorContainer,
-                success = fallback.colors.success,
-                warning = fallback.colors.warning,
-                info = fallback.colors.info,
-                outline = readColor(com.google.android.material.R.attr.colorOutline) ?: fallback.colors.outline,
-                outlineVariant = readColor(com.google.android.material.R.attr.colorOutlineVariant)
-                    ?: fallback.colors.outlineVariant,
-                surfaceTint = readColor(androidx.appcompat.R.attr.colorAccent)
-                    ?: fallback.colors.surfaceTint,
-                inverseSurface = readColor(com.google.android.material.R.attr.colorSurfaceInverse)
-                    ?: fallback.colors.inverseSurface,
-                inverseOnSurface = readColor(com.google.android.material.R.attr.colorOnSurfaceInverse)
-                    ?: fallback.colors.inverseOnSurface,
-                ripple = readRippleColor() ?: fallback.colors.ripple,
+            colors = colors,
+            stateColors = UiStateColors(
+                primaryText = readStateColor(android.R.attr.textColorPrimary)
+                    ?: fallbackStateColors.primaryText,
+                secondaryText = readStateColor(android.R.attr.textColorSecondary)
+                    ?: fallbackStateColors.secondaryText,
+                control = readStateColor(androidx.appcompat.R.attr.colorControlNormal)
+                    ?: fallbackStateColors.control,
+                controlActivated = readStateColor(androidx.appcompat.R.attr.colorControlActivated)
+                    ?: fallbackStateColors.controlActivated,
+                controlHighlight = readStateColor(androidx.appcompat.R.attr.colorControlHighlight)
+                    ?: fallbackStateColors.controlHighlight,
             ),
             typography = UiTypography(
                 titleMedium = UiTextStyle(

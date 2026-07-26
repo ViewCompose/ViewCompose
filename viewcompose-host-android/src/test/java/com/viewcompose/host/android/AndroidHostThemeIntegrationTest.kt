@@ -6,6 +6,7 @@ import android.view.View
 import androidx.activity.ComponentActivity
 import com.viewcompose.host.android.test.R as TestR
 import com.viewcompose.widget.core.AndroidDynamicColorPolicy
+import com.viewcompose.widget.core.AndroidThemeRefreshController
 import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiThemeTokens
@@ -15,6 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -50,6 +52,33 @@ class AndroidHostThemeIntegrationTest {
         assertEquals(0xFF2468AC.toInt(), capturedTokens?.colors?.primary)
         assertEquals(0xFF304050.toInt(), capturedTokens?.colors?.surface)
         assertEquals(0xFFF1F2F3.toInt(), capturedTokens?.colors?.onSurface)
+    }
+
+    @Test
+    fun `explicit refresh reapplies runtime Android theme changes`() {
+        val activity = Robolectric.buildActivity(ThemedHostActivity::class.java)
+            .setup()
+            .get()
+        val refreshController = AndroidThemeRefreshController()
+        var capturedTokens: UiThemeTokens? = null
+
+        activity.setUiContent(
+            dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+            themeRefreshController = refreshController,
+            overlayHostFactory = { OverlayHostDefaults.noOp },
+        ) {
+            capturedTokens = Theme.current
+        }
+        assertEquals(0xFF2468AC.toInt(), capturedTokens?.colors?.primary)
+        assertEquals(0L, capturedTokens?.metadata?.revision)
+
+        activity.setTheme(TestR.style.ViewComposeHostAlternateTheme)
+        refreshController.refresh()
+        Shadows.shadowOf(activity.mainLooper).idle()
+
+        assertEquals(0xFFAC6824.toInt(), capturedTokens?.colors?.primary)
+        assertEquals(0xFF504030.toInt(), capturedTokens?.colors?.surface)
+        assertEquals(1L, capturedTokens?.metadata?.revision)
     }
 }
 
