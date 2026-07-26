@@ -31,4 +31,19 @@ class PerformanceComparisonModelsTest {
             revised.first { it.id == 1 },
         )
     }
+
+    @Test
+    fun `dashboard revision preserves identities and changes nested structure`() {
+        val base = performanceDashboardCards(revision = 0)
+        val revised = performanceDashboardCards(revision = 1)
+
+        assertEquals(PERFORMANCE_DASHBOARD_CARD_COUNT, base.size)
+        assertEquals(base.map(PerformanceDashboardCard::id), revised.map(PerformanceDashboardCard::id))
+        assertEquals(3, revised.first().metrics.size)
+        assertNotEquals(base.first().metrics, revised.first().metrics)
+        assertNotEquals(
+            base.filter(PerformanceDashboardCard::detailsVisible).map(PerformanceDashboardCard::id),
+            revised.filter(PerformanceDashboardCard::detailsVisible).map(PerformanceDashboardCard::id),
+        )
+    }
 }

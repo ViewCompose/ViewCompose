@@ -16,6 +16,9 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                 setUiContent(debug = false) {
                     when (scenario) {
                         PerformanceScenario.List -> ViewComposeListPerformanceScreen()
+                        PerformanceScenario.ComplexLayout -> {
+                            ViewComposeComplexLayoutPerformanceScreen()
+                        }
                     }
                 }
             }
@@ -29,6 +32,9 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                         setContent {
                             when (scenario) {
                                 PerformanceScenario.List -> ComposeListPerformanceScreen()
+                                PerformanceScenario.ComplexLayout -> {
+                                    ComposeComplexLayoutPerformanceScreen()
+                                }
                             }
                         }
                     },

@@ -36,6 +36,7 @@
 17. graphics 执行器已收口 v2 基线：`DrawRoundRect` 四角半径语义正确、`Drawable` 绘制支持 `DrawPaint` 组合、`ImageFilterModel.Chain` 可递归合并生效。
 18. 发布态基线使用 R8 + resource shrink 的非 debuggable `benchmark` target；`ReleaseBaselineBenchmark` 固定覆盖无 ART 预编译的冷启动与 state patch 帧耗时。
 19. 列表性能对比使用同一 target、同一份 1000 项数据与完全一致的交互脚本，分别运行 ViewCompose `LazyColumn` 和 Jetpack Compose `LazyColumn`；覆盖双向快速滚动与 keyed reorder + payload 内容更新。
+20. 复杂布局对比使用同一份 18 卡片仪表盘模型，分别运行 ViewCompose `ScrollableColumn` 与 Compose `Column.verticalScroll`；全部子树一次挂载，覆盖深层嵌套滚动、全卡片字段更新和条件详情子树变更。
 
 ### 2.2 发布态基准入口
 
@@ -68,6 +69,13 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 3. `viewComposeListScroll/composeListScroll` 使用相同手势轨迹。
 4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新。
 5. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
+
+复杂布局对照基线是 `ComplexLayoutPerformanceComparisonBenchmark`：
+
+1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` 对比非 Lazy 整树滚动。
+2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并切换条件详情子树。
+3. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
+4. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
 
 ### 2.3 当前结论
 
@@ -135,7 +143,7 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 
 ### Phase 4：容器与布局收口
 
-状态：列表对照基线已建立，复杂布局对照待推进
+状态：列表与复杂布局 Compose 对照基线已建立，结果自动汇总与门禁待推进
 目标：收敛高频容器和复杂页面的布局开销
 
 ### Phase 5：发布态优化

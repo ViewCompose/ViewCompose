@@ -34,6 +34,9 @@ internal enum class PerformanceScenario(
     List(
         wireValue = "list",
     ),
+    ComplexLayout(
+        wireValue = "complex_layout",
+    ),
     ;
 
     companion object {
