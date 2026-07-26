@@ -43,6 +43,12 @@ sealed interface DrawCommand {
         val path: PathModel,
     ) : DrawCommand
 
+    data class DrawScene(
+        val scene: com.viewcompose.graphics.core.DrawScene,
+        val transform: Matrix3 = Matrix3.identity(),
+        val clip: Rect? = null,
+    ) : DrawCommand
+
     data class DrawLine(
         val from: Offset,
         val to: Offset,
@@ -96,6 +102,50 @@ sealed interface DrawCommand {
         val style: TextStyle = TextStyle(),
         val paint: DrawPaint = DrawPaint(),
     ) : DrawCommand
+}
+
+class DrawScene internal constructor(
+    commands: List<DrawCommand>,
+) {
+    val commands: List<DrawCommand> = commands.toList()
+
+    init {
+        validateSaveRestoreBalance(this.commands)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return this === other || (
+            other is DrawScene &&
+                commands == other.commands
+            )
+    }
+
+    override fun hashCode(): Int = commands.hashCode()
+
+    override fun toString(): String = "DrawScene(commands=$commands)"
+
+    private fun validateSaveRestoreBalance(commands: List<DrawCommand>) {
+        var saveDepth = 0
+        commands.forEachIndexed { index, command ->
+            when (command) {
+                DrawCommand.Save,
+                is DrawCommand.SaveLayer,
+                -> saveDepth += 1
+
+                DrawCommand.Restore -> {
+                    require(saveDepth > 0) {
+                        "DrawScene contains an unmatched Restore at command index $index."
+                    }
+                    saveDepth -= 1
+                }
+
+                else -> Unit
+            }
+        }
+        require(saveDepth == 0) {
+            "DrawScene contains $saveDepth unmatched Save or SaveLayer command(s)."
+        }
+    }
 }
 
 data class ImageRef(
