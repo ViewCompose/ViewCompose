@@ -20,6 +20,7 @@
 4. `HorizontalPager`
 5. `VerticalPager`
 6. `TabRow + pager page`（页面内容通过 `LazyListItemSession` 承载）
+7. Navigation destination page（页面内容通过 `NavDestinationSession` 承载）
 
 ## 3. 架构硬约束
 
@@ -62,12 +63,17 @@
 5. `VerticalPager`：`statePatchStress_verticalPagerContentUpdatesAcrossAdvances`（UI）
 6. `LazyVerticalGrid/HorizontalPager/VerticalPager`：`NodeBindingDifferTest` 容器 patch 单测（U）
 7. `LazyColumn`：`collectionsStress_rotateOrder_refreshesVisibleIdsAcrossToggles`（UI）
+8. Navigation destination：`NavDestinationSessionStoreTest` 覆盖候选离屏首帧、失败回滚、
+   Local/内容闭包刷新、显隐层级、永久移除和 owner 释放（U）
 
 当前缺口（需补专项回归）：
 
-1. 暂无（本轮范围内容器已覆盖；新增容器继续按第 6 节流程接入）
+1. Navigation destination 的真实 Activity 交互回归将在 Stage 4 公开 transactional `NavHost`
+   后接入；当前 Stage 3 仅暴露内部页面会话协议
 2. 门禁基线：`qaFull`（Pixel 4 XL API 33）21/21 通过
 3. 基线更新（2026-03-07）：`Lazy/Pager` 已统一走 DiffUtil + payload `Change` 路径，保留空 diff 刷新语义。
+4. 导航基线更新（2026-07-26）：候选页面先离屏提交首帧，已提交页面刷新最新
+   `UiLocalSnapshot` 与内容闭包，回滚/移除按 session → owner 顺序释放。
 
 ## 6. 新容器接入流程
 

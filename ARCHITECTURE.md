@@ -307,6 +307,8 @@ flowchart TD
 4. 导航必须走 prepare/commit/rollback 两阶段事务；候选页面首次渲染成功前不得发布新返回栈或暂停当前页面。
 5. 被隐藏但仍在栈中的页面保持 `CREATED` 并保留状态所有权；永久移除且退出转场完成后才进入 `DESTROYED` 并释放资源。
 6. Activity/Window 仅是根平台宿主，不作为 destination；导航稳定前不得改变现有 Activity/Fragment 宿主入口。
+7. 候选 destination 必须先在未挂载容器中同步完成首帧，再以隐藏状态 staged；回滚必须同时释放页面 Session 与 entry owner。
+8. 已提交 destination 复用页面 Session 时，必须在显式刷新路径更新最新 `UiLocalSnapshot` 与内容闭包，禁止复用首次创建时的旧环境。
 
 详细规范见 [NAVIGATION.md](/Users/gzq/AndroidStudioProjects/UIFramework/NAVIGATION.md)。
 

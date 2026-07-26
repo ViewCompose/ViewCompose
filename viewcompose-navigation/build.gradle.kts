@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.savedstate)
+    testImplementation(project(":viewcompose-ui-contract"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }

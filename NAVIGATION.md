@@ -26,8 +26,9 @@ Current feature-branch status:
 - Stage 1 navigation kernel: complete
 - Stage 2 lifecycle kernel: complete
 - Stage 3 Android page owner cluster: complete
-- Stage 3 destination `RenderSession`: next
-- Stages 4–5: pending
+- Stage 3 destination `RenderSession`: complete
+- Stage 4 transactional `NavHost`: next
+- Stage 5: pending
 
 ## 2. P0 delivery plan
 
@@ -58,6 +59,12 @@ Current feature-branch status:
 - one AndroidX `LifecycleRegistry` per entry
 - captured CompositionLocal snapshot per entry
 - entry resources survive hiding and are cleared only after permanent removal
+
+Destination sessions are rendered into an unattached candidate container first. A successful
+candidate can then be staged hidden, committed, and presented; a failed render or explicit rollback
+disposes its composition and destroys its owner without publishing the page. Committed sessions
+refresh both their captured CompositionLocal snapshot and latest content closure without replacing
+the entry owner or container.
 
 ### Stage 4: transactional `NavHost`
 
