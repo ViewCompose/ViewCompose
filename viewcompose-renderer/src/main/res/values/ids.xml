@@ -2,10 +2,11 @@
 <resources>
     <item name="viewcompose_original_background" type="id" />
     <item name="viewcompose_original_foreground" type="id" />
-    <item name="viewcompose_text_watcher" type="id" />
+    <item name="viewcompose_resolved_modifiers" type="id" />
     <item name="viewcompose_seek_listener" type="id" />
     <item name="viewcompose_lazy_spacing_decoration" type="id" />
     <item name="viewcompose_lazy_grid_spacing_decoration" type="id" />
+    <item name="viewcompose_lazy_sticky_header_decoration" type="id" />
     <item name="viewcompose_test_tag" type="id" />
     <item name="viewcompose_constraint_layout_id" type="id" />
     <item name="viewcompose_constraint_item_spec" type="id" />
@@ -22,4 +23,10 @@
     <item name="viewcompose_focus_follow_enabled" type="id" />
     <item name="viewcompose_focus_follow_warning_emitted" type="id" />
     <item name="viewcompose_gesture_dispatcher" type="id" />
+    <item name="viewcompose_semantics_state" type="id" />
+    <item name="viewcompose_focus_requester_binding" type="id" />
+    <item name="viewcompose_focus_observer" type="id" />
+    <item name="viewcompose_focus_group_original_state" type="id" />
+    <item name="viewcompose_key_input_binding" type="id" />
+    <item name="viewcompose_key_input_listener" type="id" />
 </resources>

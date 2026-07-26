@@ -3,17 +3,29 @@ package com.viewcompose.runtime.composition
 class InvalidationQueue {
     private val pending = LinkedHashSet<RecomposeScope>()
 
+    @Synchronized
     fun enqueue(scope: RecomposeScope) {
         if (scope.disposed) return
         pending += scope
     }
 
+    @Synchronized
     fun isNotEmpty(): Boolean = pending.isNotEmpty()
 
+    @Synchronized
     fun clear() {
         pending.clear()
     }
 
+    @Synchronized
+    internal fun drainAll(): List<RecomposeScope> {
+        if (pending.isEmpty()) return emptyList()
+        return pending.toList().also {
+            pending.clear()
+        }
+    }
+
+    @Synchronized
     fun drainCompacted(): List<RecomposeScope> {
         if (pending.isEmpty()) return emptyList()
         val drained = pending.toList()

@@ -2,14 +2,16 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.modifier.AlphaModifierElement
 import com.viewcompose.ui.modifier.BackgroundColorModifierElement
-import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
+import com.viewcompose.ui.modifier.ShapeModifierElement
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.DividerNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -114,6 +116,7 @@ class ThemeTest {
     fun `theme override rebases derived domains when colors change`() {
         val baseTheme = UiThemeDefaults.light()
         var primary = 0
+        var activatedControl = 0
         var bodySize = 0
 
         buildVNodeTree {
@@ -122,13 +125,34 @@ class ThemeTest {
                     colors = baseTheme.colors.copy(primary = 0xFF225577.toInt()),
                 ) {
                     primary = Theme.colors.primary
+                    activatedControl = Theme.stateColors.controlActivated.defaultColor
                     bodySize = Theme.typography.bodyMedium.fontSizeSp
                 }
             }
         }
 
         assertEquals(0xFF225577.toInt(), primary)
+        assertEquals(0xFF225577.toInt(), activatedControl)
         assertEquals(baseTheme.typography.bodyMedium.fontSizeSp, bodySize)
+    }
+
+    @Test
+    fun `state color resolution follows Android state precedence`() {
+        val colors = UiStateColor(
+            defaultColor = 1,
+            disabledColor = 2,
+            pressedColor = 3,
+            focusedColor = 4,
+            checkedColor = 5,
+            selectedColor = 6,
+        )
+
+        assertEquals(1, colors.resolve())
+        assertEquals(2, colors.resolve(enabled = false, pressed = true))
+        assertEquals(3, colors.resolve(pressed = true, focused = true))
+        assertEquals(4, colors.resolve(focused = true, checked = true))
+        assertEquals(5, colors.resolve(checked = true, selected = true))
+        assertEquals(6, colors.resolve(selected = true))
     }
 
     @Test
@@ -202,24 +226,24 @@ class ThemeTest {
     fun `builder theme override updates selected domains`() {
         val baseTheme = UiThemeDefaults.light()
         var resolvedPrimary = 0
-        var resolvedCorner = 0
+        var resolvedShape = UiShape.rounded(0)
         var unchangedBody = 0
 
         buildVNodeTree {
             UiTheme(baseTheme) {
                 UiThemeOverride(
                     colors = { copy(primary = 0xFF445566.toInt()) },
-                    shapes = { copy(smallCornerRadius = 77) },
+                    shapes = { copy(small = UiShape.rounded(77)) },
                 ) {
                     resolvedPrimary = Theme.colors.primary
-                    resolvedCorner = Theme.shapes.smallCornerRadius
+                    resolvedShape = Theme.shapes.small
                     unchangedBody = Theme.typography.bodyMedium.fontSizeSp
                 }
             }
         }
 
         assertEquals(0xFF445566.toInt(), resolvedPrimary)
-        assertEquals(77, resolvedCorner)
+        assertEquals(UiShape.rounded(77), resolvedShape)
         assertEquals(baseTheme.typography.bodyMedium.fontSizeSp, unchangedBody)
     }
 
@@ -248,23 +272,23 @@ class ThemeTest {
     @Test
     fun `theme override preserves explicit shape overrides while changing colors`() {
         val baseTheme = UiThemeDefaults.light()
-        var cornerRadius = 0
+        var shape = UiShape.rounded(0)
 
         buildVNodeTree {
             UiTheme(baseTheme) {
                 UiThemeOverride(
-                    shapes = { copy(smallCornerRadius = 99) },
+                    shapes = { copy(small = UiShape.rounded(99)) },
                 ) {
                     UiThemeOverride(
                         colors = { copy(primary = 0xFF778899.toInt()) },
                     ) {
-                        cornerRadius = Theme.shapes.smallCornerRadius
+                        shape = Theme.shapes.small
                     }
                 }
             }
         }
 
-        assertEquals(99, cornerRadius)
+        assertEquals(UiShape.rounded(99), shape)
     }
 
     @Test
@@ -299,7 +323,7 @@ class ThemeTest {
 
         val spec = tree.single().spec as ButtonNodeProps
         assertEquals(customTheme.colors.primary, spec.backgroundColor)
-        assertEquals(customTheme.shapes.smallCornerRadius, spec.cornerRadius)
+        assertEquals(customTheme.shapes.small, spec.shape)
         assertEquals(pressedOverlayColorFor(customTheme.colors.onSurface), spec.rippleColor)
         assertEquals(0xFFFFFFFF.toInt(), spec.textColor)
         assertEquals(customTheme.typography.labelLarge.fontSizeSp, spec.textSizeSp)
@@ -576,14 +600,13 @@ class ThemeTest {
         val surface = tree.single()
         val elements = surface.modifier.readModifierElements()
         val background = elements.last { it is BackgroundColorModifierElement } as BackgroundColorModifierElement
-        val cornerRadius = elements.last { it is CornerRadiusModifierElement } as CornerRadiusModifierElement
+        val shape = elements.last { it is ShapeModifierElement } as ShapeModifierElement
         val alpha = elements.last { it is AlphaModifierElement } as AlphaModifierElement
         val spec = surface.spec as BoxNodeProps
 
         assertEquals(NodeType.Surface, surface.type)
         assertEquals(SurfaceDefaults.variantBackgroundColor(), background.color)
-        assertEquals(SurfaceDefaults.cardCornerRadius(), cornerRadius.topStart)
-        assertEquals(SurfaceDefaults.cardCornerRadius(), cornerRadius.bottomStart)
+        assertEquals(SurfaceDefaults.shape(), shape.shape)
         assertEquals(SurfaceDefaults.pressedColor(), spec.rippleColor)
         assertEquals(SurfaceDefaults.disabledAlpha(), alpha.alpha)
         assertTrue(surface.spec is BoxNodeProps)
@@ -634,7 +657,7 @@ class ThemeTest {
         var disabledContainer = 0
         var errorColor = 0
         var controlColor = 0
-        var surfaceCornerRadius = 0
+        var surfaceShape = UiShape.rounded(0)
         var pressedColor = 0
 
         buildVNodeTree {
@@ -643,7 +666,7 @@ class ThemeTest {
                 disabledContainer = TextFieldDefaults.containerColor(enabled = false)
                 errorColor = TextFieldDefaults.hintColor(isError = true)
                 controlColor = InputControlDefaults.checkboxControlColor()
-                surfaceCornerRadius = SurfaceDefaults.cardCornerRadius()
+                surfaceShape = SurfaceDefaults.shape()
                 pressedColor = SurfaceDefaults.pressedColor()
             }
         }
@@ -652,7 +675,7 @@ class ThemeTest {
         assertEquals(customTheme.colors.surfaceVariant, disabledContainer)
         assertEquals(customTheme.colors.onErrorContainer, errorColor)
         assertEquals(customTheme.colors.primary, controlColor)
-        assertEquals(customTheme.shapes.mediumCornerRadius, surfaceCornerRadius)
+        assertEquals(customTheme.shapes.medium, surfaceShape)
         assertEquals(pressedOverlayColorFor(customTheme.colors.onSurface), pressedColor)
     }
 
@@ -699,7 +722,7 @@ class ThemeTest {
     @Test
     fun `theme current exposes fully overridden tokens`() {
         val baseTheme = UiThemeDefaults.light()
-        val overrideShapes = baseTheme.shapes.copy(smallCornerRadius = 99)
+        val overrideShapes = baseTheme.shapes.copy(small = UiShape.rounded(99))
         var current: UiThemeTokens? = null
 
         buildVNodeTree {

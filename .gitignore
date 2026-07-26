@@ -17,6 +17,8 @@
 /captures
 .externalNativeBuild
 .cxx
+__pycache__/
+*.pyc
 local.properties
 .idea
 /.idea/

@@ -1,5 +1,6 @@
 package com.viewcompose.ui.node.spec
 
+import com.viewcompose.text.TextDocument
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextDecoration
 import com.viewcompose.ui.node.TextOverflow
@@ -17,6 +18,7 @@ data class TextNodeProps(
     val lineHeightSp: Int? = null,
     val includeFontPadding: Boolean = false,
     val textDecoration: TextDecoration = TextDecoration.None,
+    val document: TextDocument = TextDocument.plain(text?.toString().orEmpty()),
 ) : NodeSpec
 
 interface UiFontFamily

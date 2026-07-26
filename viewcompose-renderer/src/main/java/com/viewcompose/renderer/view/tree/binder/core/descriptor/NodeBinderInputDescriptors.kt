@@ -1,6 +1,5 @@
 package com.viewcompose.renderer.view.tree
 
-import android.widget.EditText
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
@@ -12,7 +11,7 @@ internal fun MutableList<NodeBinderDescriptor>.addInputNodeBinderDescriptors() {
         factory = { previous, next -> TextFieldNodePatch(previous, next) },
         apply = { view, patch ->
             InputNodePatchApplier.applyTextFieldPatch(
-                view = view as EditText,
+                view = view as ViewComposeEditText,
                 patch = patch,
             )
         },
@@ -41,7 +40,7 @@ internal fun MutableList<NodeBinderDescriptor>.addInputNodeBinderDescriptors() {
             nodeType = NodeType.TextField,
             bind = { view, node ->
                 InputViewBinder.bindTextField(
-                    view = view as EditText,
+                    view = view as ViewComposeEditText,
                     spec = InputViewBinder.readTextFieldSpec(node),
                 )
             },

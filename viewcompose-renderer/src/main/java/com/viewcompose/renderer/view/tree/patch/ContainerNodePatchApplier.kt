@@ -42,11 +42,12 @@ import com.viewcompose.renderer.view.tree.SegmentedControlNodePatch
 import com.viewcompose.renderer.view.tree.TabRowNodePatch
 import com.viewcompose.renderer.view.tree.ContainerViewSpecReader
 import com.viewcompose.renderer.view.tree.VerticalPagerNodePatch
-import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
+import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
+import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 
 internal object ContainerNodePatchApplier {
     fun applyRowPatch(
@@ -163,6 +164,18 @@ internal object ContainerNodePatchApplier {
                 enabled = next.focusFollowKeyboard,
             )
         }
+        if (
+            previous.reverseLayout != next.reverseLayout ||
+            previous.userScrollEnabled != next.userScrollEnabled ||
+            previous.prefetchPolicy != next.prefetchPolicy
+        ) {
+            CollectionViewBinder.configureLazyListLayout(
+                view = view,
+                reverseLayout = next.reverseLayout,
+                userScrollEnabled = next.userScrollEnabled,
+                prefetchPolicy = next.prefetchPolicy,
+            )
+        }
         if (previous.contentPadding != next.contentPadding) {
             ContainerViewBinder.applyLazyListPadding(view, next.contentPadding)
         }
@@ -174,21 +187,17 @@ internal object ContainerNodePatchApplier {
                 view.adapter = it
             }
             adapter.submitItems(next.items)
+            LazyStickyHeaderDecoration.update(view, adapter)
         }
         if (previous.state !== next.state) {
             previous.state?.attach(null)
-            next.state?.attach(
-                object : LazyListConnector {
-                    override fun scrollToPosition(index: Int, smooth: Boolean) {
-                        if (smooth) {
-                            view.smoothScrollToPosition(index)
-                        } else {
-                            view.scrollToPosition(index)
-                        }
-                    }
-                },
-            )
         }
+        next.state?.attach(
+            UiLazyListConnector(
+                recyclerView = view,
+                mainAxisItemSpacing = next.spacing,
+            ),
+        )
     }
 
     fun applyLazyRowPatch(
@@ -212,6 +221,18 @@ internal object ContainerNodePatchApplier {
             recyclerView = view,
             enabled = false,
         )
+        if (
+            previous.reverseLayout != next.reverseLayout ||
+            previous.userScrollEnabled != next.userScrollEnabled ||
+            previous.prefetchPolicy != next.prefetchPolicy
+        ) {
+            CollectionViewBinder.configureLazyListLayout(
+                view = view,
+                reverseLayout = next.reverseLayout,
+                userScrollEnabled = next.userScrollEnabled,
+                prefetchPolicy = next.prefetchPolicy,
+            )
+        }
         if (previous.contentPadding != next.contentPadding) {
             ContainerViewBinder.applyLazyListPadding(view, next.contentPadding)
         }
@@ -224,21 +245,17 @@ internal object ContainerNodePatchApplier {
                     view.adapter = it
                 }
             adapter.submitItems(next.items)
+            LazyStickyHeaderDecoration.update(view, adapter)
         }
         if (previous.state !== next.state) {
             previous.state?.attach(null)
-            next.state?.attach(
-                object : LazyListConnector {
-                    override fun scrollToPosition(index: Int, smooth: Boolean) {
-                        if (smooth) {
-                            view.smoothScrollToPosition(index)
-                        } else {
-                            view.scrollToPosition(index)
-                        }
-                    }
-                },
-            )
         }
+        next.state?.attach(
+            UiLazyListConnector(
+                recyclerView = view,
+                mainAxisItemSpacing = next.spacing,
+            ),
+        )
     }
 
     fun applySegmentedControlPatch(
@@ -254,7 +271,7 @@ internal object ContainerNodePatchApplier {
                 enabled = patch.next.enabled,
                 backgroundColor = patch.next.backgroundColor,
                 indicatorColor = patch.next.indicatorColor,
-                cornerRadius = patch.next.cornerRadius,
+                shape = patch.next.shape,
                 textColor = patch.next.textColor,
                 selectedTextColor = patch.next.selectedTextColor,
                 rippleColor = patch.next.rippleColor,
@@ -459,6 +476,9 @@ internal object ContainerNodePatchApplier {
                 verticalSpacing = patch.next.verticalSpacing,
                 items = patch.next.items,
                 state = patch.next.state,
+                reverseLayout = patch.next.reverseLayout,
+                userScrollEnabled = patch.next.userScrollEnabled,
+                prefetchPolicy = patch.next.prefetchPolicy,
                 reusePolicy = patch.next.reusePolicy,
                 motionPolicy = patch.next.motionPolicy,
                 focusFollowKeyboard = patch.next.focusFollowKeyboard,

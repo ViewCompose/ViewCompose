@@ -1,7 +1,10 @@
 package com.viewcompose
 
+import com.viewcompose.runtime.composition.CompositionDiagnostics
+import com.viewcompose.widget.core.RenderPatchRecord
 import com.viewcompose.widget.core.RenderStats
 import com.viewcompose.widget.core.RenderStructureStats
+import com.viewcompose.widget.core.RenderTreeNode
 import com.viewcompose.widget.core.RenderTreeResult
 
 internal data class DemoRenderSnapshot(
@@ -9,6 +12,9 @@ internal data class DemoRenderSnapshot(
     val stats: RenderStats = RenderStats(),
     val structure: RenderStructureStats = RenderStructureStats(),
     val warnings: List<String> = emptyList(),
+    val tree: List<RenderTreeNode> = emptyList(),
+    val patches: List<RenderPatchRecord> = emptyList(),
+    val composition: CompositionDiagnostics = CompositionDiagnostics(),
     val updatedAtMillis: Long = 0L,
 ) {
     val hasPatchActivity: Boolean
@@ -33,6 +39,9 @@ internal object DemoRenderDiagnosticsStore {
             stats = result.stats,
             structure = result.structure,
             warnings = result.warnings,
+            tree = result.tree,
+            patches = result.patches,
+            composition = result.composition,
             updatedAtMillis = System.currentTimeMillis(),
         )
         latestSnapshot = snapshot

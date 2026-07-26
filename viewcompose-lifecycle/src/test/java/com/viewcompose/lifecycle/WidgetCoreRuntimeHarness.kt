@@ -1,80 +1,59 @@
 package com.viewcompose.lifecycle
 
 import com.viewcompose.runtime.State
+import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.buildVNodeTree
 import java.lang.reflect.Method
+import kotlinx.coroutines.Dispatchers
 
 internal class WidgetCoreRuntimeHarness {
-    private val rememberStoreClass = Class.forName("com.viewcompose.widget.core.RememberStore")
-    private val effectStoreClass = Class.forName("com.viewcompose.widget.core.EffectStore")
-    private val rememberContextClass = Class.forName("com.viewcompose.widget.core.RememberContext")
-    private val effectContextClass = Class.forName("com.viewcompose.widget.core.EffectContext")
-
-    private val rememberStore: Any = rememberStoreClass.getDeclaredConstructor().newInstance()
-    private val effectStore: Any = effectStoreClass.getDeclaredConstructor().newInstance()
-    private val rememberContextInstance: Any = requireNotNull(
-        rememberContextClass.getField("INSTANCE").get(null),
+    private val composer = ComposerLite()
+    private val composerContextClass = Class.forName("com.viewcompose.widget.core.ComposerContext")
+    private val composerContextInstance: Any = requireNotNull(
+        composerContextClass.getField("INSTANCE").get(null),
     )
-    private val effectContextInstance: Any = requireNotNull(
-        effectContextClass.getField("INSTANCE").get(null),
-    )
-
-    private val rememberWithStore = rememberContextClass.findMethodPrefix(
-        prefix = "withStore",
-        paramCount = 2,
-    )
-    private val effectWithStore = effectContextClass.findMethodPrefix(
-        prefix = "withStore",
-        paramCount = 2,
-    )
-    private val effectCommit = effectStoreClass.findMethodPrefix(
-        prefix = "commit",
-        paramCount = 0,
-    )
-    private val effectDisposeAll = effectStoreClass.findMethodPrefix(
-        prefix = "disposeAll",
-        paramCount = 0,
+    private val withComposer = composerContextClass.findMethodPrefix(
+        prefix = "withComposer",
+        paramCount = 3,
     )
 
     fun <T> render(
         block: () -> State<T>,
     ): State<T> {
-        val state = withStore(effectContextInstance, effectWithStore, effectStore) {
-            withStore(rememberContextInstance, rememberWithStore, rememberStore) {
-                block()
-            }
-        }
-        effectCommit.invoke(effectStore)
-        return state
+        return compose(block)
     }
 
     fun renderTree(
         block: UiTreeBuilder.() -> Unit,
     ) {
-        withStore(effectContextInstance, effectWithStore, effectStore) {
-            withStore(rememberContextInstance, rememberWithStore, rememberStore) {
-                buildVNodeTree(block)
-            }
+        compose {
+            buildVNodeTree(block)
         }
-        effectCommit.invoke(effectStore)
     }
 
     fun dispose() {
-        effectDisposeAll.invoke(effectStore)
+        composer.dispose()
     }
 
-    private fun <T> withStore(
-        contextInstance: Any,
-        method: Method,
-        store: Any,
+    private fun <T> compose(
         block: () -> T,
     ): T {
+        if (!composer.hasPendingInvalidations()) {
+            composer.requestRootRecompose()
+        }
         val callback = object : kotlin.jvm.functions.Function0<T> {
-            override fun invoke(): T = block()
+            override fun invoke(): T = composer.composeRoot(block)
         }
         @Suppress("UNCHECKED_CAST")
-        return method.invoke(contextInstance, store, callback) as T
+        val result = withComposer.invoke(
+            composerContextInstance,
+            composer,
+            Dispatchers.Unconfined,
+            callback,
+        ) as T
+        composer.commitSideEffects()
+        return result
     }
 
     private fun Class<*>.findMethodPrefix(

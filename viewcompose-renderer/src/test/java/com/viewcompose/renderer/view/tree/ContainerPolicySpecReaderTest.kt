@@ -4,6 +4,7 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
+import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
@@ -21,7 +22,7 @@ class ContainerPolicySpecReaderTest {
             node = VNode(
                 type = NodeType.LazyColumn,
                 spec = LazyColumnNodeProps(
-                    contentPadding = 0,
+                    contentPadding = LazyContentPadding.None,
                     spacing = 0,
                     items = emptyList(),
                 ),
@@ -52,7 +53,7 @@ class ContainerPolicySpecReaderTest {
             node = VNode(
                 type = NodeType.LazyColumn,
                 spec = LazyColumnNodeProps(
-                    contentPadding = 8,
+                    contentPadding = LazyContentPadding.all(8),
                     spacing = 4,
                     items = emptyList(),
                     reusePolicy = reuse,
@@ -70,7 +71,7 @@ class ContainerPolicySpecReaderTest {
                 type = NodeType.LazyVerticalGrid,
                 spec = LazyVerticalGridNodeProps(
                     spanCount = 2,
-                    contentPadding = 8,
+                    contentPadding = LazyContentPadding.all(8),
                     horizontalSpacing = 4,
                     verticalSpacing = 4,
                     items = emptyList(),

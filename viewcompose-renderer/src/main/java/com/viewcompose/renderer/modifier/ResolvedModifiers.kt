@@ -12,13 +12,14 @@ internal class ResolvedModifiers(
     var backgroundColor: BackgroundColorModifierElement? = null,
     var backgroundDrawableRes: BackgroundDrawableResModifierElement? = null,
     var clickable: ClickableModifierElement? = null,
-    var contentDescription: ContentDescriptionModifierElement? = null,
+    var semantics: SemanticsConfiguration = SemanticsConfiguration.Empty,
     var testTag: TestTagModifierElement? = null,
     var overlayAnchor: OverlayAnchorModifierElement? = null,
     var layoutId: LayoutIdModifierElement? = null,
     var constraint: ConstraintModifierElement? = null,
     var border: BorderModifierElement? = null,
     var cornerRadius: CornerRadiusModifierElement? = null,
+    var shape: ShapeModifierElement? = null,
     var clip: ClipModifierElement? = null,
     var elevation: ElevationModifierElement? = null,
     var offset: OffsetModifierElement? = null,
@@ -37,6 +38,15 @@ internal class ResolvedModifiers(
     var anchoredDraggable: AnchoredDraggableModifierElement? = null,
     var transformable: TransformableModifierElement? = null,
     var gesturePriority: GesturePriorityModifierElement? = null,
+    var nestedScroll: NestedScrollModifierElement? = null,
+    var focusable: FocusableModifierElement? = null,
+    var focusRequester: FocusRequesterModifierElement? = null,
+    var focusProperties: com.viewcompose.ui.focus.FocusProperties =
+        com.viewcompose.ui.focus.FocusProperties.Default,
+    var focusGroup: FocusGroupModifierElement? = null,
+    var onFocusChanged: OnFocusChangedModifierElement? = null,
+    var previewKeyEvent: PreviewKeyEventModifierElement? = null,
+    var keyEvent: KeyEventModifierElement? = null,
     // ViewLayoutParamsFactory fields
     var boxAlign: BoxAlignModifierElement? = null,
     var margin: MarginModifierElement? = null,
@@ -69,13 +79,22 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is BackgroundColorModifierElement -> result.backgroundColor = element
             is BackgroundDrawableResModifierElement -> result.backgroundDrawableRes = element
             is ClickableModifierElement -> result.clickable = element
-            is ContentDescriptionModifierElement -> result.contentDescription = element
+            is SemanticsModifierElement -> {
+                result.semantics = result.semantics.merge(element.configuration)
+            }
             is TestTagModifierElement -> result.testTag = element
             is OverlayAnchorModifierElement -> result.overlayAnchor = element
             is LayoutIdModifierElement -> result.layoutId = element
             is ConstraintModifierElement -> result.constraint = element
             is BorderModifierElement -> result.border = element
-            is CornerRadiusModifierElement -> result.cornerRadius = element
+            is CornerRadiusModifierElement -> {
+                result.cornerRadius = element
+                result.shape = null
+            }
+            is ShapeModifierElement -> {
+                result.shape = element
+                result.cornerRadius = null
+            }
             is ClipModifierElement -> result.clip = element
             is ElevationModifierElement -> result.elevation = element
             is OffsetModifierElement -> result.offset = element
@@ -94,6 +113,16 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is AnchoredDraggableModifierElement -> result.anchoredDraggable = element
             is TransformableModifierElement -> result.transformable = element
             is GesturePriorityModifierElement -> result.gesturePriority = element
+            is NestedScrollModifierElement -> result.nestedScroll = element
+            is FocusableModifierElement -> result.focusable = element
+            is FocusRequesterModifierElement -> result.focusRequester = element
+            is FocusPropertiesModifierElement -> {
+                result.focusProperties = result.focusProperties.merge(element.properties)
+            }
+            is FocusGroupModifierElement -> result.focusGroup = element
+            is OnFocusChangedModifierElement -> result.onFocusChanged = element
+            is PreviewKeyEventModifierElement -> result.previewKeyEvent = element
+            is KeyEventModifierElement -> result.keyEvent = element
             is BoxAlignModifierElement -> result.boxAlign = element
             is MarginModifierElement -> result.margin = element
             is SizeModifierElement -> result.size = element

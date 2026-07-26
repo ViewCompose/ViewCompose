@@ -12,6 +12,7 @@ internal class MutableStateImpl<T>(
     private val policy: SnapshotMutationPolicy<T>,
 ) : MutableState<T>, ObservableState, SnapshotStateObject {
     private val recordLock = Any()
+    private val observerLock = Any()
     private val observers = LinkedHashSet<Observation>()
     private var head: StateRecord<T> = StateRecord(
         snapshotId = 0,
@@ -30,15 +31,23 @@ internal class MutableStateImpl<T>(
         }
 
     override fun addObserver(observer: Observation) {
-        observers += observer
+        synchronized(observerLock) {
+            observers += observer
+        }
     }
 
     override fun removeObserver(observer: Observation) {
-        observers -= observer
+        synchronized(observerLock) {
+            observers -= observer
+        }
     }
 
     override fun readAny(readId: Int): Any? = synchronized(recordLock) {
         readRecordLocked(readId).value
+    }
+
+    override fun latestSnapshotId(): Int = synchronized(recordLock) {
+        head.snapshotId
     }
 
     override fun equivalentAny(
@@ -80,7 +89,33 @@ internal class MutableStateImpl<T>(
         true
     }
 
-    override fun snapshotObservers(): List<Observation> = observers.toList()
+    override fun pruneRecords(minActiveReadId: Int?): Boolean = synchronized(recordLock) {
+        head.next ?: return@synchronized false
+        if (minActiveReadId == null) {
+            head.next = null
+            return@synchronized false
+        }
+        var oldestRequired = head
+        while (oldestRequired.snapshotId > minActiveReadId) {
+            oldestRequired = oldestRequired.next ?: break
+        }
+        oldestRequired.next = null
+        head.next != null
+    }
+
+    override fun snapshotObservers(): List<Observation> = synchronized(observerLock) {
+        observers.toList()
+    }
+
+    internal fun recordCount(): Int = synchronized(recordLock) {
+        var count = 0
+        var current: StateRecord<T>? = head
+        while (current != null) {
+            count += 1
+            current = current.next
+        }
+        count
+    }
 
     private fun readRecordLocked(readId: Int): StateRecord<T> {
         var current: StateRecord<T>? = head
@@ -102,6 +137,6 @@ internal class MutableStateImpl<T>(
     private data class StateRecord<T>(
         val snapshotId: Int,
         val value: T,
-        val next: StateRecord<T>?,
+        var next: StateRecord<T>?,
     )
 }

@@ -4,6 +4,7 @@ import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -88,7 +89,7 @@ internal fun UiTreeBuilder.FoundationsMediaSection() {
                 contentScale = ImageContentScale.Crop,
                 modifier = Modifier
                     .size(64.dp, 64.dp)
-                    .cornerRadius(Theme.shapes.mediumCornerRadius),
+                    .shape(Theme.shapes.medium),
             )
             Column(
                 spacing = 8.dp,
@@ -113,7 +114,7 @@ internal fun UiTreeBuilder.FoundationsMediaSection() {
                 .fillMaxWidth()
                 .height(140.dp)
                 .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                .cornerRadius(Theme.shapes.mediumCornerRadius)
+                .shape(Theme.shapes.medium)
                 .testTag(DemoTestTags.FOUNDATIONS_REMOTE_IMAGE)
                 .margin(bottom = 12.dp),
         )
@@ -126,7 +127,7 @@ internal fun UiTreeBuilder.FoundationsMediaSection() {
                 .fillMaxWidth()
                 .height(88.dp)
                 .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                .cornerRadius(Theme.shapes.mediumCornerRadius)
+                .shape(Theme.shapes.medium)
                 .testTag(DemoTestTags.FOUNDATIONS_FALLBACK_IMAGE)
                 .margin(bottom = 12.dp),
         )

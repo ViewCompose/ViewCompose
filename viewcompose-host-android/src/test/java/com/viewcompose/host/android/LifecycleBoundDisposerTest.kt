@@ -4,6 +4,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LifecycleBoundDisposerTest {
@@ -51,6 +52,37 @@ class LifecycleBoundDisposerTest {
         owner.handle(Lifecycle.Event.ON_DESTROY)
 
         assertEquals(0, disposeCount)
+    }
+
+    @Test
+    fun `binding an already destroyed lifecycle disposes immediately`() {
+        var disposeCount = 0
+        val disposer = LifecycleBoundDisposer { disposeCount += 1 }
+        val owner = TestLifecycleOwner()
+        owner.handle(Lifecycle.Event.ON_CREATE)
+        owner.handle(Lifecycle.Event.ON_DESTROY)
+
+        disposer.bind(owner)
+        disposer.clearObserver()
+
+        assertEquals(1, disposeCount)
+    }
+
+    @Test
+    fun `destroyed host is rejected before creating a render session`() {
+        val owner = TestLifecycleOwner()
+        owner.handle(Lifecycle.Event.ON_CREATE)
+        owner.handle(Lifecycle.Event.ON_DESTROY)
+
+        val error = runCatching {
+            requireActiveHost(
+                owner = owner,
+                hostName = "TestHost",
+            )
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("destroyed"))
     }
 }
 

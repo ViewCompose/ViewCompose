@@ -2,13 +2,17 @@ package com.viewcompose.gesture
 
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.GesturePriority
+import com.viewcompose.ui.gesture.GestureCancellationReason
 import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
+import com.viewcompose.ui.gesture.NestedScrollConnection
+import com.viewcompose.ui.gesture.NestedScrollDispatcher
 import com.viewcompose.ui.modifier.AnchoredDraggableModifierElement
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
 import com.viewcompose.ui.modifier.DraggableModifierElement
 import com.viewcompose.ui.modifier.GesturePriorityModifierElement
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.NestedScrollModifierElement
 import com.viewcompose.ui.modifier.PointerInputModifierElement
 import com.viewcompose.ui.modifier.TransformableModifierElement
 
@@ -49,6 +53,7 @@ fun Modifier.draggable(
     enabled: Boolean = true,
     onDragStarted: (() -> Unit)? = null,
     onDragStopped: ((velocity: Float) -> Unit)? = null,
+    onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ): Modifier {
     return then(
         DraggableModifierElement(
@@ -57,6 +62,7 @@ fun Modifier.draggable(
             onDragStarted = onDragStarted,
             onDragStopped = onDragStopped,
             onDelta = state::dispatchRawDelta,
+            onDragCancelled = onDragCancelled,
         ),
     )
 }
@@ -66,6 +72,7 @@ fun <T> Modifier.anchoredDraggable(
     anchors: DraggableAnchors<T>,
     orientation: GestureOrientation = GestureOrientation.Horizontal,
     enabled: Boolean = true,
+    onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ): Modifier {
     require(orientation != GestureOrientation.Free) {
         "anchoredDraggable only supports Horizontal or Vertical orientation."
@@ -79,6 +86,7 @@ fun <T> Modifier.anchoredDraggable(
             currentOffsetPx = state.currentOffsetPx.value,
             onDelta = state::dispatchRawDelta,
             onSettleToOffset = state::settleToOffset,
+            onDragCancelled = onDragCancelled,
         ),
     )
 }
@@ -86,11 +94,17 @@ fun <T> Modifier.anchoredDraggable(
 fun Modifier.transformable(
     state: TransformableState,
     enabled: Boolean = true,
+    onTransformStarted: (() -> Unit)? = null,
+    onTransformStopped: (() -> Unit)? = null,
+    onTransformCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ): Modifier {
     return then(
         TransformableModifierElement(
             enabled = enabled,
             onTransform = state::dispatchTransform,
+            onTransformStarted = onTransformStarted,
+            onTransformStopped = onTransformStopped,
+            onTransformCancelled = onTransformCancelled,
         ),
     )
 }
@@ -101,6 +115,18 @@ fun Modifier.gesturePriority(
     return then(
         GesturePriorityModifierElement(
             priority = priority,
+        ),
+    )
+}
+
+fun Modifier.nestedScroll(
+    connection: NestedScrollConnection,
+    dispatcher: NestedScrollDispatcher? = null,
+): Modifier {
+    return then(
+        NestedScrollModifierElement(
+            connection = connection,
+            dispatcher = dispatcher,
         ),
     )
 }

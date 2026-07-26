@@ -2,7 +2,6 @@ package com.viewcompose.renderer.view.tree.patch
 
 import android.content.res.ColorStateList
 import android.widget.CompoundButton
-import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.Switch
 import com.viewcompose.renderer.R
@@ -12,20 +11,18 @@ import com.viewcompose.renderer.view.tree.SliderNodePatch
 import com.viewcompose.renderer.view.tree.TextFieldNodePatch
 import com.viewcompose.renderer.view.tree.ToggleNodePatch
 import com.viewcompose.renderer.view.tree.ViewModifierApplier
+import com.viewcompose.renderer.view.tree.ViewComposeEditText
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 
 internal object InputNodePatchApplier {
     fun applyTextFieldPatch(
-        view: EditText,
+        view: ViewComposeEditText,
         patch: TextFieldNodePatch,
     ) {
         val previous = patch.previous
         val next = patch.next
-        if (previous.value != next.value && view.text?.toString() != next.value) {
-            view.setText(next.value)
-            view.setSelection(next.value.length)
-        }
+        val nextSpec = InputViewBinder.readTextFieldSpec(next)
         if (previous.placeholder != next.placeholder) {
             view.hint = next.placeholder
         }
@@ -48,39 +45,27 @@ internal object InputNodePatchApplier {
             view.maxLines = if (next.singleLine) 1 else next.maxLines
         }
         if (
-            previous.keyboardType != next.keyboardType ||
+            previous.keyboardOptions != next.keyboardOptions ||
             previous.singleLine != next.singleLine
         ) {
-            view.inputType = InputViewBinder.resolveInputType(
-                type = next.keyboardType,
-                singleLine = next.singleLine,
+            view.textController.updateEditorConfiguration(
+                inputType = nextSpec.inputType,
+                editorOptions = nextSpec.editorOptions,
             )
-        }
-        if (previous.imeAction != next.imeAction) {
-            view.imeOptions = InputViewBinder.toEditorAction(next.imeAction)
         }
         if (previous.hintColor != next.hintColor) {
             view.setHintTextColor(next.hintColor)
         }
         if (previous.cursorColor != next.cursorColor && next.cursorColor != 0) {
-            view.highlightColor = next.cursorColor
+            InputViewBinder.applyCursorColor(view, next.cursorColor)
         }
         if (previous.readOnly != next.readOnly) {
             InputViewBinder.applyReadOnly(view, next.readOnly)
         }
-        if (previous.maxLength != next.maxLength) {
-            InputViewBinder.applyMaxLength(view, next.maxLength)
+        if (previous.autofillHints != next.autofillHints) {
+            InputViewBinder.applyAutofillHints(view, next.autofillHints)
         }
-        if (
-            previous.value != next.value ||
-            previous.onValueChange != next.onValueChange
-        ) {
-            InputViewBinder.bindTextWatcher(
-                view = view,
-                currentValue = next.value,
-                onValueChange = next.onValueChange,
-            )
-        }
+        view.textController.bind(nextSpec)
         if (hasTextAppearanceChange(previous, next)) {
             ContentViewBinder.applyTextAppearance(
                 view = view,
@@ -97,14 +82,14 @@ internal object InputNodePatchApplier {
             previous.backgroundColor != next.backgroundColor ||
             previous.borderWidth != next.borderWidth ||
             previous.borderColor != next.borderColor ||
-            previous.cornerRadius != next.cornerRadius
+            previous.shape != next.shape
         ) {
             ViewModifierApplier.applyStylePatch(
                 view = view,
                 backgroundColor = next.backgroundColor,
                 borderWidth = next.borderWidth,
                 borderColor = next.borderColor,
-                cornerRadius = next.cornerRadius,
+                shape = next.shape,
                 rippleColor = 0,
                 clickable = false,
             )

@@ -4,15 +4,17 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.appcompat.content.res.AppCompatResources
+import com.google.android.material.shape.MaterialShapeDrawable
 import com.viewcompose.renderer.R
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.renderer.modifier.ResolvedModifiers
+import com.viewcompose.renderer.view.shape.toShapeAppearanceModel
+import com.viewcompose.ui.shape.UiShape
 
 internal object ModifierSurfaceStyleApplier {
     fun cacheOriginalBackground(view: View) {
@@ -35,32 +37,6 @@ internal object ModifierSurfaceStyleApplier {
         )
     }
 
-    fun applyStylePatch(
-        view: View,
-        backgroundColor: Int,
-        borderWidth: Int,
-        borderColor: Int,
-        cornerRadius: Int,
-        rippleColor: Int,
-        clickable: Boolean,
-    ) {
-        val corners = if (cornerRadius > 0) {
-            CornerRadiusModifierElement(cornerRadius, cornerRadius, cornerRadius, cornerRadius)
-        } else {
-            null
-        }
-        applyBackgroundAndInteraction(
-            view = view,
-            backgroundDrawableResId = null,
-            backgroundColor = backgroundColor,
-            borderWidth = borderWidth,
-            borderColor = borderColor,
-            cornerRadius = corners,
-            rippleColor = rippleColor,
-            clickable = clickable,
-        )
-    }
-
     fun applySurfaceStyle(
         view: View,
         resolved: ResolvedModifiers,
@@ -76,6 +52,7 @@ internal object ModifierSurfaceStyleApplier {
             rippleColor = nodeStyle.rippleColor,
             clickable = nodeStyle.clickable,
             forceClip = resolved.graphicsLayer?.clip ?: (resolved.clip?.clip ?: false),
+            shape = nodeStyle.shape,
         )
     }
 
@@ -89,31 +66,40 @@ internal object ModifierSurfaceStyleApplier {
         rippleColor: Int,
         clickable: Boolean,
         forceClip: Boolean = false,
+        shape: UiShape? = null,
     ) {
-        val hasCorner = cornerRadius != null &&
+        val legacyHasCorner = cornerRadius != null &&
             (cornerRadius.topStart > 0 || cornerRadius.topEnd > 0 ||
                 cornerRadius.bottomEnd > 0 || cornerRadius.bottomStart > 0)
+        val resolvedShape = shape ?: cornerRadius?.toUiShape()
+        val hasShape = resolvedShape != null
         val backgroundDrawable = backgroundDrawableResId
             ?.let { loadBackgroundDrawable(view, it) }
-        val hasCustomShape = backgroundDrawable != null || backgroundColor != null || hasCorner || borderWidth > 0
-        if (hasCustomShape) {
+        val hasCustomSurface = backgroundDrawable != null ||
+            backgroundColor != null ||
+            hasShape ||
+            legacyHasCorner ||
+            borderWidth > 0
+        if (hasCustomSurface) {
             view.background = if (backgroundDrawable != null) {
                 createDrawableResourceBackground(
                     backgroundDrawable = backgroundDrawable,
                     borderWidth = borderWidth,
                     borderColor = borderColor,
-                    cornerRadius = cornerRadius,
                     rippleColor = rippleColor,
                     clickable = clickable,
+                    shape = resolvedShape,
+                    layoutDirection = view.layoutDirection,
                 )
             } else {
                 createBackgroundDrawable(
                     backgroundColor = backgroundColor ?: Color.TRANSPARENT,
                     borderWidth = borderWidth,
                     borderColor = borderColor,
-                    cornerRadius = cornerRadius,
                     rippleColor = rippleColor,
                     clickable = clickable,
+                    shape = resolvedShape,
+                    layoutDirection = view.layoutDirection,
                 )
             }
             view.foreground = null
@@ -129,11 +115,11 @@ internal object ModifierSurfaceStyleApplier {
                 restoreOriginalForeground(view)
             }
         }
-        val shouldAutoClipForDrawableCorner = backgroundDrawable != null && hasCorner
-        applyCornerOutline(
+        val shouldAutoClipForDrawableShape = backgroundDrawable != null && hasShape
+        applyShapeOutline(
             view = view,
-            cornerRadius = cornerRadius,
-            forceClip = forceClip || shouldAutoClipForDrawableCorner,
+            shape = resolvedShape,
+            forceClip = forceClip || shouldAutoClipForDrawableShape,
         )
     }
 
@@ -157,17 +143,16 @@ internal object ModifierSurfaceStyleApplier {
         backgroundColor: Int,
         borderWidth: Int,
         borderColor: Int,
-        cornerRadius: CornerRadiusModifierElement?,
         rippleColor: Int,
         clickable: Boolean,
+        shape: UiShape?,
+        layoutDirection: Int,
     ): Drawable {
-        val content = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            setColor(backgroundColor)
+        val content = MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+            fillColor = ColorStateList.valueOf(backgroundColor)
             if (borderWidth > 0) {
-                setStroke(borderWidth, borderColor)
+                setStroke(borderWidth.toFloat(), borderColor)
             }
-            applyCornerRadiusToDrawable(this, cornerRadius)
         }
         if (!clickable) {
             return content
@@ -175,13 +160,8 @@ internal object ModifierSurfaceStyleApplier {
         return RippleDrawable(
             ColorStateList.valueOf(rippleColor),
             content,
-            GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                setColor(Color.WHITE)
-                if (borderWidth > 0) {
-                    setStroke(borderWidth, borderColor)
-                }
-                applyCornerRadiusToDrawable(this, cornerRadius)
+            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+                fillColor = ColorStateList.valueOf(Color.WHITE)
             },
         )
     }
@@ -190,19 +170,18 @@ internal object ModifierSurfaceStyleApplier {
         backgroundDrawable: Drawable,
         borderWidth: Int,
         borderColor: Int,
-        cornerRadius: CornerRadiusModifierElement?,
         rippleColor: Int,
         clickable: Boolean,
+        shape: UiShape?,
+        layoutDirection: Int,
     ): Drawable {
         val layeredContent = if (borderWidth > 0) {
             LayerDrawable(
                 arrayOf(
                     backgroundDrawable,
-                    GradientDrawable().apply {
-                        shape = GradientDrawable.RECTANGLE
-                        setColor(Color.TRANSPARENT)
-                        setStroke(borderWidth, borderColor)
-                        applyCornerRadiusToDrawable(this, cornerRadius)
+                    MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+                        fillColor = ColorStateList.valueOf(Color.TRANSPARENT)
+                        setStroke(borderWidth.toFloat(), borderColor)
                     },
                 ),
             )
@@ -215,66 +194,31 @@ internal object ModifierSurfaceStyleApplier {
         return RippleDrawable(
             ColorStateList.valueOf(rippleColor),
             layeredContent,
-            GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                setColor(Color.WHITE)
-                if (borderWidth > 0) {
-                    setStroke(borderWidth, borderColor)
-                }
-                applyCornerRadiusToDrawable(this, cornerRadius)
+            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+                fillColor = ColorStateList.valueOf(Color.WHITE)
             },
         )
     }
 
-    private fun applyCornerRadiusToDrawable(
-        drawable: GradientDrawable,
-        cornerRadius: CornerRadiusModifierElement?,
-    ) {
-        if (cornerRadius == null) return
-        if (cornerRadius.isUniform) {
-            drawable.cornerRadius = cornerRadius.topStart.toFloat()
-        } else {
-            val tl = cornerRadius.topStart.toFloat()
-            val tr = cornerRadius.topEnd.toFloat()
-            val br = cornerRadius.bottomEnd.toFloat()
-            val bl = cornerRadius.bottomStart.toFloat()
-            drawable.cornerRadii = floatArrayOf(tl, tl, tr, tr, br, br, bl, bl)
-        }
-    }
-
-    private fun applyCornerOutline(
+    private fun applyShapeOutline(
         view: View,
-        cornerRadius: CornerRadiusModifierElement?,
+        shape: UiShape?,
         forceClip: Boolean = false,
     ) {
-        val hasCorner = cornerRadius != null &&
-            (cornerRadius.topStart > 0 || cornerRadius.topEnd > 0 ||
-                cornerRadius.bottomEnd > 0 || cornerRadius.bottomStart > 0)
-        if (!hasCorner && !forceClip) {
+        if (shape == null && !forceClip) {
             view.clipToOutline = false
             view.outlineProvider = ViewOutlineProvider.BACKGROUND
             view.invalidateOutline()
             return
         }
-        if (cornerRadius != null && hasCorner) {
-            if (cornerRadius.isUniform) {
-                val r = cornerRadius.topStart.toFloat()
-                view.outlineProvider = object : ViewOutlineProvider() {
-                    override fun getOutline(view: View, outline: Outline) {
-                        outline.setRoundRect(0, 0, view.width, view.height, r)
-                    }
-                }
-            } else {
-                val r = maxOf(
-                    cornerRadius.topStart,
-                    cornerRadius.topEnd,
-                    cornerRadius.bottomEnd,
-                    cornerRadius.bottomStart,
-                ).toFloat()
-                view.outlineProvider = object : ViewOutlineProvider() {
-                    override fun getOutline(view: View, outline: Outline) {
-                        outline.setRoundRect(0, 0, view.width, view.height, r)
-                    }
+        if (shape != null) {
+            val outlineDrawable = MaterialShapeDrawable(
+                shape.toShapeAppearanceModel(view.layoutDirection),
+            )
+            view.outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outlineDrawable.setBounds(0, 0, view.width, view.height)
+                    outlineDrawable.getOutline(outline)
                 }
             }
         } else {
@@ -283,6 +227,15 @@ internal object ModifierSurfaceStyleApplier {
         // Apply rounded outline for shadow, but only clip content when clip() is explicitly requested.
         view.clipToOutline = forceClip
         view.invalidateOutline()
+    }
+
+    private fun CornerRadiusModifierElement.toUiShape(): UiShape {
+        return UiShape.rounded(
+            topStart = topStart,
+            topEnd = topEnd,
+            bottomEnd = bottomEnd,
+            bottomStart = bottomStart,
+        )
     }
 
     private fun loadBackgroundDrawable(

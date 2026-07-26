@@ -1,9 +1,11 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.mutableStateOf
@@ -77,6 +79,129 @@ class SubtreeRecompositionTest {
         val rightSpec = updated[1].spec as TextNodeProps
 
         assertEquals("root-R2", rightSpec.text)
+    }
+
+    @Test
+    fun `dirty group reuses equivalent vnode result`() {
+        val invalidatingState = mutableStateOf(0)
+        val composer = ComposerLite()
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.composeRoot {
+                    buildVNodeTree {
+                        emit(
+                            type = NodeType.Box,
+                            spec = BoxNodeProps(
+                                contentAlignment = BoxAlignment.TopStart,
+                            ),
+                        ) {
+                            invalidatingState.value
+                            emit(
+                                type = NodeType.Text,
+                                spec = textSpec("stable"),
+                            )
+                        }
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        invalidatingState.value = 1
+        val second = compose()
+
+        assertSame(first, second)
+    }
+
+    @Test
+    fun `session backed vnode refreshes changed content closures`() {
+        val contentVersion = mutableStateOf(0)
+        val composer = ComposerLite()
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.composeRoot {
+                    buildVNodeTree {
+                        val version = contentVersion.value
+                        LazyColumn {
+                            items(
+                                items = listOf("item"),
+                                key = { item -> item },
+                            ) { item ->
+                                Text("$item:$version")
+                            }
+                        }
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        contentVersion.value = 1
+        val second = compose()
+
+        assertNotSame(first, second)
+    }
+
+    @Test
+    fun `explicit boundary skips stable multi-node component`() {
+        val inside = mutableStateOf("inside-0")
+        val outside = mutableStateOf("outside-0")
+        val composer = ComposerLite()
+        var boundaryRuns = 0
+
+        fun compose(): List<VNode> =
+            ComposerContext.withComposer(composer) {
+                composer.composeRoot {
+                    buildVNodeTree {
+                        RecomposeBoundary(key = "section") {
+                            boundaryRuns += 1
+                            Text(inside.value)
+                            Text("stable")
+                        }
+                        Text(outside.value)
+                    }
+                }
+            }
+
+        val first = compose()
+        outside.value = "outside-1"
+        val outsideUpdate = compose()
+
+        assertEquals(1, boundaryRuns)
+        assertSame(first[0], outsideUpdate[0])
+        assertSame(first[1], outsideUpdate[1])
+
+        inside.value = "inside-1"
+        val insideUpdate = compose()
+
+        assertEquals(2, boundaryRuns)
+        assertNotSame(outsideUpdate[0], insideUpdate[0])
+        assertSame(outsideUpdate[1], insideUpdate[1])
+    }
+
+    @Test
+    fun `explicit boundary refreshes ordinary captures declared as inputs`() {
+        val composer = ComposerLite()
+        var label = "first"
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        RecomposeBoundary(inputs = listOf(label)) {
+                            Text(label)
+                        }
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        label = "second"
+        val second = compose()
+
+        assertNotSame(first, second)
+        assertEquals("second", (second.spec as TextNodeProps).text)
     }
 
     private fun textSpec(text: String): TextNodeProps {

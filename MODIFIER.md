@@ -19,6 +19,8 @@
 9. 内容尺寸动画支持 `Modifier.animateContentSize(...)`；renderer 会在 patch 前自动插入 `AnimatedSizeHost`，以“真实测量尺寸插值”参与父布局重排（非 graphicsLayer 视觉缩放），并保留 `AnimationSpec` 的 easing/spring/keyframes/repeat 语义（含 reverse 终态）
 10. 约束 parent-data 支持 `Modifier.layoutId(...)`、`Modifier.constrainAs(...)`、`Modifier.constrain(...)`；仅对 `ConstraintLayout` 子节点生效
 11. 图形绘制 modifier 已接入：`Modifier.drawBehind`、`Modifier.drawWithContent`、`Modifier.drawWithCache`（以及短写 `draw/drawCache`）；执行顺序按 modifier 链稳定，`drawWithContent` 可显式控制内容透传；底层执行保证 `DrawRoundRect` 四角半径与 `Drawable + DrawPaint` 组合语义不丢失
+12. 声明式焦点与硬件键盘输入已接入：`focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent` 映射原生 View 焦点搜索，并由 `LocalFocusManager` 提供会话级移动与清除能力
+13. 统一嵌套滚动协议已接入：`Modifier.nestedScroll(connection, dispatcher)` 通过透明宿主映射 AndroidX nested-scrolling parent/child 链，覆盖 pre/post scroll、pre/post fling、Lazy/Pager/普通滚动容器与自定义 drag/transform pan
 
 ## 3. API 清单（全量扫描）
 
@@ -33,8 +35,8 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 
 当前扫描结果（2026-03）：
 
-1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`62`
-2. `fun Modifier.*` 唯一 API 名称数：`53`
+1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`71`
+2. `fun Modifier.*` 唯一 API 名称数：`62`
 3. scoped modifier 声明总数：`5`（`RowScope/ColumnScope/BoxScope`）
 4. renderer internal modifier 扩展：`1`（仅内部解析能力）
 
@@ -76,6 +78,13 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `graphicsLayer` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 统一设置缩放/旋转/平移/裁剪等图层属性 | 全局 | 高级视觉变换入口 |
 | `visibility` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置可见性（Visible/Invisible/Gone） | 全局 | 参与布局占位语义 |
 | `clickable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 基础点击回调 | 全局 | 与 gesture 分发链协同 |
+| `focusable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明节点可接收焦点 | 全局 | `focusProperties.canFocus` 可覆盖 |
+| `focusRequester` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 将稳定请求器绑定到节点 | 全局 | 节点复用、回滚和释放时自动换绑 |
+| `focusProperties` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明可聚焦状态与方向目标 | 全局 | 支持 next/previous/四方向 |
+| `focusGroup` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明键盘导航焦点组 | 容器 | 映射原生 descendant focus 与 navigation cluster |
+| `onFocusChanged` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 观察自身/后代焦点状态 | 全局 | 回调 `FocusState` |
+| `onPreviewKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 焦点目标前的按键捕获阶段 | 全局 | 从声明式祖先向目标分发 |
+| `onKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 按键冒泡阶段 | 全局 | 从目标向声明式祖先分发 |
 | `contentDescription` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置无障碍描述 | 全局 | 映射 `View.contentDescription` |
 | `testTag` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置测试标记 | 全局 | 供 UI 测试定位 |
 | `overlayAnchor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置 overlay 锚点 ID | 指定能力 | 用于 Popup/Tooltip/Dropdown 锚定 |
@@ -90,6 +99,7 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `anchoredDraggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 锚点拖拽/吸附手势 | 全局 | 仅支持 Horizontal/Vertical |
 | `transformable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 多指缩放/旋转/平移 | 全局 | 由 `TransformableState` 消费增量 |
 | `gesturePriority` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 设置手势优先级 | 全局 | 用于嵌套冲突仲裁 |
+| `nestedScroll` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 声明父子滚动与 fling 消费协议 | 全局 | 透明宿主接入 AndroidX nested-scrolling 链 |
 | `animateContentSize` | `viewcompose-animation` / `com.viewcompose.animation` | public | 节点尺寸变化动画 | 全局（布局参与） | 非视觉缩放，真实参与父布局重排 |
 | `constrainAs` | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 按 `ConstraintReference` 声明子项约束 | 指定容器 | 仅 `ConstraintLayout` 子项有效 |
 | `constrain` | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 通过字符串 ID 声明子项约束 | 指定容器 | `constrainAs` 的短写风格入口 |
@@ -124,7 +134,7 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 1. 尺寸与占位：`size/width/height/minWidth/minHeight/padding/margin`
 2. 外观修饰：`backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`
 3. 可见性与层级：`visibility/offset/zIndex`
-4. 通用交互与可访问性：`clickable/contentDescription`
+4. 通用交互与可访问性：`clickable/focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent/contentDescription`
 5. 测试定位：`testTag`
 6. 系统栏内边距：`systemBarsInsetsPadding`
 7. 软键盘内边距：`imeInsetsPadding`
@@ -207,3 +217,5 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 1. [NODE_PROPS.md](/Users/gzq/AndroidStudioProjects/UIFramework/NODE_PROPS.md)
 2. [THEMING.md](/Users/gzq/AndroidStudioProjects/UIFramework/THEMING.md)
 3. [ARCHITECTURE.md](/Users/gzq/AndroidStudioProjects/UIFramework/ARCHITECTURE.md)
+4. [FOCUS_INPUT.md](/Users/gzq/AndroidStudioProjects/UIFramework/FOCUS_INPUT.md)
+5. [NESTED_SCROLL.md](/Users/gzq/AndroidStudioProjects/UIFramework/NESTED_SCROLL.md)

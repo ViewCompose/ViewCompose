@@ -64,9 +64,10 @@ fun UiTreeBuilder.Snackbar(
     message: String,
     actionLabel: String? = null,
     duration: SnackbarDuration = SnackbarDuration.Short,
+    queuePolicy: TransientFeedbackQueuePolicy = TransientFeedbackQueuePolicy.Enqueue,
     requestKey: String = "snackbar",
     onAction: (() -> Unit)? = null,
-    onDismiss: (() -> Unit)? = null,
+    onDismiss: ((TransientFeedbackDismissReason) -> Unit)? = null,
 ) {
     if (!visible) {
         return
@@ -79,6 +80,7 @@ fun UiTreeBuilder.Snackbar(
                 message = message,
                 actionLabel = actionLabel,
                 duration = duration,
+                queuePolicy = queuePolicy,
                 onAction = onAction,
                 onDismiss = onDismiss,
             ),
@@ -90,8 +92,9 @@ fun UiTreeBuilder.Toast(
     visible: Boolean,
     message: String,
     duration: ToastDuration = ToastDuration.Short,
+    queuePolicy: TransientFeedbackQueuePolicy = TransientFeedbackQueuePolicy.Enqueue,
     requestKey: String = "toast",
-    onDismiss: (() -> Unit)? = null,
+    onDismiss: ((TransientFeedbackDismissReason) -> Unit)? = null,
 ) {
     if (!visible) {
         return
@@ -103,6 +106,7 @@ fun UiTreeBuilder.Toast(
             payload = ToastOverlaySpec(
                 message = message,
                 duration = duration,
+                queuePolicy = queuePolicy,
                 onDismiss = onDismiss,
             ),
         ),
@@ -145,6 +149,8 @@ fun UiTreeBuilder.Popup(
     anchorId: String,
     requestKey: String = "popup",
     alignment: PopupAlignment = PopupAlignment.BelowStart,
+    overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp,
+    windowMargin: Int = 8.dp,
     dismissOnClickOutside: Boolean = true,
     focusable: Boolean = true,
     offsetX: Int = 0,
@@ -162,6 +168,8 @@ fun UiTreeBuilder.Popup(
             payload = PopupOverlaySpec(
                 anchorId = anchorId,
                 alignment = alignment,
+                overflowPolicy = overflowPolicy,
+                windowMargin = windowMargin,
                 dismissOnClickOutside = dismissOnClickOutside,
                 focusable = focusable,
                 offsetX = offsetX,

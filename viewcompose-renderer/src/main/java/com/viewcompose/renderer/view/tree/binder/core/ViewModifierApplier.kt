@@ -1,9 +1,11 @@
 package com.viewcompose.renderer.view.tree
 
 import android.view.View
+import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.resolve
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.shape.UiShape
 
 internal object ViewModifierApplier {
     fun bindView(
@@ -35,18 +37,23 @@ internal object ViewModifierApplier {
         backgroundColor: Int,
         borderWidth: Int,
         borderColor: Int,
-        cornerRadius: Int,
+        shape: UiShape,
         rippleColor: Int,
         clickable: Boolean,
     ) {
-        ModifierSurfaceStyleApplier.applyStylePatch(
+        val resolved = view.getTag(R.id.viewcompose_resolved_modifiers) as? ResolvedModifiers
+        ModifierSurfaceStyleApplier.applyBackgroundAndInteraction(
             view = view,
-            backgroundColor = backgroundColor,
-            borderWidth = borderWidth,
-            borderColor = borderColor,
-            cornerRadius = cornerRadius,
+            backgroundDrawableResId = resolved?.backgroundDrawableRes?.resId,
+            backgroundColor = resolved?.backgroundColor?.color ?: backgroundColor,
+            borderWidth = resolved?.border?.width ?: borderWidth,
+            borderColor = resolved?.border?.color ?: borderColor,
+            cornerRadius = resolved?.cornerRadius,
             rippleColor = rippleColor,
-            clickable = clickable,
+            clickable = resolved?.clickable != null || clickable,
+            forceClip = resolved?.graphicsLayer?.clip ?: (resolved?.clip?.clip ?: false),
+            shape = resolved?.shape?.shape
+                ?: if (resolved?.cornerRadius == null) shape else null,
         )
     }
 
@@ -56,6 +63,7 @@ internal object ViewModifierApplier {
         defaultRippleColor: Int,
         resolved: ResolvedModifiers = node.modifier.resolve(),
     ) {
+        view.setTag(R.id.viewcompose_resolved_modifiers, resolved)
         val nodeStyle = ModifierNodeStyleResolver.resolveNodeStyle(
             node = node,
             resolved = resolved,
@@ -80,9 +88,17 @@ internal object ViewModifierApplier {
             minHeight = hostStyle.minHeight,
             minWidth = hostStyle.minWidth,
         )
+        ModifierSemanticsApplier.apply(
+            view = view,
+            semantics = resolved.semantics,
+        )
         ModifierInteractionApplier.applyClickAndFocusState(
             view = view,
             node = node,
+            resolved = resolved,
+        )
+        ModifierNestedScrollApplier.apply(
+            view = view,
             resolved = resolved,
         )
         ModifierInsetsApplier.applyHostPaddingWhenNoInsets(

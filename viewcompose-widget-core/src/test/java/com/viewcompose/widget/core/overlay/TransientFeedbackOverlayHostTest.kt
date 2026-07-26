@@ -5,137 +5,271 @@ import org.junit.Test
 
 class TransientFeedbackOverlayHostTest {
     @Test
-    fun `shows snackbar request on first commit`() {
-        val snackbarPresenter = RecordingSnackbarPresenter()
-        val toastPresenter = RecordingToastPresenter()
-        val host = TransientFeedbackOverlayHost(snackbarPresenter, toastPresenter)
+    fun `shows first feedback request and does not re-show equal declaration`() {
+        val fixture = Fixture()
+        val request = snackbarRequest(key = "snackbar", message = "Saved")
 
-        host.commit(
-            sessionId = OverlaySessionId("session-1"),
-            requests = listOf(
-                OverlayRequest(
-                    key = "snackbar",
-                    type = OverlayType.Snackbar,
-                    payload = SnackbarOverlaySpec(message = "Saved"),
+        fixture.host.commit(fixture.sessionId, listOf(request))
+        fixture.host.commit(fixture.sessionId, listOf(request))
+
+        assertEquals(
+            listOf("show:session-1:snackbar:Saved"),
+            fixture.snackbarPresenter.events,
+        )
+        assertEquals(
+            TransientFeedbackQueueSnapshot(
+                active = OverlayEntryId(fixture.sessionId, "snackbar"),
+                pending = emptyList(),
+                consumed = emptySet(),
+            ),
+            fixture.host.snapshot(),
+        )
+    }
+
+    @Test
+    fun `queues snackbar and toast in one deterministic lane`() {
+        val fixture = Fixture()
+
+        fixture.host.commit(
+            fixture.sessionId,
+            listOf(
+                snackbarRequest(key = "save", message = "Saved"),
+                toastRequest(key = "copy", message = "Copied"),
+            ),
+        )
+
+        assertEquals(listOf("show:session-1:save:Saved"), fixture.snackbarPresenter.events)
+        assertEquals(emptyList<String>(), fixture.toastPresenter.events)
+
+        fixture.snackbarPresenter.complete(
+            entryId = OverlayEntryId(fixture.sessionId, "save"),
+            reason = TransientFeedbackDismissReason.Timeout,
+        )
+
+        assertEquals(listOf("show:session-1:copy:Copied"), fixture.toastPresenter.events)
+    }
+
+    @Test
+    fun `replace current policy dismisses active feedback before replacement`() {
+        val fixture = Fixture()
+        fixture.host.commit(
+            fixture.sessionId,
+            listOf(snackbarRequest(key = "save", message = "Saved")),
+        )
+
+        fixture.host.commit(
+            fixture.sessionId,
+            listOf(
+                snackbarRequest(key = "save", message = "Saved"),
+                toastRequest(
+                    key = "error",
+                    message = "Failed",
+                    queuePolicy = TransientFeedbackQueuePolicy.ReplaceCurrent,
                 ),
             ),
         )
 
-        assertEquals(listOf("show:session-1:snackbar:Saved"), snackbarPresenter.events)
-        assertEquals(emptyList<String>(), toastPresenter.events)
+        assertEquals(
+            listOf(
+                "show:session-1:save:Saved",
+                "dismiss:session-1:save:Replaced",
+            ),
+            fixture.snackbarPresenter.events,
+        )
+        assertEquals(listOf("show:session-1:error:Failed"), fixture.toastPresenter.events)
     }
 
     @Test
-    fun `does not re-show equal transient feedback request`() {
-        val snackbarPresenter = RecordingSnackbarPresenter()
-        val toastPresenter = RecordingToastPresenter()
-        val host = TransientFeedbackOverlayHost(snackbarPresenter, toastPresenter)
-        val request = OverlayRequest(
-            key = "toast",
-            type = OverlayType.Toast,
-            payload = ToastOverlaySpec(message = "Copied"),
+    fun `changed request with same key replaces its active version`() {
+        val fixture = Fixture()
+        fixture.host.commit(
+            fixture.sessionId,
+            listOf(snackbarRequest(key = "status", message = "Saving")),
         )
 
-        host.commit(OverlaySessionId("session-1"), listOf(request))
-        host.commit(OverlaySessionId("session-1"), listOf(request))
+        fixture.host.commit(
+            fixture.sessionId,
+            listOf(snackbarRequest(key = "status", message = "Saved")),
+        )
 
-        assertEquals(listOf("show:session-1:toast:Copied"), toastPresenter.events)
+        assertEquals(
+            listOf(
+                "show:session-1:status:Saving",
+                "dismiss:session-1:status:Replaced",
+                "show:session-1:status:Saved",
+            ),
+            fixture.snackbarPresenter.events,
+        )
     }
 
     @Test
-    fun `dismisses removed request on next commit`() {
-        val snackbarPresenter = RecordingSnackbarPresenter()
-        val toastPresenter = RecordingToastPresenter()
-        val host = TransientFeedbackOverlayHost(snackbarPresenter, toastPresenter)
-        val sessionId = OverlaySessionId("session-1")
+    fun `drop if busy reports reason once and stays consumed while declared`() {
+        val fixture = Fixture()
+        val dismissReasons = mutableListOf<TransientFeedbackDismissReason>()
+        val active = snackbarRequest(key = "save", message = "Saved")
+        val dropped = toastRequest(
+            key = "copy",
+            message = "Copied",
+            queuePolicy = TransientFeedbackQueuePolicy.DropIfBusy,
+            onDismiss = dismissReasons::add,
+        )
 
-        host.commit(
-            sessionId = sessionId,
-            requests = listOf(
-                OverlayRequest(
+        fixture.host.commit(fixture.sessionId, listOf(active, dropped))
+        fixture.host.commit(fixture.sessionId, listOf(active, dropped))
+
+        assertEquals(listOf(TransientFeedbackDismissReason.Dropped), dismissReasons)
+        assertEquals(emptyList<String>(), fixture.toastPresenter.events)
+        assertEquals(
+            setOf(OverlayEntryId(fixture.sessionId, "copy")),
+            fixture.host.snapshot().consumed,
+        )
+    }
+
+    @Test
+    fun `removed request is dismissed with structured reason`() {
+        val fixture = Fixture()
+        val dismissReasons = mutableListOf<TransientFeedbackDismissReason>()
+        fixture.host.commit(
+            fixture.sessionId,
+            listOf(
+                snackbarRequest(
                     key = "snackbar",
-                    type = OverlayType.Snackbar,
-                    payload = SnackbarOverlaySpec(message = "Saved"),
+                    message = "Saved",
+                    onDismiss = dismissReasons::add,
                 ),
             ),
         )
-        host.commit(sessionId = sessionId, requests = emptyList())
+
+        fixture.host.commit(fixture.sessionId, emptyList())
 
         assertEquals(
             listOf(
                 "show:session-1:snackbar:Saved",
-                "dismiss:session-1:snackbar",
+                "dismiss:session-1:snackbar:Removed",
             ),
-            snackbarPresenter.events,
+            fixture.snackbarPresenter.events,
+        )
+        assertEquals(listOf(TransientFeedbackDismissReason.Removed), dismissReasons)
+        assertEquals(
+            TransientFeedbackQueueSnapshot(null, emptyList(), emptySet()),
+            fixture.host.snapshot(),
         )
     }
 
     @Test
-    fun `clear only dismisses matching session requests`() {
-        val snackbarPresenter = RecordingSnackbarPresenter()
-        val toastPresenter = RecordingToastPresenter()
-        val host = TransientFeedbackOverlayHost(snackbarPresenter, toastPresenter)
-
-        host.commit(
-            sessionId = OverlaySessionId("session-1"),
-            requests = listOf(
-                OverlayRequest(
-                    key = "toast",
-                    type = OverlayType.Toast,
-                    payload = ToastOverlaySpec(message = "Copied"),
-                ),
-            ),
+    fun `clear removes only matching session and advances other session`() {
+        val fixture = Fixture()
+        val secondSession = OverlaySessionId("session-2")
+        fixture.host.commit(
+            fixture.sessionId,
+            listOf(toastRequest(key = "first", message = "Copied")),
         )
-        host.commit(
-            sessionId = OverlaySessionId("session-2"),
-            requests = listOf(
-                OverlayRequest(
-                    key = "toast",
-                    type = OverlayType.Toast,
-                    payload = ToastOverlaySpec(message = "Pinned"),
-                ),
-            ),
+        fixture.host.commit(
+            secondSession,
+            listOf(toastRequest(key = "second", message = "Pinned")),
         )
 
-        host.clear(OverlaySessionId("session-1"))
+        fixture.host.clear(fixture.sessionId)
 
         assertEquals(
             listOf(
-                "show:session-1:toast:Copied",
-                "show:session-2:toast:Pinned",
-                "dismiss:session-1:toast",
+                "show:session-1:first:Copied",
+                "dismiss:session-1:first:SessionCleared",
+                "show:session-2:second:Pinned",
             ),
-            toastPresenter.events,
+            fixture.toastPresenter.events,
         )
+    }
+
+    private class Fixture {
+        val sessionId = OverlaySessionId("session-1")
+        val snackbarPresenter = RecordingSnackbarPresenter()
+        val toastPresenter = RecordingToastPresenter()
+        val host = TransientFeedbackOverlayHost(snackbarPresenter, toastPresenter)
     }
 
     private class RecordingSnackbarPresenter : SnackbarOverlayPresenter {
         val events = mutableListOf<String>()
+        private val callbacks = mutableMapOf<OverlayEntryId, (TransientFeedbackDismissReason) -> Unit>()
 
         override fun show(
             entryId: OverlayEntryId,
             spec: SnackbarOverlaySpec,
+            onDismissed: (TransientFeedbackDismissReason) -> Unit,
         ) {
             events += "show:${entryId.sessionId.value}:${entryId.requestKey}:${spec.message}"
+            callbacks[entryId] = onDismissed
         }
 
-        override fun dismiss(entryId: OverlayEntryId) {
-            events += "dismiss:${entryId.sessionId.value}:${entryId.requestKey}"
+        override fun dismiss(
+            entryId: OverlayEntryId,
+            reason: TransientFeedbackDismissReason,
+        ) {
+            events += "dismiss:${entryId.sessionId.value}:${entryId.requestKey}:$reason"
+            complete(entryId, reason)
+        }
+
+        fun complete(
+            entryId: OverlayEntryId,
+            reason: TransientFeedbackDismissReason,
+        ) {
+            callbacks.remove(entryId)?.invoke(reason)
         }
     }
 
     private class RecordingToastPresenter : ToastOverlayPresenter {
         val events = mutableListOf<String>()
+        private val callbacks = mutableMapOf<OverlayEntryId, (TransientFeedbackDismissReason) -> Unit>()
 
         override fun show(
             entryId: OverlayEntryId,
             spec: ToastOverlaySpec,
+            onDismissed: (TransientFeedbackDismissReason) -> Unit,
         ) {
             events += "show:${entryId.sessionId.value}:${entryId.requestKey}:${spec.message}"
+            callbacks[entryId] = onDismissed
         }
 
-        override fun dismiss(entryId: OverlayEntryId) {
-            events += "dismiss:${entryId.sessionId.value}:${entryId.requestKey}"
+        override fun dismiss(
+            entryId: OverlayEntryId,
+            reason: TransientFeedbackDismissReason,
+        ) {
+            events += "dismiss:${entryId.sessionId.value}:${entryId.requestKey}:$reason"
+            callbacks.remove(entryId)?.invoke(reason)
         }
+    }
+
+    private fun snackbarRequest(
+        key: String,
+        message: String,
+        queuePolicy: TransientFeedbackQueuePolicy = TransientFeedbackQueuePolicy.Enqueue,
+        onDismiss: ((TransientFeedbackDismissReason) -> Unit)? = null,
+    ): OverlayRequest {
+        return OverlayRequest(
+            key = key,
+            type = OverlayType.Snackbar,
+            payload = SnackbarOverlaySpec(
+                message = message,
+                queuePolicy = queuePolicy,
+                onDismiss = onDismiss,
+            ),
+        )
+    }
+
+    private fun toastRequest(
+        key: String,
+        message: String,
+        queuePolicy: TransientFeedbackQueuePolicy = TransientFeedbackQueuePolicy.Enqueue,
+        onDismiss: ((TransientFeedbackDismissReason) -> Unit)? = null,
+    ): OverlayRequest {
+        return OverlayRequest(
+            key = key,
+            type = OverlayType.Toast,
+            payload = ToastOverlaySpec(
+                message = message,
+                queuePolicy = queuePolicy,
+                onDismiss = onDismiss,
+            ),
+        )
     }
 }

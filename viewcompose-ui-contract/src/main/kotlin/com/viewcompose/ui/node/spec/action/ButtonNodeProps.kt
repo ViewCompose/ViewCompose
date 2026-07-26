@@ -1,6 +1,7 @@
 package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.shape.UiShape
 
 data class ButtonNodeProps(
     val text: CharSequence?,
@@ -16,7 +17,7 @@ data class ButtonNodeProps(
     val backgroundColor: Int,
     val borderWidth: Int,
     val borderColor: Int,
-    val cornerRadius: Int,
+    val shape: UiShape,
     val rippleColor: Int,
     val minHeight: Int,
     val paddingHorizontal: Int,

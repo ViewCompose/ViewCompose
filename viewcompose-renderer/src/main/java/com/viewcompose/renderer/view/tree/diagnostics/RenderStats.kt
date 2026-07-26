@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.spec.AndroidViewOperation
 
 data class RenderStats(
     val inserts: Int = 0,
@@ -71,6 +72,59 @@ data class RenderTreeResult(
     val stats: RenderStats,
     val structure: RenderStructureStats = RenderStructureStats(),
     val warnings: List<String> = emptyList(),
+    val tree: List<RenderTreeNode> = emptyList(),
+    val patches: List<RenderPatchRecord> = emptyList(),
+    val commitEffects: List<RenderTreeCommitEffect> = emptyList(),
+    val commitFailures: List<RenderTreeCommitFailure> = emptyList(),
+)
+
+data class RenderTreeNode(
+    val type: NodeType,
+    val key: Any?,
+    val children: List<RenderTreeNode> = emptyList(),
+) {
+    companion object {
+        fun from(nodes: List<com.viewcompose.ui.node.VNode>): List<RenderTreeNode> {
+            return nodes.map { node ->
+                RenderTreeNode(
+                    type = node.type,
+                    key = node.key,
+                    children = from(node.children),
+                )
+            }
+        }
+    }
+}
+
+data class RenderPatchRecord(
+    val operation: RenderPatchOperation,
+    val type: NodeType,
+    val key: Any?,
+    val parentKey: Any?,
+    val index: Int,
+    val moved: Boolean = false,
+    val detail: String? = null,
+)
+
+enum class RenderPatchOperation {
+    Insert,
+    Remove,
+    Rebind,
+    Patch,
+    SkipSelf,
+    SkipSubtree,
+}
+
+data class RenderTreeCommitEffect(
+    val operation: AndroidViewOperation,
+    val nodeKey: Any?,
+    val commit: () -> Unit,
+)
+
+data class RenderTreeCommitFailure(
+    val operation: AndroidViewOperation?,
+    val nodeKey: Any?,
+    val cause: Throwable,
 )
 
 enum class ReuseBindingResult {

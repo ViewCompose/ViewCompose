@@ -5,6 +5,7 @@ import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.cornerRadius
@@ -139,7 +140,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .backgroundColor(SurfaceDefaults.backgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp),
                 ) {
                     Text(text = "前导")
@@ -202,7 +203,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(140.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .clickable { boxTapState.value = boxTapState.value + 1 }
                         .padding(12.dp),
                 ) {
@@ -268,7 +269,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .backgroundColor(SurfaceDefaults.backgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .margin(bottom = 12.dp),
                 ) {
@@ -303,7 +304,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp),
                 ) {
                     Surface(modifier = Modifier.padding(8.dp)) {
@@ -408,7 +409,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(200.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_SCROLLABLE_COLUMN),
                 ) {
@@ -439,7 +440,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(8.dp)
                         .testTag(DemoTestTags.LAYOUTS_SCROLLABLE_ROW),
                 ) {
@@ -464,7 +465,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(188.dp)
                         .backgroundColor(SurfaceDefaults.backgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_BASIC_CONTAINER),
                 ) {
@@ -530,7 +531,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(176.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_CONTAINER),
                 ) {
@@ -587,7 +588,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(148.dp)
                         .backgroundColor(SurfaceDefaults.backgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_CHAIN_CONTAINER),
                 ) {
@@ -681,7 +682,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(156.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp),
                 ) {
                     Text(
@@ -717,7 +718,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(232.dp)
                         .backgroundColor(SurfaceDefaults.backgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER),
                 ) {
@@ -867,7 +868,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(220.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_CONTAINER),
                 ) {
@@ -959,7 +960,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(208.dp)
                         .backgroundColor(SurfaceDefaults.backgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_CONTAINER),
                 ) {
@@ -1097,7 +1098,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(220.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_CONTAINER),
                 ) {
@@ -1270,7 +1271,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .height(172.dp)
                         .backgroundColor(SurfaceDefaults.backgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_CONTAINER),
                 ) {
@@ -1338,7 +1339,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .testTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CONTAINER),
                 ) {

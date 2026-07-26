@@ -284,6 +284,67 @@ tasks.register("qaFull") {
     dependsOn("qaQuick", ":app:connectedDebugAndroidTest")
 }
 
+tasks.register("qaRelease") {
+    group = "verification"
+    description = "Assemble the optimized release and non-debuggable benchmark artifacts."
+    dependsOn(
+        ":app:assembleRelease",
+        ":app:assembleBenchmark",
+        ":viewcompose-benchmark:assembleBenchmark",
+    )
+}
+
+tasks.register("benchmarkRelease") {
+    group = "verification"
+    description = "Run release macrobenchmarks on a connected device or emulator."
+    dependsOn(":viewcompose-benchmark:connectedBenchmarkAndroidTest")
+}
+
+tasks.register<Exec>("benchmarkComparisonReport") {
+    group = "verification"
+    description = "Generate paired ViewCompose/Compose benchmark Markdown and JSON reports."
+    workingDir(rootDir)
+    mustRunAfter("benchmarkRelease")
+    doFirst {
+        val current = providers.gradleProperty("benchmarkResult").orNull
+            ?: "viewcompose-benchmark/build/outputs/connected_android_test_additional_output"
+        val command = mutableListOf(
+            "python3",
+            rootDir.resolve("tools/performance/compare_macrobenchmarks.py").absolutePath,
+            current,
+        )
+        providers.gradleProperty("benchmarkBaseline").orNull?.let { baseline ->
+            command += listOf(
+                "--baseline",
+                baseline,
+                "--enforce",
+            )
+        }
+        commandLine(command)
+    }
+}
+
+tasks.register("benchmarkCompare") {
+    group = "verification"
+    description = "Run release macrobenchmarks and generate the paired comparison report."
+    dependsOn(
+        "benchmarkRelease",
+        "benchmarkComparisonReport",
+    )
+}
+
+tasks.register<Exec>("testBenchmarkComparisonTool") {
+    group = "verification"
+    description = "Run unit tests for the Macrobenchmark comparison report tool."
+    workingDir(rootDir.resolve("tools/performance"))
+    commandLine(
+        "python3",
+        "-m",
+        "unittest",
+        "test_compare_macrobenchmarks.py",
+    )
+}
+
 tasks.register("qaPreview") {
     group = "verification"
     description = "Run preview snapshot verification for viewcompose-preview."

@@ -3,6 +3,7 @@ package com.viewcompose
 import android.widget.TextView
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -14,6 +15,8 @@ import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.host.android.AndroidView
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.policy.LazyContentPadding
+import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.widget.core.Box
 import com.viewcompose.widget.core.Button
@@ -39,6 +42,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.produceState
 import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberLazyListState
 import com.viewcompose.widget.core.sp
 
 internal fun UiTreeBuilder.CollectionPage(
@@ -58,7 +62,6 @@ internal fun UiTreeBuilder.CollectionPage(
         reversedState.value,
     ) {
         value = if (reversedState.value) "列表顺序: C-B-A" else "列表顺序: A-B-C"
-        null
     }
     val keyedItems = if (reversedState.value) {
         listOf("C", "B", "A")
@@ -153,7 +156,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(180.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius()),
+                        .shape(SurfaceDefaults.shape()),
                 ) { item ->
                     Surface(
                         variant = SurfaceVariant.Default,
@@ -204,37 +207,74 @@ internal fun UiTreeBuilder.CollectionPage(
             "list" -> ScenarioSection(
                 kind = ScenarioKind.Core,
                 title = "LazyColumn",
-                subtitle = "每个 item 保持独立的本地状态，键控排序和内容更新通过 diff 层处理。",
+                subtitle = "完整布局状态、sticky header、contentType、预取与键控 item 状态。",
             ) {
+                val listState = rememberLazyListState()
+                Text(
+                    text = "可见 ${listState.layoutInfo.visibleItemsInfo.map { it.index }} · " +
+                        "可前滚 ${listState.canScrollForward} · 滚动中 ${listState.isScrollInProgress}",
+                    style = UiTextStyle(fontSizeSp = 12.sp),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier.margin(bottom = 8.dp),
+                )
                 LazyColumn(
-                    items = keyedItems,
-                    key = { item -> item.id },
+                    state = listState,
+                    contentPadding = LazyContentPadding.symmetric(
+                        horizontal = 8.dp,
+                        vertical = 4.dp,
+                    ),
+                    prefetchPolicy = LazyLayoutPrefetchPolicy(
+                        initialPrefetchItemCount = 4,
+                        itemViewCacheSize = 4,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(280.dp),
-                ) { item ->
-                    val itemCountState = remember { mutableStateOf(0) }
-                    Column(
-                        key = item.id,
-                        spacing = 6.dp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .backgroundColor(SurfaceDefaults.backgroundColor())
-                            .padding(12.dp),
+                ) {
+                    stickyHeader(
+                        key = "lazy-state-header",
+                        contentType = "header",
                     ) {
-                        val titleModifier = if (item.id == "A") {
-                            Modifier.testTag(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
-                        } else {
-                            Modifier
+                        Surface(
+                            variant = SurfaceVariant.Variant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        ) {
+                            Text(
+                                text = "固定标题 · ${keyedItems.size} 项",
+                                style = UiTextStyle(fontSizeSp = 13.sp),
+                            )
                         }
-                        Text(
-                            text = item.title,
-                            modifier = titleModifier,
-                        )
-                        Button(
-                            text = "项 ${item.id} 点击: ${itemCountState.value}",
-                            onClick = { itemCountState.value = itemCountState.value + 1 },
-                        )
+                    }
+                    items(
+                        items = keyedItems,
+                        key = { item -> item.id },
+                        contentType = { "stateful-row" },
+                    ) { item ->
+                        val itemCountState = remember { mutableStateOf(0) }
+                        Column(
+                            key = item.id,
+                            spacing = 6.dp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .backgroundColor(SurfaceDefaults.backgroundColor())
+                                .padding(12.dp),
+                        ) {
+                            val titleModifier = if (item.id == "A") {
+                                Modifier.testTag(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                            } else {
+                                Modifier
+                            }
+                            Text(
+                                text = item.title,
+                                modifier = titleModifier,
+                            )
+                            Button(
+                                text = "项 ${item.id} 点击: ${itemCountState.value}",
+                                onClick = { itemCountState.value = itemCountState.value + 1 },
+                            )
+                        }
                     }
                 }
             }
@@ -302,7 +342,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(320.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius()),
+                        .shape(SurfaceDefaults.shape()),
                 ) { item ->
                     val itemCountState = remember { mutableStateOf(0) }
                     Surface(
@@ -457,7 +497,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(400.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius()),
+                        .shape(SurfaceDefaults.shape()),
                 ) { item ->
                     Card(
                         variant = CardVariant.Filled,

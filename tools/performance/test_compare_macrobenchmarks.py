@@ -1,0 +1,185 @@
+import json
+import tempfile
+import unittest
+from contextlib import redirect_stdout
+from io import StringIO
+from pathlib import Path
+
+import compare_macrobenchmarks as comparison
+
+
+def benchmark_entry(
+    name: str,
+    frame_p50: float,
+    frame_p95: float,
+    memory_kb: float,
+) -> dict:
+    return {
+        "name": name,
+        "metrics": {
+            "memoryHeapSizeMaxKb": {
+                "median": memory_kb,
+                "runs": [memory_kb, memory_kb * 1.01],
+            },
+            "memoryRssAnonMaxKb": {
+                "median": memory_kb * 2,
+                "runs": [memory_kb * 2, memory_kb * 2.01],
+            },
+        },
+        "sampledMetrics": {
+            "frameDurationCpuMs": {
+                "P50": frame_p50,
+                "P95": frame_p95,
+                "runs": [
+                    [frame_p50 * 0.9, frame_p50, frame_p95],
+                    [frame_p50, frame_p50 * 1.05, frame_p95 * 1.02],
+                ],
+            },
+            "frameOverrunMs": {
+                "P50": -10.0,
+                "P95": -2.0,
+                "runs": [[-11.0, -10.0, -2.0], [-10.5, -9.5, -1.5]],
+            },
+        },
+    }
+
+
+def result(
+    viewcompose_multiplier: float = 1.0,
+    compose_multiplier: float = 1.0,
+    fingerprint: str = "device/build",
+) -> dict:
+    entries = []
+    for _, viewcompose_name, compose_name in comparison.SCENARIOS:
+        entries.append(
+            benchmark_entry(
+                viewcompose_name,
+                4.0 * viewcompose_multiplier,
+                8.0 * viewcompose_multiplier,
+                20_000 * viewcompose_multiplier,
+            ),
+        )
+        entries.append(
+            benchmark_entry(
+                compose_name,
+                2.0 * compose_multiplier,
+                4.0 * compose_multiplier,
+                10_000 * compose_multiplier,
+            ),
+        )
+    return {
+        "context": {
+            "build": {
+                "brand": "test",
+                "model": "device",
+                "fingerprint": fingerprint,
+                "version": {"sdk": 36},
+            },
+            "cpuLocked": True,
+            "cpuMaxFreqHz": 1,
+            "compilationMode": "run-from-apk",
+        },
+        "benchmarks": entries,
+    }
+
+
+class CompareMacrobenchmarksTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.policy = {
+            "maxRunCoefficientOfVariation": 0.15,
+            "regressionThresholds": {
+                "frameDurationCpuMs.P50": {
+                    "maxRegressionPercent": 10.0,
+                    "minimumDelta": 0.3,
+                },
+            },
+        }
+
+    def test_builds_all_paired_comparisons(self) -> None:
+        entries = comparison.benchmark_entries(result())
+        comparisons = comparison.build_comparisons(entries)
+
+        self.assertEqual(24, len(comparisons))
+        list_scroll = next(
+            item
+            for item in comparisons
+            if item.scenario == "list_scroll"
+            and item.metric == "frameDurationCpuMs"
+            and item.statistic == "P50"
+        )
+        self.assertEqual(4.0, list_scroll.viewcompose)
+        self.assertEqual(2.0, list_scroll.compose)
+        self.assertEqual(100.0, list_scroll.relative_percent)
+
+    def test_detects_regression_when_compose_control_is_stable(self) -> None:
+        baseline = comparison.build_comparisons(
+            comparison.benchmark_entries(result()),
+        )
+        current = comparison.build_comparisons(
+            comparison.benchmark_entries(
+                result(viewcompose_multiplier=1.25),
+            ),
+        )
+
+        regressions = comparison.build_regressions(
+            current=current,
+            baseline=baseline,
+            policy=self.policy,
+        )
+
+        self.assertTrue(all(item.failed for item in regressions))
+
+    def test_common_device_slowdown_does_not_fail_normalized_gate(self) -> None:
+        baseline = comparison.build_comparisons(
+            comparison.benchmark_entries(result()),
+        )
+        current = comparison.build_comparisons(
+            comparison.benchmark_entries(
+                result(
+                    viewcompose_multiplier=1.25,
+                    compose_multiplier=1.25,
+                ),
+            ),
+        )
+
+        regressions = comparison.build_regressions(
+            current=current,
+            baseline=baseline,
+            policy=self.policy,
+        )
+
+        self.assertFalse(any(item.failed for item in regressions))
+
+    def test_cli_writes_markdown_and_json_reports(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            current = root / "benchmarkData.json"
+            current.write_text(json.dumps(result()), encoding="utf-8")
+            policy = root / "policy.json"
+            policy.write_text(json.dumps(self.policy), encoding="utf-8")
+            markdown = root / "report.md"
+            json_output = root / "report.json"
+
+            with redirect_stdout(StringIO()):
+                exit_code = comparison.main(
+                    [
+                        str(current),
+                        "--policy",
+                        str(policy),
+                        "--output",
+                        str(markdown),
+                        "--json-output",
+                        str(json_output),
+                    ],
+                )
+
+            self.assertEqual(0, exit_code)
+            self.assertIn("list_scroll", markdown.read_text(encoding="utf-8"))
+            self.assertEqual(
+                "NOT_RUN",
+                json.loads(json_output.read_text(encoding="utf-8"))["gateStatus"],
+            )
+
+
+if __name__ == "__main__":
+    unittest.main()

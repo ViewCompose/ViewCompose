@@ -19,19 +19,39 @@ import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
 
 internal object AnimatedSizeNodeWrapper {
     fun wrapTree(nodes: List<VNode>): List<VNode> {
-        return nodes.map(::wrapNode)
+        var changedNodes: MutableList<VNode>? = null
+        nodes.forEachIndexed { index, node ->
+            val wrapped = wrapNode(node)
+            if (wrapped !== node && changedNodes == null) {
+                changedNodes = ArrayList<VNode>(nodes.size).also { result ->
+                    repeat(index) { previousIndex ->
+                        result += nodes[previousIndex]
+                    }
+                }
+            }
+            changedNodes?.add(wrapped)
+        }
+        return changedNodes ?: nodes
     }
 
     private fun wrapNode(node: VNode): VNode {
         val wrappedChildren = wrapTree(node.children)
         if (node.type == NodeType.AnimatedSizeHost) {
-            return node.copy(children = wrappedChildren)
+            return if (wrappedChildren === node.children) {
+                node
+            } else {
+                node.copy(children = wrappedChildren)
+            }
         }
         val animateElement = node.modifier.elements
             .asReversed()
             .filterIsInstance<AnimateContentSizeModifierElement>()
             .firstOrNull()
-            ?: return node.copy(children = wrappedChildren)
+            ?: return if (wrappedChildren === node.children) {
+                node
+            } else {
+                node.copy(children = wrappedChildren)
+            }
         val withoutAnimate = node.modifier.elements.filterNot { it is AnimateContentSizeModifierElement }
         val (hostElements, childElements) = splitHostAndChildElements(withoutAnimate)
         val wrappedChild = node.copy(

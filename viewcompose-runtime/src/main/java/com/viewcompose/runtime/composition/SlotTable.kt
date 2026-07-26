@@ -4,6 +4,7 @@ class SlotTable {
     val root: RecomposeScope = RecomposeScope(
         signature = RootSignature,
         parent = null,
+        saveablePath = "root",
     )
 
     fun dispose() {

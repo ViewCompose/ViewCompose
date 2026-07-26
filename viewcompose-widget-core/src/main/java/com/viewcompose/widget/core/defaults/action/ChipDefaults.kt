@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 enum class ChipVariant {
     Assist,
     Filter,
@@ -53,7 +55,7 @@ object ChipDefaults {
         }
     }
 
-    fun cornerRadius(): Int = Theme.shapes.smallCornerRadius
+    fun shape(): UiShape = Theme.shapes.small
 
     fun height(): Int = Theme.controls.chip.height
 

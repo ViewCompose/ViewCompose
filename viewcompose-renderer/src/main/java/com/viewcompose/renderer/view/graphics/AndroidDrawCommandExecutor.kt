@@ -81,6 +81,10 @@ internal object AndroidDrawCommandExecutor {
                     command.rect.bottom,
                 )
                 is DrawCommand.ClipPath -> canvas.clipPath(command.path.toAndroidPath())
+                is DrawCommand.DrawScene -> drawScene(
+                    canvas = canvas,
+                    command = command,
+                )
                 is DrawCommand.DrawLine -> canvas.drawLine(
                     command.from.x,
                     command.from.y,
@@ -153,6 +157,34 @@ internal object AndroidDrawCommandExecutor {
                     command = command,
                 )
             }
+        }
+    }
+
+    private fun drawScene(
+        canvas: Canvas,
+        command: DrawCommand.DrawScene,
+    ) {
+        val checkpoint = canvas.save()
+        try {
+            canvas.concat(
+                Matrix().apply {
+                    setValues(command.transform.values)
+                },
+            )
+            command.clip?.let { clip ->
+                canvas.clipRect(
+                    clip.left,
+                    clip.top,
+                    clip.right,
+                    clip.bottom,
+                )
+            }
+            execute(
+                canvas = canvas,
+                commands = command.scene.commands,
+            )
+        } finally {
+            canvas.restoreToCount(checkpoint)
         }
     }
 

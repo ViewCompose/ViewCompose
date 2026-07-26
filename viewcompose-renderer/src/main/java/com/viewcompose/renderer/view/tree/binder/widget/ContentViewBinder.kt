@@ -22,11 +22,12 @@ import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.renderer.interop.toTypefaceOrNull
 import com.viewcompose.renderer.view.container.DeclarativeCanvasLayout
+import com.viewcompose.text.TextDocument
 import com.viewcompose.ui.graphics.DrawBlock
 
 internal object ContentViewBinder {
     data class TextSpec(
-        val text: CharSequence?,
+        val document: TextDocument,
         val maxLines: Int,
         val overflow: TextOverflow,
         val gravity: Int,
@@ -57,7 +58,7 @@ internal object ContentViewBinder {
         view: TextView,
         spec: TextSpec,
     ) {
-        view.text = spec.text
+        view.text = AndroidTextDocumentAdapter.toCharSequence(view, spec.document)
         view.maxLines = spec.maxLines
         view.ellipsize = when (spec.overflow) {
             TextOverflow.Clip -> null
@@ -123,7 +124,7 @@ internal object ContentViewBinder {
     fun readTextSpec(node: VNode): TextSpec {
         val spec = node.requireSpec<TextNodeProps>()
         return TextSpec(
-            text = spec.text,
+            document = spec.document,
             maxLines = spec.maxLines,
             overflow = spec.overflow,
             gravity = spec.textAlign.toTextGravity(),

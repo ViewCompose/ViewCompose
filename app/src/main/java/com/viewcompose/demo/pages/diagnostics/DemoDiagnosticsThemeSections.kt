@@ -3,6 +3,7 @@ package com.viewcompose
 import android.view.ViewGroup
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.cornerRadius
@@ -13,6 +14,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.widget.core.Badge
 import com.viewcompose.widget.core.BadgedBox
 import com.viewcompose.widget.core.Box
@@ -59,6 +61,7 @@ import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.widget.core.sp
 import com.viewcompose.runtime.mutableStateOf
 
@@ -124,7 +127,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotSection(root: ViewGroup) {
         DiagnosticFactGroup(
             title = "Shape + Control Sizing",
             facts = listOf(
-                DiagnosticFact("small / medium / large", "${Theme.shapes.smallCornerRadius}px / ${Theme.shapes.mediumCornerRadius}px / ${Theme.shapes.largeCornerRadius}px"),
+                DiagnosticFact("small / medium / large", "${Theme.shapes.small.demoLabel()} / ${Theme.shapes.medium.demoLabel()} / ${Theme.shapes.large.demoLabel()}"),
                 DiagnosticFact("Button", "${Theme.controls.button.compactHeight}/${Theme.controls.button.mediumHeight}/${Theme.controls.button.largeHeight}px"),
                 DiagnosticFact("TextField", "${Theme.controls.textField.compactHeight}/${Theme.controls.textField.mediumHeight}/${Theme.controls.textField.largeHeight}px"),
                 DiagnosticFact("SearchBar", "${Theme.controls.searchBar.height}px"),
@@ -342,7 +345,10 @@ private fun UiTreeBuilder.DiagnosticsThemeActionSection() {
 }
 
 private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
-    val searchQueryState = remember { mutableStateOf("Theme token") }
+    val searchQueryState = rememberTextFieldState("Theme token")
+    val normalFieldState = rememberTextFieldState("theme@viewcompose.dev")
+    val errorFieldState = rememberTextFieldState("error@viewcompose.dev")
+    val disabledFieldState = rememberTextFieldState("Disabled field")
     val checkboxState = remember { mutableStateOf(true) }
     val switchState = remember { mutableStateOf(true) }
     val radioState = remember { mutableStateOf(true) }
@@ -353,8 +359,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
         subtitle = "验证 field container、error container、outline variant 和 selection controls 的默认语义。",
     ) {
         TextField(
-            value = "theme@viewcompose.dev",
-            onValueChange = {},
+            state = normalFieldState,
             variant = TextFieldVariant.Outlined,
             size = TextFieldSize.Medium,
             modifier = Modifier
@@ -362,8 +367,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
                 .padding(bottom = 8.dp),
         )
         TextField(
-            value = "error@viewcompose.dev",
-            onValueChange = {},
+            state = errorFieldState,
             variant = TextFieldVariant.Tonal,
             size = TextFieldSize.Medium,
             isError = true,
@@ -373,8 +377,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
                 .padding(bottom = 8.dp),
         )
         TextField(
-            value = "Disabled field",
-            onValueChange = {},
+            state = disabledFieldState,
             enabled = false,
             size = TextFieldSize.Compact,
             modifier = Modifier
@@ -382,8 +385,7 @@ private fun UiTreeBuilder.DiagnosticsThemeInputSection() {
                 .padding(bottom = 8.dp),
         )
         SearchBar(
-            query = searchQueryState.value,
-            onQueryChange = { searchQueryState.value = it },
+            state = searchQueryState,
             onSearch = {},
             placeholder = "Search token",
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
@@ -496,6 +498,12 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
 }
 
 private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
+    val compactFieldState = rememberTextFieldState(
+        "Compact / Medium / Large use Theme.controls.textField.*",
+    )
+    val mediumFieldState = rememberTextFieldState("Medium TextField")
+    val largeFieldState = rememberTextFieldState("Large TextField")
+    val searchState = rememberTextFieldState("Large shape sample")
     ScenarioSection(
         kind = ScenarioKind.Visual,
         title = "Shape / Size 诊断",
@@ -509,15 +517,15 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
         ) {
             ShapeProbe(
                 label = "Small",
-                radius = Theme.shapes.smallCornerRadius,
+                shape = Theme.shapes.small,
                 modifier = Modifier
                     .weight(1f)
                     .testTag(DemoTestTags.DIAGNOSTICS_THEME_SHAPE_SMALL),
             )
-            ShapeProbe("Medium", Theme.shapes.mediumCornerRadius, Modifier.weight(1f))
+            ShapeProbe("Medium", Theme.shapes.medium, Modifier.weight(1f))
             ShapeProbe(
                 label = "Large",
-                radius = Theme.shapes.largeCornerRadius,
+                shape = Theme.shapes.large,
                 modifier = Modifier
                     .weight(1f)
                     .testTag(DemoTestTags.DIAGNOSTICS_THEME_SHAPE_LARGE),
@@ -534,24 +542,21 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
             Button(text = "Large", onClick = {}, size = ButtonSize.Large, modifier = Modifier.weight(1f))
         }
         TextField(
-            value = "Compact / Medium / Large use Theme.controls.textField.*",
-            onValueChange = {},
+            state = compactFieldState,
             size = TextFieldSize.Compact,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
         )
         TextField(
-            value = "Medium TextField",
-            onValueChange = {},
+            state = mediumFieldState,
             size = TextFieldSize.Medium,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
         )
         TextField(
-            value = "Large TextField",
-            onValueChange = {},
+            state = largeFieldState,
             size = TextFieldSize.Large,
             modifier = Modifier
                 .fillMaxWidth()
@@ -567,8 +572,7 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
                 .padding(bottom = 8.dp),
         )
         SearchBar(
-            query = "Large shape sample",
-            onQueryChange = {},
+            state = searchState,
             placeholder = "Search shape",
             leadingIcon = ImageSource.Resource(R.drawable.demo_media_icon),
             modifier = Modifier.fillMaxWidth(),
@@ -607,7 +611,7 @@ private fun UiTreeBuilder.MenuVisualSample() {
         modifier = Modifier
             .fillMaxWidth()
             .backgroundColor(DropdownMenuDefaults.containerColor())
-            .cornerRadius(DropdownMenuDefaults.cornerRadius())
+            .shape(DropdownMenuDefaults.shape())
             .clip()
             .elevation(DropdownMenuDefaults.elevation())
             .padding(vertical = DropdownMenuDefaults.verticalPadding())
@@ -636,7 +640,7 @@ private fun UiTreeBuilder.TooltipVisualSample() {
         Box(
             modifier = Modifier
                 .backgroundColor(TooltipDefaults.containerColor())
-                .cornerRadius(TooltipDefaults.cornerRadius())
+                .shape(TooltipDefaults.shape())
                 .clip()
                 .padding(
                     horizontal = TooltipDefaults.horizontalPadding(),
@@ -658,7 +662,7 @@ private fun UiTreeBuilder.TooltipVisualSample() {
 
 private fun UiTreeBuilder.ShapeProbe(
     label: String,
-    radius: Int,
+    shape: UiShape,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -670,11 +674,11 @@ private fun UiTreeBuilder.ShapeProbe(
                 .fillMaxWidth()
                 .height(56.dp)
                 .backgroundColor(Theme.colors.surfaceVariant)
-                .cornerRadius(radius)
+                .shape(shape)
                 .clip(),
         ) {}
         Text(
-            text = "$label (${radius}px)",
+            text = "$label (${shape.demoLabel()})",
             style = UiTextStyle(fontSizeSp = 12.sp),
             color = TextDefaults.secondaryColor(),
         )

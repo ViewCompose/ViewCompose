@@ -14,6 +14,8 @@ import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -49,12 +51,45 @@ class AnimatedSizeNodeWrapperTest {
     @Test
     fun `keeps tree untouched when animateContentSize is absent`() {
         val original = textNode(modifier = Modifier.width(120))
+        val tree = listOf(original)
 
-        val wrapped = AnimatedSizeNodeWrapper.wrapTree(listOf(original)).single()
+        val wrappedTree = AnimatedSizeNodeWrapper.wrapTree(tree)
+        val wrapped = wrappedTree.single()
 
         assertEquals(NodeType.Text, wrapped.type)
         assertEquals(original.spec, wrapped.spec)
         assertEquals(original.modifier, wrapped.modifier)
+        assertSame(tree, wrappedTree)
+        assertSame(original, wrapped)
+    }
+
+    @Test
+    fun `copies only ancestors of an animated descendant`() {
+        val animated = textNode(
+            modifier = Modifier.then(
+                AnimateContentSizeModifierElement(
+                    animationSpec = ContentSizeTweenSpecModel(
+                        durationMillis = 120,
+                        delayMillis = 0,
+                        easing = ContentSizeEasingModel.Linear,
+                    ),
+                ),
+            ),
+        )
+        val stableSibling = textNode(modifier = Modifier.width(80))
+        val parent = VNode(
+            type = NodeType.Box,
+            spec = com.viewcompose.ui.node.spec.BoxNodeProps(
+                contentAlignment = com.viewcompose.ui.layout.BoxAlignment.TopStart,
+            ),
+            children = listOf(animated, stableSibling),
+        )
+
+        val wrappedParent = AnimatedSizeNodeWrapper.wrapTree(listOf(parent)).single()
+
+        assertNotSame(parent, wrappedParent)
+        assertEquals(NodeType.AnimatedSizeHost, wrappedParent.children.first().type)
+        assertSame(stableSibling, wrappedParent.children[1])
     }
 
     private fun textNode(modifier: Modifier): VNode {

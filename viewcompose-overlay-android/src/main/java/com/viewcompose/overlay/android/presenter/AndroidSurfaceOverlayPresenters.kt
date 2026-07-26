@@ -2,11 +2,13 @@ package com.viewcompose.overlay.android.presenter
 
 import android.app.Dialog
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.view.Gravity
 import android.view.View
 import android.view.View.MeasureSpec
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.Window
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -20,11 +22,15 @@ import com.viewcompose.widget.core.DialogOverlayPresenter
 import com.viewcompose.widget.core.DialogOverlaySpec
 import com.viewcompose.widget.core.DialogPosition
 import com.viewcompose.widget.core.OverlayEntryId
-import com.viewcompose.widget.core.PopupAlignment
+import com.viewcompose.widget.core.PopupBounds
 import com.viewcompose.widget.core.PopupOverlayContent
 import com.viewcompose.widget.core.PopupOverlayHandle
 import com.viewcompose.widget.core.PopupOverlayPresenter
 import com.viewcompose.widget.core.PopupOverlaySpec
+import com.viewcompose.widget.core.PopupOverflowPolicy
+import com.viewcompose.widget.core.PopupPositioner
+import com.viewcompose.widget.core.PopupSize
+import com.viewcompose.widget.core.UiLayoutDirection
 import com.viewcompose.widget.core.OverlaySurfaceSession
 import com.viewcompose.widget.core.createOverlaySurfaceSession
 
@@ -166,14 +172,41 @@ private class AndroidPopupOverlayHandle(
         content = content.surface,
     )
     private var currentSpec = spec
-    private var programmaticDismiss = false
+    private var ignoreNextDismiss = false
+    private var userDismissed = false
+    private var disposed = false
+    private var observedTreeObserver: ViewTreeObserver? = null
+    private var lastX: Int? = null
+    private var lastY: Int? = null
+    private var lastWidth: Int? = null
+    private var lastHeight: Int? = null
+    private val globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+        reposition()
+    }
+    private val scrollChangedListener = ViewTreeObserver.OnScrollChangedListener {
+        reposition()
+    }
+    private val attachStateListener = object : View.OnAttachStateChangeListener {
+        override fun onViewAttachedToWindow(view: View) {
+            attachTreeObservers()
+            reposition()
+        }
+
+        override fun onViewDetachedFromWindow(view: View) {
+            detachTreeObservers()
+            hideWindow()
+        }
+    }
 
     init {
         popupWindow.setOnDismissListener {
-            if (!programmaticDismiss) {
+            if (!ignoreNextDismiss && !disposed) {
+                userDismissed = true
                 currentSpec.onDismissRequest?.invoke()
             }
         }
+        rootView.addOnAttachStateChangeListener(attachStateListener)
+        attachTreeObservers()
         update(
             spec = spec,
             content = content,
@@ -184,51 +217,155 @@ private class AndroidPopupOverlayHandle(
         spec: PopupOverlaySpec,
         content: PopupOverlayContent,
     ) {
-        currentSpec = spec
-        popupWindow.isFocusable = spec.focusable
-        popupWindow.isOutsideTouchable = spec.dismissOnClickOutside
-        surfaceSession.update(content.surface)
-        val anchor = rootView.findAnchorTarget(spec.anchorId)
-        if (anchor == null) {
-            if (popupWindow.isShowing) {
-                dismiss()
-            }
+        if (disposed) {
             return
         }
-        popupContainer.measure(
-            rootView.width.atMostMeasureSpec(),
-            rootView.height.atMostMeasureSpec(),
-        )
-        val popupWidth = popupContainer.measuredWidth
-        val popupHeight = popupContainer.measuredHeight
-        val xOffset = spec.alignment.resolveXOffset(
-            anchorWidth = anchor.width,
-            popupWidth = popupWidth,
-            isRtl = anchor.layoutDirection == View.LAYOUT_DIRECTION_RTL,
-            baseOffset = spec.offsetX,
-        )
-        val yOffset = spec.alignment.resolveYOffset(
-            anchorHeight = anchor.height,
-            popupHeight = popupHeight,
-            baseOffset = spec.offsetY,
-        )
-        anchor.doOnLayout {
-            if (!popupWindow.isShowing) {
-                popupWindow.showAsDropDown(anchor, xOffset, yOffset)
-            } else {
-                popupWindow.update(anchor, xOffset, yOffset, -1, -1)
-            }
+        currentSpec = spec
+        userDismissed = false
+        popupWindow.isFocusable = spec.focusable
+        popupWindow.isOutsideTouchable = spec.dismissOnClickOutside
+        popupWindow.isClippingEnabled = spec.overflowPolicy != PopupOverflowPolicy.None
+        surfaceSession.update(content.surface)
+        reposition()
+        popupContainer.doOnLayout {
+            reposition()
         }
     }
 
+    private fun reposition() {
+        if (disposed || userDismissed || !rootView.isAttachedToWindow) {
+            return
+        }
+        val anchor = rootView.findAnchorTarget(currentSpec.anchorId)
+        if (anchor == null || !anchor.isAttachedToWindow || anchor.width <= 0 || anchor.height <= 0) {
+            hideWindow()
+            return
+        }
+        val visibleFrame = Rect()
+        rootView.getWindowVisibleDisplayFrame(visibleFrame)
+        if (visibleFrame.width() <= 0 || visibleFrame.height() <= 0) {
+            val rootLocation = IntArray(2)
+            rootView.getLocationOnScreen(rootLocation)
+            visibleFrame.set(
+                rootLocation[0],
+                rootLocation[1],
+                rootLocation[0] + rootView.width,
+                rootLocation[1] + rootView.height,
+            )
+        }
+        popupContainer.measure(
+            visibleFrame.width().atMostMeasureSpec(),
+            visibleFrame.height().atMostMeasureSpec(),
+        )
+        val popupWidth = popupContainer.measuredWidth
+        val popupHeight = popupContainer.measuredHeight
+        val anchorLocation = IntArray(2)
+        anchor.getLocationOnScreen(anchorLocation)
+        val position = PopupPositioner.calculate(
+            anchorBounds = PopupBounds(
+                left = anchorLocation[0],
+                top = anchorLocation[1],
+                right = anchorLocation[0] + anchor.width,
+                bottom = anchorLocation[1] + anchor.height,
+            ),
+            popupSize = PopupSize(
+                width = popupWidth,
+                height = popupHeight,
+            ),
+            viewportBounds = PopupBounds(
+                left = visibleFrame.left,
+                top = visibleFrame.top,
+                right = visibleFrame.right,
+                bottom = visibleFrame.bottom,
+            ),
+            alignment = currentSpec.alignment,
+            layoutDirection = if (anchor.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
+                UiLayoutDirection.Rtl
+            } else {
+                UiLayoutDirection.Ltr
+            },
+            overflowPolicy = currentSpec.overflowPolicy,
+            windowMargin = currentSpec.windowMargin,
+            offsetX = currentSpec.offsetX,
+            offsetY = currentSpec.offsetY,
+        )
+        if (!popupWindow.isShowing) {
+            popupWindow.width = popupWidth
+            popupWindow.height = popupHeight
+            popupWindow.showAtLocation(
+                rootView,
+                Gravity.NO_GRAVITY,
+                position.x,
+                position.y,
+            )
+        } else if (
+            lastX != position.x ||
+            lastY != position.y ||
+            lastWidth != popupWidth ||
+            lastHeight != popupHeight
+        ) {
+            popupWindow.update(
+                position.x,
+                position.y,
+                popupWidth,
+                popupHeight,
+            )
+        }
+        lastX = position.x
+        lastY = position.y
+        lastWidth = popupWidth
+        lastHeight = popupHeight
+    }
+
     override fun dismiss() {
-        programmaticDismiss = true
+        if (disposed) {
+            return
+        }
+        disposed = true
+        rootView.removeOnAttachStateChangeListener(attachStateListener)
+        detachTreeObservers()
         popupWindow.setOnDismissListener(null)
         surfaceSession.dispose()
         if (popupWindow.isShowing) {
             popupWindow.dismiss()
         }
-        programmaticDismiss = false
+    }
+
+    private fun hideWindow() {
+        if (!popupWindow.isShowing) {
+            return
+        }
+        ignoreNextDismiss = true
+        popupWindow.dismiss()
+        ignoreNextDismiss = false
+        lastX = null
+        lastY = null
+        lastWidth = null
+        lastHeight = null
+    }
+
+    private fun attachTreeObservers() {
+        if (!rootView.isAttachedToWindow) {
+            return
+        }
+        val observer = rootView.viewTreeObserver
+        if (observedTreeObserver === observer) {
+            return
+        }
+        detachTreeObservers()
+        if (observer.isAlive) {
+            observer.addOnGlobalLayoutListener(globalLayoutListener)
+            observer.addOnScrollChangedListener(scrollChangedListener)
+            observedTreeObserver = observer
+        }
+    }
+
+    private fun detachTreeObservers() {
+        observedTreeObserver?.takeIf { it.isAlive }?.let { observer ->
+            observer.removeOnGlobalLayoutListener(globalLayoutListener)
+            observer.removeOnScrollChangedListener(scrollChangedListener)
+        }
+        observedTreeObserver = null
     }
 }
 
@@ -251,56 +388,6 @@ private fun DialogPosition.toGravity(): Int {
         DialogPosition.Top -> Gravity.TOP or Gravity.CENTER_HORIZONTAL
         DialogPosition.Center -> Gravity.CENTER
         DialogPosition.Bottom -> Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-    }
-}
-
-private fun PopupAlignment.resolveXOffset(
-    anchorWidth: Int,
-    popupWidth: Int,
-    isRtl: Boolean,
-    baseOffset: Int,
-): Int {
-    val startOffset = if (isRtl) {
-        anchorWidth - popupWidth
-    } else {
-        0
-    }
-    val endOffset = if (isRtl) {
-        0
-    } else {
-        anchorWidth - popupWidth
-    }
-    val alignedOffset = when (this) {
-        PopupAlignment.BelowStart,
-        PopupAlignment.AboveStart,
-        -> startOffset
-
-        PopupAlignment.BelowCenter,
-        PopupAlignment.AboveCenter,
-        -> (anchorWidth - popupWidth) / 2
-
-        PopupAlignment.BelowEnd,
-        PopupAlignment.AboveEnd,
-        -> endOffset
-    }
-    return alignedOffset + baseOffset
-}
-
-private fun PopupAlignment.resolveYOffset(
-    anchorHeight: Int,
-    popupHeight: Int,
-    baseOffset: Int,
-): Int {
-    return when (this) {
-        PopupAlignment.BelowStart,
-        PopupAlignment.BelowCenter,
-        PopupAlignment.BelowEnd,
-        -> baseOffset
-
-        PopupAlignment.AboveStart,
-        PopupAlignment.AboveCenter,
-        PopupAlignment.AboveEnd,
-        -> -anchorHeight - popupHeight + baseOffset
     }
 }
 

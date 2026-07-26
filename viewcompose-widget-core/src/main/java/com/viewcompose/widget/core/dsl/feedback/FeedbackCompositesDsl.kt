@@ -9,12 +9,12 @@ import com.viewcompose.ui.modifier.alpha
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.clip
-import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.minWidth
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.ImageSource
 
@@ -39,12 +39,12 @@ fun UiTreeBuilder.AlertDialog(
         dismissOnClickOutside = dismissOnClickOutside,
         onDismissRequest = onDismissRequest,
     ) {
-        val radius = AlertDialogDefaults.cornerRadius()
+        val shape = AlertDialogDefaults.shape()
         Box(
             modifier = Modifier
                 .minWidth(AlertDialogDefaults.minWidth())
                 .backgroundColor(AlertDialogDefaults.containerColor())
-                .cornerRadius(radius)
+                .shape(shape)
                 .clip()
                 .padding(AlertDialogDefaults.contentPadding()),
         ) {
@@ -97,6 +97,8 @@ fun UiTreeBuilder.PlainTooltip(
     visible: Boolean,
     anchorId: String,
     alignment: PopupAlignment = PopupAlignment.BelowStart,
+    overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp,
+    windowMargin: Int = 8.dp,
     dismissOnClickOutside: Boolean = true,
     onDismissRequest: (() -> Unit)? = null,
     requestKey: String = "tooltip",
@@ -106,6 +108,8 @@ fun UiTreeBuilder.PlainTooltip(
         anchorId = anchorId,
         requestKey = requestKey,
         alignment = alignment,
+        overflowPolicy = overflowPolicy,
+        windowMargin = windowMargin,
         dismissOnClickOutside = dismissOnClickOutside,
         focusable = false,
         onDismissRequest = onDismissRequest,
@@ -114,7 +118,7 @@ fun UiTreeBuilder.PlainTooltip(
             contentAlignment = BoxAlignment.Center,
             modifier = Modifier
                 .backgroundColor(TooltipDefaults.containerColor())
-                .cornerRadius(TooltipDefaults.cornerRadius())
+                .shape(TooltipDefaults.shape())
                 .clip()
                 .padding(
                     horizontal = TooltipDefaults.horizontalPadding(),
@@ -135,6 +139,8 @@ fun UiTreeBuilder.DropdownMenu(
     anchorId: String,
     onDismissRequest: () -> Unit,
     alignment: PopupAlignment = PopupAlignment.BelowStart,
+    overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp,
+    windowMargin: Int = 8.dp,
     requestKey: String = "dropdown_menu",
     modifier: Modifier = Modifier,
     content: ColumnScope.() -> Unit,
@@ -144,6 +150,8 @@ fun UiTreeBuilder.DropdownMenu(
         anchorId = anchorId,
         requestKey = requestKey,
         alignment = alignment,
+        overflowPolicy = overflowPolicy,
+        windowMargin = windowMargin,
         dismissOnClickOutside = true,
         onDismissRequest = onDismissRequest,
     ) {
@@ -151,7 +159,7 @@ fun UiTreeBuilder.DropdownMenu(
             modifier = Modifier
                 .minWidth(DropdownMenuDefaults.minWidth())
                 .backgroundColor(DropdownMenuDefaults.containerColor())
-                .cornerRadius(DropdownMenuDefaults.cornerRadius())
+                .shape(DropdownMenuDefaults.shape())
                 .clip()
                 .elevation(DropdownMenuDefaults.elevation())
                 .then(modifier),

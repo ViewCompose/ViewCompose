@@ -3,7 +3,6 @@ package com.viewcompose.renderer.view.container
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.text.TextUtils
 import android.view.Gravity
@@ -11,8 +10,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.google.android.material.shape.MaterialShapeDrawable
+import com.viewcompose.renderer.view.shape.toShapeAppearanceModel
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.spec.UiFontFamily
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.renderer.view.tree.ContentViewBinder
 import com.viewcompose.renderer.view.dpToPx
 
@@ -26,7 +28,7 @@ internal class DeclarativeSegmentedControlLayout(
     private var enabledState: Boolean = true
     private var backgroundColorState: Int = Color.TRANSPARENT
     private var indicatorColorState: Int = Color.TRANSPARENT
-    private var cornerRadiusState: Int = 0
+    private var shapeState: UiShape = UiShape.rounded(0)
     private var textColorState: Int = Color.BLACK
     private var selectedTextColorState: Int = Color.WHITE
     private var rippleColorState: Int = Color.TRANSPARENT
@@ -39,9 +41,7 @@ internal class DeclarativeSegmentedControlLayout(
     private var paddingHorizontalState: Int = 0
     private var paddingVerticalState: Int = 0
     private val indicatorInset = context.dpToPx(2).toFloat()
-    private val containerBackground = GradientDrawable().apply {
-        shape = GradientDrawable.RECTANGLE
-    }
+    private val containerBackground = MaterialShapeDrawable()
 
     init {
         orientation = HORIZONTAL
@@ -57,7 +57,7 @@ internal class DeclarativeSegmentedControlLayout(
         enabled: Boolean,
         backgroundColor: Int,
         indicatorColor: Int,
-        cornerRadius: Int,
+        shape: UiShape,
         textColor: Int,
         selectedTextColor: Int,
         rippleColor: Int,
@@ -86,7 +86,7 @@ internal class DeclarativeSegmentedControlLayout(
         val styleChanged = !styleInitialized ||
             enabledState != enabled ||
             indicatorColorState != indicatorColor ||
-            cornerRadiusState != cornerRadius ||
+            shapeState != shape ||
             textColorState != textColor ||
             selectedTextColorState != selectedTextColor ||
             rippleColorState != rippleColor ||
@@ -100,10 +100,10 @@ internal class DeclarativeSegmentedControlLayout(
             paddingVerticalState != paddingVertical
 
         if (!styleInitialized || backgroundColorState != backgroundColor) {
-            containerBackground.setColor(backgroundColor)
+            containerBackground.fillColor = ColorStateList.valueOf(backgroundColor)
         }
-        if (!styleInitialized || cornerRadiusState != cornerRadius) {
-            containerBackground.cornerRadius = cornerRadius.toFloat()
+        if (!styleInitialized || shapeState != shape) {
+            containerBackground.shapeAppearanceModel = shape.toShapeAppearanceModel(layoutDirection)
         }
 
         this.items = items
@@ -112,7 +112,7 @@ internal class DeclarativeSegmentedControlLayout(
         enabledState = enabled
         backgroundColorState = backgroundColor
         indicatorColorState = indicatorColor
-        cornerRadiusState = cornerRadius
+        shapeState = shape
         textColorState = textColor
         selectedTextColorState = selectedTextColor
         rippleColorState = rippleColor
@@ -130,7 +130,7 @@ internal class DeclarativeSegmentedControlLayout(
             labelsChanged || styleChanged -> updateChildren(
                 enabled = enabled,
                 indicatorColor = indicatorColor,
-                cornerRadius = cornerRadius,
+                shape = shape,
                 textColor = textColor,
                 selectedTextColor = selectedTextColor,
                 rippleColor = rippleColor,
@@ -149,7 +149,7 @@ internal class DeclarativeSegmentedControlLayout(
                 nextSelectedIndex = resolvedSelectedIndex,
                 enabled = enabled,
                 indicatorColor = indicatorColor,
-                cornerRadius = cornerRadius,
+                shape = shape,
                 textColor = textColor,
                 selectedTextColor = selectedTextColor,
                 rippleColor = rippleColor,
@@ -184,7 +184,7 @@ internal class DeclarativeSegmentedControlLayout(
     private fun updateChildren(
         enabled: Boolean,
         indicatorColor: Int,
-        cornerRadius: Int,
+        shape: UiShape,
         textColor: Int,
         selectedTextColor: Int,
         rippleColor: Int,
@@ -232,7 +232,7 @@ internal class DeclarativeSegmentedControlLayout(
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColor,
-                cornerRadius = (cornerRadius - indicatorInset).coerceAtLeast(0f),
+                shape = shape.inset(indicatorInset.toInt()),
             )
             child.isSelected = isSelected
         }
@@ -243,7 +243,7 @@ internal class DeclarativeSegmentedControlLayout(
         nextSelectedIndex: Int,
         enabled: Boolean,
         indicatorColor: Int,
-        cornerRadius: Int,
+        shape: UiShape,
         textColor: Int,
         selectedTextColor: Int,
         rippleColor: Int,
@@ -254,7 +254,7 @@ internal class DeclarativeSegmentedControlLayout(
         includeFontPadding: Boolean,
     ) {
         val indices = linkedSetOf(previousSelectedIndex, nextSelectedIndex)
-        val cornerRadiusPx = (cornerRadius - indicatorInset).coerceAtLeast(0f)
+        val indicatorShape = shape.inset(indicatorInset.toInt())
         indices.forEach { index ->
             if (index !in 0 until childCount) return@forEach
             val child = getChildAt(index) as? TextView ?: return@forEach
@@ -274,7 +274,7 @@ internal class DeclarativeSegmentedControlLayout(
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColor,
-                cornerRadius = cornerRadiusPx,
+                shape = indicatorShape,
             )
             child.isSelected = isSelected
         }
@@ -285,26 +285,24 @@ internal class DeclarativeSegmentedControlLayout(
         selected: Boolean,
         indicatorColor: Int,
         rippleColor: Int,
-        cornerRadius: Float,
+        shape: UiShape,
     ) = if (enabled) {
         RippleDrawable(
             ColorStateList.valueOf(rippleColor),
-            GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                setColor(if (selected) indicatorColor else Color.TRANSPARENT)
-                this.cornerRadius = cornerRadius
+            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+                fillColor = ColorStateList.valueOf(
+                    if (selected) indicatorColor else Color.TRANSPARENT,
+                )
             },
-            GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                setColor(Color.WHITE)
-                this.cornerRadius = cornerRadius
+            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+                fillColor = ColorStateList.valueOf(Color.WHITE)
             },
         )
     } else {
-        GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            setColor(if (selected) indicatorColor else Color.TRANSPARENT)
-            this.cornerRadius = cornerRadius
+        MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+            fillColor = ColorStateList.valueOf(
+                if (selected) indicatorColor else Color.TRANSPARENT,
+            )
         }
     }
 }

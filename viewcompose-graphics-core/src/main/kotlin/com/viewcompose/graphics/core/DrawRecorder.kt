@@ -39,6 +39,32 @@ class DrawRecorder {
         record(DrawCommand.ClipPath(path))
     }
 
+    fun drawScene(
+        scene: DrawScene,
+        transform: Matrix3 = Matrix3.identity(),
+        clip: Rect? = null,
+    ) {
+        record(
+            DrawCommand.DrawScene(
+                scene = scene,
+                transform = transform,
+                clip = clip,
+            ),
+        )
+    }
+
+    fun group(
+        transform: Matrix3 = Matrix3.identity(),
+        clip: Rect? = null,
+        block: DrawRecorder.() -> Unit,
+    ) {
+        drawScene(
+            scene = drawScene(block),
+            transform = transform,
+            clip = clip,
+        )
+    }
+
     fun translate(
         dx: Float,
         dy: Float,
@@ -212,4 +238,14 @@ class DrawRecorder {
     fun toCommands(): List<DrawCommand> {
         return commands.toList()
     }
+
+    fun toScene(): DrawScene {
+        return DrawScene(commands)
+    }
+}
+
+fun drawScene(block: DrawRecorder.() -> Unit): DrawScene {
+    return DrawRecorder()
+        .apply(block)
+        .toScene()
 }

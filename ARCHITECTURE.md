@@ -15,17 +15,18 @@
 
 - [ARCHITECTURE_FULL_2026-03-06.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/ARCHITECTURE_FULL_2026-03-06.md)
 
-## 2. 当前基线（2026-03）
+## 2. 当前基线（2026-07）
 
 - 技术基线：Kotlin + Android View System
 - SDK：`minSdk 24`、`compileSdk 36`
-- 当前模块：`:viewcompose-runtime`、`:viewcompose-ui-contract`、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
+- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
 
 ### 2.1 模块职责
 
 | 模块 | 职责 | 约束 |
 | --- | --- | --- |
 | `viewcompose-runtime` | 状态与读依赖观察（`state/observation`） | 纯 Kotlin/JVM 模块；主源码禁止 `android.*` / `androidx.*`，构建不引入 AndroidX 依赖 |
+| `viewcompose-text-core` | 完整纯文本编辑状态（text/selection/composition）、EditingBuffer、输入变换、撤销/重做 | 纯 Kotlin/JVM；禁止 Android 类型；偏移统一使用 UTF-16 以匹配平台编辑协议 |
 | `viewcompose-ui-contract` | 纯 Kotlin UI 契约层（`Modifier`、`VNode/NodeSpec`、layout 枚举、collection/state 协议） | 主源码禁止 `android.*` / `androidx.*` |
 | `viewcompose-animation-core` | 动画内核（`AnimationSpec/Easing/Converter/Engine/TransitionCore`） | 纯 Kotlin/JVM；禁止引入 Android 依赖 |
 | `viewcompose-animation` | 动画 DSL 集成层（`animate*AsState/Animatable/Transition/AnimatedVisibility/Content`） | 调用层 API；运行时驱动统一使用 `MonotonicFrameClock` + coroutine；不直接依赖 Android View 动画实现 |
@@ -58,6 +59,7 @@
 7. graphics 已形成“内核 + DSL + renderer + host interop”分层模型（graphics-core + graphics + renderer draw pipeline + host-android AndroidGraphicsInterop）
 8. ConstraintLayout 已按“widget DSL 模块 + renderer 平台映射”分层落地，支持 anchors/dimension/bias/baseline/baselineToTop/baselineToBottom/circle/guideline/barrier/chain(+weights)/Flow/Group/Layer/Placeholder/decoupled constraintSet，以及 match-constraint 进阶参数（min/max/percent/constrained）
 9. Theme token 已进入“消费闭环”阶段：新增 token 必须进入 defaults/composite 默认值，或明确登记为 reserved semantic palette
+10. 文本输入已硬切到 `TextFieldState` 单一状态主权：纯 Kotlin 编辑内核负责值、选区、组合区与历史；renderer 的 `ViewComposeEditText` 只负责 Android `Editable/InputConnection` 适配
 
 ### 2.3 `app` 目录落位基线
 
@@ -80,6 +82,7 @@
 
 renderer 侧避免“单目录平铺”，按职责拆到二级目录：
 
+0. `NodeType/VNode/NodeSpec` 及其子类型只允许定义在 `viewcompose-ui-contract`；renderer 禁止新增 `com.viewcompose.renderer.node` 镜像契约。
 1. `viewcompose-renderer/src/main/java/.../view/container/{core,layout,collection,navigation,input}`
    - Android View 容器映射层，按控件族群分类
 2. `viewcompose-renderer/src/main/java/.../view/tree/binder/core`
@@ -90,8 +93,11 @@ renderer 侧避免“单目录平铺”，按职责拆到二级目录：
    - 容器策略（reuse/motion/focus follow）由 widget DSL 写入 `NodeSpec`，binder 直接读 spec 应用，不再走 modifier 策略提取
 3. `viewcompose-renderer/src/main/java/.../view/tree/binder/widget`
    - 分控件 binder 实现（content/input/media/feedback/collection 等）
+   - TextField 固定通过 `ViewComposeEditText + AndroidTextFieldController` 同步完整编辑快照；禁止在普通重组补丁中无条件 `setText()` 或把光标移动到末尾
 4. `viewcompose-renderer/src/main/java/.../view/lazy/{adapter,focus,layout,reuse,session,state}`
    - 延迟容器子系统按能力拆分（适配器、焦点跟随、间距布局、复用策略、session、状态）
+   - `LazyListState` 由 RecyclerView scroll/layout/adapter observer 推送不可变布局快照；绑定同一 RecyclerView 时禁止重置 anchor
+   - item key/contentType/span/sticky kind 属于 `ui-contract`，Android 侧分别映射 stable ID、view type、SpanSizeLookup 与 pinned header decoration
 
 ## 3. 核心调用链
 
@@ -144,7 +150,7 @@ flowchart TD
 4. `overlay-android` 必须通过 `META-INF/services` 注册 `OverlayHostFactoryProvider`，禁止回退字符串反射装配（`Class.forName`）。
 5. host 对外回调 `onRenderStats/onRenderResult` 只能暴露 core 自有诊断类型（`com.viewcompose.widget.core.RenderStats/RenderTreeResult`），renderer 诊断类型仅允许出现在 host 内部适配层。
 6. system bars insets 走组件侧 `Modifier.systemBarsInsetsPadding(...)`，不绑死 Activity 全局参数。
-7. core 渲染引擎由 `viewcompose-host-android` 通过 `installCoreRenderEngine(...)` 接口注册，`widget-core` 不再通过反射装配 renderer。
+7. `viewcompose-host-android` 必须通过 `installRenderSessionPlatform(...)` 一次性原子注册渲染引擎、帧调度 runtime 与组合协程上下文；`RenderSession` 创建时固定使用同一平台快照，缺失或重复安装立即失败，禁止 no-op/immediate/empty-context 分段降级。
 
 ### 4.4 延迟 session 容器边界
 
@@ -182,8 +188,19 @@ flowchart TD
 3. 组级失效来源固定为两类：状态读依赖失效、`emit` 输入（`spec/modifier`）变化；两者都进入 `InvalidationQueue` 去重合并。
 4. 结构漂移（同层 group key/顺序不一致）必须回退到最近稳定祖先子树重组，并只打印一次告警，禁止 silent corruption。
 5. `LocalContext` 必须按组 snapshot/restore，保证局部重组下 Local 读取一致。
+6. `remember`、`key`、`DisposableEffect`、`SideEffect`、`LaunchedEffect`、`rememberCoroutineScope` 等组合 API 只允许在活动的 `ComposerLite` 组合中调用；禁止维护备用 slot/effect store 或在组合外静默降级。
 
-### 4.8 State Snapshot 边界
+### 4.8 文本编辑边界
+
+1. `viewcompose-text-core` 是文本、方向选区、IME 组合区、编辑事务和撤销历史的唯一平台无关真相源。
+2. `TextField/TextArea/SearchBar` 公开 API 只接受稳定的 `TextFieldState`；禁止重新增加 `String + onValueChange` 双状态入口。
+3. Android renderer 必须保留原生 `AppCompatEditText` 的输入法、无障碍、硬件键盘和系统选择能力，不实现自有文本布局或完整 `InputConnection`。
+4. 原生输入在 `InputConnection`/batch edit 边界内合并后同步到状态；状态回写必须使用最小 `Editable.replace()` 并恢复 selection/composition。
+5. `InputTransformation` 只处理用户输入，程序调用 `TextFieldState.edit` 不经过输入过滤。
+6. 保存恢复只持久化 text 与 selection；IME composition 和 undo/redo history 属于当前编辑会话，不跨进程恢复。
+7. 富文本 span、inline attachment 与统一 receive-content 属于独立文档模型能力，不允许通过把 Android `Spannable` 放入 core 契约来实现。
+
+### 4.9 State Snapshot 边界
 
 1. `MutableState` 必须通过 snapshot 事务写入，不允许绕过 `SnapshotRuntime` 直接改值。
 2. `mutableStateOf` 的去抖/冲突语义由 `SnapshotMutationPolicy` 定义；默认 `structuralEqualityPolicy`。
@@ -191,19 +208,36 @@ flowchart TD
 4. `ComposerLite` 每轮 compose 必须运行在一致性读快照中，保证同一轮读取不漂移。
 5. `DerivedState` 缓存失效必须感知 snapshot 读版本，禁止仅靠全局 dirty 布尔。
 6. `rememberUpdatedState` 只保证“重组后可见”，不保证“同一组合阶段 effect 立即读取到最新值”。
-7. 当前 runtime 的 `DisposableEffect` 执行时机在组合阶段（非 apply 阶段）；涉及动画/协程启动路径时，若要求读取最新目标值，优先直接使用当前参数，或改为提交后时机执行。
-8. 若后续将 effect 时序升级到 Compose `RememberObserver` apply 语义，必须同步回归 `animate*AsState`、`AnimatedVisibility`、`collectAsState`、`produceState`。
-9. 组合阶段若先写 snapshot-backed mirror state 再立刻读回，该读值可能仍是旧快照；控制流判定（如动画协程启动、segment version 选择）必须基于实时内核值，不得依赖同帧 mirror 回读。
+7. `ComposerLite.prepareRoot()` 只生成候选组合；slot、观察订阅、`RememberObserver` 与 Effect 生命周期必须在 renderer 成功后提交，失败时统一 abort。
+8. `DisposableEffect`、`SideEffect` 与 `RememberObserver.onRemembered` 只允许在提交阶段执行；失败候选中的 remembered value 必须收到 `onAbandoned`。
+9. `RenderSession` 是组合协程树的唯一根 owner：根使用 `SupervisorJob` 隔离子任务，Session 销毁必须取消全部后代。
+10. `LaunchedEffect` 的启动/Key 重启/遗忘取消必须由 `RememberObserver` 提交生命周期驱动，失败组合不得启动任务。
+11. `produceState` 固定为 suspend producer，并通过 `awaitDispose` 清理；`collectAsState*` 与动画不得创建独立根 Job。
+12. 传给 `rememberCoroutineScope`、`collectAsState*` 与动画的附加 `CoroutineContext` 不得包含 `Job`，防止脱离组合父任务。
+13. 组合阶段若先写 snapshot-backed mirror state 再立刻读回，该读值可能仍是旧快照；控制流判定必须基于实时内核值，不得依赖同帧 mirror 回读。
+14. 组合事务保证 slot/观察/Effect/VNode 提交一致性；组合体内主动写入的全局 snapshot state 仍遵循 snapshot 自身事务，不承诺与 Android View patch 跨系统原子回滚。
+15. 组合事务使用 touched-scope journal：只有本轮实际执行或输入变化的 Scope 才复制回滚状态，禁止恢复为每帧全 SlotTree checkpoint。
+16. 相同帧到达同一 Scope 的重复失效必须合并；组合进行中的失效仍须递增版本，保证本轮结束后保留下一次重组。
+17. 脏 Scope 若生成 type/key/spec/modifier/children 引用均等价的 VNode，必须沿用旧 VNode 引用，为 renderer 提供 O(1) `SkipSubtree`。
+18. 无编译器自动 restart group；跨多个兄弟 VNode 的业务组件应按需使用无原生节点的 `RecomposeBoundary`，普通捕获值显式声明为 inputs。
 
-### 4.9 Render 调度边界
+### 4.10 Render 调度边界
 
 1. `RenderSession.render()` 保持立即执行语义（首帧与显式调用同步渲染）。
 2. 状态失效触发的重绘必须通过 `FrameAlignedRenderDispatcher` 合帧调度，禁止回退到 `container.post`。
 3. 同一帧内多次 invalidation 只能触发一次 `RenderSession` 渲染提交。
 4. `dispose()` 必须取消未执行帧回调，禁止 session 销毁后延迟渲染。
 5. lazy item session 与 overlay surface session 继续复用 `RenderSession.render()` 的立即语义，避免首显空白。
+6. renderer 的递归 patch 必须共享一次 apply transaction；删除资源只能在整棵树成功后释放。
+7. patch 失败必须尽力恢复旧 `VNode`、mounted children、布局参数与 View 顺序，并释放本轮新建节点。
+8. `AndroidView.update/onReset/nativeView` 仅允许可重放的 View 内配置；不可重放的外部动作必须放入事务成功后才发布的 `onCommit`。
+9. renderer transaction 使用 mutation journal，只记录实际绑定、移动、插入或删除的 MountedNode/ViewGroup；稳定子树不得进入回滚快照。
+10. `AnimatedSizeNodeWrapper` 必须保留未变化 VNode/List 的引用，且整帧只转换一次；禁止无动画节点的递归 copy。
+11. `NodeBindingDiffer` 必须先于 Modifier/LayoutParams 解析执行；`SkipSubtree` 不得解析或重复 preflight。
+12. 结构深度统计与逐 NodeType 绑定统计只在 debug/诊断回调启用时收集。
+13. 所有可恢复失败必须通过 `RenderFailure(phase/recovery/frameId/operation/nodeKey)` 上报；日志不是可观测性 API。
 
-### 4.10 Renderer 绑定复杂度边界
+### 4.11 Renderer 绑定复杂度边界
 
 1. `NodeViewBinderRegistry` 与 `NodeBindingDiffer` 的 bind/patch/diff 映射必须从 `NodeBinderDescriptors` 单源派生，禁止新增并行手工 map。
 2. 新增 `NodeType` 或新增 `NodeViewPatch` 时，只允许修改 descriptor 源；不得同时改 registry/differ 的独立映射分支。
@@ -211,21 +245,21 @@ flowchart TD
 4. `ViewModifierApplier` 仅负责编排，不承载具体细节实现；样式/交互/insets/容器策略必须分别落在 `core/modifier` 子职责对象。
 5. 任何绕过 descriptor 的快速修复都视为架构违规，必须在同一迭代回补为单源注册。
 
-### 4.11 模块单包根边界
+### 4.12 模块单包根边界
 
 1. 每个模块只允许一个包根前缀，且必须与模块职责对应（允许该前缀下的子包分层）。
 2. 约束范围覆盖 `src/main`、`src/test`、`src/androidTest`，测试源码不允许例外包根。
 3. Android 模块 `namespace` 必须与该模块包根一致（`viewcompose-ui-contract` 作为 Kotlin/JVM 模块例外）。
 4. lifecycle/viewmodel 的 Local 对外 API 包名固定为 `com.viewcompose.lifecycle` 与 `com.viewcompose.viewmodel`，并且源码归属必须落在对应模块，不得回流 `widget-core`。
 
-### 4.12 开发预览边界
+### 4.13 开发预览边界
 
 1. 开发预览能力集中在 `:viewcompose-preview`，不允许回流 `app` 或核心运行时模块。
 2. Android Studio Preview 与 Paparazzi 必须共享 `PreviewCatalog` 单源，禁止双份示例维护。
 3. overlay 在 preview 场景仅允许静态内容模拟；真实窗口行为继续由 instrumentation 覆盖。
 4. 新增组件（或关键复合组件）必须同轮补 `PreviewSpec` 与 Paparazzi 快照基线。
 
-### 4.13 动画与手势边界
+### 4.14 动画与手势边界
 
 1. 动画分层固定为 `viewcompose-animation-core` + `viewcompose-animation`；手势分层固定为 `viewcompose-gesture-core` + `viewcompose-gesture`。
 2. `graphicsLayer` 是主链动画承载能力；与 `alpha/offset/elevation/zIndex` 冲突时，以 `graphicsLayer` 同语义字段优先。
@@ -243,7 +277,7 @@ flowchart TD
 14. 手势策略新增或修改（axis lock/slop/swipe settle）必须下沉到 `viewcompose-gesture-core`；renderer 禁止新增并行策略分支。
 15. `combinedClickable` 只有在 `enabled=true` 且至少提供一个回调（click/double/long）时才参与仲裁；无回调场景必须视为 no-op 且不消费触摸流。
 
-### 4.14 Graphics 边界
+### 4.15 Graphics 边界
 
 1. graphics 分层固定为 `viewcompose-graphics-core`（平台无关图形内核）+ `viewcompose-graphics`（业务 DSL）+ renderer（Android Canvas 执行）+ `viewcompose-host-android` interop（Android 特有高阶能力）。
 2. `viewcompose-graphics-core` 主源码禁止 `android.*` / `androidx.*` import；纯度由 `verifyGraphicsCorePurity` 硬门禁。
@@ -254,12 +288,20 @@ flowchart TD
 7. `DrawImage` 的 `Drawable` 分支必须应用 `DrawPaint` 组合语义（alpha/blend/colorFilter/imageFilter），并在绘制后恢复原始 `bounds`。
 8. `ImageFilterModel.Chain` 必须在执行层可生效；当前 `Blur + Chain` 路径采用递归合并半径（高斯方差累加）后下发到平台滤镜，禁止直接忽略 `Chain`。
 
+### 4.16 Semantics 与无障碍边界
+
+1. 无障碍声明统一使用 `Modifier.semantics { ... }` 与 `SemanticsConfiguration`；`contentDescription` 只是该结构化契约的便捷入口，禁止新增平行单字段 Modifier。
+2. 平台无关契约必须覆盖描述、状态、role、heading、live region、选中/勾选/启用、错误、进度、pane title、点击标签、合并后代与隐藏子树。
+3. renderer 必须通过 Android 原生 View 属性与 `AccessibilityNodeInfoCompat` 映射语义，不建立自有无障碍树。
+4. 同一 View 被 patch 或复用时，移除 semantics 必须恢复该 View 原有的 content/state/delegate/heading/live-region/importance，禁止把上一节点语义泄漏到下一节点。
+5. TextField、列表、滑块等原生控件的内建语义优先保留；结构化 semantics 只覆盖显式声明的属性。
+
 ## 5. 当前热点与风险
 
 1. `ViewTreeRenderer` 仍是复杂度热点，新增能力优先拆辅助对象，不继续堆主类。
 2. 当前是“节点组级重组 + 根级遍历调度”模型；后续优化重点是提升组键稳定性诊断与更细粒度跳过命中率。
 3. `viewcompose-widget-core` 已解除对 `renderer` 的直依赖；后续演进优先维持 `runtime/ui-contract/widget-core/renderer/host-android` 分层，不回流耦合。
-4. 延迟 session 容器专项回归已覆盖 `LazyVerticalGrid/HorizontalPager/VerticalPager`；后续重点转向 sticky headers 与复杂 list state 组合场景。
+4. 延迟 session 容器专项回归已覆盖 `LazyVerticalGrid/HorizontalPager/VerticalPager`；Lazy P1 已补齐结构化 item DSL、完整可观察 layout state、sticky headers、contentType/span、预取和边界能力。
 5. `AndroidHostBridge` 已迁至 `viewcompose-host-android`；若后续目标扩展到跨平台，下一步重点是进一步收口 `widget-core` 内 Android 专属 bridge（theme/environment）边界。
 
 ## 6. 变更落地清单（必须执行）

@@ -28,19 +28,23 @@ internal object CollectionPreviewSpecs {
             domain = PreviewDomain.Collection,
             content = {
                 LazyColumn(
-                    items = (1..8).toList(),
                     spacing = 8.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .margin(horizontal = 12.dp, vertical = 8.dp),
-                ) { index ->
-                    Surface(
-                        variant = SurfaceVariant.Variant,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                    ) {
-                        Text(text = "List Item $index")
+                ) {
+                    items(
+                        items = (1..8).toList(),
+                        key = { index -> index },
+                    ) { index ->
+                        Surface(
+                            variant = SurfaceVariant.Variant,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                        ) {
+                            Text(text = "List Item $index")
+                        }
                     }
                 }
             },
@@ -60,21 +64,25 @@ internal object CollectionPreviewSpecs {
                         .margin(horizontal = 12.dp, vertical = 8.dp),
                 ) {
                     LazyVerticalGrid(
-                        items = (1..6).toList(),
                         spanCount = 3,
                         horizontalSpacing = 8.dp,
                         verticalSpacing = 8.dp,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(140.dp),
-                    ) { index ->
-                        Surface(
-                            variant = SurfaceVariant.Variant,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(40.dp),
-                        ) {
-                            Text(text = "G$index")
+                    ) {
+                        items(
+                            items = (1..6).toList(),
+                            key = { index -> index },
+                        ) { index ->
+                            Surface(
+                                variant = SurfaceVariant.Variant,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp),
+                            ) {
+                                Text(text = "G$index")
+                            }
                         }
                     }
                     HorizontalPager(

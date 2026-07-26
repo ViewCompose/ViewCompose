@@ -15,12 +15,17 @@ import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.GesturePriority
+import com.viewcompose.ui.gesture.GestureCancellationReason
 import com.viewcompose.ui.gesture.PointerChange
 import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
 import com.viewcompose.ui.gesture.PointerEventType
 import com.viewcompose.ui.gesture.TransformDelta
+import com.viewcompose.ui.gesture.NestedScrollSource
+import com.viewcompose.ui.gesture.ScrollDelta
+import com.viewcompose.ui.gesture.ScrollVelocity
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
+import com.viewcompose.renderer.view.container.DeclarativeNestedScrollHostLayout
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -69,11 +74,14 @@ private class ViewGestureDispatcher(
     private var lastY: Float = 0f
     private var lockAxis: LockedAxis? = null
     private var dragStarted = false
+    private var localDragTotal = 0f
     private var swipeStartAnchorPx = 0f
     private var combinedTapConsumed = false
     private var pointerStreamActive = false
     private var transformStreamActive = false
     private var transformPastTouchSlop = false
+    private var transformGestureStarted = false
+    private var dragBlockedUntilNextDown = false
     private var transformMidX = Float.NaN
     private var transformMidY = Float.NaN
     private var transformAngle = Float.NaN
@@ -120,12 +128,22 @@ private class ViewGestureDispatcher(
     )
 
     fun update(resolved: ResolvedModifiers) {
+        if (dragStarted && dragParticipationChanged(this.resolved, resolved)) {
+            cancelDrag(GestureCancellationReason.ModifierChanged)
+        }
+        if (transformGestureStarted &&
+            this.resolved.transformable?.enabled == true &&
+            resolved.transformable?.enabled != true
+        ) {
+            cancelTransform(GestureCancellationReason.ModifierChanged)
+        }
         this.resolved = resolved
     }
 
     fun dispose() {
-        velocityTracker?.recycle()
-        velocityTracker = null
+        cancelDrag(GestureCancellationReason.Disposed)
+        cancelTransform(GestureCancellationReason.Disposed)
+        resetTrackingState()
         pointerStreamActive = false
     }
 
@@ -140,6 +158,13 @@ private class ViewGestureDispatcher(
         }
         val pointerConsumed = dispatchPointerInput(event)
         if (pointerConsumed) {
+            val cancellationReason = if (action == MotionEvent.ACTION_CANCEL) {
+                GestureCancellationReason.SystemCancelled
+            } else {
+                GestureCancellationReason.PointerInputConsumed
+            }
+            cancelDrag(cancellationReason)
+            cancelTransform(cancellationReason)
             if (action == MotionEvent.ACTION_DOWN &&
                 resolved.gesturePriority?.priority == GesturePriority.High
             ) {
@@ -147,6 +172,7 @@ private class ViewGestureDispatcher(
             }
             if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
                 combinedTapConsumed = false
+                pointerStreamActive = false
                 resetTrackingState()
             }
             return true
@@ -208,8 +234,13 @@ private class ViewGestureDispatcher(
         var dispatched = false
         when (event.actionMasked) {
             MotionEvent.ACTION_POINTER_DOWN, MotionEvent.ACTION_DOWN -> {
-                if (initializeTransformPointers(event) && captureTransformBaseline(event)) {
+                if (!transformStreamActive &&
+                    initializeTransformPointers(event) &&
+                    captureTransformBaseline(event)
+                ) {
                     transformStreamActive = true
+                    dragBlockedUntilNextDown = true
+                    cancelDrag(GestureCancellationReason.TransformTookOver)
                     debugLog {
                         "transform-start pointers=${event.pointerCount} " +
                             "mid=(${transformMidX.format(1)}, ${transformMidY.format(1)}) " +
@@ -249,6 +280,8 @@ private class ViewGestureDispatcher(
                         )
                     ) {
                         transformPastTouchSlop = true
+                        transformGestureStarted = true
+                        transform.onTransformStarted?.invoke()
                         hostView.parent?.requestDisallowInterceptTouchEvent(true)
                         debugLog {
                             "transform-active panMotion=${transformPanMotion.format(2)} " +
@@ -260,13 +293,25 @@ private class ViewGestureDispatcher(
                 }
                 val hasTransformDelta = zoom != 1f || panX != 0f || panY != 0f || rotation != 0f
                 if (transformPastTouchSlop && hasTransformDelta) {
+                    val nestedParent = hostView.findNestedScrollHost()
+                    val pan = ScrollDelta(panX, panY)
+                    val preConsumed = nestedParent?.dispatchPreScrollFromDescendant(
+                        available = pan,
+                        source = NestedScrollSource.UserInput,
+                    ) ?: ScrollDelta.Zero
+                    val remainingPan = pan - preConsumed
                     transform.onTransform(
                         TransformDelta(
                             zoom = zoom,
-                            panX = panX,
-                            panY = panY,
+                            panX = remainingPan.x,
+                            panY = remainingPan.y,
                             rotation = rotation,
                         ),
+                    )
+                    nestedParent?.dispatchPostScrollFromDescendant(
+                        consumed = remainingPan,
+                        available = ScrollDelta.Zero,
+                        source = NestedScrollSource.UserInput,
                     )
                     dispatched = true
                     debugLog {
@@ -282,6 +327,13 @@ private class ViewGestureDispatcher(
             }
 
             MotionEvent.ACTION_POINTER_UP -> {
+                val liftedPointerId = event.getPointerId(event.actionIndex)
+                if (liftedPointerId != primaryTransformPointerId &&
+                    liftedPointerId != secondaryTransformPointerId
+                ) {
+                    return dispatched
+                }
+                val wasStarted = transformGestureStarted
                 val hasRemainingPair = initializeTransformPointers(
                     event = event,
                     excludeActionIndex = event.actionIndex,
@@ -290,14 +342,21 @@ private class ViewGestureDispatcher(
                     excludeActionIndex = event.actionIndex,
                 )
                 if (!hasRemainingPair) {
-                    resetTransformTracking()
+                    finishTransform()
                     debugLog { "transform-end action=${event.actionMasked} pointers=${event.pointerCount}" }
+                } else if (wasStarted) {
+                    transformPastTouchSlop = true
                 }
             }
 
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                resetTransformTracking()
+            MotionEvent.ACTION_UP -> {
+                finishTransform()
                 debugLog { "transform-end action=${event.actionMasked} pointers=${event.pointerCount}" }
+            }
+
+            MotionEvent.ACTION_CANCEL -> {
+                cancelTransform(GestureCancellationReason.SystemCancelled)
+                debugLog { "transform-cancel pointers=${event.pointerCount}" }
             }
         }
         return dispatched
@@ -306,12 +365,18 @@ private class ViewGestureDispatcher(
     private fun dispatchDragAndSwipe(event: MotionEvent): Boolean {
         val draggable = resolved.draggable?.takeIf { it.enabled }
         val anchoredDraggable = resolved.anchoredDraggable?.takeIf { it.enabled }
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            dragBlockedUntilNextDown = false
+        }
         if (draggable == null && anchoredDraggable == null) {
             // Do not clear transform tracking here; transformable may coexist without drag/swipe.
             if (transformStreamActive) {
                 debugLog { "drag-swipe bypassed while transform stream is active" }
             }
             resetDragSwipeTracking()
+            return false
+        }
+        if (dragBlockedUntilNextDown) {
             return false
         }
         if (transformStreamActive && event.pointerCount > 1) {
@@ -326,6 +391,7 @@ private class ViewGestureDispatcher(
                 lastY = downY
                 lockAxis = null
                 dragStarted = false
+                localDragTotal = 0f
                 swipeStartAnchorPx = anchoredDraggable?.currentOffsetPx
                     ?: anchoredDraggable?.anchorOffsetsPx?.firstOrNull()
                     ?: 0f
@@ -364,31 +430,56 @@ private class ViewGestureDispatcher(
                 if (abs(delta) <= 0f) {
                     return false
                 }
+                val nestedParent = hostView.findNestedScrollHost()
+                val available = axis.toScrollDelta(delta)
+                val preConsumed = nestedParent?.dispatchPreScrollFromDescendant(
+                    available = available,
+                    source = NestedScrollSource.UserInput,
+                ) ?: ScrollDelta.Zero
+                val remaining = available - preConsumed
+                val localDelta = remaining.valueFor(axis)
+                if (abs(localDelta) <= 0f) {
+                    return !preConsumed.isZero
+                }
                 if (!dragStarted) {
                     dragStarted = true
                     draggable?.onDragStarted?.invoke()
                 }
-                draggable?.onDelta?.invoke(delta)
-                anchoredDraggable?.onDelta?.invoke(delta)
+                draggable?.onDelta?.invoke(localDelta)
+                anchoredDraggable?.onDelta?.invoke(localDelta)
+                localDragTotal += localDelta
+                nestedParent?.dispatchPostScrollFromDescendant(
+                    consumed = remaining,
+                    available = ScrollDelta.Zero,
+                    source = NestedScrollSource.UserInput,
+                )
                 return true
             }
 
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+            MotionEvent.ACTION_CANCEL -> {
+                val dragConsumed = dragStarted
+                cancelDrag(GestureCancellationReason.SystemCancelled)
+                return dragConsumed
+            }
+
+            MotionEvent.ACTION_UP -> {
                 tracker.addMovement(event)
-                val rawX = event.rawX
-                val rawY = event.rawY
                 val axis = lockAxis
-                val total = resolveAxisTotal(
-                    axis = axis,
-                    rawX = rawX,
-                    rawY = rawY,
-                )
-                if (dragStarted) {
-                    tracker.computeCurrentVelocity(1000)
-                    val velocity = resolveAxisVelocity(axis = axis, tracker = tracker)
-                    draggable?.onDragStopped?.invoke(velocity)
+                tracker.computeCurrentVelocity(1000)
+                val rawVelocity = resolveAxisVelocity(axis = axis, tracker = tracker)
+                val nestedParent = hostView.findNestedScrollHost()
+                val availableVelocity = axis.toScrollVelocity(rawVelocity)
+                val preConsumedVelocity = if (axis != null) {
+                    nestedParent?.dispatchPreFlingFromDescendant(availableVelocity)
+                        ?: ScrollVelocity.Zero
+                } else {
+                    ScrollVelocity.Zero
                 }
-                val velocity = resolveAxisVelocity(axis = axis, tracker = tracker)
+                val remainingVelocity = availableVelocity - preConsumedVelocity
+                val velocity = remainingVelocity.valueFor(axis)
+                if (dragStarted) {
+                    draggable?.onDragStopped?.invoke(remainingVelocity.valueFor(axis))
+                }
                 val swipeConsumed = if (axis != null && anchoredDraggable != null) {
                     runCatching {
                         val startOffset = anchoredDraggable.currentOffsetPx
@@ -396,7 +487,7 @@ private class ViewGestureDispatcher(
                         val settleResult = resolveAnchoredSettleTarget(
                             anchorsPx = anchoredDraggable.anchorOffsetsPx,
                             startOffsetPx = startOffset,
-                            currentOffsetPx = startOffset + total,
+                            currentOffsetPx = startOffset + localDragTotal,
                             velocityPxPerSecond = velocity,
                             touchSlopPx = touchSlop,
                             minFlingVelocityPxPerSecond = minimumFlingVelocity,
@@ -411,6 +502,12 @@ private class ViewGestureDispatcher(
                 } else {
                     false
                 }
+                if (dragStarted || swipeConsumed) {
+                    nestedParent?.dispatchPostFlingFromDescendant(
+                        consumed = remainingVelocity,
+                        available = ScrollVelocity.Zero,
+                    )
+                }
                 val dragConsumed = dragStarted
                 resetDragSwipeTracking()
                 return dragConsumed || swipeConsumed
@@ -422,6 +519,7 @@ private class ViewGestureDispatcher(
     private fun resetTrackingState() {
         resetDragSwipeTracking()
         resetTransformTracking()
+        dragBlockedUntilNextDown = false
     }
 
     private fun resetDragSwipeTracking() {
@@ -429,6 +527,7 @@ private class ViewGestureDispatcher(
         velocityTracker = null
         lockAxis = null
         dragStarted = false
+        localDragTotal = 0f
         swipeStartAnchorPx = 0f
     }
 
@@ -442,9 +541,45 @@ private class ViewGestureDispatcher(
         transformZoomMotion = 0f
         transformRotationMotion = 0f
         transformStreamActive = false
+        transformGestureStarted = false
         primaryTransformPointerId = INVALID_POINTER_ID
         secondaryTransformPointerId = INVALID_POINTER_ID
-        pointerStreamActive = false
+    }
+
+    private fun cancelDrag(reason: GestureCancellationReason) {
+        if (dragStarted) {
+            resolved.draggable?.onDragCancelled?.invoke(reason)
+            resolved.anchoredDraggable?.onDragCancelled?.invoke(reason)
+        }
+        resetDragSwipeTracking()
+    }
+
+    private fun finishTransform() {
+        if (transformGestureStarted) {
+            resolved.transformable?.onTransformStopped?.invoke()
+        }
+        resetTransformTracking()
+    }
+
+    private fun cancelTransform(reason: GestureCancellationReason) {
+        if (transformGestureStarted) {
+            resolved.transformable?.onTransformCancelled?.invoke(reason)
+        }
+        resetTransformTracking()
+    }
+
+    private fun dragParticipationChanged(
+        previous: ResolvedModifiers,
+        next: ResolvedModifiers,
+    ): Boolean {
+        val previousDraggable = previous.draggable?.takeIf { it.enabled }
+        val nextDraggable = next.draggable?.takeIf { it.enabled }
+        val previousAnchored = previous.anchoredDraggable?.takeIf { it.enabled }
+        val nextAnchored = next.anchoredDraggable?.takeIf { it.enabled }
+        return (previousDraggable != null) != (nextDraggable != null) ||
+            (previousAnchored != null) != (nextAnchored != null) ||
+            previousDraggable?.orientation != nextDraggable?.orientation ||
+            previousAnchored?.orientation != nextAnchored?.orientation
     }
 
     private fun resolveGestureOrientation(
@@ -464,18 +599,6 @@ private class ViewGestureDispatcher(
         return when (axis) {
             LockedAxis.Horizontal -> rawX - lastX
             LockedAxis.Vertical -> rawY - lastY
-        }
-    }
-
-    private fun resolveAxisTotal(
-        axis: LockedAxis?,
-        rawX: Float,
-        rawY: Float,
-    ): Float {
-        return when (axis) {
-            LockedAxis.Horizontal -> rawX - downX
-            LockedAxis.Vertical -> rawY - downY
-            null -> 0f
         }
     }
 
@@ -672,5 +795,46 @@ private class ViewGestureDispatcher(
 
     private fun Float.format(digits: Int): String {
         return "%.${digits}f".format(this)
+    }
+}
+
+private fun View.findNestedScrollHost(): DeclarativeNestedScrollHostLayout? {
+    var current = parent
+    while (current is View) {
+        if (current is DeclarativeNestedScrollHostLayout) {
+            return current
+        }
+        current = current.parent
+    }
+    return null
+}
+
+private fun LockedAxis.toScrollDelta(value: Float): ScrollDelta {
+    return when (this) {
+        LockedAxis.Horizontal -> ScrollDelta(x = value, y = 0f)
+        LockedAxis.Vertical -> ScrollDelta(x = 0f, y = value)
+    }
+}
+
+private fun LockedAxis?.toScrollVelocity(value: Float): ScrollVelocity {
+    return when (this) {
+        LockedAxis.Horizontal -> ScrollVelocity(x = value, y = 0f)
+        LockedAxis.Vertical -> ScrollVelocity(x = 0f, y = value)
+        null -> ScrollVelocity.Zero
+    }
+}
+
+private fun ScrollDelta.valueFor(axis: LockedAxis): Float {
+    return when (axis) {
+        LockedAxis.Horizontal -> x
+        LockedAxis.Vertical -> y
+    }
+}
+
+private fun ScrollVelocity.valueFor(axis: LockedAxis?): Float {
+    return when (axis) {
+        LockedAxis.Horizontal -> x
+        LockedAxis.Vertical -> y
+        null -> 0f
     }
 }

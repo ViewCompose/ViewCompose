@@ -19,18 +19,25 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
     implementation(project(":viewcompose-runtime"))
+    implementation(project(":viewcompose-text-core"))
     implementation(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-graphics-core"))
     implementation(project(":viewcompose-gesture-core"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.viewpager2)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.material)
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
 }

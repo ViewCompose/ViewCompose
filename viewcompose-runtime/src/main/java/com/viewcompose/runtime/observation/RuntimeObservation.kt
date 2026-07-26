@@ -8,23 +8,34 @@ internal interface ObservableState {
 class Observation internal constructor(
     private val onInvalidated: () -> Unit,
 ) {
+    private val stateLock = Any()
     private val states = LinkedHashSet<ObservableState>()
+    @Volatile
+    private var disposed: Boolean = false
 
     internal fun record(state: ObservableState) {
-        if (states.add(state)) {
-            state.addObserver(this)
+        synchronized(stateLock) {
+            if (!disposed && states.add(state)) {
+                state.addObserver(this)
+            }
         }
     }
 
     internal fun invalidate() {
-        onInvalidated()
+        if (!disposed) {
+            onInvalidated()
+        }
     }
 
     fun dispose() {
-        states.forEach { state ->
-            state.removeObserver(this)
+        synchronized(stateLock) {
+            if (disposed) return
+            disposed = true
+            states.forEach { state ->
+                state.removeObserver(this)
+            }
+            states.clear()
         }
-        states.clear()
     }
 }
 
@@ -40,6 +51,9 @@ object RuntimeObservation {
         currentObservation.set(observation)
         return try {
             block() to observation
+        } catch (error: Throwable) {
+            observation.dispose()
+            throw error
         } finally {
             currentObservation.set(previous)
         }

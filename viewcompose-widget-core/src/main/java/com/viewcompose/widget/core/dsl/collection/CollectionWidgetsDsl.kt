@@ -9,6 +9,8 @@ import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
 import com.viewcompose.ui.node.collection.TabRowTab
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
+import com.viewcompose.ui.node.policy.LazyContentPadding
+import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.LazyRowNodeProps
@@ -20,47 +22,69 @@ import com.viewcompose.ui.state.PagerState
 
 fun <T> UiTreeBuilder.LazyColumn(
     items: List<T>,
-    key: ((T) -> Any)? = null,
+    key: (T) -> Any,
+    contentType: (T) -> Any? = { null },
     contentPadding: Int = 0,
     spacing: Int = 0,
     state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
-    val localSnapshot = LocalContext.snapshot()
-    val resolvedItems = items.map { item ->
-        LazyListItem(
-            key = key?.invoke(item),
-            contentToken = item,
-            sessionFactory = LazyListItemSessionFactory { container ->
-                WidgetLazyListItemSession(
-                    container = container,
-                    localSnapshot = localSnapshot,
-                    content = {
-                        itemContent(item)
-                    },
-                )
-            },
-            sessionUpdater = { session ->
-                (session as? WidgetLazyListItemSession)?.updateContent(
-                    localSnapshot = localSnapshot,
-                    content = {
-                        itemContent(item)
-                    },
-                )
-            },
+    LazyColumn(
+        contentPadding = LazyContentPadding.all(contentPadding),
+        spacing = spacing,
+        state = state,
+        reverseLayout = reverseLayout,
+        userScrollEnabled = userScrollEnabled,
+        prefetchPolicy = prefetchPolicy,
+        reusePolicy = reusePolicy,
+        motionPolicy = motionPolicy,
+        focusFollowKeyboard = focusFollowKeyboard,
+        modifier = modifier,
+    ) {
+        items(
+            items = items,
+            key = key,
+            contentType = contentType,
+            itemContent = itemContent,
         )
     }
+}
+
+fun UiTreeBuilder.LazyColumn(
+    contentPadding: LazyContentPadding = LazyContentPadding.None,
+    spacing: Int = 0,
+    state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
+    reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
+    motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
+    focusFollowKeyboard: Boolean = false,
+    modifier: Modifier = Modifier,
+    content: LazyListScope.() -> Unit,
+) {
+    val collector = LazyItemCollector(LocalContext.snapshot())
+    LazyListScope(
+        collector = collector,
+        stickyHeadersAllowed = true,
+    ).content()
     emit(
         type = NodeType.LazyColumn,
         spec = LazyColumnNodeProps(
             contentPadding = contentPadding,
             spacing = spacing,
-            items = resolvedItems,
+            items = collector.build(),
             state = state,
+            reverseLayout = reverseLayout,
+            userScrollEnabled = userScrollEnabled,
+            prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
             focusFollowKeyboard = focusFollowKeyboard,
@@ -71,46 +95,66 @@ fun <T> UiTreeBuilder.LazyColumn(
 
 fun <T> UiTreeBuilder.LazyRow(
     items: List<T>,
-    key: ((T) -> Any)? = null,
+    key: (T) -> Any,
+    contentType: (T) -> Any? = { null },
     contentPadding: Int = 0,
     spacing: Int = 0,
     state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     modifier: Modifier = Modifier,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
-    val localSnapshot = LocalContext.snapshot()
-    val resolvedItems = items.map { item ->
-        LazyListItem(
-            key = key?.invoke(item),
-            contentToken = item,
-            sessionFactory = LazyListItemSessionFactory { container ->
-                WidgetLazyListItemSession(
-                    container = container,
-                    localSnapshot = localSnapshot,
-                    content = {
-                        itemContent(item)
-                    },
-                )
-            },
-            sessionUpdater = { session ->
-                (session as? WidgetLazyListItemSession)?.updateContent(
-                    localSnapshot = localSnapshot,
-                    content = {
-                        itemContent(item)
-                    },
-                )
-            },
+    LazyRow(
+        contentPadding = LazyContentPadding.all(contentPadding),
+        spacing = spacing,
+        state = state,
+        reverseLayout = reverseLayout,
+        userScrollEnabled = userScrollEnabled,
+        prefetchPolicy = prefetchPolicy,
+        reusePolicy = reusePolicy,
+        motionPolicy = motionPolicy,
+        modifier = modifier,
+    ) {
+        items(
+            items = items,
+            key = key,
+            contentType = contentType,
+            itemContent = itemContent,
         )
     }
+}
+
+fun UiTreeBuilder.LazyRow(
+    contentPadding: LazyContentPadding = LazyContentPadding.None,
+    spacing: Int = 0,
+    state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
+    reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
+    motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
+    modifier: Modifier = Modifier,
+    content: LazyListScope.() -> Unit,
+) {
+    val collector = LazyItemCollector(LocalContext.snapshot())
+    LazyListScope(
+        collector = collector,
+        stickyHeadersAllowed = false,
+    ).content()
     emit(
         type = NodeType.LazyRow,
         spec = LazyRowNodeProps(
             contentPadding = contentPadding,
             spacing = spacing,
-            items = resolvedItems,
+            items = collector.build(),
             state = state,
+            reverseLayout = reverseLayout,
+            userScrollEnabled = userScrollEnabled,
+            prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
         ),
@@ -121,41 +165,64 @@ fun <T> UiTreeBuilder.LazyRow(
 fun <T> UiTreeBuilder.LazyVerticalGrid(
     items: List<T>,
     spanCount: Int = 2,
-    key: ((T) -> Any)? = null,
+    key: (T) -> Any,
+    contentType: (T) -> Any? = { null },
+    span: (T) -> Int = { 1 },
     contentPadding: Int = 0,
     horizontalSpacing: Int = 0,
     verticalSpacing: Int = 0,
     state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
     focusFollowKeyboard: Boolean = false,
     modifier: Modifier = Modifier,
     itemContent: UiTreeBuilder.(T) -> Unit,
 ) {
-    val localSnapshot = LocalContext.snapshot()
-    val resolvedItems = items.map { item ->
-        LazyListItem(
-            key = key?.invoke(item),
-            contentToken = item,
-            sessionFactory = LazyListItemSessionFactory { container ->
-                WidgetLazyListItemSession(
-                    container = container,
-                    localSnapshot = localSnapshot,
-                    content = {
-                        itemContent(item)
-                    },
-                )
-            },
-            sessionUpdater = { session ->
-                (session as? WidgetLazyListItemSession)?.updateContent(
-                    localSnapshot = localSnapshot,
-                    content = {
-                        itemContent(item)
-                    },
-                )
-            },
+    LazyVerticalGrid(
+        spanCount = spanCount,
+        contentPadding = LazyContentPadding.all(contentPadding),
+        horizontalSpacing = horizontalSpacing,
+        verticalSpacing = verticalSpacing,
+        state = state,
+        reverseLayout = reverseLayout,
+        userScrollEnabled = userScrollEnabled,
+        prefetchPolicy = prefetchPolicy,
+        reusePolicy = reusePolicy,
+        motionPolicy = motionPolicy,
+        focusFollowKeyboard = focusFollowKeyboard,
+        modifier = modifier,
+    ) {
+        items(
+            items = items,
+            key = key,
+            contentType = contentType,
+            span = span,
+            itemContent = itemContent,
         )
     }
+}
+
+fun UiTreeBuilder.LazyVerticalGrid(
+    spanCount: Int = 2,
+    contentPadding: LazyContentPadding = LazyContentPadding.None,
+    horizontalSpacing: Int = 0,
+    verticalSpacing: Int = 0,
+    state: LazyListState? = null,
+    reverseLayout: Boolean = false,
+    userScrollEnabled: Boolean = true,
+    prefetchPolicy: LazyLayoutPrefetchPolicy = LazyLayoutPrefetchPolicy(),
+    reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
+    motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
+    focusFollowKeyboard: Boolean = false,
+    modifier: Modifier = Modifier,
+    content: LazyGridScope.() -> Unit,
+) {
+    require(spanCount > 0) { "spanCount must be greater than zero." }
+    val collector = LazyItemCollector(LocalContext.snapshot())
+    LazyGridScope(collector).content()
     emit(
         type = NodeType.LazyVerticalGrid,
         spec = LazyVerticalGridNodeProps(
@@ -163,8 +230,11 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
             contentPadding = contentPadding,
             horizontalSpacing = horizontalSpacing,
             verticalSpacing = verticalSpacing,
-            items = resolvedItems,
+            items = collector.build(),
             state = state,
+            reverseLayout = reverseLayout,
+            userScrollEnabled = userScrollEnabled,
+            prefetchPolicy = prefetchPolicy,
             reusePolicy = reusePolicy,
             motionPolicy = motionPolicy,
             focusFollowKeyboard = focusFollowKeyboard,

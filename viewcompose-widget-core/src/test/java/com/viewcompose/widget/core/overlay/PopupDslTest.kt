@@ -35,6 +35,7 @@ class PopupDslTest {
             PopupOverlaySpec(
                 anchorId = "feedback_popup_anchor",
                 alignment = PopupAlignment.AboveEnd,
+                windowMargin = 8.dp,
                 offsetY = 8.dp,
             ),
             request.payload,

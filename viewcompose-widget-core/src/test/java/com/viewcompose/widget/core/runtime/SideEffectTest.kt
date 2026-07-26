@@ -1,15 +1,16 @@
 package com.viewcompose.widget.core
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SideEffectTest {
     @Test
     fun `runs all registered effects on commit`() {
-        val store = SideEffectStore()
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
-        renderSideEffects(store) {
+        harness.render {
             SideEffect { events += "first" }
             SideEffect { events += "second" }
         }
@@ -18,17 +19,18 @@ class SideEffectTest {
             listOf("first", "second"),
             events,
         )
+        harness.dispose()
     }
 
     @Test
     fun `runs side effects again on next render`() {
-        val store = SideEffectStore()
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
-        renderSideEffects(store) {
+        harness.render {
             SideEffect { events += "render-1" }
         }
-        renderSideEffects(store) {
+        harness.render {
             SideEffect { events += "render-2" }
         }
 
@@ -36,27 +38,20 @@ class SideEffectTest {
             listOf("render-1", "render-2"),
             events,
         )
+        harness.dispose()
     }
 
     @Test
-    fun `side effect outside render context is ignored`() {
+    fun `side effect outside composition fails fast`() {
         val events = mutableListOf<String>()
 
-        SideEffect { events += "outside" }
+        val error = runCatching {
+            SideEffect { events += "outside" }
+        }.exceptionOrNull()
 
-        assertEquals(
-            emptyList<String>(),
-            events,
-        )
-    }
-
-    private fun renderSideEffects(
-        store: SideEffectStore,
-        block: () -> Unit,
-    ) {
-        SideEffectContext.withStore(store) {
-            block()
-        }
-        store.commit()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("SideEffect"))
+        assertTrue(error?.message.orEmpty().contains("active ViewCompose composition"))
+        assertEquals(emptyList<String>(), events)
     }
 }

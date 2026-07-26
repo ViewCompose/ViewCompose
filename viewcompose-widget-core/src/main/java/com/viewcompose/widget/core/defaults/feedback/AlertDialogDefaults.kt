@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 object AlertDialogDefaults {
     fun containerColor(): Int = Theme.colors.surface
 
@@ -13,7 +15,7 @@ object AlertDialogDefaults {
 
     fun textStyle(): UiTextStyle = TextDefaults.bodyMediumStyle()
 
-    fun cornerRadius(): Int = Theme.shapes.mediumCornerRadius
+    fun shape(): UiShape = Theme.shapes.medium
 
     fun contentPadding(): Int = 24.dp
 

@@ -11,6 +11,14 @@ enum class GesturePriority {
     High,
 }
 
+enum class GestureCancellationReason {
+    SystemCancelled,
+    TransformTookOver,
+    PointerInputConsumed,
+    ModifierChanged,
+    Disposed,
+}
+
 enum class PointerEventType {
     Down,
     Move,

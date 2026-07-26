@@ -34,8 +34,86 @@
 15. 列表/分页容器支持 opt-in motion 策略（insert/remove/move/change），与 `DiffUtil + ItemAnimator` 协同且不改变默认容器行为。
 16. graphics 主链已落地 Canvas 节点与 draw modifiers；`drawWithCache` 支持跨帧缓存命中/失效，避免高频绘制场景重复构建命令。
 17. graphics 执行器已收口 v2 基线：`DrawRoundRect` 四角半径语义正确、`Drawable` 绘制支持 `DrawPaint` 组合、`ImageFilterModel.Chain` 可递归合并生效。
+18. 发布态基线使用 R8 + resource shrink 的非 debuggable `benchmark` target；`ReleaseBaselineBenchmark` 固定覆盖无 ART 预编译的冷启动与 state patch 帧耗时。
+19. 列表性能对比使用同一 target、同一份 1000 项数据与完全一致的交互脚本，分别运行 ViewCompose `LazyColumn` 和 Jetpack Compose `LazyColumn`；覆盖双向快速滚动与 keyed reorder + payload 内容更新。
+20. 复杂布局对比使用同一份 18 卡片仪表盘模型，分别运行 ViewCompose `ScrollableColumn` 与 Compose `Column.verticalScroll`；全部子树一次挂载，覆盖深层嵌套滚动、全卡片字段更新和条件详情子树变更。
+21. 两组对照均采集帧耗时与最大 heap/RSS；`compare_macrobenchmarks.py` 自动生成 Markdown/JSON 配对报告，并支持以 Compose 为同次运行控制组的归一化回归门禁。
 
-### 2.2 当前结论
+### 2.2 发布态基准入口
+
+构建门禁：
+
+```bash
+./gradlew qaRelease
+```
+
+该任务同时构建 R8 优化的 `release`、非 debuggable `benchmark` target 和 benchmark
+instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
+
+设备基准：
+
+```bash
+./gradlew benchmarkRelease
+```
+
+设备基准并生成 Compose 对照报告：
+
+```bash
+./gradlew benchmarkCompare
+```
+
+结果默认写入：
+
+1. `build/reports/benchmarks/compose-comparison.md`
+2. `build/reports/benchmarks/compose-comparison.json`
+
+对已有结果重新生成报告：
+
+```bash
+./gradlew benchmarkComparisonReport \
+  -PbenchmarkResult=/path/to/current-benchmarkData.json
+```
+
+与同设备历史基线比较并执行回归门禁：
+
+```bash
+./gradlew benchmarkComparisonReport \
+  -PbenchmarkResult=/path/to/current-benchmarkData.json \
+  -PbenchmarkBaseline=/path/to/baseline-benchmarkData.json
+```
+
+发布态权威基线是 `ReleaseBaselineBenchmark`：
+
+1. target 为 R8 优化、resource shrink、非 debuggable 的 benchmark variant。
+2. `CompilationMode.None` 隔离 ART 预编译收益，直接暴露交付二进制回归。
+3. 固定场景为冷启动和 state patch。
+4. 结果只在同设备、同系统版本、同温控状态下纵向比较。
+
+Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
+
+1. 两个引擎运行在同一个 R8 target 中，排除应用配置、资源和进程环境差异。
+2. 使用 `CompilationMode.None`，避免 ART 预编译掩盖框架交付成本。
+3. `viewComposeListScroll/composeListScroll` 使用相同手势轨迹。
+4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新。
+5. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
+
+复杂布局对照基线是 `ComplexLayoutPerformanceComparisonBenchmark`：
+
+1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` 对比非 Lazy 整树滚动。
+2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并切换条件详情子树。
+3. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
+4. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
+
+自动报告与回归规则：
+
+1. 对照表固定输出 frame CPU P50/P95、frame overrun P50/P95、heap max 与 RSS anon max。
+2. 每个场景的 ViewCompose 与 Compose 结果必须来自同一份 benchmark JSON。
+3. 历史回归只允许同设备型号、系统 fingerprint、CPU lock 状态和 compilation mode。
+4. 门禁必须同时满足“ViewCompose 原始指标超过阈值”和“ViewCompose/Compose 归一化比值超过阈值”才失败。
+5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
+6. 报告会计算各 iteration P50 的变异系数；超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。
+
+### 2.3 当前结论
 
 1. 当前阶段优先级不是“追求极限 FPS”，而是先控制回归风险和错误用法。
 2. 最关键收益来自：
@@ -64,7 +142,7 @@
 1. 新控件必须先定义“高频路径”和“可接受开销”，再扩参数。
 2. 新 modifier/props 不得引入无条件全量 rebind。
 3. 复用型容器必须有“结构稳定仍刷新可见内容”路径。
-4. `AndroidView` 视为性能隔离区，复杂逻辑优先在外部宿主层控制。
+4. `AndroidView` 视为性能隔离区；可重放配置放在 `update/onReset/nativeView`，外部提交副作用放在 `onCommit`，资源解绑放在只执行一次的 `onRelease`。
 5. 不为短期优化破坏模块边界和可维护性。
 6. 节点组开发必须保持 group key 稳定；若无法稳定，需显式接受“祖先回退重组 + 告警”成本。
 7. 状态并发写入必须通过 snapshot apply 语义验证，禁止在性能优化中绕过冲突合并与失败路径。
@@ -96,18 +174,18 @@
 
 ### Phase 3：诊断增强
 
-状态：待继续推进  
-目标：让 render/patch/layout 问题定位更直接可用
+状态：核心可视化已完成
+目标：render tree、patch、CompositionLocal 与重组原因已可直接读取；后续补节点高亮、跨 session 关联与逐节点耗时
 
 ### Phase 4：容器与布局收口
 
-状态：待推进  
+状态：列表、复杂布局 Compose 对照、内存指标、自动报告与归一化回归门禁已建立
 目标：收敛高频容器和复杂页面的布局开销
 
 ### Phase 5：发布态优化
 
-状态：待推进  
-目标：baseline profile 等发布链路优化稳定化
+状态：R8 release 基准已建立，baseline profile 待推进
+目标：在当前无 ART 预编译基线上继续量化 baseline profile 等发布链路收益
 
 ## 7. 评审与提交流程
 

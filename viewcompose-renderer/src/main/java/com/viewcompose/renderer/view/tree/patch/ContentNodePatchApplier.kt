@@ -18,8 +18,11 @@ internal object ContentNodePatchApplier {
         view: TextView,
         patch: TextNodePatch,
     ) {
-        if (patch.previous.text != patch.next.text) {
-            view.text = patch.next.text
+        if (patch.previous.document != patch.next.document) {
+            view.text = com.viewcompose.renderer.view.tree.AndroidTextDocumentAdapter.toCharSequence(
+                view,
+                patch.next.document,
+            )
         }
         if (patch.previous.maxLines != patch.next.maxLines) {
             view.maxLines = patch.next.maxLines
@@ -114,7 +117,7 @@ internal object ContentNodePatchApplier {
                 backgroundColor = patch.next.backgroundColor,
                 borderWidth = patch.next.borderWidth,
                 borderColor = patch.next.borderColor,
-                cornerRadius = patch.next.cornerRadius,
+                shape = patch.next.shape,
                 rippleColor = patch.next.rippleColor,
                 clickable = true,
             )
@@ -157,7 +160,7 @@ internal object ContentNodePatchApplier {
         return patch.previous.backgroundColor != patch.next.backgroundColor ||
             patch.previous.borderWidth != patch.next.borderWidth ||
             patch.previous.borderColor != patch.next.borderColor ||
-            patch.previous.cornerRadius != patch.next.cornerRadius ||
+            patch.previous.shape != patch.next.shape ||
             patch.previous.rippleColor != patch.next.rippleColor
     }
 

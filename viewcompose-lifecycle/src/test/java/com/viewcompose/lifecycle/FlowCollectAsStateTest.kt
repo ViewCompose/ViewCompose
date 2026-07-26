@@ -3,6 +3,7 @@ package com.viewcompose.lifecycle
 import com.viewcompose.runtime.State
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FlowCollectAsStateTest {
@@ -119,6 +121,22 @@ class FlowCollectAsStateTest {
             }
         }
         assertEquals(1, canceled)
+    }
+
+    @Test
+    fun `collectAsState rejects a detached job context`() {
+        val harness = WidgetCoreRuntimeHarness()
+        val source = MutableStateFlow(1)
+
+        val invocationError = runCatching {
+            harness.render {
+                source.collectAsState(context = Job())
+            }
+        }.exceptionOrNull()
+        val error = invocationError?.cause ?: invocationError
+
+        assertTrue(error is IllegalArgumentException)
+        harness.dispose()
     }
 
     private suspend fun <T> awaitValue(

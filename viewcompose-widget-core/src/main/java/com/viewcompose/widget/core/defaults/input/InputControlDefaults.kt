@@ -6,141 +6,141 @@ object InputControlDefaults {
     fun checkboxLabelColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalCheckboxColors)
         return if (enabled) {
-            override?.label ?: Theme.colors.onSurface
+            override?.label ?: Theme.stateColors.primaryText.resolve()
         } else {
-            override?.labelDisabled ?: Theme.colors.onSurfaceVariant
+            override?.labelDisabled ?: Theme.stateColors.primaryText.resolve(enabled = false)
         }
     }
 
     fun checkboxControlColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalCheckboxColors)
         return if (enabled) {
-            override?.control ?: Theme.colors.primary
+            override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
     fun checkboxCheckedColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalCheckboxColors)
         return if (enabled) {
-            override?.control ?: Theme.colors.primary
+            override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
     fun checkboxUncheckedColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalCheckboxColors)
         return if (enabled) {
-            Theme.colors.outline
+            Theme.stateColors.control.resolve()
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.control.resolve(enabled = false)
         }
     }
 
     fun switchLabelColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return if (enabled) {
-            override?.label ?: Theme.colors.onSurface
+            override?.label ?: Theme.stateColors.primaryText.resolve()
         } else {
-            override?.labelDisabled ?: Theme.colors.onSurfaceVariant
+            override?.labelDisabled ?: Theme.stateColors.primaryText.resolve(enabled = false)
         }
     }
 
     fun switchControlColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return if (enabled) {
-            override?.control ?: Theme.colors.primary
+            override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
     fun switchThumbColor(checked: Boolean = true, enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return when {
-            !enabled -> override?.controlDisabled ?: Theme.colors.outlineVariant
-            checked -> override?.control ?: Theme.colors.primary
-            else -> Theme.colors.outline
+            !enabled -> override?.controlDisabled ?: Theme.stateColors.control.resolve(enabled = false)
+            checked -> override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
+            else -> Theme.stateColors.control.resolve()
         }
     }
 
     fun switchTrackColor(checked: Boolean = true, enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return when {
-            !enabled -> override?.controlDisabled ?: Theme.colors.outlineVariant
+            !enabled -> override?.controlDisabled ?: Theme.stateColors.control.resolve(enabled = false)
             checked -> {
-                val base = override?.control ?: Theme.colors.primary
+                val base = override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
                 (base and 0x00FFFFFF) or 0x61000000
             }
-            else -> Theme.colors.outlineVariant
+            else -> Theme.stateColors.control.resolve()
         }
     }
 
     fun radioButtonLabelColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalRadioButtonColors)
         return if (enabled) {
-            override?.label ?: Theme.colors.onSurface
+            override?.label ?: Theme.stateColors.primaryText.resolve()
         } else {
-            override?.labelDisabled ?: Theme.colors.onSurfaceVariant
+            override?.labelDisabled ?: Theme.stateColors.primaryText.resolve(enabled = false)
         }
     }
 
     fun radioButtonControlColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalRadioButtonColors)
         return if (enabled) {
-            override?.control ?: Theme.colors.primary
+            override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
     fun radioButtonCheckedColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalRadioButtonColors)
         return if (enabled) {
-            override?.control ?: Theme.colors.primary
+            override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
     fun radioButtonUncheckedColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalRadioButtonColors)
         return if (enabled) {
-            Theme.colors.outline
+            Theme.stateColors.control.resolve()
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.control.resolve(enabled = false)
         }
     }
 
     fun sliderControlColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSliderColors)
         return if (enabled) {
-            override?.control ?: Theme.colors.primary
+            override?.control ?: Theme.stateColors.controlActivated.resolve()
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
     fun sliderThumbColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSliderColors)
         return if (enabled) {
-            override?.control ?: Theme.colors.primary
+            override?.control ?: Theme.stateColors.controlActivated.resolve()
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
     fun sliderTrackColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSliderColors)
         return if (enabled) {
-            val base = override?.control ?: Theme.colors.primary
+            val base = override?.control ?: Theme.stateColors.controlActivated.resolve()
             (base and 0x00FFFFFF) or 0x61000000
         } else {
-            override?.controlDisabled ?: Theme.colors.outlineVariant
+            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
-    fun pressedColor(): Int = Theme.colors.ripple
+    fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
 }

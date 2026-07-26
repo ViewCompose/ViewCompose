@@ -9,93 +9,148 @@ interface SnackbarOverlayPresenter {
     fun show(
         entryId: OverlayEntryId,
         spec: SnackbarOverlaySpec,
+        onDismissed: (TransientFeedbackDismissReason) -> Unit,
     )
 
-    fun dismiss(entryId: OverlayEntryId)
+    fun dismiss(
+        entryId: OverlayEntryId,
+        reason: TransientFeedbackDismissReason,
+    )
 }
 
 interface ToastOverlayPresenter {
     fun show(
         entryId: OverlayEntryId,
         spec: ToastOverlaySpec,
+        onDismissed: (TransientFeedbackDismissReason) -> Unit,
     )
 
-    fun dismiss(entryId: OverlayEntryId)
+    fun dismiss(
+        entryId: OverlayEntryId,
+        reason: TransientFeedbackDismissReason,
+    )
 }
+
+data class TransientFeedbackQueueSnapshot(
+    val active: OverlayEntryId?,
+    val pending: List<OverlayEntryId>,
+    val consumed: Set<OverlayEntryId>,
+)
 
 class TransientFeedbackOverlayHost(
     private val snackbarPresenter: SnackbarOverlayPresenter,
     private val toastPresenter: ToastOverlayPresenter,
 ) : OverlayHost {
-    private val activeRequests = mutableMapOf<OverlayEntryId, OverlayRequest>()
+    private val desiredRequests = linkedMapOf<OverlayEntryId, OverlayRequest>()
+    private val pendingRequests = mutableListOf<QueueEntry>()
+    private val consumedRequests = mutableMapOf<OverlayEntryId, OverlayRequest>()
+    private var activeRequest: ActiveEntry? = null
+    private var nextActivationToken = 0L
+    private var reconciliationDepth = 0
 
     override fun commit(
         sessionId: OverlaySessionId,
         requests: List<OverlayRequest>,
     ) {
-        val nextRequests = requests.mapNotNull { request ->
-            request.toSupportedEntry(sessionId)
-        }.associateBy(
-            keySelector = { it.first },
-            valueTransform = { it.second },
-        )
-        val previousKeys = activeRequests.keys.filter { it.sessionId == sessionId }
-
-        previousKeys.filter { it !in nextRequests.keys }.forEach { entryId ->
-            activeRequests.remove(entryId)?.let { request ->
-                dismiss(
+        reconcile {
+            val nextRequests = linkedMapOf<OverlayEntryId, OverlayRequest>()
+            requests.forEach { request ->
+                request.toSupportedEntry(sessionId)?.let { entry ->
+                    nextRequests[entry.entryId] = entry.request
+                }
+            }
+            val removedIds = desiredRequests.keys
+                .filter { it.sessionId == sessionId && it !in nextRequests }
+            removedIds.forEach { entryId ->
+                removeDesired(
                     entryId = entryId,
-                    request = request,
+                    reason = TransientFeedbackDismissReason.Removed,
                 )
             }
-        }
-
-        nextRequests.forEach { (entryId, nextRequest) ->
-            val previous = activeRequests[entryId]
-            if (previous == nextRequest) {
-                return@forEach
+            nextRequests.forEach { (entryId, nextRequest) ->
+                val previousRequest = desiredRequests.put(entryId, nextRequest)
+                if (previousRequest == nextRequest) {
+                    return@forEach
+                }
+                consumedRequests.remove(entryId)
+                pendingRequests.removeAll { it.entryId == entryId }
+                if (activeRequest?.entry?.entryId == entryId) {
+                    pendingRequests.add(
+                        index = 0,
+                        element = QueueEntry(entryId, nextRequest),
+                    )
+                    dismissActive(TransientFeedbackDismissReason.Replaced)
+                } else {
+                    enqueue(QueueEntry(entryId, nextRequest))
+                }
             }
-            if (previous != null && previous.type != nextRequest.type) {
-                dismiss(
-                    entryId = entryId,
-                    request = previous,
-                )
-            }
-            show(
-                entryId = entryId,
-                request = nextRequest,
-            )
-            activeRequests[entryId] = nextRequest
         }
     }
 
     override fun clear(sessionId: OverlaySessionId) {
-        val keys = activeRequests.keys.filter { it.sessionId == sessionId }
-        keys.forEach { entryId ->
-            activeRequests.remove(entryId)?.let { request ->
-                dismiss(
-                    entryId = entryId,
-                    request = request,
-                )
+        reconcile {
+            desiredRequests.keys
+                .filter { it.sessionId == sessionId }
+                .forEach { entryId ->
+                    removeDesired(
+                        entryId = entryId,
+                        reason = TransientFeedbackDismissReason.SessionCleared,
+                    )
+                }
+        }
+    }
+
+    fun snapshot(): TransientFeedbackQueueSnapshot {
+        return TransientFeedbackQueueSnapshot(
+            active = activeRequest?.entry?.entryId,
+            pending = pendingRequests.map { it.entryId },
+            consumed = consumedRequests.keys.toSet(),
+        )
+    }
+
+    private fun enqueue(entry: QueueEntry) {
+        when (entry.request.queuePolicy()) {
+            TransientFeedbackQueuePolicy.Enqueue,
+            TransientFeedbackQueuePolicy.ReplaceSameKey,
+            -> pendingRequests += entry
+
+            TransientFeedbackQueuePolicy.ReplaceCurrent -> {
+                pendingRequests.add(index = 0, element = entry)
+                dismissActive(TransientFeedbackDismissReason.Replaced)
+            }
+
+            TransientFeedbackQueuePolicy.DropIfBusy -> {
+                if (activeRequest != null || pendingRequests.isNotEmpty()) {
+                    consumedRequests[entry.entryId] = entry.request
+                    entry.request.notifyDismissed(TransientFeedbackDismissReason.Dropped)
+                } else {
+                    pendingRequests += entry
+                }
             }
         }
     }
 
-    private fun show(
+    private fun removeDesired(
         entryId: OverlayEntryId,
-        request: OverlayRequest,
+        reason: TransientFeedbackDismissReason,
     ) {
-        when (request.type) {
-            OverlayType.Snackbar -> {
-                val spec = request.payload as? SnackbarOverlaySpec ?: return
-                snackbarPresenter.show(entryId, spec)
-            }
+        desiredRequests.remove(entryId)
+        consumedRequests.remove(entryId)
+        pendingRequests.removeAll { it.entryId == entryId }
+        if (activeRequest?.entry?.entryId == entryId) {
+            dismissActive(reason)
+        }
+    }
 
-            OverlayType.Toast -> {
-                val spec = request.payload as? ToastOverlaySpec ?: return
-                toastPresenter.show(entryId, spec)
-            }
-
+    private fun dismissActive(reason: TransientFeedbackDismissReason) {
+        val active = activeRequest ?: return
+        if (active.dismissRequested) {
+            return
+        }
+        active.dismissRequested = true
+        when (active.entry.request.type) {
+            OverlayType.Snackbar -> snackbarPresenter.dismiss(active.entry.entryId, reason)
+            OverlayType.Toast -> toastPresenter.dismiss(active.entry.entryId, reason)
             OverlayType.Dialog,
             OverlayType.Popup,
             OverlayType.ModalBottomSheet,
@@ -103,44 +158,130 @@ class TransientFeedbackOverlayHost(
         }
     }
 
-    private fun dismiss(
-        entryId: OverlayEntryId,
-        request: OverlayRequest,
-    ) {
-        when (request.type) {
-            OverlayType.Snackbar -> snackbarPresenter.dismiss(entryId)
-            OverlayType.Toast -> toastPresenter.dismiss(entryId)
-            OverlayType.Dialog,
-            OverlayType.Popup,
-            OverlayType.ModalBottomSheet,
-            -> Unit
+    private fun drainQueue() {
+        if (reconciliationDepth > 0 || activeRequest != null) {
+            return
+        }
+        while (pendingRequests.isNotEmpty()) {
+            val next = pendingRequests.removeAt(0)
+            if (
+                desiredRequests[next.entryId] != next.request ||
+                consumedRequests[next.entryId] == next.request
+            ) {
+                continue
+            }
+            show(next)
+            return
         }
     }
 
-    private fun OverlayRequest.toSupportedEntry(sessionId: OverlaySessionId): Pair<OverlayEntryId, OverlayRequest>? {
-        return when (type) {
-            OverlayType.Snackbar -> {
-                val spec = payload as? SnackbarOverlaySpec ?: return null
-                val entryId = OverlayEntryId(
-                    sessionId = sessionId,
-                    requestKey = key,
-                )
-                entryId to copy(payload = spec, contentToken = contentToken ?: spec)
-            }
+    private fun show(entry: QueueEntry) {
+        val token = ++nextActivationToken
+        activeRequest = ActiveEntry(
+            entry = entry,
+            token = token,
+        )
+        val onDismissed: (TransientFeedbackDismissReason) -> Unit = { reason ->
+            complete(
+                token = token,
+                reason = reason,
+            )
+        }
+        try {
+            when (entry.request.type) {
+                OverlayType.Snackbar -> {
+                    val spec = entry.request.payload as SnackbarOverlaySpec
+                    snackbarPresenter.show(entry.entryId, spec, onDismissed)
+                }
 
-            OverlayType.Toast -> {
-                val spec = payload as? ToastOverlaySpec ?: return null
-                val entryId = OverlayEntryId(
-                    sessionId = sessionId,
-                    requestKey = key,
-                )
-                entryId to copy(payload = spec, contentToken = contentToken ?: spec)
-            }
+                OverlayType.Toast -> {
+                    val spec = entry.request.payload as ToastOverlaySpec
+                    toastPresenter.show(entry.entryId, spec, onDismissed)
+                }
 
+                OverlayType.Dialog,
+                OverlayType.Popup,
+                OverlayType.ModalBottomSheet,
+                -> complete(token, TransientFeedbackDismissReason.Platform)
+            }
+        } catch (throwable: Throwable) {
+            complete(token, TransientFeedbackDismissReason.Platform)
+            throw throwable
+        }
+    }
+
+    private fun complete(
+        token: Long,
+        reason: TransientFeedbackDismissReason,
+    ) {
+        val completed = activeRequest?.takeIf { it.token == token } ?: return
+        activeRequest = null
+        if (desiredRequests[completed.entry.entryId] == completed.entry.request) {
+            consumedRequests[completed.entry.entryId] = completed.entry.request
+        }
+        try {
+            completed.entry.request.notifyDismissed(reason)
+        } finally {
+            drainQueue()
+        }
+    }
+
+    private inline fun reconcile(block: () -> Unit) {
+        reconciliationDepth += 1
+        try {
+            block()
+        } finally {
+            reconciliationDepth -= 1
+            drainQueue()
+        }
+    }
+
+    private fun OverlayRequest.toSupportedEntry(
+        sessionId: OverlaySessionId,
+    ): QueueEntry? {
+        val supportedPayload = when (type) {
+            OverlayType.Snackbar -> payload as? SnackbarOverlaySpec
+            OverlayType.Toast -> payload as? ToastOverlaySpec
             OverlayType.Dialog,
             OverlayType.Popup,
             OverlayType.ModalBottomSheet,
             -> null
+        } ?: return null
+        return QueueEntry(
+            entryId = OverlayEntryId(
+                sessionId = sessionId,
+                requestKey = key,
+            ),
+            request = copy(
+                payload = supportedPayload,
+                contentToken = contentToken ?: supportedPayload,
+            ),
+        )
+    }
+
+    private fun OverlayRequest.queuePolicy(): TransientFeedbackQueuePolicy {
+        return when (val spec = payload) {
+            is SnackbarOverlaySpec -> spec.queuePolicy
+            is ToastOverlaySpec -> spec.queuePolicy
+            else -> TransientFeedbackQueuePolicy.Enqueue
         }
     }
+
+    private fun OverlayRequest.notifyDismissed(reason: TransientFeedbackDismissReason) {
+        when (val spec = payload) {
+            is SnackbarOverlaySpec -> spec.onDismiss?.invoke(reason)
+            is ToastOverlaySpec -> spec.onDismiss?.invoke(reason)
+        }
+    }
+
+    private data class QueueEntry(
+        val entryId: OverlayEntryId,
+        val request: OverlayRequest,
+    )
+
+    private data class ActiveEntry(
+        val entry: QueueEntry,
+        val token: Long,
+        var dismissRequested: Boolean = false,
+    )
 }

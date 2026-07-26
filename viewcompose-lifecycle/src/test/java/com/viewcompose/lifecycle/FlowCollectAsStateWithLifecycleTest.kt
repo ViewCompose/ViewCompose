@@ -6,17 +6,38 @@ import androidx.lifecycle.LifecycleRegistry
 import com.viewcompose.runtime.State
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class FlowCollectAsStateWithLifecycleTest {
+    private val mainDispatcher = UnconfinedTestDispatcher()
+
+    @Before
+    fun installMainDispatcher() {
+        Dispatchers.setMain(mainDispatcher)
+    }
+
+    @After
+    fun resetMainDispatcher() {
+        Dispatchers.resetMain()
+    }
+
     @Test
     fun `collectAsStateWithLifecycle starts and stops with lifecycle state`() = runBlocking {
         val harness = WidgetCoreRuntimeHarness()
@@ -115,6 +136,67 @@ class FlowCollectAsStateWithLifecycleTest {
             }
         }
         assertEquals(1, canceled)
+    }
+
+    @Test
+    fun `collectAsStateWithLifecycle rejects non-active lifecycle thresholds`() {
+        val source = MutableStateFlow(1)
+        val owner = TestLifecycleOwner()
+
+        listOf(
+            Lifecycle.State.INITIALIZED,
+            Lifecycle.State.DESTROYED,
+        ).forEach { invalidState ->
+            val error = runCatching {
+                source.collectAsStateWithLifecycle(
+                    lifecycleOwner = owner,
+                    minActiveState = invalidState,
+                )
+            }.exceptionOrNull()
+
+            assertTrue(error is IllegalArgumentException)
+        }
+    }
+
+    @Test
+    fun `rapid lifecycle restart serializes collectors through cancellation cleanup`() = runBlocking {
+        val harness = WidgetCoreRuntimeHarness()
+        val owner = TestLifecycleOwner()
+        var activeCollectors = 0
+        var maxActiveCollectors = 0
+        var starts = 0
+        val source = flow {
+            activeCollectors += 1
+            starts += 1
+            maxActiveCollectors = maxOf(maxActiveCollectors, activeCollectors)
+            try {
+                emit(starts)
+                awaitCancellation()
+            } finally {
+                withContext(NonCancellable) {
+                    delay(25)
+                    activeCollectors -= 1
+                }
+            }
+        }
+
+        owner.handle(Lifecycle.Event.ON_CREATE)
+        owner.handle(Lifecycle.Event.ON_START)
+        val state = harness.render {
+            source.collectAsStateWithLifecycle(
+                initial = 0,
+                lifecycle = owner.lifecycle,
+                context = Dispatchers.Unconfined,
+            )
+        }
+        awaitValue(state) { it == 1 }
+
+        owner.handle(Lifecycle.Event.ON_STOP)
+        owner.handle(Lifecycle.Event.ON_START)
+        awaitValue(state) { it == 2 }
+
+        assertEquals(1, maxActiveCollectors)
+        harness.dispose()
     }
 
     private suspend fun <T> awaitValue(

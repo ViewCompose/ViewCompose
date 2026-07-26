@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -28,7 +29,6 @@ class AndroidThemeBridgeTest {
             com.google.android.material.R.attr.colorOnErrorContainer to 92,
             com.google.android.material.R.attr.colorOutline to 6,
             com.google.android.material.R.attr.colorOutlineVariant to 61,
-            androidx.appcompat.R.attr.colorAccent to 62,
             com.google.android.material.R.attr.colorSurfaceInverse to 63,
             com.google.android.material.R.attr.colorOnSurfaceInverse to 64,
         )
@@ -54,7 +54,7 @@ class AndroidThemeBridgeTest {
         assertEquals(92, tokens.colors.onErrorContainer)
         assertEquals(6, tokens.colors.outline)
         assertEquals(61, tokens.colors.outlineVariant)
-        assertEquals(62, tokens.colors.surfaceTint)
+        assertEquals(4, tokens.colors.surfaceTint)
         assertEquals(63, tokens.colors.inverseSurface)
         assertEquals(64, tokens.colors.inverseOnSurface)
     }
@@ -149,9 +149,9 @@ class AndroidThemeBridgeTest {
                     ripple = 77,
                 ),
                 shapes = AndroidThemeShapeSnapshot(
-                    smallCornerRadius = 12,
-                    mediumCornerRadius = 20,
-                    largeCornerRadius = 28,
+                    small = UiShape.rounded(12),
+                    medium = UiShape.cut(20),
+                    large = UiShape.roundedRelative(0.5f),
                 ),
                 scrimOpacity = 0.58f,
             ),
@@ -159,10 +159,9 @@ class AndroidThemeBridgeTest {
 
         assertEquals(77, tokens.colors.ripple)
         assertEquals(0.58f, tokens.overlays.scrimOpacity, 0.0001f)
-        assertEquals(12, tokens.shapes.smallCornerRadius)
-        assertEquals(20, tokens.shapes.mediumCornerRadius)
-        assertEquals(28, tokens.shapes.largeCornerRadius)
-        assertEquals(20, tokens.shapes.mediumCornerRadius)
+        assertEquals(UiShape.rounded(12), tokens.shapes.small)
+        assertEquals(UiShape.cut(20), tokens.shapes.medium)
+        assertEquals(UiShape.roundedRelative(0.5f), tokens.shapes.large)
     }
 
     @Test

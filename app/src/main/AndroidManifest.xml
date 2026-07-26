@@ -54,6 +54,9 @@
             android:name=".PreviewActivity"
             android:exported="false" />
         <activity
+            android:name=".performance.PerformanceComparisonActivity"
+            android:exported="false" />
+        <activity
             android:name=".LayoutsActivity"
             android:exported="false" />
         <activity

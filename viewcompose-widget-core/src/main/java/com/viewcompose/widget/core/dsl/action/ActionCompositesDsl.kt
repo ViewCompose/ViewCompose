@@ -8,11 +8,11 @@ import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.border
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.clip
-import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.ImageSource
 
 fun UiTreeBuilder.FloatingActionButton(
@@ -25,11 +25,11 @@ fun UiTreeBuilder.FloatingActionButton(
     content: UiTreeBuilder.() -> Unit,
 ) {
     val fabSize = FabDefaults.size(size)
-    val radius = FabDefaults.cornerRadius(size)
+    val shape = FabDefaults.shape(size)
     val semanticModifier = Modifier
         .size(width = fabSize, height = fabSize)
         .backgroundColor(containerColor)
-        .cornerRadius(radius)
+        .shape(shape)
         .elevation(FabDefaults.elevation())
         .clip()
         .clickable(onClick)
@@ -55,11 +55,11 @@ fun UiTreeBuilder.ExtendedFloatingActionButton(
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
-    val radius = FabDefaults.extendedCornerRadius()
+    val shape = FabDefaults.extendedShape()
     val semanticModifier = Modifier
         .height(FabDefaults.extendedHeight())
         .backgroundColor(containerColor)
-        .cornerRadius(radius)
+        .shape(shape)
         .elevation(FabDefaults.elevation())
         .clip()
         .clickable(onClick)
@@ -103,7 +103,7 @@ fun UiTreeBuilder.Chip(
     val cColor = ChipDefaults.contentColor(variant, selected, enabled)
     val bw = ChipDefaults.borderWidth(variant, selected)
     val bc = ChipDefaults.borderColor(variant, selected, enabled)
-    val radius = ChipDefaults.cornerRadius()
+    val shape = ChipDefaults.shape()
     val leftPadding = if (leadingIcon != null) {
         ChipDefaults.leadingIconPadding()
     } else {
@@ -118,7 +118,7 @@ fun UiTreeBuilder.Chip(
         .height(ChipDefaults.height())
         .backgroundColor(bgColor)
         .let { m -> if (bw > 0) m.border(bw, bc) else m }
-        .cornerRadius(radius)
+        .shape(shape)
         .clip()
         .let { m ->
             if (enabled) {

@@ -1,5 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.ImageSource
@@ -39,6 +41,7 @@ import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.node.spec.NodeSpec
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -483,7 +486,7 @@ class NodeBindingDifferTest {
                 backgroundColor = 0xFF0000FF.toInt(),
                 borderWidth = 0,
                 borderColor = 0,
-                cornerRadius = 8,
+                shape = UiShape.rounded(8),
                 rippleColor = 0x33000000,
                 minHeight = 48,
                 paddingHorizontal = 16,
@@ -505,23 +508,29 @@ class NodeBindingDifferTest {
         return VNode(
             type = NodeType.TextField,
             spec = TextFieldNodeProps(
-                value = value,
+                state = TextFieldState(TextFieldValue(value)),
+                value = TextFieldValue(value),
                 placeholder = "Hint",
                 enabled = true,
                 singleLine = true,
                 minLines = 1,
                 maxLines = 1,
-                keyboardType = com.viewcompose.ui.node.TextFieldType.Text,
-                imeAction = com.viewcompose.ui.node.TextFieldImeAction.Done,
+                keyboardOptions = com.viewcompose.ui.node.TextFieldKeyboardOptions(
+                    keyboardType = com.viewcompose.ui.node.TextFieldType.Text,
+                    imeAction = com.viewcompose.ui.node.TextFieldImeAction.Done,
+                ),
+                inputTransformation = null,
+                onKeyboardAction = null,
+                onFocusChange = null,
+                autofillHints = emptySet(),
                 hintColor = 0xFF888888.toInt(),
                 readOnly = false,
-                onValueChange = null,
                 textColor = textColor,
                 textSizeSp = 16,
                 backgroundColor = 0xFFEEEEEE.toInt(),
                 borderWidth = 0,
                 borderColor = 0,
-                cornerRadius = 8,
+                shape = UiShape.rounded(8),
                 minHeight = 56,
                 paddingHorizontal = 16,
                 paddingVertical = 12,
@@ -542,7 +551,7 @@ class NodeBindingDifferTest {
                 enabled = true,
                 backgroundColor = 1,
                 indicatorColor = 2,
-                cornerRadius = 3,
+                shape = UiShape.cut(3),
                 textColor = 4,
                 selectedTextColor = 5,
                 rippleColor = 6,
@@ -560,7 +569,7 @@ class NodeBindingDifferTest {
         return VNode(
             type = NodeType.LazyColumn,
             spec = LazyColumnNodeProps(
-                contentPadding = 12,
+                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(12),
                 spacing = spacing,
                 items = emptyList(),
             ),
@@ -575,7 +584,7 @@ class NodeBindingDifferTest {
             type = NodeType.LazyVerticalGrid,
             spec = LazyVerticalGridNodeProps(
                 spanCount = spanCount,
-                contentPadding = 8,
+                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(8),
                 horizontalSpacing = 8,
                 verticalSpacing = 8,
                 items = listOf(
@@ -890,7 +899,7 @@ class NodeBindingDifferTest {
                 backgroundColor = 0xFF0000FF.toInt(),
                 borderWidth = 0,
                 borderColor = 0,
-                cornerRadius = 8,
+                shape = UiShape.rounded(8),
                 rippleColor = 0x33000000,
                 contentPadding = 8,
             ),

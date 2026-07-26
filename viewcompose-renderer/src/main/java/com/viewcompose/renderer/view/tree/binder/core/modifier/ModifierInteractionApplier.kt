@@ -40,7 +40,6 @@ internal object ModifierInteractionApplier {
         applyTransformOrigin(view, layer?.transformOrigin)
         view.minimumHeight = minHeight
         view.minimumWidth = minWidth
-        view.contentDescription = resolved.contentDescription?.contentDescription
         view.setTag(
             R.id.viewcompose_constraint_layout_id,
             resolved.layoutId?.layoutId ?: resolved.constraint?.referenceId,
@@ -63,6 +62,11 @@ internal object ModifierInteractionApplier {
                 view = view,
                 resolved = resolved,
             )
+            ModifierFocusInputApplier.apply(
+                view = view,
+                node = node,
+                resolved = resolved,
+            )
             return
         }
         val clickListener = resolved.clickable?.let { clickableElement ->
@@ -76,6 +80,11 @@ internal object ModifierInteractionApplier {
         view.isFocusableInTouchMode = false
         ModifierGestureApplier.applyGestureState(
             view = view,
+            resolved = resolved,
+        )
+        ModifierFocusInputApplier.apply(
+            view = view,
+            node = node,
             resolved = resolved,
         )
     }

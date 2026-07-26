@@ -16,11 +16,18 @@ import com.viewcompose.widget.core.ProvideAnimationCoroutineContext
 import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.ProvideMonotonicFrameClock
+import com.viewcompose.widget.core.ProvideSaveableStateRegistry
 import com.viewcompose.widget.core.ProvideLocal
+import com.viewcompose.widget.core.AndroidDynamicColorPolicy
+import com.viewcompose.widget.core.AndroidResolvedTheme
+import com.viewcompose.widget.core.AndroidThemeBridge
+import com.viewcompose.widget.core.AndroidThemeRefreshController
 import com.viewcompose.widget.core.RenderStats
 import com.viewcompose.widget.core.RenderTreeResult
+import com.viewcompose.widget.core.RenderFailure
 import com.viewcompose.widget.core.LocalRenderResultListener
 import com.viewcompose.widget.core.UiEnvironment
+import com.viewcompose.widget.core.UiTheme
 import com.viewcompose.widget.core.UiTreeBuilder
 import java.util.WeakHashMap
 import kotlinx.coroutines.Dispatchers
@@ -36,13 +43,26 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
 fun Fragment.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
+    dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
+    themeRefreshController: AndroidThemeRefreshController? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> OverlayHostDefaults.androidOrNoOp(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
+    onRenderFailure: ((RenderFailure) -> Unit)? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
-    val root = buildUiContentRoot(
+    requireActiveHost(
+        owner = this,
+        hostName = "Fragment",
+    )
+    FragmentRenderSessionRegistry.clear(this)
+    val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
+    val resolvedTheme = AndroidThemeBridge.resolveContext(
         context = requireContext(),
+        dynamicColorPolicy = dynamicColorPolicy,
+    )
+    val root = buildUiContentRoot(
+        context = resolvedTheme.context,
     )
     val session = renderInto(
         container = root,
@@ -51,11 +71,15 @@ fun Fragment.setUiContent(
         overlayHost = overlayHostFactory(root),
         onRenderStats = onRenderStats,
         onRenderResult = onRenderResult,
+        onRenderFailure = onRenderFailure,
     ) {
         withHostEnvironment(
             root = root,
             lifecycleOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
+            saveableStateRegistry = saveableStateRegistry,
+            resolvedTheme = resolvedTheme,
+            themeRefreshController = themeRefreshController,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -70,13 +94,26 @@ fun Fragment.setUiContent(
 fun ComponentActivity.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
+    dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
+    themeRefreshController: AndroidThemeRefreshController? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> OverlayHostDefaults.androidOrNoOp(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
+    onRenderFailure: ((RenderFailure) -> Unit)? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
-    val root = buildUiContentRoot(
+    requireActiveHost(
+        owner = this,
+        hostName = "ComponentActivity",
+    )
+    ActivityRenderSessionRegistry.clear(this)
+    val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
+    val resolvedTheme = AndroidThemeBridge.resolveContext(
         context = this,
+        dynamicColorPolicy = dynamicColorPolicy,
+    )
+    val root = buildUiContentRoot(
+        context = resolvedTheme.context,
     )
     setContentView(root)
     val session = renderInto(
@@ -86,11 +123,15 @@ fun ComponentActivity.setUiContent(
         overlayHost = overlayHostFactory(root),
         onRenderStats = onRenderStats,
         onRenderResult = onRenderResult,
+        onRenderFailure = onRenderFailure,
     ) {
         withHostEnvironment(
             root = root,
             lifecycleOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
+            saveableStateRegistry = saveableStateRegistry,
+            resolvedTheme = resolvedTheme,
+            themeRefreshController = themeRefreshController,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -117,16 +158,26 @@ private fun UiTreeBuilder.withHostEnvironment(
     root: ViewGroup,
     lifecycleOwner: LifecycleOwner,
     viewModelStoreOwner: ViewModelStoreOwner,
+    saveableStateRegistry: com.viewcompose.widget.core.SaveableStateRegistry,
+    resolvedTheme: AndroidResolvedTheme,
+    themeRefreshController: AndroidThemeRefreshController?,
     onRenderResult: ((RenderTreeResult) -> Unit)?,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
     ProvideLifecycleOwner(lifecycleOwner) {
         ProvideViewModelStoreOwner(viewModelStoreOwner) {
-            ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
-                ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
-                    ProvideLocal(LocalRenderResultListener, onRenderResult) {
-                        UiEnvironment(androidContext = root.context) {
-                            content(root)
+            ProvideSaveableStateRegistry(saveableStateRegistry) {
+                ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
+                    ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
+                        ProvideLocal(LocalRenderResultListener, onRenderResult) {
+                            UiEnvironment(androidContext = root.context) {
+                                UiTheme(
+                                    resolvedAndroidTheme = resolvedTheme,
+                                    refreshController = themeRefreshController,
+                                ) {
+                                    content(root)
+                                }
+                            }
                         }
                     }
                 }
@@ -139,12 +190,16 @@ private object ActivityRenderSessionRegistry {
     private val sessions = WeakHashMap<ComponentActivity, RenderSession>()
     private val observers = WeakHashMap<ComponentActivity, DefaultLifecycleObserver>()
 
+    fun clear(activity: ComponentActivity) {
+        sessions.remove(activity)?.dispose()
+        observers.remove(activity)?.let(activity.lifecycle::removeObserver)
+    }
+
     fun bind(
         activity: ComponentActivity,
         session: RenderSession,
     ) {
-        sessions.remove(activity)?.dispose()
-        observers.remove(activity)?.let(activity.lifecycle::removeObserver)
+        clear(activity)
 
         val observer = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
@@ -219,7 +274,7 @@ private object FragmentRenderSessionRegistry {
         binding.viewLifecycleBinding?.bind(owner)
     }
 
-    private fun clear(
+    fun clear(
         fragment: Fragment,
     ) {
         val binding = bindings.remove(fragment) ?: return

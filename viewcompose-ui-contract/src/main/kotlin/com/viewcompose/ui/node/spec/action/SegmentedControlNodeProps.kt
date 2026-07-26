@@ -1,6 +1,7 @@
 package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.SegmentedControlItem
+import com.viewcompose.ui.shape.UiShape
 
 data class SegmentedControlNodeProps(
     val items: List<SegmentedControlItem>,
@@ -9,7 +10,7 @@ data class SegmentedControlNodeProps(
     val enabled: Boolean,
     val backgroundColor: Int,
     val indicatorColor: Int,
-    val cornerRadius: Int,
+    val shape: UiShape,
     val textColor: Int,
     val selectedTextColor: Int,
     val rippleColor: Int,

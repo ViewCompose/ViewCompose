@@ -1,10 +1,12 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 object UiShapeDefaults {
     fun default(): UiShapes {
         return UiShapes(
-            smallCornerRadius = 14.dp,
-            mediumCornerRadius = 20.dp,
+            small = UiShape.rounded(14.dp),
+            medium = UiShape.rounded(20.dp),
         )
     }
 }
@@ -107,6 +109,10 @@ object UiThemeDefaults {
                 bodyMedium = UiTextStyle(fontSizeSp = 16.sp),
                 labelMedium = UiTextStyle(fontSizeSp = 14.sp),
             ),
+            metadata = UiThemeMetadata(
+                origin = UiThemeOrigin.FrameworkDefault,
+                isDark = false,
+            ),
         )
     }
 
@@ -144,6 +150,10 @@ object UiThemeDefaults {
                 titleMedium = UiTextStyle(fontSizeSp = 24.sp),
                 bodyMedium = UiTextStyle(fontSizeSp = 16.sp),
                 labelMedium = UiTextStyle(fontSizeSp = 14.sp),
+            ),
+            metadata = UiThemeMetadata(
+                origin = UiThemeOrigin.FrameworkDefault,
+                isDark = true,
             ),
         )
     }

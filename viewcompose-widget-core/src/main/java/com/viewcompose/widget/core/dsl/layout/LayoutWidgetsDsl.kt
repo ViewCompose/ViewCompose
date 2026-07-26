@@ -8,7 +8,7 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.alpha
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
-import com.viewcompose.ui.modifier.cornerRadius
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ColumnNodeProps
@@ -52,7 +52,7 @@ fun UiTreeBuilder.Surface(
 ) {
     val semanticModifier = Modifier
         .backgroundColor(SurfaceDefaults.backgroundColor(variant))
-        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+        .shape(SurfaceDefaults.shape())
         .then(
             if (!enabled) {
                 Modifier.alpha(SurfaceDefaults.disabledAlpha())

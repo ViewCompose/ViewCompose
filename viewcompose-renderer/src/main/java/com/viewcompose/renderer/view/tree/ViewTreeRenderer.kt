@@ -24,20 +24,80 @@ object ViewTreeRenderer {
     fun disposeMounted(
         container: ViewGroup,
         mountedNodes: List<MountedNode>,
-    ) {
+    ): List<RenderTreeCommitFailure> {
+        val failures = mutableListOf<RenderTreeCommitFailure>()
         mountedNodes.forEach { mountedNode ->
-            ViewTreeDisposer.disposeMountedNode(mountedNode)
-            container.removeView(mountedNode.view)
+            try {
+                ViewTreeDisposer.disposeMountedNode(mountedNode)
+            } catch (error: Throwable) {
+                failures += error.toRenderTreeCommitFailures(
+                    fallbackNodeKey = mountedNode.vnode.key,
+                )
+                Log.e(
+                    WARNING_TAG,
+                    "Failed to dispose ${mountedNode.vnode.type} node.",
+                    error,
+                )
+            } finally {
+                container.removeView(mountedNode.view)
+            }
         }
+        return failures
     }
 
     fun renderInto(
         container: ViewGroup,
         previous: List<MountedNode>,
         nodes: List<VNode>,
+        collectDiagnostics: Boolean = true,
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
-        val renderNodes = AnimatedSizeNodeWrapper.wrapTree(nodes)
+        val renderNodes = AnimatedSizeNodeWrapper.wrapTree(
+            NestedScrollNodeWrapper.wrapTree(nodes),
+        )
+        val transaction = ViewTreePatchPipeline.beginTransaction()
+        val result = try {
+            renderIntoTransaction(
+                container = container,
+                previous = previous,
+                nodes = renderNodes,
+                transaction = transaction,
+                collectStats = collectDiagnostics,
+                collectStructure = collectDiagnostics,
+                collectWarnings = collectDiagnostics && onReconcile != null,
+                parentNodeKey = null,
+            )
+        } catch (error: Throwable) {
+            ViewTreePatchPipeline.rollbackTransaction(
+                transaction = transaction,
+                cause = error,
+                defaultRippleColor = DEFAULT_RIPPLE_COLOR,
+            )
+            throw error
+        }
+        val commitEffects = transaction.commitEffects.toList()
+        val commitFailures = ViewTreePatchPipeline.commitTransaction(
+            transaction = transaction,
+            warningTag = WARNING_TAG,
+        )
+        val committedResult = result.copy(
+            commitEffects = commitEffects,
+            commitFailures = commitFailures,
+        )
+        onReconcile?.invoke(committedResult)
+        return committedResult
+    }
+
+    private fun renderIntoTransaction(
+        container: ViewGroup,
+        previous: List<MountedNode>,
+        nodes: List<VNode>,
+        transaction: ViewTreePatchPipeline.RenderTransaction,
+        collectStats: Boolean,
+        collectStructure: Boolean,
+        collectWarnings: Boolean,
+        parentNodeKey: Any?,
+    ): RenderTreeResult {
         val reconcileResult = ChildReconciler.reconcile(
             previous = previous.map { mountedNode ->
                 ReconcileNode(
@@ -45,7 +105,7 @@ object ViewTreeRenderer {
                     payload = mountedNode,
                 )
             },
-            nodes = renderNodes,
+            nodes = nodes,
         )
         val pipelineResult = ViewTreePatchPipeline.execute(
             container = container,
@@ -53,23 +113,35 @@ object ViewTreeRenderer {
             defaultRippleColor = DEFAULT_RIPPLE_COLOR,
             warningTag = WARNING_TAG,
             emittedModifierWarnings = cappedModifierWarnings(),
-            renderChildren = { childContainer, childPrevious, childNodes ->
-                renderInto(
+            transaction = transaction,
+            collectStats = collectStats,
+            parentNodeKey = parentNodeKey,
+            renderChildren = { childContainer, childPrevious, childNodes, childParentKey ->
+                renderIntoTransaction(
                     container = childContainer,
                     previous = childPrevious,
                     nodes = childNodes,
+                    transaction = transaction,
+                    collectStats = collectStats,
+                    collectStructure = false,
+                    collectWarnings = false,
+                    parentNodeKey = childParentKey,
                 )
             },
         )
-        val structure = RenderStructureStats.from(
-            nodes = renderNodes,
-            mountedNodes = pipelineResult.mountedNodes,
-        )
-        val warnings = if (onReconcile == null) {
+        val structure = if (collectStructure) {
+            RenderStructureStats.from(
+                nodes = nodes,
+                mountedNodes = pipelineResult.mountedNodes,
+            )
+        } else {
+            RenderStructureStats()
+        }
+        val warnings = if (!collectWarnings) {
             emptyList()
         } else {
             collectRenderWarnings(
-                nodes = renderNodes,
+                nodes = nodes,
                 structure = structure,
                 stats = pipelineResult.stats,
             )
@@ -80,7 +152,9 @@ object ViewTreeRenderer {
             stats = pipelineResult.stats,
             structure = structure,
             warnings = warnings,
-        ).also { onReconcile?.invoke(it) }
+            tree = if (collectStructure) RenderTreeNode.from(nodes) else emptyList(),
+            patches = if (collectStructure) transaction.patchRecords.toList() else emptyList(),
+        )
     }
 
     private fun cappedModifierWarnings(): MutableSet<String> {

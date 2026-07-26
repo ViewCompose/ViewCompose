@@ -9,9 +9,8 @@ fun <T> rememberUpdatedState(
     val state = remember {
         mutableStateOf(newValue)
     }
-    // 注意：这里在组合阶段写入最新值；若 effect 在同一组合阶段立刻读取，可能观察到旧快照。
-    // Note: this writes during composition; an effect that reads immediately in the same composition
-    // phase may still observe the previous snapshot value.
+    // DisposableEffect starts in the commit phase, after this composition snapshot has closed,
+    // so effect callbacks observe the value written here.
     state.value = newValue
     return state
 }

@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
-import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -21,12 +20,14 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
+import com.viewcompose.renderer.view.container.DeclarativeNestedScrollHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeCanvasLayout
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeHorizontalPagerLayout
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
+import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -47,7 +48,7 @@ internal object ViewNodeFactory {
     ): View {
         return when (node.type) {
             NodeType.Text -> TextView(context)
-            NodeType.TextField -> EditText(context).apply {
+            NodeType.TextField -> ViewComposeEditText(context).apply {
                 background = null
             }
             NodeType.Checkbox -> CheckBox(context)
@@ -68,16 +69,26 @@ internal object ViewNodeFactory {
             NodeType.ConstraintLayout -> DeclarativeConstraintLayout(context)
             NodeType.AnimatedVisibilityHost -> DeclarativeAnimatedVisibilityHostLayout(context)
             NodeType.AnimatedSizeHost -> DeclarativeAnimatedSizeHostLayout(context)
+            NodeType.NestedScrollHost -> DeclarativeNestedScrollHostLayout(context)
             NodeType.Spacer, NodeType.Divider -> View(context)
             NodeType.Canvas -> DeclarativeCanvasLayout(context)
             NodeType.Image -> ImageView(context)
-            NodeType.AndroidView -> (createAndroidView?.invoke(context) as? View) ?: View(context)
-            NodeType.LazyColumn -> RecyclerView(context).apply {
+            NodeType.AndroidView -> {
+                val factory = requireNotNull(createAndroidView) {
+                    "AndroidView node requires a factory."
+                }
+                val created = factory(context)
+                require(created is View) {
+                    "AndroidView factory must return android.view.View, but returned ${created::class.java.name}."
+                }
+                created
+            }
+            NodeType.LazyColumn -> DeclarativeLazyListView(context).apply {
                 layoutManager = LazyLinearLayoutManager(context)
                 adapter = LazyListAdapter()
                 FrameworkRecyclerViewDefaults.applyLazyColumnDefaults(this)
             }
-            NodeType.LazyRow -> RecyclerView(context).apply {
+            NodeType.LazyRow -> DeclarativeLazyListView(context).apply {
                 layoutManager = LazyLinearLayoutManager(
                     context = context,
                     orientation = LinearLayoutManager.HORIZONTAL,

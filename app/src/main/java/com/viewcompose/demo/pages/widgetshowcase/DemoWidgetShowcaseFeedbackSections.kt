@@ -5,7 +5,6 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.widget.core.Badge
 import com.viewcompose.widget.core.BadgedBox
 import com.viewcompose.widget.core.CircularProgressIndicator
@@ -20,12 +19,13 @@ import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.widget.core.sp
 
 internal fun UiTreeBuilder.ShowcaseSearchBar() {
-    val query1 = remember { mutableStateOf("") }
-    val query2 = remember { mutableStateOf("搜索内容") }
+    val query1 = rememberTextFieldState()
+    val query2 = rememberTextFieldState("搜索内容")
+    val disabledQuery = rememberTextFieldState()
 
     Column(
         spacing = 0.dp,
@@ -33,8 +33,7 @@ internal fun UiTreeBuilder.ShowcaseSearchBar() {
     ) {
         DemoSection(title = "基础搜索", subtitle = "带占位文本") {
             SearchBar(
-                query = query1.value,
-                onQueryChange = { query1.value = it },
+                state = query1,
                 placeholder = "搜索...",
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -42,14 +41,13 @@ internal fun UiTreeBuilder.ShowcaseSearchBar() {
 
         DemoSection(title = "带清除按钮", subtitle = "trailingIcon 自定义") {
             SearchBar(
-                query = query2.value,
-                onQueryChange = { query2.value = it },
+                state = query2,
                 placeholder = "搜索...",
-                trailingIcon = if (query2.value.isNotEmpty()) {
+                trailingIcon = if (query2.text.isNotEmpty()) {
                     {
                         IconButton(
                             icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                            onClick = { query2.value = "" },
+                            onClick = query2::clearText,
                         )
                     }
                 } else {
@@ -61,8 +59,7 @@ internal fun UiTreeBuilder.ShowcaseSearchBar() {
 
         DemoSection(title = "禁用态", subtitle = "enabled = false") {
             SearchBar(
-                query = "",
-                onQueryChange = {},
+                state = disabledQuery,
                 placeholder = "搜索已禁用",
                 enabled = false,
                 modifier = Modifier.fillMaxWidth(),

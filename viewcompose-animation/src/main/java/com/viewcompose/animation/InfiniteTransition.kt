@@ -9,16 +9,13 @@ import com.viewcompose.animation.core.runAnimation
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.DisposableEffect
+import com.viewcompose.widget.core.LaunchedEffect
 import com.viewcompose.widget.core.LocalAnimationCoroutineContext
 import com.viewcompose.widget.core.LocalMonotonicFrameClock
 import com.viewcompose.widget.core.remember
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class InfiniteTransition internal constructor()
 
@@ -103,9 +100,11 @@ fun <T> InfiniteTransition.animateValue(
     }
     val frameClock = LocalMonotonicFrameClock.current
     val animationCoroutineContext = LocalAnimationCoroutineContext.current
-    DisposableEffect(initialValue, targetValue, animationSpec, frameClock, animationCoroutineContext) {
-        val scope = CoroutineScope(SupervisorJob() + animationCoroutineContext)
-        val job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+    require(animationCoroutineContext[Job] == null) {
+        "Animation coroutine context must not contain a Job."
+    }
+    LaunchedEffect(initialValue, targetValue, animationSpec, frameClock, animationCoroutineContext) {
+        withContext(animationCoroutineContext) {
             var from = initialValue
             var to = targetValue
             while (isActive) {
@@ -126,10 +125,6 @@ fun <T> InfiniteTransition.animateValue(
                     valueState.value = initialValue
                 }
             }
-        }
-        return@DisposableEffect {
-            job.cancel()
-            scope.cancel()
         }
     }
     return valueState

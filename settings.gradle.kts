@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 rootProject.name = "ViewCompose"
 include(":app")
 include(":viewcompose-runtime")
+include(":viewcompose-text-core")
 include(":viewcompose-ui-contract")
 include(":viewcompose-renderer")
 include(":viewcompose-widget-core")

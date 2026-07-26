@@ -15,17 +15,24 @@ import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
+import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
-import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.ui.state.LazyListState
+import com.viewcompose.ui.node.policy.LazyContentPadding
+import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
+import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
+import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 
 internal object CollectionViewBinder {
     data class LazyColumnSpec(
-        val contentPadding: Int,
+        val contentPadding: LazyContentPadding,
         val spacing: Int,
         val items: List<LazyListItem>,
         val state: LazyListState? = null,
+        val reverseLayout: Boolean,
+        val userScrollEnabled: Boolean,
+        val prefetchPolicy: LazyLayoutPrefetchPolicy,
         val reusePolicy: CollectionReusePolicy,
         val motionPolicy: CollectionMotionPolicy,
         val focusFollowKeyboard: Boolean,
@@ -55,11 +62,14 @@ internal object CollectionViewBinder {
 
     data class LazyVerticalGridSpec(
         val spanCount: Int,
-        val contentPadding: Int,
+        val contentPadding: LazyContentPadding,
         val horizontalSpacing: Int,
         val verticalSpacing: Int,
         val items: List<LazyListItem>,
         val state: LazyListState?,
+        val reverseLayout: Boolean,
+        val userScrollEnabled: Boolean,
+        val prefetchPolicy: LazyLayoutPrefetchPolicy,
         val reusePolicy: CollectionReusePolicy,
         val motionPolicy: CollectionMotionPolicy,
         val focusFollowKeyboard: Boolean,
@@ -82,22 +92,24 @@ internal object CollectionViewBinder {
             recyclerView = view,
             enabled = spec.focusFollowKeyboard,
         )
+        configureLazyListLayout(
+            view = view,
+            reverseLayout = spec.reverseLayout,
+            userScrollEnabled = spec.userScrollEnabled,
+            prefetchPolicy = spec.prefetchPolicy,
+        )
         val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
             view.adapter = it
         }
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.VERTICAL)
         adapter.submitItems(spec.items)
+        LazyStickyHeaderDecoration.update(view, adapter)
         spec.state?.attach(
-            object : LazyListConnector {
-                override fun scrollToPosition(index: Int, smooth: Boolean) {
-                    if (smooth) {
-                        view.smoothScrollToPosition(index)
-                    } else {
-                        view.scrollToPosition(index)
-                    }
-                }
-            },
+            UiLazyListConnector(
+                recyclerView = view,
+                mainAxisItemSpacing = spec.spacing,
+            ),
         )
     }
 
@@ -118,6 +130,12 @@ internal object CollectionViewBinder {
             recyclerView = view,
             enabled = false,
         )
+        configureLazyListLayout(
+            view = view,
+            reverseLayout = spec.reverseLayout,
+            userScrollEnabled = spec.userScrollEnabled,
+            prefetchPolicy = spec.prefetchPolicy,
+        )
         val adapter = view.adapter as? LazyListAdapter
             ?: LazyListAdapter(LinearLayoutManager.HORIZONTAL).also {
                 view.adapter = it
@@ -125,16 +143,12 @@ internal object CollectionViewBinder {
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.HORIZONTAL)
         adapter.submitItems(spec.items)
+        LazyStickyHeaderDecoration.update(view, adapter)
         spec.state?.attach(
-            object : LazyListConnector {
-                override fun scrollToPosition(index: Int, smooth: Boolean) {
-                    if (smooth) {
-                        view.smoothScrollToPosition(index)
-                    } else {
-                        view.scrollToPosition(index)
-                    }
-                }
-            },
+            UiLazyListConnector(
+                recyclerView = view,
+                mainAxisItemSpacing = spec.spacing,
+            ),
         )
     }
 
@@ -185,6 +199,9 @@ internal object CollectionViewBinder {
             verticalSpacing = spec.verticalSpacing,
             items = spec.items,
             state = spec.state,
+            reverseLayout = spec.reverseLayout,
+            userScrollEnabled = spec.userScrollEnabled,
+            prefetchPolicy = spec.prefetchPolicy,
         )
     }
 
@@ -195,6 +212,9 @@ internal object CollectionViewBinder {
             spacing = spec.spacing,
             items = spec.items,
             state = spec.state,
+            reverseLayout = spec.reverseLayout,
+            userScrollEnabled = spec.userScrollEnabled,
+            prefetchPolicy = spec.prefetchPolicy,
             reusePolicy = spec.reusePolicy,
             motionPolicy = spec.motionPolicy,
             focusFollowKeyboard = spec.focusFollowKeyboard,
@@ -208,6 +228,9 @@ internal object CollectionViewBinder {
             spacing = spec.spacing,
             items = spec.items,
             state = spec.state,
+            reverseLayout = spec.reverseLayout,
+            userScrollEnabled = spec.userScrollEnabled,
+            prefetchPolicy = spec.prefetchPolicy,
             reusePolicy = spec.reusePolicy,
             motionPolicy = spec.motionPolicy,
             focusFollowKeyboard = false,
@@ -248,9 +271,26 @@ internal object CollectionViewBinder {
             verticalSpacing = spec.verticalSpacing,
             items = spec.items,
             state = spec.state,
+            reverseLayout = spec.reverseLayout,
+            userScrollEnabled = spec.userScrollEnabled,
+            prefetchPolicy = spec.prefetchPolicy,
             reusePolicy = spec.reusePolicy,
             motionPolicy = spec.motionPolicy,
             focusFollowKeyboard = spec.focusFollowKeyboard,
         )
+    }
+
+    internal fun configureLazyListLayout(
+        view: RecyclerView,
+        reverseLayout: Boolean,
+        userScrollEnabled: Boolean,
+        prefetchPolicy: LazyLayoutPrefetchPolicy,
+    ) {
+        (view.layoutManager as? LinearLayoutManager)?.apply {
+            this.reverseLayout = reverseLayout
+            initialPrefetchItemCount = prefetchPolicy.initialPrefetchItemCount
+        }
+        (view as? DeclarativeLazyListView)?.userScrollEnabled = userScrollEnabled
+        view.setItemViewCacheSize(prefetchPolicy.itemViewCacheSize)
     }
 }

@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 enum class SegmentedControlSize {
     Compact,
     Medium,
@@ -19,20 +21,20 @@ object SegmentedControlDefaults {
     fun indicatorColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
-            override?.indicator ?: Theme.colors.primary
+            override?.indicator ?: Theme.stateColors.controlActivated.resolve(selected = true)
         } else {
-            override?.indicatorDisabled ?: Theme.colors.outlineVariant
+            override?.indicatorDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
-    fun cornerRadius(): Int = Theme.shapes.smallCornerRadius
+    fun shape(): UiShape = Theme.shapes.small
 
     fun textColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
-            override?.text ?: Theme.colors.onSurfaceVariant
+            override?.text ?: Theme.stateColors.secondaryText.resolve()
         } else {
-            override?.textDisabled ?: Theme.colors.onSurfaceVariant
+            override?.textDisabled ?: Theme.stateColors.secondaryText.resolve(enabled = false)
         }
     }
 
@@ -47,7 +49,7 @@ object SegmentedControlDefaults {
 
     fun rippleColor(enabled: Boolean = true): Int {
         return if (enabled) {
-            Theme.colors.ripple
+            Theme.stateColors.controlHighlight.resolve(pressed = true)
         } else {
             0x00000000
         }

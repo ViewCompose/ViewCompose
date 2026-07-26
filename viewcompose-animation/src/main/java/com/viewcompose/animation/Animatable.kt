@@ -10,6 +10,10 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.frame.MonotonicFrameClock
 import com.viewcompose.widget.core.LocalMonotonicFrameClock
 import com.viewcompose.widget.core.remember
+import java.util.concurrent.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.job
 
 class Animatable<T>(
     initialValue: T,
@@ -17,16 +21,38 @@ class Animatable<T>(
     defaultFrameClock: MonotonicFrameClock? = null,
 ) {
     private val internalState: MutableState<T> = mutableStateOf(initialValue)
+    private val targetState: MutableState<T> = mutableStateOf(initialValue)
+    private val runningState: MutableState<Boolean> = mutableStateOf(false)
+    private val mutationLock = Any()
+
     private var boundFrameClock: MonotonicFrameClock? = defaultFrameClock
+    private var nextMutationId: Long = 0L
+    private var activeMutation: Mutation? = null
 
     val value: T
         get() = internalState.value
+
+    val targetValue: T
+        get() = targetState.value
+
+    val isRunning: Boolean
+        get() = runningState.value
 
     val asState: State<T>
         get() = internalState
 
     suspend fun snapTo(targetValue: T) {
-        internalState.value = targetValue
+        val mutation = beginMutation(targetValue)
+        try {
+            publishValue(mutation.id, targetValue)
+        } finally {
+            endMutation(mutation.id)
+        }
+    }
+
+    suspend fun stop() {
+        val mutation = beginMutation(internalState.value)
+        endMutation(mutation.id)
     }
 
     suspend fun animateTo(
@@ -36,20 +62,73 @@ class Animatable<T>(
         val frameClock = requireNotNull(boundFrameClock) {
             "Animatable has no frame clock. Use rememberAnimatable(...) or pass a clock in constructor."
         }
-        runAnimation(
-            frameClock = frameClock,
-            startValue = internalState.value,
-            endValue = targetValue,
-            animationSpec = animationSpec,
-            converter = converter,
-        ) { next ->
-            internalState.value = next
+        val mutation = beginMutation(targetValue)
+        try {
+            runAnimation(
+                frameClock = frameClock,
+                startValue = internalState.value,
+                endValue = targetValue,
+                animationSpec = animationSpec,
+                converter = converter,
+            ) { next ->
+                publishValue(mutation.id, next)
+            }
+        } finally {
+            endMutation(mutation.id)
         }
     }
 
     internal fun bindFrameClock(frameClock: MonotonicFrameClock) {
         boundFrameClock = frameClock
     }
+
+    private suspend fun beginMutation(targetValue: T): Mutation {
+        val mutationJob = currentCoroutineContext().job
+        val mutation: Mutation
+        val previous: Mutation?
+        synchronized(mutationLock) {
+            mutation = Mutation(
+                id = ++nextMutationId,
+                job = mutationJob,
+            )
+            previous = activeMutation
+            activeMutation = mutation
+            targetState.value = targetValue
+            runningState.value = true
+        }
+        if (previous != null && previous.job !== mutationJob) {
+            previous.job.cancel(
+                CancellationException("Animatable mutation was interrupted by a newer mutation."),
+            )
+        }
+        return mutation
+    }
+
+    private fun publishValue(
+        mutationId: Long,
+        value: T,
+    ) {
+        synchronized(mutationLock) {
+            if (activeMutation?.id == mutationId) {
+                internalState.value = value
+            }
+        }
+    }
+
+    private fun endMutation(mutationId: Long) {
+        synchronized(mutationLock) {
+            if (activeMutation?.id == mutationId) {
+                activeMutation = null
+                targetState.value = internalState.value
+                runningState.value = false
+            }
+        }
+    }
+
+    private data class Mutation(
+        val id: Long,
+        val job: Job,
+    )
 }
 
 fun <T> rememberAnimatable(

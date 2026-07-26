@@ -7,32 +7,32 @@ import org.junit.Test
 class RememberUpdatedStateTest {
     @Test
     fun `reuses same state holder across renders`() {
-        val store = RememberStore()
-        var first: Any? = null
-        var second: Any? = null
+        val harness = ComposerRuntimeHarness()
 
-        RememberContext.withStore(store) {
-            first = rememberUpdatedState("A")
+        val first = harness.render {
+            rememberUpdatedState("A")
         }
-        RememberContext.withStore(store) {
-            second = rememberUpdatedState("B")
+        val second = harness.render {
+            rememberUpdatedState("B")
         }
 
         assertSame(first, second)
+        harness.dispose()
     }
 
     @Test
     fun `exposes latest value on every render`() {
-        val store = RememberStore()
-        var latest: String? = null
+        val harness = ComposerRuntimeHarness()
 
-        RememberContext.withStore(store) {
-            latest = rememberUpdatedState("A").value
+        val first = harness.render {
+            rememberUpdatedState("A")
         }
-        RememberContext.withStore(store) {
-            latest = rememberUpdatedState("B").value
+        val second = harness.render {
+            rememberUpdatedState("B")
         }
 
-        assertEquals("B", latest)
+        assertSame(first, second)
+        assertEquals("B", second.value)
+        harness.dispose()
     }
 }

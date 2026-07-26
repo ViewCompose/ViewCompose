@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -79,7 +80,7 @@ internal fun UiTreeBuilder.ThemeSwatchRow(
                             .fillMaxWidth()
                             .height(48.dp)
                             .backgroundColor(swatch.color)
-                            .cornerRadius(SurfaceDefaults.cardCornerRadius()),
+                            .shape(SurfaceDefaults.shape()),
                     ) {}
                     Text(
                         text = swatch.label,

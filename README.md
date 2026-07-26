@@ -24,12 +24,24 @@
 
 - 声明式 DSL + Android View 宿主，兼顾可读性与传统 View 生态互操作。  
   Declarative DSL + Android View host, balancing readability and interoperability with the classic View ecosystem.
-- 明确的模块分层：`runtime / ui-contract / widget-core / renderer / host-android`。  
-  Clear module layering: `runtime / ui-contract / widget-core / renderer / host-android`.
+- 明确的模块分层：`runtime / text-core / ui-contract / widget-core / renderer / host-android`。
+  Clear module layering: `runtime / text-core / ui-contract / widget-core / renderer / host-android`.
 - 能力模块化：动画、手势、图形、约束布局均独立演进。  
   Capability modules evolve independently: animation, gesture, graphics, and constraint layout.
 - 内建开发预览与截图回归链路（Compose Preview bridge + Paparazzi）。  
   Built-in dev preview and snapshot regression flow (Compose Preview bridge + Paparazzi).
+- 组合事务与结构化协程：失败渲染恢复旧组合/View 树，副作用与协程只在提交后启动。
+  Transactional composition and structured coroutines: failed renders restore the previous composition/View tree, and effects start only after commit.
+- 声明式焦点与硬件键盘输入：请求器、方向导航、焦点组和 preview/bubble 按键分发均映射到原生 View。
+  Declarative focus and hardware keys: requesters, directional navigation, focus groups, and preview/bubble dispatch map to native Views.
+- 统一嵌套滚动：pre/post scroll 与 fling 协议贯通 Lazy、Pager、滚动容器和自定义拖拽。
+  Unified nested scrolling: pre/post scroll and fling phases connect lazy containers, pagers, scrolling Views, and custom drags.
+- 结构化渲染失败与原生副作用边界：失败阶段/恢复结果可观测，`AndroidView.onCommit` 只在树事务成功后执行。
+  Structured render failures and native effect boundaries: failure phase/recovery is observable, and `AndroidView.onCommit` runs only after a successful tree transaction.
+- 精确浮层与统一反馈队列：Popup 可随锚点移动并自动翻转/夹取，Snackbar/Toast 共享可配置的确定性队列。
+  Precise overlays and unified feedback queues: popups track moving anchors with flip/clamp positioning, while Snackbar/Toast share a configurable deterministic queue.
+- 事务化 SavedState：失败组合不会提前消费恢复值，生命周期快速重启也不会并发收集同一个 Flow。
+  Transactional SavedState: failed compositions do not consume restored values early, and rapid lifecycle restarts never collect the same Flow concurrently.
 
 ## 架构总览 | Architecture Overview
 
@@ -49,6 +61,7 @@
 | 模块 Module | 说明 Description |
 | --- | --- |
 | `viewcompose-runtime` | 状态系统与观察机制（纯 Kotlin/JVM）。 / State system and observation (pure Kotlin/JVM). |
+| `viewcompose-text-core` | 文本、选区、IME 组合区、编辑事务与撤销历史（纯 Kotlin/JVM）。 / Text, selection, IME composition, edit transactions, and undo history. |
 | `viewcompose-ui-contract` | 节点语义契约（NodeSpec）。 / Node semantic contract (NodeSpec). |
 | `viewcompose-widget-core` | DSL、Theme、Defaults、Locals。 / DSL, Theme, Defaults, Locals. |
 | `viewcompose-renderer` | Android View 渲染实现（reconcile/binder/patch/container）。 / Android View renderer implementation (reconcile/binder/patch/container). |
@@ -91,6 +104,15 @@ cd ViewCompose
 
 # 全量（qaQuick + instrumentation）
 ./gradlew qaFull
+
+# R8 优化 release/benchmark 产物
+./gradlew qaRelease
+
+# 连接设备上的发布态 Macrobenchmark
+./gradlew benchmarkRelease
+
+# 连接设备上运行列表/复杂布局 Compose 对照并生成报告
+./gradlew benchmarkCompare
 ```
 
 ### 运行 Demo | Run Demo
@@ -123,6 +145,101 @@ class SampleActivity : AppCompatActivity() {
 核心入口 API 在 `viewcompose-host-android`：`ComponentActivity.setUiContent(...)` 与 `Fragment.setUiContent(...)`。  
 Core entry APIs are in `viewcompose-host-android`: `ComponentActivity.setUiContent(...)` and `Fragment.setUiContent(...)`.
 
+Overlay positioning and transient feedback policies are documented in [OVERLAYS.md](OVERLAYS.md).
+
+### 状态与协程副作用 | State & Coroutine Effects
+
+```kotlin
+val uiState = flow.collectAsStateWithLifecycle(initial = UiState.Loading)
+val produced = produceState(initialValue = 0, sourceId) {
+    source.observe(sourceId) { value = it }
+    awaitDispose { source.removeObserver(sourceId) }
+}
+
+LaunchedEffect(uiState.value) {
+    analytics.track(uiState.value)
+}
+
+val scope = rememberCoroutineScope()
+Button(
+    text = "Save",
+    onClick = {
+        scope.launch { repository.save() }
+    },
+)
+
+RecomposeBoundary(
+    key = "profile-section",
+    inputs = listOf(userId),
+) {
+    Text(profileState.value.name)
+    Text(profileState.value.description)
+}
+```
+
+`LaunchedEffect`、`produceState` 和 `rememberCoroutineScope` 的任务均属于当前 `RenderSession`；Key 变化、移出组合或 Session 销毁会取消对应任务。传入自定义 `CoroutineContext` 时不得携带独立 `Job`。
+Tasks created by `LaunchedEffect`, `produceState`, and `rememberCoroutineScope` belong to the current `RenderSession`; key changes, leaving composition, or session disposal cancel them. Custom coroutine contexts must not contain a detached `Job`.
+
+`RecomposeBoundary` 不创建原生 View，用于显式隔离一个可输出多个兄弟节点的重组区域。其内部读取的 snapshot state 会自动失效；普通 Kotlin 捕获值必须放入 `inputs`。
+`RecomposeBoundary` emits no native View and explicitly isolates a restartable region that may output multiple siblings. Snapshot state reads invalidate it automatically; ordinary captured Kotlin values must be declared in `inputs`.
+
+### 文本编辑状态 | Text Editing State
+
+```kotlin
+val username = rememberTextFieldState(initialText = "ViewCompose")
+
+TextField(
+    state = username,
+    label = "Username",
+    inputTransformation = InputTransformation.maxCodePoints(32),
+    keyboardOptions = TextFieldKeyboardOptions(
+        capitalization = TextFieldCapitalization.Words,
+        imeAction = TextFieldImeAction.Done,
+    ),
+    onKeyboardAction = { action ->
+        if (action == TextFieldImeAction.Done) {
+            submit(username.text)
+            true
+        } else {
+            false
+        }
+    },
+)
+
+Button(text = "Undo", enabled = username.canUndo, onClick = { username.undo() })
+```
+
+`TextFieldState` 同时拥有文本、方向选区和临时 IME 组合区。原生 `AppCompatEditText` 继续负责输入法、无障碍、硬件键盘与系统选区交互；框架控制器以原子方式同步完整编辑值，外部编辑采用最小 `Editable.replace()`。`rememberTextFieldState` 跨宿主重建保存文本与选区，但不会恢复失效的 IME 组合会话或撤销历史。详见 [TEXT_INPUT.md](./TEXT_INPUT.md)。
+
+`TextFieldState` owns text, directional selection, and the ephemeral IME composing range. Native `AppCompatEditText` remains the platform editor while the framework synchronizes complete edit snapshots atomically.
+
+### Lazy 容器状态 | Lazy Collection State
+
+```kotlin
+val listState = rememberLazyListState()
+
+LazyColumn(
+    state = listState,
+    contentPadding = LazyContentPadding.symmetric(horizontal = 16.dp, vertical = 8.dp),
+    prefetchPolicy = LazyLayoutPrefetchPolicy(initialPrefetchItemCount = 4),
+) {
+    stickyHeader(key = "header", contentType = "header") {
+        Text("Header")
+    }
+    items(
+        items = rows,
+        key = { row -> row.id },
+        contentType = { "row" },
+    ) { row ->
+        RowContent(row)
+    }
+}
+```
+
+`LazyListState` 可观察首尾可见项、完整 viewport、滚动态和边界能力，并提供立即/动画滚动与停止控制。结构化 DSL 支持 sticky header、content type、Grid span、非对称 padding、reverse layout、用户滚动开关和预取策略。详见 [LAZY_COLLECTIONS.md](./LAZY_COLLECTIONS.md)。
+
+Android 宿主会默认继承原生 Theme，并让框架 View、`AndroidView` 与 Overlay 共用同一主题上下文。桥接同时支持 Material 动态色、扩展颜色角色、原生状态色、配置变化/主动刷新，以及四角独立的圆角/切角与绝对/百分比尺寸。完整规则见 [THEMING.md](./THEMING.md)。
+
 ## 预览与截图回归 | Preview & Snapshot Regression
 
 - 预览模块：`viewcompose-preview`  
@@ -142,6 +259,12 @@ Core entry APIs are in `viewcompose-host-android`: `ComponentActivity.setUiConte
 - [ARCHITECTURE.md](./ARCHITECTURE.md): 架构边界与模块职责 / Architecture boundaries and module responsibilities
 - [WORKFLOW.md](./WORKFLOW.md): 开发流程与门禁 / Development workflow and quality gates
 - [PERFORMANCE.md](./PERFORMANCE.md): 性能基线与约束 / Performance baseline and constraints
+- [RENDER_FAILURES.md](./RENDER_FAILURES.md): 结构化渲染失败与 AndroidView 副作用边界 / Structured render failures and AndroidView effect boundary
+- [DIAGNOSTICS.md](./DIAGNOSTICS.md): Render Tree、Patch、Local 与重组原因诊断 / Runtime and renderer diagnostics
+- [LIFECYCLE_SAVED_STATE.md](./LIFECYCLE_SAVED_STATE.md): 生命周期与恢复事务 / Lifecycle and restoration transactions
+- [CORE_CAPABILITY_VERIFICATION.md](./CORE_CAPABILITY_VERIFICATION.md): P1 核心能力设备验证矩阵 / P1 core capability device matrix
+- [TEXT_INPUT.md](./TEXT_INPUT.md): 文本编辑模型与原生桥接 / Text editing model and native bridge
+- [LAZY_COLLECTIONS.md](./LAZY_COLLECTIONS.md): Lazy 状态与高级容器能力 / Lazy state and advanced collection capabilities
 - [THEMING.md](./THEMING.md): 主题系统 / Theming system
 - [PREVIEW.md](./PREVIEW.md): 开发预览说明 / Dev preview guide
 - [ROADMAP.md](./ROADMAP.md): 路线图 / Roadmap

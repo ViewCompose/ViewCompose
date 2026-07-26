@@ -21,6 +21,7 @@ import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberTextFieldState
 
 internal fun UiTreeBuilder.PreviewPage(
     initialPageIndex: Int = 0,
@@ -28,7 +29,7 @@ internal fun UiTreeBuilder.PreviewPage(
     val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 2)) }
     val darkThemeState = remember { mutableStateOf(false) }
     val tabletFrameState = remember { mutableStateOf(false) }
-    val queryState = remember { mutableStateOf("") }
+    val queryState = rememberTextFieldState()
 
     val pageItems = when (selectedPageState.value) {
         0 -> listOf("benchmark", "page", "page_filter", "bridge", "verify")
@@ -123,14 +124,13 @@ internal fun UiTreeBuilder.PreviewPage(
                     ) {
                         Text(text = "Preview Host Sample")
                         SearchBar(
-                            query = queryState.value,
-                            onQueryChange = { queryState.value = it },
+                            state = queryState,
                             onSearch = {},
                             placeholder = "输入以模拟 preview 输入态",
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Text(
-                            text = "Query = ${queryState.value.ifBlank { "(empty)" }}",
+                            text = "Query = ${queryState.text.ifBlank { "(empty)" }}",
                             color = TextDefaults.secondaryColor(),
                         )
                     }

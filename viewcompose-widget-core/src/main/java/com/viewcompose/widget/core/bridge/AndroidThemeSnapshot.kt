@@ -1,14 +1,28 @@
 package com.viewcompose.widget.core
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.res.TypedArray
 import android.graphics.Typeface
 import android.util.TypedValue
+import android.view.View
 import androidx.core.content.res.ResourcesCompat
+import com.viewcompose.ui.shape.UiCorner
+import com.viewcompose.ui.shape.UiCornerFamily
+import com.viewcompose.ui.shape.UiCornerSize
+import com.viewcompose.ui.shape.UiShape
 
 internal data class AndroidThemeColorSnapshot(
     val background: Int? = null,
+    val onBackground: Int? = null,
     val surface: Int? = null,
+    val surfaceDim: Int? = null,
+    val surfaceBright: Int? = null,
+    val surfaceContainerLowest: Int? = null,
+    val surfaceContainerLow: Int? = null,
+    val surfaceContainer: Int? = null,
+    val surfaceContainerHigh: Int? = null,
+    val surfaceContainerHighest: Int? = null,
     val surfaceVariant: Int? = null,
     val onSurface: Int? = null,
     val onSurfaceVariant: Int? = null,
@@ -20,6 +34,10 @@ internal data class AndroidThemeColorSnapshot(
     val onSecondary: Int? = null,
     val secondaryContainer: Int? = null,
     val onSecondaryContainer: Int? = null,
+    val tertiary: Int? = null,
+    val onTertiary: Int? = null,
+    val tertiaryContainer: Int? = null,
+    val onTertiaryContainer: Int? = null,
     val error: Int? = null,
     val onError: Int? = null,
     val errorContainer: Int? = null,
@@ -29,7 +47,14 @@ internal data class AndroidThemeColorSnapshot(
     val surfaceTint: Int? = null,
     val inverseSurface: Int? = null,
     val inverseOnSurface: Int? = null,
+    val inversePrimary: Int? = null,
+    val scrim: Int? = null,
     val ripple: Int? = null,
+    val primaryText: UiStateColor? = null,
+    val secondaryText: UiStateColor? = null,
+    val control: UiStateColor? = null,
+    val controlActivated: UiStateColor? = null,
+    val controlHighlight: UiStateColor? = null,
 )
 
 internal data class AndroidThemeSnapshot(
@@ -40,9 +65,9 @@ internal data class AndroidThemeSnapshot(
 )
 
 internal data class AndroidThemeShapeSnapshot(
-    val smallCornerRadius: Int? = null,
-    val mediumCornerRadius: Int? = null,
-    val largeCornerRadius: Int? = null,
+    val small: UiShape? = null,
+    val medium: UiShape? = null,
+    val large: UiShape? = null,
 )
 
 internal data class AndroidTextStyleSnapshot(
@@ -79,7 +104,15 @@ internal object AndroidThemeSnapshotReader {
     private fun readColorSnapshot(context: Context): AndroidThemeColorSnapshot {
         val attrs = intArrayOf(
             android.R.attr.colorBackground,
+            com.google.android.material.R.attr.colorOnBackground,
             com.google.android.material.R.attr.colorSurface,
+            com.google.android.material.R.attr.colorSurfaceDim,
+            com.google.android.material.R.attr.colorSurfaceBright,
+            com.google.android.material.R.attr.colorSurfaceContainerLowest,
+            com.google.android.material.R.attr.colorSurfaceContainerLow,
+            com.google.android.material.R.attr.colorSurfaceContainer,
+            com.google.android.material.R.attr.colorSurfaceContainerHigh,
+            com.google.android.material.R.attr.colorSurfaceContainerHighest,
             com.google.android.material.R.attr.colorSurfaceVariant,
             com.google.android.material.R.attr.colorOnSurface,
             com.google.android.material.R.attr.colorOnSurfaceVariant,
@@ -91,47 +124,76 @@ internal object AndroidThemeSnapshotReader {
             com.google.android.material.R.attr.colorOnSecondary,
             com.google.android.material.R.attr.colorSecondaryContainer,
             com.google.android.material.R.attr.colorOnSecondaryContainer,
+            com.google.android.material.R.attr.colorTertiary,
+            com.google.android.material.R.attr.colorOnTertiary,
+            com.google.android.material.R.attr.colorTertiaryContainer,
+            com.google.android.material.R.attr.colorOnTertiaryContainer,
             android.R.attr.colorError,
             com.google.android.material.R.attr.colorOnError,
             com.google.android.material.R.attr.colorErrorContainer,
             com.google.android.material.R.attr.colorOnErrorContainer,
             com.google.android.material.R.attr.colorOutline,
             com.google.android.material.R.attr.colorOutlineVariant,
-            androidx.appcompat.R.attr.colorAccent,
             com.google.android.material.R.attr.colorSurfaceInverse,
             com.google.android.material.R.attr.colorOnSurfaceInverse,
+            com.google.android.material.R.attr.colorPrimaryInverse,
             android.R.attr.textColorPrimary,
             android.R.attr.textColorSecondary,
+            androidx.appcompat.R.attr.colorControlNormal,
+            androidx.appcompat.R.attr.colorControlActivated,
             androidx.appcompat.R.attr.colorControlHighlight,
         )
         val typedArray = context.obtainStyledAttributes(attrs)
         return try {
-            val onSurface = typedArray.getColorOrNull(3) ?: typedArray.getColorOrNull(22)
-            val onSurfaceVariant = typedArray.getColorOrNull(4) ?: typedArray.getColorOrNull(23)
+            val primaryText = typedArray.getStateColorOrNull(34)
+            val secondaryText = typedArray.getStateColorOrNull(35)
+            val control = typedArray.getStateColorOrNull(36)
+            val controlActivated = typedArray.getStateColorOrNull(37)
+            val controlHighlight = typedArray.getStateColorOrNull(38)
+            val onSurface = typedArray.getColorOrNull(11) ?: primaryText?.defaultColor
+            val onSurfaceVariant = typedArray.getColorOrNull(12) ?: secondaryText?.defaultColor
             AndroidThemeColorSnapshot(
                 background = typedArray.getColorOrNull(0),
-                surface = typedArray.getColorOrNull(1),
-                surfaceVariant = typedArray.getColorOrNull(2),
+                onBackground = typedArray.getColorOrNull(1),
+                surface = typedArray.getColorOrNull(2),
+                surfaceDim = typedArray.getColorOrNull(3),
+                surfaceBright = typedArray.getColorOrNull(4),
+                surfaceContainerLowest = typedArray.getColorOrNull(5),
+                surfaceContainerLow = typedArray.getColorOrNull(6),
+                surfaceContainer = typedArray.getColorOrNull(7),
+                surfaceContainerHigh = typedArray.getColorOrNull(8),
+                surfaceContainerHighest = typedArray.getColorOrNull(9),
+                surfaceVariant = typedArray.getColorOrNull(10),
                 onSurface = onSurface,
                 onSurfaceVariant = onSurfaceVariant,
-                primary = typedArray.getColorOrNull(5),
-                onPrimary = typedArray.getColorOrNull(6),
-                primaryContainer = typedArray.getColorOrNull(7),
-                onPrimaryContainer = typedArray.getColorOrNull(8),
-                secondary = typedArray.getColorOrNull(9),
-                onSecondary = typedArray.getColorOrNull(10),
-                secondaryContainer = typedArray.getColorOrNull(11),
-                onSecondaryContainer = typedArray.getColorOrNull(12),
-                error = typedArray.getColorOrNull(13),
-                onError = typedArray.getColorOrNull(14),
-                errorContainer = typedArray.getColorOrNull(15),
-                onErrorContainer = typedArray.getColorOrNull(16),
-                outline = typedArray.getColorOrNull(17),
-                outlineVariant = typedArray.getColorOrNull(18),
-                surfaceTint = typedArray.getColorOrNull(19),
-                inverseSurface = typedArray.getColorOrNull(20),
-                inverseOnSurface = typedArray.getColorOrNull(21),
-                ripple = typedArray.getColorOrNull(24),
+                primary = typedArray.getColorOrNull(13),
+                onPrimary = typedArray.getColorOrNull(14),
+                primaryContainer = typedArray.getColorOrNull(15),
+                onPrimaryContainer = typedArray.getColorOrNull(16),
+                secondary = typedArray.getColorOrNull(17),
+                onSecondary = typedArray.getColorOrNull(18),
+                secondaryContainer = typedArray.getColorOrNull(19),
+                onSecondaryContainer = typedArray.getColorOrNull(20),
+                tertiary = typedArray.getColorOrNull(21),
+                onTertiary = typedArray.getColorOrNull(22),
+                tertiaryContainer = typedArray.getColorOrNull(23),
+                onTertiaryContainer = typedArray.getColorOrNull(24),
+                error = typedArray.getColorOrNull(25),
+                onError = typedArray.getColorOrNull(26),
+                errorContainer = typedArray.getColorOrNull(27),
+                onErrorContainer = typedArray.getColorOrNull(28),
+                outline = typedArray.getColorOrNull(29),
+                outlineVariant = typedArray.getColorOrNull(30),
+                surfaceTint = typedArray.getColorOrNull(13),
+                inverseSurface = typedArray.getColorOrNull(31),
+                inverseOnSurface = typedArray.getColorOrNull(32),
+                inversePrimary = typedArray.getColorOrNull(33),
+                ripple = controlHighlight?.pressedColor,
+                primaryText = primaryText,
+                secondaryText = secondaryText,
+                control = control,
+                controlActivated = controlActivated,
+                controlHighlight = controlHighlight,
             )
         } finally {
             typedArray.recycle()
@@ -156,9 +218,9 @@ internal object AndroidThemeSnapshotReader {
         val typedArray = context.obtainStyledAttributes(attrs)
         return try {
             AndroidThemeShapeSnapshot(
-                smallCornerRadius = typedArray.getStyleRadiusOrNull(context, 0),
-                mediumCornerRadius = typedArray.getStyleRadiusOrNull(context, 1),
-                largeCornerRadius = typedArray.getStyleRadiusOrNull(context, 2),
+                small = typedArray.getStyleShapeOrNull(context, 0),
+                medium = typedArray.getStyleShapeOrNull(context, 1),
+                large = typedArray.getStyleShapeOrNull(context, 2),
             )
         } finally {
             typedArray.recycle()
@@ -206,13 +268,47 @@ private fun TypedArray.getColorOrNull(index: Int): Int? {
     return if (hasValue(index)) getColor(index, 0) else null
 }
 
-private fun TypedArray.getStyleRadiusOrNull(context: Context, index: Int): Int? {
+private fun TypedArray.getStateColorOrNull(index: Int): UiStateColor? {
+    if (!hasValue(index)) return null
+    val colors: ColorStateList = getColorStateList(index) ?: return null
+    val defaultColor = colors.defaultColor
+    return UiStateColor(
+        defaultColor = defaultColor,
+        disabledColor = colors.getColorForState(
+            intArrayOf(-android.R.attr.state_enabled),
+            defaultColor,
+        ),
+        pressedColor = colors.getColorForState(
+            intArrayOf(android.R.attr.state_enabled, android.R.attr.state_pressed),
+            defaultColor,
+        ),
+        focusedColor = colors.getColorForState(
+            intArrayOf(android.R.attr.state_enabled, android.R.attr.state_focused),
+            defaultColor,
+        ),
+        checkedColor = colors.getColorForState(
+            intArrayOf(android.R.attr.state_enabled, android.R.attr.state_checked),
+            defaultColor,
+        ),
+        selectedColor = colors.getColorForState(
+            intArrayOf(android.R.attr.state_enabled, android.R.attr.state_selected),
+            defaultColor,
+        ),
+    )
+}
+
+private fun TypedArray.getStyleShapeOrNull(context: Context, index: Int): UiShape? {
     if (!hasValue(index)) return null
     val styleRes = getResourceId(index, 0)
     if (styleRes == 0) return null
     val styleArray = context.obtainStyledAttributes(
         styleRes,
         intArrayOf(
+            com.google.android.material.R.attr.cornerFamily,
+            com.google.android.material.R.attr.cornerFamilyTopLeft,
+            com.google.android.material.R.attr.cornerFamilyTopRight,
+            com.google.android.material.R.attr.cornerFamilyBottomRight,
+            com.google.android.material.R.attr.cornerFamilyBottomLeft,
             com.google.android.material.R.attr.cornerSize,
             com.google.android.material.R.attr.cornerSizeTopLeft,
             com.google.android.material.R.attr.cornerSizeTopRight,
@@ -221,23 +317,68 @@ private fun TypedArray.getStyleRadiusOrNull(context: Context, index: Int): Int? 
         ),
     )
     return try {
-        if (styleArray.hasValue(0)) {
-            return styleArray.getDimensionPixelSize(0, 0)
-        }
-        val corners = buildList {
-            for (cornerIndex in 1..4) {
-                if (styleArray.hasValue(cornerIndex)) {
-                    add(styleArray.getDimensionPixelSize(cornerIndex, 0))
-                }
-            }
-        }
-        when {
-            corners.isEmpty() -> null
-            corners.distinct().size == 1 -> corners.first()
-            else -> null
+        val defaultFamily = styleArray.readCornerFamily(index = 0)
+        val defaultSize = styleArray.readCornerSize(index = 5)
+            ?: UiCornerSize.Absolute(0)
+        val topLeft = UiCorner(
+            family = styleArray.readCornerFamily(index = 1, fallback = defaultFamily),
+            size = styleArray.readCornerSize(index = 6) ?: defaultSize,
+        )
+        val topRight = UiCorner(
+            family = styleArray.readCornerFamily(index = 2, fallback = defaultFamily),
+            size = styleArray.readCornerSize(index = 7) ?: defaultSize,
+        )
+        val bottomRight = UiCorner(
+            family = styleArray.readCornerFamily(index = 3, fallback = defaultFamily),
+            size = styleArray.readCornerSize(index = 8) ?: defaultSize,
+        )
+        val bottomLeft = UiCorner(
+            family = styleArray.readCornerFamily(index = 4, fallback = defaultFamily),
+            size = styleArray.readCornerSize(index = 9) ?: defaultSize,
+        )
+        if (context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
+            UiShape(
+                topStart = topRight,
+                topEnd = topLeft,
+                bottomEnd = bottomLeft,
+                bottomStart = bottomRight,
+            )
+        } else {
+            UiShape(
+                topStart = topLeft,
+                topEnd = topRight,
+                bottomEnd = bottomRight,
+                bottomStart = bottomLeft,
+            )
         }
     } finally {
         styleArray.recycle()
+    }
+}
+
+private fun TypedArray.readCornerFamily(
+    index: Int,
+    fallback: UiCornerFamily = UiCornerFamily.Rounded,
+): UiCornerFamily {
+    if (!hasValue(index)) return fallback
+    return when (getInt(index, 0)) {
+        1 -> UiCornerFamily.Cut
+        else -> UiCornerFamily.Rounded
+    }
+}
+
+private fun TypedArray.readCornerSize(index: Int): UiCornerSize? {
+    if (!hasValue(index)) return null
+    return when (peekValue(index)?.type) {
+        TypedValue.TYPE_FRACTION -> UiCornerSize.Relative(
+            fraction = getFraction(index, 1, 1, 0f).coerceIn(0f, 1f),
+        )
+
+        TypedValue.TYPE_DIMENSION -> UiCornerSize.Absolute(
+            pixels = getDimensionPixelSize(index, 0).coerceAtLeast(0),
+        )
+
+        else -> null
     }
 }
 

@@ -7,4 +7,6 @@ class MountedNode(
     var vnode: VNode,
     val view: View,
     var children: List<MountedNode> = emptyList(),
-)
+) {
+    internal var disposed: Boolean = false
+}

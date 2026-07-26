@@ -2,9 +2,16 @@ package com.viewcompose.ui.modifier
 
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.GesturePriority
+import com.viewcompose.ui.gesture.GestureCancellationReason
 import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
 import com.viewcompose.ui.gesture.TransformDelta
+import com.viewcompose.ui.gesture.NestedScrollConnection
+import com.viewcompose.ui.gesture.NestedScrollDispatcher
+import com.viewcompose.ui.focus.FocusProperties
+import com.viewcompose.ui.focus.FocusRequester
+import com.viewcompose.ui.focus.FocusState
+import com.viewcompose.ui.input.KeyEvent
 
 data class ClickableModifierElement(
     val onClick: () -> Unit,
@@ -28,6 +35,7 @@ data class DraggableModifierElement(
     val onDragStarted: (() -> Unit)?,
     val onDragStopped: ((velocity: Float) -> Unit)?,
     val onDelta: (delta: Float) -> Unit,
+    val onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ) : ModifierElement
 
 data class AnchoredDraggableModifierElement(
@@ -37,19 +45,56 @@ data class AnchoredDraggableModifierElement(
     val currentOffsetPx: Float?,
     val onDelta: (delta: Float) -> Unit,
     val onSettleToOffset: (offsetPx: Float) -> Unit,
+    val onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ) : ModifierElement
 
 data class TransformableModifierElement(
     val enabled: Boolean,
     val onTransform: (TransformDelta) -> Unit,
+    val onTransformStarted: (() -> Unit)? = null,
+    val onTransformStopped: (() -> Unit)? = null,
+    val onTransformCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ) : ModifierElement
 
 data class GesturePriorityModifierElement(
     val priority: GesturePriority,
 ) : ModifierElement
 
-data class ContentDescriptionModifierElement(
-    val contentDescription: String?,
+data class NestedScrollModifierElement(
+    val connection: NestedScrollConnection,
+    val dispatcher: NestedScrollDispatcher?,
+) : ModifierElement
+
+data class FocusableModifierElement(
+    val enabled: Boolean,
+) : ModifierElement
+
+data class FocusRequesterModifierElement(
+    val requester: FocusRequester,
+) : ModifierElement
+
+data class FocusPropertiesModifierElement(
+    val properties: FocusProperties,
+) : ModifierElement
+
+data class FocusGroupModifierElement(
+    val enabled: Boolean,
+) : ModifierElement
+
+data class OnFocusChangedModifierElement(
+    val onFocusChanged: (FocusState) -> Unit,
+) : ModifierElement
+
+data class PreviewKeyEventModifierElement(
+    val onPreviewKeyEvent: (KeyEvent) -> Boolean,
+) : ModifierElement
+
+data class KeyEventModifierElement(
+    val onKeyEvent: (KeyEvent) -> Boolean,
+) : ModifierElement
+
+data class SemanticsModifierElement(
+    val configuration: SemanticsConfiguration,
 ) : ModifierElement
 
 data class TestTagModifierElement(

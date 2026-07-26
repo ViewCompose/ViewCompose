@@ -5,12 +5,12 @@ import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.border
 import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.clickable
-import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.minHeight
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 
@@ -23,13 +23,13 @@ fun UiTreeBuilder.Card(
     content: BoxScope.() -> Unit,
 ) {
     val bgColor = CardDefaults.containerColor(variant)
-    val radius = CardDefaults.cornerRadius()
+    val shape = CardDefaults.shape()
     val elev = CardDefaults.elevation(variant)
     val bw = CardDefaults.borderWidth(variant)
     val bc = CardDefaults.borderColor(variant)
     val semanticModifier = Modifier
         .backgroundColor(bgColor)
-        .cornerRadius(radius)
+        .shape(shape)
         .clip()
         .let { m -> if (elev > 0) m.elevation(elev) else m }
         .let { m -> if (bw > 0) m.border(bw, bc) else m }

@@ -1,6 +1,8 @@
 package com.viewcompose.runtime
 
+import com.viewcompose.runtime.state.MutableStateImpl
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -90,5 +92,83 @@ class SnapshotStateTest {
         assertTrue(parent.apply() is SnapshotApplyResult.Success)
         assertEquals(7, state.value)
         parent.dispose()
+    }
+
+    @Test
+    fun `nullable value remains visible inside mutable snapshot and applies globally`() {
+        val state = mutableStateOf<String?>("ready")
+        val snapshot = Snapshot.takeMutableSnapshot()
+
+        snapshot.enter {
+            state.value = null
+            assertNull(state.value)
+        }
+
+        assertEquals("ready", state.value)
+        assertTrue(snapshot.apply() is SnapshotApplyResult.Success)
+        assertNull(state.value)
+        snapshot.dispose()
+    }
+
+    @Test
+    fun `nullable value applies through nested mutable snapshots`() {
+        val state = mutableStateOf<String?>("ready")
+        val parent = Snapshot.takeMutableSnapshot()
+
+        parent.enter {
+            val child = Snapshot.takeMutableSnapshot()
+            child.enter {
+                state.value = null
+                assertNull(state.value)
+            }
+            assertTrue(child.apply() is SnapshotApplyResult.Success)
+            child.dispose()
+            assertNull(state.value)
+        }
+
+        assertTrue(parent.apply() is SnapshotApplyResult.Success)
+        assertNull(state.value)
+        parent.dispose()
+    }
+
+    @Test
+    fun `never equal policy supports uncontended autocommit writes`() {
+        val state = mutableStateOf(1, neverEqualPolicy())
+        val before = Snapshot.currentGlobalId()
+
+        state.value = 1
+
+        assertEquals(1, state.value)
+        assertTrue(Snapshot.currentGlobalId() > before)
+    }
+
+    @Test
+    fun `autocommit writes prune obsolete state records`() {
+        val state = mutableStateOf(0)
+
+        repeat(1_000) { value ->
+            state.value = value + 1
+        }
+
+        assertEquals(1, (state as MutableStateImpl<Int>).recordCount())
+    }
+
+    @Test
+    fun `active read snapshot retains visible record until disposed`() {
+        val state = mutableStateOf(0)
+        val readSnapshot = Snapshot.takeSnapshot()
+
+        repeat(100) { value ->
+            state.value = value + 1
+        }
+
+        val implementation = state as MutableStateImpl<Int>
+        assertTrue(implementation.recordCount() > 1)
+        assertEquals(0, readSnapshot.enter { state.value })
+
+        readSnapshot.dispose()
+
+        assertEquals(1, implementation.recordCount())
+        assertEquals(100, state.value)
     }
 }

@@ -184,7 +184,25 @@
 5. 调整 snapshot 语义时，必须同步更新 [STATE_SNAPSHOT.md](/Users/gzq/AndroidStudioProjects/UIFramework/STATE_SNAPSHOT.md)。
 6. 在组合阶段发生“先写 mirror state 再读回”时，禁止把该回读值用于控制流（协程启动、任务调度、版本选择）；这类判定必须读取实时内核字段，并补对应回归用例。
 
-## 5.8 帧对齐调度约束
+## 5.8 组合事务与结构化协程约束
+
+涉及 `ComposerLite`、Effect、Flow、动画或协程 API 的改动，必须遵守：
+
+1. 组合结果必须经过 prepare/commit/abort；renderer 失败不得提交 slot、观察订阅或 Effect。
+2. `DisposableEffect`、`SideEffect`、`LaunchedEffect` 只能在成功提交后启动。
+3. 失败候选中的 `RememberObserver` 必须走 `onAbandoned`，不能走 `onForgotten`。
+4. 业务可见异步任务必须属于 `RenderSession` 组合 Job；禁止新增 `CoroutineScope(SupervisorJob())` 独立根。
+5. 自定义 dispatcher/context 只能覆盖非 Job 元素；携带 `Job` 必须 fail-fast。
+6. 协程相关改动至少覆盖：Key 重启、条件移除、失败组合不启动、Session 销毁、子任务异常隔离。
+7. renderer 事务回归至少覆盖：同层中途失败、递归子树失败、新节点释放、旧 View 顺序与绑定恢复。
+8. `AndroidView.update/onReset/nativeView` 必须可重放且只修改传入 View；外部不可重放副作用必须使用成功事务后执行的 `onCommit`。
+9. 组合和 renderer 的事务日志必须与本轮 touched scope/mutated node 数量相关；禁止重新引入每帧全树 checkpoint。
+10. renderer 快速路径调整必须验证：稳定 VNode/List 引用保持、`SkipSubtree` 不进入 children、诊断关闭时不做深度结构统计。
+11. 重复失效优化必须保留“组合进行中再次失效”的下一帧语义，并覆盖同帧多次写只调度一次。
+12. `RecomposeBoundary` 内普通 Kotlin 捕获值必须通过 `inputs` 声明；snapshot state 不需要重复声明。
+13. 新增 render/session 失败路径必须映射到结构化 `RenderFailure` 阶段与恢复状态，并验证单个失败不会阻断后续提交期回调或清理。
+
+## 5.9 帧对齐调度约束
 
 涉及 `RenderSession`、失效调度与测试等待机制的改动，必须遵守：
 
@@ -194,7 +212,7 @@
 4. instrumentation 若依赖“UI 空闲后断言”，必须保证等待至少一个 frame，避免调度升级后误报。
 5. session `dispose()` 路径改动必须验证“销毁后无延迟渲染”。
 
-## 5.9 Renderer 单源注册约束
+## 5.10 Renderer 单源注册约束
 
 涉及 renderer binder/differ 的新增或重构，必须遵守：
 

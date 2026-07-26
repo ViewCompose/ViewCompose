@@ -17,6 +17,7 @@ import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
 import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
 import com.viewcompose.ui.state.PagerState
+import com.viewcompose.ui.shape.UiShape
 
 internal object PagerViewBinder {
     data class SegmentedControlSpec(
@@ -26,7 +27,7 @@ internal object PagerViewBinder {
         val enabled: Boolean,
         val backgroundColor: Int,
         val indicatorColor: Int,
-        val cornerRadius: Int,
+        val shape: UiShape,
         val textColor: Int,
         val selectedTextColor: Int,
         val rippleColor: Int,
@@ -95,7 +96,7 @@ internal object PagerViewBinder {
             enabled = spec.enabled,
             backgroundColor = spec.backgroundColor,
             indicatorColor = spec.indicatorColor,
-            cornerRadius = spec.cornerRadius,
+            shape = spec.shape,
             textColor = spec.textColor,
             selectedTextColor = spec.selectedTextColor,
             rippleColor = spec.rippleColor,
@@ -190,7 +191,7 @@ internal object PagerViewBinder {
             enabled = spec.enabled,
             backgroundColor = spec.backgroundColor,
             indicatorColor = spec.indicatorColor,
-            cornerRadius = spec.cornerRadius,
+            shape = spec.shape,
             textColor = spec.textColor,
             selectedTextColor = spec.selectedTextColor,
             rippleColor = spec.rippleColor,

@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 object DropdownMenuDefaults {
     fun containerColor(): Int = Theme.colors.surface
 
@@ -7,7 +9,7 @@ object DropdownMenuDefaults {
 
     fun textStyle(): UiTextStyle = TextDefaults.bodyMediumStyle()
 
-    fun cornerRadius(): Int = Theme.shapes.mediumCornerRadius
+    fun shape(): UiShape = Theme.shapes.medium
 
     fun elevation(): Int = Theme.controls.menu.elevation
 

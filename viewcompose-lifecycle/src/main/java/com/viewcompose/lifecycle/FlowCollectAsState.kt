@@ -1,23 +1,16 @@
 package com.viewcompose.lifecycle
 
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.viewcompose.runtime.State
-import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.DisposableEffect
-import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.rememberUpdatedState
+import com.viewcompose.widget.core.produceState
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 fun <T> StateFlow<T>.collectAsState(
     context: CoroutineContext = EmptyCoroutineContext,
@@ -32,23 +25,18 @@ fun <T> Flow<T>.collectAsState(
     initial: T,
     context: CoroutineContext = EmptyCoroutineContext,
 ): State<T> {
-    val state = remember {
-        mutableStateOf(initial)
-    }
-    val latestFlow = rememberUpdatedState(this)
-    DisposableEffect(this, context) {
-        val scope = CoroutineScope(context + SupervisorJob())
-        val collectJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
-            latestFlow.value.collect { next ->
-                state.value = next
+    requireStructuredContext(context)
+    return produceState(
+        initialValue = initial,
+        this,
+        context,
+    ) {
+        withContext(context) {
+            this@collectAsState.collect { next ->
+                value = next
             }
         }
-        return@DisposableEffect {
-            collectJob.cancel()
-            scope.cancel()
-        }
     }
-    return state
 }
 
 fun <T> StateFlow<T>.collectAsStateWithLifecycle(
@@ -84,54 +72,35 @@ fun <T> Flow<T>.collectAsStateWithLifecycle(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
     context: CoroutineContext = EmptyCoroutineContext,
 ): State<T> {
-    require(minActiveState != Lifecycle.State.INITIALIZED) {
-        "minActiveState must be at least CREATED."
+    require(
+        minActiveState == Lifecycle.State.CREATED ||
+            minActiveState == Lifecycle.State.STARTED ||
+            minActiveState == Lifecycle.State.RESUMED,
+    ) {
+        "minActiveState must be CREATED, STARTED, or RESUMED."
     }
-    val state = remember {
-        mutableStateOf(initial)
-    }
-    val latestFlow = rememberUpdatedState(this)
-    DisposableEffect(this, lifecycle, minActiveState, context) {
-        val scope = CoroutineScope(context + SupervisorJob())
-        var collectJob: Job? = null
-
-        fun startCollectIfNeeded() {
-            if (collectJob?.isActive == true) {
-                return
-            }
-            collectJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                latestFlow.value.collect { next ->
-                    state.value = next
+    requireStructuredContext(context)
+    return produceState(
+        initialValue = initial,
+        this,
+        lifecycle,
+        minActiveState,
+        context,
+    ) {
+        lifecycle.repeatOnLifecycle(minActiveState) {
+            withContext(context) {
+                this@collectAsStateWithLifecycle.collect { next ->
+                    value = next
                 }
             }
         }
-
-        fun stopCollectIfNeeded() {
-            collectJob?.cancel()
-            collectJob = null
-        }
-
-        fun syncCollectionWithLifecycle() {
-            if (lifecycle.currentState.isAtLeast(minActiveState)) {
-                startCollectIfNeeded()
-            } else {
-                stopCollectIfNeeded()
-            }
-        }
-
-        val observer = LifecycleEventObserver { _, _ ->
-            syncCollectionWithLifecycle()
-        }
-        lifecycle.addObserver(observer)
-        syncCollectionWithLifecycle()
-
-        return@DisposableEffect {
-            lifecycle.removeObserver(observer)
-            stopCollectIfNeeded()
-            scope.cancel()
-        }
     }
-    return state
+}
+
+private fun requireStructuredContext(context: CoroutineContext) {
+    require(context[Job] == null) {
+        "collectAsState context must not contain a Job."
+    }
 }
 
 private fun currentLifecycleOwnerOrThrow(): LifecycleOwner {

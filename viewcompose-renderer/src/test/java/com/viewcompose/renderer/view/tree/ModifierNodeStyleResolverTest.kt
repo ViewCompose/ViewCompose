@@ -6,6 +6,7 @@ import com.viewcompose.ui.modifier.backgroundDrawableRes
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.ButtonNodeProps
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.renderer.modifier.resolve
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -43,7 +44,7 @@ class ModifierNodeStyleResolverTest {
                 backgroundColor = 0xFFE0E0E0.toInt(),
                 borderWidth = 0,
                 borderColor = 0,
-                cornerRadius = 0,
+                shape = UiShape.rounded(0),
                 rippleColor = 0x33000000,
                 minHeight = 0,
                 paddingHorizontal = 0,

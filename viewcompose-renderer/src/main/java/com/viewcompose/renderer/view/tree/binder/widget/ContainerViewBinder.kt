@@ -3,6 +3,7 @@ package com.viewcompose.renderer.view.tree
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.renderer.R
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.node.VNode
@@ -178,10 +179,15 @@ internal object ContainerViewBinder {
 
     internal fun applyLazyListPadding(
         recyclerView: RecyclerView,
-        padding: Int,
+        padding: LazyContentPadding,
     ) {
-        recyclerView.setPadding(padding, padding, padding, padding)
-        recyclerView.clipToPadding = padding == 0
+        recyclerView.setPaddingRelative(
+            padding.start,
+            padding.top,
+            padding.end,
+            padding.bottom,
+        )
+        recyclerView.clipToPadding = padding == LazyContentPadding.None
     }
 
     internal fun applyLazyListSpacing(
