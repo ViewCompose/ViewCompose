@@ -104,6 +104,10 @@ fun <T> InfiniteTransition.animateValue(
         "Animation coroutine context must not contain a Job."
     }
     LaunchedEffect(initialValue, targetValue, animationSpec, frameClock, animationCoroutineContext) {
+        if (initialValue == targetValue) {
+            valueState.value = initialValue
+            return@LaunchedEffect
+        }
         withContext(animationCoroutineContext) {
             var from = initialValue
             var to = targetValue
