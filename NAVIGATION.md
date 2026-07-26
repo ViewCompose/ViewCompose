@@ -32,7 +32,7 @@ Current feature-branch status:
 - Stage 4 native View transition driver: complete
 - Stage 4 public `NavHost`: complete
 - Stage 5 complete host restoration: complete
-- Stage 5 platform back: next
+- Stage 5 platform back and predictive back: complete
 
 ## 2. P0 delivery plan
 
@@ -130,8 +130,9 @@ so invisible animation can never retain removed page resources indefinitely.
 ### Stage 5: restoration and platform back
 
 - save and restore the back stack and each entry state across host recreation/process death: complete
-- connect Android back dispatch without making Activity/Fragment a destination owner
-- define root-pop delegation to the platform host
+- connect Android back dispatch without making Activity/Fragment a destination owner: complete
+- define root-pop delegation to the platform host: complete
+- preview, cancel, and commit Predictive Back through the same transaction boundary: complete
 
 `rememberNavHostController` now registers one versioned, Bundle-safe state envelope in the current
 ViewCompose saveable-state registry. Saving captures the committed back-stack snapshot, stable entry
@@ -148,6 +149,29 @@ without requiring process recreation.
 The codec rejects unknown formats, empty or duplicate stacks, malformed routes, and invalid typed
 arguments. Invalid restored data falls back to the declared start destination instead of partially
 publishing a damaged stack.
+
+`NavHost` registers one lifecycle-aware callback with the nearest View-tree
+`OnBackPressedDispatcherOwner`. The callback is enabled only when `systemBackEnabled` is true, the
+host is attached, and the committed stack contains more than its root destination. A root stack
+therefore never consumes Back: dispatch continues to an enclosing navigation host, another
+application callback, or the platform fallback. Setting `systemBackEnabled = false` opts the host
+out without changing its stack.
+
+Ordinary Back executes the same transactional `Pop` command as `NavHostController.popBackStack()`.
+Predictive Back adds a preview phase before that command:
+
+1. gesture start exposes the current top and its previous destination without changing the stack;
+2. the outgoing top remains the only interactive `RESUMED` destination while the revealed page is
+   visible at `STARTED`;
+3. progress updates only the native View transition driver;
+4. cancellation resets View properties, visibility, and lifecycle to the committed snapshot;
+5. completion refreshes the revealed destination, commits `Pop`, and continues the remaining motion
+   through the normal transition-retention protocol.
+
+A programmatic navigation command redirects an active preview before preparing its own transaction.
+Host detachment, callback disablement, and host destruction cancel the preview and restore a settled
+scene. This keeps platform Back, gesture Back, and application navigation on one stack and lifecycle
+ownership model.
 
 ## 3. Transaction invariants
 
@@ -198,7 +222,6 @@ The first stable merge does not include:
 - nested navigation graphs
 - multiple tab back stacks
 - URI deep-link matching
-- predictive-back progress animation
 - adaptive multi-pane placement
 - compiler-generated route serialization
 
