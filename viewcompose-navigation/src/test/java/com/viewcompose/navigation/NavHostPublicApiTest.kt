@@ -1,5 +1,6 @@
 package com.viewcompose.navigation
 
+import android.os.Parcelable
 import android.widget.FrameLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -11,7 +12,13 @@ import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.widget.core.OverlayHostDefaults
+import com.viewcompose.widget.core.ProvideSaveableStateRegistry
+import com.viewcompose.widget.core.SaveableStateRegistry
+import com.viewcompose.widget.core.Saver
 import com.viewcompose.widget.core.Text
+import com.viewcompose.widget.core.createSaveableStateRegistry
+import com.viewcompose.widget.core.rememberSaveable
+import java.io.Serializable
 import java.util.ArrayDeque
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -185,6 +192,69 @@ class NavHostPublicApiTest {
         second.session.dispose()
     }
 
+    @Test
+    fun `released controller restores destination saveable state when remounted`() {
+        val controller = deterministicController()
+        var destinationState: RestorableCounter? = null
+        val first = renderPublicHost(controller = controller) { entry ->
+            val state = rememberSaveable(
+                key = "counter",
+                saver = RestorableCounterSaver,
+            ) {
+                RestorableCounter(0)
+            }
+            if (entry.route.name == "details") {
+                destinationState = state
+            }
+            Text(entry.route.name)
+        }
+        controller.navigate(NavRoute("details"))
+        checkNotNull(destinationState).value = 41
+
+        first.session.dispose()
+        destinationState = null
+        val second = renderPublicHost(controller = controller) { entry ->
+            val state = rememberSaveable(
+                key = "counter",
+                saver = RestorableCounterSaver,
+            ) {
+                RestorableCounter(-1)
+            }
+            if (entry.route.name == "details") {
+                destinationState = state
+            }
+            Text(entry.route.name)
+        }
+
+        assertEquals(41, checkNotNull(destinationState).value)
+        second.session.dispose()
+    }
+
+    @Test
+    fun `remembered controller restores stack IDs and every destination state after recreation`() {
+        val firstRegistry = createSaveableStateRegistry(
+            canBeSaved = ::canBeSavedToBundle,
+        )
+        val first = renderRememberedHost(firstRegistry)
+        checkNotNull(first.homeState).value = 11
+        first.controller.navigate(NavRoute("details"))
+        checkNotNull(first.detailsState).value = 29
+        val expectedSnapshot = first.controller.snapshot
+
+        val saved = firstRegistry.performSave()
+        first.session.dispose()
+        val restoredRegistry = createSaveableStateRegistry(
+            restoredValues = saved,
+            canBeSaved = ::canBeSavedToBundle,
+        )
+        val restored = renderRememberedHost(restoredRegistry)
+
+        assertEquals(expectedSnapshot, restored.controller.snapshot)
+        assertEquals(11, checkNotNull(restored.homeState).value)
+        assertEquals(29, checkNotNull(restored.detailsState).value)
+        restored.session.dispose()
+    }
+
     private fun renderPublicHost(
         controller: NavHostController = deterministicController(),
         onFailure: ((NavFailure) -> Unit)? = null,
@@ -235,8 +305,92 @@ class NavHostPublicApiTest {
         )
     }
 
+    private fun renderRememberedHost(
+        registry: SaveableStateRegistry,
+    ): RememberedHostFixture {
+        val application = RuntimeEnvironment.getApplication()
+        val root = FrameLayout(application)
+        val lifecycleOwner = TestLifecycleOwner().apply {
+            moveTo(Lifecycle.State.RESUMED)
+        }
+        var controller: NavHostController? = null
+        var homeState: RestorableCounter? = null
+        var detailsState: RestorableCounter? = null
+        val session = renderInto(root) {
+            ProvideLifecycleOwner(lifecycleOwner) {
+                ProvideSaveableStateRegistry(registry) {
+                    val rememberedController = rememberNavHostController(
+                        startDestination = NavRoute("home"),
+                    )
+                    controller = rememberedController
+                    NavHost(
+                        controller = rememberedController,
+                        transitionSpec = NavTransitionSpec.None,
+                        overlayHostFactory = { OverlayHostDefaults.noOp },
+                    ) { entry ->
+                        val state = rememberSaveable(
+                            key = "counter",
+                            saver = RestorableCounterSaver,
+                        ) {
+                            RestorableCounter(0)
+                        }
+                        when (entry.route.name) {
+                            "home" -> homeState = state
+                            "details" -> detailsState = state
+                        }
+                        Text(entry.route.name)
+                    }
+                }
+            }
+        }
+        return RememberedHostFixture(
+            controller = checkNotNull(controller),
+            session = session,
+            homeStateProvider = { homeState },
+            detailsStateProvider = { detailsState },
+        )
+    }
+
     private fun NavHostController.routeNames(): List<String> {
         return snapshot.entries.map { entry -> entry.route.name }
+    }
+}
+
+private class RememberedHostFixture(
+    val controller: NavHostController,
+    val session: com.viewcompose.host.android.RenderSession,
+    private val homeStateProvider: () -> RestorableCounter?,
+    private val detailsStateProvider: () -> RestorableCounter?,
+) {
+    val homeState: RestorableCounter?
+        get() = homeStateProvider()
+
+    val detailsState: RestorableCounter?
+        get() = detailsStateProvider()
+}
+
+private class RestorableCounter(
+    var value: Int,
+)
+
+private val RestorableCounterSaver = Saver<RestorableCounter, Int>(
+    save = RestorableCounter::value,
+    restore = ::RestorableCounter,
+)
+
+private fun canBeSavedToBundle(value: Any?): Boolean {
+    return when (value) {
+        null -> true
+        is Function<*> -> false
+        is List<*> -> value.all(::canBeSavedToBundle)
+        is Map<*, *> -> value.all { (key, item) ->
+            key is String && canBeSavedToBundle(item)
+        }
+        is Array<*> -> value.all(::canBeSavedToBundle)
+        is Parcelable,
+        is Serializable,
+        -> true
+        else -> false
     }
 }
 

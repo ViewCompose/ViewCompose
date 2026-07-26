@@ -25,6 +25,7 @@ internal class NavHostRuntime private constructor(
     val hostView: NavHostView,
     private val controller: NavHostController,
     private val coordinator: TransactionalNavHostCoordinator,
+    private val ownerStore: NavEntryOwnerStore,
     private val transitionSpecHolder: TransitionSpecHolder,
 ) : NavHostBinding {
     private var stagedConfig: NavHostRuntimeConfig? = null
@@ -80,10 +81,25 @@ internal class NavHostRuntime private constructor(
         return publicResult
     }
 
+    override fun saveState(): NavHostRestorableState {
+        check(!destroyed) {
+            "A destroyed NavHost cannot save state."
+        }
+        val snapshot = coordinator.snapshot
+        return NavHostRestorableState(
+            snapshot = snapshot,
+            destinationState = ownerStore.performSave(
+                retainedEntryIds = snapshot.entries
+                    .mapTo(linkedSetOf(), NavEntry::id),
+            ),
+        )
+    }
+
     fun destroy() {
         if (destroyed) {
             return
         }
+        val retainedState = runCatching(::saveState)
         destroyed = true
         boundLifecycleOwner?.let { owner ->
             owner.lifecycle.removeObserver(lifecycleObserver)
@@ -92,10 +108,15 @@ internal class NavHostRuntime private constructor(
         try {
             coordinator.destroy()
         } finally {
-            controller.unbind(this)
-            committedConfig = null
-            stagedConfig = null
+            try {
+                retainedState.getOrNull()?.let(controller::retainState)
+            } finally {
+                controller.unbind(this)
+                committedConfig = null
+                stagedConfig = null
+            }
         }
+        retainedState.getOrThrow()
     }
 
     private fun attach(config: NavHostRuntimeConfig) {
@@ -197,6 +218,7 @@ internal class NavHostRuntime private constructor(
             val hostView = NavHostView(context)
             val ownerStore = NavEntryOwnerStore(
                 application = context.applicationContext as? Application,
+                restoredState = controller.destinationStateForHost(),
             )
             val transitionSpecHolder = TransitionSpecHolder(initialConfig.transitionSpec)
             val sessionStore = NavDestinationSessionStore(
@@ -223,6 +245,7 @@ internal class NavHostRuntime private constructor(
                 hostView = hostView,
                 controller = controller,
                 coordinator = coordinator,
+                ownerStore = ownerStore,
                 transitionSpecHolder = transitionSpecHolder,
             ).also { runtime ->
                 runtime.stage(initialConfig)

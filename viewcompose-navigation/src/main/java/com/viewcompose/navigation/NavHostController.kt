@@ -1,5 +1,6 @@
 package com.viewcompose.navigation
 
+import android.os.Bundle
 import android.os.Looper
 import androidx.annotation.MainThread
 import com.viewcompose.navigation.core.NavBackStackController
@@ -12,7 +13,7 @@ import com.viewcompose.navigation.core.NavNoChangeReason
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavStackMutation
 import com.viewcompose.widget.core.RenderFrameReport
-import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberSaveable
 
 enum class NavFailurePhase {
     DestinationPreparation,
@@ -79,12 +80,16 @@ sealed interface NavResult {
  * Stable application-facing handle for a single framework-owned navigation stack.
  *
  * A controller can be mounted by only one [NavHost] at a time. Commands require that host to be
- * attached so every stack mutation shares the destination render and lifecycle transaction.
+ * attached so every stack mutation shares the destination render and lifecycle transaction. When
+ * remembered with [rememberNavHostController], the stack, entry IDs, route arguments, destination
+ * `rememberSaveable` values, and destination `SavedStateHandle` values survive host recreation.
  */
 class NavHostController internal constructor(
     internal val backStackController: NavBackStackController,
+    restoredDestinationState: Bundle? = null,
 ) {
     private var binding: NavHostBinding? = null
+    private var retainedDestinationState: Bundle? = restoredDestinationState?.let(::Bundle)
 
     val snapshot: NavBackStackSnapshot
         get() = backStackController.snapshot()
@@ -143,6 +148,38 @@ class NavHostController internal constructor(
         }
     }
 
+    @MainThread
+    internal fun stateForSave(): NavHostRestorableState {
+        requireMainThread()
+        val state = binding?.saveState()
+            ?: NavHostRestorableState(
+                snapshot = backStackController.snapshot(),
+                destinationState = retainedDestinationState?.let(::Bundle),
+            )
+        check(state.snapshot == backStackController.snapshot()) {
+            "NavHost runtime and controller back stacks diverged while saving state."
+        }
+        retainedDestinationState = state.destinationState?.let(::Bundle)
+        return state.copy(
+            destinationState = state.destinationState?.let(::Bundle),
+        )
+    }
+
+    @MainThread
+    internal fun destinationStateForHost(): Bundle? {
+        requireMainThread()
+        return retainedDestinationState?.let(::Bundle)
+    }
+
+    @MainThread
+    internal fun retainState(state: NavHostRestorableState) {
+        requireMainThread()
+        check(state.snapshot == backStackController.snapshot()) {
+            "NavHost cannot retain destination state for a different back stack."
+        }
+        retainedDestinationState = state.destinationState?.let(::Bundle)
+    }
+
     private fun requireMainThread() {
         check(Looper.myLooper() == Looper.getMainLooper()) {
             "Navigation commands must run on the Android main thread."
@@ -150,8 +187,10 @@ class NavHostController internal constructor(
     }
 }
 
-internal fun interface NavHostBinding {
+internal interface NavHostBinding {
     fun navigate(command: NavCommand): NavResult
+
+    fun saveState(): NavHostRestorableState
 }
 
 fun createNavHostController(
@@ -175,10 +214,17 @@ internal fun createNavHostController(
     )
 }
 
+/**
+ * Remembers a controller and restores its complete host state through the current saveable-state
+ * registry. Invalid or incompatible restored data is discarded in favor of [startDestination].
+ */
 fun rememberNavHostController(
     startDestination: NavRoute,
 ): NavHostController {
-    return remember(startDestination) {
+    return rememberSaveable(
+        startDestination,
+        saver = navHostControllerSaver(startDestination),
+    ) {
         createNavHostController(startDestination)
     }
 }

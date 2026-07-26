@@ -114,7 +114,7 @@ class NavEntryOwnerStoreTest {
         firstOwner.compositionSaveableStateRegistry.registerProvider("selectedTab") { 3 }
         firstOwner.viewModel<SavedStateViewModel>("root-vm").handle["query"] = "ViewCompose"
 
-        val saved = firstStore.performSave()
+        val saved = firstStore.performSave(setOf(root.id))
         firstStore.destroy()
         val restoredStore = store(saved)
         restoredStore.reconcile(
@@ -135,6 +135,49 @@ class NavEntryOwnerStoreTest {
             "ViewCompose",
             restoredOwner.viewModel<SavedStateViewModel>("root-vm").handle["query"],
         )
+    }
+
+    @Test
+    fun `store save excludes transition-only owners outside the committed stack`() {
+        val root = entry("root", "home")
+        val outgoing = entry("outgoing", "details")
+        val firstStore = store()
+        firstStore.reconcile(
+            retainedEntries = listOf(root, outgoing),
+            visibleEntryIds = setOf(root.id, outgoing.id),
+            interactiveEntryId = root.id,
+            hostState = NavHostLifecycleState.Started,
+        )
+        checkNotNull(firstStore.ownerOrNull(root.id))
+            .compositionSaveableStateRegistry
+            .registerProvider("value") { "root-state" }
+        checkNotNull(firstStore.ownerOrNull(outgoing.id))
+            .compositionSaveableStateRegistry
+            .registerProvider("value") { "outgoing-state" }
+
+        val saved = firstStore.performSave(setOf(root.id))
+        firstStore.destroy()
+        val restoredStore = store(saved)
+        restoredStore.reconcile(
+            retainedEntries = listOf(root, outgoing),
+            visibleEntryIds = setOf(root.id),
+            interactiveEntryId = root.id,
+            hostState = NavHostLifecycleState.Started,
+        )
+
+        assertEquals(
+            "root-state",
+            checkNotNull(restoredStore.ownerOrNull(root.id))
+                .compositionSaveableStateRegistry
+                .consumeRestored("value")
+                ?.value,
+        )
+        assertNull(
+            checkNotNull(restoredStore.ownerOrNull(outgoing.id))
+                .compositionSaveableStateRegistry
+                .consumeRestored("value"),
+        )
+        restoredStore.destroy()
     }
 
     @Test
@@ -183,7 +226,7 @@ class NavEntryOwnerStoreTest {
             store.ownerFor(root)
         }
         assertThrows<IllegalStateException> {
-            store.performSave()
+            store.performSave(emptySet())
         }
     }
 

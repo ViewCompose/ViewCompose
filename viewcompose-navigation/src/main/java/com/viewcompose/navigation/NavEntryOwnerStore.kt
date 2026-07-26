@@ -85,13 +85,17 @@ internal class NavEntryOwnerStore(
     }
 
     @MainThread
-    fun performSave(): Bundle {
+    fun performSave(retainedEntryIds: Set<NavEntryId>): Bundle {
         check(!destroyed) {
             "A destroyed navigation entry owner store cannot be saved."
         }
-        val ownerStates = LinkedHashMap(restoredOwnerStates)
-        owners.forEach { (entryId, owner) ->
-            ownerStates[entryId] = owner.performSave()
+        val ownerStates = linkedMapOf<NavEntryId, Bundle>()
+        retainedEntryIds.forEach { entryId ->
+            val state = owners[entryId]?.performSave()
+                ?: restoredOwnerStates[entryId]?.let(::Bundle)
+            if (state != null) {
+                ownerStates[entryId] = state
+            }
         }
         return encodeOwnerStates(ownerStates)
     }
