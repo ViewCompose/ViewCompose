@@ -13,13 +13,21 @@ The navigation subsystem is split into two layers:
    - two-phase navigation transactions
    - page lifecycle planning
    - persistence contracts
-2. Android navigation integration
+2. `viewcompose-navigation`
    - destination `RenderSession` ownership
    - AndroidX `LifecycleOwner`, `ViewModelStoreOwner`, and SavedState adapters
    - back dispatch, transitions, and destination container Views
 
-The Android integration module is intentionally deferred until the core transaction contract is
-stable. Neither layer changes the existing Activity/Fragment host entry points during incubation.
+The Android integration remains isolated from existing application entry points during incubation.
+It does not expose `NavHost` until page rendering and navigation commit share one rollback boundary.
+
+Current feature-branch status:
+
+- Stage 1 navigation kernel: complete
+- Stage 2 lifecycle kernel: complete
+- Stage 3 Android page owner cluster: complete
+- Stage 3 destination `RenderSession`: next
+- Stages 4–5: pending
 
 ## 2. P0 delivery plan
 

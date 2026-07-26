@@ -19,7 +19,7 @@
 
 - 技术基线：Kotlin + Android View System
 - SDK：`minSdk 24`、`compileSdk 36`
-- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
+- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
 
 ### 2.1 模块职责
 
@@ -29,6 +29,7 @@
 | `viewcompose-text-core` | 完整纯文本编辑状态（text/selection/composition）、EditingBuffer、输入变换、撤销/重做 | 纯 Kotlin/JVM；禁止 Android 类型；偏移统一使用 UTF-16 以匹配平台编辑协议 |
 | `viewcompose-ui-contract` | 纯 Kotlin UI 契约层（`Modifier`、`VNode/NodeSpec`、layout 枚举、collection/state 协议） | 主源码禁止 `android.*` / `androidx.*` |
 | `viewcompose-navigation-core` | 系统导航内核（route/back stack/two-phase transaction/page lifecycle planning） | 纯 Kotlin/JVM；禁止 Android/AndroidX 类型；页面 Session 与平台 back 适配不得进入此模块 |
+| `viewcompose-navigation` | Android 系统导航集成（destination owner/page session/NavHost/back adapter） | 依赖 navigation-core 与 host-android；稳定前不向 app 默认入口注入，不允许 host-android 反向依赖 |
 | `viewcompose-animation-core` | 动画内核（`AnimationSpec/Easing/Converter/Engine/TransitionCore`） | 纯 Kotlin/JVM；禁止引入 Android 依赖 |
 | `viewcompose-animation` | 动画 DSL 集成层（`animate*AsState/Animatable/Transition/AnimatedVisibility/Content`） | 调用层 API；运行时驱动统一使用 `MonotonicFrameClock` + coroutine；不直接依赖 Android View 动画实现 |
 | `viewcompose-gesture-core` | 手势策略内核（axis lock、transform slop、swipe settle） | 纯 Kotlin/JVM；禁止引入 Android 依赖；renderer 只做事件适配并调用该内核 |

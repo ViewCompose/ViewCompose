@@ -12,6 +12,7 @@ val modulePackageRoots = mapOf(
     "app" to "com.viewcompose",
     "viewcompose-runtime" to "com.viewcompose.runtime",
     "viewcompose-navigation-core" to "com.viewcompose.navigation.core",
+    "viewcompose-navigation" to "com.viewcompose.navigation",
     "viewcompose-ui-contract" to "com.viewcompose.ui",
     "viewcompose-renderer" to "com.viewcompose.renderer",
     "viewcompose-widget-core" to "com.viewcompose.widget.core",
@@ -43,6 +44,7 @@ val kotlinJvmModules = setOf(
 val qaQuickTasks = listOf(
     ":viewcompose-runtime:compileKotlin",
     ":viewcompose-navigation-core:compileKotlin",
+    ":viewcompose-navigation:compileDebugKotlin",
     ":viewcompose-ui-contract:compileKotlin",
     ":viewcompose-host-android:compileDebugKotlin",
     ":viewcompose-lifecycle:compileDebugKotlin",
@@ -62,6 +64,7 @@ val qaQuickTasks = listOf(
     ":app:compileDebugKotlin",
     ":viewcompose-runtime:test",
     ":viewcompose-navigation-core:test",
+    ":viewcompose-navigation:testDebugUnitTest",
     ":viewcompose-ui-contract:test",
     ":viewcompose-host-android:testDebugUnitTest",
     ":viewcompose-lifecycle:testDebugUnitTest",
