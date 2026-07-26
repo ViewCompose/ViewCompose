@@ -36,6 +36,8 @@ Current feature-branch status:
 - Stage 6 Android 13 real-device back baseline: complete
 - Stage 6 Android 14+ platform gesture-progress validation: complete
 - Stage 6 P0 process-death, lifecycle-race, and resource-release certification: complete
+- Stage 7A nested graph kernel and transactional leaf resolution: complete
+- Stage 7B graph-scoped lifecycle and state ownership: pending
 
 ## 2. P0 delivery plan
 
@@ -268,7 +270,58 @@ ANDROID_SERIAL=<api35-emulator> tools/navigation/validate_android_process_death.
 ANDROID_SERIAL=<api35-emulator> ./gradlew qaFull --no-configuration-cache
 ```
 
-## 3. Transaction invariants
+## 3. P1 delivery plan
+
+P1 continues to use the P0 transaction, page ownership, restoration, and platform Back paths. A
+graph, tab, deep link, or adaptive placement policy may select a destination, but none of them may
+publish a second navigation state outside `NavBackStackController`.
+
+The implementation order is:
+
+1. nested graphs and graph-scoped ownership;
+2. multiple retained tab back stacks;
+3. URI deep-link matching through the graph resolver;
+4. adaptive multi-pane placement over the same committed entries.
+
+### Stage 7A: nested graph kernel
+
+The pure core now exposes an immutable `navGraph` DSL. Graph and destination route names are globally
+unique, every graph start destination must be a direct child, and entering a graph route recursively
+resolves to its leaf start destination before a transaction allocates or publishes an entry.
+Arguments supplied to the graph route override defaults declared by each nested start route.
+
+Every committed `NavEntry` records its complete `graphHierarchy`. Direct navigation to a leaf and
+navigation through its parent graph therefore converge on the same page-session transaction while
+remaining distinguishable for future graph-scoped ownership. `SingleTop`, replace, reset, rollback,
+and transition retention compare the resolved leaf plus its hierarchy.
+
+The saved-state envelope is hard-cut to format version 2 and persists graph hierarchy with the leaf
+route. A graph-backed controller restores only when every saved leaf still belongs to the exact same
+hierarchy; a changed or damaged graph falls back atomically to the graph start destination.
+
+```kotlin
+val graph = navGraph(
+    route = "app",
+    startDestination = NavRoute("home"),
+) {
+    destination("home")
+    navigation(
+        route = "account",
+        startDestination = NavRoute("profile"),
+    ) {
+        destination("profile")
+        destination("security")
+    }
+}
+
+val navController = rememberNavHostController(graph)
+navController.navigate(NavRoute("account"))
+```
+
+Stage 7B will add graph-scope `LifecycleOwner`, `ViewModelStore`, and saved-state ownership. Until
+that slice lands, lifecycle and resources remain leaf-entry scoped exactly as in P0.
+
+## 4. Transaction invariants
 
 Navigation is a two-phase operation:
 
@@ -293,7 +346,7 @@ snapshot. Removed entry resources remain addressable during the transition and a
 top-first order at its terminal boundary. Only the active transition ID may complete; callbacks from
 redirected or destroyed transitions have no effect.
 
-## 4. Lifecycle invariants
+## 5. Lifecycle invariants
 
 The destination lifecycle is framework-owned but capped by the root host lifecycle:
 
@@ -311,14 +364,17 @@ upgraded. This prevents two destinations from being `RESUMED` at the same time.
 Mounting during `Activity.onCreate` is valid while the platform lifecycle is still `INITIALIZED`.
 Host `DESTROYED` destroys every destination. A destroyed `NavEntryId` cannot be reintroduced.
 
-## 5. Initial non-goals
+## 6. Remaining scope
 
-The first stable merge does not include:
+The current P1 branch does not yet include:
 
-- nested navigation graphs
+- graph-scoped lifecycle and state owners
 - multiple tab back stacks
 - URI deep-link matching
 - adaptive multi-pane placement
+
+The following remains an explicit non-goal:
+
 - compiler-generated route serialization
 
 These features must build on the same transaction and ownership contracts instead of adding a
