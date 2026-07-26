@@ -20,7 +20,11 @@ import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
 import com.viewcompose.ui.gesture.PointerEventType
 import com.viewcompose.ui.gesture.TransformDelta
+import com.viewcompose.ui.gesture.NestedScrollSource
+import com.viewcompose.ui.gesture.ScrollDelta
+import com.viewcompose.ui.gesture.ScrollVelocity
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
+import com.viewcompose.renderer.view.container.DeclarativeNestedScrollHostLayout
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -69,6 +73,7 @@ private class ViewGestureDispatcher(
     private var lastY: Float = 0f
     private var lockAxis: LockedAxis? = null
     private var dragStarted = false
+    private var localDragTotal = 0f
     private var swipeStartAnchorPx = 0f
     private var combinedTapConsumed = false
     private var pointerStreamActive = false
@@ -260,13 +265,25 @@ private class ViewGestureDispatcher(
                 }
                 val hasTransformDelta = zoom != 1f || panX != 0f || panY != 0f || rotation != 0f
                 if (transformPastTouchSlop && hasTransformDelta) {
+                    val nestedParent = hostView.findNestedScrollHost()
+                    val pan = ScrollDelta(panX, panY)
+                    val preConsumed = nestedParent?.dispatchPreScrollFromDescendant(
+                        available = pan,
+                        source = NestedScrollSource.UserInput,
+                    ) ?: ScrollDelta.Zero
+                    val remainingPan = pan - preConsumed
                     transform.onTransform(
                         TransformDelta(
                             zoom = zoom,
-                            panX = panX,
-                            panY = panY,
+                            panX = remainingPan.x,
+                            panY = remainingPan.y,
                             rotation = rotation,
                         ),
+                    )
+                    nestedParent?.dispatchPostScrollFromDescendant(
+                        consumed = remainingPan,
+                        available = ScrollDelta.Zero,
+                        source = NestedScrollSource.UserInput,
                     )
                     dispatched = true
                     debugLog {
@@ -326,6 +343,7 @@ private class ViewGestureDispatcher(
                 lastY = downY
                 lockAxis = null
                 dragStarted = false
+                localDragTotal = 0f
                 swipeStartAnchorPx = anchoredDraggable?.currentOffsetPx
                     ?: anchoredDraggable?.anchorOffsetsPx?.firstOrNull()
                     ?: 0f
@@ -364,31 +382,50 @@ private class ViewGestureDispatcher(
                 if (abs(delta) <= 0f) {
                     return false
                 }
+                val nestedParent = hostView.findNestedScrollHost()
+                val available = axis.toScrollDelta(delta)
+                val preConsumed = nestedParent?.dispatchPreScrollFromDescendant(
+                    available = available,
+                    source = NestedScrollSource.UserInput,
+                ) ?: ScrollDelta.Zero
+                val remaining = available - preConsumed
+                val localDelta = remaining.valueFor(axis)
+                if (abs(localDelta) <= 0f) {
+                    return !preConsumed.isZero
+                }
                 if (!dragStarted) {
                     dragStarted = true
                     draggable?.onDragStarted?.invoke()
                 }
-                draggable?.onDelta?.invoke(delta)
-                anchoredDraggable?.onDelta?.invoke(delta)
+                draggable?.onDelta?.invoke(localDelta)
+                anchoredDraggable?.onDelta?.invoke(localDelta)
+                localDragTotal += localDelta
+                nestedParent?.dispatchPostScrollFromDescendant(
+                    consumed = remaining,
+                    available = ScrollDelta.Zero,
+                    source = NestedScrollSource.UserInput,
+                )
                 return true
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 tracker.addMovement(event)
-                val rawX = event.rawX
-                val rawY = event.rawY
                 val axis = lockAxis
-                val total = resolveAxisTotal(
-                    axis = axis,
-                    rawX = rawX,
-                    rawY = rawY,
-                )
-                if (dragStarted) {
-                    tracker.computeCurrentVelocity(1000)
-                    val velocity = resolveAxisVelocity(axis = axis, tracker = tracker)
-                    draggable?.onDragStopped?.invoke(velocity)
+                tracker.computeCurrentVelocity(1000)
+                val rawVelocity = resolveAxisVelocity(axis = axis, tracker = tracker)
+                val nestedParent = hostView.findNestedScrollHost()
+                val availableVelocity = axis.toScrollVelocity(rawVelocity)
+                val preConsumedVelocity = if (axis != null) {
+                    nestedParent?.dispatchPreFlingFromDescendant(availableVelocity)
+                        ?: ScrollVelocity.Zero
+                } else {
+                    ScrollVelocity.Zero
                 }
-                val velocity = resolveAxisVelocity(axis = axis, tracker = tracker)
+                val remainingVelocity = availableVelocity - preConsumedVelocity
+                val velocity = remainingVelocity.valueFor(axis)
+                if (dragStarted) {
+                    draggable?.onDragStopped?.invoke(remainingVelocity.valueFor(axis))
+                }
                 val swipeConsumed = if (axis != null && anchoredDraggable != null) {
                     runCatching {
                         val startOffset = anchoredDraggable.currentOffsetPx
@@ -396,7 +433,7 @@ private class ViewGestureDispatcher(
                         val settleResult = resolveAnchoredSettleTarget(
                             anchorsPx = anchoredDraggable.anchorOffsetsPx,
                             startOffsetPx = startOffset,
-                            currentOffsetPx = startOffset + total,
+                            currentOffsetPx = startOffset + localDragTotal,
                             velocityPxPerSecond = velocity,
                             touchSlopPx = touchSlop,
                             minFlingVelocityPxPerSecond = minimumFlingVelocity,
@@ -410,6 +447,12 @@ private class ViewGestureDispatcher(
                     }
                 } else {
                     false
+                }
+                if (dragStarted || swipeConsumed) {
+                    nestedParent?.dispatchPostFlingFromDescendant(
+                        consumed = remainingVelocity,
+                        available = ScrollVelocity.Zero,
+                    )
                 }
                 val dragConsumed = dragStarted
                 resetDragSwipeTracking()
@@ -429,6 +472,7 @@ private class ViewGestureDispatcher(
         velocityTracker = null
         lockAxis = null
         dragStarted = false
+        localDragTotal = 0f
         swipeStartAnchorPx = 0f
     }
 
@@ -464,18 +508,6 @@ private class ViewGestureDispatcher(
         return when (axis) {
             LockedAxis.Horizontal -> rawX - lastX
             LockedAxis.Vertical -> rawY - lastY
-        }
-    }
-
-    private fun resolveAxisTotal(
-        axis: LockedAxis?,
-        rawX: Float,
-        rawY: Float,
-    ): Float {
-        return when (axis) {
-            LockedAxis.Horizontal -> rawX - downX
-            LockedAxis.Vertical -> rawY - downY
-            null -> 0f
         }
     }
 
@@ -672,5 +704,46 @@ private class ViewGestureDispatcher(
 
     private fun Float.format(digits: Int): String {
         return "%.${digits}f".format(this)
+    }
+}
+
+private fun View.findNestedScrollHost(): DeclarativeNestedScrollHostLayout? {
+    var current = parent
+    while (current is View) {
+        if (current is DeclarativeNestedScrollHostLayout) {
+            return current
+        }
+        current = current.parent
+    }
+    return null
+}
+
+private fun LockedAxis.toScrollDelta(value: Float): ScrollDelta {
+    return when (this) {
+        LockedAxis.Horizontal -> ScrollDelta(x = value, y = 0f)
+        LockedAxis.Vertical -> ScrollDelta(x = 0f, y = value)
+    }
+}
+
+private fun LockedAxis?.toScrollVelocity(value: Float): ScrollVelocity {
+    return when (this) {
+        LockedAxis.Horizontal -> ScrollVelocity(x = value, y = 0f)
+        LockedAxis.Vertical -> ScrollVelocity(x = 0f, y = value)
+        null -> ScrollVelocity.Zero
+    }
+}
+
+private fun ScrollDelta.valueFor(axis: LockedAxis): Float {
+    return when (axis) {
+        LockedAxis.Horizontal -> x
+        LockedAxis.Vertical -> y
+    }
+}
+
+private fun ScrollVelocity.valueFor(axis: LockedAxis?): Float {
+    return when (axis) {
+        LockedAxis.Horizontal -> x
+        LockedAxis.Vertical -> y
+        null -> 0f
     }
 }

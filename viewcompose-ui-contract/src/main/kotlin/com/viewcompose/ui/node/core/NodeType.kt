@@ -18,6 +18,7 @@ sealed interface NodeType {
     data object ConstraintLayout : NodeType
     data object AnimatedVisibilityHost : NodeType
     data object AnimatedSizeHost : NodeType
+    data object NestedScrollHost : NodeType
     data object Spacer : NodeType
     data object Divider : NodeType
     data object Canvas : NodeType

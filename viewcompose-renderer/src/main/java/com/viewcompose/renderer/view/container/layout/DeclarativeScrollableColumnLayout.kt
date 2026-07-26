@@ -3,11 +3,11 @@ package com.viewcompose.renderer.view.container
 import android.content.Context
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.ScrollView
+import androidx.core.widget.NestedScrollView
 
 internal class DeclarativeScrollableColumnLayout(
     context: Context,
-) : ScrollView(context), ChildHostViewGroup {
+) : NestedScrollView(context), ChildHostViewGroup {
     internal val innerLayout = DeclarativeLinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
     }

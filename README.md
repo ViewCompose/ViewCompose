@@ -34,6 +34,8 @@
   Transactional composition and structured coroutines: failed renders restore the previous composition/View tree, and effects start only after commit.
 - 声明式焦点与硬件键盘输入：请求器、方向导航、焦点组和 preview/bubble 按键分发均映射到原生 View。
   Declarative focus and hardware keys: requesters, directional navigation, focus groups, and preview/bubble dispatch map to native Views.
+- 统一嵌套滚动：pre/post scroll 与 fling 协议贯通 Lazy、Pager、滚动容器和自定义拖拽。
+  Unified nested scrolling: pre/post scroll and fling phases connect lazy containers, pagers, scrolling Views, and custom drags.
 
 ## 架构总览 | Architecture Overview
 

@@ -89,6 +89,10 @@ internal object ViewModifierApplier {
             node = node,
             resolved = resolved,
         )
+        ModifierNestedScrollApplier.apply(
+            view = view,
+            resolved = resolved,
+        )
         ModifierInsetsApplier.applyHostPaddingWhenNoInsets(
             view = view,
             hasWindowInsetsPadding = hostStyle.hasWindowInsetsPadding,

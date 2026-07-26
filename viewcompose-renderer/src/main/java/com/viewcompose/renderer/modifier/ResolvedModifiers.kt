@@ -37,6 +37,7 @@ internal class ResolvedModifiers(
     var anchoredDraggable: AnchoredDraggableModifierElement? = null,
     var transformable: TransformableModifierElement? = null,
     var gesturePriority: GesturePriorityModifierElement? = null,
+    var nestedScroll: NestedScrollModifierElement? = null,
     var focusable: FocusableModifierElement? = null,
     var focusRequester: FocusRequesterModifierElement? = null,
     var focusProperties: com.viewcompose.ui.focus.FocusProperties =
@@ -104,6 +105,7 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is AnchoredDraggableModifierElement -> result.anchoredDraggable = element
             is TransformableModifierElement -> result.transformable = element
             is GesturePriorityModifierElement -> result.gesturePriority = element
+            is NestedScrollModifierElement -> result.nestedScroll = element
             is FocusableModifierElement -> result.focusable = element
             is FocusRequesterModifierElement -> result.focusRequester = element
             is FocusPropertiesModifierElement -> {

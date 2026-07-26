@@ -20,6 +20,7 @@
 10. 约束 parent-data 支持 `Modifier.layoutId(...)`、`Modifier.constrainAs(...)`、`Modifier.constrain(...)`；仅对 `ConstraintLayout` 子节点生效
 11. 图形绘制 modifier 已接入：`Modifier.drawBehind`、`Modifier.drawWithContent`、`Modifier.drawWithCache`（以及短写 `draw/drawCache`）；执行顺序按 modifier 链稳定，`drawWithContent` 可显式控制内容透传；底层执行保证 `DrawRoundRect` 四角半径与 `Drawable + DrawPaint` 组合语义不丢失
 12. 声明式焦点与硬件键盘输入已接入：`focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent` 映射原生 View 焦点搜索，并由 `LocalFocusManager` 提供会话级移动与清除能力
+13. 统一嵌套滚动协议已接入：`Modifier.nestedScroll(connection, dispatcher)` 通过透明宿主映射 AndroidX nested-scrolling parent/child 链，覆盖 pre/post scroll、pre/post fling、Lazy/Pager/普通滚动容器与自定义 drag/transform pan
 
 ## 3. API 清单（全量扫描）
 
@@ -34,8 +35,8 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 
 当前扫描结果（2026-03）：
 
-1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`70`
-2. `fun Modifier.*` 唯一 API 名称数：`61`
+1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`71`
+2. `fun Modifier.*` 唯一 API 名称数：`62`
 3. scoped modifier 声明总数：`5`（`RowScope/ColumnScope/BoxScope`）
 4. renderer internal modifier 扩展：`1`（仅内部解析能力）
 
@@ -98,6 +99,7 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `anchoredDraggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 锚点拖拽/吸附手势 | 全局 | 仅支持 Horizontal/Vertical |
 | `transformable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 多指缩放/旋转/平移 | 全局 | 由 `TransformableState` 消费增量 |
 | `gesturePriority` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 设置手势优先级 | 全局 | 用于嵌套冲突仲裁 |
+| `nestedScroll` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 声明父子滚动与 fling 消费协议 | 全局 | 透明宿主接入 AndroidX nested-scrolling 链 |
 | `animateContentSize` | `viewcompose-animation` / `com.viewcompose.animation` | public | 节点尺寸变化动画 | 全局（布局参与） | 非视觉缩放，真实参与父布局重排 |
 | `constrainAs` | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 按 `ConstraintReference` 声明子项约束 | 指定容器 | 仅 `ConstraintLayout` 子项有效 |
 | `constrain` | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 通过字符串 ID 声明子项约束 | 指定容器 | `constrainAs` 的短写风格入口 |
@@ -216,3 +218,4 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 2. [THEMING.md](/Users/gzq/AndroidStudioProjects/UIFramework/THEMING.md)
 3. [ARCHITECTURE.md](/Users/gzq/AndroidStudioProjects/UIFramework/ARCHITECTURE.md)
 4. [FOCUS_INPUT.md](/Users/gzq/AndroidStudioProjects/UIFramework/FOCUS_INPUT.md)
+5. [NESTED_SCROLL.md](/Users/gzq/AndroidStudioProjects/UIFramework/NESTED_SCROLL.md)

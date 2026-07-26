@@ -5,6 +5,8 @@ import com.viewcompose.ui.gesture.GesturePriority
 import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
 import com.viewcompose.ui.gesture.TransformDelta
+import com.viewcompose.ui.gesture.NestedScrollConnection
+import com.viewcompose.ui.gesture.NestedScrollDispatcher
 import com.viewcompose.ui.focus.FocusProperties
 import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.focus.FocusState
@@ -50,6 +52,11 @@ data class TransformableModifierElement(
 
 data class GesturePriorityModifierElement(
     val priority: GesturePriority,
+) : ModifierElement
+
+data class NestedScrollModifierElement(
+    val connection: NestedScrollConnection,
+    val dispatcher: NestedScrollDispatcher?,
 ) : ModifierElement
 
 data class FocusableModifierElement(

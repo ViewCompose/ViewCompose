@@ -57,6 +57,7 @@ class NodeBinderDescriptorGuardTest {
             NodeType.ConstraintLayout,
             NodeType.AnimatedVisibilityHost,
             NodeType.AnimatedSizeHost,
+            NodeType.NestedScrollHost,
             NodeType.Spacer,
             NodeType.Divider,
             NodeType.Canvas,
@@ -155,6 +156,7 @@ class NodeBinderDescriptorGuardTest {
         NodeType.ConstraintLayout -> "ConstraintLayout"
         NodeType.AnimatedVisibilityHost -> "AnimatedVisibilityHost"
         NodeType.AnimatedSizeHost -> "AnimatedSizeHost"
+        NodeType.NestedScrollHost -> "NestedScrollHost"
         NodeType.Spacer -> "Spacer"
         NodeType.Divider -> "Divider"
         NodeType.Canvas -> "Canvas"

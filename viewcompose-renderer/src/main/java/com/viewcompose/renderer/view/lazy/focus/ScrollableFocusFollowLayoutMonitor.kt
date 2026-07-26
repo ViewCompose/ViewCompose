@@ -3,15 +3,15 @@ package com.viewcompose.renderer.view.lazy.focus
 import android.graphics.Rect
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.widget.ScrollView
 import com.viewcompose.renderer.R
 
 internal object ScrollableFocusFollowLayoutMonitor {
     private const val TAG = "UIFocusFollow"
 
     fun apply(
-        scrollView: ScrollView,
+        scrollView: ViewGroup,
         enabled: Boolean,
     ) {
         val existingLayoutListener = scrollView.getTag(R.id.viewcompose_focus_follow_layout_listener)
@@ -44,7 +44,7 @@ internal object ScrollableFocusFollowLayoutMonitor {
         }
         if (existingLayoutListener == null) {
             val listener = View.OnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
-                val target = view as? ScrollView ?: return@OnLayoutChangeListener
+                val target = view as? ViewGroup ?: return@OnLayoutChangeListener
                 ensureFocusedChildVisible(target)
             }
             scrollView.addOnLayoutChangeListener(listener)
@@ -68,7 +68,7 @@ internal object ScrollableFocusFollowLayoutMonitor {
         ensureFocusedChildVisible(scrollView)
     }
 
-    private fun ensureFocusedChildVisible(scrollView: ScrollView) {
+    private fun ensureFocusedChildVisible(scrollView: ViewGroup) {
         val focused = scrollView.findFocus()
             ?.takeIf { it.onCheckIsTextEditor() }
             ?: return

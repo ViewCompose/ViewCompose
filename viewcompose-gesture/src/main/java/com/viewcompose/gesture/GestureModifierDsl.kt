@@ -4,11 +4,14 @@ import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.GesturePriority
 import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
+import com.viewcompose.ui.gesture.NestedScrollConnection
+import com.viewcompose.ui.gesture.NestedScrollDispatcher
 import com.viewcompose.ui.modifier.AnchoredDraggableModifierElement
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
 import com.viewcompose.ui.modifier.DraggableModifierElement
 import com.viewcompose.ui.modifier.GesturePriorityModifierElement
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.NestedScrollModifierElement
 import com.viewcompose.ui.modifier.PointerInputModifierElement
 import com.viewcompose.ui.modifier.TransformableModifierElement
 
@@ -101,6 +104,18 @@ fun Modifier.gesturePriority(
     return then(
         GesturePriorityModifierElement(
             priority = priority,
+        ),
+    )
+}
+
+fun Modifier.nestedScroll(
+    connection: NestedScrollConnection,
+    dispatcher: NestedScrollDispatcher? = null,
+): Modifier {
+    return then(
+        NestedScrollModifierElement(
+            connection = connection,
+            dispatcher = dispatcher,
         ),
     )
 }

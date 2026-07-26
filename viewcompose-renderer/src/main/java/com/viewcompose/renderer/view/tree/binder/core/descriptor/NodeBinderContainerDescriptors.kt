@@ -211,6 +211,12 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
     )
     add(
         descriptor(
+            nodeType = NodeType.NestedScrollHost,
+            bind = { _, _ -> Unit },
+        ),
+    )
+    add(
+        descriptor(
             nodeType = NodeType.AndroidView,
             bind = { view, node ->
                 val update = ContainerViewBinder.readAndroidViewSpec(node).update
