@@ -56,7 +56,7 @@ class TransactionalNavHostCoordinatorTest {
         )
         ownerStore = NavEntryOwnerStore(application)
         sessionStore = NavDestinationSessionStore(
-            context = application,
+            hostView = NavHostView(application),
             ownerStore = ownerStore,
         )
         coordinator = TransactionalNavHostCoordinator(

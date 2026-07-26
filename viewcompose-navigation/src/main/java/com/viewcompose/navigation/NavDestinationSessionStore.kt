@@ -1,6 +1,5 @@
 package com.viewcompose.navigation
 
-import android.content.Context
 import android.view.View
 import androidx.annotation.MainThread
 import com.viewcompose.host.android.renderInto
@@ -18,14 +17,13 @@ import com.viewcompose.widget.core.withUiLocalSnapshot
 internal typealias NavDestinationContent = UiTreeBuilder.(NavEntry) -> Unit
 
 internal class NavDestinationSessionStore(
-    context: Context,
+    val hostView: NavHostView,
     private val ownerStore: NavEntryOwnerStore,
     private val overlayHost: OverlayHost = OverlayHostDefaults.noOp,
     private val debug: Boolean = false,
+    private val debugTag: String = "ViewComposeNavigation",
     private val onRenderFailure: ((RenderFailure) -> Unit)? = null,
 ) {
-    val hostView = NavHostView(context)
-
     private val sessions = linkedMapOf<NavEntryId, NavDestinationSession>()
     private var pendingEntryId: NavEntryId? = null
     private var pendingCandidate: NavDestinationCandidate? = null
@@ -62,7 +60,7 @@ internal class NavDestinationSessionStore(
             renderSession = renderInto(
                 container = container,
                 debug = debug,
-                debugTag = "ViewComposeNavigation:${entry.route.name}:${entry.id}",
+                debugTag = "$debugTag:${entry.route.name}:${entry.id}",
                 overlayHost = overlayHost,
                 onRenderFailure = onRenderFailure,
             ) {

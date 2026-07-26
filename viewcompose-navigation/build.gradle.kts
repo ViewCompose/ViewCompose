@@ -26,15 +26,15 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-navigation-core"))
+    api(project(":viewcompose-navigation-core"))
+    api(project(":viewcompose-ui-contract"))
+    api(project(":viewcompose-widget-core"))
     implementation(project(":viewcompose-host-android"))
     implementation(project(":viewcompose-lifecycle"))
     implementation(project(":viewcompose-viewmodel"))
-    implementation(project(":viewcompose-widget-core"))
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.savedstate)
-    testImplementation(project(":viewcompose-ui-contract"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }

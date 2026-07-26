@@ -39,7 +39,7 @@ class NavDestinationSessionStoreTest {
         val application = RuntimeEnvironment.getApplication()
         ownerStore = NavEntryOwnerStore(application)
         sessionStore = NavDestinationSessionStore(
-            context = application,
+            hostView = NavHostView(application),
             ownerStore = ownerStore,
         )
     }

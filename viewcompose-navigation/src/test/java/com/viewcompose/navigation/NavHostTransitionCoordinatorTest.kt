@@ -50,7 +50,7 @@ class NavHostTransitionCoordinatorTest {
         )
         ownerStore = NavEntryOwnerStore(application)
         sessionStore = NavDestinationSessionStore(
-            context = application,
+            hostView = NavHostView(application),
             ownerStore = ownerStore,
         )
         transitionDriver = RecordingTransitionDriver()

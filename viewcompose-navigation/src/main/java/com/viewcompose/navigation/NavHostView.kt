@@ -6,6 +6,8 @@ import android.widget.FrameLayout
 internal class NavHostView(
     context: Context,
 ) : FrameLayout(context) {
+    internal var runtime: NavHostRuntime? = null
+
     init {
         layoutParams = LayoutParams(
             LayoutParams.MATCH_PARENT,
