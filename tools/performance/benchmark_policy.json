@@ -1,0 +1,21 @@
+{
+  "maxRunCoefficientOfVariation": 0.15,
+  "regressionThresholds": {
+    "frameDurationCpuMs.P50": {
+      "maxRegressionPercent": 10.0,
+      "minimumDelta": 0.3
+    },
+    "frameDurationCpuMs.P95": {
+      "maxRegressionPercent": 15.0,
+      "minimumDelta": 0.8
+    },
+    "memoryHeapSizeMaxKb.median": {
+      "maxRegressionPercent": 15.0,
+      "minimumDelta": 2048.0
+    },
+    "memoryRssAnonMaxKb.median": {
+      "maxRegressionPercent": 10.0,
+      "minimumDelta": 4096.0
+    }
+  }
+}

@@ -110,6 +110,9 @@ cd ViewCompose
 
 # 连接设备上的发布态 Macrobenchmark
 ./gradlew benchmarkRelease
+
+# 连接设备上运行列表/复杂布局 Compose 对照并生成报告
+./gradlew benchmarkCompare
 ```
 
 ### 运行 Demo | Run Demo

@@ -1,7 +1,9 @@
 package com.viewcompose.benchmark
 
 import androidx.benchmark.macro.CompilationMode
+import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.FrameTimingMetric
+import androidx.benchmark.macro.MemoryUsageMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -10,6 +12,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalMetricApi::class)
 class ComplexLayoutPerformanceComparisonBenchmark {
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
@@ -51,7 +54,7 @@ class ComplexLayoutPerformanceComparisonBenchmark {
         expectedText: String,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
+        metrics = performanceComparisonMetrics(),
         compilationMode = CompilationMode.None(),
         iterations = RELEASE_BASELINE_ITERATIONS,
         startupMode = StartupMode.WARM,
@@ -76,7 +79,7 @@ class ComplexLayoutPerformanceComparisonBenchmark {
         expectedText: String,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
+        metrics = performanceComparisonMetrics(),
         compilationMode = CompilationMode.None(),
         iterations = RELEASE_BASELINE_ITERATIONS,
         startupMode = StartupMode.WARM,
@@ -94,4 +97,9 @@ class ComplexLayoutPerformanceComparisonBenchmark {
         clickText("Reset dashboard")
         waitForText("Dashboard revision 0")
     }
+
+    private fun performanceComparisonMetrics() = listOf(
+        FrameTimingMetric(),
+        MemoryUsageMetric(MemoryUsageMetric.Mode.Max),
+    )
 }

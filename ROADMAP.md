@@ -105,7 +105,7 @@
 | Animation | `viewcompose-animation-core` + `viewcompose-animation` 已完成内核/DSL 分层；`Transition` 为共享时间线语义，`Animatable` 支持最后一次 mutation 生效的 cancel/retarget/stop；`AnimatedVisibility` 与 `animateContentSize` 已落地 | 发布态性能画像与更多复杂场景样例 |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
 | Graphics | `viewcompose-graphics-core` + `viewcompose-graphics` + renderer Canvas draw pipeline 已落地，支持 Canvas 节点、draw modifiers、缓存和不可变嵌套 `DrawScene` | 扩展 dark/tablet 预览快照与复杂图表/自定义控件样例 |
-| Performance | 已有 R8 release Macrobenchmark 基线，且 `DiffUtil + payload + SlotTable Lite + subtree skip` 主路径已落地 | 量化 baseline profile 与更复杂容器场景收益 |
+| Performance | 已有 R8 release Macrobenchmark 基线，且 `DiffUtil + payload + SlotTable Lite + subtree skip` 主路径已落地；列表/复杂布局已建立同 target Compose 对照、内存指标、自动报告和归一化回归门禁 | 在真实设备持续积累配对基线并量化 baseline profile 收益 |
 
 ### 4.1 完成态字段定义（C/U/D/UI）
 

@@ -37,6 +37,7 @@
 18. 发布态基线使用 R8 + resource shrink 的非 debuggable `benchmark` target；`ReleaseBaselineBenchmark` 固定覆盖无 ART 预编译的冷启动与 state patch 帧耗时。
 19. 列表性能对比使用同一 target、同一份 1000 项数据与完全一致的交互脚本，分别运行 ViewCompose `LazyColumn` 和 Jetpack Compose `LazyColumn`；覆盖双向快速滚动与 keyed reorder + payload 内容更新。
 20. 复杂布局对比使用同一份 18 卡片仪表盘模型，分别运行 ViewCompose `ScrollableColumn` 与 Compose `Column.verticalScroll`；全部子树一次挂载，覆盖深层嵌套滚动、全卡片字段更新和条件详情子树变更。
+21. 两组对照均采集帧耗时与最大 heap/RSS；`compare_macrobenchmarks.py` 自动生成 Markdown/JSON 配对报告，并支持以 Compose 为同次运行控制组的归一化回归门禁。
 
 ### 2.2 发布态基准入口
 
@@ -53,6 +54,32 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
 
 ```bash
 ./gradlew benchmarkRelease
+```
+
+设备基准并生成 Compose 对照报告：
+
+```bash
+./gradlew benchmarkCompare
+```
+
+结果默认写入：
+
+1. `build/reports/benchmarks/compose-comparison.md`
+2. `build/reports/benchmarks/compose-comparison.json`
+
+对已有结果重新生成报告：
+
+```bash
+./gradlew benchmarkComparisonReport \
+  -PbenchmarkResult=/path/to/current-benchmarkData.json
+```
+
+与同设备历史基线比较并执行回归门禁：
+
+```bash
+./gradlew benchmarkComparisonReport \
+  -PbenchmarkResult=/path/to/current-benchmarkData.json \
+  -PbenchmarkBaseline=/path/to/baseline-benchmarkData.json
 ```
 
 发布态权威基线是 `ReleaseBaselineBenchmark`：
@@ -76,6 +103,15 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并切换条件详情子树。
 3. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
 4. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
+
+自动报告与回归规则：
+
+1. 对照表固定输出 frame CPU P50/P95、frame overrun P50/P95、heap max 与 RSS anon max。
+2. 每个场景的 ViewCompose 与 Compose 结果必须来自同一份 benchmark JSON。
+3. 历史回归只允许同设备型号、系统 fingerprint、CPU lock 状态和 compilation mode。
+4. 门禁必须同时满足“ViewCompose 原始指标超过阈值”和“ViewCompose/Compose 归一化比值超过阈值”才失败。
+5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
+6. 报告会计算各 iteration P50 的变异系数；超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。
 
 ### 2.3 当前结论
 
@@ -143,7 +179,7 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 
 ### Phase 4：容器与布局收口
 
-状态：列表与复杂布局 Compose 对照基线已建立，结果自动汇总与门禁待推进
+状态：列表、复杂布局 Compose 对照、内存指标、自动报告与归一化回归门禁已建立
 目标：收敛高频容器和复杂页面的布局开销
 
 ### Phase 5：发布态优化
