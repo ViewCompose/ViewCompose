@@ -23,4 +23,9 @@
     <item name="viewcompose_focus_follow_warning_emitted" type="id" />
     <item name="viewcompose_gesture_dispatcher" type="id" />
     <item name="viewcompose_semantics_state" type="id" />
+    <item name="viewcompose_focus_requester_binding" type="id" />
+    <item name="viewcompose_focus_observer" type="id" />
+    <item name="viewcompose_focus_group_original_state" type="id" />
+    <item name="viewcompose_key_input_binding" type="id" />
+    <item name="viewcompose_key_input_listener" type="id" />
 </resources>

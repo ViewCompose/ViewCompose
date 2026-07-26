@@ -32,6 +32,8 @@
   Built-in dev preview and snapshot regression flow (Compose Preview bridge + Paparazzi).
 - 组合事务与结构化协程：失败渲染恢复旧组合/View 树，副作用与协程只在提交后启动。
   Transactional composition and structured coroutines: failed renders restore the previous composition/View tree, and effects start only after commit.
+- 声明式焦点与硬件键盘输入：请求器、方向导航、焦点组和 preview/bubble 按键分发均映射到原生 View。
+  Declarative focus and hardware keys: requesters, directional navigation, focus groups, and preview/bubble dispatch map to native Views.
 
 ## 架构总览 | Architecture Overview
 

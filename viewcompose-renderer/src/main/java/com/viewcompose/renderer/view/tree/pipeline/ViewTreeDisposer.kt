@@ -17,6 +17,7 @@ internal object ViewTreeDisposer {
         mountedNode.disposed = true
         try {
             mountedNode.children.forEach(::disposeMountedNode)
+            ModifierFocusInputApplier.dispose(mountedNode.view)
             (mountedNode.view as? DeclarativeHorizontalPagerLayout)?.dispose()
             (mountedNode.view as? DeclarativeVerticalPagerLayout)?.dispose()
             (mountedNode.view as? DeclarativeTabRowLayout)?.dispose()

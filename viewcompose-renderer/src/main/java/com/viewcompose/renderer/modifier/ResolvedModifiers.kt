@@ -37,6 +37,14 @@ internal class ResolvedModifiers(
     var anchoredDraggable: AnchoredDraggableModifierElement? = null,
     var transformable: TransformableModifierElement? = null,
     var gesturePriority: GesturePriorityModifierElement? = null,
+    var focusable: FocusableModifierElement? = null,
+    var focusRequester: FocusRequesterModifierElement? = null,
+    var focusProperties: com.viewcompose.ui.focus.FocusProperties =
+        com.viewcompose.ui.focus.FocusProperties.Default,
+    var focusGroup: FocusGroupModifierElement? = null,
+    var onFocusChanged: OnFocusChangedModifierElement? = null,
+    var previewKeyEvent: PreviewKeyEventModifierElement? = null,
+    var keyEvent: KeyEventModifierElement? = null,
     // ViewLayoutParamsFactory fields
     var boxAlign: BoxAlignModifierElement? = null,
     var margin: MarginModifierElement? = null,
@@ -96,6 +104,15 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is AnchoredDraggableModifierElement -> result.anchoredDraggable = element
             is TransformableModifierElement -> result.transformable = element
             is GesturePriorityModifierElement -> result.gesturePriority = element
+            is FocusableModifierElement -> result.focusable = element
+            is FocusRequesterModifierElement -> result.focusRequester = element
+            is FocusPropertiesModifierElement -> {
+                result.focusProperties = result.focusProperties.merge(element.properties)
+            }
+            is FocusGroupModifierElement -> result.focusGroup = element
+            is OnFocusChangedModifierElement -> result.onFocusChanged = element
+            is PreviewKeyEventModifierElement -> result.previewKeyEvent = element
+            is KeyEventModifierElement -> result.keyEvent = element
             is BoxAlignModifierElement -> result.boxAlign = element
             is MarginModifierElement -> result.margin = element
             is SizeModifierElement -> result.size = element

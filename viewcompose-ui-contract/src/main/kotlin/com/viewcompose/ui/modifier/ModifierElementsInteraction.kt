@@ -5,6 +5,10 @@ import com.viewcompose.ui.gesture.GesturePriority
 import com.viewcompose.ui.gesture.PointerEvent
 import com.viewcompose.ui.gesture.PointerEventResult
 import com.viewcompose.ui.gesture.TransformDelta
+import com.viewcompose.ui.focus.FocusProperties
+import com.viewcompose.ui.focus.FocusRequester
+import com.viewcompose.ui.focus.FocusState
+import com.viewcompose.ui.input.KeyEvent
 
 data class ClickableModifierElement(
     val onClick: () -> Unit,
@@ -46,6 +50,34 @@ data class TransformableModifierElement(
 
 data class GesturePriorityModifierElement(
     val priority: GesturePriority,
+) : ModifierElement
+
+data class FocusableModifierElement(
+    val enabled: Boolean,
+) : ModifierElement
+
+data class FocusRequesterModifierElement(
+    val requester: FocusRequester,
+) : ModifierElement
+
+data class FocusPropertiesModifierElement(
+    val properties: FocusProperties,
+) : ModifierElement
+
+data class FocusGroupModifierElement(
+    val enabled: Boolean,
+) : ModifierElement
+
+data class OnFocusChangedModifierElement(
+    val onFocusChanged: (FocusState) -> Unit,
+) : ModifierElement
+
+data class PreviewKeyEventModifierElement(
+    val onPreviewKeyEvent: (KeyEvent) -> Boolean,
+) : ModifierElement
+
+data class KeyEventModifierElement(
+    val onKeyEvent: (KeyEvent) -> Boolean,
 ) : ModifierElement
 
 data class SemanticsModifierElement(

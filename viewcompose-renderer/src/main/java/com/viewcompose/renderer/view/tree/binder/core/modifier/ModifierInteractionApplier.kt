@@ -62,6 +62,11 @@ internal object ModifierInteractionApplier {
                 view = view,
                 resolved = resolved,
             )
+            ModifierFocusInputApplier.apply(
+                view = view,
+                node = node,
+                resolved = resolved,
+            )
             return
         }
         val clickListener = resolved.clickable?.let { clickableElement ->
@@ -75,6 +80,11 @@ internal object ModifierInteractionApplier {
         view.isFocusableInTouchMode = false
         ModifierGestureApplier.applyGestureState(
             view = view,
+            resolved = resolved,
+        )
+        ModifierFocusInputApplier.apply(
+            view = view,
+            node = node,
             resolved = resolved,
         )
     }

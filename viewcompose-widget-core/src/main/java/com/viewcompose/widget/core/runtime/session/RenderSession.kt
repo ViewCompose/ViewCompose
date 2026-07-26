@@ -16,6 +16,7 @@ class RenderSession(
 ) {
     private val platform = RenderSessionPlatformProvider.requirePlatform()
     private val overlaySessionId = OverlaySessionId("render-session-${nextOverlaySessionId.incrementAndGet()}")
+    private val focusManager = SessionFocusManager(container)
     private var mountedNodes: List<Any> = emptyList()
     private var disposed: Boolean = false
     private val overlayRequestStore = OverlayRequestStore()
@@ -57,16 +58,18 @@ class RenderSession(
                 // without runtime state invalidation signals.
                 composer.requestRootRecompose()
             }
-            LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
-                OverlayRequestContext.withStore(overlayRequestStore) {
-                    ComposerContext.withComposer(
-                        composer = composer,
-                        coroutineContext = compositionCoroutineScope.coroutineContext,
-                    ) {
-                        preparedComposition = composer.prepareRoot {
-                            buildVNodeTree(content)
+            FocusManagerContext.withFocusManager(focusManager) {
+                LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
+                    OverlayRequestContext.withStore(overlayRequestStore) {
+                        ComposerContext.withComposer(
+                            composer = composer,
+                            coroutineContext = compositionCoroutineScope.coroutineContext,
+                        ) {
+                            preparedComposition = composer.prepareRoot {
+                                buildVNodeTree(content)
+                            }
+                            tree = checkNotNull(preparedComposition).value
                         }
-                        tree = checkNotNull(preparedComposition).value
                     }
                 }
             }
