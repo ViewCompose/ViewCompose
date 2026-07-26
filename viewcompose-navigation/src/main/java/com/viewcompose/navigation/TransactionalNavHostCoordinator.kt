@@ -28,6 +28,7 @@ internal class TransactionalNavHostCoordinator(
     private val ownerStore: NavEntryOwnerStore,
     private val sessionStore: NavDestinationSessionStore,
     initialHostLifecycleState: NavHostLifecycleState = NavHostLifecycleState.Created,
+    private val transitionDriver: NavHostTransitionDriver = ImmediateNavHostTransitionDriver,
 ) {
     val hostView: NavHostView
         get() = sessionStore.hostView
@@ -38,11 +39,19 @@ internal class TransactionalNavHostCoordinator(
     val snapshot: NavBackStackSnapshot
         get() = controller.snapshot()
 
+    val activeTransition: NavHostTransition?
+        get() = activeTransitionRecord?.transition
+
+    var lastTransitionResult: NavHostTransitionResult? = null
+        private set
+
     private var hostLifecycleState = initialHostLifecycleState
     private var localSnapshot: UiLocalSnapshot? = null
     private var destinationContent: NavDestinationContent? = null
     private val queuedCommands = ArrayDeque<NavCommand>()
     private var executing = false
+    private var nextTransitionId = 0L
+    private var activeTransitionRecord: ActiveNavHostTransition? = null
 
     @MainThread
     fun attach(
@@ -126,9 +135,31 @@ internal class TransactionalNavHostCoordinator(
                 drainQueuedCommandsWhileExecuting()
             }
             firstResult
+        } catch (throwable: Throwable) {
+            state = NavHostCoordinatorState.Failed
+            queuedCommands.clear()
+            throw throwable
         } finally {
             executing = false
         }
+    }
+
+    @MainThread
+    fun completeTransition(transitionId: NavHostTransitionId): Boolean {
+        return terminateTransition(
+            transitionId = transitionId,
+            outcome = NavHostTransitionOutcome.Completed,
+            cancelDriver = false,
+        )
+    }
+
+    @MainThread
+    fun cancelTransition(transitionId: NavHostTransitionId): Boolean {
+        return terminateTransition(
+            transitionId = transitionId,
+            outcome = NavHostTransitionOutcome.Cancelled,
+            cancelDriver = true,
+        )
     }
 
     @MainThread
@@ -148,7 +179,11 @@ internal class TransactionalNavHostCoordinator(
         executing = true
         return try {
             val reports = linkedMapOf<NavEntryId, RenderFrameReport?>()
-            controller.snapshot().entries.forEach { entry ->
+            val entries = activeTransitionRecord
+                ?.transition
+                ?.retainedEntries
+                ?: controller.snapshot().entries
+            entries.forEach { entry ->
                 reports[entry.id] = checkNotNull(sessionStore.sessionOrNull(entry.id)) {
                     "Attached destination ${entry.id} has no page session."
                 }.render(localSnapshot, content)
@@ -194,7 +229,12 @@ internal class TransactionalNavHostCoordinator(
         }
         executing = true
         try {
-            reconcileOwners(controller.snapshot())
+            val transition = activeTransitionRecord?.transition
+            if (transition == null) {
+                reconcileOwners(controller.snapshot())
+            } else {
+                reconcileOwners(transition)
+            }
             drainQueuedCommandsWhileExecuting()
         } catch (throwable: Throwable) {
             state = NavHostCoordinatorState.Failed
@@ -212,11 +252,28 @@ internal class TransactionalNavHostCoordinator(
             return
         }
         queuedCommands.clear()
+        val failures = mutableListOf<Throwable>()
+        activeTransitionRecord?.let { active ->
+            activeTransitionRecord = null
+            runCatching {
+                active.handle?.cancel()
+            }.exceptionOrNull()?.let(failures::add)
+            lastTransitionResult = NavHostTransitionResult(
+                transition = active.transition,
+                outcome = NavHostTransitionOutcome.HostDestroyed,
+            )
+        }
         try {
-            sessionStore.destroy()
+            runCatching {
+                sessionStore.destroy()
+            }.exceptionOrNull()?.let(failures::add)
         } finally {
             state = NavHostCoordinatorState.Destroyed
             executing = false
+        }
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
         }
     }
 
@@ -274,6 +331,7 @@ internal class TransactionalNavHostCoordinator(
     }
 
     private fun execute(command: NavCommand): NavHostNavigationResult {
+        redirectActiveTransition()
         return when (val preparation = controller.prepare(command)) {
             is NavPreparation.NoChange -> {
                 NavHostNavigationResult.NoChange(
@@ -390,12 +448,15 @@ internal class TransactionalNavHostCoordinator(
         }
 
         return try {
-            removeSessions(mutation.removed.map(NavEntry::id).asReversed())
-            applySettledState(committedSnapshot)
+            val transition = beginTransition(
+                transaction = transaction,
+                committedSnapshot = committedSnapshot,
+            )
             NavHostNavigationResult.Committed(
                 command = transaction.command,
                 snapshot = committedSnapshot,
                 mutation = mutation,
+                transition = transition,
             )
         } catch (throwable: Throwable) {
             state = NavHostCoordinatorState.Failed
@@ -428,6 +489,164 @@ internal class TransactionalNavHostCoordinator(
             interactiveEntryId = topId,
             hostState = hostLifecycleState,
         )
+    }
+
+    private fun beginTransition(
+        transaction: NavTransaction,
+        committedSnapshot: NavBackStackSnapshot,
+    ): NavHostTransition {
+        check(activeTransitionRecord == null) {
+            "A navigation transition must be terminal before another transition starts."
+        }
+        val committedIds = committedSnapshot.entries
+            .mapTo(mutableSetOf(), NavEntry::id)
+        val retainedEntries = buildList {
+            addAll(committedSnapshot.entries)
+            transaction.mutation.removed.forEach { removedEntry ->
+                if (removedEntry.id !in committedIds) {
+                    add(removedEntry)
+                }
+            }
+        }
+        val outgoingEntry = transaction.before.top
+        val incomingEntry = committedSnapshot.top
+        val transition = NavHostTransition(
+            id = NavHostTransitionId(++nextTransitionId),
+            command = transaction.command,
+            before = transaction.before,
+            after = committedSnapshot,
+            mutation = transaction.mutation,
+            outgoingEntry = outgoingEntry,
+            incomingEntry = incomingEntry,
+            retainedEntries = retainedEntries,
+            visibleEntryIds = linkedSetOf(
+                outgoingEntry.id,
+                incomingEntry.id,
+            ),
+            layerOrder = retainedEntries.map(NavEntry::id),
+        )
+        val active = ActiveNavHostTransition(transition)
+        activeTransitionRecord = active
+        try {
+            applyTransitionState(transition)
+            val handle = transitionDriver.start(transition) {
+                completeTransition(transition.id)
+            }
+            if (activeTransitionRecord === active) {
+                active.handle = handle
+            }
+        } catch (throwable: Throwable) {
+            if (activeTransitionRecord === active) {
+                runCatching {
+                    finishActiveTransition(
+                        active = active,
+                        outcome = NavHostTransitionOutcome.Cancelled,
+                        cancelDriver = false,
+                    )
+                }.exceptionOrNull()?.let(throwable::addSuppressed)
+            }
+            throw throwable
+        }
+        return transition
+    }
+
+    private fun applyTransitionState(transition: NavHostTransition) {
+        sessionStore.present(
+            layerOrder = transition.layerOrder,
+            visibleEntryIds = transition.visibleEntryIds,
+        )
+        reconcileOwners(transition)
+    }
+
+    private fun reconcileOwners(transition: NavHostTransition) {
+        ownerStore.reconcile(
+            retainedEntries = transition.retainedEntries,
+            visibleEntryIds = transition.visibleEntryIds,
+            interactiveEntryId = transition.incomingEntry.id,
+            hostState = hostLifecycleState,
+        )
+    }
+
+    private fun terminateTransition(
+        transitionId: NavHostTransitionId,
+        outcome: NavHostTransitionOutcome,
+        cancelDriver: Boolean,
+    ): Boolean {
+        requireMainThread()
+        val active = activeTransitionRecord
+            ?.takeIf { it.transition.id == transitionId }
+            ?: return false
+        if (executing) {
+            finishActiveTransition(
+                active = active,
+                outcome = outcome,
+                cancelDriver = cancelDriver,
+            )
+            return true
+        }
+        check(state == NavHostCoordinatorState.Attached) {
+            "Navigation transitions can terminate only while attached; current=$state."
+        }
+        executing = true
+        return try {
+            finishActiveTransition(
+                active = active,
+                outcome = outcome,
+                cancelDriver = cancelDriver,
+            )
+            drainQueuedCommandsWhileExecuting()
+            true
+        } catch (throwable: Throwable) {
+            state = NavHostCoordinatorState.Failed
+            queuedCommands.clear()
+            throw throwable
+        } finally {
+            executing = false
+        }
+    }
+
+    private fun redirectActiveTransition() {
+        val active = activeTransitionRecord ?: return
+        finishActiveTransition(
+            active = active,
+            outcome = NavHostTransitionOutcome.Redirected,
+            cancelDriver = true,
+        )
+    }
+
+    private fun finishActiveTransition(
+        active: ActiveNavHostTransition,
+        outcome: NavHostTransitionOutcome,
+        cancelDriver: Boolean,
+    ) {
+        check(activeTransitionRecord === active) {
+            "Only the active navigation transition can reach a terminal state."
+        }
+        activeTransitionRecord = null
+        val failures = mutableListOf<Throwable>()
+        if (cancelDriver) {
+            runCatching {
+                active.handle?.cancel()
+            }.exceptionOrNull()?.let(failures::add)
+        }
+        runCatching {
+            removeSessions(
+                active.transition.mutation.removed
+                    .map(NavEntry::id)
+                    .asReversed(),
+            )
+        }.exceptionOrNull()?.let(failures::add)
+        runCatching {
+            applySettledState(active.transition.after)
+        }.exceptionOrNull()?.let(failures::add)
+        lastTransitionResult = NavHostTransitionResult(
+            transition = active.transition,
+            outcome = outcome,
+        )
+        failures.firstOrNull()?.let { first ->
+            failures.drop(1).forEach(first::addSuppressed)
+            throw first
+        }
     }
 
     private fun failedBeforeCommit(
@@ -520,5 +739,10 @@ internal class TransactionalNavHostCoordinator(
         }
     }
 }
+
+private class ActiveNavHostTransition(
+    val transition: NavHostTransition,
+    var handle: NavHostTransitionHandle? = null,
+)
 
 private const val MAX_REENTRANT_COMMANDS_PER_DRAIN = 64

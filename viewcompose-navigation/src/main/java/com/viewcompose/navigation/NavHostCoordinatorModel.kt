@@ -45,6 +45,7 @@ internal sealed interface NavHostNavigationResult {
         override val command: NavCommand,
         val snapshot: NavBackStackSnapshot,
         val mutation: NavStackMutation,
+        val transition: NavHostTransition,
     ) : NavHostNavigationResult
 
     data class NoChange(
