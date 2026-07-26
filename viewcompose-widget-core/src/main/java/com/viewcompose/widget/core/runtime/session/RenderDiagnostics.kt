@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.runtime.composition.CompositionDiagnostics
 import com.viewcompose.ui.node.NodeType
 
 data class RenderStats(
@@ -30,5 +31,32 @@ data class RenderTreeResult(
     val stats: RenderStats = RenderStats(),
     val structure: RenderStructureStats = RenderStructureStats(),
     val warnings: List<String> = emptyList(),
+    val tree: List<RenderTreeNode> = emptyList(),
+    val patches: List<RenderPatchRecord> = emptyList(),
+    val composition: CompositionDiagnostics = CompositionDiagnostics(),
 )
 
+data class RenderTreeNode(
+    val type: NodeType,
+    val key: Any?,
+    val children: List<RenderTreeNode> = emptyList(),
+)
+
+data class RenderPatchRecord(
+    val operation: RenderPatchOperation,
+    val type: NodeType,
+    val key: Any?,
+    val parentKey: Any?,
+    val index: Int,
+    val moved: Boolean = false,
+    val detail: String? = null,
+)
+
+enum class RenderPatchOperation {
+    Insert,
+    Remove,
+    Rebind,
+    Patch,
+    SkipSelf,
+    SkipSubtree,
+}

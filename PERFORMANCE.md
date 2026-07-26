@@ -96,8 +96,8 @@
 
 ### Phase 3：诊断增强
 
-状态：待继续推进  
-目标：让 render/patch/layout 问题定位更直接可用
+状态：核心可视化已完成
+目标：render tree、patch、CompositionLocal 与重组原因已可直接读取；后续补节点高亮、跨 session 关联与逐节点耗时
 
 ### Phase 4：容器与布局收口
 

@@ -43,7 +43,7 @@ class ViewTreeRenderTransactionTest {
         val state = TextFieldState(TextFieldValue("value"))
         val modifierShape = UiShape.cut(14)
         val modifier = Modifier.shape(modifierShape)
-        val previous = ViewTreeRenderer.renderInto(
+        val initialResult = ViewTreeRenderer.renderInto(
             container = container,
             previous = emptyList(),
             nodes = listOf(
@@ -53,9 +53,12 @@ class ViewTreeRenderTransactionTest {
                     nodeShape = UiShape.rounded(4),
                 ),
             ),
-        ).mountedNodes
+        )
+        val previous = initialResult.mountedNodes
+        assertEquals(NodeType.TextField, initialResult.tree.single().type)
+        assertEquals(RenderPatchOperation.Insert, initialResult.patches.single().operation)
 
-        val next = ViewTreeRenderer.renderInto(
+        val nextResult = ViewTreeRenderer.renderInto(
             container = container,
             previous = previous,
             nodes = listOf(
@@ -66,7 +69,10 @@ class ViewTreeRenderTransactionTest {
                     backgroundColor = 0xFF112233.toInt(),
                 ),
             ),
-        ).mountedNodes
+        )
+        val next = nextResult.mountedNodes
+        assertEquals(RenderPatchOperation.Patch, nextResult.patches.single().operation)
+        assertTrue(nextResult.patches.single().detail?.contains("TextFieldNodePatch") == true)
 
         val drawable = next.single().view.background as MaterialShapeDrawable
         assertTrue(drawable.shapeAppearanceModel.topLeftCorner is CutCornerTreatment)

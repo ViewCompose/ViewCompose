@@ -2,7 +2,10 @@ package com.viewcompose.widget.core
 
 class UiLocal<T> internal constructor(
     internal val holder: LocalValue<T>,
-)
+) {
+    val debugName: String
+        get() = holder.debugName
+}
 
 class UiLocalProvider internal constructor(
     internal val local: UiLocal<*>,
@@ -12,7 +15,27 @@ class UiLocalProvider internal constructor(
 fun <T> uiLocalOf(
     defaultFactory: () -> T,
 ): UiLocal<T> {
-    return UiLocal(LocalValue(defaultFactory))
+    return UiLocal(
+        LocalValue(
+            debugName = nextLocalDebugName(),
+            defaultFactory = defaultFactory,
+        ),
+    )
+}
+
+fun <T> uiLocalOf(
+    debugName: String,
+    debugValueFormatter: ((T) -> String)? = null,
+    defaultFactory: () -> T,
+): UiLocal<T> {
+    require(debugName.isNotBlank()) { "UiLocal debugName must not be blank." }
+    return UiLocal(
+        LocalValue(
+            debugName = debugName,
+            defaultFactory = defaultFactory,
+            debugValueFormatter = debugValueFormatter,
+        ),
+    )
 }
 
 object UiLocals {

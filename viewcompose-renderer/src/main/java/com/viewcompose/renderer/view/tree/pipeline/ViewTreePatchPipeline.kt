@@ -46,6 +46,7 @@ internal object ViewTreePatchPipeline {
         internal val insertedNodes = LinkedHashSet<MountedNode>()
         internal val deferredRemovals = LinkedHashSet<MountedNode>()
         internal val commitEffects = mutableListOf<RenderTreeCommitEffect>()
+        internal val patchRecords = mutableListOf<RenderPatchRecord>()
     }
 
     internal data class MountedCheckpoint(
@@ -154,6 +155,7 @@ internal object ViewTreePatchPipeline {
         transaction.deferredRemovals.clear()
         transaction.insertedNodes.clear()
         transaction.commitEffects.clear()
+        transaction.patchRecords.clear()
     }
 
     fun execute(
@@ -164,7 +166,8 @@ internal object ViewTreePatchPipeline {
         emittedModifierWarnings: MutableSet<String>,
         transaction: RenderTransaction,
         collectStats: Boolean,
-        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
+        parentNodeKey: Any?,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
     ): ExecutionResult {
         val mountContainer = resolveChildHost(container)
         val preparedPatches = preflight(
@@ -182,6 +185,7 @@ internal object ViewTreePatchPipeline {
                 defaultRippleColor = defaultRippleColor,
                 transaction = transaction,
                 collectStats = collectStats,
+                parentNodeKey = parentNodeKey,
                 renderChildren = renderChildren,
             )
             if (collectStats) {
@@ -197,6 +201,13 @@ internal object ViewTreePatchPipeline {
             )
             if (collectStats) {
                 stats = stats.withRemoval()
+                transaction.recordPatch(RenderPatchRecord(
+                    operation = RenderPatchOperation.Remove,
+                    type = removal.payload.vnode.type,
+                    key = removal.payload.vnode.key,
+                    parentKey = parentNodeKey,
+                    index = removal.previousIndex,
+                ))
             }
         }
         return ExecutionResult(
@@ -211,7 +222,8 @@ internal object ViewTreePatchPipeline {
         defaultRippleColor: Int,
         transaction: RenderTransaction,
         collectStats: Boolean,
-        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
+        parentNodeKey: Any?,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
     ): PatchApplicationResult {
         val patch = preparedPatch.patch
         return when (patch) {
@@ -225,6 +237,15 @@ internal object ViewTreePatchPipeline {
                     transaction = transaction,
                     renderChildren = renderChildren,
                 )
+                if (collectStats) {
+                    transaction.recordPatch(RenderPatchRecord(
+                        operation = RenderPatchOperation.Insert,
+                        type = patch.nextVNode.type,
+                        key = patch.nextVNode.key,
+                        parentKey = parentNodeKey,
+                        index = patch.targetIndex,
+                    ))
+                }
                 captureContainer(
                     transaction = transaction,
                     target = container,
@@ -247,6 +268,15 @@ internal object ViewTreePatchPipeline {
                     mountedNode.vnode === patch.nextVNode
                 val needsMove = container.indexOfChild(mountedNode.view) != patch.targetIndex
                 if (reusesExactVNode && !needsMove) {
+                    if (collectStats) {
+                        transaction.recordPatch(RenderPatchRecord(
+                            operation = RenderPatchOperation.SkipSubtree,
+                            type = patch.nextVNode.type,
+                            key = patch.nextVNode.key,
+                            parentKey = parentNodeKey,
+                            index = patch.targetIndex,
+                        ))
+                    }
                     return PatchApplicationResult(
                         mountedNode = mountedNode,
                         stats = if (collectStats) {
@@ -341,6 +371,19 @@ internal object ViewTreePatchPipeline {
                     view = mountedNode.view,
                     targetIndex = patch.targetIndex,
                 )
+                if (collectStats) {
+                    transaction.recordPatch(RenderPatchRecord(
+                        operation = bindingPlan.toPatchOperation(),
+                        type = patch.nextVNode.type,
+                        key = patch.nextVNode.key,
+                        parentKey = parentNodeKey,
+                        index = patch.targetIndex,
+                        moved = needsMove,
+                        detail = (bindingPlan as? NodeBindingPlan.Patch)
+                            ?.patch
+                            ?.let { nodePatch -> nodePatch::class.simpleName },
+                    ))
+                }
                 PatchApplicationResult(
                     mountedNode = mountedNode,
                     stats = if (collectStats) {
@@ -378,7 +421,7 @@ internal object ViewTreePatchPipeline {
         view: View,
         previousChildren: List<MountedNode>,
         node: VNode,
-        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
     ): RenderTreeResult {
         val viewGroup = view as? ViewGroup ?: return RenderTreeResult(
             mountedNodes = emptyList(),
@@ -392,6 +435,7 @@ internal object ViewTreePatchPipeline {
             resolveChildHost(viewGroup),
             previousChildren,
             node.children,
+            node.key,
         )
     }
 
@@ -416,7 +460,7 @@ internal object ViewTreePatchPipeline {
         defaultRippleColor: Int,
         resolved: ResolvedModifiers,
         transaction: RenderTransaction,
-        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>) -> RenderTreeResult,
+        renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
     ): MountedNode {
         val view = ViewNodeFactory.createView(
             context = context,
@@ -456,6 +500,7 @@ internal object ViewTreePatchPipeline {
                 resolveChildHost(view),
                 emptyList(),
                 node.children,
+                node.key,
             ).mountedNodes
         } else {
             emptyList()
@@ -619,7 +664,24 @@ internal object ViewTreePatchPipeline {
         )
     }
 
+    private fun NodeBindingPlan.toPatchOperation(): RenderPatchOperation {
+        return when (this) {
+            NodeBindingPlan.Rebind -> RenderPatchOperation.Rebind
+            NodeBindingPlan.SkipSelfOnly -> RenderPatchOperation.SkipSelf
+            NodeBindingPlan.SkipSubtree -> RenderPatchOperation.SkipSubtree
+            is NodeBindingPlan.Patch -> RenderPatchOperation.Patch
+        }
+    }
+
+    private fun RenderTransaction.recordPatch(record: RenderPatchRecord) {
+        if (patchRecords.size < MAX_PATCH_RECORDS) {
+            patchRecords += record
+        }
+    }
+
     private fun resolveChildHost(container: ViewGroup): ViewGroup {
         return (container as? ChildHostViewGroup)?.childHost ?: container
     }
+
+    private const val MAX_PATCH_RECORDS = 5_000
 }

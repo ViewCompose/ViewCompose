@@ -7,7 +7,13 @@ import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 import java.lang.ref.WeakReference
 
-private val LocalTheme = uiLocalOf(UiThemeDefaults::light)
+private val LocalTheme = uiLocalOf(
+    debugName = "Theme",
+    debugValueFormatter = { tokens ->
+        "${tokens.metadata.origin}, dark=${tokens.metadata.isDark}, revision=${tokens.metadata.revision}"
+    },
+    defaultFactory = UiThemeDefaults::light,
+)
 
 object Theme {
     val current: UiThemeTokens

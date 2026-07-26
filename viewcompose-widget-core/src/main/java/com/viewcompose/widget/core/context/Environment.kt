@@ -36,7 +36,13 @@ object UiEnvironmentDefaults {
     }
 }
 
-private val LocalEnvironment = uiLocalOf(UiEnvironmentDefaults::values)
+private val LocalEnvironment = uiLocalOf(
+    debugName = "Environment",
+    debugValueFormatter = { values ->
+        "density=${values.density.density}, locale=${values.localeTags.joinToString()}, direction=${values.layoutDirection}"
+    },
+    defaultFactory = UiEnvironmentDefaults::values,
+)
 
 object Environment {
     val density: UiDensity

@@ -1,6 +1,9 @@
 package com.viewcompose.widget.core
 
-private val LocalSaveableStateRegistryValue = uiLocalOf<SaveableStateRegistry?> { null }
+private val LocalSaveableStateRegistryValue = uiLocalOf<SaveableStateRegistry?>(
+    debugName = "SaveableStateRegistry",
+    debugValueFormatter = { registry -> if (registry == null) "none" else "installed" },
+) { null }
 
 object LocalSaveableStateRegistry {
     val current: SaveableStateRegistry?

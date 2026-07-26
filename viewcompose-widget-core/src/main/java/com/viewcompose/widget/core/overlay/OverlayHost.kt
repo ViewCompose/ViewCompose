@@ -98,7 +98,12 @@ object OverlayHostDefaults {
     }
 }
 
-internal val LocalOverlayHost = uiLocalOf { OverlayHostDefaults.noOp }
+internal val LocalOverlayHost = uiLocalOf(
+    debugName = "OverlayHost",
+    debugValueFormatter = { host ->
+        if (host === OverlayHostDefaults.noOp) "none" else host::class.qualifiedName.orEmpty()
+    },
+) { OverlayHostDefaults.noOp }
 
 object OverlayHostContext {
     val current: OverlayHost

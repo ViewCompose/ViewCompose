@@ -18,6 +18,7 @@ import com.viewcompose.widget.core.SideEffect
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.Theme
+import com.viewcompose.widget.core.RenderTreeNode
 import com.viewcompose.widget.core.UiDensity
 import com.viewcompose.widget.core.UiEnvironment
 import com.viewcompose.widget.core.UiEnvironmentValues
@@ -416,7 +417,66 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                                     typeName,
                                     "patched=${stats.patched}  rebound=${stats.rebound}  skipped=${stats.skipped}",
                                 )
+                        },
+                    )
+                }
+                val inspectorSnapshot = patchSnapshot ?: snapshot
+                if (inspectorSnapshot.patches.isNotEmpty()) {
+                    DiagnosticFactGroup(
+                        title = "Patch 时间线（最新在后）",
+                        facts = inspectorSnapshot.patches
+                            .takeLast(16)
+                            .mapIndexed { index, patch ->
+                                val typeName = patch.type::class.simpleName ?: "?"
+                                val movement = if (patch.moved) " moved" else ""
+                                DiagnosticFact(
+                                    "#${index + 1} ${patch.operation}",
+                                    "$typeName key=${patch.key ?: "∅"} parent=${patch.parentKey ?: "root"} " +
+                                        "index=${patch.index}$movement ${patch.detail.orEmpty()}",
+                                )
                             },
+                    )
+                }
+                val treeFacts = flattenRenderTree(inspectorSnapshot.tree).take(24)
+                if (treeFacts.isNotEmpty()) {
+                    DiagnosticFactGroup(
+                        title = "Render Tree（前 24 个节点）",
+                        facts = treeFacts,
+                    )
+                }
+                val composition = inspectorSnapshot.composition
+                DiagnosticFactGroup(
+                    title = "重组原因",
+                    facts = listOf(
+                        DiagnosticFact("失效 scope", composition.invalidatedScopeCount.toString()),
+                        DiagnosticFact("已重组 scope", composition.recomposedScopeCount.toString()),
+                        DiagnosticFact("已跳过 scope", composition.skippedScopeCount.toString()),
+                    ) + composition.scopes
+                        .filter { scope -> scope.recomposed || scope.reasons.isNotEmpty() }
+                        .take(12)
+                        .map { scope ->
+                            DiagnosticFact(
+                                scope.path,
+                                "${scope.reasons.joinToString().ifEmpty { "Dirty" }} · " +
+                                    "${scope.signature} · recomposed=${scope.recomposed}",
+                            )
+                        },
+                )
+                val localFacts = composition.scopes
+                    .flatMap { scope ->
+                        scope.locals.map { local ->
+                            DiagnosticFact(
+                                "${local.name} @ ${scope.path}",
+                                local.value,
+                            )
+                        }
+                    }
+                    .distinct()
+                    .take(16)
+                if (localFacts.isNotEmpty()) {
+                    DiagnosticFactGroup(
+                        title = "CompositionLocal 浏览器",
+                        facts = localFacts,
                     )
                 }
                 DiagnosticFactGroup(
@@ -444,7 +504,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         DiagnosticFact("懒容器", "逐项懒 session"),
                         DiagnosticFact("顶部导航", "TabRow + HorizontalPager via ViewPager2 + RecyclerView"),
                         DiagnosticFact("Local 传播", "跨懒容器和 pager session 捕获"),
-                        DiagnosticFact("可视检查器", "尚未实现"),
+                        DiagnosticFact("可视检查器", "Render Tree + Patch + Local + 重组原因"),
                     ),
                 )
                 ChecklistGroup(
@@ -469,17 +529,15 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 ChecklistGroup(
                     title = "检查",
                     items = listOf(
-                        "尚无可视化渲染树检查器",
-                        "尚无 Patch 时间线 UI",
-                        "尚无 Local 值浏览器",
+                        "树/Patch/Local/重组原因已可浏览；尚无点击节点后在真实 View 上高亮边界。",
+                        "当前快照按 RenderSession 展示；尚无跨父 session 与 lazy 子 session 的关联图。",
                     ),
                 )
                 ChecklistGroup(
                     title = "性能",
                     items = listOf(
                         "尚无帧耗时覆盖层",
-                        "尚无 measure/layout 计数器页面",
-                        "尚无 diff 开销汇总 UI",
+                        "已有 measure/layout 计数与 patch 明细；尚无逐节点 diff/绑定耗时。",
                     ),
                 )
                 ChecklistGroup(
@@ -513,8 +571,8 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     "诊断会持续作为后续 inspector 的落点。",
                 ),
                 relatedGaps = listOf(
-                    "还没有自动刷新的 render tree、patch timeline 和性能面板可视化。",
-                    "还没有 deepest path、frame timeline 和每节点耗时。",
+                    "检查器当前是手动快照，还没有节点高亮和跨 session 关联图。",
+                    "还没有 deepest path、完整 frame timeline 和每节点耗时。",
                 ),
             )
         }
@@ -537,6 +595,22 @@ private fun buildRenderHistorySummary(): String {
     }
     return recent.joinToString(separator = " -> ") { snapshot ->
         "r${snapshot.renderCount}/p${snapshot.stats.patchedNodes}"
+    }
+}
+
+private fun flattenRenderTree(
+    nodes: List<RenderTreeNode>,
+    depth: Int = 0,
+): List<DiagnosticFact> {
+    return nodes.flatMapIndexed { index, node ->
+        val typeName = node.type::class.simpleName ?: "?"
+        val prefix = "  ".repeat(depth)
+        listOf(
+            DiagnosticFact(
+                "$prefix$index · $typeName",
+                "key=${node.key ?: "∅"} children=${node.children.size}",
+            ),
+        ) + flattenRenderTree(node.children, depth + 1)
     }
 }
 

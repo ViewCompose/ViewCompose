@@ -13,6 +13,7 @@ class ComposerLite(
     private val invalidationQueue: InvalidationQueue = InvalidationQueue(),
     private val warningLogger: ((String) -> Unit)? = null,
     private val onInvalidated: (() -> Unit)? = null,
+    private val localSnapshotInspector: ((Any?) -> List<CompositionLocalDiagnostic>)? = null,
 ) {
     private val keyStack = mutableListOf<Any?>()
     private val warningKeys = HashSet<String>()
@@ -21,17 +22,19 @@ class ComposerLite(
     private var currentScope: RecomposeScope = slotTable.root
     private var composing: Boolean = false
     private var activeAttempt: CompositionAttempt? = null
+    private var explicitRootRequestPending: Boolean = false
 
     fun hasPendingInvalidations(): Boolean = invalidationQueue.isNotEmpty()
 
     fun drainInvalidations(): List<RecomposeScope> = invalidationQueue.drainCompacted()
 
     fun requestRootRecompose() {
+        explicitRootRequestPending = true
         slotTable.root.markDirty()
     }
 
     fun <T> composeRoot(block: () -> T): T {
-        val prepared = prepareRoot(block)
+        val prepared = prepareRoot(block = block)
         prepared.commit()
         return prepared.value
     }
@@ -42,7 +45,10 @@ class ComposerLite(
      * Hosts that apply the result to another mutable tree should call [PreparedComposition.commit]
      * only after that apply succeeds, or [PreparedComposition.abort] when it fails.
      */
-    fun <T> prepareRoot(block: () -> T): PreparedComposition<T> {
+    fun <T> prepareRoot(
+        collectDiagnostics: Boolean = false,
+        block: () -> T,
+    ): PreparedComposition<T> {
         if (composing) {
             error("Re-entrant composeRoot() is not supported.")
         }
@@ -50,9 +56,33 @@ class ComposerLite(
             "A prepared composition must be committed or aborted before composing again."
         }
         composing = true
+        val drainedInvalidations = drainInvalidations()
+        val rootWasComposed = slotTable.root.composed
         val attempt = CompositionAttempt(
-            drainedInvalidations = drainInvalidations(),
+            drainedInvalidations = drainedInvalidations,
+            collectDiagnostics = collectDiagnostics,
+            explicitRootRequest = explicitRootRequestPending,
         )
+        explicitRootRequestPending = false
+        if (collectDiagnostics) {
+            drainedInvalidations.forEach { scope ->
+                attempt.addReason(scope, RecompositionReason.StateInvalidation)
+                var ancestor = scope.parent
+                while (ancestor != null) {
+                    attempt.addReason(ancestor, RecompositionReason.AncestorInvalidation)
+                    ancestor = ancestor.parent
+                }
+            }
+            when {
+                !rootWasComposed -> {
+                    attempt.addReason(slotTable.root, RecompositionReason.InitialComposition)
+                }
+
+                attempt.explicitRootRequest -> {
+                    attempt.addReason(slotTable.root, RecompositionReason.ExplicitRequest)
+                }
+            }
+        }
         activeAttempt = attempt
         val root = slotTable.root
         val previous = currentScope
@@ -67,6 +97,7 @@ class ComposerLite(
             }
             PreparedComposition(
                 value = result,
+                diagnostics = buildDiagnostics(attempt),
                 onCommit = { commitAttempt(attempt) },
                 onAbort = { abortAttempt(attempt) },
             )
@@ -107,6 +138,14 @@ class ComposerLite(
                 ).also { scope ->
                     parent.children += scope
                     currentAttempt().newScopes += scope
+                    currentAttempt().addReason(
+                        scope,
+                        if (parent.composed) {
+                            RecompositionReason.StructureChanged
+                        } else {
+                            RecompositionReason.InitialComposition
+                        },
+                    )
                 }
             }
 
@@ -135,11 +174,15 @@ class ComposerLite(
                 ).also { scope ->
                     parent.children += scope
                     currentAttempt().newScopes += scope
+                    currentAttempt().addReason(scope, RecompositionReason.StructureChanged)
                 }
             }
         }
         if (scope.latestInputs != inputs) {
             checkpointScope(scope)
+            if (scope.composed) {
+                currentAttempt().addReason(scope, RecompositionReason.InputsChanged)
+            }
             scope.latestInputs = inputs
             scope.markDirty()
         }
@@ -309,8 +352,17 @@ class ComposerLite(
     ): T {
         val hasCached = scope.cachedResult !== RecomposeScope.Unset
         if (!scope.dirty && scope.composed && hasCached) {
+            if (currentAttempt().collectDiagnostics) {
+                currentAttempt().skippedScopes += scope
+            }
             @Suppress("UNCHECKED_CAST")
             return scope.cachedResult as T
+        }
+        if (currentAttempt().collectDiagnostics) {
+            currentAttempt().recomposedScopes += scope
+            if (!scope.composed) {
+                currentAttempt().addReason(scope, RecompositionReason.InitialComposition)
+            }
         }
         checkpointScope(scope)
         val invalidationVersion = scope.currentInvalidationVersion()
@@ -489,6 +541,9 @@ class ComposerLite(
     private fun abortAttempt(attempt: CompositionAttempt) {
         if (activeAttempt !== attempt) return
         activeAttempt = null
+        if (attempt.explicitRootRequest) {
+            explicitRootRequestPending = true
+        }
 
         val queuedDuringAttempt = invalidationQueue.drainAll()
         val invalidatedExistingScopes = attempt.checkpoints
@@ -605,6 +660,57 @@ class ComposerLite(
         }
     }
 
+    private fun buildDiagnostics(attempt: CompositionAttempt): CompositionDiagnostics {
+        if (!attempt.collectDiagnostics) {
+            return CompositionDiagnostics()
+        }
+        val scopes = (attempt.recomposedScopes + attempt.skippedScopes)
+            .distinct()
+            .take(MAX_DIAGNOSTIC_SCOPES)
+            .map { scope ->
+                RecomposeScopeDiagnostic(
+                    path = scope.saveablePath,
+                    signature = scope.signature.toDiagnosticString(),
+                    depth = scope.depth(),
+                    reasons = attempt.reasons[scope].orEmpty(),
+                    recomposed = scope in attempt.recomposedScopes,
+                    skipped = scope in attempt.skippedScopes,
+                    locals = localSnapshotInspector
+                        ?.let { inspector ->
+                            runCatching {
+                                inspector(scope.localSnapshotOrNull())
+                            }.getOrDefault(emptyList())
+                        }
+                        .orEmpty(),
+                )
+            }
+        return CompositionDiagnostics(
+            invalidatedScopeCount = attempt.drainedInvalidations.size,
+            recomposedScopeCount = attempt.recomposedScopes.size,
+            skippedScopeCount = attempt.skippedScopes.size,
+            scopes = scopes,
+        )
+    }
+
+    private fun Any.toDiagnosticString(): String {
+        val raw = toString()
+        return if (raw.length <= MAX_DIAGNOSTIC_SIGNATURE_LENGTH) {
+            raw
+        } else {
+            raw.take(MAX_DIAGNOSTIC_SIGNATURE_LENGTH - 1) + "…"
+        }
+    }
+
+    private fun RecomposeScope.depth(): Int {
+        var depth = 0
+        var current = parent
+        while (current != null) {
+            depth += 1
+            current = current.parent
+        }
+        return depth
+    }
+
     private data class GroupSignature(
         val keyStack: List<Any?>,
         val signature: Any,
@@ -612,14 +718,28 @@ class ComposerLite(
 
     private class CompositionAttempt(
         val drainedInvalidations: List<RecomposeScope>,
+        val collectDiagnostics: Boolean,
+        val explicitRootRequest: Boolean,
         val checkpoints: LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint> = LinkedHashMap(),
         val newScopes: LinkedHashSet<RecomposeScope> = LinkedHashSet(),
         val pendingDisposableEffects: MutableList<() -> Unit> = mutableListOf(),
         val pendingSideEffects: MutableList<() -> Unit> = mutableListOf(),
-    )
+        val recomposedScopes: LinkedHashSet<RecomposeScope> = LinkedHashSet(),
+        val skippedScopes: LinkedHashSet<RecomposeScope> = LinkedHashSet(),
+        val reasons: LinkedHashMap<RecomposeScope, LinkedHashSet<RecompositionReason>> = LinkedHashMap(),
+    ) {
+        fun addReason(
+            scope: RecomposeScope,
+            reason: RecompositionReason,
+        ) {
+            if (!collectDiagnostics) return
+            reasons.getOrPut(scope, ::LinkedHashSet) += reason
+        }
+    }
 
     class PreparedComposition<T> internal constructor(
         val value: T,
+        val diagnostics: CompositionDiagnostics,
         private val onCommit: () -> Unit,
         private val onAbort: () -> Unit,
     ) {
@@ -638,5 +758,10 @@ class ComposerLite(
             completed = true
             onAbort()
         }
+    }
+
+    private companion object {
+        const val MAX_DIAGNOSTIC_SCOPES: Int = 500
+        const val MAX_DIAGNOSTIC_SIGNATURE_LENGTH: Int = 160
     }
 }

@@ -65,6 +65,7 @@ object ViewTreeRenderer {
                 collectStats = collectDiagnostics,
                 collectStructure = collectDiagnostics,
                 collectWarnings = collectDiagnostics && onReconcile != null,
+                parentNodeKey = null,
             )
         } catch (error: Throwable) {
             ViewTreePatchPipeline.rollbackTransaction(
@@ -95,6 +96,7 @@ object ViewTreeRenderer {
         collectStats: Boolean,
         collectStructure: Boolean,
         collectWarnings: Boolean,
+        parentNodeKey: Any?,
     ): RenderTreeResult {
         val reconcileResult = ChildReconciler.reconcile(
             previous = previous.map { mountedNode ->
@@ -113,7 +115,8 @@ object ViewTreeRenderer {
             emittedModifierWarnings = cappedModifierWarnings(),
             transaction = transaction,
             collectStats = collectStats,
-            renderChildren = { childContainer, childPrevious, childNodes ->
+            parentNodeKey = parentNodeKey,
+            renderChildren = { childContainer, childPrevious, childNodes, childParentKey ->
                 renderIntoTransaction(
                     container = childContainer,
                     previous = childPrevious,
@@ -122,6 +125,7 @@ object ViewTreeRenderer {
                     collectStats = collectStats,
                     collectStructure = false,
                     collectWarnings = false,
+                    parentNodeKey = childParentKey,
                 )
             },
         )
@@ -148,6 +152,8 @@ object ViewTreeRenderer {
             stats = pipelineResult.stats,
             structure = structure,
             warnings = warnings,
+            tree = if (collectStructure) RenderTreeNode.from(nodes) else emptyList(),
+            patches = if (collectStructure) transaction.patchRecords.toList() else emptyList(),
         )
     }
 

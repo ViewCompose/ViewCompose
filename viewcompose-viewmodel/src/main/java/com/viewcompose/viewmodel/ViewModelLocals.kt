@@ -6,7 +6,10 @@ import com.viewcompose.widget.core.UiLocals
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.uiLocalOf
 
-private val LocalViewModelStoreOwnerValue = uiLocalOf<ViewModelStoreOwner?> { null }
+private val LocalViewModelStoreOwnerValue = uiLocalOf<ViewModelStoreOwner?>(
+    debugName = "ViewModelStoreOwner",
+    debugValueFormatter = { owner -> owner?.javaClass?.name ?: "none" },
+) { null }
 
 object LocalViewModelStoreOwner {
     val current: ViewModelStoreOwner?

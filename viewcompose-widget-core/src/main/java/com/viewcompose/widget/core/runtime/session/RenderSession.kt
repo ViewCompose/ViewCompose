@@ -50,6 +50,7 @@ class RenderSession(
     private val composer = ComposerLite(
         warningLogger = { message -> Log.w(debugTag, message) },
         onInvalidated = { requestRender?.invoke() },
+        localSnapshotInspector = LocalContext::describeSnapshot,
     )
     private val runtime = platform.runtimeFactory
         .create(
@@ -75,6 +76,7 @@ class RenderSession(
         var preparedComposition:
             ComposerLite.PreparedComposition<List<com.viewcompose.ui.node.VNode>>? = null
         var tree: List<com.viewcompose.ui.node.VNode> = emptyList()
+        val collectDiagnostics = debug || onRenderStats != null || onRenderResult != null
         val frame = try {
             if (!composer.hasPendingInvalidations()) {
                 // External render requests (e.g. lazy/pager sessionUpdater) must recompose root even
@@ -88,7 +90,9 @@ class RenderSession(
                             composer = composer,
                             coroutineContext = compositionCoroutineScope.coroutineContext,
                         ) {
-                            preparedComposition = composer.prepareRoot {
+                            preparedComposition = composer.prepareRoot(
+                                collectDiagnostics = collectDiagnostics,
+                            ) {
                                 buildVNodeTree(content)
                             }
                             tree = checkNotNull(preparedComposition).value
@@ -101,7 +105,7 @@ class RenderSession(
                 container = container,
                 previousMountedNodes = mountedNodes,
                 nodes = tree,
-                collectDiagnostics = debug || onRenderStats != null || onRenderResult != null,
+                collectDiagnostics = collectDiagnostics,
             )
         } catch (error: Exception) {
             try {
@@ -202,7 +206,11 @@ class RenderSession(
                 frameId = frameId,
                 frameFailures = frameFailures,
             ) {
-                onRenderResult?.invoke(result)
+                onRenderResult?.invoke(
+                    result.copy(
+                        composition = checkNotNull(preparedComposition).diagnostics,
+                    ),
+                )
             }
         }
         lastFrameReport = RenderFrameReport(

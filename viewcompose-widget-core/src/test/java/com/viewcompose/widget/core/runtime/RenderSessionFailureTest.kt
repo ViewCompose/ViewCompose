@@ -170,6 +170,42 @@ class RenderSessionFailureTest {
         assertEquals("camera", failure.nodeKey)
     }
 
+    @Test
+    fun `render result includes recomposition reasons and named local values`() {
+        val results = mutableListOf<RenderTreeResult>()
+        val local = uiLocalOf(
+            debugName = "BusinessToken",
+            debugValueFormatter = { value: String -> value },
+        ) { "default" }
+        engine.renderBlock = { previous, _ ->
+            CoreRenderFrame(
+                mountedNodes = previous,
+                renderResult = RenderTreeResult(),
+            )
+        }
+        session = RenderSession(
+            container = FrameLayout(context),
+            content = {
+                ProvideLocal(local, "scoped") {
+                    RecomposeBoundary(key = "diagnostic") {}
+                }
+            },
+            onRenderResult = results::add,
+        )
+
+        session.render()
+
+        val composition = results.single().composition
+        assertTrue(composition.recomposedScopeCount > 0)
+        assertTrue(
+            composition.scopes.any { scope ->
+                scope.locals.any { localValue ->
+                    localValue.name == "BusinessToken" && localValue.value == "scoped"
+                }
+            },
+        )
+    }
+
     private fun createSession(
         failures: MutableList<RenderFailure>,
         content: UiTreeBuilder.() -> Unit = {},

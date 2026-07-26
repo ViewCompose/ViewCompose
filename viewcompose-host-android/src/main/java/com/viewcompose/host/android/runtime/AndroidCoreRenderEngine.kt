@@ -13,6 +13,9 @@ import com.viewcompose.widget.core.NodeTypeBindingStats
 import com.viewcompose.widget.core.RenderStats
 import com.viewcompose.widget.core.RenderStructureStats
 import com.viewcompose.widget.core.RenderTreeResult
+import com.viewcompose.widget.core.RenderTreeNode
+import com.viewcompose.widget.core.RenderPatchRecord
+import com.viewcompose.widget.core.RenderPatchOperation
 import com.viewcompose.widget.core.RenderFailureOperation
 
 class AndroidCoreRenderEngine : CoreRenderEngine {
@@ -94,6 +97,35 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
                 maxMountedDepth = structure.maxMountedDepth,
             ),
             warnings = warnings,
+            tree = tree.map { node -> node.toCoreNode() },
+            patches = patches.map { patch -> patch.toCorePatch() },
+        )
+    }
+
+    private fun com.viewcompose.renderer.view.tree.RenderTreeNode.toCoreNode(): RenderTreeNode {
+        return RenderTreeNode(
+            type = type,
+            key = key,
+            children = children.map { child -> child.toCoreNode() },
+        )
+    }
+
+    private fun com.viewcompose.renderer.view.tree.RenderPatchRecord.toCorePatch(): RenderPatchRecord {
+        return RenderPatchRecord(
+            operation = when (operation) {
+                com.viewcompose.renderer.view.tree.RenderPatchOperation.Insert -> RenderPatchOperation.Insert
+                com.viewcompose.renderer.view.tree.RenderPatchOperation.Remove -> RenderPatchOperation.Remove
+                com.viewcompose.renderer.view.tree.RenderPatchOperation.Rebind -> RenderPatchOperation.Rebind
+                com.viewcompose.renderer.view.tree.RenderPatchOperation.Patch -> RenderPatchOperation.Patch
+                com.viewcompose.renderer.view.tree.RenderPatchOperation.SkipSelf -> RenderPatchOperation.SkipSelf
+                com.viewcompose.renderer.view.tree.RenderPatchOperation.SkipSubtree -> RenderPatchOperation.SkipSubtree
+            },
+            type = type,
+            key = key,
+            parentKey = parentKey,
+            index = index,
+            moved = moved,
+            detail = detail,
         )
     }
 

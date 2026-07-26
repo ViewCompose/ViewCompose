@@ -249,6 +249,7 @@ LazyColumn(
 - [WORKFLOW.md](./WORKFLOW.md): 开发流程与门禁 / Development workflow and quality gates
 - [PERFORMANCE.md](./PERFORMANCE.md): 性能基线与约束 / Performance baseline and constraints
 - [RENDER_FAILURES.md](./RENDER_FAILURES.md): 结构化渲染失败与 AndroidView 副作用边界 / Structured render failures and AndroidView effect boundary
+- [DIAGNOSTICS.md](./DIAGNOSTICS.md): Render Tree、Patch、Local 与重组原因诊断 / Runtime and renderer diagnostics
 - [CORE_CAPABILITY_VERIFICATION.md](./CORE_CAPABILITY_VERIFICATION.md): P1 核心能力设备验证矩阵 / P1 core capability device matrix
 - [TEXT_INPUT.md](./TEXT_INPUT.md): 文本编辑模型与原生桥接 / Text editing model and native bridge
 - [LAZY_COLLECTIONS.md](./LAZY_COLLECTIONS.md): Lazy 状态与高级容器能力 / Lazy state and advanced collection capabilities
