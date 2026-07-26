@@ -30,6 +30,28 @@ internal data class LocalSnapshot(
     val values: Map<LocalValue<*>, Any?>,
 )
 
+/**
+ * Opaque snapshot of every active ViewCompose local.
+ *
+ * Delayed child sessions capture this while their content is declared and restore it whenever
+ * that content is rendered. The values stay opaque so session containers cannot inspect or mutate
+ * another composition's local map.
+ */
+class UiLocalSnapshot internal constructor(
+    internal val delegate: LocalSnapshot,
+)
+
+fun captureUiLocalSnapshot(): UiLocalSnapshot {
+    return UiLocalSnapshot(LocalContext.snapshot())
+}
+
+fun <T> withUiLocalSnapshot(
+    snapshot: UiLocalSnapshot,
+    block: () -> T,
+): T {
+    return LocalContext.withSnapshot(snapshot.delegate, block)
+}
+
 internal object LocalContext {
     private val currentValues = ThreadLocal<Map<LocalValue<*>, Any?>>()
 
@@ -66,13 +88,13 @@ internal object LocalContext {
             .sortedBy(CompositionLocalDiagnostic::name)
     }
 
-    fun withSnapshot(
+    fun <T> withSnapshot(
         snapshot: LocalSnapshot,
-        block: () -> Unit,
-    ) {
+        block: () -> T,
+    ): T {
         val previous = currentValues.get().orEmpty()
         currentValues.set(snapshot.values)
-        try {
+        return try {
             block()
         } finally {
             currentValues.set(previous)

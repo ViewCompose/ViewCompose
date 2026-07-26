@@ -47,4 +47,21 @@ class LocalValueTest {
         assertEquals("deferred", restored)
         assertEquals("default", LocalContext.current(local))
     }
+
+    @Test
+    fun `opaque public snapshot restores locals and returns block result`() {
+        val local = LocalValue { "default" }
+        var snapshot: UiLocalSnapshot? = null
+
+        LocalContext.provide(local, "page") {
+            snapshot = captureUiLocalSnapshot()
+        }
+        val result = withUiLocalSnapshot(checkNotNull(snapshot)) {
+            assertEquals("page", LocalContext.current(local))
+            42
+        }
+
+        assertEquals(42, result)
+        assertEquals("default", LocalContext.current(local))
+    }
 }
