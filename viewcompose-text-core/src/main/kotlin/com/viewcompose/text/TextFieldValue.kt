@@ -7,10 +7,23 @@ package com.viewcompose.text
  * [composition] is an ephemeral IME-owned range and must not be persisted across host recreation.
  */
 data class TextFieldValue(
-    val text: String,
-    val selection: TextRange = TextRange(text.length),
+    val document: TextDocument,
+    val selection: TextRange = TextRange(document.text.length),
     val composition: TextRange? = null,
 ) {
+    constructor(
+        text: String,
+        selection: TextRange = TextRange(text.length),
+        composition: TextRange? = null,
+    ) : this(
+        document = TextDocument.plain(text),
+        selection = selection,
+        composition = composition,
+    )
+
+    val text: String
+        get() = document.text
+
     init {
         requireRangeInText(selection, "selection")
         composition?.let { requireRangeInText(it, "composition") }

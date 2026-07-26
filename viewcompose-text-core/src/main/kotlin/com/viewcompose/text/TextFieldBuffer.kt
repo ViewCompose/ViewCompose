@@ -7,33 +7,63 @@ class TextFieldBuffer internal constructor(
     val originalValue: TextFieldValue,
     proposedValue: TextFieldValue,
 ) {
-    private var content = StringBuilder(proposedValue.text)
+    private var content = proposedValue.document
 
     var selection: TextRange = proposedValue.selection
         set(value) {
-            field = value.coerceIn(content.length)
+            field = value.coerceIn(content.text.length)
         }
 
     var composition: TextRange? = proposedValue.composition
         set(value) {
-            field = value?.coerceIn(content.length)
+            field = value?.coerceIn(content.text.length)
         }
 
     val text: String
-        get() = content.toString()
+        get() = content.text
+
+    val document: TextDocument
+        get() = content
 
     val length: Int
-        get() = content.length
+        get() = content.text.length
 
     fun replace(
         start: Int,
         end: Int,
         replacement: CharSequence,
     ) {
-        require(start in 0..content.length) { "replace start $start is out of bounds." }
-        require(end in start..content.length) { "replace end $end is out of bounds." }
+        require(start in 0..content.text.length) { "replace start $start is out of bounds." }
+        require(end in start..content.text.length) { "replace end $end is out of bounds." }
         val replacementLength = replacement.length
-        content.replace(start, end, replacement.toString())
+        content = content.replace(
+            range = TextRange(start, end),
+            replacement = replacement,
+        )
+        selection = selection.mapAcrossReplacement(
+            start = start,
+            end = end,
+            replacementLength = replacementLength,
+        )
+        composition = composition?.mapAcrossReplacement(
+            start = start,
+            end = end,
+            replacementLength = replacementLength,
+        )
+    }
+
+    fun replace(
+        start: Int,
+        end: Int,
+        replacement: TextDocument,
+    ) {
+        require(start in 0..content.text.length) { "replace start $start is out of bounds." }
+        require(end in start..content.text.length) { "replace end $end is out of bounds." }
+        val replacementLength = replacement.text.length
+        content = content.replace(
+            range = TextRange(start, end),
+            replacement = replacement,
+        )
         selection = selection.mapAcrossReplacement(
             start = start,
             end = end,
@@ -47,30 +77,34 @@ class TextFieldBuffer internal constructor(
     }
 
     fun replaceAll(text: CharSequence) {
-        content = StringBuilder(text)
-        selection = TextRange(content.length)
+        replaceAll(TextDocument.plain(text.toString()))
+    }
+
+    fun replaceAll(document: TextDocument) {
+        content = document
+        selection = TextRange(content.text.length)
         composition = null
     }
 
     fun placeCursorAtEnd() {
-        selection = TextRange(content.length)
+        selection = TextRange(content.text.length)
     }
 
     fun selectAll() {
-        selection = TextRange(0, content.length)
+        selection = TextRange(0, content.text.length)
     }
 
     fun revertAllChanges() {
-        content = StringBuilder(originalValue.text)
+        content = originalValue.document
         selection = originalValue.selection
         composition = originalValue.composition
     }
 
     internal fun toTextFieldValue(): TextFieldValue {
         return TextFieldValue(
-            text = content.toString(),
-            selection = selection.coerceIn(content.length),
-            composition = composition?.coerceIn(content.length),
+            document = content,
+            selection = selection.coerceIn(content.text.length),
+            composition = composition?.coerceIn(content.text.length),
         )
     }
 }

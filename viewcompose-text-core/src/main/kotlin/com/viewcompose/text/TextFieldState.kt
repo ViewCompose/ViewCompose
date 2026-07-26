@@ -26,6 +26,9 @@ class TextFieldState(
     val text: String
         get() = value.text
 
+    val document: TextDocument
+        get() = value.document
+
     val selection: TextRange
         get() = value.selection
 
@@ -55,7 +58,7 @@ class TextFieldState(
         )
         buffer.block()
         val proposed = buffer.toTextFieldValue()
-        val next = if (proposed.text != current.text) {
+        val next = if (proposed.document != current.document) {
             proposed.copy(composition = null)
         } else {
             proposed
@@ -66,6 +69,12 @@ class TextFieldState(
     fun setTextAndPlaceCursorAtEnd(text: String) {
         edit {
             replaceAll(text)
+        }
+    }
+
+    fun setDocumentAndPlaceCursorAtEnd(document: TextDocument) {
+        edit {
+            replaceAll(document)
         }
     }
 
@@ -125,7 +134,7 @@ class TextFieldState(
     ) {
         if (current == next) return
         compositionBase = null
-        if (current.text != next.text) {
+        if (current.document != next.document) {
             pushUndo(current.withoutComposition())
             redoStack.clear()
             notifyHistoryChanged()
@@ -138,7 +147,7 @@ class TextFieldState(
         next: TextFieldValue,
     ) {
         if (current == next) return
-        if (current.text == next.text) {
+        if (current.document == next.document) {
             valueState.value = next
             return
         }
@@ -151,7 +160,7 @@ class TextFieldState(
             next.composition == null && (current.composition != null || compositionBase != null) -> {
                 val base = compositionBase ?: current.withoutComposition()
                 compositionBase = null
-                if (base.text != next.text) {
+                if (base.document != next.document) {
                     pushUndo(base)
                     redoStack.clear()
                     notifyHistoryChanged()
