@@ -29,8 +29,9 @@ Current feature-branch status:
 - Stage 3 destination `RenderSession`: complete
 - Stage 4 transactional coordinator: complete
 - Stage 4 transition retention protocol: complete
-- Stage 4 public `NavHost`: next
-- Stage 5: pending
+- Stage 4 native View transition driver: complete
+- Stage 4 public `NavHost`: complete
+- Stage 5 restoration and platform back: next
 
 ## 2. P0 delivery plan
 
@@ -94,10 +95,36 @@ command redirects the active transition by cancelling its visual work, settling 
 target, and then preparing the next transaction. Stale completion callbacks are ignored by
 transition ID. Host destruction cancels visual work and destroys every retained page immediately.
 
-The default internal driver completes synchronously, preserving the settled behavior for hosts that
-do not install animation. The public `NavHost`/navigation handle remains intentionally closed until
-the next stage wires a concrete View transition driver and the platform back/restoration adapters to
-this same coordinator boundary.
+The public `NavHost` mounts this coordinator through the existing transactional `AndroidView`
+interop node. Its configuration is staged during parent rendering and applied only by the node's
+commit effect. Parent render rollback therefore cannot attach a controller, publish a destination,
+or leak an entry owner. Removing the node or destroying its lifecycle owner tears down every child
+session and unbinds the controller.
+
+`NavHostController` is the only application-facing mutation handle. It can bind to exactly one host,
+rejects commands while detached, and maps coordinator results to public `Committed`, `NoChange`,
+`Queued`, and `Failed` results without exposing transition internals. The same controller can mount a
+new host after release while retaining its pure back-stack snapshot.
+
+```kotlin
+val navController = rememberNavHostController(
+    startDestination = NavRoute("home"),
+)
+
+NavHost(
+    controller = navController,
+) { entry ->
+    when (entry.route.name) {
+        "home" -> HomePage()
+        "details" -> DetailsPage(entry.route)
+    }
+}
+```
+
+The Android View driver uses cancellable property animation after commit. Forward/back motion honors
+the host layout direction, supports slide, fade-only, and disabled policies, and resets all mutated
+View properties on completion or cancellation. An unlaid-out or detached host settles immediately
+so invisible animation can never retain removed page resources indefinitely.
 
 ### Stage 5: restoration and platform back
 
