@@ -56,7 +56,7 @@ fun Fragment.setUiContent(
         hostName = "Fragment",
     )
     FragmentRenderSessionRegistry.clear(this)
-    val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
+    val saveableStateRegistry = viewComposeSaveableStateRegistry(this)
     val resolvedTheme = AndroidThemeBridge.resolveContext(
         context = requireContext(),
         dynamicColorPolicy = dynamicColorPolicy,
@@ -107,7 +107,7 @@ fun ComponentActivity.setUiContent(
         hostName = "ComponentActivity",
     )
     ActivityRenderSessionRegistry.clear(this)
-    val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
+    val saveableStateRegistry = viewComposeSaveableStateRegistry(this)
     val resolvedTheme = AndroidThemeBridge.resolveContext(
         context = this,
         dynamicColorPolicy = dynamicColorPolicy,
