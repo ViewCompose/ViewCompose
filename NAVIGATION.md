@@ -35,6 +35,7 @@ Current feature-branch status:
 - Stage 5 platform back and predictive back: complete
 - Stage 6 Android 13 real-device back baseline: complete
 - Stage 6 Android 14+ platform gesture-progress validation: complete
+- Stage 6 P0 process-death, lifecycle-race, and resource-release certification: complete
 
 ## 2. P0 delivery plan
 
@@ -152,6 +153,20 @@ The codec rejects unknown formats, empty or duplicate stacks, malformed routes, 
 arguments. Invalid restored data falls back to the declared start destination instead of partially
 publishing a damaged stack.
 
+The host-side process-death runner proves the complete Android path instead of simulating it with
+Activity recreation. It launches a two-entry stack, records both entry IDs plus destination
+`rememberSaveable` and `SavedStateHandle` values, moves the task to the background, kills only the
+application process, and brings the existing task forward. Certification requires a new PID and an
+exact match of the pre-kill and restored stack state:
+
+```bash
+ANDROID_SERIAL=<device> tools/navigation/validate_android_process_death.sh
+```
+
+The initial force-stop in this runner only establishes a clean test process. The restoration step
+uses a system-style background process kill because Android intentionally does not restore a task
+after a user force-stop.
+
 `NavHost` registers one lifecycle-aware callback with the nearest View-tree
 `OnBackPressedDispatcherOwner`. The callback is enabled only when `systemBackEnabled` is true, the
 host is attached, and the committed stack contains more than its root destination. A root stack
@@ -175,10 +190,10 @@ Host detachment, callback disablement, and host destruction cancel the preview a
 scene. This keeps platform Back, gesture Back, and application navigation on one stack and lifecycle
 ownership model.
 
-### Stage 6: real-device validation
+### Stage 6: device validation and P0 merge gate
 
 The debug application contains an isolated `NavigationBackTestActivity` and connected-device suite.
-On a Samsung SM-G991B running Android 13/API 33, the suite validates:
+The Android 13/API 33 compatibility suite validates:
 
 - real system Back pops the framework stack and delegates at the root;
 - predictive progress updates, cancellation, and commit drive real native destination Views through
@@ -187,7 +202,9 @@ On a Samsung SM-G991B running Android 13/API 33, the suite validates:
 - `systemBackEnabled` changes callback participation without replacing the stack;
 - Activity recreation restores stable entry IDs before system Back;
 - 30 consecutive push/immediate-system-Back rounds preserve the transaction and ownership
-  invariants.
+  invariants;
+- Activity stop/resume and recreation during active transitions preserve the committed stack and
+  release redirected transition work.
 
 The connected run also validates that a `NavHost` can be mounted normally from `Activity.onCreate`.
 At that point AndroidX still reports the host as `INITIALIZED`; destination sessions now remain
@@ -195,7 +212,9 @@ At that point AndroidX still reports the host as `INITIALIZED`; destination sess
 content until `CREATED`.
 
 API 33 does not expose real platform predictive-gesture progress callbacks. The AndroidX dispatcher
-surface therefore remains the compatibility baseline for that device.
+surface therefore remains the compatibility baseline for that version. The original Samsung
+SM-G991B device established this baseline; the expanded suite completed 7/7 on the Android 13
+`ViewCompose_API_33` AVD, which also passed the host-side real process-death restoration runner.
 
 The complete platform path is certified separately on a Pixel 9a Android Emulator running Android
 15/API 35 in gesture-navigation mode. The API 34+ cases sample the destination Views on every frame
@@ -210,7 +229,7 @@ and assert that:
 Android's `input` command can express a committing swipe but cannot express one continuous
 out-and-back touch stream. The host runner uses the emulator's authenticated hardware-touch
 channel for cancellation, waits for the instrumented Activity to enter its sampling window, and
-then runs the complete eight-test suite:
+then runs the complete nine-test suite:
 
 ```bash
 tools/navigation/validate_android_predictive_back.sh
@@ -218,7 +237,36 @@ tools/navigation/validate_android_predictive_back.sh
 
 The runner requires a single API 34+ Android Emulator with gesture navigation enabled. A regular
 `connectedDebugAndroidTest` run skips only the host-assisted cancellation case; the script above is
-the certification command and completed 8/8 on the Android 15 Pixel 9a AVD.
+the certification command and completed 9/9 on the Android 15 Pixel 9a AVD. The same AVD also passed
+the host-side real process-death restoration runner.
+
+The JVM/Robolectric suite additionally runs 100 lifecycle/transaction race rounds and verifies that
+stale transition completions cannot change the settled stack. Public-host integration tests retain
+the actual destination owners, ViewModels, saved-state providers, and container Views so a pop or
+host disposal must destroy/clear/detach the old resources; remounting may restore committed state
+only through fresh resource instances.
+
+Every navigation change must pass this P0 merge gate:
+
+1. the complete `viewcompose-navigation` unit suite;
+2. API 33 compatibility Back/lifecycle tests and real process-death restoration;
+3. API 35 platform predictive-gesture tests and real process-death restoration;
+4. the repository-wide quick checks and connected device suite through `qaFull`.
+
+Reference commands:
+
+```bash
+./gradlew :viewcompose-navigation:testDebugUnitTest --no-configuration-cache
+
+ANDROID_SERIAL=<api33-device> ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.NavigationBackDeviceTest \
+  --no-configuration-cache
+ANDROID_SERIAL=<api33-device> tools/navigation/validate_android_process_death.sh
+
+ANDROID_SERIAL=<api35-emulator> tools/navigation/validate_android_predictive_back.sh
+ANDROID_SERIAL=<api35-emulator> tools/navigation/validate_android_process_death.sh
+ANDROID_SERIAL=<api35-emulator> ./gradlew qaFull --no-configuration-cache
+```
 
 ## 3. Transaction invariants
 

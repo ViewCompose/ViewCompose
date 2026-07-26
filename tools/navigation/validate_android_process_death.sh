@@ -107,7 +107,7 @@ initial_pid="$(
 )"
 task_id="$(
     "$adb_binary" -s "$device_serial" shell dumpsys activity activities |
-        sed -n "s/.*${activity_name} t\\([0-9][0-9]*\\).*/\\1/p" |
+        sed -n "s/.*${activity_name}.* t\\([0-9][0-9]*\\).*/\\1/p" |
         head -1 |
         tr -d '\r'
 )"
