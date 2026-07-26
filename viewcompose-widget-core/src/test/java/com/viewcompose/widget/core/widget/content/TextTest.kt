@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.text.TextSpanStyle
+import com.viewcompose.text.textDocument
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextOverflow
@@ -50,5 +52,22 @@ class TextTest {
 
         val spec = tree.single().spec as TextNodeProps
         assertEquals(Theme.colors.onSurface, spec.textColor)
+    }
+
+    @Test
+    fun `rich text emits document without flattening annotations`() {
+        val document = textDocument {
+            append("Rich", TextSpanStyle(fontWeight = 700))
+            append(" text")
+        }
+        val tree = buildVNodeTree {
+            RichText(document)
+        }
+
+        val spec = tree.single().spec as TextNodeProps
+
+        assertEquals(document, spec.document)
+        assertEquals("Rich text", spec.text)
+        assertEquals(1, spec.document.spanStyles.size)
     }
 }

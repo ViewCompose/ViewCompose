@@ -18,8 +18,11 @@ internal object ContentNodePatchApplier {
         view: TextView,
         patch: TextNodePatch,
     ) {
-        if (patch.previous.text != patch.next.text) {
-            view.text = patch.next.text
+        if (patch.previous.document != patch.next.document) {
+            view.text = com.viewcompose.renderer.view.tree.AndroidTextDocumentAdapter.toCharSequence(
+                view,
+                patch.next.document,
+            )
         }
         if (patch.previous.maxLines != patch.next.maxLines) {
             view.maxLines = patch.next.maxLines

@@ -1,6 +1,7 @@
 package com.viewcompose.ui.node.spec
 
 import com.viewcompose.text.InputTransformation
+import com.viewcompose.text.ReceiveContentConfiguration
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.node.TextFieldAutofillHint
@@ -38,4 +39,5 @@ data class TextFieldNodeProps(
     val paddingHorizontal: Int,
     val paddingVertical: Int,
     val cursorColor: Int = 0,
+    val receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default,
 ) : NodeSpec

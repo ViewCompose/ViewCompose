@@ -5,7 +5,9 @@ import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
+import com.viewcompose.text.TextSpanStyle
 import com.viewcompose.text.TextRange
+import com.viewcompose.text.textDocument
 import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.ui.state.LazyListStateSnapshot
 import kotlinx.coroutines.Dispatchers
@@ -364,6 +366,32 @@ class RememberSaveableTest {
         assertEquals(TextRange(2, 0), restoredState.selection)
         assertNull(restoredState.composition)
         assertTrue(!restoredState.canUndo)
+        secondHarness.dispose()
+    }
+
+    @Test
+    fun `remember text field state restores rich document annotations`() {
+        val firstRegistry = bundleLikeRegistry()
+        val firstHarness = ComposerRuntimeHarness()
+        val firstState = renderTextFieldState(
+            harness = firstHarness,
+            registry = firstRegistry,
+        )
+        val richDocument = textDocument {
+            append("saved", TextSpanStyle(fontWeight = 700))
+        }
+        firstState.setDocumentAndPlaceCursorAtEnd(richDocument)
+        val saved = firstRegistry.performSave()
+        firstHarness.dispose()
+
+        val secondHarness = ComposerRuntimeHarness()
+        val restoredState = renderTextFieldState(
+            harness = secondHarness,
+            registry = bundleLikeRegistry(saved),
+        )
+
+        assertEquals(richDocument, restoredState.document)
+        assertEquals(TextRange(5), restoredState.selection)
         secondHarness.dispose()
     }
 

@@ -11,8 +11,16 @@ import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputConnectionWrapper
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.core.view.ContentInfoCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.inputmethod.EditorInfoCompat
+import androidx.core.view.inputmethod.InputConnectionCompat
 import com.viewcompose.text.InputTransformation
+import com.viewcompose.text.ReceiveContentConfiguration
+import com.viewcompose.text.ReceivedContent
 import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
+import com.viewcompose.text.TextRange
 import com.viewcompose.ui.node.TextFieldImeAction
 
 internal class ViewComposeEditText @JvmOverloads constructor(
@@ -41,8 +49,15 @@ internal class ViewComposeEditText @JvmOverloads constructor(
 
     override fun onCreateInputConnection(outAttrs: android.view.inputmethod.EditorInfo): InputConnection? {
         if (readOnlyMode) return null
+        initializedController?.configureEditorInfo(outAttrs)
         val connection = super.onCreateInputConnection(outAttrs) ?: return null
-        return initializedController?.wrapInputConnection(connection) ?: connection
+        val receiveContentConnection = InputConnectionCompat.createWrapper(
+            this,
+            connection,
+            outAttrs,
+        )
+        return initializedController?.wrapInputConnection(receiveContentConnection)
+            ?: receiveContentConnection
     }
 
     override fun onCheckIsTextEditor(): Boolean {
@@ -102,6 +117,10 @@ internal class AndroidTextFieldController(
     private var onKeyboardAction: ((TextFieldImeAction) -> Boolean)? = null
     private var imeAction: TextFieldImeAction = TextFieldImeAction.Default
     private var onFocusChange: ((Boolean) -> Unit)? = null
+    private var receiveContent: ReceiveContentConfiguration =
+        ReceiveContentConfiguration.Default
+    private var readOnly: Boolean = false
+    private var installedMimeTypes: Set<String>? = null
     private var applyingFrameworkValue: Boolean = false
     private var inputMutationDepth: Int = 0
     private var batchEditDepth: Int = 0
@@ -140,6 +159,9 @@ internal class AndroidTextFieldController(
         onKeyboardAction = spec.onKeyboardAction
         imeAction = spec.imeAction
         onFocusChange = spec.onFocusChange
+        receiveContent = spec.receiveContent
+        readOnly = spec.readOnly
+        installReceiveContentListener(spec.receiveContent)
         if (InputViewBinder.readTextFieldValue(view) != spec.value) {
             applyFrameworkValue(spec.value)
         }
@@ -183,6 +205,13 @@ internal class AndroidTextFieldController(
         )
     }
 
+    fun configureEditorInfo(editorInfo: android.view.inputmethod.EditorInfo) {
+        EditorInfoCompat.setContentMimeTypes(
+            editorInfo,
+            receiveContent.mimeTypes.toTypedArray(),
+        )
+    }
+
     private fun requestInputSync() {
         if (applyingFrameworkValue || state == null) return
         if (inputMutationDepth > 0 || batchEditDepth > 0) {
@@ -212,6 +241,59 @@ internal class AndroidTextFieldController(
         } finally {
             applyingFrameworkValue = false
         }
+    }
+
+    private fun installReceiveContentListener(configuration: ReceiveContentConfiguration) {
+        if (installedMimeTypes == configuration.mimeTypes) return
+        installedMimeTypes = configuration.mimeTypes
+        ViewCompat.setOnReceiveContentListener(
+            view,
+            configuration.mimeTypes.toTypedArray(),
+        ) { _, payload ->
+            handleReceiveContent(payload)
+        }
+    }
+
+    private fun handleReceiveContent(payload: ContentInfoCompat): ContentInfoCompat? {
+        val currentState = state ?: return payload
+        if (readOnly || !view.isEnabled) return payload
+        val converted = AndroidTextDocumentAdapter.convertContent(
+            context = view.context,
+            payload = payload,
+        )
+        val receivedDocument = converted.document ?: return payload
+        val transformed = receiveContent.transformation?.transform(
+            ReceivedContent(
+                document = receivedDocument,
+                source = converted.source,
+                mimeTypes = converted.mimeTypes,
+                platformItemCount = converted.platformItemCount,
+            ),
+        ) ?: if (receiveContent.transformation == null) {
+            receivedDocument
+        } else {
+            return payload
+        }
+        val current = currentState.value
+        val insertionStart = current.selection.min
+        val nextDocument = current.document.replace(
+            range = current.selection,
+            replacement = transformed,
+        )
+        val proposed = TextFieldValue(
+            document = nextDocument,
+            selection = TextRange(insertionStart + transformed.text.length),
+            composition = null,
+        )
+        val accepted = currentState.updateFromInput(
+            proposedValue = proposed,
+            inputTransformation = inputTransformation,
+        )
+        applyFrameworkValue(accepted)
+        return AndroidTextDocumentAdapter.remainingContent(
+            payload = payload,
+            consumedIndices = converted.consumedIndices,
+        )
     }
 
     private inline fun <T> inputMutation(block: () -> T): T {

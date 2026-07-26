@@ -13,6 +13,7 @@ import android.widget.SeekBar
 import android.widget.Switch
 import com.viewcompose.renderer.R
 import com.viewcompose.text.InputTransformation
+import com.viewcompose.text.ReceiveContentConfiguration
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
@@ -45,6 +46,7 @@ internal object InputViewBinder {
         val onFocusChange: ((Boolean) -> Unit)?,
         val autofillHints: Set<TextFieldAutofillHint>,
         val cursorColor: Int = 0,
+        val receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default,
     )
 
     data class ToggleSpec(
@@ -207,6 +209,7 @@ internal object InputViewBinder {
             onFocusChange = spec.onFocusChange,
             autofillHints = spec.autofillHints,
             cursorColor = spec.cursorColor,
+            receiveContent = spec.receiveContent,
         )
     }
 
@@ -323,7 +326,7 @@ internal object InputViewBinder {
             null
         }
         return TextFieldValue(
-            text = text,
+            document = AndroidTextDocumentAdapter.fromCharSequence(editable ?: ""),
             selection = TextRange(selectionStart, selectionEnd),
             composition = composition,
         )
@@ -351,6 +354,11 @@ internal object InputViewBinder {
             )
         }
         val editable = view.text ?: return
+        AndroidTextDocumentAdapter.applyToEditable(
+            view = view,
+            editable = editable,
+            document = value.document,
+        )
         BaseInputConnection.removeComposingSpans(editable)
         value.composition?.let { range ->
             BaseInputConnection.setComposingSpans(editable)

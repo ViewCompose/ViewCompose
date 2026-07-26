@@ -98,4 +98,42 @@ class TextDocumentTest {
             result.document.spanStyles,
         )
     }
+
+    @Test
+    fun `save codec round trips complete rich document`() {
+        val original = textDocument {
+            append(
+                "Title",
+                TextSpanStyle(
+                    fontWeight = 800,
+                    link = "https://example.test",
+                ),
+            )
+            append("\n")
+            appendAttachment(
+                InlineTextAttachment(
+                    id = "image",
+                    mimeType = "image/png",
+                    uri = "content://images/7",
+                    widthPx = 48,
+                    heightPx = 32,
+                    metadata = mapOf("origin" to "clipboard"),
+                ),
+            )
+            addParagraphStyle(
+                TextRange(0, length),
+                ParagraphStyle(
+                    alignment = ParagraphTextAlignment.Center,
+                    lineHeightPx = 24f,
+                    bullet = TextBullet(color = 0xFF123456.toInt()),
+                ),
+            )
+        }
+
+        val restored = TextDocumentSaveCodec.decode(
+            TextDocumentSaveCodec.encode(original),
+        )
+
+        assertEquals(original, restored)
+    }
 }
