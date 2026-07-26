@@ -42,7 +42,7 @@
 17. 结构化协程已落地：`RenderSession` 统一持有组合父 Job，提供 `LaunchedEffect/rememberCoroutineScope`，`produceState` 已硬切 suspend + `awaitDispose`，Flow 与动画已移除独立根 Job。
 18. renderer apply transaction 已落地：递归 patch 共享事务、延迟释放 removal，并对绑定/插入失败执行旧树 best-effort 恢复。
 19. 无编译器重组性能收口已落地：VNode 引用保持、等价结果规范化、同帧失效合并、显式 `RecomposeBoundary`、组合/View mutation journal、renderer 快速跳过与按需诊断。
-20. 完整纯文本编辑模型已硬切落地：`viewcompose-text-core` 提供 text/selection/composition、原子 EditingBuffer、输入变换和撤销/重做；Android renderer 通过专用 `AppCompatEditText/InputConnection` 控制器同步，`rememberTextFieldState` 保存 text + selection。
+20. 完整文档编辑模型已硬切落地：`viewcompose-text-core` 提供 `TextDocument`、text/selection/composition、原子 EditingBuffer、输入变换和撤销/重做；Android renderer 通过专用 `AppCompatEditText/InputConnection` 控制器同步，`rememberTextFieldState` 保存完整文档 + selection。
 21. Lazy 容器 P1 已落地：`LazyListState` 提供完整可观察 layout snapshot、边界与滚动控制；结构化 DSL 支持稳定 key、sticky header、contentType、Grid span、非对称 padding、reverse layout、用户滚动开关和预取策略。
 22. 组合 API 已硬切到 `ComposerLite` 单一路径：移除备用 remember/effect/key 上下文，所有组合外调用立即失败，避免无编译器约束下的静默状态丢失与副作用遗漏。
 23. 宿主平台能力已收口为原子安装：渲染引擎、帧调度 runtime 与组合协程上下文作为同一不可变快照注册，移除空渲染、即时调度和空协程上下文的半安装降级路径。
@@ -53,6 +53,10 @@
 28. Diagnostics P2 可视化已落地：公开 `RenderTreeResult` 提供 render tree、逐节点 patch 时间线、CompositionLocal 快照与结构化重组原因，demo 检查器可直接浏览。
 29. Lifecycle/SavedState P2 已收口：恢复值使用 composition claim/commit/release 事务，快速生命周期重启串行取消 collector，损坏 Bundle entry 隔离，destroyed host 明确拒绝。
 30. 发布态性能基准已固定：release/benchmark target 启用 R8 与 resource shrink，新增无 ART 预编译的冷启动/state patch 基线及 `qaRelease`/`benchmarkRelease` 入口。
+31. 动画取消/重定向已收口：`Animatable` 采用最后一次 mutation 生效，`animateTo/snapTo/stop` 统一仲裁，旧帧不能覆盖新目标，并公开 `targetValue/isRunning`。
+32. 手势并发已收口：拖动、锚点拖动、双指变换和 pointer input 具备结构化取消原因；变换接管后不恢复旧拖动，系统取消不再触发 fling/settle。
+33. 复杂图形场景已增强：`DrawScene` 支持不可变复用、嵌套 transform/clip 与 Canvas 状态隔离，并拒绝不平衡 save/restore。
+34. 富文本文档与 Receive Content 已落地：span、段落、链接、行内附件共享 `TextDocument`；clipboard、drag/drop、IME content 统一转换、变换、插入、撤销和保存恢复。
 
 ### 2.2 Demo 与验证层
 
@@ -86,7 +90,7 @@
 | --- | --- | --- |
 | Foundations / Input / Layout / State | 已形成 v1 主能力；声明式焦点、方向导航、焦点组和硬件 KeyEvent 分发已落地 | 聚焦真实设备键盘/焦点边界态与复杂组合场景 |
 | Accessibility / Semantics | 结构化 semantics 契约与 Android 原生 Accessibility 映射已落地，支持状态、role、heading、live region、错误和进度等核心语义 | 扩展真实设备 TalkBack、Switch Access 与字体放大回归矩阵 |
-| Text Editing | `TextFieldState + EditingBuffer + InputTransformation + AppCompatEditText/InputConnection bridge` 已落地，支持 selection/composition/undo/save | 真实设备覆盖主流中文/日文 IME、TalkBack、硬件键盘；富文本/附件作为独立文档模型推进 |
+| Text Editing | `TextDocument + TextFieldState + EditingBuffer + InputTransformation + AppCompatEditText/InputConnection bridge` 已落地，支持富文本、段落、行内附件、selection/composition/undo/save 与统一 Receive Content | 真实设备覆盖主流中文/日文 IME、TalkBack、硬件键盘、拖放和第三方内容提供方 |
 | Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、renderer 恢复、`RenderFailure/RenderFrameReport` 与 `AndroidView.onCommit` 副作用边界已落地 | 扩展线上诊断聚合与异常采样策略 |
 | Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
 | Lifecycle / ViewModel Integration | 模块拆分与 API 硬切、串行 lifecycle collection、事务化 SavedState claim、destroyed host 与损坏 Bundle 隔离均已完成 | 扩展多窗口/后台进程回收真实设备矩阵 |
@@ -98,9 +102,9 @@
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview bridge + Paparazzi 快照链路已建立（`qaPreview` 可执行） | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
 | ConstraintLayout | 已新增 `viewcompose-widget-constraintlayout` 与 renderer 映射，核心能力覆盖 anchors/helpers/constraintSet + advanced dimensions/weights/circle/baseline extensions + Virtual Helpers（Flow/Group/Layer/Placeholder） | 下一步推进 MotionLayout interop 专题（保持 host-android 边界） |
-| Animation | `viewcompose-animation-core` + `viewcompose-animation` 已完成内核/DSL 分层；`Transition` 为共享时间线语义，`AnimatedVisibility` 已完成 Compose 默认语义与 Row/Column 轴向特化，`animateContentSize` 已落地布局级尺寸动画；Animation demo 已扩展为 6 标签页并覆盖全部业务公开动画 API，UI 回归链路已补齐 7 条 | retarget/cancel 压测、性能画像、更多复杂场景样例 |
-| Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform；统一 nested scroll 的 pre/post scroll/fling 协议已贯通 Lazy/Pager/普通滚动容器和自定义手势 | 扩展复杂多指并发、原生三方滚动控件与真实设备回归 |
-| Graphics | `viewcompose-graphics-core` + `viewcompose-graphics` + renderer Canvas draw pipeline 已落地，支持 Canvas 节点与 draw modifiers（drawBehind/drawWithContent/drawWithCache） | 扩展 dark/tablet 预览快照与更复杂图形场景（图表/自定义控件） |
+| Animation | `viewcompose-animation-core` + `viewcompose-animation` 已完成内核/DSL 分层；`Transition` 为共享时间线语义，`Animatable` 支持最后一次 mutation 生效的 cancel/retarget/stop；`AnimatedVisibility` 与 `animateContentSize` 已落地 | 发布态性能画像与更多复杂场景样例 |
+| Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
+| Graphics | `viewcompose-graphics-core` + `viewcompose-graphics` + renderer Canvas draw pipeline 已落地，支持 Canvas 节点、draw modifiers、缓存和不可变嵌套 `DrawScene` | 扩展 dark/tablet 预览快照与复杂图表/自定义控件样例 |
 | Performance | 已有 R8 release Macrobenchmark 基线，且 `DiffUtil + payload + SlotTable Lite + subtree skip` 主路径已落地 | 量化 baseline profile 与更复杂容器场景收益 |
 
 ### 4.1 完成态字段定义（C/U/D/UI）
@@ -166,8 +170,9 @@
 1. focus/IME action 回调链增强
 2. `TextFieldState` 完整值模型（text/selection/composition）与输入事务
 3. 输入变换、撤销/重做、autofill 与保存恢复
-4. 表单校验与只读/错误态组合场景
-5. 主题和状态切换下输入控件视觉一致性回归
+4. 富文本、段落、链接、行内附件与统一 Receive Content
+5. 表单校验与只读/错误态组合场景
+6. 主题和状态切换下输入控件视觉一致性回归
 
 完成标准：
 
