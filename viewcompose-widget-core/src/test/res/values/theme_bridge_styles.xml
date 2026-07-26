@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ViewComposeTestShapeAppearance">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">12dp</item>
+        <item name="cornerFamilyTopRight">rounded</item>
+        <item name="cornerSizeTopRight">50%</item>
+        <item name="cornerSizeBottomLeft">20dp</item>
+    </style>
+
+    <style name="ViewComposeTestTheme">
+        <item name="shapeAppearanceSmallComponent">@style/ViewComposeTestShapeAppearance</item>
+    </style>
+</resources>

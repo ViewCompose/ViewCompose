@@ -1,5 +1,7 @@
 package com.viewcompose.ui.modifier
 
+import com.viewcompose.ui.shape.UiShape
+
 fun Modifier.backgroundColor(color: Int): Modifier {
     return then(
         BackgroundColorModifierElement(color),
@@ -38,6 +40,10 @@ fun Modifier.cornerRadius(
         bottomEnd = bottom,
         bottomStart = bottom,
     )
+}
+
+fun Modifier.shape(shape: UiShape): Modifier {
+    return then(ShapeModifierElement(shape))
 }
 
 fun Modifier.cornerRadius(
@@ -107,4 +113,3 @@ fun Modifier.graphicsLayer(
         ),
     )
 }
-

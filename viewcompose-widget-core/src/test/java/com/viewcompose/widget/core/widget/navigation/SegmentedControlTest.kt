@@ -32,7 +32,7 @@ class SegmentedControlTest {
         assertEquals(1, spec.selectedIndex)
         assertEquals(SegmentedControlDefaults.backgroundColor(), spec.backgroundColor)
         assertEquals(SegmentedControlDefaults.indicatorColor(), spec.indicatorColor)
-        assertEquals(SegmentedControlDefaults.cornerRadius(), spec.cornerRadius)
+        assertEquals(SegmentedControlDefaults.shape(), spec.shape)
         assertEquals(SegmentedControlDefaults.textColor(), spec.textColor)
         assertEquals(SegmentedControlDefaults.selectedTextColor(), spec.selectedTextColor)
         assertEquals(SegmentedControlDefaults.rippleColor(), spec.rippleColor)

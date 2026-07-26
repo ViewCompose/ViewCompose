@@ -22,6 +22,7 @@
 3. `shapes`
 4. `controls`
 5. `overlays`
+6. `metadata`
 
 关键原则：
 
@@ -33,9 +34,10 @@
 
 1. `colors` 同时承载基础色、`on*` 前景色、`*Container` 容器色、轮廓色、逆表面色与 ripple。
 2. `typography` 只保留 tiered `title*/body*/label*` 作为唯一主入口。
-3. `shapes` 只保留语义化 `small / medium / large` 三级圆角作为唯一主入口。
+3. `shapes` 只保留语义化 `small / medium / large` 三级形状作为唯一主入口；每个形状完整表达四角、圆角/切角与绝对/百分比尺寸。
 4. `controls` 仍是框架自有尺寸 token，不承诺与 Android 原主题系统一一对齐。
 5. `overlays` 当前由语义 token 承载跨组件蒙层配置。
+6. `metadata` 标记 token 来源、深色状态与配置修订号，用于生命周期刷新和诊断，不参与组件默认值推导。
 
 ## 2.3 Token 使用闭环
 
@@ -134,6 +136,8 @@ Android 主题桥接只做“平台语义到框架语义”的映射，内部固
 1. `SnapshotReader` 负责批量读取 Android / AppCompat / Material 主题字段。
 2. `ThemeTokenMapper` 负责把平台字段映射到框架 token，并处理 fallback。
 3. bridge 不直接产出组件级默认值，不绕过 `Defaults` 层。
+4. `UiTheme(androidContext = ...)` 默认在平台支持时套用 Material 动态色；可通过 `AndroidDynamicColorPolicy.Disabled` 显式关闭。
+5. 组合内使用 Android 主题时会监听配置变化并重新读取 token；离开组合后注销回调，`metadata.revision` 随刷新递增。
 
 当前 bridge 覆盖矩阵：
 
@@ -152,7 +156,8 @@ Android 主题桥接只做“平台语义到框架语义”的映射，内部固
    - 已桥接字段：`fontSizeSp / fontWeight / fontFamily / letterSpacingEm / lineHeightSp / includeFontPadding`
 3. `shapes`
    - 已桥接：`shapeAppearanceSmallComponent / Medium / Large`
-   - 当前仅桥接“统一圆角”语义；若四角不一致，则安全回退 framework defaults
+   - 已桥接：四角独立尺寸、`rounded/cut` corner family、dimension/fraction corner size
+   - Android 的物理 left/right 会按当前布局方向转换为框架的逻辑 start/end
 4. `overlays`
    - 已桥接：`android:backgroundDimAmount -> scrimOpacity`
 5. `controls`
@@ -163,7 +168,7 @@ Android 主题桥接只做“平台语义到框架语义”的映射，内部固
 
 1. 在 bridge 层写组件业务默认值
 2. 在 bridge 层引入组件级条件分支
-3. 为了“看起来全覆盖”而猜测性映射非统一 shape 或控件尺寸
+3. 为了“看起来全覆盖”而猜测性映射控件尺寸
 
 实现约束：
 
@@ -197,7 +202,7 @@ Android 主题桥接只做“平台语义到框架语义”的映射，内部固
 ## 8. 当前阶段重点
 
 1. 保持主题模型稳定，不回退到“组件全量 token 预计算”。
-2. 优先补桥接细节一致性（如动态色/形状映射）与 token 语义补齐。
+2. 动态色、完整 shape 映射与配置生命周期已落地；继续补多窗口/厂商主题的设备矩阵。
 3. 与 `ROADMAP` 中 overlay、input、容器场景联动完善主题回归。
 
 路线图见：

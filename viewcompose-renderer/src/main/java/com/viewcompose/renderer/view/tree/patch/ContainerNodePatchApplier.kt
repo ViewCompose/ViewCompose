@@ -271,7 +271,7 @@ internal object ContainerNodePatchApplier {
                 enabled = patch.next.enabled,
                 backgroundColor = patch.next.backgroundColor,
                 indicatorColor = patch.next.indicatorColor,
-                cornerRadius = patch.next.cornerRadius,
+                shape = patch.next.shape,
                 textColor = patch.next.textColor,
                 selectedTextColor = patch.next.selectedTextColor,
                 rippleColor = patch.next.rippleColor,

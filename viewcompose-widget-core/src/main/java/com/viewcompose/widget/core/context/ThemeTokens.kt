@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 data class UiColors(
     val background: Int,
     val surface: Int,
@@ -30,9 +32,9 @@ data class UiColors(
 )
 
 data class UiShapes(
-    val smallCornerRadius: Int,
-    val mediumCornerRadius: Int,
-    val largeCornerRadius: Int = mediumCornerRadius,
+    val small: UiShape,
+    val medium: UiShape,
+    val large: UiShape = medium,
 )
 
 data class UiTextStyle(
@@ -63,10 +65,25 @@ data class UiThemeTokens(
     val shapes: UiShapes = UiShapeDefaults.default(),
     val controls: UiControlSizing = UiControlSizeDefaults.default(),
     val overlays: UiOverlays = UiOverlayDefaults.default(),
+    val metadata: UiThemeMetadata = UiThemeMetadata(),
 )
 
 data class UiOverlays(
     val scrimOpacity: Float,
+)
+
+enum class UiThemeOrigin {
+    Custom,
+    FrameworkDefault,
+    AndroidTheme,
+    AndroidDynamicColor,
+    Override,
+}
+
+data class UiThemeMetadata(
+    val origin: UiThemeOrigin = UiThemeOrigin.Custom,
+    val isDark: Boolean? = null,
+    val revision: Long = 0L,
 )
 
 internal fun pressedOverlayColorFor(contentColor: Int): Int {

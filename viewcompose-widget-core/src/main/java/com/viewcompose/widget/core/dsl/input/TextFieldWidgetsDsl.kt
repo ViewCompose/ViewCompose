@@ -11,6 +11,7 @@ import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
+import com.viewcompose.ui.shape.UiShape
 
 fun UiTreeBuilder.BasicTextField(
     state: TextFieldState,
@@ -33,7 +34,7 @@ fun UiTreeBuilder.BasicTextField(
     backgroundColor: Int = 0x00000000,
     borderWidth: Int = 0,
     borderColor: Int = 0x00000000,
-    cornerRadius: Int = 0,
+    shape: UiShape = UiShape.rounded(0),
     minHeight: Int = 0,
     paddingHorizontal: Int = 0,
     paddingVertical: Int = 0,
@@ -62,7 +63,7 @@ fun UiTreeBuilder.BasicTextField(
             backgroundColor = backgroundColor,
             borderWidth = borderWidth,
             borderColor = borderColor,
-            cornerRadius = cornerRadius,
+            shape = shape,
             minHeight = minHeight,
             paddingHorizontal = paddingHorizontal,
             paddingVertical = paddingVertical,
@@ -151,7 +152,7 @@ fun UiTreeBuilder.TextField(
                 enabled = enabled,
                 isError = isError,
             ),
-            cornerRadius = TextFieldDefaults.cornerRadius(),
+            shape = TextFieldDefaults.shape(),
             minHeight = if (singleLine) TextFieldDefaults.height(size) else 0,
             paddingHorizontal = TextFieldDefaults.horizontalPadding(size),
             paddingVertical = TextFieldDefaults.verticalPadding(size),
@@ -188,7 +189,7 @@ private fun basicTextFieldSpec(
     backgroundColor: Int,
     borderWidth: Int,
     borderColor: Int,
-    cornerRadius: Int,
+    shape: UiShape,
     minHeight: Int,
     paddingHorizontal: Int,
     paddingVertical: Int,
@@ -219,7 +220,7 @@ private fun basicTextFieldSpec(
         backgroundColor = backgroundColor,
         borderWidth = borderWidth,
         borderColor = borderColor,
-        cornerRadius = cornerRadius,
+        shape = shape,
         minHeight = minHeight,
         paddingHorizontal = paddingHorizontal,
         paddingVertical = paddingVertical,

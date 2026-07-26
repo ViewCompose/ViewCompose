@@ -13,5 +13,6 @@ fun UiThemeTokens.override(
         shapes = shapes ?: this.shapes,
         controls = controls ?: this.controls,
         overlays = overlays ?: this.overlays,
+        metadata = metadata.copy(origin = UiThemeOrigin.Override),
     )
 }

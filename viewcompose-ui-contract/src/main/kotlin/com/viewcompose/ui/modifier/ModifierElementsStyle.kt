@@ -1,5 +1,7 @@
 package com.viewcompose.ui.modifier
 
+import com.viewcompose.ui.shape.UiShape
+
 data class BackgroundColorModifierElement(
     val color: Int,
 ) : ModifierElement
@@ -22,6 +24,10 @@ data class CornerRadiusModifierElement(
     val isUniform: Boolean
         get() = topStart == topEnd && topEnd == bottomEnd && bottomEnd == bottomStart
 }
+
+data class ShapeModifierElement(
+    val shape: UiShape,
+) : ModifierElement
 
 data class ClipModifierElement(
     val clip: Boolean = true,
@@ -63,4 +69,3 @@ data class GraphicsLayerModifierElement(
     val transformOrigin: TransformOrigin? = null,
     val clip: Boolean? = null,
 ) : ModifierElement
-

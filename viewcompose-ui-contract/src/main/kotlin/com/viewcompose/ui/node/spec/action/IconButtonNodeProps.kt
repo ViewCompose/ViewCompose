@@ -3,6 +3,7 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.RemoteImageLoader
+import com.viewcompose.ui.shape.UiShape
 
 data class IconButtonNodeProps(
     override val contentDescription: String?,
@@ -17,7 +18,7 @@ data class IconButtonNodeProps(
     val backgroundColor: Int,
     val borderWidth: Int,
     val borderColor: Int,
-    val cornerRadius: Int,
+    val shape: UiShape,
     val rippleColor: Int,
     val contentPadding: Int,
 ) : ImageNodeSpec

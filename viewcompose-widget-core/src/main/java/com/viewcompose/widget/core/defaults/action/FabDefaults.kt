@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 enum class FabSize {
     Small,
     Medium,
@@ -27,11 +29,11 @@ object FabDefaults {
         }
     }
 
-    fun cornerRadius(size: FabSize = FabSize.Medium): Int {
+    fun shape(size: FabSize = FabSize.Medium): UiShape {
         return when (size) {
-            FabSize.Small -> 12.dp
-            FabSize.Medium -> 16.dp
-            FabSize.Large -> 28.dp
+            FabSize.Small -> UiShape.rounded(12.dp)
+            FabSize.Medium -> UiShape.rounded(16.dp)
+            FabSize.Large -> UiShape.rounded(28.dp)
         }
     }
 
@@ -39,7 +41,7 @@ object FabDefaults {
 
     fun extendedHeight(): Int = Theme.controls.fab.extendedHeight
 
-    fun extendedCornerRadius(): Int = Theme.shapes.largeCornerRadius
+    fun extendedShape(): UiShape = Theme.shapes.large
 
     fun extendedHorizontalPadding(): Int = Theme.controls.fab.extendedHorizontalPadding
 

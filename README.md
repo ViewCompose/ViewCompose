@@ -227,6 +227,8 @@ LazyColumn(
 
 `LazyListState` 可观察首尾可见项、完整 viewport、滚动态和边界能力，并提供立即/动画滚动与停止控制。结构化 DSL 支持 sticky header、content type、Grid span、非对称 padding、reverse layout、用户滚动开关和预取策略。详见 [LAZY_COLLECTIONS.md](./LAZY_COLLECTIONS.md)。
 
+主题桥接支持 Material 动态色、配置变化自动刷新，以及四角独立的圆角/切角与绝对/百分比尺寸。完整规则见 [THEMING.md](./THEMING.md)。
+
 ## 预览与截图回归 | Preview & Snapshot Regression
 
 - 预览模块：`viewcompose-preview`  

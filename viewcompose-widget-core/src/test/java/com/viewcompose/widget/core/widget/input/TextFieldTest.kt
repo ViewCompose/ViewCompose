@@ -81,7 +81,7 @@ class TextFieldTest {
         assertEquals(customTheme.typography.bodyMedium.lineHeightSp, spec.lineHeightSp)
         assertEquals(customTheme.typography.bodyMedium.includeFontPadding, spec.includeFontPadding)
         assertEquals(customTheme.colors.surface, spec.backgroundColor)
-        assertEquals(customTheme.shapes.smallCornerRadius, spec.cornerRadius)
+        assertEquals(customTheme.shapes.small, spec.shape)
         assertEquals(true, spec.enabled)
         assertTrue(node.spec is TextFieldNodeProps)
     }

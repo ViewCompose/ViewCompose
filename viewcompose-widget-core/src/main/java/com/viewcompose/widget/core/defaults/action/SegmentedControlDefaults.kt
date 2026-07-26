@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 enum class SegmentedControlSize {
     Compact,
     Medium,
@@ -25,7 +27,7 @@ object SegmentedControlDefaults {
         }
     }
 
-    fun cornerRadius(): Int = Theme.shapes.smallCornerRadius
+    fun shape(): UiShape = Theme.shapes.small
 
     fun textColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)

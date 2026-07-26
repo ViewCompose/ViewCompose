@@ -3,6 +3,7 @@ package com.viewcompose.renderer.view.tree
 import android.graphics.Color
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.ui.modifier.PaddingModifierElement
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
@@ -24,10 +25,9 @@ internal object ModifierNodeStyleResolver {
             backgroundColor = resolved.backgroundColor?.color ?: readNodeBackgroundColor(node),
             borderWidth = resolved.border?.width ?: readNodeBorderWidth(node) ?: 0,
             borderColor = resolved.border?.color ?: readNodeBorderColor(node) ?: Color.TRANSPARENT,
-            cornerRadius = resolved.cornerRadius
-                ?: readNodeCornerRadius(node)?.let {
-                    CornerRadiusModifierElement(it, it, it, it)
-                },
+            cornerRadius = resolved.cornerRadius,
+            shape = resolved.shape?.shape
+                ?: if (resolved.cornerRadius == null) readNodeShape(node) else null,
             padding = resolved.padding ?: readNodePadding(node),
             minHeight = resolved.minHeight?.minHeight ?: readNodeMinHeight(node) ?: 0,
             minWidth = resolved.minWidth?.minWidth ?: 0,
@@ -93,10 +93,10 @@ internal object ModifierNodeStyleResolver {
         else -> null
     }
 
-    private fun readNodeCornerRadius(node: VNode): Int? = when (val spec = node.spec) {
-        is ButtonNodeProps -> spec.cornerRadius
-        is TextFieldNodeProps -> spec.cornerRadius
-        is IconButtonNodeProps -> spec.cornerRadius
+    private fun readNodeShape(node: VNode): UiShape? = when (val spec = node.spec) {
+        is ButtonNodeProps -> spec.shape
+        is TextFieldNodeProps -> spec.shape
+        is IconButtonNodeProps -> spec.shape
         else -> null
     }
 
@@ -189,6 +189,7 @@ internal data class NodeStyle(
     val borderWidth: Int,
     val borderColor: Int,
     val cornerRadius: CornerRadiusModifierElement?,
+    val shape: UiShape? = null,
     val padding: PaddingModifierElement?,
     val minHeight: Int,
     val minWidth: Int,

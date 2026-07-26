@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -55,7 +56,7 @@ internal fun UiTreeBuilder.DeclareFeedbackOverlays(
             modifier = Modifier
                 .fillMaxWidth()
                 .backgroundColor(SurfaceDefaults.backgroundColor())
-                .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                .shape(SurfaceDefaults.shape())
                 .padding(16.dp),
         ) {
             Text(
@@ -112,7 +113,7 @@ internal fun UiTreeBuilder.DeclareFeedbackOverlays(
             spacing = 10.dp,
             modifier = Modifier
                 .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                .shape(SurfaceDefaults.shape())
                 .padding(12.dp),
         ) {
             Text(
@@ -259,7 +260,7 @@ internal fun UiTreeBuilder.DeclareFeedbackOverlays(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .cornerRadius(top = SurfaceDefaults.cardCornerRadius())
+                .shape(SurfaceDefaults.shape())
                 .backgroundColor(ModalBottomSheetDefaults.containerColor())
         ) {
             Column(

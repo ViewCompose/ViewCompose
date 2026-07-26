@@ -2,6 +2,7 @@ package com.viewcompose
 
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -36,6 +37,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.widget.core.provides
 import com.viewcompose.widget.core.uiLocalOf
 
@@ -124,7 +126,7 @@ internal fun UiTreeBuilder.FoundationsThemeSection() {
             ),
         )
         Text(
-            text = "Shapes: card=${Theme.shapes.mediumCornerRadius}px, small=${Theme.shapes.smallCornerRadius}px",
+            text = "Shapes: card=${Theme.shapes.medium.demoLabel()}, small=${Theme.shapes.small.demoLabel()}",
             style = UiTextStyle(fontSizeSp = 13.sp),
             color = TextDefaults.secondaryColor(),
         )
@@ -178,7 +180,7 @@ private fun UiTreeBuilder.BusinessLocalPreviewCard(
         modifier = Modifier
             .fillMaxWidth()
             .backgroundColor(SurfaceDefaults.backgroundColor())
-            .cornerRadius(SurfaceDefaults.cardCornerRadius())
+            .shape(SurfaceDefaults.shape())
             .padding(12.dp)
             .testTag(DemoTestTags.FOUNDATIONS_BIZ_TOKEN_CARD),
     ) {
@@ -193,7 +195,7 @@ private fun UiTreeBuilder.BusinessLocalPreviewCard(
                     .height(24.dp)
                     .weight(1f)
                     .backgroundColor(tokens.cardColor)
-                    .cornerRadius(Theme.shapes.smallCornerRadius),
+                    .shape(Theme.shapes.small),
             ) {}
             Text(
                 text = tokens.badgeLabel,
@@ -226,7 +228,7 @@ internal fun UiTreeBuilder.FoundationsOverridesSection() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                    .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                    .shape(SurfaceDefaults.shape())
                     .padding(12.dp),
             ) {
                 Text(text = "颜色覆盖")
@@ -247,7 +249,10 @@ internal fun UiTreeBuilder.FoundationsOverridesSection() {
         }
         UiThemeOverride(
             shapes = {
-                copy(mediumCornerRadius = 32.dp, smallCornerRadius = 24.dp)
+                copy(
+                    medium = UiShape.rounded(32.dp),
+                    small = UiShape.rounded(24.dp),
+                )
             },
         ) {
             Column(
@@ -255,12 +260,12 @@ internal fun UiTreeBuilder.FoundationsOverridesSection() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .backgroundColor(SurfaceDefaults.backgroundColor())
-                    .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                    .shape(SurfaceDefaults.shape())
                     .padding(16.dp),
             ) {
                 Text(text = "形状覆盖")
                 Text(
-                    text = "局部 card=${Theme.shapes.mediumCornerRadius}px, small=${Theme.shapes.smallCornerRadius}px",
+                    text = "局部 card=${Theme.shapes.medium.demoLabel()}, small=${Theme.shapes.small.demoLabel()}",
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                 )
@@ -273,7 +278,7 @@ internal fun UiTreeBuilder.FoundationsOverridesSection() {
                             .weight(1f)
                             .height(72.dp)
                             .backgroundColor(Theme.colors.surfaceVariant)
-                            .cornerRadius(SurfaceDefaults.cardCornerRadius()),
+                            .shape(SurfaceDefaults.shape()),
                     ) {}
                     Button(
                         text = "圆角按钮",
@@ -289,7 +294,7 @@ internal fun UiTreeBuilder.FoundationsOverridesSection() {
             modifier = Modifier
                 .fillMaxWidth()
                 .backgroundColor(SurfaceDefaults.backgroundColor())
-                .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                .shape(SurfaceDefaults.shape())
                 .padding(12.dp),
         ) {
             Text(text = "按压覆盖层（派生）")
@@ -337,7 +342,7 @@ internal fun UiTreeBuilder.FoundationsOverridesSection() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .backgroundColor(SurfaceDefaults.backgroundColor())
-                            .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                            .shape(SurfaceDefaults.shape())
                             .padding(12.dp),
                     ) {
                         Text(text = "组件默认值覆盖")

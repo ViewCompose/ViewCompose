@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -371,7 +372,7 @@ internal fun UiTreeBuilder.InputPage(
                         modifier = Modifier
                             .fillMaxWidth()
                             .backgroundColor(SurfaceDefaults.backgroundColor())
-                            .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                            .shape(SurfaceDefaults.shape())
                             .padding(12.dp),
                     ) {
                         Text(text = "输入控件颜色覆盖")
@@ -565,7 +566,7 @@ internal fun UiTreeBuilder.InputPage(
                         .fillMaxWidth()
                         .height(188.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                        .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
                         .margin(bottom = 12.dp),
                 ) {
@@ -609,7 +610,7 @@ internal fun UiTreeBuilder.InputPage(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                                .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                                .shape(SurfaceDefaults.shape())
                                 .padding(12.dp),
                         ) {
                             Text(
@@ -632,7 +633,7 @@ internal fun UiTreeBuilder.InputPage(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                                .cornerRadius(SurfaceDefaults.cardCornerRadius())
+                                .shape(SurfaceDefaults.shape())
                                 .padding(12.dp),
                         ) {
                             Text(text = "第二页用于手动切换验证")

@@ -114,7 +114,7 @@ internal object ContentNodePatchApplier {
                 backgroundColor = patch.next.backgroundColor,
                 borderWidth = patch.next.borderWidth,
                 borderColor = patch.next.borderColor,
-                cornerRadius = patch.next.cornerRadius,
+                shape = patch.next.shape,
                 rippleColor = patch.next.rippleColor,
                 clickable = true,
             )
@@ -157,7 +157,7 @@ internal object ContentNodePatchApplier {
         return patch.previous.backgroundColor != patch.next.backgroundColor ||
             patch.previous.borderWidth != patch.next.borderWidth ||
             patch.previous.borderColor != patch.next.borderColor ||
-            patch.previous.cornerRadius != patch.next.cornerRadius ||
+            patch.previous.shape != patch.next.shape ||
             patch.previous.rippleColor != patch.next.rippleColor
     }
 

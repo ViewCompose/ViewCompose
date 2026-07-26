@@ -19,6 +19,7 @@ internal class ResolvedModifiers(
     var constraint: ConstraintModifierElement? = null,
     var border: BorderModifierElement? = null,
     var cornerRadius: CornerRadiusModifierElement? = null,
+    var shape: ShapeModifierElement? = null,
     var clip: ClipModifierElement? = null,
     var elevation: ElevationModifierElement? = null,
     var offset: OffsetModifierElement? = null,
@@ -86,7 +87,14 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is LayoutIdModifierElement -> result.layoutId = element
             is ConstraintModifierElement -> result.constraint = element
             is BorderModifierElement -> result.border = element
-            is CornerRadiusModifierElement -> result.cornerRadius = element
+            is CornerRadiusModifierElement -> {
+                result.cornerRadius = element
+                result.shape = null
+            }
+            is ShapeModifierElement -> {
+                result.shape = element
+                result.cornerRadius = null
+            }
             is ClipModifierElement -> result.clip = element
             is ElevationModifierElement -> result.elevation = element
             is OffsetModifierElement -> result.offset = element

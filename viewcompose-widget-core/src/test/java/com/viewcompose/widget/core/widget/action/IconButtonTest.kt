@@ -32,7 +32,7 @@ class IconButtonTest {
         assertEquals(IconButtonDefaults.size(), size.width)
         assertEquals(IconButtonDefaults.size(), size.height)
         assertEquals(IconButtonDefaults.containerColor(ButtonVariant.Text), spec.backgroundColor)
-        assertEquals(IconButtonDefaults.cornerRadius(), spec.cornerRadius)
+        assertEquals(IconButtonDefaults.shape(), spec.shape)
         assertEquals(true, spec.enabled)
         assertTrue(node.spec is IconButtonNodeProps)
     }

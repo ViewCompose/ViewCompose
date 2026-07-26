@@ -4,7 +4,12 @@ import android.content.Context
 import android.content.res.TypedArray
 import android.graphics.Typeface
 import android.util.TypedValue
+import android.view.View
 import androidx.core.content.res.ResourcesCompat
+import com.viewcompose.ui.shape.UiCorner
+import com.viewcompose.ui.shape.UiCornerFamily
+import com.viewcompose.ui.shape.UiCornerSize
+import com.viewcompose.ui.shape.UiShape
 
 internal data class AndroidThemeColorSnapshot(
     val background: Int? = null,
@@ -40,9 +45,9 @@ internal data class AndroidThemeSnapshot(
 )
 
 internal data class AndroidThemeShapeSnapshot(
-    val smallCornerRadius: Int? = null,
-    val mediumCornerRadius: Int? = null,
-    val largeCornerRadius: Int? = null,
+    val small: UiShape? = null,
+    val medium: UiShape? = null,
+    val large: UiShape? = null,
 )
 
 internal data class AndroidTextStyleSnapshot(
@@ -156,9 +161,9 @@ internal object AndroidThemeSnapshotReader {
         val typedArray = context.obtainStyledAttributes(attrs)
         return try {
             AndroidThemeShapeSnapshot(
-                smallCornerRadius = typedArray.getStyleRadiusOrNull(context, 0),
-                mediumCornerRadius = typedArray.getStyleRadiusOrNull(context, 1),
-                largeCornerRadius = typedArray.getStyleRadiusOrNull(context, 2),
+                small = typedArray.getStyleShapeOrNull(context, 0),
+                medium = typedArray.getStyleShapeOrNull(context, 1),
+                large = typedArray.getStyleShapeOrNull(context, 2),
             )
         } finally {
             typedArray.recycle()
@@ -206,13 +211,18 @@ private fun TypedArray.getColorOrNull(index: Int): Int? {
     return if (hasValue(index)) getColor(index, 0) else null
 }
 
-private fun TypedArray.getStyleRadiusOrNull(context: Context, index: Int): Int? {
+private fun TypedArray.getStyleShapeOrNull(context: Context, index: Int): UiShape? {
     if (!hasValue(index)) return null
     val styleRes = getResourceId(index, 0)
     if (styleRes == 0) return null
     val styleArray = context.obtainStyledAttributes(
         styleRes,
         intArrayOf(
+            com.google.android.material.R.attr.cornerFamily,
+            com.google.android.material.R.attr.cornerFamilyTopLeft,
+            com.google.android.material.R.attr.cornerFamilyTopRight,
+            com.google.android.material.R.attr.cornerFamilyBottomRight,
+            com.google.android.material.R.attr.cornerFamilyBottomLeft,
             com.google.android.material.R.attr.cornerSize,
             com.google.android.material.R.attr.cornerSizeTopLeft,
             com.google.android.material.R.attr.cornerSizeTopRight,
@@ -221,23 +231,68 @@ private fun TypedArray.getStyleRadiusOrNull(context: Context, index: Int): Int? 
         ),
     )
     return try {
-        if (styleArray.hasValue(0)) {
-            return styleArray.getDimensionPixelSize(0, 0)
-        }
-        val corners = buildList {
-            for (cornerIndex in 1..4) {
-                if (styleArray.hasValue(cornerIndex)) {
-                    add(styleArray.getDimensionPixelSize(cornerIndex, 0))
-                }
-            }
-        }
-        when {
-            corners.isEmpty() -> null
-            corners.distinct().size == 1 -> corners.first()
-            else -> null
+        val defaultFamily = styleArray.readCornerFamily(index = 0)
+        val defaultSize = styleArray.readCornerSize(index = 5)
+            ?: UiCornerSize.Absolute(0)
+        val topLeft = UiCorner(
+            family = styleArray.readCornerFamily(index = 1, fallback = defaultFamily),
+            size = styleArray.readCornerSize(index = 6) ?: defaultSize,
+        )
+        val topRight = UiCorner(
+            family = styleArray.readCornerFamily(index = 2, fallback = defaultFamily),
+            size = styleArray.readCornerSize(index = 7) ?: defaultSize,
+        )
+        val bottomRight = UiCorner(
+            family = styleArray.readCornerFamily(index = 3, fallback = defaultFamily),
+            size = styleArray.readCornerSize(index = 8) ?: defaultSize,
+        )
+        val bottomLeft = UiCorner(
+            family = styleArray.readCornerFamily(index = 4, fallback = defaultFamily),
+            size = styleArray.readCornerSize(index = 9) ?: defaultSize,
+        )
+        if (context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
+            UiShape(
+                topStart = topRight,
+                topEnd = topLeft,
+                bottomEnd = bottomLeft,
+                bottomStart = bottomRight,
+            )
+        } else {
+            UiShape(
+                topStart = topLeft,
+                topEnd = topRight,
+                bottomEnd = bottomRight,
+                bottomStart = bottomLeft,
+            )
         }
     } finally {
         styleArray.recycle()
+    }
+}
+
+private fun TypedArray.readCornerFamily(
+    index: Int,
+    fallback: UiCornerFamily = UiCornerFamily.Rounded,
+): UiCornerFamily {
+    if (!hasValue(index)) return fallback
+    return when (getInt(index, 0)) {
+        1 -> UiCornerFamily.Cut
+        else -> UiCornerFamily.Rounded
+    }
+}
+
+private fun TypedArray.readCornerSize(index: Int): UiCornerSize? {
+    if (!hasValue(index)) return null
+    return when (peekValue(index)?.type) {
+        TypedValue.TYPE_FRACTION -> UiCornerSize.Relative(
+            fraction = getFraction(index, 1, 1, 0f).coerceIn(0f, 1f),
+        )
+
+        TypedValue.TYPE_DIMENSION -> UiCornerSize.Absolute(
+            pixels = getDimensionPixelSize(index, 0).coerceAtLeast(0),
+        )
+
+        else -> null
     }
 }
 

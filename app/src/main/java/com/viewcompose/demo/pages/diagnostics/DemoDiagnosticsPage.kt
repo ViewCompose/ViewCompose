@@ -220,7 +220,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         DiagnosticFact("Primary", Theme.colors.primary.asColorHex()),
                         DiagnosticFact("Secondary", Theme.colors.secondary.asColorHex()),
                         DiagnosticFact("Pressed", (0x22000000 or (Theme.colors.onSurface and 0x00FFFFFF)).asColorHex()),
-                        DiagnosticFact("Card radius", "${Theme.shapes.mediumCornerRadius}px"),
+                        DiagnosticFact("Card shape", Theme.shapes.medium.demoLabel()),
                     ),
                 )
                 UiEnvironment(

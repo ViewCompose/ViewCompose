@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 enum class ButtonVariant {
     Primary,
     Secondary,
@@ -108,7 +110,7 @@ object ButtonDefaults {
         }
     }
 
-    fun cornerRadius(): Int = Theme.shapes.smallCornerRadius
+    fun shape(): UiShape = Theme.shapes.small
 
     fun height(
         size: ButtonSize = ButtonSize.Medium,

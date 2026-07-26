@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 enum class CardVariant {
     Filled,
     Elevated,
@@ -20,7 +22,7 @@ object CardDefaults {
 
     fun contentColor(): Int = Theme.colors.onSurface
 
-    fun cornerRadius(): Int = Theme.shapes.mediumCornerRadius
+    fun shape(): UiShape = Theme.shapes.medium
 
     fun elevation(
         variant: CardVariant = CardVariant.Filled,

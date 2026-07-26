@@ -1,13 +1,17 @@
 package com.viewcompose.renderer.view.tree
 
 import android.content.Context
+import android.graphics.RectF
 import android.view.View
 import android.widget.FrameLayout
+import com.google.android.material.shape.CutCornerTreatment
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.VNode
@@ -16,6 +20,8 @@ import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.node.spec.ColumnNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
+import com.viewcompose.ui.shape.UiShape
+import com.google.android.material.shape.MaterialShapeDrawable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -30,6 +36,48 @@ import org.robolectric.annotation.Config
 class ViewTreeRenderTransactionTest {
     private val context: Context
         get() = RuntimeEnvironment.getApplication()
+
+    @Test
+    fun `node style patch preserves modifier shape override`() {
+        val container = FrameLayout(context)
+        val state = TextFieldState(TextFieldValue("value"))
+        val modifierShape = UiShape.cut(14)
+        val modifier = Modifier.shape(modifierShape)
+        val previous = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                textFieldNode(
+                    state = state,
+                    modifier = modifier,
+                    nodeShape = UiShape.rounded(4),
+                ),
+            ),
+        ).mountedNodes
+
+        val next = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = previous,
+            nodes = listOf(
+                textFieldNode(
+                    state = state,
+                    modifier = modifier,
+                    nodeShape = UiShape.rounded(28),
+                    backgroundColor = 0xFF112233.toInt(),
+                ),
+            ),
+        ).mountedNodes
+
+        val drawable = next.single().view.background as MaterialShapeDrawable
+        assertTrue(drawable.shapeAppearanceModel.topLeftCorner is CutCornerTreatment)
+        assertEquals(
+            14f,
+            drawable.shapeAppearanceModel.topLeftCornerSize.getCornerSize(
+                RectF(0f, 0f, 100f, 100f),
+            ),
+            0.001f,
+        )
+    }
 
     @Test
     fun `failed rebind restores previous vnode values and view order`() {
@@ -370,10 +418,16 @@ class ViewTreeRenderTransactionTest {
         )
     }
 
-    private fun textFieldNode(state: TextFieldState): VNode {
+    private fun textFieldNode(
+        state: TextFieldState,
+        modifier: Modifier = Modifier,
+        nodeShape: UiShape = UiShape.rounded(0),
+        backgroundColor: Int = 0,
+    ): VNode {
         return VNode(
             type = NodeType.TextField,
             key = "text-field",
+            modifier = modifier,
             spec = TextFieldNodeProps(
                 state = state,
                 value = state.value,
@@ -391,10 +445,10 @@ class ViewTreeRenderTransactionTest {
                 readOnly = false,
                 textColor = 0xFF000000.toInt(),
                 textSizeSp = 16,
-                backgroundColor = 0,
+                backgroundColor = backgroundColor,
                 borderWidth = 0,
                 borderColor = 0,
-                cornerRadius = 0,
+                shape = nodeShape,
                 minHeight = 0,
                 paddingHorizontal = 0,
                 paddingVertical = 0,

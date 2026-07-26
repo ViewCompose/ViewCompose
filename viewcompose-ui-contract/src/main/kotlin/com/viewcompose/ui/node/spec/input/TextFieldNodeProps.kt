@@ -6,6 +6,7 @@ import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
+import com.viewcompose.ui.shape.UiShape
 
 data class TextFieldNodeProps(
     val state: TextFieldState,
@@ -32,7 +33,7 @@ data class TextFieldNodeProps(
     val backgroundColor: Int,
     val borderWidth: Int,
     val borderColor: Int,
-    val cornerRadius: Int,
+    val shape: UiShape,
     val minHeight: Int,
     val paddingHorizontal: Int,
     val paddingVertical: Int,

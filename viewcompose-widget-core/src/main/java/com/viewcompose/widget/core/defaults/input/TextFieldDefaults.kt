@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 enum class TextFieldVariant {
     Filled,
     Tonal,
@@ -116,7 +118,7 @@ object TextFieldDefaults {
         }
     }
 
-    fun cornerRadius(): Int = Theme.shapes.smallCornerRadius
+    fun shape(): UiShape = Theme.shapes.small
 
     fun height(
         size: TextFieldSize = TextFieldSize.Medium,

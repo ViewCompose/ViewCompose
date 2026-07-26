@@ -5,14 +5,15 @@ import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clip
-import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxHeight
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
+import com.viewcompose.ui.shape.UiShape
 
 fun UiTreeBuilder.SearchBar(
     state: TextFieldState,
@@ -25,11 +26,11 @@ fun UiTreeBuilder.SearchBar(
     modifier: Modifier = Modifier,
 ) {
     val containerColor = SearchBarDefaults.containerColor()
-    val radius = SearchBarDefaults.cornerRadius()
+    val shape = SearchBarDefaults.shape()
     val semanticModifier = Modifier
         .height(SearchBarDefaults.height())
         .backgroundColor(containerColor)
-        .cornerRadius(radius)
+        .shape(shape)
         .clip()
         .elevation(SearchBarDefaults.elevation())
         .padding(horizontal = SearchBarDefaults.horizontalPadding())
@@ -79,7 +80,7 @@ fun UiTreeBuilder.SearchBar(
             backgroundColor = 0x00000000,
             borderWidth = 0,
             borderColor = 0x00000000,
-            cornerRadius = 0,
+            shape = UiShape.rounded(0),
             minHeight = 0,
             paddingHorizontal = 0,
             paddingVertical = 0,

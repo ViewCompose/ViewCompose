@@ -3,6 +3,7 @@ package com.viewcompose
 import android.view.ViewGroup
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.cornerRadius
@@ -13,6 +14,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.widget.core.Badge
 import com.viewcompose.widget.core.BadgedBox
 import com.viewcompose.widget.core.Box
@@ -125,7 +127,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotSection(root: ViewGroup) {
         DiagnosticFactGroup(
             title = "Shape + Control Sizing",
             facts = listOf(
-                DiagnosticFact("small / medium / large", "${Theme.shapes.smallCornerRadius}px / ${Theme.shapes.mediumCornerRadius}px / ${Theme.shapes.largeCornerRadius}px"),
+                DiagnosticFact("small / medium / large", "${Theme.shapes.small.demoLabel()} / ${Theme.shapes.medium.demoLabel()} / ${Theme.shapes.large.demoLabel()}"),
                 DiagnosticFact("Button", "${Theme.controls.button.compactHeight}/${Theme.controls.button.mediumHeight}/${Theme.controls.button.largeHeight}px"),
                 DiagnosticFact("TextField", "${Theme.controls.textField.compactHeight}/${Theme.controls.textField.mediumHeight}/${Theme.controls.textField.largeHeight}px"),
                 DiagnosticFact("SearchBar", "${Theme.controls.searchBar.height}px"),
@@ -515,15 +517,15 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
         ) {
             ShapeProbe(
                 label = "Small",
-                radius = Theme.shapes.smallCornerRadius,
+                shape = Theme.shapes.small,
                 modifier = Modifier
                     .weight(1f)
                     .testTag(DemoTestTags.DIAGNOSTICS_THEME_SHAPE_SMALL),
             )
-            ShapeProbe("Medium", Theme.shapes.mediumCornerRadius, Modifier.weight(1f))
+            ShapeProbe("Medium", Theme.shapes.medium, Modifier.weight(1f))
             ShapeProbe(
                 label = "Large",
-                radius = Theme.shapes.largeCornerRadius,
+                shape = Theme.shapes.large,
                 modifier = Modifier
                     .weight(1f)
                     .testTag(DemoTestTags.DIAGNOSTICS_THEME_SHAPE_LARGE),
@@ -609,7 +611,7 @@ private fun UiTreeBuilder.MenuVisualSample() {
         modifier = Modifier
             .fillMaxWidth()
             .backgroundColor(DropdownMenuDefaults.containerColor())
-            .cornerRadius(DropdownMenuDefaults.cornerRadius())
+            .shape(DropdownMenuDefaults.shape())
             .clip()
             .elevation(DropdownMenuDefaults.elevation())
             .padding(vertical = DropdownMenuDefaults.verticalPadding())
@@ -638,7 +640,7 @@ private fun UiTreeBuilder.TooltipVisualSample() {
         Box(
             modifier = Modifier
                 .backgroundColor(TooltipDefaults.containerColor())
-                .cornerRadius(TooltipDefaults.cornerRadius())
+                .shape(TooltipDefaults.shape())
                 .clip()
                 .padding(
                     horizontal = TooltipDefaults.horizontalPadding(),
@@ -660,7 +662,7 @@ private fun UiTreeBuilder.TooltipVisualSample() {
 
 private fun UiTreeBuilder.ShapeProbe(
     label: String,
-    radius: Int,
+    shape: UiShape,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -672,11 +674,11 @@ private fun UiTreeBuilder.ShapeProbe(
                 .fillMaxWidth()
                 .height(56.dp)
                 .backgroundColor(Theme.colors.surfaceVariant)
-                .cornerRadius(radius)
+                .shape(shape)
                 .clip(),
         ) {}
         Text(
-            text = "$label (${radius}px)",
+            text = "$label (${shape.demoLabel()})",
             style = UiTextStyle(fontSizeSp = 12.sp),
             color = TextDefaults.secondaryColor(),
         )

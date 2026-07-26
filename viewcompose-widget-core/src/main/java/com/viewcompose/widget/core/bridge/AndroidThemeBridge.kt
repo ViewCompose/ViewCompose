@@ -3,14 +3,39 @@ package com.viewcompose.widget.core
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.TypedArray
+import com.google.android.material.color.DynamicColors
+
+enum class AndroidDynamicColorPolicy {
+    Disabled,
+    UseIfAvailable,
+}
 
 object AndroidThemeBridge {
-    fun fromContext(context: Context): UiThemeTokens {
-        val isDark = isNightMode(context)
-        val snapshot = AndroidThemeSnapshotReader.read(context)
+    fun fromContext(
+        context: Context,
+        dynamicColorPolicy: AndroidDynamicColorPolicy = AndroidDynamicColorPolicy.UseIfAvailable,
+    ): UiThemeTokens {
+        val useDynamicColor = dynamicColorPolicy == AndroidDynamicColorPolicy.UseIfAvailable &&
+            DynamicColors.isDynamicColorAvailable()
+        val resolvedContext = if (useDynamicColor) {
+            DynamicColors.wrapContextIfAvailable(context)
+        } else {
+            context
+        }
+        val isDark = isNightMode(resolvedContext)
+        val snapshot = AndroidThemeSnapshotReader.read(resolvedContext)
         return ThemeTokenMapper.fromSnapshot(
             snapshot = snapshot,
             isDarkMode = isDark,
+        ).copy(
+            metadata = UiThemeMetadata(
+                origin = if (useDynamicColor) {
+                    UiThemeOrigin.AndroidDynamicColor
+                } else {
+                    UiThemeOrigin.AndroidTheme
+                },
+                isDark = isDark,
+            ),
         )
     }
 
@@ -88,9 +113,13 @@ internal object ThemeTokenMapper {
                 labelSmall = resolveTextStyle(snapshot.typography.labelSmall, fallback.typography.labelSmall),
             ),
             shapes = UiShapes(
-                smallCornerRadius = snapshot.shapes.smallCornerRadius ?: fallback.shapes.smallCornerRadius,
-                mediumCornerRadius = snapshot.shapes.mediumCornerRadius ?: fallback.shapes.mediumCornerRadius,
-                largeCornerRadius = snapshot.shapes.largeCornerRadius ?: fallback.shapes.largeCornerRadius,
+                small = snapshot.shapes.small ?: fallback.shapes.small,
+                medium = snapshot.shapes.medium ?: fallback.shapes.medium,
+                large = snapshot.shapes.large ?: fallback.shapes.large,
+            ),
+            metadata = UiThemeMetadata(
+                origin = UiThemeOrigin.AndroidTheme,
+                isDark = isDarkMode,
             ),
         )
     }
@@ -168,6 +197,10 @@ internal object ThemeTokenMapper {
             controls = fallback.controls,
             overlays = UiOverlays(
                 scrimOpacity = readScrimOpacity() ?: fallback.overlays.scrimOpacity,
+            ),
+            metadata = UiThemeMetadata(
+                origin = UiThemeOrigin.AndroidTheme,
+                isDark = isDarkMode,
             ),
         )
     }

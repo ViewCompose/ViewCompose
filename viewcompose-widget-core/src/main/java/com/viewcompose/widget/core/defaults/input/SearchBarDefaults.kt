@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 object SearchBarDefaults {
     fun containerColor(): Int = Theme.colors.surfaceVariant
 
@@ -11,7 +13,7 @@ object SearchBarDefaults {
 
     fun height(): Int = Theme.controls.searchBar.height
 
-    fun cornerRadius(): Int = Theme.shapes.largeCornerRadius
+    fun shape(): UiShape = Theme.shapes.large
 
     fun horizontalPadding(): Int = Theme.controls.searchBar.horizontalPadding
 

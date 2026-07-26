@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -29,8 +30,8 @@ class ThemeTokenCompatibilityTest {
                 labelSmall = UiTextStyle(fontSizeSp = 12),
             ),
             shapes = UiShapes(
-                smallCornerRadius = 22,
-                mediumCornerRadius = 20,
+                small = UiShape.rounded(22),
+                medium = UiShape.rounded(20),
             ),
         )
         var secondaryContainer = 0
@@ -39,7 +40,7 @@ class ThemeTokenCompatibilityTest {
         var largeTextSize = 0
         var listHeadlineSize = 0
         var topTitleSize = 0
-        var smallCornerRadius = 0
+        var smallShape = UiShape.rounded(0)
 
         buildVNodeTree {
             UiTheme(customTheme) {
@@ -49,7 +50,7 @@ class ThemeTokenCompatibilityTest {
                 largeTextSize = TextFieldDefaults.textStyle(TextFieldSize.Large).fontSizeSp
                 listHeadlineSize = ListItemDefaults.headlineStyle().fontSizeSp
                 topTitleSize = TopAppBarDefaults.titleStyle().fontSizeSp
-                smallCornerRadius = ButtonDefaults.cornerRadius()
+                smallShape = ButtonDefaults.shape()
             }
         }
 
@@ -59,7 +60,7 @@ class ThemeTokenCompatibilityTest {
         assertEquals(customTheme.typography.bodyLarge.fontSizeSp, largeTextSize)
         assertEquals(customTheme.typography.bodyLarge.fontSizeSp, listHeadlineSize)
         assertEquals(customTheme.typography.titleMedium.fontSizeSp, topTitleSize)
-        assertEquals(customTheme.shapes.smallCornerRadius, smallCornerRadius)
+        assertEquals(customTheme.shapes.small, smallShape)
     }
 
     @Test

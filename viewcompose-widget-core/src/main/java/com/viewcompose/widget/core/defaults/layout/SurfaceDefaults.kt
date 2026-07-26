@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 enum class SurfaceVariant {
     Default,
     Variant,
@@ -17,7 +19,7 @@ object SurfaceDefaults {
 
     fun variantBackgroundColor(): Int = Theme.colors.surfaceVariant
 
-    fun cardCornerRadius(): Int = Theme.shapes.mediumCornerRadius
+    fun shape(): UiShape = Theme.shapes.medium
 
     fun contentColor(
         variant: SurfaceVariant = SurfaceVariant.Default,

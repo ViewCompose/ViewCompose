@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
+
 object IconButtonDefaults {
     fun containerColor(
         variant: ButtonVariant = ButtonVariant.Primary,
@@ -20,7 +22,7 @@ object IconButtonDefaults {
         variant: ButtonVariant = ButtonVariant.Primary,
     ): Int = ButtonDefaults.borderWidth(variant)
 
-    fun cornerRadius(): Int = ButtonDefaults.cornerRadius()
+    fun shape(): UiShape = ButtonDefaults.shape()
 
     fun size(
         size: ButtonSize = ButtonSize.Medium,

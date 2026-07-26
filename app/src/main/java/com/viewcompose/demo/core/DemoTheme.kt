@@ -11,6 +11,9 @@ import com.viewcompose.widget.core.UiShapes
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTextFieldSizing
 import com.viewcompose.widget.core.UiThemeTokens
+import com.viewcompose.ui.shape.UiCorner
+import com.viewcompose.ui.shape.UiCornerSize
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.widget.core.UiTypography
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.sp
@@ -19,6 +22,22 @@ enum class DemoThemeMode {
     System,
     Light,
     Dark,
+}
+
+internal fun UiShape.demoLabel(): String {
+    if (isUniform) {
+        return topStart.demoLabel()
+    }
+    return listOf(topStart, topEnd, bottomEnd, bottomStart)
+        .joinToString(separator = " / ") { corner -> corner.demoLabel() }
+}
+
+private fun UiCorner.demoLabel(): String {
+    val sizeLabel = when (val cornerSize = size) {
+        is UiCornerSize.Absolute -> "${cornerSize.pixels}px"
+        is UiCornerSize.Relative -> "${(cornerSize.fraction * 100).toInt()}%"
+    }
+    return "${family.name.lowercase()} $sizeLabel"
 }
 
 object DemoThemeTokens {
@@ -43,8 +62,8 @@ object DemoThemeTokens {
             labelMedium = UiTextStyle(fontSizeSp = 14.sp),
         ),
         shapes = UiShapes(
-            smallCornerRadius = 18.dp,
-            mediumCornerRadius = 24.dp,
+            small = UiShape.rounded(18.dp),
+            medium = UiShape.rounded(24.dp),
         ),
         controls = UiControlSizing(
             button = UiButtonSizing(
@@ -109,8 +128,8 @@ object DemoThemeTokens {
             labelMedium = UiTextStyle(fontSizeSp = 14.sp),
         ),
         shapes = UiShapes(
-            smallCornerRadius = 18.dp,
-            mediumCornerRadius = 24.dp,
+            small = UiShape.rounded(18.dp),
+            medium = UiShape.rounded(24.dp),
         ),
         controls = UiControlSizing(
             button = UiButtonSizing(

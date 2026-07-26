@@ -46,7 +46,7 @@ fun UiTreeBuilder.Button(
             backgroundColor = ButtonDefaults.containerColor(variant, enabled),
             borderWidth = ButtonDefaults.borderWidth(variant),
             borderColor = ButtonDefaults.borderColor(variant, enabled),
-            cornerRadius = ButtonDefaults.cornerRadius(),
+            shape = ButtonDefaults.shape(),
             rippleColor = rippleColor,
             minHeight = ButtonDefaults.height(size),
             paddingHorizontal = ButtonDefaults.horizontalPadding(size),
@@ -103,7 +103,7 @@ fun UiTreeBuilder.IconButton(
             backgroundColor = IconButtonDefaults.containerColor(variant, enabled),
             borderWidth = IconButtonDefaults.borderWidth(variant),
             borderColor = IconButtonDefaults.borderColor(variant, enabled),
-            cornerRadius = IconButtonDefaults.cornerRadius(),
+            shape = IconButtonDefaults.shape(),
             rippleColor = IconButtonDefaults.pressedColor(),
             contentPadding = contentPaddingValue,
         ),
@@ -145,7 +145,7 @@ fun UiTreeBuilder.SegmentedControl(
     val resolvedItems = items.map { label -> SegmentedControlItem(label = label) }
     val backgroundColor = SegmentedControlDefaults.backgroundColor(enabled)
     val indicatorColor = SegmentedControlDefaults.indicatorColor(enabled)
-    val cornerRadius = SegmentedControlDefaults.cornerRadius()
+    val shape = SegmentedControlDefaults.shape()
     val textColor = SegmentedControlDefaults.textColor(enabled)
     val selectedTextColor = SegmentedControlDefaults.selectedTextColor(enabled)
     val rippleColor = SegmentedControlDefaults.rippleColor(enabled)
@@ -161,7 +161,7 @@ fun UiTreeBuilder.SegmentedControl(
             enabled = enabled,
             backgroundColor = backgroundColor,
             indicatorColor = indicatorColor,
-            cornerRadius = cornerRadius,
+            shape = shape,
             textColor = textColor,
             selectedTextColor = selectedTextColor,
             rippleColor = rippleColor,

@@ -49,6 +49,7 @@
 24. 结构化无障碍语义已落地：`Modifier.semantics` 覆盖描述、状态、role、heading、live region、选择/勾选/启用、错误、进度与子树策略；renderer 映射原生 Accessibility，并在 View 复用时恢复原始语义。
 25. 结构化渲染失败与原生副作用边界已落地：`RenderFailure/RenderFrameReport` 覆盖阶段、恢复结果、帧号与 AndroidView 操作；不可重放动作通过事务成功后发布的 `AndroidView.onCommit` 执行。
 26. Overlay P2 完整度已增强：Popup 使用平台无关 positioner 支持四向精确锚定、RTL、翻转/夹取和滚动跟随；Snackbar/Toast 使用统一队列策略与结构化结束原因。
+27. Theming P2 完整度已增强：Android 动态色策略、配置变化驱动的 token 生命周期、来源/修订元数据，以及四角独立的 rounded/cut + dimension/fraction shape 桥接已落地。
 
 ### 2.2 Demo 与验证层
 
@@ -88,7 +89,7 @@
 | Lifecycle / ViewModel Integration | 模块拆分与 API 硬切已完成（`viewcompose-lifecycle` / `viewcompose-viewmodel`） | 继续补强生命周期边界态与 SavedState 复杂场景回归 |
 | Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 list state、sticky headers、contentType/span 与预取已落地 | Paging 3 适配保持可选集成，不进入核心契约 |
 | Overlay | Popup 精确锚点、滚动跟随、RTL、翻转/夹取，以及 Snackbar/Toast 统一队列与结构化结束原因已落地 | 扩展多窗口、IME 与自由窗真实设备矩阵 |
-| Theming | 已完成 token 收口升级（语义色、tier typography、interactive shape、defaults 语义守卫），并新增 `Diagnostics -> 主题诊断` 作为当前主题语义的权威人工验证入口 | Android 动态色/shape 桥接与 token 生命周期治理 |
+| Theming | 已完成 token 收口、Android 动态色策略、完整 shape 桥接与配置变化 token 生命周期，并提供 `Diagnostics -> 主题诊断` 权威人工验证入口 | 扩展多窗口、厂商主题和动态色设备矩阵 |
 | Interop | `AndroidView` 支持 replay-safe update/reset/nativeView、提交期 onCommit 与一次性 release | 强化复杂原生 View、第三方控件与主题协同 |
 | Diagnostics | 基础 render/layout 诊断已落地，并补齐 `主题诊断` 页用于 token/defaults/关键组件视觉映射验证 | locals/render tree/patch 可视化与告警可读性 |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |

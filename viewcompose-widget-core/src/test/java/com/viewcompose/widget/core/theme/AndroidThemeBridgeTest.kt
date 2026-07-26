@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -149,9 +150,9 @@ class AndroidThemeBridgeTest {
                     ripple = 77,
                 ),
                 shapes = AndroidThemeShapeSnapshot(
-                    smallCornerRadius = 12,
-                    mediumCornerRadius = 20,
-                    largeCornerRadius = 28,
+                    small = UiShape.rounded(12),
+                    medium = UiShape.cut(20),
+                    large = UiShape.roundedRelative(0.5f),
                 ),
                 scrimOpacity = 0.58f,
             ),
@@ -159,10 +160,9 @@ class AndroidThemeBridgeTest {
 
         assertEquals(77, tokens.colors.ripple)
         assertEquals(0.58f, tokens.overlays.scrimOpacity, 0.0001f)
-        assertEquals(12, tokens.shapes.smallCornerRadius)
-        assertEquals(20, tokens.shapes.mediumCornerRadius)
-        assertEquals(28, tokens.shapes.largeCornerRadius)
-        assertEquals(20, tokens.shapes.mediumCornerRadius)
+        assertEquals(UiShape.rounded(12), tokens.shapes.small)
+        assertEquals(UiShape.cut(20), tokens.shapes.medium)
+        assertEquals(UiShape.roundedRelative(0.5f), tokens.shapes.large)
     }
 
     @Test

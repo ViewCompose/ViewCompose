@@ -2,6 +2,7 @@
 <resources>
     <item name="viewcompose_original_background" type="id" />
     <item name="viewcompose_original_foreground" type="id" />
+    <item name="viewcompose_resolved_modifiers" type="id" />
     <item name="viewcompose_seek_listener" type="id" />
     <item name="viewcompose_lazy_spacing_decoration" type="id" />
     <item name="viewcompose_lazy_grid_spacing_decoration" type="id" />

@@ -3,6 +3,7 @@ package com.viewcompose
 import android.widget.TextView
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -155,7 +156,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(180.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius()),
+                        .shape(SurfaceDefaults.shape()),
                 ) { item ->
                     Surface(
                         variant = SurfaceVariant.Default,
@@ -341,7 +342,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(320.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius()),
+                        .shape(SurfaceDefaults.shape()),
                 ) { item ->
                     val itemCountState = remember { mutableStateOf(0) }
                     Surface(
@@ -496,7 +497,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         .fillMaxWidth()
                         .height(400.dp)
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                        .cornerRadius(SurfaceDefaults.cardCornerRadius()),
+                        .shape(SurfaceDefaults.shape()),
                 ) { item ->
                     Card(
                         variant = CardVariant.Filled,
