@@ -1,12 +1,14 @@
 package com.viewcompose.widget.core
 
 import com.viewcompose.runtime.MutableState
+import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
 import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.ui.state.LazyListStateSnapshot
+import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -24,6 +26,121 @@ class RememberSaveableTest {
         assertTrue(restored != null)
         assertNull(restored?.value)
         assertNull(registry.consumeRestored("nullable"))
+    }
+
+    @Test
+    fun `released restored claim can be consumed by a later composition`() {
+        val registry = createSaveableStateRegistry(
+            restoredValues = mapOf("counter" to 7),
+        )
+        val claim = registry.claimRestored("counter")
+
+        assertEquals(7, claim?.value)
+        assertNull(registry.claimRestored("counter"))
+
+        claim?.release()
+
+        assertEquals(7, registry.consumeRestored("counter")?.value)
+    }
+
+    @Test
+    fun `performSave includes a restored value claimed by an in-flight composition`() {
+        val registry = createSaveableStateRegistry(
+            restoredValues = mapOf("counter" to 11),
+        )
+        val claim = registry.claimRestored("counter")
+
+        assertEquals(mapOf("counter" to 11), registry.performSave())
+
+        claim?.commit()
+        assertTrue(registry.performSave().isEmpty())
+    }
+
+    @Test
+    fun `aborted composition releases restored rememberSaveable value`() {
+        val registry = bundleLikeRegistry(
+            restored = mapOf("user:counter" to autoSaver<MutableState<Int>>().save(mutableStateOf(23))),
+        )
+        val composer = ComposerLite()
+        lateinit var firstAttemptState: MutableState<Int>
+        val prepared = ComposerContext.withComposer(
+            composer = composer,
+            coroutineContext = Dispatchers.Unconfined,
+        ) {
+            composer.prepareRoot {
+                UiTreeBuilder().apply {
+                    ProvideSaveableStateRegistry(registry) {
+                        firstAttemptState = rememberSaveable(key = "counter") {
+                            mutableStateOf(-1)
+                        }
+                    }
+                }
+            }
+        }
+
+        assertEquals(23, firstAttemptState.value)
+        prepared.abort()
+
+        lateinit var retryState: MutableState<Int>
+        val retry = ComposerContext.withComposer(
+            composer = composer,
+            coroutineContext = Dispatchers.Unconfined,
+        ) {
+            composer.prepareRoot {
+                UiTreeBuilder().apply {
+                    ProvideSaveableStateRegistry(registry) {
+                        retryState = rememberSaveable(key = "counter") {
+                            mutableStateOf(-1)
+                        }
+                    }
+                }
+            }
+        }
+        retry.commit()
+
+        assertEquals(23, retryState.value)
+        assertTrue(registry.performSave().containsKey("user:counter"))
+        composer.dispose()
+    }
+
+    @Test
+    fun `aborted composition does not publish a replacement saver`() {
+        val registry = bundleLikeRegistry()
+        val composer = ComposerLite()
+        val originalSaver = Saver<Int, String>(
+            save = { value -> "old:$value" },
+            restore = { saved -> saved.substringAfter(':').toInt() },
+        )
+        val replacementSaver = Saver<Int, String>(
+            save = { value -> "new:$value" },
+            restore = { saved -> saved.substringAfter(':').toInt() },
+        )
+
+        fun prepare(saver: Saver<Int, String>) = ComposerContext.withComposer(
+            composer = composer,
+            coroutineContext = Dispatchers.Unconfined,
+        ) {
+            composer.prepareRoot {
+                UiTreeBuilder().apply {
+                    ProvideSaveableStateRegistry(registry) {
+                        rememberSaveable(
+                            key = "value",
+                            saver = saver,
+                        ) {
+                            5
+                        }
+                    }
+                }
+            }
+        }
+
+        prepare(originalSaver).commit()
+        composer.commitSideEffects()
+        composer.requestRootRecompose()
+        prepare(replacementSaver).abort()
+
+        assertEquals("old:5", registry.performSave().getValue("user:value"))
+        composer.dispose()
     }
 
     @Test

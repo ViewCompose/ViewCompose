@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.runtime.composition.RememberObserver
+
 /**
  * Remembers [init]'s result and saves it through the current host registry.
  *
@@ -30,33 +32,22 @@ fun <T, Saveable> rememberSaveable(
         return remember(*inputs, calculation = init)
     }
     val resolvedKey = resolveSaveableKey(key)
-    val value = remember(
+    val holder = remember(
         registry,
         resolvedKey,
         *inputs,
     ) {
-        restoreOrInitialize(
+        createSaveableHolder(
             registry = registry,
             key = resolvedKey,
             saver = saver,
             init = init,
         )
     }
-    val holder = remember(registry, resolvedKey) {
-        SaveableHolder(
-            registry = registry,
-            key = resolvedKey,
-        )
+    SideEffect {
+        holder.update(saver)
     }
-    holder.update(
-        value = value,
-        saver = saver,
-    )
-    DisposableEffect(registry, resolvedKey) {
-        val entry = holder.register()
-        return@DisposableEffect entry::unregister
-    }
-    return value
+    return holder.value
 }
 
 private fun resolveSaveableKey(explicitKey: String?): String {
@@ -72,42 +63,56 @@ private fun resolveSaveableKey(explicitKey: String?): String {
     return composer.nextSaveableKey()
 }
 
-private fun <T, Saveable> restoreOrInitialize(
+private fun <T, Saveable> createSaveableHolder(
     registry: SaveableStateRegistry,
     key: String,
     saver: Saver<T, Saveable>,
     init: () -> T,
-): T {
-    val restored = registry.consumeRestored(key) ?: return init()
-    return try {
-        @Suppress("UNCHECKED_CAST")
-        saver.restore(restored.value as Saveable)
-    } catch (error: Throwable) {
-        throw IllegalStateException(
-            "Failed to restore rememberSaveable value for key '$key'.",
-            error,
-        )
+): SaveableHolder<T> {
+    val claim = registry.claimRestored(key)
+    val value = if (claim == null) {
+        init()
+    } else {
+        try {
+            @Suppress("UNCHECKED_CAST")
+            saver.restore(claim.value as Saveable)
+        } catch (error: Throwable) {
+            claim.release()
+            throw IllegalStateException(
+                "Failed to restore rememberSaveable value for key '$key'.",
+                error,
+            )
+        }
     }
+    @Suppress("UNCHECKED_CAST")
+    return SaveableHolder(
+        registry = registry,
+        key = key,
+        value = value,
+        saver = saver as Saver<T, Any?>,
+        restoredClaim = claim,
+    )
 }
 
-private class SaveableHolder(
+private class SaveableHolder<T>(
     private val registry: SaveableStateRegistry,
     private val key: String,
-) {
-    private var value: Any? = null
-    private var saver: Saver<Any?, Any?> = autoSaver()
+    val value: T,
+    private var saver: Saver<T, Any?>,
+    private var restoredClaim: RestoredSaveableValue?,
+) : RememberObserver {
+    private var entry: SaveableStateRegistry.Entry? = null
 
-    fun <T, Saveable> update(
-        value: T,
-        saver: Saver<T, Saveable>,
-    ) {
-        this.value = value
+    fun <Saveable> update(saver: Saver<T, Saveable>) {
         @Suppress("UNCHECKED_CAST")
-        this.saver = saver as Saver<Any?, Any?>
+        this.saver = saver as Saver<T, Any?>
     }
 
-    fun register(): SaveableStateRegistry.Entry {
-        return registry.registerProvider(key) {
+    override fun onRemembered() {
+        check(entry == null) {
+            "rememberSaveable holder for key '$key' is already registered."
+        }
+        val nextEntry = registry.registerProvider(key) {
             val saved = saver.save(value)
             require(registry.canBeSaved(saved)) {
                 val type = saved?.let { it::class.java.name } ?: "null"
@@ -116,5 +121,25 @@ private class SaveableHolder(
             }
             saved
         }
+        entry = nextEntry
+        restoredClaim?.commit()
+        restoredClaim = null
+    }
+
+    override fun onForgotten() {
+        entry?.unregister()
+        entry = null
+        releaseRestoredClaim()
+    }
+
+    override fun onAbandoned() {
+        entry?.unregister()
+        entry = null
+        releaseRestoredClaim()
+    }
+
+    private fun releaseRestoredClaim() {
+        restoredClaim?.release()
+        restoredClaim = null
     }
 }

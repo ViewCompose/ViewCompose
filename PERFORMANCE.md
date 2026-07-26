@@ -34,8 +34,33 @@
 15. 列表/分页容器支持 opt-in motion 策略（insert/remove/move/change），与 `DiffUtil + ItemAnimator` 协同且不改变默认容器行为。
 16. graphics 主链已落地 Canvas 节点与 draw modifiers；`drawWithCache` 支持跨帧缓存命中/失效，避免高频绘制场景重复构建命令。
 17. graphics 执行器已收口 v2 基线：`DrawRoundRect` 四角半径语义正确、`Drawable` 绘制支持 `DrawPaint` 组合、`ImageFilterModel.Chain` 可递归合并生效。
+18. 发布态基线使用 R8 + resource shrink 的非 debuggable `benchmark` target；`ReleaseBaselineBenchmark` 固定覆盖无 ART 预编译的冷启动与 state patch 帧耗时。
 
-### 2.2 当前结论
+### 2.2 发布态基准入口
+
+构建门禁：
+
+```bash
+./gradlew qaRelease
+```
+
+该任务同时构建 R8 优化的 `release`、非 debuggable `benchmark` target 和 benchmark
+instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
+
+设备基准：
+
+```bash
+./gradlew benchmarkRelease
+```
+
+发布态权威基线是 `ReleaseBaselineBenchmark`：
+
+1. target 为 R8 优化、resource shrink、非 debuggable 的 benchmark variant。
+2. `CompilationMode.None` 隔离 ART 预编译收益，直接暴露交付二进制回归。
+3. 固定场景为冷启动和 state patch。
+4. 结果只在同设备、同系统版本、同温控状态下纵向比较。
+
+### 2.3 当前结论
 
 1. 当前阶段优先级不是“追求极限 FPS”，而是先控制回归风险和错误用法。
 2. 最关键收益来自：
@@ -106,8 +131,8 @@
 
 ### Phase 5：发布态优化
 
-状态：待推进  
-目标：baseline profile 等发布链路优化稳定化
+状态：R8 release 基准已建立，baseline profile 待推进
+目标：在当前无 ART 预编译基线上继续量化 baseline profile 等发布链路收益
 
 ## 7. 评审与提交流程
 

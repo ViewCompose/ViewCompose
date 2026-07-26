@@ -7,7 +7,18 @@ package com.viewcompose.widget.core
  * install their own registry with [ProvideSaveableStateRegistry].
  */
 interface SaveableStateRegistry {
-    fun consumeRestored(key: String): RestoredSaveableValue?
+    /**
+     * Reserves restored state for a composition attempt.
+     *
+     * The reservation must be [RestoredSaveableValue.commit]ed after the composition commits or
+     * [RestoredSaveableValue.release]d when it is abandoned. Reserved values remain part of
+     * [performSave], so a host save racing an in-flight composition cannot lose them.
+     */
+    fun claimRestored(key: String): RestoredSaveableValue?
+
+    fun consumeRestored(key: String): RestoredSaveableValue? {
+        return claimRestored(key)?.also(RestoredSaveableValue::commit)
+    }
 
     fun registerProvider(
         key: String,
@@ -25,7 +36,34 @@ interface SaveableStateRegistry {
 
 class RestoredSaveableValue internal constructor(
     val value: Any?,
-)
+    private val onCommit: () -> Unit,
+    private val onRelease: () -> Unit,
+) {
+    private val lock = Any()
+    private var completed = false
+
+    fun commit() {
+        complete(onCommit)
+    }
+
+    fun release() {
+        complete(onRelease)
+    }
+
+    private fun complete(operation: () -> Unit) {
+        val shouldRun = synchronized(lock) {
+            if (completed) {
+                false
+            } else {
+                completed = true
+                true
+            }
+        }
+        if (shouldRun) {
+            operation()
+        }
+    }
+}
 
 fun createSaveableStateRegistry(
     restoredValues: Map<String, Any?> = emptyMap(),
@@ -44,17 +82,39 @@ private class SaveableStateRegistryImpl(
     private val lock = Any()
     private val restored = LinkedHashMap(restoredValues)
     private val retained = LinkedHashMap<String, Any?>()
+    private val claims = LinkedHashMap<String, Claim>()
     private val providers = LinkedHashMap<String, () -> Any?>()
 
-    override fun consumeRestored(key: String): RestoredSaveableValue? = synchronized(lock) {
+    override fun claimRestored(key: String): RestoredSaveableValue? = synchronized(lock) {
         require(key.isNotBlank()) { "Saveable state key must not be blank." }
-        if (restored.containsKey(key)) {
-            return@synchronized RestoredSaveableValue(restored.remove(key))
+        if (key in claims) {
+            return@synchronized null
         }
-        if (retained.containsKey(key)) {
-            return@synchronized RestoredSaveableValue(retained.remove(key))
+        val value = when {
+            restored.containsKey(key) -> restored.remove(key)
+            retained.containsKey(key) -> retained.remove(key)
+            else -> return@synchronized null
         }
-        null
+        val claim = Claim(value)
+        claims[key] = claim
+        RestoredSaveableValue(
+            value = value,
+            onCommit = {
+                synchronized(lock) {
+                    if (claims[key] === claim) {
+                        claims.remove(key)
+                    }
+                }
+            },
+            onRelease = {
+                synchronized(lock) {
+                    if (claims[key] === claim) {
+                        claims.remove(key)
+                        retained[key] = value
+                    }
+                }
+            },
+        )
     }
 
     override fun registerProvider(
@@ -97,6 +157,9 @@ private class SaveableStateRegistryImpl(
             val base = LinkedHashMap<String, Any?>()
             base.putAll(restored)
             base.putAll(retained)
+            claims.forEach { (key, claim) ->
+                base[key] = claim.value
+            }
             base to LinkedHashMap(providers)
         }
         activeProviders.forEach { (key, provider) ->
@@ -135,4 +198,8 @@ private class SaveableStateRegistryImpl(
                 "Provide a Saver that converts it to supported values."
         }
     }
+
+    private class Claim(
+        val value: Any?,
+    )
 }

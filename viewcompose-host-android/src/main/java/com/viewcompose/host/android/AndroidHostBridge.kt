@@ -44,6 +44,10 @@ fun Fragment.setUiContent(
     onRenderFailure: ((RenderFailure) -> Unit)? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
+    requireActiveHost(
+        owner = this,
+        hostName = "Fragment",
+    )
     FragmentRenderSessionRegistry.clear(this)
     val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
     val root = buildUiContentRoot(
@@ -83,6 +87,10 @@ fun ComponentActivity.setUiContent(
     onRenderFailure: ((RenderFailure) -> Unit)? = null,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
+    requireActiveHost(
+        owner = this,
+        hostName = "ComponentActivity",
+    )
     ActivityRenderSessionRegistry.clear(this)
     val saveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(this)
     val root = buildUiContentRoot(

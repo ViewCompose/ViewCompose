@@ -40,6 +40,8 @@
   Structured render failures and native effect boundaries: failure phase/recovery is observable, and `AndroidView.onCommit` runs only after a successful tree transaction.
 - 精确浮层与统一反馈队列：Popup 可随锚点移动并自动翻转/夹取，Snackbar/Toast 共享可配置的确定性队列。
   Precise overlays and unified feedback queues: popups track moving anchors with flip/clamp positioning, while Snackbar/Toast share a configurable deterministic queue.
+- 事务化 SavedState：失败组合不会提前消费恢复值，生命周期快速重启也不会并发收集同一个 Flow。
+  Transactional SavedState: failed compositions do not consume restored values early, and rapid lifecycle restarts never collect the same Flow concurrently.
 
 ## 架构总览 | Architecture Overview
 
@@ -102,6 +104,12 @@ cd ViewCompose
 
 # 全量（qaQuick + instrumentation）
 ./gradlew qaFull
+
+# R8 优化 release/benchmark 产物
+./gradlew qaRelease
+
+# 连接设备上的发布态 Macrobenchmark
+./gradlew benchmarkRelease
 ```
 
 ### 运行 Demo | Run Demo
@@ -250,6 +258,7 @@ LazyColumn(
 - [PERFORMANCE.md](./PERFORMANCE.md): 性能基线与约束 / Performance baseline and constraints
 - [RENDER_FAILURES.md](./RENDER_FAILURES.md): 结构化渲染失败与 AndroidView 副作用边界 / Structured render failures and AndroidView effect boundary
 - [DIAGNOSTICS.md](./DIAGNOSTICS.md): Render Tree、Patch、Local 与重组原因诊断 / Runtime and renderer diagnostics
+- [LIFECYCLE_SAVED_STATE.md](./LIFECYCLE_SAVED_STATE.md): 生命周期与恢复事务 / Lifecycle and restoration transactions
 - [CORE_CAPABILITY_VERIFICATION.md](./CORE_CAPABILITY_VERIFICATION.md): P1 核心能力设备验证矩阵 / P1 core capability device matrix
 - [TEXT_INPUT.md](./TEXT_INPUT.md): 文本编辑模型与原生桥接 / Text editing model and native bridge
 - [LAZY_COLLECTIONS.md](./LAZY_COLLECTIONS.md): Lazy 状态与高级容器能力 / Lazy state and advanced collection capabilities

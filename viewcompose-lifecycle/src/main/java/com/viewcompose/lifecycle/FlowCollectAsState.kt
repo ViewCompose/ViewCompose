@@ -1,19 +1,15 @@
 package com.viewcompose.lifecycle
 
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.viewcompose.runtime.State
 import com.viewcompose.widget.core.produceState
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 fun <T> StateFlow<T>.collectAsState(
@@ -76,8 +72,12 @@ fun <T> Flow<T>.collectAsStateWithLifecycle(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
     context: CoroutineContext = EmptyCoroutineContext,
 ): State<T> {
-    require(minActiveState != Lifecycle.State.INITIALIZED) {
-        "minActiveState must be at least CREATED."
+    require(
+        minActiveState == Lifecycle.State.CREATED ||
+            minActiveState == Lifecycle.State.STARTED ||
+            minActiveState == Lifecycle.State.RESUMED,
+    ) {
+        "minActiveState must be CREATED, STARTED, or RESUMED."
     }
     requireStructuredContext(context)
     return produceState(
@@ -87,44 +87,11 @@ fun <T> Flow<T>.collectAsStateWithLifecycle(
         minActiveState,
         context,
     ) {
-        coroutineScope {
-            var collectJob: Job? = null
-
-            fun startCollectIfNeeded() {
-                if (collectJob?.isActive == true) return
-                collectJob = launch(
-                    context = context,
-                    start = CoroutineStart.UNDISPATCHED,
-                ) {
-                    this@collectAsStateWithLifecycle.collect { next ->
-                        value = next
-                    }
+        lifecycle.repeatOnLifecycle(minActiveState) {
+            withContext(context) {
+                this@collectAsStateWithLifecycle.collect { next ->
+                    value = next
                 }
-            }
-
-            fun stopCollectIfNeeded() {
-                collectJob?.cancel()
-                collectJob = null
-            }
-
-            fun syncCollectionWithLifecycle() {
-                if (lifecycle.currentState.isAtLeast(minActiveState)) {
-                    startCollectIfNeeded()
-                } else {
-                    stopCollectIfNeeded()
-                }
-            }
-
-            val observer = LifecycleEventObserver { _, _ ->
-                syncCollectionWithLifecycle()
-            }
-            lifecycle.addObserver(observer)
-            try {
-                syncCollectionWithLifecycle()
-                awaitCancellation()
-            } finally {
-                lifecycle.removeObserver(observer)
-                stopCollectIfNeeded()
             }
         }
     }

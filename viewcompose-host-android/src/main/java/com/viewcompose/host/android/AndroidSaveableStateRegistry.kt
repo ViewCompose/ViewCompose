@@ -6,6 +6,7 @@ import android.os.Parcelable
 import android.util.Size
 import android.util.SizeF
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryOwner
@@ -20,11 +21,15 @@ internal object AndroidSaveableStateRegistryStore {
 
     @Synchronized
     fun registryFor(owner: SavedStateRegistryOwner): SaveableStateRegistry {
+        check(owner.lifecycle.currentState != Lifecycle.State.DESTROYED) {
+            "Cannot create saveable state for a destroyed SavedStateRegistryOwner."
+        }
         bindings[owner]?.let { binding ->
             return binding.registry
         }
         val restored = decodeRegistryState(
-            owner.savedStateRegistry.consumeRestoredStateForKey(PROVIDER_KEY),
+            bundle = owner.savedStateRegistry.consumeRestoredStateForKey(PROVIDER_KEY),
+            classLoader = owner::class.java.classLoader,
         )
         val registry = createSaveableStateRegistry(
             restoredValues = restored,
@@ -80,7 +85,7 @@ private fun canBeSavedToBundle(value: Any?): Boolean {
     }
 }
 
-private fun encodeRegistryState(values: Map<String, Any?>): Bundle {
+internal fun encodeRegistryState(values: Map<String, Any?>): Bundle {
     val entries = Bundle()
     values.forEach { (key, value) ->
         entries.putBundle(key, encodeValue(value))
@@ -91,15 +96,27 @@ private fun encodeRegistryState(values: Map<String, Any?>): Bundle {
     }
 }
 
-private fun decodeRegistryState(bundle: Bundle?): Map<String, Any?> {
+internal fun decodeRegistryState(
+    bundle: Bundle?,
+    classLoader: ClassLoader?,
+): Map<String, Any?> {
     if (bundle == null || bundle.getInt(KEY_FORMAT_VERSION) != FORMAT_VERSION) {
         return emptyMap()
     }
+    bundle.classLoader = classLoader
     val entries = bundle.getBundle(KEY_ENTRIES) ?: return emptyMap()
+    entries.classLoader = classLoader
     return buildMap {
         entries.keySet().forEach { key ->
             val encoded = entries.getBundle(key) ?: return@forEach
-            put(key, decodeValue(encoded))
+            runCatching {
+                decodeValue(
+                    bundle = encoded,
+                    classLoader = classLoader,
+                )
+            }.onSuccess { value ->
+                put(key, value)
+            }
         }
     }
 }
@@ -132,13 +149,20 @@ private fun encodeValue(value: Any?): Bundle {
     }
 }
 
-private fun decodeValue(bundle: Bundle): Any? {
+private fun decodeValue(
+    bundle: Bundle,
+    classLoader: ClassLoader?,
+): Any? {
+    bundle.classLoader = classLoader
     return when (ValueType.fromId(bundle.getInt(KEY_VALUE_TYPE))) {
         ValueType.Null -> null
         ValueType.ListValue -> {
             val size = bundle.getInt(KEY_SIZE)
             List(size) { index ->
-                decodeValue(requireNotNull(bundle.getBundle("$KEY_ITEM_PREFIX$index")))
+                decodeValue(
+                    bundle = requireNotNull(bundle.getBundle("$KEY_ITEM_PREFIX$index")),
+                    classLoader = classLoader,
+                )
             }
         }
         ValueType.MapValue -> {
@@ -147,7 +171,8 @@ private fun decodeValue(bundle: Bundle): Any? {
                 repeat(size) { index ->
                     val key = requireNotNull(bundle.getString("$KEY_MAP_KEY_PREFIX$index"))
                     val value = decodeValue(
-                        requireNotNull(bundle.getBundle("$KEY_ITEM_PREFIX$index")),
+                        bundle = requireNotNull(bundle.getBundle("$KEY_ITEM_PREFIX$index")),
+                        classLoader = classLoader,
                     )
                     put(key, value)
                 }

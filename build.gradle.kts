@@ -284,6 +284,22 @@ tasks.register("qaFull") {
     dependsOn("qaQuick", ":app:connectedDebugAndroidTest")
 }
 
+tasks.register("qaRelease") {
+    group = "verification"
+    description = "Assemble the optimized release and non-debuggable benchmark artifacts."
+    dependsOn(
+        ":app:assembleRelease",
+        ":app:assembleBenchmark",
+        ":viewcompose-benchmark:assembleBenchmark",
+    )
+}
+
+tasks.register("benchmarkRelease") {
+    group = "verification"
+    description = "Run release macrobenchmarks on a connected device or emulator."
+    dependsOn(":viewcompose-benchmark:connectedBenchmarkAndroidTest")
+}
+
 tasks.register("qaPreview") {
     group = "verification"
     description = "Run preview snapshot verification for viewcompose-preview."
