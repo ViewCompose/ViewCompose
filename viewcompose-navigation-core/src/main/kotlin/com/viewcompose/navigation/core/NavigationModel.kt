@@ -92,10 +92,42 @@ class NavRoute(
     }
 }
 
-data class NavEntry(
+class NavEntry(
     val id: NavEntryId,
     val route: NavRoute,
-)
+    graphHierarchy: List<String> = emptyList(),
+) {
+    val graphHierarchy: List<String> = Collections.unmodifiableList(
+        ArrayList(graphHierarchy),
+    )
+
+    init {
+        require(this.graphHierarchy.none(String::isBlank)) {
+            "Navigation graph hierarchy routes must not be blank."
+        }
+        require(this.graphHierarchy.distinct().size == this.graphHierarchy.size) {
+            "Navigation graph hierarchy routes must be unique."
+        }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is NavEntry &&
+            id == other.id &&
+            route == other.route &&
+            graphHierarchy == other.graphHierarchy
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + route.hashCode()
+        result = 31 * result + graphHierarchy.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "NavEntry(id=$id, route=$route, graphHierarchy=$graphHierarchy)"
+    }
+}
 
 class NavBackStackSnapshot(
     entries: List<NavEntry>,

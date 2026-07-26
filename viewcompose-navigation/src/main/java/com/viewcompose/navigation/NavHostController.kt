@@ -8,6 +8,7 @@ import com.viewcompose.navigation.core.NavBackStackSnapshot
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryIdFactory
+import com.viewcompose.navigation.core.NavGraph
 import com.viewcompose.navigation.core.NavLaunchMode
 import com.viewcompose.navigation.core.NavNoChangeReason
 import com.viewcompose.navigation.core.NavRoute
@@ -202,6 +203,15 @@ fun createNavHostController(
     )
 }
 
+fun createNavHostController(
+    graph: NavGraph,
+): NavHostController {
+    return createNavHostController(
+        graph = graph,
+        entryIdFactory = NavEntryIdFactory.random(),
+    )
+}
+
 internal fun createNavHostController(
     startDestination: NavRoute,
     entryIdFactory: NavEntryIdFactory,
@@ -209,6 +219,18 @@ internal fun createNavHostController(
     return NavHostController(
         NavBackStackController.create(
             startDestination = startDestination,
+            entryIdFactory = entryIdFactory,
+        ),
+    )
+}
+
+internal fun createNavHostController(
+    graph: NavGraph,
+    entryIdFactory: NavEntryIdFactory,
+): NavHostController {
+    return NavHostController(
+        NavBackStackController.create(
+            graph = graph,
             entryIdFactory = entryIdFactory,
         ),
     )
@@ -226,5 +248,21 @@ fun rememberNavHostController(
         saver = navHostControllerSaver(startDestination),
     ) {
         createNavHostController(startDestination)
+    }
+}
+
+/**
+ * Remembers a controller whose destinations are resolved through [graph]. Entering a graph route
+ * atomically opens its leaf start destination and records the complete parent graph hierarchy on
+ * the resulting entry.
+ */
+fun rememberNavHostController(
+    graph: NavGraph,
+): NavHostController {
+    return rememberSaveable(
+        graph,
+        saver = navHostControllerSaver(graph),
+    ) {
+        createNavHostController(graph)
     }
 }

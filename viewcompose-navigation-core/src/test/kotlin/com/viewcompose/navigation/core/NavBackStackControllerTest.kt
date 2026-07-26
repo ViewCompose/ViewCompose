@@ -174,6 +174,110 @@ class NavBackStackControllerTest {
     }
 
     @Test
+    fun `graph navigation commits resolved leaves with hierarchy metadata`() {
+        val ids = ArrayDeque(listOf("root", "profile", "security"))
+        val graph = testGraph()
+        val controller = NavBackStackController.create(
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(ids.removeFirst())
+            },
+        )
+
+        assertEquals("home", controller.snapshot().top.route.name)
+        assertEquals(listOf("app"), controller.snapshot().top.graphHierarchy)
+
+        val enterGraph = controller.prepare(
+            NavCommand.Push(
+                NavRoute(
+                    name = "account",
+                    arguments = mapOf(
+                        "userId" to NavValue.LongValue(42L),
+                    ),
+                ),
+            ),
+        ).readyTransaction()
+
+        assertEquals("profile", enterGraph.after.top.route.name)
+        assertEquals(NavValue.LongValue(42L), enterGraph.after.top.route["userId"])
+        assertEquals(listOf("app", "account"), enterGraph.after.top.graphHierarchy)
+        enterGraph.commit()
+
+        val directChild = controller.prepare(
+            NavCommand.Push(NavRoute("security")),
+        ).readyTransaction()
+
+        assertEquals(listOf("app", "account"), directChild.after.top.graphHierarchy)
+    }
+
+    @Test
+    fun `graph single top compares the resolved destination`() {
+        val ids = ArrayDeque(listOf("root", "unused"))
+        val controller = NavBackStackController.create(
+            graph = testGraph(),
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(ids.removeFirst())
+            },
+        )
+        controller.prepare(
+            NavCommand.Reset(NavRoute("account")),
+        ).readyTransaction().commit()
+
+        val result = controller.prepare(
+            NavCommand.Push(
+                route = NavRoute("account"),
+                launchMode = NavLaunchMode.SingleTop,
+            ),
+        )
+
+        assertEquals(NavNoChangeReason.AlreadyAtDestination, (result as NavPreparation.NoChange).reason)
+        assertEquals(0, ids.size)
+    }
+
+    @Test
+    fun `graph restore requires the exact persisted hierarchy`() {
+        val graph = testGraph()
+        val restored = NavBackStackSnapshot(
+            listOf(
+                NavEntry(
+                    id = NavEntryId("root"),
+                    route = NavRoute("home"),
+                    graphHierarchy = listOf("app"),
+                ),
+                NavEntry(
+                    id = NavEntryId("profile"),
+                    route = NavRoute("profile"),
+                    graphHierarchy = listOf("app", "account"),
+                ),
+            ),
+        )
+
+        val controller = NavBackStackController.restore(
+            snapshot = restored,
+            graph = graph,
+        )
+
+        assertSame(restored, controller.snapshot())
+        assertThrows<IllegalArgumentException> {
+            NavBackStackController.restore(
+                snapshot = NavBackStackSnapshot(
+                    listOf(
+                        NavEntry(
+                            id = NavEntryId("root"),
+                            route = NavRoute("home"),
+                            graphHierarchy = listOf("moved"),
+                        ),
+                    ),
+                ),
+                graph = graph,
+            )
+        }
+        assertThrows<IllegalArgumentException> {
+            NavBackStackController.restore(snapshot = restored)
+        }
+    }
+
+    @Test
     fun `route arguments and stack entries are defensively copied`() {
         val arguments = linkedMapOf<String, NavValue>(
             "documentId" to NavValue.LongValue(42L),
@@ -253,6 +357,22 @@ class NavBackStackControllerTest {
                 NavEntryId(remainingIds.removeFirst())
             },
         )
+    }
+
+    private fun testGraph(): NavGraph {
+        return navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            navigation(
+                route = "account",
+                startDestination = NavRoute("profile"),
+            ) {
+                destination("profile")
+                destination("security")
+            }
+        }
     }
 
     private fun NavPreparation.readyTransaction(): NavTransaction {

@@ -15,6 +15,8 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavValue
+import com.viewcompose.navigation.core.navGraph
 import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.widget.core.OverlayHostDefaults
@@ -39,6 +41,54 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class NavHostPublicApiTest {
+    @Test
+    fun `public host enters nested graph through the existing transaction and lifecycle boundary`() {
+        val graph = navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            navigation(
+                route = "account",
+                startDestination = NavRoute("profile"),
+            ) {
+                destination("profile")
+                destination("security")
+            }
+        }
+        val entryIds = ArrayDeque(listOf("home", "profile"))
+        val controller = createNavHostController(
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(entryIds.removeFirst())
+            },
+        )
+        val owners = mutableMapOf<String, LifecycleOwner>()
+        val fixture = renderPublicHost(controller = controller) { entry ->
+            owners[entry.route.name] = checkNotNull(LocalLifecycleOwner.current)
+            Text(entry.route.name)
+        }
+
+        val result = controller.navigate(
+            NavRoute(
+                name = "account",
+                arguments = mapOf(
+                    "userId" to NavValue.LongValue(42L),
+                ),
+            ),
+        )
+
+        assertTrue(result is NavResult.Committed)
+        assertEquals(listOf("home", "profile"), controller.routeNames())
+        assertEquals(listOf("app", "account"), controller.snapshot.top.graphHierarchy)
+        assertEquals(NavValue.LongValue(42L), controller.snapshot.top.route["userId"])
+        assertEquals(Lifecycle.State.CREATED, checkNotNull(owners["home"]).lifecycle.currentState)
+        assertEquals(Lifecycle.State.RESUMED, checkNotNull(owners["profile"]).lifecycle.currentState)
+        assertEquals(2, fixture.navHostView.childCount)
+
+        fixture.session.dispose()
+    }
+
     @Test
     fun `public host mounts stack and controller executes transactional navigation`() {
         val fixture = renderPublicHost()
