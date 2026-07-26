@@ -82,6 +82,7 @@
 
 renderer 侧避免“单目录平铺”，按职责拆到二级目录：
 
+0. `NodeType/VNode/NodeSpec` 及其子类型只允许定义在 `viewcompose-ui-contract`；renderer 禁止新增 `com.viewcompose.renderer.node` 镜像契约。
 1. `viewcompose-renderer/src/main/java/.../view/container/{core,layout,collection,navigation,input}`
    - Android View 容器映射层，按控件族群分类
 2. `viewcompose-renderer/src/main/java/.../view/tree/binder/core`
