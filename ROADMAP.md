@@ -90,7 +90,7 @@
 | Theming | 已完成 token 收口升级（语义色、tier typography、interactive shape、defaults 语义守卫），并新增 `Diagnostics -> 主题诊断` 作为当前主题语义的权威人工验证入口 | Android 动态色/shape 桥接与 token 生命周期治理 |
 | Interop | `AndroidView` 支持 replay-safe update/reset/nativeView、提交期 onCommit 与一次性 release | 强化复杂原生 View、第三方控件与主题协同 |
 | Diagnostics | 基础 render/layout 诊断已落地，并补齐 `主题诊断` 页用于 token/defaults/关键组件视觉映射验证 | locals/render tree/patch 可视化与告警可读性 |
-| UI Testing | 核心 instrumentation 路径已建立 | 扩展容器专项、overlay 宿主专项、主题断言覆盖 |
+| UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview bridge + Paparazzi 快照链路已建立（`qaPreview` 可执行） | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
 | ConstraintLayout | 已新增 `viewcompose-widget-constraintlayout` 与 renderer 映射，核心能力覆盖 anchors/helpers/constraintSet + advanced dimensions/weights/circle/baseline extensions + Virtual Helpers（Flow/Group/Layer/Placeholder） | 下一步推进 MotionLayout interop 专题（保持 host-android 边界） |
 | Animation | `viewcompose-animation-core` + `viewcompose-animation` 已完成内核/DSL 分层；`Transition` 为共享时间线语义，`AnimatedVisibility` 已完成 Compose 默认语义与 Row/Column 轴向特化，`animateContentSize` 已落地布局级尺寸动画；Animation demo 已扩展为 6 标签页并覆盖全部业务公开动画 API，UI 回归链路已补齐 7 条 | retarget/cancel 压测、性能画像、更多复杂场景样例 |

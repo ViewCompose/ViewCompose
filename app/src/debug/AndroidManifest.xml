@@ -7,5 +7,10 @@
         <activity
             android:name=".SaveableLazyListStateTestActivity"
             android:exported="false" />
+        <activity
+            android:name=".P1CoreCapabilitiesTestActivity"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
     </application>
 </manifest>
