@@ -192,7 +192,7 @@ internal fun Activity.clickByTestTag(tag: String) {
         current = current.parent as? View
     }
     assertNotNull("Expected clickable host for testTag: $tag", current)
-    current!!.performClick()
+    assertTrue("Expected click to be handled for testTag: $tag", current!!.performClick())
 }
 
 internal fun Activity.tapByTestTag(tag: String) {
