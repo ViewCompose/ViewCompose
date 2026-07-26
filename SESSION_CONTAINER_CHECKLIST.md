@@ -65,6 +65,8 @@
 7. `LazyColumn`：`collectionsStress_rotateOrder_refreshesVisibleIdsAcrossToggles`（UI）
 8. Navigation destination：`NavDestinationSessionStoreTest` 覆盖候选离屏首帧、失败回滚、
    Local/内容闭包刷新、显隐层级、永久移除和 owner 释放（U）
+9. Transactional navigation host：`TransactionalNavHostCoordinatorTest` 覆盖 attach、
+   push/pop/replace/reset、揭页刷新失败、初始失败重试、重入串行化和生命周期封顶（U）
 
 当前缺口（需补专项回归）：
 
@@ -74,6 +76,8 @@
 3. 基线更新（2026-03-07）：`Lazy/Pager` 已统一走 DiffUtil + payload `Change` 路径，保留空 diff 刷新语义。
 4. 导航基线更新（2026-07-26）：候选页面先离屏提交首帧，已提交页面刷新最新
    `UiLocalSnapshot` 与内容闭包，回滚/移除按 session → owner 顺序释放。
+5. 事务导航更新（2026-07-26）：返回栈只在候选首帧或揭页刷新成功后提交；失败候选产生的
+   重入命令不会泄漏到旧栈。
 
 ## 6. 新容器接入流程
 

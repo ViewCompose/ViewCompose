@@ -27,7 +27,8 @@ Current feature-branch status:
 - Stage 2 lifecycle kernel: complete
 - Stage 3 Android page owner cluster: complete
 - Stage 3 destination `RenderSession`: complete
-- Stage 4 transactional `NavHost`: next
+- Stage 4 transactional coordinator: complete
+- Stage 4 transition retention and public `NavHost`: next
 - Stage 5: pending
 
 ## 2. P0 delivery plan
@@ -74,6 +75,16 @@ the entry owner or container.
 - retain outgoing and incoming sessions during transitions
 - serialize re-entrant navigation commands on the main thread
 
+The internal `TransactionalNavHostCoordinator` now owns the settled-state transaction boundary.
+It attaches the initial stack, executes `push/pop/replaceTop/reset`, refreshes a page before it is
+revealed by `pop`, applies host lifecycle caps, and serializes navigation requested while another
+page is rendering. A destination render failure rolls back the pure back-stack transaction and
+discards commands emitted by that failed candidate.
+
+Animated transition retention and the public `NavHost`/navigation handle remain intentionally
+closed. Until the transition completion protocol exists, a committed settled-state transaction
+removes outgoing pages synchronously.
+
 ### Stage 5: restoration and platform back
 
 - save and restore the back stack and each entry state across host recreation/process death
@@ -94,6 +105,10 @@ or rolled back before another command can be prepared.
 
 Entry IDs allocated by an abandoned transaction are never reused. This prevents stale SavedState,
 ViewModel, overlay, or result ownership from being attached to a later page.
+
+Failures before back-stack commit preserve the old stack, visible page, and lifecycle ownership.
+An unexpected failure while applying effects after stack commit marks the coordinator `Failed`;
+further commands are rejected until the host is destroyed instead of continuing on partial state.
 
 ## 4. Lifecycle invariants
 
