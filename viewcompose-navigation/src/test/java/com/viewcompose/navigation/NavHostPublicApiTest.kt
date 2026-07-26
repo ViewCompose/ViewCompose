@@ -5,12 +5,18 @@ import android.widget.FrameLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
+import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.viewmodel.savedStateHandle
+import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.ProvideSaveableStateRegistry
 import com.viewcompose.widget.core.SaveableStateRegistry
@@ -22,7 +28,9 @@ import java.io.Serializable
 import java.util.ArrayDeque
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -80,6 +88,94 @@ class NavHostPublicApiTest {
         assertFalse(fixture.controller.isAttached)
         assertEquals(0, fixture.navHostView.childCount)
         fixture.session.dispose()
+    }
+
+    @Test
+    fun `pop and host disposal release page resources while retaining committed saveable state`() {
+        val owners = mutableMapOf<String, NavEntryOwner>()
+        val viewModels = mutableMapOf<String, ReleaseTrackingViewModel>()
+        val counters = mutableMapOf<String, RestorableCounter>()
+        val handles = mutableMapOf<String, SavedStateHandle>()
+        val content: com.viewcompose.widget.core.UiTreeBuilder.(NavEntry) -> Unit = { entry ->
+            val routeName = entry.route.name
+            owners[routeName] = LocalLifecycleOwner.current as NavEntryOwner
+            viewModels[routeName] = viewModel(
+                key = "release-vm",
+                factory = ReleaseTrackingViewModelFactory,
+            )
+            counters[routeName] = rememberSaveable(
+                key = "release-counter",
+                saver = RestorableCounterSaver,
+            ) {
+                RestorableCounter(-1)
+            }
+            handles[routeName] = savedStateHandle(key = "release-handle")
+            Text(routeName)
+        }
+        val controller = deterministicController()
+        val first = renderPublicHost(
+            controller = controller,
+            content = content,
+        )
+        val originalHomeOwner = checkNotNull(owners["home"])
+        val originalHomeViewModel = checkNotNull(viewModels["home"])
+        val originalHomeContainer = first.navHostView.getChildAt(0)
+        checkNotNull(counters["home"]).value = 7
+        checkNotNull(handles["home"])["token"] = "home-state"
+
+        controller.navigate(NavRoute("details"))
+        val removedDetailsOwner = checkNotNull(owners["details"])
+        val removedDetailsViewModel = checkNotNull(viewModels["details"])
+        val removedDetailsContainer = first.navHostView.getChildAt(1)
+        checkNotNull(counters["details"]).value = 41
+        checkNotNull(handles["details"])["token"] = "removed-state"
+
+        controller.popBackStack()
+
+        assertEquals(Lifecycle.State.DESTROYED, removedDetailsOwner.lifecycle.currentState)
+        assertTrue(removedDetailsViewModel.cleared)
+        assertNull(removedDetailsContainer.parent)
+        assertEquals(Lifecycle.State.RESUMED, originalHomeOwner.lifecycle.currentState)
+        assertFalse(originalHomeViewModel.cleared)
+
+        controller.navigate(NavRoute("details"))
+        val replacementDetailsOwner = checkNotNull(owners["details"])
+        val replacementDetailsViewModel = checkNotNull(viewModels["details"])
+
+        assertNotSame(removedDetailsOwner, replacementDetailsOwner)
+        assertNotSame(removedDetailsViewModel, replacementDetailsViewModel)
+        assertEquals(-1, checkNotNull(counters["details"]).value)
+        assertNull(checkNotNull(handles["details"]).get<String>("token"))
+
+        controller.popBackStack()
+        first.session.dispose()
+
+        assertEquals(Lifecycle.State.DESTROYED, originalHomeOwner.lifecycle.currentState)
+        assertTrue(originalHomeViewModel.cleared)
+        assertNull(originalHomeContainer.parent)
+        assertFalse(controller.isAttached)
+        assertEquals(0, first.navHostView.childCount)
+
+        val second = renderPublicHost(
+            controller = controller,
+            content = content,
+        )
+        val restoredHomeOwner = checkNotNull(owners["home"])
+        val restoredHomeViewModel = checkNotNull(viewModels["home"])
+
+        assertNotSame(originalHomeOwner, restoredHomeOwner)
+        assertNotSame(originalHomeViewModel, restoredHomeViewModel)
+        assertEquals(7, checkNotNull(counters["home"]).value)
+        assertEquals("home-state", checkNotNull(handles["home"])["token"])
+        assertEquals(Lifecycle.State.RESUMED, restoredHomeOwner.lifecycle.currentState)
+        assertFalse(restoredHomeViewModel.cleared)
+
+        second.session.dispose()
+
+        assertEquals(Lifecycle.State.DESTROYED, restoredHomeOwner.lifecycle.currentState)
+        assertTrue(restoredHomeViewModel.cleared)
+        assertFalse(controller.isAttached)
+        assertEquals(0, second.navHostView.childCount)
     }
 
     @Test
@@ -403,6 +499,23 @@ private class RememberedHostFixture(
 private class RestorableCounter(
     var value: Int,
 )
+
+private class ReleaseTrackingViewModel : ViewModel() {
+    var cleared: Boolean = false
+        private set
+
+    override fun onCleared() {
+        cleared = true
+    }
+}
+
+private object ReleaseTrackingViewModelFactory : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        check(modelClass == ReleaseTrackingViewModel::class.java)
+        return ReleaseTrackingViewModel() as T
+    }
+}
 
 private val RestorableCounterSaver = Saver<RestorableCounter, Int>(
     save = RestorableCounter::value,
