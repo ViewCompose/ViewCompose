@@ -87,7 +87,6 @@ wait_for_process_exit() {
         fi
         sleep 0.1
     done
-    echo "The application process was not killed." >&2
     return 1
 }
 
@@ -118,8 +117,20 @@ fi
 
 "$adb_binary" -s "$device_serial" shell input keyevent HOME
 sleep 1
-"$adb_binary" -s "$device_serial" shell am kill "$package_name"
-wait_for_process_exit "$initial_pid"
+"$adb_binary" -s "$device_serial" shell am make-uid-idle --user current "$package_name"
+"$adb_binary" -s "$device_serial" shell am kill --user current "$package_name"
+if ! wait_for_process_exit "$initial_pid"; then
+    # Some emulator builds keep a process at perceptible priority while UI automation is attached
+    # and silently ignore `am kill`. A root SIGKILL on userdebug emulators preserves the task and
+    # does not mark the package force-stopped, so Android can still restore the saved Activity.
+    if "$adb_binary" -s "$device_serial" shell su 0 id >/dev/null 2>&1; then
+        "$adb_binary" -s "$device_serial" shell su 0 kill -9 "$initial_pid"
+    fi
+    if ! wait_for_process_exit "$initial_pid"; then
+        echo "The application process was not killed." >&2
+        exit 1
+    fi
+fi
 
 "$adb_binary" -s "$device_serial" shell am task lock "$task_id"
 restored_status="$(wait_for_seeded_status)"
