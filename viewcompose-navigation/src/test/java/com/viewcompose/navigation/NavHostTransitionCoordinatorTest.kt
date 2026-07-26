@@ -35,12 +35,15 @@ class NavHostTransitionCoordinatorTest {
     fun setUp() {
         val application = RuntimeEnvironment.getApplication()
         val entryIds = ArrayDeque(
-            listOf(
-                "root",
-                "details",
-                "confirmation",
-                "login",
-            ),
+            buildList {
+                add("root")
+                add("details")
+                add("confirmation")
+                add("login")
+                repeat(128) { index ->
+                    add("stress-$index")
+                }
+            },
         )
         val controller = NavBackStackController.create(
             startDestination = NavRoute("home"),
@@ -379,6 +382,116 @@ class NavHostTransitionCoordinatorTest {
 
         assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
         assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+    }
+
+    @Test
+    fun `lifecycle change and navigation redirect predictive preview transactionally`() {
+        val root = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        transitionDriver.completeLatest()
+        val details = coordinator.snapshot.top
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(backEvent(progress = 0.4f)),
+        )
+        val previewRun = transitionDriver.latestBackPreview
+
+        coordinator.moveHostTo(NavHostLifecycleState.Created)
+        val result = coordinator.navigate(
+            NavCommand.Push(NavRoute("confirmation")),
+        ) as NavHostNavigationResult.Committed
+        val confirmation = coordinator.snapshot.top
+
+        assertTrue(previewRun.cancelled)
+        assertNull(coordinator.activeBackPreview)
+        assertFalse(
+            coordinator.updateBackPreview(
+                previewId = preview.id,
+                event = backEvent(progress = 0.9f),
+            ),
+        )
+        assertSame(result.transition, coordinator.activeTransition)
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(confirmation))
+
+        coordinator.moveHostTo(NavHostLifecycleState.Resumed)
+
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
+        assertEquals(NavEntryLifecycleState.Started, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(confirmation))
+
+        transitionDriver.completeLatest()
+
+        assertNull(coordinator.activeTransition)
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(details))
+        assertEquals(NavEntryLifecycleState.Resumed, lifecycle(confirmation))
+        assertEquals(
+            listOf("home", "details", "confirmation"),
+            coordinator.routeNames(),
+        )
+    }
+
+    @Test
+    fun `repeated lifecycle changes and redirected transactions ignore stale completions`() {
+        val root = coordinator.snapshot.top
+
+        repeat(100) { index ->
+            coordinator.moveHostTo(NavHostLifecycleState.Created)
+            val push = coordinator.navigate(
+                NavCommand.Push(NavRoute("stress-route-$index")),
+            ) as NavHostNavigationResult.Committed
+            val pushed = coordinator.snapshot.top
+            val stalePushRun = transitionDriver.latest
+
+            coordinator.moveHostTo(NavHostLifecycleState.Started)
+            val pop = coordinator.navigate(
+                NavCommand.Pop,
+            ) as NavHostNavigationResult.Committed
+
+            assertTrue("iteration=$index", stalePushRun.cancelled)
+            assertEquals(
+                "iteration=$index",
+                NavHostTransitionOutcome.Redirected,
+                coordinator.lastTransitionResult?.outcome,
+            )
+            assertSame(pop.transition, coordinator.activeTransition)
+            assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
+            assertEquals(NavEntryLifecycleState.Started, lifecycle(pushed))
+
+            coordinator.moveHostTo(NavHostLifecycleState.Created)
+            assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
+            assertEquals(NavEntryLifecycleState.Created, lifecycle(pushed))
+
+            coordinator.moveHostTo(NavHostLifecycleState.Resumed)
+            assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
+            assertEquals(NavEntryLifecycleState.Started, lifecycle(pushed))
+
+            stalePushRun.complete()
+            assertSame(
+                "iteration=$index",
+                pop.transition,
+                coordinator.activeTransition,
+            )
+
+            transitionDriver.completeLatest()
+
+            assertNull("iteration=$index", coordinator.activeTransition)
+            assertEquals(
+                "iteration=$index",
+                listOf("home"),
+                coordinator.routeNames(),
+            )
+            assertNull(sessionStore.sessionOrNull(pushed.id))
+            assertNull(ownerStore.ownerOrNull(pushed.id))
+            assertEquals(1, coordinator.hostView.childCount)
+            assertEquals(NavEntryLifecycleState.Resumed, lifecycle(root))
+            assertEquals(
+                "iteration=$index",
+                NavHostTransitionOutcome.Completed,
+                coordinator.lastTransitionResult?.outcome,
+            )
+            assertSame(push.transition, stalePushRun.transition)
+        }
     }
 
     @Test

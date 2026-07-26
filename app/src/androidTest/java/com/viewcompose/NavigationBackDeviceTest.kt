@@ -354,6 +354,75 @@ class NavigationBackDeviceTest {
     }
 
     @Test
+    fun lifecycleStopAndRecreationDuringActiveTransitionsPreserveCommittedStack() {
+        launchHost().use { scenario ->
+            var detailsEntryIds: List<String> = emptyList()
+            scenario.onActivity { activity ->
+                assertTrue(
+                    activity.push(NavigationBackTestActivity.DETAILS_ROUTE) is
+                        NavResult.Committed,
+                )
+                detailsEntryIds = activity.entryIds()
+            }
+
+            scenario.moveToState(Lifecycle.State.CREATED)
+            scenario.moveToState(Lifecycle.State.RESUMED)
+            awaitTransition()
+
+            scenario.onActivity { activity ->
+                assertEquals(detailsEntryIds, activity.entryIds())
+                assertEquals(
+                    listOf(
+                        NavigationBackTestActivity.HOME_ROUTE,
+                        NavigationBackTestActivity.DETAILS_ROUTE,
+                    ),
+                    activity.routeNames(),
+                )
+                assertEquals(0, activity.failureCount)
+            }
+
+            var confirmationEntryIds: List<String> = emptyList()
+            scenario.onActivity { activity ->
+                assertTrue(
+                    activity.push(NavigationBackTestActivity.CONFIRMATION_ROUTE) is
+                        NavResult.Committed,
+                )
+                confirmationEntryIds = activity.entryIds()
+            }
+
+            scenario.recreate()
+            waitForUiIdle()
+
+            scenario.onActivity { activity ->
+                assertEquals(confirmationEntryIds, activity.entryIds())
+                assertEquals(
+                    listOf(
+                        NavigationBackTestActivity.HOME_ROUTE,
+                        NavigationBackTestActivity.DETAILS_ROUTE,
+                        NavigationBackTestActivity.CONFIRMATION_ROUTE,
+                    ),
+                    activity.routeNames(),
+                )
+                assertEquals(0, activity.failureCount)
+            }
+
+            device.pressBack()
+            waitForUiIdle()
+
+            scenario.onActivity { activity ->
+                assertEquals(
+                    listOf(
+                        NavigationBackTestActivity.HOME_ROUTE,
+                        NavigationBackTestActivity.DETAILS_ROUTE,
+                    ),
+                    activity.routeNames(),
+                )
+                assertEquals(0, activity.failureCount)
+            }
+        }
+    }
+
+    @Test
     fun repeatedPushAndImmediateSystemBackRemainTransactional() {
         launchHost().use { scenario ->
             repeat(STRESS_ITERATIONS) { index ->
