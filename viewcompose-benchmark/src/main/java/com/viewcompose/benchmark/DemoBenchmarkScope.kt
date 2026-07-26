@@ -39,6 +39,8 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
         // preserving any system extras the benchmark framework needs.
         intent.removeExtra("demo_module_key")
         intent.removeExtra("state_page_index")
+        intent.removeExtra("performance_engine")
+        intent.removeExtra("performance_scenario")
         // When extras are present, clear the task so the activity is recreated
         // fresh with the new extras. Otherwise, remove the flag so subsequent
         // tests without extras don't inherit the aggressive clear behavior.
@@ -49,6 +51,22 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
         }
         intent.putExtra("demo_module_key", moduleKey)
         extras.forEach { (key, value) -> intent.putExtra(key, value) }
+    }
+    waitForText(expectedText)
+}
+
+internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
+    engine: String,
+    scenario: String,
+    expectedText: String,
+) {
+    pressHome()
+    startActivityAndWait { intent ->
+        intent.removeExtra("demo_module_key")
+        intent.removeExtra("state_page_index")
+        intent.putExtra("performance_engine", engine)
+        intent.putExtra("performance_scenario", scenario)
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
     }
     waitForText(expectedText)
 }

@@ -35,6 +35,7 @@
 16. graphics 主链已落地 Canvas 节点与 draw modifiers；`drawWithCache` 支持跨帧缓存命中/失效，避免高频绘制场景重复构建命令。
 17. graphics 执行器已收口 v2 基线：`DrawRoundRect` 四角半径语义正确、`Drawable` 绘制支持 `DrawPaint` 组合、`ImageFilterModel.Chain` 可递归合并生效。
 18. 发布态基线使用 R8 + resource shrink 的非 debuggable `benchmark` target；`ReleaseBaselineBenchmark` 固定覆盖无 ART 预编译的冷启动与 state patch 帧耗时。
+19. 列表性能对比使用同一 target、同一份 1000 项数据与完全一致的交互脚本，分别运行 ViewCompose `LazyColumn` 和 Jetpack Compose `LazyColumn`；覆盖双向快速滚动与 keyed reorder + payload 内容更新。
 
 ### 2.2 发布态基准入口
 
@@ -59,6 +60,14 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
 2. `CompilationMode.None` 隔离 ART 预编译收益，直接暴露交付二进制回归。
 3. 固定场景为冷启动和 state patch。
 4. 结果只在同设备、同系统版本、同温控状态下纵向比较。
+
+Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
+
+1. 两个引擎运行在同一个 R8 target 中，排除应用配置、资源和进程环境差异。
+2. 使用 `CompilationMode.None`，避免 ART 预编译掩盖框架交付成本。
+3. `viewComposeListScroll/composeListScroll` 使用相同手势轨迹。
+4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新。
+5. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
 
 ### 2.3 当前结论
 
@@ -126,7 +135,7 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
 
 ### Phase 4：容器与布局收口
 
-状态：待推进  
+状态：列表对照基线已建立，复杂布局对照待推进
 目标：收敛高频容器和复杂页面的布局开销
 
 ### Phase 5：发布态优化
