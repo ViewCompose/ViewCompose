@@ -187,6 +187,7 @@ flowchart TD
 3. 组级失效来源固定为两类：状态读依赖失效、`emit` 输入（`spec/modifier`）变化；两者都进入 `InvalidationQueue` 去重合并。
 4. 结构漂移（同层 group key/顺序不一致）必须回退到最近稳定祖先子树重组，并只打印一次告警，禁止 silent corruption。
 5. `LocalContext` 必须按组 snapshot/restore，保证局部重组下 Local 读取一致。
+6. `remember`、`key`、`DisposableEffect`、`SideEffect`、`LaunchedEffect`、`rememberCoroutineScope` 等组合 API 只允许在活动的 `ComposerLite` 组合中调用；禁止维护备用 slot/effect store 或在组合外静默降级。
 
 ### 4.8 文本编辑边界
 

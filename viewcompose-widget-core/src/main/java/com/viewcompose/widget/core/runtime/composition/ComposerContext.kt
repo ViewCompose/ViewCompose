@@ -27,5 +27,10 @@ internal object ComposerContext {
 
     fun currentComposer(): ComposerLite? = currentComposer.get()
 
+    fun requireCurrentComposer(apiName: String): ComposerLite =
+        checkNotNull(currentComposer()) {
+            "$apiName must be called during an active ViewCompose composition."
+        }
+
     fun currentCoroutineContext(): CoroutineContext? = currentCoroutineContext.get()
 }

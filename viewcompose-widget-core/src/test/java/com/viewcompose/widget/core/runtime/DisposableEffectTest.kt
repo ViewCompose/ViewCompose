@@ -1,59 +1,62 @@
 package com.viewcompose.widget.core
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DisposableEffectTest {
     @Test
     fun `reuses effect when key is unchanged`() {
-        val store = EffectStore()
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
-        renderEffect(store, key = "stable", events = events)
-        renderEffect(store, key = "stable", events = events)
+        renderEffect(harness, key = "stable", events = events)
+        renderEffect(harness, key = "stable", events = events)
 
         assertEquals(
             listOf("start:stable"),
             events,
         )
+        harness.dispose()
     }
 
     @Test
     fun `disposes and restarts effect when key changes`() {
-        val store = EffectStore()
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
-        renderEffect(store, key = "A", events = events)
-        renderEffect(store, key = "B", events = events)
+        renderEffect(harness, key = "A", events = events)
+        renderEffect(harness, key = "B", events = events)
 
         assertEquals(
             listOf("start:A", "dispose:A", "start:B"),
             events,
         )
+        harness.dispose()
     }
 
     @Test
     fun `disposes effect when slot disappears`() {
-        val store = EffectStore()
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
-        renderEffect(store, key = "A", events = events)
-        EffectContext.withStore(store) { Unit }
-        store.commit()
+        renderEffect(harness, key = "A", events = events)
+        harness.render { Unit }
 
         assertEquals(
             listOf("start:A", "dispose:A"),
             events,
         )
+        harness.dispose()
     }
 
     @Test
-    fun `disposeAll disposes active effects`() {
-        val store = EffectStore()
+    fun `composer disposal disposes active effects`() {
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
-        renderEffect(store, key = "A", events = events)
-        store.disposeAll()
+        renderEffect(harness, key = "A", events = events)
+        harness.dispose()
 
         assertEquals(
             listOf("start:A", "dispose:A"),
@@ -63,16 +66,16 @@ class DisposableEffectTest {
 
     @Test
     fun `reuses effect when composite keys are unchanged`() {
-        val store = EffectStore()
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
         renderEffect(
-            store = store,
+            harness = harness,
             events = events,
             keys = arrayOf("user", 1),
         )
         renderEffect(
-            store = store,
+            harness = harness,
             events = events,
             keys = arrayOf("user", 1),
         )
@@ -81,20 +84,21 @@ class DisposableEffectTest {
             listOf("start:user-1"),
             events,
         )
+        harness.dispose()
     }
 
     @Test
     fun `restarts effect when any composite key changes`() {
-        val store = EffectStore()
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
         renderEffect(
-            store = store,
+            harness = harness,
             events = events,
             keys = arrayOf("user", 1),
         )
         renderEffect(
-            store = store,
+            harness = harness,
             events = events,
             keys = arrayOf("user", 2),
         )
@@ -103,14 +107,15 @@ class DisposableEffectTest {
             listOf("start:user-1", "dispose:user-1", "start:user-2"),
             events,
         )
+        harness.dispose()
     }
 
     @Test
     fun `key scope contributes to effect identity`() {
-        val store = EffectStore()
+        val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
 
-        EffectContext.withStore(store) {
+        harness.render {
             key("branch-A") {
                 DisposableEffect {
                     events += "start:A"
@@ -120,8 +125,7 @@ class DisposableEffectTest {
                 }
             }
         }
-        store.commit()
-        EffectContext.withStore(store) {
+        harness.render {
             key("branch-B") {
                 DisposableEffect {
                     events += "start:B"
@@ -131,33 +135,44 @@ class DisposableEffectTest {
                 }
             }
         }
-        store.commit()
 
         assertEquals(
             listOf("start:A", "dispose:A", "start:B"),
             events,
         )
+        harness.dispose()
+    }
+
+    @Test
+    fun `disposable effect outside composition fails fast`() {
+        val error = runCatching {
+            DisposableEffect { {} }
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("DisposableEffect"))
+        assertTrue(error?.message.orEmpty().contains("active ViewCompose composition"))
     }
 
     private fun renderEffect(
-        store: EffectStore,
+        harness: ComposerRuntimeHarness,
         key: String,
         events: MutableList<String>,
     ) {
         renderEffect(
-            store = store,
+            harness = harness,
             events = events,
             keys = arrayOf(key),
         )
     }
 
     private fun renderEffect(
-        store: EffectStore,
+        harness: ComposerRuntimeHarness,
         events: MutableList<String>,
         keys: Array<out Any?>,
     ) {
         val label = keys.joinToString(separator = "-")
-        EffectContext.withStore(store) {
+        harness.render {
             DisposableEffect(*keys) {
                 events += "start:$label"
                 {
@@ -165,6 +180,5 @@ class DisposableEffectTest {
                 }
             }
         }
-        store.commit()
     }
 }
