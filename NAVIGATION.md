@@ -34,7 +34,7 @@ Current feature-branch status:
 - Stage 5 complete host restoration: complete
 - Stage 5 platform back and predictive back: complete
 - Stage 6 Android 13 real-device back baseline: complete
-- Stage 6 Android 14+ platform gesture-progress validation: pending compatible hardware
+- Stage 6 Android 14+ platform gesture-progress validation: complete
 
 ## 2. P0 delivery plan
 
@@ -194,9 +194,31 @@ At that point AndroidX still reports the host as `INITIALIZED`; destination sess
 `INITIALIZED` until the Activity advances, instead of requiring the application to delay first
 content until `CREATED`.
 
-API 33 does not expose real platform predictive-gesture progress callbacks. The native View progress
-driver is exercised on hardware through AndroidX, while an Android 14/API 34 or newer gesture-mode
-device remains required to certify the complete OS edge-gesture start/progress/cancel/commit path.
+API 33 does not expose real platform predictive-gesture progress callbacks. The AndroidX dispatcher
+surface therefore remains the compatibility baseline for that device.
+
+The complete platform path is certified separately on a Pixel 9a Android Emulator running Android
+15/API 35 in gesture-navigation mode. The API 34+ cases sample the destination Views on every frame
+and assert that:
+
+- a real OS edge gesture exposes both destinations and continuously updates translation and alpha;
+- reversing the same touch stream back to the edge cancels, restores settled View properties, and
+  preserves `[home, details]`;
+- completing the OS edge gesture removes `details`, presents `home`, and leaves no navigation
+  failure.
+
+Android's `input` command can express a committing swipe but cannot express one continuous
+out-and-back touch stream. The host runner uses the emulator's authenticated hardware-touch
+channel for cancellation, waits for the instrumented Activity to enter its sampling window, and
+then runs the complete eight-test suite:
+
+```bash
+tools/navigation/validate_android_predictive_back.sh
+```
+
+The runner requires a single API 34+ Android Emulator with gesture navigation enabled. A regular
+`connectedDebugAndroidTest` run skips only the host-assisted cancellation case; the script above is
+the certification command and completed 8/8 on the Android 15 Pixel 9a AVD.
 
 ## 3. Transaction invariants
 
