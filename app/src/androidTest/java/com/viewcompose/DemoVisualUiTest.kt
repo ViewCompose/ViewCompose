@@ -1174,7 +1174,9 @@ class DemoVisualUiTest {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 5)
+        )
+            .putExtra(EXTRA_ANIMATION_PAGE_INDEX, 5)
+            .putExtra(EXTRA_ANIMATION_INFINITE_PULSE, false)
         launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
