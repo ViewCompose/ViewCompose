@@ -148,15 +148,29 @@ internal fun Activity.requireViewByTestTagVisible(
     maxScrollAttempts: Int = 24,
 ): View {
     val root = findViewById<ViewGroup>(android.R.id.content)
-    repeat(maxScrollAttempts) {
-        val view = findViewByTestTag(root, tag)
-        if (view != null && isViewVisible(view)) {
-            return view
-        }
-        val recyclerView = findFirstRecyclerView(root) ?: return@repeat
-        val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
-        recyclerView.scrollBy(0, delta)
+    fun visibleTaggedView(): View? {
+        return findViewByTestTag(root, tag)?.takeIf(::isViewVisible)
     }
+
+    visibleTaggedView()?.let { return it }
+    val recyclerView = findFirstRecyclerView(root)
+    if (recyclerView != null) {
+        val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
+        fun scrollUntilVisible(direction: Int): View? {
+            repeat(maxScrollAttempts) {
+                visibleTaggedView()?.let { return it }
+                if (!recyclerView.canScrollVertically(direction)) {
+                    return null
+                }
+                recyclerView.scrollBy(0, direction * delta)
+            }
+            return visibleTaggedView()
+        }
+
+        scrollUntilVisible(direction = 1)?.let { return it }
+        scrollUntilVisible(direction = -1)?.let { return it }
+    }
+
     val view = findViewByTestTag(root, tag)
     assertNotNull("Expected to find view with testTag: $tag", view)
     assertViewFullyVisible(view!!)
