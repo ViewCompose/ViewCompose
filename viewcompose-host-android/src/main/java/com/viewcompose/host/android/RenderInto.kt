@@ -1,7 +1,7 @@
 package com.viewcompose.host.android
 
 import android.view.ViewGroup
-import com.viewcompose.host.android.runtime.ensureAndroidCoreRenderEngineInstalled
+import com.viewcompose.host.android.runtime.ensureAndroidRenderSessionPlatformInstalled
 import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.RenderStats
@@ -29,7 +29,7 @@ fun renderInto(
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
     content: UiTreeBuilder.() -> Unit,
 ): RenderSession {
-    ensureAndroidCoreRenderEngineInstalled()
+    ensureAndroidRenderSessionPlatformInstalled()
     val session = com.viewcompose.widget.core.RenderSession(
         container = container,
         content = content,

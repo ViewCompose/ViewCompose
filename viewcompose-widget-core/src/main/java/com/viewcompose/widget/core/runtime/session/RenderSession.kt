@@ -14,13 +14,14 @@ class RenderSession(
     private val onRenderStats: ((RenderStats) -> Unit)? = null,
     private val onRenderResult: ((RenderTreeResult) -> Unit)? = null,
 ) {
+    private val platform = RenderSessionPlatformProvider.requirePlatform()
     private val overlaySessionId = OverlaySessionId("render-session-${nextOverlaySessionId.incrementAndGet()}")
     private var mountedNodes: List<Any> = emptyList()
     private var disposed: Boolean = false
     private val overlayRequestStore = OverlayRequestStore()
     private var requestRender: (() -> Unit)? = null
     private val compositionCoroutineScope = CompositionCoroutineScopeOwner(
-        parentContext = renderSessionCoroutineContext(),
+        parentContext = platform.coroutineContext,
         onError = { error ->
             Log.e(debugTag, "Composition coroutine failed", error)
         },
@@ -29,7 +30,7 @@ class RenderSession(
         warningLogger = { message -> Log.w(debugTag, message) },
         onInvalidated = { requestRender?.invoke() },
     )
-    private val runtime = RenderSessionRuntimeProvider
+    private val runtime = platform.runtimeFactory
         .create(
             onRenderNow = ::renderNow,
             onDisposeNow = ::disposeNow,
@@ -69,7 +70,7 @@ class RenderSession(
                     }
                 }
             }
-            CoreRenderEngineProvider.engine.renderInto(
+            platform.renderEngine.renderInto(
                 container = container,
                 previousMountedNodes = mountedNodes,
                 nodes = tree,
@@ -122,7 +123,7 @@ class RenderSession(
         disposed = true
         requestRender = null
         compositionCoroutineScope.cancel()
-        CoreRenderEngineProvider.engine.disposeMounted(
+        platform.renderEngine.disposeMounted(
             container = container,
             mountedNodes = mountedNodes,
         )

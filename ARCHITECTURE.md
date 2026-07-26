@@ -150,7 +150,7 @@ flowchart TD
 4. `overlay-android` 必须通过 `META-INF/services` 注册 `OverlayHostFactoryProvider`，禁止回退字符串反射装配（`Class.forName`）。
 5. host 对外回调 `onRenderStats/onRenderResult` 只能暴露 core 自有诊断类型（`com.viewcompose.widget.core.RenderStats/RenderTreeResult`），renderer 诊断类型仅允许出现在 host 内部适配层。
 6. system bars insets 走组件侧 `Modifier.systemBarsInsetsPadding(...)`，不绑死 Activity 全局参数。
-7. core 渲染引擎由 `viewcompose-host-android` 通过 `installCoreRenderEngine(...)` 接口注册，`widget-core` 不再通过反射装配 renderer。
+7. `viewcompose-host-android` 必须通过 `installRenderSessionPlatform(...)` 一次性原子注册渲染引擎、帧调度 runtime 与组合协程上下文；`RenderSession` 创建时固定使用同一平台快照，缺失或重复安装立即失败，禁止 no-op/immediate/empty-context 分段降级。
 
 ### 4.4 延迟 session 容器边界
 

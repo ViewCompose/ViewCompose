@@ -45,6 +45,7 @@
 20. 完整纯文本编辑模型已硬切落地：`viewcompose-text-core` 提供 text/selection/composition、原子 EditingBuffer、输入变换和撤销/重做；Android renderer 通过专用 `AppCompatEditText/InputConnection` 控制器同步，`rememberTextFieldState` 保存 text + selection。
 21. Lazy 容器 P1 已落地：`LazyListState` 提供完整可观察 layout snapshot、边界与滚动控制；结构化 DSL 支持稳定 key、sticky header、contentType、Grid span、非对称 padding、reverse layout、用户滚动开关和预取策略。
 22. 组合 API 已硬切到 `ComposerLite` 单一路径：移除备用 remember/effect/key 上下文，所有组合外调用立即失败，避免无编译器约束下的静默状态丢失与副作用遗漏。
+23. 宿主平台能力已收口为原子安装：渲染引擎、帧调度 runtime 与组合协程上下文作为同一不可变快照注册，移除空渲染、即时调度和空协程上下文的半安装降级路径。
 
 ### 2.2 Demo 与验证层
 
