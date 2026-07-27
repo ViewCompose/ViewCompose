@@ -59,7 +59,7 @@ dependencies {
     implementation(project(":viewcompose-overlay-android"))
     implementation(project(":viewcompose-image-coil"))
     debugImplementation(project(":viewcompose-preview"))
-    debugImplementation(project(":viewcompose-navigation"))
+    implementation(project(":viewcompose-navigation"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

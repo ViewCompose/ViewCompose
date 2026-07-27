@@ -1,10 +1,14 @@
 package com.viewcompose
 
+import android.os.Build
 import android.os.SystemClock
+import android.util.Log
+import android.util.SparseIntArray
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.BackEventCompat
 import androidx.activity.ExperimentalActivityApi
+import androidx.core.app.FrameMetricsAggregator
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -21,6 +25,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.math.abs
+import kotlin.math.ceil
 
 @OptIn(ExperimentalActivityApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -145,6 +150,59 @@ class NavigationBackDeviceTest {
                     ).visibility,
                 )
                 assertEquals(0, activity.failureCount)
+            }
+        }
+    }
+
+    @SdkSuppress(minSdkVersion = 24)
+    @Test
+    fun predictiveBackCancellationFrameTimingStaysWithinDeviceBudget() {
+        launchHost().use { scenario ->
+            scenario.onActivity { activity ->
+                activity.push(NavigationBackTestActivity.DETAILS_ROUTE)
+            }
+            awaitTransition()
+
+            dispatchPredictiveCancellation(scenario)
+            awaitBackCancellation()
+
+            val aggregator = FrameMetricsAggregator(FrameMetricsAggregator.TOTAL_DURATION)
+            var refreshRateHz = 60f
+            scenario.onActivity { activity ->
+                @Suppress("DEPRECATION")
+                val display = activity.windowManager.defaultDisplay
+                refreshRateHz = display.refreshRate.takeIf { rate -> rate > 0f } ?: 60f
+                aggregator.add(activity)
+            }
+
+            repeat(FRAME_TIMING_ITERATIONS) {
+                dispatchPredictiveCancellation(scenario)
+                awaitBackCancellation()
+            }
+
+            var metrics: Array<SparseIntArray>? = null
+            scenario.onActivity { activity ->
+                metrics = aggregator.remove(activity)
+            }
+            val summary = checkNotNull(metrics)
+                .getOrNull(FrameMetricsAggregator.TOTAL_INDEX)
+                .toFrameTimingSummary(refreshRateHz)
+            Log.i(FRAME_TIMING_LOG_TAG, summary.description)
+
+            assertTrue(
+                "${summary.description}; expected at least $MIN_MEASURED_FRAMES frames",
+                summary.frameCount >= MIN_MEASURED_FRAMES,
+            )
+            if (!isEmulator()) {
+                assertTrue(
+                    "${summary.description}; P95 exceeded ${summary.maxP95Millis}ms",
+                    summary.p95Millis <= summary.maxP95Millis,
+                )
+                assertTrue(
+                    "${summary.description}; severe-frame ratio exceeded " +
+                        "$MAX_SEVERE_FRAME_RATIO",
+                    summary.severeFrameRatio <= MAX_SEVERE_FRAME_RATIO,
+                )
             }
         }
     }
@@ -472,13 +530,53 @@ class NavigationBackDeviceTest {
     }
 
     private fun backEvent(progress: Float): BackEventCompat {
+        return backEvent(
+            progress = progress,
+            frameTimeMillis = SystemClock.uptimeMillis(),
+        )
+    }
+
+    private fun backEvent(
+        progress: Float,
+        frameTimeMillis: Long,
+    ): BackEventCompat {
         return BackEventCompat(
             touchX = 0f,
             touchY = 500f,
             progress = progress,
             swipeEdge = BackEventCompat.EDGE_LEFT,
-            frameTimeMillis = SystemClock.uptimeMillis(),
+            frameTimeMillis = frameTimeMillis,
         )
+    }
+
+    private fun dispatchPredictiveCancellation(
+        scenario: ActivityScenario<NavigationBackTestActivity>,
+    ) {
+        scenario.onActivity { activity ->
+            val startTimeMillis = SystemClock.uptimeMillis()
+            activity.onBackPressedDispatcher.dispatchOnBackStarted(
+                backEvent(
+                    progress = 0f,
+                    frameTimeMillis = startTimeMillis,
+                ),
+            )
+            listOf(0.2f, 0.45f, 0.7f).forEachIndexed { index, progress ->
+                activity.onBackPressedDispatcher.dispatchOnBackProgressed(
+                    backEvent(
+                        progress = progress,
+                        frameTimeMillis = startTimeMillis + (index + 1) * 16L,
+                    ),
+                )
+            }
+            activity.onBackPressedDispatcher.dispatchOnBackCancelled()
+        }
+    }
+
+    private fun isEmulator(): Boolean {
+        return Build.FINGERPRINT.startsWith("generic") ||
+            Build.FINGERPRINT.contains("emulator") ||
+            Build.HARDWARE.contains("goldfish") ||
+            Build.HARDWARE.contains("ranchu")
     }
 
     private fun assumeGestureNavigation() {
@@ -572,8 +670,73 @@ class NavigationBackDeviceTest {
             "maxDetailsTranslation=$maxDetailsTranslation."
     }
 
+    private fun SparseIntArray?.toFrameTimingSummary(
+        refreshRateHz: Float,
+    ): FrameTimingSummary {
+        requireNotNull(this) {
+            "FrameMetricsAggregator did not return total-duration metrics."
+        }
+        val frameCount = (0 until size()).sumOf { index -> valueAt(index) }
+        require(frameCount > 0) {
+            "FrameMetricsAggregator did not capture any predictive-back frames."
+        }
+        val p95Target = ceil(frameCount * 0.95).toInt()
+        var cumulativeFrames = 0
+        var p95Millis = 0
+        for (index in 0 until size()) {
+            cumulativeFrames += valueAt(index)
+            if (cumulativeFrames >= p95Target) {
+                p95Millis = keyAt(index)
+                break
+            }
+        }
+        val frameBudgetMillis = 1_000f / refreshRateHz
+        val severeFrameThresholdMillis = maxOf(
+            MIN_SEVERE_FRAME_MILLIS,
+            ceil(frameBudgetMillis * 2f).toInt(),
+        )
+        val severeFrameCount = (0 until size()).sumOf { index ->
+            if (keyAt(index) > severeFrameThresholdMillis) valueAt(index) else 0
+        }
+        return FrameTimingSummary(
+            refreshRateHz = refreshRateHz,
+            frameCount = frameCount,
+            p95Millis = p95Millis,
+            maxP95Millis = maxOf(
+                MIN_MAX_P95_MILLIS,
+                ceil(frameBudgetMillis * 3f).toInt(),
+            ),
+            severeFrameThresholdMillis = severeFrameThresholdMillis,
+            severeFrameCount = severeFrameCount,
+        )
+    }
+
+    private data class FrameTimingSummary(
+        val refreshRateHz: Float,
+        val frameCount: Int,
+        val p95Millis: Int,
+        val maxP95Millis: Int,
+        val severeFrameThresholdMillis: Int,
+        val severeFrameCount: Int,
+    ) {
+        val severeFrameRatio: Float
+            get() = severeFrameCount.toFloat() / frameCount
+
+        val description: String
+            get() = "predictive-back frame timing: refreshRate=${refreshRateHz}Hz, " +
+                "frames=$frameCount, p95=${p95Millis}ms, " +
+                "severe(>${severeFrameThresholdMillis}ms)=" +
+                "$severeFrameCount (${severeFrameRatio * 100f}%)"
+    }
+
     companion object {
         private const val STRESS_ITERATIONS = 30
+        private const val FRAME_TIMING_ITERATIONS = 6
+        private const val MIN_MEASURED_FRAMES = 30
+        private const val MIN_SEVERE_FRAME_MILLIS = 32
+        private const val MIN_MAX_P95_MILLIS = 48
+        private const val MAX_SEVERE_FRAME_RATIO = 0.2f
+        private const val FRAME_TIMING_LOG_TAG = "ViewComposeNavFrames"
         private const val GESTURE_NAVIGATION_MODE = "2"
         private const val EXTERNAL_GESTURE_ARGUMENT = "platformPredictiveBackGesture"
         private const val EXTERNAL_GESTURE_LOG_TAG = "ViewComposeNavigationBack"

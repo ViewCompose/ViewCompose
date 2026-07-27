@@ -1,5 +1,6 @@
 package com.viewcompose.benchmark
 
+import android.os.SystemClock
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
@@ -71,6 +72,20 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
     waitForText(expectedText)
 }
 
+internal fun MacrobenchmarkScope.startSystemNavigationAndWait() {
+    pressHome()
+    startActivityAndWait { intent ->
+        intent.setClassName(
+            TARGET_PACKAGE,
+            "com.viewcompose.SystemNavigationActivity",
+        )
+        intent.action = android.content.Intent.ACTION_MAIN
+        intent.data = null
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    }
+    waitForText("首页总览")
+}
+
 internal fun MacrobenchmarkScope.waitForText(text: String) {
     device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
 }
@@ -103,6 +118,16 @@ internal fun MacrobenchmarkScope.clickText(text: String) {
     assertNotNull("Expected to find text: $text", node)
     node!!.click()
     device.waitForIdle()
+}
+
+internal fun MacrobenchmarkScope.clickVisibleTextWithoutIdle(text: String) {
+    val node = device.findObject(By.text(text))
+    assertNotNull("Expected to find visible text: $text", node)
+    node!!.click()
+}
+
+internal fun MacrobenchmarkScope.waitForNavigationMotion() {
+    SystemClock.sleep(NAVIGATION_MOTION_WAIT_MILLIS)
 }
 
 internal fun MacrobenchmarkScope.openDemoModule(title: String) {
@@ -184,3 +209,5 @@ internal fun MacrobenchmarkScope.swipeTabStripLeft() {
     )
     device.waitForIdle()
 }
+
+private const val NAVIGATION_MOTION_WAIT_MILLIS = 650L
