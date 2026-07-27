@@ -61,9 +61,13 @@ wait_for_seeded_status() {
     local status=""
     for _ in $(seq 1 80); do
         status="$(read_status || true)"
-        if [[ "$status" == *"top=details"* &&
-            "$status" == *"home@"*"[saveable=11,handle=101]"* &&
-            "$status" == *"details@"*"[saveable=29,handle=202]"* &&
+        if [[ "$status" == *"active=process-death-account-stack"* &&
+            "$status" == *"history=process-death-home-stack"* &&
+            "$status" == *"top=process-death-security"* &&
+            "$status" == *"process-death-home-stack{"*"home@"*"[saveable=11,handle=101]"* &&
+            "$status" == *"confirmation@"*"[saveable=17,handle=151]"* &&
+            "$status" == *"process-death-account-stack{"*"details@"*"[saveable=29,handle=202]"* &&
+            "$status" == *"process-death-security@"*"[saveable=31,handle=252]"* &&
             "$status" == *"process-death-account@"*"[saveable=37,handle=303,arg=42]"* ]]; then
             printf '%s\n' "$status"
             return 0
