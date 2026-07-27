@@ -8,6 +8,10 @@ import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavGraph
 import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavStackConfiguration
+import com.viewcompose.navigation.core.NavStackId
+import com.viewcompose.navigation.core.NavStackSetSnapshot
+import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.navigation.core.navGraph
 import org.junit.Assert.assertEquals
@@ -19,8 +23,8 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class NavHostSavedStateTest {
     @Test
-    fun `codec preserves stack IDs routes arguments and destination state`() {
-        val snapshot = NavBackStackSnapshot(
+    fun `codec preserves all stacks selection history routes and destination state`() {
+        val homeStack = NavBackStackSnapshot(
             listOf(
                 NavEntry(
                     id = NavEntryId("root"),
@@ -58,6 +62,22 @@ class NavHostSavedStateTest {
                 ),
             ),
         )
+        val searchStack = NavBackStackSnapshot(
+            listOf(
+                NavEntry(
+                    id = NavEntryId("search-root"),
+                    route = NavRoute("search"),
+                ),
+            ),
+        )
+        val stackState = NavStackSetSnapshot(
+            activeStackId = SearchStack,
+            stacks = linkedMapOf(
+                HomeStack to homeStack,
+                SearchStack to searchStack,
+            ),
+            selectionHistory = listOf(HomeStack),
+        )
         val destinationState = Bundle().apply {
             putString("query", "restored")
             putInt("selection", 3)
@@ -67,17 +87,17 @@ class NavHostSavedStateTest {
             decodeNavHostState(
                 encodeNavHostState(
                     NavHostRestorableState(
-                        snapshot = snapshot,
+                        stackState = stackState,
                         destinationState = destinationState,
                     ),
                 ),
             ),
         )
 
-        assertEquals(snapshot, decoded.snapshot)
+        assertEquals(stackState, decoded.stackState)
         assertEquals(
             listOf("app", "account"),
-            decoded.snapshot.top.graphHierarchy,
+            checkNotNull(decoded.stackState[HomeStack]).top.graphHierarchy,
         )
         assertEquals("restored", decoded.destinationState?.getString("query"))
         assertEquals(3, decoded.destinationState?.getInt("selection"))
@@ -89,33 +109,45 @@ class NavHostSavedStateTest {
             decodeNavHostState(
                 mapOf(
                     "formatVersion" to Int.MAX_VALUE,
-                    "entries" to emptyList<Any?>(),
+                    "stacks" to emptyList<Any?>(),
                 ),
             ),
         )
         assertNull(
             decodeNavHostState(
                 mapOf(
-                    "formatVersion" to 3,
-                    "entries" to listOf(
-                        encodedEntry(id = "same", routeName = "home"),
-                        encodedEntry(id = "same", routeName = "details"),
-                    ),
-                    "destinationState" to null,
-                ),
-            ),
-        )
-        assertNull(
-            decodeNavHostState(
-                mapOf(
-                    "formatVersion" to 3,
-                    "entries" to listOf(
-                        encodedEntry(
-                            id = "root",
-                            routeName = "",
+                    "formatVersion" to 4,
+                    "activeStackId" to "home",
+                    "selectionHistory" to emptyList<String>(),
+                    "stacks" to listOf(
+                        encodedStack(
+                            id = "home",
+                            entries = listOf(
+                                encodedEntry(id = "same", routeName = "home"),
+                                encodedEntry(id = "same", routeName = "details"),
+                            ),
                         ),
                     ),
-                    "destinationState" to null,
+                ),
+            ),
+        )
+        assertNull(
+            decodeNavHostState(
+                mapOf(
+                    "formatVersion" to 4,
+                    "activeStackId" to "home",
+                    "selectionHistory" to emptyList<String>(),
+                    "stacks" to listOf(
+                        encodedStack(
+                            id = "home",
+                            entries = listOf(
+                                encodedEntry(
+                                    id = "root",
+                                    routeName = "",
+                                ),
+                            ),
+                        ),
+                    ),
                 ),
             ),
         )
@@ -132,8 +164,10 @@ class NavHostSavedStateTest {
 
         val restored = navHostControllerSaver(startDestination).restore(
             mapOf(
-                "formatVersion" to 3,
-                "entries" to listOf("not-an-entry"),
+                "formatVersion" to 4,
+                "activeStackId" to "default",
+                "selectionHistory" to emptyList<String>(),
+                "stacks" to listOf("not-a-stack"),
                 "destinationState" to null,
             ),
         )
@@ -141,6 +175,47 @@ class NavHostSavedStateTest {
         assertEquals(
             listOf(startDestination),
             restored.snapshot.entries.map(NavEntry::route),
+        )
+    }
+
+    @Test
+    fun `multi stack saver restores every stack and active selection`() {
+        val configuration = NavStackConfiguration(
+            initialStackId = HomeStack,
+            stacks = listOf(
+                NavStackSpec(HomeStack, NavRoute("home")),
+                NavStackSpec(SearchStack, NavRoute("search")),
+            ),
+        )
+        val ids = ArrayDeque(listOf("home-root", "search-root"))
+        val controller = createNavHostController(
+            stackConfiguration = configuration,
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(ids.removeFirst())
+            },
+        )
+        val encoded = encodeNavHostState(controller.stateForSave())
+            .toMutableMap()
+            .apply {
+                this["activeStackId"] = "search"
+                this["selectionHistory"] = listOf("home")
+            }
+
+        val restored = navHostControllerSaver(configuration).restore(encoded)
+
+        assertEquals(SearchStack, restored.activeStackId)
+        assertEquals(listOf(HomeStack), restored.stackState.selectionHistory)
+        assertEquals("home-root", restored.stackSnapshot(HomeStack).top.id.value)
+        assertEquals("search-root", restored.stackSnapshot(SearchStack).top.id.value)
+    }
+
+    private fun encodedStack(
+        id: String,
+        entries: List<Map<String, Any?>>,
+    ): Map<String, Any?> {
+        return mapOf(
+            "stackId" to id,
+            "entries" to entries,
         )
     }
 
@@ -197,5 +272,10 @@ class NavHostSavedStateTest {
                 destination("profile")
             }
         }
+    }
+
+    private companion object {
+        val HomeStack = NavStackId("home")
+        val SearchStack = NavStackId("search")
     }
 }

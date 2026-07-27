@@ -79,7 +79,7 @@ internal class TransactionalNavHostCoordinator(
         try {
             val currentSnapshot = controller.snapshot()
             result = attachEntries(
-                entries = currentSnapshot.entries,
+                entries = controller.retainedEntries(),
                 attachedEntryIds = attachedEntryIds,
             )
             if (result is NavHostAttachmentResult.Attached) {
@@ -178,19 +178,38 @@ internal class TransactionalNavHostCoordinator(
             redirectActiveBackPreview()
             redirectActiveTransition()
             val currentSnapshot = controller.snapshot()
-            if (currentSnapshot.entries.size == 1) {
-                return null
+            val command = controller.systemBackCommand() ?: return null
+            val incomingEntry = when (command) {
+                NavCommand.Pop -> {
+                    currentSnapshot.entries[currentSnapshot.entries.lastIndex - 1]
+                }
+
+                NavCommand.PopStackHistory -> {
+                    val previousStackId = checkNotNull(
+                        controller.stackStateSnapshot().selectionHistory.lastOrNull(),
+                    )
+                    controller.stackSnapshot(previousStackId).top
+                }
+
+                is NavCommand.Push,
+                is NavCommand.ReplaceTop,
+                is NavCommand.Reset,
+                is NavCommand.SelectStack,
+                -> error("System Back produced a forward navigation command: $command")
             }
+            val retainedEntries = controller.retainedEntries()
             val preview = NavHostBackPreview(
                 id = NavHostBackPreviewId(++nextBackPreviewId),
+                command = command,
                 snapshot = currentSnapshot,
                 outgoingEntry = currentSnapshot.top,
-                incomingEntry = currentSnapshot.entries[currentSnapshot.entries.lastIndex - 1],
+                incomingEntry = incomingEntry,
+                retainedEntries = retainedEntries,
                 visibleEntryIds = linkedSetOf(
-                    currentSnapshot.entries[currentSnapshot.entries.lastIndex - 1].id,
+                    incomingEntry.id,
                     currentSnapshot.top.id,
                 ),
-                layerOrder = currentSnapshot.entries.map(NavEntry::id),
+                layerOrder = retainedEntries.map(NavEntry::id),
             )
             val active = ActiveNavHostBackPreview(preview)
             activeBackPreviewRecord = active
@@ -280,12 +299,14 @@ internal class TransactionalNavHostCoordinator(
         executing = true
         activeBackPreviewRecord = null
         return try {
-            val result = when (val preparation = controller.prepare(NavCommand.Pop)) {
+            val result = when (
+                val preparation = controller.prepare(active.preview.command)
+            ) {
                 is NavPreparation.NoChange -> {
                     active.handle?.cancel()
                     applySettledState(controller.snapshot())
                     NavHostNavigationResult.NoChange(
-                        command = NavCommand.Pop,
+                        command = active.preview.command,
                         reason = preparation.reason,
                         snapshot = preparation.snapshot,
                     )
@@ -347,7 +368,7 @@ internal class TransactionalNavHostCoordinator(
             val entries = activeTransitionRecord
                 ?.transition
                 ?.retainedEntries
-                ?: controller.snapshot().entries
+                ?: controller.retainedEntries()
             entries.forEach { entry ->
                 reports[entry.id] = checkNotNull(sessionStore.sessionOrNull(entry.id)) {
                     "Attached destination ${entry.id} has no page session."
@@ -657,17 +678,24 @@ internal class TransactionalNavHostCoordinator(
 
     private fun applySettledState(snapshot: NavBackStackSnapshot) {
         val topId = snapshot.top.id
+        val retainedEntries = controller.retainedEntries()
         sessionStore.present(
-            layerOrder = snapshot.entries.map(NavEntry::id),
+            layerOrder = retainedEntries.map(NavEntry::id),
             visibleEntryIds = setOf(topId),
         )
-        reconcileOwners(snapshot)
+        reconcileOwners(
+            snapshot = snapshot,
+            retainedEntries = retainedEntries,
+        )
     }
 
-    private fun reconcileOwners(snapshot: NavBackStackSnapshot) {
+    private fun reconcileOwners(
+        snapshot: NavBackStackSnapshot,
+        retainedEntries: List<NavEntry> = controller.retainedEntries(),
+    ) {
         val topId = snapshot.top.id
         ownerStore.reconcile(
-            retainedEntries = snapshot.entries,
+            retainedEntries = retainedEntries,
             visibleEntryIds = setOf(topId),
             interactiveEntryId = topId,
             hostState = hostLifecycleState,
@@ -682,10 +710,11 @@ internal class TransactionalNavHostCoordinator(
         check(activeTransitionRecord == null) {
             "A navigation transition must be terminal before another transition starts."
         }
-        val committedIds = committedSnapshot.entries
+        val committedEntries = controller.retainedEntries()
+        val committedIds = committedEntries
             .mapTo(mutableSetOf(), NavEntry::id)
         val retainedEntries = buildList {
-            addAll(committedSnapshot.entries)
+            addAll(committedEntries)
             transaction.mutation.removed.forEach { removedEntry ->
                 if (removedEntry.id !in committedIds) {
                     add(removedEntry)
@@ -773,7 +802,7 @@ internal class TransactionalNavHostCoordinator(
 
     private fun reconcileOwners(preview: NavHostBackPreview) {
         ownerStore.reconcile(
-            retainedEntries = preview.snapshot.entries,
+            retainedEntries = preview.retainedEntries,
             visibleEntryIds = preview.visibleEntryIds,
             interactiveEntryId = preview.outgoingEntry.id,
             hostState = hostLifecycleState,

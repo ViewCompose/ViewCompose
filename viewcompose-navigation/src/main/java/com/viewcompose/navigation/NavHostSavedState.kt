@@ -8,17 +8,28 @@ import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavGraph
 import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavStackConfiguration
+import com.viewcompose.navigation.core.NavStackId
+import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.widget.core.Saver
 import com.viewcompose.widget.core.mapSaver
 
 internal data class NavHostRestorableState(
-    val snapshot: NavBackStackSnapshot,
+    val stackState: NavStackSetSnapshot,
     val destinationState: Bundle?,
 )
 
 internal fun navHostControllerSaver(
     startDestination: NavRoute,
+): Saver<NavHostController, Map<String, Any?>> {
+    return navHostControllerSaver(
+        stackConfiguration = NavStackConfiguration.single(startDestination),
+    )
+}
+
+internal fun navHostControllerSaver(
+    stackConfiguration: NavStackConfiguration,
 ): Saver<NavHostController, Map<String, Any?>> {
     return mapSaver(
         save = { controller ->
@@ -27,18 +38,35 @@ internal fun navHostControllerSaver(
         restore = { saved ->
             val restored = decodeNavHostState(saved)
             if (restored == null) {
-                createNavHostController(startDestination)
+                createNavHostController(stackConfiguration)
             } else {
-                NavHostController(
-                    backStackController = NavBackStackController.restore(restored.snapshot),
-                    restoredDestinationState = restored.destinationState,
-                )
+                runCatching {
+                    NavHostController(
+                        backStackController = NavBackStackController.restore(
+                            state = restored.stackState,
+                            configuration = stackConfiguration,
+                        ),
+                        restoredDestinationState = restored.destinationState,
+                    )
+                }.getOrElse {
+                    createNavHostController(stackConfiguration)
+                }
             }
         },
     )
 }
 
 internal fun navHostControllerSaver(
+    graph: NavGraph,
+): Saver<NavHostController, Map<String, Any?>> {
+    return navHostControllerSaver(
+        stackConfiguration = NavStackConfiguration.single(graph.startDestination),
+        graph = graph,
+    )
+}
+
+internal fun navHostControllerSaver(
+    stackConfiguration: NavStackConfiguration,
     graph: NavGraph,
 ): Saver<NavHostController, Map<String, Any?>> {
     return mapSaver(
@@ -48,18 +76,25 @@ internal fun navHostControllerSaver(
         restore = { saved ->
             val restored = decodeNavHostState(saved)
             if (restored == null) {
-                createNavHostController(graph)
+                createNavHostController(
+                    stackConfiguration = stackConfiguration,
+                    graph = graph,
+                )
             } else {
                 runCatching {
                     NavHostController(
                         backStackController = NavBackStackController.restore(
-                            snapshot = restored.snapshot,
+                            state = restored.stackState,
+                            configuration = stackConfiguration,
                             graph = graph,
                         ),
                         restoredDestinationState = restored.destinationState,
                     )
                 }.getOrElse {
-                    createNavHostController(graph)
+                    createNavHostController(
+                        stackConfiguration = stackConfiguration,
+                        graph = graph,
+                    )
                 }
             }
         },
@@ -71,7 +106,14 @@ internal fun encodeNavHostState(
 ): Map<String, Any?> {
     return linkedMapOf(
         KEY_FORMAT_VERSION to FORMAT_VERSION,
-        KEY_ENTRIES to state.snapshot.entries.map(::encodeEntry),
+        KEY_ACTIVE_STACK_ID to state.stackState.activeStackId.value,
+        KEY_SELECTION_HISTORY to state.stackState.selectionHistory.map(NavStackId::value),
+        KEY_STACKS to state.stackState.stacks.map { (stackId, snapshot) ->
+            linkedMapOf(
+                KEY_STACK_ID to stackId.value,
+                KEY_ENTRIES to snapshot.entries.map(::encodeEntry),
+            )
+        },
         KEY_DESTINATION_STATE to state.destinationState?.let(::Bundle),
     )
 }
@@ -90,19 +132,50 @@ private fun decodeNavHostStateUnsafe(
     if ((saved[KEY_FORMAT_VERSION] as? Number)?.toInt() != FORMAT_VERSION) {
         return null
     }
-    val encodedEntries = saved[KEY_ENTRIES] as? List<*> ?: return null
-    if (encodedEntries.isEmpty() || encodedEntries.size > MAX_ENTRY_COUNT) {
+    val activeStackId = NavStackId(
+        saved[KEY_ACTIVE_STACK_ID] as? String ?: return null,
+    )
+    val encodedStacks = saved[KEY_STACKS] as? List<*> ?: return null
+    if (encodedStacks.isEmpty() || encodedStacks.size > MAX_STACK_COUNT) {
         return null
     }
-    val entries = encodedEntries.map { encoded ->
-        decodeEntry(encoded as? Map<*, *> ?: return null) ?: return null
+    var totalEntryCount = 0
+    val stacks = linkedMapOf<NavStackId, NavBackStackSnapshot>()
+    encodedStacks.forEach { encodedStack ->
+        val stackMap = encodedStack as? Map<*, *> ?: return null
+        val stackId = NavStackId(
+            stackMap[KEY_STACK_ID] as? String ?: return null,
+        )
+        val encodedEntries = stackMap[KEY_ENTRIES] as? List<*> ?: return null
+        if (encodedEntries.isEmpty()) {
+            return null
+        }
+        totalEntryCount += encodedEntries.size
+        if (totalEntryCount > MAX_ENTRY_COUNT) {
+            return null
+        }
+        val entries = encodedEntries.map { encoded ->
+            decodeEntry(encoded as? Map<*, *> ?: return null) ?: return null
+        }
+        if (stacks.put(stackId, NavBackStackSnapshot(entries)) != null) {
+            return null
+        }
     }
+    val selectionHistory = (saved[KEY_SELECTION_HISTORY] as? List<*>)
+        ?.map { encodedStackId ->
+            NavStackId(encodedStackId as? String ?: return null)
+        }
+        ?: return null
     val encodedDestinationState = saved[KEY_DESTINATION_STATE]
     if (encodedDestinationState != null && encodedDestinationState !is Bundle) {
         return null
     }
     return NavHostRestorableState(
-        snapshot = NavBackStackSnapshot(entries),
+        stackState = NavStackSetSnapshot(
+            activeStackId = activeStackId,
+            stacks = stacks,
+            selectionHistory = selectionHistory,
+        ),
         destinationState = (encodedDestinationState as? Bundle)?.let(::Bundle),
     )
 }
@@ -232,8 +305,12 @@ private fun decodeValue(encoded: List<*>): NavValue? {
     }
 }
 
-private const val FORMAT_VERSION = 3
+private const val FORMAT_VERSION = 4
 private const val KEY_FORMAT_VERSION = "formatVersion"
+private const val KEY_ACTIVE_STACK_ID = "activeStackId"
+private const val KEY_SELECTION_HISTORY = "selectionHistory"
+private const val KEY_STACKS = "stacks"
+private const val KEY_STACK_ID = "stackId"
 private const val KEY_ENTRIES = "entries"
 private const val KEY_DESTINATION_STATE = "destinationState"
 private const val KEY_ENTRY_ID = "id"
@@ -248,4 +325,5 @@ private const val VALUE_LONG = 3
 private const val VALUE_BOOLEAN = 4
 private const val VALUE_FLOAT = 5
 private const val VALUE_DOUBLE = 6
+private const val MAX_STACK_COUNT = 100
 private const val MAX_ENTRY_COUNT = 10_000

@@ -63,9 +63,11 @@ internal data class NavHostBackEvent(
 
 internal data class NavHostBackPreview(
     val id: NavHostBackPreviewId,
+    val command: NavCommand,
     val snapshot: NavBackStackSnapshot,
     val outgoingEntry: NavEntry,
     val incomingEntry: NavEntry,
+    val retainedEntries: List<NavEntry>,
     val visibleEntryIds: Set<NavEntryId>,
     val layerOrder: List<NavEntryId>,
 )

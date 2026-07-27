@@ -104,7 +104,7 @@ class NavStackConfiguration(
             ")"
     }
 
-    internal companion object {
+    companion object {
         fun single(startDestination: NavRoute): NavStackConfiguration {
             return NavStackConfiguration(
                 initialStackId = NavStackId.Default,

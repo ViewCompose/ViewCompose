@@ -15,6 +15,10 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavStackConfiguration
+import com.viewcompose.navigation.core.NavStackId
+import com.viewcompose.navigation.core.NavStackSelectionMode
+import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.navigation.core.navGraph
 import com.viewcompose.viewmodel.savedStateHandle
@@ -245,6 +249,76 @@ class NavHostPublicApiTest {
 
         assertFalse(fixture.controller.isAttached)
         assertEquals(0, fixture.navHostView.childCount)
+    }
+
+    @Test
+    fun `public host retains independent tab stacks and owners`() {
+        val homeStack = NavStackId("home-tab")
+        val searchStack = NavStackId("search-tab")
+        val entryIds = ArrayDeque(
+            listOf(
+                "home-root",
+                "search-root",
+                "home-details",
+                "search-result",
+            ),
+        )
+        val controller = createNavHostController(
+            stackConfiguration = NavStackConfiguration(
+                initialStackId = homeStack,
+                stacks = listOf(
+                    NavStackSpec(homeStack, NavRoute("home")),
+                    NavStackSpec(searchStack, NavRoute("search")),
+                ),
+            ),
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(entryIds.removeFirst())
+            },
+        )
+        val owners = mutableMapOf<NavEntryId, LifecycleOwner>()
+        val fixture = renderPublicHost(controller = controller) { entry ->
+            owners[entry.id] = checkNotNull(LocalLifecycleOwner.current)
+            Text(entry.route.name)
+        }
+        val homeRoot = controller.stackSnapshot(homeStack).top
+        val searchRoot = controller.stackSnapshot(searchStack).top
+
+        assertEquals(2, fixture.navHostView.childCount)
+        assertEquals(Lifecycle.State.RESUMED, checkNotNull(owners[homeRoot.id]).lifecycle.currentState)
+        assertEquals(Lifecycle.State.CREATED, checkNotNull(owners[searchRoot.id]).lifecycle.currentState)
+
+        controller.navigate(NavRoute("home-details"))
+        val homeDetails = controller.snapshot.top
+        val homeDetailsOwner = checkNotNull(owners[homeDetails.id])
+        controller.selectStack(searchStack)
+        controller.navigate(NavRoute("search-result"))
+        val searchResult = controller.snapshot.top
+        controller.selectStack(homeStack)
+
+        assertEquals(homeStack, controller.activeStackId)
+        assertSame(homeDetails, controller.snapshot.top)
+        assertEquals(
+            listOf("search", "search-result"),
+            controller.stackSnapshot(searchStack).entries.map { entry -> entry.route.name },
+        )
+        assertEquals(Lifecycle.State.RESUMED, homeDetailsOwner.lifecycle.currentState)
+        assertEquals(
+            Lifecycle.State.CREATED,
+            checkNotNull(owners[searchResult.id]).lifecycle.currentState,
+        )
+
+        controller.selectStack(
+            stackId = homeStack,
+            selectionMode = NavStackSelectionMode.PopToRoot,
+        )
+
+        assertEquals(listOf("home"), controller.snapshot.entries.map { entry -> entry.route.name })
+        assertEquals(Lifecycle.State.DESTROYED, homeDetailsOwner.lifecycle.currentState)
+        assertEquals(
+            listOf("search", "search-result"),
+            controller.stackSnapshot(searchStack).entries.map { entry -> entry.route.name },
+        )
+        fixture.session.dispose()
     }
 
     @Test
@@ -564,6 +638,41 @@ class NavHostPublicApiTest {
         restored.session.dispose()
     }
 
+    @Test
+    fun `remembered multi stack host restores active tab histories and inactive state`() {
+        val firstRegistry = createSaveableStateRegistry(
+            canBeSaved = ::canBeSavedToBundle,
+        )
+        val first = renderRememberedMultiStackHost(firstRegistry)
+        first.state("home").value = 11
+        first.controller.selectStack(MultiSearchStack)
+        first.state("search").value = 22
+        first.controller.navigate(NavRoute("search-result"))
+        first.state("search-result").value = 33
+        first.controller.selectStack(MultiHomeStack)
+        val expectedState = first.controller.stackState
+
+        val saved = firstRegistry.performSave()
+        first.session.dispose()
+        val restoredRegistry = createSaveableStateRegistry(
+            restoredValues = saved,
+            canBeSaved = ::canBeSavedToBundle,
+        )
+        val restored = renderRememberedMultiStackHost(restoredRegistry)
+
+        assertEquals(expectedState, restored.controller.stackState)
+        assertEquals(MultiHomeStack, restored.controller.activeStackId)
+        assertEquals(11, restored.state("home").value)
+        assertEquals(22, restored.state("search").value)
+        assertEquals(33, restored.state("search-result").value)
+
+        restored.controller.selectStack(MultiSearchStack)
+
+        assertEquals("search-result", restored.controller.snapshot.top.route.name)
+        assertEquals(33, restored.state("search-result").value)
+        restored.session.dispose()
+    }
+
     private fun renderPublicHost(
         controller: NavHostController = deterministicController(),
         onFailure: ((NavFailure) -> Unit)? = null,
@@ -660,8 +769,59 @@ class NavHostPublicApiTest {
         )
     }
 
+    private fun renderRememberedMultiStackHost(
+        registry: SaveableStateRegistry,
+    ): RememberedMultiStackHostFixture {
+        val application = RuntimeEnvironment.getApplication()
+        val root = FrameLayout(application)
+        val lifecycleOwner = TestLifecycleOwner().apply {
+            moveTo(Lifecycle.State.RESUMED)
+        }
+        val states = linkedMapOf<String, RestorableCounter>()
+        var controller: NavHostController? = null
+        val session = renderInto(root) {
+            ProvideLifecycleOwner(lifecycleOwner) {
+                ProvideSaveableStateRegistry(registry) {
+                    val rememberedController = rememberNavHostController(
+                        NavStackConfiguration(
+                            initialStackId = MultiHomeStack,
+                            stacks = listOf(
+                                NavStackSpec(MultiHomeStack, NavRoute("home")),
+                                NavStackSpec(MultiSearchStack, NavRoute("search")),
+                            ),
+                        ),
+                    )
+                    controller = rememberedController
+                    NavHost(
+                        controller = rememberedController,
+                        transitionSpec = NavTransitionSpec.None,
+                        overlayHostFactory = { OverlayHostDefaults.noOp },
+                    ) { entry ->
+                        states[entry.route.name] = rememberSaveable(
+                            key = "counter",
+                            saver = RestorableCounterSaver,
+                        ) {
+                            RestorableCounter(0)
+                        }
+                        Text(entry.route.name)
+                    }
+                }
+            }
+        }
+        return RememberedMultiStackHostFixture(
+            controller = checkNotNull(controller),
+            session = session,
+            states = states,
+        )
+    }
+
     private fun NavHostController.routeNames(): List<String> {
         return snapshot.entries.map { entry -> entry.route.name }
+    }
+
+    private companion object {
+        val MultiHomeStack = NavStackId("multi-home")
+        val MultiSearchStack = NavStackId("multi-search")
     }
 }
 
@@ -681,6 +841,14 @@ private class RememberedHostFixture(
 private class RestorableCounter(
     var value: Int,
 )
+
+private class RememberedMultiStackHostFixture(
+    val controller: NavHostController,
+    val session: com.viewcompose.host.android.RenderSession,
+    private val states: Map<String, RestorableCounter>,
+) {
+    fun state(route: String): RestorableCounter = checkNotNull(states[route])
+}
 
 private class ReleaseTrackingViewModel : ViewModel() {
     var cleared: Boolean = false

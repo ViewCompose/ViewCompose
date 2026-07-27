@@ -11,6 +11,10 @@ import com.viewcompose.navigation.core.NavEntryLifecycleState
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavNoChangeReason
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavRootBackBehavior
+import com.viewcompose.navigation.core.NavStackConfiguration
+import com.viewcompose.navigation.core.NavStackId
+import com.viewcompose.navigation.core.NavStackSpec
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.captureUiLocalSnapshot
 import java.util.ArrayDeque
@@ -362,6 +366,172 @@ class TransactionalNavHostCoordinatorTest {
         assertEquals(Lifecycle.State.DESTROYED, owner.lifecycle.currentState)
     }
 
+    @Test
+    fun `tab stacks retain independent sessions state and lifecycle`() {
+        configureMultiStackCoordinator()
+        attach()
+        val homeRoot = controller.stackSnapshot(HomeStack).top
+        val searchRoot = controller.stackSnapshot(SearchStack).top
+        val homeSession = checkNotNull(sessionStore.sessionOrNull(homeRoot.id))
+        val searchSession = checkNotNull(sessionStore.sessionOrNull(searchRoot.id))
+
+        assertEquals(2, coordinator.hostView.childCount)
+        assertEquals(View.VISIBLE, homeSession.container.visibility)
+        assertEquals(View.GONE, searchSession.container.visibility)
+        assertEquals(
+            NavEntryLifecycleState.Resumed,
+            checkNotNull(ownerStore.ownerOrNull(homeRoot.id)).entryLifecycleState,
+        )
+        assertEquals(
+            NavEntryLifecycleState.Created,
+            checkNotNull(ownerStore.ownerOrNull(searchRoot.id)).entryLifecycleState,
+        )
+
+        coordinator.navigate(NavCommand.Push(NavRoute("home-details")))
+        val homeDetails = controller.snapshot().top
+        val homeDetailsSession = checkNotNull(sessionStore.sessionOrNull(homeDetails.id))
+        coordinator.navigate(NavCommand.SelectStack(SearchStack))
+
+        assertEquals(SearchStack, controller.stackStateSnapshot().activeStackId)
+        assertEquals(View.VISIBLE, searchSession.container.visibility)
+        assertEquals(View.GONE, homeDetailsSession.container.visibility)
+        assertSame(homeSession, sessionStore.sessionOrNull(homeRoot.id))
+        assertEquals(
+            NavEntryLifecycleState.Created,
+            checkNotNull(ownerStore.ownerOrNull(homeDetails.id)).entryLifecycleState,
+        )
+        assertEquals(
+            NavEntryLifecycleState.Resumed,
+            checkNotNull(ownerStore.ownerOrNull(searchRoot.id)).entryLifecycleState,
+        )
+
+        coordinator.navigate(NavCommand.Push(NavRoute("search-result")))
+        val searchResult = controller.snapshot().top
+        coordinator.navigate(NavCommand.SelectStack(HomeStack))
+
+        assertSame(homeDetails, coordinator.snapshot.top)
+        assertEquals(View.VISIBLE, homeDetailsSession.container.visibility)
+        assertEquals(
+            listOf("search", "search-result"),
+            controller.stackSnapshot(SearchStack).entries.map { entry -> entry.route.name },
+        )
+        assertEquals(
+            NavEntryLifecycleState.Created,
+            checkNotNull(ownerStore.ownerOrNull(searchResult.id)).entryLifecycleState,
+        )
+    }
+
+    @Test
+    fun `failed tab switch rolls back selection without destroying retained target`() {
+        configureMultiStackCoordinator()
+        var failSearch = false
+        attach { entry ->
+            if (failSearch && entry.route.name == "search") {
+                error("search refresh failed")
+            }
+            Text(entry.route.name)
+        }
+        val homeRoot = controller.snapshot().top
+        val searchRoot = controller.stackSnapshot(SearchStack).top
+        val searchSession = checkNotNull(sessionStore.sessionOrNull(searchRoot.id))
+        failSearch = true
+
+        val result = coordinator.navigate(NavCommand.SelectStack(SearchStack))
+
+        assertTrue(result is NavHostNavigationResult.Failed)
+        assertEquals(HomeStack, controller.stackStateSnapshot().activeStackId)
+        assertSame(homeRoot, coordinator.snapshot.top)
+        assertSame(searchSession, sessionStore.sessionOrNull(searchRoot.id))
+        assertEquals(View.VISIBLE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
+        assertEquals(View.GONE, searchSession.container.visibility)
+        assertEquals(
+            NavEntryLifecycleState.Created,
+            checkNotNull(ownerStore.ownerOrNull(searchRoot.id)).entryLifecycleState,
+        )
+    }
+
+    @Test
+    fun `predictive system back can cancel or return to previous tab`() {
+        configureMultiStackCoordinator(
+            rootBackBehavior = NavRootBackBehavior.PreviousStack,
+        )
+        attach()
+        coordinator.navigate(NavCommand.SelectStack(SearchStack))
+        val homeRoot = controller.stackSnapshot(HomeStack).top
+        val searchRoot = controller.snapshot().top
+
+        val cancelledPreview = checkNotNull(
+            coordinator.beginBackPreview(backEvent(progress = 0f)),
+        )
+        assertEquals(NavCommand.PopStackHistory, cancelledPreview.command)
+        assertSame(searchRoot, cancelledPreview.outgoingEntry)
+        assertSame(homeRoot, cancelledPreview.incomingEntry)
+        coordinator.cancelBackPreview(cancelledPreview.id)
+
+        assertEquals(SearchStack, controller.stackStateSnapshot().activeStackId)
+        assertEquals(listOf(HomeStack), controller.stackStateSnapshot().selectionHistory)
+
+        val committedPreview = checkNotNull(
+            coordinator.beginBackPreview(backEvent(progress = 0.5f)),
+        )
+        val result = coordinator.commitBackPreview(committedPreview.id)
+
+        assertTrue(result is NavHostNavigationResult.Committed)
+        assertEquals(HomeStack, controller.stackStateSnapshot().activeStackId)
+        assertTrue(controller.stackStateSnapshot().selectionHistory.isEmpty())
+        assertEquals(View.VISIBLE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
+        assertEquals(View.GONE, checkNotNull(sessionStore.sessionOrNull(searchRoot.id)).container.visibility)
+    }
+
+    private fun configureMultiStackCoordinator(
+        rootBackBehavior: NavRootBackBehavior = NavRootBackBehavior.Delegate,
+    ) {
+        coordinator.destroy()
+        val application = RuntimeEnvironment.getApplication()
+        val ids = ArrayDeque(
+            listOf(
+                "home-root",
+                "search-root",
+                "home-details",
+                "search-result",
+            ),
+        )
+        controller = NavBackStackController.create(
+            configuration = NavStackConfiguration(
+                initialStackId = HomeStack,
+                stacks = listOf(
+                    NavStackSpec(HomeStack, NavRoute("home")),
+                    NavStackSpec(SearchStack, NavRoute("search")),
+                ),
+                rootBackBehavior = rootBackBehavior,
+            ),
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(ids.removeFirst())
+            },
+        )
+        ownerStore = NavEntryOwnerStore(application)
+        sessionStore = NavDestinationSessionStore(
+            hostView = NavHostView(application),
+            ownerStore = ownerStore,
+        )
+        coordinator = TransactionalNavHostCoordinator(
+            controller = controller,
+            ownerStore = ownerStore,
+            sessionStore = sessionStore,
+            initialHostLifecycleState = NavHostLifecycleState.Resumed,
+        )
+    }
+
+    private fun backEvent(progress: Float): NavHostBackEvent {
+        return NavHostBackEvent(
+            touchX = 0f,
+            touchY = 0f,
+            progress = progress,
+            swipeEdge = NavHostBackSwipeEdge.Left,
+            frameTimeMillis = 0L,
+        )
+    }
+
     private fun attach(
         content: NavDestinationContent = { entry -> Text(entry.route.name) },
     ): NavHostAttachmentResult {
@@ -373,5 +543,10 @@ class TransactionalNavHostCoordinatorTest {
 
     private fun TransactionalNavHostCoordinator.routeNames(): List<String> {
         return snapshot.entries.map { entry -> entry.route.name }
+    }
+
+    private companion object {
+        val HomeStack = NavStackId("home")
+        val SearchStack = NavStackId("search")
     }
 }

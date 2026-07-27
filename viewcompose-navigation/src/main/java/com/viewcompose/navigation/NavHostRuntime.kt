@@ -38,13 +38,15 @@ internal class NavHostRuntime private constructor(
         canHandleBack = {
             !destroyed &&
                 coordinator.state == NavHostCoordinatorState.Attached &&
-                coordinator.snapshot.entries.size > 1
+                controller.backStackController.systemBackCommand() != null
         },
         isPreviewActive = { previewId ->
             coordinator.activeBackPreview?.id == previewId
         },
         onBackPressed = {
-            publishNavigationResult(coordinator.navigate(NavCommand.Pop))
+            controller.backStackController.systemBackCommand()?.let { command ->
+                publishNavigationResult(coordinator.navigate(command))
+            }
             Unit
         },
         onBackStarted = { event ->
@@ -112,6 +114,7 @@ internal class NavHostRuntime private constructor(
         result: NavHostNavigationResult,
     ): NavResult {
         val publicResult = result.toPublicResult(coordinator.snapshot)
+        controller.syncNavigationState()
         backAdapter.onNavigationStateChanged()
         if (publicResult is NavResult.Failed) {
             committedConfig?.onFailure?.invoke(publicResult.failure)
@@ -123,11 +126,10 @@ internal class NavHostRuntime private constructor(
         check(!destroyed) {
             "A destroyed NavHost cannot save state."
         }
-        val snapshot = coordinator.snapshot
         return NavHostRestorableState(
-            snapshot = snapshot,
+            stackState = controller.backStackController.stackStateSnapshot(),
             destinationState = ownerStore.performSave(
-                retainedEntryIds = snapshot.entries
+                retainedEntryIds = controller.backStackController.retainedEntries()
                     .flatMapTo(linkedSetOf()) { entry ->
                         entry.graphEntries.map { graphEntry -> graphEntry.id } + entry.id
                     },
@@ -217,7 +219,7 @@ internal class NavHostRuntime private constructor(
         }
         val retainedEntries = coordinator.activeTransition
             ?.retainedEntries
-            ?: coordinator.snapshot.entries
+            ?: controller.backStackController.retainedEntries()
         val entriesById = retainedEntries.associateBy(NavEntry::id)
         result.failedEntryIds.forEach { entryId ->
             val report = result.reports[entryId]

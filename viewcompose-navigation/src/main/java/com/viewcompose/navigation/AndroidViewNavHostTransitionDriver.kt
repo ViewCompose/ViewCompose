@@ -183,7 +183,7 @@ private class AndroidBackPreviewHandle(
             "A predictive-back preview can be committed only once."
         }
         check(
-            transition.command == NavCommand.Pop &&
+            transition.command == preview.command &&
                 transition.before == preview.snapshot &&
                 transition.outgoingEntry == preview.outgoingEntry &&
                 transition.incomingEntry == preview.incomingEntry,
@@ -278,7 +278,17 @@ internal fun navTransitionDirection(
     layoutDirection: Int,
 ): Float {
     val layoutMultiplier = if (layoutDirection == View.LAYOUT_DIRECTION_RTL) -1f else 1f
-    val commandMultiplier = if (command == NavCommand.Pop) -1f else 1f
+    val commandMultiplier = when (command) {
+        NavCommand.Pop,
+        NavCommand.PopStackHistory,
+        -> -1f
+
+        is NavCommand.Push,
+        is NavCommand.ReplaceTop,
+        is NavCommand.Reset,
+        is NavCommand.SelectStack,
+        -> 1f
+    }
     return layoutMultiplier * commandMultiplier
 }
 
