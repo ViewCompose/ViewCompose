@@ -1,5 +1,7 @@
 package com.viewcompose.navigation
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Parcelable
 import android.widget.FrameLayout
 import androidx.lifecycle.Lifecycle
@@ -14,6 +16,7 @@ import com.viewcompose.lifecycle.ProvideLifecycleOwner
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
+import com.viewcompose.navigation.core.NavDeepLink
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavStackConfiguration
 import com.viewcompose.navigation.core.NavStackId
@@ -325,6 +328,100 @@ class NavHostPublicApiTest {
             listOf("search", "search-result"),
             controller.stackSnapshot(searchStack).entries.map { entry -> entry.route.name },
         )
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `native deep link selects its stack and rolls back both changes on render failure`() {
+        val homeStack = NavStackId("home-tab")
+        val accountStack = NavStackId("account-tab")
+        val entryIds = ArrayDeque(
+            listOf(
+                "home-root",
+                "account-root",
+                "broken-security",
+            ),
+        )
+        val graph = navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            navigation(
+                route = "account",
+                startDestination = NavRoute("profile"),
+            ) {
+                destination(
+                    route = "profile",
+                    deepLinks = listOf(
+                        NavDeepLink(
+                            uriPattern = "viewcompose://account/profile",
+                            targetStackId = accountStack,
+                        ),
+                    ),
+                )
+                destination(
+                    route = "security",
+                    deepLinks = listOf(
+                        NavDeepLink(
+                            uriPattern = "viewcompose://account/security",
+                            targetStackId = accountStack,
+                        ),
+                    ),
+                )
+            }
+        }
+        val controller = createNavHostController(
+            stackConfiguration = NavStackConfiguration(
+                initialStackId = homeStack,
+                stacks = listOf(
+                    NavStackSpec(homeStack, NavRoute("home")),
+                    NavStackSpec(accountStack, NavRoute("account")),
+                ),
+            ),
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(entryIds.removeFirst())
+            },
+        )
+        val fixture = renderPublicHost(controller = controller) { entry ->
+            if (entry.route.name == "security") {
+                error("broken security destination")
+            }
+            Text(entry.route.name)
+        }
+
+        assertSame(
+            NavDeepLinkResult.NoMatch,
+            controller.navigateDeepLink(Intent(Intent.ACTION_SEND)),
+        )
+
+        val selected = controller.navigateDeepLink(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("viewcompose://account/profile"),
+            ),
+        ) as NavDeepLinkResult.Navigated
+
+        assertTrue(selected.navigationResult is NavResult.Committed)
+        assertEquals(accountStack, selected.navigationResult.stackState.activeStackId)
+        assertEquals(accountStack, controller.activeStackId)
+        controller.selectStack(homeStack)
+        val beforeFailure = controller.stackState
+
+        val failed = controller.navigateDeepLink(
+            Uri.parse("viewcompose://account/security"),
+        ) as NavDeepLinkResult.Navigated
+
+        assertTrue(failed.navigationResult is NavResult.Failed)
+        assertFalse((failed.navigationResult as NavResult.Failed).failure.stackCommitted)
+        assertSame(beforeFailure, controller.stackState)
+        assertEquals(homeStack, controller.activeStackId)
+        assertEquals(
+            listOf("profile"),
+            controller.stackSnapshot(accountStack).entries.map { entry -> entry.route.name },
+        )
+        assertEquals(2, fixture.navHostView.childCount)
         fixture.session.dispose()
     }
 

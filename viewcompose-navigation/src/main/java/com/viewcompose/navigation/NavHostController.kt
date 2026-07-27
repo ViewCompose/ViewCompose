@@ -1,11 +1,17 @@
 package com.viewcompose.navigation
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import androidx.annotation.MainThread
 import com.viewcompose.navigation.core.NavBackStackController
 import com.viewcompose.navigation.core.NavBackStackSnapshot
 import com.viewcompose.navigation.core.NavCommand
+import com.viewcompose.navigation.core.NavDeepLinkLaunchMode
+import com.viewcompose.navigation.core.NavDeepLinkMatch
+import com.viewcompose.navigation.core.NavDeepLinkRejection
+import com.viewcompose.navigation.core.NavDeepLinkResolution
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavGraph
@@ -87,6 +93,22 @@ sealed interface NavResult {
     ) : NavResult
 }
 
+sealed interface NavDeepLinkResult {
+    data class Navigated(
+        val match: NavDeepLinkMatch,
+        val navigationResult: NavResult,
+    ) : NavDeepLinkResult
+
+    data object NoMatch : NavDeepLinkResult
+
+    data class Rejected(
+        val rejection: NavDeepLinkRejection,
+    ) : NavDeepLinkResult
+
+    /** This controller was created without a navigation graph. */
+    data object Unsupported : NavDeepLinkResult
+}
+
 /**
  * Stable application-facing handle for one or more framework-owned navigation stacks.
  *
@@ -166,6 +188,68 @@ class NavHostController internal constructor(
                 stackId = stackId,
                 selectionMode = selectionMode,
             ),
+        )
+    }
+
+    /**
+     * Resolves an allowlisted graph URI and atomically updates and selects its destination stack.
+     */
+    @MainThread
+    fun navigateDeepLink(
+        uri: String,
+        launchMode: NavDeepLinkLaunchMode = NavDeepLinkLaunchMode.Reset,
+    ): NavDeepLinkResult {
+        requireMainThread()
+        return when (val resolution = backStackController.resolveDeepLink(uri)) {
+            is NavDeepLinkResolution.Matched -> {
+                NavDeepLinkResult.Navigated(
+                    match = resolution.match,
+                    navigationResult = execute(
+                        NavCommand.OpenDeepLink(
+                            route = resolution.match.route,
+                            targetStackId = resolution.match.deepLink.targetStackId,
+                            launchMode = launchMode,
+                        ),
+                    ),
+                )
+            }
+
+            NavDeepLinkResolution.NoMatch -> NavDeepLinkResult.NoMatch
+            is NavDeepLinkResolution.Rejected -> {
+                NavDeepLinkResult.Rejected(resolution.rejection)
+            }
+
+            NavDeepLinkResolution.Unsupported -> NavDeepLinkResult.Unsupported
+        }
+    }
+
+    @MainThread
+    fun navigateDeepLink(
+        uri: Uri,
+        launchMode: NavDeepLinkLaunchMode = NavDeepLinkLaunchMode.Reset,
+    ): NavDeepLinkResult {
+        return navigateDeepLink(
+            uri = uri.toString(),
+            launchMode = launchMode,
+        )
+    }
+
+    /**
+     * Maps a native Android VIEW intent into the same strict graph deep-link transaction.
+     */
+    @MainThread
+    fun navigateDeepLink(
+        intent: Intent,
+        launchMode: NavDeepLinkLaunchMode = NavDeepLinkLaunchMode.Reset,
+    ): NavDeepLinkResult {
+        requireMainThread()
+        val uri = intent.data
+        if (intent.action != Intent.ACTION_VIEW || uri == null) {
+            return NavDeepLinkResult.NoMatch
+        }
+        return navigateDeepLink(
+            uri = uri,
+            launchMode = launchMode,
         )
     }
 
