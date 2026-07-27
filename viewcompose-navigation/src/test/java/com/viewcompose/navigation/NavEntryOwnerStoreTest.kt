@@ -32,7 +32,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(root),
             visibleEntryIds = setOf(root.id),
-            interactiveEntryId = root.id,
+            interactiveEntryIds = setOf(root.id),
             hostState = NavHostLifecycleState.Resumed,
         )
         val rootOwner = checkNotNull(store.ownerOrNull(root.id))
@@ -41,7 +41,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(root, details),
             visibleEntryIds = setOf(details.id),
-            interactiveEntryId = details.id,
+            interactiveEntryIds = setOf(details.id),
             hostState = NavHostLifecycleState.Resumed,
         )
 
@@ -55,7 +55,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(root),
             visibleEntryIds = setOf(root.id),
-            interactiveEntryId = root.id,
+            interactiveEntryIds = setOf(root.id),
             hostState = NavHostLifecycleState.Resumed,
         )
 
@@ -72,7 +72,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(root),
             visibleEntryIds = setOf(root.id),
-            interactiveEntryId = root.id,
+            interactiveEntryIds = setOf(root.id),
             hostState = NavHostLifecycleState.Resumed,
         )
         val rootOwner = checkNotNull(store.ownerOrNull(root.id))
@@ -92,7 +92,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(root, details),
             visibleEntryIds = setOf(root.id, details.id),
-            interactiveEntryId = details.id,
+            interactiveEntryIds = setOf(details.id),
             hostState = NavHostLifecycleState.Resumed,
         )
 
@@ -125,7 +125,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(profile),
             visibleEntryIds = setOf(profile.id),
-            interactiveEntryId = profile.id,
+            interactiveEntryIds = setOf(profile.id),
             hostState = NavHostLifecycleState.Resumed,
         )
         val appOwner = checkNotNull(store.graphOwnerOrNull(appGraph.id))
@@ -136,7 +136,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(profile, security),
             visibleEntryIds = setOf(security.id),
-            interactiveEntryId = security.id,
+            interactiveEntryIds = setOf(security.id),
             hostState = NavHostLifecycleState.Resumed,
         )
 
@@ -151,7 +151,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(home),
             visibleEntryIds = setOf(home.id),
-            interactiveEntryId = home.id,
+            interactiveEntryIds = setOf(home.id),
             hostState = NavHostLifecycleState.Resumed,
         )
 
@@ -187,7 +187,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(profile),
             visibleEntryIds = setOf(profile.id),
-            interactiveEntryId = profile.id,
+            interactiveEntryIds = setOf(profile.id),
             hostState = NavHostLifecycleState.Resumed,
         )
 
@@ -198,7 +198,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(profile),
             visibleEntryIds = setOf(profile.id),
-            interactiveEntryId = profile.id,
+            interactiveEntryIds = setOf(profile.id),
             hostState = NavHostLifecycleState.Destroyed,
         )
 
@@ -226,7 +226,7 @@ class NavEntryOwnerStoreTest {
         firstStore.reconcile(
             retainedEntries = listOf(profile),
             visibleEntryIds = setOf(profile.id),
-            interactiveEntryId = profile.id,
+            interactiveEntryIds = setOf(profile.id),
             hostState = NavHostLifecycleState.Created,
         )
         val firstOwner = checkNotNull(firstStore.graphOwnerOrNull(accountGraph.id))
@@ -243,7 +243,7 @@ class NavEntryOwnerStoreTest {
         restoredStore.reconcile(
             retainedEntries = listOf(profile),
             visibleEntryIds = setOf(profile.id),
-            interactiveEntryId = profile.id,
+            interactiveEntryIds = setOf(profile.id),
             hostState = NavHostLifecycleState.Created,
         )
         val restoredViewModel = checkNotNull(restoredStore.graphOwnerOrNull(accountGraph.id))
@@ -262,7 +262,7 @@ class NavEntryOwnerStoreTest {
         firstStore.reconcile(
             retainedEntries = listOf(root),
             visibleEntryIds = setOf(root.id),
-            interactiveEntryId = root.id,
+            interactiveEntryIds = setOf(root.id),
             hostState = NavHostLifecycleState.Created,
         )
         val firstOwner = checkNotNull(firstStore.ownerOrNull(root.id))
@@ -275,7 +275,7 @@ class NavEntryOwnerStoreTest {
         restoredStore.reconcile(
             retainedEntries = listOf(root),
             visibleEntryIds = setOf(root.id),
-            interactiveEntryId = root.id,
+            interactiveEntryIds = setOf(root.id),
             hostState = NavHostLifecycleState.Created,
         )
         val restoredOwner = checkNotNull(restoredStore.ownerOrNull(root.id))
@@ -300,7 +300,7 @@ class NavEntryOwnerStoreTest {
         firstStore.reconcile(
             retainedEntries = listOf(root, outgoing),
             visibleEntryIds = setOf(root.id, outgoing.id),
-            interactiveEntryId = root.id,
+            interactiveEntryIds = setOf(root.id),
             hostState = NavHostLifecycleState.Started,
         )
         checkNotNull(firstStore.ownerOrNull(root.id))
@@ -316,7 +316,7 @@ class NavEntryOwnerStoreTest {
         restoredStore.reconcile(
             retainedEntries = listOf(root, outgoing),
             visibleEntryIds = setOf(root.id),
-            interactiveEntryId = root.id,
+            interactiveEntryIds = setOf(root.id),
             hostState = NavHostLifecycleState.Started,
         )
 
@@ -358,7 +358,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(root, details),
             visibleEntryIds = setOf(details.id),
-            interactiveEntryId = details.id,
+            interactiveEntryIds = setOf(details.id),
             hostState = NavHostLifecycleState.Resumed,
         )
         val rootViewModel = checkNotNull(store.ownerOrNull(root.id))
@@ -369,7 +369,7 @@ class NavEntryOwnerStoreTest {
         store.reconcile(
             retainedEntries = listOf(root, details),
             visibleEntryIds = setOf(details.id),
-            interactiveEntryId = details.id,
+            interactiveEntryIds = setOf(details.id),
             hostState = NavHostLifecycleState.Destroyed,
         )
 

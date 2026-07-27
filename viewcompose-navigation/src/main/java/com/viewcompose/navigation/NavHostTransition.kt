@@ -4,6 +4,7 @@ import com.viewcompose.navigation.core.NavBackStackSnapshot
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
+import com.viewcompose.navigation.core.NavPaneScene
 import com.viewcompose.navigation.core.NavStackMutation
 
 @JvmInline
@@ -26,6 +27,8 @@ internal data class NavHostTransition(
     val mutation: NavStackMutation,
     val outgoingEntry: NavEntry,
     val incomingEntry: NavEntry,
+    val beforeScene: NavPaneScene,
+    val afterScene: NavPaneScene,
     val retainedEntries: List<NavEntry>,
     val visibleEntryIds: Set<NavEntryId>,
     val layerOrder: List<NavEntryId>,
@@ -67,6 +70,8 @@ internal data class NavHostBackPreview(
     val snapshot: NavBackStackSnapshot,
     val outgoingEntry: NavEntry,
     val incomingEntry: NavEntry,
+    val beforeScene: NavPaneScene,
+    val afterScene: NavPaneScene,
     val retainedEntries: List<NavEntry>,
     val visibleEntryIds: Set<NavEntryId>,
     val layerOrder: List<NavEntryId>,

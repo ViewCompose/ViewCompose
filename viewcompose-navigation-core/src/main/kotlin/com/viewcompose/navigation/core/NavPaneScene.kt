@@ -95,7 +95,7 @@ object NavPaneStrategies {
     }
 }
 
-internal fun NavPaneStrategy.calculateValidated(
+fun NavPaneStrategy.calculateValidated(
     snapshot: NavBackStackSnapshot,
     maxPaneCount: Int,
 ): NavPaneScene {

@@ -99,7 +99,7 @@ internal class NavEntryOwnerStore(
     fun reconcile(
         retainedEntries: List<NavEntry>,
         visibleEntryIds: Set<NavEntryId>,
-        interactiveEntryId: NavEntryId?,
+        interactiveEntryIds: Set<NavEntryId>,
         hostState: NavHostLifecycleState,
     ): NavLifecyclePlan {
         check(!destroyed) {
@@ -129,7 +129,7 @@ internal class NavEntryOwnerStore(
             visibleOwnerIds += entry.id
         }
         val interactiveOwnerIds = linkedSetOf<NavEntryId>()
-        interactiveEntryId?.let { entryId ->
+        interactiveEntryIds.forEach { entryId ->
             val entry = checkNotNull(entriesById[entryId]) {
                 "Interactive navigation entry $entryId is not retained."
             }
