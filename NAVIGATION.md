@@ -482,6 +482,55 @@ ANDROID_SERIAL=<api35-emulator> ./gradlew :app:connectedDebugAndroidTest \
   --no-configuration-cache
 ```
 
+### System navigation acceptance demo
+
+The Demo catalog contains a dedicated `系统导航验收` module backed by the production `NavHost`.
+The Activity only owns the Android window and forwards `ACTION_VIEW`; every destination, back stack,
+lifecycle, ViewModel, SavedState registry, transition, and adaptive pane remains framework-owned.
+
+The page exposes the current route and arguments, entry/graph owner IDs, lifecycle, all three tab
+stacks, selection history, last transaction result, and external deep-link result. Its controls cover:
+
+- `Push`, `SingleTop`, `Pop`, `ReplaceTop`, and `Reset`;
+- independently retained Home, Discover, and Account stacks plus `PopToRoot`;
+- `PreviousStack` system Back and Android 13+ predictive Back;
+- nested checkout/account graphs and graph-scoped SavedState;
+- entry-scoped `rememberSaveable`, `SavedStateHandle`, and `ViewModel`;
+- strict deep-link accept, typed-argument rejection, no-match, reset/push/replace modes;
+- live transition, system-Back, one-to-three-pane policy switches, and a one-tap three-pane seed;
+- Activity recreation, rotation, and owner identity preservation.
+
+For an external intent, install the debug app and run:
+
+```bash
+adb shell am start \
+  -a android.intent.action.VIEW \
+  -d 'viewcompose://demo/account/42' \
+  com.gzq.uiframework
+```
+
+Recommended manual journey:
+
+1. Increment every state counter, push a page in each bottom tab, and return to verify independent
+   stacks and retained owner IDs.
+2. From a tab root, press system Back to verify selection-history traversal; on Android 13+, slowly
+   drag from the edge once to cancel and once to commit predictive Back.
+3. In Discover, run the valid, invalid typed-argument, and unregistered deep links. Invalid/no-match
+   operations must leave every entry ID unchanged.
+4. Launch the external account URI and verify the Account stack becomes active with `userId=42`.
+5. Rotate after changing the entry and graph counters. Saveable values and owner IDs must survive;
+   the ViewModel instance ID may change while its `SavedStateHandle`-backed counter is restored.
+6. Tap “准备三窗格样例”, keep adaptive panes enabled, and rotate to landscape. The newest three
+   native destination Views must appear side-by-side without changing their entry/graph owner IDs.
+
+The device smoke suite for the same journeys is:
+
+```bash
+ANDROID_SERIAL=<device> ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.SystemNavigationDemoDeviceTest \
+  --no-configuration-cache
+```
+
 ## 4. Transaction invariants
 
 Navigation is a two-phase operation:
