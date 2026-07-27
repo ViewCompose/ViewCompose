@@ -60,25 +60,29 @@ class NavHostException(
 )
 
 sealed interface NavResult {
+    /** Complete committed navigation state observed when this result was produced. */
+    val stackState: NavStackSetSnapshot
+
+    /** Active-stack projection for destination-oriented call sites. */
     val snapshot: NavBackStackSnapshot
+        get() = stackState.activeStack
 
     data class Committed(
-        override val snapshot: NavBackStackSnapshot,
+        override val stackState: NavStackSetSnapshot,
         val mutation: NavStackMutation,
     ) : NavResult
 
     data class NoChange(
-        override val snapshot: NavBackStackSnapshot,
+        override val stackState: NavStackSetSnapshot,
         val reason: NavNoChangeReason,
     ) : NavResult
 
     data class Queued(
-        override val snapshot: NavBackStackSnapshot,
-        val command: NavCommand,
+        override val stackState: NavStackSetSnapshot,
     ) : NavResult
 
     data class Failed(
-        override val snapshot: NavBackStackSnapshot,
+        override val stackState: NavStackSetSnapshot,
         val failure: NavFailure,
     ) : NavResult
 }
@@ -166,7 +170,7 @@ class NavHostController internal constructor(
     }
 
     @MainThread
-    fun execute(command: NavCommand): NavResult {
+    internal fun execute(command: NavCommand): NavResult {
         requireMainThread()
         return checkNotNull(binding) {
             "NavHostController commands require an attached NavHost."

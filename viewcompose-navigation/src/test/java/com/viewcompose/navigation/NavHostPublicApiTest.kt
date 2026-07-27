@@ -290,7 +290,14 @@ class NavHostPublicApiTest {
         controller.navigate(NavRoute("home-details"))
         val homeDetails = controller.snapshot.top
         val homeDetailsOwner = checkNotNull(owners[homeDetails.id])
-        controller.selectStack(searchStack)
+        val selectedSearch = controller.selectStack(searchStack)
+        assertEquals(searchStack, selectedSearch.stackState.activeStackId)
+        assertEquals(
+            listOf("home", "home-details"),
+            checkNotNull(selectedSearch.stackState[homeStack])
+                .entries
+                .map { entry -> entry.route.name },
+        )
         controller.navigate(NavRoute("search-result"))
         val searchResult = controller.snapshot.top
         controller.selectStack(homeStack)

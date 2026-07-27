@@ -9,6 +9,7 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavPreparation
+import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavTransaction
 import com.viewcompose.navigation.core.NavTransactionStatus
 import com.viewcompose.widget.core.RenderFrameReport
@@ -38,6 +39,9 @@ internal class TransactionalNavHostCoordinator(
 
     val snapshot: NavBackStackSnapshot
         get() = controller.snapshot()
+
+    val stackState: NavStackSetSnapshot
+        get() = controller.stackStateSnapshot()
 
     val activeTransition: NavHostTransition?
         get() = activeTransitionRecord?.transition

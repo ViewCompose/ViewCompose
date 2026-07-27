@@ -6,9 +6,9 @@ import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import com.viewcompose.navigation.core.NavBackStackSnapshot
 import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntry
+import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.UiLocalSnapshot
@@ -113,7 +113,7 @@ internal class NavHostRuntime private constructor(
     private fun publishNavigationResult(
         result: NavHostNavigationResult,
     ): NavResult {
-        val publicResult = result.toPublicResult(coordinator.snapshot)
+        val publicResult = result.toPublicResult(coordinator.stackState)
         controller.syncNavigationState()
         backAdapter.onNavigationStateChanged()
         if (publicResult is NavResult.Failed) {
@@ -304,33 +304,32 @@ internal class TransitionSpecHolder(
 )
 
 private fun NavHostNavigationResult.toPublicResult(
-    currentSnapshot: NavBackStackSnapshot,
+    currentState: NavStackSetSnapshot,
 ): NavResult {
     return when (this) {
         is NavHostNavigationResult.Committed -> {
             NavResult.Committed(
-                snapshot = snapshot,
+                stackState = currentState,
                 mutation = mutation,
             )
         }
 
         is NavHostNavigationResult.NoChange -> {
             NavResult.NoChange(
-                snapshot = snapshot,
+                stackState = currentState,
                 reason = reason,
             )
         }
 
         is NavHostNavigationResult.Queued -> {
             NavResult.Queued(
-                snapshot = currentSnapshot,
-                command = command,
+                stackState = currentState,
             )
         }
 
         is NavHostNavigationResult.Failed -> {
             NavResult.Failed(
-                snapshot = snapshot,
+                stackState = currentState,
                 failure = NavFailure(
                     phase = phase.toPublicPhase(),
                     failedEntry = failedEntry,
