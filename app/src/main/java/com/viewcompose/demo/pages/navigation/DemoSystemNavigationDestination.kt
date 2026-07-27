@@ -1,5 +1,7 @@
 package com.viewcompose
 
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.lifecycle.collectAsStateWithLifecycle
@@ -30,6 +32,7 @@ import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
+import com.viewcompose.widget.core.produceState
 import com.viewcompose.widget.core.rememberSaveable
 import com.viewcompose.widget.core.sp
 import java.util.concurrent.atomic.AtomicInteger
@@ -51,11 +54,24 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
         .getStateFlow("counter", 0)
         .collectAsStateWithLifecycle()
     val entryViewModel = viewModel<SystemNavigationEntryViewModel>()
-    val lifecycleState = LocalLifecycleOwner.current
-        ?.lifecycle
-        ?.currentState
-        ?.name
-        ?: "NONE"
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleState = if (lifecycleOwner == null) {
+        "NONE"
+    } else {
+        produceState(
+            initialValue = lifecycleOwner.lifecycle.currentState,
+            lifecycleOwner,
+        ) {
+            val observer = LifecycleEventObserver { _, _ ->
+                value = lifecycleOwner.lifecycle.currentState
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            value = lifecycleOwner.lifecycle.currentState
+            awaitDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }.value.name
+    }
     val stackState = controller.navigationState.value
     val sections = listOf(
         "status",
@@ -144,7 +160,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                 )
                 GraphOwnerStateBlock()
                 Text(
-                    text = "验证方式：递增后切换 Tab、压栈、旋转设备；返回本 entry 时数值和 owner ID 应保持。Pop 后重新进入应获得新 entry/ViewModel。",
+                    text = "验证方式：切换 Tab/压栈后，数值与 ViewModel 实例应保持；旋转后 entry/graph ID 和所有可保存数值保持，ViewModel 实例 ID 可更新。Pop 后重新进入应获得新 entry。",
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
                 )
@@ -230,6 +246,18 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                 title = "平台、Tab 与自适应能力",
                 subtitle = "覆盖独立返回栈、PreviousStack Back、predictive Back、动态窗格和宿主配置更新。",
             ) {
+                Button(
+                    text = "准备三窗格样例（当前 Tab）",
+                    onClick = {
+                        lastEvent.value = seedAdaptiveStack(
+                            controller = controller,
+                            stackId = stackState.activeStackId,
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SYSTEM_NAV_SEED_ADAPTIVE),
+                )
                 Button(
                     text = if (adaptivePanes.value) {
                         "自适应窗格：开（点击切为单窗格）"
@@ -446,7 +474,7 @@ private fun UiTreeBuilder.RouteSpecificActions(
             )
             Text(
                 text = "外部验证：adb shell am start -a android.intent.action.VIEW " +
-                    "-d '${SystemNavigationDemoModel.SecurityDeepLink}' com.viewcompose",
+                    "-d '${SystemNavigationDemoModel.SecurityDeepLink}' com.gzq.uiframework",
                 style = UiTextStyle(fontSizeSp = 12.sp),
                 color = TextDefaults.secondaryColor(),
             )
@@ -498,6 +526,59 @@ private fun nextRoute(
     }
 }
 
+private fun seedAdaptiveStack(
+    controller: NavHostController,
+    stackId: com.viewcompose.navigation.core.NavStackId,
+): String {
+    val destinations = when (stackId) {
+        SystemNavigationDemoModel.HomeStack -> listOf(
+            NavRoute(
+                name = SystemNavigationDemoModel.HomeDetailRoute,
+                arguments = mapOf(
+                    SystemNavigationDemoModel.ItemIdArgument to NavValue.IntValue(101),
+                ),
+            ),
+            NavRoute(SystemNavigationDemoModel.CheckoutGraphRoute),
+        )
+
+        SystemNavigationDemoModel.DiscoverStack -> listOf(
+            NavRoute(
+                name = SystemNavigationDemoModel.SearchResultRoute,
+                arguments = mapOf(
+                    SystemNavigationDemoModel.QueryArgument to NavValue.Text("pane-secondary"),
+                    SystemNavigationDemoModel.PageArgument to NavValue.IntValue(1),
+                ),
+            ),
+            NavRoute(
+                name = SystemNavigationDemoModel.SearchResultRoute,
+                arguments = mapOf(
+                    SystemNavigationDemoModel.QueryArgument to NavValue.Text("pane-primary"),
+                    SystemNavigationDemoModel.PageArgument to NavValue.IntValue(2),
+                ),
+            ),
+        )
+
+        else -> listOf(
+            NavRoute(
+                name = SystemNavigationDemoModel.SecurityRoute,
+                arguments = mapOf(
+                    SystemNavigationDemoModel.UserIdArgument to NavValue.LongValue(42L),
+                ),
+            ),
+            NavRoute(SystemNavigationDemoModel.SettingsRoute),
+        )
+    }
+    val results = buildList {
+        add(controller.reset(SystemNavigationDemoModel.rootRoute(stackId)))
+        destinations.forEach { route ->
+            add(controller.navigate(route, NavLaunchMode.Standard))
+        }
+    }
+    return "三窗格样例：" + results.joinToString(" / ") { result ->
+        result.toDemoDescription()
+    }
+}
+
 private fun Map<String, NavValue>.toReadableText(): String {
     if (isEmpty()) {
         return "{}"
@@ -532,15 +613,19 @@ private fun com.viewcompose.navigation.core.NavStackSetSnapshot.toReadableText()
     return "active=${activeStackId.value} · history=$history\n$stackText"
 }
 
-internal class SystemNavigationEntryViewModel : ViewModel() {
+internal class SystemNavigationEntryViewModel(
+    private val savedStateHandle: SavedStateHandle,
+) : ViewModel() {
     val instanceId: Int = nextInstanceId.incrementAndGet()
-    val counter = mutableStateOf(0)
+    val counter = mutableStateOf(savedStateHandle[COUNTER_KEY] ?: 0)
 
     fun increment() {
         counter.value += 1
+        savedStateHandle[COUNTER_KEY] = counter.value
     }
 
     private companion object {
+        const val COUNTER_KEY = "view-model-counter"
         val nextInstanceId = AtomicInteger(0)
     }
 }

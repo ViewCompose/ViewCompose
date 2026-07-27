@@ -186,6 +186,7 @@ internal object DemoTestTags {
     const val SYSTEM_NAV_DEEP_LINK_INVALID = "system_nav_deep_link_invalid"
     const val SYSTEM_NAV_DEEP_LINK_NO_MATCH = "system_nav_deep_link_no_match"
     const val SYSTEM_NAV_DEEP_LINK_SECURITY = "system_nav_deep_link_security"
+    const val SYSTEM_NAV_SEED_ADAPTIVE = "system_nav_seed_adaptive"
     const val SYSTEM_NAV_ADAPTIVE_TOGGLE = "system_nav_adaptive_toggle"
     const val SYSTEM_NAV_MOTION_TOGGLE = "system_nav_motion_toggle"
     const val SYSTEM_NAV_BACK_TOGGLE = "system_nav_back_toggle"
