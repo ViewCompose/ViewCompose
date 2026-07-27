@@ -224,7 +224,7 @@ class AndroidViewNavHostTransitionDriverTest {
     }
 
     @Test
-    fun `predictive back progress and cancellation restore native view properties`() {
+    fun `predictive back progress uses eased transforms and cancellation rebounds`() {
         val root = coordinator.snapshot.top
         coordinator.navigate(NavCommand.Push(NavRoute("details")))
         val details = coordinator.snapshot.top
@@ -240,22 +240,53 @@ class AndroidViewNavHostTransitionDriverTest {
         )
         val incoming = session(root.id).container
         val outgoing = session(details.id).container
+        val visualProgress = specHolder.value.predictiveBack.progressEasing.transform(0.5f)
 
-        assertEquals(-12.5f, incoming.translationX)
-        assertEquals(0.97f, incoming.alpha)
-        assertEquals(40f, outgoing.translationX)
-        assertEquals(0.94f, outgoing.alpha)
-        assertEquals(0.9925f, outgoing.scaleX)
+        assertTrue(visualProgress > 0.5f)
+        assertEquals(-40f * (1f - visualProgress), incoming.translationX, 0.05f)
+        assertEquals(0.92f + 0.08f * visualProgress, incoming.alpha, 0.001f)
+        assertEquals(100f * visualProgress, outgoing.translationX, 0.05f)
+        assertEquals(1f - 0.04f * visualProgress, outgoing.alpha, 0.001f)
+        assertEquals(1f - 0.015f * visualProgress, outgoing.scaleX, 0.001f)
 
         coordinator.cancelBackPreview(preview.id)
+
+        assertEquals(View.GONE, incoming.visibility)
+        assertEquals(View.VISIBLE, outgoing.visibility)
+        assertTrue(outgoing.translationX > 0f)
+
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(1, TimeUnit.SECONDS)
 
         assertEquals(0f, incoming.translationX)
         assertEquals(1f, incoming.alpha)
         assertEquals(0f, outgoing.translationX)
         assertEquals(1f, outgoing.alpha)
         assertEquals(1f, outgoing.scaleX)
-        assertEquals(View.GONE, incoming.visibility)
-        assertEquals(View.VISIBLE, outgoing.visibility)
+    }
+
+    @Test
+    fun `navigation during predictive back preserves the gesture visual state`() {
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        val details = coordinator.snapshot.top
+        attachAndLayoutHost()
+        coordinator.beginBackPreview(
+            backEvent(
+                progress = 0.5f,
+                swipeEdge = NavHostBackSwipeEdge.Left,
+            ),
+        )
+        val detailsView = session(details.id).container
+        val gestureTranslation = detailsView.translationX
+        assertTrue(gestureTranslation > 0f)
+
+        coordinator.navigate(NavCommand.Push(NavRoute("confirmation")))
+
+        assertNull(coordinator.activeBackPreview)
+        assertEquals(gestureTranslation, detailsView.translationX)
+        assertEquals(
+            NavCommand.Push(NavRoute("confirmation")),
+            coordinator.activeTransition?.command,
+        )
     }
 
     @Test

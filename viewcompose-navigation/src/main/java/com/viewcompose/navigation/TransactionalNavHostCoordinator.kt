@@ -191,7 +191,7 @@ internal class TransactionalNavHostCoordinator(
         val previousStrategy = paneStrategy
         val previousMaxPaneCount = this.maxPaneCount
         return try {
-            redirectActiveBackPreview()
+            redirectActiveBackPreview(preserveVisualState = false)
             redirectActiveTransition(preserveVisualState = false)
             paneStrategy = strategy
             this.maxPaneCount = maxPaneCount
@@ -241,7 +241,7 @@ internal class TransactionalNavHostCoordinator(
         }
         executing = true
         return try {
-            redirectActiveBackPreview()
+            redirectActiveBackPreview(preserveVisualState = false)
             redirectActiveTransition(preserveVisualState = false)
             val currentSnapshot = controller.snapshot()
             val command = controller.systemBackCommand() ?: return null
@@ -310,7 +310,7 @@ internal class TransactionalNavHostCoordinator(
             } catch (throwable: Throwable) {
                 if (activeBackPreviewRecord === active) {
                     activeBackPreviewRecord = null
-                    runCatching { active.handle?.cancel() }
+                    runCatching { active.handle?.dispose() }
                         .exceptionOrNull()
                         ?.let(throwable::addSuppressed)
                     runCatching { applySettledState(currentSnapshot) }
@@ -354,7 +354,10 @@ internal class TransactionalNavHostCoordinator(
         }
         executing = true
         return try {
-            finishBackPreview(active)
+            finishBackPreview(
+                active = active,
+                termination = NavBackPreviewTermination.Cancel,
+            )
             drainQueuedCommandsWhileExecuting()
             true
         } catch (throwable: Throwable) {
@@ -390,7 +393,7 @@ internal class TransactionalNavHostCoordinator(
                 val preparation = controller.prepare(active.preview.command)
             ) {
                 is NavPreparation.NoChange -> {
-                    active.handle?.cancel()
+                    active.handle?.dispose()
                     applySettledState(controller.snapshot())
                     NavHostNavigationResult.NoChange(
                         command = active.preview.command,
@@ -408,7 +411,7 @@ internal class TransactionalNavHostCoordinator(
                         committed is NavHostNavigationResult.Failed &&
                         !committed.stackCommitted
                     ) {
-                        active.handle?.cancel()
+                        active.handle?.dispose()
                         applySettledState(controller.snapshot())
                     }
                     committed
@@ -421,7 +424,7 @@ internal class TransactionalNavHostCoordinator(
             }
             result
         } catch (throwable: Throwable) {
-            runCatching { active.handle?.cancel() }
+            runCatching { active.handle?.dispose() }
                 .exceptionOrNull()
                 ?.let(throwable::addSuppressed)
             runCatching { applySettledState(controller.snapshot()) }
@@ -534,7 +537,7 @@ internal class TransactionalNavHostCoordinator(
         activeBackPreviewRecord?.let { active ->
             activeBackPreviewRecord = null
             runCatching {
-                active.handle?.cancel()
+                active.handle?.dispose()
             }.exceptionOrNull()?.let(failures::add)
         }
         activeTransitionRecord?.let { active ->
@@ -616,7 +619,7 @@ internal class TransactionalNavHostCoordinator(
     }
 
     private fun execute(command: NavCommand): NavHostNavigationResult {
-        redirectActiveBackPreview()
+        redirectActiveBackPreview(preserveVisualState = true)
         redirectActiveTransition(preserveVisualState = true)
         return when (val preparation = controller.prepare(command)) {
             is NavPreparation.NoChange -> {
@@ -1000,19 +1003,35 @@ internal class TransactionalNavHostCoordinator(
         )
     }
 
-    private fun redirectActiveBackPreview() {
+    private fun redirectActiveBackPreview(
+        preserveVisualState: Boolean,
+    ) {
         val active = activeBackPreviewRecord ?: return
-        finishBackPreview(active)
+        finishBackPreview(
+            active = active,
+            termination = if (preserveVisualState) {
+                NavBackPreviewTermination.Redirect
+            } else {
+                NavBackPreviewTermination.Dispose
+            },
+        )
     }
 
-    private fun finishBackPreview(active: ActiveNavHostBackPreview) {
+    private fun finishBackPreview(
+        active: ActiveNavHostBackPreview,
+        termination: NavBackPreviewTermination,
+    ) {
         check(activeBackPreviewRecord === active) {
             "Only the active predictive-back preview can reach a terminal state."
         }
         activeBackPreviewRecord = null
         val failures = mutableListOf<Throwable>()
         runCatching {
-            active.handle?.cancel()
+            when (termination) {
+                NavBackPreviewTermination.Cancel -> active.handle?.cancel()
+                NavBackPreviewTermination.Redirect -> active.handle?.redirect()
+                NavBackPreviewTermination.Dispose -> active.handle?.dispose()
+            }
         }.exceptionOrNull()?.let(failures::add)
         runCatching {
             applySettledState(active.preview.snapshot)
@@ -1166,5 +1185,11 @@ private class ActiveNavHostBackPreview(
     val preview: NavHostBackPreview,
     var handle: NavHostBackPreviewHandle? = null,
 )
+
+private enum class NavBackPreviewTermination {
+    Cancel,
+    Redirect,
+    Dispose,
+}
 
 private const val MAX_REENTRANT_COMMANDS_PER_DRAIN = 64

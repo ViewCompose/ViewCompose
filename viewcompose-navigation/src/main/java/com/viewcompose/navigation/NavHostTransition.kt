@@ -93,6 +93,14 @@ internal interface NavHostBackPreviewHandle {
 
     fun cancel()
 
+    fun redirect() {
+        cancel()
+    }
+
+    fun dispose() {
+        cancel()
+    }
+
     fun commit(
         transition: NavHostTransition,
         onCompleted: () -> Unit,

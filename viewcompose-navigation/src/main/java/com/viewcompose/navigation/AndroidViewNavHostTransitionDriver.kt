@@ -1,5 +1,7 @@
 package com.viewcompose.navigation
 
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.animation.Interpolator
 import android.view.animation.PathInterpolator
@@ -137,12 +139,7 @@ internal class AndroidViewNavHostTransitionDriver(
                     animatedViews.forEach { view ->
                         view.animate().cancel()
                         if (preserveVisualState) {
-                            interruptedViews += view
-                            view.postOnAnimation {
-                                if (interruptedViews.remove(view)) {
-                                    resetProperties(view)
-                                }
-                            }
+                            preserveForNextTransition(view)
                         } else {
                             interruptedViews -= view
                             resetProperties(view)
@@ -169,11 +166,12 @@ internal class AndroidViewNavHostTransitionDriver(
             view.animate().cancel()
             resetProperties(view)
         }
+        val predictiveSpec = specProvider().predictiveBack
         return AndroidBackPreviewHandle(
             preview = preview,
             outgoing = outgoing,
             incoming = incoming,
-            motion = specProvider().pop,
+            spec = predictiveSpec,
             travelWidth = sessionStore.hostView.width / maxOf(
                 preview.beforeScene.panes.size,
                 preview.afterScene.panes.size,
@@ -182,8 +180,22 @@ internal class AndroidViewNavHostTransitionDriver(
             canAnimate = sessionStore.hostView.isLaidOut &&
                 sessionStore.hostView.isAttachedToWindow &&
                 sessionStore.hostView.width > 0,
+            interruptedViews = interruptedViews,
+            preserveForNextTransition = { views ->
+                views.forEach(::preserveForNextTransition)
+            },
+            resetView = ::resetProperties,
         ).also { handle ->
             handle.update(initialEvent)
+        }
+    }
+
+    private fun preserveForNextTransition(view: View) {
+        interruptedViews += view
+        view.postOnAnimation {
+            if (interruptedViews.remove(view)) {
+                resetProperties(view)
+            }
         }
     }
 
@@ -223,11 +235,16 @@ private class AndroidBackPreviewHandle(
     private val preview: NavHostBackPreview,
     private val outgoing: List<View>,
     private val incoming: List<View>,
-    private val motion: NavDestinationMotionSpec,
+    private val spec: NavPredictiveBackSpec,
     private val travelWidth: Float,
     private val layoutDirection: Int,
     private val canAnimate: Boolean,
+    private val interruptedViews: MutableSet<View>,
+    private val preserveForNextTransition: (List<View>) -> Unit,
+    private val resetView: (View) -> Unit,
 ) : NavHostBackPreviewHandle {
+    private val motion = spec.motion
+    private val progressInterpolator = spec.progressEasing.toInterpolator()
     private var latestEvent = NavHostBackEvent(
         touchX = 0f,
         touchY = 0f,
@@ -235,6 +252,7 @@ private class AndroidBackPreviewHandle(
         swipeEdge = NavHostBackSwipeEdge.None,
         frameTimeMillis = 0L,
     )
+    private var latestVisualProgress = 0f
     private var terminal = false
     private var committing = false
 
@@ -243,13 +261,78 @@ private class AndroidBackPreviewHandle(
             return
         }
         latestEvent = event
+        latestVisualProgress = progressInterpolator.getInterpolation(event.progress)
+            .coerceIn(0f, 1f)
         if (!canAnimate) {
             return
         }
-        applyProgress(event)
+        applyProgress(
+            event = event,
+            visualProgress = latestVisualProgress,
+        )
     }
 
     override fun cancel() {
+        if (terminal) {
+            return
+        }
+        terminal = true
+        (outgoing + incoming).forEach { view -> view.animate().cancel() }
+        incoming.forEach { view ->
+            interruptedViews -= view
+            resetView(view)
+        }
+        if (
+            !canAnimate ||
+            motion.isDisabled ||
+            spec.cancelDurationMillis == 0L ||
+            latestVisualProgress <= 0f ||
+            outgoing.isEmpty()
+        ) {
+            reset()
+            return
+        }
+        interruptedViews += outgoing
+        val duration = (spec.cancelDurationMillis * latestVisualProgress)
+            .toLong()
+            .coerceAtLeast(1L)
+        val interpolator = spec.cancelEasing.toInterpolator()
+        val completionView = outgoing.last()
+        val finish = Runnable {
+            outgoing.forEach { view ->
+                if (interruptedViews.remove(view)) {
+                    resetView(view)
+                }
+            }
+        }
+        outgoing.forEach { view ->
+            val animator = view.animate()
+                .translationX(0f)
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(duration)
+                .setInterpolator(interpolator)
+                .withLayer()
+            if (view === completionView) {
+                animator.withEndAction(finish)
+            }
+            animator.start()
+        }
+        Handler(Looper.getMainLooper()).postDelayed(finish, duration + 32L)
+    }
+
+    override fun redirect() {
+        if (terminal) {
+            return
+        }
+        terminal = true
+        val animatedViews = outgoing + incoming
+        animatedViews.forEach { view -> view.animate().cancel() }
+        preserveForNextTransition(animatedViews)
+    }
+
+    override fun dispose() {
         if (terminal) {
             return
         }
@@ -276,7 +359,7 @@ private class AndroidBackPreviewHandle(
             "Predictive-back preview does not match the committed pop transition."
         }
         committing = true
-        val remainingFraction = 1f - latestEvent.progress
+        val remainingFraction = 1f - latestVisualProgress
         if (
             !canAnimate ||
             motion.isDisabled ||
@@ -347,46 +430,62 @@ private class AndroidBackPreviewHandle(
             reset()
             throw throwable
         }
-        return NavHostTransitionHandle {
-            if (!terminal) {
-                terminal = true
-                (outgoing + incoming).forEach { view -> view.animate().cancel() }
-                reset()
+        return object : NavHostTransitionHandle {
+            override fun cancel() {
+                terminate(preserveVisualState = false)
+            }
+
+            override fun redirect() {
+                terminate(preserveVisualState = true)
+            }
+
+            private fun terminate(preserveVisualState: Boolean) {
+                if (!terminal) {
+                    terminal = true
+                    val animatedViews = outgoing + incoming
+                    animatedViews.forEach { view -> view.animate().cancel() }
+                    if (preserveVisualState) {
+                        preserveForNextTransition(animatedViews)
+                    } else {
+                        reset()
+                    }
+                }
             }
         }
     }
 
-    private fun applyProgress(event: NavHostBackEvent) {
+    private fun applyProgress(
+        event: NavHostBackEvent,
+        visualProgress: Float,
+    ) {
         val direction = backPreviewOutgoingDirection(
             swipeEdge = event.swipeEdge,
             layoutDirection = layoutDirection,
         )
         outgoing.forEach { view ->
             view.applyTransform(
-                transform = motion.outgoingEnd.interpolateFromIdentity(event.progress),
+                transform = motion.outgoingEnd.interpolateFromIdentity(visualProgress),
                 translationX = direction *
                     travelWidth *
                     motion.outgoingEnd.travelFraction *
-                    event.progress,
+                    visualProgress,
             )
         }
         incoming.forEach { view ->
             view.applyTransform(
-                transform = motion.incomingStart.interpolateToIdentity(event.progress),
+                transform = motion.incomingStart.interpolateToIdentity(visualProgress),
                 translationX = -direction *
                     travelWidth *
                     motion.incomingStart.travelFraction *
-                    (1f - event.progress),
+                    (1f - visualProgress),
             )
         }
     }
 
     private fun reset() {
         (outgoing + incoming).forEach { view ->
-            view.alpha = 1f
-            view.translationX = 0f
-            view.scaleX = 1f
-            view.scaleY = 1f
+            interruptedViews -= view
+            resetView(view)
         }
     }
 }

@@ -47,6 +47,32 @@ data class NavMotionEasing(
         }
     }
 
+    fun transform(fraction: Float): Float {
+        val targetX = fraction.coerceIn(0f, 1f)
+        var low = 0f
+        var high = 1f
+        repeat(16) {
+            val mid = (low + high) * 0.5f
+            if (cubic(x1, x2, mid) < targetX) {
+                low = mid
+            } else {
+                high = mid
+            }
+        }
+        return cubic(y1, y2, (low + high) * 0.5f)
+    }
+
+    private fun cubic(
+        firstControl: Float,
+        secondControl: Float,
+        fraction: Float,
+    ): Float {
+        val inverse = 1f - fraction
+        return 3f * inverse * inverse * fraction * firstControl +
+            3f * inverse * fraction * fraction * secondControl +
+            fraction * fraction * fraction
+    }
+
     companion object {
         val Standard = NavMotionEasing(
             x1 = 0.2f,
@@ -65,6 +91,29 @@ data class NavMotionEasing(
             y1 = 0f,
             x2 = 1f,
             y2 = 1f,
+        )
+    }
+}
+
+/**
+ * Gesture-driven motion used before a predictive Back transaction commits.
+ */
+data class NavPredictiveBackSpec(
+    val motion: NavDestinationMotionSpec,
+    val progressEasing: NavMotionEasing = NavMotionEasing.Linear,
+    val cancelDurationMillis: Long = 180L,
+    val cancelEasing: NavMotionEasing = NavMotionEasing.Standard,
+) {
+    init {
+        require(cancelDurationMillis >= 0L) {
+            "Predictive Back cancel duration must not be negative."
+        }
+    }
+
+    companion object {
+        val None = NavPredictiveBackSpec(
+            motion = NavDestinationMotionSpec.None,
+            cancelDurationMillis = 0L,
         )
     }
 }
@@ -109,6 +158,7 @@ data class NavTransitionSpec(
     val reset: NavDestinationMotionSpec = DefaultReset,
     val stackSelection: NavDestinationMotionSpec = DefaultStackSelection,
     val deepLink: NavDestinationMotionSpec = DefaultDeepLink,
+    val predictiveBack: NavPredictiveBackSpec = DefaultPredictiveBack,
 ) {
     internal fun motionFor(command: NavCommand): NavDestinationMotionSpec {
         return when (command) {
@@ -189,6 +239,27 @@ data class NavTransitionSpec(
                 scale = 1.015f,
             ),
         )
+        private val DefaultPredictiveBack = NavPredictiveBackSpec(
+            motion = NavDestinationMotionSpec(
+                durationMillis = 220L,
+                incomingStart = NavDestinationTransform(
+                    travelFraction = 0.04f,
+                    alpha = 0.92f,
+                    scale = 0.99f,
+                ),
+                outgoingEnd = NavDestinationTransform(
+                    travelFraction = 0.1f,
+                    alpha = 0.96f,
+                    scale = 0.985f,
+                ),
+            ),
+            progressEasing = NavMotionEasing(
+                x1 = 0.2f,
+                y1 = 0f,
+                x2 = 0.2f,
+                y2 = 1f,
+            ),
+        )
 
         val Default = NavTransitionSpec()
         val None = NavTransitionSpec(
@@ -198,6 +269,7 @@ data class NavTransitionSpec(
             reset = NavDestinationMotionSpec.None,
             stackSelection = NavDestinationMotionSpec.None,
             deepLink = NavDestinationMotionSpec.None,
+            predictiveBack = NavPredictiveBackSpec.None,
         )
     }
 }
