@@ -65,6 +65,10 @@ class RenderSession(
         runtime.render()
     }
 
+    fun setRenderingActive(active: Boolean) {
+        runtime.setRenderingActive(active)
+    }
+
     fun dispose() {
         runtime.dispose()
     }

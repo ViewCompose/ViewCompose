@@ -151,10 +151,12 @@ internal class NavDestinationSessionStore(
     @MainThread
     internal fun stage(candidate: NavDestinationCandidate) {
         requirePending(candidate)
-        val container = candidate.destinationSession.container
+        val session = candidate.destinationSession
+        val container = session.container
         check(container.parent == null) {
             "Destination candidate ${candidate.entry.id} is already attached."
         }
+        session.setRenderingActive(false)
         container.visibility = View.GONE
         hostView.addView(container)
     }
@@ -195,6 +197,16 @@ internal class NavDestinationSessionStore(
     fun sessionOrNull(entryId: NavEntryId): NavDestinationSession? = sessions[entryId]
 
     @MainThread
+    fun updateRenderEnvironment(
+        localSnapshot: UiLocalSnapshot,
+        content: NavDestinationContent,
+    ) {
+        sessions.values.forEach { session ->
+            session.updateEnvironment(localSnapshot, content)
+        }
+    }
+
+    @MainThread
     fun present(
         layerOrder: List<NavEntryId>,
         visibleEntryIds: Set<NavEntryId>,
@@ -218,10 +230,12 @@ internal class NavDestinationSessionStore(
             "Every visible destination must have exactly one pane layout."
         }
         sessions.forEach { (entryId, session) ->
-            session.container.visibility = if (entryId in visibleEntryIds) {
-                View.VISIBLE
+            if (entryId in visibleEntryIds) {
+                session.container.visibility = View.VISIBLE
+                session.setRenderingActive(true)
             } else {
-                View.GONE
+                session.setRenderingActive(false)
+                session.container.visibility = View.GONE
             }
         }
         hostView.updatePaneLayouts(

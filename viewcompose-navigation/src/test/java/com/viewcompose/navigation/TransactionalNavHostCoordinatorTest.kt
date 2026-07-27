@@ -229,7 +229,7 @@ class TransactionalNavHostCoordinatorTest {
     }
 
     @Test
-    fun `pop refresh failure preserves current page and can be retried`() {
+    fun `pop reuses retained page without a synchronous destination refresh`() {
         var failHomeRefresh = false
         attach { entry ->
             if (entry.route.name == "home" && failHomeRefresh) {
@@ -241,23 +241,6 @@ class TransactionalNavHostCoordinatorTest {
         val details = coordinator.snapshot.top
         failHomeRefresh = true
 
-        val failed = coordinator.navigate(NavCommand.Pop)
-
-        assertTrue(failed is NavHostNavigationResult.Failed)
-        failed as NavHostNavigationResult.Failed
-        assertEquals(NavHostFailurePhase.DestinationRefresh, failed.phase)
-        assertFalse(failed.stackCommitted)
-        assertEquals(listOf("home", "details"), coordinator.routeNames())
-        assertEquals(
-            View.VISIBLE,
-            checkNotNull(sessionStore.sessionOrNull(details.id)).container.visibility,
-        )
-        assertEquals(
-            NavEntryLifecycleState.Resumed,
-            checkNotNull(ownerStore.ownerOrNull(details.id)).entryLifecycleState,
-        )
-
-        failHomeRefresh = false
         val committed = coordinator.navigate(NavCommand.Pop)
 
         assertTrue(committed is NavHostNavigationResult.Committed)
@@ -422,7 +405,7 @@ class TransactionalNavHostCoordinatorTest {
     }
 
     @Test
-    fun `failed tab switch rolls back selection without destroying retained target`() {
+    fun `tab switch reuses retained target without a synchronous destination refresh`() {
         configureMultiStackCoordinator()
         var failSearch = false
         attach { entry ->
@@ -438,14 +421,14 @@ class TransactionalNavHostCoordinatorTest {
 
         val result = coordinator.navigate(NavCommand.SelectStack(SearchStack))
 
-        assertTrue(result is NavHostNavigationResult.Failed)
-        assertEquals(HomeStack, controller.stackStateSnapshot().activeStackId)
-        assertSame(homeRoot, coordinator.snapshot.top)
+        assertTrue(result is NavHostNavigationResult.Committed)
+        assertEquals(SearchStack, controller.stackStateSnapshot().activeStackId)
+        assertSame(searchRoot, coordinator.snapshot.top)
         assertSame(searchSession, sessionStore.sessionOrNull(searchRoot.id))
-        assertEquals(View.VISIBLE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
-        assertEquals(View.GONE, searchSession.container.visibility)
+        assertEquals(View.GONE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
+        assertEquals(View.VISIBLE, searchSession.container.visibility)
         assertEquals(
-            NavEntryLifecycleState.Created,
+            NavEntryLifecycleState.Resumed,
             checkNotNull(ownerStore.ownerOrNull(searchRoot.id)).entryLifecycleState,
         )
     }

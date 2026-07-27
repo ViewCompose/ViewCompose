@@ -43,6 +43,7 @@ class NavHostAdaptiveRuntimeTest {
             ),
             systemBackEnabled = false,
             onFailure = null,
+            contentKey = Unit,
             content = { entry -> Text(entry.route.name) },
         )
         val runtime = NavHostRuntime.create(

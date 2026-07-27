@@ -18,7 +18,6 @@ import com.viewcompose.navigation.core.NavTransaction
 import com.viewcompose.navigation.core.NavTransactionStatus
 import com.viewcompose.navigation.core.calculateValidated
 import com.viewcompose.widget.core.RenderFrameReport
-import com.viewcompose.widget.core.RenderFrameStatus
 import com.viewcompose.widget.core.UiLocalSnapshot
 import java.util.ArrayDeque
 
@@ -440,6 +439,23 @@ internal class TransactionalNavHostCoordinator(
     }
 
     @MainThread
+    fun updateRenderEnvironment(
+        localSnapshot: UiLocalSnapshot,
+        content: NavDestinationContent,
+    ) {
+        requireMainThread()
+        check(state == NavHostCoordinatorState.Attached) {
+            "Navigation environment can update only while attached; current=$state."
+        }
+        check(!executing) {
+            "Navigation environment cannot update during another host operation."
+        }
+        this.localSnapshot = localSnapshot
+        destinationContent = content
+        sessionStore.updateRenderEnvironment(localSnapshot, content)
+    }
+
+    @MainThread
     fun refresh(
         localSnapshot: UiLocalSnapshot,
         content: NavDestinationContent,
@@ -451,8 +467,7 @@ internal class TransactionalNavHostCoordinator(
         check(!executing) {
             "Navigation pages cannot refresh during another host operation."
         }
-        this.localSnapshot = localSnapshot
-        destinationContent = content
+        updateRenderEnvironment(localSnapshot, content)
         executing = true
         return try {
             val reports = linkedMapOf<NavEntryId, RenderFrameReport?>()
@@ -460,7 +475,16 @@ internal class TransactionalNavHostCoordinator(
                 ?.transition
                 ?.retainedEntries
                 ?: controller.retainedEntries()
-            entries.forEach { entry ->
+            val visibleEntryIds = when {
+                activeTransitionRecord != null -> {
+                    checkNotNull(activeTransitionRecord).transition.visibleEntryIds
+                }
+                activeBackPreviewRecord != null -> {
+                    checkNotNull(activeBackPreviewRecord).preview.visibleEntryIds
+                }
+                else -> calculatePaneScene(controller.snapshot()).visibleEntryIds
+            }
+            entries.filter { entry -> entry.id in visibleEntryIds }.forEach { entry ->
                 reports[entry.id] = checkNotNull(sessionStore.sessionOrNull(entry.id)) {
                     "Attached destination ${entry.id} has no page session."
                 }.render(localSnapshot, content)
@@ -690,33 +714,8 @@ internal class TransactionalNavHostCoordinator(
             }
         } else {
             val revealedEntry = transaction.after.top
-            val frameReport = runCatching {
-                traceSection("VC.Nav.RefreshRevealed") {
-                    checkNotNull(sessionStore.sessionOrNull(revealedEntry.id)) {
-                        "Revealed destination ${revealedEntry.id} has no page session."
-                    }.render(
-                        localSnapshot = checkNotNull(localSnapshot),
-                        content = checkNotNull(destinationContent),
-                    )
-                }
-            }.getOrElse { throwable ->
-                rollback(transaction)
-                return failedBeforeCommit(
-                    transaction = transaction,
-                    phase = NavHostFailurePhase.DestinationRefresh,
-                    failedEntry = revealedEntry,
-                    cause = throwable,
-                )
-            }
-            if (frameReport?.status != RenderFrameStatus.Committed) {
-                rollback(transaction)
-                return failedBeforeCommit(
-                    transaction = transaction,
-                    phase = NavHostFailurePhase.DestinationRefresh,
-                    failedEntry = revealedEntry,
-                    frameReport = frameReport,
-                    cause = frameReport?.failures?.firstOrNull()?.cause,
-                )
+            checkNotNull(sessionStore.sessionOrNull(revealedEntry.id)) {
+                "Revealed destination ${revealedEntry.id} has no retained page session."
             }
         }
 

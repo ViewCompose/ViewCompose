@@ -24,6 +24,9 @@ import com.viewcompose.widget.core.captureUiLocalSnapshot
  * changing the committed stack until the gesture completes.
  * [panePolicy] can adapt the same committed entries into multiple native View panes without
  * recreating their lifecycle, ViewModel, or saved-state owners.
+ * [contentKey] must change when destination content or inherited locals depend on a non-observable
+ * parent value. Observable state invalidates destination sessions directly, so ordinary navigation
+ * and state changes do not synchronously refresh every retained page.
  */
 fun UiTreeBuilder.NavHost(
     controller: NavHostController,
@@ -31,6 +34,7 @@ fun UiTreeBuilder.NavHost(
     transitionSpec: NavTransitionSpec = NavTransitionSpec.Default,
     panePolicy: NavPanePolicy = NavPanePolicy.Single,
     systemBackEnabled: Boolean = true,
+    contentKey: Any? = Unit,
     debug: Boolean = false,
     debugTag: String = "ViewComposeNavigation",
     overlayHostFactory: (ViewGroup) -> OverlayHost = defaultNavOverlayHostFactory,
@@ -49,6 +53,7 @@ fun UiTreeBuilder.NavHost(
         panePolicy = panePolicy,
         systemBackEnabled = systemBackEnabled,
         onFailure = onFailure,
+        contentKey = contentKey,
         content = content,
     )
     AndroidView(

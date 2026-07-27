@@ -570,7 +570,7 @@ class NavHostPublicApiTest {
     }
 
     @Test
-    fun `parent rerender refreshes destination content without replacing host`() {
+    fun `parent rerender does not synchronously refresh unchanged destination content`() {
         var renderCount = 0
         val fixture = renderPublicHost { entry ->
             renderCount += 1
@@ -581,9 +581,30 @@ class NavHostPublicApiTest {
 
         fixture.session.render()
 
-        assertTrue(renderCount > initialRenderCount)
+        assertEquals(initialRenderCount, renderCount)
         assertTrue(fixture.root.getChildAt(0) === originalHost)
         assertTrue(fixture.controller.isAttached)
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `changed content key refreshes visible destination without replacing host`() {
+        var contentVersion = 0
+        var renderCount = 0
+        val fixture = renderPublicHost(
+            contentKey = { contentVersion },
+        ) { entry ->
+            renderCount += 1
+            Text("${entry.route.name}:$contentVersion")
+        }
+        val originalHost = fixture.navHostView
+        val initialRenderCount = renderCount
+        contentVersion += 1
+
+        fixture.session.render()
+
+        assertTrue(renderCount > initialRenderCount)
+        assertTrue(fixture.root.getChildAt(0) === originalHost)
         fixture.session.dispose()
     }
 
@@ -780,6 +801,7 @@ class NavHostPublicApiTest {
     private fun renderPublicHost(
         controller: NavHostController = deterministicController(),
         onFailure: ((NavFailure) -> Unit)? = null,
+        contentKey: () -> Any? = { Unit },
         content: com.viewcompose.widget.core.UiTreeBuilder.(
             com.viewcompose.navigation.core.NavEntry,
         ) -> Unit = { entry -> Text(entry.route.name) },
@@ -796,6 +818,7 @@ class NavHostPublicApiTest {
                     transitionSpec = NavTransitionSpec.None,
                     overlayHostFactory = { OverlayHostDefaults.noOp },
                     onFailure = onFailure,
+                    contentKey = contentKey(),
                     content = content,
                 )
             }

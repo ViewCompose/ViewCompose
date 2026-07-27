@@ -7,12 +7,19 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class AndroidFrameAlignedRenderSessionRuntime(
     private val onRenderNow: () -> Unit,
     private val onDisposeNow: () -> Unit,
+    frameClock: RenderFrameClock = AndroidChoreographerFrameClock(),
 ) : RenderSessionRuntime {
     private val disposed = AtomicBoolean(false)
+    private val renderingActive = AtomicBoolean(true)
+    private val renderRequested = AtomicBoolean(false)
     private val frameDispatcher = FrameAlignedRenderDispatcher(
-        frameClock = AndroidChoreographerFrameClock(),
+        frameClock = frameClock,
         onFrameRender = {
-            if (!disposed.get()) {
+            if (
+                !disposed.get() &&
+                renderingActive.get() &&
+                renderRequested.compareAndSet(true, false)
+            ) {
                 traceSection("VC.FrameRender") {
                     onRenderNow()
                 }
@@ -22,19 +29,36 @@ internal class AndroidFrameAlignedRenderSessionRuntime(
 
     override fun requestRender() {
         if (disposed.get()) return
-        frameDispatcher.requestFrame()
+        renderRequested.set(true)
+        if (renderingActive.get()) {
+            frameDispatcher.requestFrame()
+        }
     }
 
     override fun render() {
         if (disposed.get()) return
         frameDispatcher.cancelPending()
+        renderRequested.set(false)
         traceSection("VC.DirectRender") {
             onRenderNow()
         }
     }
 
+    override fun setRenderingActive(active: Boolean) {
+        if (disposed.get()) return
+        if (renderingActive.getAndSet(active) == active) return
+        if (active) {
+            if (renderRequested.get()) {
+                frameDispatcher.requestFrame()
+            }
+        } else {
+            frameDispatcher.cancelPending()
+        }
+    }
+
     override fun dispose() {
         if (!disposed.compareAndSet(false, true)) return
+        renderRequested.set(false)
         frameDispatcher.dispose()
         onDisposeNow()
     }

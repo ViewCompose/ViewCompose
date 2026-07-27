@@ -20,6 +20,7 @@ internal data class NavHostRuntimeConfig(
     val panePolicy: NavPanePolicy,
     val systemBackEnabled: Boolean,
     val onFailure: ((NavFailure) -> Unit)?,
+    val contentKey: Any?,
     val content: NavDestinationContent,
 )
 
@@ -89,12 +90,24 @@ internal class NavHostRuntime private constructor(
         val config = checkNotNull(stagedConfig) {
             "NavHost must be updated before its render transaction commits."
         }
+        val previousConfig = committedConfig
         transitionSpecHolder.value = config.transitionSpec
         committedConfig = config
         applyPanePolicy(config.panePolicy)
         when (coordinator.state) {
             NavHostCoordinatorState.Detached -> attach(config)
-            NavHostCoordinatorState.Attached -> refresh(config)
+            NavHostCoordinatorState.Attached -> {
+                coordinator.updateRenderEnvironment(
+                    localSnapshot = config.localSnapshot,
+                    content = config.content,
+                )
+                if (
+                    previousConfig == null ||
+                    previousConfig.contentKey != config.contentKey
+                ) {
+                    refresh(config)
+                }
+            }
             NavHostCoordinatorState.Attaching -> {
                 error("NavHost cannot commit configuration while attachment is still running.")
             }

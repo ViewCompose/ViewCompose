@@ -21,10 +21,21 @@ internal class NavDestinationSession(
         localSnapshot: UiLocalSnapshot,
         content: NavDestinationContent,
     ): RenderFrameReport? {
-        renderEnvironment.localSnapshot = localSnapshot
-        renderEnvironment.content = content
+        updateEnvironment(localSnapshot, content)
         renderSession.render()
         return lastFrameReport
+    }
+
+    fun updateEnvironment(
+        localSnapshot: UiLocalSnapshot,
+        content: NavDestinationContent,
+    ) {
+        renderEnvironment.localSnapshot = localSnapshot
+        renderEnvironment.content = content
+    }
+
+    fun setRenderingActive(active: Boolean) {
+        renderSession.setRenderingActive(active)
     }
 
     fun dispose() {
