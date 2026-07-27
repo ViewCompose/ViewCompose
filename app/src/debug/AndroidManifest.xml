@@ -36,5 +36,11 @@
                     android:scheme="viewcompose" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".NavigationAdaptivePaneTestActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
     </application>
 </manifest>
