@@ -5,6 +5,7 @@ import androidx.benchmark.macro.FrameTimingMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,7 +26,7 @@ class NavigationMotionBenchmark {
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = navigationMotionIterations(),
         startupMode = StartupMode.WARM,
         setupBlock = {
             startSystemNavigationAndWait()
@@ -42,7 +43,7 @@ class NavigationMotionBenchmark {
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = navigationMotionIterations(),
         startupMode = StartupMode.WARM,
         setupBlock = {
             startSystemNavigationAndWait()
@@ -60,5 +61,14 @@ class NavigationMotionBenchmark {
     private companion object {
         const val PUSH_ACTION_TEXT = "Push 下一页面"
         const val DETAIL_DESTINATION_TEXT = "首页详情"
+        const val ITERATIONS_ARGUMENT = "navigationMotionIterations"
+
+        fun navigationMotionIterations(): Int {
+            return InstrumentationRegistry.getArguments()
+                .getString(ITERATIONS_ARGUMENT)
+                ?.toIntOrNull()
+                ?.takeIf { it > 0 }
+                ?: RELEASE_BASELINE_ITERATIONS
+        }
     }
 }

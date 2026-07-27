@@ -1,6 +1,7 @@
 package com.viewcompose.navigation
 
 import android.os.Looper
+import android.os.Trace
 import androidx.annotation.MainThread
 import com.viewcompose.navigation.core.NavBackStackController
 import com.viewcompose.navigation.core.NavBackStackSnapshot
@@ -624,7 +625,11 @@ internal class TransactionalNavHostCoordinator(
     private fun execute(command: NavCommand): NavHostNavigationResult {
         redirectActiveBackPreview(preserveVisualState = true)
         redirectActiveTransition(preserveVisualState = true)
-        return when (val preparation = controller.prepare(command)) {
+        return when (
+            val preparation = traceSection("VC.Nav.PrepareCommand") {
+                controller.prepare(command)
+            }
+        ) {
             is NavPreparation.NoChange -> {
                 NavHostNavigationResult.NoChange(
                     command = command,
@@ -650,12 +655,14 @@ internal class TransactionalNavHostCoordinator(
         if (addedEntry != null) {
             when (
                 val preparation = runCatching {
-                    sessionStore.prepare(
-                        entry = addedEntry,
-                        localSnapshot = checkNotNull(localSnapshot),
-                        hostLifecycleState = hostLifecycleState,
-                        content = checkNotNull(destinationContent),
-                    )
+                    traceSection("VC.Nav.PrepareDestination") {
+                        sessionStore.prepare(
+                            entry = addedEntry,
+                            localSnapshot = checkNotNull(localSnapshot),
+                            hostLifecycleState = hostLifecycleState,
+                            content = checkNotNull(destinationContent),
+                        )
+                    }
                 }.getOrElse { throwable ->
                     rollback(transaction)
                     return failedBeforeCommit(
@@ -684,12 +691,14 @@ internal class TransactionalNavHostCoordinator(
         } else {
             val revealedEntry = transaction.after.top
             val frameReport = runCatching {
-                checkNotNull(sessionStore.sessionOrNull(revealedEntry.id)) {
-                    "Revealed destination ${revealedEntry.id} has no page session."
-                }.render(
-                    localSnapshot = checkNotNull(localSnapshot),
-                    content = checkNotNull(destinationContent),
-                )
+                traceSection("VC.Nav.RefreshRevealed") {
+                    checkNotNull(sessionStore.sessionOrNull(revealedEntry.id)) {
+                        "Revealed destination ${revealedEntry.id} has no page session."
+                    }.render(
+                        localSnapshot = checkNotNull(localSnapshot),
+                        content = checkNotNull(destinationContent),
+                    )
+                }
             }.getOrElse { throwable ->
                 rollback(transaction)
                 return failedBeforeCommit(
@@ -713,8 +722,10 @@ internal class TransactionalNavHostCoordinator(
 
         if (candidate != null) {
             try {
-                candidate.stage()
-                candidate.commit()
+                traceSection("VC.Nav.StageDestination") {
+                    candidate.stage()
+                    candidate.commit()
+                }
             } catch (throwable: Throwable) {
                 rollbackCandidate(candidate)
                 rollback(transaction)
@@ -729,7 +740,9 @@ internal class TransactionalNavHostCoordinator(
         }
 
         val committedSnapshot = try {
-            transaction.commit()
+            traceSection("VC.Nav.CommitStack") {
+                transaction.commit()
+            }
         } catch (throwable: Throwable) {
             addedEntry?.let { entry ->
                 runCatching { sessionStore.remove(entry.id) }
@@ -744,11 +757,13 @@ internal class TransactionalNavHostCoordinator(
         }
 
         return try {
-            val transition = beginTransition(
-                transaction = transaction,
-                committedSnapshot = committedSnapshot,
-                backPreviewHandle = backPreviewHandle,
-            )
+            val transition = traceSection("VC.Nav.BeginTransition") {
+                beginTransition(
+                    transaction = transaction,
+                    committedSnapshot = committedSnapshot,
+                    backPreviewHandle = backPreviewHandle,
+                )
+            }
             NavHostNavigationResult.Committed(
                 command = transaction.command,
                 snapshot = committedSnapshot,
@@ -1193,6 +1208,18 @@ private enum class NavBackPreviewTermination {
     Cancel,
     Redirect,
     Dispose,
+}
+
+private inline fun <T> traceSection(
+    name: String,
+    block: () -> T,
+): T {
+    Trace.beginSection(name)
+    return try {
+        block()
+    } finally {
+        Trace.endSection()
+    }
 }
 
 private const val MAX_REENTRANT_COMMANDS_PER_DRAIN = 64

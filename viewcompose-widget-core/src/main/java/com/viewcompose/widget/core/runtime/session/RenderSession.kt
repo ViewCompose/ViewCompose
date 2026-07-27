@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import android.os.Trace
 import android.util.Log
 import android.view.ViewGroup
 import com.viewcompose.runtime.composition.ComposerLite
@@ -83,30 +84,34 @@ class RenderSession(
                 // without runtime state invalidation signals.
                 composer.requestRootRecompose()
             }
-            FocusManagerContext.withFocusManager(focusManager) {
-                LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
-                    OverlayRequestContext.withStore(overlayRequestStore) {
-                        ComposerContext.withComposer(
-                            composer = composer,
-                            coroutineContext = compositionCoroutineScope.coroutineContext,
-                        ) {
-                            preparedComposition = composer.prepareRoot(
-                                collectDiagnostics = collectDiagnostics,
+            traceSection("VC.Compose") {
+                FocusManagerContext.withFocusManager(focusManager) {
+                    LocalContext.provide(LocalOverlayHost.holder, overlayHost) {
+                        OverlayRequestContext.withStore(overlayRequestStore) {
+                            ComposerContext.withComposer(
+                                composer = composer,
+                                coroutineContext = compositionCoroutineScope.coroutineContext,
                             ) {
-                                buildVNodeTree(content)
+                                preparedComposition = composer.prepareRoot(
+                                    collectDiagnostics = collectDiagnostics,
+                                ) {
+                                    buildVNodeTree(content)
+                                }
+                                tree = checkNotNull(preparedComposition).value
                             }
-                            tree = checkNotNull(preparedComposition).value
                         }
                     }
                 }
             }
             failurePhase = RenderFailurePhase.ViewTreeRender
-            platform.renderEngine.renderInto(
-                container = container,
-                previousMountedNodes = mountedNodes,
-                nodes = tree,
-                collectDiagnostics = collectDiagnostics,
-            )
+            traceSection("VC.RenderTree") {
+                platform.renderEngine.renderInto(
+                    container = container,
+                    previousMountedNodes = mountedNodes,
+                    nodes = tree,
+                    collectDiagnostics = collectDiagnostics,
+                )
+            }
         } catch (error: Exception) {
             try {
                 preparedComposition?.abort()
@@ -349,5 +354,17 @@ class RenderSession(
 
     private companion object {
         val nextSessionId = AtomicLong(0)
+    }
+}
+
+private inline fun <T> traceSection(
+    name: String,
+    block: () -> T,
+): T {
+    Trace.beginSection(name)
+    return try {
+        block()
+    } finally {
+        Trace.endSection()
     }
 }

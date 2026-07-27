@@ -1,5 +1,6 @@
 package com.viewcompose.host.android.runtime
 
+import android.os.Trace
 import com.viewcompose.widget.core.RenderSessionRuntime
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -12,7 +13,9 @@ internal class AndroidFrameAlignedRenderSessionRuntime(
         frameClock = AndroidChoreographerFrameClock(),
         onFrameRender = {
             if (!disposed.get()) {
-                onRenderNow()
+                traceSection("VC.FrameRender") {
+                    onRenderNow()
+                }
             }
         },
     )
@@ -25,12 +28,26 @@ internal class AndroidFrameAlignedRenderSessionRuntime(
     override fun render() {
         if (disposed.get()) return
         frameDispatcher.cancelPending()
-        onRenderNow()
+        traceSection("VC.DirectRender") {
+            onRenderNow()
+        }
     }
 
     override fun dispose() {
         if (!disposed.compareAndSet(false, true)) return
         frameDispatcher.dispose()
         onDisposeNow()
+    }
+}
+
+private inline fun <T> traceSection(
+    name: String,
+    block: () -> T,
+): T {
+    Trace.beginSection(name)
+    return try {
+        block()
+    } finally {
+        Trace.endSection()
     }
 }
