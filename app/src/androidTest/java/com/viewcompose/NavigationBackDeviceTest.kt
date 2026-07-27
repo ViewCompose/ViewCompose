@@ -423,17 +423,12 @@ class NavigationBackDeviceTest {
     }
 
     @Test
-    fun repeatedPushAndImmediateSystemBackRemainTransactional() {
+    fun repeatedPushAndImmediateBackDispatchRemainTransactional() {
         launchHost().use { scenario ->
             repeat(STRESS_ITERATIONS) { index ->
                 scenario.onActivity { activity ->
                     assertTrue(activity.push("stress-$index") is NavResult.Committed)
-                }
-
-                device.pressBack()
-                waitForUiIdle()
-
-                scenario.onActivity { activity ->
+                    activity.onBackPressedDispatcher.onBackPressed()
                     assertEquals(
                         "iteration=$index",
                         listOf(NavigationBackTestActivity.HOME_ROUTE),

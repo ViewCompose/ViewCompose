@@ -207,7 +207,7 @@ The Android 13/API 33 compatibility suite validates:
 - programmatic navigation redirects an active preview before the next system Back;
 - `systemBackEnabled` changes callback participation without replacing the stack;
 - Activity recreation restores stable entry IDs before system Back;
-- 30 consecutive push/immediate-system-Back rounds preserve the transaction and ownership
+- 30 consecutive push/immediate-Back-dispatch rounds preserve the transaction and ownership
   invariants;
 - Activity stop/resume and recreation during active transitions preserve the committed stack and
   release redirected transition work.
