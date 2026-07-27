@@ -38,6 +38,7 @@ Current feature-branch status:
 - Stage 6 P0 process-death, lifecycle-race, and resource-release certification: complete
 - Stage 7A nested graph kernel and transactional leaf resolution: complete
 - Stage 7B graph-scoped lifecycle and state ownership: complete
+- Stage 8 independently retained tab back stacks: complete
 
 ## 2. P0 delivery plan
 
@@ -140,10 +141,10 @@ so invisible animation can never retain removed page resources indefinitely.
 - preview, cancel, and commit Predictive Back through the same transaction boundary: complete
 
 `rememberNavHostController` now registers one versioned, Bundle-safe state envelope in the current
-ViewCompose saveable-state registry. Saving captures the committed back-stack snapshot, stable entry
-and graph-instance IDs, every typed route argument, and the Android saved-state bundle for each leaf
-or graph owner still referenced by that snapshot. Owner bundles include both `rememberSaveable`
-providers and AndroidX `SavedStateHandle` providers.
+ViewCompose saveable-state registry. Saving captures the complete committed stack set, active stack,
+stack-selection history, stable entry and graph-instance IDs, every typed route argument, and the
+Android saved-state bundle for each retained leaf or graph owner. Owner bundles include both
+`rememberSaveable` providers and AndroidX `SavedStateHandle` providers.
 
 Restoration creates the pure back-stack controller directly from the saved snapshot before `NavHost`
 attaches. Each destination owner then consumes only the bundle matching its restored entry ID. State
@@ -151,16 +152,16 @@ for an outgoing page retained solely by a running transition is excluded when th
 in the committed stack. Releasing and remounting the same controller also preserves destination state
 without requiring process recreation.
 
-The codec rejects unknown formats, empty or duplicate stacks, malformed routes, and invalid typed
-arguments. Invalid restored data falls back to the declared start destination instead of partially
-publishing a damaged stack.
+The format-4 codec rejects unknown formats, empty or duplicate stacks, mismatched stack
+configurations, malformed routes, and invalid typed arguments. Invalid restored data falls back
+atomically to every configured stack root instead of partially publishing damaged state.
 
 The host-side process-death runner proves the complete Android path instead of simulating it with
-Activity recreation. It launches a two-entry stack through a nested graph, records both leaf-entry
-IDs and graph-instance IDs plus leaf and graph `rememberSaveable`, `SavedStateHandle`, and graph-route
-argument values, moves the task to the background, kills only the application process, and brings
-the existing task forward. Certification requires a new PID and an exact match of the pre-kill and
-restored stack state:
+Activity recreation. It builds two retained tab stacks with two entries each, records the active
+stack and selection history, all leaf-entry and graph-instance IDs, leaf and graph
+`rememberSaveable`, `SavedStateHandle`, and graph-route arguments, moves the task to the background,
+kills only the application process, and brings the existing task forward. Certification requires a
+new PID and an exact match of the complete pre-kill and restored stack set:
 
 ```bash
 ANDROID_SERIAL=<device> tools/navigation/validate_android_process_death.sh
@@ -172,21 +173,23 @@ after a user force-stop.
 
 `NavHost` registers one lifecycle-aware callback with the nearest View-tree
 `OnBackPressedDispatcherOwner`. The callback is enabled only when `systemBackEnabled` is true, the
-host is attached, and the committed stack contains more than its root destination. A root stack
-therefore never consumes Back: dispatch continues to an enclosing navigation host, another
+host is attached, and the controller can produce a system-Back command. Back pops the active stack
+when it contains more than its root. At a root, `NavRootBackBehavior.PreviousStack` returns to the
+most recently selected stack; otherwise dispatch continues to an enclosing navigation host, another
 application callback, or the platform fallback. Setting `systemBackEnabled = false` opts the host
-out without changing its stack.
+out without changing any stack.
 
-Ordinary Back executes the same transactional `Pop` command as `NavHostController.popBackStack()`.
+Ordinary Back executes a transactional `Pop` or `PopStackHistory` command from the same controller.
 Predictive Back adds a preview phase before that command:
 
-1. gesture start exposes the current top and its previous destination without changing the stack;
+1. gesture start exposes the current top and either its previous destination or the previous stack's
+   top without changing the committed stack set;
 2. the outgoing top remains the only interactive `RESUMED` destination while the revealed page is
    visible at `STARTED`;
 3. progress updates only the native View transition driver;
 4. cancellation resets View properties, visibility, and lifecycle to the committed snapshot;
-5. completion refreshes the revealed destination, commits `Pop`, and continues the remaining motion
-   through the normal transition-retention protocol.
+5. completion refreshes the revealed destination, commits the prepared Back command, and continues
+   the remaining motion through the normal transition-retention protocol.
 
 A programmatic navigation command redirects an active preview before preparing its own transaction.
 Host detachment, callback disablement, and host destruction cancel the preview and restore a settled
@@ -280,7 +283,7 @@ publish a second navigation state outside `NavBackStackController`.
 The implementation order is:
 
 1. nested graphs and graph-scoped ownership;
-2. multiple retained tab back stacks;
+2. multiple retained tab back stacks — complete;
 3. URI deep-link matching through the graph resolver;
 4. adaptive multi-pane placement over the same committed entries.
 
@@ -298,10 +301,11 @@ Explicitly entering a graph route allocates a fresh instance for that graph and 
 `reset` creates a wholly fresh graph path. `SingleTop`, replace, reset, rollback, and transition
 retention compare the resolved leaf plus its graph path.
 
-The saved-state envelope is hard-cut to format version 3 and persists graph instance IDs, routes, and
+The saved-state envelope first introduced graph ownership in format version 3 and is now hard-cut to
+format version 4 for complete retained stack sets. It persists graph instance IDs, routes, and
 arguments with each leaf route. A graph-backed controller restores only when every saved graph path
 is valid and shared instance IDs describe the same graph entry; changed, damaged, or colliding data
-falls back atomically to the graph start destination.
+falls back atomically to the configured stack roots.
 
 ```kotlin
 val graph = navGraph(
@@ -358,6 +362,52 @@ rollback cleanup, graph `SavedStateHandle` recreation, and full host/controller 
 real-device process-death runner additionally verifies the restored nested graph instance ID,
 graph-scoped `rememberSaveable`, graph-scoped `SavedStateHandle`, and graph-route argument.
 
+### Stage 8: independently retained tab back stacks
+
+`NavStackConfiguration` declares stable stack IDs, one start route per stack, the initial selection,
+and root-Back policy. The controller owns all stacks in one immutable `NavStackSetSnapshot` and
+allows only one prepared transaction across the whole set. A route mutation always targets the
+active stack; `selectStack` switches atomically without rebuilding another controller.
+
+```kotlin
+val homeStack = NavStackId("home")
+val searchStack = NavStackId("search")
+val tabs = NavStackConfiguration(
+    initialStackId = homeStack,
+    stacks = listOf(
+        NavStackSpec(homeStack, NavRoute("home")),
+        NavStackSpec(searchStack, NavRoute("search")),
+    ),
+    rootBackBehavior = NavRootBackBehavior.PreviousStack,
+)
+val navController = rememberNavHostController(
+    stackConfiguration = tabs,
+    graph = graph,
+)
+
+val selectedStack = navController.navigationState.value.activeStackId
+navController.selectStack(searchStack)
+navController.selectStack(
+    stackId = homeStack,
+    selectionMode = NavStackSelectionMode.PopToRoot,
+)
+```
+
+Each retained entry and graph owner remains attached to the same host. Only the active stack's top
+is visible, interactive, and `RESUMED`; every inactive stack is hidden and capped at `CREATED`.
+Selecting a stack in `Preserve` mode resumes it exactly where it was left. Reselecting with
+`PopToRoot` destroys only entries above that stack's root and does not alter other stacks.
+
+Selection history is stable, excludes the active stack, and is saved with the complete stack set.
+With `PreviousStack`, system and predictive Back at a stack root reveal and commit the newest
+history target; once history is empty, Back delegates to the enclosing host. A failed destination
+render, failed stack switch, or cancelled predictive preview preserves the previously committed
+selection, histories, sessions, and owners.
+
+The pure-core, Robolectric/public-host, and Android process-death suites cover stack isolation,
+reselection, transaction rollback, inactive lifecycle ownership, ordinary and predictive Back, and
+format-4 restoration of all stack and owner state.
+
 ## 4. Transaction invariants
 
 Navigation is a two-phase operation:
@@ -410,7 +460,6 @@ be reintroduced.
 
 The current P1 branch does not yet include:
 
-- multiple tab back stacks
 - URI deep-link matching
 - adaptive multi-pane placement
 
