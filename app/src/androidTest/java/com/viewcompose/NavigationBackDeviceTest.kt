@@ -12,6 +12,7 @@ import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import com.viewcompose.navigation.NavResult
+import com.viewcompose.navigation.NavTransitionSpec
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -103,6 +104,16 @@ class NavigationBackDeviceTest {
 
                 activity.onBackPressedDispatcher.dispatchOnBackCancelled()
 
+                assertEquals(View.GONE, home.visibility)
+                assertEquals(View.VISIBLE, details.visibility)
+                assertEquals(0f, home.translationX, 0f)
+                assertEquals(1f, home.alpha, 0f)
+            }
+            awaitBackCancellation()
+
+            scenario.onActivity { activity ->
+                val home = activity.destinationContainer(NavigationBackTestActivity.HOME_ROUTE)
+                val details = activity.destinationContainer(NavigationBackTestActivity.DETAILS_ROUTE)
                 assertEquals(View.GONE, home.visibility)
                 assertEquals(View.VISIBLE, details.visibility)
                 assertEquals(0f, home.translationX, 0f)
@@ -258,6 +269,21 @@ class NavigationBackDeviceTest {
                 activity.onBackPressedDispatcher.dispatchOnBackCancelled()
             }
             awaitTransition()
+
+            scenario.onActivity { activity ->
+                val details = activity.destinationContainer(
+                    NavigationBackTestActivity.DETAILS_ROUTE,
+                )
+                val confirmation = activity.destinationContainer(
+                    NavigationBackTestActivity.CONFIRMATION_ROUTE,
+                )
+                assertEquals(View.GONE, details.visibility)
+                assertEquals(View.VISIBLE, confirmation.visibility)
+                assertEquals(0f, details.translationX, 0f)
+                assertEquals(0f, confirmation.translationX, 0f)
+                assertEquals(1f, details.alpha, 0f)
+                assertEquals(1f, confirmation.alpha, 0f)
+            }
 
             device.pressBack()
             waitForUiIdle()
@@ -513,6 +539,11 @@ class NavigationBackDeviceTest {
 
     private fun awaitTransition() {
         SystemClock.sleep(NavigationBackTestActivity.TRANSITION_DURATION_MILLIS + 80L)
+        waitForUiIdle()
+    }
+
+    private fun awaitBackCancellation() {
+        SystemClock.sleep(NavTransitionSpec.Default.predictiveBack.cancelDurationMillis + 80L)
         waitForUiIdle()
     }
 

@@ -7,8 +7,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiScrollable
-import androidx.test.uiautomator.UiSelector
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavStackSelectionMode
 import com.viewcompose.navigation.core.NavValue
@@ -96,7 +94,6 @@ class SystemNavigationDemoDeviceTest {
                 )
             }
 
-            scrollTextIntoView("准备三窗格样例（当前 Tab）")
             scenario.onActivity { activity ->
                 activity.clickByTestTag(DemoTestTags.SYSTEM_NAV_SEED_ADAPTIVE)
             }
@@ -143,7 +140,6 @@ class SystemNavigationDemoDeviceTest {
             }
             awaitNavigation()
 
-            scrollTextIntoView("非法 Int 参数（应拒绝）")
             scenario.onActivity { activity ->
                 val before = activity.navigationSnapshot()
                     .activeStack
@@ -253,13 +249,4 @@ class SystemNavigationDemoDeviceTest {
         waitForUiIdle()
     }
 
-    private fun scrollTextIntoView(text: String) {
-        assertTrue(
-            "Expected to scroll to '$text'",
-            UiScrollable(UiSelector().scrollable(true))
-                .setAsVerticalList()
-                .scrollTextIntoView(text),
-        )
-        waitForUiIdle()
-    }
 }

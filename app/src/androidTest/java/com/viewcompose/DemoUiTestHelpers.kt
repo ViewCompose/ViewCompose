@@ -153,23 +153,24 @@ internal fun Activity.requireViewByTestTagVisible(
     }
 
     visibleTaggedView()?.let { return it }
-    val recyclerView = findFirstRecyclerView(root)
-    if (recyclerView != null) {
-        val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
-        fun scrollUntilVisible(direction: Int): View? {
-            repeat(maxScrollAttempts) {
-                visibleTaggedView()?.let { return it }
-                if (!recyclerView.canScrollVertically(direction)) {
-                    return null
+    findRecyclerViews(root)
+        .filter { recyclerView -> recyclerView.isShown && recyclerView.height > 0 }
+        .forEach { recyclerView ->
+            val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
+            fun scrollUntilVisible(direction: Int): View? {
+                repeat(maxScrollAttempts) {
+                    visibleTaggedView()?.let { return it }
+                    if (!recyclerView.canScrollVertically(direction)) {
+                        return null
+                    }
+                    recyclerView.scrollBy(0, direction * delta)
                 }
-                recyclerView.scrollBy(0, direction * delta)
+                return visibleTaggedView()
             }
-            return visibleTaggedView()
-        }
 
-        scrollUntilVisible(direction = 1)?.let { return it }
-        scrollUntilVisible(direction = -1)?.let { return it }
-    }
+            scrollUntilVisible(direction = 1)?.let { return it }
+            scrollUntilVisible(direction = -1)?.let { return it }
+        }
 
     val view = findViewByTestTag(root, tag)
     assertNotNull("Expected to find view with testTag: $tag", view)
@@ -576,6 +577,22 @@ private fun findFirstRecyclerView(root: View): RecyclerView? {
         }
     }
     return null
+}
+
+private fun findRecyclerViews(root: View): List<RecyclerView> {
+    val matches = mutableListOf<RecyclerView>()
+    fun collect(view: View) {
+        if (view is RecyclerView) {
+            matches += view
+        }
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) {
+                collect(view.getChildAt(index))
+            }
+        }
+    }
+    collect(root)
+    return matches
 }
 
 private fun findFirstEditText(root: View): EditText? {
