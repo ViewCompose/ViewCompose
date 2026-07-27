@@ -86,6 +86,12 @@ internal fun MacrobenchmarkScope.startSystemNavigationAndWait() {
     waitForText("首页总览")
 }
 
+internal fun MacrobenchmarkScope.startSystemNavigationActivityFromForeground() {
+    device.executeShellCommand(
+        "am start -W -n $TARGET_PACKAGE/com.viewcompose.SystemNavigationActivity",
+    )
+}
+
 internal fun MacrobenchmarkScope.waitForText(text: String) {
     device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
 }

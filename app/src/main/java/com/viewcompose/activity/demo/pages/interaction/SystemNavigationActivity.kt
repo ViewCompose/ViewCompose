@@ -24,15 +24,24 @@ class SystemNavigationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val diagnosticsEnabled = intent.getBooleanExtra(
+            EXTRA_RENDER_DIAGNOSTICS,
+            false,
+        )
         setUiContent(
-            debug = true,
+            debug = diagnosticsEnabled,
             debugTag = "SystemNavigationDemo",
             overlayHostFactory = ::AndroidOverlayHost,
-            onRenderResult = DemoRenderDiagnosticsStore::record,
+            onRenderResult = if (diagnosticsEnabled) {
+                DemoRenderDiagnosticsStore::record
+            } else {
+                null
+            },
         ) { root ->
             SystemNavigationDemoPage(
                 root = root,
                 externalDeepLinkOutcome = externalDeepLinkOutcome,
+                diagnosticsEnabled = diagnosticsEnabled,
                 onControllerReady = { controller -> navController = controller },
                 onExit = ::finish,
             )
@@ -79,6 +88,7 @@ class SystemNavigationActivity : AppCompatActivity() {
 
     private companion object {
         const val MAX_CONTROLLER_WAIT_ATTEMPTS = 10
+        const val EXTRA_RENDER_DIAGNOSTICS = "system_navigation_render_diagnostics"
     }
 }
 

@@ -38,6 +38,7 @@ import com.viewcompose.widget.core.rememberSaveable
 internal fun UiTreeBuilder.SystemNavigationDemoPage(
     root: ViewGroup,
     externalDeepLinkOutcome: MutableState<String>,
+    diagnosticsEnabled: Boolean,
     onControllerReady: (NavHostController) -> Unit,
     onExit: () -> Unit,
 ) {
@@ -128,7 +129,7 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
                 NavPanePolicy.Single
             },
             systemBackEnabled = systemBackEnabled.value,
-            debug = true,
+            debug = diagnosticsEnabled,
             debugTag = "SystemNavigationDemoHost",
             onFailure = { failure ->
                 lastEvent.value = failure.toDemoDescription()
