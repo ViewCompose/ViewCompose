@@ -140,14 +140,7 @@ class NavigationBackTestActivity : AppCompatActivity() {
             navController = controller
             NavHost(
                 controller = controller,
-                transitionSpec = NavTransitionSpec.Default.copy(
-                    push = NavTransitionSpec.Default.push.copy(
-                        durationMillis = TRANSITION_DURATION_MILLIS,
-                    ),
-                    pop = NavTransitionSpec.Default.pop.copy(
-                        durationMillis = TRANSITION_DURATION_MILLIS,
-                    ),
-                ),
+                transitionSpec = NavTransitionSpec.Default,
                 systemBackEnabled = systemBackEnabledState.value,
                 overlayHostFactory = { OverlayHostDefaults.noOp },
                 onFailure = failures::add,
@@ -404,7 +397,7 @@ class NavigationBackTestActivity : AppCompatActivity() {
         const val HOME_ROUTE = "home"
         const val DETAILS_ROUTE = "details"
         const val CONFIRMATION_ROUTE = "confirmation"
-        const val TRANSITION_DURATION_MILLIS = 120L
+        const val TRANSITION_DURATION_MILLIS = 450L
         const val EXTRA_PROCESS_DEATH_CERTIFICATION =
             "com.viewcompose.extra.PROCESS_DEATH_CERTIFICATION"
         const val PROCESS_DEATH_STATUS_PREFIX = "PROCESS_DEATH|"

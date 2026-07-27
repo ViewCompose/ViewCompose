@@ -5,17 +5,22 @@ import com.viewcompose.navigation.core.NavCommand
 /**
  * Visual transform applied to one destination at an edge of a navigation transition.
  *
- * [travelFraction] is relative to one visible pane. The transition direction is resolved from the
- * navigation command and layout direction by the Android host.
+ * [travelFraction] is relative to one visible pane and [travelDp] is added to that distance. The
+ * transition direction is resolved from the navigation command and layout direction by the Android
+ * host.
  */
 data class NavDestinationTransform(
     val travelFraction: Float = 0f,
+    val travelDp: Float = 0f,
     val alpha: Float = 1f,
     val scale: Float = 1f,
 ) {
     init {
         require(travelFraction.isFinite() && travelFraction in 0f..1f) {
             "Navigation travel fraction must be finite and between 0 and 1."
+        }
+        require(travelDp.isFinite()) {
+            "Navigation travel distance must be finite."
         }
         require(alpha.isFinite() && alpha in 0f..1f) {
             "Navigation alpha must be finite and between 0 and 1."
@@ -26,51 +31,120 @@ data class NavDestinationTransform(
     }
 
     internal val isIdentity: Boolean
-        get() = travelFraction == 0f && alpha == 1f && scale == 1f
+        get() = travelFraction == 0f &&
+            travelDp == 0f &&
+            alpha == 1f &&
+            scale == 1f
 }
 
 /**
- * Cubic Bézier timing curve used by native navigation motion.
+ * Timing path used by native navigation motion.
+ *
+ * The public constructor creates one cubic Bézier from `(0, 0)` to `(1, 1)`. System motion can
+ * use multiple cubic segments so Android's `fast_out_extra_slow_in` path is represented without
+ * approximating it as a single curve.
  */
-data class NavMotionEasing(
-    val x1: Float,
-    val y1: Float,
-    val x2: Float,
-    val y2: Float,
+class NavMotionEasing private constructor(
+    internal val segments: List<NavMotionPathSegment>,
 ) {
+    constructor(
+        x1: Float,
+        y1: Float,
+        x2: Float,
+        y2: Float,
+    ) : this(
+        listOf(
+            NavMotionPathSegment(
+                control1X = x1,
+                control1Y = y1,
+                control2X = x2,
+                control2Y = y2,
+                endX = 1f,
+                endY = 1f,
+            ),
+        ),
+    )
+
     init {
-        require(listOf(x1, y1, x2, y2).all(Float::isFinite)) {
-            "Navigation easing control points must be finite."
+        require(segments.isNotEmpty()) {
+            "Navigation easing must contain at least one path segment."
         }
-        require(x1 in 0f..1f && x2 in 0f..1f) {
-            "Navigation easing x control points must be between 0 and 1."
+        var startX = 0f
+        segments.forEach { segment ->
+            require(segment.values.all(Float::isFinite)) {
+                "Navigation easing path values must be finite."
+            }
+            require(segment.endX > startX && segment.endX <= 1f) {
+                "Navigation easing path must advance monotonically to x=1."
+            }
+            require(
+                segment.control1X in startX..segment.endX &&
+                    segment.control2X in startX..segment.endX,
+            ) {
+                "Navigation easing x control points must stay inside their segment."
+            }
+            startX = segment.endX
+        }
+        require(segments.last().endX == 1f && segments.last().endY == 1f) {
+            "Navigation easing path must end at (1, 1)."
         }
     }
 
     fun transform(fraction: Float): Float {
         val targetX = fraction.coerceIn(0f, 1f)
+        if (targetX == 0f || targetX == 1f) {
+            return targetX
+        }
+        var startX = 0f
+        var startY = 0f
+        val segment = segments.first { candidate ->
+            if (targetX <= candidate.endX) {
+                true
+            } else {
+                startX = candidate.endX
+                startY = candidate.endY
+                false
+            }
+        }
         var low = 0f
         var high = 1f
         repeat(16) {
             val mid = (low + high) * 0.5f
-            if (cubic(x1, x2, mid) < targetX) {
+            if (
+                cubic(
+                    start = startX,
+                    control1 = segment.control1X,
+                    control2 = segment.control2X,
+                    end = segment.endX,
+                    fraction = mid,
+                ) < targetX
+            ) {
                 low = mid
             } else {
                 high = mid
             }
         }
-        return cubic(y1, y2, (low + high) * 0.5f)
+        return cubic(
+            start = startY,
+            control1 = segment.control1Y,
+            control2 = segment.control2Y,
+            end = segment.endY,
+            fraction = (low + high) * 0.5f,
+        )
     }
 
     private fun cubic(
-        firstControl: Float,
-        secondControl: Float,
+        start: Float,
+        control1: Float,
+        control2: Float,
+        end: Float,
         fraction: Float,
     ): Float {
         val inverse = 1f - fraction
-        return 3f * inverse * inverse * fraction * firstControl +
-            3f * inverse * fraction * fraction * secondControl +
-            fraction * fraction * fraction
+        return inverse * inverse * inverse * start +
+            3f * inverse * inverse * fraction * control1 +
+            3f * inverse * fraction * fraction * control2 +
+            fraction * fraction * fraction * end
     }
 
     companion object {
@@ -92,6 +166,76 @@ data class NavMotionEasing(
             x2 = 1f,
             y2 = 1f,
         )
+        val BackGesture = NavMotionEasing(
+            x1 = 0.1f,
+            y1 = 0.1f,
+            x2 = 0f,
+            y2 = 1f,
+        )
+        val Emphasized = NavMotionEasing(
+            segments = listOf(
+                NavMotionPathSegment(
+                    control1X = 0.05f,
+                    control1Y = 0f,
+                    control2X = 0.133333f,
+                    control2Y = 0.06f,
+                    endX = 0.166666f,
+                    endY = 0.4f,
+                ),
+                NavMotionPathSegment(
+                    control1X = 0.208333f,
+                    control1Y = 0.82f,
+                    control2X = 0.25f,
+                    control2Y = 1f,
+                    endX = 1f,
+                    endY = 1f,
+                ),
+            ),
+        )
+    }
+}
+
+internal data class NavMotionPathSegment(
+    val control1X: Float,
+    val control1Y: Float,
+    val control2X: Float,
+    val control2Y: Float,
+    val endX: Float,
+    val endY: Float,
+) {
+    val values: List<Float>
+        get() = listOf(control1X, control1Y, control2X, control2Y, endX, endY)
+}
+
+/**
+ * Independent timing for one navigation property.
+ */
+data class NavMotionTiming(
+    val durationMillis: Long,
+    val startDelayMillis: Long = 0L,
+    val easing: NavMotionEasing = NavMotionEasing.Linear,
+) {
+    init {
+        require(durationMillis >= 0L) {
+            "Navigation property duration must not be negative."
+        }
+        require(startDelayMillis >= 0L) {
+            "Navigation property start delay must not be negative."
+        }
+    }
+
+    internal val endTimeMillis: Long
+        get() = startDelayMillis + durationMillis
+
+    internal fun progressAt(playTimeMillis: Long): Float {
+        if (durationMillis == 0L) {
+            return if (playTimeMillis >= startDelayMillis) 1f else 0f
+        }
+        val linearProgress = (
+            (playTimeMillis - startDelayMillis).toFloat() /
+                durationMillis.toFloat()
+            ).coerceIn(0f, 1f)
+        return easing.transform(linearProgress)
     }
 }
 
@@ -125,9 +269,10 @@ data class NavSpringSpec(
  */
 data class NavPredictiveBackSpec(
     val incomingStart: NavDestinationTransform,
+    val incomingEnd: NavDestinationTransform = NavDestinationTransform(),
     val outgoingEnd: NavDestinationTransform,
     val progressEasing: NavMotionEasing = NavMotionEasing.Linear,
-    val commitSpring: NavSpringSpec = DefaultCommitSpring,
+    val commitMotion: NavDestinationMotionSpec = DefaultCommitMotion,
     val cancelSpring: NavSpringSpec = DefaultCancelSpring,
     val velocitySampleWindowMillis: Long = 100L,
     val maxProgressVelocity: Float = 4f,
@@ -142,13 +287,23 @@ data class NavPredictiveBackSpec(
     }
 
     internal val isDisabled: Boolean
-        get() = incomingStart.isIdentity && outgoingEnd.isIdentity
+        get() = incomingStart.isIdentity &&
+            incomingEnd.isIdentity &&
+            outgoingEnd.isIdentity &&
+            commitMotion.isDisabled
 
     companion object {
-        private val DefaultCommitSpring = NavSpringSpec(
-            stiffness = 700f,
-            dampingRatio = 1f,
-            maxDurationMillis = 500L,
+        private val DefaultCommitMotion = NavDestinationMotionSpec(
+            durationMillis = 450L,
+            outgoingEnd = NavDestinationTransform(
+                travelDp = 96f,
+                alpha = 0f,
+            ),
+            easing = NavMotionEasing.Emphasized,
+            outgoingAlphaTiming = NavMotionTiming(
+                durationMillis = 90L,
+                easing = NavMotionEasing.Linear,
+            ),
         )
         private val DefaultCancelSpring = NavSpringSpec(
             stiffness = 900f,
@@ -157,7 +312,9 @@ data class NavPredictiveBackSpec(
         )
         val None = NavPredictiveBackSpec(
             incomingStart = NavDestinationTransform(),
+            incomingEnd = NavDestinationTransform(),
             outgoingEnd = NavDestinationTransform(),
+            commitMotion = NavDestinationMotionSpec.None,
         )
     }
 }
@@ -173,6 +330,14 @@ data class NavDestinationMotionSpec(
     val incomingStart: NavDestinationTransform = NavDestinationTransform(),
     val outgoingEnd: NavDestinationTransform = NavDestinationTransform(),
     val easing: NavMotionEasing = NavMotionEasing.Standard,
+    val incomingAlphaTiming: NavMotionTiming = NavMotionTiming(
+        durationMillis = durationMillis,
+        easing = easing,
+    ),
+    val outgoingAlphaTiming: NavMotionTiming = NavMotionTiming(
+        durationMillis = durationMillis,
+        easing = easing,
+    ),
 ) {
     init {
         require(durationMillis >= 0L) {
@@ -180,8 +345,15 @@ data class NavDestinationMotionSpec(
         }
     }
 
+    internal val totalDurationMillis: Long
+        get() = maxOf(
+            durationMillis,
+            incomingAlphaTiming.endTimeMillis,
+            outgoingAlphaTiming.endTimeMillis,
+        )
+
     internal val isDisabled: Boolean
-        get() = durationMillis == 0L ||
+        get() = totalDurationMillis == 0L ||
             (incomingStart.isIdentity && outgoingEnd.isIdentity)
 
     companion object {
@@ -219,22 +391,38 @@ data class NavTransitionSpec(
     }
 
     companion object {
+        // Mirrors current AOSP activity_open_*.xml/activity_close_*.xml motion: 96dp travel,
+        // 450ms fast_out_extra_slow_in geometry, and independently timed 83ms alpha windows.
         private val DefaultPush = NavDestinationMotionSpec(
-            durationMillis = 300L,
+            durationMillis = 450L,
             incomingStart = NavDestinationTransform(
-                travelFraction = 0.08f,
+                travelDp = 96f,
+                alpha = 0f,
             ),
             outgoingEnd = NavDestinationTransform(
-                travelFraction = 0.025f,
+                travelDp = 96f,
+            ),
+            easing = NavMotionEasing.Emphasized,
+            incomingAlphaTiming = NavMotionTiming(
+                durationMillis = 83L,
+                startDelayMillis = 50L,
+                easing = NavMotionEasing.Linear,
             ),
         )
         private val DefaultPop = NavDestinationMotionSpec(
-            durationMillis = 260L,
+            durationMillis = 450L,
             incomingStart = NavDestinationTransform(
-                travelFraction = 0.025f,
+                travelDp = 96f,
             ),
             outgoingEnd = NavDestinationTransform(
-                travelFraction = 0.08f,
+                travelDp = 96f,
+                alpha = 0f,
+            ),
+            easing = NavMotionEasing.Emphasized,
+            outgoingAlphaTiming = NavMotionTiming(
+                durationMillis = 83L,
+                startDelayMillis = 35L,
+                easing = NavMotionEasing.Linear,
             ),
         )
         private val DefaultReplace = NavDestinationMotionSpec(
@@ -269,19 +457,21 @@ data class NavTransitionSpec(
                 travelFraction = 0.015f,
             ),
         )
+        // Mirrors WM Shell DefaultCrossActivityBackAnimation geometry and back-gesture easing.
         private val DefaultPredictiveBack = NavPredictiveBackSpec(
             incomingStart = NavDestinationTransform(
-                travelFraction = 0.04f,
+                travelDp = 96f,
+            ),
+            incomingEnd = NavDestinationTransform(
+                travelDp = 96f,
+                scale = 0.9f,
             ),
             outgoingEnd = NavDestinationTransform(
-                travelFraction = 0.1f,
+                travelFraction = 0.05f,
+                travelDp = -8f,
+                scale = 0.9f,
             ),
-            progressEasing = NavMotionEasing(
-                x1 = 0.2f,
-                y1 = 0f,
-                x2 = 0.2f,
-                y2 = 1f,
-            ),
+            progressEasing = NavMotionEasing.BackGesture,
         )
 
         val Default = NavTransitionSpec()

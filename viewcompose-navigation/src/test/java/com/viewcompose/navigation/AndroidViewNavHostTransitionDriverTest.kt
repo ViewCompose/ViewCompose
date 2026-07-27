@@ -1,6 +1,7 @@
 package com.viewcompose.navigation
 
 import android.app.Activity
+import android.graphics.drawable.ColorDrawable
 import android.os.Looper
 import android.view.View
 import com.viewcompose.navigation.core.NavBackStackController
@@ -101,9 +102,10 @@ class AndroidViewNavHostTransitionDriverTest {
         ) as NavHostNavigationResult.Committed
         val details = coordinator.snapshot.top
         val incoming = session(details.id).container
+        val density = incoming.resources.displayMetrics.density
 
-        assertEquals(80f, incoming.translationX)
-        assertEquals(1f, incoming.alpha)
+        assertEquals(96f * density, incoming.translationX)
+        assertEquals(0f, incoming.alpha)
         assertEquals(1f, incoming.scaleX)
         assertEquals(1f, incoming.scaleY)
         assertTrue(coordinator.activeTransition != null)
@@ -142,8 +144,9 @@ class AndroidViewNavHostTransitionDriverTest {
         coordinator.navigate(NavCommand.Push(NavRoute("details")))
         val details = coordinator.snapshot.top
         val detailsView = session(details.id).container
-        assertEquals(80f, detailsView.translationX)
-        assertEquals(1f, detailsView.alpha)
+        val expectedStartOffset = 96f * detailsView.resources.displayMetrics.density
+        assertEquals(expectedStartOffset, detailsView.translationX)
+        assertEquals(0f, detailsView.alpha)
         assertEquals(1f, detailsView.scaleX)
 
         coordinator.navigate(NavCommand.Push(NavRoute("confirmation")))
@@ -153,11 +156,11 @@ class AndroidViewNavHostTransitionDriverTest {
             NavHostTransitionOutcome.Redirected,
             coordinator.lastTransitionResult?.outcome,
         )
-        assertEquals(80f, detailsView.translationX)
-        assertEquals(1f, detailsView.alpha)
+        assertEquals(expectedStartOffset, detailsView.translationX)
+        assertEquals(0f, detailsView.alpha)
         assertEquals(1f, detailsView.scaleX)
-        assertEquals(80f, confirmationView.translationX)
-        assertEquals(1f, confirmationView.alpha)
+        assertEquals(expectedStartOffset, confirmationView.translationX)
+        assertEquals(0f, confirmationView.alpha)
         assertTrue(coordinator.activeTransition != null)
     }
 
@@ -167,7 +170,10 @@ class AndroidViewNavHostTransitionDriverTest {
 
         coordinator.navigate(NavCommand.Push(NavRoute("details")))
         val detailsView = session(coordinator.snapshot.top.id).container
-        assertEquals(80f, detailsView.translationX)
+        assertEquals(
+            96f * detailsView.resources.displayMetrics.density,
+            detailsView.translationX,
+        )
 
         val result = coordinator.navigate(
             NavCommand.Push(
@@ -241,13 +247,29 @@ class AndroidViewNavHostTransitionDriverTest {
         val incoming = session(root.id).container
         val outgoing = session(details.id).container
         val visualProgress = specHolder.value.predictiveBack.progressEasing.transform(0.5f)
+        val density = incoming.resources.displayMetrics.density
+        val outgoingTravel = 1_000f * 0.05f - 8f * density
 
         assertTrue(visualProgress > 0.5f)
-        assertEquals(-40f * (1f - visualProgress), incoming.translationX, 0.05f)
+        assertEquals(-96f * density, incoming.translationX, 0.05f)
         assertEquals(1f, incoming.alpha, 0f)
-        assertEquals(100f * visualProgress, outgoing.translationX, 0.05f)
+        assertEquals(outgoingTravel * visualProgress, outgoing.translationX, 0.05f)
         assertEquals(1f, outgoing.alpha, 0f)
-        assertEquals(1f, outgoing.scaleX, 0f)
+        assertEquals(1f - 0.1f * visualProgress, outgoing.scaleX, 0.001f)
+        assertEquals(1f - 0.1f * visualProgress, incoming.scaleX, 0.001f)
+        assertTrue(incoming.foreground is ColorDrawable)
+
+        coordinator.updateBackPreview(
+            previewId = preview.id,
+            event = backEvent(
+                progress = 0.5f,
+                swipeEdge = NavHostBackSwipeEdge.Left,
+                touchY = 400f,
+                frameTimeMillis = 48L,
+            ),
+        )
+        assertTrue(outgoing.translationY > 0f)
+        assertTrue(incoming.translationY > 0f)
 
         coordinator.cancelBackPreview(preview.id)
 
@@ -260,8 +282,10 @@ class AndroidViewNavHostTransitionDriverTest {
         assertEquals(0f, incoming.translationX)
         assertEquals(1f, incoming.alpha)
         assertEquals(0f, outgoing.translationX)
+        assertEquals(0f, outgoing.translationY)
         assertEquals(1f, outgoing.alpha)
         assertEquals(1f, outgoing.scaleX)
+        assertNull(incoming.foreground)
     }
 
     @Test
@@ -440,6 +464,39 @@ class AndroidViewNavHostTransitionDriverTest {
     }
 
     @Test
+    fun `default push pop and predictive back mirror current Android system motion`() {
+        val spec = NavTransitionSpec.Default
+
+        assertEquals(450L, spec.push.durationMillis)
+        assertEquals(96f, spec.push.incomingStart.travelDp)
+        assertEquals(0f, spec.push.incomingStart.alpha)
+        assertEquals(96f, spec.push.outgoingEnd.travelDp)
+        assertEquals(50L, spec.push.incomingAlphaTiming.startDelayMillis)
+        assertEquals(83L, spec.push.incomingAlphaTiming.durationMillis)
+
+        assertEquals(450L, spec.pop.durationMillis)
+        assertEquals(96f, spec.pop.incomingStart.travelDp)
+        assertEquals(96f, spec.pop.outgoingEnd.travelDp)
+        assertEquals(0f, spec.pop.outgoingEnd.alpha)
+        assertEquals(35L, spec.pop.outgoingAlphaTiming.startDelayMillis)
+        assertEquals(83L, spec.pop.outgoingAlphaTiming.durationMillis)
+        assertEquals(
+            0.4f,
+            NavMotionEasing.Emphasized.transform(0.166666f),
+            0.001f,
+        )
+
+        assertEquals(0.9f, spec.predictiveBack.outgoingEnd.scale)
+        assertEquals(0.05f, spec.predictiveBack.outgoingEnd.travelFraction)
+        assertEquals(-8f, spec.predictiveBack.outgoingEnd.travelDp)
+        assertEquals(96f, spec.predictiveBack.incomingStart.travelDp)
+        assertEquals(96f, spec.predictiveBack.incomingEnd.travelDp)
+        assertEquals(0.9f, spec.predictiveBack.incomingEnd.scale)
+        assertEquals(450L, spec.predictiveBack.commitMotion.durationMillis)
+        assertEquals(90L, spec.predictiveBack.commitMotion.outgoingAlphaTiming.durationMillis)
+    }
+
+    @Test
     fun `predictive back motion follows swipe edge with layout fallback`() {
         assertEquals(
             1f,
@@ -474,11 +531,12 @@ class AndroidViewNavHostTransitionDriverTest {
     private fun backEvent(
         progress: Float,
         swipeEdge: NavHostBackSwipeEdge,
+        touchY: Float = 16f,
         frameTimeMillis: Long = 24L,
     ): NavHostBackEvent {
         return NavHostBackEvent(
             touchX = 8f,
-            touchY = 16f,
+            touchY = touchY,
             progress = progress,
             swipeEdge = swipeEdge,
             frameTimeMillis = frameTimeMillis,

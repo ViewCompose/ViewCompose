@@ -101,8 +101,12 @@ class NavigationBackDeviceTest {
                 assertTrue(details.translationX > 0f)
                 assertEquals(1f, home.alpha, 0f)
                 assertEquals(1f, details.alpha, 0f)
-                assertEquals(1f, home.scaleX, 0f)
-                assertEquals(1f, details.scaleX, 0f)
+                assertTrue(home.scaleX in 0.9f..1f)
+                assertTrue(details.scaleX in 0.9f..1f)
+                assertTrue(home.scaleX < 1f)
+                assertTrue(details.scaleX < 1f)
+                assertTrue(home.foreground is ColorDrawable)
+                assertTrue((home.foreground as ColorDrawable).alpha > 0)
                 assertEquals(
                     listOf(
                         NavigationBackTestActivity.HOME_ROUTE,
@@ -117,6 +121,7 @@ class NavigationBackDeviceTest {
                 assertEquals(View.VISIBLE, details.visibility)
                 assertEquals(0f, home.translationX, 0f)
                 assertEquals(1f, home.alpha, 0f)
+                assertNull(home.foreground)
             }
             awaitBackCancellation()
 
@@ -153,13 +158,18 @@ class NavigationBackDeviceTest {
                         NavigationBackTestActivity.HOME_ROUTE,
                     ).visibility,
                 )
+                assertNull(
+                    activity.destinationContainer(
+                        NavigationBackTestActivity.HOME_ROUTE,
+                    ).foreground,
+                )
                 assertEquals(0, activity.failureCount)
             }
         }
     }
 
     @Test
-    fun committedPushAndPopKeepTransitionSurfacesOpaque() {
+    fun committedPushAndPopFollowPlatformLayeringWithoutDoubleExposure() {
         launchHost().use { scenario ->
             val pushSamples = sampleDestinationViewsDuring(scenario) {
                 scenario.onActivity { activity ->
@@ -168,7 +178,11 @@ class NavigationBackDeviceTest {
                 awaitTransition()
             }
 
-            assertOpaqueTransitionSamples("push", pushSamples)
+            assertPlatformTransitionSamples(
+                phase = "push",
+                samples = pushSamples,
+                fadingRoute = NavigationBackTestActivity.DETAILS_ROUTE,
+            )
             scenario.onActivity { activity ->
                 val home = activity.destinationContainer(NavigationBackTestActivity.HOME_ROUTE)
                 val details = activity.destinationContainer(NavigationBackTestActivity.DETAILS_ROUTE)
@@ -189,7 +203,11 @@ class NavigationBackDeviceTest {
                 awaitTransition()
             }
 
-            assertOpaqueTransitionSamples("pop", popSamples)
+            assertPlatformTransitionSamples(
+                phase = "pop",
+                samples = popSamples,
+                fadingRoute = NavigationBackTestActivity.DETAILS_ROUTE,
+            )
         }
     }
 
@@ -695,9 +713,10 @@ class NavigationBackDeviceTest {
             detailsAlpha in 0f..1f
     }
 
-    private fun assertOpaqueTransitionSamples(
+    private fun assertPlatformTransitionSamples(
         phase: String,
         samples: List<NavigationBackTestActivity.DestinationViewSample>,
+        fadingRoute: String,
     ) {
         val overlappingSamples = samples.filter { sample ->
             sample.homeVisibility == View.VISIBLE &&
@@ -708,13 +727,21 @@ class NavigationBackDeviceTest {
             overlappingSamples.isNotEmpty(),
         )
         assertTrue(
-            "$phase transition blended or scaled live destination trees: $overlappingSamples",
+            "$phase transition made both destination surfaces translucent: $overlappingSamples",
             overlappingSamples.all { sample ->
-                sample.homeAlpha == 1f &&
-                    sample.detailsAlpha == 1f &&
+                (sample.homeAlpha == 1f || sample.detailsAlpha == 1f) &&
                     sample.homeScaleX == 1f &&
                     sample.detailsScaleX == 1f
             },
+        )
+        val fadingSamples = when (fadingRoute) {
+            NavigationBackTestActivity.HOME_ROUTE -> overlappingSamples.map { it.homeAlpha }
+            NavigationBackTestActivity.DETAILS_ROUTE -> overlappingSamples.map { it.detailsAlpha }
+            else -> error("Unsupported fading route '$fadingRoute'.")
+        }
+        assertTrue(
+            "$phase transition did not capture the platform fade phase: $overlappingSamples",
+            fadingSamples.any { alpha -> alpha < 1f },
         )
     }
 

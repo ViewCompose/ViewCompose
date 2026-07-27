@@ -1,15 +1,26 @@
 package com.viewcompose.navigation
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
+import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.Path
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.animation.Interpolator
+import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
 import androidx.dynamicanimation.animation.FloatValueHolder
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
 import com.viewcompose.navigation.core.NavCommand
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 internal class AndroidViewNavHostTransitionDriver(
     private val sessionStore: NavDestinationSessionStore,
@@ -78,90 +89,27 @@ internal class AndroidViewNavHostTransitionDriver(
         incoming.forEach { view ->
             view.applyTransform(
                 transform = motion.incomingStart,
-                translationX = direction * paneWidth * motion.incomingStart.travelFraction,
+                translationX = direction * motion.incomingStart.resolveTravelPx(
+                    paneWidth = paneWidth,
+                    density = view.resources.displayMetrics.density,
+                ),
             )
         }
 
-        var terminal = false
-        val finish = Runnable {
-            if (!terminal) {
-                terminal = true
-                animatedViews.forEach(::resetProperties)
-                interruptedViews.removeAll(animatedViews.toSet())
-                onCompleted()
-            }
-        }
-        val interpolator = motion.easing.toInterpolator()
-        val completionView = incoming.lastOrNull() ?: outgoing.last()
-        try {
-            outgoing.forEach { view ->
-                val animator = view.animate()
-                    .translationX(
-                        -direction * paneWidth * motion.outgoingEnd.travelFraction,
-                    )
-                    .alpha(motion.outgoingEnd.alpha)
-                    .scaleX(motion.outgoingEnd.scale)
-                    .scaleY(motion.outgoingEnd.scale)
-                    .setDuration(motion.durationMillis)
-                    .setInterpolator(interpolator)
-                if (motion.outgoingEnd.requiresCompositingLayer) {
-                    animator.withLayer()
-                }
-                if (view === completionView) {
-                    animator.withEndAction(finish)
-                }
-                animator.start()
-            }
-            incoming.forEach { view ->
-                val animator = view.animate()
-                    .translationX(0f)
-                    .alpha(1f)
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(motion.durationMillis)
-                    .setInterpolator(interpolator)
-                if (motion.incomingStart.requiresCompositingLayer) {
-                    animator.withLayer()
-                }
-                if (view === completionView) {
-                    animator.withEndAction(finish)
-                }
-                animator.start()
-            }
-        } catch (throwable: Throwable) {
-            terminal = true
-            animatedViews.forEach { view ->
-                view.animate().cancel()
+        return CommittedViewTransitionRun(
+            outgoing = outgoing,
+            incoming = incoming,
+            motion = motion,
+            paneWidth = paneWidth,
+            density = sessionStore.hostView.resources.displayMetrics.density,
+            direction = direction,
+            resetView = { view ->
+                interruptedViews -= view
                 resetProperties(view)
-            }
-            interruptedViews.removeAll(animatedViews.toSet())
-            throw throwable
-        }
-
-        return object : NavHostTransitionHandle {
-            override fun cancel() {
-                terminate(preserveVisualState = false)
-            }
-
-            override fun redirect() {
-                terminate(preserveVisualState = true)
-            }
-
-            private fun terminate(preserveVisualState: Boolean) {
-                if (!terminal) {
-                    terminal = true
-                    animatedViews.forEach { view ->
-                        view.animate().cancel()
-                        if (preserveVisualState) {
-                            preserveForNextTransition(view)
-                        } else {
-                            interruptedViews -= view
-                            resetProperties(view)
-                        }
-                    }
-                }
-            }
-        }
+            },
+            preserveView = ::preserveForNextTransition,
+            onCompleted = onCompleted,
+        ).start()
     }
 
     override fun startBackPreview(
@@ -191,6 +139,8 @@ internal class AndroidViewNavHostTransitionDriver(
                 preview.beforeScene.panes.size,
                 preview.afterScene.panes.size,
             ).toFloat(),
+            travelHeight = sessionStore.hostView.height.toFloat(),
+            density = sessionStore.hostView.resources.displayMetrics.density,
             layoutDirection = sessionStore.hostView.layoutDirection,
             canAnimate = sessionStore.hostView.isLaidOut &&
                 sessionStore.hostView.isAttachedToWindow &&
@@ -222,6 +172,7 @@ internal class AndroidViewNavHostTransitionDriver(
     private fun resetProperties(view: View) {
         view.alpha = 1f
         view.translationX = 0f
+        view.translationY = 0f
         view.scaleX = 1f
         view.scaleY = 1f
     }
@@ -240,18 +191,37 @@ internal class AndroidViewNavHostTransitionDriver(
 private fun View.applyTransform(
     transform: NavDestinationTransform,
     translationX: Float,
+    translationY: Float = 0f,
 ) {
     this.translationX = if (translationX == 0f) 0f else translationX
+    this.translationY = if (translationY == 0f) 0f else translationY
     alpha = transform.alpha
     scaleX = transform.scale
     scaleY = transform.scale
 }
 
-private val NavDestinationTransform.requiresCompositingLayer: Boolean
-    get() = alpha != 1f || scale != 1f
+private fun NavDestinationTransform.resolveTravelPx(
+    paneWidth: Float,
+    density: Float,
+): Float {
+    return paneWidth * travelFraction + density * travelDp
+}
 
 private fun NavMotionEasing.toInterpolator(): Interpolator {
-    return PathInterpolator(x1, y1, x2, y2)
+    val path = Path().apply {
+        moveTo(0f, 0f)
+        segments.forEach { segment ->
+            cubicTo(
+                segment.control1X,
+                segment.control1Y,
+                segment.control2X,
+                segment.control2Y,
+                segment.endX,
+                segment.endY,
+            )
+        }
+    }
+    return PathInterpolator(path)
 }
 
 private class AndroidBackPreviewHandle(
@@ -260,6 +230,8 @@ private class AndroidBackPreviewHandle(
     private val incoming: List<View>,
     private val spec: NavPredictiveBackSpec,
     private val travelWidth: Float,
+    private val travelHeight: Float,
+    private val density: Float,
     private val layoutDirection: Int,
     private val canAnimate: Boolean,
     private val interruptedViews: MutableSet<View>,
@@ -283,10 +255,19 @@ private class AndroidBackPreviewHandle(
     private var latestProgressVelocity = 0f
     private var terminal = false
     private var committing = false
+    private var initialTouchY: Float? = null
+    private val scrim = PredictiveBackScrim(incoming).also { scrim ->
+        if (canAnimate && !spec.isDisabled) {
+            scrim.attach()
+        }
+    }
 
     override fun update(event: NavHostBackEvent) {
         if (terminal || committing) {
             return
+        }
+        if (initialTouchY == null) {
+            initialTouchY = event.touchY
         }
         latestEvent = event
         latestVisualProgress = progressInterpolator.getInterpolation(event.progress)
@@ -314,6 +295,7 @@ private class AndroidBackPreviewHandle(
             interruptedViews -= view
             resetView(view)
         }
+        scrim.clear()
         if (
             !canAnimate ||
             spec.isDisabled ||
@@ -348,6 +330,7 @@ private class AndroidBackPreviewHandle(
         terminal = true
         val animatedViews = outgoing + incoming
         animatedViews.forEach { view -> view.animate().cancel() }
+        scrim.clear()
         preserveForNextTransition(animatedViews)
     }
 
@@ -378,11 +361,10 @@ private class AndroidBackPreviewHandle(
             "Predictive-back preview does not match the committed pop transition."
         }
         committing = true
-        val remainingFraction = 1f - latestVisualProgress
         if (
             !canAnimate ||
             spec.isDisabled ||
-            remainingFraction <= 0f
+            spec.commitMotion.isDisabled
         ) {
             terminal = true
             reset()
@@ -397,53 +379,39 @@ private class AndroidBackPreviewHandle(
             onCompleted()
             return NavHostTransitionHandle {}
         }
-        lateinit var settleHandle: BackProgressSpringHandle
         try {
-            settleHandle = settleController.start(
-                views = animatedViews,
-                initialProgress = latestVisualProgress,
-                targetProgress = 1f,
-                initialVelocity = latestProgressVelocity,
-                springSpec = spec.commitSpring,
-                onUpdate = { visualProgress ->
-                    applyProgress(
-                        event = latestEvent,
-                        visualProgress = visualProgress,
-                    )
+            val motionDirection = -backPreviewOutgoingDirection(
+                swipeEdge = latestEvent.swipeEdge,
+                layoutDirection = layoutDirection,
+            )
+            return CommittedViewTransitionRun(
+                outgoing = outgoing,
+                incoming = incoming,
+                motion = spec.commitMotion,
+                paneWidth = travelWidth,
+                density = density,
+                direction = motionDirection,
+                resetView = { view ->
+                    interruptedViews -= view
+                    resetView(view)
                 },
+                preserveView = { view ->
+                    preserveForNextTransition(listOf(view))
+                },
+                onFrame = scrim::applyCommitProgress,
+                onTerminated = scrim::clear,
                 onCompleted = {
                     if (!terminal) {
                         terminal = true
-                        reset()
                         onCompleted()
                     }
-                }
-            )
+                },
+            ).start()
         } catch (throwable: Throwable) {
             terminal = true
             animatedViews.forEach { view -> view.animate().cancel() }
             reset()
             throw throwable
-        }
-        return object : NavHostTransitionHandle {
-            override fun cancel() {
-                terminate(preserveVisualState = false)
-            }
-
-            override fun redirect() {
-                terminate(preserveVisualState = true)
-            }
-
-            private fun terminate(preserveVisualState: Boolean) {
-                if (!terminal) {
-                    terminal = true
-                    animatedViews.forEach { view -> view.animate().cancel() }
-                    settleHandle.cancel(preserveVisualState)
-                    if (!preserveVisualState) {
-                        reset()
-                    }
-                }
-            }
         }
     }
 
@@ -456,21 +424,36 @@ private class AndroidBackPreviewHandle(
             layoutDirection = layoutDirection,
         )
         outgoing.forEach { view ->
+            val transform = spec.outgoingEnd.interpolateFromIdentity(visualProgress)
             view.applyTransform(
-                transform = spec.outgoingEnd.interpolateFromIdentity(visualProgress),
+                transform = transform,
                 translationX = direction *
-                    travelWidth *
-                    spec.outgoingEnd.travelFraction *
-                    visualProgress,
+                    transform.resolveTravelPx(
+                        paneWidth = travelWidth,
+                        density = density,
+                    ),
+                translationY = verticalOffset(
+                    event = event,
+                    scale = transform.scale,
+                ),
             )
         }
         incoming.forEach { view ->
+            val transform = spec.incomingStart.interpolateTo(
+                end = spec.incomingEnd,
+                fraction = visualProgress,
+            )
             view.applyTransform(
-                transform = spec.incomingStart.interpolateToIdentity(visualProgress),
+                transform = transform,
                 translationX = -direction *
-                    travelWidth *
-                    spec.incomingStart.travelFraction *
-                    (1f - visualProgress),
+                    transform.resolveTravelPx(
+                        paneWidth = travelWidth,
+                        density = density,
+                    ),
+                translationY = verticalOffset(
+                    event = event,
+                    scale = transform.scale,
+                ),
             )
         }
     }
@@ -484,22 +467,270 @@ private class AndroidBackPreviewHandle(
             layoutDirection = layoutDirection,
         )
         outgoing.forEach { view ->
+            val transform = spec.outgoingEnd.interpolateFromIdentity(visualProgress)
             view.applyTransform(
-                transform = spec.outgoingEnd.interpolateFromIdentity(visualProgress),
+                transform = transform,
                 translationX = direction *
-                    travelWidth *
-                    spec.outgoingEnd.travelFraction *
-                    visualProgress,
+                    transform.resolveTravelPx(
+                        paneWidth = travelWidth,
+                        density = density,
+                    ),
+                translationY = verticalOffset(
+                    event = event,
+                    scale = transform.scale,
+                ),
             )
         }
     }
 
+    private fun verticalOffset(
+        event: NavHostBackEvent,
+        scale: Float,
+    ): Float {
+        val startTouchY = initialTouchY ?: return 0f
+        val height = travelHeight
+        if (height <= 0f) {
+            return 0f
+        }
+        val rawDelta = event.touchY - startTouchY
+        val halfHeight = height / 2f
+        val deltaRatio = min(halfHeight, abs(rawDelta)) / halfHeight
+        val deceleratedRatio = 1f - (1f - deltaRatio) * (1f - deltaRatio)
+        val availableShift = max(
+            0f,
+            (height - height * scale) / 2f - SYSTEM_BACK_EDGE_MARGIN_DP * density,
+        )
+        return availableShift * deceleratedRatio * if (rawDelta < 0f) -1f else 1f
+    }
+
     private fun reset() {
+        scrim.clear()
         (outgoing + incoming).forEach { view ->
             interruptedViews -= view
             resetView(view)
         }
     }
+}
+
+private class CommittedViewTransitionRun(
+    outgoing: List<View>,
+    incoming: List<View>,
+    private val motion: NavDestinationMotionSpec,
+    paneWidth: Float,
+    density: Float,
+    direction: Float,
+    private val resetView: (View) -> Unit,
+    private val preserveView: (View) -> Unit,
+    private val onFrame: (Float) -> Unit = {},
+    private val onTerminated: () -> Unit = {},
+    private val onCompleted: () -> Unit,
+) : NavHostTransitionHandle {
+    private val outgoingViews = outgoing.distinct()
+    private val incomingViews = incoming.distinct()
+    private val animatedViews = (outgoingViews + incomingViews).distinct()
+    private val startStates = animatedViews.associateWith(ViewTransformState::capture)
+    private val outgoingTarget = ViewTransformState(
+        translationX = -direction * motion.outgoingEnd.resolveTravelPx(paneWidth, density),
+        translationY = 0f,
+        alpha = motion.outgoingEnd.alpha,
+        scaleX = motion.outgoingEnd.scale,
+        scaleY = motion.outgoingEnd.scale,
+    )
+    private val incomingTarget = ViewTransformState.Identity
+    private val animator = ValueAnimator.ofFloat(0f, 1f).apply {
+        duration = motion.totalDurationMillis
+        interpolator = LinearInterpolator()
+        addUpdateListener { animation ->
+            if (!terminal) {
+                applyFrame(
+                    linearProgress = animation.animatedFraction,
+                    playTimeMillis = animation.currentPlayTime,
+                )
+            }
+        }
+        addListener(
+            object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    finish()
+                }
+            },
+        )
+    }
+    private var terminal = false
+
+    fun start(): NavHostTransitionHandle {
+        try {
+            applyFrame(linearProgress = 0f, playTimeMillis = 0L)
+            animator.start()
+        } catch (throwable: Throwable) {
+            terminal = true
+            animatedViews.forEach(resetView)
+            throw throwable
+        }
+        return this
+    }
+
+    override fun cancel() {
+        terminate(preserveVisualState = false)
+    }
+
+    override fun redirect() {
+        terminate(preserveVisualState = true)
+    }
+
+    private fun applyFrame(
+        linearProgress: Float,
+        playTimeMillis: Long,
+    ) {
+        onFrame(linearProgress)
+        val geometryProgress = motion.easing.transform(linearProgress)
+        val outgoingAlphaProgress = motion.outgoingAlphaTiming.progressAt(playTimeMillis)
+        val incomingAlphaProgress = motion.incomingAlphaTiming.progressAt(playTimeMillis)
+        outgoingViews.forEach { view ->
+            view.applyState(
+                start = checkNotNull(startStates[view]),
+                end = outgoingTarget,
+                geometryProgress = geometryProgress,
+                alphaProgress = outgoingAlphaProgress,
+            )
+        }
+        incomingViews.forEach { view ->
+            view.applyState(
+                start = checkNotNull(startStates[view]),
+                end = incomingTarget,
+                geometryProgress = geometryProgress,
+                alphaProgress = incomingAlphaProgress,
+            )
+        }
+    }
+
+    private fun finish() {
+        if (terminal) {
+            return
+        }
+        terminal = true
+        animatedViews.forEach(resetView)
+        onTerminated()
+        onCompleted()
+    }
+
+    private fun terminate(preserveVisualState: Boolean) {
+        if (terminal) {
+            return
+        }
+        terminal = true
+        animator.cancel()
+        onTerminated()
+        if (preserveVisualState) {
+            animatedViews.forEach(preserveView)
+        } else {
+            animatedViews.forEach(resetView)
+        }
+    }
+}
+
+private data class ViewTransformState(
+    val translationX: Float,
+    val translationY: Float,
+    val alpha: Float,
+    val scaleX: Float,
+    val scaleY: Float,
+) {
+    companion object {
+        val Identity = ViewTransformState(
+            translationX = 0f,
+            translationY = 0f,
+            alpha = 1f,
+            scaleX = 1f,
+            scaleY = 1f,
+        )
+
+        fun capture(view: View): ViewTransformState {
+            return ViewTransformState(
+                translationX = view.translationX,
+                translationY = view.translationY,
+                alpha = view.alpha,
+                scaleX = view.scaleX,
+                scaleY = view.scaleY,
+            )
+        }
+    }
+}
+
+private fun View.applyState(
+    start: ViewTransformState,
+    end: ViewTransformState,
+    geometryProgress: Float,
+    alphaProgress: Float,
+) {
+    translationX = lerp(start.translationX, end.translationX, geometryProgress)
+    translationY = lerp(start.translationY, end.translationY, geometryProgress)
+    scaleX = lerp(start.scaleX, end.scaleX, geometryProgress)
+    scaleY = lerp(start.scaleY, end.scaleY, geometryProgress)
+    alpha = lerp(start.alpha, end.alpha, alphaProgress)
+}
+
+private class PredictiveBackScrim(
+    private val views: List<View>,
+) {
+    private val states = mutableListOf<ScrimState>()
+    private var attached = false
+
+    fun attach() {
+        if (attached) {
+            return
+        }
+        attached = true
+        views.distinct().forEach { view ->
+            val drawable = ColorDrawable(Color.BLACK)
+            val maxAlpha = if (
+                view.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+                Configuration.UI_MODE_NIGHT_YES
+            ) {
+                SYSTEM_BACK_SCRIM_ALPHA_DARK
+            } else {
+                SYSTEM_BACK_SCRIM_ALPHA_LIGHT
+            }
+            states += ScrimState(
+                view = view,
+                originalForeground = view.foreground,
+                drawable = drawable,
+                maxAlpha = maxAlpha,
+            )
+            drawable.alpha = (maxAlpha * 255f).toInt()
+            view.foreground = drawable
+        }
+    }
+
+    fun applyCommitProgress(linearProgress: Float) {
+        states.forEach { state ->
+            state.drawable.alpha = (
+                state.maxAlpha *
+                    (1f - linearProgress.coerceIn(0f, 1f)) *
+                    255f
+                ).toInt()
+        }
+    }
+
+    fun clear() {
+        if (!attached) {
+            return
+        }
+        attached = false
+        states.forEach { state ->
+            if (state.view.foreground === state.drawable) {
+                state.view.foreground = state.originalForeground
+            }
+        }
+        states.clear()
+    }
+
+    private data class ScrimState(
+        val view: View,
+        val originalForeground: Drawable?,
+        val drawable: ColorDrawable,
+        val maxAlpha: Float,
+    )
 }
 
 private fun interface BackProgressSpringHandle {
@@ -677,18 +908,21 @@ private fun NavDestinationTransform.interpolateFromIdentity(
 ): NavDestinationTransform {
     return NavDestinationTransform(
         travelFraction = travelFraction * fraction,
+        travelDp = travelDp * fraction,
         alpha = lerp(1f, alpha, fraction),
         scale = lerp(1f, scale, fraction),
     )
 }
 
-private fun NavDestinationTransform.interpolateToIdentity(
+private fun NavDestinationTransform.interpolateTo(
+    end: NavDestinationTransform,
     fraction: Float,
 ): NavDestinationTransform {
     return NavDestinationTransform(
-        travelFraction = travelFraction * (1f - fraction),
-        alpha = lerp(alpha, 1f, fraction),
-        scale = lerp(scale, 1f, fraction),
+        travelFraction = lerp(travelFraction, end.travelFraction, fraction),
+        travelDp = lerp(travelDp, end.travelDp, fraction),
+        alpha = lerp(alpha, end.alpha, fraction),
+        scale = lerp(scale, end.scale, fraction),
     )
 }
 
@@ -699,6 +933,10 @@ private fun lerp(
 ): Float {
     return start + (end - start) * fraction.coerceIn(0f, 1f)
 }
+
+private const val SYSTEM_BACK_EDGE_MARGIN_DP = 8f
+private const val SYSTEM_BACK_SCRIM_ALPHA_DARK = 0.8f
+private const val SYSTEM_BACK_SCRIM_ALPHA_LIGHT = 0.2f
 
 internal fun navTransitionDirection(
     command: NavCommand,
