@@ -92,21 +92,48 @@ class NavRoute(
     }
 }
 
+class NavGraphEntry(
+    val id: NavEntryId,
+    val route: NavRoute,
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is NavGraphEntry &&
+            id == other.id &&
+            route == other.route
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + route.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "NavGraphEntry(id=$id, route=$route)"
+    }
+}
+
 class NavEntry(
     val id: NavEntryId,
     val route: NavRoute,
-    graphHierarchy: List<String> = emptyList(),
+    graphEntries: List<NavGraphEntry> = emptyList(),
 ) {
+    val graphEntries: List<NavGraphEntry> = Collections.unmodifiableList(
+        ArrayList(graphEntries),
+    )
     val graphHierarchy: List<String> = Collections.unmodifiableList(
-        ArrayList(graphHierarchy),
+        this.graphEntries.map { entry -> entry.route.name },
     )
 
     init {
-        require(this.graphHierarchy.none(String::isBlank)) {
-            "Navigation graph hierarchy routes must not be blank."
-        }
         require(this.graphHierarchy.distinct().size == this.graphHierarchy.size) {
             "Navigation graph hierarchy routes must be unique."
+        }
+        require(this.graphEntries.map(NavGraphEntry::id).distinct().size == this.graphEntries.size) {
+            "Navigation graph entries must not contain duplicate IDs."
+        }
+        require(this.graphEntries.none { graphEntry -> graphEntry.id == id }) {
+            "A destination entry must not reuse one of its navigation graph entry IDs."
         }
     }
 
@@ -114,18 +141,18 @@ class NavEntry(
         return other is NavEntry &&
             id == other.id &&
             route == other.route &&
-            graphHierarchy == other.graphHierarchy
+            graphEntries == other.graphEntries
     }
 
     override fun hashCode(): Int {
         var result = id.hashCode()
         result = 31 * result + route.hashCode()
-        result = 31 * result + graphHierarchy.hashCode()
+        result = 31 * result + graphEntries.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "NavEntry(id=$id, route=$route, graphHierarchy=$graphHierarchy)"
+        return "NavEntry(id=$id, route=$route, graphEntries=$graphEntries)"
     }
 }
 
@@ -145,6 +172,19 @@ class NavBackStackSnapshot(
         }
         require(this.entries.map(NavEntry::id).distinct().size == this.entries.size) {
             "A navigation back stack must not contain duplicate entry IDs."
+        }
+        val destinationIds = this.entries.mapTo(hashSetOf(), NavEntry::id)
+        val graphEntriesById = linkedMapOf<NavEntryId, NavGraphEntry>()
+        this.entries.forEach { entry ->
+            entry.graphEntries.forEach { graphEntry ->
+                require(graphEntry.id !in destinationIds) {
+                    "A navigation graph entry ID must not be reused by a destination entry."
+                }
+                val existing = graphEntriesById.putIfAbsent(graphEntry.id, graphEntry)
+                require(existing == null || existing == graphEntry) {
+                    "A navigation graph entry ID must identify one stable graph instance."
+                }
+            }
         }
     }
 

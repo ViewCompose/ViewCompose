@@ -6,6 +6,7 @@ import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavGraph
+import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.navigation.core.navGraph
@@ -39,7 +40,21 @@ class NavHostSavedStateTest {
                             "double" to NavValue.DoubleValue(2.5),
                         ),
                     ),
-                    graphHierarchy = listOf("app", "account"),
+                    graphEntries = listOf(
+                        NavGraphEntry(
+                            id = NavEntryId("app-scope"),
+                            route = NavRoute("app"),
+                        ),
+                        NavGraphEntry(
+                            id = NavEntryId("account-scope"),
+                            route = NavRoute(
+                                name = "account",
+                                arguments = mapOf(
+                                    "userId" to NavValue.LongValue(42L),
+                                ),
+                            ),
+                        ),
+                    ),
                 ),
             ),
         )
@@ -81,7 +96,7 @@ class NavHostSavedStateTest {
         assertNull(
             decodeNavHostState(
                 mapOf(
-                    "formatVersion" to 2,
+                    "formatVersion" to 3,
                     "entries" to listOf(
                         encodedEntry(id = "same", routeName = "home"),
                         encodedEntry(id = "same", routeName = "details"),
@@ -93,7 +108,7 @@ class NavHostSavedStateTest {
         assertNull(
             decodeNavHostState(
                 mapOf(
-                    "formatVersion" to 2,
+                    "formatVersion" to 3,
                     "entries" to listOf(
                         encodedEntry(
                             id = "root",
@@ -117,7 +132,7 @@ class NavHostSavedStateTest {
 
         val restored = navHostControllerSaver(startDestination).restore(
             mapOf(
-                "formatVersion" to 2,
+                "formatVersion" to 3,
                 "entries" to listOf("not-an-entry"),
                 "destinationState" to null,
             ),
@@ -164,7 +179,7 @@ class NavHostSavedStateTest {
         return mapOf(
             "id" to id,
             "routeName" to routeName,
-            "graphHierarchy" to emptyList<String>(),
+            "graphEntries" to emptyList<Map<String, Any?>>(),
             "routeArguments" to emptyMap<String, Any?>(),
         )
     }

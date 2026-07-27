@@ -60,18 +60,20 @@ class NavGraph internal constructor(
         val indexed = requireNotNull(routeIndex[route.name]) {
             "Navigation route '${route.name}' is not registered in graph '${this.route}'."
         }
+        val ancestorGraphPath = indexed.ancestorGraphRoutes.map(::NavRoute)
         return when (val node = indexed.node) {
             is NavDestination -> {
                 NavGraphResolution(
                     destination = route,
-                    hierarchy = indexed.ancestorGraphRoutes,
+                    graphPath = ancestorGraphPath,
                 )
             }
 
             is NavGraph -> {
                 node.resolveStartDestination(
-                    hierarchy = indexed.ancestorGraphRoutes + node.route,
+                    graphPath = ancestorGraphPath + route,
                     inheritedArguments = route.arguments,
+                    enteredGraphRoute = node.route,
                 )
             }
         }
@@ -80,8 +82,9 @@ class NavGraph internal constructor(
     fun contains(routeName: String): Boolean = routeName in routeIndex
 
     private fun resolveStartDestination(
-        hierarchy: List<String>,
+        graphPath: List<NavRoute>,
         inheritedArguments: Map<String, NavValue>,
+        enteredGraphRoute: String,
     ): NavGraphResolution {
         val child = children.first { node ->
             node.route == startDestination.name
@@ -96,14 +99,19 @@ class NavGraph internal constructor(
                         name = child.route,
                         arguments = mergedArguments,
                     ),
-                    hierarchy = hierarchy,
+                    graphPath = graphPath,
+                    enteredGraphRoute = enteredGraphRoute,
                 )
             }
 
             is NavGraph -> {
                 child.resolveStartDestination(
-                    hierarchy = hierarchy + child.route,
+                    graphPath = graphPath + NavRoute(
+                        name = child.route,
+                        arguments = mergedArguments,
+                    ),
                     inheritedArguments = mergedArguments,
+                    enteredGraphRoute = enteredGraphRoute,
                 )
             }
         }
@@ -183,26 +191,36 @@ class NavGraph internal constructor(
 
 class NavGraphResolution internal constructor(
     val destination: NavRoute,
-    hierarchy: List<String>,
+    graphPath: List<NavRoute>,
+    val enteredGraphRoute: String? = null,
 ) {
+    val graphPath: List<NavRoute> = Collections.unmodifiableList(
+        ArrayList(graphPath),
+    )
     val hierarchy: List<String> = Collections.unmodifiableList(
-        ArrayList(hierarchy),
+        this.graphPath.map(NavRoute::name),
     )
 
     override fun equals(other: Any?): Boolean {
         return other is NavGraphResolution &&
             destination == other.destination &&
-            hierarchy == other.hierarchy
+            graphPath == other.graphPath &&
+            enteredGraphRoute == other.enteredGraphRoute
     }
 
     override fun hashCode(): Int {
         var result = destination.hashCode()
-        result = 31 * result + hierarchy.hashCode()
+        result = 31 * result + graphPath.hashCode()
+        result = 31 * result + (enteredGraphRoute?.hashCode() ?: 0)
         return result
     }
 
     override fun toString(): String {
-        return "NavGraphResolution(destination=$destination, hierarchy=$hierarchy)"
+        return "NavGraphResolution(" +
+            "destination=$destination, " +
+            "graphPath=$graphPath, " +
+            "enteredGraphRoute=$enteredGraphRoute" +
+            ")"
     }
 }
 

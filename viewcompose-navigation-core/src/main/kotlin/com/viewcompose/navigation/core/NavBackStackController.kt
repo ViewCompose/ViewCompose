@@ -96,8 +96,12 @@ class NavBackStackController private constructor(
     private val routeResolver: (NavRoute) -> NavGraphResolution,
 ) {
     private var currentSnapshot = initialSnapshot
-    private val allocatedEntryIds = initialSnapshot.entries
-        .mapTo(linkedSetOf(), NavEntry::id)
+    private val allocatedEntryIds = linkedSetOf<NavEntryId>().apply {
+        initialSnapshot.entries.forEach { entry ->
+            add(entry.id)
+            entry.graphEntries.forEach { graphEntry -> add(graphEntry.id) }
+        }
+    }
     private var pendingTransactionId: Long? = null
     private var nextTransactionId = 0L
 
@@ -123,7 +127,10 @@ class NavBackStackController private constructor(
                     )
                 }
                 NavBackStackSnapshot(
-                    before.entries + createEntry(resolved),
+                    before.entries + createEntry(
+                        resolved = resolved,
+                        previousEntry = before.top,
+                    ),
                 )
             }
 
@@ -146,7 +153,10 @@ class NavBackStackController private constructor(
                     )
                 }
                 NavBackStackSnapshot(
-                    before.entries.dropLast(1) + createEntry(resolved),
+                    before.entries.dropLast(1) + createEntry(
+                        resolved = resolved,
+                        previousEntry = before.top,
+                    ),
                 )
             }
 
@@ -158,7 +168,14 @@ class NavBackStackController private constructor(
                         snapshot = before,
                     )
                 }
-                NavBackStackSnapshot(listOf(createEntry(resolved)))
+                NavBackStackSnapshot(
+                    listOf(
+                        createEntry(
+                            resolved = resolved,
+                            previousEntry = null,
+                        ),
+                    ),
+                )
             }
         }
         val transactionId = ++nextTransactionId
@@ -201,16 +218,66 @@ class NavBackStackController private constructor(
         }
     }
 
-    private fun createEntry(resolved: NavGraphResolution): NavEntry {
+    private fun createEntry(
+        resolved: NavGraphResolution,
+        previousEntry: NavEntry?,
+    ): NavEntry {
         val id = entryIdFactory.nextId()
         check(allocatedEntryIds.add(id)) {
             "NavEntryIdFactory returned an entry ID that was already allocated: $id"
         }
+        val graphEntries = createGraphEntries(
+            ownerEntryId = id,
+            resolved = resolved,
+            previousEntry = previousEntry,
+        )
         return NavEntry(
             id = id,
             route = resolved.destination,
-            graphHierarchy = resolved.hierarchy,
+            graphEntries = graphEntries,
         )
+    }
+
+    private fun createGraphEntries(
+        ownerEntryId: NavEntryId,
+        resolved: NavGraphResolution,
+        previousEntry: NavEntry?,
+    ): List<NavGraphEntry> {
+        val previousGraphEntries = previousEntry?.graphEntries.orEmpty()
+        val commonPrefixSize = previousGraphEntries
+            .zip(resolved.graphPath)
+            .takeWhile { (entry, route) -> entry.route.name == route.name }
+            .size
+        val enteredGraphIndex = resolved.enteredGraphRoute?.let { enteredRoute ->
+            resolved.graphPath.indexOfFirst { route -> route.name == enteredRoute }
+                .also { index ->
+                    check(index >= 0) {
+                        "Entered navigation graph '$enteredRoute' is missing from its resolved path."
+                    }
+                }
+        }
+        val reusablePrefixSize = minOf(
+            commonPrefixSize,
+            enteredGraphIndex ?: commonPrefixSize,
+        )
+        val retained = previousGraphEntries.take(reusablePrefixSize)
+        val created = resolved.graphPath
+            .drop(reusablePrefixSize)
+            .mapIndexed { relativeIndex, route ->
+                val pathIndex = reusablePrefixSize + relativeIndex
+                NavGraphEntry(
+                    id = graphEntryId(
+                        ownerEntryId = ownerEntryId,
+                        pathIndex = pathIndex,
+                    ).also { graphEntryId ->
+                        check(allocatedEntryIds.add(graphEntryId)) {
+                            "Navigation graph entry ID was already allocated: $graphEntryId"
+                        }
+                    },
+                    route = route,
+                )
+            }
+        return retained + created
     }
 
     private fun NavEntry.matches(resolved: NavGraphResolution): Boolean {
@@ -241,7 +308,7 @@ class NavBackStackController private constructor(
             val directResolver: (NavRoute) -> NavGraphResolution = { route ->
                 NavGraphResolution(
                     destination = route,
-                    hierarchy = emptyList(),
+                    graphPath = emptyList(),
                 )
             }
             return NavBackStackController(
@@ -264,13 +331,17 @@ class NavBackStackController private constructor(
         ): NavBackStackController {
             val rootId = entryIdFactory.nextId()
             val resolvedStart = graph.resolve(graph.startDestination)
+            val rootGraphEntries = freshGraphEntries(
+                ownerEntryId = rootId,
+                graphPath = resolvedStart.graphPath,
+            )
             return NavBackStackController(
                 initialSnapshot = NavBackStackSnapshot(
                     entries = listOf(
                         NavEntry(
                             id = rootId,
                             route = resolvedStart.destination,
-                            graphHierarchy = resolvedStart.hierarchy,
+                            graphEntries = rootGraphEntries,
                         ),
                     ),
                 ),
@@ -283,7 +354,7 @@ class NavBackStackController private constructor(
             snapshot: NavBackStackSnapshot,
             entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
         ): NavBackStackController {
-            require(snapshot.entries.all { entry -> entry.graphHierarchy.isEmpty() }) {
+            require(snapshot.entries.all { entry -> entry.graphEntries.isEmpty() }) {
                 "A graph-owned back stack must be restored with its NavGraph."
             }
             return NavBackStackController(
@@ -292,7 +363,7 @@ class NavBackStackController private constructor(
                 routeResolver = { route ->
                     NavGraphResolution(
                         destination = route,
-                        hierarchy = emptyList(),
+                        graphPath = emptyList(),
                     )
                 },
             )
@@ -317,6 +388,28 @@ class NavBackStackController private constructor(
                 entryIdFactory = entryIdFactory,
                 routeResolver = graph::resolve,
             )
+        }
+
+        private fun freshGraphEntries(
+            ownerEntryId: NavEntryId,
+            graphPath: List<NavRoute>,
+        ): List<NavGraphEntry> {
+            return graphPath.mapIndexed { index, route ->
+                NavGraphEntry(
+                    id = graphEntryId(
+                        ownerEntryId = ownerEntryId,
+                        pathIndex = index,
+                    ),
+                    route = route,
+                )
+            }
+        }
+
+        private fun graphEntryId(
+            ownerEntryId: NavEntryId,
+            pathIndex: Int,
+        ): NavEntryId {
+            return NavEntryId("${ownerEntryId.value}#graph:$pathIndex")
         }
     }
 }

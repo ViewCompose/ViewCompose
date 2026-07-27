@@ -242,12 +242,26 @@ class NavBackStackControllerTest {
                 NavEntry(
                     id = NavEntryId("root"),
                     route = NavRoute("home"),
-                    graphHierarchy = listOf("app"),
+                    graphEntries = listOf(
+                        NavGraphEntry(
+                            id = NavEntryId("app-scope"),
+                            route = NavRoute("app"),
+                        ),
+                    ),
                 ),
                 NavEntry(
                     id = NavEntryId("profile"),
                     route = NavRoute("profile"),
-                    graphHierarchy = listOf("app", "account"),
+                    graphEntries = listOf(
+                        NavGraphEntry(
+                            id = NavEntryId("app-scope"),
+                            route = NavRoute("app"),
+                        ),
+                        NavGraphEntry(
+                            id = NavEntryId("account-scope"),
+                            route = NavRoute("account"),
+                        ),
+                    ),
                 ),
             ),
         )
@@ -265,7 +279,12 @@ class NavBackStackControllerTest {
                         NavEntry(
                             id = NavEntryId("root"),
                             route = NavRoute("home"),
-                            graphHierarchy = listOf("moved"),
+                            graphEntries = listOf(
+                                NavGraphEntry(
+                                    id = NavEntryId("moved-scope"),
+                                    route = NavRoute("moved"),
+                                ),
+                            ),
                         ),
                     ),
                 ),
@@ -275,6 +294,79 @@ class NavBackStackControllerTest {
         assertThrows<IllegalArgumentException> {
             NavBackStackController.restore(snapshot = restored)
         }
+    }
+
+    @Test
+    fun `graph instances are shared within a graph and recreated when entering it again`() {
+        val ids = ArrayDeque(listOf("root", "profile", "security", "profile-again"))
+        val controller = NavBackStackController.create(
+            graph = testGraph(),
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(ids.removeFirst())
+            },
+        )
+        val appScope = controller.snapshot().top.graphEntries.single()
+
+        val firstProfile = controller.prepare(
+            NavCommand.Push(
+                NavRoute(
+                    name = "account",
+                    arguments = mapOf(
+                        "userId" to NavValue.LongValue(42L),
+                    ),
+                ),
+            ),
+        ).readyTransaction()
+        val firstAccountScope = firstProfile.after.top.graphEntries.last()
+        firstProfile.commit()
+
+        val security = controller.prepare(
+            NavCommand.Push(NavRoute("security")),
+        ).readyTransaction()
+        assertEquals(
+            listOf(appScope, firstAccountScope),
+            security.after.top.graphEntries,
+        )
+        assertEquals(
+            NavValue.LongValue(42L),
+            security.after.top.graphEntries.last().route["userId"],
+        )
+        security.commit()
+
+        val secondProfile = controller.prepare(
+            NavCommand.Push(NavRoute("account")),
+        ).readyTransaction()
+
+        assertEquals(appScope, secondProfile.after.top.graphEntries.first())
+        assertNotEquals(
+            firstAccountScope.id,
+            secondProfile.after.top.graphEntries.last().id,
+        )
+    }
+
+    @Test
+    fun `reset allocates a fresh root graph instance`() {
+        val ids = ArrayDeque(listOf("root", "profile"))
+        val controller = NavBackStackController.create(
+            graph = testGraph(),
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(ids.removeFirst())
+            },
+        )
+        val originalAppScope = controller.snapshot().top.graphEntries.single()
+
+        val reset = controller.prepare(
+            NavCommand.Reset(NavRoute("account")),
+        ).readyTransaction()
+
+        assertNotEquals(
+            originalAppScope.id,
+            reset.after.top.graphEntries.first().id,
+        )
+        assertEquals(
+            listOf("app", "account"),
+            reset.after.top.graphHierarchy,
+        )
     }
 
     @Test
@@ -334,6 +426,32 @@ class NavBackStackControllerTest {
                 listOf(
                     NavEntry(NavEntryId("same"), NavRoute("first")),
                     NavEntry(NavEntryId("same"), NavRoute("second")),
+                ),
+            )
+        }
+        assertThrows<IllegalArgumentException> {
+            NavBackStackSnapshot(
+                listOf(
+                    NavEntry(
+                        id = NavEntryId("home"),
+                        route = NavRoute("home"),
+                        graphEntries = listOf(
+                            NavGraphEntry(
+                                id = NavEntryId("shared-scope"),
+                                route = NavRoute("app"),
+                            ),
+                        ),
+                    ),
+                    NavEntry(
+                        id = NavEntryId("details"),
+                        route = NavRoute("details"),
+                        graphEntries = listOf(
+                            NavGraphEntry(
+                                id = NavEntryId("shared-scope"),
+                                route = NavRoute("other"),
+                            ),
+                        ),
+                    ),
                 ),
             )
         }

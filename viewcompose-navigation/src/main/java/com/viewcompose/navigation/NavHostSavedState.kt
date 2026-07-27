@@ -6,6 +6,7 @@ import com.viewcompose.navigation.core.NavBackStackSnapshot
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavGraph
+import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.widget.core.Saver
@@ -110,7 +111,17 @@ private fun encodeEntry(entry: NavEntry): Map<String, Any?> {
     return linkedMapOf(
         KEY_ENTRY_ID to entry.id.value,
         KEY_ROUTE_NAME to entry.route.name,
-        KEY_GRAPH_HIERARCHY to entry.graphHierarchy,
+        KEY_GRAPH_ENTRIES to entry.graphEntries.map(::encodeGraphEntry),
+        KEY_ROUTE_ARGUMENTS to entry.route.arguments.mapValues { (_, value) ->
+            encodeValue(value)
+        },
+    )
+}
+
+private fun encodeGraphEntry(entry: NavGraphEntry): Map<String, Any?> {
+    return linkedMapOf(
+        KEY_ENTRY_ID to entry.id.value,
+        KEY_ROUTE_NAME to entry.route.name,
         KEY_ROUTE_ARGUMENTS to entry.route.arguments.mapValues { (_, value) ->
             encodeValue(value)
         },
@@ -120,24 +131,42 @@ private fun encodeEntry(entry: NavEntry): Map<String, Any?> {
 private fun decodeEntry(encoded: Map<*, *>): NavEntry? {
     val entryId = encoded[KEY_ENTRY_ID] as? String ?: return null
     val routeName = encoded[KEY_ROUTE_NAME] as? String ?: return null
-    val graphHierarchy = (encoded[KEY_GRAPH_HIERARCHY] as? List<*>)
-        ?.map { route -> route as? String ?: return null }
+    val graphEntries = (encoded[KEY_GRAPH_ENTRIES] as? List<*>)
+        ?.map { graphEntry ->
+            decodeGraphEntry(graphEntry as? Map<*, *> ?: return null) ?: return null
+        }
         ?: return null
-    val encodedArguments = encoded[KEY_ROUTE_ARGUMENTS] as? Map<*, *> ?: return null
+    return NavEntry(
+        id = NavEntryId(entryId),
+        route = NavRoute(
+            name = routeName,
+            arguments = decodeArguments(encoded[KEY_ROUTE_ARGUMENTS]) ?: return null,
+        ),
+        graphEntries = graphEntries,
+    )
+}
+
+private fun decodeGraphEntry(encoded: Map<*, *>): NavGraphEntry? {
+    val entryId = encoded[KEY_ENTRY_ID] as? String ?: return null
+    val routeName = encoded[KEY_ROUTE_NAME] as? String ?: return null
+    return NavGraphEntry(
+        id = NavEntryId(entryId),
+        route = NavRoute(
+            name = routeName,
+            arguments = decodeArguments(encoded[KEY_ROUTE_ARGUMENTS]) ?: return null,
+        ),
+    )
+}
+
+private fun decodeArguments(encoded: Any?): Map<String, NavValue>? {
+    val encodedArguments = encoded as? Map<*, *> ?: return null
     val arguments = linkedMapOf<String, NavValue>()
     encodedArguments.forEach { (argumentName, encodedValue) ->
         val name = argumentName as? String ?: return null
         val value = decodeValue(encodedValue as? List<*> ?: return null) ?: return null
         arguments[name] = value
     }
-    return NavEntry(
-        id = NavEntryId(entryId),
-        route = NavRoute(
-            name = routeName,
-            arguments = arguments,
-        ),
-        graphHierarchy = graphHierarchy,
-    )
+    return arguments
 }
 
 private fun encodeValue(value: NavValue): List<Any?> {
@@ -203,13 +232,13 @@ private fun decodeValue(encoded: List<*>): NavValue? {
     }
 }
 
-private const val FORMAT_VERSION = 2
+private const val FORMAT_VERSION = 3
 private const val KEY_FORMAT_VERSION = "formatVersion"
 private const val KEY_ENTRIES = "entries"
 private const val KEY_DESTINATION_STATE = "destinationState"
 private const val KEY_ENTRY_ID = "id"
 private const val KEY_ROUTE_NAME = "routeName"
-private const val KEY_GRAPH_HIERARCHY = "graphHierarchy"
+private const val KEY_GRAPH_ENTRIES = "graphEntries"
 private const val KEY_ROUTE_ARGUMENTS = "routeArguments"
 
 private const val VALUE_NULL = 0
