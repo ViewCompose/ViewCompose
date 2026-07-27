@@ -12,16 +12,19 @@ internal class AndroidViewNavHostTransitionDriver(
         transition: NavHostTransition,
         onCompleted: () -> Unit,
     ): NavHostTransitionHandle {
-        val outgoing = checkNotNull(
-            sessionStore.sessionOrNull(transition.outgoingEntry.id),
-        ) {
-            "Outgoing destination ${transition.outgoingEntry.id} has no committed View."
-        }.container
-        val incoming = checkNotNull(
-            sessionStore.sessionOrNull(transition.incomingEntry.id),
-        ) {
-            "Incoming destination ${transition.incomingEntry.id} has no committed View."
-        }.container
+        val outgoing = destinationViews(
+            transition.beforeScene.visibleEntryIds -
+                transition.afterScene.visibleEntryIds,
+        )
+        val incoming = destinationViews(
+            transition.afterScene.visibleEntryIds -
+                transition.beforeScene.visibleEntryIds,
+        )
+        val animatedViews = outgoing + incoming
+        if (animatedViews.isEmpty()) {
+            onCompleted()
+            return NavHostTransitionHandle {}
+        }
         val spec = specProvider()
         val hostWidth = sessionStore.hostView.width
         if (
@@ -31,67 +34,79 @@ internal class AndroidViewNavHostTransitionDriver(
             !sessionStore.hostView.isAttachedToWindow ||
             hostWidth <= 0
         ) {
-            resetProperties(outgoing)
-            resetProperties(incoming)
+            animatedViews.forEach(::resetProperties)
             onCompleted()
             return NavHostTransitionHandle {}
         }
 
-        outgoing.animate().cancel()
-        incoming.animate().cancel()
-        resetProperties(outgoing)
-        resetProperties(incoming)
+        animatedViews.forEach { view ->
+            view.animate().cancel()
+            resetProperties(view)
+        }
 
         val direction = navTransitionDirection(
             command = transition.command,
             layoutDirection = sessionStore.hostView.layoutDirection,
         )
-        val travel = hostWidth * spec.travelFraction
-        incoming.translationX = direction * travel
+        val paneCount = maxOf(
+            transition.beforeScene.panes.size,
+            transition.afterScene.panes.size,
+        )
+        val travel = (hostWidth / paneCount.toFloat()) * spec.travelFraction
+        incoming.forEach { view -> view.translationX = direction * travel }
         if (spec.fadeEnabled) {
-            incoming.alpha = 0f
+            incoming.forEach { view -> view.alpha = 0f }
         }
 
         var terminal = false
         val finish = Runnable {
             if (!terminal) {
                 terminal = true
-                resetProperties(outgoing)
-                resetProperties(incoming)
+                animatedViews.forEach(::resetProperties)
                 onCompleted()
             }
         }
         val interpolator = DecelerateInterpolator()
+        val completionView = incoming.lastOrNull() ?: outgoing.last()
         try {
-            outgoing.animate()
-                .translationX(-direction * travel)
-                .alpha(if (spec.fadeEnabled) 0f else 1f)
-                .setDuration(spec.durationMillis)
-                .setInterpolator(interpolator)
-                .start()
-            incoming.animate()
-                .translationX(0f)
-                .alpha(1f)
-                .setDuration(spec.durationMillis)
-                .setInterpolator(interpolator)
-                .withEndAction(finish)
-                .start()
+            outgoing.forEach { view ->
+                val animator = view.animate()
+                    .translationX(-direction * travel)
+                    .alpha(if (spec.fadeEnabled) 0f else 1f)
+                    .setDuration(spec.durationMillis)
+                    .setInterpolator(interpolator)
+                if (view === completionView) {
+                    animator.withEndAction(finish)
+                }
+                animator.start()
+            }
+            incoming.forEach { view ->
+                val animator = view.animate()
+                    .translationX(0f)
+                    .alpha(1f)
+                    .setDuration(spec.durationMillis)
+                    .setInterpolator(interpolator)
+                if (view === completionView) {
+                    animator.withEndAction(finish)
+                }
+                animator.start()
+            }
         } catch (throwable: Throwable) {
             terminal = true
-            outgoing.animate().cancel()
-            incoming.animate().cancel()
-            resetProperties(outgoing)
-            resetProperties(incoming)
+            animatedViews.forEach { view ->
+                view.animate().cancel()
+                resetProperties(view)
+            }
             throw throwable
         }
 
         return NavHostTransitionHandle {
             if (!terminal) {
                 terminal = true
-                outgoing.animate().cancel()
-                incoming.animate().cancel()
-                resetProperties(outgoing)
-                resetProperties(incoming)
+                animatedViews.forEach { view ->
+                    view.animate().cancel()
+                    resetProperties(view)
+                }
             }
         }
     }
@@ -100,26 +115,27 @@ internal class AndroidViewNavHostTransitionDriver(
         preview: NavHostBackPreview,
         initialEvent: NavHostBackEvent,
     ): NavHostBackPreviewHandle {
-        val outgoing = checkNotNull(
-            sessionStore.sessionOrNull(preview.outgoingEntry.id),
-        ) {
-            "Back-preview outgoing destination ${preview.outgoingEntry.id} has no committed View."
-        }.container
-        val incoming = checkNotNull(
-            sessionStore.sessionOrNull(preview.incomingEntry.id),
-        ) {
-            "Back-preview incoming destination ${preview.incomingEntry.id} has no committed View."
-        }.container
-        outgoing.animate().cancel()
-        incoming.animate().cancel()
-        resetProperties(outgoing)
-        resetProperties(incoming)
+        val outgoing = destinationViews(
+            preview.beforeScene.visibleEntryIds -
+                preview.afterScene.visibleEntryIds,
+        )
+        val incoming = destinationViews(
+            preview.afterScene.visibleEntryIds -
+                preview.beforeScene.visibleEntryIds,
+        )
+        (outgoing + incoming).forEach { view ->
+            view.animate().cancel()
+            resetProperties(view)
+        }
         return AndroidBackPreviewHandle(
             preview = preview,
             outgoing = outgoing,
             incoming = incoming,
             spec = specProvider(),
-            hostWidth = sessionStore.hostView.width,
+            travelWidth = sessionStore.hostView.width / maxOf(
+                preview.beforeScene.panes.size,
+                preview.afterScene.panes.size,
+            ).toFloat(),
             layoutDirection = sessionStore.hostView.layoutDirection,
             canAnimate = sessionStore.hostView.isLaidOut &&
                 sessionStore.hostView.isAttachedToWindow &&
@@ -133,14 +149,24 @@ internal class AndroidViewNavHostTransitionDriver(
         view.alpha = 1f
         view.translationX = 0f
     }
+
+    private fun destinationViews(
+        entryIds: Set<com.viewcompose.navigation.core.NavEntryId>,
+    ): List<View> {
+        return entryIds.map { entryId ->
+            checkNotNull(sessionStore.sessionOrNull(entryId)) {
+                "Animated destination $entryId has no committed View."
+            }.container
+        }
+    }
 }
 
 private class AndroidBackPreviewHandle(
     private val preview: NavHostBackPreview,
-    private val outgoing: View,
-    private val incoming: View,
+    private val outgoing: List<View>,
+    private val incoming: List<View>,
     private val spec: NavTransitionSpec,
-    private val hostWidth: Int,
+    private val travelWidth: Float,
     private val layoutDirection: Int,
     private val canAnimate: Boolean,
 ) : NavHostBackPreviewHandle {
@@ -170,8 +196,7 @@ private class AndroidBackPreviewHandle(
             return
         }
         terminal = true
-        outgoing.animate().cancel()
-        incoming.animate().cancel()
+        (outgoing + incoming).forEach { view -> view.animate().cancel() }
         reset()
     }
 
@@ -186,7 +211,9 @@ private class AndroidBackPreviewHandle(
             transition.command == preview.command &&
                 transition.before == preview.snapshot &&
                 transition.outgoingEntry == preview.outgoingEntry &&
-                transition.incomingEntry == preview.incomingEntry,
+                transition.incomingEntry == preview.incomingEntry &&
+                transition.beforeScene == preview.beforeScene &&
+                transition.afterScene == preview.afterScene,
         ) {
             "Predictive-back preview does not match the committed pop transition."
         }
@@ -208,11 +235,12 @@ private class AndroidBackPreviewHandle(
             swipeEdge = latestEvent.swipeEdge,
             layoutDirection = layoutDirection,
         )
-        val travel = hostWidth * spec.travelFraction
+        val travel = travelWidth * spec.travelFraction
         val duration = (spec.durationMillis * remainingFraction)
             .toLong()
             .coerceAtLeast(1L)
         val interpolator = DecelerateInterpolator()
+        val completionView = incoming.lastOrNull() ?: outgoing.lastOrNull()
         val finish = Runnable {
             if (!terminal) {
                 terminal = true
@@ -221,31 +249,44 @@ private class AndroidBackPreviewHandle(
             }
         }
         try {
-            outgoing.animate()
-                .translationX(direction * travel)
-                .alpha(if (spec.fadeEnabled) 0f else 1f)
-                .setDuration(duration)
-                .setInterpolator(interpolator)
-                .start()
-            incoming.animate()
-                .translationX(0f)
-                .alpha(1f)
-                .setDuration(duration)
-                .setInterpolator(interpolator)
-                .withEndAction(finish)
-                .start()
+            if (completionView == null) {
+                terminal = true
+                reset()
+                onCompleted()
+                return NavHostTransitionHandle {}
+            }
+            outgoing.forEach { view ->
+                val animator = view.animate()
+                    .translationX(direction * travel)
+                    .alpha(if (spec.fadeEnabled) 0f else 1f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                if (view === completionView) {
+                    animator.withEndAction(finish)
+                }
+                animator.start()
+            }
+            incoming.forEach { view ->
+                val animator = view.animate()
+                    .translationX(0f)
+                    .alpha(1f)
+                    .setDuration(duration)
+                    .setInterpolator(interpolator)
+                if (view === completionView) {
+                    animator.withEndAction(finish)
+                }
+                animator.start()
+            }
         } catch (throwable: Throwable) {
             terminal = true
-            outgoing.animate().cancel()
-            incoming.animate().cancel()
+            (outgoing + incoming).forEach { view -> view.animate().cancel() }
             reset()
             throw throwable
         }
         return NavHostTransitionHandle {
             if (!terminal) {
                 terminal = true
-                outgoing.animate().cancel()
-                incoming.animate().cancel()
+                (outgoing + incoming).forEach { view -> view.animate().cancel() }
                 reset()
             }
         }
@@ -256,20 +297,24 @@ private class AndroidBackPreviewHandle(
             swipeEdge = event.swipeEdge,
             layoutDirection = layoutDirection,
         )
-        val travel = hostWidth * spec.travelFraction
-        outgoing.translationX = direction * travel * event.progress
-        incoming.translationX = -direction * travel * (1f - event.progress)
+        val travel = travelWidth * spec.travelFraction
+        outgoing.forEach { view ->
+            view.translationX = direction * travel * event.progress
+        }
+        incoming.forEach { view ->
+            view.translationX = -direction * travel * (1f - event.progress)
+        }
         if (spec.fadeEnabled) {
-            outgoing.alpha = 1f - event.progress
-            incoming.alpha = event.progress
+            outgoing.forEach { view -> view.alpha = 1f - event.progress }
+            incoming.forEach { view -> view.alpha = event.progress }
         }
     }
 
     private fun reset() {
-        outgoing.alpha = 1f
-        outgoing.translationX = 0f
-        incoming.alpha = 1f
-        incoming.translationX = 0f
+        (outgoing + incoming).forEach { view ->
+            view.alpha = 1f
+            view.translationX = 0f
+        }
     }
 }
 

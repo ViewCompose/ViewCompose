@@ -17,6 +17,7 @@ internal data class NavHostRuntimeConfig(
     val localSnapshot: UiLocalSnapshot,
     val lifecycleOwner: LifecycleOwner,
     val transitionSpec: NavTransitionSpec,
+    val panePolicy: NavPanePolicy,
     val systemBackEnabled: Boolean,
     val onFailure: ((NavFailure) -> Unit)?,
     val content: NavDestinationContent,
@@ -90,6 +91,7 @@ internal class NavHostRuntime private constructor(
         }
         transitionSpecHolder.value = config.transitionSpec
         committedConfig = config
+        applyPanePolicy(config.panePolicy)
         when (coordinator.state) {
             NavHostCoordinatorState.Detached -> attach(config)
             NavHostCoordinatorState.Attached -> refresh(config)
@@ -108,6 +110,19 @@ internal class NavHostRuntime private constructor(
 
     override fun navigate(command: NavCommand): NavResult {
         return publishNavigationResult(coordinator.navigate(command))
+    }
+
+    internal fun onHostWidthChanged(widthPixels: Int) {
+        if (destroyed) {
+            return
+        }
+        val policy = committedConfig?.panePolicy
+            ?: stagedConfig?.panePolicy
+            ?: return
+        applyPanePolicy(
+            policy = policy,
+            widthPixels = widthPixels,
+        )
     }
 
     private fun publishNavigationResult(
@@ -247,6 +262,21 @@ internal class NavHostRuntime private constructor(
         handler(failure)
     }
 
+    private fun applyPanePolicy(
+        policy: NavPanePolicy,
+        widthPixels: Int = hostView.width,
+    ) {
+        val density = hostView.resources.displayMetrics.density
+        hostView.paneSpacingPixels = policy.resolveSpacingPixels(density)
+        coordinator.updatePaneStrategy(
+            strategy = policy.strategy,
+            maxPaneCount = policy.resolvePaneCount(
+                widthPixels = widthPixels,
+                density = density,
+            ),
+        )
+    }
+
     companion object {
         fun create(
             context: Context,
@@ -283,6 +313,11 @@ internal class NavHostRuntime private constructor(
                 transitionDriver = AndroidViewNavHostTransitionDriver(
                     sessionStore = sessionStore,
                     specProvider = { transitionSpecHolder.value },
+                ),
+                initialPaneStrategy = initialConfig.panePolicy.strategy,
+                initialMaxPaneCount = initialConfig.panePolicy.resolvePaneCount(
+                    widthPixels = hostView.width,
+                    density = hostView.resources.displayMetrics.density,
                 ),
             )
             return NavHostRuntime(

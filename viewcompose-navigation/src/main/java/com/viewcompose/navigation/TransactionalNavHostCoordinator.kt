@@ -771,6 +771,7 @@ internal class TransactionalNavHostCoordinator(
         sessionStore.present(
             layerOrder = retainedEntries.map(NavEntry::id),
             visibleEntryIds = scene.visibleEntryIds,
+            paneLayouts = scene.toPaneLayouts(),
         )
         reconcileOwners(
             scene = scene,
@@ -878,6 +879,10 @@ internal class TransactionalNavHostCoordinator(
         sessionStore.present(
             layerOrder = transition.layerOrder,
             visibleEntryIds = transition.visibleEntryIds,
+            paneLayouts = mergePaneLayouts(
+                before = transition.beforeScene,
+                after = transition.afterScene,
+            ),
         )
         reconcileOwners(transition)
     }
@@ -895,6 +900,10 @@ internal class TransactionalNavHostCoordinator(
         sessionStore.present(
             layerOrder = preview.layerOrder,
             visibleEntryIds = preview.visibleEntryIds,
+            paneLayouts = mergePaneLayouts(
+                before = preview.beforeScene,
+                after = preview.afterScene,
+            ),
         )
         reconcileOwners(preview)
     }
@@ -919,6 +928,25 @@ internal class TransactionalNavHostCoordinator(
         return linkedSetOf<NavEntryId>().apply {
             addAll(before.visibleEntryIds)
             addAll(after.visibleEntryIds)
+        }
+    }
+
+    private fun mergePaneLayouts(
+        before: NavPaneScene,
+        after: NavPaneScene,
+    ): Map<NavEntryId, NavPaneLayout> {
+        return linkedMapOf<NavEntryId, NavPaneLayout>().apply {
+            putAll(before.toPaneLayouts())
+            putAll(after.toPaneLayouts())
+        }
+    }
+
+    private fun NavPaneScene.toPaneLayouts(): Map<NavEntryId, NavPaneLayout> {
+        return panes.associate { pane ->
+            pane.entryId to NavPaneLayout(
+                role = pane.role,
+                paneCount = panes.size,
+            )
         }
     }
 

@@ -22,11 +22,14 @@ import com.viewcompose.widget.core.captureUiLocalSnapshot
  * When [systemBackEnabled] is true, the host participates in the nearest AndroidX back dispatcher
  * only while its stack can pop. Predictive-back progress previews the previous destination without
  * changing the committed stack until the gesture completes.
+ * [panePolicy] can adapt the same committed entries into multiple native View panes without
+ * recreating their lifecycle, ViewModel, or saved-state owners.
  */
 fun UiTreeBuilder.NavHost(
     controller: NavHostController,
     modifier: Modifier = Modifier,
     transitionSpec: NavTransitionSpec = NavTransitionSpec.Default,
+    panePolicy: NavPanePolicy = NavPanePolicy.Single,
     systemBackEnabled: Boolean = true,
     debug: Boolean = false,
     debugTag: String = "ViewComposeNavigation",
@@ -43,6 +46,7 @@ fun UiTreeBuilder.NavHost(
         localSnapshot = captureUiLocalSnapshot(),
         lifecycleOwner = lifecycleOwner,
         transitionSpec = transitionSpec,
+        panePolicy = panePolicy,
         systemBackEnabled = systemBackEnabled,
         onFailure = onFailure,
         content = content,

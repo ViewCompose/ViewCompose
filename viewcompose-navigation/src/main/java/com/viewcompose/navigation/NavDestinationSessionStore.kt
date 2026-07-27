@@ -198,6 +198,9 @@ internal class NavDestinationSessionStore(
     fun present(
         layerOrder: List<NavEntryId>,
         visibleEntryIds: Set<NavEntryId>,
+        paneLayouts: Map<NavEntryId, NavPaneLayout> = visibleEntryIds.associateWith {
+            NavPaneLayout.Single
+        },
     ) {
         check(layerOrder.distinct().size == layerOrder.size) {
             "Destination layer order must not contain duplicate entry IDs."
@@ -211,6 +214,9 @@ internal class NavDestinationSessionStore(
         check(visibleEntryIds.all(layerOrder::contains)) {
             "Every visible destination must be included in the destination layer order."
         }
+        check(paneLayouts.keys == visibleEntryIds) {
+            "Every visible destination must have exactly one pane layout."
+        }
         sessions.forEach { (entryId, session) ->
             session.container.visibility = if (entryId in visibleEntryIds) {
                 View.VISIBLE
@@ -218,6 +224,11 @@ internal class NavDestinationSessionStore(
                 View.GONE
             }
         }
+        hostView.updatePaneLayouts(
+            paneLayouts.mapKeys { (entryId, _) ->
+                checkNotNull(sessions[entryId]).container
+            },
+        )
         layerOrder.forEach { entryId ->
             hostView.bringChildToFront(checkNotNull(sessions[entryId]).container)
         }
