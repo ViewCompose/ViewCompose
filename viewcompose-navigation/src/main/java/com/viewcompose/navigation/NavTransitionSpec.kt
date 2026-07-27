@@ -223,76 +223,58 @@ data class NavTransitionSpec(
             durationMillis = 300L,
             incomingStart = NavDestinationTransform(
                 travelFraction = 0.08f,
-                alpha = 0.9f,
-                scale = 0.985f,
             ),
             outgoingEnd = NavDestinationTransform(
                 travelFraction = 0.025f,
-                alpha = 0.94f,
             ),
         )
         private val DefaultPop = NavDestinationMotionSpec(
             durationMillis = 260L,
             incomingStart = NavDestinationTransform(
                 travelFraction = 0.025f,
-                alpha = 0.94f,
             ),
             outgoingEnd = NavDestinationTransform(
                 travelFraction = 0.08f,
-                alpha = 0.88f,
-                scale = 0.985f,
             ),
         )
         private val DefaultReplace = NavDestinationMotionSpec(
             durationMillis = 220L,
             incomingStart = NavDestinationTransform(
-                alpha = 0.88f,
-                scale = 0.98f,
+                travelFraction = 0.03f,
             ),
             outgoingEnd = NavDestinationTransform(
-                alpha = 0f,
-                scale = 1.015f,
+                travelFraction = 0.015f,
             ),
         )
         private val DefaultReset = NavDestinationMotionSpec(
             durationMillis = 260L,
             incomingStart = NavDestinationTransform(
-                alpha = 0.86f,
-                scale = 0.97f,
+                travelFraction = 0.04f,
             ),
             outgoingEnd = NavDestinationTransform(
-                alpha = 0f,
-                scale = 1.02f,
+                travelFraction = 0.02f,
             ),
         )
         private val DefaultStackSelection = NavDestinationMotionSpec(
             durationMillis = 180L,
-            incomingStart = NavDestinationTransform(alpha = 0f),
-            outgoingEnd = NavDestinationTransform(alpha = 0f),
+            incomingStart = NavDestinationTransform(travelFraction = 0.015f),
+            outgoingEnd = NavDestinationTransform(travelFraction = 0.01f),
         )
         private val DefaultDeepLink = NavDestinationMotionSpec(
             durationMillis = 280L,
             incomingStart = NavDestinationTransform(
                 travelFraction = 0.04f,
-                alpha = 0.84f,
-                scale = 0.975f,
             ),
             outgoingEnd = NavDestinationTransform(
                 travelFraction = 0.015f,
-                alpha = 0f,
-                scale = 1.015f,
             ),
         )
         private val DefaultPredictiveBack = NavPredictiveBackSpec(
             incomingStart = NavDestinationTransform(
                 travelFraction = 0.04f,
-                alpha = 0.92f,
-                scale = 0.99f,
             ),
             outgoingEnd = NavDestinationTransform(
                 travelFraction = 0.1f,
-                alpha = 0.96f,
-                scale = 0.985f,
             ),
             progressEasing = NavMotionEasing(
                 x1 = 0.2f,

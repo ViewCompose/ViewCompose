@@ -104,7 +104,9 @@ internal class AndroidViewNavHostTransitionDriver(
                     .scaleY(motion.outgoingEnd.scale)
                     .setDuration(motion.durationMillis)
                     .setInterpolator(interpolator)
-                    .withLayer()
+                if (motion.outgoingEnd.requiresCompositingLayer) {
+                    animator.withLayer()
+                }
                 if (view === completionView) {
                     animator.withEndAction(finish)
                 }
@@ -118,7 +120,9 @@ internal class AndroidViewNavHostTransitionDriver(
                     .scaleY(1f)
                     .setDuration(motion.durationMillis)
                     .setInterpolator(interpolator)
-                    .withLayer()
+                if (motion.incomingStart.requiresCompositingLayer) {
+                    animator.withLayer()
+                }
                 if (view === completionView) {
                     animator.withEndAction(finish)
                 }
@@ -242,6 +246,9 @@ private fun View.applyTransform(
     scaleX = transform.scale
     scaleY = transform.scale
 }
+
+private val NavDestinationTransform.requiresCompositingLayer: Boolean
+    get() = alpha != 1f || scale != 1f
 
 private fun NavMotionEasing.toInterpolator(): Interpolator {
     return PathInterpolator(x1, y1, x2, y2)

@@ -1,8 +1,12 @@
 package com.viewcompose.navigation
 
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.util.TypedValue
 import android.view.View
 import android.widget.FrameLayout
+import androidx.annotation.AttrRes
 import com.viewcompose.navigation.core.NavPaneRole
 import java.util.IdentityHashMap
 
@@ -27,6 +31,8 @@ internal class NavHostView(
             LayoutParams.MATCH_PARENT,
             LayoutParams.MATCH_PARENT,
         )
+        clipChildren = true
+        clipToPadding = true
     }
 
     internal fun updatePaneLayouts(layouts: Map<View, NavPaneLayout>) {
@@ -177,5 +183,29 @@ internal fun destinationContainer(context: Context): FrameLayout {
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT,
         )
+        clipChildren = true
+        clipToPadding = true
+        background = resolveDestinationSurfaceBackground(context)
+    }
+}
+
+private fun resolveDestinationSurfaceBackground(context: Context): Drawable? {
+    return resolveThemeDrawable(context, android.R.attr.colorBackground)
+        ?: resolveThemeDrawable(context, android.R.attr.windowBackground)
+}
+
+private fun resolveThemeDrawable(
+    context: Context,
+    @AttrRes attribute: Int,
+): Drawable? {
+    val value = TypedValue()
+    if (!context.theme.resolveAttribute(attribute, value, true)) {
+        return null
+    }
+    return when {
+        value.resourceId != 0 -> context.getDrawable(value.resourceId)?.mutate()
+        value.type in TypedValue.TYPE_FIRST_COLOR_INT..TypedValue.TYPE_LAST_COLOR_INT ->
+            ColorDrawable(value.data)
+        else -> null
     }
 }

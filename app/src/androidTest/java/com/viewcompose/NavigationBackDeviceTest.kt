@@ -1,5 +1,7 @@
 package com.viewcompose
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.SystemClock
 import android.util.Log
@@ -97,8 +99,10 @@ class NavigationBackDeviceTest {
                 assertEquals(View.VISIBLE, details.visibility)
                 assertTrue(home.translationX < 0f)
                 assertTrue(details.translationX > 0f)
-                assertTrue(home.alpha in 0f..1f)
-                assertTrue(details.alpha in 0f..1f)
+                assertEquals(1f, home.alpha, 0f)
+                assertEquals(1f, details.alpha, 0f)
+                assertEquals(1f, home.scaleX, 0f)
+                assertEquals(1f, details.scaleX, 0f)
                 assertEquals(
                     listOf(
                         NavigationBackTestActivity.HOME_ROUTE,
@@ -151,6 +155,41 @@ class NavigationBackDeviceTest {
                 )
                 assertEquals(0, activity.failureCount)
             }
+        }
+    }
+
+    @Test
+    fun committedPushAndPopKeepTransitionSurfacesOpaque() {
+        launchHost().use { scenario ->
+            val pushSamples = sampleDestinationViewsDuring(scenario) {
+                scenario.onActivity { activity ->
+                    activity.push(NavigationBackTestActivity.DETAILS_ROUTE)
+                }
+                awaitTransition()
+            }
+
+            assertOpaqueTransitionSamples("push", pushSamples)
+            scenario.onActivity { activity ->
+                val home = activity.destinationContainer(NavigationBackTestActivity.HOME_ROUTE)
+                val details = activity.destinationContainer(NavigationBackTestActivity.DETAILS_ROUTE)
+                assertEquals(
+                    255,
+                    Color.alpha((checkNotNull(home.background) as ColorDrawable).color),
+                )
+                assertEquals(
+                    255,
+                    Color.alpha((checkNotNull(details.background) as ColorDrawable).color),
+                )
+            }
+
+            val popSamples = sampleDestinationViewsDuring(scenario) {
+                scenario.onActivity { activity ->
+                    activity.navController.popBackStack()
+                }
+                awaitTransition()
+            }
+
+            assertOpaqueTransitionSamples("pop", popSamples)
         }
     }
 
@@ -654,6 +693,29 @@ class NavigationBackDeviceTest {
             abs(detailsTranslationX) > MIN_GESTURE_TRANSLATION_PX &&
             homeAlpha in 0f..1f &&
             detailsAlpha in 0f..1f
+    }
+
+    private fun assertOpaqueTransitionSamples(
+        phase: String,
+        samples: List<NavigationBackTestActivity.DestinationViewSample>,
+    ) {
+        val overlappingSamples = samples.filter { sample ->
+            sample.homeVisibility == View.VISIBLE &&
+                sample.detailsVisibility == View.VISIBLE
+        }
+        assertTrue(
+            "$phase transition did not expose overlapping destination frames; samples=${samples.size}",
+            overlappingSamples.isNotEmpty(),
+        )
+        assertTrue(
+            "$phase transition blended or scaled live destination trees: $overlappingSamples",
+            overlappingSamples.all { sample ->
+                sample.homeAlpha == 1f &&
+                    sample.detailsAlpha == 1f &&
+                    sample.homeScaleX == 1f &&
+                    sample.detailsScaleX == 1f
+            },
+        )
     }
 
     private fun List<NavigationBackTestActivity.DestinationViewSample>

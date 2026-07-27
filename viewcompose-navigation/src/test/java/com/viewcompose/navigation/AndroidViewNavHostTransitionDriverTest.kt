@@ -92,7 +92,7 @@ class AndroidViewNavHostTransitionDriverTest {
     }
 
     @Test
-    fun `laid out host starts native motion and cancellation resets properties`() {
+    fun `laid out host starts opaque native motion and cancellation resets properties`() {
         attachAndLayoutHost()
         val root = coordinator.snapshot.top
 
@@ -103,9 +103,9 @@ class AndroidViewNavHostTransitionDriverTest {
         val incoming = session(details.id).container
 
         assertEquals(80f, incoming.translationX)
-        assertEquals(0.9f, incoming.alpha)
-        assertEquals(0.985f, incoming.scaleX)
-        assertEquals(0.985f, incoming.scaleY)
+        assertEquals(1f, incoming.alpha)
+        assertEquals(1f, incoming.scaleX)
+        assertEquals(1f, incoming.scaleY)
         assertTrue(coordinator.activeTransition != null)
 
         coordinator.cancelTransition(result.transition.id)
@@ -143,8 +143,8 @@ class AndroidViewNavHostTransitionDriverTest {
         val details = coordinator.snapshot.top
         val detailsView = session(details.id).container
         assertEquals(80f, detailsView.translationX)
-        assertEquals(0.9f, detailsView.alpha)
-        assertEquals(0.985f, detailsView.scaleX)
+        assertEquals(1f, detailsView.alpha)
+        assertEquals(1f, detailsView.scaleX)
 
         coordinator.navigate(NavCommand.Push(NavRoute("confirmation")))
         val confirmationView = session(coordinator.snapshot.top.id).container
@@ -154,10 +154,10 @@ class AndroidViewNavHostTransitionDriverTest {
             coordinator.lastTransitionResult?.outcome,
         )
         assertEquals(80f, detailsView.translationX)
-        assertEquals(0.9f, detailsView.alpha)
-        assertEquals(0.985f, detailsView.scaleX)
+        assertEquals(1f, detailsView.alpha)
+        assertEquals(1f, detailsView.scaleX)
         assertEquals(80f, confirmationView.translationX)
-        assertEquals(0.9f, confirmationView.alpha)
+        assertEquals(1f, confirmationView.alpha)
         assertTrue(coordinator.activeTransition != null)
     }
 
@@ -244,10 +244,10 @@ class AndroidViewNavHostTransitionDriverTest {
 
         assertTrue(visualProgress > 0.5f)
         assertEquals(-40f * (1f - visualProgress), incoming.translationX, 0.05f)
-        assertEquals(0.92f + 0.08f * visualProgress, incoming.alpha, 0.001f)
+        assertEquals(1f, incoming.alpha, 0f)
         assertEquals(100f * visualProgress, outgoing.translationX, 0.05f)
-        assertEquals(1f - 0.04f * visualProgress, outgoing.alpha, 0.001f)
-        assertEquals(1f - 0.015f * visualProgress, outgoing.scaleX, 0.001f)
+        assertEquals(1f, outgoing.alpha, 0f)
+        assertEquals(1f, outgoing.scaleX, 0f)
 
         coordinator.cancelBackPreview(preview.id)
 

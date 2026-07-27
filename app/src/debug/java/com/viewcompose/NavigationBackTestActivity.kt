@@ -248,6 +248,8 @@ class NavigationBackTestActivity : AppCompatActivity() {
             detailsTranslationX = details.translationX,
             homeAlpha = home.alpha,
             detailsAlpha = details.alpha,
+            homeScaleX = home.scaleX,
+            detailsScaleX = details.scaleX,
         )
     }
 
@@ -389,6 +391,8 @@ class NavigationBackTestActivity : AppCompatActivity() {
         val detailsTranslationX: Float,
         val homeAlpha: Float,
         val detailsAlpha: Float,
+        val homeScaleX: Float,
+        val detailsScaleX: Float,
     )
 
     private data class ProcessDeathRecord(

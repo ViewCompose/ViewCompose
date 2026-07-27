@@ -1,5 +1,8 @@
 package com.viewcompose.navigation
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.ContextThemeWrapper
 import android.view.View
 import androidx.lifecycle.Lifecycle
 import com.viewcompose.lifecycle.LocalLifecycleOwner
@@ -85,6 +88,21 @@ class NavDestinationSessionStoreTest {
         assertEquals(NavDestinationCandidateStatus.Committed, candidate.status)
         assertSame(committed, sessionStore.sessionOrNull(entry.id))
         assertEquals(View.VISIBLE, committed.container.visibility)
+    }
+
+    @Test
+    fun `destination container owns an opaque themed surface and clips transition content`() {
+        val themedContext = ContextThemeWrapper(
+            RuntimeEnvironment.getApplication(),
+            android.R.style.Theme_Material_Light,
+        )
+
+        val container = destinationContainer(themedContext)
+        val background = checkNotNull(container.background) as ColorDrawable
+
+        assertEquals(255, Color.alpha(background.color))
+        assertTrue(container.clipChildren)
+        assertTrue(container.clipToPadding)
     }
 
     @Test
