@@ -57,6 +57,27 @@ class NavLifecyclePlannerTest {
     }
 
     @Test
+    fun `multiple interactive owners can share the resumed lifecycle`() {
+        val appGraph = NavEntryId("app-graph")
+        val accountGraph = NavEntryId("account-graph")
+        val profile = NavEntryId("profile")
+
+        val plan = NavLifecyclePlanner.plan(
+            currentStates = emptyMap(),
+            retainedEntryIds = listOf(appGraph, accountGraph, profile),
+            visibleEntryIds = setOf(appGraph, accountGraph, profile),
+            interactiveEntryIds = setOf(appGraph, accountGraph, profile),
+            hostState = NavHostLifecycleState.Resumed,
+        )
+
+        assertTrue(
+            plan.targetStates.values.all { state ->
+                state == NavEntryLifecycleState.Resumed
+            },
+        )
+    }
+
+    @Test
     fun `host lifecycle caps destination lifecycle`() {
         val root = NavEntryId("root")
 

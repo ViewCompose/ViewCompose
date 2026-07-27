@@ -90,6 +90,138 @@ class NavHostPublicApiTest {
     }
 
     @Test
+    fun `public host shares graph ViewModels and releases them when graph leaves the stack`() {
+        val graph = navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            navigation(
+                route = "account",
+                startDestination = NavRoute("profile"),
+            ) {
+                destination("profile")
+                destination("security")
+            }
+        }
+        val entryIds = ArrayDeque(listOf("home", "profile", "security", "home-reset"))
+        val controller = createNavHostController(
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(entryIds.removeFirst())
+            },
+        )
+        val accountOwners = mutableMapOf<String, NavGraphOwner>()
+        val accountViewModels = mutableMapOf<String, ReleaseTrackingViewModel>()
+        val accountHandles = mutableMapOf<String, SavedStateHandle>()
+        val fixture = renderPublicHost(controller = controller) { entry ->
+            val accountOwner = LocalNavGraphOwnerScope.current?.get("account")
+            if (accountOwner != null) {
+                accountOwners[entry.route.name] = accountOwner
+                ProvideNavGraphOwner("account") {
+                    accountViewModels[entry.route.name] = viewModel(
+                        key = "account-vm",
+                        factory = ReleaseTrackingViewModelFactory,
+                    )
+                    accountHandles[entry.route.name] = savedStateHandle("account-handle")
+                    Text(entry.route.name)
+                }
+            } else {
+                Text(entry.route.name)
+            }
+        }
+
+        controller.navigate(
+            NavRoute(
+                name = "account",
+                arguments = mapOf(
+                    "userId" to NavValue.LongValue(42L),
+                ),
+            ),
+        )
+        val profileOwner = checkNotNull(accountOwners["profile"])
+        val profileViewModel = checkNotNull(accountViewModels["profile"])
+        checkNotNull(accountHandles["profile"])["selection"] = 7
+        controller.navigate(NavRoute("security"))
+
+        assertSame(profileOwner, accountOwners["security"])
+        assertSame(profileViewModel, accountViewModels["security"])
+        assertEquals(42L, checkNotNull(accountHandles["security"])["userId"])
+        assertEquals(7, checkNotNull(accountHandles["security"])["selection"])
+        assertEquals(Lifecycle.State.RESUMED, profileOwner.lifecycle.currentState)
+
+        controller.reset(NavRoute("home"))
+
+        assertEquals(Lifecycle.State.DESTROYED, profileOwner.lifecycle.currentState)
+        assertTrue(profileViewModel.cleared)
+        fixture.session.dispose()
+    }
+
+    @Test
+    fun `graph SavedStateHandle survives complete host and controller recreation`() {
+        val graph = navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            navigation(
+                route = "account",
+                startDestination = NavRoute("profile"),
+            ) {
+                destination("profile")
+            }
+        }
+        val entryIds = ArrayDeque(listOf("home", "profile"))
+        val controller = createNavHostController(
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(entryIds.removeFirst())
+            },
+        )
+        var firstHandle: SavedStateHandle? = null
+        val first = renderPublicHost(controller = controller) { entry ->
+            if (LocalNavGraphOwnerScope.current?.get("account") != null) {
+                ProvideNavGraphOwner("account") {
+                    firstHandle = savedStateHandle("account-handle")
+                    Text(entry.route.name)
+                }
+            } else {
+                Text(entry.route.name)
+            }
+        }
+        controller.navigate(
+            NavRoute(
+                name = "account",
+                arguments = mapOf(
+                    "userId" to NavValue.LongValue(42L),
+                ),
+            ),
+        )
+        checkNotNull(firstHandle)["selection"] = 7
+        val expectedGraphEntry = controller.snapshot.top.graphEntries.last()
+        val encoded = encodeNavHostState(controller.stateForSave())
+        first.session.dispose()
+
+        val restoredController = checkNotNull(navHostControllerSaver(graph).restore(encoded))
+        var restoredHandle: SavedStateHandle? = null
+        val restored = renderPublicHost(controller = restoredController) { entry ->
+            if (LocalNavGraphOwnerScope.current?.get("account") != null) {
+                ProvideNavGraphOwner("account") {
+                    restoredHandle = savedStateHandle("account-handle")
+                    Text(entry.route.name)
+                }
+            } else {
+                Text(entry.route.name)
+            }
+        }
+
+        assertEquals(expectedGraphEntry, restoredController.snapshot.top.graphEntries.last())
+        assertEquals(42L, checkNotNull(restoredHandle)["userId"])
+        assertEquals(7, checkNotNull(restoredHandle)["selection"])
+        restored.session.dispose()
+    }
+
+    @Test
     fun `public host mounts stack and controller executes transactional navigation`() {
         val fixture = renderPublicHost()
 

@@ -3,6 +3,7 @@ package com.viewcompose.navigation
 import android.view.ViewGroup
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.navigation.core.NavEntry
+import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.widget.core.RenderFrameReport
 import com.viewcompose.widget.core.UiLocalSnapshot
 
@@ -46,6 +47,7 @@ internal enum class NavDestinationCandidateStatus {
 internal class NavDestinationCandidate internal constructor(
     private val store: NavDestinationSessionStore,
     internal val destinationSession: NavDestinationSession,
+    internal val newGraphOwnerIds: Set<NavEntryId>,
 ) : AutoCloseable {
     var status: NavDestinationCandidateStatus = NavDestinationCandidateStatus.Prepared
         private set

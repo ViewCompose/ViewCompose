@@ -6,6 +6,7 @@ import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.viewmodel.LocalViewModelStoreOwner
@@ -161,6 +162,132 @@ class NavDestinationSessionStoreTest {
     }
 
     @Test
+    fun `page render exposes graph owners and provider switches owner locals`() {
+        val appGraph = graphEntry("app-scope", "app")
+        val entry = entry(
+            id = "details",
+            route = "details",
+            graphEntries = listOf(appGraph),
+        )
+        var observedScope: NavGraphOwnerScope? = null
+        var observedLeafOwner: Any? = null
+        var observedGraphLifecycleOwner: Any? = null
+        var observedGraphViewModelOwner: Any? = null
+        var observedGraphSaveableRegistry: Any? = null
+
+        val candidate = sessionStore.prepare(
+            entry = entry,
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
+        ) {
+            observedScope = LocalNavGraphOwnerScope.current
+            observedLeafOwner = LocalLifecycleOwner.current
+            ProvideNavGraphOwner("app") {
+                observedGraphLifecycleOwner = LocalLifecycleOwner.current
+                observedGraphViewModelOwner = LocalViewModelStoreOwner.current
+                observedGraphSaveableRegistry = LocalSaveableStateRegistry.current
+                Text("Graph content")
+            }
+        }.readyCandidate()
+        val leafOwner = checkNotNull(ownerStore.ownerOrNull(entry.id))
+        val graphOwner = checkNotNull(ownerStore.graphOwnerOrNull(appGraph.id))
+
+        assertSame(leafOwner, observedLeafOwner)
+        assertSame(graphOwner, checkNotNull(observedScope)["app"])
+        assertSame(graphOwner, observedGraphLifecycleOwner)
+        assertSame(graphOwner, observedGraphViewModelOwner)
+        assertSame(
+            graphOwner.delegate.compositionSaveableStateRegistry,
+            observedGraphSaveableRegistry,
+        )
+        candidate.rollback()
+        assertNull(ownerStore.graphOwnerOrNull(appGraph.id))
+        assertEquals(Lifecycle.State.DESTROYED, graphOwner.lifecycle.currentState)
+    }
+
+    @Test
+    fun `candidate rollback preserves a graph owner shared with a committed page`() {
+        val appGraph = graphEntry("app-scope", "app")
+        val home = entry(
+            id = "home",
+            route = "home",
+            graphEntries = listOf(appGraph),
+        )
+        prepareAndCommit(home, "Home")
+        val appOwner = checkNotNull(ownerStore.graphOwnerOrNull(appGraph.id))
+        val details = entry(
+            id = "details",
+            route = "details",
+            graphEntries = listOf(appGraph),
+        )
+        val candidate = sessionStore.prepare(
+            entry = details,
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
+        ) {
+            Text("Details")
+        }.readyCandidate()
+
+        candidate.rollback()
+
+        assertSame(appOwner, ownerStore.graphOwnerOrNull(appGraph.id))
+        assertEquals(Lifecycle.State.CREATED, appOwner.lifecycle.currentState)
+    }
+
+    @Test
+    fun `failed first render destroys newly created graph owners`() {
+        val appGraph = graphEntry("app-scope", "app")
+        val entry = entry(
+            id = "broken",
+            route = "broken",
+            graphEntries = listOf(appGraph),
+        )
+
+        val result = sessionStore.prepare(
+            entry = entry,
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
+        ) {
+            error("graph destination failed")
+        }
+
+        assertTrue(result is NavDestinationPreparation.Failed)
+        assertNull(ownerStore.ownerOrNull(entry.id))
+        assertNull(ownerStore.graphOwnerOrNull(appGraph.id))
+    }
+
+    @Test
+    fun `setup failure releases graph owners and reopens the preparation slot`() {
+        val appGraph = graphEntry("app-scope", "app")
+        val rejected = entry(
+            id = "rejected",
+            route = "rejected",
+            graphEntries = listOf(appGraph),
+        )
+
+        val result = sessionStore.prepare(
+            entry = rejected,
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Destroyed,
+        ) {
+            Text("Rejected")
+        }
+
+        assertTrue(result is NavDestinationPreparation.Failed)
+        assertNull(ownerStore.ownerOrNull(rejected.id))
+        assertNull(ownerStore.graphOwnerOrNull(appGraph.id))
+
+        val accepted = sessionStore.prepare(
+            entry = entry("accepted", "accepted"),
+            localSnapshot = captureUiLocalSnapshot(),
+            hostLifecycleState = NavHostLifecycleState.Created,
+        ) {
+            Text("Accepted")
+        }.readyCandidate()
+        accepted.rollback()
+    }
+
+    @Test
     fun `committed page refreshes parent locals and content closure without recreating session`() {
         val businessLocal = uiLocalOf { "default" }
         val firstSnapshot = captureSnapshot(businessLocal, "first")
@@ -293,8 +420,20 @@ class NavDestinationSessionStoreTest {
     private fun entry(
         id: String,
         route: String,
+        graphEntries: List<NavGraphEntry> = emptyList(),
     ): NavEntry {
         return NavEntry(
+            id = NavEntryId(id),
+            route = NavRoute(route),
+            graphEntries = graphEntries,
+        )
+    }
+
+    private fun graphEntry(
+        id: String,
+        route: String,
+    ): NavGraphEntry {
+        return NavGraphEntry(
             id = NavEntryId(id),
             route = NavRoute(route),
         )

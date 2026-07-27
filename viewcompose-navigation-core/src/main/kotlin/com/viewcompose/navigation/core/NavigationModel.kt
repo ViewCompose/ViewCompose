@@ -92,6 +92,11 @@ class NavRoute(
     }
 }
 
+/**
+ * Stable identity and arguments for one concrete navigation-graph instance on the back stack.
+ *
+ * Multiple destination entries may reference the same instance while they remain in that graph.
+ */
 class NavGraphEntry(
     val id: NavEntryId,
     val route: NavRoute,

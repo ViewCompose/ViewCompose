@@ -82,8 +82,8 @@ sealed interface NavResult {
  *
  * A controller can be mounted by only one [NavHost] at a time. Commands require that host to be
  * attached so every stack mutation shares the destination render and lifecycle transaction. When
- * remembered with [rememberNavHostController], the stack, entry IDs, route arguments, destination
- * `rememberSaveable` values, and destination `SavedStateHandle` values survive host recreation.
+ * remembered with [rememberNavHostController], the stack, destination and graph instance IDs, route
+ * arguments, and every destination/graph saved-state namespace survive host recreation.
  */
 class NavHostController internal constructor(
     internal val backStackController: NavBackStackController,
@@ -253,8 +253,8 @@ fun rememberNavHostController(
 
 /**
  * Remembers a controller whose destinations are resolved through [graph]. Entering a graph route
- * atomically opens its leaf start destination and records the complete parent graph hierarchy on
- * the resulting entry.
+ * atomically opens its leaf start destination and records stable parent-graph instances on the
+ * resulting entry. Destinations reuse common graph instances until that graph is entered again.
  */
 fun rememberNavHostController(
     graph: NavGraph,

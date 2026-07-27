@@ -128,7 +128,9 @@ internal class NavHostRuntime private constructor(
             snapshot = snapshot,
             destinationState = ownerStore.performSave(
                 retainedEntryIds = snapshot.entries
-                    .mapTo(linkedSetOf(), NavEntry::id),
+                    .flatMapTo(linkedSetOf()) { entry ->
+                        entry.graphEntries.map { graphEntry -> graphEntry.id } + entry.id
+                    },
             ),
         )
     }

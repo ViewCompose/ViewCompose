@@ -50,17 +50,9 @@ internal class NavDestinationSessionStore(
             "Destination ${entry.id} already owns page state without a committed session."
         }
         pendingEntryId = entry.id
-        val owner = ownerStore.ownerFor(entry)
-        when (hostLifecycleState) {
-            NavHostLifecycleState.Initialized -> Unit
-            NavHostLifecycleState.Created,
-            NavHostLifecycleState.Started,
-            NavHostLifecycleState.Resumed,
-            -> owner.moveTo(NavEntryLifecycleState.Created)
-            NavHostLifecycleState.Destroyed -> {
-                error("A destroyed navigation host cannot prepare a destination.")
-            }
-        }
+        val newGraphOwnerIds = entry.graphEntries
+            .filter { graphEntry -> ownerStore.graphOwnerOrNull(graphEntry.id) == null }
+            .mapTo(linkedSetOf()) { graphEntry -> graphEntry.id }
         val container = destinationContainer(hostView.context)
         val renderEnvironment = NavDestinationRenderEnvironment(
             localSnapshot = localSnapshot,
@@ -68,6 +60,30 @@ internal class NavDestinationSessionStore(
         )
         var renderSession: com.viewcompose.host.android.RenderSession? = null
         return try {
+            val graphOwners = entry.graphEntries.mapIndexed { depth, graphEntry ->
+                ownerStore.graphOwnerFor(
+                    entry = graphEntry,
+                    depth = depth,
+                )
+            }
+            val owner = ownerStore.ownerFor(entry)
+            when (hostLifecycleState) {
+                NavHostLifecycleState.Initialized -> Unit
+                NavHostLifecycleState.Created,
+                NavHostLifecycleState.Started,
+                NavHostLifecycleState.Resumed,
+                -> {
+                    newGraphOwnerIds.forEach { graphEntryId ->
+                        checkNotNull(ownerStore.graphOwnerOrNull(graphEntryId))
+                            .delegate
+                            .moveTo(NavEntryLifecycleState.Created)
+                    }
+                    owner.moveTo(NavEntryLifecycleState.Created)
+                }
+                NavHostLifecycleState.Destroyed -> {
+                    error("A destroyed navigation host cannot prepare a destination.")
+                }
+            }
             renderSession = renderInto(
                 container = container,
                 debug = debug,
@@ -76,8 +92,15 @@ internal class NavDestinationSessionStore(
                 onRenderFailure = onRenderFailure,
             ) {
                 withUiLocalSnapshot(renderEnvironment.localSnapshot) {
-                    ProvideNavEntryOwner(owner) {
-                        renderEnvironment.content(this, entry)
+                    ProvideNavGraphOwnerScope(
+                        NavGraphOwnerScope(
+                            entries = entry.graphEntries,
+                            owners = graphOwners,
+                        ),
+                    ) {
+                        ProvideNavEntryOwner(owner) {
+                            renderEnvironment.content(this, entry)
+                        }
                     }
                 }
             }
@@ -92,6 +115,7 @@ internal class NavDestinationSessionStore(
             if (frameReport?.status != RenderFrameStatus.Committed) {
                 cleanupFailedPreparation(
                     entryId = entry.id,
+                    newGraphOwnerIds = newGraphOwnerIds,
                     renderSession = renderSession,
                     container = container,
                 )
@@ -104,6 +128,7 @@ internal class NavDestinationSessionStore(
                 val candidate = NavDestinationCandidate(
                     store = this,
                     destinationSession = destinationSession,
+                    newGraphOwnerIds = newGraphOwnerIds,
                 )
                 pendingCandidate = candidate
                 NavDestinationPreparation.Ready(candidate)
@@ -111,6 +136,7 @@ internal class NavDestinationSessionStore(
         } catch (throwable: Throwable) {
             cleanupFailedPreparation(
                 entryId = entry.id,
+                newGraphOwnerIds = newGraphOwnerIds,
                 renderSession = renderSession,
                 container = container,
             )
@@ -159,6 +185,7 @@ internal class NavDestinationSessionStore(
             session.dispose()
         } finally {
             ownerStore.remove(candidate.entry.id)
+            candidate.newGraphOwnerIds.forEach(ownerStore::removeGraphOwner)
             pendingCandidate = null
             pendingEntryId = null
         }
@@ -250,6 +277,7 @@ internal class NavDestinationSessionStore(
 
     private fun cleanupFailedPreparation(
         entryId: NavEntryId,
+        newGraphOwnerIds: Set<NavEntryId>,
         renderSession: com.viewcompose.host.android.RenderSession?,
         container: View,
     ) {
@@ -260,6 +288,7 @@ internal class NavDestinationSessionStore(
             renderSession?.dispose()
         } finally {
             ownerStore.remove(entryId)
+            newGraphOwnerIds.forEach(ownerStore::removeGraphOwner)
             pendingCandidate = null
             pendingEntryId = null
         }

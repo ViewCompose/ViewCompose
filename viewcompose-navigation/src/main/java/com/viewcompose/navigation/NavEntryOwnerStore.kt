@@ -6,6 +6,7 @@ import androidx.annotation.MainThread
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryLifecycleState
+import com.viewcompose.navigation.core.NavGraphEntry
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLifecyclePlan
 import com.viewcompose.navigation.core.NavLifecyclePlanner
@@ -15,6 +16,8 @@ internal class NavEntryOwnerStore(
     restoredState: Bundle? = null,
 ) {
     private val owners = linkedMapOf<NavEntryId, NavEntryOwner>()
+    private val graphOwners = linkedMapOf<NavEntryId, NavGraphOwner>()
+    private val ownerDepths = linkedMapOf<NavEntryId, Int>()
     private val restoredOwnerStates = decodeOwnerStates(restoredState)
     private var destroyed = false
 
@@ -24,8 +27,14 @@ internal class NavEntryOwnerStore(
             "A destroyed navigation entry owner store cannot create owners."
         }
         owners[entry.id]?.let { existing ->
+            check(entry.id !in graphOwners) {
+                "Navigation entry ID ${entry.id} is already owned by a navigation graph."
+            }
             check(existing.entry == entry) {
                 "Navigation entry ID ${entry.id} was reused for a different route."
+            }
+            check(ownerDepths[entry.id] == entry.graphEntries.size) {
+                "Navigation entry ${entry.id} changed graph depth."
             }
             return existing
         }
@@ -35,11 +44,56 @@ internal class NavEntryOwnerStore(
             restoredState = restoredOwnerStates.remove(entry.id),
         ).also { owner ->
             owners[entry.id] = owner
+            ownerDepths[entry.id] = entry.graphEntries.size
+        }
+    }
+
+    @MainThread
+    fun graphOwnerFor(
+        entry: NavGraphEntry,
+        depth: Int,
+    ): NavGraphOwner {
+        check(!destroyed) {
+            "A destroyed navigation entry owner store cannot create graph owners."
+        }
+        require(depth >= 0) {
+            "Navigation graph owner depth must be non-negative."
+        }
+        graphOwners[entry.id]?.let { existing ->
+            check(existing.entry == entry) {
+                "Navigation graph entry ID ${entry.id} was reused for a different graph."
+            }
+            check(ownerDepths[entry.id] == depth) {
+                "Navigation graph entry ${entry.id} changed hierarchy depth."
+            }
+            return existing
+        }
+        check(entry.id !in owners) {
+            "Navigation graph entry ID ${entry.id} is already owned by a destination."
+        }
+        val delegate = NavEntryOwner(
+            entry = NavEntry(
+                id = entry.id,
+                route = entry.route,
+            ),
+            application = application,
+            restoredState = restoredOwnerStates.remove(entry.id),
+        )
+        return NavGraphOwner(
+            entry = entry,
+            delegate = delegate,
+        ).also { owner ->
+            owners[entry.id] = delegate
+            graphOwners[entry.id] = owner
+            ownerDepths[entry.id] = depth
         }
     }
 
     @MainThread
     fun ownerOrNull(entryId: NavEntryId): NavEntryOwner? = owners[entryId]
+
+    @MainThread
+    fun graphOwnerOrNull(entryId: NavEntryId): NavGraphOwner? = graphOwners[entryId]
 
     @MainThread
     fun reconcile(
@@ -51,15 +105,56 @@ internal class NavEntryOwnerStore(
         check(!destroyed) {
             "A destroyed navigation entry owner store cannot be reconciled."
         }
-        retainedEntries.forEach(::ownerFor)
+        val retainedOwnerIds = linkedSetOf<NavEntryId>()
+        retainedEntries.forEach { entry ->
+            entry.graphEntries.forEachIndexed { depth, graphEntry ->
+                graphOwnerFor(
+                    entry = graphEntry,
+                    depth = depth,
+                )
+                retainedOwnerIds += graphEntry.id
+            }
+            ownerFor(entry)
+            retainedOwnerIds += entry.id
+        }
+        val entriesById = retainedEntries.associateBy(NavEntry::id)
+        val visibleOwnerIds = linkedSetOf<NavEntryId>()
+        visibleEntryIds.forEach { entryId ->
+            val entry = checkNotNull(entriesById[entryId]) {
+                "Visible navigation entry $entryId is not retained."
+            }
+            entry.graphEntries.forEach { graphEntry ->
+                visibleOwnerIds += graphEntry.id
+            }
+            visibleOwnerIds += entry.id
+        }
+        val interactiveOwnerIds = linkedSetOf<NavEntryId>()
+        interactiveEntryId?.let { entryId ->
+            val entry = checkNotNull(entriesById[entryId]) {
+                "Interactive navigation entry $entryId is not retained."
+            }
+            entry.graphEntries.forEach { graphEntry ->
+                interactiveOwnerIds += graphEntry.id
+            }
+            interactiveOwnerIds += entry.id
+        }
         val plan = NavLifecyclePlanner.plan(
             currentStates = owners.mapValues { (_, owner) -> owner.entryLifecycleState },
-            retainedEntryIds = retainedEntries.map(NavEntry::id),
-            visibleEntryIds = visibleEntryIds,
-            interactiveEntryId = interactiveEntryId,
+            retainedEntryIds = retainedOwnerIds.toList(),
+            visibleEntryIds = visibleOwnerIds,
+            interactiveEntryIds = interactiveOwnerIds,
             hostState = hostState,
         )
-        plan.transitions.forEach { transition ->
+        val orderedTransitions = plan.transitions
+            .partition { transition -> transition.isDownward() }
+            .let { (downward, upward) ->
+                downward.sortedByDescending { transition ->
+                    checkNotNull(ownerDepths[transition.entryId])
+                } + upward.sortedBy { transition ->
+                    checkNotNull(ownerDepths[transition.entryId])
+                }
+            }
+        orderedTransitions.forEach { transition ->
             checkNotNull(owners[transition.entryId]) {
                 "Lifecycle plan referenced unknown navigation entry ${transition.entryId}."
             }.moveTo(transition.to)
@@ -69,19 +164,34 @@ internal class NavEntryOwnerStore(
             .keys
         destroyedEntryIds.forEach { entryId ->
             owners.remove(entryId)
+            graphOwners.remove(entryId)
+            ownerDepths.remove(entryId)
             restoredOwnerStates.remove(entryId)
         }
         if (hostState == NavHostLifecycleState.Destroyed) {
             destroyed = true
             restoredOwnerStates.clear()
         }
-        return plan
+        return NavLifecyclePlan(
+            targetStates = plan.targetStates,
+            transitions = orderedTransitions,
+        )
     }
 
     @MainThread
     fun remove(entryId: NavEntryId) {
         restoredOwnerStates.remove(entryId)
         owners.remove(entryId)?.moveTo(NavEntryLifecycleState.Destroyed)
+        graphOwners.remove(entryId)
+        ownerDepths.remove(entryId)
+    }
+
+    @MainThread
+    fun removeGraphOwner(entryId: NavEntryId) {
+        check(entryId in graphOwners || entryId !in owners) {
+            "Navigation entry $entryId is not a graph owner."
+        }
+        remove(entryId)
     }
 
     @MainThread
@@ -109,8 +219,25 @@ internal class NavEntryOwnerStore(
             owner.moveTo(NavEntryLifecycleState.Destroyed)
         }
         owners.clear()
+        graphOwners.clear()
+        ownerDepths.clear()
         restoredOwnerStates.clear()
         destroyed = true
+    }
+}
+
+private fun com.viewcompose.navigation.core.NavLifecycleTransition.isDownward(): Boolean {
+    return to == NavEntryLifecycleState.Destroyed ||
+        to.activeRank() < from.activeRank()
+}
+
+private fun NavEntryLifecycleState.activeRank(): Int {
+    return when (this) {
+        NavEntryLifecycleState.Initialized -> 0
+        NavEntryLifecycleState.Created -> 1
+        NavEntryLifecycleState.Started -> 2
+        NavEntryLifecycleState.Resumed -> 3
+        NavEntryLifecycleState.Destroyed -> -1
     }
 }
 

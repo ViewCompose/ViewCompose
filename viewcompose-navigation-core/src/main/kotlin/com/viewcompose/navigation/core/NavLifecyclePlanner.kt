@@ -44,6 +44,22 @@ object NavLifecyclePlanner {
         interactiveEntryId: NavEntryId?,
         hostState: NavHostLifecycleState,
     ): NavLifecyclePlan {
+        return plan(
+            currentStates = currentStates,
+            retainedEntryIds = retainedEntryIds,
+            visibleEntryIds = visibleEntryIds,
+            interactiveEntryIds = interactiveEntryId?.let(::setOf).orEmpty(),
+            hostState = hostState,
+        )
+    }
+
+    fun plan(
+        currentStates: Map<NavEntryId, NavEntryLifecycleState>,
+        retainedEntryIds: List<NavEntryId>,
+        visibleEntryIds: Set<NavEntryId>,
+        interactiveEntryIds: Set<NavEntryId>,
+        hostState: NavHostLifecycleState,
+    ): NavLifecyclePlan {
         require(retainedEntryIds.distinct().size == retainedEntryIds.size) {
             "Retained navigation entry IDs must be unique."
         }
@@ -51,8 +67,8 @@ object NavLifecyclePlanner {
         require(visibleEntryIds.all(retainedSet::contains)) {
             "Visible navigation entries must also be retained."
         }
-        require(interactiveEntryId == null || interactiveEntryId in visibleEntryIds) {
-            "The interactive navigation entry must also be visible."
+        require(interactiveEntryIds.all(visibleEntryIds::contains)) {
+            "Interactive navigation entries must also be visible."
         }
         val resurrected = retainedEntryIds.filter { entryId ->
             currentStates[entryId] == NavEntryLifecycleState.Destroyed
@@ -76,7 +92,7 @@ object NavLifecyclePlanner {
             } else {
                 targetForRetainedEntry(
                     isVisible = entryId in visibleEntryIds,
-                    isInteractive = entryId == interactiveEntryId,
+                    isInteractive = entryId in interactiveEntryIds,
                     hostState = hostState,
                 )
             }

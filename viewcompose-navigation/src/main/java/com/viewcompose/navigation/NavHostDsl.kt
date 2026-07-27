@@ -17,6 +17,8 @@ import com.viewcompose.widget.core.captureUiLocalSnapshot
  *
  * Destination content receives the active [NavEntry]. Its lifecycle, ViewModel store, saved-state
  * namespace, and child render session are owned by this host rather than an Activity or Fragment.
+ * [LocalNavGraphOwnerScope] exposes every active parent-graph owner, while
+ * [ProvideNavGraphOwner] lets a subtree use one graph's shared state directly.
  * When [systemBackEnabled] is true, the host participates in the nearest AndroidX back dispatcher
  * only while its stack can pop. Predictive-back progress previews the previous destination without
  * changing the committed stack until the gesture completes.
