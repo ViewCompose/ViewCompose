@@ -10,7 +10,9 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
+import android.os.Trace
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.animation.Interpolator
 import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
@@ -547,15 +549,44 @@ private class CommittedViewTransitionRun(
         scaleY = motion.outgoingEnd.scale,
     )
     private val incomingTarget = ViewTransformState.Identity
+    private val startAnchor = incomingViews.firstOrNull() ?: animatedViews.first()
+    private val surfaceWarmupDelayMillis = startAnchor.display
+        ?.refreshRate
+        ?.takeIf { refreshRate -> refreshRate.isFinite() && refreshRate > 0f }
+        ?.let { refreshRate -> (1_000f / refreshRate).toLong() + 1L }
+        ?: DEFAULT_SURFACE_WARMUP_DELAY_MILLIS
+    private val startAnimator = Runnable {
+        if (!terminal) {
+            try {
+                animator.start()
+            } catch (_: Throwable) {
+                finish()
+            }
+        }
+    }
+    private val finishSurfaceWarmup = Runnable {
+        if (!terminal) {
+            startAnchor.postOnAnimationDelayed(
+                startAnimator,
+                surfaceWarmupDelayMillis,
+            )
+        }
+    }
+    private var preDrawListener: ViewTreeObserver.OnPreDrawListener? = null
     private val animator = ValueAnimator.ofFloat(0f, 1f).apply {
         duration = motion.totalDurationMillis
         interpolator = LinearInterpolator()
         addUpdateListener { animation ->
             if (!terminal) {
-                applyFrame(
-                    linearProgress = animation.animatedFraction,
-                    playTimeMillis = animation.currentPlayTime,
-                )
+                Trace.beginSection(NAV_MOTION_FRAME_TRACE_SECTION)
+                try {
+                    applyFrame(
+                        linearProgress = animation.animatedFraction,
+                        playTimeMillis = animation.currentPlayTime,
+                    )
+                } finally {
+                    Trace.endSection()
+                }
             }
         }
         addListener(
@@ -572,9 +603,10 @@ private class CommittedViewTransitionRun(
         try {
             layerLease.acquire()
             applyFrame(linearProgress = 0f, playTimeMillis = 0L)
-            animator.start()
+            startAfterSurfaceWarmup()
         } catch (throwable: Throwable) {
             terminal = true
+            cancelScheduledStart()
             animatedViews.forEach(resetView)
             layerLease.release()
             throw throwable
@@ -621,6 +653,7 @@ private class CommittedViewTransitionRun(
             return
         }
         terminal = true
+        cancelScheduledStart()
         animatedViews.forEach(resetView)
         layerLease.release()
         onTerminated()
@@ -632,6 +665,7 @@ private class CommittedViewTransitionRun(
             return
         }
         terminal = true
+        cancelScheduledStart()
         animator.cancel()
         onTerminated()
         if (preserveVisualState) {
@@ -640,6 +674,44 @@ private class CommittedViewTransitionRun(
             animatedViews.forEach(resetView)
         }
         layerLease.release()
+    }
+
+    /**
+     * Draws the fully laid-out start state into its hardware layer before motion begins.
+     *
+     * Without this barrier, the first animated frame also measures the newly visible destination
+     * and records its entire View hierarchy. Android window transitions avoid that collision by
+     * waiting for the destination window's first frame before SurfaceControl starts moving it.
+     */
+    private fun startAfterSurfaceWarmup() {
+        val observer = startAnchor.viewTreeObserver
+        if (!observer.isAlive) {
+            startAnchor.postOnAnimation(startAnimator)
+            return
+        }
+        val listener = ViewTreeObserver.OnPreDrawListener {
+            removePreDrawListener()
+            startAnchor.postOnAnimation(finishSurfaceWarmup)
+            true
+        }
+        preDrawListener = listener
+        observer.addOnPreDrawListener(listener)
+        startAnchor.invalidate()
+    }
+
+    private fun cancelScheduledStart() {
+        removePreDrawListener()
+        startAnchor.removeCallbacks(finishSurfaceWarmup)
+        startAnchor.removeCallbacks(startAnimator)
+    }
+
+    private fun removePreDrawListener() {
+        val listener = preDrawListener ?: return
+        preDrawListener = null
+        val observer = startAnchor.viewTreeObserver
+        if (observer.isAlive) {
+            observer.removeOnPreDrawListener(listener)
+        }
     }
 }
 
@@ -1005,6 +1077,8 @@ private fun lerp(
 private const val SYSTEM_BACK_EDGE_MARGIN_DP = 8f
 private const val SYSTEM_BACK_SCRIM_ALPHA_DARK = 0.8f
 private const val SYSTEM_BACK_SCRIM_ALPHA_LIGHT = 0.2f
+private const val DEFAULT_SURFACE_WARMUP_DELAY_MILLIS = 17L
+private const val NAV_MOTION_FRAME_TRACE_SECTION = "VC.Nav.MotionFrame"
 
 internal fun navTransitionDirection(
     command: NavCommand,
