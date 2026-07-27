@@ -234,19 +234,23 @@ and assert that:
 - completing the OS edge gesture removes `details`, presents `home`, and leaves no navigation
   failure.
 
-Android's `input` command can express a committing swipe but cannot express one continuous
-out-and-back touch stream. The host runner uses the emulator's authenticated hardware-touch
-channel for cancellation, waits for the instrumented Activity to enter its sampling window, and
-then runs the complete nine-test suite:
+Android's `input` command does not provide a repeatable predictive-gesture stream across emulator
+and system-image versions. The host runner therefore uses the emulator's authenticated
+hardware-touch channel for both commit and cancellation, waits for the instrumented Activity to
+enter its sampling window, and runs the two platform-gesture cases in isolated instrumentation
+sessions:
 
 ```bash
 tools/navigation/validate_android_predictive_back.sh
 ```
 
-The runner requires a single API 34+ Android Emulator with gesture navigation enabled. A regular
-`connectedDebugAndroidTest` run skips only the host-assisted cancellation case; the script above is
-the certification command and completed 9/9 on the Android 15 Pixel 9a AVD. The same AVD also passed
-the host-side real process-death restoration runner.
+The runner requires a single API 34+ Android Emulator with gesture navigation enabled. It
+temporarily enables the system predictive-back animation switch and restores its original value on
+every exit path. A regular `connectedDebugAndroidTest` run skips the two host-assisted edge-gesture
+cases while retaining the deterministic AndroidX progress/commit/cancel coverage and ordinary
+system-Back coverage. The script above is the real platform-gesture certification command and
+completed 2/2 on the Android 15 Pixel 9a AVD. The same AVD also passed the host-side real
+process-death restoration runner.
 
 The JVM/Robolectric suite additionally runs 100 lifecycle/transaction race rounds and verifies that
 stale transition completions cannot change the settled stack. Public-host integration tests retain

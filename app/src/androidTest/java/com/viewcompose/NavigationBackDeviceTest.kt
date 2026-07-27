@@ -142,7 +142,7 @@ class NavigationBackDeviceTest {
     @Test
     fun platformEdgeGestureProgressAndCancellationDriveRealViews() {
         assumeGestureNavigation()
-        assumeExternalCancellationGesture()
+        assumeExternalPlatformGestureRunner()
         launchHost().use { scenario ->
             scenario.onActivity { activity ->
                 activity.push(NavigationBackTestActivity.DETAILS_ROUTE)
@@ -151,7 +151,7 @@ class NavigationBackDeviceTest {
 
             val samples = sampleDestinationViewsDuring(scenario) {
                 device.executeShellCommand(
-                    "log -t $EXTERNAL_GESTURE_LOG_TAG $EXTERNAL_GESTURE_READY_MESSAGE",
+                    "log -t $EXTERNAL_GESTURE_LOG_TAG $EXTERNAL_CANCEL_GESTURE_READY_MESSAGE",
                 )
                 SystemClock.sleep(EXTERNAL_GESTURE_WINDOW_MILLIS)
             }
@@ -187,21 +187,18 @@ class NavigationBackDeviceTest {
     @Test
     fun platformEdgeGestureProgressAndCommitPopTheStack() {
         assumeGestureNavigation()
+        assumeExternalPlatformGestureRunner()
         launchHost().use { scenario ->
             scenario.onActivity { activity ->
                 activity.push(NavigationBackTestActivity.DETAILS_ROUTE)
             }
             awaitTransition()
 
-            val centerY = device.displayHeight / 2
-            val endX = (device.displayWidth * COMMIT_GESTURE_WIDTH_FRACTION).toInt()
             val samples = sampleDestinationViewsDuring(scenario) {
                 device.executeShellCommand(
-                    "input touchscreen swipe " +
-                        "$EDGE_GESTURE_START_X $centerY " +
-                        "$endX $centerY " +
-                        "$EDGE_GESTURE_DURATION_MILLIS",
+                    "log -t $EXTERNAL_GESTURE_LOG_TAG $EXTERNAL_COMMIT_GESTURE_READY_MESSAGE",
                 )
+                SystemClock.sleep(EXTERNAL_GESTURE_WINDOW_MILLIS)
             }
             awaitTransition()
 
@@ -468,12 +465,12 @@ class NavigationBackDeviceTest {
         )
     }
 
-    private fun assumeExternalCancellationGesture() {
+    private fun assumeExternalPlatformGestureRunner() {
         val enabled = InstrumentationRegistry.getArguments()
             .getString(EXTERNAL_GESTURE_ARGUMENT)
             .toBoolean()
         assumeTrue(
-            "Platform cancellation requires the emulator host gesture runner; " +
+            "Platform predictive-back gestures require the emulator host gesture runner; " +
                 "run tools/navigation/validate_android_predictive_back.sh.",
             enabled,
         )
@@ -545,13 +542,11 @@ class NavigationBackDeviceTest {
     companion object {
         private const val STRESS_ITERATIONS = 30
         private const val GESTURE_NAVIGATION_MODE = "2"
-        private const val EDGE_GESTURE_START_X = 1
-        private const val EDGE_GESTURE_DURATION_MILLIS = 1_200
-        private const val EXTERNAL_GESTURE_ARGUMENT = "platformPredictiveBackCancel"
+        private const val EXTERNAL_GESTURE_ARGUMENT = "platformPredictiveBackGesture"
         private const val EXTERNAL_GESTURE_LOG_TAG = "ViewComposeNavigationBack"
-        private const val EXTERNAL_GESTURE_READY_MESSAGE = "READY_FOR_CANCEL_GESTURE"
+        private const val EXTERNAL_CANCEL_GESTURE_READY_MESSAGE = "READY_FOR_CANCEL_GESTURE"
+        private const val EXTERNAL_COMMIT_GESTURE_READY_MESSAGE = "READY_FOR_COMMIT_GESTURE"
         private const val EXTERNAL_GESTURE_WINDOW_MILLIS = 15_000L
-        private const val COMMIT_GESTURE_WIDTH_FRACTION = 0.72f
         private const val MIN_GESTURE_TRANSLATION_PX = 1f
     }
 }

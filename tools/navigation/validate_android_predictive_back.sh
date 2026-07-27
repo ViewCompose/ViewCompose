@@ -74,44 +74,6 @@ if ! command -v ruby >/dev/null 2>&1; then
     exit 1
 fi
 
-log_tag="ViewComposeNavigationBack"
-ready_message="READY_FOR_CANCEL_GESTURE"
-"$adb_binary" -s "$device_serial" logcat -c
-
-cd "$repo_root"
-./gradlew \
-    :app:connectedDebugAndroidTest \
-    -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.NavigationBackDeviceTest \
-    -Pandroid.testInstrumentationRunnerArguments.platformPredictiveBackCancel=true \
-    --no-configuration-cache \
-    --console=plain &
-gradle_pid=$!
-
-cleanup() {
-    if kill -0 "$gradle_pid" >/dev/null 2>&1; then
-        kill "$gradle_pid" >/dev/null 2>&1 || true
-    fi
-}
-trap cleanup EXIT INT TERM
-
-gesture_ready=false
-for _ in $(seq 1 600); do
-    if ! kill -0 "$gradle_pid" >/dev/null 2>&1; then
-        wait "$gradle_pid"
-        exit $?
-    fi
-    if "$adb_binary" -s "$device_serial" logcat -d -s "$log_tag:I" '*:S' |
-        grep -q "$ready_message"; then
-        gesture_ready=true
-        break
-    fi
-    sleep 0.2
-done
-if [[ "$gesture_ready" != "true" ]]; then
-    echo "Timed out waiting for the predictive-back cancellation test." >&2
-    exit 1
-fi
-
 display_size="$(
     "$adb_binary" -s "$device_serial" shell wm size |
         sed -n 's/.*size: //p' |
@@ -171,27 +133,139 @@ send_touch() {
     fi
 }
 
-start_x=1
-center_y=$((display_height / 2))
-peak_x=$((display_width * 32 / 100))
-move_steps=12
+send_cancel_gesture() {
+    local start_x=1
+    local center_y=$((display_height / 2))
+    local peak_x=$((display_width * 32 / 100))
+    local move_steps=12
+    local step
+    local touch_x
 
-send_touch "$start_x" "$center_y" 1
-for step in $(seq 1 "$move_steps"); do
-    x=$((start_x + (peak_x - start_x) * step / move_steps))
+    send_touch "$start_x" "$center_y" 1
+    for step in $(seq 1 "$move_steps"); do
+        touch_x=$((start_x + (peak_x - start_x) * step / move_steps))
+        sleep 0.04
+        send_touch "$touch_x" "$center_y" 1
+    done
+    sleep 0.12
+    for step in $(seq $((move_steps - 1)) -1 0); do
+        touch_x=$((start_x + (peak_x - start_x) * step / move_steps))
+        sleep 0.04
+        send_touch "$touch_x" "$center_y" 1
+    done
     sleep 0.04
-    send_touch "$x" "$center_y" 1
-done
-sleep 0.12
-for step in $(seq $((move_steps - 1)) -1 0); do
-    x=$((start_x + (peak_x - start_x) * step / move_steps))
-    sleep 0.04
-    send_touch "$x" "$center_y" 1
-done
-sleep 0.04
-send_touch "$start_x" "$center_y" 0
+    send_touch "$start_x" "$center_y" 0
+}
 
-wait "$gradle_pid"
-test_exit=$?
-trap - EXIT INT TERM
-exit "$test_exit"
+send_commit_gesture() {
+    local start_x=1
+    local center_y=$((display_height / 2))
+    local end_x=$((display_width * 90 / 100))
+    local move_steps=18
+    local step
+    local touch_x
+
+    send_touch "$start_x" "$center_y" 1
+    for step in $(seq 1 "$move_steps"); do
+        touch_x=$((start_x + (end_x - start_x) * step / move_steps))
+        sleep 0.02
+        send_touch "$touch_x" "$center_y" 1
+    done
+    sleep 0.04
+    send_touch "$end_x" "$center_y" 0
+}
+
+log_tag="ViewComposeNavigationBack"
+original_back_animation="$(
+    "$adb_binary" -s "$device_serial" shell settings get global enable_back_animation |
+        tr -d '\r'
+)"
+gradle_pid=""
+
+restore_back_animation() {
+    if [[ -z "$original_back_animation" || "$original_back_animation" == "null" ]]; then
+        "$adb_binary" -s "$device_serial" shell \
+            settings delete global enable_back_animation >/dev/null
+    else
+        "$adb_binary" -s "$device_serial" shell \
+            settings put global enable_back_animation "$original_back_animation"
+    fi
+}
+
+cleanup() {
+    if [[ -n "$gradle_pid" ]] && kill -0 "$gradle_pid" >/dev/null 2>&1; then
+        kill "$gradle_pid" >/dev/null 2>&1 || true
+        wait "$gradle_pid" >/dev/null 2>&1 || true
+    fi
+    restore_back_animation
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+"$adb_binary" -s "$device_serial" shell settings put global enable_back_animation 1
+if [[ "$(
+    "$adb_binary" -s "$device_serial" shell settings get global enable_back_animation |
+        tr -d '\r'
+)" != "1" ]]; then
+    echo "Unable to enable predictive-back animations on $device_serial." >&2
+    exit 1
+fi
+
+run_platform_test() {
+    local test_method="$1"
+    local ready_message="$2"
+    local gesture_kind="$3"
+    local gesture_ready=false
+    local test_exit
+
+    "$adb_binary" -s "$device_serial" logcat -c
+    cd "$repo_root"
+    ./gradlew \
+        :app:connectedDebugAndroidTest \
+        "-Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.NavigationBackDeviceTest#$test_method" \
+        -Pandroid.testInstrumentationRunnerArguments.platformPredictiveBackGesture=true \
+        --no-configuration-cache \
+        --console=plain &
+    gradle_pid=$!
+
+    for _ in $(seq 1 600); do
+        if "$adb_binary" -s "$device_serial" logcat -d -s "$log_tag:I" '*:S' |
+            grep -q "$ready_message"; then
+            gesture_ready=true
+            break
+        fi
+        if ! kill -0 "$gradle_pid" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.2
+    done
+    if [[ "$gesture_ready" != "true" ]]; then
+        wait "$gradle_pid" >/dev/null 2>&1 || true
+        gradle_pid=""
+        echo "Timed out waiting for $test_method." >&2
+        return 1
+    fi
+
+    if [[ "$gesture_kind" == "cancel" ]]; then
+        send_cancel_gesture
+    else
+        send_commit_gesture
+    fi
+
+    set +e
+    wait "$gradle_pid"
+    test_exit=$?
+    set -e
+    gradle_pid=""
+    return "$test_exit"
+}
+
+run_platform_test \
+    platformEdgeGestureProgressAndCommitPopTheStack \
+    READY_FOR_COMMIT_GESTURE \
+    commit
+run_platform_test \
+    platformEdgeGestureProgressAndCancellationDriveRealViews \
+    READY_FOR_CANCEL_GESTURE \
+    cancel
