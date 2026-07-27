@@ -192,7 +192,7 @@ internal class TransactionalNavHostCoordinator(
         val previousMaxPaneCount = this.maxPaneCount
         return try {
             redirectActiveBackPreview()
-            redirectActiveTransition()
+            redirectActiveTransition(preserveVisualState = false)
             paneStrategy = strategy
             this.maxPaneCount = maxPaneCount
             applySettledState(snapshot, scene)
@@ -242,7 +242,7 @@ internal class TransactionalNavHostCoordinator(
         executing = true
         return try {
             redirectActiveBackPreview()
-            redirectActiveTransition()
+            redirectActiveTransition(preserveVisualState = false)
             val currentSnapshot = controller.snapshot()
             val command = controller.systemBackCommand() ?: return null
             val incomingEntry = when (command) {
@@ -617,7 +617,7 @@ internal class TransactionalNavHostCoordinator(
 
     private fun execute(command: NavCommand): NavHostNavigationResult {
         redirectActiveBackPreview()
-        redirectActiveTransition()
+        redirectActiveTransition(preserveVisualState = true)
         return when (val preparation = controller.prepare(command)) {
             is NavPreparation.NoChange -> {
                 NavHostNavigationResult.NoChange(
@@ -988,12 +988,15 @@ internal class TransactionalNavHostCoordinator(
         }
     }
 
-    private fun redirectActiveTransition() {
+    private fun redirectActiveTransition(
+        preserveVisualState: Boolean,
+    ) {
         val active = activeTransitionRecord ?: return
         finishActiveTransition(
             active = active,
             outcome = NavHostTransitionOutcome.Redirected,
-            cancelDriver = true,
+            cancelDriver = !preserveVisualState,
+            redirectDriver = preserveVisualState,
         )
     }
 
@@ -1024,15 +1027,23 @@ internal class TransactionalNavHostCoordinator(
         active: ActiveNavHostTransition,
         outcome: NavHostTransitionOutcome,
         cancelDriver: Boolean,
+        redirectDriver: Boolean = false,
     ) {
         check(activeTransitionRecord === active) {
             "Only the active navigation transition can reach a terminal state."
         }
         activeTransitionRecord = null
         val failures = mutableListOf<Throwable>()
-        if (cancelDriver) {
+        check(!cancelDriver || !redirectDriver) {
+            "A navigation transition cannot be cancelled and redirected simultaneously."
+        }
+        if (cancelDriver || redirectDriver) {
             runCatching {
-                active.handle?.cancel()
+                if (redirectDriver) {
+                    active.handle?.redirect()
+                } else {
+                    active.handle?.cancel()
+                }
             }.exceptionOrNull()?.let(failures::add)
         }
         runCatching {

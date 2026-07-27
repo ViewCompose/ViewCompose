@@ -8,6 +8,7 @@ import com.viewcompose.navigation.core.NavCommand
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavHostLifecycleState
+import com.viewcompose.navigation.core.NavLaunchMode
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.widget.core.Text
@@ -38,7 +39,7 @@ class AndroidViewNavHostTransitionDriverTest {
     @Before
     fun setUp() {
         val application = RuntimeEnvironment.getApplication()
-        val entryIds = ArrayDeque(listOf("root", "details"))
+        val entryIds = ArrayDeque(listOf("root", "details", "confirmation"))
         val controller = NavBackStackController.create(
             startDestination = NavRoute("home"),
             entryIdFactory = NavEntryIdFactory {
@@ -132,6 +133,55 @@ class AndroidViewNavHostTransitionDriverTest {
             NavHostTransitionOutcome.Completed,
             coordinator.lastTransitionResult?.outcome,
         )
+    }
+
+    @Test
+    fun `redirected navigation continues from the current visual state`() {
+        attachAndLayoutHost()
+
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        val details = coordinator.snapshot.top
+        val detailsView = session(details.id).container
+        assertEquals(80f, detailsView.translationX)
+        assertEquals(0.9f, detailsView.alpha)
+        assertEquals(0.985f, detailsView.scaleX)
+
+        coordinator.navigate(NavCommand.Push(NavRoute("confirmation")))
+        val confirmationView = session(coordinator.snapshot.top.id).container
+
+        assertEquals(
+            NavHostTransitionOutcome.Redirected,
+            coordinator.lastTransitionResult?.outcome,
+        )
+        assertEquals(80f, detailsView.translationX)
+        assertEquals(0.9f, detailsView.alpha)
+        assertEquals(0.985f, detailsView.scaleX)
+        assertEquals(80f, confirmationView.translationX)
+        assertEquals(0.9f, confirmationView.alpha)
+        assertTrue(coordinator.activeTransition != null)
+    }
+
+    @Test
+    fun `redirected visual state settles when the next command is a no-op`() {
+        attachAndLayoutHost()
+
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        val detailsView = session(coordinator.snapshot.top.id).container
+        assertEquals(80f, detailsView.translationX)
+
+        val result = coordinator.navigate(
+            NavCommand.Push(
+                route = NavRoute("details"),
+                launchMode = NavLaunchMode.SingleTop,
+            ),
+        )
+        assertTrue(result is NavHostNavigationResult.NoChange)
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(20, TimeUnit.MILLISECONDS)
+
+        assertNull(coordinator.activeTransition)
+        assertEquals(0f, detailsView.translationX)
+        assertEquals(1f, detailsView.alpha)
+        assertEquals(1f, detailsView.scaleX)
     }
 
     @Test

@@ -79,6 +79,13 @@ internal data class NavHostBackPreview(
 
 internal fun interface NavHostTransitionHandle {
     fun cancel()
+
+    /**
+     * Stops the current animator while preserving its visual properties for the next transition.
+     */
+    fun redirect() {
+        cancel()
+    }
 }
 
 internal interface NavHostBackPreviewHandle {

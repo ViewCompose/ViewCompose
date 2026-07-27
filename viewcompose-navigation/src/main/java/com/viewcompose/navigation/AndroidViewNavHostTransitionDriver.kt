@@ -9,6 +9,8 @@ internal class AndroidViewNavHostTransitionDriver(
     private val sessionStore: NavDestinationSessionStore,
     private val specProvider: () -> NavTransitionSpec,
 ) : NavHostTransitionDriver {
+    private val interruptedViews = linkedSetOf<View>()
+
     override fun start(
         transition: NavHostTransition,
         onCompleted: () -> Unit,
@@ -22,6 +24,12 @@ internal class AndroidViewNavHostTransitionDriver(
                 transition.beforeScene.visibleEntryIds,
         )
         val animatedViews = outgoing + incoming
+        val redirectedViews = interruptedViews.toSet()
+        interruptedViews.clear()
+        (animatedViews + redirectedViews).distinct().forEach { view ->
+            view.animate().cancel()
+        }
+        (redirectedViews - animatedViews.toSet()).forEach(::resetProperties)
         if (animatedViews.isEmpty()) {
             onCompleted()
             return NavHostTransitionHandle {}
@@ -34,15 +42,17 @@ internal class AndroidViewNavHostTransitionDriver(
             !sessionStore.hostView.isAttachedToWindow ||
             hostWidth <= 0
         ) {
-            animatedViews.forEach(::resetProperties)
+            (animatedViews + redirectedViews).distinct().forEach(::resetProperties)
             onCompleted()
             return NavHostTransitionHandle {}
         }
 
-        animatedViews.forEach { view ->
-            view.animate().cancel()
-            resetProperties(view)
-        }
+        outgoing
+            .filterNot(redirectedViews::contains)
+            .forEach(::resetProperties)
+        incoming
+            .filterNot(redirectedViews::contains)
+            .forEach(::resetProperties)
 
         val direction = navTransitionDirection(
             command = transition.command,
@@ -65,6 +75,7 @@ internal class AndroidViewNavHostTransitionDriver(
             if (!terminal) {
                 terminal = true
                 animatedViews.forEach(::resetProperties)
+                interruptedViews.removeAll(animatedViews.toSet())
                 onCompleted()
             }
         }
@@ -107,15 +118,36 @@ internal class AndroidViewNavHostTransitionDriver(
                 view.animate().cancel()
                 resetProperties(view)
             }
+            interruptedViews.removeAll(animatedViews.toSet())
             throw throwable
         }
 
-        return NavHostTransitionHandle {
-            if (!terminal) {
-                terminal = true
-                animatedViews.forEach { view ->
-                    view.animate().cancel()
-                    resetProperties(view)
+        return object : NavHostTransitionHandle {
+            override fun cancel() {
+                terminate(preserveVisualState = false)
+            }
+
+            override fun redirect() {
+                terminate(preserveVisualState = true)
+            }
+
+            private fun terminate(preserveVisualState: Boolean) {
+                if (!terminal) {
+                    terminal = true
+                    animatedViews.forEach { view ->
+                        view.animate().cancel()
+                        if (preserveVisualState) {
+                            interruptedViews += view
+                            view.postOnAnimation {
+                                if (interruptedViews.remove(view)) {
+                                    resetProperties(view)
+                                }
+                            }
+                        } else {
+                            interruptedViews -= view
+                            resetProperties(view)
+                        }
+                    }
                 }
             }
         }
