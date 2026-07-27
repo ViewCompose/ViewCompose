@@ -290,6 +290,73 @@ class AndroidViewNavHostTransitionDriverTest {
     }
 
     @Test
+    fun `navigation during cancel spring redirects from the rebound frame`() {
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        val details = coordinator.snapshot.top
+        attachAndLayoutHost()
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(
+                backEvent(
+                    progress = 0.2f,
+                    swipeEdge = NavHostBackSwipeEdge.Left,
+                    frameTimeMillis = 100L,
+                ),
+            ),
+        )
+        coordinator.updateBackPreview(
+            previewId = preview.id,
+            event = backEvent(
+                progress = 0.65f,
+                swipeEdge = NavHostBackSwipeEdge.Left,
+                frameTimeMillis = 150L,
+            ),
+        )
+        val detailsView = session(details.id).container
+
+        coordinator.cancelBackPreview(preview.id)
+        val reboundTranslation = detailsView.translationX
+        assertTrue(reboundTranslation > 0f)
+
+        coordinator.navigate(NavCommand.Push(NavRoute("confirmation")))
+        val confirmationView = session(coordinator.snapshot.top.id).container
+
+        assertEquals(reboundTranslation, detailsView.translationX)
+        assertTrue(coordinator.activeTransition != null)
+
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(1, TimeUnit.SECONDS)
+
+        assertEquals(0f, detailsView.translationX)
+        assertEquals(1f, detailsView.alpha)
+        assertEquals(0f, confirmationView.translationX)
+        assertEquals(1f, confirmationView.alpha)
+        assertEquals(View.VISIBLE, confirmationView.visibility)
+    }
+
+    @Test
+    fun `host destruction cancels a predictive back settle spring`() {
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        attachAndLayoutHost()
+        val detailsView = session(coordinator.snapshot.top.id).container
+        val preview = checkNotNull(
+            coordinator.beginBackPreview(
+                backEvent(
+                    progress = 0.65f,
+                    swipeEdge = NavHostBackSwipeEdge.Left,
+                ),
+            ),
+        )
+
+        coordinator.cancelBackPreview(preview.id)
+        assertTrue(detailsView.translationX > 0f)
+
+        coordinator.destroy()
+
+        assertEquals(0f, detailsView.translationX)
+        assertEquals(1f, detailsView.alpha)
+        assertEquals(1f, detailsView.scaleX)
+    }
+
+    @Test
     fun `predictive back commit continues native motion and settles pop`() {
         val root = coordinator.snapshot.top
         coordinator.navigate(NavCommand.Push(NavRoute("details")))
@@ -407,13 +474,14 @@ class AndroidViewNavHostTransitionDriverTest {
     private fun backEvent(
         progress: Float,
         swipeEdge: NavHostBackSwipeEdge,
+        frameTimeMillis: Long = 24L,
     ): NavHostBackEvent {
         return NavHostBackEvent(
             touchX = 8f,
             touchY = 16f,
             progress = progress,
             swipeEdge = swipeEdge,
-            frameTimeMillis = 24L,
+            frameTimeMillis = frameTimeMillis,
         )
     }
 

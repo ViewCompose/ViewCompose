@@ -550,6 +550,9 @@ internal class TransactionalNavHostCoordinator(
                 outcome = NavHostTransitionOutcome.HostDestroyed,
             )
         }
+        runCatching {
+            transitionDriver.destroy()
+        }.exceptionOrNull()?.let(failures::add)
         try {
             runCatching {
                 sessionStore.destroy()

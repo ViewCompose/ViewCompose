@@ -96,24 +96,68 @@ data class NavMotionEasing(
 }
 
 /**
- * Gesture-driven motion used before a predictive Back transaction commits.
+ * Physics used to settle gesture-driven navigation motion.
  */
-data class NavPredictiveBackSpec(
-    val motion: NavDestinationMotionSpec,
-    val progressEasing: NavMotionEasing = NavMotionEasing.Linear,
-    val cancelDurationMillis: Long = 180L,
-    val cancelEasing: NavMotionEasing = NavMotionEasing.Standard,
+data class NavSpringSpec(
+    val stiffness: Float,
+    val dampingRatio: Float,
+    val maxDurationMillis: Long = 500L,
 ) {
     init {
-        require(cancelDurationMillis >= 0L) {
-            "Predictive Back cancel duration must not be negative."
+        require(stiffness.isFinite() && stiffness > 0f) {
+            "Navigation spring stiffness must be finite and greater than zero."
+        }
+        require(dampingRatio.isFinite() && dampingRatio > 0f) {
+            "Navigation spring damping ratio must be finite and greater than zero."
+        }
+        require(maxDurationMillis > 0L) {
+            "Navigation spring maximum duration must be greater than zero."
+        }
+    }
+}
+
+/**
+ * Gesture-driven motion used before and immediately after a predictive Back transaction settles.
+ *
+ * Progress velocity is estimated from [velocitySampleWindowMillis] and capped by
+ * [maxProgressVelocity] before it becomes the initial velocity of [commitSpring] or
+ * [cancelSpring].
+ */
+data class NavPredictiveBackSpec(
+    val incomingStart: NavDestinationTransform,
+    val outgoingEnd: NavDestinationTransform,
+    val progressEasing: NavMotionEasing = NavMotionEasing.Linear,
+    val commitSpring: NavSpringSpec = DefaultCommitSpring,
+    val cancelSpring: NavSpringSpec = DefaultCancelSpring,
+    val velocitySampleWindowMillis: Long = 100L,
+    val maxProgressVelocity: Float = 4f,
+) {
+    init {
+        require(velocitySampleWindowMillis > 0L) {
+            "Predictive Back velocity sample window must be greater than zero."
+        }
+        require(maxProgressVelocity.isFinite() && maxProgressVelocity > 0f) {
+            "Predictive Back maximum progress velocity must be finite and greater than zero."
         }
     }
 
+    internal val isDisabled: Boolean
+        get() = incomingStart.isIdentity && outgoingEnd.isIdentity
+
     companion object {
+        private val DefaultCommitSpring = NavSpringSpec(
+            stiffness = 700f,
+            dampingRatio = 1f,
+            maxDurationMillis = 500L,
+        )
+        private val DefaultCancelSpring = NavSpringSpec(
+            stiffness = 900f,
+            dampingRatio = 1f,
+            maxDurationMillis = 450L,
+        )
         val None = NavPredictiveBackSpec(
-            motion = NavDestinationMotionSpec.None,
-            cancelDurationMillis = 0L,
+            incomingStart = NavDestinationTransform(),
+            outgoingEnd = NavDestinationTransform(),
         )
     }
 }
@@ -240,18 +284,15 @@ data class NavTransitionSpec(
             ),
         )
         private val DefaultPredictiveBack = NavPredictiveBackSpec(
-            motion = NavDestinationMotionSpec(
-                durationMillis = 220L,
-                incomingStart = NavDestinationTransform(
-                    travelFraction = 0.04f,
-                    alpha = 0.92f,
-                    scale = 0.99f,
-                ),
-                outgoingEnd = NavDestinationTransform(
-                    travelFraction = 0.1f,
-                    alpha = 0.96f,
-                    scale = 0.985f,
-                ),
+            incomingStart = NavDestinationTransform(
+                travelFraction = 0.04f,
+                alpha = 0.92f,
+                scale = 0.99f,
+            ),
+            outgoingEnd = NavDestinationTransform(
+                travelFraction = 0.1f,
+                alpha = 0.96f,
+                scale = 0.985f,
             ),
             progressEasing = NavMotionEasing(
                 x1 = 0.2f,

@@ -543,7 +543,9 @@ class NavigationBackDeviceTest {
     }
 
     private fun awaitBackCancellation() {
-        SystemClock.sleep(NavTransitionSpec.Default.predictiveBack.cancelDurationMillis + 80L)
+        SystemClock.sleep(
+            NavTransitionSpec.Default.predictiveBack.cancelSpring.maxDurationMillis + 80L,
+        )
         waitForUiIdle()
     }
 

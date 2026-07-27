@@ -5,18 +5,28 @@ import android.os.Looper
 import android.view.View
 import android.view.animation.Interpolator
 import android.view.animation.PathInterpolator
+import androidx.dynamicanimation.animation.FloatValueHolder
+import androidx.dynamicanimation.animation.SpringAnimation
+import androidx.dynamicanimation.animation.SpringForce
 import com.viewcompose.navigation.core.NavCommand
+import kotlin.math.abs
 
 internal class AndroidViewNavHostTransitionDriver(
     private val sessionStore: NavDestinationSessionStore,
     private val specProvider: () -> NavTransitionSpec,
 ) : NavHostTransitionDriver {
     private val interruptedViews = linkedSetOf<View>()
+    private val backSettleController = BackProgressSpringController(
+        interruptedViews = interruptedViews,
+        preserveForNextTransition = ::preserveForNextTransition,
+        resetView = ::resetProperties,
+    )
 
     override fun start(
         transition: NavHostTransition,
         onCompleted: () -> Unit,
     ): NavHostTransitionHandle {
+        backSettleController.cancelActive(preserveVisualState = true)
         val outgoing = destinationViews(
             transition.beforeScene.visibleEntryIds -
                 transition.afterScene.visibleEntryIds,
@@ -154,6 +164,7 @@ internal class AndroidViewNavHostTransitionDriver(
         preview: NavHostBackPreview,
         initialEvent: NavHostBackEvent,
     ): NavHostBackPreviewHandle {
+        backSettleController.cancelActive(preserveVisualState = false)
         val outgoing = destinationViews(
             preview.beforeScene.visibleEntryIds -
                 preview.afterScene.visibleEntryIds,
@@ -185,9 +196,14 @@ internal class AndroidViewNavHostTransitionDriver(
                 views.forEach(::preserveForNextTransition)
             },
             resetView = ::resetProperties,
+            settleController = backSettleController,
         ).also { handle ->
             handle.update(initialEvent)
         }
+    }
+
+    override fun destroy() {
+        backSettleController.cancelActive(preserveVisualState = false)
     }
 
     private fun preserveForNextTransition(view: View) {
@@ -221,7 +237,7 @@ private fun View.applyTransform(
     transform: NavDestinationTransform,
     translationX: Float,
 ) {
-    this.translationX = translationX
+    this.translationX = if (translationX == 0f) 0f else translationX
     alpha = transform.alpha
     scaleX = transform.scale
     scaleY = transform.scale
@@ -242,9 +258,13 @@ private class AndroidBackPreviewHandle(
     private val interruptedViews: MutableSet<View>,
     private val preserveForNextTransition: (List<View>) -> Unit,
     private val resetView: (View) -> Unit,
+    private val settleController: BackProgressSpringController,
 ) : NavHostBackPreviewHandle {
-    private val motion = spec.motion
     private val progressInterpolator = spec.progressEasing.toInterpolator()
+    private val velocityTracker = NavProgressVelocityTracker(
+        sampleWindowMillis = spec.velocitySampleWindowMillis,
+        maxAbsoluteVelocity = spec.maxProgressVelocity,
+    )
     private var latestEvent = NavHostBackEvent(
         touchX = 0f,
         touchY = 0f,
@@ -253,6 +273,7 @@ private class AndroidBackPreviewHandle(
         frameTimeMillis = 0L,
     )
     private var latestVisualProgress = 0f
+    private var latestProgressVelocity = 0f
     private var terminal = false
     private var committing = false
 
@@ -263,6 +284,10 @@ private class AndroidBackPreviewHandle(
         latestEvent = event
         latestVisualProgress = progressInterpolator.getInterpolation(event.progress)
             .coerceIn(0f, 1f)
+        latestProgressVelocity = velocityTracker.add(
+            frameTimeMillis = event.frameTimeMillis,
+            progress = latestVisualProgress,
+        )
         if (!canAnimate) {
             return
         }
@@ -284,42 +309,29 @@ private class AndroidBackPreviewHandle(
         }
         if (
             !canAnimate ||
-            motion.isDisabled ||
-            spec.cancelDurationMillis == 0L ||
+            spec.isDisabled ||
             latestVisualProgress <= 0f ||
             outgoing.isEmpty()
         ) {
             reset()
             return
         }
-        interruptedViews += outgoing
-        val duration = (spec.cancelDurationMillis * latestVisualProgress)
-            .toLong()
-            .coerceAtLeast(1L)
-        val interpolator = spec.cancelEasing.toInterpolator()
-        val completionView = outgoing.last()
-        val finish = Runnable {
-            outgoing.forEach { view ->
-                if (interruptedViews.remove(view)) {
-                    resetView(view)
-                }
-            }
-        }
-        outgoing.forEach { view ->
-            val animator = view.animate()
-                .translationX(0f)
-                .alpha(1f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .setDuration(duration)
-                .setInterpolator(interpolator)
-                .withLayer()
-            if (view === completionView) {
-                animator.withEndAction(finish)
-            }
-            animator.start()
-        }
-        Handler(Looper.getMainLooper()).postDelayed(finish, duration + 32L)
+        settleController.start(
+            views = outgoing,
+            initialProgress = latestVisualProgress,
+            targetProgress = 0f,
+            initialVelocity = latestProgressVelocity,
+            springSpec = spec.cancelSpring,
+            onUpdate = { visualProgress ->
+                applyOutgoingProgress(
+                    event = latestEvent,
+                    visualProgress = visualProgress,
+                )
+            },
+            onCompleted = {
+                outgoing.forEach(resetView)
+            },
+        )
     }
 
     override fun redirect() {
@@ -362,7 +374,7 @@ private class AndroidBackPreviewHandle(
         val remainingFraction = 1f - latestVisualProgress
         if (
             !canAnimate ||
-            motion.isDisabled ||
+            spec.isDisabled ||
             remainingFraction <= 0f
         ) {
             terminal = true
@@ -371,62 +383,38 @@ private class AndroidBackPreviewHandle(
             return NavHostTransitionHandle {}
         }
 
-        val direction = backPreviewOutgoingDirection(
-            swipeEdge = latestEvent.swipeEdge,
-            layoutDirection = layoutDirection,
-        )
-        val duration = (motion.durationMillis * remainingFraction)
-            .toLong()
-            .coerceAtLeast(1L)
-        val interpolator = motion.easing.toInterpolator()
-        val completionView = incoming.lastOrNull() ?: outgoing.lastOrNull()
-        val finish = Runnable {
-            if (!terminal) {
-                terminal = true
-                reset()
-                onCompleted()
-            }
+        val animatedViews = outgoing + incoming
+        if (animatedViews.isEmpty()) {
+            terminal = true
+            reset()
+            onCompleted()
+            return NavHostTransitionHandle {}
         }
+        lateinit var settleHandle: BackProgressSpringHandle
         try {
-            if (completionView == null) {
-                terminal = true
-                reset()
-                onCompleted()
-                return NavHostTransitionHandle {}
-            }
-            outgoing.forEach { view ->
-                val animator = view.animate()
-                    .translationX(
-                        direction * travelWidth * motion.outgoingEnd.travelFraction,
+            settleHandle = settleController.start(
+                views = animatedViews,
+                initialProgress = latestVisualProgress,
+                targetProgress = 1f,
+                initialVelocity = latestProgressVelocity,
+                springSpec = spec.commitSpring,
+                onUpdate = { visualProgress ->
+                    applyProgress(
+                        event = latestEvent,
+                        visualProgress = visualProgress,
                     )
-                    .alpha(motion.outgoingEnd.alpha)
-                    .scaleX(motion.outgoingEnd.scale)
-                    .scaleY(motion.outgoingEnd.scale)
-                    .setDuration(duration)
-                    .setInterpolator(interpolator)
-                    .withLayer()
-                if (view === completionView) {
-                    animator.withEndAction(finish)
+                },
+                onCompleted = {
+                    if (!terminal) {
+                        terminal = true
+                        reset()
+                        onCompleted()
+                    }
                 }
-                animator.start()
-            }
-            incoming.forEach { view ->
-                val animator = view.animate()
-                    .translationX(0f)
-                    .alpha(1f)
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(duration)
-                    .setInterpolator(interpolator)
-                    .withLayer()
-                if (view === completionView) {
-                    animator.withEndAction(finish)
-                }
-                animator.start()
-            }
+            )
         } catch (throwable: Throwable) {
             terminal = true
-            (outgoing + incoming).forEach { view -> view.animate().cancel() }
+            animatedViews.forEach { view -> view.animate().cancel() }
             reset()
             throw throwable
         }
@@ -442,11 +430,9 @@ private class AndroidBackPreviewHandle(
             private fun terminate(preserveVisualState: Boolean) {
                 if (!terminal) {
                     terminal = true
-                    val animatedViews = outgoing + incoming
                     animatedViews.forEach { view -> view.animate().cancel() }
-                    if (preserveVisualState) {
-                        preserveForNextTransition(animatedViews)
-                    } else {
+                    settleHandle.cancel(preserveVisualState)
+                    if (!preserveVisualState) {
                         reset()
                     }
                 }
@@ -464,20 +450,39 @@ private class AndroidBackPreviewHandle(
         )
         outgoing.forEach { view ->
             view.applyTransform(
-                transform = motion.outgoingEnd.interpolateFromIdentity(visualProgress),
+                transform = spec.outgoingEnd.interpolateFromIdentity(visualProgress),
                 translationX = direction *
                     travelWidth *
-                    motion.outgoingEnd.travelFraction *
+                    spec.outgoingEnd.travelFraction *
                     visualProgress,
             )
         }
         incoming.forEach { view ->
             view.applyTransform(
-                transform = motion.incomingStart.interpolateToIdentity(visualProgress),
+                transform = spec.incomingStart.interpolateToIdentity(visualProgress),
                 translationX = -direction *
                     travelWidth *
-                    motion.incomingStart.travelFraction *
+                    spec.incomingStart.travelFraction *
                     (1f - visualProgress),
+            )
+        }
+    }
+
+    private fun applyOutgoingProgress(
+        event: NavHostBackEvent,
+        visualProgress: Float,
+    ) {
+        val direction = backPreviewOutgoingDirection(
+            swipeEdge = event.swipeEdge,
+            layoutDirection = layoutDirection,
+        )
+        outgoing.forEach { view ->
+            view.applyTransform(
+                transform = spec.outgoingEnd.interpolateFromIdentity(visualProgress),
+                translationX = direction *
+                    travelWidth *
+                    spec.outgoingEnd.travelFraction *
+                    visualProgress,
             )
         }
     }
@@ -487,6 +492,176 @@ private class AndroidBackPreviewHandle(
             interruptedViews -= view
             resetView(view)
         }
+    }
+}
+
+private fun interface BackProgressSpringHandle {
+    fun cancel(preserveVisualState: Boolean)
+}
+
+private class BackProgressSpringController(
+    private val interruptedViews: MutableSet<View>,
+    private val preserveForNextTransition: (View) -> Unit,
+    private val resetView: (View) -> Unit,
+) {
+    private var active: ActiveSpring? = null
+
+    fun start(
+        views: List<View>,
+        initialProgress: Float,
+        targetProgress: Float,
+        initialVelocity: Float,
+        springSpec: NavSpringSpec,
+        onUpdate: (Float) -> Unit,
+        onCompleted: () -> Unit,
+    ): BackProgressSpringHandle {
+        cancelActive(preserveVisualState = false)
+        val animatedViews = views.distinct()
+        if (
+            animatedViews.isEmpty() ||
+            abs(targetProgress - initialProgress) <= MIN_PROGRESS_CHANGE
+        ) {
+            onUpdate(targetProgress)
+            onCompleted()
+            return BackProgressSpringHandle {}
+        }
+
+        interruptedViews += animatedViews
+        lateinit var run: BackProgressSpringRun
+        run = BackProgressSpringRun(
+            initialProgress = initialProgress,
+            targetProgress = targetProgress,
+            initialVelocity = initialVelocity,
+            springSpec = springSpec,
+            onUpdate = onUpdate,
+            onCompleted = {
+                val current = active
+                if (current?.run === run) {
+                    active = null
+                    interruptedViews.removeAll(current.views.toSet())
+                    onCompleted()
+                }
+            },
+        )
+        active = ActiveSpring(
+            run = run,
+            views = animatedViews,
+        )
+        try {
+            run.start()
+        } catch (throwable: Throwable) {
+            active = null
+            interruptedViews.removeAll(animatedViews.toSet())
+            animatedViews.forEach(resetView)
+            throw throwable
+        }
+        return BackProgressSpringHandle { preserveVisualState ->
+            cancel(
+                expectedRun = run,
+                preserveVisualState = preserveVisualState,
+            )
+        }
+    }
+
+    fun cancelActive(preserveVisualState: Boolean) {
+        val current = active ?: return
+        cancel(
+            expectedRun = current.run,
+            preserveVisualState = preserveVisualState,
+        )
+    }
+
+    private fun cancel(
+        expectedRun: BackProgressSpringRun,
+        preserveVisualState: Boolean,
+    ) {
+        val current = active?.takeIf { active -> active.run === expectedRun } ?: return
+        active = null
+        current.run.cancel()
+        interruptedViews.removeAll(current.views.toSet())
+        if (preserveVisualState) {
+            current.views.forEach(preserveForNextTransition)
+        } else {
+            current.views.forEach(resetView)
+        }
+    }
+
+    private data class ActiveSpring(
+        val run: BackProgressSpringRun,
+        val views: List<View>,
+    )
+
+    private companion object {
+        const val MIN_PROGRESS_CHANGE = 0.0001f
+    }
+}
+
+private class BackProgressSpringRun(
+    initialProgress: Float,
+    private val targetProgress: Float,
+    initialVelocity: Float,
+    springSpec: NavSpringSpec,
+    private val onUpdate: (Float) -> Unit,
+    private val onCompleted: () -> Unit,
+) {
+    private val handler = Handler(Looper.getMainLooper())
+    private val valueHolder = FloatValueHolder(initialProgress)
+    private val animation = SpringAnimation(valueHolder).apply {
+        spring = SpringForce(targetProgress).apply {
+            stiffness = springSpec.stiffness
+            dampingRatio = springSpec.dampingRatio
+        }
+        setStartVelocity(initialVelocity)
+        setMinValue(0f)
+        setMaxValue(1f)
+        setMinimumVisibleChange(MIN_VISIBLE_PROGRESS_CHANGE)
+        addUpdateListener { _, value, _ ->
+            if (!terminal) {
+                onUpdate(value.coerceIn(0f, 1f))
+            }
+        }
+        addEndListener { _, _, _, _ ->
+            finish()
+        }
+    }
+    private val timeout = Runnable {
+        if (!terminal) {
+            terminal = true
+            animation.cancel()
+            onUpdate(targetProgress)
+            onCompleted()
+        }
+    }
+    private val maxDurationMillis = springSpec.maxDurationMillis
+    private var terminal = false
+
+    fun start() {
+        onUpdate(valueHolder.value.coerceIn(0f, 1f))
+        animation.start()
+        handler.postDelayed(timeout, maxDurationMillis)
+    }
+
+    fun cancel() {
+        if (terminal) {
+            return
+        }
+        terminal = true
+        handler.removeCallbacks(timeout)
+        animation.cancel()
+    }
+
+    private fun finish() {
+        if (terminal) {
+            return
+        }
+        terminal = true
+        handler.removeCallbacks(timeout)
+        onUpdate(targetProgress)
+        onCompleted()
+    }
+
+    private companion object {
+        const val MIN_VISIBLE_PROGRESS_CHANGE = 0.001f
     }
 }
 

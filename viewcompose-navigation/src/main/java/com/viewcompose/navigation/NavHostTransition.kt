@@ -123,6 +123,8 @@ internal interface NavHostTransitionDriver {
         preview: NavHostBackPreview,
         initialEvent: NavHostBackEvent,
     ): NavHostBackPreviewHandle
+
+    fun destroy() = Unit
 }
 
 internal object ImmediateNavHostTransitionDriver : NavHostTransitionDriver {
