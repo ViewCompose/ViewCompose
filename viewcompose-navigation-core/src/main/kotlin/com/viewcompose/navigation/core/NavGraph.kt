@@ -9,11 +9,17 @@ annotation class NavGraphDsl
 
 sealed interface NavGraphNode {
     val route: String
+    val deepLinks: List<NavDeepLink>
 }
 
 class NavDestination internal constructor(
     override val route: String,
+    deepLinks: List<NavDeepLink>,
 ) : NavGraphNode {
+    override val deepLinks: List<NavDeepLink> = Collections.unmodifiableList(
+        ArrayList(deepLinks),
+    )
+
     init {
         require(route.isNotBlank()) {
             "Navigation destination route must not be blank."
@@ -21,24 +27,37 @@ class NavDestination internal constructor(
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is NavDestination && route == other.route
+        return other is NavDestination &&
+            route == other.route &&
+            deepLinks == other.deepLinks
     }
 
-    override fun hashCode(): Int = route.hashCode()
+    override fun hashCode(): Int {
+        var result = route.hashCode()
+        result = 31 * result + deepLinks.hashCode()
+        return result
+    }
 
-    override fun toString(): String = "NavDestination(route=$route)"
+    override fun toString(): String {
+        return "NavDestination(route=$route, deepLinks=$deepLinks)"
+    }
 }
 
 class NavGraph internal constructor(
     override val route: String,
     val startDestination: NavRoute,
     children: List<NavGraphNode>,
+    deepLinks: List<NavDeepLink>,
 ) : NavGraphNode {
+    override val deepLinks: List<NavDeepLink> = Collections.unmodifiableList(
+        ArrayList(deepLinks),
+    )
     val children: List<NavGraphNode> = Collections.unmodifiableList(
         ArrayList(children),
     )
 
     private val routeIndex: Map<String, IndexedNode>
+    private val deepLinkTargets: List<NavDeepLinkTarget>
 
     init {
         require(route.isNotBlank()) {
@@ -54,6 +73,21 @@ class NavGraph internal constructor(
             ancestorGraphRoutes = emptyList(),
         )
         routeIndex = Collections.unmodifiableMap(mutableIndex)
+        val registeredPatterns = mutableSetOf<String>()
+        deepLinkTargets = Collections.unmodifiableList(
+            mutableIndex.values.flatMap { indexed ->
+                indexed.node.deepLinks.map { deepLink ->
+                    check(registeredPatterns.add(deepLink.uriPattern)) {
+                        "Navigation deep-link pattern '${deepLink.uriPattern}' is registered " +
+                            "more than once."
+                    }
+                    NavDeepLinkTarget(
+                        routeName = indexed.node.route,
+                        deepLink = deepLink,
+                    )
+                }
+            },
+        )
     }
 
     fun resolve(route: NavRoute): NavGraphResolution {
@@ -80,6 +114,13 @@ class NavGraph internal constructor(
     }
 
     fun contains(routeName: String): Boolean = routeName in routeIndex
+
+    fun resolveDeepLink(uri: String): NavDeepLinkResolution {
+        return resolveDeepLinkTargets(
+            uri = uri,
+            targets = deepLinkTargets,
+        )
+    }
 
     private fun resolveStartDestination(
         graphPath: List<NavRoute>,
@@ -169,18 +210,25 @@ class NavGraph internal constructor(
         return other is NavGraph &&
             route == other.route &&
             startDestination == other.startDestination &&
-            children == other.children
+            children == other.children &&
+            deepLinks == other.deepLinks
     }
 
     override fun hashCode(): Int {
         var result = route.hashCode()
         result = 31 * result + startDestination.hashCode()
         result = 31 * result + children.hashCode()
+        result = 31 * result + deepLinks.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "NavGraph(route=$route, startDestination=$startDestination, children=$children)"
+        return "NavGraph(" +
+            "route=$route, " +
+            "startDestination=$startDestination, " +
+            "children=$children, " +
+            "deepLinks=$deepLinks" +
+            ")"
     }
 
     private data class IndexedNode(
@@ -228,21 +276,30 @@ class NavGraphResolution internal constructor(
 class NavGraphBuilder internal constructor(
     private val route: String,
     private val startDestination: NavRoute,
+    private val deepLinks: List<NavDeepLink>,
 ) {
     private val children = mutableListOf<NavGraphNode>()
 
-    fun destination(route: String) {
-        children += NavDestination(route)
+    fun destination(
+        route: String,
+        deepLinks: List<NavDeepLink> = emptyList(),
+    ) {
+        children += NavDestination(
+            route = route,
+            deepLinks = deepLinks,
+        )
     }
 
     fun navigation(
         route: String,
         startDestination: NavRoute,
+        deepLinks: List<NavDeepLink> = emptyList(),
         builder: NavGraphBuilder.() -> Unit,
     ) {
         children += NavGraphBuilder(
             route = route,
             startDestination = startDestination,
+            deepLinks = deepLinks,
         ).apply(builder).build()
     }
 
@@ -251,6 +308,7 @@ class NavGraphBuilder internal constructor(
             route = route,
             startDestination = startDestination,
             children = children,
+            deepLinks = deepLinks,
         )
     }
 }
@@ -258,10 +316,12 @@ class NavGraphBuilder internal constructor(
 fun navGraph(
     route: String,
     startDestination: NavRoute,
+    deepLinks: List<NavDeepLink> = emptyList(),
     builder: NavGraphBuilder.() -> Unit,
 ): NavGraph {
     return NavGraphBuilder(
         route = route,
         startDestination = startDestination,
+        deepLinks = deepLinks,
     ).apply(builder).build()
 }
