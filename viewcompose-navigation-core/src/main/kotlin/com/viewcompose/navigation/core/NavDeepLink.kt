@@ -617,4 +617,4 @@ private fun hostsMatch(expected: String?, actual: String?): Boolean {
 
 private fun placeholderToken(index: Int): String = "__vc_deep_link_argument_${index}__"
 
-private val PlaceholderRegex = Regex("\\{([A-Za-z][A-Za-z0-9_]*)}")
+private val PlaceholderRegex = Regex("\\{([A-Za-z][A-Za-z0-9_]*)\\}")
