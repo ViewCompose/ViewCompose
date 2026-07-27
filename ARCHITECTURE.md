@@ -305,13 +305,14 @@ flowchart TD
 2. AndroidX `LifecycleOwner/ViewModelStoreOwner/SavedStateRegistryOwner`、系统返回分发和页面 View 容器只能进入后续 Android 导航集成模块。
 3. 一个 destination 对应一个独立页面 `RenderSession`；禁止把完整返回栈作为根 Session 中普通条件分支实现。
 4. 导航必须走 prepare/commit/rollback 两阶段事务；候选页面首次渲染成功前不得发布新返回栈或暂停当前页面。
-5. 被隐藏但仍在栈中的页面保持 `CREATED` 并保留状态所有权；永久移除且退出转场完成后才进入 `DESTROYED` 并释放资源。
+5. 被隐藏但仍在栈中的页面保持 `CREATED` 并保留状态所有权；自适应窗格场景中的多个可交互页面可以同时为 `RESUMED`；永久移除且退出转场完成后才进入 `DESTROYED` 并释放资源。
 6. Activity/Window 仅是根平台宿主，不作为 destination；导航稳定前不得改变现有 Activity/Fragment 宿主入口。
 7. 候选 destination 必须先在未挂载容器中同步完成首帧，再以隐藏状态 staged；回滚必须同时释放页面 Session 与 entry owner。
 8. 已提交 destination 复用页面 Session 时，必须在显式刷新路径更新最新 `UiLocalSnapshot` 与内容闭包，禁止复用首次创建时的旧环境。
 9. `pop` 发布新返回栈前必须先刷新即将重新显示的已有页面；刷新失败时保留原返回栈、当前可见页和生命周期。
 10. 导航执行期间产生的重入命令必须进入主线程串行队列；失败候选渲染期间产生的命令随候选一起丢弃，禁止作用到旧返回栈。
 11. 返回栈提交后的 effect 应用若发生不可恢复异常，协调器必须进入 `Failed` 并拒绝后续命令，禁止在部分提交状态继续运行。
+12. 自适应多窗格只能改变同一已提交返回栈的可见集合与原生 View 布局；禁止建立平行导航状态、重建可见 entry owner，或让窗格策略引用活动栈外 entry。
 
 详细规范见 [NAVIGATION.md](/Users/gzq/AndroidStudioProjects/UIFramework/NAVIGATION.md)。
 

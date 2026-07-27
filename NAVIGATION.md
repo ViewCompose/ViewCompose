@@ -39,6 +39,8 @@ Current feature-branch status:
 - Stage 7A nested graph kernel and transactional leaf resolution: complete
 - Stage 7B graph-scoped lifecycle and state ownership: complete
 - Stage 8 independently retained tab back stacks: complete
+- Stage 9 strict URI deep links and Android `VIEW` intents: complete
+- Stage 10 adaptive native View panes: complete
 
 ## 2. P0 delivery plan
 
@@ -55,7 +57,7 @@ Current feature-branch status:
 ### Stage 2: page lifecycle kernel
 
 - host lifecycle caps destination lifecycle
-- exactly one interactive `RESUMED` destination
+- every interactive destination in the settled pane scene is `RESUMED`
 - visible transition participants remain at least `STARTED`
 - retained hidden destinations remain `CREATED`
 - removed destinations become `DESTROYED`
@@ -90,11 +92,11 @@ revealed by `pop`, applies host lifecycle caps, and serializes navigation reques
 page is rendering. A destination render failure rolls back the pure back-stack transaction and
 discards commands emitted by that failed candidate.
 
-The coordinator also owns transition retention. After the stack commits, it publishes an immutable
-transition scene containing the outgoing page, incoming page, retained entries, visibility set, and
-layer order. Both transition participants remain visible; the incoming page is the only interactive
-`RESUMED` destination and the outgoing page remains `STARTED`. Permanently removed sessions are
-destroyed only when the transition reaches a terminal result.
+The coordinator also owns transition retention. After the stack commits, it publishes immutable
+before/after pane scenes plus retained entries, their visibility union, and layer order. Every
+destination in the committed after-scene is interactive and `RESUMED`; transition-only destinations
+remain `STARTED`. Permanently removed sessions are destroyed only when the transition reaches a
+terminal result.
 
 Transition drivers are cancellable policy adapters. Completion settles the committed target;
 explicit cancellation also settles that target and never rolls the stack back. A newer navigation
@@ -184,8 +186,8 @@ Predictive Back adds a preview phase before that command:
 
 1. gesture start exposes the current top and either its previous destination or the previous stack's
    top without changing the committed stack set;
-2. the outgoing top remains the only interactive `RESUMED` destination while the revealed page is
-   visible at `STARTED`;
+2. every destination in the committed before-scene remains interactive and `RESUMED`, while
+   destinations visible only in the after-scene remain `STARTED`;
 3. progress updates only the native View transition driver;
 4. cancellation resets View properties, visibility, and lifecycle to the committed snapshot;
 5. completion refreshes the revealed destination, commits the prepared Back command, and continues
@@ -284,8 +286,8 @@ The implementation order is:
 
 1. nested graphs and graph-scoped ownership;
 2. multiple retained tab back stacks — complete;
-3. URI deep-link matching through the graph resolver;
-4. adaptive multi-pane placement over the same committed entries.
+3. URI deep-link matching through the graph resolver — complete;
+4. adaptive multi-pane placement over the same committed entries — complete.
 
 ### Stage 7A: nested graph kernel
 
@@ -393,10 +395,11 @@ navController.selectStack(
 )
 ```
 
-Each retained entry and graph owner remains attached to the same host. Only the active stack's top
-is visible, interactive, and `RESUMED`; every inactive stack is hidden and capped at `CREATED`.
-Selecting a stack in `Preserve` mode resumes it exactly where it was left. Reselecting with
-`PopToRoot` destroys only entries above that stack's root and does not alter other stacks.
+Each retained entry and graph owner remains attached to the same host. The active stack's resolved
+pane scene is visible, interactive, and `RESUMED`; every inactive stack is hidden and capped at
+`CREATED`. The default single-pane policy resolves only the top. Selecting a stack in `Preserve`
+mode resumes it exactly where it was left. Reselecting with `PopToRoot` destroys only entries above
+that stack's root and does not alter other stacks.
 
 Selection history is stable, excludes the active stack, and is saved with the complete stack set.
 With `PreviousStack`, system and predictive Back at a stack root reveal and commit the newest
@@ -407,6 +410,73 @@ selection, histories, sessions, and owners.
 The pure-core, Robolectric/public-host, and Android process-death suites cover stack isolation,
 reselection, transaction rollback, inactive lifecycle ownership, ordinary and predictive Back, and
 format-4 restoration of all stack and owner state.
+
+### Stage 9: strict graph deep links
+
+`NavDeepLink` registers allowlisted URI patterns on graphs or destinations. Matching is strict:
+scheme, host, optional port, path segments, and query keys must match the registered pattern.
+Placeholders occupy a complete path segment or query value and decode into declared
+`Text/Int/Long/Boolean/Float/Double` route arguments. Malformed encoding, fragments, user info,
+duplicate query values, invalid typed values, ambiguous patterns, and attempts to fall through from
+a more-specific failed pattern to a broader pattern are rejected.
+
+`NavCommand.OpenDeepLink` applies route mutation, target-stack selection, and selection-history
+updates in one prepare/commit/rollback transaction. `NavHostController.navigateDeepLink` accepts a
+string, Android `Uri`, or Android `ACTION_VIEW` `Intent`; all three use the same graph resolver and
+transaction boundary. Render failure therefore restores the complete previous stack set rather
+than publishing a partially selected tab.
+
+The pure-core randomized model includes deep-link operations in 128,000 deterministic transactions.
+The Android certification launches a real browsable intent, rejects a malformed typed argument
+without changing state, switches stacks through another deep link, and returns through system Back:
+
+```bash
+ANDROID_SERIAL=<device> tools/navigation/validate_android_deep_links.sh
+```
+
+### Stage 10: adaptive native View panes
+
+`NavPaneStrategy` resolves an immutable `NavPaneScene` over the active committed stack. Scenes use
+contiguous `Primary`, `Secondary`, and `Tertiary` roles, may reference only entries in that stack,
+and must include its top. `NavPaneStrategies.Single` preserves classic behavior;
+`NavPaneStrategies.BackStack` exposes the newest one to three entries.
+
+Android `NavPanePolicy` converts native host width and density into a pane count using a minimum pane
+width, maximum count, and spacing. `NavHost` defaults to `NavPanePolicy.Single`; applications opt in
+with `NavPanePolicy.Adaptive` or a custom policy:
+
+```kotlin
+NavHost(
+    controller = navController,
+    panePolicy = NavPanePolicy(
+        minPaneWidthDp = 320f,
+        maxPaneCount = 3,
+        paneSpacingDp = 8f,
+    ),
+) { entry ->
+    Destination(entry)
+}
+```
+
+Width changes republish only placement and lifecycle effects over the same committed entries.
+They do not create another stack, replace destination containers, or recreate lifecycle, ViewModel,
+SavedState, or saveable-state owners. Every settled pane is interactive and `RESUMED`; retained
+entries outside the pane scene are hidden and `CREATED`.
+
+Navigation and predictive Back carry both before/after pane scenes. Their visibility union remains
+attached through the terminal transition, while the native View driver animates only entries that
+actually enter or leave; shared panes are never treated as outgoing pages. The host lays out equal
+native panes with exact pixel remainder distribution, spacing, and start-edge mirroring under RTL.
+
+The Android 15 Pixel 9a certification rotates one committed three-entry stack between landscape
+three-pane and portrait single-pane layouts, verifies native bounds and lifecycle changes, rotates
+back without replacing owners, and commits Back into a two-pane scene:
+
+```bash
+ANDROID_SERIAL=<api35-emulator> ./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.NavigationAdaptivePaneDeviceTest \
+  --no-configuration-cache
+```
 
 ## 4. Transaction invariants
 
@@ -439,18 +509,19 @@ The destination lifecycle is framework-owned but capped by the root host lifecyc
 
 | Destination role | Desired state |
 | --- | --- |
-| graph on the active destination path | `RESUMED` |
+| graph on an interactive pane path | `RESUMED` |
 | graph on a visible transition path | `STARTED` |
 | retained hidden graph | `CREATED` |
-| interactive top destination | `RESUMED` |
+| interactive settled-pane destination | `RESUMED` |
 | visible non-interactive/transition destination | `STARTED` |
 | retained hidden destination | `CREATED` |
 | prepared but not committed destination | `INITIALIZED` while the host is `INITIALIZED`; otherwise `CREATED` |
 | permanently removed destination | `DESTROYED` |
 
-When ownership changes, current interactive destinations are downgraded before a new destination is
-upgraded. This prevents two leaf destinations from being `RESUMED` at the same time. Every graph on
-the active leaf's path may be `RESUMED`; parent graphs advance before their children.
+When ownership changes, current interactive destinations are downgraded before new destinations are
+upgraded. Multiple leaf destinations may be `RESUMED` only when they belong to the same validated
+settled pane scene. Every graph on an interactive leaf's path may be `RESUMED`; parent graphs
+advance before their children.
 
 Mounting during `Activity.onCreate` is valid while the platform lifecycle is still `INITIALIZED`.
 Host `DESTROYED` destroys every leaf and graph owner. A destroyed leaf or graph instance ID cannot
@@ -458,10 +529,12 @@ be reintroduced.
 
 ## 6. Remaining scope
 
-The current P1 branch does not yet include:
+The planned P1 system-navigation capability set is implemented. Before the feature branch is merged,
+the remaining work is stabilization rather than another navigation model:
 
-- URI deep-link matching
-- adaptive multi-pane placement
+- repeat the complete API 33/API 35 device matrix after the final branch rebase;
+- collect release-mode navigation transition and adaptive relayout benchmarks;
+- keep the branch isolated until the full repository and device soak gates remain consistently green.
 
 The following remains an explicit non-goal:
 
