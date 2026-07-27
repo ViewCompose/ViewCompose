@@ -156,6 +156,15 @@ internal val DEMO_MODULES = listOf(
         activityClass = GraphicsActivity::class.java,
     ),
     DemoModule(
+        key = "system_navigation",
+        title = "系统导航验收",
+        subtitle = "框架自有页面生命周期、多 Tab 返回栈、严格 Deep Link、状态恢复、predictive Back 与自适应多窗格。",
+        status = DemoModuleStatus.Available,
+        manualFocus = "事务化 Push/Pop/Replace/Reset，独立 Tab 栈，页面/图 owner，系统 Back，旋转恢复，双/三窗格",
+        benchmarkPath = "Catalog -> Open 系统导航验收 -> Push / Tab / Deep Link / 横屏",
+        activityClass = SystemNavigationActivity::class.java,
+    ),
+    DemoModule(
         key = "navigation",
         title = "Navigation",
         subtitle = "TopAppBar, BottomAppBar, NavigationBar, Scaffold 导航组件。",
