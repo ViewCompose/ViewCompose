@@ -16,8 +16,12 @@ import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
 import com.viewcompose.navigation.NavResult
 import com.viewcompose.navigation.NavTransitionSpec
+import com.viewcompose.navigation.LocalNavGraphOwnerScope
+import com.viewcompose.navigation.ProvideNavGraphOwner
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavValue
+import com.viewcompose.navigation.core.navGraph
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
@@ -35,6 +39,19 @@ class NavigationBackTestActivity : AppCompatActivity() {
     private val systemBackEnabledState = mutableStateOf(true)
     private val failures = mutableListOf<NavFailure>()
     private val processDeathRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
+    private val processDeathGraphRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
+    private val processDeathGraph = navGraph(
+        route = PROCESS_DEATH_ROOT_GRAPH_ROUTE,
+        startDestination = NavRoute(HOME_ROUTE),
+    ) {
+        destination(HOME_ROUTE)
+        navigation(
+            route = PROCESS_DEATH_ACCOUNT_GRAPH_ROUTE,
+            startDestination = NavRoute(DETAILS_ROUTE),
+        ) {
+            destination(DETAILS_ROUTE)
+        }
+    }
     private val destinationViewSamples = mutableListOf<DestinationViewSample>()
     private var destinationViewSampling = false
     private val destinationViewSampleFrameCallback = object : Choreographer.FrameCallback {
@@ -82,9 +99,13 @@ class NavigationBackTestActivity : AppCompatActivity() {
             debug = true,
             debugTag = "NavigationBackDeviceTest",
         ) {
-            val controller = rememberNavHostController(
-                startDestination = NavRoute(HOME_ROUTE),
-            )
+            val controller = if (processDeathCertificationEnabled()) {
+                rememberNavHostController(processDeathGraph)
+            } else {
+                rememberNavHostController(
+                    startDestination = NavRoute(HOME_ROUTE),
+                )
+            }
             navController = controller
             NavHost(
                 controller = controller,
@@ -110,10 +131,33 @@ class NavigationBackTestActivity : AppCompatActivity() {
                         saveableValue = saveableValue,
                         savedStateHandle = handle,
                     )
-                    Text(
-                        text = processDeathStatus(entry.route.name),
-                        modifier = Modifier.testTag(destinationTag(entry.route.name)),
-                    )
+                    val accountOwner = LocalNavGraphOwnerScope.current
+                        ?.get(PROCESS_DEATH_ACCOUNT_GRAPH_ROUTE)
+                    if (accountOwner == null) {
+                        Text(
+                            text = processDeathStatus(entry.route.name),
+                            modifier = Modifier.testTag(destinationTag(entry.route.name)),
+                        )
+                    } else {
+                        ProvideNavGraphOwner(PROCESS_DEATH_ACCOUNT_GRAPH_ROUTE) {
+                            val graphSaveableValue = rememberSaveable(
+                                key = PROCESS_DEATH_GRAPH_SAVEABLE_KEY,
+                            ) {
+                                mutableStateOf(PROCESS_DEATH_UNSEEDED_VALUE)
+                            }
+                            val graphHandle = savedStateHandle(
+                                key = PROCESS_DEATH_GRAPH_HANDLE_OWNER_KEY,
+                            )
+                            processDeathGraphRecords[accountOwner.entry.id] = ProcessDeathRecord(
+                                saveableValue = graphSaveableValue,
+                                savedStateHandle = graphHandle,
+                            )
+                            Text(
+                                text = processDeathStatus(entry.route.name),
+                                modifier = Modifier.testTag(destinationTag(entry.route.name)),
+                            )
+                        }
+                    }
                 } else {
                     Text(
                         text = destinationText(entry.route.name),
@@ -199,7 +243,17 @@ class NavigationBackTestActivity : AppCompatActivity() {
     }
 
     private fun seedProcessDeathCertificationState() {
-        check(push(DETAILS_ROUTE) is NavResult.Committed) {
+        check(
+            navController.navigate(
+                NavRoute(
+                    name = PROCESS_DEATH_ACCOUNT_GRAPH_ROUTE,
+                    arguments = mapOf(
+                        PROCESS_DEATH_GRAPH_ARGUMENT_KEY to
+                            NavValue.LongValue(PROCESS_DEATH_GRAPH_ARGUMENT_VALUE),
+                    ),
+                ),
+            ) is NavResult.Committed,
+        ) {
             "Unable to create the process-death certification back stack."
         }
         val entriesByRoute = navController.snapshot.entries.associateBy { entry ->
@@ -211,12 +265,25 @@ class NavigationBackTestActivity : AppCompatActivity() {
         val detailsRecord = checkNotNull(
             processDeathRecords[checkNotNull(entriesByRoute[DETAILS_ROUTE]).id],
         )
+        val accountGraphEntry = checkNotNull(
+            checkNotNull(entriesByRoute[DETAILS_ROUTE])
+                .graphEntries
+                .singleOrNull { graphEntry ->
+                    graphEntry.route.name == PROCESS_DEATH_ACCOUNT_GRAPH_ROUTE
+                },
+        )
+        val accountGraphRecord = checkNotNull(
+            processDeathGraphRecords[accountGraphEntry.id],
+        )
         homeRecord.savedStateHandle[PROCESS_DEATH_HANDLE_VALUE_KEY] =
             PROCESS_DEATH_HOME_HANDLE_VALUE
         detailsRecord.savedStateHandle[PROCESS_DEATH_HANDLE_VALUE_KEY] =
             PROCESS_DEATH_DETAILS_HANDLE_VALUE
         homeRecord.saveableValue.value = PROCESS_DEATH_HOME_SAVEABLE_VALUE
         detailsRecord.saveableValue.value = PROCESS_DEATH_DETAILS_SAVEABLE_VALUE
+        accountGraphRecord.savedStateHandle[PROCESS_DEATH_HANDLE_VALUE_KEY] =
+            PROCESS_DEATH_GRAPH_HANDLE_VALUE
+        accountGraphRecord.saveableValue.value = PROCESS_DEATH_GRAPH_SAVEABLE_VALUE
     }
 
     private fun processDeathStatus(topRouteName: String): String {
@@ -229,10 +296,28 @@ class NavigationBackTestActivity : AppCompatActivity() {
             "${entry.route.name}@${entry.id.value}" +
                 "[saveable=$saveableValue,handle=$handleValue]"
         }
+        val graphScopes = navController.snapshot.entries
+            .flatMap { entry -> entry.graphEntries }
+            .distinctBy { graphEntry -> graphEntry.id }
+            .joinToString(separator = ";") { graphEntry ->
+                val record = processDeathGraphRecords[graphEntry.id]
+                val saveableValue = record?.saveableValue?.value ?: PROCESS_DEATH_MISSING_VALUE
+                val handleValue = record?.savedStateHandle
+                    ?.get<Int>(PROCESS_DEATH_HANDLE_VALUE_KEY)
+                    ?: PROCESS_DEATH_MISSING_VALUE
+                val argumentValue = graphEntry.route[
+                    PROCESS_DEATH_GRAPH_ARGUMENT_KEY
+                ]?.let { value ->
+                    (value as? NavValue.LongValue)?.value
+                } ?: PROCESS_DEATH_MISSING_VALUE.toLong()
+                "${graphEntry.route.name}@${graphEntry.id.value}" +
+                    "[saveable=$saveableValue,handle=$handleValue,arg=$argumentValue]"
+            }
         return "$PROCESS_DEATH_STATUS_PREFIX" +
             "pid=${android.os.Process.myPid()}|" +
             "top=$topRouteName|" +
-            "stack=$stack"
+            "stack=$stack|" +
+            "graphs=$graphScopes"
     }
 
     data class DestinationViewSample(
@@ -261,11 +346,20 @@ class NavigationBackTestActivity : AppCompatActivity() {
         const val PROCESS_DEATH_HOME_HANDLE_VALUE = 101
         const val PROCESS_DEATH_DETAILS_SAVEABLE_VALUE = 29
         const val PROCESS_DEATH_DETAILS_HANDLE_VALUE = 202
+        const val PROCESS_DEATH_GRAPH_SAVEABLE_VALUE = 37
+        const val PROCESS_DEATH_GRAPH_HANDLE_VALUE = 303
+        const val PROCESS_DEATH_GRAPH_ARGUMENT_VALUE = 42L
         private const val DESTINATION_PREFIX = "Destination:"
         private const val DESTINATION_TAG_PREFIX = "navigation-back-destination-"
+        private const val PROCESS_DEATH_ROOT_GRAPH_ROUTE = "process-death-root"
+        private const val PROCESS_DEATH_ACCOUNT_GRAPH_ROUTE = "process-death-account"
         private const val PROCESS_DEATH_SAVEABLE_KEY = "process-death-state"
         private const val PROCESS_DEATH_HANDLE_OWNER_KEY = "process-death-handle-owner"
+        private const val PROCESS_DEATH_GRAPH_SAVEABLE_KEY = "process-death-graph-state"
+        private const val PROCESS_DEATH_GRAPH_HANDLE_OWNER_KEY =
+            "process-death-graph-handle-owner"
         private const val PROCESS_DEATH_HANDLE_VALUE_KEY = "process-death-handle-value"
+        private const val PROCESS_DEATH_GRAPH_ARGUMENT_KEY = "userId"
         private const val PROCESS_DEATH_UNSEEDED_VALUE = -1
         private const val PROCESS_DEATH_MISSING_VALUE = -2
 

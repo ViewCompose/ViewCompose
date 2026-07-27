@@ -63,7 +63,8 @@ wait_for_seeded_status() {
         status="$(read_status || true)"
         if [[ "$status" == *"top=details"* &&
             "$status" == *"home@"*"[saveable=11,handle=101]"* &&
-            "$status" == *"details@"*"[saveable=29,handle=202]"* ]]; then
+            "$status" == *"details@"*"[saveable=29,handle=202]"* &&
+            "$status" == *"process-death-account@"*"[saveable=37,handle=303,arg=42]"* ]]; then
             printf '%s\n' "$status"
             return 0
         fi
