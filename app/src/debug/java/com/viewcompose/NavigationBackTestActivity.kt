@@ -140,10 +140,13 @@ class NavigationBackTestActivity : AppCompatActivity() {
             navController = controller
             NavHost(
                 controller = controller,
-                transitionSpec = NavTransitionSpec(
-                    durationMillis = TRANSITION_DURATION_MILLIS,
-                    travelFraction = 0.12f,
-                    fadeEnabled = true,
+                transitionSpec = NavTransitionSpec.Default.copy(
+                    push = NavTransitionSpec.Default.push.copy(
+                        durationMillis = TRANSITION_DURATION_MILLIS,
+                    ),
+                    pop = NavTransitionSpec.Default.pop.copy(
+                        durationMillis = TRANSITION_DURATION_MILLIS,
+                    ),
                 ),
                 systemBackEnabled = systemBackEnabledState.value,
                 overlayHostFactory = { OverlayHostDefaults.noOp },

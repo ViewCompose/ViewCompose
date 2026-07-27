@@ -9,6 +9,7 @@ import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.captureUiLocalSnapshot
 import java.util.ArrayDeque
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -99,8 +101,10 @@ class AndroidViewNavHostTransitionDriverTest {
         val details = coordinator.snapshot.top
         val incoming = session(details.id).container
 
-        assertEquals(120f, incoming.translationX)
-        assertEquals(0f, incoming.alpha)
+        assertEquals(80f, incoming.translationX)
+        assertEquals(0.9f, incoming.alpha)
+        assertEquals(0.985f, incoming.scaleX)
+        assertEquals(0.985f, incoming.scaleY)
         assertTrue(coordinator.activeTransition != null)
 
         coordinator.cancelTransition(result.transition.id)
@@ -108,6 +112,8 @@ class AndroidViewNavHostTransitionDriverTest {
         assertNull(coordinator.activeTransition)
         assertEquals(0f, incoming.translationX)
         assertEquals(1f, incoming.alpha)
+        assertEquals(1f, incoming.scaleX)
+        assertEquals(1f, incoming.scaleY)
         assertEquals(0f, session(root.id).container.translationX)
         assertEquals(1f, session(root.id).container.alpha)
         assertEquals(View.GONE, session(root.id).container.visibility)
@@ -146,10 +152,12 @@ class AndroidViewNavHostTransitionDriverTest {
     @Test
     fun `zero travel still supports fade only motion`() {
         attachAndLayoutHost()
-        specHolder.value = NavTransitionSpec(
-            durationMillis = 260L,
-            travelFraction = 0f,
-            fadeEnabled = true,
+        specHolder.value = NavTransitionSpec.Default.copy(
+            push = NavDestinationMotionSpec(
+                durationMillis = 260L,
+                incomingStart = NavDestinationTransform(alpha = 0f),
+                outgoingEnd = NavDestinationTransform(alpha = 0f),
+            ),
         )
 
         val result = coordinator.navigate(
@@ -183,10 +191,11 @@ class AndroidViewNavHostTransitionDriverTest {
         val incoming = session(root.id).container
         val outgoing = session(details.id).container
 
-        assertEquals(-60f, incoming.translationX)
-        assertEquals(0.5f, incoming.alpha)
-        assertEquals(60f, outgoing.translationX)
-        assertEquals(0.5f, outgoing.alpha)
+        assertEquals(-12.5f, incoming.translationX)
+        assertEquals(0.97f, incoming.alpha)
+        assertEquals(40f, outgoing.translationX)
+        assertEquals(0.94f, outgoing.alpha)
+        assertEquals(0.9925f, outgoing.scaleX)
 
         coordinator.cancelBackPreview(preview.id)
 
@@ -194,6 +203,7 @@ class AndroidViewNavHostTransitionDriverTest {
         assertEquals(1f, incoming.alpha)
         assertEquals(0f, outgoing.translationX)
         assertEquals(1f, outgoing.alpha)
+        assertEquals(1f, outgoing.scaleX)
         assertEquals(View.GONE, incoming.visibility)
         assertEquals(View.VISIBLE, outgoing.visibility)
     }
@@ -259,6 +269,25 @@ class AndroidViewNavHostTransitionDriverTest {
                 command = NavCommand.Pop,
                 layoutDirection = View.LAYOUT_DIRECTION_RTL,
             ),
+        )
+    }
+
+    @Test
+    fun `motion policy resolves independently for every command family`() {
+        val spec = NavTransitionSpec.Default
+
+        assertSame(spec.push, spec.motionFor(NavCommand.Push(NavRoute("details"))))
+        assertSame(spec.pop, spec.motionFor(NavCommand.Pop))
+        assertSame(spec.replace, spec.motionFor(NavCommand.ReplaceTop(NavRoute("details"))))
+        assertSame(spec.reset, spec.motionFor(NavCommand.Reset(NavRoute("home"))))
+        assertSame(
+            spec.stackSelection,
+            spec.motionFor(NavCommand.SelectStack(NavStackId("search"))),
+        )
+        assertSame(spec.stackSelection, spec.motionFor(NavCommand.PopStackHistory))
+        assertSame(
+            spec.deepLink,
+            spec.motionFor(NavCommand.OpenDeepLink(NavRoute("details"))),
         )
     }
 

@@ -1,7 +1,8 @@
 package com.viewcompose.navigation
 
 import android.view.View
-import android.view.animation.DecelerateInterpolator
+import android.view.animation.Interpolator
+import android.view.animation.PathInterpolator
 import com.viewcompose.navigation.core.NavCommand
 
 internal class AndroidViewNavHostTransitionDriver(
@@ -25,11 +26,10 @@ internal class AndroidViewNavHostTransitionDriver(
             onCompleted()
             return NavHostTransitionHandle {}
         }
-        val spec = specProvider()
+        val motion = specProvider().motionFor(transition.command)
         val hostWidth = sessionStore.hostView.width
         if (
-            spec.durationMillis == 0L ||
-            (spec.travelFraction == 0f && !spec.fadeEnabled) ||
+            motion.isDisabled ||
             !sessionStore.hostView.isLaidOut ||
             !sessionStore.hostView.isAttachedToWindow ||
             hostWidth <= 0
@@ -52,10 +52,12 @@ internal class AndroidViewNavHostTransitionDriver(
             transition.beforeScene.panes.size,
             transition.afterScene.panes.size,
         )
-        val travel = (hostWidth / paneCount.toFloat()) * spec.travelFraction
-        incoming.forEach { view -> view.translationX = direction * travel }
-        if (spec.fadeEnabled) {
-            incoming.forEach { view -> view.alpha = 0f }
+        val paneWidth = hostWidth / paneCount.toFloat()
+        incoming.forEach { view ->
+            view.applyTransform(
+                transform = motion.incomingStart,
+                translationX = direction * paneWidth * motion.incomingStart.travelFraction,
+            )
         }
 
         var terminal = false
@@ -66,15 +68,20 @@ internal class AndroidViewNavHostTransitionDriver(
                 onCompleted()
             }
         }
-        val interpolator = DecelerateInterpolator()
+        val interpolator = motion.easing.toInterpolator()
         val completionView = incoming.lastOrNull() ?: outgoing.last()
         try {
             outgoing.forEach { view ->
                 val animator = view.animate()
-                    .translationX(-direction * travel)
-                    .alpha(if (spec.fadeEnabled) 0f else 1f)
-                    .setDuration(spec.durationMillis)
+                    .translationX(
+                        -direction * paneWidth * motion.outgoingEnd.travelFraction,
+                    )
+                    .alpha(motion.outgoingEnd.alpha)
+                    .scaleX(motion.outgoingEnd.scale)
+                    .scaleY(motion.outgoingEnd.scale)
+                    .setDuration(motion.durationMillis)
                     .setInterpolator(interpolator)
+                    .withLayer()
                 if (view === completionView) {
                     animator.withEndAction(finish)
                 }
@@ -84,8 +91,11 @@ internal class AndroidViewNavHostTransitionDriver(
                 val animator = view.animate()
                     .translationX(0f)
                     .alpha(1f)
-                    .setDuration(spec.durationMillis)
+                    .scaleX(1f)
+                    .scaleY(1f)
+                    .setDuration(motion.durationMillis)
                     .setInterpolator(interpolator)
+                    .withLayer()
                 if (view === completionView) {
                     animator.withEndAction(finish)
                 }
@@ -131,7 +141,7 @@ internal class AndroidViewNavHostTransitionDriver(
             preview = preview,
             outgoing = outgoing,
             incoming = incoming,
-            spec = specProvider(),
+            motion = specProvider().pop,
             travelWidth = sessionStore.hostView.width / maxOf(
                 preview.beforeScene.panes.size,
                 preview.afterScene.panes.size,
@@ -148,6 +158,8 @@ internal class AndroidViewNavHostTransitionDriver(
     private fun resetProperties(view: View) {
         view.alpha = 1f
         view.translationX = 0f
+        view.scaleX = 1f
+        view.scaleY = 1f
     }
 
     private fun destinationViews(
@@ -161,11 +173,25 @@ internal class AndroidViewNavHostTransitionDriver(
     }
 }
 
+private fun View.applyTransform(
+    transform: NavDestinationTransform,
+    translationX: Float,
+) {
+    this.translationX = translationX
+    alpha = transform.alpha
+    scaleX = transform.scale
+    scaleY = transform.scale
+}
+
+private fun NavMotionEasing.toInterpolator(): Interpolator {
+    return PathInterpolator(x1, y1, x2, y2)
+}
+
 private class AndroidBackPreviewHandle(
     private val preview: NavHostBackPreview,
     private val outgoing: List<View>,
     private val incoming: List<View>,
-    private val spec: NavTransitionSpec,
+    private val motion: NavDestinationMotionSpec,
     private val travelWidth: Float,
     private val layoutDirection: Int,
     private val canAnimate: Boolean,
@@ -221,8 +247,7 @@ private class AndroidBackPreviewHandle(
         val remainingFraction = 1f - latestEvent.progress
         if (
             !canAnimate ||
-            spec.durationMillis == 0L ||
-            (spec.travelFraction == 0f && !spec.fadeEnabled) ||
+            motion.isDisabled ||
             remainingFraction <= 0f
         ) {
             terminal = true
@@ -235,11 +260,10 @@ private class AndroidBackPreviewHandle(
             swipeEdge = latestEvent.swipeEdge,
             layoutDirection = layoutDirection,
         )
-        val travel = travelWidth * spec.travelFraction
-        val duration = (spec.durationMillis * remainingFraction)
+        val duration = (motion.durationMillis * remainingFraction)
             .toLong()
             .coerceAtLeast(1L)
-        val interpolator = DecelerateInterpolator()
+        val interpolator = motion.easing.toInterpolator()
         val completionView = incoming.lastOrNull() ?: outgoing.lastOrNull()
         val finish = Runnable {
             if (!terminal) {
@@ -257,10 +281,15 @@ private class AndroidBackPreviewHandle(
             }
             outgoing.forEach { view ->
                 val animator = view.animate()
-                    .translationX(direction * travel)
-                    .alpha(if (spec.fadeEnabled) 0f else 1f)
+                    .translationX(
+                        direction * travelWidth * motion.outgoingEnd.travelFraction,
+                    )
+                    .alpha(motion.outgoingEnd.alpha)
+                    .scaleX(motion.outgoingEnd.scale)
+                    .scaleY(motion.outgoingEnd.scale)
                     .setDuration(duration)
                     .setInterpolator(interpolator)
+                    .withLayer()
                 if (view === completionView) {
                     animator.withEndAction(finish)
                 }
@@ -270,8 +299,11 @@ private class AndroidBackPreviewHandle(
                 val animator = view.animate()
                     .translationX(0f)
                     .alpha(1f)
+                    .scaleX(1f)
+                    .scaleY(1f)
                     .setDuration(duration)
                     .setInterpolator(interpolator)
+                    .withLayer()
                 if (view === completionView) {
                     animator.withEndAction(finish)
                 }
@@ -297,16 +329,23 @@ private class AndroidBackPreviewHandle(
             swipeEdge = event.swipeEdge,
             layoutDirection = layoutDirection,
         )
-        val travel = travelWidth * spec.travelFraction
         outgoing.forEach { view ->
-            view.translationX = direction * travel * event.progress
+            view.applyTransform(
+                transform = motion.outgoingEnd.interpolateFromIdentity(event.progress),
+                translationX = direction *
+                    travelWidth *
+                    motion.outgoingEnd.travelFraction *
+                    event.progress,
+            )
         }
         incoming.forEach { view ->
-            view.translationX = -direction * travel * (1f - event.progress)
-        }
-        if (spec.fadeEnabled) {
-            outgoing.forEach { view -> view.alpha = 1f - event.progress }
-            incoming.forEach { view -> view.alpha = event.progress }
+            view.applyTransform(
+                transform = motion.incomingStart.interpolateToIdentity(event.progress),
+                translationX = -direction *
+                    travelWidth *
+                    motion.incomingStart.travelFraction *
+                    (1f - event.progress),
+            )
         }
     }
 
@@ -314,8 +353,38 @@ private class AndroidBackPreviewHandle(
         (outgoing + incoming).forEach { view ->
             view.alpha = 1f
             view.translationX = 0f
+            view.scaleX = 1f
+            view.scaleY = 1f
         }
     }
+}
+
+private fun NavDestinationTransform.interpolateFromIdentity(
+    fraction: Float,
+): NavDestinationTransform {
+    return NavDestinationTransform(
+        travelFraction = travelFraction * fraction,
+        alpha = lerp(1f, alpha, fraction),
+        scale = lerp(1f, scale, fraction),
+    )
+}
+
+private fun NavDestinationTransform.interpolateToIdentity(
+    fraction: Float,
+): NavDestinationTransform {
+    return NavDestinationTransform(
+        travelFraction = travelFraction * (1f - fraction),
+        alpha = lerp(alpha, 1f, fraction),
+        scale = lerp(scale, 1f, fraction),
+    )
+}
+
+private fun lerp(
+    start: Float,
+    end: Float,
+    fraction: Float,
+): Float {
+    return start + (end - start) * fraction.coerceIn(0f, 1f)
 }
 
 internal fun navTransitionDirection(
