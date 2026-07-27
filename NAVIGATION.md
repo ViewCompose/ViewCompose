@@ -37,7 +37,7 @@ Current feature-branch status:
 - Stage 6 Android 14+ platform gesture-progress validation: complete
 - Stage 6 P0 process-death, lifecycle-race, and resource-release certification: complete
 - Stage 7A nested graph kernel and transactional leaf resolution: complete
-- Stage 7B graph-scoped lifecycle and state ownership: pending
+- Stage 7B graph-scoped lifecycle and state ownership: complete
 
 ## 2. P0 delivery plan
 
@@ -141,9 +141,9 @@ so invisible animation can never retain removed page resources indefinitely.
 
 `rememberNavHostController` now registers one versioned, Bundle-safe state envelope in the current
 ViewCompose saveable-state registry. Saving captures the committed back-stack snapshot, stable entry
-IDs, every typed route argument, and the Android saved-state bundle for each entry still present in
-that snapshot. Entry bundles include both destination `rememberSaveable` providers and AndroidX
-`SavedStateHandle` providers.
+and graph-instance IDs, every typed route argument, and the Android saved-state bundle for each leaf
+or graph owner still referenced by that snapshot. Owner bundles include both `rememberSaveable`
+providers and AndroidX `SavedStateHandle` providers.
 
 Restoration creates the pure back-stack controller directly from the saved snapshot before `NavHost`
 attaches. Each destination owner then consumes only the bundle matching its restored entry ID. State
@@ -156,10 +156,11 @@ arguments. Invalid restored data falls back to the declared start destination in
 publishing a damaged stack.
 
 The host-side process-death runner proves the complete Android path instead of simulating it with
-Activity recreation. It launches a two-entry stack, records both entry IDs plus destination
-`rememberSaveable` and `SavedStateHandle` values, moves the task to the background, kills only the
-application process, and brings the existing task forward. Certification requires a new PID and an
-exact match of the pre-kill and restored stack state:
+Activity recreation. It launches a two-entry stack through a nested graph, records both leaf-entry
+IDs and graph-instance IDs plus leaf and graph `rememberSaveable`, `SavedStateHandle`, and graph-route
+argument values, moves the task to the background, kills only the application process, and brings
+the existing task forward. Certification requires a new PID and an exact match of the pre-kill and
+restored stack state:
 
 ```bash
 ANDROID_SERIAL=<device> tools/navigation/validate_android_process_death.sh
@@ -290,14 +291,17 @@ unique, every graph start destination must be a direct child, and entering a gra
 resolves to its leaf start destination before a transaction allocates or publishes an entry.
 Arguments supplied to the graph route override defaults declared by each nested start route.
 
-Every committed `NavEntry` records its complete `graphHierarchy`. Direct navigation to a leaf and
-navigation through its parent graph therefore converge on the same page-session transaction while
-remaining distinguishable for future graph-scoped ownership. `SingleTop`, replace, reset, rollback,
-and transition retention compare the resolved leaf plus its hierarchy.
+Every committed `NavEntry` records its complete `graphEntries`. Each `NavGraphEntry` contains the
+graph route, typed graph arguments, and a stable instance ID; `graphHierarchy` remains available as
+the route-only projection. Direct navigation between leaves reuses the common graph-instance prefix.
+Explicitly entering a graph route allocates a fresh instance for that graph and its descendants, and
+`reset` creates a wholly fresh graph path. `SingleTop`, replace, reset, rollback, and transition
+retention compare the resolved leaf plus its graph path.
 
-The saved-state envelope is hard-cut to format version 2 and persists graph hierarchy with the leaf
-route. A graph-backed controller restores only when every saved leaf still belongs to the exact same
-hierarchy; a changed or damaged graph falls back atomically to the graph start destination.
+The saved-state envelope is hard-cut to format version 3 and persists graph instance IDs, routes, and
+arguments with each leaf route. A graph-backed controller restores only when every saved graph path
+is valid and shared instance IDs describe the same graph entry; changed, damaged, or colliding data
+falls back atomically to the graph start destination.
 
 ```kotlin
 val graph = navGraph(
@@ -318,8 +322,41 @@ val navController = rememberNavHostController(graph)
 navController.navigate(NavRoute("account"))
 ```
 
-Stage 7B will add graph-scope `LifecycleOwner`, `ViewModelStore`, and saved-state ownership. Until
-that slice lands, lifecycle and resources remain leaf-entry scoped exactly as in P0.
+### Stage 7B: graph-scoped Android ownership
+
+Every live `NavGraphEntry` now owns one stable `NavGraphOwner`, which implements AndroidX
+`LifecycleOwner`, `ViewModelStoreOwner`, and `SavedStateRegistryOwner` and exposes its own
+ViewCompose saveable-state namespace. Sibling leaves in the same graph instance therefore share
+graph-scoped ViewModels and state without sharing their leaf owners. Popping the last referencing
+leaf, resetting the stack, or destroying the host releases the graph owner exactly once.
+
+`LocalNavGraphOwnerScope` exposes the graph owners belonging to the rendered entry. Applications can
+look up an owner by graph route and use `ProvideNavGraphOwner` to install its lifecycle, ViewModel,
+saved-state, and saveable-state locals for a subtree:
+
+```kotlin
+NavHost(controller = navController) { entry ->
+    val accountOwner = LocalNavGraphOwnerScope.current?.get("account")
+    if (accountOwner == null) {
+        HomePage()
+    } else {
+        ProvideNavGraphOwner("account") {
+            AccountPage(entry.route)
+        }
+    }
+}
+```
+
+Preparing a candidate creates only graph owners missing from the committed stack. A render or setup
+failure destroys only those candidate owners, while reused committed graph owners keep their
+lifecycle and state. After commit, lifecycle reconciliation starts parent graphs before children and
+destroys leaf/child owners before parents. Visible transition graph paths remain at least `STARTED`;
+hidden retained graphs remain `CREATED`.
+
+The JVM and public-host suites verify sibling sharing, release boundaries, lifecycle ordering,
+rollback cleanup, graph `SavedStateHandle` recreation, and full host/controller restoration. The
+real-device process-death runner additionally verifies the restored nested graph instance ID,
+graph-scoped `rememberSaveable`, graph-scoped `SavedStateHandle`, and graph-route argument.
 
 ## 4. Transaction invariants
 
@@ -352,6 +389,9 @@ The destination lifecycle is framework-owned but capped by the root host lifecyc
 
 | Destination role | Desired state |
 | --- | --- |
+| graph on the active destination path | `RESUMED` |
+| graph on a visible transition path | `STARTED` |
+| retained hidden graph | `CREATED` |
 | interactive top destination | `RESUMED` |
 | visible non-interactive/transition destination | `STARTED` |
 | retained hidden destination | `CREATED` |
@@ -359,16 +399,17 @@ The destination lifecycle is framework-owned but capped by the root host lifecyc
 | permanently removed destination | `DESTROYED` |
 
 When ownership changes, current interactive destinations are downgraded before a new destination is
-upgraded. This prevents two destinations from being `RESUMED` at the same time.
+upgraded. This prevents two leaf destinations from being `RESUMED` at the same time. Every graph on
+the active leaf's path may be `RESUMED`; parent graphs advance before their children.
 
 Mounting during `Activity.onCreate` is valid while the platform lifecycle is still `INITIALIZED`.
-Host `DESTROYED` destroys every destination. A destroyed `NavEntryId` cannot be reintroduced.
+Host `DESTROYED` destroys every leaf and graph owner. A destroyed leaf or graph instance ID cannot
+be reintroduced.
 
 ## 6. Remaining scope
 
 The current P1 branch does not yet include:
 
-- graph-scoped lifecycle and state owners
 - multiple tab back stacks
 - URI deep-link matching
 - adaptive multi-pane placement
