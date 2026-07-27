@@ -108,6 +108,10 @@ class AndroidViewNavHostTransitionDriverTest {
         assertEquals(0f, incoming.alpha)
         assertEquals(1f, incoming.scaleX)
         assertEquals(1f, incoming.scaleY)
+        assertEquals(View.LAYER_TYPE_HARDWARE, incoming.layerType)
+        assertEquals(View.LAYER_TYPE_HARDWARE, session(root.id).container.layerType)
+        assertTrue(session(details.id).isRenderingActive)
+        assertTrue(!session(root.id).isRenderingActive)
         assertTrue(coordinator.activeTransition != null)
 
         coordinator.cancelTransition(result.transition.id)
@@ -119,6 +123,8 @@ class AndroidViewNavHostTransitionDriverTest {
         assertEquals(1f, incoming.scaleY)
         assertEquals(0f, session(root.id).container.translationX)
         assertEquals(1f, session(root.id).container.alpha)
+        assertEquals(View.LAYER_TYPE_NONE, incoming.layerType)
+        assertEquals(View.LAYER_TYPE_NONE, session(root.id).container.layerType)
         assertEquals(View.GONE, session(root.id).container.visibility)
         assertEquals(View.VISIBLE, incoming.visibility)
     }
@@ -200,6 +206,10 @@ class AndroidViewNavHostTransitionDriverTest {
         Shadows.shadowOf(Looper.getMainLooper()).idleFor(1, TimeUnit.SECONDS)
         assertNull(coordinator.activeTransition)
         assertEquals(
+            View.LAYER_TYPE_NONE,
+            session(coordinator.snapshot.top.id).container.layerType,
+        )
+        assertEquals(
             NavHostTransitionOutcome.Completed,
             coordinator.lastTransitionResult?.outcome,
         )
@@ -258,6 +268,8 @@ class AndroidViewNavHostTransitionDriverTest {
         assertEquals(1f - 0.1f * visualProgress, outgoing.scaleX, 0.001f)
         assertEquals(1f - 0.1f * visualProgress, incoming.scaleX, 0.001f)
         assertTrue(incoming.foreground is ColorDrawable)
+        assertEquals(View.LAYER_TYPE_HARDWARE, incoming.layerType)
+        assertEquals(View.LAYER_TYPE_HARDWARE, outgoing.layerType)
 
         coordinator.updateBackPreview(
             previewId = preview.id,
@@ -286,6 +298,8 @@ class AndroidViewNavHostTransitionDriverTest {
         assertEquals(1f, outgoing.alpha)
         assertEquals(1f, outgoing.scaleX)
         assertNull(incoming.foreground)
+        assertEquals(View.LAYER_TYPE_NONE, incoming.layerType)
+        assertEquals(View.LAYER_TYPE_NONE, outgoing.layerType)
     }
 
     @Test
@@ -401,6 +415,8 @@ class AndroidViewNavHostTransitionDriverTest {
 
         assertEquals(NavCommand.Pop, result.command)
         assertTrue(coordinator.activeTransition != null)
+        assertEquals(View.LAYER_TYPE_HARDWARE, session(root.id).container.layerType)
+        assertEquals(View.LAYER_TYPE_HARDWARE, session(details.id).container.layerType)
         assertEquals(listOf("home"), coordinator.snapshot.entries.map { it.route.name })
 
         Shadows.shadowOf(Looper.getMainLooper()).idleFor(1, TimeUnit.SECONDS)
@@ -408,6 +424,7 @@ class AndroidViewNavHostTransitionDriverTest {
         assertNull(coordinator.activeTransition)
         assertNull(sessionStore.sessionOrNull(details.id))
         assertEquals(View.VISIBLE, session(root.id).container.visibility)
+        assertEquals(View.LAYER_TYPE_NONE, session(root.id).container.layerType)
         assertEquals(0f, session(root.id).container.translationX)
         assertEquals(1f, session(root.id).container.alpha)
     }

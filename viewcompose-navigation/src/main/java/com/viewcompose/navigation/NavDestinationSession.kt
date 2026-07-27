@@ -14,6 +14,9 @@ internal class NavDestinationSession(
     private val renderSession: RenderSession,
     private val renderEnvironment: NavDestinationRenderEnvironment,
 ) {
+    var isRenderingActive: Boolean = true
+        private set
+
     val lastFrameReport: RenderFrameReport?
         get() = renderSession.lastFrameReport
 
@@ -35,6 +38,10 @@ internal class NavDestinationSession(
     }
 
     fun setRenderingActive(active: Boolean) {
+        if (isRenderingActive == active) {
+            return
+        }
+        isRenderingActive = active
         renderSession.setRenderingActive(active)
     }
 

@@ -905,6 +905,11 @@ internal class TransactionalNavHostCoordinator(
             ),
         )
         reconcileOwners(transition)
+        sessionStore.setRenderingActive(
+            entryIds = transition.beforeScene.visibleEntryIds -
+                transition.afterScene.visibleEntryIds,
+            active = false,
+        )
     }
 
     private fun reconcileOwners(transition: NavHostTransition) {

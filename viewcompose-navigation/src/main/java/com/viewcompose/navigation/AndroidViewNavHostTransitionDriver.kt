@@ -261,6 +261,11 @@ private class AndroidBackPreviewHandle(
             scrim.attach()
         }
     }
+    private val layerLease = TransitionHardwareLayerLease(outgoing + incoming).also { lease ->
+        if (canAnimate && !spec.isDisabled) {
+            lease.acquire()
+        }
+    }
 
     override fun update(event: NavHostBackEvent) {
         if (terminal || committing) {
@@ -320,6 +325,7 @@ private class AndroidBackPreviewHandle(
             onCompleted = {
                 outgoing.forEach(resetView)
             },
+            onTerminated = layerLease::release,
         )
     }
 
@@ -332,6 +338,7 @@ private class AndroidBackPreviewHandle(
         animatedViews.forEach { view -> view.animate().cancel() }
         scrim.clear()
         preserveForNextTransition(animatedViews)
+        layerLease.release()
     }
 
     override fun dispose() {
@@ -380,6 +387,7 @@ private class AndroidBackPreviewHandle(
             return NavHostTransitionHandle {}
         }
         try {
+            layerLease.release()
             val motionDirection = -backPreviewOutgoingDirection(
                 swipeEdge = latestEvent.swipeEdge,
                 layoutDirection = layoutDirection,
@@ -509,6 +517,7 @@ private class AndroidBackPreviewHandle(
             interruptedViews -= view
             resetView(view)
         }
+        layerLease.release()
     }
 }
 
@@ -528,6 +537,7 @@ private class CommittedViewTransitionRun(
     private val outgoingViews = outgoing.distinct()
     private val incomingViews = incoming.distinct()
     private val animatedViews = (outgoingViews + incomingViews).distinct()
+    private val layerLease = TransitionHardwareLayerLease(animatedViews)
     private val startStates = animatedViews.associateWith(ViewTransformState::capture)
     private val outgoingTarget = ViewTransformState(
         translationX = -direction * motion.outgoingEnd.resolveTravelPx(paneWidth, density),
@@ -560,11 +570,13 @@ private class CommittedViewTransitionRun(
 
     fun start(): NavHostTransitionHandle {
         try {
+            layerLease.acquire()
             applyFrame(linearProgress = 0f, playTimeMillis = 0L)
             animator.start()
         } catch (throwable: Throwable) {
             terminal = true
             animatedViews.forEach(resetView)
+            layerLease.release()
             throw throwable
         }
         return this
@@ -610,6 +622,7 @@ private class CommittedViewTransitionRun(
         }
         terminal = true
         animatedViews.forEach(resetView)
+        layerLease.release()
         onTerminated()
         onCompleted()
     }
@@ -625,6 +638,48 @@ private class CommittedViewTransitionRun(
             animatedViews.forEach(preserveView)
         } else {
             animatedViews.forEach(resetView)
+        }
+        layerLease.release()
+    }
+}
+
+/**
+ * Keeps a destination's expensive View hierarchy in a texture while only transform/alpha
+ * properties change. Activity transitions get this behavior from Window/SurfaceControl; a
+ * temporary hardware View layer is the public View-system equivalent.
+ */
+private class TransitionHardwareLayerLease(
+    views: List<View>,
+) {
+    private val originalLayerTypes = views
+        .distinct()
+        .associateWith(View::getLayerType)
+    private var acquired = false
+
+    fun acquire() {
+        if (acquired) {
+            return
+        }
+        acquired = true
+        originalLayerTypes.forEach { (view, originalLayerType) ->
+            if (originalLayerType != View.LAYER_TYPE_SOFTWARE) {
+                view.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            }
+        }
+    }
+
+    fun release() {
+        if (!acquired) {
+            return
+        }
+        acquired = false
+        originalLayerTypes.forEach { (view, originalLayerType) ->
+            if (
+                originalLayerType != View.LAYER_TYPE_SOFTWARE &&
+                view.layerType != originalLayerType
+            ) {
+                view.setLayerType(originalLayerType, null)
+            }
         }
     }
 }
@@ -752,6 +807,7 @@ private class BackProgressSpringController(
         springSpec: NavSpringSpec,
         onUpdate: (Float) -> Unit,
         onCompleted: () -> Unit,
+        onTerminated: () -> Unit = {},
     ): BackProgressSpringHandle {
         cancelActive(preserveVisualState = false)
         val animatedViews = views.distinct()
@@ -760,7 +816,11 @@ private class BackProgressSpringController(
             abs(targetProgress - initialProgress) <= MIN_PROGRESS_CHANGE
         ) {
             onUpdate(targetProgress)
-            onCompleted()
+            try {
+                onCompleted()
+            } finally {
+                onTerminated()
+            }
             return BackProgressSpringHandle {}
         }
 
@@ -777,13 +837,18 @@ private class BackProgressSpringController(
                 if (current?.run === run) {
                     active = null
                     interruptedViews.removeAll(current.views.toSet())
-                    onCompleted()
+                    try {
+                        onCompleted()
+                    } finally {
+                        onTerminated()
+                    }
                 }
             },
         )
         active = ActiveSpring(
             run = run,
             views = animatedViews,
+            onTerminated = onTerminated,
         )
         try {
             run.start()
@@ -791,6 +856,7 @@ private class BackProgressSpringController(
             active = null
             interruptedViews.removeAll(animatedViews.toSet())
             animatedViews.forEach(resetView)
+            onTerminated()
             throw throwable
         }
         return BackProgressSpringHandle { preserveVisualState ->
@@ -822,11 +888,13 @@ private class BackProgressSpringController(
         } else {
             current.views.forEach(resetView)
         }
+        current.onTerminated()
     }
 
     private data class ActiveSpring(
         val run: BackProgressSpringRun,
         val views: List<View>,
+        val onTerminated: () -> Unit,
     )
 
     private companion object {

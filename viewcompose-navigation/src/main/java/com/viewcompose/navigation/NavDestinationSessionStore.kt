@@ -248,6 +248,26 @@ internal class NavDestinationSessionStore(
         }
     }
 
+    /**
+     * Suspends or resumes frame-driven rendering without changing destination visibility.
+     *
+     * A committed transition animates the already-rendered outgoing surface. Keeping that
+     * destination's composition active would let lifecycle invalidations rebuild its View tree
+     * during the first motion frame, even though those updates cannot affect the settled scene.
+     */
+    @MainThread
+    fun setRenderingActive(
+        entryIds: Set<NavEntryId>,
+        active: Boolean,
+    ) {
+        check(entryIds.all(sessions::containsKey)) {
+            "Rendering state contains an entry without a committed page session."
+        }
+        entryIds.forEach { entryId ->
+            checkNotNull(sessions[entryId]).setRenderingActive(active)
+        }
+    }
+
     @MainThread
     fun remove(entryId: NavEntryId) {
         val session = sessions.remove(entryId) ?: return
