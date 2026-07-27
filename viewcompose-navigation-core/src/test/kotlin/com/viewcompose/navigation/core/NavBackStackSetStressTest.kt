@@ -99,7 +99,7 @@ class NavBackStackSetStressTest {
         model: ModelState,
     ): NavCommand {
         return when (random.nextInt(100)) {
-            in 0..34 -> NavCommand.Push(
+            in 0..29 -> NavCommand.Push(
                 route = randomRoute(random, model),
                 launchMode = if (random.nextBoolean()) {
                     NavLaunchMode.Standard
@@ -108,10 +108,10 @@ class NavBackStackSetStressTest {
                 },
             )
 
-            in 35..49 -> NavCommand.Pop
-            in 50..61 -> NavCommand.ReplaceTop(randomRoute(random, model))
-            in 62..72 -> NavCommand.Reset(randomRoute(random, model))
-            in 73..91 -> NavCommand.SelectStack(
+            in 30..42 -> NavCommand.Pop
+            in 43..52 -> NavCommand.ReplaceTop(randomRoute(random, model))
+            in 53..61 -> NavCommand.Reset(randomRoute(random, model))
+            in 62..77 -> NavCommand.SelectStack(
                 stackId = StackIds[random.nextInt(StackIds.size)],
                 selectionMode = if (random.nextInt(3) == 0) {
                     NavStackSelectionMode.PopToRoot
@@ -120,6 +120,21 @@ class NavBackStackSetStressTest {
                 },
             )
 
+            in 78..92 -> {
+                val targetStackId = StackIds[random.nextInt(StackIds.size)]
+                NavCommand.OpenDeepLink(
+                    route = randomRoute(
+                        random = random,
+                        model = model,
+                        stackId = targetStackId,
+                    ),
+                    targetStackId = targetStackId,
+                    launchMode = NavDeepLinkLaunchMode.entries[
+                        random.nextInt(NavDeepLinkLaunchMode.entries.size)
+                    ],
+                )
+            }
+
             else -> model.systemBackCommand() ?: NavCommand.Pop
         }
     }
@@ -127,9 +142,10 @@ class NavBackStackSetStressTest {
     private fun randomRoute(
         random: Random,
         model: ModelState,
+        stackId: NavStackId = model.activeStackId,
     ): NavRoute {
         if (random.nextInt(5) == 0) {
-            return checkNotNull(model.stacks[model.activeStackId]).last()
+            return checkNotNull(model.stacks[stackId]).last()
         }
         val arguments = if (random.nextBoolean()) {
             mapOf(
@@ -271,6 +287,42 @@ class NavBackStackSetStressTest {
                 }
             }
 
+            is NavCommand.OpenDeepLink -> {
+                val targetStackId = command.targetStackId ?: activeStackId
+                val target = checkNotNull(stacks[targetStackId])
+                val selected = when (command.launchMode) {
+                    NavDeepLinkLaunchMode.Push -> target + command.route
+                    NavDeepLinkLaunchMode.SingleTop -> {
+                        if (target.last() == command.route) target else target + command.route
+                    }
+
+                    NavDeepLinkLaunchMode.ReplaceTop -> {
+                        if (target.last() == command.route) {
+                            target
+                        } else {
+                            target.dropLast(1) + command.route
+                        }
+                    }
+
+                    NavDeepLinkLaunchMode.Reset -> {
+                        if (target.size == 1 && target.last() == command.route) {
+                            target
+                        } else {
+                            listOf(command.route)
+                        }
+                    }
+                }
+                val next = replaceAndSelectStack(
+                    targetStackId = targetStackId,
+                    routes = selected,
+                )
+                if (next == this) {
+                    noChange(NavNoChangeReason.AlreadyAtDestination)
+                } else {
+                    changed(next)
+                }
+            }
+
             NavCommand.PopStackHistory -> {
                 check(activeStack.size == 1)
                 val target = selectionHistory.lastOrNull()
@@ -289,6 +341,23 @@ class NavBackStackSetStressTest {
         return copy(
             stacks = LinkedHashMap(stacks).apply {
                 put(activeStackId, routes)
+            },
+        )
+    }
+
+    private fun ModelState.replaceAndSelectStack(
+        targetStackId: NavStackId,
+        routes: List<NavRoute>,
+    ): ModelState {
+        return copy(
+            activeStackId = targetStackId,
+            stacks = LinkedHashMap(stacks).apply {
+                put(targetStackId, routes)
+            },
+            selectionHistory = if (targetStackId == activeStackId) {
+                selectionHistory
+            } else {
+                selectionHistory.filterNot { it == targetStackId } + activeStackId
             },
         )
     }

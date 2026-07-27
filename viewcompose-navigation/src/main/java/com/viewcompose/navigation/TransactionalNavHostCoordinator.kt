@@ -199,6 +199,7 @@ internal class TransactionalNavHostCoordinator(
                 is NavCommand.ReplaceTop,
                 is NavCommand.Reset,
                 is NavCommand.SelectStack,
+                is NavCommand.OpenDeepLink,
                 -> error("System Back produced a forward navigation command: $command")
             }
             val retainedEntries = controller.retainedEntries()

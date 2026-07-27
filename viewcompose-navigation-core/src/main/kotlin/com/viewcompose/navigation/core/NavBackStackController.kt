@@ -27,6 +27,18 @@ sealed interface NavCommand {
     ) : NavCommand
 
     /**
+     * Mutates a destination stack and selects it as one atomic transaction.
+     *
+     * This command carries a graph-resolved route. Applications normally create it through their
+     * host's deep-link API instead of constructing it directly.
+     */
+    data class OpenDeepLink(
+        val route: NavRoute,
+        val targetStackId: NavStackId? = null,
+        val launchMode: NavDeepLinkLaunchMode = NavDeepLinkLaunchMode.Reset,
+    ) : NavCommand
+
+    /**
      * Returns to the newest stack in selection history without adding the current stack back.
      *
      * Applications normally reach this command through system Back when
@@ -110,6 +122,7 @@ class NavBackStackController private constructor(
     initialState: NavStackSetSnapshot,
     private val entryIdFactory: NavEntryIdFactory,
     private val routeResolver: (NavRoute) -> NavGraphResolution,
+    private val deepLinkResolver: ((String) -> NavDeepLinkResolution)?,
     val rootBackBehavior: NavRootBackBehavior,
 ) {
     private var currentState = initialState
@@ -137,6 +150,11 @@ class NavBackStackController private constructor(
 
     @Synchronized
     fun retainedEntries(): List<NavEntry> = currentState.allEntries
+
+    @Synchronized
+    fun resolveDeepLink(uri: String): NavDeepLinkResolution {
+        return deepLinkResolver?.invoke(uri) ?: NavDeepLinkResolution.Unsupported
+    }
 
     @Synchronized
     fun systemBackCommand(): NavCommand? {
@@ -233,6 +251,16 @@ class NavBackStackController private constructor(
                     command = command,
                 ) ?: return NavPreparation.NoChange(
                     reason = NavNoChangeReason.AlreadySelectedStack,
+                    snapshot = before,
+                )
+            }
+
+            is NavCommand.OpenDeepLink -> {
+                prepareDeepLinkNavigation(
+                    beforeState = beforeState,
+                    command = command,
+                ) ?: return NavPreparation.NoChange(
+                    reason = NavNoChangeReason.AlreadyAtDestination,
                     snapshot = before,
                 )
             }
@@ -378,18 +406,101 @@ class NavBackStackController private constructor(
         ) {
             return null
         }
-        val nextStacks = LinkedHashMap(beforeState.stacks).apply {
-            put(command.stackId, selectedSnapshot)
+        return beforeState.replaceAndSelectStack(
+            targetStackId = command.stackId,
+            targetSnapshot = selectedSnapshot,
+        )
+    }
+
+    private fun prepareDeepLinkNavigation(
+        beforeState: NavStackSetSnapshot,
+        command: NavCommand.OpenDeepLink,
+    ): NavStackSetSnapshot? {
+        val targetStackId = command.targetStackId ?: beforeState.activeStackId
+        val targetSnapshot = requireNotNull(beforeState[targetStackId]) {
+            "Navigation stack '$targetStackId' is not declared."
         }
-        val nextHistory = if (command.stackId == beforeState.activeStackId) {
-            beforeState.selectionHistory
+        val resolved = routeResolver(command.route)
+        val nextSnapshot = when (command.launchMode) {
+            NavDeepLinkLaunchMode.Push -> {
+                NavBackStackSnapshot(
+                    targetSnapshot.entries + createEntry(
+                        resolved = resolved,
+                        previousEntry = targetSnapshot.top,
+                    ),
+                )
+            }
+
+            NavDeepLinkLaunchMode.SingleTop -> {
+                if (targetSnapshot.top.matches(resolved)) {
+                    targetSnapshot
+                } else {
+                    NavBackStackSnapshot(
+                        targetSnapshot.entries + createEntry(
+                            resolved = resolved,
+                            previousEntry = targetSnapshot.top,
+                        ),
+                    )
+                }
+            }
+
+            NavDeepLinkLaunchMode.ReplaceTop -> {
+                if (targetSnapshot.top.matches(resolved)) {
+                    targetSnapshot
+                } else {
+                    NavBackStackSnapshot(
+                        targetSnapshot.entries.dropLast(1) + createEntry(
+                            resolved = resolved,
+                            previousEntry = targetSnapshot.top,
+                        ),
+                    )
+                }
+            }
+
+            NavDeepLinkLaunchMode.Reset -> {
+                if (
+                    targetSnapshot.entries.size == 1 &&
+                    targetSnapshot.top.matches(resolved)
+                ) {
+                    targetSnapshot
+                } else {
+                    NavBackStackSnapshot(
+                        listOf(
+                            createEntry(
+                                resolved = resolved,
+                                previousEntry = null,
+                            ),
+                        ),
+                    )
+                }
+            }
+        }
+        val afterState = beforeState.replaceAndSelectStack(
+            targetStackId = targetStackId,
+            targetSnapshot = nextSnapshot,
+        )
+        return afterState.takeUnless { state -> state == beforeState }
+    }
+
+    private fun NavStackSetSnapshot.replaceAndSelectStack(
+        targetStackId: NavStackId,
+        targetSnapshot: NavBackStackSnapshot,
+    ): NavStackSetSnapshot {
+        requireNotNull(this[targetStackId]) {
+            "Navigation stack '$targetStackId' is not declared."
+        }
+        val nextStacks = LinkedHashMap(stacks).apply {
+            put(targetStackId, targetSnapshot)
+        }
+        val nextHistory = if (targetStackId == activeStackId) {
+            selectionHistory
         } else {
-            beforeState.selectionHistory
-                .filterNot { stackId -> stackId == command.stackId } +
-                beforeState.activeStackId
+            selectionHistory
+                .filterNot { stackId -> stackId == targetStackId } +
+                activeStackId
         }
         return NavStackSetSnapshot(
-            activeStackId = command.stackId,
+            activeStackId = targetStackId,
             stacks = nextStacks,
             selectionHistory = nextHistory,
         )
@@ -469,6 +580,7 @@ class NavBackStackController private constructor(
                 ),
                 entryIdFactory = entryIdFactory,
                 routeResolver = resolver,
+                deepLinkResolver = null,
                 rootBackBehavior = configuration.rootBackBehavior,
             )
         }
@@ -486,6 +598,7 @@ class NavBackStackController private constructor(
                 ),
                 entryIdFactory = entryIdFactory,
                 routeResolver = graph::resolve,
+                deepLinkResolver = graph::resolveDeepLink,
                 rootBackBehavior = configuration.rootBackBehavior,
             )
         }
@@ -503,6 +616,7 @@ class NavBackStackController private constructor(
                 initialState = state,
                 entryIdFactory = entryIdFactory,
                 routeResolver = resolver,
+                deepLinkResolver = null,
                 rootBackBehavior = NavRootBackBehavior.Delegate,
             )
         }
@@ -518,6 +632,7 @@ class NavBackStackController private constructor(
                 initialState = state,
                 entryIdFactory = entryIdFactory,
                 routeResolver = graph::resolve,
+                deepLinkResolver = graph::resolveDeepLink,
                 rootBackBehavior = NavRootBackBehavior.Delegate,
             )
         }
@@ -536,6 +651,7 @@ class NavBackStackController private constructor(
                 initialState = state,
                 entryIdFactory = entryIdFactory,
                 routeResolver = resolver,
+                deepLinkResolver = null,
                 rootBackBehavior = configuration.rootBackBehavior,
             )
         }
@@ -552,6 +668,7 @@ class NavBackStackController private constructor(
                 initialState = state,
                 entryIdFactory = entryIdFactory,
                 routeResolver = graph::resolve,
+                deepLinkResolver = graph::resolveDeepLink,
                 rootBackBehavior = configuration.rootBackBehavior,
             )
         }

@@ -18,6 +18,13 @@ enum class NavDeepLinkArgumentType {
     Double,
 }
 
+enum class NavDeepLinkLaunchMode {
+    Push,
+    SingleTop,
+    ReplaceTop,
+    Reset,
+}
+
 /**
  * One allowlisted URI pattern for a graph node.
  *

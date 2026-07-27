@@ -201,6 +201,111 @@ class NavBackStackSetControllerTest {
     }
 
     @Test
+    fun `deep link selects and resets its target stack as one rollback-safe transaction`() {
+        val ids = ArrayDeque(
+            listOf(
+                "home-root",
+                "account-root",
+                "security-rolled-back",
+                "security-committed",
+            ),
+        )
+        val accountStack = NavStackId("account")
+        val graph = navGraph(
+            route = "app",
+            startDestination = NavRoute("home"),
+        ) {
+            destination("home")
+            navigation(
+                route = "account",
+                startDestination = NavRoute("profile"),
+            ) {
+                destination("profile")
+                destination(
+                    route = "security",
+                    deepLinks = listOf(
+                        NavDeepLink(
+                            uriPattern = "viewcompose://account/security/{section}",
+                            targetStackId = accountStack,
+                        ),
+                    ),
+                )
+            }
+        }
+        val controller = NavBackStackController.create(
+            configuration = NavStackConfiguration(
+                initialStackId = HomeStack,
+                stacks = listOf(
+                    NavStackSpec(HomeStack, NavRoute("home")),
+                    NavStackSpec(accountStack, NavRoute("account")),
+                ),
+            ),
+            graph = graph,
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(ids.removeFirst())
+            },
+        )
+        val match = (
+            controller.resolveDeepLink("viewcompose://account/security/privacy")
+                as NavDeepLinkResolution.Matched
+            ).match
+        val before = controller.stackStateSnapshot()
+
+        val rolledBack = controller.prepare(
+            NavCommand.OpenDeepLink(
+                route = match.route,
+                targetStackId = match.deepLink.targetStackId,
+            ),
+        ).readyTransaction()
+
+        assertSame(before, controller.stackStateSnapshot())
+        assertEquals(accountStack, rolledBack.afterState.activeStackId)
+        assertEquals(listOf(HomeStack), rolledBack.afterState.selectionHistory)
+        assertEquals(
+            listOf("security"),
+            checkNotNull(rolledBack.afterState[accountStack]).routeNames(),
+        )
+        assertEquals(
+            NavValue.Text("privacy"),
+            rolledBack.after.top.route["section"],
+        )
+        assertEquals(
+            listOf("security-rolled-back"),
+            rolledBack.mutation.added.map { entry -> entry.id.value },
+        )
+        assertEquals(
+            listOf("account-root"),
+            rolledBack.mutation.removed.map { entry -> entry.id.value },
+        )
+        rolledBack.rollback()
+
+        assertSame(before, controller.stackStateSnapshot())
+
+        controller.prepare(
+            NavCommand.OpenDeepLink(
+                route = match.route,
+                targetStackId = match.deepLink.targetStackId,
+            ),
+        ).readyTransaction().commit()
+
+        assertEquals(accountStack, controller.stackStateSnapshot().activeStackId)
+        assertEquals("security-committed", controller.snapshot().top.id.value)
+        assertEquals(listOf(HomeStack), controller.stackStateSnapshot().selectionHistory)
+    }
+
+    @Test
+    fun `deep-link resolution is unsupported without a graph`() {
+        val controller = controllerWithIds(
+            ids = listOf("home-root", "search-root"),
+        )
+
+        assertSame(
+            NavDeepLinkResolution.Unsupported,
+            controller.resolveDeepLink("viewcompose://account/security"),
+        )
+    }
+
+    @Test
     fun `stack set rejects owner identity collisions across stacks`() {
         val sharedEntry = NavEntry(
             id = NavEntryId("shared"),

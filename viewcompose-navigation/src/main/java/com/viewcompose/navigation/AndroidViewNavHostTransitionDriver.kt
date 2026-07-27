@@ -287,6 +287,7 @@ internal fun navTransitionDirection(
         is NavCommand.ReplaceTop,
         is NavCommand.Reset,
         is NavCommand.SelectStack,
+        is NavCommand.OpenDeepLink,
         -> 1f
     }
     return layoutMultiplier * commandMultiplier
