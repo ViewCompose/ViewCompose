@@ -20,11 +20,25 @@ sealed interface NavCommand {
     data class Reset(
         val route: NavRoute,
     ) : NavCommand
+
+    data class SelectStack(
+        val stackId: NavStackId,
+        val selectionMode: NavStackSelectionMode = NavStackSelectionMode.Preserve,
+    ) : NavCommand
+
+    /**
+     * Returns to the newest stack in selection history without adding the current stack back.
+     *
+     * Applications normally reach this command through system Back when
+     * [NavRootBackBehavior.PreviousStack] is configured.
+     */
+    data object PopStackHistory : NavCommand
 }
 
 enum class NavNoChangeReason {
     CannotPopRoot,
     AlreadyAtDestination,
+    AlreadySelectedStack,
 }
 
 sealed interface NavPreparation {
@@ -54,6 +68,8 @@ enum class NavTransactionStatus {
 class NavTransaction internal constructor(
     private val owner: NavBackStackController,
     internal val transactionId: Long,
+    internal val beforeState: NavStackSetSnapshot,
+    internal val afterState: NavStackSetSnapshot,
     val command: NavCommand,
     val before: NavBackStackSnapshot,
     val after: NavBackStackSnapshot,
@@ -91,13 +107,14 @@ class NavTransaction internal constructor(
 }
 
 class NavBackStackController private constructor(
-    initialSnapshot: NavBackStackSnapshot,
+    initialState: NavStackSetSnapshot,
     private val entryIdFactory: NavEntryIdFactory,
     private val routeResolver: (NavRoute) -> NavGraphResolution,
+    val rootBackBehavior: NavRootBackBehavior,
 ) {
-    private var currentSnapshot = initialSnapshot
+    private var currentState = initialState
     private val allocatedEntryIds = linkedSetOf<NavEntryId>().apply {
-        initialSnapshot.entries.forEach { entry ->
+        initialState.allEntries.forEach { entry ->
             add(entry.id)
             entry.graphEntries.forEach { graphEntry -> add(graphEntry.id) }
         }
@@ -106,15 +123,39 @@ class NavBackStackController private constructor(
     private var nextTransactionId = 0L
 
     @Synchronized
-    fun snapshot(): NavBackStackSnapshot = currentSnapshot
+    fun snapshot(): NavBackStackSnapshot = currentState.activeStack
+
+    @Synchronized
+    fun stackStateSnapshot(): NavStackSetSnapshot = currentState
+
+    @Synchronized
+    fun stackSnapshot(stackId: NavStackId): NavBackStackSnapshot {
+        return requireNotNull(currentState[stackId]) {
+            "Navigation stack '$stackId' is not declared."
+        }
+    }
+
+    @Synchronized
+    fun retainedEntries(): List<NavEntry> = currentState.allEntries
+
+    @Synchronized
+    fun systemBackCommand(): NavCommand? {
+        return when {
+            currentState.activeStack.entries.size > 1 -> NavCommand.Pop
+            rootBackBehavior == NavRootBackBehavior.PreviousStack &&
+                currentState.selectionHistory.isNotEmpty() -> NavCommand.PopStackHistory
+            else -> null
+        }
+    }
 
     @Synchronized
     fun prepare(command: NavCommand): NavPreparation {
         check(pendingTransactionId == null) {
             "A navigation transaction is already prepared. Commit or roll it back first."
         }
-        val before = currentSnapshot
-        val after = when (command) {
+        val beforeState = currentState
+        val before = beforeState.activeStack
+        val afterState = when (command) {
             is NavCommand.Push -> {
                 val resolved = routeResolver(command.route)
                 if (
@@ -126,10 +167,12 @@ class NavBackStackController private constructor(
                         snapshot = before,
                     )
                 }
-                NavBackStackSnapshot(
-                    before.entries + createEntry(
-                        resolved = resolved,
-                        previousEntry = before.top,
+                beforeState.withActiveStack(
+                    NavBackStackSnapshot(
+                        before.entries + createEntry(
+                            resolved = resolved,
+                            previousEntry = before.top,
+                        ),
                     ),
                 )
             }
@@ -141,7 +184,9 @@ class NavBackStackController private constructor(
                         snapshot = before,
                     )
                 }
-                NavBackStackSnapshot(before.entries.dropLast(1))
+                beforeState.withActiveStack(
+                    NavBackStackSnapshot(before.entries.dropLast(1)),
+                )
             }
 
             is NavCommand.ReplaceTop -> {
@@ -152,10 +197,12 @@ class NavBackStackController private constructor(
                         snapshot = before,
                     )
                 }
-                NavBackStackSnapshot(
-                    before.entries.dropLast(1) + createEntry(
-                        resolved = resolved,
-                        previousEntry = before.top,
+                beforeState.withActiveStack(
+                    NavBackStackSnapshot(
+                        before.entries.dropLast(1) + createEntry(
+                            resolved = resolved,
+                            previousEntry = before.top,
+                        ),
                     ),
                 )
             }
@@ -168,26 +215,53 @@ class NavBackStackController private constructor(
                         snapshot = before,
                     )
                 }
-                NavBackStackSnapshot(
-                    listOf(
-                        createEntry(
-                            resolved = resolved,
-                            previousEntry = null,
+                beforeState.withActiveStack(
+                    NavBackStackSnapshot(
+                        listOf(
+                            createEntry(
+                                resolved = resolved,
+                                previousEntry = null,
+                            ),
                         ),
                     ),
                 )
             }
+
+            is NavCommand.SelectStack -> {
+                prepareStackSelection(
+                    beforeState = beforeState,
+                    command = command,
+                ) ?: return NavPreparation.NoChange(
+                    reason = NavNoChangeReason.AlreadySelectedStack,
+                    snapshot = before,
+                )
+            }
+
+            NavCommand.PopStackHistory -> {
+                check(before.entries.size == 1) {
+                    "Navigation stack history can be popped only from the active stack root."
+                }
+                val targetStackId = beforeState.selectionHistory.lastOrNull()
+                    ?: return NavPreparation.NoChange(
+                        reason = NavNoChangeReason.CannotPopRoot,
+                        snapshot = before,
+                    )
+                beforeState.selectPreviousStack(targetStackId)
+            }
         }
+        val after = afterState.activeStack
         val transactionId = ++nextTransactionId
         pendingTransactionId = transactionId
         return NavPreparation.Ready(
             transaction = NavTransaction(
                 owner = this,
                 transactionId = transactionId,
+                beforeState = beforeState,
+                afterState = afterState,
                 command = command,
                 before = before,
                 after = after,
-                mutation = mutationBetween(before, after),
+                mutation = mutationBetween(beforeState, afterState),
             ),
         )
     }
@@ -195,12 +269,12 @@ class NavBackStackController private constructor(
     @Synchronized
     internal fun commit(transaction: NavTransaction): NavBackStackSnapshot {
         requirePrepared(transaction)
-        check(currentSnapshot == transaction.before) {
+        check(currentState == transaction.beforeState) {
             "Navigation state changed while transaction ${transaction.transactionId} was prepared."
         }
-        currentSnapshot = transaction.after
+        currentState = transaction.afterState
         pendingTransactionId = null
-        return currentSnapshot
+        return currentState.activeStack
     }
 
     @Synchronized
@@ -285,17 +359,78 @@ class NavBackStackController private constructor(
             graphHierarchy == resolved.hierarchy
     }
 
+    private fun prepareStackSelection(
+        beforeState: NavStackSetSnapshot,
+        command: NavCommand.SelectStack,
+    ): NavStackSetSnapshot? {
+        val targetSnapshot = requireNotNull(beforeState[command.stackId]) {
+            "Navigation stack '${command.stackId}' is not declared."
+        }
+        val selectedSnapshot = when (command.selectionMode) {
+            NavStackSelectionMode.Preserve -> targetSnapshot
+            NavStackSelectionMode.PopToRoot -> {
+                NavBackStackSnapshot(listOf(targetSnapshot.entries.first()))
+            }
+        }
+        if (
+            command.stackId == beforeState.activeStackId &&
+            selectedSnapshot == targetSnapshot
+        ) {
+            return null
+        }
+        val nextStacks = LinkedHashMap(beforeState.stacks).apply {
+            put(command.stackId, selectedSnapshot)
+        }
+        val nextHistory = if (command.stackId == beforeState.activeStackId) {
+            beforeState.selectionHistory
+        } else {
+            beforeState.selectionHistory
+                .filterNot { stackId -> stackId == command.stackId } +
+                beforeState.activeStackId
+        }
+        return NavStackSetSnapshot(
+            activeStackId = command.stackId,
+            stacks = nextStacks,
+            selectionHistory = nextHistory,
+        )
+    }
+
     private fun mutationBetween(
-        before: NavBackStackSnapshot,
-        after: NavBackStackSnapshot,
+        before: NavStackSetSnapshot,
+        after: NavStackSetSnapshot,
     ): NavStackMutation {
-        val beforeIds = before.entries.mapTo(hashSetOf(), NavEntry::id)
-        val afterIds = after.entries.mapTo(hashSetOf(), NavEntry::id)
+        val beforeIds = before.allEntries.mapTo(hashSetOf(), NavEntry::id)
+        val afterIds = after.allEntries.mapTo(hashSetOf(), NavEntry::id)
         return NavStackMutation(
-            added = after.entries.filter { it.id !in beforeIds },
-            removed = before.entries.filter { it.id !in afterIds },
-            previousTop = before.top,
-            nextTop = after.top,
+            added = after.allEntries.filter { it.id !in beforeIds },
+            removed = before.allEntries.filter { it.id !in afterIds },
+            previousTop = before.activeStack.top,
+            nextTop = after.activeStack.top,
+        )
+    }
+
+    private fun NavStackSetSnapshot.withActiveStack(
+        snapshot: NavBackStackSnapshot,
+    ): NavStackSetSnapshot {
+        return NavStackSetSnapshot(
+            activeStackId = activeStackId,
+            stacks = LinkedHashMap(stacks).apply {
+                put(activeStackId, snapshot)
+            },
+            selectionHistory = selectionHistory,
+        )
+    }
+
+    private fun NavStackSetSnapshot.selectPreviousStack(
+        targetStackId: NavStackId,
+    ): NavStackSetSnapshot {
+        check(selectionHistory.lastOrNull() == targetStackId) {
+            "Previous navigation stack must be the newest selection-history entry."
+        }
+        return NavStackSetSnapshot(
+            activeStackId = targetStackId,
+            stacks = stacks,
+            selectionHistory = selectionHistory.dropLast(1),
         )
     }
 
@@ -304,24 +439,9 @@ class NavBackStackController private constructor(
             startDestination: NavRoute,
             entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
         ): NavBackStackController {
-            val rootId = entryIdFactory.nextId()
-            val directResolver: (NavRoute) -> NavGraphResolution = { route ->
-                NavGraphResolution(
-                    destination = route,
-                    graphPath = emptyList(),
-                )
-            }
-            return NavBackStackController(
-                initialSnapshot = NavBackStackSnapshot(
-                    entries = listOf(
-                        NavEntry(
-                            id = rootId,
-                            route = startDestination,
-                        ),
-                    ),
-                ),
+            return create(
+                configuration = NavStackConfiguration.single(startDestination),
                 entryIdFactory = entryIdFactory,
-                routeResolver = directResolver,
             )
         }
 
@@ -329,24 +449,44 @@ class NavBackStackController private constructor(
             graph: NavGraph,
             entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
         ): NavBackStackController {
-            val rootId = entryIdFactory.nextId()
-            val resolvedStart = graph.resolve(graph.startDestination)
-            val rootGraphEntries = freshGraphEntries(
-                ownerEntryId = rootId,
-                graphPath = resolvedStart.graphPath,
+            return create(
+                configuration = NavStackConfiguration.single(graph.startDestination),
+                graph = graph,
+                entryIdFactory = entryIdFactory,
             )
+        }
+
+        fun create(
+            configuration: NavStackConfiguration,
+            entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
+        ): NavBackStackController {
+            val resolver = directResolver()
             return NavBackStackController(
-                initialSnapshot = NavBackStackSnapshot(
-                    entries = listOf(
-                        NavEntry(
-                            id = rootId,
-                            route = resolvedStart.destination,
-                            graphEntries = rootGraphEntries,
-                        ),
-                    ),
+                initialState = createInitialState(
+                    configuration = configuration,
+                    entryIdFactory = entryIdFactory,
+                    routeResolver = resolver,
+                ),
+                entryIdFactory = entryIdFactory,
+                routeResolver = resolver,
+                rootBackBehavior = configuration.rootBackBehavior,
+            )
+        }
+
+        fun create(
+            configuration: NavStackConfiguration,
+            graph: NavGraph,
+            entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
+        ): NavBackStackController {
+            return NavBackStackController(
+                initialState = createInitialState(
+                    configuration = configuration,
+                    entryIdFactory = entryIdFactory,
+                    routeResolver = graph::resolve,
                 ),
                 entryIdFactory = entryIdFactory,
                 routeResolver = graph::resolve,
+                rootBackBehavior = configuration.rootBackBehavior,
             )
         }
 
@@ -357,15 +497,13 @@ class NavBackStackController private constructor(
             require(snapshot.entries.all { entry -> entry.graphEntries.isEmpty() }) {
                 "A graph-owned back stack must be restored with its NavGraph."
             }
+            val state = singleStackState(snapshot)
+            val resolver = directResolver()
             return NavBackStackController(
-                initialSnapshot = snapshot,
+                initialState = state,
                 entryIdFactory = entryIdFactory,
-                routeResolver = { route ->
-                    NavGraphResolution(
-                        destination = route,
-                        graphPath = emptyList(),
-                    )
-                },
+                routeResolver = resolver,
+                rootBackBehavior = NavRootBackBehavior.Delegate,
             )
         }
 
@@ -374,7 +512,110 @@ class NavBackStackController private constructor(
             graph: NavGraph,
             entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
         ): NavBackStackController {
-            snapshot.entries.forEach { entry ->
+            val state = singleStackState(snapshot)
+            validateGraphState(state, graph)
+            return NavBackStackController(
+                initialState = state,
+                entryIdFactory = entryIdFactory,
+                routeResolver = graph::resolve,
+                rootBackBehavior = NavRootBackBehavior.Delegate,
+            )
+        }
+
+        fun restore(
+            state: NavStackSetSnapshot,
+            configuration: NavStackConfiguration,
+            entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
+        ): NavBackStackController {
+            requireConfigurationMatches(state, configuration)
+            require(state.allEntries.all { entry -> entry.graphEntries.isEmpty() }) {
+                "Graph-owned back stacks must be restored with their NavGraph."
+            }
+            val resolver = directResolver()
+            return NavBackStackController(
+                initialState = state,
+                entryIdFactory = entryIdFactory,
+                routeResolver = resolver,
+                rootBackBehavior = configuration.rootBackBehavior,
+            )
+        }
+
+        fun restore(
+            state: NavStackSetSnapshot,
+            configuration: NavStackConfiguration,
+            graph: NavGraph,
+            entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
+        ): NavBackStackController {
+            requireConfigurationMatches(state, configuration)
+            validateGraphState(state, graph)
+            return NavBackStackController(
+                initialState = state,
+                entryIdFactory = entryIdFactory,
+                routeResolver = graph::resolve,
+                rootBackBehavior = configuration.rootBackBehavior,
+            )
+        }
+
+        private fun createInitialState(
+            configuration: NavStackConfiguration,
+            entryIdFactory: NavEntryIdFactory,
+            routeResolver: (NavRoute) -> NavGraphResolution,
+        ): NavStackSetSnapshot {
+            val stacks = linkedMapOf<NavStackId, NavBackStackSnapshot>()
+            configuration.stacks.forEach { stack ->
+                val rootId = entryIdFactory.nextId()
+                val resolvedStart = routeResolver(stack.startDestination)
+                stacks[stack.id] = NavBackStackSnapshot(
+                    entries = listOf(
+                        NavEntry(
+                            id = rootId,
+                            route = resolvedStart.destination,
+                            graphEntries = freshGraphEntries(
+                                ownerEntryId = rootId,
+                                graphPath = resolvedStart.graphPath,
+                            ),
+                        ),
+                    ),
+                )
+            }
+            return NavStackSetSnapshot(
+                activeStackId = configuration.initialStackId,
+                stacks = stacks,
+            )
+        }
+
+        private fun directResolver(): (NavRoute) -> NavGraphResolution {
+            return { route ->
+                NavGraphResolution(
+                    destination = route,
+                    graphPath = emptyList(),
+                )
+            }
+        }
+
+        private fun singleStackState(
+            snapshot: NavBackStackSnapshot,
+        ): NavStackSetSnapshot {
+            return NavStackSetSnapshot(
+                activeStackId = NavStackId.Default,
+                stacks = linkedMapOf(NavStackId.Default to snapshot),
+            )
+        }
+
+        private fun requireConfigurationMatches(
+            state: NavStackSetSnapshot,
+            configuration: NavStackConfiguration,
+        ) {
+            require(state.stacks.keys == configuration.stacks.mapTo(linkedSetOf(), NavStackSpec::id)) {
+                "Restored navigation stack IDs do not match the current configuration."
+            }
+        }
+
+        private fun validateGraphState(
+            state: NavStackSetSnapshot,
+            graph: NavGraph,
+        ) {
+            state.allEntries.forEach { entry ->
                 val resolved = graph.resolve(entry.route)
                 require(entry.route == resolved.destination) {
                     "Restored destination '${entry.route}' no longer resolves to itself."
@@ -383,11 +624,6 @@ class NavBackStackController private constructor(
                     "Restored destination '${entry.route}' moved to a different navigation graph."
                 }
             }
-            return NavBackStackController(
-                initialSnapshot = snapshot,
-                entryIdFactory = entryIdFactory,
-                routeResolver = graph::resolve,
-            )
         }
 
         private fun freshGraphEntries(
