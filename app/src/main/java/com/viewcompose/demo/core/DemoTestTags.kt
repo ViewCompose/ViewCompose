@@ -1,6 +1,10 @@
 package com.viewcompose
 
 internal object DemoTestTags {
+    const val HOME_NAVIGATION_BAR = "home_navigation_bar"
+
+    fun catalogModuleButton(moduleKey: String): String = "catalog_module_$moduleKey"
+
     const val LAYOUTS_BENCHMARK_TOGGLE = "layouts_benchmark_toggle"
     const val LAYOUTS_BENCHMARK_RESET = "layouts_benchmark_reset"
     const val LAYOUTS_EDGE_TOGGLE = "layouts_edge_toggle"

@@ -6,6 +6,7 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
+import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.widget.core.HorizontalPager
@@ -24,11 +25,10 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
     val themeModeState = remember { mutableStateOf(DemoThemeSession.mode) }
     val remoteImageLoader = remember { CoilRemoteImageLoader(root.context.applicationContext) }
     val activity = root.context.findAppCompatActivity()
-    val overrideTheme = when (themeModeState.value) {
-        DemoThemeMode.System -> null
-        DemoThemeMode.Light -> DemoThemeTokens.light
-        DemoThemeMode.Dark -> DemoThemeTokens.dark
-    }
+    val themeTokens = DemoThemeTokens.resolve(
+        mode = themeModeState.value,
+        context = root.context,
+    )
     ProvideRemoteImageLoader(remoteImageLoader) {
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
             val navIndex = remember { mutableStateOf(0) }
@@ -41,6 +41,7 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
                     NavigationBar(
                         selectedIndex = navIndex.value,
                         onItemSelected = { navIndex.value = it },
+                        modifier = Modifier.testTag(DemoTestTags.HOME_NAVIGATION_BAR),
                     ) {
                         Item(label = "目录", icon = ImageSource.Resource(R.drawable.demo_media_icon))
                         Item(label = "诊断", icon = ImageSource.Resource(R.drawable.demo_media_icon))
@@ -70,10 +71,6 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
                 }
             }
         }
-        if (overrideTheme == null) {
-            scaffoldContent()
-        } else {
-            UiTheme(tokens = overrideTheme, content = scaffoldContent)
-        }
+        UiTheme(tokens = themeTokens, content = scaffoldContent)
     }
 }
