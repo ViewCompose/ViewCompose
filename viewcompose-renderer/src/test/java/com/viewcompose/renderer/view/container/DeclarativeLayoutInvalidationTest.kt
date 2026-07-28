@@ -2,7 +2,9 @@ package com.viewcompose.renderer.view.container
 
 import android.view.Gravity
 import android.view.View
+import android.widget.LinearLayout
 import com.viewcompose.ui.layout.MainAxisArrangement
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -12,6 +14,42 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class DeclarativeLayoutInvalidationTest {
+    @Test
+    fun `linear layout keeps margin and spacing placement without temporary specs`() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = DeclarativeLinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            itemSpacing = 8
+            mainAxisArrangement = MainAxisArrangement.Start
+        }
+        val first = View(context)
+        val second = View(context)
+        view.addView(
+            first,
+            LinearLayout.LayoutParams(40, 20).apply {
+                leftMargin = 10
+                rightMargin = 6
+            },
+        )
+        view.addView(
+            second,
+            LinearLayout.LayoutParams(20, 20).apply {
+                leftMargin = 4
+                rightMargin = 2
+            },
+        )
+
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(40, View.MeasureSpec.EXACTLY)
+        view.measure(widthSpec, heightSpec)
+        view.layout(0, 0, 200, 40)
+
+        assertEquals(10, first.left)
+        assertEquals(50, first.right)
+        assertEquals(68, second.left)
+        assertEquals(88, second.right)
+    }
+
     @Test
     fun `box only requests layout when content gravity changes`() {
         val view = DeclarativeBoxLayout(RuntimeEnvironment.getApplication())
