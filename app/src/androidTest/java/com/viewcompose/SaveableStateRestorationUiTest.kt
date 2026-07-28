@@ -12,6 +12,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * rememberSaveable 和 lazy list state 的 Activity 重建恢复验证。
+ * Activity-recreation restoration tests for rememberSaveable and lazy list state.
+ */
 @RunWith(AndroidJUnit4::class)
 class SaveableStateRestorationUiTest {
     @Before

@@ -29,6 +29,10 @@ import org.junit.runner.RunWith
 import kotlin.math.abs
 import kotlin.math.ceil
 
+/**
+ * 系统 Back、predictive Back 和导航事务性的设备级验证。
+ * Device-level validation for system Back, predictive Back, and navigation transactions.
+ */
 @OptIn(ExperimentalActivityApi::class)
 @RunWith(AndroidJUnit4::class)
 class NavigationBackDeviceTest {
@@ -377,10 +381,11 @@ class NavigationBackDeviceTest {
                     ),
                     activity.routeNames(),
                 )
-                // Finish the synthetic gesture cycle before asking Android to dispatch a new,
-                // physical Back event. A real platform gesture always terminates with either
-                // cancellation or commit; mixing a dispatcher-only start with a separate key
-                // event leaves AndroidX's platform bridge in an impossible state.
+                // 先结束合成手势周期，再让 Android 分发新的物理 Back 事件。
+                // Finish the synthetic gesture cycle before asking Android to dispatch a new physical Back event.
+                // 真实平台手势一定会以取消或提交结束；dispatcher-only start 混用独立按键事件会让 AndroidX bridge 状态不可能成立。
+                // A real platform gesture always ends with cancellation or commit; mixing a dispatcher-only
+                // start with a separate key event leaves AndroidX's platform bridge in an impossible state.
                 activity.onBackPressedDispatcher.dispatchOnBackCancelled()
             }
             awaitTransition()
@@ -579,6 +584,10 @@ class NavigationBackDeviceTest {
         }
     }
 
+    /**
+     * 启动导航 Back 测试宿主并等待首帧稳定。
+     * Launches the navigation Back test host and waits for the first stable frame.
+     */
     private fun launchHost(): ActivityScenario<NavigationBackTestActivity> {
         return ActivityScenario.launch(NavigationBackTestActivity::class.java).also { scenario ->
             scenario.moveToState(Lifecycle.State.RESUMED)
@@ -606,6 +615,10 @@ class NavigationBackDeviceTest {
         )
     }
 
+    /**
+     * 合成一段 predictive Back 取消手势。
+     * Synthesizes a predictive Back cancellation gesture.
+     */
     private fun dispatchPredictiveCancellation(
         scenario: ActivityScenario<NavigationBackTestActivity>,
     ) {
@@ -657,6 +670,10 @@ class NavigationBackDeviceTest {
         )
     }
 
+    /**
+     * 在指定代码块执行期间采样 destination View 属性。
+     * Samples destination View properties while the given block runs.
+     */
     private fun sampleDestinationViewsDuring(
         scenario: ActivityScenario<NavigationBackTestActivity>,
         block: () -> Unit,
@@ -692,11 +709,19 @@ class NavigationBackDeviceTest {
         )
     }
 
+    /**
+     * 等待常规导航转场结束。
+     * Waits for a regular navigation transition to settle.
+     */
     private fun awaitTransition() {
         SystemClock.sleep(NavigationBackTestActivity.TRANSITION_DURATION_MILLIS + 80L)
         waitForUiIdle()
     }
 
+    /**
+     * 等待 predictive Back 取消弹簧结束。
+     * Waits for the predictive Back cancellation spring to settle.
+     */
     private fun awaitBackCancellation() {
         SystemClock.sleep(
             NavTransitionSpec.Default.predictiveBack.cancelSpring.maxDurationMillis + 80L,
@@ -713,6 +738,10 @@ class NavigationBackDeviceTest {
             detailsAlpha in 0f..1f
     }
 
+    /**
+     * 断言系统 Activity 转场采样具备重叠帧和单 surface 淡出行为。
+     * Asserts that platform transition samples contain overlap frames and one-surface fade behavior.
+     */
     private fun assertPlatformTransitionSamples(
         phase: String,
         samples: List<NavigationBackTestActivity.DestinationViewSample>,
@@ -759,6 +788,10 @@ class NavigationBackDeviceTest {
             "maxDetailsTranslation=$maxDetailsTranslation."
     }
 
+    /**
+     * 将 FrameMetricsAggregator 的直方图转换成测试使用的帧耗时摘要。
+     * Converts a FrameMetricsAggregator histogram into the frame-timing summary used by tests.
+     */
     private fun SparseIntArray?.toFrameTimingSummary(
         refreshRateHz: Float,
     ): FrameTimingSummary {

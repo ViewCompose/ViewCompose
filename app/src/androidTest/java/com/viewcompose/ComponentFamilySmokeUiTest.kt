@@ -6,6 +6,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * 核心组件家族的设备级 smoke test。
+ * Device-level smoke test for core component families.
+ *
+ * 每段只断言稳定锚点可见，避免把大量视觉细节复制到 smoke 层。
+ * Each section only asserts a stable anchor is visible, keeping visual details out of smoke coverage.
+ */
 @RunWith(AndroidJUnit4::class)
 class ComponentFamilySmokeUiTest {
     @Test

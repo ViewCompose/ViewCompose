@@ -29,6 +29,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * P1 能力的设备级集成测试。
+ * Device-level integration tests for P1 capabilities.
+ *
+ * 覆盖焦点/硬件键、原生 nested scroll、AndroidView 失败回滚等必须走真实 View 管线的能力。
+ * Covers focus/hardware keys, native nested scroll, and AndroidView rollback paths that require real Views.
+ */
 @RunWith(AndroidJUnit4::class)
 class P1CoreCapabilitiesUiTest {
     @Test
@@ -201,6 +208,10 @@ class P1CoreCapabilitiesUiTest {
         }
     }
 
+    /**
+     * 在测试 Activity 上挂载临时容器，用于直接驱动 renderInto。
+     * Attaches a temporary container to the test Activity for direct renderInto driving.
+     */
     private fun attachedContainer(activity: P1CoreCapabilitiesTestActivity): FrameLayout {
         return FrameLayout(activity).also { container ->
             activity.addContentView(

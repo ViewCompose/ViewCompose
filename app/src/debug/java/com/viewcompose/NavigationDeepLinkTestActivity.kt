@@ -26,6 +26,13 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.Text
 
+/**
+ * 导航 deep link 设备测试的 debug-only 宿主。
+ * Debug-only host for navigation deep-link device tests.
+ *
+ * 它把导航结果和多 back stack 状态序列化为单行文本，方便 UiAutomator 稳定读取。
+ * It serializes navigation outcome and multi-back-stack state into one text line for stable UiAutomator reads.
+ */
 class NavigationDeepLinkTestActivity : ComponentActivity() {
     private val outcome = mutableStateOf(OUTCOME_NONE)
     private var controller: com.viewcompose.navigation.NavHostController? = null
@@ -79,6 +86,10 @@ class NavigationDeepLinkTestActivity : ComponentActivity() {
         consumeDeepLink(intent)
     }
 
+    /**
+     * 消费当前 Intent 中的 deep link，并记录导航结果。
+     * Consumes the deep link in the current Intent and records the navigation outcome.
+     */
     private fun consumeDeepLink(intent: Intent) {
         outcome.value = when (
             val result = checkNotNull(controller).navigateDeepLink(intent)
@@ -98,6 +109,10 @@ class NavigationDeepLinkTestActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * 生成测试可解析的导航状态串。
+     * Builds a navigation status string that tests can parse.
+     */
     private fun statusText(
         state: NavStackSetSnapshot,
         outcome: String,

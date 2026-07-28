@@ -11,6 +11,10 @@ import com.viewcompose.widget.core.Column
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.rememberSaveable
 
+/**
+ * rememberSaveable 基础状态恢复测试的 debug-only 宿主。
+ * Debug-only host for basic rememberSaveable state restoration tests.
+ */
 class SaveableStateTestActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
