@@ -15,6 +15,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.job
 
+/**
+ * 可由协程驱动的动画状态容器。
+ * Coroutine-driven animated state holder.
+ *
+ * 同一时刻只有最新 mutation 可以发布值；新动画会取消旧动画，避免过期协程回写 UI 状态。
+ * Only the newest mutation may publish values; new animations cancel old ones to prevent stale
+ * coroutines from writing UI state.
+ */
 class Animatable<T>(
     initialValue: T,
     private val converter: AnimationConverter<T>,
@@ -97,6 +105,8 @@ class Animatable<T>(
             runningState.value = true
         }
         if (previous != null && previous.job !== mutationJob) {
+            // 新 mutation 取代旧 mutation；同一个 Job 内的 snap/stop 不需要自我取消。
+            // A new mutation replaces the old one; snap/stop from the same Job should not cancel itself.
             previous.job.cancel(
                 CancellationException("Animatable mutation was interrupted by a newer mutation."),
             )
@@ -131,6 +141,10 @@ class Animatable<T>(
     )
 }
 
+/**
+ * 创建并记忆绑定当前 frame clock 的 [Animatable]。
+ * Creates and remembers an [Animatable] bound to the current frame clock.
+ */
 fun <T> rememberAnimatable(
     initialValue: T,
     converter: AnimationConverter<T>,

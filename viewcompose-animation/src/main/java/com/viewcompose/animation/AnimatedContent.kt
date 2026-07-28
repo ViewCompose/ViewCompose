@@ -12,6 +12,10 @@ import com.viewcompose.widget.core.SideEffect
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
 
+/**
+ * 在旧状态和新状态内容之间执行交叉淡入淡出。
+ * Cross-fades between content for the previous state and the target state.
+ */
 fun <T> UiTreeBuilder.AnimatedContent(
     targetState: T,
     modifier: Modifier = Modifier,
@@ -34,6 +38,8 @@ fun <T> UiTreeBuilder.AnimatedContent(
     }.coerceIn(0f, 1f)
     val outgoingAlpha = 1f - incomingAlpha
     if (hasPendingTransition && outgoingAlpha <= 0.001f) {
+        // 等离场内容几乎透明后再提交 displayedState，避免旧内容提前从树中移除。
+        // Commit displayedState only after outgoing content is nearly transparent.
         SideEffect {
             displayedState.value = targetState
         }
@@ -60,6 +66,10 @@ fun <T> UiTreeBuilder.AnimatedContent(
     }
 }
 
+/**
+ * [AnimatedContent] 的单一动画规格便捷入口。
+ * Convenience wrapper around [AnimatedContent] with one animation spec.
+ */
 fun <T> UiTreeBuilder.Crossfade(
     targetState: T,
     modifier: Modifier = Modifier,

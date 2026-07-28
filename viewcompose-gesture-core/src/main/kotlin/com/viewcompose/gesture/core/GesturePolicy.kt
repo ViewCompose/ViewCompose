@@ -6,16 +6,28 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sign
 
+/**
+ * 指针移动超过 slop 后锁定的主轴。
+ * Primary axis locked after pointer movement crosses touch slop.
+ */
 enum class LockedAxis {
     Horizontal,
     Vertical,
 }
 
+/**
+ * swipe 判定时使用的轴向。
+ * Axis used when resolving a swipe decision.
+ */
 enum class SwipeDecisionAxis {
     Horizontal,
     Vertical,
 }
 
+/**
+ * 拖拽结束后 renderer 应执行的 swipe/settle 决策。
+ * Swipe or settle decision a renderer should perform after drag end.
+ */
 sealed interface SwipeDecision {
     data class Swipe(val direction: SwipeDirection) : SwipeDecision
 
@@ -24,17 +36,29 @@ sealed interface SwipeDecision {
     data object None : SwipeDecision
 }
 
+/**
+ * 未形成 swipe 时应收敛到的端点。
+ * Endpoint to settle to when the drag does not become a swipe.
+ */
 enum class SwipeSettleTarget {
     Min,
     Max,
 }
 
+/**
+ * anchored draggable 选择目标 anchor 的原因。
+ * Reason why anchored draggable selected a target anchor.
+ */
 enum class AnchoredSettleReason {
     Velocity,
     Distance,
     Nearest,
 }
 
+/**
+ * anchored draggable 的距离和速度阈值策略。
+ * Distance and velocity threshold policy for anchored draggable.
+ */
 data class AnchoredThresholdPolicy(
     val slopMultiplier: Float = 2f,
     val segmentFraction: Float = 0.35f,
@@ -53,11 +77,19 @@ data class AnchoredThresholdPolicy(
     }
 }
 
+/**
+ * anchored draggable 结束时解析出的目标位置。
+ * Target position resolved when anchored draggable settles.
+ */
 data class AnchoredSettleResult(
     val targetOffsetPx: Float,
     val reason: AnchoredSettleReason,
 )
 
+/**
+ * 校验 anchor 像素列表必须非空、有限且严格递增。
+ * Validates that anchor pixel offsets are non-empty, finite, and strictly increasing.
+ */
 fun requireValidAnchorsPx(anchorsPx: List<Float>) {
     require(anchorsPx.isNotEmpty()) { "Anchors must not be empty." }
     var previous = Float.NEGATIVE_INFINITY
@@ -70,6 +102,10 @@ fun requireValidAnchorsPx(anchorsPx: List<Float>) {
     }
 }
 
+/**
+ * anchor 集合变化时，选择应保留的当前 offset。
+ * Chooses the current offset to preserve after the anchor set changes.
+ */
 fun resolveAnchoredOffsetOnAnchorUpdate(
     anchorsPx: List<Float>,
     currentValueOffsetPx: Float?,
@@ -91,6 +127,10 @@ fun resolveAnchoredOffsetOnAnchorUpdate(
     return anchorsPx.first()
 }
 
+/**
+ * 根据起点、当前位置和速度解析 anchored draggable 的最终 anchor。
+ * Resolves the final anchor from the start offset, current offset, and velocity.
+ */
 fun resolveAnchoredSettleTarget(
     anchorsPx: List<Float>,
     startOffsetPx: Float,
@@ -114,6 +154,8 @@ fun resolveAnchoredSettleTarget(
     val minFlingVelocity = thresholdPolicy.minFlingVelocityOverridePxPerSecond
         ?: minFlingVelocityPxPerSecond
     if (abs(velocityPxPerSecond) >= minFlingVelocity) {
+        // 速度优先于距离阈值，匹配用户快速 fling 时的预期。
+        // Velocity wins over distance thresholds to match fast-fling expectations.
         val direction = velocityPxPerSecond.sign.toInt()
         val targetIndex = when {
             direction > 0 -> (startIndex + 1).coerceAtMost(anchorsPx.lastIndex)
@@ -179,6 +221,10 @@ private fun nearestAnchorIndex(
     return nearestIndex
 }
 
+/**
+ * 根据累计移动和方向策略决定是否锁定手势轴。
+ * Resolves whether accumulated movement should lock the gesture axis.
+ */
 fun resolveLockAxis(
     dx: Float,
     dy: Float,
@@ -208,6 +254,10 @@ fun resolveLockAxis(
     }
 }
 
+/**
+ * 判断 transform 手势是否已越过任一激活阈值。
+ * Returns whether a transform gesture crossed any activation threshold.
+ */
 fun shouldActivateTransform(
     panMotion: Float,
     zoomMotion: Float,
@@ -217,6 +267,10 @@ fun shouldActivateTransform(
     return panMotion > touchSlop || zoomMotion > touchSlop || rotationMotion > touchSlop
 }
 
+/**
+ * 根据拖拽距离、速度和可用 anchor 解析 swipe 决策。
+ * Resolves a swipe decision from drag distance, velocity, and available anchors.
+ */
 fun resolveSwipeDecision(
     axis: SwipeDecisionAxis,
     total: Float,

@@ -17,8 +17,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
+/**
+ * 持有无限循环动画通道的组合层标记对象。
+ * Composition-level marker object that owns infinite animation channels.
+ */
 class InfiniteTransition internal constructor()
 
+/**
+ * 记忆一个无限 transition，生命周期跟随当前组合位置。
+ * Remembers an infinite transition whose lifetime follows the current composition slot.
+ */
 fun rememberInfiniteTransition(
     label: String = "",
 ): InfiniteTransition {
@@ -112,6 +120,8 @@ fun <T> InfiniteTransition.animateValue(
             var from = initialValue
             var to = targetValue
             while (isActive) {
+                // 无限动画用有限动画循环拼接；Reverse 模式交换端点，Restart 模式回写初始值。
+                // Infinite animation is stitched from finite runs; Reverse swaps endpoints, Restart resets.
                 runAnimation(
                     frameClock = frameClock,
                     startValue = from,

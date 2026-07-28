@@ -1,9 +1,17 @@
 package com.viewcompose.animation.core
 
+/**
+ * 将线性时间进度映射为视觉进度的函数。
+ * Function that maps linear time progress to visual progress.
+ */
 fun interface Easing {
     fun transform(fraction: Float): Float
 }
 
+/**
+ * 常用 easing 预设。
+ * Common easing presets.
+ */
 object EasingDefaults {
     val Linear: Easing = Easing { it }
     val FastOutSlowIn: Easing = Easing { fraction ->
@@ -20,6 +28,10 @@ object EasingDefaults {
     }
 }
 
+/**
+ * 由两个控制点定义的三次贝塞尔 easing。
+ * Cubic Bezier easing defined by two control points.
+ */
 class CubicBezierEasing(
     val x1: Float,
     val y1: Float,
@@ -32,6 +44,8 @@ class CubicBezierEasing(
     }
 
     private fun solveTForX(x: Float): Float {
+        // 通过二分求解 x 对应的参数 t，避免要求控制点 x 单调之外的解析反解。
+        // Solve parameter t for x with binary search instead of relying on an analytic inverse.
         var low = 0f
         var high = 1f
         repeat(16) {

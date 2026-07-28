@@ -25,6 +25,10 @@ import com.viewcompose.ui.modifier.ContentSizeSpringSpecModel
 import com.viewcompose.ui.modifier.ContentSizeTweenSpecModel
 import com.viewcompose.ui.modifier.Modifier
 
+/**
+ * 在布局内容尺寸变化时为测量结果添加动画。
+ * Adds animation to measured content-size changes.
+ */
 fun Modifier.animateContentSize(
     animationSpec: AnimationSpec = spring(),
 ): Modifier {
@@ -35,6 +39,10 @@ fun Modifier.animateContentSize(
     )
 }
 
+/**
+ * 将 animation-core 规格转换为跨 renderer 传输的 modifier 模型。
+ * Converts animation-core specs into modifier models that can cross the renderer boundary.
+ */
 private fun AnimationSpec.toContentSizeSpecModel(): ContentSizeAnimationSpecModel {
     return when (this) {
         is TweenSpec -> ContentSizeTweenSpecModel(
@@ -80,6 +88,10 @@ private fun RepeatMode.toContentSizeRepeatMode(): ContentSizeRepeatModeModel {
     }
 }
 
+/**
+ * 只保留 renderer 可识别的 easing；未知实现降级为默认曲线。
+ * Keeps only renderer-known easing values; unknown implementations fall back to the default curve.
+ */
 private fun Easing.toContentSizeEasingModel(): ContentSizeEasingModel {
     return when (this) {
         EasingDefaults.Linear -> ContentSizeEasingModel.Linear

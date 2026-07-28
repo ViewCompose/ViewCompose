@@ -14,12 +14,20 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
 import kotlin.math.abs
 
+/**
+ * 尺寸转场作用的轴向。
+ * Axis affected by a size transition.
+ */
 enum class SizeTransformAxis {
     Both,
     Horizontal,
     Vertical,
 }
 
+/**
+ * 进入转场的基础元素。
+ * Primitive element of an enter transition.
+ */
 sealed interface EnterTransitionElement {
     data class Fade(
         val animationSpec: AnimationSpec = tween(),
@@ -33,6 +41,10 @@ sealed interface EnterTransitionElement {
     ) : EnterTransitionElement
 }
 
+/**
+ * 离开转场的基础元素。
+ * Primitive element of an exit transition.
+ */
 sealed interface ExitTransitionElement {
     data class Fade(
         val animationSpec: AnimationSpec = tween(),
@@ -46,6 +58,10 @@ sealed interface ExitTransitionElement {
     ) : ExitTransitionElement
 }
 
+/**
+ * 可组合的进入转场。
+ * Composable enter transition.
+ */
 data class EnterTransition(
     val elements: List<EnterTransitionElement>,
 ) {
@@ -54,6 +70,10 @@ data class EnterTransition(
     }
 }
 
+/**
+ * 可组合的离开转场。
+ * Composable exit transition.
+ */
 data class ExitTransition(
     val elements: List<ExitTransitionElement>,
 ) {
@@ -164,6 +184,10 @@ fun shrinkVertically(
     ),
 )
 
+/**
+ * 根据 [visible] 控制内容挂载，并在进入/离开时应用 alpha 和尺寸转场。
+ * Mounts content according to [visible] and applies alpha/size transitions on enter and exit.
+ */
 fun UiTreeBuilder.AnimatedVisibility(
     visible: Boolean,
     modifier: Modifier = Modifier,
@@ -377,6 +401,8 @@ private fun UiTreeBuilder.animatedVisibilityCore(
             if (settledVisible) 1f else (exitHeightShrink?.targetScale ?: 1f)
         },
     )
+    // 将内部 Transition 的实时状态写回外部 state，使调用方能观察 idle/current/target。
+    // Mirror the internal Transition back to external state so callers can observe idle/current/target.
     visibleState.currentState = transition.currentState
     visibleState.targetState = targetVisible
     visibleState.isIdle = !transition.isRunning && transition.currentState == transition.targetState

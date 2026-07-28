@@ -9,11 +9,19 @@ internal suspend fun MonotonicFrameClock.awaitFrameNanos(): Long {
     return withFrameNanos { it }
 }
 
+/**
+ * 协程动画循环的结束原因。
+ * Terminal reason for a coroutine animation loop.
+ */
 enum class AnimationRunResult {
     Completed,
     Cancelled,
 }
 
+/**
+ * 按 [animationSpec] 驱动一段动画，并在每帧通过 [onValue] 发布采样值。
+ * Drives one animation described by [animationSpec] and publishes sampled values through [onValue].
+ */
 suspend fun <T> runAnimation(
     frameClock: MonotonicFrameClock,
     startValue: T,
@@ -84,6 +92,8 @@ private suspend fun <T> runFiniteAnimation(
         }
     }
     if (completed) {
+        // 循环结束后再发布一次精确终点，避免最后一帧略小于总时长造成残留误差。
+        // Publish the exact terminal value after completion to avoid residual last-frame error.
         onValue(
             sampleAnimationValue(
                 startValue = startValue,
@@ -128,6 +138,10 @@ private data class AnimationTimingNanos(
     val durationNanos: Long,
 )
 
+/**
+ * 计算规格的总时长；无限重复使用 [Long.MAX_VALUE] 作为哨兵值。
+ * Calculates total duration; infinite repeats use [Long.MAX_VALUE] as a sentinel.
+ */
 fun animationDurationNanos(
     spec: AnimationSpec,
 ): Long {
@@ -144,6 +158,10 @@ fun animationDurationNanos(
     }
 }
 
+/**
+ * 在给定播放时间采样动画值。
+ * Samples an animated value at the supplied play time.
+ */
 fun <T> sampleAnimationValue(
     startValue: T,
     endValue: T,
@@ -193,6 +211,10 @@ fun <T> sampleAnimationValue(
     return converter.fromVector(vector)
 }
 
+/**
+ * 判断有限动画在 [playTimeNanos] 是否已经结束。
+ * Returns whether a finite animation has finished at [playTimeNanos].
+ */
 fun isAnimationFinished(
     spec: AnimationSpec,
     playTimeNanos: Long,
@@ -319,6 +341,8 @@ private fun <T> repeatTerminalValue(
     repeatMode: RepeatMode,
     iterations: Int,
 ): T {
+    // Reverse 模式偶数轮结束时回到起点，奇数轮结束时落到终点。
+    // Reverse mode ends at start after even cycles and at end after odd cycles.
     return if (repeatMode == RepeatMode.Reverse && iterations % 2 == 0) {
         startValue
     } else {
