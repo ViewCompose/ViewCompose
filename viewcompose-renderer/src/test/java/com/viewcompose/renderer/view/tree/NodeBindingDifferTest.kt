@@ -97,6 +97,20 @@ class NodeBindingDifferTest {
     }
 
     @Test
+    fun `returns subtree skip when equivalent modifier chains are rebuilt`() {
+        val previous = textNode(
+            text = "stable",
+            modifier = Modifier.padding(horizontal = 12, vertical = 8),
+        )
+        val next = textNode(
+            text = "stable",
+            modifier = Modifier.padding(horizontal = 12, vertical = 8),
+        )
+
+        assertSame(NodeBindingPlan.SkipSubtree, NodeBindingDiffer.plan(previous, next))
+    }
+
+    @Test
     fun `returns subtree skip when vnode instance is reused`() {
         val node = textNode(text = "stable")
 
