@@ -65,21 +65,40 @@ import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.widget.core.sp
 import com.viewcompose.runtime.mutableStateOf
 
-internal fun UiTreeBuilder.DiagnosticsThemeSections(root: ViewGroup) {
-    DiagnosticsThemeSnapshotSection(root)
-    DiagnosticsThemeSurfaceSection()
-    DiagnosticsThemeActionSection()
-    DiagnosticsThemeInputSection()
-    DiagnosticsThemeNavigationSection()
-    DiagnosticsThemeShapeSizeSection()
+internal val DIAGNOSTICS_THEME_SECTION_KEYS = listOf(
+    "theme_snapshot_core",
+    "theme_snapshot_palette",
+    "theme_snapshot_sizing",
+    "theme_surface",
+    "theme_action",
+    "theme_input",
+    "theme_navigation",
+    "theme_shape_size",
+)
+
+internal fun UiTreeBuilder.DiagnosticsThemeSection(
+    root: ViewGroup,
+    section: String,
+) {
+    when (section) {
+        "theme_snapshot_core" -> DiagnosticsThemeSnapshotCoreSection(root)
+        "theme_snapshot_palette" -> DiagnosticsThemeSnapshotPaletteSection()
+        "theme_snapshot_sizing" -> DiagnosticsThemeSnapshotSizingSection()
+        "theme_surface" -> DiagnosticsThemeSurfaceSection()
+        "theme_action" -> DiagnosticsThemeActionSection()
+        "theme_input" -> DiagnosticsThemeInputSection()
+        "theme_navigation" -> DiagnosticsThemeNavigationSection()
+        "theme_shape_size" -> DiagnosticsThemeShapeSizeSection()
+        else -> error("Unknown diagnostics theme section: $section")
+    }
 }
 
-private fun UiTreeBuilder.DiagnosticsThemeSnapshotSection(root: ViewGroup) {
+private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup) {
     val modeLabel = DemoThemeTokens.modeLabel(DemoThemeSession.mode, root.context)
     ScenarioSection(
         kind = ScenarioKind.Core,
         title = "Theme Snapshot",
-        subtitle = "集中查看当前模式、语义色、shape tier 和关键 control sizing，作为后续组件视觉诊断的基线。",
+        subtitle = "集中查看当前模式和最常用的语义色，作为后续组件视觉诊断的基线。",
     ) {
         DiagnosticFactGroup(
             title = "当前主题基线",
@@ -94,6 +113,23 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotSection(root: ViewGroup) {
                 DiagnosticFact("OnPrimary", Theme.colors.onPrimary.asColorHex()),
                 DiagnosticFact("Secondary", Theme.colors.secondary.asColorHex()),
                 DiagnosticFact("OnSecondary", Theme.colors.onSecondary.asColorHex()),
+            ),
+            valueTagsByLabel = mapOf(
+                "Mode" to DemoTestTags.DIAGNOSTICS_THEME_MODE,
+            ),
+        )
+    }
+}
+
+private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
+    ScenarioSection(
+        kind = ScenarioKind.Core,
+        title = "Theme Palette",
+        subtitle = "检查扩展语义色和关键色板组合。",
+    ) {
+        DiagnosticFactGroup(
+            title = "扩展语义色",
+            facts = listOf(
                 DiagnosticFact("ErrorContainer", Theme.colors.errorContainer.asColorHex()),
                 DiagnosticFact("OnErrorContainer", Theme.colors.onErrorContainer.asColorHex()),
                 DiagnosticFact("Outline", Theme.colors.outline.asColorHex()),
@@ -101,9 +137,6 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotSection(root: ViewGroup) {
                 DiagnosticFact("InverseSurface", Theme.colors.inverseSurface.asColorHex()),
                 DiagnosticFact("InverseOnSurface", Theme.colors.inverseOnSurface.asColorHex()),
                 DiagnosticFact("Ripple", Theme.colors.ripple.asColorHex()),
-            ),
-            valueTagsByLabel = mapOf(
-                "Mode" to DemoTestTags.DIAGNOSTICS_THEME_MODE,
             ),
         )
         ThemeSwatchRow(
@@ -124,6 +157,15 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotSection(root: ViewGroup) {
                 ThemeSwatch("Outline", Theme.colors.outline),
             ),
         )
+    }
+}
+
+private fun UiTreeBuilder.DiagnosticsThemeSnapshotSizingSection() {
+    ScenarioSection(
+        kind = ScenarioKind.Core,
+        title = "Theme Shape + Sizing",
+        subtitle = "检查 shape tier 和关键 control sizing。",
+    ) {
         DiagnosticFactGroup(
             title = "Shape + Control Sizing",
             facts = listOf(

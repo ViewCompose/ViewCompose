@@ -10,6 +10,7 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.SnapshotApplyConflictException
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.widget.core.Button
 import com.viewcompose.widget.core.DisposableEffect
 import com.viewcompose.widget.core.Environment
@@ -34,6 +35,16 @@ import java.util.Date
 import java.util.Locale
 
 private const val SNAPSHOT_STABLE_FRAME_THRESHOLD = 2
+private val DIAGNOSTICS_COMMON_PAGE_ITEMS = listOf("page", "page_filter")
+
+internal fun diagnosticsPageItems(selectedPage: Int): List<String> {
+    return DIAGNOSTICS_COMMON_PAGE_ITEMS + when (selectedPage) {
+        0 -> listOf("benchmark", "runtime", "verify")
+        1 -> DIAGNOSTICS_THEME_SECTION_KEYS + "theme_verify"
+        2 -> listOf("renderer_actions", "renderer", "verify")
+        else -> listOf("gaps", "verify")
+    }
+}
 
 internal fun UiTreeBuilder.DiagnosticsPage(
     root: ViewGroup,
@@ -127,15 +138,11 @@ internal fun UiTreeBuilder.DiagnosticsPage(
             requestNextFrame()
         }
     }
-    val pageItems = when (selectedPageState.value) {
-        0 -> listOf("benchmark", "page", "page_filter", "runtime", "verify")
-        1 -> listOf("page", "page_filter", "theme", "theme_verify")
-        2 -> listOf("page", "page_filter", "renderer_actions", "renderer", "verify")
-        else -> listOf("page", "page_filter", "gaps", "verify")
-    }
+    val pageItems = diagnosticsPageItems(selectedPageState.value)
     LazyColumn(
         items = pageItems,
         key = { it },
+        motionPolicy = CollectionMotionPolicy(disableItemAnimator = true),
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
@@ -245,7 +252,10 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 }
             }
 
-            "theme" -> DiagnosticsThemeSections(root)
+            in DIAGNOSTICS_THEME_SECTION_KEYS -> DiagnosticsThemeSection(
+                root = root,
+                section = section,
+            )
 
             "renderer_actions" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
