@@ -13,19 +13,23 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
 ) : ViewGroup(context, attrs) {
     var horizontalSpacing: Int = 0
         set(value) {
+            if (field == value) return
             field = value
             requestLayout()
         }
 
     var verticalSpacing: Int = 0
         set(value) {
+            if (field == value) return
             field = value
             requestLayout()
         }
 
     var maxItemsInEachColumn: Int = Int.MAX_VALUE
         set(value) {
-            field = value.coerceAtLeast(1)
+            val resolved = value.coerceAtLeast(1)
+            if (field == resolved) return
+            field = resolved
             requestLayout()
         }
 

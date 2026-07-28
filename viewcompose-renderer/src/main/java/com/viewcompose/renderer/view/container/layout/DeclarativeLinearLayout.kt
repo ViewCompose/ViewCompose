@@ -25,6 +25,7 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
 
     var itemSpacing: Int = 0
         set(value) {
+            if (field == value) return
             field = value
             updateSpacingDivider()
             requestLayout()
@@ -32,6 +33,7 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
 
     var mainAxisArrangement: MainAxisArrangement = MainAxisArrangement.Start
         set(value) {
+            if (field == value) return
             field = value
             requestLayout()
         }

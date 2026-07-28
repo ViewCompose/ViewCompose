@@ -48,12 +48,14 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     var inlineHelpersSpec: ConstraintHelpersSpec = ConstraintHelpersSpec()
         set(value) {
+            if (field == value) return
             field = value
             requestConstraintRebuild()
         }
 
     var decoupledConstraintSetSpec: ConstraintSetSpec? = null
         set(value) {
+            if (field == value) return
             field = value
             requestConstraintRebuild()
         }

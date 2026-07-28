@@ -17,6 +17,7 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
 
     var contentGravity: Int = Gravity.TOP or Gravity.START
         set(value) {
+            if (field == value) return
             field = value
             requestLayout()
         }

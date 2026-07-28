@@ -10,10 +10,22 @@ internal class LazyGridSpacingDecoration(
     private var spanCount: Int,
 ) : RecyclerView.ItemDecoration() {
 
-    fun update(horizontalSpacing: Int, verticalSpacing: Int, spanCount: Int) {
+    fun update(
+        horizontalSpacing: Int,
+        verticalSpacing: Int,
+        spanCount: Int,
+    ): Boolean {
+        if (
+            this.horizontalSpacing == horizontalSpacing &&
+            this.verticalSpacing == verticalSpacing &&
+            this.spanCount == spanCount
+        ) {
+            return false
+        }
         this.horizontalSpacing = horizontalSpacing
         this.verticalSpacing = verticalSpacing
         this.spanCount = spanCount
+        return true
     }
 
     override fun getItemOffsets(
