@@ -13,11 +13,17 @@ import com.viewcompose.host.android.nativeView
 import com.viewcompose.ui.modifier.Modifier
 
 /**
+ * Android 专属图形互操作工具，供业务代码显式接入原生 View 行为。
  * Android-specific graphics interop for business code that explicitly opts into native View behavior.
  *
+ * 该 API 放在 host-android 中，确保 graphics 主线 API 保持平台中立。
  * This API is intentionally hosted in `host-android` to keep graphics mainline APIs platform-neutral.
  */
 object AndroidGraphicsInterop {
+    /**
+     * 在支持的 Android 版本上给 View 应用 RenderEffect。
+     * Applies a RenderEffect to a View on supported Android versions.
+     */
     fun applyRenderEffect(
         target: View,
         effect: RenderEffect?,
@@ -29,6 +35,10 @@ object AndroidGraphicsInterop {
         return true
     }
 
+    /**
+     * 清除 View 上的 RenderEffect。
+     * Clears the RenderEffect applied to a View.
+     */
     fun clearRenderEffect(target: View): Boolean {
         return applyRenderEffect(
             target = target,
@@ -96,6 +106,8 @@ object AndroidGraphicsInterop {
     ): Bitmap {
         require(width > 0) { "width must be > 0" }
         require(height > 0) { "height must be > 0" }
+        // 由调用方提供 Canvas DSL 绘制内容，这里只负责创建位图和绑定 Canvas。
+        // The caller supplies Canvas DSL drawing; this helper only creates the bitmap and binds the Canvas.
         return Bitmap.createBitmap(width, height, config).apply {
             Canvas(this).draw()
         }
@@ -128,6 +140,10 @@ object AndroidGraphicsInterop {
     }
 }
 
+/**
+ * 将 Android 图形配置作为 nativeView modifier 接入声明式树。
+ * Attaches Android graphics configuration to the declarative tree as a nativeView modifier.
+ */
 fun Modifier.androidGraphics(
     key: Any = Unit,
     configure: (View) -> Unit,

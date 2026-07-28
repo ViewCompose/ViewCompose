@@ -20,13 +20,22 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.widget.core.UiTreeBuilder
 
 /**
+ * Android 专属动画桥接，用于业务代码显式接入 View 互操作。
  * Android-specific animation bridge for cases where business code explicitly opts into View interop.
  *
+ * 常见用法：
  * Typical usage:
+ *
+ * - 使用 [UiTreeBuilder.MotionLayoutView] 承载 MotionLayout transition。
  * - Use [UiTreeBuilder.MotionLayoutView] for MotionLayout-driven transitions.
+ * - 使用 [Modifier.androidAnimation] 配置 host View，并在回调中调用 [AndroidAnimationInterop]。
  * - Use [Modifier.androidAnimation] to configure a host view and call [AndroidAnimationInterop].
  */
 object AndroidAnimationInterop {
+    /**
+     * 对目标 View 或其父级 ViewGroup 开始 delayed transition。
+     * Begins a delayed transition on the target View or its parent ViewGroup.
+     */
     fun beginDelayedTransition(
         targetView: View,
         transition: Transition? = null,
@@ -43,6 +52,10 @@ object AndroidAnimationInterop {
         return true
     }
 
+    /**
+     * 启动 ObjectAnimator 并返回原生 animator，调用方可继续取消或监听。
+     * Starts an ObjectAnimator and returns the native animator for further cancellation or observation.
+     */
     fun startObjectAnimator(
         target: View,
         propertyName: String,
@@ -179,6 +192,10 @@ object AndroidAnimationInterop {
     }
 }
 
+/**
+ * 将 Android 动画配置作为 nativeView modifier 接入声明式树。
+ * Attaches Android animation configuration to the declarative tree as a nativeView modifier.
+ */
 fun Modifier.androidAnimation(
     key: Any = Unit,
     configure: (View) -> Unit,
@@ -189,6 +206,10 @@ fun Modifier.androidAnimation(
     )
 }
 
+/**
+ * 挂载 MotionLayout，供 Android 原生 motion 场景与 UIFramework 树协作。
+ * Mounts a MotionLayout so native Android motion scenes can cooperate with the UIFramework tree.
+ */
 fun UiTreeBuilder.MotionLayoutView(
     factory: (Context) -> MotionLayout,
     update: (MotionLayout) -> Unit = {},

@@ -18,6 +18,13 @@ import com.viewcompose.widget.core.RenderPatchRecord
 import com.viewcompose.widget.core.RenderPatchOperation
 import com.viewcompose.widget.core.RenderFailureOperation
 
+/**
+ * widget-core 与 renderer 模块之间的 Android 渲染引擎适配器。
+ * Android render-engine adapter between widget-core and the renderer module.
+ *
+ * widget-core 只依赖 CoreRenderEngine 契约，具体 MountedNode 和诊断类型在这里转换。
+ * widget-core depends only on CoreRenderEngine, while concrete MountedNode and diagnostic types are translated here.
+ */
 class AndroidCoreRenderEngine : CoreRenderEngine {
     override fun renderInto(
         container: ViewGroup,
@@ -88,6 +95,8 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
     }
 
     private fun com.viewcompose.renderer.view.tree.RenderTreeResult.toCoreResult(): RenderTreeResult {
+        // 诊断结构复制为 core 类型，避免把 renderer 内部类型泄漏给 widget-core 调用方。
+        // Diagnostics are copied into core types so renderer internals do not leak to widget-core callers.
         return RenderTreeResult(
             stats = stats.toCoreStats(),
             structure = RenderStructureStats(
