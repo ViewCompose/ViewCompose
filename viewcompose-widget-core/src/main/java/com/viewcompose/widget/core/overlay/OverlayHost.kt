@@ -5,10 +5,18 @@ import android.view.View
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.ServiceLoader
 
+/**
+ * overlay 提交的 session 标识，用于隔离不同 RenderSession 的 overlay 请求。
+ * Session id for overlay commits, isolating overlay requests from different RenderSessions.
+ */
 data class OverlaySessionId(
     val value: String,
 )
 
+/**
+ * 框架支持的 overlay 类型。
+ * Overlay types supported by the framework.
+ */
 enum class OverlayType {
     Dialog,
     Snackbar,
@@ -17,6 +25,10 @@ enum class OverlayType {
     ModalBottomSheet,
 }
 
+/**
+ * 一条 overlay 声明请求。
+ * One declarative overlay request.
+ */
 data class OverlayRequest(
     val key: String,
     val type: OverlayType,
@@ -24,6 +36,10 @@ data class OverlayRequest(
     val contentToken: Any? = null,
 )
 
+/**
+ * overlay 宿主接口，平台实现负责展示和清理实际浮层。
+ * Overlay host interface; platform implementations show and clear actual surfaces.
+ */
 interface OverlayHost {
     fun commit(
         sessionId: OverlaySessionId,
@@ -33,10 +49,18 @@ interface OverlayHost {
     fun clear(sessionId: OverlaySessionId)
 }
 
+/**
+ * 从根 View 创建 OverlayHost 的服务提供者。
+ * Service provider that creates an OverlayHost from a root View.
+ */
 fun interface OverlayHostFactoryProvider {
     fun create(rootView: View): OverlayHost
 }
 
+/**
+ * overlay host 默认实现和 Android service-provider 发现入口。
+ * Default overlay host implementations and Android service-provider discovery entry point.
+ */
 object OverlayHostDefaults {
     private const val TAG = "ViewCompose"
     private val missingAndroidHostWarningLogged = AtomicBoolean(false)
@@ -54,6 +78,10 @@ object OverlayHostDefaults {
         override fun clear(sessionId: OverlaySessionId) = Unit
     }
 
+    /**
+     * 返回 Android overlay host；找不到 provider 时返回 no-op 并只记录一次提示。
+     * Returns an Android overlay host, or a no-op host with one-time logging when no provider exists.
+     */
     fun androidOrNoOp(rootView: View): OverlayHost {
         val provider = androidOverlayHostProvider
         if (provider == null) {
@@ -105,11 +133,19 @@ internal val LocalOverlayHost = uiLocalOf(
     },
 ) { OverlayHostDefaults.noOp }
 
+/**
+ * 当前 composition 中的 overlay host。
+ * Overlay host for the current composition.
+ */
 object OverlayHostContext {
     val current: OverlayHost
         get() = UiLocals.current(LocalOverlayHost)
 }
 
+/**
+ * 在 content 范围内提供 overlay host。
+ * Provides an overlay host within the content scope.
+ */
 fun UiTreeBuilder.ProvideOverlayHost(
     host: OverlayHost,
     content: UiTreeBuilder.() -> Unit,
