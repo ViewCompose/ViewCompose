@@ -281,7 +281,10 @@ fun UiTreeBuilder.HorizontalPager(
     val resolvedPages = builtPages.map { page ->
         LazyListItem(
             key = page.key,
-            contentToken = page.contentToken,
+            contentToken = capturedLazyContentToken(
+                contentToken = page.contentToken,
+                localSnapshot = localSnapshot,
+            ),
             sessionFactory = LazyListItemSessionFactory { container ->
                 WidgetLazyListItemSession(
                     container = container,
@@ -340,7 +343,10 @@ fun UiTreeBuilder.VerticalPager(
     val resolvedPages = builtPages.map { page ->
         LazyListItem(
             key = page.key,
-            contentToken = page.contentToken,
+            contentToken = capturedLazyContentToken(
+                contentToken = page.contentToken,
+                localSnapshot = localSnapshot,
+            ),
             sessionFactory = LazyListItemSessionFactory { container ->
                 WidgetLazyListItemSession(
                     container = container,
@@ -422,7 +428,10 @@ fun UiTreeBuilder.TabRow(
         TabRowTab(
             item = LazyListItem(
                 key = entry.key,
-                contentToken = Pair(entry.key, selected),
+                contentToken = capturedLazyContentToken(
+                    contentToken = Pair(entry.key, selected),
+                    localSnapshot = localSnapshot,
+                ),
                 sessionFactory = LazyListItemSessionFactory { container ->
                     WidgetLazyListItemSession(
                         container = container,
