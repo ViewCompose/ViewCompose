@@ -6,6 +6,7 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.structuralEqualityPolicy
 
 /**
+ * 在状态持有者/领域值与宿主可保存表示之间转换。
  * Converts a state holder or domain value to and from a host-saveable representation.
  */
 class Saver<Original, Saveable>(
@@ -13,6 +14,10 @@ class Saver<Original, Saveable>(
     val restore: (Saveable) -> Original,
 )
 
+/**
+ * 默认 saver：直接保存普通值，并用信封格式保存 MutableState。
+ * Default saver: saves ordinary values directly and wraps MutableState values in an envelope.
+ */
 @Suppress("UNCHECKED_CAST")
 fun <T> autoSaver(): Saver<T, Any?> {
     return Saver(
@@ -39,6 +44,10 @@ fun <T> autoSaver(): Saver<T, Any?> {
     )
 }
 
+/**
+ * 用 List 表示领域对象的 saver 辅助函数。
+ * Saver helper that represents a domain object as a List.
+ */
 fun <T> listSaver(
     save: (T) -> List<Any?>,
     restore: (List<Any?>) -> T,
@@ -49,6 +58,10 @@ fun <T> listSaver(
     )
 }
 
+/**
+ * 用 Map 表示领域对象的 saver 辅助函数。
+ * Saver helper that represents a domain object as a Map.
+ */
 fun <T> mapSaver(
     save: (T) -> Map<String, Any?>,
     restore: (Map<String, Any?>) -> T,
@@ -59,6 +72,10 @@ fun <T> mapSaver(
     )
 }
 
+/**
+ * 基于值 saver 创建 MutableState saver。
+ * Creates a MutableState saver from a value saver.
+ */
 fun <T, Saveable> mutableStateSaver(
     valueSaver: Saver<T, Saveable>,
     policy: SnapshotMutationPolicy<T> = structuralEqualityPolicy(),

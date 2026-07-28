@@ -3,6 +3,10 @@ package com.viewcompose.widget.core
 import com.viewcompose.runtime.composition.CompositionDiagnostics
 import com.viewcompose.ui.node.NodeType
 
+/**
+ * renderer 一帧绑定行为的汇总统计。
+ * Summary statistics for renderer binding behavior in one frame.
+ */
 data class RenderStats(
     val inserts: Int = 0,
     val reuses: Int = 0,
@@ -14,12 +18,20 @@ data class RenderStats(
     val bindingsByType: Map<NodeType, NodeTypeBindingStats> = emptyMap(),
 )
 
+/**
+ * 某一节点类型的绑定统计。
+ * Binding statistics for one node type.
+ */
 data class NodeTypeBindingStats(
     val rebound: Int = 0,
     val patched: Int = 0,
     val skipped: Int = 0,
 )
 
+/**
+ * VNode 树与 mounted tree 的结构规模统计。
+ * Structure-size statistics for the VNode tree and mounted tree.
+ */
 data class RenderStructureStats(
     val vnodeCount: Int = 0,
     val mountedNodeCount: Int = 0,
@@ -27,6 +39,10 @@ data class RenderStructureStats(
     val maxMountedDepth: Int = 0,
 )
 
+/**
+ * 一帧完整渲染诊断结果。
+ * Complete render diagnostics for one frame.
+ */
 data class RenderTreeResult(
     val stats: RenderStats = RenderStats(),
     val structure: RenderStructureStats = RenderStructureStats(),
@@ -36,12 +52,20 @@ data class RenderTreeResult(
     val composition: CompositionDiagnostics = CompositionDiagnostics(),
 )
 
+/**
+ * 诊断用渲染树节点，不暴露平台 View 实例。
+ * Diagnostic render-tree node that does not expose platform View instances.
+ */
 data class RenderTreeNode(
     val type: NodeType,
     val key: Any?,
     val children: List<RenderTreeNode> = emptyList(),
 )
 
+/**
+ * renderer 对 mounted tree 执行的一条 patch 记录。
+ * One patch record applied by the renderer to the mounted tree.
+ */
 data class RenderPatchRecord(
     val operation: RenderPatchOperation,
     val type: NodeType,
@@ -52,6 +76,10 @@ data class RenderPatchRecord(
     val detail: String? = null,
 )
 
+/**
+ * renderer patch 操作类型。
+ * Renderer patch operation type.
+ */
 enum class RenderPatchOperation {
     Insert,
     Remove,
