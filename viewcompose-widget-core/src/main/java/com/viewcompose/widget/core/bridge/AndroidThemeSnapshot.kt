@@ -12,6 +12,10 @@ import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * Android theme 中可读取到的颜色和状态色快照。
+ * Snapshot of colors and state colors readable from an Android theme.
+ */
 internal data class AndroidThemeColorSnapshot(
     val background: Int? = null,
     val onBackground: Int? = null,
@@ -57,6 +61,10 @@ internal data class AndroidThemeColorSnapshot(
     val controlHighlight: UiStateColor? = null,
 )
 
+/**
+ * Android theme 的完整可读快照。
+ * Complete readable snapshot of an Android theme.
+ */
 internal data class AndroidThemeSnapshot(
     val colors: AndroidThemeColorSnapshot = AndroidThemeColorSnapshot(),
     val shapes: AndroidThemeShapeSnapshot = AndroidThemeShapeSnapshot(),
@@ -64,12 +72,20 @@ internal data class AndroidThemeSnapshot(
     val scrimOpacity: Float? = null,
 )
 
+/**
+ * Android shapeAppearance 属性解析结果。
+ * Parsed result of Android shapeAppearance attributes.
+ */
 internal data class AndroidThemeShapeSnapshot(
     val small: UiShape? = null,
     val medium: UiShape? = null,
     val large: UiShape? = null,
 )
 
+/**
+ * Android textAppearance 属性解析结果。
+ * Parsed result of Android textAppearance attributes.
+ */
 internal data class AndroidTextStyleSnapshot(
     val fontSizeSp: Int? = null,
     val fontWeight: Int? = null,
@@ -79,6 +95,10 @@ internal data class AndroidTextStyleSnapshot(
     val includeFontPadding: Boolean? = null,
 )
 
+/**
+ * Android typography 相关 textAppearance 快照。
+ * Snapshot of Android typography-related textAppearance values.
+ */
 internal data class AndroidThemeTypographySnapshot(
     val titleLarge: AndroidTextStyleSnapshot? = null,
     val titleMedium: AndroidTextStyleSnapshot? = null,
@@ -91,7 +111,15 @@ internal data class AndroidThemeTypographySnapshot(
     val labelSmall: AndroidTextStyleSnapshot? = null,
 )
 
+/**
+ * Android theme snapshot 读取器。
+ * Reader for Android theme snapshots.
+ */
 internal object AndroidThemeSnapshotReader {
+    /**
+     * 读取颜色、形状、排版和 scrim opacity。
+     * Reads colors, shapes, typography, and scrim opacity.
+     */
     fun read(context: Context): AndroidThemeSnapshot {
         return AndroidThemeSnapshot(
             colors = readColorSnapshot(context),

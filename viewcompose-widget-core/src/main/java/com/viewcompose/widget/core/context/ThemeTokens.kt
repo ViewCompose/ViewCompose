@@ -2,6 +2,10 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * ViewCompose 主题颜色 token，颜色格式为 ARGB Int。
+ * ViewCompose theme color tokens stored as ARGB Int values.
+ */
 data class UiColors(
     val background: Int,
     val onBackground: Int = contentColorFor(background),
@@ -45,6 +49,10 @@ data class UiColors(
     val ripple: Int = pressedOverlayColorFor(onSurface),
 )
 
+/**
+ * 同一语义颜色在不同交互状态下的取值。
+ * Values for one semantic color across interaction states.
+ */
 data class UiStateColor(
     val defaultColor: Int,
     val disabledColor: Int = defaultColor,
@@ -53,6 +61,10 @@ data class UiStateColor(
     val checkedColor: Int = defaultColor,
     val selectedColor: Int = checkedColor,
 ) {
+    /**
+     * 按当前交互状态解析最终颜色。
+     * Resolves the final color for the current interaction state.
+     */
     fun resolve(
         enabled: Boolean = true,
         pressed: Boolean = false,
@@ -71,6 +83,10 @@ data class UiStateColor(
     }
 }
 
+/**
+ * 组件常用状态色集合。
+ * Common state-color set used by components.
+ */
 data class UiStateColors(
     val primaryText: UiStateColor,
     val secondaryText: UiStateColor,
@@ -79,6 +95,10 @@ data class UiStateColors(
     val controlHighlight: UiStateColor,
 )
 
+/**
+ * 从基础颜色派生默认状态色。
+ * Derives default state colors from base colors.
+ */
 object UiStateColorDefaults {
     fun from(colors: UiColors): UiStateColors {
         return UiStateColors(
@@ -118,12 +138,20 @@ object UiStateColorDefaults {
     }
 }
 
+/**
+ * 主题形状 token。
+ * Theme shape tokens.
+ */
 data class UiShapes(
     val small: UiShape,
     val medium: UiShape,
     val large: UiShape = medium,
 )
 
+/**
+ * 主题文本样式 token。
+ * Theme text-style token.
+ */
 data class UiTextStyle(
     val fontSizeSp: Int,
     val fontWeight: Int? = null,
@@ -134,6 +162,10 @@ data class UiTextStyle(
     val textDecoration: com.viewcompose.ui.node.TextDecoration? = null,
 )
 
+/**
+ * 主题排版 token 集合。
+ * Theme typography token set.
+ */
 data class UiTypography(
     val titleMedium: UiTextStyle,
     val bodyMedium: UiTextStyle,
@@ -146,6 +178,10 @@ data class UiTypography(
     val labelSmall: UiTextStyle = labelMedium,
 )
 
+/**
+ * ViewCompose 主题完整 token 快照。
+ * Complete ViewCompose theme-token snapshot.
+ */
 data class UiThemeTokens(
     val colors: UiColors,
     val typography: UiTypography,
@@ -156,10 +192,18 @@ data class UiThemeTokens(
     val metadata: UiThemeMetadata = UiThemeMetadata(),
 )
 
+/**
+ * overlay 相关主题 token。
+ * Theme tokens for overlays.
+ */
 data class UiOverlays(
     val scrimOpacity: Float,
 )
 
+/**
+ * 主题 token 来源，用于诊断和 host 桥接。
+ * Theme-token origin used for diagnostics and host bridging.
+ */
 enum class UiThemeOrigin {
     Custom,
     FrameworkDefault,
@@ -168,17 +212,29 @@ enum class UiThemeOrigin {
     Override,
 }
 
+/**
+ * 主题诊断元数据。
+ * Theme diagnostic metadata.
+ */
 data class UiThemeMetadata(
     val origin: UiThemeOrigin = UiThemeOrigin.Custom,
     val isDark: Boolean? = null,
     val revision: Long = 0L,
 )
 
+/**
+ * 基于内容色生成按压态 overlay 颜色。
+ * Builds a pressed-state overlay color from the content color.
+ */
 internal fun pressedOverlayColorFor(contentColor: Int): Int {
     val base = contentColor and 0x00FFFFFF
     return 0x22000000 or base
 }
 
+/**
+ * 根据背景亮度推导黑/白内容色。
+ * Derives black or white content color from background luminance.
+ */
 internal fun contentColorFor(backgroundColor: Int): Int {
     val red = backgroundColor shr 16 and 0xFF
     val green = backgroundColor shr 8 and 0xFF
