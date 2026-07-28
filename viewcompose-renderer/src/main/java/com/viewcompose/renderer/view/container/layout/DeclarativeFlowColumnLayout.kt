@@ -7,6 +7,10 @@ import android.view.ViewGroup
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import kotlin.math.max
 
+/**
+ * FlowColumn 使用的自定义换列容器。
+ * Custom wrapping container used by FlowColumn.
+ */
 internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -99,6 +103,7 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
             maxColumnHeight = max(maxColumnHeight, currentColumnHeight)
             totalWidth += currentColumnWidth
         } else if (totalWidth > 0) {
+            // 最后一列可能由 maxItemsInEachColumn 截止，此时不应留下尾部间距。
             // The last column can close via maxItemsInEachColumn and should not leave trailing spacing.
             totalWidth = (totalWidth - horizontalSpacing).coerceAtLeast(0)
         }

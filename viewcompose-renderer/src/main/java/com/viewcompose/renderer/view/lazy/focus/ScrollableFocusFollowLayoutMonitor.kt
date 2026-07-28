@@ -7,6 +7,13 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.viewcompose.renderer.R
 
+/**
+ * ScrollView/NestedScrollView 类容器的键盘焦点跟随监听器管理器。
+ * Listener manager for keyboard focus-follow behavior in ScrollView-like containers.
+ *
+ * 与 RecyclerView 版本不同，它只处理垂直 scrollBy，不参与 item holder 或 adapter 状态。
+ * Unlike the RecyclerView variant, it only issues vertical scrollBy and does not touch holder or adapter state.
+ */
 internal object ScrollableFocusFollowLayoutMonitor {
     private const val TAG = "UIFocusFollow"
 
@@ -21,6 +28,8 @@ internal object ScrollableFocusFollowLayoutMonitor {
         val existingGlobalLayoutListener = scrollView.getTag(R.id.viewcompose_focus_follow_global_layout_listener)
             as? ViewTreeObserver.OnGlobalLayoutListener
         if (!enabled) {
+            // 关闭策略时同步清理所有通过 tag 保存的 listener。
+            // When disabling the policy, clean up every listener stored on tags.
             if (existingLayoutListener != null) {
                 scrollView.removeOnLayoutChangeListener(existingLayoutListener)
                 scrollView.setTag(R.id.viewcompose_focus_follow_layout_listener, null)
@@ -43,6 +52,8 @@ internal object ScrollableFocusFollowLayoutMonitor {
             return
         }
         if (existingLayoutListener == null) {
+            // 普通滚动容器没有 adapter 事件，因此依赖布局变化触发重新校正。
+            // Plain scroll containers have no adapter events, so layout changes trigger recalculation.
             val listener = View.OnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
                 val target = view as? ViewGroup ?: return@OnLayoutChangeListener
                 ensureFocusedChildVisible(target)
@@ -51,6 +62,8 @@ internal object ScrollableFocusFollowLayoutMonitor {
             scrollView.setTag(R.id.viewcompose_focus_follow_layout_listener, listener)
         }
         if (existingGlobalFocusListener == null) {
+            // 焦点变更后立即校正，保证新输入框不会被键盘遮住。
+            // Correct immediately after focus changes so the new editor is not hidden by the keyboard.
             val listener = ViewTreeObserver.OnGlobalFocusChangeListener { _, _ ->
                 ensureFocusedChildVisible(scrollView)
             }
@@ -58,6 +71,8 @@ internal object ScrollableFocusFollowLayoutMonitor {
             scrollView.setTag(R.id.viewcompose_focus_follow_global_focus_listener, listener)
         }
         if (existingGlobalLayoutListener == null) {
+            // IME 显隐通常表现为 global layout 变化，需要重新解析可见视口。
+            // IME show/hide usually arrives as a global layout change, requiring viewport resolution again.
             val listener = ViewTreeObserver.OnGlobalLayoutListener {
                 ensureFocusedChildVisible(scrollView)
             }

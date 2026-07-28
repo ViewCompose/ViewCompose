@@ -6,6 +6,10 @@ import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import kotlin.math.roundToInt
 
+/**
+ * AnimatedVisibility modifier 提升后的平台 host。
+ * Platform host created from promoted AnimatedVisibility modifiers.
+ */
 internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -77,11 +81,8 @@ internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor
             MeasureSpec.UNSPECIFIED -> animatedSize
             MeasureSpec.AT_MOST -> animatedSize.coerceAtMost(specSize)
             MeasureSpec.EXACTLY -> {
-                // 中文：可见性收缩动画需要在 EXACTLY 约束下也能回传更小尺寸，
-                // 否则横向/纵向 shrink 会被父约束“钉死”，表现成仅透明度变化。
-                // English: Visibility shrink should be able to report a smaller measured size even
-                // under EXACT constraints; otherwise horizontal/vertical shrink gets pinned by the
-                // parent spec and degrades into alpha-only animation.
+                // 可见性收缩动画在 EXACTLY 约束下也需要回传更小尺寸，否则 shrink 会退化成仅透明度变化。
+                // Visibility shrink must report a smaller size even under EXACT constraints, otherwise it degrades into alpha-only animation.
                 animatedSize.coerceAtMost(specSize)
             }
 

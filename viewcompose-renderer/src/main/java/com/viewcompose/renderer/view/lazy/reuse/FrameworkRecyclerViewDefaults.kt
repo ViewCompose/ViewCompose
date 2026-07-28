@@ -4,6 +4,13 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
 
+/**
+ * Lazy 容器和 Pager 的 RecyclerView 默认策略集合。
+ * Default RecyclerView policies for lazy containers and pagers.
+ *
+ * 它集中配置 item animator 和可选共享复用池，避免每个容器重复处理 RecyclerView 细节。
+ * It centralizes item animator and optional shared pool configuration so each container does not duplicate RecyclerView details.
+ */
 internal object FrameworkRecyclerViewDefaults {
     private val lazyColumnPool = RecyclerView.RecycledViewPool()
     private val lazyRowPool = RecyclerView.RecycledViewPool()
@@ -142,6 +149,8 @@ internal object FrameworkRecyclerViewDefaults {
         if (sharePool) {
             recyclerView.setRecycledViewPool(sharedPool)
         } else {
+            // 本地 pool 挂在 tag 上，重复 bind defaults 时不会丢失已缓存 holder。
+            // The local pool is kept on a tag so repeated default binding does not discard cached holders.
             recyclerView.setRecycledViewPool(resolveLocalPool(recyclerView))
         }
     }
@@ -158,6 +167,10 @@ internal object FrameworkRecyclerViewDefaults {
     }
 }
 
+/**
+ * 可按声明式 motion policy 逐项关闭动画的默认 ItemAnimator。
+ * Default ItemAnimator whose animation types can be disabled by declarative motion policy.
+ */
 private class FrameworkItemAnimator : DefaultItemAnimator() {
     private var animateInsert: Boolean = true
     private var animateRemove: Boolean = true

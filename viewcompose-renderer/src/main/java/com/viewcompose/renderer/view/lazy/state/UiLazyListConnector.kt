@@ -12,6 +12,10 @@ import com.viewcompose.ui.state.LazyListLayoutInfo
 import com.viewcompose.ui.state.LazyListOrientation
 import com.viewcompose.ui.state.LazyListStateSnapshot
 
+/**
+ * 将 UiLazyListState 操作连接到 RecyclerView。
+ * Connects UiLazyListState operations to RecyclerView.
+ */
 internal class UiLazyListConnector(
     private val recyclerView: RecyclerView,
     private val mainAxisItemSpacing: Int = 0,

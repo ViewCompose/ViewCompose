@@ -24,6 +24,10 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.roundToInt
 
+/**
+ * animateContentSize modifier 提升后的平台 host。
+ * Platform host created from promoted animateContentSize modifiers.
+ */
 internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -82,9 +86,8 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         val contentRight = (right - left - paddingRight).coerceAtLeast(contentLeft)
         val contentBottom = (bottom - top - paddingBottom).coerceAtLeast(contentTop)
         if (childCount == 1) {
-            // 中文：将唯一子节点按 host 当前动画尺寸布局，避免收起时子节点先跳到末端尺寸造成“瞬间收起”错觉。
-            // English: Layout the single child with the host's animated bounds to avoid visual snap-to-end
-            // during collapse when the wrapped node updates its target size immediately.
+            // 将唯一子节点按 host 当前动画尺寸布局，避免收起时子节点先跳到末端尺寸。
+            // Layout the single child with the host's animated bounds to avoid snap-to-end during collapse.
             getChildAt(0).layout(contentLeft, contentTop, contentRight, contentBottom)
         } else {
             super.onLayout(changed, left, top, right, bottom)

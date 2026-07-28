@@ -17,6 +17,13 @@ import android.view.MotionEvent
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 
+/**
+ * LazyVerticalGrid 的 Android 渲染容器。
+ * Android rendering container for LazyVerticalGrid.
+ *
+ * 它集中维护 GridLayoutManager、间距装饰、sticky header、复用池和 LazyListState 连接。
+ * It coordinates GridLayoutManager, spacing decoration, sticky headers, reuse pools, and LazyListState attachment.
+ */
 internal class DeclarativeLazyVerticalGridLayout(
     context: Context,
 ) : RecyclerView(context) {

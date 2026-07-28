@@ -18,6 +18,10 @@ import com.viewcompose.ui.modifier.DrawWithCacheModifierElement
 import com.viewcompose.ui.modifier.DrawWithContentModifierElement
 import com.viewcompose.ui.modifier.ModifierElement
 
+/**
+ * Canvas 节点和 draw modifier 使用的绘制容器。
+ * Drawing container used by Canvas nodes and draw modifiers.
+ */
 internal class DeclarativeCanvasLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
