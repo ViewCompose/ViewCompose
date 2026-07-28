@@ -36,8 +36,10 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
                 mutableStateOf(0)
             }
             val diagnosticsPageState = remember { mutableStateOf(0) }
+            val currentTheme = Theme.current
             SideEffect {
                 activity?.title = "ViewCompose · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
+                activity?.applyDemoThemeWindowAppearance(currentTheme)
             }
             Scaffold(
                 bottomBar = {
