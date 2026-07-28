@@ -1,6 +1,14 @@
 package com.viewcompose.text
 
+/**
+ * [TextDocument] 的 saveable 编解码器。
+ * Saveable encoder/decoder for [TextDocument].
+ */
 object TextDocumentSaveCodec {
+    /**
+     * 将文档编码为只包含基础类型、List 和 Map 的结构。
+     * Encodes a document into a structure made of primitives, Lists, and Maps only.
+     */
     fun encode(document: TextDocument): Map<String, Any?> {
         return mapOf(
             KEY_VERSION to FORMAT_VERSION,
@@ -11,6 +19,10 @@ object TextDocumentSaveCodec {
         )
     }
 
+    /**
+     * 从保存结构恢复文档；格式不兼容时抛出明确错误。
+     * Restores a document from saved structure and fails clearly on incompatible format.
+     */
     fun decode(saved: Any?): TextDocument {
         val root = saved.stringKeyMap("TextDocument")
         require(root[KEY_VERSION].intValue(KEY_VERSION) == FORMAT_VERSION) {
@@ -189,6 +201,10 @@ object TextDocumentSaveCodec {
             ?: error("Saved TextDocument $label must be a Number.")
     }
 
+    /**
+     * 将平台恢复出的 Map 校验为 String key Map，避免后续解码出现模糊 ClassCastException。
+     * Validates a platform-restored Map as a String-key Map to avoid vague ClassCastExceptions later.
+     */
     private fun Any?.stringKeyMap(label: String): Map<String, Any?> {
         val map = this as? Map<*, *>
             ?: error("$label must be a Map.")

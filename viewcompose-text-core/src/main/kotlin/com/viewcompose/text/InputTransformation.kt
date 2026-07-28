@@ -1,8 +1,10 @@
 package com.viewcompose.text
 
 /**
+ * 在平台提出的用户编辑写入 [TextFieldState] 前进行校验或改写。
  * Validates or rewrites a platform-proposed user edit before it reaches [TextFieldState].
  *
+ * 程序化 [TextFieldState.edit] 调用刻意不经过 transformation，避免业务代码被输入策略意外拦截。
  * Programmatic [TextFieldState.edit] calls are intentionally not transformed.
  */
 fun interface InputTransformation {

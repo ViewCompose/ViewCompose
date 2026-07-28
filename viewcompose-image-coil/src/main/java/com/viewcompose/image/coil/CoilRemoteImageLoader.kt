@@ -13,6 +13,10 @@ import com.viewcompose.ui.node.RemoteImageRequest
 import com.viewcompose.ui.node.RemoteImageTarget
 import com.viewcompose.ui.node.PlatformRemoteImageTarget
 
+/**
+ * 使用 Coil3 将 ViewCompose 远程图片请求加载到 Android [ImageView]。
+ * Uses Coil3 to load ViewCompose remote image requests into Android [ImageView].
+ */
 class CoilRemoteImageLoader(
     private val imageLoader: ImageLoader,
 ) : RemoteImageLoader {
@@ -26,6 +30,8 @@ class CoilRemoteImageLoader(
     ) {
         val imageView = (target as? PlatformRemoteImageTarget)?.target as? ImageView
             ?: return
+        // 非 Android ImageView target 直接忽略，保持 RemoteImageLoader 平台边界可安全复用。
+        // Non-Android ImageView targets are ignored so the RemoteImageLoader boundary remains portable.
         imageLoader.enqueue(
             ImageRequest.Builder(imageView.context)
                 .data(request.url)

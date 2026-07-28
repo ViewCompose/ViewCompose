@@ -1,6 +1,7 @@
 package com.viewcompose.text
 
 /**
+ * 暴露给程序化编辑和输入转换的可变编辑缓冲区。
  * Mutable editing buffer presented to programmatic edits and input transformations.
  */
 class TextFieldBuffer internal constructor(
@@ -40,6 +41,8 @@ class TextFieldBuffer internal constructor(
             range = TextRange(start, end),
             replacement = replacement,
         )
+        // 文本替换后同步迁移 selection/composition，保持它们仍指向等价逻辑位置。
+        // After replacement, migrate selection/composition so they keep pointing at equivalent logical positions.
         selection = selection.mapAcrossReplacement(
             start = start,
             end = end,
@@ -109,6 +112,10 @@ class TextFieldBuffer internal constructor(
     }
 }
 
+/**
+ * 将范围限制在当前文本长度内。
+ * Clamps a range into the current text length.
+ */
 internal fun TextRange.coerceIn(textLength: Int): TextRange {
     return TextRange(
         start = start.coerceIn(0, textLength),
