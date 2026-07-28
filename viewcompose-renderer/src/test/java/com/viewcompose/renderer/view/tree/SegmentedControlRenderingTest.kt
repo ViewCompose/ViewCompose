@@ -38,6 +38,8 @@ class SegmentedControlRenderingTest {
         val themeTab = view.getChildAt(1) as TextView
         val runtimeBackground = runtimeTab.background
         val themeBackground = themeTab.background
+        val runtimeTypeface = runtimeTab.typeface
+        val themeTypeface = themeTab.typeface
 
         assertEquals(initialColor, view.materialBackgroundColor())
         assertEquals(0xFF7B9E68.toInt(), runtimeTab.indicatorColor())
@@ -53,6 +55,8 @@ class SegmentedControlRenderingTest {
         assertSame(view, patched.mountedNodes.single().view)
         assertSame(runtimeBackground, runtimeTab.background)
         assertSame(themeBackground, themeTab.background)
+        assertSame(runtimeTypeface, runtimeTab.typeface)
+        assertSame(themeTypeface, themeTab.typeface)
         assertEquals(patchedColor, view.materialBackgroundColor())
         assertEquals(Color.TRANSPARENT, runtimeTab.indicatorColor())
         assertEquals(0xFF7B9E68.toInt(), themeTab.indicatorColor())
