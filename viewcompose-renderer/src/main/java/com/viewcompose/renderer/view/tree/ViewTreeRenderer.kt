@@ -8,6 +8,13 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.renderer.reconcile.ChildReconciler
 import com.viewcompose.renderer.reconcile.ReconcileNode
 
+/**
+ * Android View 树 renderer 的核心入口。
+ * Core entry point for rendering into the Android View tree.
+ *
+ * renderer 将 VNode 列表包装为平台需要的 host 节点，执行 reconcile/patch 事务，并返回诊断结果。
+ * The renderer wraps VNodes into platform host nodes, executes reconcile/patch transactions, and returns diagnostics.
+ */
 object ViewTreeRenderer {
     private const val DEFAULT_RIPPLE_COLOR: Int = 0x22000000
     private const val WARNING_TAG: String = "ViewCompose"
@@ -21,6 +28,10 @@ object ViewTreeRenderer {
         emittedStructureWarnings.clear()
     }
 
+    /**
+     * 释放已挂载节点并从 container 移除对应 View。
+     * Disposes mounted nodes and removes their Views from the container.
+     */
     fun disposeMounted(
         container: ViewGroup,
         mountedNodes: List<MountedNode>,
@@ -45,6 +56,13 @@ object ViewTreeRenderer {
         return failures
     }
 
+    /**
+     * 将 VNode 列表渲染进 container。
+     * Renders a VNode list into the container.
+     *
+     * 所有 View 结构改动都先进入事务；失败时 rollback，成功后再 commit deferred removal。
+     * All View structure changes go through a transaction; failures roll back, success commits deferred removals.
+     */
     fun renderInto(
         container: ViewGroup,
         previous: List<MountedNode>,
@@ -52,6 +70,8 @@ object ViewTreeRenderer {
         collectDiagnostics: Boolean = true,
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
+        // wrapper 在 reconcile 前插入平台 host 节点，使 modifier 语义变成普通树结构。
+        // Wrappers insert platform host nodes before reconciliation, turning modifier semantics into normal tree structure.
         val renderNodes = AnimatedSizeNodeWrapper.wrapTree(
             NestedScrollNodeWrapper.wrapTree(nodes),
         )
@@ -76,6 +96,8 @@ object ViewTreeRenderer {
             throw error
         }
         val commitEffects = transaction.commitEffects.toList()
+        // 删除节点延迟到 commit 后释放，避免中途失败时无法恢复旧树。
+        // Removed nodes are disposed after commit so the old tree can still be restored if patching fails.
         val commitFailures = ViewTreePatchPipeline.commitTransaction(
             transaction = transaction,
             warningTag = WARNING_TAG,

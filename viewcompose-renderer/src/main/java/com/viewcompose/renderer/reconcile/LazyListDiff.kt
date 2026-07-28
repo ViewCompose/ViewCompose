@@ -4,6 +4,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import com.viewcompose.ui.node.LazyListItem
 
+/**
+ * lazy 列表 adapter 可消费的增量更新。
+ * Incremental updates consumed by lazy list adapters.
+ */
 sealed interface LazyListUpdate {
     data class Insert(
         val index: Int,
@@ -26,6 +30,10 @@ sealed interface LazyListUpdate {
     data object ReloadAll : LazyListUpdate
 }
 
+/**
+ * lazy item 内容变化时传递给 adapter 的 payload。
+ * Payload delivered to adapters when lazy item content changes.
+ */
 sealed interface LazyListChangePayload {
     data class ContentTokenChanged(
         val previous: Any?,
@@ -33,13 +41,28 @@ sealed interface LazyListChangePayload {
     ) : LazyListChangePayload
 }
 
+/**
+ * lazy diff 的完整结果。
+ * Complete result of lazy list diffing.
+ */
 data class LazyListDiffResult(
     val updates: List<LazyListUpdate>,
     val items: List<LazyListItem>,
     val diffResult: DiffUtil.DiffResult? = null,
 )
 
+/**
+ * 基于稳定 key 计算 lazy 列表增量更新。
+ * Calculates lazy list incremental updates from stable keys.
+ *
+ * key 缺失或重复时回退 ReloadAll，避免 DiffUtil 把不稳定身份误判为可复用 item。
+ * Missing or duplicate keys fall back to ReloadAll to keep DiffUtil from reusing unstable identities.
+ */
 object LazyListDiff {
+    /**
+     * 计算 previous -> next 的 lazy item 更新序列。
+     * Calculates the lazy item update sequence from previous to next.
+     */
     fun calculate(
         previous: List<LazyListItem>,
         next: List<LazyListItem>,
@@ -94,6 +117,7 @@ object LazyListDiff {
 
         return LazyListDiffResult(
             updates = updates,
+            // 始终使用最新 item 实例，保留刷新的闭包和 session updater。
             // Always use latest item instances to preserve refreshed closures/session updaters.
             items = next,
             diffResult = diffResult,

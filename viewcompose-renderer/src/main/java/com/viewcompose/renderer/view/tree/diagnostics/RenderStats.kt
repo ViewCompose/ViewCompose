@@ -3,6 +3,10 @@ package com.viewcompose.renderer.view.tree
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 
+/**
+ * 单次 render/reconcile 的操作统计。
+ * Operation statistics for one render/reconcile pass.
+ */
 data class RenderStats(
     val inserts: Int = 0,
     val reuses: Int = 0,
@@ -13,8 +17,16 @@ data class RenderStats(
     val skippedSubtrees: Int = 0,
     val bindingsByType: Map<NodeType, NodeTypeBindingStats> = emptyMap(),
 ) {
+    /**
+     * 记录一个新节点插入。
+     * Records one newly inserted node.
+     */
     fun withInsert(): RenderStats = copy(inserts = inserts + 1)
 
+    /**
+     * 记录一次节点复用及其绑定结果。
+     * Records one node reuse and its binding result.
+     */
     fun withReuse(
         result: ReuseBindingResult,
         nodeType: NodeType,
@@ -46,6 +58,10 @@ data class RenderStats(
 
     fun withRemoval(): RenderStats = copy(removals = removals + 1)
 
+    /**
+     * 合并子树统计，用于递归 render 后向父层汇总。
+     * Merges subtree statistics so recursive renders can aggregate into their parent.
+     */
     fun mergeWith(other: RenderStats): RenderStats {
         return RenderStats(
             inserts = inserts + other.inserts,
@@ -60,12 +76,20 @@ data class RenderStats(
     }
 }
 
+/**
+ * 按 NodeType 聚合的绑定结果统计。
+ * Binding result statistics grouped by NodeType.
+ */
 data class NodeTypeBindingStats(
     val rebound: Int = 0,
     val patched: Int = 0,
     val skipped: Int = 0,
 )
 
+/**
+ * ViewTreeRenderer 对外返回的完整渲染结果。
+ * Complete render result returned by ViewTreeRenderer.
+ */
 data class RenderTreeResult(
     val mountedNodes: List<MountedNode>,
     val reconcileResult: com.viewcompose.renderer.reconcile.ReconcileResult<MountedNode>,
@@ -78,12 +102,20 @@ data class RenderTreeResult(
     val commitFailures: List<RenderTreeCommitFailure> = emptyList(),
 )
 
+/**
+ * 用于诊断展示的轻量 render tree 快照。
+ * Lightweight render tree snapshot used for diagnostics display.
+ */
 data class RenderTreeNode(
     val type: NodeType,
     val key: Any?,
     val children: List<RenderTreeNode> = emptyList(),
 ) {
     companion object {
+        /**
+         * 从 VNode 树构建诊断树，保留 type/key/children。
+         * Builds a diagnostic tree from VNodes, preserving type/key/children.
+         */
         fun from(nodes: List<com.viewcompose.ui.node.VNode>): List<RenderTreeNode> {
             return nodes.map { node ->
                 RenderTreeNode(
@@ -96,6 +128,10 @@ data class RenderTreeNode(
     }
 }
 
+/**
+ * 记录一次 patch 操作，供调试面板查看本轮 render 做了什么。
+ * Records one patch operation for debug panels to inspect what the render pass did.
+ */
 data class RenderPatchRecord(
     val operation: RenderPatchOperation,
     val type: NodeType,
@@ -106,6 +142,10 @@ data class RenderPatchRecord(
     val detail: String? = null,
 )
 
+/**
+ * renderer patch 操作类型。
+ * Renderer patch operation type.
+ */
 enum class RenderPatchOperation {
     Insert,
     Remove,
@@ -115,18 +155,30 @@ enum class RenderPatchOperation {
     SkipSubtree,
 }
 
+/**
+ * 事务 commit 后执行的 AndroidView 生命周期回调。
+ * AndroidView lifecycle callback executed after transaction commit.
+ */
 data class RenderTreeCommitEffect(
     val operation: AndroidViewOperation,
     val nodeKey: Any?,
     val commit: () -> Unit,
 )
 
+/**
+ * commit/dispose 阶段失败信息，避免单个释放错误吞掉其他诊断。
+ * Failure information from commit/dispose so one release error does not hide diagnostics.
+ */
 data class RenderTreeCommitFailure(
     val operation: AndroidViewOperation?,
     val nodeKey: Any?,
     val cause: Throwable,
 )
 
+/**
+ * 已复用节点的绑定结果。
+ * Binding result for a reused node.
+ */
 enum class ReuseBindingResult {
     Rebound,
     Patched,
