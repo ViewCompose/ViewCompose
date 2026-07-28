@@ -1,12 +1,27 @@
 package com.viewcompose.graphics.core
 
+/**
+ * 绘制命令记录器，为 Canvas DSL 收集平台中立的命令列表。
+ * Draw command recorder that collects platform-neutral command lists for the Canvas DSL.
+ *
+ * 记录器本身是可变构建器；导出的 DrawScene/commands 会复制当前快照。
+ * The recorder itself is a mutable builder; exported DrawScene/commands copy the current snapshot.
+ */
 class DrawRecorder {
     private val commands = mutableListOf<DrawCommand>()
 
+    /**
+     * 清空已记录命令，以便复用记录器实例。
+     * Clears recorded commands so the recorder instance can be reused.
+     */
     fun clear() {
         commands.clear()
     }
 
+    /**
+     * 直接追加一条绘制命令，供高级调用方或测试使用。
+     * Appends one draw command directly for advanced callers or tests.
+     */
     fun record(command: DrawCommand) {
         commands += command
     }
@@ -239,11 +254,19 @@ class DrawRecorder {
         return commands.toList()
     }
 
+    /**
+     * 导出不可变绘制场景，并校验 save/restore 配对。
+     * Exports an immutable draw scene and validates save/restore pairing.
+     */
     fun toScene(): DrawScene {
         return DrawScene(commands)
     }
 }
 
+/**
+ * 使用 DSL 构建不可变绘制场景。
+ * Builds an immutable draw scene with a DSL block.
+ */
 fun drawScene(block: DrawRecorder.() -> Unit): DrawScene {
     return DrawRecorder()
         .apply(block)

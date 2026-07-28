@@ -3,8 +3,11 @@ package com.viewcompose.ui.state
 import com.viewcompose.runtime.mutableStateOf
 
 /**
+ * lazy list/grid 的可观察状态。
  * Observable state for lazy lists and grids.
  *
+ * renderer 负责平台滚动动作，本类负责持久锚点和最新的平台无关布局快照。
+ * composition 中读取任何由 snapshot 支撑的公开属性，都会登记普通的 snapshot-state 依赖。
  * The renderer owns platform scrolling while this class owns the durable anchor and the latest
  * platform-independent layout snapshot. Reading any public snapshot-backed property during
  * composition registers a normal snapshot-state dependency.
@@ -66,6 +69,7 @@ class LazyListState(
         get() = layoutInfo.totalItemsCount > 0 && !canScrollForward
 
     /**
+     * 立即将 [index] 放到起始边缘，并按 [scrollOffset] 像素偏移。
      * Immediately places [index] at the start edge, shifted by [scrollOffset] pixels.
      */
     fun scrollToItem(
@@ -89,6 +93,7 @@ class LazyListState(
     }
 
     /**
+     * 平滑滚动到 [index]；最终平台锚点会通过 [snapshot] 回传。
      * Smoothly scrolls [index] into view. The final platform anchor is reported through [snapshot].
      */
     fun animateScrollToItem(index: Int) {
@@ -113,6 +118,7 @@ class LazyListState(
     }
 
     /**
+     * renderer 连接边界。保持 public 是为了让平台 renderer 实现连接器，同时避免 UI contract 依赖 Android。
      * Renderer attachment boundary. Public so a platform renderer can implement the connector
      * without making the UI contract depend on Android.
      */
@@ -156,6 +162,10 @@ class LazyListState(
     }
 }
 
+/**
+ * lazy list 状态与平台 renderer 之间的命令/快照桥接。
+ * Command and snapshot bridge between LazyListState and the platform renderer.
+ */
 interface LazyListConnector {
     val identity: Any
         get() = this
@@ -173,6 +183,10 @@ interface LazyListConnector {
     fun setOnSnapshotChangedListener(listener: ((LazyListStateSnapshot) -> Unit)?) = Unit
 }
 
+/**
+ * lazy list/grid 某一时刻的平台无关滚动与布局快照。
+ * Platform-neutral scroll and layout snapshot for a lazy list/grid at one moment.
+ */
 data class LazyListStateSnapshot(
     val firstVisibleItemIndex: Int,
     val firstVisibleItemScrollOffset: Int,
@@ -211,6 +225,10 @@ data class LazyListStateSnapshot(
     }
 }
 
+/**
+ * lazy list/grid 当前可见布局信息。
+ * Current visible layout information for a lazy list/grid.
+ */
 data class LazyListLayoutInfo(
     val visibleItemsInfo: List<LazyListItemInfo>,
     val viewportStartOffset: Int,
@@ -255,6 +273,10 @@ data class LazyListLayoutInfo(
     }
 }
 
+/**
+ * 单个可见 lazy item 的平台无关布局信息。
+ * Platform-neutral layout information for one visible lazy item.
+ */
 data class LazyListItemInfo(
     val index: Int,
     val key: Any,
@@ -272,6 +294,10 @@ data class LazyListItemInfo(
     }
 }
 
+/**
+ * lazy list 主轴方向。
+ * Main-axis orientation for a lazy list.
+ */
 enum class LazyListOrientation {
     Vertical,
     Horizontal,
