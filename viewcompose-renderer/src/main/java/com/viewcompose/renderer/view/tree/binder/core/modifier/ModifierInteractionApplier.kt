@@ -11,7 +11,15 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.overlay.OVERLAY_ANCHOR_TAG_KEY
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 
+/**
+ * 应用可见性、transform、anchor、testTag、点击和焦点等通用交互 modifier。
+ * Applies common interaction modifiers such as visibility, transform, anchor, testTag, click, and focus.
+ */
 internal object ModifierInteractionApplier {
+    /**
+     * 应用不依赖节点语义的通用宿主属性。
+     * Applies common host properties that do not depend on node semantics.
+     */
     fun applyCommonHostProperties(
         view: View,
         resolved: ResolvedModifiers,
@@ -19,6 +27,7 @@ internal object ModifierInteractionApplier {
         minWidth: Int,
     ) {
         val layer = resolved.graphicsLayer
+        // anchor 元数据只来自显式 modifier，避免 NodeSpec 默认值误注册 overlay 锚点。
         // Anchor metadata is sourced only from resolved modifier elements.
         applyAnchorId(view, resolved.overlayAnchor?.anchorId)
         applyTestTag(view, resolved.testTag?.tag)
@@ -50,12 +59,17 @@ internal object ModifierInteractionApplier {
         )
     }
 
+    /**
+     * 应用点击、手势和焦点状态。
+     * Applies click, gesture, and focus state.
+     */
     fun applyClickAndFocusState(
         view: View,
         node: VNode,
         resolved: ResolvedModifiers,
     ) {
         if (node.type == NodeType.TextField) {
+            // EditText 需要保留原生 focus/click 语义，避免覆盖文本选择和键盘行为。
             // EditText should keep its intrinsic focus/click semantics.
             view.setTag(R.id.viewcompose_modifier_click_listener, null)
             view.setOnClickListener(null)
@@ -98,6 +112,10 @@ internal object ModifierInteractionApplier {
         )
     }
 
+    /**
+     * 当目标 View 是 TextView 时应用文本外观。
+     * Applies text appearance when the target View is a TextView.
+     */
     fun applyTextAppearanceIfTextView(
         view: View,
         textColor: Int?,

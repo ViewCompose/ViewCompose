@@ -18,7 +18,15 @@ import com.viewcompose.ui.input.KeyEventType
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 
+/**
+ * 应用 focus、focus requester、focus observer 和 key input modifier。
+ * Applies focus, focus requester, focus observer, and key input modifiers.
+ */
 internal object ModifierFocusInputApplier {
+    /**
+     * 将焦点和键盘输入配置绑定到目标 View。
+     * Binds focus and keyboard input configuration to the target View.
+     */
     fun apply(
         view: View,
         node: VNode,
@@ -42,6 +50,10 @@ internal object ModifierFocusInputApplier {
         )
     }
 
+    /**
+     * 释放 focus/key input 相关 listener 和 requester 绑定。
+     * Releases focus/key-input listeners and requester bindings.
+     */
     fun dispose(view: View) {
         (view.getTag(R.id.viewcompose_focus_requester_binding) as? FocusRequesterBinding)
             ?.dispose()
@@ -123,6 +135,8 @@ internal object ModifierFocusInputApplier {
             R.id.viewcompose_focus_requester_binding,
         ) as? FocusRequesterBinding
         val restorationKey = node.key ?: view
+        // 有 key 时用 key 作为恢复身份；无 key 时退回 View 实例避免不同无 key 节点互相复用焦点。
+        // Use key as restoration identity when present; otherwise fall back to the View to avoid sharing focus across unkeyed nodes.
         if (previous != null &&
             previous.requester === requester &&
             previous.connector.restorationKey == restorationKey
@@ -185,6 +199,8 @@ internal object ModifierFocusInputApplier {
                 binding.bubble != null ||
                 binding.focusProperties != FocusProperties.Default
         val shouldInstall = nodeType != NodeType.AndroidView || hasOwnInputContract
+        // AndroidView 默认保留业务 View 的 key listener，只有声明了输入契约才接管。
+        // AndroidView keeps the business View's key listener by default and is intercepted only when an input contract is declared.
         val installed = view.getTag(R.id.viewcompose_key_input_listener) as? View.OnKeyListener
         if (!shouldInstall) {
             if (installed != null) {
@@ -215,6 +231,8 @@ internal object ModifierFocusInputApplier {
             current.parent as? View
         }.toList()
 
+        // 先捕获阶段从 root 到 target，再冒泡阶段从 target 到 root。
+        // Run preview from root to target first, then bubble from target back to root.
         hierarchy.asReversed().forEach { current ->
             val binding = current.getTag(
                 R.id.viewcompose_key_input_binding,

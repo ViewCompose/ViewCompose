@@ -14,7 +14,15 @@ import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 
+/**
+ * 将 modifier 与 NodeSpec 中的视觉字段合并为 renderer 样式模型。
+ * Merges modifier values and visual fields from NodeSpec into renderer style models.
+ */
 internal object ModifierNodeStyleResolver {
+    /**
+     * 解析直接应用到节点 View 的样式。
+     * Resolves style applied directly to the node View.
+     */
     fun resolveNodeStyle(
         node: VNode,
         resolved: ResolvedModifiers,
@@ -43,6 +51,10 @@ internal object ModifierNodeStyleResolver {
         )
     }
 
+    /**
+     * 解析 host 层需要保留的 padding/min size。
+     * Resolves padding/min-size that must be retained by the host layer.
+     */
     fun resolveHostStyle(
         resolved: ResolvedModifiers,
         nodeStyle: NodeStyle,
@@ -183,6 +195,10 @@ internal object ModifierNodeStyleResolver {
     }
 }
 
+/**
+ * 节点 View 的完整视觉样式快照。
+ * Complete visual style snapshot for a node View.
+ */
 internal data class NodeStyle(
     val backgroundDrawableResId: Int?,
     val backgroundColor: Int?,
@@ -204,6 +220,10 @@ internal data class NodeStyle(
     val clickable: Boolean,
 )
 
+/**
+ * 外层 host 需要参与布局和 inset 处理的样式。
+ * Style used by the outer host for layout and inset handling.
+ */
 internal data class HostStyle(
     val hasWindowInsetsPadding: Boolean,
     val padding: PaddingModifierElement?,

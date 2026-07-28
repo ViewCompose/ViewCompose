@@ -8,7 +8,15 @@ import com.viewcompose.ui.modifier.ImeInsetsPaddingModifierElement
 import com.viewcompose.ui.modifier.PaddingModifierElement
 import com.viewcompose.ui.modifier.SystemBarsInsetsPaddingModifierElement
 
+/**
+ * 应用 systemBars/IME inset padding，并在移除 modifier 时恢复基础 padding。
+ * Applies systemBars/IME inset padding and restores base padding when modifiers are removed.
+ */
 internal object ModifierInsetsApplier {
+    /**
+     * 没有 inset padding modifier 时直接应用 host padding。
+     * Applies host padding directly when no inset-padding modifier is present.
+     */
     fun applyHostPaddingWhenNoInsets(
         view: View,
         hasWindowInsetsPadding: Boolean,
@@ -27,6 +35,10 @@ internal object ModifierInsetsApplier {
         )
     }
 
+    /**
+     * 安装 WindowInsets listener 并把系统栏/键盘 inset 叠加到基础 padding。
+     * Installs a WindowInsets listener and adds system-bar/IME insets to base padding.
+     */
     fun applyWindowInsetsPadding(
         view: View,
         systemBarsModifier: SystemBarsInsetsPaddingModifierElement?,
@@ -34,6 +46,8 @@ internal object ModifierInsetsApplier {
         basePadding: PaddingModifierElement?,
     ) {
         if (systemBarsModifier == null && imeModifier == null) {
+            // modifier 移除时恢复记录的 base padding，并卸载 listener。
+            // When modifiers are removed, restore recorded base padding and uninstall the listener.
             val state = view.getTag(R.id.viewcompose_system_bars_padding_state) as? WindowInsetsPaddingState
             if (state != null) {
                 view.setPadding(state.baseLeft, state.baseTop, state.baseRight, state.baseBottom)
