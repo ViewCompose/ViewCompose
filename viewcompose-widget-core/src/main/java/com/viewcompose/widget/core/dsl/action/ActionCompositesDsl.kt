@@ -15,6 +15,10 @@ import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.ImageSource
 
+/**
+ * 组合式 FloatingActionButton，由 Box、主题 token 和点击 modifier 构成。
+ * Composite FloatingActionButton built from Box, theme tokens, and click modifiers.
+ */
 fun UiTreeBuilder.FloatingActionButton(
     onClick: () -> Unit,
     size: FabSize = FabSize.Medium,
@@ -46,6 +50,10 @@ fun UiTreeBuilder.FloatingActionButton(
     }
 }
 
+/**
+ * 带文本和可选图标的扩展 FloatingActionButton。
+ * Extended FloatingActionButton with text and an optional icon.
+ */
 fun UiTreeBuilder.ExtendedFloatingActionButton(
     text: String,
     onClick: () -> Unit,
@@ -88,6 +96,10 @@ fun UiTreeBuilder.ExtendedFloatingActionButton(
     }
 }
 
+/**
+ * 组合式 Chip，支持选中、禁用、leading icon 和 trailing icon action。
+ * Composite Chip supporting selected/disabled states, leading icon, and trailing icon action.
+ */
 fun UiTreeBuilder.Chip(
     label: String,
     onClick: () -> Unit,
