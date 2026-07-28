@@ -9,6 +9,25 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class MainDemoDeviceTest {
     @Test
+    fun activityRecreation_preservesSelectedHomeTab() {
+        launchDemoActivity(MainActivity::class.java, themeMode = DemoThemeMode.Light).use { scenario ->
+            waitForUiIdle()
+            clickDeviceText("设置")
+            assertDeviceTextVisible("主题切换")
+
+            scenario.recreate()
+            waitForUiIdle()
+
+            assertDeviceTextVisible("主题切换")
+            scenario.onActivity { activity ->
+                assertViewCompletelyVisible(
+                    activity.requireViewByTestTagVisible(DemoTestTags.HOME_NAVIGATION_BAR),
+                )
+            }
+        }
+    }
+
+    @Test
     fun catalogLaunchAndThemeSwitch_keepMainDemoUsable() {
         launchDemoActivity(MainActivity::class.java, themeMode = DemoThemeMode.System).use { scenario ->
             waitForUiIdle()

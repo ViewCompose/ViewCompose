@@ -18,6 +18,7 @@ import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiTheme
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
+import com.viewcompose.widget.core.rememberSaveable
 
 internal fun UiTreeBuilder.DemoHomeScaffold(
     root: ViewGroup,
@@ -31,7 +32,9 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
     )
     ProvideRemoteImageLoader(remoteImageLoader) {
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
-            val navIndex = remember { mutableStateOf(0) }
+            val navIndex = rememberSaveable(key = "demo-home-navigation-index") {
+                mutableStateOf(0)
+            }
             val diagnosticsPageState = remember { mutableStateOf(0) }
             SideEffect {
                 activity?.title = "ViewCompose · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
