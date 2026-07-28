@@ -24,6 +24,10 @@ import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
 
+/**
+ * 提供手势组件的预览规格，用最小可交互场景覆盖点击、拖拽、滑动和缩放。
+ * Provides preview specs for gesture components using minimal interactive cases for tap, drag, swipe, and scale.
+ */
 internal object GesturePreviewSpecs {
     val all: List<PreviewSpec> = listOf(
         PreviewSpec(

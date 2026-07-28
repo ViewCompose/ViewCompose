@@ -20,6 +20,10 @@ import com.viewcompose.widget.core.VerticalPager
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
 
+/**
+ * 提供集合类组件的预览规格，覆盖列表、网格和导航栏的 catalog 示例。
+ * Provides preview specs for collection components, covering list, grid, and navigation bar catalog samples.
+ */
 internal object CollectionPreviewSpecs {
     val all: List<PreviewSpec> = listOf(
         PreviewSpec(

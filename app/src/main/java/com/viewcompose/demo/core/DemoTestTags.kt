@@ -1,5 +1,9 @@
 package com.viewcompose
 
+/**
+ * 集中维护 demo 页面测试标签，保证 UI 测试和 benchmark 不依赖可见文案。
+ * Centralizes demo test tags so UI tests and benchmarks do not depend on visible copy.
+ */
 internal object DemoTestTags {
     const val HOME_NAVIGATION_BAR = "home_navigation_bar"
 
