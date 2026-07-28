@@ -125,37 +125,29 @@ internal object InputViewBinder {
         view: SeekBar,
         spec: SliderSpec,
     ) {
-        val listener = view.getTag(R.id.viewcompose_seek_listener) as? SeekBar.OnSeekBarChangeListener
-        if (listener != null) {
-            view.setOnSeekBarChangeListener(null)
-        }
         val resolvedValue = spec.value.coerceIn(spec.min, spec.max)
+        updateSliderListener(
+            view = view,
+            min = spec.min,
+            expectedValue = resolvedValue,
+            onValueChange = spec.onValueChange,
+        )
         view.max = (spec.max - spec.min).coerceAtLeast(0)
         view.progress = resolvedValue - spec.min
         view.isEnabled = spec.enabled
         view.progressTintList = ColorStateList.valueOf(spec.trackColor)
         view.thumbTintList = ColorStateList.valueOf(spec.thumbColor)
-        val nextListener = object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val nextValue = spec.min + progress
-                if (fromUser && nextValue != resolvedValue) {
-                    spec.onValueChange?.invoke(nextValue)
-                }
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
-
-            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
-        }
-        view.setOnSeekBarChangeListener(nextListener)
-        view.setTag(R.id.viewcompose_seek_listener, nextListener)
     }
 
     private fun bindCompoundButton(
         view: CompoundButton,
         spec: ToggleSpec,
     ) {
-        view.setOnCheckedChangeListener(null)
+        updateToggleListener(
+            view = view,
+            expectedChecked = spec.checked,
+            onCheckedChange = spec.onCheckedChange,
+        )
         view.text = spec.text
         view.isEnabled = spec.enabled
         view.isChecked = spec.checked
@@ -176,11 +168,36 @@ internal object InputViewBinder {
         } else {
             view.buttonTintList = ColorStateList.valueOf(spec.controlColor)
         }
-        view.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked != spec.checked) {
-                spec.onCheckedChange?.invoke(isChecked)
+    }
+
+    internal fun updateToggleListener(
+        view: CompoundButton,
+        expectedChecked: Boolean,
+        onCheckedChange: ((Boolean) -> Unit)?,
+    ) {
+        val binding = (view.getTag(R.id.viewcompose_toggle_listener) as? ToggleListenerBinding)
+            ?: ToggleListenerBinding().also {
+                view.setTag(R.id.viewcompose_toggle_listener, it)
+                view.setOnCheckedChangeListener(it)
             }
-        }
+        binding.expectedChecked = expectedChecked
+        binding.onCheckedChange = onCheckedChange
+    }
+
+    internal fun updateSliderListener(
+        view: SeekBar,
+        min: Int,
+        expectedValue: Int,
+        onValueChange: ((Int) -> Unit)?,
+    ) {
+        val binding = (view.getTag(R.id.viewcompose_seek_listener) as? SliderListenerBinding)
+            ?: SliderListenerBinding().also {
+                view.setTag(R.id.viewcompose_seek_listener, it)
+                view.setOnSeekBarChangeListener(it)
+            }
+        binding.min = min
+        binding.expectedValue = expectedValue
+        binding.onValueChange = onValueChange
     }
 
     fun readTextFieldSpec(node: VNode): TextFieldSpec {
@@ -457,4 +474,39 @@ internal object InputViewBinder {
         }
         return count
     }
+}
+
+private class ToggleListenerBinding : CompoundButton.OnCheckedChangeListener {
+    var expectedChecked: Boolean = false
+    var onCheckedChange: ((Boolean) -> Unit)? = null
+
+    override fun onCheckedChanged(
+        buttonView: CompoundButton,
+        isChecked: Boolean,
+    ) {
+        if (isChecked != expectedChecked) {
+            onCheckedChange?.invoke(isChecked)
+        }
+    }
+}
+
+private class SliderListenerBinding : SeekBar.OnSeekBarChangeListener {
+    var min: Int = 0
+    var expectedValue: Int = 0
+    var onValueChange: ((Int) -> Unit)? = null
+
+    override fun onProgressChanged(
+        seekBar: SeekBar?,
+        progress: Int,
+        fromUser: Boolean,
+    ) {
+        val nextValue = min + progress
+        if (fromUser && nextValue != expectedValue) {
+            onValueChange?.invoke(nextValue)
+        }
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
 }
