@@ -1,6 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import android.graphics.Color
+import android.graphics.drawable.RippleDrawable
 import android.widget.FrameLayout
+import android.widget.TextView
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
 import com.viewcompose.ui.node.NodeType
@@ -31,8 +34,14 @@ class SegmentedControlRenderingTest {
             nodes = listOf(segmentedControlNode(selectedIndex = 0, backgroundColor = initialColor)),
         )
         val view = initial.mountedNodes.single().view as DeclarativeSegmentedControlLayout
+        val runtimeTab = view.getChildAt(0) as TextView
+        val themeTab = view.getChildAt(1) as TextView
+        val runtimeBackground = runtimeTab.background
+        val themeBackground = themeTab.background
 
         assertEquals(initialColor, view.materialBackgroundColor())
+        assertEquals(0xFF7B9E68.toInt(), runtimeTab.indicatorColor())
+        assertEquals(Color.TRANSPARENT, themeTab.indicatorColor())
 
         val patchedColor = 0xFFEFE4D2.toInt()
         val patched = ViewTreeRenderer.renderInto(
@@ -42,7 +51,11 @@ class SegmentedControlRenderingTest {
         )
 
         assertSame(view, patched.mountedNodes.single().view)
+        assertSame(runtimeBackground, runtimeTab.background)
+        assertSame(themeBackground, themeTab.background)
         assertEquals(patchedColor, view.materialBackgroundColor())
+        assertEquals(Color.TRANSPARENT, runtimeTab.indicatorColor())
+        assertEquals(0xFF7B9E68.toInt(), themeTab.indicatorColor())
         assertEquals(1, patched.stats.patchedNodes)
         assertEquals(0, patched.stats.reboundNodes)
     }
@@ -77,5 +90,10 @@ class SegmentedControlRenderingTest {
 
     private fun DeclarativeSegmentedControlLayout.materialBackgroundColor(): Int {
         return (background as MaterialShapeDrawable).fillColor!!.defaultColor
+    }
+
+    private fun TextView.indicatorColor(): Int {
+        val ripple = background as RippleDrawable
+        return (ripple.getDrawable(0) as MaterialShapeDrawable).fillColor!!.defaultColor
     }
 }
