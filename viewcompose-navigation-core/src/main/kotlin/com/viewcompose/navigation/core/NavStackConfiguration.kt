@@ -5,6 +5,7 @@ import java.util.Collections
 import java.util.LinkedHashMap
 
 /**
+ * 一个独立保留导航栈的稳定业务身份。
  * Stable application identity for one independently retained navigation stack.
  */
 @JvmInline
@@ -25,28 +26,43 @@ value class NavStackId(
 }
 
 /**
+ * 应用选择某个 stack 时采用的行为。
  * Behavior applied when an application selects a stack.
  */
 enum class NavStackSelectionMode {
-    /** Preserve the selected stack exactly where the user left it. */
+    /**
+     * 保留被选中 stack 的完整状态。
+     * Preserve the selected stack exactly where the user left it.
+     */
     Preserve,
 
-    /** Remove every entry above the selected stack's root before presenting it. */
+    /**
+     * 展示前移除被选中 stack 根节点之上的所有 entry。
+     * Remove every entry above the selected stack's root before presenting it.
+     */
     PopToRoot,
 }
 
 /**
+ * 活跃 stack 已位于根节点时的系统 Back 行为。
  * System-Back behavior when the active stack is already at its root.
  */
 enum class NavRootBackBehavior {
-    /** Do not consume Back; delegate it to the enclosing host or the Android platform. */
+    /**
+     * 不消费 Back，交给外层 host 或 Android 平台处理。
+     * Do not consume Back; delegate it to the enclosing host or the Android platform.
+     */
     Delegate,
 
-    /** Return to the most recently selected stack, then delegate when no history remains. */
+    /**
+     * 返回最近选择过的 stack；没有历史后再委托给外层。
+     * Return to the most recently selected stack, then delegate when no history remains.
+     */
     PreviousStack,
 }
 
 /**
+ * 声明一个独立保留导航栈的初始 route。
  * Declares the initial route of one independently retained navigation stack.
  */
 data class NavStackSpec(
@@ -55,6 +71,7 @@ data class NavStackSpec(
 )
 
 /**
+ * 多个独立保留导航栈的不可变配置。
  * Immutable configuration for a set of independently retained navigation stacks.
  */
 class NavStackConfiguration(
@@ -105,6 +122,10 @@ class NavStackConfiguration(
     }
 
     companion object {
+        /**
+         * 创建单 stack 配置，用于不需要 bottom-nav/tab 独立栈的场景。
+         * Creates a single-stack configuration for hosts that do not need independent bottom-nav/tab stacks.
+         */
         fun single(startDestination: NavRoute): NavStackConfiguration {
             return NavStackConfiguration(
                 initialStackId = NavStackId.Default,
@@ -120,8 +141,10 @@ class NavStackConfiguration(
 }
 
 /**
+ * 所有保留导航栈的完整不可变状态。
  * Complete immutable state of every retained navigation stack.
  *
+ * [selectionHistory] 从旧到新排序，且不包含 [activeStackId]。
  * [selectionHistory] is oldest-to-newest and excludes [activeStackId].
  */
 class NavStackSetSnapshot(
@@ -187,6 +210,8 @@ class NavStackSetSnapshot(
     }
 
     private fun validateGlobalOwnerIdentities() {
+        // destination 和 graph owner ID 在所有 stack 间必须全局唯一，避免跨栈状态串联。
+        // Destination and graph owner IDs must be globally unique across stacks to avoid cross-stack state sharing.
         val destinationStackById = linkedMapOf<NavEntryId, NavStackId>()
         val graphStackById = linkedMapOf<NavEntryId, NavStackId>()
         stacks.forEach { (stackId, snapshot) ->

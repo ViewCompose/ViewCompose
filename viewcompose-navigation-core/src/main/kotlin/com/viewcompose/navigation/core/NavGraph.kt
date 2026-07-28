@@ -4,14 +4,26 @@ import java.util.ArrayList
 import java.util.Collections
 import java.util.LinkedHashMap
 
+/**
+ * 限制导航图 DSL 的接收者作用域。
+ * Restricts receiver scope for the navigation graph DSL.
+ */
 @DslMarker
 annotation class NavGraphDsl
 
+/**
+ * 导航图中的节点契约，可能是 destination 或嵌套 graph。
+ * Node contract inside a navigation graph, either a destination or a nested graph.
+ */
 sealed interface NavGraphNode {
     val route: String
     val deepLinks: List<NavDeepLink>
 }
 
+/**
+ * 导航图中的叶子目的地。
+ * Leaf destination inside a navigation graph.
+ */
 class NavDestination internal constructor(
     override val route: String,
     deepLinks: List<NavDeepLink>,
@@ -43,6 +55,10 @@ class NavDestination internal constructor(
     }
 }
 
+/**
+ * 不可变导航图，提供 route 解析、startDestination 展开和 deep-link 匹配。
+ * Immutable navigation graph that resolves routes, expands start destinations, and matches deep links.
+ */
 class NavGraph internal constructor(
     override val route: String,
     val startDestination: NavRoute,
@@ -67,6 +83,8 @@ class NavGraph internal constructor(
             "Navigation graph '$route' must contain at least one destination."
         }
         validateStartDestination()
+        // routeIndex 包含当前图及所有后代节点，用于 O(1) route 名称查找和重复 route 校验。
+        // routeIndex includes this graph and all descendants for O(1) route lookup and duplicate-route validation.
         val mutableIndex = LinkedHashMap<String, IndexedNode>()
         indexInto(
             target = mutableIndex,
@@ -90,6 +108,10 @@ class NavGraph internal constructor(
         )
     }
 
+    /**
+     * 将 route 解析为最终叶子目的地及其 graph 层级。
+     * Resolves a route to the final leaf destination plus its graph hierarchy.
+     */
     fun resolve(route: NavRoute): NavGraphResolution {
         val indexed = requireNotNull(routeIndex[route.name]) {
             "Navigation route '${route.name}' is not registered in graph '${this.route}'."
@@ -133,6 +155,8 @@ class NavGraph internal constructor(
         val mergedArguments = LinkedHashMap(startDestination.arguments).apply {
             putAll(inheritedArguments)
         }
+        // 嵌套 graph route 的参数会传递给其 startDestination，让 deep link/graph entry 参数保持一致。
+        // Arguments on a nested graph route flow into its startDestination so deep links and graph entries stay aligned.
         return when (child) {
             is NavDestination -> {
                 NavGraphResolution(
@@ -237,6 +261,10 @@ class NavGraph internal constructor(
     )
 }
 
+/**
+ * NavGraph 解析结果，包含实际 destination 和所属 graphPath。
+ * NavGraph resolution containing the concrete destination and owning graphPath.
+ */
 class NavGraphResolution internal constructor(
     val destination: NavRoute,
     graphPath: List<NavRoute>,
@@ -272,6 +300,10 @@ class NavGraphResolution internal constructor(
     }
 }
 
+/**
+ * navigation DSL 的可变构建器，最终输出不可变 NavGraph。
+ * Mutable builder for the navigation DSL that produces an immutable NavGraph.
+ */
 @NavGraphDsl
 class NavGraphBuilder internal constructor(
     private val route: String,
@@ -280,6 +312,10 @@ class NavGraphBuilder internal constructor(
 ) {
     private val children = mutableListOf<NavGraphNode>()
 
+    /**
+     * 添加一个叶子目的地。
+     * Adds one leaf destination.
+     */
     fun destination(
         route: String,
         deepLinks: List<NavDeepLink> = emptyList(),
@@ -290,6 +326,10 @@ class NavGraphBuilder internal constructor(
         )
     }
 
+    /**
+     * 添加一个嵌套导航图。
+     * Adds one nested navigation graph.
+     */
     fun navigation(
         route: String,
         startDestination: NavRoute,
@@ -313,6 +353,10 @@ class NavGraphBuilder internal constructor(
     }
 }
 
+/**
+ * 构建一个不可变导航图。
+ * Builds an immutable navigation graph.
+ */
 fun navGraph(
     route: String,
     startDestination: NavRoute,

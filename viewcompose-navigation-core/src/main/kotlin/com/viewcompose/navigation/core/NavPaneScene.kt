@@ -3,17 +3,29 @@ package com.viewcompose.navigation.core
 import java.util.ArrayList
 import java.util.Collections
 
+/**
+ * 多 pane 导航布局中的逻辑角色。
+ * Logical role in a multi-pane navigation layout.
+ */
 enum class NavPaneRole {
     Primary,
     Secondary,
     Tertiary,
 }
 
+/**
+ * 一个 pane 与其展示 entry 的绑定。
+ * Binding between one pane and the entry it displays.
+ */
 data class NavPane(
     val role: NavPaneRole,
     val entryId: NavEntryId,
 )
 
+/**
+ * 当前导航快照应展示的 pane 场景。
+ * Pane scene that should be displayed for the current navigation snapshot.
+ */
 class NavPaneScene(
     panes: List<NavPane>,
 ) {
@@ -57,6 +69,10 @@ class NavPaneScene(
     override fun toString(): String = "NavPaneScene(panes=$panes)"
 }
 
+/**
+ * 根据 back stack 与最大 pane 数计算可见 pane 场景。
+ * Calculates the visible pane scene from a back stack and maximum pane count.
+ */
 fun interface NavPaneStrategy {
     fun calculate(
         snapshot: NavBackStackSnapshot,
@@ -64,6 +80,10 @@ fun interface NavPaneStrategy {
     ): NavPaneScene
 }
 
+/**
+ * 内置 pane 策略集合。
+ * Built-in pane strategy collection.
+ */
 object NavPaneStrategies {
     val Single = NavPaneStrategy { snapshot, _ ->
         NavPaneScene(
@@ -77,6 +97,7 @@ object NavPaneStrategies {
     }
 
     /**
+     * 将最新提交的 entry 放入连续 pane，并始终保留 top entry。
      * Places the newest committed entries into contiguous panes while always retaining the top.
      */
     val BackStack = NavPaneStrategy { snapshot, maxPaneCount ->
@@ -95,6 +116,10 @@ object NavPaneStrategies {
     }
 }
 
+/**
+ * 执行 pane 策略并校验输出仍引用当前 back stack。
+ * Runs a pane strategy and validates that it still references the current back stack.
+ */
 fun NavPaneStrategy.calculateValidated(
     snapshot: NavBackStackSnapshot,
     maxPaneCount: Int,

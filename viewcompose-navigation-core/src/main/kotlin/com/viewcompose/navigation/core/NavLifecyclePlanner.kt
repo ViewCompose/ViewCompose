@@ -2,6 +2,10 @@ package com.viewcompose.navigation.core
 
 import java.util.Collections
 
+/**
+ * Android host 生命周期的抽象状态。
+ * Abstract lifecycle state of the Android host.
+ */
 enum class NavHostLifecycleState {
     Initialized,
     Created,
@@ -10,6 +14,10 @@ enum class NavHostLifecycleState {
     Destroyed,
 }
 
+/**
+ * 单个导航 entry 的目标生命周期状态。
+ * Target lifecycle state for one navigation entry.
+ */
 enum class NavEntryLifecycleState {
     Initialized,
     Created,
@@ -18,12 +26,20 @@ enum class NavEntryLifecycleState {
     Destroyed,
 }
 
+/**
+ * entry 生命周期状态迁移记录。
+ * Lifecycle-state transition record for one entry.
+ */
 data class NavLifecycleTransition(
     val entryId: NavEntryId,
     val from: NavEntryLifecycleState,
     val to: NavEntryLifecycleState,
 )
 
+/**
+ * 一次生命周期规划的目标状态和有序迁移。
+ * Target states and ordered transitions for one lifecycle planning pass.
+ */
 class NavLifecyclePlan(
     targetStates: Map<NavEntryId, NavEntryLifecycleState>,
     transitions: List<NavLifecycleTransition>,
@@ -36,6 +52,10 @@ class NavLifecyclePlan(
     )
 }
 
+/**
+ * 根据 retained/visible/interactive entry 集合计算生命周期迁移。
+ * Computes lifecycle transitions from retained, visible, and interactive entry sets.
+ */
 object NavLifecyclePlanner {
     fun plan(
         currentStates: Map<NavEntryId, NavEntryLifecycleState>,
@@ -115,6 +135,8 @@ object NavLifecyclePlanner {
             transition.to == NavEntryLifecycleState.Destroyed ||
                 transition.to.activeRank() < transition.from.activeRank()
         }
+        // 先执行降级/销毁，再执行升级，避免两个 entry 同时处于 RESUMED。
+        // Run downward/destroy transitions before upward transitions so two entries are not RESUMED at once.
         return NavLifecyclePlan(
             targetStates = targetStates,
             transitions = downward + upward,

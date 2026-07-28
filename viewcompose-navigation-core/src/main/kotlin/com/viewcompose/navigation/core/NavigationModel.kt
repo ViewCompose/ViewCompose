@@ -3,6 +3,10 @@ package com.viewcompose.navigation.core
 import java.util.UUID
 import java.util.Collections
 
+/**
+ * 单个导航目的地或图实例在回退栈中的稳定 ID。
+ * Stable ID for one destination or graph instance on the navigation back stack.
+ */
 @JvmInline
 value class NavEntryId(
     val value: String,
@@ -14,6 +18,10 @@ value class NavEntryId(
     override fun toString(): String = value
 }
 
+/**
+ * NavEntryId 生成器，测试可注入确定性 ID。
+ * NavEntryId factory; tests can inject deterministic IDs.
+ */
 fun interface NavEntryIdFactory {
     fun nextId(): NavEntryId
 
@@ -26,6 +34,10 @@ fun interface NavEntryIdFactory {
     }
 }
 
+/**
+ * 导航参数的跨平台值模型。
+ * Cross-platform value model for navigation arguments.
+ */
 sealed interface NavValue {
     data object Null : NavValue
 
@@ -54,6 +66,10 @@ sealed interface NavValue {
     ) : NavValue
 }
 
+/**
+ * 导航 route 名称及其不可变参数集合。
+ * Navigation route name plus immutable argument map.
+ */
 class NavRoute(
     val name: String,
     arguments: Map<String, NavValue> = emptyMap(),
@@ -93,8 +109,10 @@ class NavRoute(
 }
 
 /**
+ * 回退栈上一个具体导航图实例的稳定身份和参数。
  * Stable identity and arguments for one concrete navigation-graph instance on the back stack.
  *
+ * 多个 destination entry 在仍位于该图内时可以引用同一个 graph instance。
  * Multiple destination entries may reference the same instance while they remain in that graph.
  */
 class NavGraphEntry(
@@ -118,6 +136,13 @@ class NavGraphEntry(
     }
 }
 
+/**
+ * 回退栈上的一个目的地实例。
+ * One destination instance on a back stack.
+ *
+ * graphEntries 记录该目的地所属的图实例链，用于生命周期、ViewModelStore 和 saved-state 共享。
+ * graphEntries records owning graph instances for lifecycle, ViewModelStore, and saved-state sharing.
+ */
 class NavEntry(
     val id: NavEntryId,
     val route: NavRoute,
@@ -161,6 +186,10 @@ class NavEntry(
     }
 }
 
+/**
+ * 单个导航栈的不可变快照。
+ * Immutable snapshot of one navigation stack.
+ */
 class NavBackStackSnapshot(
     entries: List<NavEntry>,
 ) {
