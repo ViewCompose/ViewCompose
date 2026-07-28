@@ -1,5 +1,9 @@
 package com.viewcompose.ui.node.policy
 
+/**
+ * Lazy 容器内容内边距的 renderer 中立模型。
+ * Renderer-neutral model for lazy container content padding.
+ */
 data class LazyContentPadding(
     val start: Int = 0,
     val top: Int = 0,

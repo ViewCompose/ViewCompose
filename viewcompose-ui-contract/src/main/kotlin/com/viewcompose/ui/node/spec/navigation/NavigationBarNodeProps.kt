@@ -2,6 +2,10 @@ package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.NavigationBarItem
 
+/**
+ * NavigationBar 节点的 item 集合和选中状态属性。
+ * Item collection and selected-state properties for a NavigationBar node.
+ */
 data class NavigationBarNodeProps(
     val items: List<NavigationBarItem>,
     val selectedIndex: Int,

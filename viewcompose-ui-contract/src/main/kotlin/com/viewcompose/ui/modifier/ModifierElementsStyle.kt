@@ -2,6 +2,10 @@ package com.viewcompose.ui.modifier
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * 背景、边框、裁剪、层级和图形变换相关的 modifier 元素模型。
+ * Modifier element models for backgrounds, borders, clipping, layers, and graphics transforms.
+ */
 data class BackgroundColorModifierElement(
     val color: Int,
 ) : ModifierElement

@@ -1,5 +1,9 @@
 package com.viewcompose.ui.modifier
 
+/**
+ * renderer 和无障碍桥接使用的语义角色。
+ * Semantic roles consumed by the renderer and accessibility bridge.
+ */
 enum class SemanticsRole {
     Button,
     Checkbox,

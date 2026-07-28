@@ -1,5 +1,9 @@
 package com.viewcompose.ui.shape
 
+/**
+ * 角形状族，描述圆角或切角。
+ * Corner family describing rounded or cut corners.
+ */
 enum class UiCornerFamily {
     Rounded,
     Cut,

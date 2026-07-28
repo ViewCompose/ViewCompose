@@ -1,8 +1,11 @@
 package com.viewcompose.ui.node
 
 /**
+ * 带 key 的 lazy 容器 item。
  * One keyed lazy-container item.
  *
+ * [contentToken] 是渲染内容的语义版本。item content 捕获的值变化时它必须变化。
+ * 相等 token 允许 renderer 刷新最新 content closure，而不必同步重绘已绑定 item。
  * [contentToken] is the semantic version of the rendered content. It must change when values
  * captured by the item content change. An equal token allows the renderer to refresh the latest
  * content closure without synchronously redrawing an already-bound item.

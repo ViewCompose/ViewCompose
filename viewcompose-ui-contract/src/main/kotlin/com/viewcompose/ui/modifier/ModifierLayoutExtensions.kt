@@ -1,5 +1,9 @@
 package com.viewcompose.ui.modifier
 
+/**
+ * 布局类 modifier 的声明式扩展入口。
+ * Declarative extension entrypoints for layout modifiers.
+ */
 fun Modifier.padding(all: Int): Modifier {
     return padding(
         horizontal = all,
@@ -172,4 +176,3 @@ fun Modifier.fillMaxSize(): Modifier {
 }
 
 private const val MATCH_PARENT: Int = -1
-

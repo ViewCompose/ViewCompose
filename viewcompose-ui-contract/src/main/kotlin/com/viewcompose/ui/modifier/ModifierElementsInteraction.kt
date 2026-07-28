@@ -13,6 +13,10 @@ import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.focus.FocusState
 import com.viewcompose.ui.input.KeyEvent
 
+/**
+ * 交互、焦点、键盘和语义相关的 modifier 元素模型。
+ * Modifier element models for interaction, focus, keyboard, and semantics.
+ */
 data class ClickableModifierElement(
     val onClick: () -> Unit,
 ) : ModifierElement

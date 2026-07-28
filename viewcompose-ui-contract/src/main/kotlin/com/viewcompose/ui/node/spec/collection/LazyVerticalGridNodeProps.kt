@@ -7,6 +7,10 @@ import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
 
+/**
+ * LazyVerticalGrid 节点的网格、item 和复用策略属性。
+ * Grid, item, and reuse-policy properties for a LazyVerticalGrid node.
+ */
 data class LazyVerticalGridNodeProps(
     val spanCount: Int,
     val contentPadding: LazyContentPadding,

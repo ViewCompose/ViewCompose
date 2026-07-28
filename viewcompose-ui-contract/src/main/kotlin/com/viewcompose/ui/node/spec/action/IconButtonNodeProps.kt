@@ -5,6 +5,10 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.RemoteImageLoader
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * IconButton 节点传给 renderer 的完整属性快照。
+ * Complete property snapshot passed to the renderer for an IconButton node.
+ */
 data class IconButtonNodeProps(
     override val contentDescription: String?,
     override val contentScale: ImageContentScale,

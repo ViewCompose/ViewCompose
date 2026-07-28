@@ -7,6 +7,10 @@ import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
 
+/**
+ * LazyColumn 节点的 item、复用、内边距和滚动状态属性。
+ * Item, reuse, padding, and scroll-state properties for a LazyColumn node.
+ */
 data class LazyColumnNodeProps(
     val contentPadding: LazyContentPadding,
     val spacing: Int,

@@ -9,6 +9,10 @@ import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * TextField 节点的文本状态、键盘、装饰和回调属性。
+ * Text state, keyboard, decoration, and callback properties for a TextField node.
+ */
 data class TextFieldNodeProps(
     val state: TextFieldState,
     val value: TextFieldValue,
