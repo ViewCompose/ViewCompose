@@ -2,6 +2,10 @@ package com.viewcompose.renderer.view.lazy.state
 
 import androidx.viewpager2.widget.ViewPager2
 
+/**
+ * 暴露 pager 当前页与偏移量的轻量状态对象。
+ * Lightweight state object exposing pager current page and offset.
+ */
 class PagerState {
     private val listeners = linkedSetOf<(Int, Float) -> Unit>()
 

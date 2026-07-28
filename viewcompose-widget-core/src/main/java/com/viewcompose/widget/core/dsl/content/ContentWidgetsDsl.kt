@@ -13,6 +13,10 @@ import com.viewcompose.ui.node.spec.ImageNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 
+/**
+ * 发射纯文本节点。
+ * Emits a plain text node.
+ */
 fun UiTreeBuilder.Text(
     text: String,
     style: UiTextStyle = TextDefaults.currentStyle(),
@@ -46,6 +50,10 @@ fun UiTreeBuilder.Text(
     )
 }
 
+/**
+ * 发射富文本节点，保留 TextDocument 的 span/段落信息。
+ * Emits a rich text node while preserving TextDocument span/paragraph data.
+ */
 fun UiTreeBuilder.RichText(
     document: TextDocument,
     style: UiTextStyle = TextDefaults.currentStyle(),
@@ -79,6 +87,10 @@ fun UiTreeBuilder.RichText(
     )
 }
 
+/**
+ * 发射图片节点，并使用当前 ImageLoading loader 处理远程资源。
+ * Emits an image node and uses the current ImageLoading loader for remote sources.
+ */
 fun UiTreeBuilder.Image(
     source: ImageSource,
     contentDescription: String? = null,
@@ -107,6 +119,10 @@ fun UiTreeBuilder.Image(
     )
 }
 
+/**
+ * Image 的图标语义便捷封装，默认使用 ContentColor。
+ * Icon-oriented convenience wrapper around Image, using ContentColor by default.
+ */
 fun UiTreeBuilder.Icon(
     source: ImageSource,
     contentDescription: String? = null,

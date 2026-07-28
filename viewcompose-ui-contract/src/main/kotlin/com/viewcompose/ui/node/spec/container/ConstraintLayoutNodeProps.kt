@@ -1,5 +1,9 @@
 package com.viewcompose.ui.node.spec
 
+/**
+ * ConstraintLayout 节点的约束集合属性。
+ * Constraint-set properties for a ConstraintLayout node.
+ */
 data class ConstraintLayoutNodeProps(
     val constraintSet: ConstraintSetSpec? = null,
     val helpers: ConstraintHelpersSpec = ConstraintHelpersSpec(),

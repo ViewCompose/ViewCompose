@@ -2,13 +2,28 @@ package com.viewcompose
 
 import androidx.appcompat.app.AppCompatActivity
 
+/**
+ * Demo 模块在目录中的可见状态。
+ * Visibility state for a demo module in the catalog.
+ */
 internal enum class DemoModuleStatus {
     Available,
     Planned,
 }
 
+/**
+ * 从启动 Intent 指定目标 demo 模块的 extra key。
+ * Intent extra key used to launch a specific demo module.
+ */
 internal const val EXTRA_DEMO_MODULE_KEY = "demo_module_key"
 
+/**
+ * 首页、手工验收和 benchmark 共享的 demo 模块描述。
+ * Shared demo module descriptor used by the home page, manual QA, and benchmarks.
+ *
+ * [key] 必须稳定，因为 benchmark 和深链入口会按它定位模块。
+ * [key] must remain stable because benchmarks and deep-link entrypoints use it to resolve modules.
+ */
 internal data class DemoModule(
     val key: String,
     val title: String,
@@ -19,6 +34,13 @@ internal data class DemoModule(
     val activityClass: Class<out AppCompatActivity>? = null,
 )
 
+/**
+ * demo 目录的单一事实来源。
+ * Single source of truth for the demo catalog.
+ *
+ * 新增模块时同步填写 manualFocus 和 benchmarkPath，确保人工验收与自动化脚本能找到同一路径。
+ * When adding a module, fill manualFocus and benchmarkPath so manual QA and automation follow the same route.
+ */
 internal val DEMO_MODULES = listOf(
     DemoModule(
         key = "widget_showcase",
@@ -175,25 +197,54 @@ internal val DEMO_MODULES = listOf(
     ),
 )
 
+/**
+ * 当前可以从目录进入的模块。
+ * Modules currently available from the catalog.
+ */
 internal val AVAILABLE_DEMO_MODULES = DEMO_MODULES.filter { it.status == DemoModuleStatus.Available }
+
+/**
+ * 已规划但尚未开放的模块。
+ * Modules planned but not yet exposed as available demos.
+ */
 internal val PLANNED_DEMO_MODULES = DEMO_MODULES.filter { it.status == DemoModuleStatus.Planned }
 
+/**
+ * 按稳定 key 查找模块，允许返回 planned 项以支持管理和诊断视图。
+ * Finds a module by stable key, including planned entries for management and diagnostics.
+ */
 internal fun findDemoModuleByKey(key: String): DemoModule? =
     DEMO_MODULES.firstOrNull { it.key == key }
 
+/**
+ * 按稳定 key 查找可打开模块，供外部启动路径使用。
+ * Finds an available module by stable key for external launch paths.
+ */
 internal fun findAvailableDemoModuleByKey(key: String): DemoModule? =
     AVAILABLE_DEMO_MODULES.firstOrNull { it.key == key }
 
+/**
+ * 简单列表页面复用的展示项模型。
+ * Display item model reused by simple demo lists.
+ */
 internal data class DemoListItem(
     val id: String,
     val title: String,
 )
 
+/**
+ * 主题页面展示色板时使用的 label/color 对。
+ * Label/color pair used by theme swatch demos.
+ */
 internal data class ThemeSwatch(
     val label: String,
     val color: Int,
 )
 
+/**
+ * 诊断页面中展示的单项事实数据。
+ * Single fact row displayed by diagnostics pages.
+ */
 internal data class DiagnosticFact(
     val label: String,
     val value: String,

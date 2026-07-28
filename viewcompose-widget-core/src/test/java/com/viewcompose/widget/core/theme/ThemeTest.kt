@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core theme 中的 Theme 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Theme behavior in widget-core theme and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.ui.modifier.AlphaModifierElement
 import com.viewcompose.ui.modifier.BackgroundColorModifierElement
 import com.viewcompose.ui.modifier.Modifier

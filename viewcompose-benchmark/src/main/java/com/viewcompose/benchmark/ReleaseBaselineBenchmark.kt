@@ -11,8 +11,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
+ * R8 优化且不可调试 benchmark 目标的稳定 release baseline。
  * Stable release baseline for the R8-optimized, non-debuggable benchmark target.
  *
+ * [CompilationMode.None] 会排除 ART 预编译影响，让已发布二进制自身的回归独立于 baseline profile 工作暴露出来。
  * [CompilationMode.None] keeps ART pre-compilation out of the result so regressions in the shipped
  * binary remain visible independently from baseline-profile work.
  */

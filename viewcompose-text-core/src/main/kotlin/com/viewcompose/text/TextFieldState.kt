@@ -4,6 +4,7 @@ import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 
 /**
+ * 可编辑文本、selection、IME composition 和 undo history 的稳定可观察 owner。
  * Stable, observable owner of editable text, selection, IME composition, and undo history.
  */
 class TextFieldState(
@@ -48,6 +49,7 @@ class TextFieldState(
         }
 
     /**
+     * 应用业务代码发起的编辑。文本内容变化会结束任何活跃 IME composition。
      * Applies an application-owned edit. Text changes terminate any active IME composition.
      */
     fun edit(block: TextFieldBuffer.() -> Unit) {
@@ -83,6 +85,7 @@ class TextFieldState(
     }
 
     /**
+     * 应用平台 adapter 提出的用户编辑，并返回最终接受值。
      * Applies a user edit proposed by a platform adapter and returns the accepted value.
      */
     fun updateFromInput(
@@ -154,6 +157,8 @@ class TextFieldState(
 
         when {
             current.composition == null && next.composition != null -> {
+                // IME composition 开始时记录基线，组合结束后把整段输入合并为一个 undo 单元。
+                // Capture the baseline when IME composition starts so the final commit becomes one undo unit.
                 compositionBase = current.withoutComposition()
             }
 

@@ -1,6 +1,7 @@
 package com.viewcompose.ui.focus
 
 /**
+ * 平台无关焦点移动方向。
  * Platform-independent focus movement directions.
  */
 enum class FocusDirection {
@@ -14,6 +15,10 @@ enum class FocusDirection {
     Exit,
 }
 
+/**
+ * 焦点状态快照，isFocused 表示自身聚焦，hasFocus 表示自身或子节点持有焦点。
+ * Focus-state snapshot; isFocused means the target itself is focused, while hasFocus includes descendants.
+ */
 data class FocusState(
     val isFocused: Boolean,
     val hasFocus: Boolean,
@@ -27,17 +32,28 @@ data class FocusState(
 }
 
 /**
+ * render session 暴露的命令式焦点管理入口。
  * Imperative focus owner exposed by a render session.
  */
 interface FocusManager {
+    /**
+     * 清除当前焦点，force 由平台决定是否绕过常规拒绝逻辑。
+     * Clears current focus; force lets the platform decide whether to bypass normal refusal rules.
+     */
     fun clearFocus(force: Boolean = false)
 
+    /**
+     * 按方向移动焦点，返回是否成功。
+     * Moves focus in a direction and returns whether it succeeded.
+     */
     fun moveFocus(direction: FocusDirection): Boolean
 }
 
 /**
+ * [FocusRequester] 使用的平台连接器。
  * Platform connector used by [FocusRequester].
  *
+ * 这是公开 renderer 边界，与 lazy 容器的 state connector 契约一致。业务代码不应直接实现。
  * This is a public renderer boundary, matching the state connector contracts used by lazy
  * containers. Application code should not implement it.
  */
@@ -54,8 +70,10 @@ interface FocusRequesterConnector {
 }
 
 /**
+ * 稳定的焦点句柄，可独立于平台 View 被 remember。
  * Stable focus handle that can be remembered independently of a platform View.
  *
+ * 一个 requester 可连接多个目标；请求按连接顺序尝试，直到某个目标接受。
  * One requester may be attached to more than one target. Requests are offered in attachment
  * order until a target accepts them.
  */
@@ -65,6 +83,10 @@ class FocusRequester {
     private var savedRestorationKey: Any? = null
     private var restorePending: Boolean = false
 
+    /**
+     * 请求已连接目标获取焦点，按 attach 顺序尝试。
+     * Requests focus from attached targets in attach order.
+     */
     fun requestFocus(direction: FocusDirection = FocusDirection.Enter): Boolean {
         val targets = synchronized(lock) {
             check(connectors.isNotEmpty()) {
@@ -77,6 +99,7 @@ class FocusRequester {
     }
 
     /**
+     * 保存当前持有焦点的目标，以便 keyed reuse 或重新挂载后恢复。
      * Saves the currently focused target so it can be restored after keyed reuse or remount.
      */
     fun saveFocusedChild(): Boolean {
@@ -91,8 +114,10 @@ class FocusRequester {
     }
 
     /**
+     * 恢复之前由 [saveFocusedChild] 捕获的目标。
      * Restores the target previously captured by [saveFocusedChild].
      *
+     * 如果目标临时 detach，恢复请求会保持 pending，并在相同 restoration key 的 connector 再次 attach 时重试。
      * If the target is temporarily detached, the restore remains pending and is attempted when
      * a connector carrying the same restoration key is attached again.
      */
@@ -114,6 +139,10 @@ class FocusRequester {
         return restored
     }
 
+    /**
+     * 连接一个平台焦点目标；如有 pending restore，会在 key 匹配时立即尝试恢复。
+     * Attaches one platform focus target; pending restore is attempted immediately when the key matches.
+     */
     fun attach(connector: FocusRequesterConnector) {
         val shouldRestore = synchronized(lock) {
             connectors += connector
@@ -126,6 +155,10 @@ class FocusRequester {
         }
     }
 
+    /**
+     * 断开一个平台焦点目标。
+     * Detaches one platform focus target.
+     */
     fun detach(connector: FocusRequesterConnector) {
         synchronized(lock) {
             connectors -= connector
@@ -133,6 +166,10 @@ class FocusRequester {
     }
 }
 
+/**
+ * 声明式焦点属性，后声明的非空字段会覆盖先前字段。
+ * Declarative focus properties where later non-null fields override earlier fields.
+ */
 data class FocusProperties(
     val canFocus: Boolean? = null,
     val next: FocusRequester? = null,
@@ -173,6 +210,10 @@ data class FocusProperties(
     }
 }
 
+/**
+ * focusProperties DSL 的临时接收器。
+ * Temporary receiver used by the focusProperties DSL.
+ */
 class FocusPropertiesReceiver {
     var canFocus: Boolean? = null
     var next: FocusRequester? = null

@@ -38,6 +38,10 @@ import com.viewcompose.ui.node.spec.ConstraintLayerSpec
 import com.viewcompose.ui.node.spec.ConstraintPlaceholderSpec
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
 
+/**
+ * ConstraintLayout DSL 对应的 Android ConstraintLayout 容器。
+ * Android ConstraintLayout container for the ConstraintLayout DSL.
+ */
 internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

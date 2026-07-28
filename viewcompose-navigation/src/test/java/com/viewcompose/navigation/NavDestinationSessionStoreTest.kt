@@ -1,5 +1,10 @@
 package com.viewcompose.navigation
 
+/*
+ * 测试职责：覆盖 Android navigation runtime 中的 Nav Destination Session Store 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Nav Destination Session Store behavior in Android navigation runtime and guards navigation contracts against regressions.
+ */
+
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.ContextThemeWrapper

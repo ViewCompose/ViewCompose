@@ -1,5 +1,10 @@
 package com.viewcompose.navigation
 
+/*
+ * 测试职责：覆盖 Android navigation runtime 中的 Nav Host Transition Coordinator 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Nav Host Transition Coordinator behavior in Android navigation runtime and guards navigation contracts against regressions.
+ */
+
 import android.view.View
 import com.viewcompose.navigation.core.NavBackStackController
 import com.viewcompose.navigation.core.NavCommand

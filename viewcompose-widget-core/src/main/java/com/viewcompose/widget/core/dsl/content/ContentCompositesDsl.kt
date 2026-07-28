@@ -10,6 +10,10 @@ import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
 
+/**
+ * Badge 组合组件；count 为 null 时显示圆点，大于 99 时显示 99+。
+ * Composite Badge; null count renders a dot, and values above 99 render 99+.
+ */
 fun UiTreeBuilder.Badge(
     count: Int? = null,
     containerColor: Int = BadgeDefaults.containerColor(),
@@ -55,6 +59,10 @@ fun UiTreeBuilder.Badge(
     }
 }
 
+/**
+ * 带 badge 锚点的 Box 组合组件。
+ * Box composite with a badge anchored to the top end.
+ */
 fun UiTreeBuilder.BadgedBox(
     badge: UiTreeBuilder.() -> Unit,
     key: Any? = null,

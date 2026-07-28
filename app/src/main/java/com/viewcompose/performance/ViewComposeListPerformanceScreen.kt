@@ -20,6 +20,10 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
 
+/**
+ * ViewCompose 版本的列表性能场景。
+ * ViewCompose implementation of the list performance scenario.
+ */
 internal fun UiTreeBuilder.ViewComposeListPerformanceScreen() {
     val revisionState = remember { mutableStateOf(0) }
     val revision = revisionState.value
@@ -114,6 +118,10 @@ private fun UiTreeBuilder.PerformanceAction(
     }
 }
 
+/**
+ * 单行使用稳定 key 的 Surface，便于测量列表重排时的节点复用。
+ * Row surface uses a stable key so list reordering measures node reuse.
+ */
 private fun UiTreeBuilder.PerformanceListRow(row: PerformanceListRow) {
     Surface(
         key = row.id,

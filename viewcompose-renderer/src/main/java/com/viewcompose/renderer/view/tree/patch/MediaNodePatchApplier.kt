@@ -8,7 +8,15 @@ import com.viewcompose.renderer.view.tree.ImageNodePatch
 import com.viewcompose.renderer.view.tree.MediaViewBinder
 import com.viewcompose.renderer.view.tree.ViewModifierApplier
 
+/**
+ * 媒体类节点的细粒度 patch 应用器。
+ * Fine-grained patch applier for media nodes.
+ */
 internal object MediaNodePatchApplier {
+    /**
+     * 更新 ImageView 的可访问描述、缩放、tint 和图片来源。
+     * Updates ImageView accessibility description, scale, tint, and image source.
+     */
     fun applyImagePatch(
         view: ImageView,
         patch: ImageNodePatch,
@@ -32,6 +40,8 @@ internal object MediaNodePatchApplier {
             previous.fallback != next.fallback ||
             previous.remoteImageLoader != next.remoteImageLoader
         if (sourceChanged) {
+            // 图片来源变化交回 MediaViewBinder，确保占位图、错误图和远程加载策略一致。
+            // Source changes go back through MediaViewBinder to keep placeholder, error, and remote loading policy consistent.
             MediaViewBinder.bindImage(
                 view = view,
                 spec = MediaViewBinder.ImageSpec(
@@ -48,6 +58,10 @@ internal object MediaNodePatchApplier {
         }
     }
 
+    /**
+     * 更新 IconButton 的图片内容、启用态、样式和 padding。
+     * Updates IconButton image content, enabled state, styling, and padding.
+     */
     fun applyIconButtonPatch(
         view: ImageButton,
         patch: IconButtonNodePatch,

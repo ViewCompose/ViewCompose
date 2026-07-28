@@ -1,3 +1,7 @@
+"""性能报告脚本的单元测试。
+Unit tests for the performance report script.
+"""
+
 import json
 import tempfile
 import unittest
@@ -14,6 +18,10 @@ def benchmark_entry(
     frame_p95: float,
     memory_kb: float,
 ) -> dict:
+    """构造一个最小 Macrobenchmark 条目。
+    Builds one minimal Macrobenchmark entry.
+    """
+
     return {
         "name": name,
         "metrics": {
@@ -49,6 +57,10 @@ def result(
     compose_multiplier: float = 1.0,
     fingerprint: str = "device/build",
 ) -> dict:
+    """构造包含所有配对场景的 Macrobenchmark 结果。
+    Builds a Macrobenchmark result containing all paired scenarios.
+    """
+
     entries = []
     for _, viewcompose_name, compose_name in comparison.SCENARIOS:
         entries.append(
@@ -84,6 +96,10 @@ def result(
 
 
 class CompareMacrobenchmarksTest(unittest.TestCase):
+    """验证配对对比、归一化回归门禁和 CLI 输出。
+    Verifies paired comparisons, normalized regression gating, and CLI output.
+    """
+
     def setUp(self) -> None:
         self.policy = {
             "maxRunCoefficientOfVariation": 0.15,

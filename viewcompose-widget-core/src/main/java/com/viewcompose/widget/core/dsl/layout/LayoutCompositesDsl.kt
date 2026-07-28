@@ -14,6 +14,10 @@ import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 
+/**
+ * Card 组合组件，基于 Box 和 Surface-like 样式 token 构建。
+ * Composite Card built from Box and Surface-like style tokens.
+ */
 fun UiTreeBuilder.Card(
     onClick: (() -> Unit)? = null,
     variant: CardVariant = CardVariant.Filled,
@@ -51,6 +55,10 @@ fun UiTreeBuilder.Card(
     }
 }
 
+/**
+ * Card 的 elevated 便捷变体。
+ * Elevated convenience variant of Card.
+ */
 fun UiTreeBuilder.ElevatedCard(
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
@@ -68,6 +76,10 @@ fun UiTreeBuilder.ElevatedCard(
     )
 }
 
+/**
+ * Card 的 outlined 便捷变体。
+ * Outlined convenience variant of Card.
+ */
 fun UiTreeBuilder.OutlinedCard(
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
@@ -85,6 +97,10 @@ fun UiTreeBuilder.OutlinedCard(
     )
 }
 
+/**
+ * 标准列表项组合组件。
+ * Standard list item composite.
+ */
 fun UiTreeBuilder.ListItem(
     headlineText: String,
     supportingText: String? = null,
@@ -149,6 +165,10 @@ fun UiTreeBuilder.ListItem(
     }
 }
 
+/**
+ * 页面骨架组合组件，按 top/content/fab/bottom 区域组织内容。
+ * Page scaffold composite that arranges top/content/fab/bottom regions.
+ */
 fun UiTreeBuilder.Scaffold(
     topBar: (UiTreeBuilder.() -> Unit)? = null,
     bottomBar: (UiTreeBuilder.() -> Unit)? = null,

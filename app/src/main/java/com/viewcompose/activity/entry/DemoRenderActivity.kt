@@ -9,11 +9,27 @@ import com.viewcompose.host.android.setUiContent
 import com.viewcompose.overlay.android.host.AndroidOverlayHost
 import com.viewcompose.widget.core.UiTreeBuilder
 
+/**
+ * demo Activity 的 ViewCompose 渲染基类。
+ * Base Activity for rendering demo pages with ViewCompose.
+ *
+ * 子类只需要声明标题和内容；基类统一处理 edge-to-edge、overlay host、诊断收集和启动重定向。
+ * Subclasses provide only title and content; this base handles edge-to-edge, overlay host,
+ * diagnostics collection, and launch redirects.
+ */
 abstract class DemoRenderActivity : AppCompatActivity() {
+    /**
+     * 可选的启动重定向目标，用于 MainActivity 按 extra 转发到具体页面。
+     * Optional launch redirect target used by MainActivity to forward extras to concrete pages.
+     */
     protected open fun redirectTargetIntent(): Intent? = null
 
     protected abstract val demoTitle: String
 
+    /**
+     * 构建当前 demo 页面的实际内容。
+     * Builds the concrete content for the current demo page.
+     */
     protected abstract fun buildDemoContent(
         root: ViewGroup,
         builder: UiTreeBuilder,
@@ -35,6 +51,10 @@ abstract class DemoRenderActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 构建根脚手架；普通子页使用统一子页壳，首页可以覆盖为自己的多页结构。
+     * Builds the root scaffold; normal sub-pages use the shared shell, while home can provide its own pager.
+     */
     protected open fun UiTreeBuilder.buildRootScaffold(root: ViewGroup) {
         DemoSubPageScaffold(
             root = root,
@@ -52,6 +72,8 @@ abstract class DemoRenderActivity : AppCompatActivity() {
 
     private fun consumeRedirectIfNeeded(): Boolean {
         redirectTargetIntent()?.let { targetIntent ->
+            // 重定向后结束当前 Activity，避免 benchmark 或 deep link 留下空壳页面。
+            // Finish after redirect so benchmarks or deep links do not leave an empty shell activity.
             startActivity(targetIntent)
             finish()
             return true

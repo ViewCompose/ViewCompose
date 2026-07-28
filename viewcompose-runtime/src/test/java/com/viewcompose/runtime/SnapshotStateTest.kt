@@ -1,5 +1,10 @@
 package com.viewcompose.runtime
 
+/*
+ * 测试职责：覆盖 runtime 中的 Snapshot State 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Snapshot State behavior in runtime and guards the contract against regressions.
+ */
+
 import com.viewcompose.runtime.state.MutableStateImpl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

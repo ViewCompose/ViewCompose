@@ -1,5 +1,10 @@
 package com.viewcompose.gesture
 
+/*
+ * 测试职责：覆盖 gesture DSL 中的 Nested Scroll Modifier 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Nested Scroll Modifier behavior in gesture DSL and guards the contract against regressions.
+ */
+
 import com.viewcompose.ui.gesture.NestedScrollConnection
 import com.viewcompose.ui.gesture.NestedScrollDispatcher
 import com.viewcompose.ui.modifier.Modifier

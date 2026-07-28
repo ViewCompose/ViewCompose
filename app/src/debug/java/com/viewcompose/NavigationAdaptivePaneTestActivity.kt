@@ -21,9 +21,18 @@ import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.Text
 
 /**
+ * 自适应原生导航窗格的 debug-only 设备认证宿主。
  * Debug-only device certification host for adaptive native navigation panes.
+ *
+ * 测试通过它读取路由、可见窗格、生命周期和真实 View 边界，避免只断言纯模型状态。
+ * Tests read routes, visible panes, lifecycles, and real View bounds from this host instead of
+ * asserting only pure model state.
  */
 class NavigationAdaptivePaneTestActivity : ComponentActivity() {
+    /**
+     * 按 route 记录 destination 的 lifecycle owner，供旋转后断言 CREATED/RESUMED 状态。
+     * Records destination lifecycle owners by route so rotation tests can assert CREATED/RESUMED states.
+     */
     private val lifecycleByRoute = linkedMapOf<String, androidx.lifecycle.LifecycleOwner>()
 
     lateinit var navController: NavHostController
@@ -74,10 +83,18 @@ class NavigationAdaptivePaneTestActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * 返回当前 back stack 中所有 route 名称。
+     * Returns all route names currently in the back stack.
+     */
     fun routeNames(): List<String> {
         return navController.snapshot.entries.map { entry -> entry.route.name }
     }
 
+    /**
+     * 返回当前真实可见的 destination route 名称。
+     * Returns route names whose destination containers are actually visible.
+     */
     fun visibleRouteNames(): List<String> {
         return routes.mapNotNull { route ->
             destinationContainerOrNull(route)
@@ -86,10 +103,18 @@ class NavigationAdaptivePaneTestActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * 返回指定 route 当前绑定的 lifecycle 状态。
+     * Returns the lifecycle state currently bound to the given route.
+     */
     fun lifecycleState(route: String): Lifecycle.State? {
         return lifecycleByRoute[route]?.lifecycle?.currentState
     }
 
+    /**
+     * 返回指定 route 对应真实 View 容器的屏幕内布局边界。
+     * Returns layout bounds for the real View container of the given route.
+     */
     fun destinationBounds(route: String): Rect? {
         val container = destinationContainerOrNull(route) ?: return null
         return Rect(
@@ -100,6 +125,10 @@ class NavigationAdaptivePaneTestActivity : ComponentActivity() {
         )
     }
 
+    /**
+     * 执行一次 pop 并返回是否提交成功。
+     * Performs one pop and returns whether it was committed.
+     */
     fun pop(): Boolean {
         return navController.popBackStack() is com.viewcompose.navigation.NavResult.Committed
     }

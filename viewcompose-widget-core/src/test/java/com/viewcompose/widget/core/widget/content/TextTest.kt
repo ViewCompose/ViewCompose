@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core widget/content 中的 Text 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Text behavior in widget-core widget/content and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.text.TextSpanStyle
 import com.viewcompose.text.textDocument
 import com.viewcompose.ui.node.NodeType

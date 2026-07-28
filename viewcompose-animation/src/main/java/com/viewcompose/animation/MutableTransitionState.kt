@@ -2,6 +2,10 @@ package com.viewcompose.animation
 
 import com.viewcompose.runtime.mutableStateOf
 
+/**
+ * 可由外部持有的 transition 状态，暴露当前值、目标值和 idle 状态。
+ * Externally held transition state that exposes current value, target value, and idle status.
+ */
 class MutableTransitionState<S>(
     initialState: S,
 ) {

@@ -7,6 +7,10 @@ import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberUpdatedState
 import kotlin.math.abs
 
+/**
+ * 业务侧持有的 drag 状态，renderer 通过它回传原始位移。
+ * App-held drag state; renderers dispatch raw drag deltas through it.
+ */
 class DraggableState internal constructor(
     private val onDeltaState: State<(Float) -> Unit>,
 ) {
@@ -15,11 +19,19 @@ class DraggableState internal constructor(
     }
 }
 
+/**
+ * anchored draggable 的一个离散 anchor。
+ * One discrete anchor for anchored draggable.
+ */
 data class DraggableAnchor<T>(
     val offsetPx: Float,
     val value: T,
 )
 
+/**
+ * 已按像素位置排序的 anchor 集合。
+ * Anchor collection sorted by pixel offset.
+ */
 class DraggableAnchors<T> private constructor(
     private val sortedAnchors: List<DraggableAnchor<T>>,
 ) {
@@ -75,6 +87,10 @@ class DraggableAnchors<T> private constructor(
     }
 }
 
+/**
+ * 用 DSL 构建 [DraggableAnchors] 的 builder。
+ * Builder used by the DSL to create [DraggableAnchors].
+ */
 class DraggableAnchorsBuilder<T> {
     private val anchors = mutableListOf<Pair<Float, T>>()
 
@@ -102,6 +118,10 @@ fun <T> draggableAnchorsOf(vararg anchors: Pair<Float, T>): DraggableAnchors<T> 
     return DraggableAnchors.of(*anchors)
 }
 
+/**
+ * anchored draggable 的当前值、目标值和当前 offset 状态。
+ * Current value, target value, and current offset state for anchored draggable.
+ */
 class AnchoredDraggableState<T> internal constructor(
     initialValue: T,
 ) {
@@ -133,6 +153,8 @@ class AnchoredDraggableState<T> internal constructor(
             targetState.value = currentState.value
             return
         }
+        // 当前值不再存在于新 anchors 时，按现有 offset 贴近最近 anchor，避免状态悬空。
+        // If the current value disappears from anchors, snap to the nearest offset to avoid dangling state.
         val nearest = newAnchors.nearest(
             offsetPx = currentOffsetState.value ?: newAnchors.firstOffsetPx,
         )
@@ -158,6 +180,10 @@ class AnchoredDraggableState<T> internal constructor(
     }
 }
 
+/**
+ * transformable 手势的业务状态入口。
+ * App state entry point for transformable gestures.
+ */
 class TransformableState internal constructor(
     private val onTransformState: State<(TransformDelta) -> Unit>,
 ) {
@@ -166,6 +192,10 @@ class TransformableState internal constructor(
     }
 }
 
+/**
+ * 记忆 [DraggableState]，同时让回调始终指向最新 lambda。
+ * Remembers [DraggableState] while keeping its callback pointed at the latest lambda.
+ */
 fun rememberDraggableState(
     onDelta: (Float) -> Unit,
 ): DraggableState {
@@ -175,6 +205,10 @@ fun rememberDraggableState(
     }
 }
 
+/**
+ * 记忆 anchored draggable 状态。
+ * Remembers anchored draggable state.
+ */
 fun <T> rememberAnchoredDraggableState(
     initialValue: T,
 ): AnchoredDraggableState<T> {
@@ -183,6 +217,10 @@ fun <T> rememberAnchoredDraggableState(
     }
 }
 
+/**
+ * 记忆 transformable 状态，并把 renderer 的 [TransformDelta] 展开为业务回调参数。
+ * Remembers transformable state and expands renderer [TransformDelta] into app callback arguments.
+ */
 fun rememberTransformableState(
     onTransformation: (
         zoomChange: Float,

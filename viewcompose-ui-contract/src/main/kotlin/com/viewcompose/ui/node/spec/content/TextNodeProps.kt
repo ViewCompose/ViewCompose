@@ -5,6 +5,10 @@ import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextDecoration
 import com.viewcompose.ui.node.TextOverflow
 
+/**
+ * Text/RichText 节点的文本内容、排版和字体属性。
+ * Text content, typography, and font properties for Text/RichText nodes.
+ */
 data class TextNodeProps(
     val text: CharSequence?,
     val maxLines: Int,

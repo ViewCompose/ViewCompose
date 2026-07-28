@@ -34,6 +34,13 @@ import com.viewcompose.widget.core.UiLayoutDirection
 import com.viewcompose.widget.core.OverlaySurfaceSession
 import com.viewcompose.widget.core.createOverlaySurfaceSession
 
+/**
+ * Android Dialog overlay presenter。
+ * Android Dialog overlay presenter.
+ *
+ * show 只创建 handle；后续更新由 host 对同一 requestKey 的 handle 调用 update 完成。
+ * show only creates a handle; later updates are delivered by the host to the same requestKey handle.
+ */
 class AndroidDialogOverlayPresenter(
     private val rootView: View,
 ) : DialogOverlayPresenter {
@@ -50,6 +57,13 @@ class AndroidDialogOverlayPresenter(
     }
 }
 
+/**
+ * Android PopupWindow overlay presenter。
+ * Android PopupWindow overlay presenter.
+ *
+ * Popup 需要 rootView 查找 anchorId 对应的 View，并在布局/滚动变化时重新定位。
+ * Popup needs the rootView to find the View matching anchorId and reposition on layout/scroll changes.
+ */
 class AndroidPopupOverlayPresenter(
     private val rootView: View,
 ) : PopupOverlayPresenter {
@@ -66,6 +80,13 @@ class AndroidPopupOverlayPresenter(
     }
 }
 
+/**
+ * Dialog overlay 的平台句柄。
+ * Platform handle for a dialog overlay.
+ *
+ * 句柄拥有 Dialog 与内部 OverlaySurfaceSession，dismiss 时必须同时释放平台窗口和渲染 session。
+ * The handle owns both Dialog and OverlaySurfaceSession; dismiss must release the platform window and render session together.
+ */
 private class AndroidDialogOverlayHandle(
     rootView: View,
     spec: DialogOverlaySpec,
@@ -120,6 +141,8 @@ private class AndroidDialogOverlayHandle(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
             )
             setGravity(spec.position.toGravity())
+            // scrimOpacity 来自 DSL，进入平台前夹紧到 Window 支持的 0..1 范围。
+            // scrimOpacity comes from DSL and is clamped to the Window-supported 0..1 range before applying.
             val clampedScrim = spec.scrimOpacity.coerceIn(0f, 1f)
             if (clampedScrim > 0f) {
                 addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
@@ -135,6 +158,8 @@ private class AndroidDialogOverlayHandle(
     }
 
     override fun dismiss() {
+        // 程序化 dismiss 不应回调 onDismissRequest，避免 host 清理造成业务侧重复关闭。
+        // Programmatic dismiss must not call onDismissRequest to avoid duplicate business-close events during host cleanup.
         programmaticDismiss = true
         dialog.setOnDismissListener(null)
         surfaceSession.dispose()
@@ -145,6 +170,13 @@ private class AndroidDialogOverlayHandle(
     }
 }
 
+/**
+ * Popup overlay 的平台句柄。
+ * Platform handle for a popup overlay.
+ *
+ * 句柄监听 rootView 的 attach/layout/scroll 状态，并把 DSL 的锚点定位策略转换为 PopupWindow 坐标。
+ * The handle observes rootView attach/layout/scroll state and converts DSL anchor positioning into PopupWindow coordinates.
+ */
 private class AndroidPopupOverlayHandle(
     private val rootView: View,
     spec: PopupOverlaySpec,
@@ -226,6 +258,8 @@ private class AndroidPopupOverlayHandle(
         popupWindow.isOutsideTouchable = spec.dismissOnClickOutside
         popupWindow.isClippingEnabled = spec.overflowPolicy != PopupOverflowPolicy.None
         surfaceSession.update(content.surface)
+        // 内容变化可能改变 popup 尺寸，因此更新 surface 后立即重新测量定位。
+        // Content changes can alter popup size, so reposition immediately after updating the surface.
         reposition()
         popupContainer.doOnLayout {
             reposition()
@@ -238,6 +272,8 @@ private class AndroidPopupOverlayHandle(
         }
         val anchor = rootView.findAnchorTarget(currentSpec.anchorId)
         if (anchor == null || !anchor.isAttachedToWindow || anchor.width <= 0 || anchor.height <= 0) {
+            // anchor 暂不可用时只隐藏窗口，不触发用户 dismiss 回调，等待下一次布局恢复。
+            // When the anchor is temporarily unavailable, hide the window without firing user dismiss and wait for layout recovery.
             hideWindow()
             return
         }
@@ -304,6 +340,8 @@ private class AndroidPopupOverlayHandle(
             lastWidth != popupWidth ||
             lastHeight != popupHeight
         ) {
+            // 只有位置或尺寸实际变化时才 update，减少 PopupWindow 重新布局抖动。
+            // Update only when position or size changes to reduce PopupWindow relayout churn.
             popupWindow.update(
                 position.x,
                 position.y,
@@ -335,6 +373,8 @@ private class AndroidPopupOverlayHandle(
         if (!popupWindow.isShowing) {
             return
         }
+        // 内部 hide 是定位策略的一部分，不代表用户点击外部关闭。
+        // Internal hide is part of positioning behavior and does not mean the user dismissed outside.
         ignoreNextDismiss = true
         popupWindow.dismiss()
         ignoreNextDismiss = false
@@ -354,6 +394,8 @@ private class AndroidPopupOverlayHandle(
         }
         detachTreeObservers()
         if (observer.isAlive) {
+            // 同时监听布局和滚动，覆盖 anchor 移动、键盘弹起和窗口可见区域变化。
+            // Observe both layout and scroll to cover anchor movement, keyboard changes, and visible-frame changes.
             observer.addOnGlobalLayoutListener(globalLayoutListener)
             observer.addOnScrollChangedListener(scrollChangedListener)
             observedTreeObserver = observer
@@ -369,6 +411,10 @@ private class AndroidPopupOverlayHandle(
     }
 }
 
+/**
+ * 深度优先查找带 overlay anchor tag 的 View。
+ * Finds a View with the overlay anchor tag using depth-first traversal.
+ */
 private fun View.findAnchorTarget(anchorId: String): View? {
     if (getTag(OVERLAY_ANCHOR_TAG_KEY) == anchorId) {
         return this
@@ -383,6 +429,10 @@ private fun View.findAnchorTarget(anchorId: String): View? {
     return null
 }
 
+/**
+ * 将声明式 dialog 位置转换为 Android Window gravity。
+ * Converts declarative dialog position to Android Window gravity.
+ */
 private fun DialogPosition.toGravity(): Int {
     return when (this) {
         DialogPosition.Top -> Gravity.TOP or Gravity.CENTER_HORIZONTAL
@@ -391,6 +441,10 @@ private fun DialogPosition.toGravity(): Int {
     }
 }
 
+/**
+ * 为 popup 内容测量生成 AT_MOST 约束。
+ * Builds an AT_MOST measure spec for popup content measurement.
+ */
 private fun Int.atMostMeasureSpec(): Int {
     return if (this > 0) {
         MeasureSpec.makeMeasureSpec(this, MeasureSpec.AT_MOST)

@@ -37,8 +37,11 @@ private val defaultMonotonicFrameClock = AndroidMonotonicFrameClock()
 private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Main.immediate
 
 /**
- * Creates and returns a Fragment content root and binds the internal [RenderSession]
- * to the Fragment view lifecycle. Session disposal is handled automatically.
+ * 创建并返回 Fragment 内容根节点，并将内部 RenderSession 绑定到 Fragment view lifecycle。
+ * Creates and returns a Fragment content root and binds the internal RenderSession to the Fragment view lifecycle.
+ *
+ * 当 view lifecycle 销毁或 Fragment 销毁时，会自动释放 session。
+ * The session is disposed automatically when either the view lifecycle or Fragment lifecycle is destroyed.
  */
 fun Fragment.setUiContent(
     debug: Boolean = false,
@@ -91,6 +94,13 @@ fun Fragment.setUiContent(
     return root
 }
 
+/**
+ * 为 ComponentActivity 创建根容器、调用 setContentView，并启动 ViewCompose 渲染会话。
+ * Creates the root container for ComponentActivity, calls setContentView, and starts a ViewCompose render session.
+ *
+ * 重复调用会先释放之前绑定到该 Activity 的 session。
+ * Repeated calls dispose the previous session bound to the Activity before rendering new content.
+ */
 fun ComponentActivity.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
@@ -154,6 +164,10 @@ private fun buildUiContentRoot(
     }
 }
 
+/**
+ * 向 DSL 子树注入 Android host 层提供的生命周期、状态、主题和动画上下文。
+ * Injects lifecycle, state, theme, and animation context provided by the Android host into a DSL subtree.
+ */
 private fun UiTreeBuilder.withHostEnvironment(
     root: ViewGroup,
     lifecycleOwner: LifecycleOwner,
@@ -186,6 +200,10 @@ private fun UiTreeBuilder.withHostEnvironment(
     }
 }
 
+/**
+ * Activity 与 RenderSession 的弱引用注册表。
+ * Weak registry that binds ComponentActivity instances to RenderSession objects.
+ */
 private object ActivityRenderSessionRegistry {
     private val sessions = WeakHashMap<ComponentActivity, RenderSession>()
     private val observers = WeakHashMap<ComponentActivity, DefaultLifecycleObserver>()
@@ -201,6 +219,8 @@ private object ActivityRenderSessionRegistry {
     ) {
         clear(activity)
 
+        // Activity 销毁时释放 session，并移除 observer 避免重复回调。
+        // Dispose the session when the Activity is destroyed and remove the observer to avoid repeated callbacks.
         val observer = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 sessions.remove(activity)?.dispose()
@@ -214,6 +234,13 @@ private object ActivityRenderSessionRegistry {
     }
 }
 
+/**
+ * Fragment 与 RenderSession 的弱引用注册表。
+ * Weak registry that binds Fragment instances to RenderSession objects.
+ *
+ * 它同时观察 Fragment lifecycle 和 viewLifecycleOwnerLiveData，确保 view 重建时 session 跟随正确释放。
+ * It observes both Fragment lifecycle and viewLifecycleOwnerLiveData so sessions are disposed correctly across view recreation.
+ */
 private object FragmentRenderSessionRegistry {
     private class Binding(
         val session: RenderSession,

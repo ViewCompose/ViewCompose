@@ -8,6 +8,10 @@ import androidx.activity.OnBackPressedDispatcherOwner
 import androidx.activity.findViewTreeOnBackPressedDispatcherOwner
 import androidx.lifecycle.LifecycleOwner
 
+/**
+ * 将 NavHost predictive/system back 接入最近的 AndroidX back dispatcher。
+ * Connects NavHost predictive/system back to the nearest AndroidX back dispatcher.
+ */
 @OptIn(ExperimentalActivityApi::class)
 internal class AndroidNavHostBackAdapter(
     private val hostView: NavHostView,
@@ -27,6 +31,8 @@ internal class AndroidNavHostBackAdapter(
     private var destroyed = false
     private val callback = object : OnBackPressedCallback(false) {
         override fun handleOnBackStarted(backEvent: BackEventCompat) {
+            // 系统可能在上一次 preview 未显式 cancel 时发起新手势，先清理旧 preview。
+            // The system may start a new gesture before cancelling the old preview; clear it first.
             activePreviewId?.let(onBackCancelled)
             activePreviewId = onBackStarted(backEvent.toNavHostBackEvent())
             syncEnabled()
@@ -71,6 +77,8 @@ internal class AndroidNavHostBackAdapter(
             "A destroyed navigation back adapter cannot attach."
         }
         if (attached && lifecycleOwner === owner) {
+            // View tree dispatcher owner 可能随窗口重新 attach 改变，因此相同 lifecycle 也要重查。
+            // The view-tree dispatcher owner can change after window reattach, so re-query it.
             registerWithViewTreeOwner()
             syncEnabled()
             return
@@ -92,6 +100,8 @@ internal class AndroidNavHostBackAdapter(
         }
         systemBackEnabled = enabled
         if (!enabled) {
+            // 关闭系统返回时必须取消进行中的 preview，避免视觉层停在半进度状态。
+            // Disabling system back must cancel an active preview so visuals do not remain mid-progress.
             activePreviewId?.let { previewId ->
                 activePreviewId = null
                 onBackCancelled(previewId)
@@ -134,6 +144,8 @@ internal class AndroidNavHostBackAdapter(
         activePreviewId = null
         try {
             if (previewId != null && isPreviewActive(previewId)) {
+                // detach 后 dispatcher 不再拥有手势终止回调，运行时需主动取消 preview。
+                // After detach the dispatcher no longer owns gesture callbacks, so cancel explicitly.
                 onBackCancelled(previewId)
             }
         } finally {

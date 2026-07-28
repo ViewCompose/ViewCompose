@@ -1,5 +1,10 @@
 package com.viewcompose.runtime
 
+/*
+ * 测试职责：覆盖 runtime 中的 Snapshot Mutation Policy 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Snapshot Mutation Policy behavior in runtime and guards the contract against regressions.
+ */
+
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue

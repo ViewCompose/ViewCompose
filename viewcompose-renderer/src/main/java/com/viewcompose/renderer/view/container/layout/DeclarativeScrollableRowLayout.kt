@@ -11,6 +11,13 @@ import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat
 import kotlin.math.roundToInt
 
+/**
+ * ScrollableRow 使用的 HorizontalScrollView 宿主。
+ * HorizontalScrollView host used by ScrollableRow.
+ *
+ * 它补齐水平滚动的 nested scrolling child 行为，使父级 nested scroll host 可协同消费滚动。
+ * It adds horizontal nested-scrolling child behavior so parent nested scroll hosts can coordinate consumption.
+ */
 internal class DeclarativeScrollableRowLayout(
     context: Context,
 ) : HorizontalScrollView(context), ChildHostViewGroup {

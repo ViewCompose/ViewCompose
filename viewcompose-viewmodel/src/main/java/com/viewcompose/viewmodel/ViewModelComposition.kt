@@ -10,6 +10,10 @@ import androidx.lifecycle.viewmodel.MutableCreationExtras
 import com.viewcompose.widget.core.remember
 import kotlin.reflect.KClass
 
+/**
+ * 从当前或显式 ViewModelStoreOwner 获取指定类型的 ViewModel。
+ * Retrieves a ViewModel of the requested type from the current or explicit ViewModelStoreOwner.
+ */
 @MainThread
 inline fun <reified VM : ViewModel> viewModel(
     key: String? = null,
@@ -26,6 +30,13 @@ inline fun <reified VM : ViewModel> viewModel(
     )
 }
 
+/**
+ * 从当前或显式 ViewModelStoreOwner 获取指定 KClass 的 ViewModel。
+ * Retrieves a ViewModel for the given KClass from the current or explicit ViewModelStoreOwner.
+ *
+ * 实例由 remember 缓存，只有 owner/key/factory/extras/modelClass 变化时才重新解析 provider。
+ * The instance is cached by remember and resolves the provider again only when owner/key/factory/extras/modelClass changes.
+ */
 @MainThread
 fun <VM : ViewModel> viewModel(
     modelClass: KClass<VM>,
@@ -39,6 +50,8 @@ fun <VM : ViewModel> viewModel(
         "No ViewModelStoreOwner found. Use ComponentActivity/Fragment.setUiContent " +
             "or wrap with ProvideViewModelStoreOwner."
     }
+    // owner/factory/extras 都参与 remember key，保持 ViewModelProvider 解析与调用方输入一致。
+    // owner/factory/extras all participate in the remember key so ViewModelProvider resolution matches caller inputs.
     return remember(
         resolvedOwner,
         key,
@@ -76,6 +89,10 @@ private fun resolveFactory(
         ?: ViewModelProvider.NewInstanceFactory()
 }
 
+/**
+ * 解析 CreationExtras，并复制 owner 默认 extras，避免后续调用方修改共享实例。
+ * Resolves CreationExtras and copies owner defaults so later callers do not mutate a shared instance.
+ */
 private fun resolveCreationExtras(
     owner: ViewModelStoreOwner,
     override: CreationExtras?,

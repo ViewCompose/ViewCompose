@@ -1,5 +1,9 @@
 package com.viewcompose.ui.node.spec
 
+/**
+ * Toggle 类节点的选中状态、文案和交互属性。
+ * Checked state, label, and interaction properties for toggle-like nodes.
+ */
 data class ToggleNodeProps(
     val text: CharSequence?,
     val enabled: Boolean,

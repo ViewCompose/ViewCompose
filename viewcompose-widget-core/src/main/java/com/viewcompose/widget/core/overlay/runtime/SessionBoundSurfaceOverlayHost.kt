@@ -1,5 +1,9 @@
 package com.viewcompose.widget.core
 
+/**
+ * 为有真实表面句柄的 overlay 提供通用 diff 逻辑，按 session 隔离 show/update/dismiss。
+ * Provides common diffing for overlays with real surface handles, isolating show/update/dismiss by session.
+ */
 abstract class SessionBoundSurfaceOverlayHost<Spec : Any, Content : Any, Handle>(
     private val overlayType: OverlayType,
     private val decode: (OverlayRequest) -> Pair<Spec, Content>?,

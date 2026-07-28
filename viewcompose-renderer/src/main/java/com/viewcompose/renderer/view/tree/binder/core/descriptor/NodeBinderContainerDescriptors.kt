@@ -25,6 +25,10 @@ import com.viewcompose.renderer.view.container.DeclarativeScrollableColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeScrollableRowLayout
 import com.viewcompose.renderer.view.tree.patch.ContainerNodePatchApplier
 
+/**
+ * 注册基础容器、滚动容器和 AndroidView 节点的 binder/patch 描述。
+ * Registers binder/patch descriptors for base containers, scroll containers, and AndroidView nodes.
+ */
 internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors() {
     val rowPatch = patchDescriptor<RowNodeProps, RowNodePatch>(
         factory = { previous, next -> RowNodePatch(previous, next) },

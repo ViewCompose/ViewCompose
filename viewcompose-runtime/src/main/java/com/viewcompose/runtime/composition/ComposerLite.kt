@@ -4,9 +4,11 @@ import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.runtime.Snapshot
 
 /**
+ * 面向节点组增量重组的 SlotTable-lite composer。
  * SlotTable-lite composer for node-group incremental recomposition.
  *
- * This runtime intentionally does not depend on compiler-generated stability/changed flags.
+ * 该运行时刻意不依赖编译器生成的 stability/changed flags，所有跳过逻辑由 scope 输入和状态观察驱动。
+ * This runtime intentionally avoids compiler-generated stability/changed flags; skipping is driven by scope inputs and state observation.
  */
 class ComposerLite(
     private val slotTable: SlotTable = SlotTable(),
@@ -24,15 +26,31 @@ class ComposerLite(
     private var activeAttempt: CompositionAttempt? = null
     private var explicitRootRequestPending: Boolean = false
 
+    /**
+     * 是否存在尚未处理的失效 scope。
+     * Returns whether there are invalidated scopes waiting to be processed.
+     */
     fun hasPendingInvalidations(): Boolean = invalidationQueue.isNotEmpty()
 
+    /**
+     * 取出并压缩失效 scope，父 scope 覆盖子 scope 的重组需求。
+     * Drains and compacts invalidated scopes, where a parent scope covers its children.
+     */
     fun drainInvalidations(): List<RecomposeScope> = invalidationQueue.drainCompacted()
 
+    /**
+     * 请求根节点重组，通常用于宿主显式刷新或全局环境变化。
+     * Requests root recomposition, typically for host-driven refreshes or global environment changes.
+     */
     fun requestRootRecompose() {
         explicitRootRequestPending = true
         slotTable.root.markDirty()
     }
 
+    /**
+     * 组合根内容并立即提交成功结果。
+     * Composes root content and commits the successful result immediately.
+     */
     fun <T> composeRoot(block: () -> T): T {
         val prepared = prepareRoot(block = block)
         prepared.commit()
@@ -40,8 +58,11 @@ class ComposerLite(
     }
 
     /**
+     * 组合候选结果，但暂不提交 slot table 或观察者变化。
      * Composes a candidate result without committing slot-table or observer changes.
      *
+     * 宿主如果还要把结果应用到另一棵可变树，应在应用成功后调用 [PreparedComposition.commit]，
+     * 失败时调用 [PreparedComposition.abort]。
      * Hosts that apply the result to another mutable tree should call [PreparedComposition.commit]
      * only after that apply succeeds, or [PreparedComposition.abort] when it fails.
      */
@@ -115,6 +136,10 @@ class ComposerLite(
         }
     }
 
+    /**
+     * 运行一个结构化节点组，并根据 signature/inputs 决定复用、重组或结构回退。
+     * Runs one structured node group and uses signature/inputs to decide reuse, recomposition, or structure fallback.
+     */
     fun <T> runGroup(
         signature: Any,
         inputs: Any? = RecomposeScope.NoInputs,
@@ -199,6 +224,10 @@ class ComposerLite(
         }
     }
 
+    /**
+     * 在当前 scope 的 remember slot 中缓存计算值。
+     * Caches a calculated value in the current scope's remember slot.
+     */
     fun <T> remember(
         keys: List<Any?>,
         calculation: () -> T,
@@ -224,6 +253,10 @@ class ComposerLite(
         return value
     }
 
+    /**
+     * 注册需要在提交后生效、在 key 变化或离开 composition 时清理的副作用。
+     * Registers an effect that starts after commit and cleans up when keys change or leave composition.
+     */
     fun disposableEffect(
         keys: List<Any?>,
         effect: () -> (() -> Unit)?,
@@ -257,13 +290,20 @@ class ComposerLite(
         }
     }
 
+    /**
+     * 注册提交后执行的一次性副作用。
+     * Registers a one-shot side effect to run after commit.
+     */
     fun sideEffect(effect: () -> Unit) {
         currentAttempt().pendingSideEffects += effect
     }
 
     /**
+     * 返回当前 composition scope 中下一个 saveable slot 的确定性 key。
      * Returns a deterministic key for the next saveable slot in the current composition scope.
      *
+     * key 基于节点组路径、局部 saveable slot 位置和显式 [withKeys] 值。
+     * 自定义 key 对象必须在宿主重建前后保持稳定的 `hashCode`。
      * The key is based on the node-group path, the local saveable slot position, and any explicit
      * [withKeys] values. Callers that provide custom key objects must keep their `hashCode` stable
      * across host recreation.
@@ -277,6 +317,10 @@ class ComposerLite(
         return "auto:${currentScope.saveablePath}:$slot:${explicitKeyHash.toUInt().toString(16)}"
     }
 
+    /**
+     * 执行已提交 composition 收集到的 disposable effect 和 side effect。
+     * Runs disposable effects and side effects collected by the committed composition.
+     */
     fun commitSideEffects() {
         if (pendingDisposableEffects.isEmpty() && pendingSideEffects.isEmpty()) return
         val disposableOperations = pendingDisposableEffects.toList()
@@ -304,6 +348,10 @@ class ComposerLite(
         }
     }
 
+    /**
+     * 在当前调用栈追加显式 key，影响 remember/saveable 的局部 key 空间。
+     * Appends explicit keys to the current call stack, affecting the local remember/saveable key space.
+     */
     fun <T> withKeys(
         keys: List<Any?>,
         block: () -> T,
@@ -322,6 +370,10 @@ class ComposerLite(
         }
     }
 
+    /**
+     * 释放 composer 管理的所有 scope、pending effect 和失效队列。
+     * Disposes all scopes, pending effects, and invalidation queues owned by this composer.
+     */
     fun dispose() {
         val failures = mutableListOf<Throwable>()
         activeAttempt?.let { attempt ->

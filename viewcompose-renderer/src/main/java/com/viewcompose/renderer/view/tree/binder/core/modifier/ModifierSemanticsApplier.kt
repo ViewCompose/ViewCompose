@@ -15,7 +15,15 @@ import com.viewcompose.ui.modifier.SemanticsConfiguration
 import com.viewcompose.ui.modifier.SemanticsLiveRegion
 import com.viewcompose.ui.modifier.SemanticsRole
 
+/**
+ * 将声明式 semantics modifier 映射到 Android accessibility 属性。
+ * Maps declarative semantics modifiers to Android accessibility properties.
+ */
 internal object ModifierSemanticsApplier {
+    /**
+     * 应用 semantics；为空时恢复应用前捕获的原生 accessibility 状态。
+     * Applies semantics, restoring the captured native accessibility state when empty.
+     */
     fun apply(
         view: View,
         semantics: SemanticsConfiguration,
@@ -27,6 +35,8 @@ internal object ModifierSemanticsApplier {
             return
         }
 
+        // 第一次应用 semantics 时捕获原生状态，后续移除 modifier 可完整恢复。
+        // Capture native state on first semantics application so modifier removal can fully restore it.
         val state = existingState ?: SemanticsViewState.capture(view).also { captured ->
             view.setTag(R.id.viewcompose_semantics_state, captured)
         }
@@ -95,6 +105,10 @@ internal object ModifierSemanticsApplier {
         val importantForAccessibility: Int,
         val accessibilityDelegate: AccessibilityDelegateCompat?,
     ) {
+        /**
+         * 恢复 semantics modifier 接管前的 View accessibility 状态。
+         * Restores the View accessibility state captured before semantics modifiers took over.
+         */
         fun restore(view: View) {
             view.contentDescription = contentDescription
             ViewCompat.setStateDescription(view, stateDescription)

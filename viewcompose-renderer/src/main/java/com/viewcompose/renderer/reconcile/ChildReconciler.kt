@@ -2,12 +2,27 @@ package com.viewcompose.renderer.reconcile
 
 import com.viewcompose.ui.node.VNode
 
+/**
+ * child reconcile 的输出结果。
+ * Output of child reconciliation.
+ */
 data class ReconcileResult<T>(
     val patches: List<RenderPatch<T>>,
     val removals: List<RemovePatch<T>>,
 )
 
+/**
+ * 将上一轮 child 列表与新 VNode 列表对齐为 insert/reuse/remove patch。
+ * Aligns previous children with new VNodes into insert/reuse/remove patches.
+ *
+ * 有 key 的节点按 key 优先复用；无 key 节点只在相同 index 且类型相同时复用。
+ * Keyed nodes reuse by key first; unkeyed nodes only reuse at the same index with the same type.
+ */
 object ChildReconciler {
+    /**
+     * 生成下一轮渲染所需的 patch 与删除列表。
+     * Builds patches and removals needed for the next render.
+     */
     fun <T> reconcile(
         previous: List<ReconcileNode<T>>,
         nodes: List<VNode>,
@@ -83,6 +98,8 @@ object ChildReconciler {
         node: VNode,
     ): Int? {
         if (node.key != null) {
+            // keyed 节点允许跨 index 复用，从而支持重排时保留平台 View。
+            // Keyed nodes may be reused across indexes, preserving platform Views during reorder.
             val candidates = keyedIndex[node.key] ?: return null
             for (candidateIndex in candidates) {
                 if (!usedPrevious[candidateIndex] &&
@@ -94,6 +111,8 @@ object ChildReconciler {
             return null
         }
 
+        // unkeyed 节点只按位置复用，避免同类型兄弟重排时错绑状态。
+        // Unkeyed nodes reuse only by position to avoid misbinding state among reordered same-type siblings.
         val candidate = previous.getOrNull(targetIndex) ?: return null
         return if (!usedPrevious[targetIndex] && canReuse(candidate.vnode, node)) {
             targetIndex

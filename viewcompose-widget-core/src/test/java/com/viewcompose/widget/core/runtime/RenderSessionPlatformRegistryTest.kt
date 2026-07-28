@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core runtime 中的 Render Session Platform Registry 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Render Session Platform Registry behavior in widget-core runtime and guards DSL, state, or theme contracts against regressions.
+ */
+
 import android.view.ViewGroup
 import com.viewcompose.ui.node.VNode
 import kotlin.coroutines.EmptyCoroutineContext

@@ -9,6 +9,11 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.ProgressIndicatorNodeProps
 import kotlin.math.roundToInt
 
+/**
+ * 绑定进度反馈节点，统一处理确定/不确定进度值、颜色和可见性状态。
+ * Binds progress feedback nodes and normalizes determinate/indeterminate progress, color, and
+ * visibility state.
+ */
 internal object FeedbackViewBinder {
     data class ProgressSpec(
         val enabled: Boolean,

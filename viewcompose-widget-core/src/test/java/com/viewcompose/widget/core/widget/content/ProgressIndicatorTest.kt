@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core widget/content 中的 Progress Indicator 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Progress Indicator behavior in widget-core widget/content and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.ui.modifier.HeightModifierElement
 import com.viewcompose.ui.modifier.SizeModifierElement
 import com.viewcompose.ui.modifier.WidthModifierElement

@@ -1,5 +1,10 @@
 package com.viewcompose.animation
 
+/*
+ * 测试职责：覆盖 animation DSL 中的 Animatable 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Animatable behavior in animation DSL and guards the contract against regressions.
+ */
+
 import com.viewcompose.animation.core.AnimationConverters
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.frame.MonotonicFrameClock

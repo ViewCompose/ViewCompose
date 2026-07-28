@@ -5,6 +5,10 @@ import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
 
+/**
+ * 布局约束、尺寸、边距和对齐相关的 modifier 元素模型。
+ * Modifier element models for layout constraints, sizing, margins, and alignment.
+ */
 data class PaddingModifierElement(
     val left: Int,
     val top: Int,
@@ -83,4 +87,3 @@ data class OffsetModifierElement(
     val x: Float,
     val y: Float,
 ) : ModifierElement
-

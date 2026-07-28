@@ -6,10 +6,13 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /**
+ * 根据原生 View 宽度计算可同时展示的导航 pane 数量。
  * Resolves the number of simultaneously visible navigation panes from native View width.
  *
- * A pane is admitted only when every pane can retain at least [minPaneWidthDp]. The same
- * committed back stack and entry owners are reused when the width changes.
+ * 只有当每个 pane 都能保持至少 [minPaneWidthDp] 时才会增加 pane 数。宽度变化时复用同一份
+ * 已提交 back stack 和 entry owners，不会重建页面状态。
+ * A pane is admitted only when every pane can retain at least [minPaneWidthDp]. The same committed
+ * back stack and entry owners are reused when the width changes.
  */
 data class NavPanePolicy(
     val strategy: NavPaneStrategy = NavPaneStrategies.BackStack,
@@ -55,6 +58,7 @@ data class NavPanePolicy(
 
     companion object {
         /**
+         * 在所有宽度下保留经典的单目的地全屏宿主行为。
          * Preserves classic full-host destination behavior at every width.
          */
         val Single = NavPanePolicy(
@@ -64,6 +68,7 @@ data class NavPanePolicy(
         )
 
         /**
+         * 在原生宽度允许时展示最多三个最新 back-stack entry。
          * Shows up to three newest back-stack entries when native width permits.
          */
         val Adaptive = NavPanePolicy()

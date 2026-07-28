@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core runtime 中的 Coroutine Effects 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Coroutine Effects behavior in widget-core runtime and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.runtime.composition.ComposerLite
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope

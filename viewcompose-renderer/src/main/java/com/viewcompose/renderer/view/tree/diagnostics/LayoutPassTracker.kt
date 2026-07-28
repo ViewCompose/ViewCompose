@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+/**
+ * 单个 View 类型的 measure/layout 统计条目。
+ * Measure/layout statistics entry for one View type.
+ */
 data class LayoutPassEntry(
     val viewName: String,
     val measureCount: Int,
@@ -8,6 +12,10 @@ data class LayoutPassEntry(
     val totalLayoutNs: Long,
 )
 
+/**
+ * layout pass 采样快照。
+ * Snapshot of sampled layout passes.
+ */
 data class LayoutPassSnapshot(
     val totalMeasureCount: Int = 0,
     val totalLayoutCount: Int = 0,
@@ -16,6 +24,13 @@ data class LayoutPassSnapshot(
     val entries: List<LayoutPassEntry> = emptyList(),
 )
 
+/**
+ * 轻量级 layout pass 采样器。
+ * Lightweight layout pass sampler.
+ *
+ * 默认关闭，仅在诊断页面或测试显式启用时记录 measure/layout 耗时。
+ * Disabled by default; records measure/layout timing only when diagnostics pages or tests enable it.
+ */
 object LayoutPassTracker {
     private val counters = linkedMapOf<String, MutableLayoutPassCounter>()
 
@@ -23,6 +38,10 @@ object LayoutPassTracker {
     var isEnabled: Boolean = false
         private set
 
+    /**
+     * 启用采样，可选择是否清空历史计数。
+     * Enables sampling and optionally clears historical counters.
+     */
     @Synchronized
     fun start(resetCounters: Boolean = true) {
         if (resetCounters) {
@@ -31,10 +50,18 @@ object LayoutPassTracker {
         isEnabled = true
     }
 
+    /**
+     * 关闭采样但保留当前计数，便于随后读取 snapshot。
+     * Stops sampling while preserving current counters for later snapshot reads.
+     */
     fun stop() {
         isEnabled = false
     }
 
+    /**
+     * 返回采样起点；未启用时返回哨兵值避免额外 nanoTime 成本。
+     * Returns a timing start point, or a sentinel when disabled to avoid extra nanoTime cost.
+     */
     fun beginTiming(): Long = if (isEnabled) System.nanoTime() else TIMING_DISABLED
 
     fun recordMeasureSince(

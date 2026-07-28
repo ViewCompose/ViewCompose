@@ -1,5 +1,9 @@
 package com.viewcompose.widget.core
 
+/**
+ * Button 组件尺寸 token。
+ * Size tokens for Button components.
+ */
 data class UiButtonSizing(
     val compactHeight: Int,
     val mediumHeight: Int,
@@ -12,6 +16,10 @@ data class UiButtonSizing(
     val largeVerticalPadding: Int,
 )
 
+/**
+ * TextField 组件尺寸 token。
+ * Size tokens for TextField components.
+ */
 data class UiTextFieldSizing(
     val compactHeight: Int,
     val mediumHeight: Int,
@@ -24,6 +32,10 @@ data class UiTextFieldSizing(
     val largeVerticalPadding: Int,
 )
 
+/**
+ * SegmentedControl 组件尺寸 token。
+ * Size tokens for SegmentedControl components.
+ */
 data class UiSegmentedControlSizing(
     val compactHeight: Int,
     val mediumHeight: Int,
@@ -36,12 +48,20 @@ data class UiSegmentedControlSizing(
     val largeVerticalPadding: Int,
 )
 
+/**
+ * ProgressIndicator 组件尺寸 token。
+ * Size tokens for ProgressIndicator components.
+ */
 data class UiProgressIndicatorSizing(
     val linearTrackThickness: Int,
     val circularSize: Int,
     val circularTrackThickness: Int,
 )
 
+/**
+ * Floating action button 尺寸 token。
+ * Size tokens for floating action buttons.
+ */
 data class UiFabSizing(
     val smallSize: Int,
     val mediumSize: Int,
@@ -70,6 +90,10 @@ data class UiFabSizing(
     }
 }
 
+/**
+ * Chip 组件尺寸 token。
+ * Size tokens for Chip components.
+ */
 data class UiChipSizing(
     val height: Int,
     val horizontalPadding: Int,
@@ -90,6 +114,10 @@ data class UiChipSizing(
     }
 }
 
+/**
+ * SearchBar 组件尺寸 token。
+ * Size tokens for SearchBar components.
+ */
 data class UiSearchBarSizing(
     val height: Int,
     val horizontalPadding: Int,
@@ -108,6 +136,10 @@ data class UiSearchBarSizing(
     }
 }
 
+/**
+ * NavigationBar 组件尺寸 token。
+ * Size tokens for NavigationBar components.
+ */
 data class UiNavigationBarSizing(
     val height: Int,
     val iconSize: Int,
@@ -122,6 +154,10 @@ data class UiNavigationBarSizing(
     }
 }
 
+/**
+ * AppBar 组件尺寸 token。
+ * Size tokens for AppBar components.
+ */
 data class UiAppBarSizing(
     val topHeight: Int,
     val topHorizontalPadding: Int,
@@ -142,6 +178,10 @@ data class UiAppBarSizing(
     }
 }
 
+/**
+ * List item 组件尺寸 token。
+ * Size tokens for list item components.
+ */
 data class UiListItemSizing(
     val minHeight: Int,
     val horizontalPadding: Int,
@@ -160,6 +200,10 @@ data class UiListItemSizing(
     }
 }
 
+/**
+ * Menu 组件尺寸 token。
+ * Size tokens for Menu components.
+ */
 data class UiMenuSizing(
     val elevation: Int,
     val minWidth: Int,
@@ -182,6 +226,10 @@ data class UiMenuSizing(
     }
 }
 
+/**
+ * Tooltip 组件尺寸 token。
+ * Size tokens for Tooltip components.
+ */
 data class UiTooltipSizing(
     val horizontalPadding: Int,
     val verticalPadding: Int,
@@ -194,6 +242,10 @@ data class UiTooltipSizing(
     }
 }
 
+/**
+ * Badge 组件尺寸 token。
+ * Size tokens for Badge components.
+ */
 data class UiBadgeSizing(
     val dotSize: Int,
     val pillHeight: Int,
@@ -210,6 +262,10 @@ data class UiBadgeSizing(
     }
 }
 
+/**
+ * 所有核心组件尺寸 token 的聚合。
+ * Aggregate size tokens for all core components.
+ */
 data class UiControlSizing(
     val button: UiButtonSizing,
     val textField: UiTextFieldSizing,

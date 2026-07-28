@@ -9,6 +9,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * demo 模块交互路径的轻量帧耗时 benchmark。
+ * Lightweight frame-time benchmarks for demo module interaction paths.
+ *
+ * 这些用例覆盖手工验收锚点，帮助发现常用 DSL 页面在状态切换和滚动时的回归。
+ * These cases exercise manual-QA anchors and catch regressions during state toggles and scrolling.
+ */
 @RunWith(AndroidJUnit4::class)
 class DemoInteractionBenchmark {
     @get:Rule

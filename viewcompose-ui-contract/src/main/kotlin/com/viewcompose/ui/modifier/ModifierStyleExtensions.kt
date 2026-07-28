@@ -2,6 +2,10 @@ package com.viewcompose.ui.modifier
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * 样式类 modifier 的声明式扩展入口。
+ * Declarative extension entrypoints for style modifiers.
+ */
 fun Modifier.backgroundColor(color: Int): Modifier {
     return then(
         BackgroundColorModifierElement(color),

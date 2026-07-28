@@ -1,5 +1,10 @@
 package com.viewcompose.host.android.runtime
 
+/*
+ * 测试职责：覆盖 Android host 中的 Android Frame Aligned Render Session Runtime 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Android Frame Aligned Render Session Runtime behavior in Android host and guards the contract against regressions.
+ */
+
 import java.util.LinkedHashSet
 import org.junit.Assert.assertEquals
 import org.junit.Test

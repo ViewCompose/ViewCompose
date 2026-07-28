@@ -14,6 +14,14 @@ import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * 发射不带外层标签和辅助文案的基础文本输入节点。
+ * Emits the low-level text input node without outer label or supporting text.
+ *
+ * BasicTextField 直接把 TextFieldState 与键盘/转换/接收内容配置交给 renderer，适合复合控件复用。
+ * BasicTextField passes TextFieldState plus keyboard/transformation/content receiving options directly to the renderer,
+ * making it suitable for higher-level composite widgets.
+ */
 fun UiTreeBuilder.BasicTextField(
     state: TextFieldState,
     hint: String = "",
@@ -76,6 +84,13 @@ fun UiTreeBuilder.BasicTextField(
     )
 }
 
+/**
+ * 发射带 label、placeholder 和 supportingText 的标准文本框组合。
+ * Emits a standard text field composite with label, placeholder, and supporting text.
+ *
+ * 外层 Column 只负责辅助文案布局，真正可编辑区域仍由 BasicTextField 生成同一个 TextField 节点类型。
+ * The outer Column only lays out helper text; the editable area is still produced by BasicTextField as the same TextField node type.
+ */
 fun UiTreeBuilder.TextField(
     state: TextFieldState,
     hint: String = "",
@@ -113,6 +128,8 @@ fun UiTreeBuilder.TextField(
         enabled = enabled,
         isError = isError,
     )
+    // 将视觉结构放在组合层，避免 renderer 同时承担 label/supportingText 布局职责。
+    // Visual structure stays in the composite layer so the renderer only binds the editable field.
     Column(
         key = key,
         modifier = modifier,
@@ -175,6 +192,10 @@ fun UiTreeBuilder.TextField(
     }
 }
 
+/**
+ * 将 DSL 参数归一化为 renderer 消费的 TextFieldNodeProps。
+ * Normalizes DSL parameters into TextFieldNodeProps consumed by the renderer.
+ */
 private fun basicTextFieldSpec(
     state: TextFieldState,
     placeholder: String,
@@ -201,6 +222,8 @@ private fun basicTextFieldSpec(
     paddingVertical: Int,
     cursorColor: Int,
 ): TextFieldNodeProps {
+    // TextFieldState 是单一数据源，同时快照 value 便于 diff/patch 阶段比较。
+    // TextFieldState is the single source of truth; value is snapshotted for diff/patch comparison.
     return TextFieldNodeProps(
         state = state,
         value = state.value,
@@ -235,6 +258,13 @@ private fun basicTextFieldSpec(
     )
 }
 
+/**
+ * 发射面向密码输入的单行文本框。
+ * Emits a single-line text field configured for password input.
+ *
+ * 默认关闭自动纠错并声明 Password autofill hint，调用方仍可传入自定义 keyboardOptions 覆盖。
+ * Auto-correct is disabled and the Password autofill hint is declared by default; callers can still override keyboardOptions.
+ */
 fun UiTreeBuilder.PasswordField(
     state: TextFieldState,
     hint: String = "",
@@ -279,6 +309,13 @@ fun UiTreeBuilder.PasswordField(
     )
 }
 
+/**
+ * 发射面向邮箱输入的单行文本框。
+ * Emits a single-line text field configured for email input.
+ *
+ * 默认键盘类型和 autofill hint 均偏向邮箱场景，样式与普通 TextField 保持一致。
+ * The default keyboard type and autofill hint target email flows while preserving the standard TextField styling.
+ */
 fun UiTreeBuilder.EmailField(
     state: TextFieldState,
     hint: String = "",
@@ -320,6 +357,13 @@ fun UiTreeBuilder.EmailField(
     )
 }
 
+/**
+ * 发射面向数字输入的单行文本框。
+ * Emits a single-line text field configured for numeric input.
+ *
+ * 默认关闭自动纠错，避免数字输入被键盘联想或拼写逻辑干扰。
+ * Auto-correct is disabled by default to keep numeric input independent from suggestion or spelling logic.
+ */
 fun UiTreeBuilder.NumberField(
     state: TextFieldState,
     hint: String = "",
@@ -362,6 +406,13 @@ fun UiTreeBuilder.NumberField(
     )
 }
 
+/**
+ * 发射多行文本输入区域。
+ * Emits a multi-line text input area.
+ *
+ * TextArea 复用 TextField 的视觉规则，仅将 singleLine 关闭并使用多行高度约束。
+ * TextArea reuses TextField visual rules, only disabling singleLine and applying multi-line line constraints.
+ */
 fun UiTreeBuilder.TextArea(
     state: TextFieldState,
     hint: String = "",

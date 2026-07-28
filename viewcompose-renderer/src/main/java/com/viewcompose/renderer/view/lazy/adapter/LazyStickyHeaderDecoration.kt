@@ -9,9 +9,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
 
 /**
+ * 绘制并分发指针事件给脱离 RecyclerView child 列表的 sticky header holder。
  * Draws and dispatches pointer input to a detached, session-backed header holder.
  *
+ * pinned copy 放在 RecyclerView child 集合外，避免与 LayoutManager 回收流程冲突。
  * Keeping the pinned copy outside RecyclerView's child set avoids fighting LayoutManager recycling.
+ *
+ * 普通列表内 header 仍是语义/accessibility 来源，pinned copy 只负责视觉和指针表面。
  * The ordinary in-list header remains the semantic/accessibility source while this copy owns the
  * pinned visual and pointer surface.
  */
@@ -51,6 +55,8 @@ internal class LazyStickyHeaderDecoration private constructor(
         measureAndLayoutHeader(header, parent)
         val left = parent.paddingLeft
         val naturalTop = parent.paddingTop
+        // 下一个 header 顶到当前位置时，把当前 pinned header 顶出视口。
+        // When the next header reaches the pinned slot, push the current pinned header out.
         val nextHeaderTop = findNextHeaderTop(
             parent = parent,
             currentHeaderPosition = stickyPosition,
@@ -192,6 +198,8 @@ internal class LazyStickyHeaderDecoration private constructor(
     private fun dispatchToHeader(event: MotionEvent) {
         val header = headerHolder?.itemView ?: return
         val transformed = MotionEvent.obtain(event)
+        // 将 RecyclerView 坐标转换为 detached header 的本地坐标再分发。
+        // Convert RecyclerView coordinates into the detached header's local coordinates before dispatching.
         transformed.offsetLocation(
             -headerBounds.left.toFloat(),
             -headerBounds.top.toFloat(),

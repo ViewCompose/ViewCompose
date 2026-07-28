@@ -12,8 +12,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
+ * Android Window/SurfaceControl 驱动 Activity 转场的参考测量。
  * Reference measurements for Android's Window/SurfaceControl-backed Activity transition.
  *
+ * 它与 [NavigationMotionBenchmark] 放在一起，便于在同一目标应用和设备上对比框架页内转场与系统合成器转场。
  * These are intentionally kept beside [NavigationMotionBenchmark] so reports compare the
  * framework's in-window page transition with the system compositor on the same target and device.
  */

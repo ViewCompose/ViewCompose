@@ -13,6 +13,10 @@ import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 
+/**
+ * 支持 parent-data modifier 的父容器分类。
+ * Parent container categories that support parent-data modifiers.
+ */
 internal enum class ParentDataHost {
     Row,
     Column,
@@ -21,7 +25,15 @@ internal enum class ParentDataHost {
     Other,
 }
 
+/**
+ * 校验 parent-data modifier 是否放在正确父容器下。
+ * Validates whether parent-data modifiers are placed under the correct parent container.
+ */
 internal object ModifierParentDataValidator {
+    /**
+     * 根据实际 Android parent 推导父容器类型并执行校验。
+     * Infers parent container type from the Android parent and validates modifiers.
+     */
     fun validate(
         parent: ViewGroup,
         node: VNode,
@@ -47,6 +59,10 @@ internal object ModifierParentDataValidator {
         )
     }
 
+    /**
+     * 在已知父容器分类下校验 VNode modifier。
+     * Validates VNode modifiers under a known parent container category.
+     */
     fun validate(
         parent: ParentDataHost,
         node: VNode,

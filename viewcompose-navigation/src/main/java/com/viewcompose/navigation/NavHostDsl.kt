@@ -13,17 +13,32 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.captureUiLocalSnapshot
 
 /**
+ * 将框架持有的导航栈挂载为原生 Android View 层级。
  * Mounts one framework-owned navigation stack as a native Android View hierarchy.
  *
+ * 目的地内容会接收当前活跃的 [NavEntry]。其 lifecycle、ViewModel store、保存状态命名空间和
+ * 子渲染会话由此宿主管理，而不是由 Activity 或 Fragment 管理。
  * Destination content receives the active [NavEntry]. Its lifecycle, ViewModel store, saved-state
  * namespace, and child render session are owned by this host rather than an Activity or Fragment.
- * [LocalNavGraphOwnerScope] exposes every active parent-graph owner, while
- * [ProvideNavGraphOwner] lets a subtree use one graph's shared state directly.
+ *
+ * [LocalNavGraphOwnerScope] 暴露所有活跃父图 owner，[ProvideNavGraphOwner] 允许子树直接
+ * 使用某个图的共享状态。
+ * [LocalNavGraphOwnerScope] exposes every active parent-graph owner, while [ProvideNavGraphOwner]
+ * lets a subtree use one graph's shared state directly.
+ *
+ * 当 [systemBackEnabled] 为 true 时，仅在当前栈可弹出时参与最近的 AndroidX back dispatcher。
+ * predictive back 会预览上一个目的地，但在手势完成前不会改变已提交栈。
  * When [systemBackEnabled] is true, the host participates in the nearest AndroidX back dispatcher
  * only while its stack can pop. Predictive-back progress previews the previous destination without
  * changing the committed stack until the gesture completes.
+ *
+ * [panePolicy] 可以把同一批已提交 entry 自适应展示为多个原生 View pane，不会重建对应的
+ * lifecycle、ViewModel 或 saved-state owner。
  * [panePolicy] can adapt the same committed entries into multiple native View panes without
  * recreating their lifecycle, ViewModel, or saved-state owners.
+ *
+ * 当目的地内容或继承 local 依赖不可观察的父级值时，应变更 [contentKey]。可观察状态会直接
+ * 使目的地会话失效，所以普通导航和状态变化不会同步刷新每个保留页面。
  * [contentKey] must change when destination content or inherited locals depend on a non-observable
  * parent value. Observable state invalidates destination sessions directly, so ordinary navigation
  * and state changes do not synchronously refresh every retained page.
@@ -103,6 +118,10 @@ private fun View.requireNavHostRuntime(): NavHostRuntime {
     }
 }
 
+/**
+ * 只在会改变 AndroidView 身份的宿主输入发生变化时触发重建。
+ * Recreates AndroidView only when host inputs that affect identity change.
+ */
 private class NavHostNodeKey(
     private val controller: NavHostController,
     private val lifecycleOwner: androidx.lifecycle.LifecycleOwner,
@@ -132,6 +151,10 @@ private class NavHostNodeKey(
     }
 }
 
+/**
+ * 默认复用宿主容器的 overlay 能力，缺失时安全降级为空实现。
+ * Reuses the host container overlay by default and falls back to a no-op implementation.
+ */
 private val defaultNavOverlayHostFactory: (ViewGroup) -> OverlayHost = { root ->
     OverlayHostDefaults.androidOrNoOp(root)
 }

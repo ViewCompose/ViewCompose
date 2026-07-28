@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试工具职责：为 widget-core runtime 测试提供 Composer Runtime Harness 支撑，避免每个用例重复搭建组合运行时。
+ * Test harness responsibility: provides Composer Runtime Harness support for widget-core runtime tests and avoids repeated composition runtime setup.
+ */
+
 import com.viewcompose.runtime.composition.ComposerLite
 import kotlinx.coroutines.Dispatchers
 

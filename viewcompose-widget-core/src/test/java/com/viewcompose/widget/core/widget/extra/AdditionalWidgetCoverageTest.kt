@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core widget/extra 中的 Additional Widget Coverage 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Additional Widget Coverage behavior in widget-core widget/extra and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.layout.HorizontalAlignment

@@ -17,6 +17,10 @@ import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * AndroidView/nativeView 互操作渲染的设备级回归测试。
+ * Device-level regression tests for AndroidView/nativeView interop rendering.
+ */
 @RunWith(AndroidJUnit4::class)
 class AndroidInteropRenderingUiTest {
     @Test

@@ -1,5 +1,9 @@
 package com.viewcompose.ui.input
 
+/**
+ * 与平台键盘事件解耦的按键事件类型。
+ * Platform-independent key event type.
+ */
 enum class KeyEventType {
     KeyDown,
     KeyUp,

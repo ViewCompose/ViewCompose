@@ -5,6 +5,10 @@ import com.viewcompose.graphics.core.DrawCommand
 import com.viewcompose.graphics.core.DrawRecorder
 import com.viewcompose.graphics.core.Size
 
+/**
+ * 绘制 modifier 执行时传入的画布尺寸上下文。
+ * Canvas-size context passed to drawing modifiers.
+ */
 data class DrawContext(
     val size: Size,
     val density: Float,

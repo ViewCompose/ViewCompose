@@ -17,6 +17,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
+/**
+ * 将一个状态机目标值拆成多个同步动画通道。
+ * Splits one state-machine target into multiple synchronized animation channels.
+ */
 class Transition<S> internal constructor(
     initialState: S,
     label: String,
@@ -120,6 +124,8 @@ class Transition<S> internal constructor(
         val running = core.isRunning
         val version = core.segmentVersion
         if (channelState.segmentVersion != version) {
+            // 每个通道在 segment 切换时冻结自己的起点和终点，随后共享同一 playTime。
+            // Each channel freezes its own endpoints on segment changes, then shares the same playTime.
             val segmentInitialState = core.segmentInitialState
             val segmentTargetState = core.segmentTargetState
             val spec = transitionSpec(segmentInitialState, segmentTargetState)
@@ -218,6 +224,11 @@ class Transition<S> internal constructor(
     }
 }
 
+/**
+ * 记忆并更新一个 [Transition]，同时启动负责推进 segment playTime 的帧循环。
+ * Remembers and updates a [Transition], while launching the frame loop that advances segment
+ * playTime.
+ */
 fun <S> updateTransition(
     targetState: S,
     label: String = "",

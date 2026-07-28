@@ -1,5 +1,10 @@
 package com.viewcompose.ui.guard
 
+/*
+ * 契约测试职责：锁定 UI contract 的 Ui Contract Dependency Guard 边界，防止依赖或公开 API 在重构中漂移。
+ * Contract test responsibility: locks down the Ui Contract Dependency Guard boundary in UI contract and prevents dependency or public API drift.
+ */
+
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files

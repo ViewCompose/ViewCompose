@@ -156,6 +156,10 @@ private fun GraphicsCatalogPreview(
     PreviewCatalogSpecScreen(specId = specRef.id)
 }
 
+/**
+ * 渲染单个目录 spec 的共享 Preview 屏幕。
+ * Shared Preview screen that renders one catalog spec.
+ */
 @Composable
 internal fun PreviewCatalogSpecScreen(
     specId: String,

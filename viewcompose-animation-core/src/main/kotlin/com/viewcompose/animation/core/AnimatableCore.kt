@@ -2,6 +2,10 @@ package com.viewcompose.animation.core
 
 import com.viewcompose.runtime.frame.MonotonicFrameClock
 
+/**
+ * 不依赖组合层的可变动画值核心。
+ * Composition-free core for a mutable animated value.
+ */
 class AnimatableCore<T>(
     initialValue: T,
     private val converter: AnimationConverter<T>,

@@ -1,18 +1,34 @@
 package com.viewcompose.text
 
+/**
+ * 富文本 inline attachment 在纯文本中的占位字符。
+ * Placeholder character used by rich-text inline attachments inside plain text.
+ */
 const val INLINE_ATTACHMENT_CHARACTER: Char = '\uFFFC'
 
+/**
+ * 文本字体样式。
+ * Text font style.
+ */
 enum class TextFontStyle {
     Normal,
     Italic,
 }
 
+/**
+ * span 相对于文字基线的垂直对齐。
+ * Span vertical alignment relative to the text baseline.
+ */
 enum class TextVerticalAlignment {
     Normal,
     Superscript,
     Subscript,
 }
 
+/**
+ * 字符级富文本样式。
+ * Character-level rich text style.
+ */
 data class TextSpanStyle(
     val color: Int? = null,
     val backgroundColor: Int? = null,
@@ -36,6 +52,10 @@ data class TextSpanStyle(
     }
 }
 
+/**
+ * 段落文本对齐方式。
+ * Paragraph text alignment.
+ */
 enum class ParagraphTextAlignment {
     Start,
     Center,
@@ -43,6 +63,10 @@ enum class ParagraphTextAlignment {
     Justify,
 }
 
+/**
+ * 段落项目符号配置。
+ * Paragraph bullet configuration.
+ */
 data class TextBullet(
     val radiusPx: Float = 3f,
     val gapWidthPx: Float = 8f,
@@ -58,6 +82,10 @@ data class TextBullet(
     }
 }
 
+/**
+ * 段落级富文本样式。
+ * Paragraph-level rich text style.
+ */
 data class ParagraphStyle(
     val alignment: ParagraphTextAlignment? = null,
     val lineHeightPx: Float? = null,
@@ -90,6 +118,10 @@ data class ParagraphStyleRange(
     val style: ParagraphStyle,
 )
 
+/**
+ * 内联非文本内容的元数据。
+ * Metadata for non-text inline content.
+ */
 class InlineTextAttachment(
     val id: String,
     val mimeType: String,
@@ -142,6 +174,11 @@ data class InlineAttachmentRange(
     val attachment: InlineTextAttachment,
 )
 
+/**
+ * 不可变富文本文档，包含纯文本、span、段落样式和内联附件。
+ * Immutable rich-text document containing plain text, spans, paragraph styles, and inline
+ * attachments.
+ */
 class TextDocument(
     val text: String,
     spanStyles: List<TextSpanRange> = emptyList(),
@@ -195,6 +232,8 @@ class TextDocument(
             append(replacement.text)
             append(text, end, text.length)
         }
+        // 替换时保留未被覆盖的样式范围，并把插入文档的样式平移到目标位置。
+        // Preserve uncovered style ranges and shift inserted document styles into the target position.
         val nextSpans = spanStyles.flatMap { span ->
             preserveRangeAroundReplacement(
                 range = span.range,
@@ -297,6 +336,10 @@ class TextDocument(
     }
 }
 
+/**
+ * 增量构建 [TextDocument] 的 builder。
+ * Builder for incrementally creating [TextDocument].
+ */
 class TextDocumentBuilder {
     private val text = StringBuilder()
     private val spanStyles = mutableListOf<TextSpanRange>()
@@ -373,6 +416,10 @@ class TextDocumentBuilder {
     }
 }
 
+/**
+ * 使用 DSL 构建富文本文档。
+ * Builds a rich-text document with a DSL block.
+ */
 fun textDocument(
     block: TextDocumentBuilder.() -> Unit,
 ): TextDocument {
@@ -388,6 +435,10 @@ private fun TextRange.shift(offset: Int): TextRange {
     )
 }
 
+/**
+ * 计算一次替换后原有样式范围应保留的片段。
+ * Calculates preserved fragments of an existing style range after one replacement.
+ */
 private fun preserveRangeAroundReplacement(
     range: TextRange,
     start: Int,

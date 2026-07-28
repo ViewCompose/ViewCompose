@@ -2,12 +2,20 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * Card 的视觉层级。
+ * Visual hierarchy variants for Card.
+ */
 enum class CardVariant {
     Filled,
     Elevated,
     Outlined,
 }
 
+/**
+ * Card DSL 的默认容器、边框、阴影和点击反馈 token。
+ * Default container, border, elevation, and click feedback tokens for the Card DSL.
+ */
 object CardDefaults {
     fun containerColor(
         variant: CardVariant = CardVariant.Filled,

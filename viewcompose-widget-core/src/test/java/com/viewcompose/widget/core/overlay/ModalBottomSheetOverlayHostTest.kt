@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core overlay 中的 Modal Bottom Sheet Overlay Host 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Modal Bottom Sheet Overlay Host behavior in widget-core overlay and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.ui.node.spec.TextNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Test

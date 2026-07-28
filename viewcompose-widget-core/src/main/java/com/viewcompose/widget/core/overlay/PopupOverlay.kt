@@ -1,5 +1,9 @@
 package com.viewcompose.widget.core
 
+/**
+ * 声明 popup 相对锚点的首选对齐方式。
+ * Declares the preferred alignment of a popup relative to its anchor.
+ */
 enum class PopupAlignment {
     BelowStart,
     BelowCenter,
@@ -16,12 +20,20 @@ enum class PopupAlignment {
     Center,
 }
 
+/**
+ * 控制 popup 超出可用边界时的修正策略。
+ * Controls how popup placement is adjusted when it would overflow available bounds.
+ */
 enum class PopupOverflowPolicy {
     None,
     Clamp,
     FlipThenClamp,
 }
 
+/**
+ * 表示 popup 定位算法使用的矩形边界，单位由平台宿主保持一致。
+ * Represents rectangle bounds consumed by popup positioning; units are kept consistent by the platform host.
+ */
 data class PopupBounds(
     val left: Int,
     val top: Int,
@@ -69,6 +81,10 @@ data class PopupPosition(
     val wasClamped: Boolean,
 )
 
+/**
+ * 计算 popup 的最终窗口位置，集中处理锚点、偏移、尺寸和溢出策略。
+ * Calculates the final popup window position, centralizing anchor, offset, size, and overflow handling.
+ */
 object PopupPositioner {
     fun calculate(
         anchorBounds: PopupBounds,
@@ -274,6 +290,10 @@ object PopupPositioner {
     }
 }
 
+/**
+ * 描述 popup overlay 的平台无关参数，包含定位、可关闭性和焦点策略。
+ * Describes platform-neutral popup overlay parameters including placement, dismiss behavior, and focus policy.
+ */
 class PopupOverlaySpec(
     val anchorId: String,
     val alignment: PopupAlignment = PopupAlignment.BelowStart,
@@ -315,6 +335,10 @@ class PopupOverlaySpec(
     }
 }
 
+/**
+ * 保存 popup 内容 token，host 用它在 show/update 之间维持声明式内容身份。
+ * Stores popup content tokens so hosts preserve declarative content identity between show and update calls.
+ */
 data class PopupOverlayContent(
     val surface: OverlaySurfaceContent,
 )

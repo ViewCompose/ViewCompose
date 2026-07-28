@@ -1,12 +1,24 @@
 package com.viewcompose.performance
 
+/**
+ * 复杂布局性能场景中的固定卡片数量。
+ * Fixed card count used by the complex-layout performance scenario.
+ */
 internal const val PERFORMANCE_DASHBOARD_CARD_COUNT: Int = 18
 
+/**
+ * 复杂布局卡片中的指标项。
+ * Metric item displayed inside a complex-layout card.
+ */
 internal data class PerformanceDashboardMetric(
     val label: String,
     val value: String,
 )
 
+/**
+ * 复杂布局 benchmark 的稳定卡片模型。
+ * Stable card model for complex-layout benchmarks.
+ */
 internal data class PerformanceDashboardCard(
     val id: Int,
     val title: String,
@@ -39,6 +51,14 @@ private val basePerformanceDashboardCards: List<PerformanceDashboardCard> =
         )
     }
 
+/**
+ * 根据 revision 返回确定性的复杂布局卡片数据。
+ * Returns deterministic complex-layout cards for the given revision.
+ *
+ * 结构保持同一批 id，但会更新嵌套指标和明细可见性，用于测量深层布局 patch 成本。
+ * The same card ids are retained while nested metrics and detail visibility change, measuring
+ * deep-layout patch cost.
+ */
 internal fun performanceDashboardCards(revision: Int): List<PerformanceDashboardCard> {
     if (revision == 0) return basePerformanceDashboardCards
     return basePerformanceDashboardCards.map { card ->

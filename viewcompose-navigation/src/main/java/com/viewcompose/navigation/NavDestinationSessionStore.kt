@@ -17,6 +17,10 @@ import com.viewcompose.widget.core.withUiLocalSnapshot
 
 internal typealias NavDestinationContent = UiTreeBuilder.(NavEntry) -> Unit
 
+/**
+ * 管理目的地 View 会话、候选会话和宿主子 View 排布。
+ * Manages destination View sessions, candidate sessions, and host child layout.
+ */
 internal class NavDestinationSessionStore(
     val hostView: NavHostView,
     private val ownerStore: NavEntryOwnerStore,
@@ -60,6 +64,8 @@ internal class NavDestinationSessionStore(
         )
         var renderSession: com.viewcompose.host.android.RenderSession? = null
         return try {
+            // 先创建父图 owner，再创建目的地 owner，保证 lifecycle 下行时可以子先父后销毁。
+            // Create graph owners before the destination owner so lifecycle teardown can destroy child first.
             val graphOwners = entry.graphEntries.mapIndexed { depth, graphEntry ->
                 ownerStore.graphOwnerFor(
                     entry = graphEntry,
@@ -229,6 +235,8 @@ internal class NavDestinationSessionStore(
         check(paneLayouts.keys == visibleEntryIds) {
             "Every visible destination must have exactly one pane layout."
         }
+        // 可见性和 render-active 分开处理：隐藏页面保留会话，但暂停帧驱动更新。
+        // Visibility and render-active are separate: hidden pages keep sessions but pause frame work.
         sessions.forEach { (entryId, session) ->
             if (entryId in visibleEntryIds) {
                 session.container.visibility = View.VISIBLE
@@ -249,11 +257,14 @@ internal class NavDestinationSessionStore(
     }
 
     /**
+     * 暂停或恢复帧驱动渲染，但不改变目的地可见性。
      * Suspends or resumes frame-driven rendering without changing destination visibility.
      *
+     * 已提交转场会动画化已经渲染好的离场 surface。如果保持该目的地 composition 活跃，
+     * lifecycle invalidation 可能在首个 motion frame 重建其 View tree，而这些更新不会影响最终画面。
      * A committed transition animates the already-rendered outgoing surface. Keeping that
-     * destination's composition active would let lifecycle invalidations rebuild its View tree
-     * during the first motion frame, even though those updates cannot affect the settled scene.
+     * destination's composition active would let lifecycle invalidations rebuild its View tree during
+     * the first motion frame, even though those updates cannot affect the settled scene.
      */
     @MainThread
     fun setRenderingActive(
@@ -332,6 +343,8 @@ internal class NavDestinationSessionStore(
         try {
             renderSession?.dispose()
         } finally {
+            // 失败候选必须同时释放新建 graph owner，否则后续重试会复用半初始化 owner。
+            // Failed candidates must also release new graph owners so retries do not reuse half-built owners.
             ownerStore.remove(entryId)
             newGraphOwnerIds.forEach(ownerStore::removeGraphOwner)
             pendingCandidate = null

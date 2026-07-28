@@ -1,5 +1,10 @@
 package com.viewcompose.preview.catalog
 
+/*
+ * 测试职责：覆盖 preview catalog 中的 Preview Catalog Paparazzi 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Preview Catalog Paparazzi behavior in preview catalog and guards the contract against regressions.
+ */
+
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import app.cash.paparazzi.detectEnvironment

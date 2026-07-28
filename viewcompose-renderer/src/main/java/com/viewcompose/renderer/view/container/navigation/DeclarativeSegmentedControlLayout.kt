@@ -20,6 +20,13 @@ import com.viewcompose.renderer.view.tree.ContentViewBinder
 import com.viewcompose.renderer.view.dpToPx
 import java.util.IdentityHashMap
 
+/**
+ * SegmentedControl 的 Android LinearLayout 实现。
+ * Android LinearLayout implementation for SegmentedControl.
+ *
+ * 每个 segment 直接使用 TextView，背景对象被缓存以便只更新选中 indicator。
+ * Each segment is a TextView, and background wrappers are cached so only the selected indicator is updated.
+ */
 internal class DeclarativeSegmentedControlLayout(
     context: Context,
 ) : LinearLayout(context) {
@@ -44,6 +51,8 @@ internal class DeclarativeSegmentedControlLayout(
     private var paddingVerticalState: Int = 0
     private val indicatorInset = context.dpToPx(2).toFloat()
     private val containerBackground = MaterialShapeDrawable()
+    // 使用身份映射避免 TextView 文本相等时误共享背景状态。
+    // Identity mapping avoids sharing background state between TextViews that happen to have equal content.
     private val segmentBackgrounds = IdentityHashMap<TextView, SegmentBackground>()
 
     init {
@@ -77,6 +86,8 @@ internal class DeclarativeSegmentedControlLayout(
         if (background !== containerBackground) {
             background = containerBackground
         }
+        // label 或数量变化会重建子 View；纯样式和选中态变化走增量更新。
+        // Label or count changes rebuild child views; pure style and selection changes use incremental updates.
         val labelsChanged = this.items.size != items.size ||
             items.indices.any { index -> this.items[index].label != items[index].label }
         if (labelsChanged || childCount != items.size) {
@@ -330,6 +341,10 @@ internal class DeclarativeSegmentedControlLayout(
         val drawable: Drawable,
         private val indicator: MaterialShapeDrawable,
     ) {
+        /**
+         * 只切换 indicator 的填充色，避免重新创建 ripple/background 层。
+         * Switches only the indicator fill color, avoiding recreation of ripple/background layers.
+         */
         fun updateIndicator(
             selected: Boolean,
             indicatorColor: Int,

@@ -1,5 +1,10 @@
 package com.viewcompose.navigation
 
+/*
+ * 测试职责：覆盖 Android navigation runtime 中的 Nav Pane Policy 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Nav Pane Policy behavior in Android navigation runtime and guards navigation contracts against regressions.
+ */
+
 import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.navigation.core.NavPaneRole

@@ -1,5 +1,10 @@
 package com.viewcompose.navigation
 
+/*
+ * 测试职责：覆盖 Android navigation runtime 中的 Nav Progress Velocity Tracker 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Nav Progress Velocity Tracker behavior in Android navigation runtime and guards navigation contracts against regressions.
+ */
+
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

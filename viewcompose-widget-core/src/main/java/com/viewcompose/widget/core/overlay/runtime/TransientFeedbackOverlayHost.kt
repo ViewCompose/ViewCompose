@@ -1,10 +1,18 @@
 package com.viewcompose.widget.core
 
+/**
+ * 唯一标识一次 overlay 请求在某个 session 内的运行时条目。
+ * Uniquely identifies the runtime entry for one overlay request inside a session.
+ */
 data class OverlayEntryId(
     val sessionId: OverlaySessionId,
     val requestKey: String,
 )
 
+/**
+ * 由平台实现的 snackbar 展示与关闭入口。
+ * Platform-provided entry point for showing and dismissing snackbars.
+ */
 interface SnackbarOverlayPresenter {
     fun show(
         entryId: OverlayEntryId,
@@ -18,6 +26,10 @@ interface SnackbarOverlayPresenter {
     )
 }
 
+/**
+ * 由平台实现的 toast 展示与关闭入口。
+ * Platform-provided entry point for showing and dismissing toasts.
+ */
 interface ToastOverlayPresenter {
     fun show(
         entryId: OverlayEntryId,
@@ -31,12 +43,20 @@ interface ToastOverlayPresenter {
     )
 }
 
+/**
+ * 暴露当前临时反馈队列状态，主要用于测试和诊断。
+ * Exposes current transient-feedback queue state, primarily for tests and diagnostics.
+ */
 data class TransientFeedbackQueueSnapshot(
     val active: OverlayEntryId?,
     val pending: List<OverlayEntryId>,
     val consumed: Set<OverlayEntryId>,
 )
 
+/**
+ * 管理 snackbar/toast 的排队、替换和清理，并把最终展示动作委托给平台 presenter。
+ * Manages snackbar/toast queueing, replacement, and clearing while delegating final presentation to platform presenters.
+ */
 class TransientFeedbackOverlayHost(
     private val snackbarPresenter: SnackbarOverlayPresenter,
     private val toastPresenter: ToastOverlayPresenter,

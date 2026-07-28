@@ -2,6 +2,10 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * 框架默认形状 token。
+ * Framework default shape tokens.
+ */
 object UiShapeDefaults {
     fun default(): UiShapes {
         return UiShapes(
@@ -11,6 +15,10 @@ object UiShapeDefaults {
     }
 }
 
+/**
+ * 框架默认组件尺寸 token。
+ * Framework default component size tokens.
+ */
 object UiControlSizeDefaults {
     fun default(): UiControlSizing {
         return UiControlSizing(
@@ -65,6 +73,10 @@ object UiControlSizeDefaults {
     }
 }
 
+/**
+ * 框架默认 overlay token。
+ * Framework default overlay tokens.
+ */
 object UiOverlayDefaults {
     fun default(): UiOverlays {
         return UiOverlays(
@@ -73,6 +85,10 @@ object UiOverlayDefaults {
     }
 }
 
+/**
+ * 框架内置亮/暗主题 token。
+ * Framework built-in light and dark theme tokens.
+ */
 object UiThemeDefaults {
     fun light(): UiThemeTokens {
         return UiThemeTokens(

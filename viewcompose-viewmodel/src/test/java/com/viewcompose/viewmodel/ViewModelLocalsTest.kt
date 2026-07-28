@@ -1,5 +1,10 @@
 package com.viewcompose.viewmodel
 
+/*
+ * 测试职责：覆盖 viewmodel integration 中的 View Model Locals 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers View Model Locals behavior in viewmodel integration and guards the contract against regressions.
+ */
+
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.viewcompose.widget.core.buildVNodeTree

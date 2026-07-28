@@ -1,9 +1,13 @@
 package com.viewcompose.text
 
 /**
+ * 完整可编辑状态的不可变快照。
  * An immutable snapshot of the complete editable state.
  *
+ * offset 使用 UTF-16 索引，以匹配 Android Editable 和 InputConnection 契约。
  * Offsets use UTF-16 indices to match Android's Editable and InputConnection contracts.
+ *
+ * [composition] 是 IME 持有的临时范围，不应跨宿主重建持久化。
  * [composition] is an ephemeral IME-owned range and must not be persisted across host recreation.
  */
 data class TextFieldValue(

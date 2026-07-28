@@ -24,6 +24,10 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * 基于 Android View 属性动画实现 NavHost 转场和 predictive back 预览。
+ * Implements NavHost transitions and predictive-back previews with Android View property animation.
+ */
 internal class AndroidViewNavHostTransitionDriver(
     private val sessionStore: NavDestinationSessionStore,
     private val specProvider: () -> NavTransitionSpec,
@@ -49,6 +53,8 @@ internal class AndroidViewNavHostTransitionDriver(
                 transition.beforeScene.visibleEntryIds,
         )
         val animatedViews = outgoing + incoming
+        // 上一次被重定向的 View 会保留当前视觉属性，下一次转场从该状态继续。
+        // Views redirected from the previous run keep visual properties so the next transition continues.
         val redirectedViews = interruptedViews.toSet()
         interruptedViews.clear()
         (animatedViews + redirectedViews).distinct().forEach { view ->
@@ -67,6 +73,8 @@ internal class AndroidViewNavHostTransitionDriver(
             !sessionStore.hostView.isAttachedToWindow ||
             hostWidth <= 0
         ) {
+            // 未布局、未 attach 或关闭 motion 时直接复位并完成，避免启动无效 animator。
+            // When unlaid-out, detached, or motion-disabled, reset and complete without invalid animators.
             (animatedViews + redirectedViews).distinct().forEach(::resetProperties)
             onCompleted()
             return NavHostTransitionHandle {}
@@ -118,6 +126,8 @@ internal class AndroidViewNavHostTransitionDriver(
         preview: NavHostBackPreview,
         initialEvent: NavHostBackEvent,
     ): NavHostBackPreviewHandle {
+        // 新 preview 总是终止旧 settle 动画，保证手势输入成为唯一视觉来源。
+        // A new preview always stops old settle animation so gesture input is the only visual source.
         backSettleController.cancelActive(preserveVisualState = false)
         val outgoing = destinationViews(
             preview.beforeScene.visibleEntryIds -
@@ -165,6 +175,8 @@ internal class AndroidViewNavHostTransitionDriver(
     private fun preserveForNextTransition(view: View) {
         interruptedViews += view
         view.postOnAnimation {
+            // 如果下一帧仍没有新转场接管，就自动复位避免保留脏属性。
+            // If no new transition adopts the view by the next frame, reset dirty properties.
             if (interruptedViews.remove(view)) {
                 resetProperties(view)
             }
@@ -226,6 +238,10 @@ private fun NavMotionEasing.toInterpolator(): Interpolator {
     return PathInterpolator(path)
 }
 
+/**
+ * predictive back 预览的运行时句柄。
+ * Runtime handle for an active predictive-back preview.
+ */
 private class AndroidBackPreviewHandle(
     private val preview: NavHostBackPreview,
     private val outgoing: List<View>,
@@ -312,6 +328,8 @@ private class AndroidBackPreviewHandle(
             reset()
             return
         }
+        // cancel 使用弹簧回到 0，保留 Android 系统 back 取消时的回弹感。
+        // Cancel springs back to 0 to preserve Android system-back cancellation feel.
         settleController.start(
             views = outgoing,
             initialProgress = latestVisualProgress,
@@ -339,6 +357,8 @@ private class AndroidBackPreviewHandle(
         val animatedViews = outgoing + incoming
         animatedViews.forEach { view -> view.animate().cancel() }
         scrim.clear()
+        // 被新导航命令打断时保留当前 visual state，让后续转场可无缝接管。
+        // When interrupted by a new command, preserve visual state for the following transition.
         preserveForNextTransition(animatedViews)
         layerLease.release()
     }
@@ -390,6 +410,8 @@ private class AndroidBackPreviewHandle(
         }
         try {
             layerLease.release()
+            // commit motion 与手势预览方向相反：手势暴露 incoming，提交时 outgoing 完成离场。
+            // Commit motion runs opposite the preview direction: the gesture reveals incoming, commit exits outgoing.
             val motionDirection = -backPreviewOutgoingDirection(
                 swipeEdge = latestEvent.swipeEdge,
                 layoutDirection = layoutDirection,
@@ -523,6 +545,10 @@ private class AndroidBackPreviewHandle(
     }
 }
 
+/**
+ * 一次已提交导航转场的 View animator 封装。
+ * View animator wrapper for one committed navigation transition.
+ */
 private class CommittedViewTransitionRun(
     outgoing: List<View>,
     incoming: List<View>,
@@ -603,6 +629,8 @@ private class CommittedViewTransitionRun(
         try {
             layerLease.acquire()
             applyFrame(linearProgress = 0f, playTimeMillis = 0L)
+            // 首帧先写入硬件层，再延迟启动 motion，降低新目的地首次绘制与动画的竞争。
+            // Write the first frame into hardware layers before motion to avoid first-draw contention.
             startAfterSurfaceWarmup()
         } catch (throwable: Throwable) {
             terminal = true
@@ -677,11 +705,14 @@ private class CommittedViewTransitionRun(
     }
 
     /**
+     * 在 motion 开始前，把完整布局后的起始状态绘制进硬件层。
      * Draws the fully laid-out start state into its hardware layer before motion begins.
      *
-     * Without this barrier, the first animated frame also measures the newly visible destination
-     * and records its entire View hierarchy. Android window transitions avoid that collision by
-     * waiting for the destination window's first frame before SurfaceControl starts moving it.
+     * 没有这个屏障时，首个动画帧也要测量新可见目的地并录制整棵 View 层级。Android window
+     * transition 会等待目标 window 首帧后再移动 SurfaceControl，这里用 View 系统可用的方式模拟。
+     * Without this barrier, the first animated frame also measures the newly visible destination and
+     * records its entire View hierarchy. Android window transitions avoid that collision by waiting
+     * for the destination window's first frame before SurfaceControl starts moving it.
      */
     private fun startAfterSurfaceWarmup() {
         val observer = startAnchor.viewTreeObserver
@@ -716,9 +747,14 @@ private class CommittedViewTransitionRun(
 }
 
 /**
- * Keeps a destination's expensive View hierarchy in a texture while only transform/alpha
- * properties change. Activity transitions get this behavior from Window/SurfaceControl; a
- * temporary hardware View layer is the public View-system equivalent.
+ * 在只有 transform/alpha 变化时，把昂贵的目的地 View 层级保留在纹理中。
+ * Keeps a destination's expensive View hierarchy in a texture while only transform/alpha properties
+ * change.
+ *
+ * Activity transition 通过 Window/SurfaceControl 获得类似行为；临时硬件 View layer 是公开
+ * View 系统里的等价手段。
+ * Activity transitions get this behavior from Window/SurfaceControl; a temporary hardware View
+ * layer is the public View-system equivalent.
  */
 private class TransitionHardwareLayerLease(
     views: List<View>,
@@ -756,6 +792,10 @@ private class TransitionHardwareLayerLease(
     }
 }
 
+/**
+ * View 转场属性快照，用于从被打断状态继续动画。
+ * Snapshot of View transition properties, used to continue from interrupted visual state.
+ */
 private data class ViewTransformState(
     val translationX: Float,
     val translationY: Float,
@@ -797,6 +837,10 @@ private fun View.applyState(
     alpha = lerp(start.alpha, end.alpha, alphaProgress)
 }
 
+/**
+ * predictive back 期间覆盖 incoming 页面前景的系统风格 scrim。
+ * System-style scrim applied to incoming pages during predictive back.
+ */
 private class PredictiveBackScrim(
     private val views: List<View>,
 ) {
@@ -860,10 +904,18 @@ private class PredictiveBackScrim(
     )
 }
 
+/**
+ * predictive back settle 弹簧的取消句柄。
+ * Cancellation handle for a predictive-back settle spring.
+ */
 private fun interface BackProgressSpringHandle {
     fun cancel(preserveVisualState: Boolean)
 }
 
+/**
+ * 串行管理 predictive back cancel/settle 弹簧。
+ * Serially manages predictive-back cancel/settle springs.
+ */
 private class BackProgressSpringController(
     private val interruptedViews: MutableSet<View>,
     private val preserveForNextTransition: (View) -> Unit,
@@ -974,6 +1026,10 @@ private class BackProgressSpringController(
     }
 }
 
+/**
+ * 单次 back progress 弹簧动画，带最大时长兜底。
+ * One back-progress spring animation with a maximum-duration fallback.
+ */
 private class BackProgressSpringRun(
     initialProgress: Float,
     private val targetProgress: Float,
@@ -1004,6 +1060,8 @@ private class BackProgressSpringRun(
     }
     private val timeout = Runnable {
         if (!terminal) {
+            // DynamicAnimation 理论上会结束，但最大时长兜底能防止极端参数让 preview 永久占用。
+            // DynamicAnimation should end, but a max-duration fallback prevents previews from lingering.
             terminal = true
             animation.cancel()
             onUpdate(targetProgress)
@@ -1043,6 +1101,10 @@ private class BackProgressSpringRun(
     }
 }
 
+/**
+ * 从无变换状态插值到目标变换。
+ * Interpolates from identity to the target transform.
+ */
 private fun NavDestinationTransform.interpolateFromIdentity(
     fraction: Float,
 ): NavDestinationTransform {
@@ -1054,6 +1116,10 @@ private fun NavDestinationTransform.interpolateFromIdentity(
     )
 }
 
+/**
+ * 在两个目的地变换之间插值。
+ * Interpolates between two destination transforms.
+ */
 private fun NavDestinationTransform.interpolateTo(
     end: NavDestinationTransform,
     fraction: Float,
@@ -1080,6 +1146,10 @@ private const val SYSTEM_BACK_SCRIM_ALPHA_LIGHT = 0.2f
 private const val DEFAULT_SURFACE_WARMUP_DELAY_MILLIS = 17L
 private const val NAV_MOTION_FRAME_TRACE_SECTION = "VC.Nav.MotionFrame"
 
+/**
+ * 根据命令类型和布局方向解析普通导航转场方向。
+ * Resolves regular navigation transition direction from command type and layout direction.
+ */
 internal fun navTransitionDirection(
     command: NavCommand,
     layoutDirection: Int,
@@ -1100,6 +1170,10 @@ internal fun navTransitionDirection(
     return layoutMultiplier * commandMultiplier
 }
 
+/**
+ * 根据 back 手势边缘和布局方向解析离场页面移动方向。
+ * Resolves outgoing-page movement direction from back gesture edge and layout direction.
+ */
 internal fun backPreviewOutgoingDirection(
     swipeEdge: NavHostBackSwipeEdge,
     layoutDirection: Int,

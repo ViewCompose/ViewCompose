@@ -1,5 +1,9 @@
 package com.viewcompose.widget.core
 
+/**
+ * TopAppBar DSL 的默认高度、间距和标题 token。
+ * Default height, spacing, and title tokens for the TopAppBar DSL.
+ */
 object TopAppBarDefaults {
     fun containerColor(): Int = Theme.colors.surface
 

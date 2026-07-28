@@ -17,7 +17,18 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 
+/**
+ * 将 nestedScroll modifier 提升为显式 NestedScrollHost 节点。
+ * Promotes nestedScroll modifiers into explicit NestedScrollHost nodes.
+ *
+ * 多个 nestedScroll modifier 会生成嵌套 host，保持 modifier 顺序与事件分发链一致。
+ * Multiple nestedScroll modifiers generate nested hosts, preserving modifier order and event dispatch chain.
+ */
 internal object NestedScrollNodeWrapper {
+    /**
+     * 包装整棵 VNode 子树；无变化时返回原列表以减少后续 diff 成本。
+     * Wraps a VNode subtree and returns the original list when unchanged to reduce later diff cost.
+     */
     fun wrapTree(nodes: List<VNode>): List<VNode> {
         var changedNodes: MutableList<VNode>? = null
         nodes.forEachIndexed { index, node ->
@@ -56,6 +67,8 @@ internal object NestedScrollNodeWrapper {
         val withoutNested = node.modifier.elements
             .filterNot { element -> element is NestedScrollModifierElement }
         val (hostLayoutElements, childElements) = splitHostAndChildElements(withoutNested)
+        // 外层 host 继承影响父布局的 modifier，内层原节点保留绘制/交互类 modifier。
+        // The outer host inherits parent-layout modifiers, while the inner original node keeps drawing/interaction modifiers.
         var wrapped = node.copy(
             modifier = childElements.toModifier(),
             children = wrappedChildren,
@@ -121,6 +134,10 @@ internal object NestedScrollNodeWrapper {
         return modifier
     }
 
+    /**
+     * 派生 host key，支持同一个 child 上多个 nestedScroll modifier 的稳定复用。
+     * Derived host key supporting stable reuse for multiple nestedScroll modifiers on one child.
+     */
     private data class NestedScrollHostKey(
         val childKey: Any,
         val modifierIndex: Int,

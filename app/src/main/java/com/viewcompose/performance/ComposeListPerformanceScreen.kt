@@ -30,6 +30,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Compose 对照版本的列表性能场景。
+ * Compose control implementation of the list performance scenario.
+ */
 @Composable
 internal fun ComposeListPerformanceScreen() {
     var revision by remember { mutableIntStateOf(0) }
@@ -195,6 +199,10 @@ private fun ComposePerformanceListRow(row: PerformanceListRow) {
     }
 }
 
+/**
+ * Compose 侧复用的文本渲染函数，保持字号、粗细和省略规则集中管理。
+ * Shared Compose text renderer that centralizes size, weight, and ellipsis rules.
+ */
 @Composable
 internal fun PerformanceText(
     text: String,

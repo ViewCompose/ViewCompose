@@ -4,15 +4,31 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.NodeSpec
 import kotlin.reflect.KClass
 
+/**
+ * NodeType binder 和 NodeSpec patch 描述的集中注册表。
+ * Central registry of NodeType binders and NodeSpec patch descriptors.
+ */
 internal object NodeBinderDescriptors {
+    /**
+     * 全量 descriptor 列表，按功能域分文件构建。
+     * Complete descriptor list built by feature-domain files.
+     */
     val all: List<NodeBinderDescriptor> by lazy { buildDescriptors() }
 
+    /**
+     * 构建 NodeType -> bind 函数映射，并校验 NodeType 不重复。
+     * Builds NodeType -> bind mapping and validates uniqueness.
+     */
     fun bindersByType(): Map<NodeType, BindBlock> = all.associateByUnique(
         keySelector = { it.nodeType },
         valueSelector = { it.bind },
         duplicateMessage = { "Duplicate binder descriptor for NodeType: $it" },
     )
 
+    /**
+     * 构建 NodeViewPatch class -> apply 函数映射。
+     * Builds NodeViewPatch class -> apply function mapping.
+     */
     fun patchAppliersByType(): Map<KClass<out NodeViewPatch>, PatchApplyBlock> = all
         .uniquePatchDescriptorsBy(
             keySelector = { it.patchClass },
@@ -26,6 +42,10 @@ internal object NodeBinderDescriptors {
             duplicateMessage = { "Duplicate patch applier descriptor for NodeViewPatch: ${it.simpleName}" },
         )
 
+    /**
+     * 构建 NodeSpec class -> patch factory 映射，供 NodeBindingDiffer 使用。
+     * Builds NodeSpec class -> patch factory mapping for NodeBindingDiffer.
+     */
     fun patchFactoriesBySpec(): Map<KClass<out NodeSpec>, PatchFactory> = all
         .uniquePatchDescriptorsBy(
             keySelector = { it.specClass },
@@ -42,6 +62,8 @@ internal object NodeBinderDescriptors {
         valueSelector: (T) -> V,
         duplicateMessage: (K) -> String,
     ): Map<K, V> {
+        // descriptor 冲突在启动期暴露，避免 render 中途遇到不可解释的绑定覆盖。
+        // Descriptor conflicts fail during startup to avoid unexplained binding overrides mid-render.
         val result = LinkedHashMap<K, V>(size)
         for (item in this) {
             val key = keySelector(item)
@@ -55,6 +77,8 @@ internal object NodeBinderDescriptors {
         keySelector: (NodePatchDescriptor) -> K,
         duplicateMessage: (K) -> String,
     ): List<NodePatchDescriptor> {
+        // 多个 NodeType 可共享同一个 patch descriptor，但同一个 spec/patch class 不允许冲突实现。
+        // Multiple NodeTypes may share one patch descriptor, but a spec/patch class cannot have conflicting implementations.
         val result = LinkedHashMap<K, NodePatchDescriptor>()
         for (descriptor in this) {
             val patch = descriptor.patch ?: continue

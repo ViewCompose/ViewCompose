@@ -1,5 +1,10 @@
 package com.viewcompose.ui.focus
 
+/*
+ * 测试职责：覆盖 UI contract 中的 Focus Requester Contract 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Focus Requester Contract behavior in UI contract and guards the contract against regressions.
+ */
+
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

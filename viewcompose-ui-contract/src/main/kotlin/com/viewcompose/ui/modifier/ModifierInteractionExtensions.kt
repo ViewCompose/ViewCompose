@@ -5,6 +5,10 @@ import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.focus.FocusState
 import com.viewcompose.ui.input.KeyEvent
 
+/**
+ * 交互类 modifier 的声明式扩展入口。
+ * Declarative extension entrypoints for interaction modifiers.
+ */
 fun Modifier.clickable(onClick: () -> Unit): Modifier {
     return then(
         ClickableModifierElement(onClick),

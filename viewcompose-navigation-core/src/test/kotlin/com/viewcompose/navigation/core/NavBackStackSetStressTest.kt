@@ -1,5 +1,10 @@
 package com.viewcompose.navigation.core
 
+/*
+ * 压力测试职责：覆盖 navigation core 中的 Nav Back Stack Set Stress 极端路径，防止高频导航操作破坏状态一致性。
+ * Stress test responsibility: covers Nav Back Stack Set Stress edge paths in navigation core and guards state consistency under frequent navigation operations.
+ */
+
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame

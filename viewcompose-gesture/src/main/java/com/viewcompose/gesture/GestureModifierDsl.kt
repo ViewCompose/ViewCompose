@@ -16,6 +16,10 @@ import com.viewcompose.ui.modifier.NestedScrollModifierElement
 import com.viewcompose.ui.modifier.PointerInputModifierElement
 import com.viewcompose.ui.modifier.TransformableModifierElement
 
+/**
+ * 注册原始 pointer event 处理器。
+ * Registers a raw pointer-event handler.
+ */
 fun Modifier.pointerInput(
     key: Any = Unit,
     onEvent: (PointerEvent) -> PointerEventResult,
@@ -28,6 +32,10 @@ fun Modifier.pointerInput(
     )
 }
 
+/**
+ * 同时支持 click、double-click 和 long-click 的点击 modifier。
+ * Click modifier that can handle click, double-click, and long-click.
+ */
 fun Modifier.combinedClickable(
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
@@ -47,6 +55,10 @@ fun Modifier.combinedClickable(
     )
 }
 
+/**
+ * 将 [DraggableState] 连接到 renderer 的一维拖拽识别器。
+ * Connects [DraggableState] to the renderer's one-dimensional drag recognizer.
+ */
 fun Modifier.draggable(
     state: DraggableState,
     orientation: GestureOrientation = GestureOrientation.Horizontal,
@@ -67,6 +79,10 @@ fun Modifier.draggable(
     )
 }
 
+/**
+ * 将拖拽位置限制到一组离散 anchors。
+ * Constrains drag position to a discrete set of anchors.
+ */
 fun <T> Modifier.anchoredDraggable(
     state: AnchoredDraggableState<T>,
     anchors: DraggableAnchors<T>,
@@ -91,6 +107,10 @@ fun <T> Modifier.anchoredDraggable(
     )
 }
 
+/**
+ * 注册缩放、平移和旋转的组合 transform 手势。
+ * Registers a combined transform gesture for zoom, pan, and rotation.
+ */
 fun Modifier.transformable(
     state: TransformableState,
     enabled: Boolean = true,
@@ -109,6 +129,10 @@ fun Modifier.transformable(
     )
 }
 
+/**
+ * 调整同一节点或祖先链上手势竞争时的优先级。
+ * Adjusts priority when gestures compete on the same node or ancestor chain.
+ */
 fun Modifier.gesturePriority(
     priority: GesturePriority = GesturePriority.Default,
 ): Modifier {
@@ -119,6 +143,10 @@ fun Modifier.gesturePriority(
     )
 }
 
+/**
+ * 接入嵌套滚动链，可选 dispatcher 用于业务侧主动分发滚动。
+ * Joins the nested-scroll chain, with an optional dispatcher for app-initiated scroll dispatch.
+ */
 fun Modifier.nestedScroll(
     connection: NestedScrollConnection,
     dispatcher: NestedScrollDispatcher? = null,

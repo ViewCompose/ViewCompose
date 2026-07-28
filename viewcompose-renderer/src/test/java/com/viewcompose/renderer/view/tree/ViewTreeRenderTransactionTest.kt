@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
+/*
+ * 测试职责：覆盖 renderer view/tree 中的 View Tree Render Transaction 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers View Tree Render Transaction behavior in renderer view/tree and guards render and patch contracts against regressions.
+ */
+
 import android.content.Context
 import android.graphics.RectF
 import android.view.View

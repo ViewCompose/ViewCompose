@@ -12,11 +12,24 @@ import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 
+/**
+ * MountedNode 释放器。
+ * MountedNode disposer.
+ *
+ * 释放顺序是子节点、modifier 持有资源、容器私有资源、AndroidView release 回调。
+ * Disposal order is children, modifier-owned resources, container-private resources, then AndroidView release callback.
+ */
 internal object ViewTreeDisposer {
+    /**
+     * 递归释放一个已挂载节点。
+     * Recursively disposes one mounted node.
+     */
     fun disposeMountedNode(mountedNode: MountedNode) {
         if (mountedNode.disposed) return
         mountedNode.disposed = true
         val failures = mutableListOf<Throwable>()
+        // 尽量释放所有资源；最后把第一个异常抛出，并附带其余 suppressed 异常。
+        // Release as many resources as possible; throw the first error with the rest suppressed at the end.
         fun disposeOperation(block: () -> Unit) {
             try {
                 block()

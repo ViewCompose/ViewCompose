@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.lazy.state
 
+/*
+ * 测试职责：覆盖 renderer view/lazy/state 中的 Ui Lazy List Connector 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Ui Lazy List Connector behavior in renderer view/lazy/state and guards render and patch contracts against regressions.
+ */
+
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup

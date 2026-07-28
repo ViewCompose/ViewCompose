@@ -1,5 +1,10 @@
 package com.viewcompose.gesture
 
+/*
+ * 测试职责：覆盖 gesture DSL 中的 Gesture Modifiers 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Gesture Modifiers behavior in gesture DSL and guards the contract against regressions.
+ */
+
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.GesturePriority
 import com.viewcompose.ui.gesture.PointerEvent

@@ -1,11 +1,19 @@
 package com.viewcompose.animation.core
 
+/**
+ * 在业务值和可逐维插值 Float 向量之间转换。
+ * Converts between domain values and Float vectors that can be interpolated component by component.
+ */
 interface AnimationConverter<T> {
     fun toVector(value: T): FloatArray
 
     fun fromVector(vector: FloatArray): T
 }
 
+/**
+ * 框架内置的常用动画值 converter。
+ * Built-in converters for common animated value types.
+ */
 object AnimationConverters {
     val Float: AnimationConverter<Float> = object : AnimationConverter<Float> {
         override fun toVector(value: Float): FloatArray = floatArrayOf(value)
@@ -19,6 +27,10 @@ object AnimationConverters {
         override fun fromVector(vector: FloatArray): Int = (vector.firstOrNull() ?: 0f).toInt()
     }
 
+    /**
+     * ARGB int converter，按 A/R/G/B 四个通道独立插值。
+     * ARGB int converter that interpolates A/R/G/B channels independently.
+     */
     val ColorInt: AnimationConverter<Int> = object : AnimationConverter<Int> {
         override fun toVector(value: Int): FloatArray {
             val a = (value shr 24) and 0xFF

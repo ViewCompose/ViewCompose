@@ -6,11 +6,20 @@ import com.viewcompose.performance.EXTRA_PERFORMANCE_ENGINE
 import com.viewcompose.performance.PerformanceComparisonActivity
 import com.viewcompose.widget.core.UiTreeBuilder
 
+/**
+ * demo 应用入口 Activity。
+ * Entry Activity for the demo app.
+ *
+ * 普通启动展示首页；带 benchmark 或模块 extra 的启动会被转发到对应 Activity。
+ * Normal launches show the home page; benchmark or module extras are forwarded to the matching Activity.
+ */
 class MainActivity : DemoRenderActivity() {
     override val demoTitle: String = "ViewCompose Demo"
 
     override fun redirectTargetIntent(): Intent? {
         if (intent?.hasExtra(EXTRA_PERFORMANCE_ENGINE) == true) {
+            // benchmark 入口复用主 Activity intent，保持 Macrobenchmark 的启动包名稳定。
+            // Benchmark launches reuse the main Activity intent so Macrobenchmark keeps a stable package entry.
             return Intent(this, PerformanceComparisonActivity::class.java).apply {
                 intent?.extras?.let(::putExtras)
             }
@@ -32,6 +41,7 @@ class MainActivity : DemoRenderActivity() {
         root: ViewGroup,
         builder: UiTreeBuilder,
     ) {
-        // Not used — DemoHomeScaffold manages its own content.
+        // 主页面由 DemoHomeScaffold 自行管理内容，这里不会被调用。
+        // Main content is managed by DemoHomeScaffold, so this hook is unused.
     }
 }

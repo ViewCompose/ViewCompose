@@ -13,6 +13,10 @@ import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.rememberLazyListState
 
+/**
+ * rememberLazyListState 恢复测试的 debug-only 宿主。
+ * Debug-only host for rememberLazyListState restoration tests.
+ */
 class SaveableLazyListStateTestActivity : AppCompatActivity() {
     lateinit var listState: LazyListState
         private set
@@ -38,10 +42,18 @@ class SaveableLazyListStateTestActivity : AppCompatActivity() {
     }
 
     companion object {
+        /**
+         * 测试重建前滚动到的目标 item。
+         * Target item scrolled to before recreation in tests.
+         */
         const val RESTORE_TARGET = 24
         private const val ITEM_COUNT = 50
         private const val ITEM_HEIGHT_DP = 64
 
+        /**
+         * 为列表项生成稳定 testTag。
+         * Builds a stable testTag for a list item.
+         */
         fun itemTag(item: Int): String = "saveable-lazy-list-item-$item"
     }
 }

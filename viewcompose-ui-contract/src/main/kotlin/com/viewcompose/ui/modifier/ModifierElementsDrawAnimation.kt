@@ -4,6 +4,10 @@ import com.viewcompose.ui.graphics.DrawBlock
 import com.viewcompose.ui.graphics.DrawCacheBuildBlock
 import com.viewcompose.ui.graphics.DrawContentBlock
 
+/**
+ * 绘制与内容尺寸动画相关的 modifier 元素模型。
+ * Modifier element models for drawing and content-size animation.
+ */
 data class DrawBehindModifierElement(
     val key: Any,
     val onDraw: DrawBlock,
@@ -88,4 +92,3 @@ enum class Visibility {
 data class VisibilityModifierElement(
     val visibility: Visibility,
 ) : ModifierElement
-

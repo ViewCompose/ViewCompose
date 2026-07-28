@@ -11,6 +11,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * ViewCompose 与 Compose 复杂布局场景的帧耗时和内存对照 benchmark。
+ * Paired frame-time and memory benchmark for the ViewCompose and Compose complex-layout scenario.
+ */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalMetricApi::class)
 class ComplexLayoutPerformanceComparisonBenchmark {

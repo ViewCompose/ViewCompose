@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core runtime 中的 Remember Saveable 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Remember Saveable behavior in widget-core runtime and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.mutableStateOf

@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.lazy.adapter
 
+/*
+ * 测试职责：覆盖 renderer view/lazy/adapter 中的 Lazy List Adapter 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Lazy List Adapter behavior in renderer view/lazy/adapter and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession

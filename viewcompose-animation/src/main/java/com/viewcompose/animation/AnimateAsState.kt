@@ -14,6 +14,11 @@ import com.viewcompose.widget.core.remember
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 
+/**
+ * 将目标值动画为可观察 [State]，目标变化时从当前值启动新动画。
+ * Animates a target value into observable [State], starting a new animation from the current value
+ * when the target changes.
+ */
 fun <T> animateValueAsState(
     targetValue: T,
     converter: AnimationConverter<T>,

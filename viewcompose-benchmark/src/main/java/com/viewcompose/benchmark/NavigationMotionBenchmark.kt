@@ -15,8 +15,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
+ * release/R8 环境下框架自有导航转场的帧耗时覆盖。
  * Release/R8 frame-time coverage for framework-owned navigation transitions.
  *
+ * Push 和系统 Back 分开测量，便于报告区分目标页创建成本和 Pop 时复用已保留目标页的路径。
  * Push and system Back are measured independently so the report can distinguish destination
  * creation from the already-retained destination path used by Pop.
  */

@@ -1,8 +1,21 @@
 package com.viewcompose.performance
 
+/**
+ * 列表性能场景的固定行数，保持每次 benchmark 的工作量一致。
+ * Fixed row count for the list scenario so each benchmark run has the same workload.
+ */
 internal const val PERFORMANCE_LIST_ITEM_COUNT: Int = 1_000
+
+/**
+ * 每次 revision 重排列表时使用的步长。
+ * Rotation step used when reordering rows for each revision.
+ */
 internal const val PERFORMANCE_LIST_ROTATION: Int = 37
 
+/**
+ * 性能对比页使用固定色值，避免主题变化影响两个渲染引擎的对比。
+ * Performance screens use fixed colors so theme changes do not skew engine comparisons.
+ */
 internal const val PERFORMANCE_BACKGROUND_COLOR: Int = 0xFFF7F8FA.toInt()
 internal const val PERFORMANCE_SURFACE_COLOR: Int = 0xFFFFFFFF.toInt()
 internal const val PERFORMANCE_PRIMARY_COLOR: Int = 0xFF315EFB.toInt()
@@ -10,6 +23,10 @@ internal const val PERFORMANCE_PRIMARY_TEXT_COLOR: Int = 0xFF172033.toInt()
 internal const val PERFORMANCE_SECONDARY_TEXT_COLOR: Int = 0xFF647087.toInt()
 internal const val PERFORMANCE_BADGE_COLOR: Int = 0xFFE7ECFF.toInt()
 
+/**
+ * 列表 benchmark 的稳定行模型。
+ * Stable row model for list benchmarks.
+ */
 internal data class PerformanceListRow(
     val id: Int,
     val title: String,
@@ -29,6 +46,14 @@ private val basePerformanceListRows: List<PerformanceListRow> =
         )
     }
 
+/**
+ * 根据 revision 返回确定性的列表数据。
+ * Returns deterministic list data for the given revision.
+ *
+ * revision 0 返回同一份基础列表；后续 revision 会重排并更新固定子集，用于测量 key 保留和 patch 更新。
+ * Revision 0 returns the shared base list; later revisions reorder rows and update a fixed subset
+ * to measure key retention and patch updates.
+ */
 internal fun performanceListRows(revision: Int): List<PerformanceListRow> {
     if (revision == 0) return basePerformanceListRows
     val rotation = (revision * PERFORMANCE_LIST_ROTATION).mod(PERFORMANCE_LIST_ITEM_COUNT)

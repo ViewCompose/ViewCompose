@@ -3,6 +3,10 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * SegmentedControl 节点传给 renderer 的完整属性快照。
+ * Complete property snapshot passed to the renderer for a SegmentedControl node.
+ */
 data class SegmentedControlNodeProps(
     val items: List<SegmentedControlItem>,
     val selectedIndex: Int,

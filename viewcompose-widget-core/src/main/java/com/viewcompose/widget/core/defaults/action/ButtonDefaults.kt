@@ -2,6 +2,10 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * 按按钮视觉层级划分的默认样式变体。
+ * Default style variants grouped by button visual hierarchy.
+ */
 enum class ButtonVariant {
     Primary,
     Secondary,
@@ -10,12 +14,23 @@ enum class ButtonVariant {
     Text,
 }
 
+/**
+ * 按交互密度划分的按钮尺寸档位。
+ * Button size tiers grouped by interaction density.
+ */
 enum class ButtonSize {
     Compact,
     Medium,
     Large,
 }
 
+/**
+ * Button DSL 的默认颜色、尺寸、字体和反馈 token。
+ * Default color, size, typography, and feedback tokens for the Button DSL.
+ *
+ * 颜色优先读取局部 override，再回退到当前 Theme token。
+ * Colors read scoped overrides first and then fall back to current Theme tokens.
+ */
 object ButtonDefaults {
     fun containerColor(
         variant: ButtonVariant = ButtonVariant.Primary,

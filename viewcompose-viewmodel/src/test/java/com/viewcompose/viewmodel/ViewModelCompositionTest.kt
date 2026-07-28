@@ -1,5 +1,10 @@
 package com.viewcompose.viewmodel
 
+/*
+ * 测试职责：覆盖 viewmodel integration 中的 View Model Composition 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers View Model Composition behavior in viewmodel integration and guards the contract against regressions.
+ */
+
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

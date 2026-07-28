@@ -4,6 +4,10 @@ import com.viewcompose.ui.graphics.DrawBlock
 import com.viewcompose.ui.graphics.DrawCacheBuildBlock
 import com.viewcompose.ui.graphics.DrawContentBlock
 
+/**
+ * 在内容背后注册绘制回调。
+ * Registers a draw callback behind content.
+ */
 fun Modifier.drawBehind(
     key: Any = Unit,
     onDraw: DrawBlock,
@@ -65,4 +69,3 @@ fun Modifier.visibility(visibility: Visibility): Modifier {
         VisibilityModifierElement(visibility),
     )
 }
-

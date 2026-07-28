@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
+/*
+ * 测试职责：覆盖 renderer view/tree 中的 Node Binding Differ 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Node Binding Differ behavior in renderer view/tree and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.modifier.Modifier

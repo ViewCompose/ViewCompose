@@ -2,6 +2,10 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * Chip 的语义变体，影响选中态容器和边框默认值。
+ * Semantic chip variants that affect selected container and border defaults.
+ */
 enum class ChipVariant {
     Assist,
     Filter,
@@ -9,6 +13,10 @@ enum class ChipVariant {
     Suggestion,
 }
 
+/**
+ * Chip DSL 的默认颜色、尺寸和交互反馈 token。
+ * Default color, sizing, and interaction feedback tokens for the Chip DSL.
+ */
 object ChipDefaults {
     fun containerColor(
         variant: ChipVariant = ChipVariant.Assist,

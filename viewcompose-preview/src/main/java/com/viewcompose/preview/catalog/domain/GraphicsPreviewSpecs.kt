@@ -21,6 +21,10 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.dp
 
+/**
+ * 提供图形绘制预览规格，验证 Canvas、drawBehind 和 drawWithCache 在预览宿主中的渲染链路。
+ * Provides graphics preview specs that validate Canvas, drawBehind, and drawWithCache rendering inside the preview host.
+ */
 internal object GraphicsPreviewSpecs {
     val all: List<PreviewSpec> = listOf(
         PreviewSpec(

@@ -12,11 +12,19 @@ import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.ui.state.PagerState
 
+/**
+ * 滚动容器内部可用的 DSL scope。
+ * DSL scope available inside scroll containers.
+ *
+ * 该 scope 使用独立 UiTreeBuilder 代理收集子节点，避免外层 builder 泄漏到嵌套滚动内容中。
+ * This scope uses an internal UiTreeBuilder delegate to collect child nodes and avoid leaking the outer builder.
+ */
 @UiDslMarker
 class ScrollableScope internal constructor() {
     private val delegate = UiTreeBuilder()
 
-    // ── 纵向滚动 ──
+    // 纵向滚动。
+    // Vertical scrolling.
 
     fun <T> LazyColumn(
         items: List<T>,
@@ -106,7 +114,8 @@ class ScrollableScope internal constructor() {
         }
     }
 
-    // ── 横向滚动 ──
+    // 横向滚动。
+    // Horizontal scrolling.
 
     fun <T> LazyRow(
         items: List<T>,
@@ -181,7 +190,8 @@ class ScrollableScope internal constructor() {
         with(delegate) { ScrollableRow(key, spacing, arrangement, verticalAlignment, modifier, content) }
     }
 
-    // ── 网格 ──
+    // 网格。
+    // Grid.
 
     fun <T> LazyVerticalGrid(
         items: List<T>,
@@ -259,7 +269,8 @@ class ScrollableScope internal constructor() {
         }
     }
 
-    // ── 翻页 ──
+    // 翻页。
+    // Paging.
 
     fun HorizontalPager(
         currentPage: Int,
@@ -319,5 +330,9 @@ class ScrollableScope internal constructor() {
         }
     }
 
+    /**
+     * 导出该 scope 收集到的子节点。
+     * Exports child nodes collected by this scope.
+     */
     internal fun build(): List<VNode> = delegate.build()
 }

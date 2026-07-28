@@ -5,6 +5,10 @@ import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
 import com.viewcompose.ui.node.collection.TabRowTab
 import com.viewcompose.ui.state.PagerState
 
+/**
+ * TabRow 节点的 tab 集合、选中项和指示器属性。
+ * Tab collection, selection, and indicator properties for a TabRow node.
+ */
 data class TabRowNodeProps(
     val tabs: List<TabRowTab>,
     val selectedIndex: Int,

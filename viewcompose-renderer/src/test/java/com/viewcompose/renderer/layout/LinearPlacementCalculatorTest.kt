@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.layout
 
+/*
+ * 测试职责：覆盖 renderer layout 中的 Linear Placement Calculator 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Linear Placement Calculator behavior in renderer layout and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.layout.MainAxisArrangement
 import org.junit.Assert.assertEquals
 import org.junit.Test

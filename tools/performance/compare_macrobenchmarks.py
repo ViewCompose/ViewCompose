@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Compare paired ViewCompose and Jetpack Compose Macrobenchmark results."""
+"""对比成对的 ViewCompose 与 Jetpack Compose Macrobenchmark 结果。
+Compare paired ViewCompose and Jetpack Compose Macrobenchmark results.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +15,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
+# 成对 benchmark 方法映射: 报告场景名、ViewCompose 方法名、Compose 方法名。
+# Paired benchmark method mapping: report scenario, ViewCompose method, Compose method.
 SCENARIOS = (
     ("list_scroll", "viewComposeListScroll", "composeListScroll"),
     ("list_mutation", "viewComposeListMutation", "composeListMutation"),
@@ -27,6 +31,7 @@ SCENARIOS = (
         "composeComplexLayoutUpdate",
     ),
 )
+
 SAMPLED_METRICS = ("frameDurationCpuMs", "frameOverrunMs")
 SAMPLED_PERCENTILES = ("P50", "P95")
 MEMORY_METRICS = ("memoryHeapSizeMaxKb", "memoryRssAnonMaxKb")
@@ -34,6 +39,10 @@ MEMORY_METRICS = ("memoryHeapSizeMaxKb", "memoryRssAnonMaxKb")
 
 @dataclass(frozen=True)
 class Comparison:
+    """单个 ViewCompose/Compose 指标对比结果。
+    One paired ViewCompose/Compose metric comparison result.
+    """
+
     scenario: str
     metric: str
     statistic: str
@@ -45,6 +54,10 @@ class Comparison:
 
 @dataclass(frozen=True)
 class Stability:
+    """单个 benchmark run 序列的稳定性摘要。
+    Stability summary for one benchmark run series.
+    """
+
     scenario: str
     engine: str
     metric: str
@@ -55,6 +68,10 @@ class Stability:
 
 @dataclass(frozen=True)
 class Regression:
+    """当前结果相对 baseline 的回归判定。
+    Regression decision for current results compared with a baseline.
+    """
+
     scenario: str
     metric: str
     statistic: str
@@ -67,6 +84,10 @@ class Regression:
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
+    """解析 CLI 参数。
+    Parses CLI arguments.
+    """
+
     parser = argparse.ArgumentParser(
         description=(
             "Generate a paired ViewCompose/Compose performance report from AndroidX "
@@ -115,6 +136,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def resolve_result_path(value: str | Path) -> Path:
+    """解析 benchmarkData.json 文件路径，目录输入会选择最新结果。
+    Resolves a benchmarkData.json path, choosing the newest result when a directory is passed.
+    """
+
     path = Path(value)
     if path.is_file():
         return path
@@ -127,6 +152,10 @@ def resolve_result_path(value: str | Path) -> Path:
 
 
 def load_json(path: Path) -> dict[str, Any]:
+    """加载 JSON object，非 object 输入直接失败。
+    Loads a JSON object and fails fast for non-object input.
+    """
+
     with path.open(encoding="utf-8") as source:
         value = json.load(source)
     if not isinstance(value, dict):
@@ -135,6 +164,10 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def benchmark_entries(result: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """从 Macrobenchmark 结果中提取并校验必须的 benchmark 条目。
+    Extracts required benchmark entries from a Macrobenchmark result and validates them.
+    """
+
     entries = result.get("benchmarks")
     if not isinstance(entries, list):
         raise ValueError("Macrobenchmark result has no benchmarks array.")
@@ -160,6 +193,10 @@ def metric_value(
     metric: str,
     statistic: str,
 ) -> float | None:
+    """读取 sampledMetrics 或 metrics 中的数值。
+    Reads a numeric value from sampledMetrics or metrics.
+    """
+
     if statistic.startswith("P"):
         metric_data = entry.get("sampledMetrics", {}).get(metric, {})
     else:
@@ -171,6 +208,10 @@ def metric_value(
 def build_comparisons(
     entries: dict[str, dict[str, Any]],
 ) -> list[Comparison]:
+    """构建所有场景的成对 ViewCompose/Compose 对比。
+    Builds paired ViewCompose/Compose comparisons for all scenarios.
+    """
+
     comparisons: list[Comparison] = []
     for scenario, viewcompose_name, compose_name in SCENARIOS:
         viewcompose_entry = entries[viewcompose_name]
@@ -206,6 +247,10 @@ def create_comparison(
     viewcompose: float | None,
     compose: float | None,
 ) -> Comparison | None:
+    """创建单个指标对比；缺失数据会跳过。
+    Creates one metric comparison and skips missing data.
+    """
+
     if viewcompose is None or compose is None:
         return None
     relative_percent = None
@@ -223,6 +268,10 @@ def create_comparison(
 
 
 def percentile(values: list[float], percentile_value: int) -> float:
+    """使用线性插值计算百分位数。
+    Calculates a percentile with linear interpolation.
+    """
+
     if not values:
         raise ValueError("Cannot calculate a percentile from an empty run.")
     ordered = sorted(values)
@@ -238,6 +287,10 @@ def percentile(values: list[float], percentile_value: int) -> float:
 
 
 def coefficient_of_variation(values: Iterable[float]) -> float | None:
+    """计算变异系数；样本不足或均值为零时返回 None。
+    Calculates coefficient of variation, returning None for insufficient samples or zero mean.
+    """
+
     materialized = list(values)
     if len(materialized) < 2:
         return None
@@ -251,6 +304,10 @@ def build_stability(
     entries: dict[str, dict[str, Any]],
     max_coefficient_of_variation: float,
 ) -> list[Stability]:
+    """基于每次 run 的 P50 计算稳定性。
+    Builds stability results from per-run P50 values.
+    """
+
     stability: list[Stability] = []
     for scenario, viewcompose_name, compose_name in SCENARIOS:
         for engine, benchmark_name in (
@@ -290,6 +347,10 @@ def build_stability(
 
 
 def context_identity(result: dict[str, Any]) -> dict[str, Any]:
+    """提取用于 baseline 对比的设备和编译上下文身份。
+    Extracts device and compilation identity used for baseline comparisons.
+    """
+
     context = result.get("context", {})
     build = context.get("build", {})
     version = build.get("version", {})
@@ -308,6 +369,10 @@ def require_matching_context(
     current: dict[str, Any],
     baseline: dict[str, Any],
 ) -> None:
+    """要求 current 和 baseline 来自同一类设备/系统/编译上下文。
+    Requires current and baseline results to share the same device, system, and compilation context.
+    """
+
     current_identity = context_identity(current)
     baseline_identity = context_identity(baseline)
     keys = ("model", "fingerprint", "sdk", "cpuLocked", "compilationMode")
@@ -329,6 +394,10 @@ def require_matching_context(
 def comparison_index(
     comparisons: Iterable[Comparison],
 ) -> dict[tuple[str, str, str], Comparison]:
+    """按场景、指标和统计量索引对比结果。
+    Indexes comparisons by scenario, metric, and statistic.
+    """
+
     return {
         (comparison.scenario, comparison.metric, comparison.statistic): comparison
         for comparison in comparisons
@@ -340,6 +409,13 @@ def build_regressions(
     baseline: list[Comparison],
     policy: dict[str, Any],
 ) -> list[Regression]:
+    """按 policy 构建回归门禁结果。
+    Builds regression-gate results from the policy.
+    回归需要原始值和 Compose 归一化后的比例同时越过阈值，降低整机变慢造成的误报。
+    A failure requires both raw values and Compose-normalized ratios to cross thresholds,
+    reducing false positives from common device slowdown.
+    """
+
     current_index = comparison_index(current)
     baseline_index = comparison_index(baseline)
     thresholds = policy.get("regressionThresholds", {})
@@ -390,12 +466,20 @@ def build_regressions(
 
 
 def safe_ratio(numerator: float, denominator: float) -> float:
+    """计算正数分母比例。
+    Calculates a ratio with a positive denominator.
+    """
+
     if denominator <= 0:
         raise ValueError("Normalized comparison requires positive metric values.")
     return numerator / denominator
 
 
 def percentage_change(current: float, baseline: float) -> float:
+    """计算 current 相对 baseline 的百分比变化。
+    Calculates percentage change from baseline to current.
+    """
+
     if baseline <= 0:
         raise ValueError("Regression comparison requires positive baseline values.")
     return (current / baseline - 1.0) * 100.0
@@ -409,6 +493,10 @@ def render_markdown(
     stability: list[Stability],
     regressions: list[Regression],
 ) -> str:
+    """渲染人工可读 Markdown 性能报告。
+    Renders a human-readable Markdown performance report.
+    """
+
     lines = [
         "# ViewCompose / Compose Performance Comparison",
         "",
@@ -491,11 +579,19 @@ def render_markdown(
 
 
 def write_report(path: Path, content: str) -> None:
+    """写入报告文件并创建父目录。
+    Writes a report file and creates parent directories.
+    """
+
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI 入口，输出 Markdown 与 JSON 报告并按需执行门禁。
+    CLI entrypoint that emits Markdown and JSON reports and optionally enforces the gate.
+    """
+
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if args.enforce and not args.baseline:
         raise ValueError("--enforce requires --baseline.")

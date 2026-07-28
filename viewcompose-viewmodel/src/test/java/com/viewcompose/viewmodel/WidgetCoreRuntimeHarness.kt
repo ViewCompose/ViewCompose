@@ -1,5 +1,10 @@
 package com.viewcompose.viewmodel
 
+/*
+ * 测试工具职责：为 viewmodel integration 测试提供 Widget Core Runtime Harness 支撑，避免每个用例重复搭建运行时。
+ * Test harness responsibility: provides Widget Core Runtime Harness support for viewmodel integration tests and avoids repeated runtime setup.
+ */
+
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.buildVNodeTree

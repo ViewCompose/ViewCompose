@@ -27,6 +27,10 @@ import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.sp
 import java.util.Locale
 
+/**
+ * 标记 demo 场景类型，帮助页面用一致的文案区分基线、压力和边界验证路径。
+ * Marks demo scenario types so pages use consistent copy for baseline, stress, and edge verification paths.
+ */
 internal enum class ScenarioKind(
     val label: String,
     val hint: String,
@@ -53,6 +57,10 @@ internal enum class ScenarioKind(
     ),
 }
 
+/**
+ * 渲染一组主题色样本，用于手工确认 token 在当前主题模式下的实际输出。
+ * Renders theme swatches for manual confirmation of token output under the active theme mode.
+ */
 internal fun UiTreeBuilder.ThemeSwatchRow(
     label: String,
     swatches: List<ThemeSwatch>,
@@ -144,6 +152,10 @@ internal fun UiTreeBuilder.BenchmarkRouteCallout(
     }
 }
 
+/**
+ * 统一 demo 章节中的卡片式说明区域，避免各页面重复搭建标题、副标题和分隔线结构。
+ * Provides the shared explanatory section used across demo chapters, avoiding repeated title, subtitle, and divider layout.
+ */
 internal fun UiTreeBuilder.DemoSection(
     title: String,
     subtitle: String,

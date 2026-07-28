@@ -1,5 +1,10 @@
 package com.viewcompose.navigation
 
+/*
+ * 测试职责：覆盖 Android navigation runtime 中的 Nav Host Public Api 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Nav Host Public Api behavior in Android navigation runtime and guards navigation contracts against regressions.
+ */
+
 import android.content.Intent
 import android.net.Uri
 import android.os.Parcelable

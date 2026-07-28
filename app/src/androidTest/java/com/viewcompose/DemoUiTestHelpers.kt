@@ -39,11 +39,19 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 
+/**
+ * RecyclerView 当前视口的首个可见 item 锚点。
+ * Anchor for the first visible RecyclerView item in the current viewport.
+ */
 internal data class RecyclerViewportAnchor(
     val position: Int,
     val offset: Int,
 )
 
+/**
+ * 启动 demo Activity 并设置测试所需主题模式。
+ * Launches a demo Activity with the theme mode required by the test.
+ */
 internal fun <A : Activity> launchDemoActivity(
     activityClass: Class<A>,
     themeMode: DemoThemeMode = DemoThemeMode.Light,
@@ -54,6 +62,10 @@ internal fun <A : Activity> launchDemoActivity(
     }
 }
 
+/**
+ * 使用自定义 Intent 启动 demo Activity，并设置测试主题模式。
+ * Launches a demo Activity from a custom Intent with the test theme mode.
+ */
 internal fun <A : Activity> launchDemoActivity(
     intent: Intent,
     themeMode: DemoThemeMode = DemoThemeMode.Light,
@@ -64,6 +76,10 @@ internal fun <A : Activity> launchDemoActivity(
     }
 }
 
+/**
+ * 等待 instrumentation idle，并额外跨过一帧以覆盖 ViewCompose 异步提交。
+ * Waits for instrumentation idle and one extra frame to cover asynchronous ViewCompose commits.
+ */
 internal fun waitForUiIdle() {
     val instrumentation = InstrumentationRegistry.getInstrumentation()
     instrumentation.waitForIdleSync()
@@ -78,6 +94,10 @@ internal fun waitForUiIdle() {
     instrumentation.waitForIdleSync()
 }
 
+/**
+ * 保存当前设备截图，供失败时人工排查。
+ * Saves the current device screenshot for manual failure investigation.
+ */
 internal fun captureDeviceScreenshot(name: String) {
     val context = InstrumentationRegistry.getInstrumentation().targetContext
     val directory = File(context.getExternalFilesDir(null), "ui-test-screenshots")
@@ -88,6 +108,10 @@ internal fun captureDeviceScreenshot(name: String) {
         .takeScreenshot(File(directory, "$name.png"))
 }
 
+/**
+ * 通过 UiAutomator 点击指定文本。
+ * Clicks the given text through UiAutomator.
+ */
 internal fun clickDeviceText(text: String) {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     val node = device.wait(Until.hasObject(By.text(text)), 5_000)
@@ -98,6 +122,10 @@ internal fun clickDeviceText(text: String) {
     waitForUiIdle()
 }
 
+/**
+ * 断言指定文本在设备可见区域内。
+ * Asserts that the given text is visible on the device.
+ */
 internal fun assertDeviceTextVisible(text: String) {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     val node = device.wait(Until.hasObject(By.text(text)), 5_000)
@@ -109,6 +137,10 @@ internal fun assertDeviceTextVisible(text: String) {
     assertTrue("Expected visible height > 0 for device text: $text", bounds.height() > 0)
 }
 
+/**
+ * 使用设备级可滚动容器把文本滚入视口。
+ * Scrolls a text target into view through a device-level scrollable container.
+ */
 internal fun scrollDeviceTextIntoView(text: String) {
     UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     val scrollable = UiScrollable(UiSelector().scrollable(true))
@@ -118,6 +150,10 @@ internal fun scrollDeviceTextIntoView(text: String) {
     waitForUiIdle()
 }
 
+/**
+ * 使用设备级可滚动容器把 contentDescription 滚入视口。
+ * Scrolls a contentDescription target into view through a device-level scrollable container.
+ */
 internal fun scrollDeviceDescriptionIntoView(description: String) {
     UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     val scrollable = UiScrollable(UiSelector().scrollable(true))
@@ -128,6 +164,10 @@ internal fun scrollDeviceDescriptionIntoView(description: String) {
     waitForUiIdle()
 }
 
+/**
+ * 在 Activity View 树中按精确文本查找 TextView，找不到时直接失败。
+ * Finds a TextView by exact text in the Activity View tree and fails fast when missing.
+ */
 internal fun Activity.requireTextView(text: String): TextView {
     val root = findViewById<ViewGroup>(android.R.id.content)
     val view = findTextViewByText(root, text)
@@ -135,14 +175,26 @@ internal fun Activity.requireTextView(text: String): TextView {
     return view!!
 }
 
+/**
+ * 通过 ViewCompose testTag 查找可见 View。
+ * Finds a visible View by ViewCompose testTag.
+ */
 internal fun Activity.requireViewByTestTag(tag: String): View {
     return requireViewByTestTagVisible(tag)
 }
 
+/**
+ * 通过 ViewCompose testTag 查找可见 TextView。
+ * Finds a visible TextView by ViewCompose testTag.
+ */
 internal fun Activity.requireTextViewByTestTag(tag: String): TextView {
     return requireTextViewByTestTagVisible(tag)
 }
 
+/**
+ * 查找可见 testTag，必要时在 RecyclerView 中上下滚动搜索。
+ * Finds a visible testTag, scrolling RecyclerViews up and down when needed.
+ */
 internal fun Activity.requireViewByTestTagVisible(
     tag: String,
     maxScrollAttempts: Int = 24,
@@ -178,6 +230,10 @@ internal fun Activity.requireViewByTestTagVisible(
     return view
 }
 
+/**
+ * 查找可见 testTag 并断言它对应 TextView。
+ * Finds a visible testTag and asserts that it maps to a TextView.
+ */
 internal fun Activity.requireTextViewByTestTagVisible(
     tag: String,
     maxScrollAttempts: Int = 24,
@@ -187,6 +243,10 @@ internal fun Activity.requireTextViewByTestTagVisible(
     return view as TextView
 }
 
+/**
+ * 点击 testTag 对应 View 或其最近的可点击父节点。
+ * Clicks the View for a testTag or the nearest clickable parent.
+ */
 internal fun Activity.clickByTestTag(tag: String) {
     var current: View? = requireViewByTestTagVisible(tag)
     while (current != null && !current.isClickable) {
@@ -196,6 +256,10 @@ internal fun Activity.clickByTestTag(tag: String) {
     assertTrue("Expected click to be handled for testTag: $tag", current!!.performClick())
 }
 
+/**
+ * 向 testTag 中心注入真实 down/up 触摸事件。
+ * Injects real down/up touch events at the center of the tagged View.
+ */
 internal fun Activity.tapByTestTag(tag: String) {
     val view = requireViewByTestTagVisible(tag)
     val location = IntArray(2)
@@ -219,6 +283,10 @@ internal fun Activity.tapByTestTag(tag: String) {
     )
 }
 
+/**
+ * 向 testTag 中心注入一段真实拖拽手势。
+ * Injects a real drag gesture starting at the center of the tagged View.
+ */
 internal fun Activity.dragByTestTag(
     tag: String,
     deltaX: Float,
@@ -261,6 +329,10 @@ internal fun Activity.dragByTestTag(
     )
 }
 
+/**
+ * 向 testTag 注入双指平移、旋转和缩放组合手势。
+ * Injects a two-pointer transform gesture with pan, rotation, and zoom.
+ */
 internal fun Activity.transformByTestTag(
     tag: String,
     panX: Float = 120f,
@@ -345,6 +417,10 @@ internal fun Activity.transformByTestTag(
     )
 }
 
+/**
+ * 聚焦 testTag 内的第一个 EditText。
+ * Focuses the first EditText under the tagged host.
+ */
 internal fun Activity.focusInputByTestTag(tag: String) {
     val host = requireViewByTestTagVisible(tag)
     val input = findFirstEditText(host)
@@ -352,6 +428,10 @@ internal fun Activity.focusInputByTestTag(tag: String) {
     input!!.requestFocus()
 }
 
+/**
+ * 读取第一个 RecyclerView 当前首个可见 item 的位置和偏移。
+ * Reads the position and offset of the first visible item in the first RecyclerView.
+ */
 internal fun Activity.readFirstRecyclerAnchor(): RecyclerViewportAnchor? {
     val root = findViewById<ViewGroup>(android.R.id.content)
     val recyclerView = findFirstRecyclerView(root) ?: return null
@@ -369,6 +449,10 @@ internal fun Activity.readFirstRecyclerAnchor(): RecyclerViewportAnchor? {
     return RecyclerViewportAnchor(position = position, offset = offset)
 }
 
+/**
+ * 点击精确文本对应 TextView 或其最近的可点击父节点。
+ * Clicks the TextView for exact text or the nearest clickable parent.
+ */
 internal fun Activity.clickTextView(text: String) {
     var current: View? = requireTextView(text)
     while (current != null && !current.isClickable) {
@@ -378,6 +462,10 @@ internal fun Activity.clickTextView(text: String) {
     current!!.performClick()
 }
 
+/**
+ * 按 contentDescription 查找 View，找不到时直接失败。
+ * Finds a View by contentDescription and fails fast when missing.
+ */
 internal fun Activity.requireViewWithContentDescription(description: String): View {
     val root = findViewById<ViewGroup>(android.R.id.content)
     val view = findViewByContentDescription(root, description)
@@ -385,6 +473,10 @@ internal fun Activity.requireViewWithContentDescription(description: String): Vi
     return view!!
 }
 
+/**
+ * 断言 View 至少有一部分真实可见且已经完成测量。
+ * Asserts that a View is at least partially visible and measured.
+ */
 internal fun assertViewFullyVisible(view: View) {
     assertTrue("Expected view to be shown", view.isShown)
     val rect = Rect()
@@ -396,6 +488,10 @@ internal fun assertViewFullyVisible(view: View) {
     assertTrue("Expected measured height > 0", view.height > 0)
 }
 
+/**
+ * 断言 View 的完整尺寸都在全局可见区域内。
+ * Asserts that the full View bounds are visible globally.
+ */
 internal fun assertViewCompletelyVisible(view: View) {
     assertViewFullyVisible(view)
     val rect = Rect()
@@ -405,6 +501,10 @@ internal fun assertViewCompletelyVisible(view: View) {
     assertEquals("Expected full height to be visible", view.height, rect.height())
 }
 
+/**
+ * 断言 TextView 文本不会垂直溢出内容区域。
+ * Asserts that TextView content does not overflow vertically.
+ */
 internal fun assertTextFitsVertically(textView: TextView) {
     val layout = textView.layout
     assertNotNull("Expected layout for text: ${textView.text}", layout)
@@ -417,6 +517,10 @@ internal fun assertTextFitsVertically(textView: TextView) {
     )
 }
 
+/**
+ * 断言 TextView 没有省略号且可用宽度有效。
+ * Asserts that TextView has no ellipsis and a valid text width.
+ */
 internal fun assertTextNotEllipsized(textView: TextView) {
     val layout = textView.layout
     assertNotNull("Expected layout for text: ${textView.text}", layout)
@@ -434,6 +538,10 @@ internal fun assertTextNotEllipsized(textView: TextView) {
     )
 }
 
+/**
+ * 向 Activity 分发单指 MotionEvent，并确保事件对象被回收。
+ * Dispatches a single-pointer MotionEvent to the Activity and always recycles it.
+ */
 private fun Activity.dispatchGestureEvent(
     downTime: Long,
     eventTime: Long,
@@ -456,6 +564,10 @@ private fun Activity.dispatchGestureEvent(
     }
 }
 
+/**
+ * 构造并分发多指 MotionEvent。
+ * Builds and dispatches a multi-pointer MotionEvent.
+ */
 private fun dispatchMultiTouchEvent(
     target: View,
     downTime: Long,
@@ -508,6 +620,10 @@ private fun dispatchMultiTouchEvent(
     }
 }
 
+/**
+ * 根据中心点、半径和角度生成一对双指坐标。
+ * Builds a pair of two-pointer coordinates from center, radius, and angle.
+ */
 private fun twoPointerCoords(
     centerX: Float,
     centerY: Float,
@@ -519,6 +635,10 @@ private fun twoPointerCoords(
     return (centerX - dx to centerY - dy) to (centerX + dx to centerY + dy)
 }
 
+/**
+ * 深度优先查找精确文本匹配的 TextView。
+ * Finds a TextView with exact text using depth-first traversal.
+ */
 internal fun findTextViewByText(root: View, text: String): TextView? {
     if (root is TextView && root.text?.toString() == text) {
         return root
@@ -534,6 +654,10 @@ internal fun findTextViewByText(root: View, text: String): TextView? {
     return null
 }
 
+/**
+ * 深度优先查找 contentDescription 匹配的 View。
+ * Finds a View with matching contentDescription using depth-first traversal.
+ */
 internal fun findViewByContentDescription(root: View, description: String): View? {
     if (root.contentDescription?.toString() == description) {
         return root
@@ -549,6 +673,10 @@ internal fun findViewByContentDescription(root: View, description: String): View
     return null
 }
 
+/**
+ * 深度优先查找 ViewCompose testTag 匹配的 View。
+ * Finds a ViewCompose testTag match using depth-first traversal.
+ */
 internal fun findViewByTestTag(root: View, tag: String): View? {
     if (root.getTag(RendererR.id.viewcompose_test_tag) == tag) {
         return root
@@ -616,6 +744,10 @@ private fun isViewVisible(view: View): Boolean {
     return view.getGlobalVisibleRect(rect) && rect.width() > 0 && rect.height() > 0
 }
 
+/**
+ * 断言 View 背景解析出的最终填充色与预期一致。
+ * Asserts that the resolved fill color from a View background matches expectation.
+ */
 internal fun assertViewBackgroundColor(view: View, expectedColor: Int) {
     val actual = resolveDrawableColor(view.background)
     assertNotNull("Expected background drawable color for ${view.javaClass.simpleName}", actual)
@@ -626,6 +758,10 @@ internal fun assertViewBackgroundColor(view: View, expectedColor: Int) {
     )
 }
 
+/**
+ * 从常见 Android drawable 包装层中递归解析实际填充色。
+ * Recursively resolves the actual fill color from common Android drawable wrappers.
+ */
 private fun resolveDrawableColor(drawable: Drawable?): Int? {
     return when (drawable) {
         null -> null

@@ -7,6 +7,10 @@ import com.viewcompose.widget.core.RenderStructureStats
 import com.viewcompose.widget.core.RenderTreeNode
 import com.viewcompose.widget.core.RenderTreeResult
 
+/**
+ * 记录一次渲染后的诊断快照，供 Diagnostics 页面展示 renderer 是否进入 patch-active 路径。
+ * Records diagnostics after one render so the Diagnostics page can show whether the renderer used the patch-active path.
+ */
 internal data class DemoRenderSnapshot(
     val renderCount: Int = 0,
     val stats: RenderStats = RenderStats(),
@@ -21,6 +25,10 @@ internal data class DemoRenderSnapshot(
         get() = stats.patchedNodes > 0 || stats.skippedBindings > 0 || stats.reboundNodes > 0
 }
 
+/**
+ * 保存最近的 demo 渲染诊断历史，作为 Activity 与声明式诊断页面之间的轻量共享状态。
+ * Stores recent demo render diagnostics as lightweight shared state between Activities and the declarative diagnostics page.
+ */
 internal object DemoRenderDiagnosticsStore {
     private const val MAX_HISTORY = 12
 

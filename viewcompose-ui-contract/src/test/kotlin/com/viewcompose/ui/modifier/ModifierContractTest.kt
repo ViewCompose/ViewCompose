@@ -1,5 +1,10 @@
 package com.viewcompose.ui.modifier
 
+/*
+ * 测试职责：覆盖 UI contract 中的 Modifier Contract 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Modifier Contract behavior in UI contract and guards the contract against regressions.
+ */
+
 import com.viewcompose.graphics.core.DrawCommand
 import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink

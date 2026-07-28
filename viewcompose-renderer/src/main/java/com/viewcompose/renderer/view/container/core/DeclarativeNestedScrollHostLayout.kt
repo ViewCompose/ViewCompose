@@ -15,6 +15,10 @@ import com.viewcompose.ui.gesture.ScrollDelta
 import com.viewcompose.ui.gesture.ScrollVelocity
 import kotlin.math.roundToInt
 
+/**
+ * nestedScroll modifier 的 Android host，连接 View nested-scroll 协议和 UIFramework 手势协议。
+ * Android host for nestedScroll modifiers, bridging View nested-scroll callbacks to UIFramework gestures.
+ */
 internal class DeclarativeNestedScrollHostLayout(
     context: Context,
 ) : FrameLayout(context),
@@ -35,6 +39,8 @@ internal class DeclarativeNestedScrollHostLayout(
         connection: NestedScrollConnection,
         dispatcher: NestedScrollDispatcher?,
     ) {
+        // dispatcher 可能随节点复用而变化，先解绑旧连接再接入新连接。
+        // The dispatcher can change during node reuse, so detach the old connector before attaching the new one.
         if (this.dispatcher !== dispatcher) {
             this.dispatcher?.detach(dispatcherConnector)
             this.dispatcher = dispatcher
@@ -85,6 +91,8 @@ internal class DeclarativeNestedScrollHostLayout(
         consumed: IntArray,
         type: Int,
     ) {
+        // 先把 pre-scroll 交给更外层父级，再把剩余量交给当前 connection。
+        // Pre-scroll is offered to outer parents first, then the remaining delta is offered to this connection.
         val parentConsumed = IntArray(2)
         childHelper.dispatchNestedPreScroll(
             dx,
@@ -133,6 +141,8 @@ internal class DeclarativeNestedScrollHostLayout(
         consumed[0] += local.x.roundToInt()
         consumed[1] += local.y.roundToInt()
 
+        // post-scroll 的剩余量继续冒泡给父级，保证多层 nestedScroll 链路顺序一致。
+        // The remaining post-scroll delta bubbles to parents, preserving multi-layer nestedScroll ordering.
         val remaining = available - local
         val parentConsumed = IntArray(2)
         childHelper.dispatchNestedScroll(

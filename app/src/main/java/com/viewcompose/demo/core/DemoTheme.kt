@@ -21,12 +21,20 @@ import com.viewcompose.widget.core.UiTypography
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.sp
 
+/**
+ * demo 应用支持的主题模式。
+ * Theme modes supported by the demo app.
+ */
 enum class DemoThemeMode {
     System,
     Light,
     Dark,
 }
 
+/**
+ * 将 shape 转成面向 demo 页展示的可读标签。
+ * Converts a shape into a readable label for demo pages.
+ */
 internal fun UiShape.demoLabel(): String {
     if (isUniform) {
         return topStart.demoLabel()
@@ -43,7 +51,18 @@ private fun UiCorner.demoLabel(): String {
     return "${family.name.lowercase()} $sizeLabel"
 }
 
+/**
+ * demo 应用专用的主题 token 集合和解析工具。
+ * Demo-app-specific theme tokens and resolving helpers.
+ *
+ * 这里刻意独立于框架默认主题，用于验证业务侧覆盖 token 时的渲染表现。
+ * This intentionally stays separate from framework defaults to verify rendering with app-provided tokens.
+ */
 object DemoThemeTokens {
+    /**
+     * demo 浅色主题 token。
+     * Demo light-theme tokens.
+     */
     val light: UiThemeTokens = UiThemeTokens(
         colors = UiColors(
             background = 0xFFF7F2EA.toInt(),
@@ -111,6 +130,10 @@ object DemoThemeTokens {
         metadata = UiThemeMetadata(isDark = false),
     )
 
+    /**
+     * demo 深色主题 token。
+     * Demo dark-theme tokens.
+     */
     val dark: UiThemeTokens = UiThemeTokens(
         colors = UiColors(
             background = 0xFF1F1B18.toInt(),
@@ -178,6 +201,10 @@ object DemoThemeTokens {
         metadata = UiThemeMetadata(isDark = true),
     )
 
+    /**
+     * 结合 Android Context 的系统夜间模式解析最终 token。
+     * Resolves final tokens using the system night mode from Android Context.
+     */
     fun resolve(
         mode: DemoThemeMode,
         context: Context,
@@ -188,6 +215,10 @@ object DemoThemeTokens {
         )
     }
 
+    /**
+     * 使用显式系统明暗状态解析最终 token，方便测试或非 Android Context 调用。
+     * Resolves final tokens from an explicit system-dark flag for tests or non-Context callers.
+     */
     fun resolve(
         mode: DemoThemeMode,
         isSystemDark: Boolean,
@@ -199,6 +230,10 @@ object DemoThemeTokens {
         }
     }
 
+    /**
+     * 生成包含系统跟随结果的主题模式标签。
+     * Builds a theme-mode label that includes the resolved system-following result.
+     */
     fun modeLabel(
         mode: DemoThemeMode,
         context: Context,
@@ -209,6 +244,10 @@ object DemoThemeTokens {
         )
     }
 
+    /**
+     * 使用显式系统明暗状态生成主题模式标签。
+     * Builds a theme-mode label from an explicit system-dark flag.
+     */
     fun modeLabel(
         mode: DemoThemeMode,
         isSystemDark: Boolean,
@@ -220,12 +259,20 @@ object DemoThemeTokens {
         }
     }
 
+    /**
+     * 读取当前资源配置中的夜间模式。
+     * Reads night mode from the current resource configuration.
+     */
     fun isSystemDark(context: Context): Boolean {
         val nightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         return nightMode == Configuration.UI_MODE_NIGHT_YES
     }
 }
 
+/**
+ * 根据当前 demo 主题同步系统栏明暗外观。
+ * Synchronizes status/navigation bar appearance with the current demo theme.
+ */
 internal fun AppCompatActivity.applyDemoThemeWindowAppearance(
     tokens: UiThemeTokens,
 ) {

@@ -6,7 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 
 /**
+ * 返回作用域绑定到当前 ViewModelStoreOwner 的 [SavedStateHandle]。
  * Returns a [SavedStateHandle] scoped to the current [ViewModelStoreOwner].
+ *
+ * 该 handle 由内部 ViewModel 条目持有，因此能跨配置变更保留。
  * The handle is backed by an internal ViewModel entry and survives configuration changes.
  */
 @MainThread
@@ -22,6 +25,10 @@ fun savedStateHandle(
     return holder.handle
 }
 
+/**
+ * 持有 SavedStateHandle 的内部 ViewModel。
+ * Internal ViewModel that owns a SavedStateHandle.
+ */
 class SavedStateHandleHolderViewModel(
     val handle: SavedStateHandle,
 ) : ViewModel()

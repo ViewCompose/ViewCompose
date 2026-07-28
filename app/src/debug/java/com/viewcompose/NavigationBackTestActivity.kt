@@ -37,13 +37,22 @@ import com.viewcompose.widget.core.rememberSaveable
 import com.viewcompose.viewmodel.savedStateHandle
 
 /**
+ * 孵化中的系统导航栈在真机上的 debug-only 宿主。
  * Debug-only real-device host for the incubating system-navigation stack.
+ *
+ * 该 Activity 暴露路由、entry id、转场采样和进程重建状态，用于 androidTest 验证真实 View 行为。
+ * This Activity exposes routes, entry ids, transition samples, and process-recreation state so
+ * androidTest can verify real View behavior.
  */
 class NavigationBackTestActivity : AppCompatActivity() {
     private val systemBackEnabledState = mutableStateOf(true)
     private val failures = mutableListOf<NavFailure>()
     private val processDeathRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
     private val processDeathGraphRecords = linkedMapOf<NavEntryId, ProcessDeathRecord>()
+    /**
+     * 进程重建认证专用图，覆盖普通 destination、嵌套 graph owner 和多 back stack。
+     * Process-recreation certification graph covering destinations, nested graph owners, and multiple stacks.
+     */
     private val processDeathGraph = navGraph(
         route = PROCESS_DEATH_ROOT_GRAPH_ROUTE,
         startDestination = NavRoute(HOME_ROUTE),
@@ -82,6 +91,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
     )
     private val destinationViewSamples = mutableListOf<DestinationViewSample>()
     private var destinationViewSampling = false
+    /**
+     * 按帧采集转场期间两个 destination 容器的真实 View 属性。
+     * Samples real View properties for the two destination containers during transitions.
+     */
     private val destinationViewSampleFrameCallback = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             if (!destinationViewSampling) {
@@ -201,22 +214,42 @@ class NavigationBackTestActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 从测试线程请求一次导航 push。
+     * Requests one navigation push from the test thread.
+     */
     fun push(routeName: String): NavResult {
         return navController.navigate(NavRoute(routeName))
     }
 
+    /**
+     * 动态控制系统 Back 是否交给 NavHost 处理。
+     * Dynamically controls whether system Back is handled by NavHost.
+     */
     fun setSystemBackEnabled(enabled: Boolean) {
         systemBackEnabledState.value = enabled
     }
 
+    /**
+     * 返回当前 back stack 中所有 route 名称。
+     * Returns all route names currently in the back stack.
+     */
     fun routeNames(): List<String> {
         return navController.snapshot.entries.map { entry -> entry.route.name }
     }
 
+    /**
+     * 返回当前 back stack 中所有 entry id，用于重建前后身份对比。
+     * Returns all entry ids in the current back stack for identity checks across recreation.
+     */
     fun entryIds(): List<String> {
         return navController.snapshot.entries.map { entry -> entry.id.value }
     }
 
+    /**
+     * 开始逐帧采集 destination View 状态。
+     * Starts frame-by-frame destination View sampling.
+     */
     fun beginDestinationViewSampling() {
         destinationViewSamples.clear()
         destinationViewSampling = true
@@ -224,6 +257,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
         Choreographer.getInstance().postFrameCallback(destinationViewSampleFrameCallback)
     }
 
+    /**
+     * 停止采样并返回已捕获的 destination View 状态。
+     * Stops sampling and returns captured destination View states.
+     */
     fun endDestinationViewSampling(): List<DestinationViewSample> {
         destinationViewSampling = false
         Choreographer.getInstance().removeFrameCallback(destinationViewSampleFrameCallback)
@@ -274,6 +311,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
         return intent.getBooleanExtra(EXTRA_PROCESS_DEATH_CERTIFICATION, false)
     }
 
+    /**
+     * 播种进程重建认证状态，确保每种 owner 范围都有可保存数据。
+     * Seeds process-recreation certification state so each owner scope has saveable data.
+     */
     private fun seedProcessDeathCertificationState() {
         check(
             navController.navigate(NavRoute(CONFIRMATION_ROUTE)) is NavResult.Committed,
@@ -335,6 +376,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
         accountGraphRecord.saveableValue.value = PROCESS_DEATH_GRAPH_SAVEABLE_VALUE
     }
 
+    /**
+     * 序列化当前导航和保存状态，供测试在进程重建前后做字符串级对比。
+     * Serializes navigation and saved state so tests can compare before and after process recreation.
+     */
     private fun processDeathStatus(): String {
         val stackState = navController.stackState
         val stacks = stackState.stacks.entries.joinToString(separator = "/") { stack ->
@@ -377,6 +422,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
             "graphs=$graphScopes"
     }
 
+    /**
+     * 单帧 destination View 属性快照。
+     * One-frame snapshot of destination View properties.
+     */
     data class DestinationViewSample(
         val homeVisibility: Int,
         val detailsVisibility: Int,
@@ -388,6 +437,10 @@ class NavigationBackTestActivity : AppCompatActivity() {
         val detailsScaleX: Float,
     )
 
+    /**
+     * 进程重建认证中绑定到 entry 或 graph owner 的保存状态句柄。
+     * Saved-state handles bound to an entry or graph owner during process-recreation certification.
+     */
     private data class ProcessDeathRecord(
         val saveableValue: MutableState<Int>,
         val savedStateHandle: SavedStateHandle,

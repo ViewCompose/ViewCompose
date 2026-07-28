@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.lazy.adapter
 
+/*
+ * 测试职责：覆盖 renderer view/lazy/adapter 中的 Lazy Sticky Header Decoration 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Lazy Sticky Header Decoration behavior in renderer view/lazy/adapter and guards render and patch contracts against regressions.
+ */
+
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View

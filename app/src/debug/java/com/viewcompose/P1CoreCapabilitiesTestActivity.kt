@@ -6,8 +6,10 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 
 /**
+ * 设备能力测试使用的最小 debug-only 宿主。
  * Minimal debug-only host for device capability tests.
  *
+ * 允许显示在锁屏上可以让连接设备自动化保持确定性，同时不修改设备锁屏设置。
  * Showing over the keyguard keeps connected-device automation deterministic without changing the
  * device's lock settings.
  */

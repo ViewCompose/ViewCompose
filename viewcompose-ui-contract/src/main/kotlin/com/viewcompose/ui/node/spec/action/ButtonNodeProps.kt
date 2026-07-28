@@ -3,6 +3,10 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * Button 节点传给 renderer 的完整属性快照。
+ * Complete property snapshot passed to the renderer for a Button node.
+ */
 data class ButtonNodeProps(
     val text: CharSequence?,
     val enabled: Boolean,

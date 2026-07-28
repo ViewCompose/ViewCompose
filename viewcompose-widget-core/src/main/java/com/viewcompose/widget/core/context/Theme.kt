@@ -17,12 +17,19 @@ private val LocalTheme = uiLocalOf(
 )
 
 /**
- * Explicit invalidation entry point for hosts that mutate Android theme
- * resources at runtime (for example with Context.setTheme/applyStyle).
+ * Android theme 资源运行时变化时的显式失效入口。
+ * Explicit invalidation entry point for hosts that mutate Android theme resources at runtime.
+ *
+ * 例如宿主调用 Context.setTheme/applyStyle 后，可通过 refresh 触发重新读取 token。
+ * For example, hosts can call refresh after Context.setTheme/applyStyle to force token reread.
  */
 class AndroidThemeRefreshController {
     private val listeners = linkedSetOf<() -> Unit>()
 
+    /**
+     * 通知所有订阅的 theme lifecycle 重新读取 Android 主题。
+     * Notifies all subscribed theme lifecycles to reread the Android theme.
+     */
     fun refresh() {
         check(Looper.myLooper() == Looper.getMainLooper()) {
             "AndroidThemeRefreshController.refresh() must be called on the main thread."
@@ -36,6 +43,10 @@ class AndroidThemeRefreshController {
     }
 }
 
+/**
+ * 当前 composition 的主题访问入口。
+ * Theme access entry point for the current composition.
+ */
 object Theme {
     val current: UiThemeTokens
         get() = UiLocals.current(LocalTheme)
@@ -59,6 +70,13 @@ object Theme {
         get() = current.overlays
 }
 
+/**
+ * 在 content 范围内提供主题 token。
+ * Provides theme tokens within the content scope.
+ *
+ * tokens、androidContext、resolvedAndroidTheme 三种来源互斥；未提供时使用 framework light 默认值。
+ * tokens, androidContext, and resolvedAndroidTheme are mutually exclusive; framework light defaults are used when absent.
+ */
 fun UiTreeBuilder.UiTheme(
     tokens: UiThemeTokens? = null,
     androidContext: Context? = null,
@@ -122,6 +140,10 @@ fun UiTreeBuilder.UiTheme(
     }
 }
 
+/**
+ * Android 主题 token 生命周期，监听 configuration 变化并按 revision 推动重组。
+ * Lifecycle for Android theme tokens, observing configuration changes and driving recomposition by revision.
+ */
 @Suppress("DEPRECATION")
 internal class AndroidThemeTokenLifecycle(
     context: Context,
@@ -188,6 +210,10 @@ internal class AndroidThemeTokenLifecycle(
     }
 }
 
+/**
+ * 在当前主题基础上覆盖部分 token。
+ * Overrides selected tokens on top of the current theme.
+ */
 fun UiTreeBuilder.UiThemeOverride(
     colors: UiColors? = null,
     stateColors: UiStateColors? = null,
@@ -212,6 +238,10 @@ fun UiTreeBuilder.UiThemeOverride(
     }
 }
 
+/**
+ * 使用 lambda 基于当前 token 计算覆盖值。
+ * Computes token overrides from the current tokens with lambdas.
+ */
 fun UiTreeBuilder.UiThemeOverride(
     colors: (UiColors.() -> UiColors)? = null,
     stateColors: (UiStateColors.() -> UiStateColors)? = null,

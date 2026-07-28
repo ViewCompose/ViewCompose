@@ -13,6 +13,10 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 
+/**
+ * 顶部应用栏组合组件。
+ * Top app bar composite.
+ */
 fun UiTreeBuilder.TopAppBar(
     title: String,
     navigationIcon: (UiTreeBuilder.() -> Unit)? = null,
@@ -55,6 +59,10 @@ fun UiTreeBuilder.TopAppBar(
     }
 }
 
+/**
+ * 底部应用栏组合组件。
+ * Bottom app bar composite.
+ */
 fun UiTreeBuilder.BottomAppBar(
     containerColor: Int = BottomAppBarDefaults.containerColor(),
     key: Any? = null,
@@ -76,10 +84,18 @@ fun UiTreeBuilder.BottomAppBar(
     )
 }
 
+/**
+ * NavigationBar item 收集 scope。
+ * Item collection scope for NavigationBar.
+ */
 @UiDslMarker
 class NavigationBarScope internal constructor() {
     private val items = mutableListOf<NavigationBarItem>()
 
+    /**
+     * 添加一个 navigation item。
+     * Adds one navigation item.
+     */
     fun Item(
         label: String,
         icon: ImageSource.Resource,
@@ -97,6 +113,10 @@ class NavigationBarScope internal constructor() {
     internal fun build(): List<NavigationBarItem> = items.toList()
 }
 
+/**
+ * 发射底部 NavigationBar 节点。
+ * Emits a bottom NavigationBar node.
+ */
 fun UiTreeBuilder.NavigationBar(
     selectedIndex: Int,
     onItemSelected: (Int) -> Unit,

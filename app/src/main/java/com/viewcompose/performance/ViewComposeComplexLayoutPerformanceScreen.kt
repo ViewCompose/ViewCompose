@@ -20,6 +20,10 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
 
+/**
+ * ViewCompose 版本的复杂布局性能场景。
+ * ViewCompose implementation of the complex-layout performance scenario.
+ */
 internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen() {
     val revisionState = remember { mutableStateOf(0) }
     val revision = revisionState.value
@@ -113,6 +117,10 @@ private fun UiTreeBuilder.ComplexLayoutAction(
     }
 }
 
+/**
+ * 复杂布局卡片包含嵌套行列、标签和条件明细，用于放大布局与 patch 成本。
+ * Complex cards include nested rows, tags, and conditional details to amplify layout and patch cost.
+ */
 private fun UiTreeBuilder.DashboardCard(card: PerformanceDashboardCard) {
     Surface(
         key = card.id,

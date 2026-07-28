@@ -16,6 +16,13 @@ import com.viewcompose.widget.core.OverlayEntryId
 import com.viewcompose.widget.core.OverlaySurfaceSession
 import com.viewcompose.widget.core.createOverlaySurfaceSession
 
+/**
+ * Android BottomSheetDialog overlay presenter。
+ * Android BottomSheetDialog overlay presenter.
+ *
+ * presenter 只负责创建平台 handle；同 key 请求的内容/行为更新由 handle.update 处理。
+ * The presenter only creates platform handles; same-key content/behavior updates are handled by handle.update.
+ */
 class AndroidModalBottomSheetPresenter(
     private val rootView: View,
 ) : ModalBottomSheetOverlayPresenter {
@@ -32,6 +39,13 @@ class AndroidModalBottomSheetPresenter(
     }
 }
 
+/**
+ * Modal bottom sheet overlay 的平台句柄。
+ * Platform handle for a modal bottom sheet overlay.
+ *
+ * 句柄同时维护 BottomSheetDialog、内部内容渲染 session 和系统导航栏颜色。
+ * The handle maintains the BottomSheetDialog, inner content render session, and system navigation bar color together.
+ */
 private class AndroidModalBottomSheetHandle(
     rootView: View,
     spec: ModalBottomSheetOverlaySpec,
@@ -76,6 +90,8 @@ private class AndroidModalBottomSheetHandle(
         dialog.setCanceledOnTouchOutside(spec.dismissOnClickOutside)
         dialog.window?.apply {
             setDimAmount(spec.scrimOpacity.coerceIn(0f, 1f))
+            // 未显式指定导航栏颜色时恢复 dialog 初始颜色，并继续让 Android 处理对比度。
+            // When no navigation bar color is specified, restore the dialog's initial color and let Android handle contrast.
             val color = spec.navigationBarColor ?: defaultNavigationBarColor
             if (color != null) {
                 applyNavigationBarColorCompat(
@@ -85,6 +101,8 @@ private class AndroidModalBottomSheetHandle(
             }
         }
         if (spec.skipPartiallyExpanded) {
+            // skipPartiallyExpanded 对应 Material behavior：直接展开并跳过 collapsed 中间态。
+            // skipPartiallyExpanded maps to Material behavior by expanding immediately and skipping the collapsed intermediate state.
             dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
             dialog.behavior.skipCollapsed = true
         }
@@ -95,6 +113,8 @@ private class AndroidModalBottomSheetHandle(
     }
 
     override fun dismiss() {
+        // host 清理触发的 dismiss 不应再次通知业务 onDismissRequest。
+        // Dismiss triggered by host cleanup should not notify business onDismissRequest again.
         programmaticDismiss = true
         dialog.setOnDismissListener(null)
         surfaceSession.dispose()
@@ -105,9 +125,17 @@ private class AndroidModalBottomSheetHandle(
     }
 }
 
+/**
+ * 兼容读取 Window.navigationBarColor。
+ * Compatibility wrapper for reading Window.navigationBarColor.
+ */
 @Suppress("DEPRECATION")
 private fun Window.readNavigationBarColorCompat(): Int = navigationBarColor
 
+/**
+ * 兼容设置 Window.navigationBarColor，并在 Android Q+ 控制对比度强制策略。
+ * Compatibility wrapper for setting Window.navigationBarColor and controlling contrast enforcement on Android Q+.
+ */
 @Suppress("DEPRECATION")
 private fun Window.applyNavigationBarColorCompat(
     color: Int,

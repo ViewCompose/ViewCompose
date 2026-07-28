@@ -1,5 +1,10 @@
 package com.viewcompose.animation
 
+/*
+ * 测试职责：覆盖 animation DSL 中的 Animate Content Size Modifier 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Animate Content Size Modifier behavior in animation DSL and guards the contract against regressions.
+ */
+
 import com.viewcompose.animation.core.keyframes
 import com.viewcompose.animation.core.keyframe
 import com.viewcompose.animation.core.repeatable

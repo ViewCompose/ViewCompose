@@ -15,6 +15,13 @@ import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * 发射搜索栏组合控件。
+ * Emits a search bar composite widget.
+ *
+ * SearchBar 使用 BasicTextField 作为内部输入区，并在提供 onSearch 时把键盘动作切换为 Search。
+ * SearchBar uses BasicTextField for the editable region and switches the IME action to Search when onSearch is provided.
+ */
 fun UiTreeBuilder.SearchBar(
     state: TextFieldState,
     onSearch: ((String) -> Unit)? = null,
@@ -62,6 +69,8 @@ fun UiTreeBuilder.SearchBar(
                     TextFieldImeAction.Default
                 },
             ),
+            // onSearch 为空时保持默认 IME 行为；非空时只消费 Search 动作。
+            // When onSearch is null the IME behavior remains default; otherwise only Search is consumed.
             onKeyboardAction = if (onSearch == null) {
                 null
             } else {

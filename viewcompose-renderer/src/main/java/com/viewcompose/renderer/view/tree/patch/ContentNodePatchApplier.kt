@@ -13,7 +13,15 @@ import com.viewcompose.renderer.view.tree.TextNodePatch
 import com.viewcompose.renderer.view.tree.ViewModifierApplier
 import com.viewcompose.renderer.view.container.DeclarativeCanvasLayout
 
+/**
+ * 内容类节点的细粒度 patch 应用器。
+ * Fine-grained patch applier for content nodes.
+ */
 internal object ContentNodePatchApplier {
+    /**
+     * 更新 TextView 中发生变化的文本、排版和装饰属性。
+     * Updates changed text, typography, and decoration properties on a TextView.
+     */
     fun applyTextPatch(
         view: TextView,
         patch: TextNodePatch,
@@ -53,6 +61,10 @@ internal object ContentNodePatchApplier {
         }
     }
 
+    /**
+     * 更新 Button 文案、图标、点击监听和视觉样式。
+     * Updates Button text, icons, click listener, and visual styling.
+     */
     fun applyButtonPatch(
         view: Button,
         patch: ButtonNodePatch,
@@ -138,6 +150,10 @@ internal object ContentNodePatchApplier {
         }
     }
 
+    /**
+     * 更新 divider 颜色；尺寸变化由 LayoutParams patch 处理。
+     * Updates divider color; size changes are handled by LayoutParams patching.
+     */
     fun applyDividerPatch(
         view: View,
         patch: DividerNodePatch,
@@ -147,6 +163,10 @@ internal object ContentNodePatchApplier {
         }
     }
 
+    /**
+     * 更新 Canvas 绘制闭包并交给自定义 layout 触发重绘。
+     * Updates the Canvas draw lambda and lets the custom layout invalidate drawing.
+     */
     fun applyCanvasPatch(
         view: DeclarativeCanvasLayout,
         patch: CanvasNodePatch,

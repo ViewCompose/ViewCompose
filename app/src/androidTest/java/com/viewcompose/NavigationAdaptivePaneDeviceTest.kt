@@ -11,6 +11,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * 自适应导航窗格在真机上的生命周期和布局验证。
+ * Real-device lifecycle and layout validation for adaptive navigation panes.
+ */
 @RunWith(AndroidJUnit4::class)
 class NavigationAdaptivePaneDeviceTest {
     @Test
@@ -67,6 +71,10 @@ class NavigationAdaptivePaneDeviceTest {
         }
     }
 
+    /**
+     * 轮询 Activity 状态，等待异步导航和旋转布局都完成。
+     * Polls Activity state until asynchronous navigation and rotation layout settle.
+     */
     private fun awaitState(
         scenario: ActivityScenario<NavigationAdaptivePaneTestActivity>,
         predicate: (NavigationAdaptivePaneTestActivity) -> Boolean,
@@ -93,6 +101,10 @@ class NavigationAdaptivePaneDeviceTest {
         }
     }
 
+    /**
+     * 断言三窗格从左到右排列且互不重叠。
+     * Asserts that three panes are ordered left-to-right without overlap.
+     */
     private fun assertOrderedNonOverlapping(bounds: List<Rect>) {
         assertEquals(3, bounds.size)
         bounds.zipWithNext().forEach { (left, right) ->

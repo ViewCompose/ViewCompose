@@ -1,5 +1,9 @@
 package com.viewcompose.widget.core
 
+/**
+ * Badge DSL 的默认颜色和尺寸 token。
+ * Default color and sizing tokens for the Badge DSL.
+ */
 object BadgeDefaults {
     fun containerColor(): Int = Theme.colors.error
 

@@ -2,6 +2,13 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * IconButton DSL 的默认 token 入口。
+ * Default token entry point for the IconButton DSL.
+ *
+ * IconButton 复用 Button 的颜色层级，仅将内容区尺寸压缩为正方形触控目标。
+ * IconButton reuses Button color hierarchy and compresses the content area into a square touch target.
+ */
 object IconButtonDefaults {
     fun containerColor(
         variant: ButtonVariant = ButtonVariant.Primary,

@@ -32,16 +32,32 @@ import com.viewcompose.ui.node.spec.ConstraintPlaceholderSpec
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
 import com.viewcompose.widget.core.UiTreeBuilder
 
+/**
+ * ConstraintLayout content 中可使用的构建 scope。
+ * Builder scope available inside ConstraintLayout content.
+ */
 typealias ConstraintLayoutScope = UiTreeBuilder
 
+/**
+ * 业务侧引用一个带 layoutId 的子节点。
+ * App-side reference to a child node with a layoutId.
+ */
 data class ConstraintReference(
     override val id: String,
 ) : ConstraintReferenceTarget
 
+/**
+ * constraint anchor 可连接的目标。
+ * Target that a constraint anchor can connect to.
+ */
 sealed interface ConstraintReferenceTarget {
     val id: String?
 }
 
+/**
+ * ConstraintLayout 父容器自身的引用。
+ * Reference to the ConstraintLayout parent itself.
+ */
 data object ConstraintParentReference : ConstraintReferenceTarget {
     override val id: String? = null
 }
@@ -49,6 +65,10 @@ data object ConstraintParentReference : ConstraintReferenceTarget {
 val parent: ConstraintReferenceTarget
     get() = ConstraintParentReference
 
+/**
+ * 收集 ConstraintLayout helper DSL 生成的 guideline/barrier/chain 等辅助规格。
+ * Collects helper specs such as guidelines, barriers, and chains created by the ConstraintLayout DSL.
+ */
 private class MutableConstraintHelpersCollector {
     private var nextAutoId = 0
     val guidelines = mutableListOf<ConstraintGuidelineSpec>()
@@ -82,6 +102,10 @@ private class ConstraintLayoutDslContext(
     val helpers: MutableConstraintHelpersCollector,
 )
 
+/**
+ * 跟踪嵌套 ConstraintLayout DSL 调用的线程局部上下文。
+ * Thread-local context stack that tracks nested ConstraintLayout DSL calls.
+ */
 private object ConstraintLayoutDslContextStack {
     private val threadLocal: ThreadLocal<ArrayDeque<ConstraintLayoutDslContext>> = ThreadLocal.withInitial {
         ArrayDeque<ConstraintLayoutDslContext>()
@@ -120,6 +144,10 @@ private fun ConstraintReferenceTarget.toAnchorTarget(anchor: ConstraintAnchor): 
     )
 }
 
+/**
+ * 单个子节点的 constraint 配置 scope。
+ * Constraint configuration scope for one child node.
+ */
 class ConstraintConstrainScope internal constructor() {
     private var start: ConstraintAnchorLink? = null
     private var end: ConstraintAnchorLink? = null
@@ -337,6 +365,10 @@ private fun validateChainWeights(
     }
 }
 
+/**
+ * 将 modifier 绑定到 [ref]，并声明该子节点的 constraints。
+ * Binds a modifier to [ref] and declares constraints for that child.
+ */
 fun Modifier.constrainAs(
     ref: ConstraintReference,
     content: ConstraintConstrainScope.() -> Unit,
@@ -365,6 +397,10 @@ fun Modifier.constrain(
         )
 }
 
+/**
+ * 发射 ConstraintLayout 节点，并收集 content 中声明的 helper。
+ * Emits a ConstraintLayout node and collects helpers declared inside [content].
+ */
 fun UiTreeBuilder.ConstraintLayout(
     key: Any? = null,
     constraintSet: ConstraintSetSpec? = null,
@@ -391,6 +427,10 @@ fun UiTreeBuilder.ConstraintLayout(
     }
 }
 
+/**
+ * 创建一个可用于 constrain/helper API 的引用。
+ * Creates a reference usable by constrain and helper APIs.
+ */
 fun ConstraintLayoutScope.createRef(id: String): ConstraintReference {
     return ConstraintReference(id = id)
 }
@@ -507,6 +547,10 @@ fun ConstraintLayoutScope.createGuidelineFromBottom(
     return ConstraintReference(id)
 }
 
+/**
+ * 注册 barrier helper 的共享实现。
+ * Shared implementation for registering barrier helpers.
+ */
 private fun ConstraintLayoutScope.registerBarrier(
     id: String,
     direction: ConstraintBarrierDirection,
@@ -561,6 +605,10 @@ fun ConstraintLayoutScope.createBottomBarrier(
     return registerBarrier(id, ConstraintBarrierDirection.Bottom, refs, margin, allowsGoneWidgets)
 }
 
+/**
+ * 创建 Flow helper，用于把多个引用按行/列自动换行排布。
+ * Creates a Flow helper that lays out multiple references with row/column wrapping.
+ */
 fun ConstraintLayoutScope.createFlow(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("flow"),
@@ -738,6 +786,10 @@ fun ConstraintLayoutScope.createVerticalChain(
     )
 }
 
+/**
+ * 构建可复用 [ConstraintSetSpec] 的 DSL builder。
+ * DSL builder for reusable [ConstraintSetSpec].
+ */
 class ConstraintSetBuilder internal constructor() {
     private val constraints = linkedMapOf<String, ConstraintItemSpec>()
     private val helpers = MutableConstraintHelpersCollector()
@@ -1082,6 +1134,10 @@ class ConstraintSetBuilder internal constructor() {
     }
 }
 
+/**
+ * 构建独立 constraint set，可传给 [ConstraintLayout] 复用。
+ * Builds a standalone constraint set that can be reused by [ConstraintLayout].
+ */
 fun constraintSet(content: ConstraintSetBuilder.() -> Unit): ConstraintSetSpec {
     return ConstraintSetBuilder()
         .apply(content)

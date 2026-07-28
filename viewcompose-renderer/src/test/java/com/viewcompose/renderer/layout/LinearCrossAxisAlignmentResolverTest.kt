@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.layout
 
+/*
+ * 测试职责：覆盖 renderer layout 中的 Linear Cross Axis Alignment Resolver 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Linear Cross Axis Alignment Resolver behavior in renderer layout and guards render and patch contracts against regressions.
+ */
+
 import android.view.Gravity
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.VerticalAlignment

@@ -11,6 +11,10 @@ import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * 将框架 UiShape 转换为 Material ShapeAppearanceModel。
+ * Converts framework UiShape to Material ShapeAppearanceModel.
+ */
 internal fun UiShape?.toShapeAppearanceModel(layoutDirection: Int): ShapeAppearanceModel {
     val resolvedShape = this ?: UiShape.rounded(0)
     val topLeft = if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {

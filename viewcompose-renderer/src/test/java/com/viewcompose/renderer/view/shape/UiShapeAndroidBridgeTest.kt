@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.shape
 
+/*
+ * 测试职责：覆盖 renderer view/shape 中的 Ui Shape Android Bridge 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Ui Shape Android Bridge behavior in renderer view/shape and guards render and patch contracts against regressions.
+ */
+
 import android.graphics.RectF
 import android.view.View
 import com.google.android.material.shape.CutCornerTreatment

@@ -6,6 +6,13 @@ import com.viewcompose.runtime.observation.ObservableState
 import com.viewcompose.runtime.observation.Observation
 import com.viewcompose.runtime.observation.RuntimeObservation
 
+/**
+ * 派生状态实现，缓存计算结果并观察计算过程中读取到的依赖状态。
+ * Derived state implementation that caches computed output and observes state dependencies read during calculation.
+ *
+ * 当任一依赖失效时仅标记 dirty，下一次读取时再重新计算。
+ * When any dependency invalidates, it only marks dirty and recomputes on the next read.
+ */
 internal class DerivedStateImpl<T>(
     private val block: () -> T,
 ) : State<T>, ObservableState {
