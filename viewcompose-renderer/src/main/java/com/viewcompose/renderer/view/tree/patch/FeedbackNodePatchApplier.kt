@@ -7,7 +7,15 @@ import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.viewcompose.renderer.view.tree.ProgressIndicatorNodePatch
 import kotlin.math.roundToInt
 
+/**
+ * 反馈类节点的细粒度 patch 应用器。
+ * Fine-grained patch applier for feedback nodes.
+ */
 internal object FeedbackNodePatchApplier {
+    /**
+     * 更新线性/圆形进度指示器的模式、颜色、轨道和进度值。
+     * Updates mode, colors, track, and progress value for linear/circular progress indicators.
+     */
     fun applyProgressIndicatorPatch(
         view: ProgressBar,
         patch: ProgressIndicatorNodePatch,
@@ -47,6 +55,8 @@ internal object FeedbackNodePatchApplier {
         }
         val nextProgress = next.progress
         if (nextProgress != null && previous.progress != nextProgress) {
+            // 使用 10000 作为内部 max，保留 Float progress 到平台 Int progress 的精度。
+            // Use 10000 as internal max to preserve Float progress precision when mapping to platform Int progress.
             view.max = 10_000
             view.progress = (nextProgress.coerceIn(0f, 1f) * 10_000f).roundToInt()
         }

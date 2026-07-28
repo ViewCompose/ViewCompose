@@ -12,9 +12,17 @@ import com.viewcompose.ui.node.spec.NodeSpec
 import com.viewcompose.ui.node.spec.TabRowNodeProps
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 
+/**
+ * 比较 previous/next VNode 并选择最小绑定策略。
+ * Compares previous/next VNodes and chooses the smallest binding strategy.
+ */
 internal object NodeBindingDiffer {
     private val patchFactories by lazy { NodeBinderDescriptors.patchFactoriesBySpec() }
 
+    /**
+     * 生成节点复用时的 binding plan。
+     * Builds the binding plan for a reused node.
+     */
     fun plan(
         previous: VNode,
         next: VNode,
@@ -48,6 +56,7 @@ internal object NodeBindingDiffer {
             nextSpec is BoxNodeProps &&
             prevSpec.rippleColor != nextSpec.rippleColor
         ) {
+            // 容器 ripple 从 NodeSpec 参与 style 绑定，因此变化时必须重新执行 modifier/style bind。
             // Container ripple is resolved from NodeSpec, so this change must re-run modifier/style binding.
             return NodeBindingPlan.Rebind
         }
@@ -65,6 +74,8 @@ internal object NodeBindingDiffer {
         previous: NodeSpec,
         next: NodeSpec,
     ): Boolean {
+        // lazy/pager/tab 内容会持有 session factory/updater；引用变化即使 equals 相同也需要更新。
+        // lazy/pager/tab content owns session factories/updaters; reference changes require updates even when equals matches.
         return when {
             previous is LazyColumnNodeProps && next is LazyColumnNodeProps -> previous.items.hasSessionIdentityChange(next.items)
             previous is LazyRowNodeProps && next is LazyRowNodeProps -> previous.items.hasSessionIdentityChange(next.items)

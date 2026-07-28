@@ -9,6 +9,10 @@ import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.renderer.view.container.DeclarativeCanvasLayout
 import com.viewcompose.renderer.view.tree.patch.ContentNodePatchApplier
 
+/**
+ * 注册文本、按钮、分割线和 canvas 节点的 binder/patch 描述。
+ * Registers binder/patch descriptors for text, button, divider, and canvas nodes.
+ */
 internal fun MutableList<NodeBinderDescriptor>.addContentNodeBinderDescriptors() {
     val textPatch = patchDescriptor<TextNodeProps, TextNodePatch>(
         factory = { previous, next -> TextNodePatch(previous, next) },

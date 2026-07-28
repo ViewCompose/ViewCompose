@@ -6,6 +6,10 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.NodeSpec
 import kotlin.reflect.KClass
 
+/**
+ * renderer 内部使用的 View binder/patch applier 注册表。
+ * Internal View binder/patch applier registry used by the renderer.
+ */
 internal object NodeViewBinderRegistry {
     private val binders: Map<NodeType, (View, VNode) -> Unit> by lazy {
         NodeBinderDescriptors.bindersByType()
@@ -14,6 +18,10 @@ internal object NodeViewBinderRegistry {
         NodeBinderDescriptors.patchAppliersByType()
     }
 
+    /**
+     * 对新建或需要重绑的 View 执行完整绑定。
+     * Performs a full bind for newly created or rebound Views.
+     */
     fun bind(
         view: View,
         node: VNode,
@@ -21,6 +29,10 @@ internal object NodeViewBinderRegistry {
         binders.getValue(node.type).invoke(view, node)
     }
 
+    /**
+     * 对已复用 View 执行细粒度 patch。
+     * Applies a fine-grained patch to a reused View.
+     */
     fun applyPatch(
         view: View,
         patch: NodeViewPatch,

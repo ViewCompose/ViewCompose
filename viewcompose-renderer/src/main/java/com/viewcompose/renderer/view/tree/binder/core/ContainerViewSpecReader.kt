@@ -16,7 +16,15 @@ import com.viewcompose.ui.node.spec.FlowColumnNodeProps
 import com.viewcompose.ui.node.spec.FlowRowNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
 
+/**
+ * 将容器类 NodeSpec 转换为 binder 使用的平台无关中间 spec。
+ * Converts container NodeSpec values into platform-neutral intermediate specs consumed by binders.
+ */
 internal object ContainerViewSpecReader {
+    /**
+     * 读取 Row 的线性布局参数。
+     * Reads Row linear layout parameters.
+     */
     fun readRowSpec(node: VNode): ContainerViewBinder.LinearSpec {
         val spec = node.requireSpec<RowNodeProps>()
         return ContainerViewBinder.LinearSpec(
@@ -100,6 +108,10 @@ internal object ContainerViewSpecReader {
         )
     }
 
+    /**
+     * 将垂直对齐转换为 Android gravity。
+     * Converts vertical alignment to Android gravity.
+     */
     internal fun VerticalAlignment.toGravity(): Int {
         return when (this) {
             VerticalAlignment.Top -> Gravity.TOP
@@ -108,6 +120,10 @@ internal object ContainerViewSpecReader {
         }
     }
 
+    /**
+     * 将水平对齐转换为 Android gravity。
+     * Converts horizontal alignment to Android gravity.
+     */
     internal fun HorizontalAlignment.toGravity(): Int {
         return when (this) {
             HorizontalAlignment.Start -> Gravity.START
@@ -116,6 +132,10 @@ internal object ContainerViewSpecReader {
         }
     }
 
+    /**
+     * 将 Box 内容对齐转换为 Android gravity。
+     * Converts Box content alignment to Android gravity.
+     */
     internal fun BoxAlignment.toGravity(): Int {
         return when (this) {
             BoxAlignment.TopStart -> Gravity.TOP or Gravity.START

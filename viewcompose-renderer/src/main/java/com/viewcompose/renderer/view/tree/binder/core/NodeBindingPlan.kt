@@ -30,19 +30,46 @@ import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 
+/**
+ * 复用节点时的绑定策略。
+ * Binding strategy for a reused node.
+ */
 internal sealed interface NodeBindingPlan {
+    /**
+     * 跳过当前节点绑定，但仍继续 reconcile 子节点。
+     * Skips binding this node while continuing to reconcile children.
+     */
     data object SkipSelfOnly : NodeBindingPlan
 
+    /**
+     * 跳过当前节点和整棵子树。
+     * Skips this node and the entire subtree.
+     */
     data object SkipSubtree : NodeBindingPlan
 
+    /**
+     * 重新执行完整 bind。
+     * Re-runs a full bind.
+     */
     data object Rebind : NodeBindingPlan
 
+    /**
+     * 执行细粒度 patch，可同时标记 modifier 是否变化。
+     * Applies a fine-grained patch and records whether modifiers changed.
+     */
     data class Patch(
         val patch: NodeViewPatch,
         val modifierChanged: Boolean = false,
     ) : NodeBindingPlan
 }
 
+/**
+ * 细粒度 View patch 的公共标记接口。
+ * Marker interface for fine-grained View patches.
+ *
+ * 具体 patch 只携带 previous/next spec，实际差异判断由对应 applier 完成。
+ * Concrete patches only carry previous/next specs; the matching applier performs property-level diffing.
+ */
 internal sealed interface NodeViewPatch
 
 internal data class ButtonNodePatch(

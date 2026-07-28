@@ -18,6 +18,10 @@ import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
 import com.viewcompose.renderer.view.tree.patch.ContainerNodePatchApplier
 
+/**
+ * 注册 lazy、pager、tab 和 navigation 类集合节点的 binder/patch 描述。
+ * Registers binder/patch descriptors for lazy, pager, tab, and navigation collection nodes.
+ */
 internal fun MutableList<NodeBinderDescriptor>.addCollectionNodeBinderDescriptors() {
     val lazyColumnPatch = patchDescriptor<LazyColumnNodeProps, LazyColumnNodePatch>(
         factory = { previous, next -> LazyColumnNodePatch(previous, next) },

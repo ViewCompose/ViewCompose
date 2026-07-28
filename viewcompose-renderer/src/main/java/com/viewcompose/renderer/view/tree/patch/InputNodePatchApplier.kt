@@ -14,7 +14,15 @@ import com.viewcompose.renderer.view.tree.ViewComposeEditText
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 
+/**
+ * 输入类节点的细粒度 patch 应用器。
+ * Fine-grained patch applier for input nodes.
+ */
 internal object InputNodePatchApplier {
+    /**
+     * 更新文本输入 View 的键盘、文本控制器、样式和 autofill 配置。
+     * Updates keyboard, text controller, styling, and autofill configuration for a text input View.
+     */
     fun applyTextFieldPatch(
         view: ViewComposeEditText,
         patch: TextFieldNodePatch,
@@ -47,6 +55,8 @@ internal object InputNodePatchApplier {
             previous.keyboardOptions != next.keyboardOptions ||
             previous.singleLine != next.singleLine
         ) {
+            // 输入类型和 IME action 由 textController 管理，避免 EditText 原生状态与 TextFieldState 分离。
+            // Input type and IME action are managed by textController to keep native EditText state aligned with TextFieldState.
             view.textController.updateEditorConfiguration(
                 inputType = nextSpec.inputType,
                 editorOptions = nextSpec.editorOptions,
@@ -109,12 +119,18 @@ internal object InputNodePatchApplier {
         }
     }
 
+    /**
+     * 更新 checkbox/switch/radio 的选中态、监听器、颜色和文本样式。
+     * Updates checked state, listener, colors, and text style for checkbox/switch/radio.
+     */
     fun applyTogglePatch(
         view: CompoundButton,
         patch: ToggleNodePatch,
     ) {
         val previous = patch.previous
         val next = patch.next
+        // 先重绑监听器，再写入 isChecked，避免程序化状态同步触发旧回调。
+        // Rebind the listener before setting isChecked so programmatic state sync cannot invoke a stale callback.
         InputViewBinder.updateToggleListener(
             view = view,
             expectedChecked = next.checked,
@@ -172,6 +188,10 @@ internal object InputNodePatchApplier {
         }
     }
 
+    /**
+     * 更新 SeekBar 范围、进度、监听器和 tint。
+     * Updates SeekBar range, progress, listener, and tint.
+     */
     fun applySliderPatch(
         view: SeekBar,
         patch: SliderNodePatch,
@@ -179,6 +199,8 @@ internal object InputNodePatchApplier {
         val previous = patch.previous
         val next = patch.next
         val resolvedValue = next.value.coerceIn(next.min, next.max)
+        // progress 用 value - min 表示，保持 DSL 暴露任意整数区间。
+        // progress is represented as value - min so the DSL can expose any integer range.
         InputViewBinder.updateSliderListener(
             view = view,
             min = next.min,
