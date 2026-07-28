@@ -4,11 +4,14 @@ import android.view.View
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.resolve
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
+import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,6 +20,54 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ModifierInteractionApplierTest {
+    @Test
+    fun `incremental modifier application still applies changed layout domain`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        val firstNode = vnode(Modifier.padding(4))
+        val secondNode = vnode(Modifier.padding(12))
+
+        ViewModifierApplier.applyModifier(view, firstNode, defaultRippleColor = 0)
+        ViewModifierApplier.applyModifier(view, secondNode, defaultRippleColor = 0)
+
+        assertEquals(12, view.paddingLeft)
+        assertEquals(12, view.paddingTop)
+        assertEquals(12, view.paddingRight)
+        assertEquals(12, view.paddingBottom)
+    }
+
+    @Test
+    fun `callback-only modifier update does not rebuild the native surface`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        var latestCalls = 0
+        val firstNode = vnode(
+            Modifier
+                .backgroundColor(0xFF112233.toInt())
+                .clickable {},
+        )
+        val secondNode = vnode(
+            Modifier
+                .backgroundColor(0xFF112233.toInt())
+                .clickable { latestCalls += 1 },
+        )
+
+        ViewModifierApplier.applyModifier(view, firstNode, defaultRippleColor = 0)
+        val firstBackground = view.background
+        ViewModifierApplier.applyModifier(view, secondNode, defaultRippleColor = 0)
+
+        assertSame(firstBackground, view.background)
+        view.performClick()
+        assertEquals(1, latestCalls)
+
+        val changedSurfaceNode = vnode(
+            Modifier
+                .backgroundColor(0xFF445566.toInt())
+                .clickable { latestCalls += 1 },
+        )
+        ViewModifierApplier.applyModifier(view, changedSurfaceNode, defaultRippleColor = 0)
+
+        assertNotSame(firstBackground, view.background)
+    }
+
     @Test
     fun `clickable modifier reuses listener while refreshing callback`() {
         val view = View(RuntimeEnvironment.getApplication())

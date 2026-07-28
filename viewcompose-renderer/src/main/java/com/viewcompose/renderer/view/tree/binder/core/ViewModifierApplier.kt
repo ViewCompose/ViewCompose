@@ -63,7 +63,6 @@ internal object ViewModifierApplier {
         defaultRippleColor: Int,
         resolved: ResolvedModifiers = node.modifier.resolve(),
     ) {
-        view.setTag(R.id.viewcompose_resolved_modifiers, resolved)
         val nodeStyle = ModifierNodeStyleResolver.resolveNodeStyle(
             node = node,
             resolved = resolved,
@@ -73,58 +72,186 @@ internal object ViewModifierApplier {
             resolved = resolved,
             nodeStyle = nodeStyle,
         )
-        ModifierGraphicsApplier.applyGraphicsModifiers(
-            view = view,
-            resolved = resolved,
-        )
-        ModifierSurfaceStyleApplier.applySurfaceStyle(
-            view = view,
+        val previous = view.getTag(
+            R.id.viewcompose_applied_modifier_state,
+        ) as? AppliedModifierState
+        val next = AppliedModifierState(
+            nodeType = node.type,
+            nodeKey = node.key,
             resolved = resolved,
             nodeStyle = nodeStyle,
+            hostStyle = hostStyle,
         )
-        ModifierInteractionApplier.applyCommonHostProperties(
-            view = view,
-            resolved = resolved,
-            minHeight = hostStyle.minHeight,
-            minWidth = hostStyle.minWidth,
-        )
-        ModifierSemanticsApplier.apply(
-            view = view,
-            semantics = resolved.semantics,
-        )
-        ModifierInteractionApplier.applyClickAndFocusState(
-            view = view,
-            node = node,
-            resolved = resolved,
-        )
-        ModifierNestedScrollApplier.apply(
-            view = view,
-            resolved = resolved,
-        )
-        ModifierInsetsApplier.applyHostPaddingWhenNoInsets(
-            view = view,
-            hasWindowInsetsPadding = hostStyle.hasWindowInsetsPadding,
-            hostPadding = hostStyle.padding,
-        )
-        ModifierInsetsApplier.applyWindowInsetsPadding(
-            view = view,
-            systemBarsModifier = resolved.systemBarsInsetsPadding,
-            imeModifier = resolved.imeInsetsPadding,
-            basePadding = if (hostStyle.hasWindowInsetsPadding) {
-                nodeStyle.padding
-            } else {
-                null
-            },
-        )
-        ModifierInteractionApplier.applyTextAppearanceIfTextView(
-            view = view,
-            textColor = nodeStyle.textColor,
-            textSizeSp = nodeStyle.textSizeSp,
-            fontWeight = nodeStyle.fontWeight,
-            fontFamily = nodeStyle.fontFamily,
-            letterSpacingEm = nodeStyle.letterSpacingEm,
-            lineHeightSp = nodeStyle.lineHeightSp,
-            includeFontPadding = nodeStyle.includeFontPadding,
-        )
+        view.setTag(R.id.viewcompose_resolved_modifiers, resolved)
+
+        if (previous == null || graphicsChanged(previous, next)) {
+            ModifierGraphicsApplier.applyGraphicsModifiers(
+                view = view,
+                resolved = resolved,
+            )
+        }
+        if (previous == null || surfaceChanged(previous, next)) {
+            ModifierSurfaceStyleApplier.applySurfaceStyle(
+                view = view,
+                resolved = resolved,
+                nodeStyle = nodeStyle,
+            )
+        }
+        if (previous == null || commonHostPropertiesChanged(previous, next)) {
+            ModifierInteractionApplier.applyCommonHostProperties(
+                view = view,
+                resolved = resolved,
+                minHeight = hostStyle.minHeight,
+                minWidth = hostStyle.minWidth,
+            )
+        }
+        if (previous == null || previous.resolved.semantics != resolved.semantics) {
+            ModifierSemanticsApplier.apply(
+                view = view,
+                semantics = resolved.semantics,
+            )
+        }
+        if (previous == null || interactionChanged(previous, next)) {
+            ModifierInteractionApplier.applyClickAndFocusState(
+                view = view,
+                node = node,
+                resolved = resolved,
+            )
+        }
+        if (previous == null || previous.resolved.nestedScroll != resolved.nestedScroll) {
+            ModifierNestedScrollApplier.apply(
+                view = view,
+                resolved = resolved,
+            )
+        }
+        if (previous == null || insetsChanged(previous, next)) {
+            ModifierInsetsApplier.applyHostPaddingWhenNoInsets(
+                view = view,
+                hasWindowInsetsPadding = hostStyle.hasWindowInsetsPadding,
+                hostPadding = hostStyle.padding,
+            )
+            ModifierInsetsApplier.applyWindowInsetsPadding(
+                view = view,
+                systemBarsModifier = resolved.systemBarsInsetsPadding,
+                imeModifier = resolved.imeInsetsPadding,
+                basePadding = if (hostStyle.hasWindowInsetsPadding) {
+                    nodeStyle.padding
+                } else {
+                    null
+                },
+            )
+        }
+        if (previous == null || textAppearanceChanged(previous, next)) {
+            ModifierInteractionApplier.applyTextAppearanceIfTextView(
+                view = view,
+                textColor = nodeStyle.textColor,
+                textSizeSp = nodeStyle.textSizeSp,
+                fontWeight = nodeStyle.fontWeight,
+                fontFamily = nodeStyle.fontFamily,
+                letterSpacingEm = nodeStyle.letterSpacingEm,
+                lineHeightSp = nodeStyle.lineHeightSp,
+                includeFontPadding = nodeStyle.includeFontPadding,
+            )
+        }
+        view.setTag(R.id.viewcompose_applied_modifier_state, next)
+    }
+
+    private fun graphicsChanged(
+        previous: AppliedModifierState,
+        next: AppliedModifierState,
+    ): Boolean = previous.resolved.drawElements != next.resolved.drawElements
+
+    private fun surfaceChanged(
+        previous: AppliedModifierState,
+        next: AppliedModifierState,
+    ): Boolean {
+        val previousStyle = previous.nodeStyle
+        val nextStyle = next.nodeStyle
+        return previousStyle.backgroundDrawableResId != nextStyle.backgroundDrawableResId ||
+            previousStyle.backgroundColor != nextStyle.backgroundColor ||
+            previousStyle.borderWidth != nextStyle.borderWidth ||
+            previousStyle.borderColor != nextStyle.borderColor ||
+            previousStyle.cornerRadius != nextStyle.cornerRadius ||
+            previousStyle.shape != nextStyle.shape ||
+            previousStyle.rippleColor != nextStyle.rippleColor ||
+            previousStyle.clickable != nextStyle.clickable ||
+            previous.resolved.clip != next.resolved.clip ||
+            previous.resolved.graphicsLayer?.clip != next.resolved.graphicsLayer?.clip
+    }
+
+    private fun commonHostPropertiesChanged(
+        previous: AppliedModifierState,
+        next: AppliedModifierState,
+    ): Boolean {
+        val previousResolved = previous.resolved
+        val nextResolved = next.resolved
+        return previousResolved.overlayAnchor != nextResolved.overlayAnchor ||
+            previousResolved.testTag != nextResolved.testTag ||
+            previousResolved.alpha != nextResolved.alpha ||
+            previousResolved.visibility != nextResolved.visibility ||
+            previousResolved.offset != nextResolved.offset ||
+            previousResolved.zIndex != nextResolved.zIndex ||
+            previousResolved.elevation != nextResolved.elevation ||
+            previousResolved.graphicsLayer != nextResolved.graphicsLayer ||
+            previous.hostStyle.minHeight != next.hostStyle.minHeight ||
+            previous.hostStyle.minWidth != next.hostStyle.minWidth ||
+            previousResolved.layoutId != nextResolved.layoutId ||
+            previousResolved.constraint != nextResolved.constraint
+    }
+
+    private fun interactionChanged(
+        previous: AppliedModifierState,
+        next: AppliedModifierState,
+    ): Boolean {
+        val previousResolved = previous.resolved
+        val nextResolved = next.resolved
+        return previous.nodeType != next.nodeType ||
+            previous.nodeKey != next.nodeKey ||
+            previousResolved.clickable != nextResolved.clickable ||
+            previousResolved.pointerInput != nextResolved.pointerInput ||
+            previousResolved.combinedClickable != nextResolved.combinedClickable ||
+            previousResolved.draggable != nextResolved.draggable ||
+            previousResolved.anchoredDraggable != nextResolved.anchoredDraggable ||
+            previousResolved.transformable != nextResolved.transformable ||
+            previousResolved.gesturePriority != nextResolved.gesturePriority ||
+            previousResolved.focusable != nextResolved.focusable ||
+            previousResolved.focusRequester != nextResolved.focusRequester ||
+            previousResolved.focusProperties != nextResolved.focusProperties ||
+            previousResolved.focusGroup != nextResolved.focusGroup ||
+            previousResolved.onFocusChanged != nextResolved.onFocusChanged ||
+            previousResolved.previewKeyEvent != nextResolved.previewKeyEvent ||
+            previousResolved.keyEvent != nextResolved.keyEvent
+    }
+
+    private fun insetsChanged(
+        previous: AppliedModifierState,
+        next: AppliedModifierState,
+    ): Boolean {
+        return previous.hostStyle != next.hostStyle ||
+            previous.resolved.systemBarsInsetsPadding != next.resolved.systemBarsInsetsPadding ||
+            previous.resolved.imeInsetsPadding != next.resolved.imeInsetsPadding
+    }
+
+    private fun textAppearanceChanged(
+        previous: AppliedModifierState,
+        next: AppliedModifierState,
+    ): Boolean {
+        val previousStyle = previous.nodeStyle
+        val nextStyle = next.nodeStyle
+        return previousStyle.textColor != nextStyle.textColor ||
+            previousStyle.textSizeSp != nextStyle.textSizeSp ||
+            previousStyle.fontWeight != nextStyle.fontWeight ||
+            previousStyle.fontFamily != nextStyle.fontFamily ||
+            previousStyle.letterSpacingEm != nextStyle.letterSpacingEm ||
+            previousStyle.lineHeightSp != nextStyle.lineHeightSp ||
+            previousStyle.includeFontPadding != nextStyle.includeFontPadding
     }
 }
+
+private data class AppliedModifierState(
+    val nodeType: com.viewcompose.ui.node.NodeType,
+    val nodeKey: Any?,
+    val resolved: ResolvedModifiers,
+    val nodeStyle: NodeStyle,
+    val hostStyle: HostStyle,
+)
