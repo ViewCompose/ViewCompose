@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view
 
+/*
+ * 测试职责：覆盖 renderer view 中的 Lazy Item Session Controller 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Lazy Item Session Controller behavior in renderer view and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory

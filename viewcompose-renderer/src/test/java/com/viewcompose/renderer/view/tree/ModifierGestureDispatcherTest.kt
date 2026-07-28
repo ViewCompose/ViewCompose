@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
+/*
+ * 测试职责：覆盖 renderer view/tree 中的 Modifier Gesture Dispatcher 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Modifier Gesture Dispatcher behavior in renderer view/tree and guards render and patch contracts against regressions.
+ */
+
 import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.View

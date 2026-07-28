@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.reconcile
 
+/*
+ * 测试职责：覆盖 renderer reconcile 中的 Lazy List Diff 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Lazy List Diff behavior in renderer reconcile and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession

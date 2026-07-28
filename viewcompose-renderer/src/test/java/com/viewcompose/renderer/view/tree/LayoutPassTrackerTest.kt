@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
+/*
+ * 测试职责：覆盖 renderer view/tree 中的 Layout Pass Tracker 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Layout Pass Tracker behavior in renderer view/tree and guards render and patch contracts against regressions.
+ */
+
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

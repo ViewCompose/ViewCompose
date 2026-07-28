@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.debug
 
+/*
+ * 测试职责：覆盖 renderer debug 中的 Debug Strings 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Debug Strings behavior in renderer debug and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode

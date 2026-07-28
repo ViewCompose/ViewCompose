@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.modifier
 
+/*
+ * 测试职责：覆盖 renderer modifier 中的 Resolved Focus Modifiers 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Resolved Focus Modifiers behavior in renderer modifier and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.focusProperties

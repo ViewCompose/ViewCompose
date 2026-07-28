@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.layout
 
+/*
+ * 测试职责：覆盖 renderer layout 中的 Cross Axis Placement Calculator 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Cross Axis Placement Calculator behavior in renderer layout and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 import org.junit.Assert.assertEquals

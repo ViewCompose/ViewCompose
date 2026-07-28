@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.graphics
 
+/*
+ * 测试职责：覆盖 renderer view/graphics 中的 Android Draw Command Executor 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Android Draw Command Executor behavior in renderer view/graphics and guards render and patch contracts against regressions.
+ */
+
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import com.viewcompose.graphics.core.DrawRecorder

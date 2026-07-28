@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.guard
 
+/*
+ * 契约测试职责：锁定 renderer guard 中的 Legacy Node Contract Guard 边界，防止节点协议或依赖关系在重构中漂移。
+ * Contract test responsibility: locks down the Legacy Node Contract Guard boundary in renderer guard and prevents node protocol or dependency drift.
+ */
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths

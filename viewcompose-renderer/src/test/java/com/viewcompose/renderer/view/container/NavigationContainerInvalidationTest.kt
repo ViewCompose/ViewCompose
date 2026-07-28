@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.container
 
+/*
+ * 测试职责：覆盖 renderer view/container 中的 Navigation Container Invalidation 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Navigation Container Invalidation behavior in renderer view/container and guards render and patch contracts against regressions.
+ */
+
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView

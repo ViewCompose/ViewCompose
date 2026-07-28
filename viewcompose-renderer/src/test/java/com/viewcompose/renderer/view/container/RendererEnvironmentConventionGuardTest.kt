@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.container
 
+/*
+ * 契约测试职责：锁定 renderer view/container 中的 Renderer Environment Convention Guard 边界，防止节点协议或依赖关系在重构中漂移。
+ * Contract test responsibility: locks down the Renderer Environment Convention Guard boundary in renderer view/container and prevents node protocol or dependency drift.
+ */
+
 import java.io.File
 import org.junit.Assert.assertTrue
 import org.junit.Test

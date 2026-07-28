@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
+/*
+ * 契约测试职责：锁定 renderer view/tree 中的 Node Binder Descriptor Structure Guard 边界，防止节点协议或依赖关系在重构中漂移。
+ * Contract test responsibility: locks down the Node Binder Descriptor Structure Guard boundary in renderer view/tree and prevents node protocol or dependency drift.
+ */
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths

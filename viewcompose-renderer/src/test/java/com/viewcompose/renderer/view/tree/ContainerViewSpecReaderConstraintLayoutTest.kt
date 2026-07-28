@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
+/*
+ * 测试职责：覆盖 renderer view/tree 中的 Container View Spec Reader Constraint Layout 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Container View Spec Reader Constraint Layout behavior in renderer view/tree and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.ConstraintAnchor

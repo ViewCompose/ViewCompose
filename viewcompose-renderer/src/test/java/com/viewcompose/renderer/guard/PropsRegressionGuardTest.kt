@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.guard
 
+/*
+ * 契约测试职责：锁定 renderer guard 中的 Props Regression Guard 边界，防止节点协议或依赖关系在重构中漂移。
+ * Contract test responsibility: locks down the Props Regression Guard boundary in renderer guard and prevents node protocol or dependency drift.
+ */
+
 import java.io.File
 import org.junit.Assert.assertTrue
 import org.junit.Test

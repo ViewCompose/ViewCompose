@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
+/*
+ * 测试职责：覆盖 renderer view/tree 中的 Animated Size Node Wrapper 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Animated Size Node Wrapper behavior in renderer view/tree and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.ui.modifier.AlphaModifierElement
 import com.viewcompose.ui.modifier.AnimateContentSizeModifierElement
 import com.viewcompose.ui.modifier.ContentSizeEasingModel

@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view
 
+/*
+ * 测试职责：覆盖 renderer view 中的 Lazy Holder Registry 行为，防止渲染和 patch 契约在后续重构中回退。
+ * Test responsibility: covers Lazy Holder Registry behavior in renderer view and guards render and patch contracts against regressions.
+ */
+
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Test
