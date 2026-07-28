@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core widget/input 中的 Text Field 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Text Field behavior in widget-core widget/input and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.node.NodeType

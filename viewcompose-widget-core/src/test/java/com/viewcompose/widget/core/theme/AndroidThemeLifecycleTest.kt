@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core theme 中的 Android Theme Lifecycle 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Android Theme Lifecycle behavior in widget-core theme and guards DSL, state, or theme contracts against regressions.
+ */
+
 import android.content.Context
 import android.content.res.Configuration
 import android.view.ContextThemeWrapper

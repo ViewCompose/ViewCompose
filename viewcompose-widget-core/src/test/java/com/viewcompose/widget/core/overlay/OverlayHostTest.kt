@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core overlay 中的 Overlay Host 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Overlay Host behavior in widget-core overlay and guards DSL, state, or theme contracts against regressions.
+ */
+
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test

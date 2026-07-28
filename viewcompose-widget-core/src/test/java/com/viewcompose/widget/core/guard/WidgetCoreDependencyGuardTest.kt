@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core.guard
 
+/*
+ * 契约测试职责：锁定 widget-core guard 中的 Widget Core Dependency Guard 边界，防止 DSL 或依赖关系在重构中漂移。
+ * Contract test responsibility: locks down the Widget Core Dependency Guard boundary in widget-core guard and prevents DSL or dependency drift.
+ */
+
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files

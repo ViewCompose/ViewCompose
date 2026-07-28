@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core overlay 中的 Overlay Scrim Theme Defaults 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Overlay Scrim Theme Defaults behavior in widget-core overlay and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.ui.node.VNode
 import org.junit.Assert.assertEquals
 import org.junit.Test

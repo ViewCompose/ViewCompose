@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core context 中的 Lazy Content Local Propagation 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Lazy Content Local Propagation behavior in widget-core context and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.TabRowNodeProps

@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 契约测试职责：锁定 widget-core theme 中的 Theme Defaults Hardcoded Color Guard 边界，防止 DSL 或依赖关系在重构中漂移。
+ * Contract test responsibility: locks down the Theme Defaults Hardcoded Color Guard boundary in widget-core theme and prevents DSL or dependency drift.
+ */
+
 import java.io.File
 import org.junit.Assert.assertTrue
 import org.junit.Test

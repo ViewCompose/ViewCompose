@@ -1,5 +1,10 @@
 package com.viewcompose.widget.core
 
+/*
+ * 测试职责：覆盖 widget-core widget/content 中的 Image 行为，防止 DSL、状态或主题契约在后续重构中回退。
+ * Test responsibility: covers Image behavior in widget-core widget/content and guards DSL, state, or theme contracts against regressions.
+ */
+
 import com.viewcompose.ui.modifier.SizeModifierElement
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
