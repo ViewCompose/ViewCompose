@@ -23,6 +23,10 @@ If your change affects UI behavior on device/emulator, also run:
 ./gradlew qaFull
 ```
 
+Navigation changes have an additional API 33/API 35 P0 certification matrix covering real
+process-death restoration and platform Predictive Back. Run the merge gate documented in
+[`NAVIGATION.md`](NAVIGATION.md#stage-6-device-validation-and-p0-merge-gate) before opening the PR.
+
 ## Coding Expectations
 
 1. Follow repository docs: `ARCHITECTURE.md` and `WORKFLOW.md`.

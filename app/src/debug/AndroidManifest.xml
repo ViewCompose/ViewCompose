@@ -12,5 +12,35 @@
             android:exported="false"
             android:showWhenLocked="true"
             android:turnScreenOn="true" />
+        <activity
+            android:name=".NavigationBackTestActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
+        <activity
+            android:name=".NavigationDeepLinkTestActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="navigation"
+                    android:scheme="viewcompose" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".NavigationAdaptivePaneTestActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
     </application>
 </manifest>

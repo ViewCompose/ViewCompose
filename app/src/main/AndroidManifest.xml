@@ -72,6 +72,21 @@
             android:name=".ModifiersActivity"
             android:exported="false" />
         <activity
+            android:name=".SystemNavigationActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="demo"
+                    android:scheme="viewcompose" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".NavigationActivity"
             android:exported="false" />
         <activity

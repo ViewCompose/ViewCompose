@@ -11,6 +11,8 @@ plugins {
 val modulePackageRoots = mapOf(
     "app" to "com.viewcompose",
     "viewcompose-runtime" to "com.viewcompose.runtime",
+    "viewcompose-navigation-core" to "com.viewcompose.navigation.core",
+    "viewcompose-navigation" to "com.viewcompose.navigation",
     "viewcompose-ui-contract" to "com.viewcompose.ui",
     "viewcompose-renderer" to "com.viewcompose.renderer",
     "viewcompose-widget-core" to "com.viewcompose.widget.core",
@@ -33,6 +35,7 @@ val modulePackageRoots = mapOf(
 val kotlinJvmModules = setOf(
     "viewcompose-ui-contract",
     "viewcompose-runtime",
+    "viewcompose-navigation-core",
     "viewcompose-animation-core",
     "viewcompose-gesture-core",
     "viewcompose-graphics-core",
@@ -40,6 +43,8 @@ val kotlinJvmModules = setOf(
 
 val qaQuickTasks = listOf(
     ":viewcompose-runtime:compileKotlin",
+    ":viewcompose-navigation-core:compileKotlin",
+    ":viewcompose-navigation:compileDebugKotlin",
     ":viewcompose-ui-contract:compileKotlin",
     ":viewcompose-host-android:compileDebugKotlin",
     ":viewcompose-lifecycle:compileDebugKotlin",
@@ -58,6 +63,8 @@ val qaQuickTasks = listOf(
     ":viewcompose-widget-constraintlayout:compileDebugKotlin",
     ":app:compileDebugKotlin",
     ":viewcompose-runtime:test",
+    ":viewcompose-navigation-core:test",
+    ":viewcompose-navigation:testDebugUnitTest",
     ":viewcompose-ui-contract:test",
     ":viewcompose-host-android:testDebugUnitTest",
     ":viewcompose-lifecycle:testDebugUnitTest",
@@ -267,12 +274,48 @@ tasks.register("verifyGraphicsCorePurity") {
     }
 }
 
+tasks.register("verifyNavigationCorePurity") {
+    group = "verification"
+    description = "Verify navigation-core remains Kotlin/JVM-pure without Android imports."
+    doLast {
+        val violations = mutableListOf<String>()
+        val navigationCoreMainDir = rootDir.resolve("viewcompose-navigation-core").resolve("src/main")
+        if (navigationCoreMainDir.exists()) {
+            navigationCoreMainDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import android.") ||
+                                trimmed.startsWith("import androidx.")
+                            ) {
+                                violations += "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Navigation core purity verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("qaQuick") {
     group = "verification"
     description = "Run compile + unit-test quality gate for all core modules."
     dependsOn("verifyModulePackageRoots")
     dependsOn("verifyAndroidModuleNamespaces")
     dependsOn("verifyRuntimePurity")
+    dependsOn("verifyNavigationCorePurity")
     dependsOn("verifyGestureCorePurity")
     dependsOn("verifyGraphicsCorePurity")
     dependsOn(qaQuickTasks)

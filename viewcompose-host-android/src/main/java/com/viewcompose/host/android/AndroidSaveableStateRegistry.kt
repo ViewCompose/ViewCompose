@@ -66,6 +66,18 @@ internal object AndroidSaveableStateRegistryStore {
     )
 }
 
+/**
+ * Creates or returns the ViewCompose saveable-state registry bound to an Android
+ * [SavedStateRegistryOwner].
+ *
+ * Custom framework-owned hosts, such as navigation destinations, use this bridge to share the
+ * same transactional `rememberSaveable` persistence semantics as Activity and Fragment roots.
+ * The binding is removed automatically when [SavedStateRegistryOwner.getLifecycle] is destroyed.
+ */
+fun viewComposeSaveableStateRegistry(
+    owner: SavedStateRegistryOwner,
+): SaveableStateRegistry = AndroidSaveableStateRegistryStore.registryFor(owner)
+
 private fun canBeSavedToBundle(value: Any?): Boolean {
     return when (value) {
         null -> true

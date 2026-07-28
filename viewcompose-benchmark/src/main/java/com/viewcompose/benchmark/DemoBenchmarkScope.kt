@@ -1,14 +1,17 @@
 package com.viewcompose.benchmark
 
+import android.os.SystemClock
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertNotNull
 
 internal fun MacrobenchmarkScope.startDemoAndWait() {
+    prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait()
-    device.wait(Until.hasObject(By.text("Demo Theme")), UI_WAIT_TIMEOUT_MS)
+    device.wait(Until.hasObject(By.text("已实现模块")), UI_WAIT_TIMEOUT_MS)
 }
 
 internal fun MacrobenchmarkScope.startCatalogAndWait() {
@@ -33,6 +36,7 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
     expectedText: String,
     extras: Map<String, Int> = emptyMap(),
 ) {
+    prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait { intent ->
         // Clear app-specific extras from previous test methods while
@@ -60,6 +64,7 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
     scenario: String,
     expectedText: String,
 ) {
+    prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait { intent ->
         intent.removeExtra("demo_module_key")
@@ -69,6 +74,27 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
         intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
     }
     waitForText(expectedText)
+}
+
+internal fun MacrobenchmarkScope.startSystemNavigationAndWait() {
+    prepareBenchmarkUiAutomation()
+    pressHome()
+    startActivityAndWait { intent ->
+        intent.setClassName(
+            TARGET_PACKAGE,
+            "com.viewcompose.SystemNavigationActivity",
+        )
+        intent.action = android.content.Intent.ACTION_MAIN
+        intent.data = null
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    }
+    waitForText("首页总览")
+}
+
+internal fun MacrobenchmarkScope.startSystemNavigationActivityFromForeground() {
+    device.executeShellCommand(
+        "am start -W -n $TARGET_PACKAGE/com.viewcompose.SystemNavigationActivity",
+    )
 }
 
 internal fun MacrobenchmarkScope.waitForText(text: String) {
@@ -103,6 +129,23 @@ internal fun MacrobenchmarkScope.clickText(text: String) {
     assertNotNull("Expected to find text: $text", node)
     node!!.click()
     device.waitForIdle()
+}
+
+internal fun MacrobenchmarkScope.clickVisibleTextWithoutIdle(text: String) {
+    val node = device.findObject(By.text(text))
+    assertNotNull("Expected to find visible text: $text", node)
+    node!!.click()
+}
+
+internal fun MacrobenchmarkScope.waitForNavigationMotion() {
+    SystemClock.sleep(NAVIGATION_MOTION_WAIT_MILLIS)
+}
+
+private fun prepareBenchmarkUiAutomation() {
+    // Some OEM builds keep accessibility/window events flowing continuously, so UiAutomator's
+    // implicit "wait for idle" never succeeds and adds its full timeout to every interaction.
+    // Benchmarks already use explicit text conditions and fixed motion windows for synchronization.
+    Configurator.getInstance().setWaitForIdleTimeout(0L)
 }
 
 internal fun MacrobenchmarkScope.openDemoModule(title: String) {
@@ -184,3 +227,5 @@ internal fun MacrobenchmarkScope.swipeTabStripLeft() {
     )
     device.waitForIdle()
 }
+
+private const val NAVIGATION_MOTION_WAIT_MILLIS = 650L

@@ -1,5 +1,12 @@
 package com.viewcompose.ui.node
 
+/**
+ * One keyed lazy-container item.
+ *
+ * [contentToken] is the semantic version of the rendered content. It must change when values
+ * captured by the item content change. An equal token allows the renderer to refresh the latest
+ * content closure without synchronously redrawing an already-bound item.
+ */
 class LazyListItem(
     val key: Any?,
     val contentToken: Any?,

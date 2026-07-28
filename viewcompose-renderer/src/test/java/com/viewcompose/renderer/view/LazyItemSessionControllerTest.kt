@@ -18,7 +18,7 @@ class LazyItemSessionControllerTest {
         controller.bind(item)
 
         assertEquals(
-            listOf("clear", "create:A:1", "render:A:1", "render:A:1"),
+            listOf("clear", "create:A:1", "render:A:1"),
             events,
         )
     }
@@ -54,7 +54,6 @@ class LazyItemSessionControllerTest {
                 "update:A:1:first",
                 "render:A:1:first",
                 "update:A:1:second",
-                "render:A:1:second",
             ),
             events,
         )

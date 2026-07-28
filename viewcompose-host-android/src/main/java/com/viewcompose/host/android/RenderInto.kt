@@ -23,6 +23,10 @@ class RenderSession internal constructor(
         delegate.render()
     }
 
+    fun setRenderingActive(active: Boolean) {
+        delegate.setRenderingActive(active)
+    }
+
     fun dispose() {
         delegate.dispose()
     }

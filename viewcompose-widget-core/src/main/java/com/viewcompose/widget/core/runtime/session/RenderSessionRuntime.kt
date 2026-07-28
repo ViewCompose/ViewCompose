@@ -5,6 +5,14 @@ interface RenderSessionRuntime {
 
     fun render()
 
+    /**
+     * Suspends frame-driven renders while a retained surface is not visible.
+     *
+     * Invalidations remain pending and are coalesced into one frame when rendering becomes active
+     * again. Explicit [render] calls still render immediately.
+     */
+    fun setRenderingActive(active: Boolean) = Unit
+
     fun dispose()
 }
 

@@ -1,0 +1,83 @@
+package com.viewcompose.benchmark
+
+import androidx.benchmark.macro.BaselineProfileMode
+import androidx.benchmark.macro.CompilationMode
+import androidx.benchmark.macro.FrameTimingMetric
+import androidx.benchmark.macro.StartupMode
+import androidx.benchmark.macro.junit4.MacrobenchmarkRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+
+/**
+ * Reference measurements for Android's Window/SurfaceControl-backed Activity transition.
+ *
+ * These are intentionally kept beside [NavigationMotionBenchmark] so reports compare the
+ * framework's in-window page transition with the system compositor on the same target and device.
+ */
+@RunWith(AndroidJUnit4::class)
+class ActivityNavigationMotionBenchmark {
+    @get:Rule
+    val benchmarkRule = MacrobenchmarkRule()
+
+    @Test
+    fun enterSystemNavigationActivityAfterProfileGuidedCompilation() =
+        benchmarkRule.measureRepeated(
+            packageName = TARGET_PACKAGE,
+            metrics = listOf(FrameTimingMetric()),
+            compilationMode = profileGuidedCompilation(),
+            iterations = activityMotionIterations(),
+            startupMode = StartupMode.WARM,
+            setupBlock = {
+                startDemoAndWait()
+            },
+        ) {
+            startSystemNavigationActivityFromForeground()
+            waitForNavigationMotion()
+            waitForText(SYSTEM_NAVIGATION_TEXT)
+        }
+
+    @Test
+    fun exitSystemNavigationActivityAfterProfileGuidedCompilation() =
+        benchmarkRule.measureRepeated(
+            packageName = TARGET_PACKAGE,
+            metrics = listOf(FrameTimingMetric()),
+            compilationMode = profileGuidedCompilation(),
+            iterations = activityMotionIterations(),
+            startupMode = StartupMode.WARM,
+            setupBlock = {
+                startDemoAndWait()
+                startSystemNavigationActivityFromForeground()
+                waitForNavigationMotion()
+                waitForText(SYSTEM_NAVIGATION_TEXT)
+            },
+        ) {
+            device.pressBack()
+            waitForNavigationMotion()
+            waitForText(DEMO_HOME_TEXT)
+        }
+
+    private companion object {
+        const val SYSTEM_NAVIGATION_TEXT = "首页总览"
+        const val DEMO_HOME_TEXT = "已实现模块"
+        const val ITERATIONS_ARGUMENT = "activityNavigationMotionIterations"
+        const val PROFILE_WARMUP_ITERATIONS = 3
+
+        fun activityMotionIterations(): Int {
+            return InstrumentationRegistry.getArguments()
+                .getString(ITERATIONS_ARGUMENT)
+                ?.toIntOrNull()
+                ?.takeIf { it > 0 }
+                ?: RELEASE_BASELINE_ITERATIONS
+        }
+
+        fun profileGuidedCompilation(): CompilationMode {
+            return CompilationMode.Partial(
+                baselineProfileMode = BaselineProfileMode.Disable,
+                warmupIterations = PROFILE_WARMUP_ITERATIONS,
+            )
+        }
+    }
+}

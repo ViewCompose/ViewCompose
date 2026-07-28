@@ -29,7 +29,6 @@ class Transition<S> internal constructor(
     private val runningHolder = mutableStateOf(false)
     private val segmentVersionHolder = mutableStateOf(0L)
     private val playTimeNanosHolder = mutableStateOf(0L)
-    private val segmentDurationNanosHolder = mutableStateOf(1L)
     private val segmentInitialStateHolder = mutableStateOf(initialState)
     private val segmentTargetStateHolder = mutableStateOf(initialState)
 
@@ -55,7 +54,7 @@ class Transition<S> internal constructor(
         get() = playTimeNanosHolder.value
 
     internal val segmentDurationNanos: Long
-        get() = segmentDurationNanosHolder.value
+        get() = core.segmentDurationNanos
 
     internal fun updateTarget(target: S) {
         core.updateTarget(target)
@@ -64,9 +63,6 @@ class Transition<S> internal constructor(
 
     internal fun registerChannelDuration(durationNanos: Long) {
         core.registerDuration(durationNanos)
-        if (segmentDurationNanosHolder.value != core.segmentDurationNanos) {
-            segmentDurationNanosHolder.value = core.segmentDurationNanos
-        }
     }
 
     internal fun advanceFrame(version: Long, playTimeNanos: Long) {
@@ -93,7 +89,6 @@ class Transition<S> internal constructor(
         runningHolder.value = core.isRunning
         segmentVersionHolder.value = core.segmentVersion
         playTimeNanosHolder.value = core.playTimeNanos
-        segmentDurationNanosHolder.value = core.segmentDurationNanos
         segmentInitialStateHolder.value = core.segmentInitialState
         segmentTargetStateHolder.value = core.segmentTargetState
     }

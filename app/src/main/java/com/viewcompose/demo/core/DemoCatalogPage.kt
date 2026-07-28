@@ -2,12 +2,12 @@ package com.viewcompose
 
 import android.content.Intent
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.widget.core.Button
 import com.viewcompose.widget.core.ButtonVariant
 import com.viewcompose.widget.core.Column
@@ -22,7 +22,7 @@ import com.viewcompose.widget.core.dp
 internal fun UiTreeBuilder.DemoCatalogPage(
     root: ViewGroup,
 ) {
-    val activity = root.context as? AppCompatActivity
+    val activity = root.context.findAppCompatActivity()
     LazyColumn(
         items = listOf("intro", "available", "planned"),
         key = { it },
@@ -118,7 +118,9 @@ private fun UiTreeBuilder.ModuleCard(
                 text = actionLabel,
                 variant = actionVariant,
                 onClick = onClick,
-                modifier = Modifier.margin(top = 4.dp),
+                modifier = Modifier
+                    .margin(top = 4.dp)
+                    .testTag(DemoTestTags.catalogModuleButton(module.key)),
             )
         }
     }

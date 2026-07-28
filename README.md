@@ -123,6 +123,10 @@ cd ViewCompose
    Run `MainActivity` in the `app` module.
 3. 在 Demo 首页按模块浏览能力（Foundations / State / Layouts / Animation / Graphics 等）。  
    Browse capabilities by module on the demo home (Foundations / State / Layouts / Animation / Graphics, etc.).
+4. 打开“系统导航验收”，可人工验证多 Tab 独立返回栈、嵌套图、Deep Link、页面状态恢复、
+   predictive Back 和自适应多窗格；完整路径见 [NAVIGATION.md](NAVIGATION.md)。
+   Open “系统导航验收” to verify independent tab stacks, nested graphs, deep links, destination
+   state restoration, predictive Back, and adaptive panes. See [NAVIGATION.md](NAVIGATION.md).
 
 ## 最小接入示例 | Minimal Integration Example
 

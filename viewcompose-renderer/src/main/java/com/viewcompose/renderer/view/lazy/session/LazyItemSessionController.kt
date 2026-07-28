@@ -16,24 +16,38 @@ internal class LazyItemSessionController(
         item: LazyListItem,
         payload: Any? = null,
     ) {
-        if (session == null || currentKey != item.key) {
-            session?.dispose()
-            clearContainer()
-            val newSession = createSession(item)
-            session = newSession
-            currentKey = item.key
-            currentContentToken = item.contentToken
-            item.sessionUpdater?.invoke(newSession)
-        } else if (payload is LazyListChangePayload.ContentTokenChanged) {
-            applyContentTokenUpdate(item)
-        } else if (currentContentToken == item.contentToken) {
-            session?.let { currentSession ->
-                item.sessionUpdater?.invoke(currentSession)
+        val shouldRender = when {
+            session == null || currentKey != item.key -> {
+                session?.dispose()
+                clearContainer()
+                val newSession = createSession(item)
+                session = newSession
+                currentKey = item.key
+                currentContentToken = item.contentToken
+                item.sessionUpdater?.invoke(newSession)
+                true
             }
-        } else if (currentContentToken != item.contentToken) {
-            applyContentTokenUpdate(item)
+
+            payload is LazyListChangePayload.ContentTokenChanged -> {
+                applyContentTokenUpdate(item)
+                true
+            }
+
+            currentContentToken == item.contentToken -> {
+                session?.let { currentSession ->
+                    item.sessionUpdater?.invoke(currentSession)
+                }
+                false
+            }
+
+            else -> {
+                applyContentTokenUpdate(item)
+                true
+            }
         }
-        session?.render()
+        if (shouldRender) {
+            session?.render()
+        }
     }
 
     fun recycle() {

@@ -63,6 +63,7 @@ import kotlinx.coroutines.withContext
 
 internal fun UiTreeBuilder.AnimationPage(
     initialPageIndex: Int = 0,
+    initialInfinitePulse: Boolean = true,
 ) {
     val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 5)) }
     val visibleState = remember { mutableStateOf(true) }
@@ -81,7 +82,7 @@ internal fun UiTreeBuilder.AnimationPage(
     val mutableVisibilityState = remember { MutableTransitionState(false) }
     val rowAxisVisibleState = remember { mutableStateOf(false) }
     val columnAxisVisibleState = remember { mutableStateOf(false) }
-    val infinitePulseState = remember { mutableStateOf(true) }
+    val infinitePulseState = remember { mutableStateOf(initialInfinitePulse) }
     val infiniteReverseState = remember { mutableStateOf(false) }
     val animatableCommandState = remember { mutableStateOf(AnimatableCommand.None) }
     val animatableCommandNonceState = remember { mutableStateOf(0) }

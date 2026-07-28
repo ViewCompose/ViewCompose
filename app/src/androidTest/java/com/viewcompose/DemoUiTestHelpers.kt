@@ -26,6 +26,7 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.lifecycle.Lifecycle
+import com.google.android.material.shape.MaterialShapeDrawable
 import com.viewcompose.renderer.R as RendererR
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -147,15 +148,30 @@ internal fun Activity.requireViewByTestTagVisible(
     maxScrollAttempts: Int = 24,
 ): View {
     val root = findViewById<ViewGroup>(android.R.id.content)
-    repeat(maxScrollAttempts) {
-        val view = findViewByTestTag(root, tag)
-        if (view != null && isViewVisible(view)) {
-            return view
-        }
-        val recyclerView = findFirstRecyclerView(root) ?: return@repeat
-        val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
-        recyclerView.scrollBy(0, delta)
+    fun visibleTaggedView(): View? {
+        return findViewByTestTag(root, tag)?.takeIf(::isViewVisible)
     }
+
+    visibleTaggedView()?.let { return it }
+    findRecyclerViews(root)
+        .filter { recyclerView -> recyclerView.isShown && recyclerView.height > 0 }
+        .forEach { recyclerView ->
+            val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
+            fun scrollUntilVisible(direction: Int): View? {
+                repeat(maxScrollAttempts) {
+                    visibleTaggedView()?.let { return it }
+                    if (!recyclerView.canScrollVertically(direction)) {
+                        return null
+                    }
+                    recyclerView.scrollBy(0, direction * delta)
+                }
+                return visibleTaggedView()
+            }
+
+            scrollUntilVisible(direction = 1)?.let { return it }
+            scrollUntilVisible(direction = -1)?.let { return it }
+        }
+
     val view = findViewByTestTag(root, tag)
     assertNotNull("Expected to find view with testTag: $tag", view)
     assertViewFullyVisible(view!!)
@@ -177,7 +193,7 @@ internal fun Activity.clickByTestTag(tag: String) {
         current = current.parent as? View
     }
     assertNotNull("Expected clickable host for testTag: $tag", current)
-    current!!.performClick()
+    assertTrue("Expected click to be handled for testTag: $tag", current!!.performClick())
 }
 
 internal fun Activity.tapByTestTag(tag: String) {
@@ -563,6 +579,22 @@ private fun findFirstRecyclerView(root: View): RecyclerView? {
     return null
 }
 
+private fun findRecyclerViews(root: View): List<RecyclerView> {
+    val matches = mutableListOf<RecyclerView>()
+    fun collect(view: View) {
+        if (view is RecyclerView) {
+            matches += view
+        }
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) {
+                collect(view.getChildAt(index))
+            }
+        }
+    }
+    collect(root)
+    return matches
+}
+
 private fun findFirstEditText(root: View): EditText? {
     if (root is EditText) {
         return root
@@ -611,6 +643,7 @@ private fun resolveDrawableColor(drawable: Drawable?): Int? {
             }
             null
         }
+        is MaterialShapeDrawable -> drawable.fillColor?.defaultColor
         is GradientDrawable -> drawable.color?.defaultColor
         else -> null
     }

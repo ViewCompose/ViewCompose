@@ -3,7 +3,6 @@ package com.viewcompose
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Rect
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.os.SystemClock
 import android.view.View
@@ -11,6 +10,7 @@ import android.view.ViewGroup
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.android.material.shape.MaterialShapeDrawable
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -143,7 +143,10 @@ class DemoVisualUiTest {
                 val drawablePreferred = activity.requireViewByTestTagVisible(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_SAMPLE)
                 assertViewFullyVisible(colorOnly)
                 assertViewFullyVisible(drawablePreferred)
-                assertTrue("Expected color-only sample to use GradientDrawable background", colorOnly.background is GradientDrawable)
+                assertTrue(
+                    "Expected color-only sample to use MaterialShapeDrawable background",
+                    colorOnly.background is MaterialShapeDrawable,
+                )
                 assertTrue("Expected drawable sample to use layered drawable background", drawablePreferred.background is LayerDrawable)
                 assertFalse("Expected color-only sample to keep non-clipped outline by default", colorOnly.clipToOutline)
                 assertTrue("Expected drawable sample to auto-clip when cornerRadius is set", drawablePreferred.clipToOutline)
@@ -1083,17 +1086,24 @@ class DemoVisualUiTest {
                 activity.clickByTestTag(DemoTestTags.ANIMATION_TRANSITION_TOGGLE)
             }
             waitForUiIdle()
+            var transitionAfterSnapshot = ""
             val transitionValuesUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val alphaAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_ALPHA).text.toString()
                 val intAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_INT).text.toString()
                 val dpAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_DP).text.toString()
                 val colorAfter = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_TRANSITION_COLOR).text.toString()
+                transitionAfterSnapshot = "$alphaAfter, $intAfter, $dpAfter, $colorAfter"
                 alphaAfter != alphaBefore &&
                     intAfter != intBefore &&
                     dpAfter != dpBefore &&
                     colorAfter != colorBefore
             }
-            assertTrue("Expected transition panel channels to update after toggle", transitionValuesUpdated)
+            assertTrue(
+                "Expected transition panel channels to update after toggle; " +
+                    "before=[$alphaBefore, $intBefore, $dpBefore, $colorBefore], " +
+                    "after=[$transitionAfterSnapshot]",
+                transitionValuesUpdated,
+            )
         }
     }
 
@@ -1111,15 +1121,20 @@ class DemoVisualUiTest {
                 activity.clickByTestTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE)
             }
             waitForUiIdle()
+            var visibilityAfterSnapshot = ""
             val visibilityStateAndAxisUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val status = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_VISIBILITY_STATE_STATUS).text.toString()
                 val rowToggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_ROW_AXIS_TOGGLE).text.toString()
                 val columnToggle = activity.requireTextViewByTestTag(DemoTestTags.ANIMATION_COLUMN_AXIS_TOGGLE).text.toString()
+                visibilityAfterSnapshot = "$status, row=$rowToggle, column=$columnToggle"
                 status.contains("target=true") &&
                     rowToggle.contains("隐藏") &&
                     columnToggle.contains("隐藏")
             }
-            assertTrue("Expected visibility state status and axis targets to update", visibilityStateAndAxisUpdated)
+            assertTrue(
+                "Expected visibility state status and axis targets to update; after=[$visibilityAfterSnapshot]",
+                visibilityStateAndAxisUpdated,
+            )
             var rowShownWidth = 0
             val rowTargetShown = waitUntilActivityCondition(scenario, timeoutMs = 1_000L) { activity ->
                 val rowTarget = findViewByTestTag(
@@ -1159,7 +1174,9 @@ class DemoVisualUiTest {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             AnimationActivity::class.java,
-        ).putExtra(EXTRA_ANIMATION_PAGE_INDEX, 5)
+        )
+            .putExtra(EXTRA_ANIMATION_PAGE_INDEX, 5)
+            .putExtra(EXTRA_ANIMATION_INFINITE_PULSE, false)
         launchDemoActivity<AnimationActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
@@ -1232,14 +1249,43 @@ class DemoVisualUiTest {
                 )
             }
             waitForUiIdle()
+            var centerAnchorSnapshot = ""
+            val movedToCenterAnchor = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
+                val swipeAfterText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
+                val swipeTargetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
+                val swipeOffsetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
+                val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                centerAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
+                swipeAfterText.contains("Center") &&
+                    swipeTargetText.contains("Center") &&
+                    abs(offset) <= 1f
+            }
+            assertTrue(
+                "Expected one reverse swipe to settle at the adjacent center anchor; " +
+                    "after=[$centerAnchorSnapshot]",
+                movedToCenterAnchor,
+            )
+            scenario.onActivity { activity ->
+                activity.dragByTestTag(
+                    tag = DemoTestTags.GESTURE_SWIPE_TARGET,
+                    deltaX = -420f,
+                )
+            }
+            waitForUiIdle()
+            var leftAnchorSnapshot = ""
             val movedToLeftAnchor = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val swipeAfterText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
                 val swipeTargetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
                 val swipeOffsetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                leftAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
                 swipeAfterText.contains("Left") && swipeTargetText.contains("Left") && offset <= -60f
             }
-            assertTrue("Expected swipe summaries to move to left anchor after reverse drag", movedToLeftAnchor)
+            assertTrue(
+                "Expected the second reverse swipe to settle at the adjacent left anchor; " +
+                    "after=[$leftAnchorSnapshot]",
+                movedToLeftAnchor,
+            )
         }
     }
 
