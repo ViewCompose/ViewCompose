@@ -43,6 +43,7 @@ internal class DeclarativeTabRowLayout(
     private var itemPaddingVerticalPx: Int = 0
     private var minItemWidthPx: Int = 0
     private var equalWidth: Boolean = true
+    private var containerColorState: Int? = null
 
     private val controllers = mutableListOf<LazyItemSessionController>()
 
@@ -94,6 +95,14 @@ internal class DeclarativeTabRowLayout(
         itemPaddingVertical: Int,
         minItemWidth: Int,
     ) {
+        val itemContainerStyleChanged =
+            this.rippleColor != rippleColor ||
+                this.itemPaddingHorizontalPx != itemPaddingHorizontal ||
+                this.itemPaddingVerticalPx != itemPaddingVertical
+        val itemLayoutStyleChanged =
+            this.itemSpacingPx != itemSpacing ||
+                this.minItemWidthPx != minItemWidth ||
+                this.equalWidth != equalWidth
         this.onTabSelected = onTabSelected
         this.indicatorColor = indicatorColor
         this.indicatorHeightPx = indicatorHeight
@@ -118,7 +127,10 @@ internal class DeclarativeTabRowLayout(
         tabContainer.itemSpacingPx = itemSpacing
         tabContainer.minItemWidthPx = minItemWidth
 
-        setBackgroundColor(containerColor)
+        if (containerColorState != containerColor) {
+            containerColorState = containerColor
+            setBackgroundColor(containerColor)
+        }
         isScrollEnabled = scrollable
 
         val resolvedSelectedIndex = if (tabs.isEmpty()) {
@@ -127,7 +139,10 @@ internal class DeclarativeTabRowLayout(
             selectedIndex.coerceIn(0, tabs.lastIndex)
         }
         val selectedChanged = this.selectedIndex != resolvedSelectedIndex
-        val tabsRebuilt = updateTabs(tabs)
+        val tabsRebuilt = updateTabs(
+            newTabs = tabs,
+            forceRebuild = itemContainerStyleChanged,
+        )
         this.tabs = tabs
         this.selectedIndex = resolvedSelectedIndex
 
@@ -135,7 +150,7 @@ internal class DeclarativeTabRowLayout(
         if (this.pagerState == null) {
             tabContainer.updateIndicatorPosition(this.selectedIndex, 0f)
         }
-        if (selectedChanged || tabsRebuilt) {
+        if (selectedChanged || tabsRebuilt || itemLayoutStyleChanged) {
             scrollToSelectedTab(animate = true)
         }
     }
@@ -150,8 +165,12 @@ internal class DeclarativeTabRowLayout(
         return if (isScrollEnabled) super.onTouchEvent(ev) else false
     }
 
-    private fun updateTabs(newTabs: List<TabRowTab>): Boolean {
-        val needsRebuild = newTabs.size != controllers.size ||
+    private fun updateTabs(
+        newTabs: List<TabRowTab>,
+        forceRebuild: Boolean,
+    ): Boolean {
+        val needsRebuild = forceRebuild ||
+            newTabs.size != controllers.size ||
             newTabs.zip(tabs).any { (a, b) -> a.item.key != b.item.key }
 
         if (needsRebuild) {
@@ -261,14 +280,63 @@ internal class DeclarativeTabRowLayout(
 internal class TabRowContainer(context: Context) : ViewGroup(context) {
 
     var indicatorColor: Int = 0
+        set(value) {
+            if (field == value) return
+            field = value
+            indicatorDrawable.setColor(value)
+            invalidate()
+        }
     var indicatorHeightPx: Int = 0
+        set(value) {
+            if (field == value) return
+            field = value
+            invalidate()
+        }
     var indicatorCornerRadiusPx: Int = 0
+        set(value) {
+            if (field == value) return
+            field = value
+            indicatorDrawable.cornerRadius = value.toFloat()
+            invalidate()
+        }
     var indicatorPosition: TabIndicatorPosition = TabIndicatorPosition.Bottom
+        set(value) {
+            if (field == value) return
+            field = value
+            invalidate()
+        }
     var indicatorWidthMode: TabIndicatorWidthMode = TabIndicatorWidthMode.MatchItem
+        set(value) {
+            if (field == value) return
+            field = value
+            updateIndicatorPosition(indicatorCurrentIndex, indicatorCurrentOffset)
+        }
     var indicatorFixedWidthPx: Int = 0
+        set(value) {
+            if (field == value) return
+            field = value
+            if (indicatorWidthMode == TabIndicatorWidthMode.Fixed) {
+                updateIndicatorPosition(indicatorCurrentIndex, indicatorCurrentOffset)
+            }
+        }
     var equalWidth: Boolean = true
+        set(value) {
+            if (field == value) return
+            field = value
+            requestLayout()
+        }
     var itemSpacingPx: Int = 0
+        set(value) {
+            if (field == value) return
+            field = value
+            requestLayout()
+        }
     var minItemWidthPx: Int = 0
+        set(value) {
+            if (field == value) return
+            field = value
+            requestLayout()
+        }
 
     private val indicatorDrawable = GradientDrawable()
     private var indicatorLeft = 0f
@@ -278,6 +346,8 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
 
     init {
         setWillNotDraw(false)
+        indicatorDrawable.shape = GradientDrawable.RECTANGLE
+        indicatorDrawable.setColor(indicatorColor)
     }
 
     fun updateIndicatorPosition(currentIndex: Int, offset: Float) {
@@ -319,8 +389,13 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
             }
         }
 
-        indicatorLeft = lerp(fromLeft, toLeft, safeOffset)
-        indicatorRight = lerp(fromRight, toRight, safeOffset)
+        val nextLeft = lerp(fromLeft, toLeft, safeOffset)
+        val nextRight = lerp(fromRight, toRight, safeOffset)
+        if (indicatorLeft == nextLeft && indicatorRight == nextRight) {
+            return
+        }
+        indicatorLeft = nextLeft
+        indicatorRight = nextRight
         invalidate()
     }
 
@@ -405,10 +480,6 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
     private fun drawIndicator(canvas: Canvas) {
         if (indicatorHeightPx <= 0 || childCount == 0 || indicatorRight <= indicatorLeft) return
 
-        indicatorDrawable.shape = GradientDrawable.RECTANGLE
-        indicatorDrawable.setColor(indicatorColor)
-        indicatorDrawable.cornerRadius = indicatorCornerRadiusPx.toFloat()
-
         val top: Int
         val bottom: Int
         when (indicatorPosition) {
@@ -432,6 +503,9 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
     }
 
     private fun clearIndicator() {
+        if (indicatorLeft == 0f && indicatorRight == 0f) {
+            return
+        }
         indicatorLeft = 0f
         indicatorRight = 0f
         invalidate()
