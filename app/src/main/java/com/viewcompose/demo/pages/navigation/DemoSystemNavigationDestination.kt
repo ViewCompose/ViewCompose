@@ -81,13 +81,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
         "capabilities",
     )
 
-    LazyColumn(
-        items = sections,
-        key = { section -> section },
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag(DemoTestTags.SYSTEM_NAV_DESTINATION),
-    ) { section ->
+    val sectionContent: UiTreeBuilder.(String) -> Unit = { section ->
         when (section) {
             "status" -> DemoSection(
                 title = SystemNavigationDemoModel.routeLabel(entry.route.name),
@@ -328,6 +322,25 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                         "关闭系统 Back 后按返回会委托 Activity，因此请先完成其它验收。",
                     ),
                 )
+            }
+        }
+    }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(DemoTestTags.SYSTEM_NAV_DESTINATION),
+    ) {
+        sections.forEach { section ->
+            item(
+                key = section,
+                contentToken = when (section) {
+                    "status" -> Triple(section, lifecycleState, stackState)
+                    "actions" -> section to stackState
+                    "capabilities" -> section to stackState.activeStackId
+                    else -> section
+                },
+            ) {
+                sectionContent(section)
             }
         }
     }
