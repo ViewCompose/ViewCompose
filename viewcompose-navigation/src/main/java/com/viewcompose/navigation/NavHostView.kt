@@ -10,6 +10,11 @@ import androidx.annotation.AttrRes
 import com.viewcompose.navigation.core.NavPaneRole
 import java.util.IdentityHashMap
 
+/**
+ * NavHost 的原生 View 容器，负责目的地子 View 的 pane 测量与排布。
+ * Native View container for NavHost, responsible for pane measurement and layout of destination
+ * child Views.
+ */
 internal class NavHostView(
     context: Context,
 ) : FrameLayout(context) {
@@ -116,6 +121,10 @@ internal class NavHostView(
 
 }
 
+/**
+ * 将逻辑 pane 角色转换为当前布局方向下的水平像素边界。
+ * Converts a logical pane role into horizontal pixel bounds for the current layout direction.
+ */
 internal fun resolvePaneHorizontalBounds(
     availableWidth: Int,
     paneLayout: NavPaneLayout,
@@ -144,6 +153,10 @@ internal fun resolvePaneHorizontalBounds(
     )
 }
 
+/**
+ * 单个 pane 在宿主内容区内的水平边界。
+ * Horizontal bounds of one pane inside the host content area.
+ */
 internal data class NavPaneHorizontalBounds(
     val left: Int,
     val right: Int,
@@ -156,6 +169,10 @@ internal data class NavPaneHorizontalBounds(
     }
 }
 
+/**
+ * 某个目的地在当前 pane scene 中的布局角色。
+ * Layout role of one destination in the current pane scene.
+ */
 internal data class NavPaneLayout(
     val role: NavPaneRole,
     val paneCount: Int,
@@ -170,6 +187,10 @@ internal data class NavPaneLayout(
     }
 
     companion object {
+        /**
+         * 单 pane 布局，目的地占满宿主。
+         * Single-pane layout where the destination fills the host.
+         */
         val Single = NavPaneLayout(
             role = NavPaneRole.Primary,
             paneCount = 1,
@@ -177,6 +198,10 @@ internal data class NavPaneLayout(
     }
 }
 
+/**
+ * 创建目的地根容器，并继承宿主主题背景作为 surface。
+ * Creates a destination root container and inherits the host theme background as its surface.
+ */
 internal fun destinationContainer(context: Context): FrameLayout {
     return FrameLayout(context).apply {
         layoutParams = FrameLayout.LayoutParams(

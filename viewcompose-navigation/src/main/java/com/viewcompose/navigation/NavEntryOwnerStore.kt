@@ -11,6 +11,10 @@ import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavLifecyclePlan
 import com.viewcompose.navigation.core.NavLifecyclePlanner
 
+/**
+ * 保存并协调目的地 owner 与图 owner 的生命周期状态。
+ * Stores and reconciles lifecycle state for destination owners and graph owners.
+ */
 internal class NavEntryOwnerStore(
     private val application: Application?,
     restoredState: Bundle? = null,
@@ -71,6 +75,8 @@ internal class NavEntryOwnerStore(
         check(entry.id !in owners) {
             "Navigation graph entry ID ${entry.id} is already owned by a destination."
         }
+        // 图 owner 复用 NavEntryOwner 作为 Android owner delegate，但对外暴露 NavGraphEntry 身份。
+        // Graph owners reuse NavEntryOwner as their Android delegate while exposing NavGraphEntry identity.
         val delegate = NavEntryOwner(
             entry = NavEntry(
                 id = entry.id,
@@ -105,6 +111,8 @@ internal class NavEntryOwnerStore(
         check(!destroyed) {
             "A destroyed navigation entry owner store cannot be reconciled."
         }
+        // 保留集合必须包含目的地及其所有父图，否则共享图状态会在子目的地仍存在时被销毁。
+        // Retained IDs include destinations and parent graphs so shared graph state outlives children.
         val retainedOwnerIds = linkedSetOf<NavEntryId>()
         retainedEntries.forEach { entry ->
             entry.graphEntries.forEachIndexed { depth, graphEntry ->
@@ -148,6 +156,8 @@ internal class NavEntryOwnerStore(
         val orderedTransitions = plan.transitions
             .partition { transition -> transition.isDownward() }
             .let { (downward, upward) ->
+                // 生命周期下行时深层子节点先降级，上行时父图先升级，保持 Android owner 层级顺序。
+                // Move children down first and parents up first to preserve Android owner hierarchy order.
                 downward.sortedByDescending { transition ->
                     checkNotNull(ownerDepths[transition.entryId])
                 } + upward.sortedBy { transition ->
@@ -226,6 +236,10 @@ internal class NavEntryOwnerStore(
     }
 }
 
+/**
+ * 判断 lifecycle transition 是否为降级或销毁。
+ * Returns whether a lifecycle transition moves downward or destroys the owner.
+ */
 private fun com.viewcompose.navigation.core.NavLifecycleTransition.isDownward(): Boolean {
     return to == NavEntryLifecycleState.Destroyed ||
         to.activeRank() < from.activeRank()
@@ -241,6 +255,10 @@ private fun NavEntryLifecycleState.activeRank(): Int {
     }
 }
 
+/**
+ * 编码 owner 保存状态，使用 entryId 作为 Bundle 子键。
+ * Encodes owner saved state using entryId values as nested Bundle keys.
+ */
 private fun encodeOwnerStates(
     states: Map<NavEntryId, Bundle>,
 ): Bundle {
@@ -257,6 +275,10 @@ private fun encodeOwnerStates(
     }
 }
 
+/**
+ * 防御式读取已保存 owner 状态，版本不匹配时丢弃。
+ * Defensively reads saved owner state and discards it when the format version mismatches.
+ */
 private fun decodeOwnerStates(
     state: Bundle?,
 ): LinkedHashMap<NavEntryId, Bundle> {

@@ -26,6 +26,15 @@ import com.viewcompose.navigation.core.NavEntryLifecycleState
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.widget.core.SaveableStateRegistry as ViewComposeSaveableStateRegistry
 
+/**
+ * 单个导航 entry 的 Android owner 集合。
+ * Android owner bundle for one navigation entry.
+ *
+ * 每个 entry 拥有独立 lifecycle、ViewModelStore、SavedStateRegistry 和 ViewCompose saveable
+ * registry，确保同一路由的多次入栈互不共享页面状态。
+ * Each entry owns independent lifecycle, ViewModelStore, SavedStateRegistry, and ViewCompose
+ * saveable registry so multiple instances of the same route do not share page state.
+ */
 internal class NavEntryOwner(
     val entry: NavEntry,
     private val application: Application?,
@@ -57,6 +66,8 @@ internal class NavEntryOwner(
 
     override val defaultViewModelCreationExtras: CreationExtras
         get() = MutableCreationExtras().apply {
+            // route 参数作为默认参数写入 extras，使 SavedStateHandle 与 Android ViewModel 默认工厂一致。
+            // Route arguments enter extras as defaults, matching SavedStateHandle and Android VM factory behavior.
             this[SAVED_STATE_REGISTRY_OWNER_KEY] = this@NavEntryOwner
             this[VIEW_MODEL_STORE_OWNER_KEY] = this@NavEntryOwner
             this[DEFAULT_ARGS_KEY] = Bundle(defaultArguments)
@@ -94,9 +105,11 @@ internal class NavEntryOwner(
         if (state == NavEntryLifecycleState.Destroyed) {
             try {
                 if (lifecycleRegistry.currentState == Lifecycle.State.INITIALIZED) {
-                    // LifecycleRegistry intentionally disallows INITIALIZED -> DESTROYED.
-                    // A candidate page can still be rolled back before its first render, so give
-                    // observers the minimal balanced ON_CREATE/ON_DESTROY sequence.
+                    // LifecycleRegistry 有意禁止 INITIALIZED -> DESTROYED。候选页面可能在首次渲染前
+                    // 回滚，因此这里补一个最小的 ON_CREATE/ON_DESTROY 平衡序列。
+                    // LifecycleRegistry intentionally disallows INITIALIZED -> DESTROYED. A candidate page can
+                    // still be rolled back before its first render, so give observers the minimal balanced
+                    // ON_CREATE/ON_DESTROY sequence.
                     lifecycleRegistry.currentState = Lifecycle.State.CREATED
                 }
                 lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
@@ -129,6 +142,10 @@ internal class NavEntryOwner(
     }
 }
 
+/**
+ * 将导航参数转换为 Android 默认参数 Bundle。
+ * Converts navigation arguments into an Android default-arguments Bundle.
+ */
 private fun Map<String, NavValue>.toBundle(): Bundle {
     return Bundle().apply {
         this@toBundle.forEach { (key, value) ->

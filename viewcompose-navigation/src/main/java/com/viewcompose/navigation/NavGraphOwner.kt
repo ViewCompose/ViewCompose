@@ -14,8 +14,11 @@ import java.util.ArrayList
 import java.util.Collections
 
 /**
+ * 单个具体导航图实例的 Android ownership 边界。
  * Android ownership boundary for one concrete navigation-graph instance.
  *
+ * 同一图实例内的目的地共享此 lifecycle、ViewModel store 和 saved-state registry。之后再次进入
+ * 同一个图路由时会获得新的 owner。
  * Destinations in the same graph instance share this lifecycle, ViewModel store, and saved-state
  * registry. A later entry into the same graph route receives a different owner.
  */
@@ -43,8 +46,10 @@ class NavGraphOwner internal constructor(
 }
 
 /**
+ * 当前正在渲染目的地的有序图 owner 层级。
  * Ordered graph-owner hierarchy for the destination currently being rendered.
  *
+ * entries 从根图到目的地的直接父图排序。
  * Entries are ordered from the root graph to the destination's direct parent graph.
  */
 class NavGraphOwnerScope internal constructor(
@@ -70,9 +75,16 @@ class NavGraphOwnerScope internal constructor(
         )
     }
 
+    /**
+     * 返回当前目的地所属层级中 [route] 对应的图 owner。
+     * Returns the graph owner for [route] in the current destination hierarchy.
+     */
     operator fun get(route: String): NavGraphOwner? = ownersByRoute[route]
 
-    /** Returns the active owner for [route], or fails when that graph is not in this destination. */
+    /**
+     * 返回 [route] 的活跃 owner；若该图不在当前目的地层级中则失败。
+     * Returns the active owner for [route], or fails when that graph is not in this destination.
+     */
     fun requireOwner(route: String): NavGraphOwner {
         return checkNotNull(this[route]) {
             "Navigation graph '$route' is not active in the current destination. " +
