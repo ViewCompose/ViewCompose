@@ -71,6 +71,9 @@ internal class DeclarativeSegmentedControlLayout(
         paddingVertical: Int,
     ) {
         this.onSelectionChange = onSelectionChange
+        if (background !== containerBackground) {
+            background = containerBackground
+        }
         val labelsChanged = this.items.map { it.label } != items.map { it.label }
         if (labelsChanged || childCount != items.size) {
             rebuild(items)
