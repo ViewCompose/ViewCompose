@@ -29,7 +29,15 @@ internal class DeclarativeNavigationBarLayout(
         val indicatorDrawable: GradientDrawable,
         val iconView: ImageView,
         val badgeView: TextView,
+        val badgeDrawable: GradientDrawable,
         val labelView: TextView,
+        var iconResId: Int,
+        var iconTint: Int? = null,
+        var indicatorColor: Int? = null,
+        var badgeInitialized: Boolean = false,
+        var badgeCount: Int? = null,
+        var badgeColor: Int? = null,
+        var badgeTextColor: Int? = null,
     )
 
     private var items: List<NavigationBarItem> = emptyList()
@@ -89,10 +97,13 @@ internal class DeclarativeNavigationBarLayout(
         } else {
             selectedIndex.coerceIn(0, items.lastIndex)
         }
-        val labelsChanged = previousItems.map { it.label } != items.map { it.label }
-        val iconsChanged = previousItems.map { it.icon.resId } != items.map { it.icon.resId }
+        val structureContentChanged = previousItems.size != items.size ||
+            items.indices.any { index ->
+                previousItems[index].label != items[index].label ||
+                    previousItems[index].icon.resId != items[index].icon.resId
+            }
         val rippleChanged = !styleInitialized || rippleColorState != rippleColor
-        val structureChanged = labelsChanged || iconsChanged || childCount != items.size || rippleChanged
+        val structureChanged = structureContentChanged || childCount != items.size || rippleChanged
         if (structureChanged) {
             rebuild(items, rippleColor)
         }
@@ -161,6 +172,7 @@ internal class DeclarativeNavigationBarLayout(
                 labelIncludeFontPadding = labelIncludeFontPadding,
                 badgeColor = badgeColor,
                 badgeTextColor = badgeTextColor,
+                applyFullTextAppearance = true,
             )
 
             selectionChanged || contentChangedIndices.isNotEmpty() -> {
@@ -186,6 +198,7 @@ internal class DeclarativeNavigationBarLayout(
                     labelIncludeFontPadding = labelIncludeFontPadding,
                     badgeColor = badgeColor,
                     badgeTextColor = badgeTextColor,
+                    applyFullTextAppearance = false,
                 )
             }
         }
@@ -265,6 +278,7 @@ internal class DeclarativeNavigationBarLayout(
         iconContainer.addView(iconView)
 
         // Badge (optional, positioned top-right of icon container)
+        val badgeDrawable = GradientDrawable()
         val badgeView = TextView(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -276,6 +290,7 @@ internal class DeclarativeNavigationBarLayout(
             gravity = Gravity.CENTER
             setTypeface(typeface, Typeface.BOLD)
             includeFontPadding = false
+            background = badgeDrawable
         }
         iconContainer.addView(badgeView)
 
@@ -302,7 +317,9 @@ internal class DeclarativeNavigationBarLayout(
             indicatorDrawable = indicatorDrawable,
             iconView = iconView,
             badgeView = badgeView,
+            badgeDrawable = badgeDrawable,
             labelView = label,
+            iconResId = item.icon.resId,
         )
     }
 
@@ -321,6 +338,7 @@ internal class DeclarativeNavigationBarLayout(
         labelIncludeFontPadding: Boolean,
         badgeColor: Int,
         badgeTextColor: Int,
+        applyFullTextAppearance: Boolean,
     ) {
         for (index in 0 until itemRefs.size) {
             updateChildAt(
@@ -339,6 +357,7 @@ internal class DeclarativeNavigationBarLayout(
                 labelIncludeFontPadding = labelIncludeFontPadding,
                 badgeColor = badgeColor,
                 badgeTextColor = badgeTextColor,
+                applyFullTextAppearance = applyFullTextAppearance,
             )
         }
     }
@@ -359,6 +378,7 @@ internal class DeclarativeNavigationBarLayout(
         labelIncludeFontPadding: Boolean,
         badgeColor: Int,
         badgeTextColor: Int,
+        applyFullTextAppearance: Boolean,
     ) {
         indices.forEach { index ->
             updateChildAt(
@@ -377,6 +397,7 @@ internal class DeclarativeNavigationBarLayout(
                 labelIncludeFontPadding = labelIncludeFontPadding,
                 badgeColor = badgeColor,
                 badgeTextColor = badgeTextColor,
+                applyFullTextAppearance = applyFullTextAppearance,
             )
         }
     }
@@ -397,6 +418,7 @@ internal class DeclarativeNavigationBarLayout(
         labelIncludeFontPadding: Boolean,
         badgeColor: Int,
         badgeTextColor: Int,
+        applyFullTextAppearance: Boolean,
     ) {
         if (index !in itemRefs.indices) {
             return
@@ -408,8 +430,11 @@ internal class DeclarativeNavigationBarLayout(
         refs.indicator.apply {
             visibility = if (isSelected) View.VISIBLE else View.INVISIBLE
         }
-        refs.indicatorDrawable.setColor(indicatorColor)
-        refs.indicatorDrawable.cornerRadius = context.dpToPx(INDICATOR_CORNER_RADIUS).toFloat()
+        if (refs.indicatorColor != indicatorColor) {
+            refs.indicatorColor = indicatorColor
+            refs.indicatorDrawable.setColor(indicatorColor)
+            refs.indicatorDrawable.cornerRadius = context.dpToPx(INDICATOR_CORNER_RADIUS).toFloat()
+        }
 
         refs.iconView.apply {
             val selectedIcon = item.selectedIcon
@@ -418,10 +443,15 @@ internal class DeclarativeNavigationBarLayout(
             } else {
                 item.icon.resId
             }
-            setImageResource(iconRes)
-            imageTintList = ColorStateList.valueOf(
-                if (isSelected) selectedIconColor else unselectedIconColor,
-            )
+            if (refs.iconResId != iconRes) {
+                refs.iconResId = iconRes
+                setImageResource(iconRes)
+            }
+            val iconTint = if (isSelected) selectedIconColor else unselectedIconColor
+            if (refs.iconTint != iconTint) {
+                refs.iconTint = iconTint
+                imageTintList = ColorStateList.valueOf(iconTint)
+            }
             val size = iconSize.coerceAtLeast(1)
             val currentParams = layoutParams as FrameLayout.LayoutParams
             if (currentParams.width != size || currentParams.height != size) {
@@ -434,6 +464,17 @@ internal class DeclarativeNavigationBarLayout(
 
         refs.badgeView.apply {
             val badgeCount = item.badgeCount
+            val badgeStateChanged = !refs.badgeInitialized ||
+                refs.badgeCount != badgeCount ||
+                refs.badgeColor != badgeColor ||
+                refs.badgeTextColor != badgeTextColor
+            if (!badgeStateChanged) {
+                return@apply
+            }
+            refs.badgeInitialized = true
+            refs.badgeCount = badgeCount
+            refs.badgeColor = badgeColor
+            refs.badgeTextColor = badgeTextColor
             when {
                 badgeCount == null -> {
                     visibility = View.GONE
@@ -441,6 +482,8 @@ internal class DeclarativeNavigationBarLayout(
                 badgeCount == 0 -> {
                     visibility = View.VISIBLE
                     text = ""
+                    minWidth = 0
+                    setPadding(0, 0, 0, 0)
                     val dotSize = context.dpToPx(DOT_BADGE_SIZE)
                     val currentParams = layoutParams as FrameLayout.LayoutParams
                     if (currentParams.width != dotSize || currentParams.height != dotSize) {
@@ -449,10 +492,9 @@ internal class DeclarativeNavigationBarLayout(
                             height = dotSize
                         }
                     }
-                    background = GradientDrawable().apply {
-                        shape = GradientDrawable.OVAL
-                        setColor(badgeColor)
-                    }
+                    refs.badgeDrawable.shape = GradientDrawable.OVAL
+                    refs.badgeDrawable.cornerRadius = 0f
+                    refs.badgeDrawable.setColor(badgeColor)
                 }
                 else -> {
                     visibility = View.VISIBLE
@@ -470,27 +512,32 @@ internal class DeclarativeNavigationBarLayout(
                         }
                     }
                     minWidth = badgeHeight
-                    background = GradientDrawable().apply {
-                        shape = GradientDrawable.RECTANGLE
-                        setColor(badgeColor)
-                        cornerRadius = badgeHeight / 2f
-                    }
+                    refs.badgeDrawable.shape = GradientDrawable.RECTANGLE
+                    refs.badgeDrawable.setColor(badgeColor)
+                    refs.badgeDrawable.cornerRadius = badgeHeight / 2f
                 }
             }
         }
 
         refs.labelView.apply {
-            text = item.label
-            ContentViewBinder.applyTextAppearance(
-                view = this,
-                textColor = if (isSelected) selectedLabelColor else unselectedLabelColor,
-                textSizeSp = labelSizeSp,
-                fontWeight = labelFontWeight,
-                fontFamily = labelFontFamily,
-                letterSpacingEm = labelLetterSpacingEm,
-                lineHeightSp = labelLineHeightSp,
-                includeFontPadding = labelIncludeFontPadding,
-            )
+            if (text != item.label) {
+                text = item.label
+            }
+            val textColor = if (isSelected) selectedLabelColor else unselectedLabelColor
+            if (applyFullTextAppearance) {
+                ContentViewBinder.applyTextAppearance(
+                    view = this,
+                    textColor = textColor,
+                    textSizeSp = labelSizeSp,
+                    fontWeight = labelFontWeight,
+                    fontFamily = labelFontFamily,
+                    letterSpacingEm = labelLetterSpacingEm,
+                    lineHeightSp = labelLineHeightSp,
+                    includeFontPadding = labelIncludeFontPadding,
+                )
+            } else if (currentTextColor != textColor) {
+                setTextColor(textColor)
+            }
         }
     }
 

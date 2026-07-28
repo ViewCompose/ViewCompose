@@ -181,13 +181,23 @@ internal object ContainerViewBinder {
         recyclerView: RecyclerView,
         padding: LazyContentPadding,
     ) {
-        recyclerView.setPaddingRelative(
-            padding.start,
-            padding.top,
-            padding.end,
-            padding.bottom,
-        )
-        recyclerView.clipToPadding = padding == LazyContentPadding.None
+        if (
+            recyclerView.paddingStart != padding.start ||
+            recyclerView.paddingTop != padding.top ||
+            recyclerView.paddingEnd != padding.end ||
+            recyclerView.paddingBottom != padding.bottom
+        ) {
+            recyclerView.setPaddingRelative(
+                padding.start,
+                padding.top,
+                padding.end,
+                padding.bottom,
+            )
+        }
+        val shouldClipToPadding = padding == LazyContentPadding.None
+        if (recyclerView.clipToPadding != shouldClipToPadding) {
+            recyclerView.clipToPadding = shouldClipToPadding
+        }
     }
 
     internal fun applyLazyListSpacing(
@@ -197,8 +207,9 @@ internal object ContainerViewBinder {
     ) {
         val existing = recyclerView.getTag(R.id.viewcompose_lazy_spacing_decoration) as? LazyListSpacingDecoration
         if (existing != null) {
-            existing.updateSpacing(spacing)
-            recyclerView.invalidateItemDecorations()
+            if (existing.update(spacing, orientation)) {
+                recyclerView.invalidateItemDecorations()
+            }
             return
         }
         val decoration = LazyListSpacingDecoration(spacing, orientation)

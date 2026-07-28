@@ -17,6 +17,7 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
 
     var contentGravity: Int = Gravity.TOP or Gravity.START
         set(value) {
+            if (field == value) return
             field = value
             requestLayout()
         }
@@ -31,12 +32,9 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         widthMeasureSpec: Int,
         heightMeasureSpec: Int,
     ) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        LayoutPassTracker.recordMeasure(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
     override fun onViewAdded(child: View) {
@@ -55,13 +53,10 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         right: Int,
         bottom: Int,
     ) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         applyGravityToChildren()
         super.onLayout(changed, left, top, right, bottom)
-        LayoutPassTracker.recordLayout(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 
     private fun applyGravityToChildren() {

@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.widget.CompoundButton
 import android.widget.SeekBar
 import android.widget.Switch
-import com.viewcompose.renderer.R
 import com.viewcompose.renderer.view.tree.ContentViewBinder
 import com.viewcompose.renderer.view.tree.InputViewBinder
 import com.viewcompose.renderer.view.tree.SliderNodePatch
@@ -116,7 +115,11 @@ internal object InputNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
-        view.setOnCheckedChangeListener(null)
+        InputViewBinder.updateToggleListener(
+            view = view,
+            expectedChecked = next.checked,
+            onCheckedChange = next.onCheckedChange,
+        )
         if (previous.text != next.text) {
             view.text = next.text
         }
@@ -155,11 +158,6 @@ internal object InputNodePatchApplier {
                 view.trackTintList = ColorStateList.valueOf(next.trackColor ?: next.controlColor)
             }
         }
-        view.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked != next.checked) {
-                next.onCheckedChange?.invoke(isChecked)
-            }
-        }
         if (hasTextAppearanceChange(previous, next)) {
             ContentViewBinder.applyTextAppearance(
                 view = view,
@@ -180,11 +178,13 @@ internal object InputNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
-        val listener = view.getTag(R.id.viewcompose_seek_listener) as? SeekBar.OnSeekBarChangeListener
-        if (listener != null) {
-            view.setOnSeekBarChangeListener(null)
-        }
         val resolvedValue = next.value.coerceIn(next.min, next.max)
+        InputViewBinder.updateSliderListener(
+            view = view,
+            min = next.min,
+            expectedValue = resolvedValue,
+            onValueChange = next.onValueChange,
+        )
         if (previous.min != next.min || previous.max != next.max) {
             view.max = (next.max - next.min).coerceAtLeast(0)
         }
@@ -200,19 +200,6 @@ internal object InputNodePatchApplier {
         if (previous.trackColor != next.trackColor) {
             view.progressTintList = ColorStateList.valueOf(next.trackColor)
         }
-        val nextListener = object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val nextValue = next.min + progress
-                if (fromUser && nextValue != resolvedValue) {
-                    next.onValueChange?.invoke(nextValue)
-                }
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
-            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
-        }
-        view.setOnSeekBarChangeListener(nextListener)
-        view.setTag(R.id.viewcompose_seek_listener, nextListener)
     }
 
     private fun hasTextAppearanceChange(

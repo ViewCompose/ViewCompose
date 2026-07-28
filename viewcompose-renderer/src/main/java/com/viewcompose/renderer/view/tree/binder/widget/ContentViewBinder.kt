@@ -107,11 +107,11 @@ internal object ContentViewBinder {
             ),
             null,
         )
-        view.setOnClickListener {
-            if (spec.enabled) {
-                spec.onClick?.invoke()
-            }
-        }
+        updateButtonClickListener(
+            view = view,
+            enabled = spec.enabled,
+            onClick = spec.onClick,
+        )
     }
 
     fun bindCanvas(
@@ -174,6 +174,20 @@ internal object ContentViewBinder {
             tint = tint,
             size = size,
         )
+    }
+
+    internal fun updateButtonClickListener(
+        view: Button,
+        enabled: Boolean,
+        onClick: (() -> Unit)?,
+    ) {
+        val binding = (view.getTag(R.id.viewcompose_button_click_listener) as? ButtonClickBinding)
+            ?: ButtonClickBinding().also {
+                view.setTag(R.id.viewcompose_button_click_listener, it)
+                view.setOnClickListener(it)
+            }
+        binding.enabled = enabled
+        binding.onClick = onClick
     }
 
     private fun com.viewcompose.ui.node.TextAlign.toTextGravity(): Int {
@@ -275,6 +289,17 @@ internal object ContentViewBinder {
             TextDecoration.LineThrough -> Paint.STRIKE_THRU_TEXT_FLAG
             TextDecoration.UnderlineLineThrough ->
                 Paint.UNDERLINE_TEXT_FLAG or Paint.STRIKE_THRU_TEXT_FLAG
+        }
+    }
+}
+
+private class ButtonClickBinding : android.view.View.OnClickListener {
+    var enabled: Boolean = true
+    var onClick: (() -> Unit)? = null
+
+    override fun onClick(view: android.view.View?) {
+        if (enabled) {
+            onClick?.invoke()
         }
     }
 }

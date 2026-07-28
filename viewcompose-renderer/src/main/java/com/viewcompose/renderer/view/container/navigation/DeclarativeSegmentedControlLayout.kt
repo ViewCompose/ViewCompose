@@ -3,6 +3,7 @@ package com.viewcompose.renderer.view.container
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
 import android.text.TextUtils
 import android.view.Gravity
@@ -17,6 +18,7 @@ import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.renderer.view.tree.ContentViewBinder
 import com.viewcompose.renderer.view.dpToPx
+import java.util.IdentityHashMap
 
 internal class DeclarativeSegmentedControlLayout(
     context: Context,
@@ -42,6 +44,7 @@ internal class DeclarativeSegmentedControlLayout(
     private var paddingVerticalState: Int = 0
     private val indicatorInset = context.dpToPx(2).toFloat()
     private val containerBackground = MaterialShapeDrawable()
+    private val segmentBackgrounds = IdentityHashMap<TextView, SegmentBackground>()
 
     init {
         orientation = HORIZONTAL
@@ -71,7 +74,11 @@ internal class DeclarativeSegmentedControlLayout(
         paddingVertical: Int,
     ) {
         this.onSelectionChange = onSelectionChange
-        val labelsChanged = this.items.map { it.label } != items.map { it.label }
+        if (background !== containerBackground) {
+            background = containerBackground
+        }
+        val labelsChanged = this.items.size != items.size ||
+            items.indices.any { index -> this.items[index].label != items[index].label }
         if (labelsChanged || childCount != items.size) {
             rebuild(items)
         }
@@ -147,23 +154,16 @@ internal class DeclarativeSegmentedControlLayout(
             selectedChanged -> updateSelectionOnly(
                 previousSelectedIndex = previousSelectedIndex,
                 nextSelectedIndex = resolvedSelectedIndex,
-                enabled = enabled,
                 indicatorColor = indicatorColor,
-                shape = shape,
                 textColor = textColor,
                 selectedTextColor = selectedTextColor,
-                rippleColor = rippleColor,
-                fontWeight = fontWeight,
-                fontFamily = fontFamily,
-                letterSpacingEm = letterSpacingEm,
-                lineHeightSp = lineHeightSp,
-                includeFontPadding = includeFontPadding,
             )
         }
     }
 
     private fun rebuild(items: List<SegmentedControlItem>) {
         removeAllViews()
+        segmentBackgrounds.clear()
         items.forEachIndexed { index, _ ->
             addView(
                 TextView(context).apply {
@@ -227,13 +227,15 @@ internal class DeclarativeSegmentedControlLayout(
                 childParams.bottomMargin = insetPx
                 child.layoutParams = childParams
             }
-            child.background = createSegmentBackground(
+            val segmentBackground = createSegmentBackground(
                 enabled = enabled,
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColor,
                 shape = shape.inset(indicatorInset.toInt()),
             )
+            segmentBackgrounds[child] = segmentBackground
+            child.background = segmentBackground.drawable
             child.isSelected = isSelected
         }
     }
@@ -241,43 +243,58 @@ internal class DeclarativeSegmentedControlLayout(
     private fun updateSelectionOnly(
         previousSelectedIndex: Int,
         nextSelectedIndex: Int,
-        enabled: Boolean,
         indicatorColor: Int,
-        shape: UiShape,
         textColor: Int,
         selectedTextColor: Int,
-        rippleColor: Int,
-        fontWeight: Int?,
-        fontFamily: UiFontFamily?,
-        letterSpacingEm: Float?,
-        lineHeightSp: Int?,
-        includeFontPadding: Boolean,
     ) {
-        val indices = linkedSetOf(previousSelectedIndex, nextSelectedIndex)
-        val indicatorShape = shape.inset(indicatorInset.toInt())
-        indices.forEach { index ->
-            if (index !in 0 until childCount) return@forEach
-            val child = getChildAt(index) as? TextView ?: return@forEach
-            val isSelected = index == nextSelectedIndex
-            ContentViewBinder.applyTextAppearance(
-                view = child,
-                textColor = if (isSelected) selectedTextColor else textColor,
-                textSizeSp = textSizeSpState,
-                fontWeight = fontWeight,
-                fontFamily = fontFamily,
-                letterSpacingEm = letterSpacingEm,
-                lineHeightSp = lineHeightSp,
-                includeFontPadding = includeFontPadding,
+        updateSelectionAt(
+            index = previousSelectedIndex,
+            nextSelectedIndex = nextSelectedIndex,
+            indicatorColor = indicatorColor,
+            textColor = textColor,
+            selectedTextColor = selectedTextColor,
+        )
+        if (nextSelectedIndex != previousSelectedIndex) {
+            updateSelectionAt(
+                index = nextSelectedIndex,
+                nextSelectedIndex = nextSelectedIndex,
+                indicatorColor = indicatorColor,
+                textColor = textColor,
+                selectedTextColor = selectedTextColor,
             )
-            child.background = createSegmentBackground(
-                enabled = enabled,
+        }
+    }
+
+    private fun updateSelectionAt(
+        index: Int,
+        nextSelectedIndex: Int,
+        indicatorColor: Int,
+        textColor: Int,
+        selectedTextColor: Int,
+    ) {
+        if (index !in 0 until childCount) return
+        val child = getChildAt(index) as? TextView ?: return
+        val isSelected = index == nextSelectedIndex
+        val resolvedTextColor = if (isSelected) selectedTextColor else textColor
+        if (child.currentTextColor != resolvedTextColor) {
+            child.setTextColor(resolvedTextColor)
+        }
+        val segmentBackground = segmentBackgrounds[child]
+            ?: createSegmentBackground(
+                enabled = enabledState,
                 selected = isSelected,
                 indicatorColor = indicatorColor,
-                rippleColor = rippleColor,
-                shape = indicatorShape,
-            )
-            child.isSelected = isSelected
-        }
+                rippleColor = rippleColorState,
+                shape = shapeState.inset(indicatorInset.toInt()),
+            ).also { created ->
+                segmentBackgrounds[child] = created
+                child.background = created.drawable
+            }
+        segmentBackground.updateIndicator(
+            selected = isSelected,
+            indicatorColor = indicatorColor,
+        )
+        child.isSelected = isSelected
     }
 
     private fun createSegmentBackground(
@@ -286,21 +303,38 @@ internal class DeclarativeSegmentedControlLayout(
         indicatorColor: Int,
         rippleColor: Int,
         shape: UiShape,
-    ) = if (enabled) {
-        RippleDrawable(
-            ColorStateList.valueOf(rippleColor),
-            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
-                fillColor = ColorStateList.valueOf(
-                    if (selected) indicatorColor else Color.TRANSPARENT,
-                )
-            },
-            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
-                fillColor = ColorStateList.valueOf(Color.WHITE)
-            },
-        )
-    } else {
-        MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+    ): SegmentBackground {
+        val indicator = MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
             fillColor = ColorStateList.valueOf(
+                if (selected) indicatorColor else Color.TRANSPARENT,
+            )
+        }
+        val drawable = if (enabled) {
+            RippleDrawable(
+                ColorStateList.valueOf(rippleColor),
+                indicator,
+                MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+                    fillColor = ColorStateList.valueOf(Color.WHITE)
+                },
+            )
+        } else {
+            indicator
+        }
+        return SegmentBackground(
+            drawable = drawable,
+            indicator = indicator,
+        )
+    }
+
+    private class SegmentBackground(
+        val drawable: Drawable,
+        private val indicator: MaterialShapeDrawable,
+    ) {
+        fun updateIndicator(
+            selected: Boolean,
+            indicatorColor: Int,
+        ) {
+            indicator.fillColor = ColorStateList.valueOf(
                 if (selected) indicatorColor else Color.TRANSPARENT,
             )
         }

@@ -19,6 +19,46 @@ data class LayoutPassSnapshot(
 object LayoutPassTracker {
     private val counters = linkedMapOf<String, MutableLayoutPassCounter>()
 
+    @Volatile
+    var isEnabled: Boolean = false
+        private set
+
+    @Synchronized
+    fun start(resetCounters: Boolean = true) {
+        if (resetCounters) {
+            counters.clear()
+        }
+        isEnabled = true
+    }
+
+    fun stop() {
+        isEnabled = false
+    }
+
+    fun beginTiming(): Long = if (isEnabled) System.nanoTime() else TIMING_DISABLED
+
+    fun recordMeasureSince(
+        viewClass: Class<*>,
+        startNs: Long,
+    ) {
+        if (startNs == TIMING_DISABLED) return
+        recordMeasure(
+            viewName = viewClass.simpleName,
+            durationNs = System.nanoTime() - startNs,
+        )
+    }
+
+    fun recordLayoutSince(
+        viewClass: Class<*>,
+        startNs: Long,
+    ) {
+        if (startNs == TIMING_DISABLED) return
+        recordLayout(
+            viewName = viewClass.simpleName,
+            durationNs = System.nanoTime() - startNs,
+        )
+    }
+
     @Synchronized
     fun recordMeasure(
         viewName: String,
@@ -73,6 +113,8 @@ object LayoutPassTracker {
     fun reset() {
         counters.clear()
     }
+
+    private const val TIMING_DISABLED: Long = 0L
 }
 
 private class MutableLayoutPassCounter(

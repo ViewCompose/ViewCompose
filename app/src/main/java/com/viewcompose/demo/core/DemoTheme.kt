@@ -2,6 +2,8 @@ package com.viewcompose
 
 import android.content.Context
 import android.content.res.Configuration
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import com.viewcompose.widget.core.UiColors
 import com.viewcompose.widget.core.UiControlSizing
 import com.viewcompose.widget.core.UiButtonSizing
@@ -10,6 +12,7 @@ import com.viewcompose.widget.core.UiSegmentedControlSizing
 import com.viewcompose.widget.core.UiShapes
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTextFieldSizing
+import com.viewcompose.widget.core.UiThemeMetadata
 import com.viewcompose.widget.core.UiThemeTokens
 import com.viewcompose.ui.shape.UiCorner
 import com.viewcompose.ui.shape.UiCornerSize
@@ -105,6 +108,7 @@ object DemoThemeTokens {
                 circularTrackThickness = 4.dp,
             ),
         ),
+        metadata = UiThemeMetadata(isDark = false),
     )
 
     val dark: UiThemeTokens = UiThemeTokens(
@@ -171,6 +175,7 @@ object DemoThemeTokens {
                 circularTrackThickness = 4.dp,
             ),
         ),
+        metadata = UiThemeMetadata(isDark = true),
     )
 
     fun resolve(
@@ -218,5 +223,15 @@ object DemoThemeTokens {
     fun isSystemDark(context: Context): Boolean {
         val nightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         return nightMode == Configuration.UI_MODE_NIGHT_YES
+    }
+}
+
+internal fun AppCompatActivity.applyDemoThemeWindowAppearance(
+    tokens: UiThemeTokens,
+) {
+    val isDark = tokens.metadata.isDark ?: return
+    WindowCompat.getInsetsController(window, window.decorView).apply {
+        isAppearanceLightStatusBars = !isDark
+        isAppearanceLightNavigationBars = !isDark
     }
 }

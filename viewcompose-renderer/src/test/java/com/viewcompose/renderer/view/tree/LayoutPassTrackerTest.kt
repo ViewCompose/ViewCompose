@@ -1,9 +1,18 @@
 package com.viewcompose.renderer.view.tree
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Test
 
 class LayoutPassTrackerTest {
+    @After
+    fun tearDown() {
+        LayoutPassTracker.stop()
+        LayoutPassTracker.reset()
+    }
+
     @Test
     fun `records and resets layout pass counts`() {
         LayoutPassTracker.reset()
@@ -41,5 +50,26 @@ class LayoutPassTrackerTest {
 
         LayoutPassTracker.reset()
         assertEquals(LayoutPassSnapshot(), LayoutPassTracker.snapshot())
+    }
+
+    @Test
+    fun `custom view timing is disabled by default and can be scoped`() {
+        LayoutPassTracker.stop()
+        LayoutPassTracker.reset()
+
+        val disabledStart = LayoutPassTracker.beginTiming()
+        LayoutPassTracker.recordMeasureSince(LayoutPassTrackerTest::class.java, disabledStart)
+
+        assertEquals(LayoutPassSnapshot(), LayoutPassTracker.snapshot())
+        assertFalse(LayoutPassTracker.isEnabled)
+
+        LayoutPassTracker.start()
+        val enabledStart = LayoutPassTracker.beginTiming()
+        LayoutPassTracker.recordMeasureSince(LayoutPassTrackerTest::class.java, enabledStart)
+        LayoutPassTracker.stop()
+
+        assertTrue(enabledStart > 0L)
+        assertEquals(1, LayoutPassTracker.snapshot().totalMeasureCount)
+        assertFalse(LayoutPassTracker.isEnabled)
     }
 }

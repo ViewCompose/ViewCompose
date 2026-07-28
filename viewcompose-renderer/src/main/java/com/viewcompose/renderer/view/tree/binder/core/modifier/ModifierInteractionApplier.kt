@@ -57,6 +57,7 @@ internal object ModifierInteractionApplier {
     ) {
         if (node.type == NodeType.TextField) {
             // EditText should keep its intrinsic focus/click semantics.
+            view.setTag(R.id.viewcompose_modifier_click_listener, null)
             view.setOnClickListener(null)
             ModifierGestureApplier.applyGestureState(
                 view = view,
@@ -69,12 +70,20 @@ internal object ModifierInteractionApplier {
             )
             return
         }
-        val clickListener = resolved.clickable?.let { clickableElement ->
-            View.OnClickListener { clickableElement.onClick() }
-        }
-        val hasClickListener = clickListener != null
+        val clickableElement = resolved.clickable
+        val hasClickListener = clickableElement != null
         val keepIntrinsicInteraction = shouldKeepIntrinsicInteraction(node.type)
-        view.setOnClickListener(clickListener)
+        if (clickableElement == null) {
+            view.setTag(R.id.viewcompose_modifier_click_listener, null)
+            view.setOnClickListener(null)
+        } else {
+            val listener = (view.getTag(R.id.viewcompose_modifier_click_listener) as? ModifierClickListenerBinding)
+                ?: ModifierClickListenerBinding().also {
+                    view.setTag(R.id.viewcompose_modifier_click_listener, it)
+                }
+            listener.onClick = clickableElement.onClick
+            view.setOnClickListener(listener)
+        }
         view.isClickable = hasClickListener || keepIntrinsicInteraction
         view.isFocusable = hasClickListener || keepIntrinsicInteraction
         view.isFocusableInTouchMode = false
@@ -174,5 +183,13 @@ internal object ModifierInteractionApplier {
     ) {
         view.pivotX = view.width * origin.pivotFractionX
         view.pivotY = view.height * origin.pivotFractionY
+    }
+}
+
+private class ModifierClickListenerBinding : View.OnClickListener {
+    var onClick: (() -> Unit)? = null
+
+    override fun onClick(view: View?) {
+        onClick?.invoke()
     }
 }

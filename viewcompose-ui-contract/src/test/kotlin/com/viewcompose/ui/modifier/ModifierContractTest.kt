@@ -6,10 +6,28 @@ import com.viewcompose.ui.node.spec.ConstraintAnchorLink
 import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ModifierContractTest {
+    @Test
+    fun `independently rebuilt modifier chains compare structurally`() {
+        val first = Modifier
+            .padding(horizontal = 12, vertical = 8)
+            .backgroundColor(0xFF112233.toInt())
+        val second = Modifier
+            .padding(horizontal = 12, vertical = 8)
+            .backgroundColor(0xFF112233.toInt())
+        val changed = Modifier
+            .padding(horizontal = 16, vertical = 8)
+            .backgroundColor(0xFF112233.toInt())
+
+        assertEquals(first, second)
+        assertEquals(first.hashCode(), second.hashCode())
+        assertNotEquals(first, changed)
+    }
+
     @Test
     fun `then keeps modifier element order`() {
         val modifier = Modifier

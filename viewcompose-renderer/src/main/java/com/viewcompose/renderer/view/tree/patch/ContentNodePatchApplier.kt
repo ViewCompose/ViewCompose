@@ -93,11 +93,11 @@ internal object ContentNodePatchApplier {
             patch.previous.onClick != patch.next.onClick ||
             patch.previous.enabled != patch.next.enabled
         ) {
-            view.setOnClickListener {
-                if (patch.next.enabled) {
-                    patch.next.onClick?.invoke()
-                }
-            }
+            ContentViewBinder.updateButtonClickListener(
+                view = view,
+                enabled = patch.next.enabled,
+                onClick = patch.next.onClick,
+            )
         }
         if (hasTextAppearanceChange(patch)) {
             ContentViewBinder.applyTextAppearance(

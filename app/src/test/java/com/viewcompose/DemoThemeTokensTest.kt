@@ -12,6 +12,7 @@ class DemoThemeTokensTest {
         assertEquals(0xFF7B9E68.toInt(), DemoThemeTokens.light.colors.primary)
         assertEquals(0xFF9A7AAE.toInt(), DemoThemeTokens.light.colors.secondary)
         assertEquals(0xFF2F241B.toInt(), DemoThemeTokens.light.colors.onSurface)
+        assertEquals(false, DemoThemeTokens.light.metadata.isDark)
     }
 
     @Test
@@ -21,6 +22,7 @@ class DemoThemeTokensTest {
         assertEquals(0xFF98C27F.toInt(), DemoThemeTokens.dark.colors.primary)
         assertEquals(0xFFB39AC9.toInt(), DemoThemeTokens.dark.colors.secondary)
         assertEquals(0xFFF4EFE8.toInt(), DemoThemeTokens.dark.colors.onSurface)
+        assertEquals(true, DemoThemeTokens.dark.metadata.isDark)
     }
 
     @Test

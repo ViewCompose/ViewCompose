@@ -140,7 +140,10 @@ internal class LazyItemCollector(
         require(span > 0) { "Lazy item span must be greater than zero." }
         items += LazyListItem(
             key = key,
-            contentToken = contentToken,
+            contentToken = capturedLazyContentToken(
+                contentToken = contentToken,
+                localSnapshot = localSnapshot,
+            ),
             contentType = contentType,
             kind = kind,
             span = span,

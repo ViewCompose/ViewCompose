@@ -5,6 +5,21 @@ import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.nativeContainer
 
+internal data class CapturedLazyContentToken(
+    val contentToken: Any?,
+    val localSnapshot: LocalSnapshot,
+)
+
+internal fun capturedLazyContentToken(
+    contentToken: Any?,
+    localSnapshot: LocalSnapshot,
+): CapturedLazyContentToken {
+    return CapturedLazyContentToken(
+        contentToken = contentToken,
+        localSnapshot = localSnapshot,
+    )
+}
+
 internal class WidgetLazyListItemSession(
     container: RenderContainerHandle,
     localSnapshot: LocalSnapshot,

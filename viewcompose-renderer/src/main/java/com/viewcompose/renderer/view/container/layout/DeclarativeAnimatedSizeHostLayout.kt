@@ -48,7 +48,7 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         widthMeasureSpec: Int,
         heightMeasureSpec: Int,
     ) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val desiredWidth = measuredWidth
         val desiredHeight = measuredHeight
@@ -66,10 +66,7 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
             resolveSize(animatedWidthPx.roundToInt().coerceAtLeast(0), widthMeasureSpec),
             resolveSize(animatedHeightPx.roundToInt().coerceAtLeast(0), heightMeasureSpec),
         )
-        LayoutPassTracker.recordMeasure(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
     override fun onLayout(
@@ -79,7 +76,7 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         right: Int,
         bottom: Int,
     ) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         val contentLeft = paddingLeft
         val contentTop = paddingTop
         val contentRight = (right - left - paddingRight).coerceAtLeast(contentLeft)
@@ -92,10 +89,7 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         } else {
             super.onLayout(changed, left, top, right, bottom)
         }
-        LayoutPassTracker.recordLayout(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 
     override fun onDetachedFromWindow() {

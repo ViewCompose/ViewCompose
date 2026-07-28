@@ -38,8 +38,10 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
     }
     ProvideRemoteImageLoader(remoteImageLoader) {
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
+            val currentTheme = Theme.current
             SideEffect {
                 activity?.title = "$title · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
+                activity?.applyDemoThemeWindowAppearance(currentTheme)
             }
             Scaffold(
                 topBar = {

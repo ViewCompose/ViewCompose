@@ -44,7 +44,9 @@ internal object ModifierGestureApplier {
             resolved.anchoredDraggable != null ||
             resolved.transformable != null
         if (!hasGesture) {
-            (view.getTag(R.id.viewcompose_gesture_dispatcher) as? ViewGestureDispatcher)?.dispose()
+            val existing = view.getTag(R.id.viewcompose_gesture_dispatcher) as? ViewGestureDispatcher
+                ?: return
+            existing.dispose()
             view.setTag(R.id.viewcompose_gesture_dispatcher, null)
             view.setOnTouchListener(null)
             return
@@ -52,9 +54,9 @@ internal object ModifierGestureApplier {
         val dispatcher = (view.getTag(R.id.viewcompose_gesture_dispatcher) as? ViewGestureDispatcher)
             ?: ViewGestureDispatcher(view).also {
                 view.setTag(R.id.viewcompose_gesture_dispatcher, it)
+                view.setOnTouchListener(it)
             }
         dispatcher.update(resolved)
-        view.setOnTouchListener(dispatcher)
     }
 }
 

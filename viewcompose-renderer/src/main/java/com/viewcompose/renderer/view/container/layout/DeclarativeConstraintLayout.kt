@@ -48,12 +48,14 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     var inlineHelpersSpec: ConstraintHelpersSpec = ConstraintHelpersSpec()
         set(value) {
+            if (field == value) return
             field = value
             requestConstraintRebuild()
         }
 
     var decoupledConstraintSetSpec: ConstraintSetSpec? = null
         set(value) {
+            if (field == value) return
             field = value
             requestConstraintRebuild()
         }
@@ -84,12 +86,9 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         flushPendingConstraintRebuild()
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        LayoutPassTracker.recordMeasure(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
     override fun onLayout(
@@ -100,12 +99,9 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         bottom: Int,
     ) {
         flushPendingConstraintRebuild()
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onLayout(changed, left, top, right, bottom)
-        LayoutPassTracker.recordLayout(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 
     override fun onViewAdded(child: View) {

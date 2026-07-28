@@ -324,10 +324,18 @@ internal class LazyListAdapter(
 
 internal class LazyListSpacingDecoration(
     private var spacing: Int,
-    private val orientation: Int = LinearLayoutManager.VERTICAL,
+    private var orientation: Int = LinearLayoutManager.VERTICAL,
 ) : RecyclerView.ItemDecoration() {
-    fun updateSpacing(spacing: Int) {
+    fun update(
+        spacing: Int,
+        orientation: Int,
+    ): Boolean {
+        if (this.spacing == spacing && this.orientation == orientation) {
+            return false
+        }
         this.spacing = spacing
+        this.orientation = orientation
+        return true
     }
 
     override fun getItemOffsets(

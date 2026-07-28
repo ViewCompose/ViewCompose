@@ -13,19 +13,23 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
 ) : ViewGroup(context, attrs) {
     var horizontalSpacing: Int = 0
         set(value) {
+            if (field == value) return
             field = value
             requestLayout()
         }
 
     var verticalSpacing: Int = 0
         set(value) {
+            if (field == value) return
             field = value
             requestLayout()
         }
 
     var maxItemsInEachColumn: Int = Int.MAX_VALUE
         set(value) {
-            field = value.coerceAtLeast(1)
+            val resolved = value.coerceAtLeast(1)
+            if (field == resolved) return
+            field = resolved
             requestLayout()
         }
 
@@ -42,7 +46,7 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
         p is MarginLayoutParams
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
         val availableHeight = if (heightMode == MeasureSpec.UNSPECIFIED) {
             Int.MAX_VALUE
@@ -103,14 +107,11 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
             resolveSize(totalWidth + paddingLeft + paddingRight, widthMeasureSpec),
             resolveSize(maxColumnHeight + paddingTop + paddingBottom, heightMeasureSpec),
         )
-        LayoutPassTracker.recordMeasure(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         val availableHeight = b - t - paddingTop - paddingBottom
 
         var currentX = paddingLeft
@@ -156,9 +157,6 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
                 itemsInCurrentColumn = 0
             }
         }
-        LayoutPassTracker.recordLayout(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 }
