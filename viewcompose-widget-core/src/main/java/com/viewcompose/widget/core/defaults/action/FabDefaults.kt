@@ -2,12 +2,23 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * FloatingActionButton 的尺寸档位。
+ * Size tiers for FloatingActionButton.
+ */
 enum class FabSize {
     Small,
     Medium,
     Large,
 }
 
+/**
+ * FAB 与 Extended FAB 的默认 token。
+ * Default tokens for FAB and Extended FAB.
+ *
+ * 普通 FAB 按 size 选择独立形状和图标尺寸，Extended FAB 使用横向文本按钮语义。
+ * Regular FAB selects shape and icon size by size tier, while Extended FAB follows horizontal text-button semantics.
+ */
 object FabDefaults {
     fun containerColor(): Int = Theme.colors.primaryContainer
 

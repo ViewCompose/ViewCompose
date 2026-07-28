@@ -1,11 +1,22 @@
 package com.viewcompose.widget.core
 
+/**
+ * 排版 token 的语义档位。
+ * Semantic tiers for typography tokens.
+ */
 enum class TypographyTier {
     Large,
     Medium,
     Small,
 }
 
+/**
+ * 文本 DSL 的默认排版和颜色入口。
+ * Default typography and color entry point for text DSLs.
+ *
+ * currentStyle/current color 从 composition local 读取，用于继承父级文本或 surface 的上下文。
+ * currentStyle/current color read composition locals to inherit parent text or surface context.
+ */
 object TextDefaults {
     fun currentStyle(): UiTextStyle = TextStyle.current
 

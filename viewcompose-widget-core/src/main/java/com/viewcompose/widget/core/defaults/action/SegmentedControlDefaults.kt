@@ -2,12 +2,23 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * SegmentedControl 的尺寸档位。
+ * Size tiers for SegmentedControl.
+ */
 enum class SegmentedControlSize {
     Compact,
     Medium,
     Large,
 }
 
+/**
+ * SegmentedControl DSL 的默认 token。
+ * Default tokens for the SegmentedControl DSL.
+ *
+ * 选中态、禁用态颜色支持局部 override，尺寸始终来自当前 Theme.controls。
+ * Selected/disabled colors support scoped overrides, while sizing always comes from current Theme.controls.
+ */
 object SegmentedControlDefaults {
     fun backgroundColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)

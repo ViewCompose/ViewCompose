@@ -1,5 +1,9 @@
 package com.viewcompose.widget.core
 
+/**
+ * TabRow DSL 的默认容器、指示器和 item 间距 token。
+ * Default container, indicator, and item spacing tokens for the TabRow DSL.
+ */
 object TabRowDefaults {
     fun containerColor(): Int = Theme.colors.surface
 

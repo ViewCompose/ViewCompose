@@ -2,6 +2,10 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * AlertDialog 组合控件的默认颜色、排版和间距 token。
+ * Default color, typography, and spacing tokens for the AlertDialog composite widget.
+ */
 object AlertDialogDefaults {
     fun containerColor(): Int = Theme.colors.surface
 

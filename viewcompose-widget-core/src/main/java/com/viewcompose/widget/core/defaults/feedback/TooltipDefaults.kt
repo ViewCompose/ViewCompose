@@ -2,6 +2,10 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * PlainTooltip 的默认容器、内容色和内边距 token。
+ * Default container, content color, and padding tokens for PlainTooltip.
+ */
 object TooltipDefaults {
     fun containerColor(): Int = Theme.colors.inverseSurface
 

@@ -1,5 +1,9 @@
 package com.viewcompose.widget.core
 
+/**
+ * NavigationBar DSL 的默认颜色、标签和徽标 token。
+ * Default color, label, and badge tokens for the NavigationBar DSL.
+ */
 object NavigationBarDefaults {
     fun containerColor(): Int = Theme.colors.surface
 

@@ -1,5 +1,9 @@
 package com.viewcompose.widget.core
 
+/**
+ * ListItem DSL 的默认文本、颜色和间距 token。
+ * Default text, color, and spacing tokens for the ListItem DSL.
+ */
 object ListItemDefaults {
     fun headlineColor(): Int = Theme.colors.onSurface
 

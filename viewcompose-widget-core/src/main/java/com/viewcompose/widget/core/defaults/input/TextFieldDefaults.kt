@@ -2,18 +2,33 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * TextField 的视觉变体。
+ * Visual variants for TextField.
+ */
 enum class TextFieldVariant {
     Filled,
     Tonal,
     Outlined,
 }
 
+/**
+ * TextField 的尺寸档位。
+ * Size tiers for TextField.
+ */
 enum class TextFieldSize {
     Compact,
     Medium,
     Large,
 }
 
+/**
+ * TextField DSL 的默认颜色、排版、形状和内边距 token。
+ * Default color, typography, shape, and padding tokens for the TextField DSL.
+ *
+ * 容器和边框颜色支持局部 override，用于单页或组件局部替换输入框风格。
+ * Container and border colors support scoped overrides for page-level or component-local input styling.
+ */
 object TextFieldDefaults {
     fun textStyle(
         size: TextFieldSize = TextFieldSize.Medium,

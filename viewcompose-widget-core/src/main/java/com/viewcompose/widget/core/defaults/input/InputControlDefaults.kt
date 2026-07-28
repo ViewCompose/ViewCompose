@@ -1,5 +1,12 @@
 package com.viewcompose.widget.core
 
+/**
+ * Checkbox、Switch、RadioButton 与 Slider 的默认输入控件 token。
+ * Default input-control tokens for Checkbox, Switch, RadioButton, and Slider.
+ *
+ * 各控件拥有独立 local override，避免一个控件的定制意外影响其他输入控件。
+ * Each control has its own local override to prevent one control customization from leaking into other input controls.
+ */
 object InputControlDefaults {
     fun labelStyle(): UiTextStyle = TextDefaults.bodyStyle()
 
