@@ -7,6 +7,7 @@ import com.viewcompose.text.TextDocument
 import com.viewcompose.text.TextDocumentSaveCodec
 
 /**
+ * 记住稳定的文本编辑状态，并在宿主重建后恢复文本与方向性选区；IME 组合和撤销历史保持会话级。
  * Remembers a stable text editor state and restores text plus directional selection after host
  * recreation. Active IME composition and undo history are intentionally session-local.
  */
@@ -28,6 +29,10 @@ fun rememberTextFieldState(
     }
 }
 
+/**
+ * 使用富文本文档初始化可保存的文本编辑状态。
+ * Initializes saveable text editor state from a rich text document.
+ */
 fun rememberTextFieldState(
     initialDocument: TextDocument,
     initialSelection: TextRange = TextRange(initialDocument.text.length),
@@ -46,6 +51,10 @@ fun rememberTextFieldState(
     }
 }
 
+/**
+ * 编解码 TextFieldState 的可保存快照，明确版本号以便未来扩展格式。
+ * Encodes and decodes saveable TextFieldState snapshots with an explicit version for future format changes.
+ */
 fun textFieldStateSaver(
     historyLimit: Int = TextFieldState.DEFAULT_HISTORY_LIMIT,
 ): Saver<TextFieldState, List<Any?>> {

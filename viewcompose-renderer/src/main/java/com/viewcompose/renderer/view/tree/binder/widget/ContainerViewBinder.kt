@@ -19,6 +19,11 @@ import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 import com.viewcompose.renderer.view.lazy.adapter.LazyListSpacingDecoration
 
+/**
+ * 绑定基础容器节点，负责布局方向、对齐、间距、约束与动画宿主的 View 层映射。
+ * Binds primitive container nodes and maps orientation, alignment, spacing, constraints, and
+ * animation-host state onto Android Views.
+ */
 internal object ContainerViewBinder {
     data class LinearSpec(
         val spacing: Int,

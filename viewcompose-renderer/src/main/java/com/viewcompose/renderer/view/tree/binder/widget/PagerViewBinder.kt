@@ -19,6 +19,11 @@ import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.ui.shape.UiShape
 
+/**
+ * 绑定分页、分段控件和标签栏节点，保持 PagerState 与 Android 容器滚动状态一致。
+ * Binds pagers, segmented controls, and tab rows while keeping PagerState aligned with Android
+ * container scroll state.
+ */
 internal object PagerViewBinder {
     data class SegmentedControlSpec(
         val items: List<SegmentedControlItem>,

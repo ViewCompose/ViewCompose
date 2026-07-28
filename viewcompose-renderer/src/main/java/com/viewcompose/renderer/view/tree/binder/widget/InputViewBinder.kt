@@ -27,6 +27,10 @@ import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 
+/**
+ * 绑定输入类节点，封装文本编辑、开关控件、滑块和平台 IME/无障碍细节。
+ * Binds input nodes and encapsulates text editing, toggle controls, sliders, and platform IME/accessibility details.
+ */
 internal object InputViewBinder {
     data class TextFieldSpec(
         val state: TextFieldState,

@@ -9,6 +9,11 @@ import com.viewcompose.renderer.view.container.DeclarativeScrollableRowLayout
 import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
+/**
+ * 绑定普通滚动容器和下拉刷新节点，复用容器 binder 并接入键盘跟随滚动策略。
+ * Binds scroll containers and pull-to-refresh nodes by reusing container binders and wiring
+ * keyboard-follow scrolling policy.
+ */
 internal object ScrollableViewBinder {
     data class PullToRefreshSpec(
         val isRefreshing: Boolean,
