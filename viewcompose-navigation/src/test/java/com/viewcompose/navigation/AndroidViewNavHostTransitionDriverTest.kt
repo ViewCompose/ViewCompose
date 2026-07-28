@@ -1,5 +1,10 @@
 package com.viewcompose.navigation
 
+/*
+ * 测试职责：覆盖 Android navigation runtime 中的 Android View Nav Host Transition Driver 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Android View Nav Host Transition Driver behavior in Android navigation runtime and guards navigation contracts against regressions.
+ */
+
 import android.app.Activity
 import android.graphics.drawable.ColorDrawable
 import android.os.Looper

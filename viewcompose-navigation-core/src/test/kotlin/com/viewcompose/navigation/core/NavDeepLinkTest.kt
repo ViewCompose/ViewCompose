@@ -1,5 +1,10 @@
 package com.viewcompose.navigation.core
 
+/*
+ * 测试职责：覆盖 navigation core 中的 Nav Deep Link 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Nav Deep Link behavior in navigation core and guards navigation contracts against regressions.
+ */
+
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue

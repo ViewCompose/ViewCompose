@@ -1,5 +1,10 @@
 package com.viewcompose.navigation
 
+/*
+ * 测试职责：覆盖 Android navigation runtime 中的 Android Nav Host Back Adapter 行为，防止导航契约在后续重构中回退。
+ * Test responsibility: covers Android Nav Host Back Adapter behavior in Android navigation runtime and guards navigation contracts against regressions.
+ */
+
 import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.BackEventCompat
