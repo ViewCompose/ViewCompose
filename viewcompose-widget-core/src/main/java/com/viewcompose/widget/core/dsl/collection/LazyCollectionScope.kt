@@ -4,11 +4,19 @@ import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 
+/**
+ * Lazy list 内容 scope，收集 item 定义并捕获声明时的 locals。
+ * Lazy-list content scope that collects item definitions and captures locals from declaration time.
+ */
 @UiDslMarker
 class LazyListScope internal constructor(
     private val collector: LazyItemCollector,
     private val stickyHeadersAllowed: Boolean,
 ) {
+    /**
+     * 添加单个 lazy item。
+     * Adds one lazy item.
+     */
     fun item(
         key: Any,
         contentType: Any? = null,
@@ -25,6 +33,10 @@ class LazyListScope internal constructor(
         )
     }
 
+    /**
+     * 批量添加 lazy items。
+     * Adds lazy items from a list.
+     */
     fun <T> items(
         items: List<T>,
         key: (T) -> Any,
@@ -43,6 +55,10 @@ class LazyListScope internal constructor(
         }
     }
 
+    /**
+     * 添加 sticky header；当前仅 LazyColumn 支持。
+     * Adds a sticky header; currently supported only by LazyColumn.
+     */
     fun stickyHeader(
         key: Any,
         contentType: Any? = null,
@@ -63,10 +79,18 @@ class LazyListScope internal constructor(
     }
 }
 
+/**
+ * Lazy grid 内容 scope，支持 item span。
+ * Lazy-grid content scope with item span support.
+ */
 @UiDslMarker
 class LazyGridScope internal constructor(
     private val collector: LazyItemCollector,
 ) {
+    /**
+     * 添加单个 grid item。
+     * Adds one grid item.
+     */
     fun item(
         key: Any,
         contentType: Any? = null,
@@ -84,6 +108,10 @@ class LazyGridScope internal constructor(
         )
     }
 
+    /**
+     * 批量添加 grid items。
+     * Adds grid items from a list.
+     */
     fun <T> items(
         items: List<T>,
         key: (T) -> Any,
@@ -103,6 +131,10 @@ class LazyGridScope internal constructor(
         }
     }
 
+    /**
+     * 添加跨整行的 sticky header。
+     * Adds a sticky header spanning the full row.
+     */
     fun stickyHeader(
         key: Any,
         contentType: Any? = null,
@@ -120,6 +152,10 @@ class LazyGridScope internal constructor(
     }
 }
 
+/**
+ * lazy item 收集器，负责 key 去重、locals 捕获和 item session 工厂创建。
+ * Lazy-item collector responsible for key uniqueness, locals capture, and item session factory creation.
+ */
 internal class LazyItemCollector(
     private val localSnapshot: LocalSnapshot,
 ) {
