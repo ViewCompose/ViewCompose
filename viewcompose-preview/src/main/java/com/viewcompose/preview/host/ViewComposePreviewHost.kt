@@ -17,11 +17,23 @@ import com.viewcompose.widget.core.UiTheme
 import com.viewcompose.widget.core.UiThemeDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
 
+/**
+ * Preview 宿主内部使用的主题模式。
+ * Internal theme mode consumed by the Preview host.
+ */
 enum class PreviewThemeMode {
     Light,
     Dark,
 }
 
+/**
+ * 将 ViewCompose 渲染会话嵌入 Compose Preview 的 AndroidView 容器。
+ * Embeds a ViewCompose render session inside the AndroidView container used by Compose Preview.
+ *
+ * 该宿主负责把 Compose 的重组更新转成 ViewCompose 的重新渲染，同时在参数变化时重建会话。
+ * This host converts Compose recomposition updates into ViewCompose re-renders and recreates
+ * the session when host parameters change.
+ */
 @Composable
 fun ViewComposePreviewHost(
     modifier: Modifier = Modifier,
@@ -81,6 +93,10 @@ private data class PreviewRenderConfig(
     val themeMode: PreviewThemeMode,
 )
 
+/**
+ * 保留 Android render session，避免 Preview 每次重组都重建整棵 View 树。
+ * Retains the Android render session so Preview recompositions do not rebuild the whole View tree.
+ */
 private class PreviewRenderController {
     private var attachedContainer: ViewGroup? = null
     private var config: PreviewRenderConfig? = null
@@ -96,6 +112,8 @@ private class PreviewRenderController {
         val shouldRecreate = attachedContainer !== container || this.config != config || session == null
         this.config = config
         if (shouldRecreate) {
+            // 容器或宿主配置变化时必须重建，确保 overlay/debug/theme 边界一致。
+            // Recreate when container or host config changes so overlay/debug/theme boundaries stay consistent.
             session?.dispose()
             attachedContainer = container
             session = renderInto(
@@ -108,6 +126,8 @@ private class PreviewRenderController {
             }
             return
         }
+        // 内容 lambda 更新但宿主边界未变时，只触发一次渲染即可。
+        // When only the content lambda changed, a render pass is enough.
         session?.render()
     }
 

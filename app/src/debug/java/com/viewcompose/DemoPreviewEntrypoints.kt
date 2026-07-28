@@ -7,6 +7,10 @@ import com.viewcompose.preview.ViewComposePreviewOptions
 import com.viewcompose.preview.ViewComposePreviewTheme
 import com.viewcompose.preview.ViewComposePreviewWithRoot
 
+/**
+ * demo 模块对 IDE Preview 暴露的调试入口。
+ * Debug-only IDE Preview entrypoints for demo modules.
+ */
 @Preview(
     name = "Demo Preview Chapter Light",
     group = "Demo/Preview",

@@ -26,6 +26,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+/**
+ * Compose 对照版本的复杂布局性能场景。
+ * Compose control implementation of the complex-layout performance scenario.
+ */
 @Composable
 internal fun ComposeComplexLayoutPerformanceScreen() {
     var revision by remember { mutableIntStateOf(0) }
@@ -128,6 +132,10 @@ private fun ComposeComplexLayoutAction(
     }
 }
 
+/**
+ * Compose 对照卡片，结构需要与 ViewCompose 版本保持同等复杂度。
+ * Compose control card; its structure should stay equally complex to the ViewCompose version.
+ */
 @Composable
 private fun ComposeDashboardCard(card: PerformanceDashboardCard) {
     Column(

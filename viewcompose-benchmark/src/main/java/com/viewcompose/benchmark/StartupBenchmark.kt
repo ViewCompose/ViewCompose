@@ -9,6 +9,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/**
+ * demo 应用冷启动 benchmark。
+ * Cold-start benchmark for the demo app.
+ */
 @RunWith(AndroidJUnit4::class)
 class StartupBenchmark {
     @get:Rule

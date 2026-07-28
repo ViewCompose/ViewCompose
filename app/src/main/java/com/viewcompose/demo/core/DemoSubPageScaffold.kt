@@ -23,6 +23,10 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.remember
 
+/**
+ * demo 子页面共享脚手架，提供返回按钮、系统栏内边距和主题覆盖。
+ * Shared scaffold for demo sub-pages, providing back navigation, system-bar padding, and theme override.
+ */
 internal fun UiTreeBuilder.DemoSubPageScaffold(
     root: ViewGroup,
     title: String,
@@ -40,6 +44,8 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
             val currentTheme = Theme.current
             SideEffect {
+                // 子页标题展示当前主题模式，帮助手工验收时确认 token 覆盖是否生效。
+                // Sub-page titles include the theme mode so manual QA can confirm token overrides.
                 activity?.title = "$title · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
                 activity?.applyDemoThemeWindowAppearance(currentTheme)
             }
@@ -73,6 +79,8 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
             }
         }
         if (overrideTheme == null) {
+            // System 模式使用上层解析后的主题，避免在子页重复包一层相同 token。
+            // System mode uses the already resolved parent theme and avoids wrapping identical tokens.
             scaffoldContent()
         } else {
             UiTheme(tokens = overrideTheme, content = scaffoldContent)

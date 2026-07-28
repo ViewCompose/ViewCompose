@@ -5,6 +5,10 @@ import com.viewcompose.preview.catalog.PreviewCatalog
 import com.viewcompose.preview.catalog.model.PreviewDomain
 import com.viewcompose.preview.catalog.model.PreviewSpecRef
 
+/**
+ * 按领域把 PreviewSpec 转换为 PreviewParameter 可消费的轻量引用。
+ * Converts PreviewSpec entries in one domain into lightweight refs consumable by PreviewParameter.
+ */
 internal abstract class DomainPreviewSpecProvider(
     domain: PreviewDomain,
 ) : PreviewParameterProvider<PreviewSpecRef> {

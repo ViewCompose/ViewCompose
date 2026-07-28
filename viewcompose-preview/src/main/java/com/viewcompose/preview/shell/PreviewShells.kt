@@ -16,6 +16,10 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.dp
 import com.viewcompose.widget.core.sp
 
+/**
+ * Preview 目录统一使用的外层 surface。
+ * Shared outer surface used by Preview catalog entries.
+ */
 @Composable
 internal fun ViewComposePreviewSurface(
     themeMode: ViewComposePreviewTheme,
@@ -28,6 +32,10 @@ internal fun ViewComposePreviewSurface(
     )
 }
 
+/**
+ * 验证 Preview bridge 是否能启动的最小内容。
+ * Minimal content used to verify that the Preview bridge can boot.
+ */
 private fun UiTreeBuilder.previewBootstrapContent() {
     Column(
         spacing = 8.dp,
