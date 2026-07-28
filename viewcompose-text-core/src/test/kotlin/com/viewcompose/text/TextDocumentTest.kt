@@ -1,5 +1,10 @@
 package com.viewcompose.text
 
+/*
+ * 测试职责：覆盖 text core 中的 Text Document 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Text Document behavior in text core and guards the contract against regressions.
+ */
+
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

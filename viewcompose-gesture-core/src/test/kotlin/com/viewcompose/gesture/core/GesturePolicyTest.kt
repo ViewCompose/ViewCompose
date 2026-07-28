@@ -1,5 +1,10 @@
 package com.viewcompose.gesture.core
 
+/*
+ * 测试职责：覆盖 gesture core 中的 Gesture Policy 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Gesture Policy behavior in gesture core and guards the contract against regressions.
+ */
+
 import com.viewcompose.ui.gesture.GestureOrientation
 import com.viewcompose.ui.gesture.SwipeDirection
 import org.junit.Assert.assertEquals

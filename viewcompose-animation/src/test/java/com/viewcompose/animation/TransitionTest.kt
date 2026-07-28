@@ -1,5 +1,10 @@
 package com.viewcompose.animation
 
+/*
+ * 测试职责：覆盖 animation DSL 中的 Transition 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Transition behavior in animation DSL and guards the contract against regressions.
+ */
+
 import com.viewcompose.runtime.Snapshot
 import org.junit.Assert.assertEquals
 import org.junit.Test

@@ -1,5 +1,10 @@
 package com.viewcompose.graphics
 
+/*
+ * 测试职责：覆盖 graphics DSL 中的 Graphics Dsl 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Graphics Dsl behavior in graphics DSL and guards the contract against regressions.
+ */
+
 import com.viewcompose.graphics.core.DrawCommand
 import com.viewcompose.ui.modifier.DrawBehindModifierElement
 import com.viewcompose.ui.modifier.DrawWithCacheModifierElement

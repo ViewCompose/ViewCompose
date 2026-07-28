@@ -1,5 +1,10 @@
 package com.viewcompose.preview.catalog
 
+/*
+ * 契约测试职责：锁定 preview catalog 的 Preview Catalog Guard 边界，防止依赖或公开 API 在重构中漂移。
+ * Contract test responsibility: locks down the Preview Catalog Guard boundary in preview catalog and prevents dependency or public API drift.
+ */
+
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

@@ -1,5 +1,10 @@
 package com.viewcompose.host.android
 
+/*
+ * 契约测试职责：锁定 Android host 的 Host Android Api Boundary Guard 边界，防止依赖或公开 API 在重构中漂移。
+ * Contract test responsibility: locks down the Host Android Api Boundary Guard boundary in Android host and prevents dependency or public API drift.
+ */
+
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files

@@ -1,5 +1,10 @@
 package com.viewcompose.lifecycle
 
+/*
+ * 测试职责：覆盖 lifecycle integration 中的 Flow Collect As State With Lifecycle 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Flow Collect As State With Lifecycle behavior in lifecycle integration and guards the contract against regressions.
+ */
+
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry

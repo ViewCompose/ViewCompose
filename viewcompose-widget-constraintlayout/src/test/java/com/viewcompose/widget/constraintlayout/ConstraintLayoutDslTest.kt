@@ -1,5 +1,10 @@
 package com.viewcompose.widget.constraintlayout
 
+/*
+ * 测试职责：覆盖 constraintlayout widget 中的 Constraint Layout Dsl 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Constraint Layout Dsl behavior in constraintlayout widget and guards the contract against regressions.
+ */
+
 import com.viewcompose.ui.modifier.ConstraintModifierElement
 import com.viewcompose.ui.modifier.LayoutIdModifierElement
 import com.viewcompose.ui.modifier.Modifier

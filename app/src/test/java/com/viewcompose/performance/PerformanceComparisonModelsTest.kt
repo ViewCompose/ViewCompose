@@ -1,5 +1,10 @@
 package com.viewcompose.performance
 
+/*
+ * 测试职责：覆盖 app demo 中的 Performance Comparison Models 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers Performance Comparison Models behavior in app demo and guards the contract against regressions.
+ */
+
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertSame

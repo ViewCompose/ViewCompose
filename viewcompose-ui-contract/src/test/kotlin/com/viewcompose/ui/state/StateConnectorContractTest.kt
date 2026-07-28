@@ -1,5 +1,10 @@
 package com.viewcompose.ui.state
 
+/*
+ * 测试职责：覆盖 UI contract 中的 State Connector Contract 行为，防止关键契约在后续重构中回退。
+ * Test responsibility: covers State Connector Contract behavior in UI contract and guards the contract against regressions.
+ */
+
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
