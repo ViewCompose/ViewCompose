@@ -3,13 +3,15 @@ package com.viewcompose.benchmark
 import android.os.SystemClock
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertNotNull
 
 internal fun MacrobenchmarkScope.startDemoAndWait() {
+    prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait()
-    device.wait(Until.hasObject(By.text("Demo Theme")), UI_WAIT_TIMEOUT_MS)
+    device.wait(Until.hasObject(By.text("已实现模块")), UI_WAIT_TIMEOUT_MS)
 }
 
 internal fun MacrobenchmarkScope.startCatalogAndWait() {
@@ -34,6 +36,7 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
     expectedText: String,
     extras: Map<String, Int> = emptyMap(),
 ) {
+    prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait { intent ->
         // Clear app-specific extras from previous test methods while
@@ -61,6 +64,7 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
     scenario: String,
     expectedText: String,
 ) {
+    prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait { intent ->
         intent.removeExtra("demo_module_key")
@@ -73,6 +77,7 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
 }
 
 internal fun MacrobenchmarkScope.startSystemNavigationAndWait() {
+    prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait { intent ->
         intent.setClassName(
@@ -134,6 +139,13 @@ internal fun MacrobenchmarkScope.clickVisibleTextWithoutIdle(text: String) {
 
 internal fun MacrobenchmarkScope.waitForNavigationMotion() {
     SystemClock.sleep(NAVIGATION_MOTION_WAIT_MILLIS)
+}
+
+private fun prepareBenchmarkUiAutomation() {
+    // Some OEM builds keep accessibility/window events flowing continuously, so UiAutomator's
+    // implicit "wait for idle" never succeeds and adds its full timeout to every interaction.
+    // Benchmarks already use explicit text conditions and fixed motion windows for synchronization.
+    Configurator.getInstance().setWaitForIdleTimeout(0L)
 }
 
 internal fun MacrobenchmarkScope.openDemoModule(title: String) {

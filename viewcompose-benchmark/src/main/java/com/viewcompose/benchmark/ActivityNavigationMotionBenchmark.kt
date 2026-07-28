@@ -61,7 +61,7 @@ class ActivityNavigationMotionBenchmark {
 
     private companion object {
         const val SYSTEM_NAVIGATION_TEXT = "首页总览"
-        const val DEMO_HOME_TEXT = "Demo Theme"
+        const val DEMO_HOME_TEXT = "已实现模块"
         const val ITERATIONS_ARGUMENT = "activityNavigationMotionIterations"
         const val PROFILE_WARMUP_ITERATIONS = 3
 

@@ -43,7 +43,7 @@ class DemoInteractionBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startCatalogAndWait()
-            waitForText("Demo Theme")
+            waitForText("已实现模块")
             waitForText("Light")
             waitForText("Dark")
         },
