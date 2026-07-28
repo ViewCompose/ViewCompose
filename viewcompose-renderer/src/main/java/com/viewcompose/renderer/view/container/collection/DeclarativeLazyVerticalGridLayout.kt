@@ -31,21 +31,15 @@ internal class DeclarativeLazyVerticalGridLayout(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        LayoutPassTracker.recordMeasure(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onLayout(changed, left, top, right, bottom)
-        LayoutPassTracker.recordLayout(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 
     fun bind(

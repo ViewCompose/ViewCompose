@@ -44,7 +44,7 @@ internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor
         widthMeasureSpec: Int,
         heightMeasureSpec: Int,
     ) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val scaledWidth = (measuredWidth * widthScale).roundToInt().coerceAtLeast(0)
         val scaledHeight = (measuredHeight * heightScale).roundToInt().coerceAtLeast(0)
@@ -52,10 +52,7 @@ internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor
             resolveAnimatedDimension(scaledWidth, widthMeasureSpec),
             resolveAnimatedDimension(scaledHeight, heightMeasureSpec),
         )
-        LayoutPassTracker.recordMeasure(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
     override fun onLayout(
@@ -65,12 +62,9 @@ internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor
         right: Int,
         bottom: Int,
     ) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onLayout(changed, left, top, right, bottom)
-        LayoutPassTracker.recordLayout(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 
     private fun resolveAnimatedDimension(

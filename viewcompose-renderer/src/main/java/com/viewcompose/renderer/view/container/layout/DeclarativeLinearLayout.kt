@@ -40,12 +40,9 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
         widthMeasureSpec: Int,
         heightMeasureSpec: Int,
     ) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        LayoutPassTracker.recordMeasure(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
     override fun onLayout(
@@ -55,13 +52,10 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
         right: Int,
         bottom: Int,
     ) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         val visibleChildren = collectVisibleChildren()
         if (visibleChildren.isEmpty()) {
-            LayoutPassTracker.recordLayout(
-                viewName = javaClass.simpleName,
-                durationNs = System.nanoTime() - startNs,
-            )
+            LayoutPassTracker.recordLayoutSince(javaClass, startNs)
             return
         }
         if (orientation == HORIZONTAL) {
@@ -69,10 +63,7 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
         } else {
             layoutVertically(visibleChildren)
         }
-        LayoutPassTracker.recordLayout(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 
     private fun layoutHorizontally(

@@ -86,6 +86,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     val latestSnapshot = DemoRenderDiagnosticsStore.latestSnapshot()
                     val latestPatchSnapshot = DemoRenderDiagnosticsStore.latestPatchActiveSnapshot()
                     val latestLayoutSnapshot = LayoutPassTracker.snapshot()
+                    LayoutPassTracker.stop()
                     val hasSnapshotChanged = latestSnapshot != previousSnapshot ||
                         latestPatchSnapshot != previousPatchSnapshot ||
                         latestLayoutSnapshot != previousLayoutSnapshot
@@ -297,7 +298,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 Button(
                     text = "重置布局计数器",
                     onClick = {
-                        LayoutPassTracker.reset()
+                        LayoutPassTracker.start()
                         snapshotRefreshRequestTokenState.value = snapshotRefreshRequestTokenState.value + 1
                         snapshotFollowUntilStableState.value = true
                         snapshotStableFrameCountState.value = 0

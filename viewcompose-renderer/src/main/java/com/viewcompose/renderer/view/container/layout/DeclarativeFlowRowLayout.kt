@@ -42,7 +42,7 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
         p is MarginLayoutParams
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val availableWidth = if (widthMode == MeasureSpec.UNSPECIFIED) {
             Int.MAX_VALUE
@@ -103,14 +103,11 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
             resolveSize(maxRowWidth + paddingLeft + paddingRight, widthMeasureSpec),
             resolveSize(totalHeight + paddingTop + paddingBottom, heightMeasureSpec),
         )
-        LayoutPassTracker.recordMeasure(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        val startNs = System.nanoTime()
+        val startNs = LayoutPassTracker.beginTiming()
         val availableWidth = r - l - paddingLeft - paddingRight
 
         var currentX = paddingLeft
@@ -156,9 +153,6 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
                 itemsInCurrentRow = 0
             }
         }
-        LayoutPassTracker.recordLayout(
-            viewName = javaClass.simpleName,
-            durationNs = System.nanoTime() - startNs,
-        )
+        LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 }
