@@ -13,10 +13,12 @@ import android.content.Context
 import android.graphics.RectF
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.TextView
 import com.google.android.material.shape.CutCornerTreatment
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.modifier.Modifier
@@ -28,8 +30,10 @@ import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.node.spec.ColumnNodeProps
+import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDensity
 import com.google.android.material.shape.MaterialShapeDrawable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -45,6 +49,28 @@ import org.robolectric.annotation.Config
 class ViewTreeRenderTransactionTest {
     private val context: Context
         get() = RuntimeEnvironment.getApplication()
+
+    @Test
+    fun `environment density and font scale are reapplied to an existing text view`() {
+        val container = FrameLayout(context)
+        val firstNode = environmentTextNode(density = 2f, fontScale = 1f)
+        val first = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(firstNode),
+        )
+        val textView = container.getChildAt(0) as TextView
+        assertEquals(20f, textView.textSize, 0.01f)
+
+        ViewTreeRenderer.renderInto(
+            container = container,
+            previous = first.mountedNodes,
+            nodes = listOf(environmentTextNode(density = 3f, fontScale = 1.5f)),
+        )
+
+        assertSame(textView, container.getChildAt(0))
+        assertEquals(45f, textView.textSize, 0.01f)
+    }
 
     @Test
     fun `node style patch preserves modifier shape override`() {
@@ -430,6 +456,30 @@ class ViewTreeRenderTransactionTest {
                 horizontalAlignment = HorizontalAlignment.Start,
             ),
             children = children.toList(),
+        )
+    }
+
+    private fun environmentTextNode(
+        density: Float,
+        fontScale: Float,
+    ): VNode {
+        return VNode(
+            type = NodeType.Text,
+            key = "environment-text",
+            spec = TextNodeProps(
+                text = "Environment",
+                maxLines = 1,
+                overflow = com.viewcompose.ui.node.TextOverflow.Clip,
+                textAlign = com.viewcompose.ui.node.TextAlign.Start,
+                textColor = 0xFF000000.toInt(),
+                textSizeSp = 10.sp,
+            ),
+            environment = UiEnvironmentValues.Default.copy(
+                density = UiDensity(
+                    density = density,
+                    fontScale = fontScale,
+                ),
+            ),
         )
     }
 

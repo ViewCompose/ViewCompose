@@ -11,7 +11,7 @@ import com.viewcompose.widget.core.IconButton
 import com.viewcompose.widget.core.NavigationBar
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.TopAppBar
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.node.ImageSource
 

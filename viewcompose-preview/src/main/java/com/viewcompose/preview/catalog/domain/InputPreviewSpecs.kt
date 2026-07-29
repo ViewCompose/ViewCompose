@@ -18,7 +18,7 @@ import com.viewcompose.widget.core.Slider
 import com.viewcompose.widget.core.Switch
 import com.viewcompose.widget.core.TextArea
 import com.viewcompose.widget.core.TextField
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.ui.node.ImageSource

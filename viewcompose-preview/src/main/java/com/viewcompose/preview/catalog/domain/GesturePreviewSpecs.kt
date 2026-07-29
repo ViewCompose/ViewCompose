@@ -21,7 +21,7 @@ import com.viewcompose.widget.core.Column
 import com.viewcompose.widget.core.Surface
 import com.viewcompose.widget.core.SurfaceVariant
 import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 
 /**

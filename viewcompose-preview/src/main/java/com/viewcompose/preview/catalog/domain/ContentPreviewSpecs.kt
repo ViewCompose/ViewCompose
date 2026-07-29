@@ -16,8 +16,8 @@ import com.viewcompose.widget.core.Surface
 import com.viewcompose.widget.core.SurfaceVariant
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.dp
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 import com.viewcompose.ui.node.ImageSource
 
 internal object ContentPreviewSpecs {

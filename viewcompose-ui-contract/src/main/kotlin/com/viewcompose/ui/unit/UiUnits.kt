@@ -94,12 +94,6 @@ data class UiDensity(
 
     fun toPx(value: UiSp): Float = value.value * scaledDensity
 
-    @Deprecated("Keep UiDp logical and resolve it only at the renderer boundary.")
-    fun dp(value: Int): Int = roundToPx(UiDp(value.toFloat()))
-
-    @Deprecated("Keep UiSp logical and resolve it only at the renderer boundary.")
-    fun sp(value: Int): Int = roundToPx(UiSp(value.toFloat()))
-
     companion object {
         val Default = UiDensity(
             density = 1f,

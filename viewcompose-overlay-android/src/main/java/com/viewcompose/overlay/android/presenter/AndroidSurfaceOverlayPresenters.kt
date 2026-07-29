@@ -15,6 +15,7 @@ import android.widget.FrameLayout
 import android.widget.PopupWindow
 import androidx.core.view.doOnLayout
 import com.viewcompose.ui.overlay.OVERLAY_ANCHOR_TAG_KEY
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.AndroidEnvironmentBridge
 import com.viewcompose.widget.core.DialogOverlayContent
 import com.viewcompose.widget.core.DialogOverlayHandle
@@ -94,7 +95,7 @@ private class AndroidDialogOverlayHandle(
 ) : DialogOverlayHandle {
     private val density = AndroidEnvironmentBridge.fromContext(rootView.context).density
     private val dialogContainer = FrameLayout(rootView.context).apply {
-        val inset = density.dp(24)
+        val inset = density.roundToPx(24.dp)
         setPadding(inset, inset, inset, inset)
         background = ColorDrawable(Color.TRANSPARENT)
         layoutParams = ViewGroup.LayoutParams(
@@ -197,7 +198,7 @@ private class AndroidPopupOverlayHandle(
         spec.focusable,
     ).apply {
         setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        elevation = density.dp(12).toFloat()
+        elevation = density.toPx(12.dp)
     }
     private val surfaceSession: OverlaySurfaceSession = createOverlaySurfaceSession(
         container = popupContainer,
