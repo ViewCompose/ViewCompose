@@ -251,7 +251,7 @@ internal object ViewLayoutParamsFactory {
             ConstraintDimension.WrapContent -> ViewGroup.LayoutParams.WRAP_CONTENT
             ConstraintDimension.FillToConstraints -> 0
             ConstraintDimension.MatchParent -> ViewGroup.LayoutParams.MATCH_PARENT
-            is ConstraintDimension.Fixed -> value
+            is ConstraintDimension.Fixed -> node.environment.roundToPx(value)
         }
     }
 }

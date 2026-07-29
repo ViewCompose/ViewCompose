@@ -12,7 +12,11 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.constraintlayout.widget.Group
 import androidx.constraintlayout.widget.Placeholder
 import com.viewcompose.renderer.R
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
 import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
@@ -396,7 +400,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             constraintSet.createBarrier(
                 helperId,
                 barrier.direction.toConstraintSetDirection(),
-                barrier.margin,
+                requireUiEnvironment().roundToPx(barrier.margin),
                 *references,
             )
             constraintSet.getConstraint(helperId)?.layout?.mBarrierAllowsGoneWidgets = barrier.allowsGoneWidgets
@@ -488,6 +492,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         spec: ConstraintFlowSpec,
         helperReferenceIds: Map<String, Int>,
     ) {
+        val environment = requireUiEnvironment()
         val flowView = ensureHelperView(
             key = key,
             viewId = helperId,
@@ -504,8 +509,8 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         flowView.setReferencedIds(referencedIds)
         flowView.setOrientation(spec.orientation.toFlowOrientation())
         flowView.setWrapMode(spec.wrapMode.toFlowWrapMode())
-        flowView.setHorizontalGap(spec.horizontalGap)
-        flowView.setVerticalGap(spec.verticalGap)
+        flowView.setHorizontalGap(environment.roundToPx(spec.horizontalGap))
+        flowView.setVerticalGap(environment.roundToPx(spec.verticalGap))
         flowView.setHorizontalStyle(spec.horizontalStyle.toConstraintSetChainStyle())
         flowView.setVerticalStyle(spec.verticalStyle.toConstraintSetChainStyle())
         flowView.setFirstHorizontalStyle(
@@ -531,16 +536,16 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         flowView.setHorizontalAlign(spec.horizontalAlign.toFlowHorizontalAlign())
         flowView.setVerticalAlign(spec.verticalAlign.toFlowVerticalAlign())
         flowView.setMaxElementsWrap(spec.maxElementsWrap)
-        flowView.setPadding(spec.padding)
+        flowView.setPadding(environment.roundToPx(spec.padding))
         if (flowView.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
-            flowView.setPaddingLeft(spec.paddingEnd)
-            flowView.setPaddingRight(spec.paddingStart)
+            flowView.setPaddingLeft(environment.roundToPx(spec.paddingEnd))
+            flowView.setPaddingRight(environment.roundToPx(spec.paddingStart))
         } else {
-            flowView.setPaddingLeft(spec.paddingStart)
-            flowView.setPaddingRight(spec.paddingEnd)
+            flowView.setPaddingLeft(environment.roundToPx(spec.paddingStart))
+            flowView.setPaddingRight(environment.roundToPx(spec.paddingEnd))
         }
-        flowView.setPaddingTop(spec.paddingTop)
-        flowView.setPaddingBottom(spec.paddingBottom)
+        flowView.setPaddingTop(environment.roundToPx(spec.paddingTop))
+        flowView.setPaddingBottom(environment.roundToPx(spec.paddingBottom))
     }
 
     private fun applyGroupHelper(
@@ -564,7 +569,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         }
         groupView.setReferencedIds(referencedIds)
         groupView.visibility = spec.visibility.toViewVisibility()
-        groupView.elevation = spec.elevation
+        groupView.elevation = requireUiEnvironment().toPx(spec.elevation)
     }
 
     private fun applyLayerHelper(
@@ -588,7 +593,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         }
         layerView.setReferencedIds(referencedIds)
         layerView.visibility = spec.visibility.toViewVisibility()
-        layerView.elevation = spec.elevation
+        layerView.elevation = requireUiEnvironment().toPx(spec.elevation)
         if (referencedIds.isEmpty()) {
             return
         }
@@ -604,14 +609,15 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         layerView: Layer,
         spec: ConstraintLayerSpec,
     ) {
+        val environment = requireUiEnvironment()
         try {
             layerView.rotation = spec.rotation
             layerView.scaleX = spec.scaleX
             layerView.scaleY = spec.scaleY
-            layerView.translationX = spec.translationX
-            layerView.translationY = spec.translationY
-            layerView.pivotX = spec.pivotX ?: Float.NaN
-            layerView.pivotY = spec.pivotY ?: Float.NaN
+            layerView.translationX = environment.toPx(spec.translationX)
+            layerView.translationY = environment.toPx(spec.translationY)
+            layerView.pivotX = spec.pivotX?.let(environment::toPx) ?: Float.NaN
+            layerView.pivotY = spec.pivotY?.let(environment::toPx) ?: Float.NaN
         } catch (error: RuntimeException) {
             warnOnce("Layer '${spec.id}' transform apply failed after layout: ${error.message}")
         }
@@ -716,11 +722,17 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                 when (spec.direction) {
                     ConstraintGuidelineDirection.FromStart,
                     ConstraintGuidelineDirection.FromTop,
-                    -> constraintSet.setGuidelineBegin(helperId, position.value)
+                    -> constraintSet.setGuidelineBegin(
+                        helperId,
+                        requireUiEnvironment().roundToPx(position.value),
+                    )
 
                     ConstraintGuidelineDirection.FromEnd,
                     ConstraintGuidelineDirection.FromBottom,
-                    -> constraintSet.setGuidelineEnd(helperId, position.value)
+                    -> constraintSet.setGuidelineEnd(
+                        helperId,
+                        requireUiEnvironment().roundToPx(position.value),
+                    )
                 }
             }
 
@@ -864,21 +876,30 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         constraints: Map<String, ConstraintItemSpec>,
         helperReferenceIds: Map<String, Int>,
     ) {
+        val environment = requireUiEnvironment()
         constraints.forEach { (referenceId, item) ->
             val viewId = referenceIdToViewId[referenceId] ?: helperReferenceIds[referenceId]
             if (viewId == null) {
                 warnOnce("Constraint item '$referenceId' has no matching child/helper layoutId.")
                 return@forEach
             }
-            constraintSet.constrainWidth(viewId, item.width.toLayoutParam())
-            constraintSet.constrainHeight(viewId, item.height.toLayoutParam())
-            item.widthMin?.let { minWidth -> constraintSet.constrainMinWidth(viewId, minWidth) }
-            item.widthMax?.let { maxWidth -> constraintSet.constrainMaxWidth(viewId, maxWidth) }
+            constraintSet.constrainWidth(viewId, item.width.toLayoutParam(environment))
+            constraintSet.constrainHeight(viewId, item.height.toLayoutParam(environment))
+            item.widthMin?.let { minWidth ->
+                constraintSet.constrainMinWidth(viewId, environment.roundToPx(minWidth))
+            }
+            item.widthMax?.let { maxWidth ->
+                constraintSet.constrainMaxWidth(viewId, environment.roundToPx(maxWidth))
+            }
             item.widthPercent?.let { percent ->
                 constraintSet.constrainPercentWidth(viewId, percent.coerceIn(0f, 1f))
             }
-            item.heightMin?.let { minHeight -> constraintSet.constrainMinHeight(viewId, minHeight) }
-            item.heightMax?.let { maxHeight -> constraintSet.constrainMaxHeight(viewId, maxHeight) }
+            item.heightMin?.let { minHeight ->
+                constraintSet.constrainMinHeight(viewId, environment.roundToPx(minHeight))
+            }
+            item.heightMax?.let { maxHeight ->
+                constraintSet.constrainMaxHeight(viewId, environment.roundToPx(maxHeight))
+            }
             item.heightPercent?.let { percent ->
                 constraintSet.constrainPercentHeight(viewId, percent.coerceIn(0f, 1f))
             }
@@ -927,7 +948,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
                     constraintSet.constrainCircle(
                         viewId,
                         targetId,
-                        circle.radius,
+                        environment.roundToPx(circle.radius),
                         circle.angle,
                     )
                 }
@@ -1007,13 +1028,13 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
             sourceSide,
             targetId,
             targetSide,
-            margin,
+            requireUiEnvironment().roundToPx(margin),
         )
         goneMargin?.let { marginValue ->
             constraintSet.setGoneMargin(
                 sourceViewId,
                 sourceSide,
-                marginValue,
+                requireUiEnvironment().roundToPx(marginValue),
             )
         }
     }
@@ -1086,12 +1107,12 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         }
     }
 
-    private fun ConstraintDimension.toLayoutParam(): Int {
+    private fun ConstraintDimension.toLayoutParam(environment: UiEnvironmentValues): Int {
         return when (this) {
             ConstraintDimension.WrapContent -> LayoutParams.WRAP_CONTENT
             ConstraintDimension.FillToConstraints -> 0
             ConstraintDimension.MatchParent -> LayoutParams.MATCH_PARENT
-            is ConstraintDimension.Fixed -> value
+            is ConstraintDimension.Fixed -> environment.roundToPx(value)
         }
     }
 

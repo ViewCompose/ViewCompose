@@ -112,7 +112,7 @@ class ModifierContractTest {
                     constraint = ConstraintItemSpec(
                         top = ConstraintAnchorLink(
                             target = ConstraintAnchorTarget.parent(ConstraintAnchor.Top),
-                            margin = 12,
+                            margin = 12.dp,
                         ),
                     ),
                 ),
@@ -122,7 +122,7 @@ class ModifierContractTest {
         assertEquals("hero-card", (modifier.elements[0] as LayoutIdModifierElement).layoutId)
         val constraintElement = modifier.elements[1] as ConstraintModifierElement
         assertEquals("hero-card", constraintElement.referenceId)
-        assertEquals(12, constraintElement.constraint.top?.margin)
+        assertEquals(12.dp, constraintElement.constraint.top?.margin)
     }
 
     @Test

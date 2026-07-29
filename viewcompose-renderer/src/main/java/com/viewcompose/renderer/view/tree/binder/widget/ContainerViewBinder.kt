@@ -105,6 +105,9 @@ internal object ContainerViewBinder {
     ) {
         view.decoupledConstraintSetSpec = spec.decoupledConstraintSet
         view.inlineHelpersSpec = spec.inlineHelpers
+        // Environment changes do not change the logical constraint spec, but they do change
+        // every dp-to-pixel result. A full node rebind must therefore rebuild ConstraintSet.
+        view.requestConstraintRebuild()
     }
 
     fun bindAnimatedVisibilityHost(

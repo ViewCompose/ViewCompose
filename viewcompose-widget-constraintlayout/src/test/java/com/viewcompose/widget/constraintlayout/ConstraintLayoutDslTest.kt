@@ -18,6 +18,7 @@ import com.viewcompose.ui.node.spec.ConstraintGuidelinePosition
 import com.viewcompose.ui.node.spec.ConstraintHelperVisibility
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.buildVNodeTree
@@ -48,7 +49,7 @@ class ConstraintLayoutDslTest {
                 Text(
                     text = "Subtitle",
                     modifier = Modifier.constrain("subtitle") {
-                        topToBottom(title, margin = 8)
+                        topToBottom(title, margin = 8.dp)
                         startToStart(parent)
                     },
                 )
@@ -109,7 +110,7 @@ class ConstraintLayoutDslTest {
                 startToStart(parent)
             }
             constrain("details") {
-                topToBottom(hero, margin = 12)
+                topToBottom(hero, margin = 12.dp)
                 startToStart(parent)
             }
         }
@@ -133,8 +134,8 @@ class ConstraintLayoutDslTest {
                     id = "flow-main",
                     orientation = ConstraintFlowOrientation.Vertical,
                     wrapMode = ConstraintFlowWrapMode.Chain,
-                    horizontalGap = 6,
-                    verticalGap = 8,
+                    horizontalGap = 6.dp,
+                    verticalGap = 8.dp,
                     maxElementsWrap = 2,
                 )
                 createGroup(
@@ -148,7 +149,7 @@ class ConstraintLayoutDslTest {
                     b,
                     id = "layer-main",
                     rotation = 12f,
-                    translationX = 14f,
+                    translationX = 14.dp,
                 )
                 createPlaceholder(
                     content = c,
@@ -197,29 +198,29 @@ class ConstraintLayoutDslTest {
     @Test
     fun `constrain scope emits advanced dimensions baseline and circle fields`() {
         val spec = Modifier.constrain("hero") {
-            startToStart(parent, margin = 8)
-            endToEnd(parent, margin = 8)
+            startToStart(parent, margin = 8.dp)
+            endToEnd(parent, margin = 8.dp)
             topToTop(parent)
             width = com.viewcompose.ui.node.spec.ConstraintDimension.FillToConstraints
             height = com.viewcompose.ui.node.spec.ConstraintDimension.FillToConstraints
-            widthMin = 120
-            widthMax = 360
+            widthMin = 120.dp
+            widthMax = 360.dp
             widthPercent = 0.6f
-            heightMin = 80
-            heightMax = 400
+            heightMin = 80.dp
+            heightMax = 400.dp
             heightPercent = 0.5f
             constrainedWidth = true
             constrainedHeight = true
-            baselineToTop(parent, margin = 6)
+            baselineToTop(parent, margin = 6.dp)
             val target = ConstraintReference("avatar")
-            circular(target = target, radius = 72, angle = 45f)
+            circular(target = target, radius = 72.dp, angle = 45f)
         }.elements.filterIsInstance<ConstraintModifierElement>().single().constraint
 
-        assertEquals(120, spec.widthMin)
-        assertEquals(360, spec.widthMax)
+        assertEquals(120.dp, spec.widthMin)
+        assertEquals(360.dp, spec.widthMax)
         assertEquals(0.6f, spec.widthPercent)
-        assertEquals(80, spec.heightMin)
-        assertEquals(400, spec.heightMax)
+        assertEquals(80.dp, spec.heightMin)
+        assertEquals(400.dp, spec.heightMax)
         assertEquals(0.5f, spec.heightPercent)
         assertEquals(true, spec.constrainedWidth)
         assertEquals(true, spec.constrainedHeight)
@@ -247,7 +248,7 @@ class ConstraintLayoutDslTest {
     fun `helper apis fail fast outside constraint layout scope`() {
         val builder = UiTreeBuilder()
         try {
-            builder.createGuidelineFromTop(10)
+            builder.createGuidelineFromTop(10.dp)
             throw AssertionError("Expected an IllegalArgumentException for out-of-scope helper API")
         } catch (expected: IllegalArgumentException) {
             assertTrue(expected.message?.contains("ConstraintLayout helper APIs") == true)
