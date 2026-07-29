@@ -161,7 +161,7 @@ class AndroidNavHostBackAdapterTest {
             owner = owner,
             controller = controller,
             session = session,
-            navHostView = root.getChildAt(0) as NavHostView,
+            navHostView = root.requireNavHostView(),
         )
     }
 
