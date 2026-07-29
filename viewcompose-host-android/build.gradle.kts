@@ -32,6 +32,7 @@ dependencies {
     implementation(project(":viewcompose-lifecycle"))
     implementation(project(":viewcompose-viewmodel"))
     implementation(project(":viewcompose-renderer"))
+    implementation(project(":viewcompose-shadow-android"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.core.ktx)

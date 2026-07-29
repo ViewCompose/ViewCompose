@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
@@ -16,6 +17,7 @@ import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
@@ -110,6 +112,19 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         val startNs = LayoutPassTracker.beginTiming()
         super.onLayout(changed, left, top, right, bottom)
         LayoutPassTracker.recordLayoutSince(javaClass, startNs)
+    }
+
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return super.drawChild(canvas, child, drawingTime)
     }
 
     override fun onViewAdded(child: View) {

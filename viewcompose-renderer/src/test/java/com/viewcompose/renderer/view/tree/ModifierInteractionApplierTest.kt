@@ -12,15 +12,20 @@ import com.viewcompose.ui.unit.dp
 import android.view.View
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.resolve
+import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
+import com.viewcompose.ui.modifier.cornerRadius
+import com.viewcompose.ui.modifier.dropShadow
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -103,6 +108,32 @@ class ModifierInteractionApplierTest {
         assertSame(firstBinding, secondBinding)
         assertEquals(0, firstCalls)
         assertEquals(1, secondCalls)
+    }
+
+    @Test
+    fun `drop shadow follows resolved node shape and is removed incrementally`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        val shadowNode = vnode(
+            Modifier
+                .cornerRadius(6.dp)
+                .dropShadow(
+                    UiShadow(
+                        color = 0x33000000,
+                        blurRadius = 8.dp,
+                        offsetY = 2.dp,
+                    ),
+                ),
+        )
+
+        ViewModifierApplier.applyModifier(view, shadowNode, defaultRippleColor = 0)
+
+        val installed = requireNotNull(ShadowDecorationLayer.specOrNull(view))
+        assertEquals(1, installed.layerCount)
+        assertEquals(6.dp, installed.groups.single().shape.uniformAbsoluteSizeOrNull)
+
+        ViewModifierApplier.applyModifier(view, vnode(Modifier), defaultRippleColor = 0)
+
+        assertNull(ShadowDecorationLayer.specOrNull(view))
     }
 
     private fun vnode(modifier: Modifier): VNode {

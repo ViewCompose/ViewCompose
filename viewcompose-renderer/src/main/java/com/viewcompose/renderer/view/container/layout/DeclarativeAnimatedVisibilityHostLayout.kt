@@ -1,9 +1,12 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
+import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 import kotlin.math.roundToInt
 
 /**
@@ -69,6 +72,19 @@ internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor
         val startNs = LayoutPassTracker.beginTiming()
         super.onLayout(changed, left, top, right, bottom)
         LayoutPassTracker.recordLayoutSince(javaClass, startNs)
+    }
+
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return super.drawChild(canvas, child, drawingTime)
     }
 
     private fun resolveAnimatedDimension(

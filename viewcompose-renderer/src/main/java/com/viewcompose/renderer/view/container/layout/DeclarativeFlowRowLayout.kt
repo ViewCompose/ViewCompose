@@ -1,10 +1,12 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 import kotlin.math.max
 
 /**
@@ -15,6 +17,11 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : ViewGroup(context, attrs) {
+    init {
+        clipChildren = false
+        clipToPadding = false
+    }
+
     var horizontalSpacing: Int = 0
         set(value) {
             if (field == value) return
@@ -48,6 +55,19 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
 
     override fun checkLayoutParams(p: LayoutParams): Boolean =
         p is MarginLayoutParams
+
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return super.drawChild(canvas, child, drawingTime)
+    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val startNs = LayoutPassTracker.beginTiming()

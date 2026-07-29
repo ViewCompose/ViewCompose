@@ -5,11 +5,14 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.TimeInterpolator
 import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
+import android.view.View
 import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.ui.modifier.ContentSizeAnimationSpecModel
 import com.viewcompose.ui.modifier.ContentSizeEasingModel
 import com.viewcompose.ui.modifier.ContentSizeInfiniteRepeatableSpecModel
@@ -99,6 +102,19 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         super.onDetachedFromWindow()
         sizeAnimator?.cancel()
         sizeAnimator = null
+    }
+
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return super.drawChild(canvas, child, drawingTime)
     }
 
     private fun startSizeAnimation() {

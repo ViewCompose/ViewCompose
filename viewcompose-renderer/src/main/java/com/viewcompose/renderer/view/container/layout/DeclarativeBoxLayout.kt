@@ -1,11 +1,13 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 
 /**
  * Box/Surface 使用的 FrameLayout 容器。
@@ -52,6 +54,19 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
 
     override fun onViewRemoved(child: View) {
         super.onViewRemoved(child)
+    }
+
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return super.drawChild(canvas, child, drawingTime)
     }
 
     override fun onLayout(

@@ -6,6 +6,9 @@ import android.widget.TextView
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.resolve
+import com.viewcompose.shadow.android.ResolvedShadowSpec
+import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.shadow.android.ShadowSpecResolver
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.shape.UiShape
@@ -101,6 +104,11 @@ internal object ViewModifierApplier {
             resolved = resolved,
             nodeStyle = nodeStyle,
         )
+        val shadowSpec = ShadowSpecResolver.resolve(
+            elements = resolved.dropShadows,
+            defaultShape = nodeStyle.resolveShadowShape(),
+            density = node.environment.density,
+        )
         val previous = view.getTag(
             R.id.viewcompose_applied_modifier_state,
         ) as? AppliedModifierState
@@ -110,9 +118,16 @@ internal object ViewModifierApplier {
             resolved = resolved,
             nodeStyle = nodeStyle,
             hostStyle = hostStyle,
+            shadowSpec = shadowSpec,
         )
         view.setTag(R.id.viewcompose_resolved_modifiers, resolved)
 
+        if (previous == null || previous.shadowSpec != next.shadowSpec) {
+            ShadowDecorationLayer.update(
+                view = view,
+                spec = next.shadowSpec,
+            )
+        }
         if (previous == null || graphicsChanged(previous, next)) {
             ModifierGraphicsApplier.applyGraphicsModifiers(
                 view = view,
@@ -275,6 +290,17 @@ internal object ViewModifierApplier {
             previousStyle.lineHeightPx != nextStyle.lineHeightPx ||
             previousStyle.includeFontPadding != nextStyle.includeFontPadding
     }
+
+    private fun NodeStyle.resolveShadowShape(): UiShape? {
+        shape?.let { return it }
+        val corners = cornerRadius ?: return null
+        return UiShape.rounded(
+            topStart = corners.topStart,
+            topEnd = corners.topEnd,
+            bottomEnd = corners.bottomEnd,
+            bottomStart = corners.bottomStart,
+        )
+    }
 }
 
 /**
@@ -288,4 +314,5 @@ private data class AppliedModifierState(
     val resolved: ResolvedModifiers,
     val nodeStyle: NodeStyle,
     val hostStyle: HostStyle,
+    val shadowSpec: ResolvedShadowSpec,
 )
