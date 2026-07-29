@@ -29,7 +29,6 @@
 负责平台无关公开契约：
 
 - `UiShadow`
-- `UiShadowLayer`
 - `Modifier.dropShadow(...)`
 - `Modifier.dropShadows(...)`
 - 后续的 `Modifier.innerShadow(...)`

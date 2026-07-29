@@ -8,11 +8,14 @@ import com.viewcompose.ui.unit.dp
  */
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.modifier.TransformOrigin
 import com.viewcompose.ui.modifier.AnchoredDraggableModifierElement
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.backgroundDrawableRes
 import com.viewcompose.ui.modifier.graphicsLayer
+import com.viewcompose.ui.modifier.dropShadow
+import com.viewcompose.ui.modifier.dropShadows
 import com.viewcompose.ui.modifier.layoutId
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
 import com.viewcompose.ui.modifier.ConstraintModifierElement
@@ -61,6 +64,33 @@ class ResolvedModifiersTest {
         assertEquals(0.5f, resolved.graphicsLayer?.transformOrigin?.pivotFractionX)
         assertEquals(0.5f, resolved.graphicsLayer?.transformOrigin?.pivotFractionY)
         assertEquals(true, resolved.graphicsLayer?.clip)
+    }
+
+    @Test
+    fun `resolve preserves every drop shadow group in declaration order`() {
+        val first = UiShadow(
+            color = 0x22000000,
+            blurRadius = 4.dp,
+        )
+        val second = UiShadow(
+            color = 0x33000000,
+            blurRadius = 12.dp,
+            offsetY = 6.dp,
+        )
+        val third = UiShadow(
+            color = 0x44000000,
+            blurRadius = 20.dp,
+            spreadRadius = 2.dp,
+        )
+
+        val resolved = Modifier
+            .dropShadows(listOf(first, second))
+            .dropShadow(third)
+            .resolve()
+
+        assertEquals(2, resolved.dropShadows.size)
+        assertEquals(listOf(first, second), resolved.dropShadows[0].shadows)
+        assertEquals(listOf(third), resolved.dropShadows[1].shadows)
     }
 
     @Test

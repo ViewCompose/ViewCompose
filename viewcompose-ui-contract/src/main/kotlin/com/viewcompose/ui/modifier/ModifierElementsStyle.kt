@@ -1,6 +1,7 @@
 package com.viewcompose.ui.modifier
 
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.unit.UiDp
 
 /**
@@ -41,6 +42,21 @@ data class ClipModifierElement(
 data class ElevationModifierElement(
     val elevation: UiDp,
 ) : ModifierElement
+
+/**
+ * 一组共享可选 shape 的有序外阴影。
+ * An ordered group of drop shadows sharing an optional shape override.
+ */
+data class DropShadowModifierElement(
+    val shadows: List<UiShadow>,
+    val shape: UiShape? = null,
+) : ModifierElement {
+    init {
+        require(shadows.isNotEmpty()) {
+            "DropShadowModifierElement requires at least one shadow."
+        }
+    }
+}
 
 data class AlphaModifierElement(
     val alpha: Float,
