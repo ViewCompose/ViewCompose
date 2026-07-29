@@ -70,6 +70,7 @@
 | `viewcompose-animation*` | 动画内核与 DSL（含 `AnimatedVisibility` / `animateContentSize`）。 / Animation core + DSL. |
 | `viewcompose-gesture*` | 手势策略内核与 DSL（tap/drag/swipe/transform）。 / Gesture strategy core + DSL. |
 | `viewcompose-graphics*` | Canvas/绘制命令内核与 DSL。 / Canvas and drawing command core + DSL. |
+| `viewcompose-shadow-android` | 高级阴影后端、缓存与 Decoration Layer 平台能力。 / Advanced shadow backends, caching, and Decoration Layer platform support. |
 | `viewcompose-widget-constraintlayout` | ConstraintLayout DSL 与 helper 能力。 / ConstraintLayout DSL and helper capabilities. |
 | `viewcompose-preview` | 开发预览与 Paparazzi 快照回归。 / Dev preview and Paparazzi snapshot regression. |
 | `app` | Demo 应用与 UI 回归锚点。 / Demo app and UI regression anchors. |

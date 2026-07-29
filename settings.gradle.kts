@@ -41,5 +41,6 @@ include(":viewcompose-gesture")
 include(":viewcompose-gesture-core")
 include(":viewcompose-graphics")
 include(":viewcompose-graphics-core")
+include(":viewcompose-shadow-android")
 include(":viewcompose-widget-constraintlayout")
  

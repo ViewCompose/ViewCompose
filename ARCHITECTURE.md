@@ -19,7 +19,7 @@
 
 - 技术基线：Kotlin + Android View System
 - SDK：`minSdk 24`、`compileSdk 36`
-- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
+- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-shadow-android`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
 
 ### 2.1 模块职责
 
@@ -36,6 +36,7 @@
 | `viewcompose-gesture` | 平台无关手势 DSL 入口层（`pointerInput`、`combinedClickable`、`draggable/anchoredDraggable/transformable`） | 仅定义手势 modifier 与状态入口；不承载策略判定实现 |
 | `viewcompose-graphics-core` | 图形绘制内核（geometry/path/brush/draw command/draw cache） | 纯 Kotlin/JVM；禁止引入 Android 依赖；仅定义平台无关图形模型 |
 | `viewcompose-graphics` | 图形 DSL 集成层（`Canvas`、`drawBehind`、`drawWithContent`、`drawWithCache`） | 仅定义业务 API 与契约映射；不直接依赖 Android Canvas 实现 |
+| `viewcompose-shadow-android` | 高级阴影后端、缓存与 Decoration Layer Android 实现 | 只依赖 `ui-contract`；不依赖 renderer/widget/app；renderer 单向消费其平台 SPI |
 | `viewcompose-widget-core` | DSL、Theme/Defaults、Local 与 overlay 声明契约 | 不依赖 `viewcompose-renderer`；不放 Android 宿主入口 API |
 | `viewcompose-widget-constraintlayout` | ConstraintLayout 组件 DSL（`ConstraintLayout/createRef(s)/constrainAs/constrain/constraintSet`） | 仅承载约束布局 DSL 与 scope；平台渲染实现仍在 `viewcompose-renderer` |
 | `viewcompose-renderer` | Android View 渲染实现（reconcile、binder、patch、container） | 只消费 `ui-contract`，不承载业务 DSL |
