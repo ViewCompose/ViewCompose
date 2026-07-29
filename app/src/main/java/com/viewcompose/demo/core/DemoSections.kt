@@ -278,7 +278,9 @@ internal fun UiTreeBuilder.DiagnosticFactGroup(
 ) {
     Column(
         spacing = 6.dp,
-        modifier = Modifier.margin(top = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .margin(top = 8.dp),
     ) {
         Text(
             text = title,
