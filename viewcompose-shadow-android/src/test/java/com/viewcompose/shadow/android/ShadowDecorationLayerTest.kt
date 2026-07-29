@@ -68,6 +68,18 @@ class ShadowDecorationLayerTest {
         assertEquals(Color.RED, bitmap.getPixel(18, 30))
         assertEquals(Color.BLUE, bitmap.getPixel(30, 30))
         assertEquals(Color.TRANSPARENT, bitmap.getPixel(10, 30))
+
+        val statsAfterFirstDraw = ShadowDecorationLayer.cacheStats()
+        child.translationX = 10f
+        val translatedBitmap = Bitmap.createBitmap(80, 80, Bitmap.Config.ARGB_8888)
+        host.drawChildren(Canvas(translatedBitmap))
+        val statsAfterTranslation = ShadowDecorationLayer.cacheStats()
+
+        assertEquals(Color.TRANSPARENT, translatedBitmap.getPixel(18, 30))
+        assertEquals(Color.RED, translatedBitmap.getPixel(28, 30))
+        assertEquals(Color.BLUE, translatedBitmap.getPixel(40, 30))
+        assertEquals(statsAfterFirstDraw.misses, statsAfterTranslation.misses)
+        assertTrue(statsAfterTranslation.hits > statsAfterFirstDraw.hits)
     }
 
     @Test

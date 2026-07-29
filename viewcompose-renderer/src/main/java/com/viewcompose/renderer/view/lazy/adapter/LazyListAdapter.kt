@@ -14,6 +14,7 @@ import com.viewcompose.renderer.reconcile.LazyListIdentityInspector
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
+import com.viewcompose.shadow.android.ShadowDecorationHostLayout
 
 /**
  * LazyColumn/LazyRow/Grid 共享的 RecyclerView adapter。
@@ -57,7 +58,7 @@ internal class LazyListAdapter(
         parent: ViewGroup,
         viewType: Int,
     ): LazyListViewHolder {
-        val container = FrameLayout(parent.context).apply {
+        val container = ShadowDecorationHostLayout(parent.context).apply {
             layoutParams = if (orientation == LinearLayoutManager.HORIZONTAL) {
                 RecyclerView.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,

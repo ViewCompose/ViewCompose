@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
 import com.viewcompose.ui.node.LazyListItem
@@ -35,6 +36,13 @@ internal class DeclarativeLazyVerticalGridLayout(
     init {
         adapter = gridAdapter
         applyRecyclerDefaults()
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        val saveCount = canvas.save()
+        canvas.clipRect(0, 0, width, height)
+        super.dispatchDraw(canvas)
+        canvas.restoreToCount(saveCount)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
