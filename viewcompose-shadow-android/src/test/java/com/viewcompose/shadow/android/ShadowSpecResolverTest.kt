@@ -51,6 +51,7 @@ class ShadowSpecResolverTest {
         )
 
         assertEquals(2, resolved.layerCount)
+        assertEquals(density, resolved.density)
         assertEquals(UiShape.rounded(8.dp), resolved.groups.single().shape)
         assertEquals(8f, resolved.groups.single().shadows[0].blurRadiusPx)
         assertEquals(4f, resolved.groups.single().shadows[0].offsetYPx)

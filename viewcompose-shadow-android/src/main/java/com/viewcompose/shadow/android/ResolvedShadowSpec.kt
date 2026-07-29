@@ -31,13 +31,17 @@ data class ResolvedShadowGroup(
  * Complete immutable shadow specification submitted to the Android backend for one node.
  */
 data class ResolvedShadowSpec(
+    val density: UiDensity,
     val groups: List<ResolvedShadowGroup>,
 ) {
     val layerCount: Int
         get() = groups.sumOf { it.shadows.size }
 
     companion object {
-        val Empty = ResolvedShadowSpec(emptyList())
+        val Empty = ResolvedShadowSpec(
+            density = UiDensity.Default,
+            groups = emptyList(),
+        )
     }
 }
 
@@ -55,6 +59,7 @@ object ShadowSpecResolver {
     ): ResolvedShadowSpec {
         if (elements.isEmpty()) return ResolvedShadowSpec.Empty
         return ResolvedShadowSpec(
+            density = density,
             groups = elements.map { element ->
                 ResolvedShadowGroup(
                     shape = element.shape ?: defaultShape ?: Rectangle,
