@@ -7,6 +7,8 @@ package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
+import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.ImageSource
@@ -120,6 +122,18 @@ class NodeBindingDifferTest {
         val node = textNode(text = "stable")
 
         assertSame(NodeBindingPlan.SkipSubtree, NodeBindingDiffer.plan(node, node))
+    }
+
+    @Test
+    fun `rebinds when node environment changes`() {
+        val previous = textNode()
+        val next = textNode(
+            environment = UiEnvironmentValues.Default.copy(
+                layoutDirection = UiLayoutDirection.Rtl,
+            ),
+        )
+
+        assertSame(NodeBindingPlan.Rebind, NodeBindingDiffer.plan(previous, next))
     }
 
     @Test
@@ -474,6 +488,7 @@ class NodeBindingDifferTest {
         text: String = "value",
         modifier: Modifier = Modifier,
         children: List<VNode> = emptyList(),
+        environment: UiEnvironmentValues = UiEnvironmentValues.Default,
     ): VNode {
         return VNode(
             type = NodeType.Text,
@@ -487,6 +502,7 @@ class NodeBindingDifferTest {
             ),
             modifier = modifier,
             children = children,
+            environment = environment,
         )
     }
 

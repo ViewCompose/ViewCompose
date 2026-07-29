@@ -33,6 +33,11 @@ internal object NodeBindingDiffer {
         if (previous.type != next.type) {
             return NodeBindingPlan.Rebind
         }
+        if (previous.environment != next.environment) {
+            // Environment affects every native boundary: layout units, text scaling, locale and direction.
+            // Treat it as a full rebind even when spec/modifier objects are otherwise identical.
+            return NodeBindingPlan.Rebind
+        }
         val modifierChanged = previous.modifier != next.modifier
         val prevSpec = previous.spec
         val nextSpec = next.spec

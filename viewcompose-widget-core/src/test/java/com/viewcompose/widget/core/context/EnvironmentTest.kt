@@ -5,6 +5,10 @@ package com.viewcompose.widget.core
  * Test responsibility: covers Environment behavior in widget-core context and guards DSL, state, or theme contracts against regressions.
  */
 
+import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.environment.UiLocaleList
+import com.viewcompose.ui.unit.UiDensity
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -21,9 +25,9 @@ class EnvironmentTest {
         val customValues = UiEnvironmentValues(
             density = UiDensity(
                 density = 2f,
-                scaledDensity = 3f,
+                fontScale = 1.5f,
             ),
-            localeTags = listOf("zh-CN", "en-US"),
+            locales = UiLocaleList.of("zh-CN", "en-US"),
             layoutDirection = UiLayoutDirection.Rtl,
         )
         var density = 0f
@@ -41,5 +45,25 @@ class EnvironmentTest {
         assertEquals(2f, density)
         assertEquals(UiLayoutDirection.Rtl, layoutDirection)
         assertEquals("zh-CN", primaryLocale)
+    }
+
+    @Test
+    fun `environment is captured by emitted nodes`() {
+        val values = UiEnvironmentValues(
+            density = UiDensity(
+                density = 1.25f,
+                fontScale = 1.1f,
+            ),
+            locales = UiLocaleList.of("en-US"),
+            layoutDirection = UiLayoutDirection.Rtl,
+        )
+
+        val node = buildVNodeTree {
+            UiEnvironment(values) {
+                Text("environment")
+            }
+        }.single()
+
+        assertEquals(values, node.environment)
     }
 }

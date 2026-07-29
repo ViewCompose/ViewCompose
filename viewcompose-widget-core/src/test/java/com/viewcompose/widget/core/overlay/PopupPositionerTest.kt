@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.environment.UiLayoutDirection
 /*
  * 测试职责：覆盖 widget-core overlay 中的 Popup Positioner 行为，防止 DSL、状态或主题契约在后续重构中回退。
  * Test responsibility: covers Popup Positioner behavior in widget-core overlay and guards DSL, state, or theme contracts against regressions.

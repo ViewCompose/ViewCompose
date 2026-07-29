@@ -30,7 +30,7 @@ import com.viewcompose.widget.core.PopupOverlaySpec
 import com.viewcompose.widget.core.PopupOverflowPolicy
 import com.viewcompose.widget.core.PopupPositioner
 import com.viewcompose.widget.core.PopupSize
-import com.viewcompose.widget.core.UiLayoutDirection
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.widget.core.OverlaySurfaceSession
 import com.viewcompose.widget.core.createOverlaySurfaceSession
 

@@ -3,6 +3,10 @@ package com.viewcompose.widget.core
 import android.content.Context
 import android.os.LocaleList
 import android.view.View
+import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.environment.UiLocaleList
+import com.viewcompose.ui.unit.UiDensity
 import java.util.Locale
 
 /**
@@ -20,9 +24,9 @@ object AndroidEnvironmentBridge {
         return UiEnvironmentValues(
             density = UiDensity(
                 density = displayMetrics.density,
-                scaledDensity = displayMetrics.density * configuration.fontScale,
+                fontScale = configuration.fontScale,
             ),
-            localeTags = EnvironmentValueMapper.localeTags(configuration.locales),
+            locales = UiLocaleList.from(EnvironmentValueMapper.localeTags(configuration.locales)),
             layoutDirection = EnvironmentValueMapper.layoutDirection(configuration.layoutDirection),
         )
     }

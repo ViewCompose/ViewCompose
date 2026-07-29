@@ -6,6 +6,7 @@ package com.viewcompose.widget.core
  */
 
 import android.view.View
+import com.viewcompose.ui.environment.UiLayoutDirection
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.Locale

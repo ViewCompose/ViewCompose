@@ -51,9 +51,8 @@ open class UiTreeBuilder {
             inputs = inputs,
             reuseResult = List<VNode>::hasSameElementReferences,
         ) { scope ->
-            val restoreSnapshot = (scope.localSnapshotOrNull() as? LocalSnapshot) ?: parentSnapshot
             var nextNodes: List<VNode>? = null
-            LocalContext.withSnapshot(restoreSnapshot) {
+            LocalContext.withSnapshot(parentSnapshot) {
                 nextNodes = UiTreeBuilder().apply(content).build()
                 scope.updateLocalSnapshot(LocalContext.snapshot())
             }
@@ -102,12 +101,12 @@ open class UiTreeBuilder {
             inputs = EmitInputs(
                 spec,
                 modifier,
+                parentSnapshot,
             ),
             reuseResult = ::canReuseVNode,
         ) { scope ->
-            val restoreSnapshot = (scope.localSnapshotOrNull() as? LocalSnapshot) ?: parentSnapshot
             var nextNode: VNode? = null
-            LocalContext.withSnapshot(restoreSnapshot) {
+            LocalContext.withSnapshot(parentSnapshot) {
                 val nestedChildren = if (content == null) {
                     emptyList()
                 } else {
@@ -119,6 +118,7 @@ open class UiTreeBuilder {
                     spec = spec,
                     modifier = modifier,
                     children = nestedChildren,
+                    environment = Environment.values,
                 )
                 scope.updateLocalSnapshot(LocalContext.snapshot())
             }
@@ -144,6 +144,7 @@ open class UiTreeBuilder {
             spec = spec,
             modifier = modifier,
             children = children,
+            environment = Environment.values,
         )
     }
 
@@ -197,16 +198,23 @@ open class UiTreeBuilder {
     private class EmitInputs(
         private val spec: NodeSpec,
         private val modifier: Modifier,
+        private val localSnapshot: LocalSnapshot,
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is EmitInputs) return false
             return spec == other.spec &&
                 modifier == other.modifier &&
+                localSnapshot == other.localSnapshot &&
                 hasSameSessionIdentity(spec, other.spec)
         }
 
-        override fun hashCode(): Int = 31 * spec.hashCode() + modifier.hashCode()
+        override fun hashCode(): Int {
+            var result = spec.hashCode()
+            result = 31 * result + modifier.hashCode()
+            result = 31 * result + localSnapshot.hashCode()
+            return result
+        }
     }
 
     private companion object {
@@ -239,6 +247,7 @@ private fun canReuseVNode(
         previous.spec == next.spec &&
         hasSameSessionIdentity(previous.spec, next.spec) &&
         previous.modifier == next.modifier &&
+        previous.environment == next.environment &&
         previous.children.hasSameElementReferences(next.children)
 }
 

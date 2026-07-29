@@ -6,6 +6,9 @@ package com.viewcompose.widget.core
  */
 
 import com.viewcompose.ui.layout.BoxAlignment
+import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.environment.UiLocaleList
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextOverflow
@@ -14,6 +17,7 @@ import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.unit.UiDensity
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
@@ -84,6 +88,38 @@ class SubtreeRecompositionTest {
         val rightSpec = updated[1].spec as TextNodeProps
 
         assertEquals("root-R2", rightSpec.text)
+    }
+
+    @Test
+    fun `environment change invalidates an otherwise stable node group`() {
+        val composer = ComposerLite()
+        var environment = UiEnvironmentValues.Default
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        UiEnvironment(environment) {
+                            Text("stable")
+                        }
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        environment = UiEnvironmentValues(
+            density = UiDensity(
+                density = 1.25f,
+                fontScale = 1.2f,
+            ),
+            locales = UiLocaleList.of("ar"),
+            layoutDirection = UiLayoutDirection.Rtl,
+        )
+        val second = compose()
+
+        assertNotSame(first, second)
+        assertEquals(environment, second.environment)
     }
 
     @Test

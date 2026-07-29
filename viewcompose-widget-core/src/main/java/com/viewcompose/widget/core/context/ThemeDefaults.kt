@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.shape.UiShape
 
 /**
