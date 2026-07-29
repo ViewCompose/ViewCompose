@@ -22,6 +22,8 @@ import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
+import com.viewcompose.renderer.view.resolveLayoutDimension
+import com.viewcompose.renderer.view.roundToPx
 
 /**
  * 将 VNode modifier/spec 转换为父容器可接受的 Android LayoutParams。
@@ -86,13 +88,13 @@ internal object ViewLayoutParamsFactory {
                 linearOrientation = linearLikeOrientation,
             )
         }
-        val width = constraintSpec?.width?.toLayoutParamValue()
-            ?: widthModifier?.width
-            ?: size?.width
+        val width = constraintSpec?.width?.toLayoutParamValue(node)
+            ?: widthModifier?.width?.let(node.environment::resolveLayoutDimension)
+            ?: size?.width?.let(node.environment::resolveLayoutDimension)
             ?: defaultWidth
-        val height = constraintSpec?.height?.toLayoutParamValue()
-            ?: heightModifier?.height
-            ?: size?.height
+        val height = constraintSpec?.height?.toLayoutParamValue(node)
+            ?: heightModifier?.height?.let(node.environment::resolveLayoutDimension)
+            ?: size?.height?.let(node.environment::resolveLayoutDimension)
             ?: defaultHeight
         return when (parent) {
             is DeclarativeLinearLayout -> {
@@ -120,6 +122,7 @@ internal object ViewLayoutParamsFactory {
                 }
                 android.widget.LinearLayout.LayoutParams(resolvedWidth, resolvedHeight).applyLayoutParams(
                     margin = margin,
+                    node = node,
                 ) {
                     this.weight = weight?.weight ?: 0f
                     gravity = when (parent.orientation) {
@@ -131,16 +134,18 @@ internal object ViewLayoutParamsFactory {
 
             is DeclarativeBoxLayout -> FrameLayout.LayoutParams(width, height).applyLayoutParams(
                 margin = margin,
+                node = node,
             ) {
                 gravity = boxAlign?.alignment?.toGravity() ?: DeclarativeBoxLayout.UNSET_GRAVITY
             }
 
             is DeclarativeConstraintLayout -> ConstraintLayout.LayoutParams(width, height).applyLayoutParams(
                 margin = margin,
+                node = node,
             )
 
-            is FrameLayout -> FrameLayout.LayoutParams(width, height).applyLayoutParams(margin = margin)
-            else -> ViewGroup.MarginLayoutParams(width, height).applyMargin(margin)
+            is FrameLayout -> FrameLayout.LayoutParams(width, height).applyLayoutParams(margin = margin, node = node)
+            else -> ViewGroup.MarginLayoutParams(width, height).applyMargin(margin, node)
         }
     }
 
@@ -162,25 +167,27 @@ internal object ViewLayoutParamsFactory {
 
     private fun <T : ViewGroup.MarginLayoutParams> T.applyLayoutParams(
         margin: MarginModifierElement?,
+        node: VNode,
         block: T.() -> Unit = {},
     ): T {
-        applyMargin(margin)
+        applyMargin(margin, node)
         block()
         return this
     }
 
     private fun <T : ViewGroup.MarginLayoutParams> T.applyMargin(
         margin: MarginModifierElement?,
+        node: VNode,
     ): T {
         if (margin == null) {
             setMargins(0, 0, 0, 0)
             return this
         }
         setMargins(
-            margin.left,
-            margin.top,
-            margin.right,
-            margin.bottom,
+            node.environment.roundToPx(margin.left),
+            node.environment.roundToPx(margin.top),
+            node.environment.roundToPx(margin.right),
+            node.environment.roundToPx(margin.bottom),
         )
         return this
     }
@@ -237,7 +244,7 @@ internal object ViewLayoutParamsFactory {
         }
     }
 
-    private fun ConstraintDimension.toLayoutParamValue(): Int {
+    private fun ConstraintDimension.toLayoutParamValue(node: VNode): Int {
         // ConstraintLayout 的 match-constraints 在 Android LayoutParams 中用 0 表达。
         // ConstraintLayout expresses match-constraints as 0 in Android LayoutParams.
         return when (this) {

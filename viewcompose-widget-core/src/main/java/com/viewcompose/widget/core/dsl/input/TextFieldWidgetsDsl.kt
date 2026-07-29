@@ -13,6 +13,7 @@ import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 发射不带外层标签和辅助文案的基础文本输入节点。
@@ -42,12 +43,12 @@ fun UiTreeBuilder.BasicTextField(
     textStyle: UiTextStyle = TextFieldDefaults.textStyle(),
     hintColor: Int = TextFieldDefaults.hintColor(enabled = enabled),
     backgroundColor: Int = 0x00000000,
-    borderWidth: Int = 0,
+    borderWidth: UiDp = UiDp.Zero,
     borderColor: Int = 0x00000000,
-    shape: UiShape = UiShape.rounded(0),
-    minHeight: Int = 0,
-    paddingHorizontal: Int = 0,
-    paddingVertical: Int = 0,
+    shape: UiShape = UiShape.rounded(UiDp.Zero),
+    minHeight: UiDp = UiDp.Zero,
+    paddingHorizontal: UiDp = UiDp.Zero,
+    paddingVertical: UiDp = UiDp.Zero,
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -175,7 +176,7 @@ fun UiTreeBuilder.TextField(
                 isError = isError,
             ),
             shape = TextFieldDefaults.shape(),
-            minHeight = if (singleLine) TextFieldDefaults.height(size) else 0,
+            minHeight = if (singleLine) TextFieldDefaults.height(size) else UiDp.Zero,
             paddingHorizontal = TextFieldDefaults.horizontalPadding(size),
             paddingVertical = TextFieldDefaults.verticalPadding(size),
             cursorColor = cursorColor,
@@ -214,12 +215,12 @@ private fun basicTextFieldSpec(
     textColor: Int,
     textStyle: UiTextStyle,
     backgroundColor: Int,
-    borderWidth: Int,
+    borderWidth: UiDp,
     borderColor: Int,
     shape: UiShape,
-    minHeight: Int,
-    paddingHorizontal: Int,
-    paddingVertical: Int,
+    minHeight: UiDp,
+    paddingHorizontal: UiDp,
+    paddingVertical: UiDp,
     cursorColor: Int,
 ): TextFieldNodeProps {
     // TextFieldState 是单一数据源，同时快照 value 便于 diff/patch 阶段比较。

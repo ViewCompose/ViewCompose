@@ -18,11 +18,14 @@ import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
 import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
 import com.viewcompose.ui.state.LazyListState
-import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
+import com.viewcompose.renderer.view.PaddingPx
+import com.viewcompose.renderer.view.resolvePadding
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 
 /**
  * 绑定懒列表、网格和导航栏节点，把声明式集合规格转换为 RecyclerView/容器的稳定更新。
@@ -31,7 +34,7 @@ import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
  */
 internal object CollectionViewBinder {
     data class LazyColumnSpec(
-        val contentPadding: LazyContentPadding,
+        val contentPadding: PaddingPx,
         val spacing: Int,
         val items: List<LazyListItem>,
         val state: LazyListState? = null,
@@ -55,11 +58,11 @@ internal object CollectionViewBinder {
         val indicatorColor: Int,
         val rippleColor: Int,
         val iconSize: Int,
-        val labelSizeSp: Int,
+        val labelSizePx: Float,
         val labelFontWeight: Int? = null,
         val labelFontFamily: UiFontFamily? = null,
         val labelLetterSpacingEm: Float? = null,
-        val labelLineHeightSp: Int? = null,
+        val labelLineHeightPx: Int? = null,
         val labelIncludeFontPadding: Boolean = false,
         val badgeColor: Int,
         val badgeTextColor: Int,
@@ -67,7 +70,7 @@ internal object CollectionViewBinder {
 
     data class LazyVerticalGridSpec(
         val spanCount: Int,
-        val contentPadding: LazyContentPadding,
+        val contentPadding: PaddingPx,
         val horizontalSpacing: Int,
         val verticalSpacing: Int,
         val items: List<LazyListItem>,
@@ -173,11 +176,11 @@ internal object CollectionViewBinder {
             indicatorColor = spec.indicatorColor,
             rippleColor = spec.rippleColor,
             iconSize = spec.iconSize,
-            labelSizeSp = spec.labelSizeSp,
+            labelSizePx = spec.labelSizePx,
             labelFontWeight = spec.labelFontWeight,
             labelFontFamily = spec.labelFontFamily,
             labelLetterSpacingEm = spec.labelLetterSpacingEm,
-            labelLineHeightSp = spec.labelLineHeightSp,
+            labelLineHeightPx = spec.labelLineHeightPx,
             labelIncludeFontPadding = spec.labelIncludeFontPadding,
             badgeColor = spec.badgeColor,
             badgeTextColor = spec.badgeTextColor,
@@ -213,8 +216,8 @@ internal object CollectionViewBinder {
     fun readLazyColumnSpec(node: VNode): LazyColumnSpec {
         val spec = node.requireSpec<LazyColumnNodeProps>()
         return LazyColumnSpec(
-            contentPadding = spec.contentPadding,
-            spacing = spec.spacing,
+            contentPadding = node.environment.resolvePadding(spec.contentPadding),
+            spacing = node.environment.roundToPx(spec.spacing),
             items = spec.items,
             state = spec.state,
             reverseLayout = spec.reverseLayout,
@@ -229,8 +232,8 @@ internal object CollectionViewBinder {
     fun readLazyRowSpec(node: VNode): LazyColumnSpec {
         val spec = node.requireSpec<LazyRowNodeProps>()
         return LazyColumnSpec(
-            contentPadding = spec.contentPadding,
-            spacing = spec.spacing,
+            contentPadding = node.environment.resolvePadding(spec.contentPadding),
+            spacing = node.environment.roundToPx(spec.spacing),
             items = spec.items,
             state = spec.state,
             reverseLayout = spec.reverseLayout,
@@ -255,12 +258,12 @@ internal object CollectionViewBinder {
             unselectedLabelColor = spec.unselectedLabelColor,
             indicatorColor = spec.indicatorColor,
             rippleColor = spec.rippleColor,
-            iconSize = spec.iconSize,
-            labelSizeSp = spec.labelSizeSp,
+            iconSize = node.environment.roundToPx(spec.iconSize),
+            labelSizePx = node.environment.toPx(spec.labelSizeSp),
             labelFontWeight = spec.labelFontWeight,
             labelFontFamily = spec.labelFontFamily,
             labelLetterSpacingEm = spec.labelLetterSpacingEm,
-            labelLineHeightSp = spec.labelLineHeightSp,
+            labelLineHeightPx = spec.labelLineHeightSp?.let(node.environment.density::roundToPx),
             labelIncludeFontPadding = spec.labelIncludeFontPadding,
             badgeColor = spec.badgeColor,
             badgeTextColor = spec.badgeTextColor,
@@ -271,9 +274,9 @@ internal object CollectionViewBinder {
         val spec = node.requireSpec<LazyVerticalGridNodeProps>()
         return LazyVerticalGridSpec(
             spanCount = spec.spanCount,
-            contentPadding = spec.contentPadding,
-            horizontalSpacing = spec.horizontalSpacing,
-            verticalSpacing = spec.verticalSpacing,
+            contentPadding = node.environment.resolvePadding(spec.contentPadding),
+            horizontalSpacing = node.environment.roundToPx(spec.horizontalSpacing),
+            verticalSpacing = node.environment.roundToPx(spec.verticalSpacing),
             items = spec.items,
             state = spec.state,
             reverseLayout = spec.reverseLayout,

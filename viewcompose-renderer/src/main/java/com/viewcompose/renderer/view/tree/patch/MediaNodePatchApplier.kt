@@ -7,6 +7,8 @@ import com.viewcompose.renderer.view.tree.IconButtonNodePatch
 import com.viewcompose.renderer.view.tree.ImageNodePatch
 import com.viewcompose.renderer.view.tree.MediaViewBinder
 import com.viewcompose.renderer.view.tree.ViewModifierApplier
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.roundToPx
 
 /**
  * 媒体类节点的细粒度 patch 应用器。
@@ -120,11 +122,12 @@ internal object MediaNodePatchApplier {
             )
         }
         if (previous.contentPadding != next.contentPadding) {
+            val contentPaddingPx = view.requireUiEnvironment().roundToPx(next.contentPadding)
             view.setPadding(
-                next.contentPadding,
-                next.contentPadding,
-                next.contentPadding,
-                next.contentPadding,
+                contentPaddingPx,
+                contentPaddingPx,
+                contentPaddingPx,
+                contentPaddingPx,
             )
         }
     }

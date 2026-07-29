@@ -13,6 +13,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * Card 组合组件，基于 Box 和 Surface-like 样式 token 构建。
@@ -35,8 +36,8 @@ fun UiTreeBuilder.Card(
         .backgroundColor(bgColor)
         .shape(shape)
         .clip()
-        .let { m -> if (elev > 0) m.elevation(elev) else m }
-        .let { m -> if (bw > 0) m.border(bw, bc) else m }
+        .let { m -> if (elev > UiDp.Zero) m.elevation(elev) else m }
+        .let { m -> if (bw > UiDp.Zero) m.border(bw, bc) else m }
         .let { m ->
             if (enabled && onClick != null) {
                 m.clickable(onClick)

@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -15,19 +17,19 @@ object DropdownMenuDefaults {
 
     fun shape(): UiShape = Theme.shapes.medium
 
-    fun elevation(): Int = Theme.controls.menu.elevation
+    fun elevation(): UiDp = Theme.controls.menu.elevation
 
-    fun minWidth(): Int = Theme.controls.menu.minWidth
+    fun minWidth(): UiDp = Theme.controls.menu.minWidth
 
-    fun verticalPadding(): Int = Theme.controls.menu.verticalPadding
+    fun verticalPadding(): UiDp = Theme.controls.menu.verticalPadding
 
-    fun itemHeight(): Int = Theme.controls.menu.itemHeight
+    fun itemHeight(): UiDp = Theme.controls.menu.itemHeight
 
-    fun itemHorizontalPadding(): Int = Theme.controls.menu.itemHorizontalPadding
+    fun itemHorizontalPadding(): UiDp = Theme.controls.menu.itemHorizontalPadding
 
-    fun iconSize(): Int = Theme.controls.menu.iconSize
+    fun iconSize(): UiDp = Theme.controls.menu.iconSize
 
-    fun iconToTextSpacing(): Int = Theme.controls.menu.iconToTextSpacing
+    fun iconToTextSpacing(): UiDp = Theme.controls.menu.iconToTextSpacing
 
     fun trailingTextColor(): Int = Theme.colors.onSurfaceVariant
 

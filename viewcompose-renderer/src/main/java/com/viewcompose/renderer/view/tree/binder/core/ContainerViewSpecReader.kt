@@ -15,6 +15,7 @@ import com.viewcompose.ui.node.spec.DividerNodeProps
 import com.viewcompose.ui.node.spec.FlowColumnNodeProps
 import com.viewcompose.ui.node.spec.FlowRowNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
+import com.viewcompose.renderer.view.roundToPx
 
 /**
  * 将容器类 NodeSpec 转换为 binder 使用的平台无关中间 spec。
@@ -28,7 +29,7 @@ internal object ContainerViewSpecReader {
     fun readRowSpec(node: VNode): ContainerViewBinder.LinearSpec {
         val spec = node.requireSpec<RowNodeProps>()
         return ContainerViewBinder.LinearSpec(
-            spacing = spec.spacing,
+            spacing = node.environment.roundToPx(spec.spacing),
             arrangement = spec.arrangement,
             gravity = spec.verticalAlignment.toGravity(),
         )
@@ -37,7 +38,7 @@ internal object ContainerViewSpecReader {
     fun readColumnSpec(node: VNode): ContainerViewBinder.LinearSpec {
         val spec = node.requireSpec<ColumnNodeProps>()
         return ContainerViewBinder.LinearSpec(
-            spacing = spec.spacing,
+            spacing = node.environment.roundToPx(spec.spacing),
             arrangement = spec.arrangement,
             gravity = spec.horizontalAlignment.toGravity(),
         )
@@ -46,8 +47,8 @@ internal object ContainerViewSpecReader {
     fun readFlowRowSpec(node: VNode): ContainerViewBinder.FlowRowSpec {
         val spec = node.requireSpec<FlowRowNodeProps>()
         return ContainerViewBinder.FlowRowSpec(
-            horizontalSpacing = spec.horizontalSpacing,
-            verticalSpacing = spec.verticalSpacing,
+            horizontalSpacing = node.environment.roundToPx(spec.horizontalSpacing),
+            verticalSpacing = node.environment.roundToPx(spec.verticalSpacing),
             maxItemsInEachRow = spec.maxItemsInEachRow,
         )
     }
@@ -55,8 +56,8 @@ internal object ContainerViewSpecReader {
     fun readFlowColumnSpec(node: VNode): ContainerViewBinder.FlowColumnSpec {
         val spec = node.requireSpec<FlowColumnNodeProps>()
         return ContainerViewBinder.FlowColumnSpec(
-            horizontalSpacing = spec.horizontalSpacing,
-            verticalSpacing = spec.verticalSpacing,
+            horizontalSpacing = node.environment.roundToPx(spec.horizontalSpacing),
+            verticalSpacing = node.environment.roundToPx(spec.verticalSpacing),
             maxItemsInEachColumn = spec.maxItemsInEachColumn,
         )
     }
@@ -80,7 +81,7 @@ internal object ContainerViewSpecReader {
         val spec = node.requireSpec<DividerNodeProps>()
         return ContainerViewBinder.DividerSpec(
             color = spec.color,
-            thickness = spec.thickness,
+            thickness = node.environment.roundToPx(spec.thickness),
         )
     }
 

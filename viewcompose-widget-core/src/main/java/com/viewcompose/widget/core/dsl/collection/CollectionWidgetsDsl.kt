@@ -19,6 +19,7 @@ import com.viewcompose.ui.node.spec.TabRowNodeProps
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.ui.state.PagerState
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 基于列表数据发射 LazyColumn。
@@ -28,8 +29,8 @@ fun <T> UiTreeBuilder.LazyColumn(
     items: List<T>,
     key: (T) -> Any,
     contentType: (T) -> Any? = { null },
-    contentPadding: Int = 0,
-    spacing: Int = 0,
+    contentPadding: UiDp = UiDp.Zero,
+    spacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
     reverseLayout: Boolean = false,
     userScrollEnabled: Boolean = true,
@@ -67,7 +68,7 @@ fun <T> UiTreeBuilder.LazyColumn(
  */
 fun UiTreeBuilder.LazyColumn(
     contentPadding: LazyContentPadding = LazyContentPadding.None,
-    spacing: Int = 0,
+    spacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
     reverseLayout: Boolean = false,
     userScrollEnabled: Boolean = true,
@@ -109,8 +110,8 @@ fun <T> UiTreeBuilder.LazyRow(
     items: List<T>,
     key: (T) -> Any,
     contentType: (T) -> Any? = { null },
-    contentPadding: Int = 0,
-    spacing: Int = 0,
+    contentPadding: UiDp = UiDp.Zero,
+    spacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
     reverseLayout: Boolean = false,
     userScrollEnabled: Boolean = true,
@@ -146,7 +147,7 @@ fun <T> UiTreeBuilder.LazyRow(
  */
 fun UiTreeBuilder.LazyRow(
     contentPadding: LazyContentPadding = LazyContentPadding.None,
-    spacing: Int = 0,
+    spacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
     reverseLayout: Boolean = false,
     userScrollEnabled: Boolean = true,
@@ -188,9 +189,9 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
     key: (T) -> Any,
     contentType: (T) -> Any? = { null },
     span: (T) -> Int = { 1 },
-    contentPadding: Int = 0,
-    horizontalSpacing: Int = 0,
-    verticalSpacing: Int = 0,
+    contentPadding: UiDp = UiDp.Zero,
+    horizontalSpacing: UiDp = UiDp.Zero,
+    verticalSpacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
     reverseLayout: Boolean = false,
     userScrollEnabled: Boolean = true,
@@ -232,8 +233,8 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
 fun UiTreeBuilder.LazyVerticalGrid(
     spanCount: Int = 2,
     contentPadding: LazyContentPadding = LazyContentPadding.None,
-    horizontalSpacing: Int = 0,
-    verticalSpacing: Int = 0,
+    horizontalSpacing: UiDp = UiDp.Zero,
+    verticalSpacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
     reverseLayout: Boolean = false,
     userScrollEnabled: Boolean = true,
@@ -460,19 +461,19 @@ fun UiTreeBuilder.TabRow(
     onTabSelected: (Int) -> Unit,
     pagerState: PagerState? = null,
     indicatorColor: Int = TabRowDefaults.indicatorColor(),
-    indicatorHeight: Int = TabRowDefaults.indicatorHeight(),
-    indicatorCornerRadius: Int = TabRowDefaults.indicatorCornerRadius(),
+    indicatorHeight: UiDp = TabRowDefaults.indicatorHeight(),
+    indicatorCornerRadius: UiDp = TabRowDefaults.indicatorCornerRadius(),
     indicatorPosition: TabIndicatorPosition = TabIndicatorPosition.Bottom,
     indicatorWidthMode: TabIndicatorWidthMode = TabIndicatorWidthMode.MatchItem,
-    indicatorFixedWidth: Int = 0,
+    indicatorFixedWidth: UiDp = UiDp.Zero,
     containerColor: Int = TabRowDefaults.containerColor(),
     scrollable: Boolean = false,
     equalWidth: Boolean = true,
     rippleColor: Int = TabRowDefaults.rippleColor(),
-    itemSpacing: Int = 0,
-    itemPaddingHorizontal: Int = TabRowDefaults.itemPaddingHorizontal(),
-    itemPaddingVertical: Int = TabRowDefaults.itemPaddingVertical(),
-    minItemWidth: Int = TabRowDefaults.minItemWidth(),
+    itemSpacing: UiDp = UiDp.Zero,
+    itemPaddingHorizontal: UiDp = TabRowDefaults.itemPaddingHorizontal(),
+    itemPaddingVertical: UiDp = TabRowDefaults.itemPaddingVertical(),
+    minItemWidth: UiDp = TabRowDefaults.minItemWidth(),
     key: Any? = null,
     modifier: Modifier = Modifier,
     tabs: TabRowScope.() -> Unit,

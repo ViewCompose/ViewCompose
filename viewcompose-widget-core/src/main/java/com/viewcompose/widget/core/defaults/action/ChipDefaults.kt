@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -56,26 +58,26 @@ object ChipDefaults {
     fun borderWidth(
         variant: ChipVariant = ChipVariant.Assist,
         selected: Boolean = false,
-    ): Int {
+    ): UiDp {
         return when {
-            selected && variant == ChipVariant.Filter -> 0
+            selected && variant == ChipVariant.Filter -> 0.dp
             else -> 1.dp
         }
     }
 
     fun shape(): UiShape = Theme.shapes.small
 
-    fun height(): Int = Theme.controls.chip.height
+    fun height(): UiDp = Theme.controls.chip.height
 
-    fun horizontalPadding(): Int = Theme.controls.chip.horizontalPadding
+    fun horizontalPadding(): UiDp = Theme.controls.chip.horizontalPadding
 
-    fun leadingIconPadding(): Int = Theme.controls.chip.leadingIconPadding
+    fun leadingIconPadding(): UiDp = Theme.controls.chip.leadingIconPadding
 
-    fun iconSize(): Int = Theme.controls.chip.iconSize
+    fun iconSize(): UiDp = Theme.controls.chip.iconSize
 
-    fun trailingIconSize(): Int = Theme.controls.chip.trailingIconSize
+    fun trailingIconSize(): UiDp = Theme.controls.chip.trailingIconSize
 
-    fun iconSpacing(): Int = Theme.controls.chip.iconSpacing
+    fun iconSpacing(): UiDp = Theme.controls.chip.iconSpacing
 
     fun textStyle(): UiTextStyle = TextDefaults.labelMediumStyle()
 

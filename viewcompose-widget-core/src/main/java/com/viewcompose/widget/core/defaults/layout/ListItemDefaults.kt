@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * ListItem DSL 的默认文本、颜色和间距 token。
  * Default text, color, and spacing tokens for the ListItem DSL.
@@ -17,13 +19,13 @@ object ListItemDefaults {
 
     fun overlineStyle(): UiTextStyle = TextDefaults.labelSmallStyle()
 
-    fun minHeight(): Int = Theme.controls.listItem.minHeight
+    fun minHeight(): UiDp = Theme.controls.listItem.minHeight
 
-    fun horizontalPadding(): Int = Theme.controls.listItem.horizontalPadding
+    fun horizontalPadding(): UiDp = Theme.controls.listItem.horizontalPadding
 
-    fun verticalPadding(): Int = Theme.controls.listItem.verticalPadding
+    fun verticalPadding(): UiDp = Theme.controls.listItem.verticalPadding
 
-    fun leadingTrailingSpacing(): Int = Theme.controls.listItem.leadingTrailingSpacing
+    fun leadingTrailingSpacing(): UiDp = Theme.controls.listItem.leadingTrailingSpacing
 
-    fun textSpacing(): Int = Theme.controls.listItem.textSpacing
+    fun textSpacing(): UiDp = Theme.controls.listItem.textSpacing
 }

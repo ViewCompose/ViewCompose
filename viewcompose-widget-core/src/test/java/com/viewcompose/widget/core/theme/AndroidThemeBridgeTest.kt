@@ -100,9 +100,9 @@ class AndroidThemeBridgeTest {
     @Test
     fun `theme mapper bridges typography from text appearance attrs`() {
         val textSizes = mapOf(
-            android.R.attr.textAppearanceLarge to 28,
-            android.R.attr.textAppearanceMedium to 18,
-            android.R.attr.textAppearanceSmall to 12,
+            android.R.attr.textAppearanceLarge to 28.sp,
+            android.R.attr.textAppearanceMedium to 18.sp,
+            android.R.attr.textAppearanceSmall to 12.sp,
         )
 
         val tokens = ThemeTokenMapper.fromThemeColors(
@@ -110,9 +110,9 @@ class AndroidThemeBridgeTest {
             readTextSizeSp = textSizes::get,
         )
 
-        assertEquals(28, tokens.typography.titleMedium.fontSizeSp)
-        assertEquals(18, tokens.typography.bodyMedium.fontSizeSp)
-        assertEquals(12, tokens.typography.labelMedium.fontSizeSp)
+        assertEquals(28.sp, tokens.typography.titleMedium.fontSizeSp)
+        assertEquals(18.sp, tokens.typography.bodyMedium.fontSizeSp)
+        assertEquals(12.sp, tokens.typography.labelMedium.fontSizeSp)
     }
 
     @Test
@@ -134,7 +134,7 @@ class AndroidThemeBridgeTest {
             readColor = { null },
             readTextSizeSp = { attr ->
                 when (attr) {
-                    android.R.attr.textAppearanceMedium -> 20
+                    android.R.attr.textAppearanceMedium -> 20.sp
                     else -> null
                 }
             },
@@ -142,7 +142,7 @@ class AndroidThemeBridgeTest {
 
         val fallback = UiThemeDefaults.light()
         assertEquals(fallback.typography.titleMedium.fontSizeSp, tokens.typography.titleMedium.fontSizeSp)
-        assertEquals(20, tokens.typography.bodyMedium.fontSizeSp)
+        assertEquals(20.sp, tokens.typography.bodyMedium.fontSizeSp)
         assertEquals(fallback.typography.labelMedium.fontSizeSp, tokens.typography.labelMedium.fontSizeSp)
     }
 
@@ -154,8 +154,8 @@ class AndroidThemeBridgeTest {
                     ripple = 77,
                 ),
                 shapes = AndroidThemeShapeSnapshot(
-                    small = UiShape.rounded(12),
-                    medium = UiShape.cut(20),
+                    small = UiShape.rounded(12.dp),
+                    medium = UiShape.cut(20.dp),
                     large = UiShape.roundedRelative(0.5f),
                 ),
                 scrimOpacity = 0.58f,
@@ -164,8 +164,8 @@ class AndroidThemeBridgeTest {
 
         assertEquals(77, tokens.colors.ripple)
         assertEquals(0.58f, tokens.overlays.scrimOpacity, 0.0001f)
-        assertEquals(UiShape.rounded(12), tokens.shapes.small)
-        assertEquals(UiShape.cut(20), tokens.shapes.medium)
+        assertEquals(UiShape.rounded(12.dp), tokens.shapes.small)
+        assertEquals(UiShape.cut(20.dp), tokens.shapes.medium)
         assertEquals(UiShape.roundedRelative(0.5f), tokens.shapes.large)
     }
 
@@ -175,33 +175,33 @@ class AndroidThemeBridgeTest {
             snapshot = AndroidThemeSnapshot(
                 typography = AndroidThemeTypographySnapshot(
                     titleLarge = AndroidTextStyleSnapshot(
-                        fontSizeSp = 30,
+                        fontSizeSp = 30.sp,
                         fontWeight = 700,
                         letterSpacingEm = 0.04f,
-                        lineHeightSp = 36,
+                        lineHeightSp = 36.sp,
                         includeFontPadding = true,
                     ),
                     bodyLarge = AndroidTextStyleSnapshot(
-                        fontSizeSp = 19,
+                        fontSizeSp = 19.sp,
                         fontWeight = 500,
                     ),
                     labelSmall = AndroidTextStyleSnapshot(
-                        fontSizeSp = 11,
+                        fontSizeSp = 11.sp,
                     ),
                 ),
             ),
         )
 
-        assertEquals(30, tokens.typography.titleLarge.fontSizeSp)
+        assertEquals(30.sp, tokens.typography.titleLarge.fontSizeSp)
         assertEquals(700, tokens.typography.titleLarge.fontWeight)
         assertEquals(0.04f, tokens.typography.titleLarge.letterSpacingEm)
-        assertEquals(36, tokens.typography.titleLarge.lineHeightSp)
+        assertEquals(36.sp, tokens.typography.titleLarge.lineHeightSp)
         assertEquals(true, tokens.typography.titleLarge.includeFontPadding)
-        assertEquals(30, tokens.typography.titleMedium.fontSizeSp)
-        assertEquals(19, tokens.typography.bodyLarge.fontSizeSp)
+        assertEquals(30.sp, tokens.typography.titleMedium.fontSizeSp)
+        assertEquals(19.sp, tokens.typography.bodyLarge.fontSizeSp)
         assertEquals(500, tokens.typography.bodyLarge.fontWeight)
-        assertEquals(19, tokens.typography.bodyMedium.fontSizeSp)
-        assertEquals(11, tokens.typography.labelSmall.fontSizeSp)
-        assertEquals(11, tokens.typography.labelMedium.fontSizeSp)
+        assertEquals(19.sp, tokens.typography.bodyMedium.fontSizeSp)
+        assertEquals(11.sp, tokens.typography.labelSmall.fontSizeSp)
+        assertEquals(11.sp, tokens.typography.labelMedium.fontSizeSp)
     }
 }

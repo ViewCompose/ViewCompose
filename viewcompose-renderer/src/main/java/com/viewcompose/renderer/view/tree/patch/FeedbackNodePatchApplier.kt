@@ -5,6 +5,8 @@ import android.widget.ProgressBar
 import com.google.android.material.progressindicator.BaseProgressIndicator
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.viewcompose.renderer.view.tree.ProgressIndicatorNodePatch
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.roundToPx
 import kotlin.math.roundToInt
 
 /**
@@ -22,6 +24,7 @@ internal object FeedbackNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
+        val environment = view.requireUiEnvironment()
         if (previous.enabled != next.enabled) {
             view.isEnabled = next.enabled
         }
@@ -38,7 +41,7 @@ internal object FeedbackNodePatchApplier {
                 view.trackColor = next.trackColor
             }
             if (previous.trackThickness != next.trackThickness) {
-                view.trackThickness = next.trackThickness
+                view.trackThickness = environment.roundToPx(next.trackThickness)
             }
             if (previous.indicatorColor != next.indicatorColor) {
                 view.setIndicatorColor(next.indicatorColor)
@@ -50,7 +53,7 @@ internal object FeedbackNodePatchApplier {
         }
         if (view is CircularProgressIndicator) {
             if (previous.indicatorSize != next.indicatorSize) {
-                view.indicatorSize = next.indicatorSize
+                view.indicatorSize = environment.roundToPx(next.indicatorSize)
             }
         }
         val nextProgress = next.progress

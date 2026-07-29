@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Segmented Control Rendering 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Segmented Control Rendering behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -86,13 +90,13 @@ class SegmentedControlRenderingTest {
                 enabled = true,
                 backgroundColor = backgroundColor,
                 indicatorColor = 0xFF7B9E68.toInt(),
-                shape = UiShape.rounded(18),
+                shape = UiShape.rounded(18.dp),
                 textColor = 0xFF6A5A4A.toInt(),
                 selectedTextColor = 0xFFFFFFFF.toInt(),
                 rippleColor = 0x22000000,
-                textSizeSp = 14,
-                paddingHorizontal = 14,
-                paddingVertical = 8,
+                textSizeSp = 14.sp,
+                paddingHorizontal = 14.dp,
+                paddingVertical = 8.dp,
             ),
         )
     }

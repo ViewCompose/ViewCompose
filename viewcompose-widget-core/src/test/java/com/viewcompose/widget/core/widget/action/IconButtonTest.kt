@@ -6,6 +6,7 @@ package com.viewcompose.widget.core
  */
 
 import com.viewcompose.ui.modifier.SizeModifierElement
+import com.viewcompose.ui.unit.UiDimension
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
@@ -34,8 +35,8 @@ class IconButtonTest {
         assertEquals("Action", spec.contentDescription)
         assertEquals(ImageContentScale.Inside, spec.contentScale)
         assertEquals(IconButtonDefaults.contentColor(ButtonVariant.Text), spec.tint)
-        assertEquals(IconButtonDefaults.size(), size.width)
-        assertEquals(IconButtonDefaults.size(), size.height)
+        assertEquals(UiDimension.Exact(IconButtonDefaults.size()), size.width)
+        assertEquals(UiDimension.Exact(IconButtonDefaults.size()), size.height)
         assertEquals(IconButtonDefaults.containerColor(ButtonVariant.Text), spec.backgroundColor)
         assertEquals(IconButtonDefaults.shape(), spec.shape)
         assertEquals(true, spec.enabled)

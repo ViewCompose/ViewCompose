@@ -1,4 +1,5 @@
 package com.viewcompose.ui.node.spec
+import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
@@ -8,7 +9,7 @@ import com.viewcompose.ui.layout.MainAxisArrangement
  * Spacing and horizontal-alignment properties for a Column node.
  */
 data class ColumnNodeProps(
-    val spacing: Int,
+    val spacing: UiDp,
     val arrangement: MainAxisArrangement,
     val horizontalAlignment: HorizontalAlignment,
 ) : NodeSpec

@@ -7,6 +7,7 @@ import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.ProgressIndicatorNodeProps
+import com.viewcompose.renderer.view.roundToPx
 import kotlin.math.roundToInt
 
 /**
@@ -76,8 +77,8 @@ internal object FeedbackViewBinder {
             progress = spec.progress,
             indicatorColor = spec.indicatorColor,
             trackColor = spec.trackColor,
-            trackThickness = spec.trackThickness,
-            indicatorSize = spec.indicatorSize,
+            trackThickness = node.environment.roundToPx(spec.trackThickness),
+            indicatorSize = node.environment.roundToPx(spec.indicatorSize),
         )
     }
 }

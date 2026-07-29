@@ -1,6 +1,7 @@
 package com.viewcompose.widget.core
 
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * ViewCompose 主题颜色 token，颜色格式为 ARGB Int。
@@ -153,11 +154,11 @@ data class UiShapes(
  * Theme text-style token.
  */
 data class UiTextStyle(
-    val fontSizeSp: Int,
+    val fontSizeSp: UiSp,
     val fontWeight: Int? = null,
     val fontFamily: android.graphics.Typeface? = null,
     val letterSpacingEm: Float? = null,
-    val lineHeightSp: Int? = null,
+    val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean = false,
     val textDecoration: com.viewcompose.ui.node.TextDecoration? = null,
 )

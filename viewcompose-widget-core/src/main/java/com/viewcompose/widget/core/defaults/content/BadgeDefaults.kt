@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * Badge DSL 的默认颜色和尺寸 token。
  * Default color and sizing tokens for the Badge DSL.
@@ -9,13 +11,13 @@ object BadgeDefaults {
 
     fun contentColor(): Int = Theme.colors.onError
 
-    fun dotSize(): Int = Theme.controls.badge.dotSize
+    fun dotSize(): UiDp = Theme.controls.badge.dotSize
 
-    fun pillHeight(): Int = Theme.controls.badge.pillHeight
+    fun pillHeight(): UiDp = Theme.controls.badge.pillHeight
 
-    fun pillMinWidth(): Int = Theme.controls.badge.pillMinWidth
+    fun pillMinWidth(): UiDp = Theme.controls.badge.pillMinWidth
 
-    fun pillHorizontalPadding(): Int = Theme.controls.badge.pillHorizontalPadding
+    fun pillHorizontalPadding(): UiDp = Theme.controls.badge.pillHorizontalPadding
 
     fun textStyle(): UiTextStyle = TextDefaults.labelSmallStyle()
 }

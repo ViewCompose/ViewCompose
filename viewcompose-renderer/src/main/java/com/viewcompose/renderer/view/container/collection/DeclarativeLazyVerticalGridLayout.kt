@@ -11,7 +11,7 @@ import com.viewcompose.renderer.view.lazy.layout.LazyGridSpacingDecoration
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.ui.state.LazyListState
-import com.viewcompose.ui.node.policy.LazyContentPadding
+import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import android.view.MotionEvent
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
@@ -51,7 +51,7 @@ internal class DeclarativeLazyVerticalGridLayout(
 
     fun bind(
         spanCount: Int,
-        contentPadding: LazyContentPadding,
+        contentPadding: PaddingPx,
         horizontalSpacing: Int,
         verticalSpacing: Int,
         items: List<LazyListItem>,
@@ -83,12 +83,14 @@ internal class DeclarativeLazyVerticalGridLayout(
         this.userScrollEnabled = userScrollEnabled
         updateSpacingDecoration(horizontalSpacing, verticalSpacing, spanCount)
         setPaddingRelative(
-            contentPadding.start,
+            contentPadding.left,
             contentPadding.top,
-            contentPadding.end,
+            contentPadding.right,
             contentPadding.bottom,
         )
-        clipToPadding = contentPadding == LazyContentPadding.None
+        clipToPadding =
+            contentPadding.left == 0 && contentPadding.top == 0 &&
+                contentPadding.right == 0 && contentPadding.bottom == 0
         gridAdapter.submitItems(items)
         LazyStickyHeaderDecoration.update(this, gridAdapter)
         if (listState !== state) {

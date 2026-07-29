@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -18,17 +20,17 @@ object SearchBarDefaults {
 
     fun iconColor(): Int = Theme.colors.onSurfaceVariant
 
-    fun height(): Int = Theme.controls.searchBar.height
+    fun height(): UiDp = Theme.controls.searchBar.height
 
     fun shape(): UiShape = Theme.shapes.large
 
-    fun horizontalPadding(): Int = Theme.controls.searchBar.horizontalPadding
+    fun horizontalPadding(): UiDp = Theme.controls.searchBar.horizontalPadding
 
-    fun iconSize(): Int = Theme.controls.searchBar.iconSize
+    fun iconSize(): UiDp = Theme.controls.searchBar.iconSize
 
-    fun iconSpacing(): Int = Theme.controls.searchBar.iconSpacing
+    fun iconSpacing(): UiDp = Theme.controls.searchBar.iconSpacing
 
     fun textStyle(): UiTextStyle = TextDefaults.bodyLargeStyle()
 
-    fun elevation(): Int = Theme.controls.searchBar.elevation
+    fun elevation(): UiDp = Theme.controls.searchBar.elevation
 }

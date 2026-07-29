@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -126,10 +128,10 @@ object TextFieldDefaults {
 
     fun borderWidth(
         variant: TextFieldVariant = TextFieldVariant.Filled,
-    ): Int {
+    ): UiDp {
         return when (variant) {
             TextFieldVariant.Outlined -> 1.dp
-            else -> 0
+            else -> 0.dp
         }
     }
 
@@ -137,7 +139,7 @@ object TextFieldDefaults {
 
     fun height(
         size: TextFieldSize = TextFieldSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             TextFieldSize.Compact -> Theme.controls.textField.compactHeight
             TextFieldSize.Medium -> Theme.controls.textField.mediumHeight
@@ -147,7 +149,7 @@ object TextFieldDefaults {
 
     fun horizontalPadding(
         size: TextFieldSize = TextFieldSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             TextFieldSize.Compact -> Theme.controls.textField.compactHorizontalPadding
             TextFieldSize.Medium -> Theme.controls.textField.mediumHorizontalPadding
@@ -157,7 +159,7 @@ object TextFieldDefaults {
 
     fun verticalPadding(
         size: TextFieldSize = TextFieldSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             TextFieldSize.Compact -> Theme.controls.textField.compactVerticalPadding
             TextFieldSize.Medium -> Theme.controls.textField.mediumVerticalPadding

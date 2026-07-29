@@ -6,6 +6,7 @@ import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * LazyRow 节点的 item、复用、内边距和滚动状态属性。
@@ -13,7 +14,7 @@ import com.viewcompose.ui.state.LazyListState
  */
 data class LazyRowNodeProps(
     val contentPadding: LazyContentPadding,
-    val spacing: Int,
+    val spacing: UiDp,
     val items: List<LazyListItem>,
     val state: LazyListState? = null,
     val reverseLayout: Boolean = false,

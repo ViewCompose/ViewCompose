@@ -1,5 +1,7 @@
 package com.viewcompose.renderer.modifier
 
+import com.viewcompose.ui.unit.sp
+
 /*
  * 测试职责：覆盖 renderer modifier 中的 Resolved Modifiers 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Resolved Modifiers behavior in renderer modifier and guards render and patch contracts against regressions.

@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Collection Advanced Binding 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Collection Advanced Binding behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -9,6 +13,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
+import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.focus.LazyLinearLayoutManager
 import com.viewcompose.ui.node.LazyListItem
@@ -41,10 +46,10 @@ class CollectionAdvancedBindingTest {
         CollectionViewBinder.bindLazyColumn(
             view = view,
             spec = CollectionViewBinder.LazyColumnSpec(
-                contentPadding = LazyContentPadding(
-                    start = 3,
+                contentPadding = PaddingPx(
+                    left = 3,
                     top = 5,
-                    end = 7,
+                    right = 7,
                     bottom = 11,
                 ),
                 spacing = 13,
@@ -78,7 +83,7 @@ class CollectionAdvancedBindingTest {
         val view = DeclarativeLazyVerticalGridLayout(context)
         view.bind(
             spanCount = 3,
-            contentPadding = LazyContentPadding.None,
+            contentPadding = PaddingPx(0, 0, 0, 0),
             horizontalSpacing = 0,
             verticalSpacing = 0,
             items = listOf(

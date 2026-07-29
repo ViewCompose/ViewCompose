@@ -1,5 +1,8 @@
 package com.viewcompose.renderer.view.shape
 
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.UiDensity
+
 /*
  * 测试职责：覆盖 renderer view/shape 中的 Ui Shape Android Bridge 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Ui Shape Android Bridge behavior in renderer view/shape and guards render and patch contracts against regressions.
@@ -25,15 +28,15 @@ import org.robolectric.annotation.Config
 class UiShapeAndroidBridgeTest {
     private val bounds = RectF(0f, 0f, 200f, 100f)
     private val shape = UiShape(
-        topStart = UiCorner(UiCornerFamily.Cut, UiCornerSize.Absolute(12)),
+        topStart = UiCorner(UiCornerFamily.Cut, UiCornerSize.Absolute(12.dp)),
         topEnd = UiCorner(UiCornerFamily.Rounded, UiCornerSize.Relative(0.5f)),
-        bottomEnd = UiCorner(UiCornerFamily.Cut, UiCornerSize.Absolute(20)),
-        bottomStart = UiCorner(UiCornerFamily.Rounded, UiCornerSize.Absolute(4)),
+        bottomEnd = UiCorner(UiCornerFamily.Cut, UiCornerSize.Absolute(20.dp)),
+        bottomStart = UiCorner(UiCornerFamily.Rounded, UiCornerSize.Absolute(4.dp)),
     )
 
     @Test
     fun `maps logical shape to material model in ltr`() {
-        val model = shape.toShapeAppearanceModel(View.LAYOUT_DIRECTION_LTR)
+        val model = shape.toShapeAppearanceModel(View.LAYOUT_DIRECTION_LTR, UiDensity.Default)
 
         assertTrue(model.topLeftCorner is CutCornerTreatment)
         assertEquals(12f, model.topLeftCornerSize.getCornerSize(bounds), 0.001f)
@@ -46,7 +49,7 @@ class UiShapeAndroidBridgeTest {
 
     @Test
     fun `swaps logical start and end in rtl`() {
-        val model = shape.toShapeAppearanceModel(View.LAYOUT_DIRECTION_RTL)
+        val model = shape.toShapeAppearanceModel(View.LAYOUT_DIRECTION_RTL, UiDensity.Default)
 
         assertTrue(model.topLeftCorner is RoundedCornerTreatment)
         assertEquals(50f, model.topLeftCornerSize.getCornerSize(bounds), 0.001f)

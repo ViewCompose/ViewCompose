@@ -17,6 +17,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 发射标准确认对话框组合。
@@ -114,7 +115,7 @@ fun UiTreeBuilder.PlainTooltip(
     anchorId: String,
     alignment: PopupAlignment = PopupAlignment.BelowStart,
     overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp,
-    windowMargin: Int = 8.dp,
+    windowMargin: UiDp = 8.dp,
     dismissOnClickOutside: Boolean = true,
     onDismissRequest: (() -> Unit)? = null,
     requestKey: String = "tooltip",
@@ -165,7 +166,7 @@ fun UiTreeBuilder.DropdownMenu(
     onDismissRequest: () -> Unit,
     alignment: PopupAlignment = PopupAlignment.BelowStart,
     overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp,
-    windowMargin: Int = 8.dp,
+    windowMargin: UiDp = 8.dp,
     requestKey: String = "dropdown_menu",
     modifier: Modifier = Modifier,
     content: ColumnScope.() -> Unit,

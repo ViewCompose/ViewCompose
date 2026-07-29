@@ -3,7 +3,6 @@ package com.viewcompose.renderer.view.tree
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.renderer.R
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.node.VNode
@@ -18,6 +17,7 @@ import com.viewcompose.renderer.view.container.DeclarativeFlowColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeFlowRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 import com.viewcompose.renderer.view.lazy.adapter.LazyListSpacingDecoration
+import com.viewcompose.renderer.view.PaddingPx
 
 /**
  * 绑定基础容器节点，负责布局方向、对齐、间距、约束与动画宿主的 View 层映射。
@@ -184,22 +184,23 @@ internal object ContainerViewBinder {
 
     internal fun applyLazyListPadding(
         recyclerView: RecyclerView,
-        padding: LazyContentPadding,
+        padding: PaddingPx,
     ) {
         if (
-            recyclerView.paddingStart != padding.start ||
+            recyclerView.paddingStart != padding.left ||
             recyclerView.paddingTop != padding.top ||
-            recyclerView.paddingEnd != padding.end ||
+            recyclerView.paddingEnd != padding.right ||
             recyclerView.paddingBottom != padding.bottom
         ) {
             recyclerView.setPaddingRelative(
-                padding.start,
+                padding.left,
                 padding.top,
-                padding.end,
+                padding.right,
                 padding.bottom,
             )
         }
-        val shouldClipToPadding = padding == LazyContentPadding.None
+        val shouldClipToPadding =
+            padding.left == 0 && padding.top == 0 && padding.right == 0 && padding.bottom == 0
         if (recyclerView.clipToPadding != shouldClipToPadding) {
             recyclerView.clipToPadding = shouldClipToPadding
         }

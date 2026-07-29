@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * TabRow DSL 的默认容器、指示器和 item 间距 token。
  * Default container, indicator, and item spacing tokens for the TabRow DSL.
@@ -11,15 +13,15 @@ object TabRowDefaults {
 
     fun inactiveContentColor(): Int = Theme.colors.onSurfaceVariant
 
-    fun indicatorHeight(): Int = 3.dp
+    fun indicatorHeight(): UiDp = 3.dp
 
-    fun indicatorCornerRadius(): Int = 2.dp
+    fun indicatorCornerRadius(): UiDp = 2.dp
 
     fun rippleColor(): Int = Theme.colors.ripple
 
-    fun itemPaddingHorizontal(): Int = 16.dp
+    fun itemPaddingHorizontal(): UiDp = 16.dp
 
-    fun itemPaddingVertical(): Int = 12.dp
+    fun itemPaddingVertical(): UiDp = 12.dp
 
-    fun minItemWidth(): Int = 48.dp
+    fun minItemWidth(): UiDp = 48.dp
 }

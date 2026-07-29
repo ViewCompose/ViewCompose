@@ -1,31 +1,19 @@
 package com.viewcompose.widget.core
 
-import kotlin.math.roundToInt
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 
 /**
- * 将整数 dp 转换为当前 Environment 密度下的像素。
- * Converts integer dp to pixels using the current Environment density.
+ * widget-core 内部的单位简写；公开 API 位于 com.viewcompose.ui.unit。
  */
-val Int.dp: Int
-    get() = Environment.density.dp(this)
+internal val Int.dp: UiDp
+    get() = UiDp(toFloat())
 
-/**
- * 将浮点 dp 四舍五入后转换为像素。
- * Rounds float dp and converts it to pixels.
- */
-val Float.dp: Int
-    get() = Environment.density.dp(roundToInt())
+internal val Float.dp: UiDp
+    get() = UiDp(this)
 
-/**
- * 整数 sp token，实际像素换算在渲染层按文本语义处理。
- * Integer sp token; pixel conversion is handled by the renderer according to text semantics.
- */
-val Int.sp: Int
-    get() = this
+internal val Int.sp: UiSp
+    get() = UiSp(toFloat())
 
-/**
- * 浮点 sp 四舍五入为整数 sp token。
- * Rounds float sp into an integer sp token.
- */
-val Float.sp: Int
-    get() = roundToInt()
+internal val Float.sp: UiSp
+    get() = UiSp(this)

@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -78,7 +80,7 @@ object SegmentedControlDefaults {
 
     fun height(
         size: SegmentedControlSize = SegmentedControlSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             SegmentedControlSize.Compact -> Theme.controls.segmentedControl.compactHeight
             SegmentedControlSize.Medium -> Theme.controls.segmentedControl.mediumHeight
@@ -88,7 +90,7 @@ object SegmentedControlDefaults {
 
     fun paddingHorizontal(
         size: SegmentedControlSize = SegmentedControlSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             SegmentedControlSize.Compact -> Theme.controls.segmentedControl.compactHorizontalPadding
             SegmentedControlSize.Medium -> Theme.controls.segmentedControl.mediumHorizontalPadding
@@ -98,7 +100,7 @@ object SegmentedControlDefaults {
 
     fun paddingVertical(
         size: SegmentedControlSize = SegmentedControlSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             SegmentedControlSize.Compact -> Theme.controls.segmentedControl.compactVerticalPadding
             SegmentedControlSize.Medium -> Theme.controls.segmentedControl.mediumVerticalPadding

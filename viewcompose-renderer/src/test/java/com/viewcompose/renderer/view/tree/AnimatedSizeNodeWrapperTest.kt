@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Animated Size Node Wrapper 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Animated Size Node Wrapper behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -29,7 +33,7 @@ class AnimatedSizeNodeWrapperTest {
     fun `wraps animateContentSize nodes with animated size host`() {
         val original = textNode(
             modifier = Modifier
-                .width(240)
+                .width(240.dp)
                 .then(AlphaModifierElement(alpha = 0.8f))
                 .then(
                     AnimateContentSizeModifierElement(
@@ -55,7 +59,7 @@ class AnimatedSizeNodeWrapperTest {
 
     @Test
     fun `keeps tree untouched when animateContentSize is absent`() {
-        val original = textNode(modifier = Modifier.width(120))
+        val original = textNode(modifier = Modifier.width(120.dp))
         val tree = listOf(original)
 
         val wrappedTree = AnimatedSizeNodeWrapper.wrapTree(tree)
@@ -81,7 +85,7 @@ class AnimatedSizeNodeWrapperTest {
                 ),
             ),
         )
-        val stableSibling = textNode(modifier = Modifier.width(80))
+        val stableSibling = textNode(modifier = Modifier.width(80.dp))
         val parent = VNode(
             type = NodeType.Box,
             spec = com.viewcompose.ui.node.spec.BoxNodeProps(
@@ -106,7 +110,7 @@ class AnimatedSizeNodeWrapperTest {
                 overflow = TextOverflow.Clip,
                 textAlign = TextAlign.Start,
                 textColor = 0xFF000000.toInt(),
-                textSizeSp = 14,
+                textSizeSp = 14.sp,
             ),
             modifier = modifier,
         )

@@ -6,6 +6,7 @@ import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.ProgressIndicatorNodeProps
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 发射线性进度指示器节点。
@@ -18,7 +19,7 @@ fun UiTreeBuilder.LinearProgressIndicator(
     progress: Float? = null,
     indicatorColor: Int = ProgressIndicatorDefaults.linearIndicatorColor(),
     trackColor: Int = ProgressIndicatorDefaults.linearTrackColor(),
-    trackThickness: Int = ProgressIndicatorDefaults.linearTrackThickness(),
+    trackThickness: UiDp = ProgressIndicatorDefaults.linearTrackThickness(),
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -31,7 +32,7 @@ fun UiTreeBuilder.LinearProgressIndicator(
             indicatorColor = indicatorColor,
             trackColor = trackColor,
             trackThickness = trackThickness,
-            indicatorSize = 0,
+            indicatorSize = UiDp.Zero,
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -51,8 +52,8 @@ fun UiTreeBuilder.CircularProgressIndicator(
     progress: Float? = null,
     indicatorColor: Int = ProgressIndicatorDefaults.circularIndicatorColor(),
     trackColor: Int = ProgressIndicatorDefaults.circularTrackColor(),
-    size: Int = ProgressIndicatorDefaults.circularSize(),
-    trackThickness: Int = ProgressIndicatorDefaults.circularTrackThickness(),
+    size: UiDp = ProgressIndicatorDefaults.circularSize(),
+    trackThickness: UiDp = ProgressIndicatorDefaults.circularTrackThickness(),
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -198,11 +199,11 @@ fun UiTreeBuilder.Popup(
     requestKey: String = "popup",
     alignment: PopupAlignment = PopupAlignment.BelowStart,
     overflowPolicy: PopupOverflowPolicy = PopupOverflowPolicy.FlipThenClamp,
-    windowMargin: Int = 8.dp,
+    windowMargin: UiDp = 8.dp,
     dismissOnClickOutside: Boolean = true,
     focusable: Boolean = true,
-    offsetX: Int = 0,
-    offsetY: Int = 0,
+    offsetX: UiDp = UiDp.Zero,
+    offsetY: UiDp = UiDp.Zero,
     onDismissRequest: (() -> Unit)? = null,
     content: UiTreeBuilder.() -> Unit,
 ) {
@@ -219,11 +220,11 @@ fun UiTreeBuilder.Popup(
                 anchorId = anchorId,
                 alignment = alignment,
                 overflowPolicy = overflowPolicy,
-                windowMargin = windowMargin,
+                windowMargin = Environment.density.roundToPx(windowMargin),
                 dismissOnClickOutside = dismissOnClickOutside,
                 focusable = focusable,
-                offsetX = offsetX,
-                offsetY = offsetY,
+                offsetX = Environment.density.roundToPx(offsetX),
+                offsetY = Environment.density.roundToPx(offsetY),
                 onDismissRequest = onDismissRequest,
             ),
             contentToken = PopupOverlayContent(

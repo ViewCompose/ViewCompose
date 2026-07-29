@@ -12,6 +12,9 @@ import com.viewcompose.renderer.view.tree.DividerNodePatch
 import com.viewcompose.renderer.view.tree.TextNodePatch
 import com.viewcompose.renderer.view.tree.ViewModifierApplier
 import com.viewcompose.renderer.view.container.DeclarativeCanvasLayout
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 
 /**
  * 内容类节点的细粒度 patch 应用器。
@@ -26,6 +29,7 @@ internal object ContentNodePatchApplier {
         view: TextView,
         patch: TextNodePatch,
     ) {
+        val environment = view.requireUiEnvironment()
         if (patch.previous.document != patch.next.document) {
             view.text = com.viewcompose.renderer.view.tree.AndroidTextDocumentAdapter.toCharSequence(
                 view,
@@ -48,11 +52,11 @@ internal object ContentNodePatchApplier {
             ContentViewBinder.applyTextAppearance(
                 view = view,
                 textColor = patch.next.textColor,
-                textSizeSp = patch.next.textSizeSp,
+                textSizePx = environment.toPx(patch.next.textSizeSp),
                 fontWeight = patch.next.fontWeight,
                 fontFamily = patch.next.fontFamily,
                 letterSpacingEm = patch.next.letterSpacingEm,
-                lineHeightSp = patch.next.lineHeightSp,
+                lineHeightPx = patch.next.lineHeightSp?.let(environment.density::roundToPx),
                 includeFontPadding = patch.next.includeFontPadding,
             )
         }
@@ -69,6 +73,7 @@ internal object ContentNodePatchApplier {
         view: Button,
         patch: ButtonNodePatch,
     ) {
+        val environment = view.requireUiEnvironment()
         if (patch.previous.text != patch.next.text) {
             view.text = patch.next.text
         }
@@ -76,7 +81,7 @@ internal object ContentNodePatchApplier {
             view.isEnabled = patch.next.enabled
         }
         if (patch.previous.iconSpacing != patch.next.iconSpacing) {
-            view.compoundDrawablePadding = patch.next.iconSpacing
+            view.compoundDrawablePadding = environment.roundToPx(patch.next.iconSpacing)
         }
         if (
             patch.previous.leadingIcon != patch.next.leadingIcon ||
@@ -89,14 +94,14 @@ internal object ContentNodePatchApplier {
                     view = view,
                     source = patch.next.leadingIcon,
                     tint = patch.next.iconTint,
-                    size = patch.next.iconSize,
+                    size = environment.roundToPx(patch.next.iconSize),
                 ),
                 null,
                 ContentViewBinder.resolveButtonIconDrawable(
                     view = view,
                     source = patch.next.trailingIcon,
                     tint = patch.next.iconTint,
-                    size = patch.next.iconSize,
+                    size = environment.roundToPx(patch.next.iconSize),
                 ),
                 null,
             )
@@ -115,11 +120,11 @@ internal object ContentNodePatchApplier {
             ContentViewBinder.applyTextAppearance(
                 view = view,
                 textColor = patch.next.textColor,
-                textSizeSp = patch.next.textSizeSp,
+                textSizePx = environment.toPx(patch.next.textSizeSp),
                 fontWeight = patch.next.fontWeight,
                 fontFamily = patch.next.fontFamily,
                 letterSpacingEm = patch.next.letterSpacingEm,
-                lineHeightSp = patch.next.lineHeightSp,
+                lineHeightPx = patch.next.lineHeightSp?.let(environment.density::roundToPx),
                 includeFontPadding = patch.next.includeFontPadding,
             )
         }
@@ -135,17 +140,17 @@ internal object ContentNodePatchApplier {
             )
         }
         if (patch.previous.minHeight != patch.next.minHeight) {
-            view.minimumHeight = patch.next.minHeight
+            view.minimumHeight = environment.roundToPx(patch.next.minHeight)
         }
         if (
             patch.previous.paddingHorizontal != patch.next.paddingHorizontal ||
             patch.previous.paddingVertical != patch.next.paddingVertical
         ) {
             view.setPadding(
-                patch.next.paddingHorizontal,
-                patch.next.paddingVertical,
-                patch.next.paddingHorizontal,
-                patch.next.paddingVertical,
+                environment.roundToPx(patch.next.paddingHorizontal),
+                environment.roundToPx(patch.next.paddingVertical),
+                environment.roundToPx(patch.next.paddingHorizontal),
+                environment.roundToPx(patch.next.paddingVertical),
             )
         }
     }

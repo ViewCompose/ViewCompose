@@ -10,13 +10,18 @@ import com.viewcompose.ui.shape.UiCorner
 import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 将框架 UiShape 转换为 Material ShapeAppearanceModel。
  * Converts framework UiShape to Material ShapeAppearanceModel.
  */
-internal fun UiShape?.toShapeAppearanceModel(layoutDirection: Int): ShapeAppearanceModel {
-    val resolvedShape = this ?: UiShape.rounded(0)
+internal fun UiShape?.toShapeAppearanceModel(
+    layoutDirection: Int,
+    density: UiDensity,
+): ShapeAppearanceModel {
+    val resolvedShape = this ?: UiShape.rounded(UiDp.Zero)
     val topLeft = if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {
         resolvedShape.topEnd
     } else {
@@ -38,23 +43,24 @@ internal fun UiShape?.toShapeAppearanceModel(layoutDirection: Int): ShapeAppeara
         resolvedShape.bottomStart
     }
     return ShapeAppearanceModel.builder()
-        .applyCorner(CornerPosition.TopLeft, topLeft)
-        .applyCorner(CornerPosition.TopRight, topRight)
-        .applyCorner(CornerPosition.BottomRight, bottomRight)
-        .applyCorner(CornerPosition.BottomLeft, bottomLeft)
+        .applyCorner(CornerPosition.TopLeft, topLeft, density)
+        .applyCorner(CornerPosition.TopRight, topRight, density)
+        .applyCorner(CornerPosition.BottomRight, bottomRight, density)
+        .applyCorner(CornerPosition.BottomLeft, bottomLeft, density)
         .build()
 }
 
 private fun ShapeAppearanceModel.Builder.applyCorner(
     position: CornerPosition,
     corner: UiCorner,
+    density: UiDensity,
 ): ShapeAppearanceModel.Builder {
     val treatment = when (corner.family) {
         UiCornerFamily.Rounded -> RoundedCornerTreatment()
         UiCornerFamily.Cut -> CutCornerTreatment()
     }
     val size = when (val cornerSize = corner.size) {
-        is UiCornerSize.Absolute -> AbsoluteCornerSize(cornerSize.pixels.toFloat())
+        is UiCornerSize.Absolute -> AbsoluteCornerSize(density.toPx(cornerSize.size))
         is UiCornerSize.Relative -> RelativeCornerSize(cornerSize.fraction)
     }
     when (position) {

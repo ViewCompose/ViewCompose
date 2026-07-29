@@ -28,24 +28,24 @@ class ThemeTokenCompatibilityTest {
                 outline = 10,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 26),
-                bodyLarge = UiTextStyle(fontSizeSp = 20),
-                bodyMedium = UiTextStyle(fontSizeSp = 17),
-                labelMedium = UiTextStyle(fontSizeSp = 14),
-                labelSmall = UiTextStyle(fontSizeSp = 12),
+                titleMedium = UiTextStyle(fontSizeSp = 26.sp),
+                bodyLarge = UiTextStyle(fontSizeSp = 20.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 17.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 14.sp),
+                labelSmall = UiTextStyle(fontSizeSp = 12.sp),
             ),
             shapes = UiShapes(
-                small = UiShape.rounded(22),
-                medium = UiShape.rounded(20),
+                small = UiShape.rounded(22.dp),
+                medium = UiShape.rounded(20.dp),
             ),
         )
         var secondaryContainer = 0
         var errorColor = 0
-        var compactTextSize = 0
-        var largeTextSize = 0
-        var listHeadlineSize = 0
-        var topTitleSize = 0
-        var smallShape = UiShape.rounded(0)
+        var compactTextSize = 0.sp
+        var largeTextSize = 0.sp
+        var listHeadlineSize = 0.sp
+        var topTitleSize = 0.sp
+        var smallShape = UiShape.rounded(0.dp)
 
         buildVNodeTree {
             UiTheme(customTheme) {
@@ -71,9 +71,9 @@ class ThemeTokenCompatibilityTest {
     @Test
     fun `tiered typography defaults map to base tokens when tiers are omitted`() {
         val typography = UiTypography(
-            titleMedium = UiTextStyle(fontSizeSp = 30),
-            bodyMedium = UiTextStyle(fontSizeSp = 18),
-            labelMedium = UiTextStyle(fontSizeSp = 14),
+            titleMedium = UiTextStyle(fontSizeSp = 30.sp),
+            bodyMedium = UiTextStyle(fontSizeSp = 18.sp),
+            labelMedium = UiTextStyle(fontSizeSp = 14.sp),
         )
 
         assertEquals(typography.titleMedium, typography.titleLarge)

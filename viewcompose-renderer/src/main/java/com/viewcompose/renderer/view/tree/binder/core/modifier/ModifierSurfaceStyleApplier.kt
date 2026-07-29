@@ -15,6 +15,9 @@ import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.shape.toShapeAppearanceModel
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.ui.unit.UiDensity
 
 /**
  * 应用背景、边框、shape、ripple 和 clip 等 surface style。
@@ -89,9 +92,10 @@ internal object ModifierSurfaceStyleApplier {
         shape: UiShape? = null,
     ) {
         val legacyHasCorner = cornerRadius != null &&
-            (cornerRadius.topStart > 0 || cornerRadius.topEnd > 0 ||
-                cornerRadius.bottomEnd > 0 || cornerRadius.bottomStart > 0)
+            (cornerRadius.topStart > UiDp.Zero || cornerRadius.topEnd > UiDp.Zero ||
+                cornerRadius.bottomEnd > UiDp.Zero || cornerRadius.bottomStart > UiDp.Zero)
         val resolvedShape = shape ?: cornerRadius?.toUiShape()
+        val density = view.requireUiEnvironment().density
         val hasShape = resolvedShape != null
         val backgroundDrawable = backgroundDrawableResId
             ?.let { loadBackgroundDrawable(view, it) }
@@ -112,6 +116,7 @@ internal object ModifierSurfaceStyleApplier {
                     clickable = clickable,
                     shape = resolvedShape,
                     layoutDirection = view.layoutDirection,
+                    density = density,
                 )
             } else {
                 createBackgroundDrawable(
@@ -122,6 +127,7 @@ internal object ModifierSurfaceStyleApplier {
                     clickable = clickable,
                     shape = resolvedShape,
                     layoutDirection = view.layoutDirection,
+                    density = density,
                 )
             }
             view.foreground = null
@@ -144,6 +150,7 @@ internal object ModifierSurfaceStyleApplier {
             view = view,
             shape = resolvedShape,
             forceClip = forceClip || shouldAutoClipForDrawableShape,
+            density = density,
         )
     }
 
@@ -171,8 +178,9 @@ internal object ModifierSurfaceStyleApplier {
         clickable: Boolean,
         shape: UiShape?,
         layoutDirection: Int,
+        density: UiDensity,
     ): Drawable {
-        val content = MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+        val content = MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection, density)).apply {
             fillColor = ColorStateList.valueOf(backgroundColor)
             if (borderWidth > 0) {
                 setStroke(borderWidth.toFloat(), borderColor)
@@ -184,7 +192,7 @@ internal object ModifierSurfaceStyleApplier {
         return RippleDrawable(
             ColorStateList.valueOf(rippleColor),
             content,
-            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection, density)).apply {
                 fillColor = ColorStateList.valueOf(Color.WHITE)
             },
         )
@@ -198,12 +206,13 @@ internal object ModifierSurfaceStyleApplier {
         clickable: Boolean,
         shape: UiShape?,
         layoutDirection: Int,
+        density: UiDensity,
     ): Drawable {
         val layeredContent = if (borderWidth > 0) {
             LayerDrawable(
                 arrayOf(
                     backgroundDrawable,
-                    MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+                    MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection, density)).apply {
                         fillColor = ColorStateList.valueOf(Color.TRANSPARENT)
                         setStroke(borderWidth.toFloat(), borderColor)
                     },
@@ -218,7 +227,7 @@ internal object ModifierSurfaceStyleApplier {
         return RippleDrawable(
             ColorStateList.valueOf(rippleColor),
             layeredContent,
-            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+            MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection, density)).apply {
                 fillColor = ColorStateList.valueOf(Color.WHITE)
             },
         )
@@ -228,6 +237,7 @@ internal object ModifierSurfaceStyleApplier {
         view: View,
         shape: UiShape?,
         forceClip: Boolean = false,
+        density: UiDensity,
     ) {
         if (shape == null && !forceClip) {
             view.clipToOutline = false
@@ -237,7 +247,7 @@ internal object ModifierSurfaceStyleApplier {
         }
         if (shape != null) {
             val outlineDrawable = MaterialShapeDrawable(
-                shape.toShapeAppearanceModel(view.layoutDirection),
+                shape.toShapeAppearanceModel(view.layoutDirection, density),
             )
             view.outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {

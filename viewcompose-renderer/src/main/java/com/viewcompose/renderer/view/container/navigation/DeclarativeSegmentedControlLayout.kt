@@ -17,8 +17,10 @@ import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.renderer.view.tree.ContentViewBinder
-import com.viewcompose.renderer.view.dpToPx
 import java.util.IdentityHashMap
+import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.dp
 
 /**
  * SegmentedControl 的 Android LinearLayout 实现。
@@ -37,19 +39,20 @@ internal class DeclarativeSegmentedControlLayout(
     private var enabledState: Boolean = true
     private var backgroundColorState: Int = Color.TRANSPARENT
     private var indicatorColorState: Int = Color.TRANSPARENT
-    private var shapeState: UiShape = UiShape.rounded(0)
+    private var shapeState: UiShape = UiShape.rounded(UiDp.Zero)
     private var textColorState: Int = Color.BLACK
     private var selectedTextColorState: Int = Color.WHITE
     private var rippleColorState: Int = Color.TRANSPARENT
-    private var textSizeSpState: Int = 14
+    private var textSizePxState: Float = 14f
     private var fontWeightState: Int? = null
     private var fontFamilyState: UiFontFamily? = null
     private var letterSpacingState: Float? = null
-    private var lineHeightSpState: Int? = null
+    private var lineHeightPxState: Int? = null
     private var includeFontPaddingState: Boolean = false
     private var paddingHorizontalState: Int = 0
     private var paddingVerticalState: Int = 0
-    private val indicatorInset = context.dpToPx(2).toFloat()
+    private var densityState: UiDensity = UiDensity.Default
+    private val indicatorInset = 2.dp
     private val containerBackground = MaterialShapeDrawable()
     // 使用身份映射避免 TextView 文本相等时误共享背景状态。
     // Identity mapping avoids sharing background state between TextViews that happen to have equal content.
@@ -73,14 +76,15 @@ internal class DeclarativeSegmentedControlLayout(
         textColor: Int,
         selectedTextColor: Int,
         rippleColor: Int,
-        textSizeSp: Int,
+        textSizePx: Float,
         fontWeight: Int?,
         fontFamily: UiFontFamily?,
         letterSpacingEm: Float?,
-        lineHeightSp: Int?,
+        lineHeightPx: Int?,
         includeFontPadding: Boolean,
         paddingHorizontal: Int,
         paddingVertical: Int,
+        density: UiDensity,
     ) {
         this.onSelectionChange = onSelectionChange
         if (background !== containerBackground) {
@@ -108,20 +112,21 @@ internal class DeclarativeSegmentedControlLayout(
             textColorState != textColor ||
             selectedTextColorState != selectedTextColor ||
             rippleColorState != rippleColor ||
-            textSizeSpState != textSizeSp ||
+            textSizePxState != textSizePx ||
             fontWeightState != fontWeight ||
             fontFamilyState != fontFamily ||
             letterSpacingState != letterSpacingEm ||
-            lineHeightSpState != lineHeightSp ||
+            lineHeightPxState != lineHeightPx ||
             includeFontPaddingState != includeFontPadding ||
             paddingHorizontalState != paddingHorizontal ||
-            paddingVerticalState != paddingVertical
+            paddingVerticalState != paddingVertical ||
+            densityState != density
 
         if (!styleInitialized || backgroundColorState != backgroundColor) {
             containerBackground.fillColor = ColorStateList.valueOf(backgroundColor)
         }
         if (!styleInitialized || shapeState != shape) {
-            containerBackground.shapeAppearanceModel = shape.toShapeAppearanceModel(layoutDirection)
+            containerBackground.shapeAppearanceModel = shape.toShapeAppearanceModel(layoutDirection, density)
         }
 
         this.items = items
@@ -134,14 +139,15 @@ internal class DeclarativeSegmentedControlLayout(
         textColorState = textColor
         selectedTextColorState = selectedTextColor
         rippleColorState = rippleColor
-        textSizeSpState = textSizeSp
+        textSizePxState = textSizePx
         fontWeightState = fontWeight
         fontFamilyState = fontFamily
         letterSpacingState = letterSpacingEm
-        lineHeightSpState = lineHeightSp
+        lineHeightPxState = lineHeightPx
         includeFontPaddingState = includeFontPadding
         paddingHorizontalState = paddingHorizontal
         paddingVerticalState = paddingVertical
+        densityState = density
         styleInitialized = true
 
         when {
@@ -152,11 +158,11 @@ internal class DeclarativeSegmentedControlLayout(
                 textColor = textColor,
                 selectedTextColor = selectedTextColor,
                 rippleColor = rippleColor,
-                textSizeSp = textSizeSp,
+                textSizePx = textSizePx,
                 fontWeight = fontWeight,
                 fontFamily = fontFamily,
                 letterSpacingEm = letterSpacingEm,
-                lineHeightSp = lineHeightSp,
+                lineHeightPx = lineHeightPx,
                 includeFontPadding = includeFontPadding,
                 paddingHorizontal = paddingHorizontal,
                 paddingVertical = paddingVertical,
@@ -199,16 +205,16 @@ internal class DeclarativeSegmentedControlLayout(
         textColor: Int,
         selectedTextColor: Int,
         rippleColor: Int,
-        textSizeSp: Int,
+        textSizePx: Float,
         fontWeight: Int?,
         fontFamily: UiFontFamily?,
         letterSpacingEm: Float?,
-        lineHeightSp: Int?,
+        lineHeightPx: Int?,
         includeFontPadding: Boolean,
         paddingHorizontal: Int,
         paddingVertical: Int,
     ) {
-        val insetPx = indicatorInset.toInt()
+        val insetPx = densityState.roundToPx(indicatorInset)
         for (index in 0 until childCount) {
             val child = getChildAt(index) as? TextView ?: continue
             val item = items.getOrNull(index) ?: continue
@@ -218,11 +224,11 @@ internal class DeclarativeSegmentedControlLayout(
             ContentViewBinder.applyTextAppearance(
                 view = child,
                 textColor = if (isSelected) selectedTextColor else textColor,
-                textSizeSp = textSizeSp,
+                textSizePx = textSizePx,
                 fontWeight = fontWeight,
                 fontFamily = fontFamily,
                 letterSpacingEm = letterSpacingEm,
-                lineHeightSp = lineHeightSp,
+                lineHeightPx = lineHeightPx,
                 includeFontPadding = includeFontPadding,
             )
             child.setPadding(paddingHorizontal, paddingVertical, paddingHorizontal, paddingVertical)
@@ -243,7 +249,7 @@ internal class DeclarativeSegmentedControlLayout(
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColor,
-                shape = shape.inset(indicatorInset.toInt()),
+                shape = shape.inset(indicatorInset),
             )
             segmentBackgrounds[child] = segmentBackground
             child.background = segmentBackground.drawable
@@ -296,7 +302,7 @@ internal class DeclarativeSegmentedControlLayout(
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColorState,
-                shape = shapeState.inset(indicatorInset.toInt()),
+                shape = shapeState.inset(indicatorInset),
             ).also { created ->
                 segmentBackgrounds[child] = created
                 child.background = created.drawable
@@ -315,7 +321,7 @@ internal class DeclarativeSegmentedControlLayout(
         rippleColor: Int,
         shape: UiShape,
     ): SegmentBackground {
-        val indicator = MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+        val indicator = MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection, densityState)).apply {
             fillColor = ColorStateList.valueOf(
                 if (selected) indicatorColor else Color.TRANSPARENT,
             )
@@ -324,7 +330,7 @@ internal class DeclarativeSegmentedControlLayout(
             RippleDrawable(
                 ColorStateList.valueOf(rippleColor),
                 indicator,
-                MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection)).apply {
+                MaterialShapeDrawable(shape.toShapeAppearanceModel(layoutDirection, densityState)).apply {
                     fillColor = ColorStateList.valueOf(Color.WHITE)
                 },
             )

@@ -19,6 +19,10 @@ value class UiDp(
 
     operator fun times(scale: Float): UiDp = UiDp(value * scale)
 
+    operator fun div(divisor: Int): UiDp = UiDp(value / divisor)
+
+    operator fun div(divisor: Float): UiDp = UiDp(value / divisor)
+
     companion object {
         val Zero = UiDp(0f)
     }
@@ -38,6 +42,14 @@ value class UiSp(
     companion object {
         val Zero = UiSp(0f)
     }
+}
+
+sealed interface UiDimension {
+    data class Exact(
+        val value: UiDp,
+    ) : UiDimension
+
+    data object MatchParent : UiDimension
 }
 
 val Int.dp: UiDp

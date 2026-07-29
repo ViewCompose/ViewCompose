@@ -1,5 +1,7 @@
 package com.viewcompose.ui.node.spec
 
+import com.viewcompose.ui.unit.UiSp
+
 /**
  * Toggle 类节点的选中状态、文案和交互属性。
  * Checked state, label, and interaction properties for toggle-like nodes.
@@ -15,11 +17,11 @@ data class ToggleNodeProps(
     val uncheckedColor: Int? = null,
     val onCheckedChange: ((Boolean) -> Unit)?,
     val textColor: Int,
-    val textSizeSp: Int,
+    val textSizeSp: UiSp,
     val fontWeight: Int? = null,
     val fontFamily: UiFontFamily? = null,
     val letterSpacingEm: Float? = null,
-    val lineHeightSp: Int? = null,
+    val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean = false,
     val rippleColor: Int,
 ) : NodeSpec

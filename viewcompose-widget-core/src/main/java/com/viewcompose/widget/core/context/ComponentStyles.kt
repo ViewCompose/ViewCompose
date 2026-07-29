@@ -1,20 +1,21 @@
 package com.viewcompose.widget.core
 
-import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 /**
  * Button 组件尺寸 token。
  * Size tokens for Button components.
  */
 data class UiButtonSizing(
-    val compactHeight: Int,
-    val mediumHeight: Int,
-    val largeHeight: Int,
-    val compactHorizontalPadding: Int,
-    val mediumHorizontalPadding: Int,
-    val largeHorizontalPadding: Int,
-    val compactVerticalPadding: Int,
-    val mediumVerticalPadding: Int,
-    val largeVerticalPadding: Int,
+    val compactHeight: UiDp,
+    val mediumHeight: UiDp,
+    val largeHeight: UiDp,
+    val compactHorizontalPadding: UiDp,
+    val mediumHorizontalPadding: UiDp,
+    val largeHorizontalPadding: UiDp,
+    val compactVerticalPadding: UiDp,
+    val mediumVerticalPadding: UiDp,
+    val largeVerticalPadding: UiDp,
 )
 
 /**
@@ -22,15 +23,15 @@ data class UiButtonSizing(
  * Size tokens for TextField components.
  */
 data class UiTextFieldSizing(
-    val compactHeight: Int,
-    val mediumHeight: Int,
-    val largeHeight: Int,
-    val compactHorizontalPadding: Int,
-    val mediumHorizontalPadding: Int,
-    val largeHorizontalPadding: Int,
-    val compactVerticalPadding: Int,
-    val mediumVerticalPadding: Int,
-    val largeVerticalPadding: Int,
+    val compactHeight: UiDp,
+    val mediumHeight: UiDp,
+    val largeHeight: UiDp,
+    val compactHorizontalPadding: UiDp,
+    val mediumHorizontalPadding: UiDp,
+    val largeHorizontalPadding: UiDp,
+    val compactVerticalPadding: UiDp,
+    val mediumVerticalPadding: UiDp,
+    val largeVerticalPadding: UiDp,
 )
 
 /**
@@ -38,15 +39,15 @@ data class UiTextFieldSizing(
  * Size tokens for SegmentedControl components.
  */
 data class UiSegmentedControlSizing(
-    val compactHeight: Int,
-    val mediumHeight: Int,
-    val largeHeight: Int,
-    val compactHorizontalPadding: Int,
-    val mediumHorizontalPadding: Int,
-    val largeHorizontalPadding: Int,
-    val compactVerticalPadding: Int,
-    val mediumVerticalPadding: Int,
-    val largeVerticalPadding: Int,
+    val compactHeight: UiDp,
+    val mediumHeight: UiDp,
+    val largeHeight: UiDp,
+    val compactHorizontalPadding: UiDp,
+    val mediumHorizontalPadding: UiDp,
+    val largeHorizontalPadding: UiDp,
+    val compactVerticalPadding: UiDp,
+    val mediumVerticalPadding: UiDp,
+    val largeVerticalPadding: UiDp,
 )
 
 /**
@@ -54,9 +55,9 @@ data class UiSegmentedControlSizing(
  * Size tokens for ProgressIndicator components.
  */
 data class UiProgressIndicatorSizing(
-    val linearTrackThickness: Int,
-    val circularSize: Int,
-    val circularTrackThickness: Int,
+    val linearTrackThickness: UiDp,
+    val circularSize: UiDp,
+    val circularTrackThickness: UiDp,
 )
 
 /**
@@ -64,16 +65,16 @@ data class UiProgressIndicatorSizing(
  * Size tokens for floating action buttons.
  */
 data class UiFabSizing(
-    val smallSize: Int,
-    val mediumSize: Int,
-    val largeSize: Int,
-    val smallIconSize: Int,
-    val mediumIconSize: Int,
-    val largeIconSize: Int,
-    val elevation: Int,
-    val extendedHeight: Int,
-    val extendedHorizontalPadding: Int,
-    val extendedIconSpacing: Int,
+    val smallSize: UiDp,
+    val mediumSize: UiDp,
+    val largeSize: UiDp,
+    val smallIconSize: UiDp,
+    val mediumIconSize: UiDp,
+    val largeIconSize: UiDp,
+    val elevation: UiDp,
+    val extendedHeight: UiDp,
+    val extendedHorizontalPadding: UiDp,
+    val extendedIconSpacing: UiDp,
 ) {
     companion object {
         fun default(): UiFabSizing = UiFabSizing(
@@ -96,12 +97,12 @@ data class UiFabSizing(
  * Size tokens for Chip components.
  */
 data class UiChipSizing(
-    val height: Int,
-    val horizontalPadding: Int,
-    val leadingIconPadding: Int,
-    val iconSize: Int,
-    val trailingIconSize: Int,
-    val iconSpacing: Int,
+    val height: UiDp,
+    val horizontalPadding: UiDp,
+    val leadingIconPadding: UiDp,
+    val iconSize: UiDp,
+    val trailingIconSize: UiDp,
+    val iconSpacing: UiDp,
 ) {
     companion object {
         fun default(): UiChipSizing = UiChipSizing(
@@ -120,11 +121,11 @@ data class UiChipSizing(
  * Size tokens for SearchBar components.
  */
 data class UiSearchBarSizing(
-    val height: Int,
-    val horizontalPadding: Int,
-    val iconSize: Int,
-    val iconSpacing: Int,
-    val elevation: Int,
+    val height: UiDp,
+    val horizontalPadding: UiDp,
+    val iconSize: UiDp,
+    val iconSpacing: UiDp,
+    val elevation: UiDp,
 ) {
     companion object {
         fun default(): UiSearchBarSizing = UiSearchBarSizing(
@@ -142,15 +143,15 @@ data class UiSearchBarSizing(
  * Size tokens for NavigationBar components.
  */
 data class UiNavigationBarSizing(
-    val height: Int,
-    val iconSize: Int,
-    val labelSizeSp: Int,
+    val height: UiDp,
+    val iconSize: UiDp,
+    val labelSizeSp: UiSp,
 ) {
     companion object {
         fun default(): UiNavigationBarSizing = UiNavigationBarSizing(
             height = 80.dp,
             iconSize = 24.dp,
-            labelSizeSp = 12,
+            labelSizeSp = 12.sp,
         )
     }
 }
@@ -160,12 +161,12 @@ data class UiNavigationBarSizing(
  * Size tokens for AppBar components.
  */
 data class UiAppBarSizing(
-    val topHeight: Int,
-    val topHorizontalPadding: Int,
-    val topTitleStartPadding: Int,
-    val bottomHeight: Int,
-    val bottomHorizontalPadding: Int,
-    val bottomElevation: Int,
+    val topHeight: UiDp,
+    val topHorizontalPadding: UiDp,
+    val topTitleStartPadding: UiDp,
+    val bottomHeight: UiDp,
+    val bottomHorizontalPadding: UiDp,
+    val bottomElevation: UiDp,
 ) {
     companion object {
         fun default(): UiAppBarSizing = UiAppBarSizing(
@@ -184,11 +185,11 @@ data class UiAppBarSizing(
  * Size tokens for list item components.
  */
 data class UiListItemSizing(
-    val minHeight: Int,
-    val horizontalPadding: Int,
-    val verticalPadding: Int,
-    val leadingTrailingSpacing: Int,
-    val textSpacing: Int,
+    val minHeight: UiDp,
+    val horizontalPadding: UiDp,
+    val verticalPadding: UiDp,
+    val leadingTrailingSpacing: UiDp,
+    val textSpacing: UiDp,
 ) {
     companion object {
         fun default(): UiListItemSizing = UiListItemSizing(
@@ -206,13 +207,13 @@ data class UiListItemSizing(
  * Size tokens for Menu components.
  */
 data class UiMenuSizing(
-    val elevation: Int,
-    val minWidth: Int,
-    val verticalPadding: Int,
-    val itemHeight: Int,
-    val itemHorizontalPadding: Int,
-    val iconSize: Int,
-    val iconToTextSpacing: Int,
+    val elevation: UiDp,
+    val minWidth: UiDp,
+    val verticalPadding: UiDp,
+    val itemHeight: UiDp,
+    val itemHorizontalPadding: UiDp,
+    val iconSize: UiDp,
+    val iconToTextSpacing: UiDp,
 ) {
     companion object {
         fun default(): UiMenuSizing = UiMenuSizing(
@@ -232,8 +233,8 @@ data class UiMenuSizing(
  * Size tokens for Tooltip components.
  */
 data class UiTooltipSizing(
-    val horizontalPadding: Int,
-    val verticalPadding: Int,
+    val horizontalPadding: UiDp,
+    val verticalPadding: UiDp,
 ) {
     companion object {
         fun default(): UiTooltipSizing = UiTooltipSizing(
@@ -248,10 +249,10 @@ data class UiTooltipSizing(
  * Size tokens for Badge components.
  */
 data class UiBadgeSizing(
-    val dotSize: Int,
-    val pillHeight: Int,
-    val pillMinWidth: Int,
-    val pillHorizontalPadding: Int,
+    val dotSize: UiDp,
+    val pillHeight: UiDp,
+    val pillMinWidth: UiDp,
+    val pillHorizontalPadding: UiDp,
 ) {
     companion object {
         fun default(): UiBadgeSizing = UiBadgeSizing(

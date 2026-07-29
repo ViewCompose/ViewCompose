@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -34,19 +36,19 @@ object CardDefaults {
 
     fun elevation(
         variant: CardVariant = CardVariant.Filled,
-    ): Int {
+    ): UiDp {
         return when (variant) {
             CardVariant.Elevated -> 2.dp
-            else -> 0
+            else -> 0.dp
         }
     }
 
     fun borderWidth(
         variant: CardVariant = CardVariant.Filled,
-    ): Int {
+    ): UiDp {
         return when (variant) {
             CardVariant.Outlined -> 1.dp
-            else -> 0
+            else -> 0.dp
         }
     }
 

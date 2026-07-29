@@ -4,6 +4,7 @@ import com.viewcompose.text.TextDocument
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextDecoration
 import com.viewcompose.ui.node.TextOverflow
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * Text/RichText 节点的文本内容、排版和字体属性。
@@ -15,11 +16,11 @@ data class TextNodeProps(
     val overflow: TextOverflow,
     val textAlign: TextAlign,
     val textColor: Int,
-    val textSizeSp: Int,
+    val textSizeSp: UiSp,
     val fontWeight: Int? = null,
     val fontFamily: UiFontFamily? = null,
     val letterSpacingEm: Float? = null,
-    val lineHeightSp: Int? = null,
+    val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean = false,
     val textDecoration: TextDecoration = TextDecoration.None,
     val document: TextDocument = TextDocument.plain(text?.toString().orEmpty()),

@@ -252,7 +252,7 @@ class SubtreeRecompositionTest {
             overflow = TextOverflow.Clip,
             textAlign = TextAlign.Start,
             textColor = 0xFF000000.toInt(),
-            textSizeSp = 14,
+            textSizeSp = 14.sp,
         )
     }
 }

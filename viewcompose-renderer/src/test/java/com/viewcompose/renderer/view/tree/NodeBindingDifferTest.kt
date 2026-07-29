@@ -1,5 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.UiDp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Node Binding Differ 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Node Binding Differ behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -71,7 +76,7 @@ class NodeBindingDifferTest {
                         overflow = com.viewcompose.ui.node.TextOverflow.Clip,
                         textAlign = com.viewcompose.ui.node.TextAlign.Start,
                         textColor = 0xFF000000.toInt(),
-                        textSizeSp = 14,
+                        textSizeSp = 14.sp,
                     ),
                 ),
             ),
@@ -86,7 +91,7 @@ class NodeBindingDifferTest {
                         overflow = com.viewcompose.ui.node.TextOverflow.Clip,
                         textAlign = com.viewcompose.ui.node.TextAlign.Start,
                         textColor = 0xFF000000.toInt(),
-                        textSizeSp = 14,
+                        textSizeSp = 14.sp,
                     ),
                 ),
             ),
@@ -107,11 +112,11 @@ class NodeBindingDifferTest {
     fun `returns subtree skip when equivalent modifier chains are rebuilt`() {
         val previous = textNode(
             text = "stable",
-            modifier = Modifier.padding(horizontal = 12, vertical = 8),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         )
         val next = textNode(
             text = "stable",
-            modifier = Modifier.padding(horizontal = 12, vertical = 8),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         )
 
         assertSame(NodeBindingPlan.SkipSubtree, NodeBindingDiffer.plan(previous, next))
@@ -150,7 +155,7 @@ class NodeBindingDifferTest {
     @Test
     fun `rebinds when modifier changes`() {
         val previous = textNode()
-        val next = textNode(modifier = Modifier.padding(8))
+        val next = textNode(modifier = Modifier.padding(8.dp))
 
         assertSame(NodeBindingPlan.Rebind, NodeBindingDiffer.plan(previous, next))
     }
@@ -261,8 +266,8 @@ class NodeBindingDifferTest {
 
     @Test
     fun `patches lazy column semantic updates`() {
-        val previous = lazyColumnNode(spacing = 8)
-        val next = lazyColumnNode(spacing = 16)
+        val previous = lazyColumnNode(spacing = 8.dp)
+        val next = lazyColumnNode(spacing = 16.dp)
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
@@ -382,8 +387,8 @@ class NodeBindingDifferTest {
 
     @Test
     fun `patches row semantic updates`() {
-        val previous = rowNode(spacing = 8)
-        val next = rowNode(spacing = 16)
+        val previous = rowNode(spacing = 8.dp)
+        val next = rowNode(spacing = 16.dp)
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
@@ -393,8 +398,8 @@ class NodeBindingDifferTest {
 
     @Test
     fun `patches column semantic updates`() {
-        val previous = columnNode(spacing = 8)
-        val next = columnNode(spacing = 16)
+        val previous = columnNode(spacing = 8.dp)
+        val next = columnNode(spacing = 16.dp)
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
@@ -464,8 +469,8 @@ class NodeBindingDifferTest {
 
     @Test
     fun `patches flow row semantic updates`() {
-        val previous = flowRowNode(horizontalSpacing = 8)
-        val next = flowRowNode(horizontalSpacing = 16)
+        val previous = flowRowNode(horizontalSpacing = 8.dp)
+        val next = flowRowNode(horizontalSpacing = 16.dp)
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
@@ -475,8 +480,8 @@ class NodeBindingDifferTest {
 
     @Test
     fun `patches flow column semantic updates`() {
-        val previous = flowColumnNode(verticalSpacing = 8)
-        val next = flowColumnNode(verticalSpacing = 16)
+        val previous = flowColumnNode(verticalSpacing = 8.dp)
+        val next = flowColumnNode(verticalSpacing = 16.dp)
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
@@ -498,7 +503,7 @@ class NodeBindingDifferTest {
                 overflow = com.viewcompose.ui.node.TextOverflow.Clip,
                 textAlign = com.viewcompose.ui.node.TextAlign.Start,
                 textColor = 0xFF000000.toInt(),
-                textSizeSp = 14,
+                textSizeSp = 14.sp,
             ),
             modifier = modifier,
             children = children,
@@ -517,20 +522,20 @@ class NodeBindingDifferTest {
                 enabled = true,
                 onClick = null,
                 textColor = textColor,
-                textSizeSp = 14,
+                textSizeSp = 14.sp,
                 backgroundColor = 0xFF0000FF.toInt(),
-                borderWidth = 0,
+                borderWidth = 0.dp,
                 borderColor = 0,
-                shape = UiShape.rounded(8),
+                shape = UiShape.rounded(8.dp),
                 rippleColor = 0x33000000,
-                minHeight = 48,
-                paddingHorizontal = 16,
-                paddingVertical = 8,
+                minHeight = 48.dp,
+                paddingHorizontal = 16.dp,
+                paddingVertical = 8.dp,
                 leadingIcon = null,
                 trailingIcon = null,
                 iconTint = textColor,
-                iconSize = 18,
-                iconSpacing = 8,
+                iconSize = 18.dp,
+                iconSpacing = 8.dp,
             ),
             modifier = Modifier,
         )
@@ -561,14 +566,14 @@ class NodeBindingDifferTest {
                 hintColor = 0xFF888888.toInt(),
                 readOnly = false,
                 textColor = textColor,
-                textSizeSp = 16,
+                textSizeSp = 16.sp,
                 backgroundColor = 0xFFEEEEEE.toInt(),
-                borderWidth = 0,
+                borderWidth = 0.dp,
                 borderColor = 0,
-                shape = UiShape.rounded(8),
-                minHeight = 56,
-                paddingHorizontal = 16,
-                paddingVertical = 12,
+                shape = UiShape.rounded(8.dp),
+                minHeight = 56.dp,
+                paddingHorizontal = 16.dp,
+                paddingVertical = 12.dp,
             ),
             modifier = Modifier,
         )
@@ -586,25 +591,25 @@ class NodeBindingDifferTest {
                 enabled = true,
                 backgroundColor = 1,
                 indicatorColor = 2,
-                shape = UiShape.cut(3),
+                shape = UiShape.cut(3.dp),
                 textColor = 4,
                 selectedTextColor = 5,
                 rippleColor = 6,
-                textSizeSp = 14,
-                paddingHorizontal = 8,
-                paddingVertical = 6,
+                textSizeSp = 14.sp,
+                paddingHorizontal = 8.dp,
+                paddingVertical = 6.dp,
             ),
             modifier = Modifier,
         )
     }
 
     private fun lazyColumnNode(
-        spacing: Int = 8,
+        spacing: UiDp = 8.dp,
     ): VNode {
         return VNode(
             type = NodeType.LazyColumn,
             spec = LazyColumnNodeProps(
-                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(12),
+                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(12.dp),
                 spacing = spacing,
                 items = emptyList(),
             ),
@@ -619,9 +624,9 @@ class NodeBindingDifferTest {
             type = NodeType.LazyVerticalGrid,
             spec = LazyVerticalGridNodeProps(
                 spanCount = spanCount,
-                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(8),
-                horizontalSpacing = 8,
-                verticalSpacing = 8,
+                contentPadding = com.viewcompose.ui.node.policy.LazyContentPadding.all(8.dp),
+                horizontalSpacing = 8.dp,
+                verticalSpacing = 8.dp,
                 items = listOf(
                     lazyItem("grid-1"),
                     lazyItem("grid-2"),
@@ -763,7 +768,7 @@ class NodeBindingDifferTest {
                 controlColor = 0xFF000000.toInt(),
                 onCheckedChange = null,
                 textColor = 0xFF000000.toInt(),
-                textSizeSp = 14,
+                textSizeSp = 14.sp,
                 rippleColor = 0x33000000,
             ),
             modifier = Modifier,
@@ -798,8 +803,8 @@ class NodeBindingDifferTest {
                 progress = progress,
                 indicatorColor = 0xFF000000.toInt(),
                 trackColor = 0x33000000,
-                trackThickness = 4,
-                indicatorSize = 32,
+                trackThickness = 4.dp,
+                indicatorSize = 32.dp,
             ),
             modifier = Modifier,
         )
@@ -812,7 +817,7 @@ class NodeBindingDifferTest {
             type = NodeType.Divider,
             spec = DividerNodeProps(
                 color = color,
-                thickness = 1,
+                thickness = 1.dp,
             ),
             modifier = Modifier,
         )
@@ -835,7 +840,7 @@ class NodeBindingDifferTest {
     }
 
     private fun rowNode(
-        spacing: Int = 8,
+        spacing: UiDp = 8.dp,
     ): VNode {
         return VNode(
             type = NodeType.Row,
@@ -849,7 +854,7 @@ class NodeBindingDifferTest {
     }
 
     private fun columnNode(
-        spacing: Int = 8,
+        spacing: UiDp = 8.dp,
     ): VNode {
         return VNode(
             type = NodeType.Column,
@@ -932,24 +937,24 @@ class NodeBindingDifferTest {
                 remoteImageLoader = null,
                 enabled = enabled,
                 backgroundColor = 0xFF0000FF.toInt(),
-                borderWidth = 0,
+                borderWidth = 0.dp,
                 borderColor = 0,
-                shape = UiShape.rounded(8),
+                shape = UiShape.rounded(8.dp),
                 rippleColor = 0x33000000,
-                contentPadding = 8,
+                contentPadding = 8.dp,
             ),
             modifier = Modifier,
         )
     }
 
     private fun flowRowNode(
-        horizontalSpacing: Int = 8,
+        horizontalSpacing: UiDp = 8.dp,
     ): VNode {
         return VNode(
             type = NodeType.FlowRow,
             spec = FlowRowNodeProps(
                 horizontalSpacing = horizontalSpacing,
-                verticalSpacing = 4,
+                verticalSpacing = 4.dp,
                 maxItemsInEachRow = Int.MAX_VALUE,
             ),
             modifier = Modifier,
@@ -957,12 +962,12 @@ class NodeBindingDifferTest {
     }
 
     private fun flowColumnNode(
-        verticalSpacing: Int = 8,
+        verticalSpacing: UiDp = 8.dp,
     ): VNode {
         return VNode(
             type = NodeType.FlowColumn,
             spec = FlowColumnNodeProps(
-                horizontalSpacing = 4,
+                horizontalSpacing = 4.dp,
                 verticalSpacing = verticalSpacing,
                 maxItemsInEachColumn = Int.MAX_VALUE,
             ),
@@ -996,8 +1001,8 @@ class NodeBindingDifferTest {
                 unselectedLabelColor = 0xFF666666.toInt(),
                 indicatorColor = 0x22000000,
                 rippleColor = 0x11000000,
-                iconSize = 24,
-                labelSizeSp = 12,
+                iconSize = 24.dp,
+                labelSizeSp = 12.sp,
                 badgeColor = 0xFFFF0000.toInt(),
                 badgeTextColor = 0xFFFFFFFF.toInt(),
             ),
@@ -1019,19 +1024,19 @@ class NodeBindingDifferTest {
                 onTabSelected = null,
                 pagerState = null,
                 indicatorColor = 0xFF000000.toInt(),
-                indicatorHeight = 4,
-                indicatorCornerRadius = 2,
+                indicatorHeight = 4.dp,
+                indicatorCornerRadius = 2.dp,
                 indicatorPosition = TabIndicatorPosition.Bottom,
                 indicatorWidthMode = TabIndicatorWidthMode.MatchItem,
-                indicatorFixedWidth = 0,
+                indicatorFixedWidth = 0.dp,
                 containerColor = 0xFFFFFFFF.toInt(),
                 scrollable = true,
                 equalWidth = false,
                 rippleColor = 0x11000000,
-                itemSpacing = 8,
-                itemPaddingHorizontal = 12,
-                itemPaddingVertical = 8,
-                minItemWidth = 64,
+                itemSpacing = 8.dp,
+                itemPaddingHorizontal = 12.dp,
+                itemPaddingVertical = 8.dp,
+                minItemWidth = 64.dp,
             ),
             modifier = Modifier,
         )
@@ -1052,19 +1057,19 @@ class NodeBindingDifferTest {
                 onTabSelected = null,
                 pagerState = null,
                 indicatorColor = 0xFF000000.toInt(),
-                indicatorHeight = 4,
-                indicatorCornerRadius = 2,
+                indicatorHeight = 4.dp,
+                indicatorCornerRadius = 2.dp,
                 indicatorPosition = TabIndicatorPosition.Bottom,
                 indicatorWidthMode = TabIndicatorWidthMode.MatchItem,
-                indicatorFixedWidth = 0,
+                indicatorFixedWidth = 0.dp,
                 containerColor = 0xFFFFFFFF.toInt(),
                 scrollable = true,
                 equalWidth = false,
                 rippleColor = 0x11000000,
-                itemSpacing = 8,
-                itemPaddingHorizontal = 12,
-                itemPaddingVertical = 8,
-                minItemWidth = 64,
+                itemSpacing = 8.dp,
+                itemPaddingHorizontal = 12.dp,
+                itemPaddingVertical = 8.dp,
+                minItemWidth = 64.dp,
             ),
             modifier = Modifier,
         )

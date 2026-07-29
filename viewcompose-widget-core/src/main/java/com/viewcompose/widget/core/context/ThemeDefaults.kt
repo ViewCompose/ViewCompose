@@ -1,6 +1,6 @@
 package com.viewcompose.widget.core
 
-import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -126,6 +126,8 @@ object UiThemeDefaults {
                 bodyMedium = UiTextStyle(fontSizeSp = 16.sp),
                 labelMedium = UiTextStyle(fontSizeSp = 14.sp),
             ),
+            shapes = UiShapeDefaults.default(),
+            controls = UiControlSizeDefaults.default(),
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.FrameworkDefault,
                 isDark = false,
@@ -168,6 +170,8 @@ object UiThemeDefaults {
                 bodyMedium = UiTextStyle(fontSizeSp = 16.sp),
                 labelMedium = UiTextStyle(fontSizeSp = 14.sp),
             ),
+            shapes = UiShapeDefaults.default(),
+            controls = UiControlSizeDefaults.default(),
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.FrameworkDefault,
                 isDark = true,

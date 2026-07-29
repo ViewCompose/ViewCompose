@@ -1,5 +1,7 @@
 package com.viewcompose.ui.modifier
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -19,7 +21,7 @@ fun Modifier.backgroundDrawableRes(resId: Int): Modifier {
 }
 
 fun Modifier.border(
-    width: Int,
+    width: UiDp,
     color: Int,
 ): Modifier {
     return then(
@@ -30,13 +32,13 @@ fun Modifier.border(
     )
 }
 
-fun Modifier.cornerRadius(radius: Int): Modifier {
+fun Modifier.cornerRadius(radius: UiDp): Modifier {
     return cornerRadius(top = radius, bottom = radius)
 }
 
 fun Modifier.cornerRadius(
-    top: Int = 0,
-    bottom: Int = 0,
+    top: UiDp = UiDp.Zero,
+    bottom: UiDp = UiDp.Zero,
 ): Modifier {
     return cornerRadius(
         topStart = top,
@@ -51,10 +53,10 @@ fun Modifier.shape(shape: UiShape): Modifier {
 }
 
 fun Modifier.cornerRadius(
-    topStart: Int = 0,
-    topEnd: Int = 0,
-    bottomEnd: Int = 0,
-    bottomStart: Int = 0,
+    topStart: UiDp = UiDp.Zero,
+    topEnd: UiDp = UiDp.Zero,
+    bottomEnd: UiDp = UiDp.Zero,
+    bottomStart: UiDp = UiDp.Zero,
 ): Modifier {
     return then(
         CornerRadiusModifierElement(
@@ -72,7 +74,7 @@ fun Modifier.clip(): Modifier {
     )
 }
 
-fun Modifier.elevation(elevation: Int): Modifier {
+fun Modifier.elevation(elevation: UiDp): Modifier {
     return then(
         ElevationModifierElement(elevation),
     )

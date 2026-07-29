@@ -4,6 +4,7 @@ import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.RemoteImageLoader
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * IconButton 节点传给 renderer 的完整属性快照。
@@ -20,9 +21,9 @@ data class IconButtonNodeProps(
     override val remoteImageLoader: RemoteImageLoader?,
     val enabled: Boolean,
     val backgroundColor: Int,
-    val borderWidth: Int,
+    val borderWidth: UiDp,
     val borderColor: Int,
     val shape: UiShape,
     val rippleColor: Int,
-    val contentPadding: Int,
+    val contentPadding: UiDp,
 ) : ImageNodeSpec

@@ -9,14 +9,16 @@ import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.environment.UiLocaleList
 import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class DimensionsTest {
     @Test
-    fun `dp uses current environment density`() {
-        var resolved = 0
-        var floatResolved = 0
+    fun `dp remains logical inside an overridden environment`() {
+        var resolved = UiDp.Zero
+        var floatResolved = UiDp.Zero
 
         buildVNodeTree {
             UiEnvironment(
@@ -34,43 +36,33 @@ class DimensionsTest {
             }
         }
 
-        assertEquals(16, resolved)
-        assertEquals(16, floatResolved)
+        assertEquals(8.dp, resolved)
+        assertEquals(8.4f.dp, floatResolved)
     }
 
     @Test
     fun `sp keeps semantic text units`() {
-        assertEquals(14, 14.sp)
-        assertEquals(15, 14.6f.sp)
+        assertEquals(UiSp(14f), 14.sp)
+        assertEquals(UiSp(14.6f), 14.6f.sp)
     }
     @Test
-    fun `control defaults can resolve from explicit density without an environment`() {
-        val controls = UiControlSizeDefaults.default(
-            density = UiDensity(
-                density = 3f,
-                fontScale = 4f / 3f,
-            ),
-        )
+    fun `control defaults are density independent`() {
+        val controls = UiControlSizeDefaults.default()
 
-        assertEquals(132, controls.button.mediumHeight)
-        assertEquals(126, controls.segmentedControl.mediumHeight)
-        assertEquals(240, controls.navigationBar.height)
-        assertEquals(168, controls.fab.mediumSize)
+        assertEquals(44.dp, controls.button.mediumHeight)
+        assertEquals(42.dp, controls.segmentedControl.mediumHeight)
+        assertEquals(80.dp, controls.navigationBar.height)
+        assertEquals(56.dp, controls.fab.mediumSize)
     }
 
     @Test
-    fun `theme defaults pass explicit density to every size domain`() {
-        val tokens = UiThemeDefaults.light(
-            density = UiDensity(
-                density = 2f,
-                fontScale = 1.5f,
-            ),
-        )
+    fun `theme defaults retain logical dimensions`() {
+        val tokens = UiThemeDefaults.light()
 
-        assertEquals(88, tokens.controls.button.mediumHeight)
-        assertEquals(84, tokens.controls.segmentedControl.mediumHeight)
-        assertEquals(160, tokens.controls.navigationBar.height)
-        assertEquals(112, tokens.controls.fab.mediumSize)
-        assertEquals(40, tokens.shapes.medium.uniformAbsoluteSizeOrNull)
+        assertEquals(44.dp, tokens.controls.button.mediumHeight)
+        assertEquals(42.dp, tokens.controls.segmentedControl.mediumHeight)
+        assertEquals(80.dp, tokens.controls.navigationBar.height)
+        assertEquals(56.dp, tokens.controls.fab.mediumSize)
+        assertEquals(20.dp, tokens.shapes.medium.uniformAbsoluteSizeOrNull)
     }
 }

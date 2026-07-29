@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * TopAppBar DSL 的默认高度、间距和标题 token。
  * Default height, spacing, and title tokens for the TopAppBar DSL.
@@ -11,9 +13,9 @@ object TopAppBarDefaults {
 
     fun titleStyle(): UiTextStyle = TextDefaults.titleMediumStyle()
 
-    fun height(): Int = Theme.controls.appBar.topHeight
+    fun height(): UiDp = Theme.controls.appBar.topHeight
 
-    fun horizontalPadding(): Int = Theme.controls.appBar.topHorizontalPadding
+    fun horizontalPadding(): UiDp = Theme.controls.appBar.topHorizontalPadding
 
-    fun titleStartPadding(): Int = Theme.controls.appBar.topTitleStartPadding
+    fun titleStartPadding(): UiDp = Theme.controls.appBar.topTitleStartPadding
 }
