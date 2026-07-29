@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -27,17 +29,17 @@ object IconButtonDefaults {
 
     fun borderWidth(
         variant: ButtonVariant = ButtonVariant.Primary,
-    ): Int = ButtonDefaults.borderWidth(variant)
+    ): UiDp = ButtonDefaults.borderWidth(variant)
 
     fun shape(): UiShape = ButtonDefaults.shape()
 
     fun size(
         size: ButtonSize = ButtonSize.Medium,
-    ): Int = ButtonDefaults.height(size)
+    ): UiDp = ButtonDefaults.height(size)
 
     fun contentPadding(
         size: ButtonSize = ButtonSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             ButtonSize.Compact -> 8.dp
             ButtonSize.Medium -> 10.dp

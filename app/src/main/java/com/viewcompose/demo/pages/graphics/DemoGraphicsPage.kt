@@ -34,9 +34,9 @@ import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.sp
 import kotlin.math.min
 
 internal fun UiTreeBuilder.GraphicsPage() {

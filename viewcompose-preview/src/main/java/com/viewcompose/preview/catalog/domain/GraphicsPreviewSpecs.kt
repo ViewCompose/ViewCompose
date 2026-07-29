@@ -19,7 +19,7 @@ import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 
 /**
  * 提供图形绘制预览规格，验证 Canvas、drawBehind 和 drawWithCache 在预览宿主中的渲染链路。

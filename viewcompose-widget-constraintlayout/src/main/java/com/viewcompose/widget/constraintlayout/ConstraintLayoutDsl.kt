@@ -30,6 +30,7 @@ import com.viewcompose.ui.node.spec.ConstraintLayerSpec
 import com.viewcompose.ui.node.spec.ConstraintLayoutNodeProps
 import com.viewcompose.ui.node.spec.ConstraintPlaceholderSpec
 import com.viewcompose.ui.node.spec.ConstraintSetSpec
+import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.widget.core.UiTreeBuilder
 
 /**
@@ -158,11 +159,11 @@ class ConstraintConstrainScope internal constructor() {
     private var baselineToBottom: ConstraintAnchorLink? = null
     var width: ConstraintDimension = ConstraintDimension.WrapContent
     var height: ConstraintDimension = ConstraintDimension.WrapContent
-    var widthMin: Int? = null
-    var widthMax: Int? = null
+    var widthMin: UiDp? = null
+    var widthMax: UiDp? = null
     var widthPercent: Float? = null
-    var heightMin: Int? = null
-    var heightMax: Int? = null
+    var heightMin: UiDp? = null
+    var heightMax: UiDp? = null
     var heightPercent: Float? = null
     var constrainedWidth: Boolean = false
     var constrainedHeight: Boolean = false
@@ -173,8 +174,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun startToStart(
         target: ConstraintReferenceTarget = parent,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         start = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.Start),
@@ -185,8 +186,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun startToEnd(
         target: ConstraintReferenceTarget,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         start = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.End),
@@ -197,8 +198,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun endToStart(
         target: ConstraintReferenceTarget,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         end = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.Start),
@@ -209,8 +210,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun endToEnd(
         target: ConstraintReferenceTarget = parent,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         end = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.End),
@@ -221,8 +222,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun topToTop(
         target: ConstraintReferenceTarget = parent,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         top = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.Top),
@@ -233,8 +234,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun topToBottom(
         target: ConstraintReferenceTarget,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         top = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.Bottom),
@@ -245,8 +246,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun bottomToTop(
         target: ConstraintReferenceTarget,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         bottom = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.Top),
@@ -257,8 +258,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun bottomToBottom(
         target: ConstraintReferenceTarget = parent,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         bottom = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.Bottom),
@@ -276,8 +277,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun baselineToTop(
         target: ConstraintReferenceTarget,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         baselineToTop = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.Top),
@@ -288,8 +289,8 @@ class ConstraintConstrainScope internal constructor() {
 
     fun baselineToBottom(
         target: ConstraintReferenceTarget,
-        margin: Int = 0,
-        goneMargin: Int? = null,
+        margin: UiDp = UiDp.Zero,
+        goneMargin: UiDp? = null,
     ) {
         baselineToBottom = ConstraintAnchorLink(
             target = target.toAnchorTarget(ConstraintAnchor.Bottom),
@@ -300,7 +301,7 @@ class ConstraintConstrainScope internal constructor() {
 
     fun circular(
         target: ConstraintReference,
-        radius: Int,
+        radius: UiDp,
         angle: Float,
     ) {
         circle = ConstraintCircleSpec(
@@ -444,7 +445,7 @@ private fun ConstraintLayoutScope.allocHelperId(prefix: String): String {
 }
 
 fun ConstraintLayoutScope.createGuidelineFromStart(
-    offset: Int,
+    offset: UiDp,
     id: String = allocHelperId("guideline-start"),
 ): ConstraintReference {
     val context = requireConstraintContext()
@@ -470,7 +471,7 @@ fun ConstraintLayoutScope.createGuidelineFromStart(
 }
 
 fun ConstraintLayoutScope.createGuidelineFromEnd(
-    offset: Int,
+    offset: UiDp,
     id: String = allocHelperId("guideline-end"),
 ): ConstraintReference {
     val context = requireConstraintContext()
@@ -496,7 +497,7 @@ fun ConstraintLayoutScope.createGuidelineFromEnd(
 }
 
 fun ConstraintLayoutScope.createGuidelineFromTop(
-    offset: Int,
+    offset: UiDp,
     id: String = allocHelperId("guideline-top"),
 ): ConstraintReference {
     val context = requireConstraintContext()
@@ -522,7 +523,7 @@ fun ConstraintLayoutScope.createGuidelineFromTop(
 }
 
 fun ConstraintLayoutScope.createGuidelineFromBottom(
-    offset: Int,
+    offset: UiDp,
     id: String = allocHelperId("guideline-bottom"),
 ): ConstraintReference {
     val context = requireConstraintContext()
@@ -555,7 +556,7 @@ private fun ConstraintLayoutScope.registerBarrier(
     id: String,
     direction: ConstraintBarrierDirection,
     refs: Array<out ConstraintReference>,
-    margin: Int,
+    margin: UiDp,
     allowsGoneWidgets: Boolean,
 ): ConstraintReference {
     val context = requireConstraintContext()
@@ -572,7 +573,7 @@ private fun ConstraintLayoutScope.registerBarrier(
 fun ConstraintLayoutScope.createStartBarrier(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("barrier-start"),
-    margin: Int = 0,
+    margin: UiDp = UiDp.Zero,
     allowsGoneWidgets: Boolean = true,
 ): ConstraintReference {
     return registerBarrier(id, ConstraintBarrierDirection.Start, refs, margin, allowsGoneWidgets)
@@ -581,7 +582,7 @@ fun ConstraintLayoutScope.createStartBarrier(
 fun ConstraintLayoutScope.createEndBarrier(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("barrier-end"),
-    margin: Int = 0,
+    margin: UiDp = UiDp.Zero,
     allowsGoneWidgets: Boolean = true,
 ): ConstraintReference {
     return registerBarrier(id, ConstraintBarrierDirection.End, refs, margin, allowsGoneWidgets)
@@ -590,7 +591,7 @@ fun ConstraintLayoutScope.createEndBarrier(
 fun ConstraintLayoutScope.createTopBarrier(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("barrier-top"),
-    margin: Int = 0,
+    margin: UiDp = UiDp.Zero,
     allowsGoneWidgets: Boolean = true,
 ): ConstraintReference {
     return registerBarrier(id, ConstraintBarrierDirection.Top, refs, margin, allowsGoneWidgets)
@@ -599,7 +600,7 @@ fun ConstraintLayoutScope.createTopBarrier(
 fun ConstraintLayoutScope.createBottomBarrier(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("barrier-bottom"),
-    margin: Int = 0,
+    margin: UiDp = UiDp.Zero,
     allowsGoneWidgets: Boolean = true,
 ): ConstraintReference {
     return registerBarrier(id, ConstraintBarrierDirection.Bottom, refs, margin, allowsGoneWidgets)
@@ -614,8 +615,8 @@ fun ConstraintLayoutScope.createFlow(
     id: String = allocHelperId("flow"),
     orientation: ConstraintFlowOrientation = ConstraintFlowOrientation.Horizontal,
     wrapMode: ConstraintFlowWrapMode = ConstraintFlowWrapMode.None,
-    horizontalGap: Int = 0,
-    verticalGap: Int = 0,
+    horizontalGap: UiDp = UiDp.Zero,
+    verticalGap: UiDp = UiDp.Zero,
     horizontalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread,
     verticalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread,
     firstHorizontalStyle: ConstraintChainStyle? = null,
@@ -631,11 +632,11 @@ fun ConstraintLayoutScope.createFlow(
     horizontalAlign: ConstraintFlowHorizontalAlign = ConstraintFlowHorizontalAlign.Center,
     verticalAlign: ConstraintFlowVerticalAlign = ConstraintFlowVerticalAlign.Center,
     maxElementsWrap: Int = -1,
-    padding: Int = 0,
-    paddingStart: Int = 0,
-    paddingEnd: Int = 0,
-    paddingTop: Int = 0,
-    paddingBottom: Int = 0,
+    padding: UiDp = UiDp.Zero,
+    paddingStart: UiDp = UiDp.Zero,
+    paddingEnd: UiDp = UiDp.Zero,
+    paddingTop: UiDp = UiDp.Zero,
+    paddingBottom: UiDp = UiDp.Zero,
 ): ConstraintReference {
     require(refs.isNotEmpty()) {
         "Flow helper requires at least one referenced id."
@@ -676,7 +677,7 @@ fun ConstraintLayoutScope.createGroup(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("group"),
     visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
-    elevation: Float = 0f,
+    elevation: UiDp = UiDp.Zero,
 ): ConstraintReference {
     require(refs.isNotEmpty()) {
         "Group helper requires at least one referenced id."
@@ -695,14 +696,14 @@ fun ConstraintLayoutScope.createLayer(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("layer"),
     visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
-    elevation: Float = 0f,
+    elevation: UiDp = UiDp.Zero,
     rotation: Float = 0f,
     scaleX: Float = 1f,
     scaleY: Float = 1f,
-    translationX: Float = 0f,
-    translationY: Float = 0f,
-    pivotX: Float? = null,
-    pivotY: Float? = null,
+    translationX: UiDp = UiDp.Zero,
+    translationY: UiDp = UiDp.Zero,
+    pivotX: UiDp? = null,
+    pivotY: UiDp? = null,
 ): ConstraintReference {
     require(refs.isNotEmpty()) {
         "Layer helper requires at least one referenced id."
@@ -810,7 +811,7 @@ class ConstraintSetBuilder internal constructor() {
     }
 
     fun createGuidelineFromStart(
-        offset: Int,
+        offset: UiDp,
         id: String = helpers.allocId("guideline-start"),
     ): ConstraintReference {
         helpers.guidelines += ConstraintGuidelineSpec(
@@ -834,7 +835,7 @@ class ConstraintSetBuilder internal constructor() {
     }
 
     fun createGuidelineFromEnd(
-        offset: Int,
+        offset: UiDp,
         id: String = helpers.allocId("guideline-end"),
     ): ConstraintReference {
         helpers.guidelines += ConstraintGuidelineSpec(
@@ -858,7 +859,7 @@ class ConstraintSetBuilder internal constructor() {
     }
 
     fun createGuidelineFromTop(
-        offset: Int,
+        offset: UiDp,
         id: String = helpers.allocId("guideline-top"),
     ): ConstraintReference {
         helpers.guidelines += ConstraintGuidelineSpec(
@@ -882,7 +883,7 @@ class ConstraintSetBuilder internal constructor() {
     }
 
     fun createGuidelineFromBottom(
-        offset: Int,
+        offset: UiDp,
         id: String = helpers.allocId("guideline-bottom"),
     ): ConstraintReference {
         helpers.guidelines += ConstraintGuidelineSpec(
@@ -908,7 +909,7 @@ class ConstraintSetBuilder internal constructor() {
     fun createStartBarrier(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("barrier-start"),
-        margin: Int = 0,
+        margin: UiDp = UiDp.Zero,
         allowsGoneWidgets: Boolean = true,
     ): ConstraintReference {
         helpers.barriers += ConstraintBarrierSpec(
@@ -924,7 +925,7 @@ class ConstraintSetBuilder internal constructor() {
     fun createEndBarrier(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("barrier-end"),
-        margin: Int = 0,
+        margin: UiDp = UiDp.Zero,
         allowsGoneWidgets: Boolean = true,
     ): ConstraintReference {
         helpers.barriers += ConstraintBarrierSpec(
@@ -940,7 +941,7 @@ class ConstraintSetBuilder internal constructor() {
     fun createTopBarrier(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("barrier-top"),
-        margin: Int = 0,
+        margin: UiDp = UiDp.Zero,
         allowsGoneWidgets: Boolean = true,
     ): ConstraintReference {
         helpers.barriers += ConstraintBarrierSpec(
@@ -956,7 +957,7 @@ class ConstraintSetBuilder internal constructor() {
     fun createBottomBarrier(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("barrier-bottom"),
-        margin: Int = 0,
+        margin: UiDp = UiDp.Zero,
         allowsGoneWidgets: Boolean = true,
     ): ConstraintReference {
         helpers.barriers += ConstraintBarrierSpec(
@@ -974,8 +975,8 @@ class ConstraintSetBuilder internal constructor() {
         id: String = helpers.allocId("flow"),
         orientation: ConstraintFlowOrientation = ConstraintFlowOrientation.Horizontal,
         wrapMode: ConstraintFlowWrapMode = ConstraintFlowWrapMode.None,
-        horizontalGap: Int = 0,
-        verticalGap: Int = 0,
+        horizontalGap: UiDp = UiDp.Zero,
+        verticalGap: UiDp = UiDp.Zero,
         horizontalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread,
         verticalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread,
         firstHorizontalStyle: ConstraintChainStyle? = null,
@@ -991,11 +992,11 @@ class ConstraintSetBuilder internal constructor() {
         horizontalAlign: ConstraintFlowHorizontalAlign = ConstraintFlowHorizontalAlign.Center,
         verticalAlign: ConstraintFlowVerticalAlign = ConstraintFlowVerticalAlign.Center,
         maxElementsWrap: Int = -1,
-        padding: Int = 0,
-        paddingStart: Int = 0,
-        paddingEnd: Int = 0,
-        paddingTop: Int = 0,
-        paddingBottom: Int = 0,
+        padding: UiDp = UiDp.Zero,
+        paddingStart: UiDp = UiDp.Zero,
+        paddingEnd: UiDp = UiDp.Zero,
+        paddingTop: UiDp = UiDp.Zero,
+        paddingBottom: UiDp = UiDp.Zero,
     ): ConstraintReference {
         require(refs.isNotEmpty()) {
             "Flow helper requires at least one referenced id."
@@ -1035,7 +1036,7 @@ class ConstraintSetBuilder internal constructor() {
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("group"),
         visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
-        elevation: Float = 0f,
+        elevation: UiDp = UiDp.Zero,
     ): ConstraintReference {
         require(refs.isNotEmpty()) {
             "Group helper requires at least one referenced id."
@@ -1053,14 +1054,14 @@ class ConstraintSetBuilder internal constructor() {
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("layer"),
         visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
-        elevation: Float = 0f,
+        elevation: UiDp = UiDp.Zero,
         rotation: Float = 0f,
         scaleX: Float = 1f,
         scaleY: Float = 1f,
-        translationX: Float = 0f,
-        translationY: Float = 0f,
-        pivotX: Float? = null,
-        pivotY: Float? = null,
+        translationX: UiDp = UiDp.Zero,
+        translationY: UiDp = UiDp.Zero,
+        pivotX: UiDp? = null,
+        pivotY: UiDp? = null,
     ): ConstraintReference {
         require(refs.isNotEmpty()) {
             "Layer helper requires at least one referenced id."

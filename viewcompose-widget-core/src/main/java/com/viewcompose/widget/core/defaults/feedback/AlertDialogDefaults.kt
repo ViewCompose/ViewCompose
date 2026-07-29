@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -21,17 +23,17 @@ object AlertDialogDefaults {
 
     fun shape(): UiShape = Theme.shapes.medium
 
-    fun contentPadding(): Int = 24.dp
+    fun contentPadding(): UiDp = 24.dp
 
-    fun titleToTextSpacing(): Int = 16.dp
+    fun titleToTextSpacing(): UiDp = 16.dp
 
-    fun textToButtonsSpacing(): Int = 24.dp
+    fun textToButtonsSpacing(): UiDp = 24.dp
 
-    fun buttonSpacing(): Int = 8.dp
+    fun buttonSpacing(): UiDp = 8.dp
 
-    fun iconBottomSpacing(): Int = 16.dp
+    fun iconBottomSpacing(): UiDp = 16.dp
 
-    fun iconSize(): Int = 24.dp
+    fun iconSize(): UiDp = 24.dp
 
-    fun minWidth(): Int = 280.dp
+    fun minWidth(): UiDp = 280.dp
 }

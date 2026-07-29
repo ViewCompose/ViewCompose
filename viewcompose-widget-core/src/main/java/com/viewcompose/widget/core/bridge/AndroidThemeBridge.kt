@@ -5,6 +5,7 @@ import android.content.MutableContextWrapper
 import android.content.res.Configuration
 import android.content.res.TypedArray
 import com.google.android.material.color.DynamicColors
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * Android 动态色策略。
@@ -264,7 +265,7 @@ internal object ThemeTokenMapper {
      */
     fun fromThemeColors(
         readColor: (Int) -> Int?,
-        readTextSizeSp: (Int) -> Int? = { null },
+        readTextSizeSp: (Int) -> UiSp? = { null },
         readStateColor: (Int) -> UiStateColor? = { null },
         readRippleColor: () -> Int? = { null },
         readScrimOpacity: () -> Float? = { null },
@@ -394,7 +395,7 @@ internal object ThemeTokenMapper {
  */
 private fun Context.resolveTextAppearanceTextSizeSp(
     textAppearanceAttr: Int,
-): Int? {
+): UiSp? {
     val ta: TypedArray = obtainStyledAttributes(intArrayOf(textAppearanceAttr))
     val resId = try {
         if (ta.hasValue(0)) ta.getResourceId(0, 0) else 0
@@ -413,7 +414,7 @@ private fun Context.resolveTextAppearanceTextSizeSp(
 
     val density = resources.displayMetrics.density
     val fontScale = resources.configuration.fontScale.takeIf { it > 0f } ?: 1f
-    return kotlin.math.round(px / (density * fontScale)).toInt()
+    return UiSp(px / (density * fontScale))
 }
 
 /**

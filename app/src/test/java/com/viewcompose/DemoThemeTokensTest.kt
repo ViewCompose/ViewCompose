@@ -5,6 +5,7 @@ package com.viewcompose
  * Test responsibility: covers Demo Theme Tokens behavior in app demo and guards the contract against regressions.
  */
 
+import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -32,9 +33,19 @@ class DemoThemeTokensTest {
 
     @Test
     fun `system mode follows passed dark flag`() {
-        assertSame(DemoThemeTokens.light, DemoThemeTokens.resolve(DemoThemeMode.System, isSystemDark = false))
-        assertSame(DemoThemeTokens.dark, DemoThemeTokens.resolve(DemoThemeMode.System, isSystemDark = true))
-        assertSame(DemoThemeTokens.light, DemoThemeTokens.resolve(DemoThemeMode.Light, isSystemDark = true))
-        assertSame(DemoThemeTokens.dark, DemoThemeTokens.resolve(DemoThemeMode.Dark, isSystemDark = false))
+        assertSame(DemoThemeTokens.light, DemoThemeTokens.select(DemoThemeMode.System, isSystemDark = false))
+        assertSame(DemoThemeTokens.dark, DemoThemeTokens.select(DemoThemeMode.System, isSystemDark = true))
+        assertSame(DemoThemeTokens.light, DemoThemeTokens.select(DemoThemeMode.Light, isSystemDark = true))
+        assertSame(DemoThemeTokens.dark, DemoThemeTokens.select(DemoThemeMode.Dark, isSystemDark = false))
+    }
+
+    @Test
+    fun `theme tokens retain logical dimensions and stable identity`() {
+        assertEquals(80.dp, DemoThemeTokens.light.controls.navigationBar.height)
+        assertEquals(44.dp, DemoThemeTokens.light.controls.segmentedControl.mediumHeight)
+        assertSame(
+            DemoThemeTokens.light,
+            DemoThemeTokens.select(DemoThemeMode.Light, isSystemDark = true),
+        )
     }
 }

@@ -31,15 +31,15 @@ class InputControlTest {
                 outline = 6,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 31),
+                titleMedium = UiTextStyle(fontSizeSp = 31.sp),
                 bodyMedium = UiTextStyle(
-                    fontSizeSp = 19,
+                    fontSizeSp = 19.sp,
                     fontWeight = 600,
                     letterSpacingEm = 0.02f,
-                    lineHeightSp = 24,
+                    lineHeightSp = 24.sp,
                     includeFontPadding = true,
                 ),
-                labelMedium = UiTextStyle(fontSizeSp = 13),
+                labelMedium = UiTextStyle(fontSizeSp = 13.sp),
             ),
         )
         val tree = buildVNodeTree {

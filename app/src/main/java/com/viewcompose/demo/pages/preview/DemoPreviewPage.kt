@@ -19,7 +19,7 @@ import com.viewcompose.widget.core.SurfaceVariant
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberTextFieldState
 

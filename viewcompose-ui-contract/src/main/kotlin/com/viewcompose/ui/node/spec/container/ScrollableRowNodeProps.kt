@@ -1,4 +1,5 @@
 package com.viewcompose.ui.node.spec
+import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
@@ -8,7 +9,7 @@ import com.viewcompose.ui.layout.VerticalAlignment
  * Spacing, padding, and scroll-state properties for a ScrollableRow node.
  */
 data class ScrollableRowNodeProps(
-    val spacing: Int,
+    val spacing: UiDp,
     val arrangement: MainAxisArrangement,
     val verticalAlignment: VerticalAlignment,
 ) : NodeSpec

@@ -1,5 +1,8 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
+
 /**
  * NavigationBar DSL 的默认颜色、标签和徽标 token。
  * Default color, label, and badge tokens for the NavigationBar DSL.
@@ -19,9 +22,9 @@ object NavigationBarDefaults {
 
     fun rippleColor(): Int = Theme.colors.ripple
 
-    fun height(): Int = Theme.controls.navigationBar.height
+    fun height(): UiDp = Theme.controls.navigationBar.height
 
-    fun iconSize(): Int = Theme.controls.navigationBar.iconSize
+    fun iconSize(): UiDp = Theme.controls.navigationBar.iconSize
 
     fun labelStyle(): UiTextStyle {
         return TextDefaults.labelSmallStyle().copy(
@@ -29,7 +32,7 @@ object NavigationBarDefaults {
         )
     }
 
-    fun labelSizeSp(): Int = Theme.controls.navigationBar.labelSizeSp
+    fun labelSizeSp(): UiSp = Theme.controls.navigationBar.labelSizeSp
 
     fun badgeColor(): Int = Theme.colors.error
 

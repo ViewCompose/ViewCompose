@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Modifier Interaction Applier 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Modifier Interaction Applier behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -28,8 +32,8 @@ class ModifierInteractionApplierTest {
     @Test
     fun `incremental modifier application still applies changed layout domain`() {
         val view = View(RuntimeEnvironment.getApplication())
-        val firstNode = vnode(Modifier.padding(4))
-        val secondNode = vnode(Modifier.padding(12))
+        val firstNode = vnode(Modifier.padding(4.dp))
+        val secondNode = vnode(Modifier.padding(12.dp))
 
         ViewModifierApplier.applyModifier(view, firstNode, defaultRippleColor = 0)
         ViewModifierApplier.applyModifier(view, secondNode, defaultRippleColor = 0)

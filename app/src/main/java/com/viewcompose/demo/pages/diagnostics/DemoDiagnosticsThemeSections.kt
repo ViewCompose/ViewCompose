@@ -10,6 +10,7 @@ import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.testTag
@@ -59,10 +60,10 @@ import com.viewcompose.widget.core.TooltipDefaults
 import com.viewcompose.widget.core.TopAppBar
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberTextFieldState
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.sp
 import com.viewcompose.runtime.mutableStateOf
 
 internal val DIAGNOSTICS_THEME_SECTION_KEYS = listOf(
@@ -501,7 +502,7 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
             selectedIndex = navIndexState.value,
             onItemSelected = { navIndexState.value = it },
             modifier = Modifier
-                .padding(bottom = 8.dp)
+                .margin(bottom = 8.dp)
                 .testTag(DemoTestTags.DIAGNOSTICS_THEME_NAVIGATION),
         ) {
             Item(label = "Home", icon = ImageSource.Resource(R.drawable.demo_media_icon))

@@ -13,7 +13,7 @@ import com.viewcompose.widget.core.TextField
 import com.viewcompose.widget.core.TextFieldSize
 import com.viewcompose.widget.core.TextFieldVariant
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.rememberTextFieldState
 
 internal fun UiTreeBuilder.ShowcaseTextField() {

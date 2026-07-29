@@ -40,9 +40,9 @@ class ThemeTest {
                 outline = 6,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 30),
-                bodyMedium = UiTextStyle(fontSizeSp = 18),
-                labelMedium = UiTextStyle(fontSizeSp = 12),
+                titleMedium = UiTextStyle(fontSizeSp = 30.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 18.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 12.sp),
             ),
         )
 
@@ -54,7 +54,7 @@ class ThemeTest {
 
         val spec = tree.single().spec as TextNodeProps
         assertEquals(7, spec.textColor)
-        assertEquals(18, spec.textSizeSp)
+        assertEquals(18.sp, spec.textSizeSp)
     }
 
     @Test
@@ -75,9 +75,9 @@ class ThemeTest {
                 outline = 42,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 30),
-                bodyMedium = UiTextStyle(fontSizeSp = 18),
-                labelMedium = UiTextStyle(fontSizeSp = 12),
+                titleMedium = UiTextStyle(fontSizeSp = 30.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 18.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 12.sp),
             ),
         )
 
@@ -97,8 +97,8 @@ class ThemeTest {
         val innerTheme = UiThemeDefaults.dark()
         var outerColor = 0
         var innerColor = 0
-        var outerSize = 0
-        var innerSize = 0
+        var outerSize = 0.sp
+        var innerSize = 0.sp
 
         buildVNodeTree {
             UiTheme(outerTheme) {
@@ -122,7 +122,7 @@ class ThemeTest {
         val baseTheme = UiThemeDefaults.light()
         var primary = 0
         var activatedControl = 0
-        var bodySize = 0
+        var bodySize = 0.sp
 
         buildVNodeTree {
             UiTheme(baseTheme) {
@@ -231,14 +231,14 @@ class ThemeTest {
     fun `builder theme override updates selected domains`() {
         val baseTheme = UiThemeDefaults.light()
         var resolvedPrimary = 0
-        var resolvedShape = UiShape.rounded(0)
-        var unchangedBody = 0
+        var resolvedShape = UiShape.rounded(0.dp)
+        var unchangedBody = 0.sp
 
         buildVNodeTree {
             UiTheme(baseTheme) {
                 UiThemeOverride(
                     colors = { copy(primary = 0xFF445566.toInt()) },
-                    shapes = { copy(small = UiShape.rounded(77)) },
+                    shapes = { copy(small = UiShape.rounded(77.dp)) },
                 ) {
                     resolvedPrimary = Theme.colors.primary
                     resolvedShape = Theme.shapes.small
@@ -248,7 +248,7 @@ class ThemeTest {
         }
 
         assertEquals(0xFF445566.toInt(), resolvedPrimary)
-        assertEquals(UiShape.rounded(77), resolvedShape)
+        assertEquals(UiShape.rounded(77.dp), resolvedShape)
         assertEquals(baseTheme.typography.bodyMedium.fontSizeSp, unchangedBody)
     }
 
@@ -277,12 +277,12 @@ class ThemeTest {
     @Test
     fun `theme override preserves explicit shape overrides while changing colors`() {
         val baseTheme = UiThemeDefaults.light()
-        var shape = UiShape.rounded(0)
+        var shape = UiShape.rounded(0.dp)
 
         buildVNodeTree {
             UiTheme(baseTheme) {
                 UiThemeOverride(
-                    shapes = { copy(small = UiShape.rounded(99)) },
+                    shapes = { copy(small = UiShape.rounded(99.dp)) },
                 ) {
                     UiThemeOverride(
                         colors = { copy(primary = 0xFF778899.toInt()) },
@@ -293,7 +293,7 @@ class ThemeTest {
             }
         }
 
-        assertEquals(UiShape.rounded(99), shape)
+        assertEquals(UiShape.rounded(99.dp), shape)
     }
 
     @Test
@@ -314,9 +314,9 @@ class ThemeTest {
                 outline = 6,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 30),
-                bodyMedium = UiTextStyle(fontSizeSp = 18),
-                labelMedium = UiTextStyle(fontSizeSp = 12),
+                titleMedium = UiTextStyle(fontSizeSp = 30.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 18.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 12.sp),
             ),
         )
 
@@ -431,24 +431,24 @@ class ThemeTest {
             typography = baseTheme.typography,
             controls = UiControlSizing(
                 button = UiButtonSizing(
-                    compactHeight = 31,
-                    mediumHeight = 41,
-                    largeHeight = 51,
-                    compactHorizontalPadding = 11,
-                    mediumHorizontalPadding = 21,
-                    largeHorizontalPadding = 31,
-                    compactVerticalPadding = 6,
-                    mediumVerticalPadding = 8,
-                    largeVerticalPadding = 10,
+                    compactHeight = 31.dp,
+                    mediumHeight = 41.dp,
+                    largeHeight = 51.dp,
+                    compactHorizontalPadding = 11.dp,
+                    mediumHorizontalPadding = 21.dp,
+                    largeHorizontalPadding = 31.dp,
+                    compactVerticalPadding = 6.dp,
+                    mediumVerticalPadding = 8.dp,
+                    largeVerticalPadding = 10.dp,
                 ),
                 textField = UiControlSizeDefaults.default().textField,
                 segmentedControl = UiControlSizeDefaults.default().segmentedControl,
                 progressIndicator = UiControlSizeDefaults.default().progressIndicator,
             ),
         )
-        var compactHeight = 0
-        var largeHorizontalPadding = 0
-        var largeStyle = 0
+        var compactHeight = 0.dp
+        var largeHorizontalPadding = 0.dp
+        var largeStyle = 0.sp
 
         buildVNodeTree {
             UiTheme(customTheme) {
@@ -458,8 +458,8 @@ class ThemeTest {
             }
         }
 
-        assertEquals(31, compactHeight)
-        assertEquals(31, largeHorizontalPadding)
+        assertEquals(31.dp, compactHeight)
+        assertEquals(31.dp, largeHorizontalPadding)
         assertEquals(customTheme.typography.bodyLarge.fontSizeSp, largeStyle)
     }
 
@@ -481,9 +481,9 @@ class ThemeTest {
                 outline = 0xFF778899.toInt(),
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 30),
-                bodyMedium = UiTextStyle(fontSizeSp = 18),
-                labelMedium = UiTextStyle(fontSizeSp = 12),
+                titleMedium = UiTextStyle(fontSizeSp = 30.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 18.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 12.sp),
             ),
         )
         var buttonTonal = 0
@@ -527,14 +527,14 @@ class ThemeTest {
                 outline = 6,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 31),
-                bodyMedium = UiTextStyle(fontSizeSp = 19),
-                labelMedium = UiTextStyle(fontSizeSp = 13),
+                titleMedium = UiTextStyle(fontSizeSp = 31.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 19.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 13.sp),
             ),
         )
         var primaryColor = 0
         var secondaryColor = 0
-        var titleSize = 0
+        var titleSize = 0.sp
 
         buildVNodeTree {
             UiTheme(customTheme) {
@@ -567,9 +567,9 @@ class ThemeTest {
                 outline = 66,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 31),
-                bodyMedium = UiTextStyle(fontSizeSp = 19),
-                labelMedium = UiTextStyle(fontSizeSp = 13),
+                titleMedium = UiTextStyle(fontSizeSp = 31.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 19.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 13.sp),
             ),
         )
         var surface = 0
@@ -653,16 +653,16 @@ class ThemeTest {
                 outline = 66,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 31),
-                bodyMedium = UiTextStyle(fontSizeSp = 19),
-                labelMedium = UiTextStyle(fontSizeSp = 13),
+                titleMedium = UiTextStyle(fontSizeSp = 31.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 19.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 13.sp),
             ),
         )
         var container = 0
         var disabledContainer = 0
         var errorColor = 0
         var controlColor = 0
-        var surfaceShape = UiShape.rounded(0)
+        var surfaceShape = UiShape.rounded(0.dp)
         var pressedColor = 0
 
         buildVNodeTree {
@@ -693,23 +693,23 @@ class ThemeTest {
             controls = UiControlSizing(
                 button = UiControlSizeDefaults.default().button,
                 textField = UiTextFieldSizing(
-                    compactHeight = 35,
-                    mediumHeight = 45,
-                    largeHeight = 55,
-                    compactHorizontalPadding = 12,
-                    mediumHorizontalPadding = 16,
-                    largeHorizontalPadding = 20,
-                    compactVerticalPadding = 5,
-                    mediumVerticalPadding = 7,
-                    largeVerticalPadding = 9,
+                    compactHeight = 35.dp,
+                    mediumHeight = 45.dp,
+                    largeHeight = 55.dp,
+                    compactHorizontalPadding = 12.dp,
+                    mediumHorizontalPadding = 16.dp,
+                    largeHorizontalPadding = 20.dp,
+                    compactVerticalPadding = 5.dp,
+                    mediumVerticalPadding = 7.dp,
+                    largeVerticalPadding = 9.dp,
                 ),
                 segmentedControl = UiControlSizeDefaults.default().segmentedControl,
                 progressIndicator = UiControlSizeDefaults.default().progressIndicator,
             ),
         )
-        var compactHeight = 0
-        var mediumVerticalPadding = 0
-        var compactStyle = 0
+        var compactHeight = 0.dp
+        var mediumVerticalPadding = 0.dp
+        var compactStyle = 0.sp
 
         buildVNodeTree {
             UiTheme(customTheme) {
@@ -719,15 +719,15 @@ class ThemeTest {
             }
         }
 
-        assertEquals(35, compactHeight)
-        assertEquals(7, mediumVerticalPadding)
+        assertEquals(35.dp, compactHeight)
+        assertEquals(7.dp, mediumVerticalPadding)
         assertEquals(customTheme.typography.labelSmall.fontSizeSp, compactStyle)
     }
 
     @Test
     fun `theme current exposes fully overridden tokens`() {
         val baseTheme = UiThemeDefaults.light()
-        val overrideShapes = baseTheme.shapes.copy(small = UiShape.rounded(99))
+        val overrideShapes = baseTheme.shapes.copy(small = UiShape.rounded(99.dp))
         var current: UiThemeTokens? = null
 
         buildVNodeTree {

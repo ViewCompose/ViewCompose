@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -118,10 +120,10 @@ object ButtonDefaults {
 
     fun borderWidth(
         variant: ButtonVariant = ButtonVariant.Primary,
-    ): Int {
+    ): UiDp {
         return when (variant) {
             ButtonVariant.Outlined -> 1.dp
-            else -> 0
+            else -> 0.dp
         }
     }
 
@@ -129,7 +131,7 @@ object ButtonDefaults {
 
     fun height(
         size: ButtonSize = ButtonSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             ButtonSize.Compact -> Theme.controls.button.compactHeight
             ButtonSize.Medium -> Theme.controls.button.mediumHeight
@@ -139,7 +141,7 @@ object ButtonDefaults {
 
     fun horizontalPadding(
         size: ButtonSize = ButtonSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             ButtonSize.Compact -> Theme.controls.button.compactHorizontalPadding
             ButtonSize.Medium -> Theme.controls.button.mediumHorizontalPadding
@@ -149,7 +151,7 @@ object ButtonDefaults {
 
     fun verticalPadding(
         size: ButtonSize = ButtonSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             ButtonSize.Compact -> Theme.controls.button.compactVerticalPadding
             ButtonSize.Medium -> Theme.controls.button.mediumVerticalPadding
@@ -169,7 +171,7 @@ object ButtonDefaults {
 
     fun iconSize(
         size: ButtonSize = ButtonSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             ButtonSize.Compact -> 16.dp
             ButtonSize.Medium -> 18.dp
@@ -179,7 +181,7 @@ object ButtonDefaults {
 
     fun iconSpacing(
         size: ButtonSize = ButtonSize.Medium,
-    ): Int {
+    ): UiDp {
         return when (size) {
             ButtonSize.Compact -> 6.dp
             ButtonSize.Medium -> 8.dp

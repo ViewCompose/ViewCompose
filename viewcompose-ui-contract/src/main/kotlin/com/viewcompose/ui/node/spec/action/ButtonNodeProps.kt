@@ -2,6 +2,8 @@ package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * Button 节点传给 renderer 的完整属性快照。
@@ -12,23 +14,23 @@ data class ButtonNodeProps(
     val enabled: Boolean,
     val onClick: (() -> Unit)?,
     val textColor: Int,
-    val textSizeSp: Int,
+    val textSizeSp: UiSp,
     val fontWeight: Int? = null,
     val fontFamily: UiFontFamily? = null,
     val letterSpacingEm: Float? = null,
-    val lineHeightSp: Int? = null,
+    val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean = false,
     val backgroundColor: Int,
-    val borderWidth: Int,
+    val borderWidth: UiDp,
     val borderColor: Int,
     val shape: UiShape,
     val rippleColor: Int,
-    val minHeight: Int,
-    val paddingHorizontal: Int,
-    val paddingVertical: Int,
+    val minHeight: UiDp,
+    val paddingHorizontal: UiDp,
+    val paddingVertical: UiDp,
     val leadingIcon: ImageSource.Resource?,
     val trailingIcon: ImageSource.Resource?,
     val iconTint: Int,
-    val iconSize: Int,
-    val iconSpacing: Int,
+    val iconSize: UiDp,
+    val iconSpacing: UiDp,
 ) : NodeSpec

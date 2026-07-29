@@ -5,8 +5,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.viewcompose.renderer.R
 import com.viewcompose.ui.modifier.ImeInsetsPaddingModifierElement
-import com.viewcompose.ui.modifier.PaddingModifierElement
 import com.viewcompose.ui.modifier.SystemBarsInsetsPaddingModifierElement
+import com.viewcompose.renderer.view.PaddingPx
 
 /**
  * 应用 systemBars/IME inset padding，并在移除 modifier 时恢复基础 padding。
@@ -20,7 +20,7 @@ internal object ModifierInsetsApplier {
     fun applyHostPaddingWhenNoInsets(
         view: View,
         hasWindowInsetsPadding: Boolean,
-        hostPadding: PaddingModifierElement?,
+        hostPadding: PaddingPx?,
     ) {
         if (hasWindowInsetsPadding) return
         if (hostPadding == null) {
@@ -43,7 +43,7 @@ internal object ModifierInsetsApplier {
         view: View,
         systemBarsModifier: SystemBarsInsetsPaddingModifierElement?,
         imeModifier: ImeInsetsPaddingModifierElement?,
-        basePadding: PaddingModifierElement?,
+        basePadding: PaddingPx?,
     ) {
         if (systemBarsModifier == null && imeModifier == null) {
             // modifier 移除时恢复记录的 base padding，并卸载 listener。

@@ -6,6 +6,7 @@ package com.viewcompose.widget.core
  */
 
 import com.viewcompose.ui.modifier.SizeModifierElement
+import com.viewcompose.ui.unit.UiDimension
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
@@ -56,8 +57,8 @@ class ImageTest {
         assertEquals(NodeType.Image, node.type)
         assertEquals(0xFF123456.toInt(), spec.tint)
         assertEquals(ImageContentScale.Inside, spec.contentScale)
-        assertEquals(24.dp, size.width)
-        assertEquals(24.dp, size.height)
+        assertEquals(UiDimension.Exact(24.dp), size.width)
+        assertEquals(UiDimension.Exact(24.dp), size.height)
     }
 
     @Test

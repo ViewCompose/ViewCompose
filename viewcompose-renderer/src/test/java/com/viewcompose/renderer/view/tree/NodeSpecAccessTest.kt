@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Node Spec Access 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Node Spec Access behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -22,7 +26,7 @@ class NodeSpecAccessTest {
     @Test
     fun `require spec returns typed spec when matched`() {
         val spec = RowNodeProps(
-            spacing = 8,
+            spacing = 8.dp,
             arrangement = MainAxisArrangement.Start,
             verticalAlignment = VerticalAlignment.Top,
         )
@@ -39,7 +43,7 @@ class NodeSpecAccessTest {
         val node = VNode(
             type = NodeType.Row,
             spec = ColumnNodeProps(
-                spacing = 0,
+                spacing = 0.dp,
                 arrangement = MainAxisArrangement.Start,
                 horizontalAlignment = HorizontalAlignment.Start,
             ),
@@ -61,7 +65,7 @@ class NodeSpecAccessTest {
         val node = VNode(
             type = NodeType.HorizontalPager,
             spec = RowNodeProps(
-                spacing = 0,
+                spacing = 0.dp,
                 arrangement = MainAxisArrangement.Start,
                 verticalAlignment = VerticalAlignment.Top,
             ),

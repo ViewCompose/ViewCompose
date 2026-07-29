@@ -1,71 +1,39 @@
 package com.viewcompose.widget.core
 
 import android.content.Context
-import kotlin.math.roundToInt
-
-/**
- * UI 密度信息，density 用于 dp，scaledDensity 用于 sp。
- * UI density values; density is used for dp and scaledDensity is used for sp.
- */
-data class UiDensity(
-    val density: Float,
-    val scaledDensity: Float,
-) {
-    /**
-     * 将 dp 整数转换为当前密度下的像素整数。
-     * Converts an integer dp value to pixels under the current density.
-     */
-    fun dp(value: Int): Int = (value * density).roundToInt()
-
-    /**
-     * 将 sp 整数转换为当前字体缩放下的像素整数。
-     * Converts an integer sp value to pixels under the current font scale.
-     */
-    fun sp(value: Int): Int = (value * scaledDensity).roundToInt()
-}
-
-/**
- * UI 布局方向。
- * UI layout direction.
- */
-enum class UiLayoutDirection {
-    Ltr,
-    Rtl,
-}
-
-/**
- * 当前 UI 环境快照。
- * Snapshot of the current UI environment.
- */
-data class UiEnvironmentValues(
-    val density: UiDensity,
-    val localeTags: List<String>,
-    val layoutDirection: UiLayoutDirection,
-)
+import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.environment.UiLocaleList
+import com.viewcompose.ui.unit.UiDensity
 
 /**
  * 无平台环境时使用的默认值。
  * Defaults used when no platform environment is available.
  */
 object UiEnvironmentDefaults {
-    fun values(): UiEnvironmentValues {
-        return UiEnvironmentValues(
-            density = UiDensity(
-                density = 1f,
-                scaledDensity = 1f,
-            ),
-            localeTags = listOf("und"),
-            layoutDirection = UiLayoutDirection.Ltr,
-        )
-    }
+    fun values(): UiEnvironmentValues = UiEnvironmentValues.Default
 }
 
-private val LocalEnvironment = uiLocalOf(
-    debugName = "Environment",
-    debugValueFormatter = { values ->
-        "density=${values.density.density}, locale=${values.localeTags.joinToString()}, direction=${values.layoutDirection}"
+/**
+ * The current density. Kept separate from locale and direction so scoped overrides are explicit.
+ */
+val LocalDensity = uiLocalOf(
+    debugName = "Environment.Density",
+    debugValueFormatter = { density ->
+        "density=${density.density}, fontScale=${density.fontScale}"
     },
-    defaultFactory = UiEnvironmentDefaults::values,
+    defaultFactory = { UiDensity.Default },
+)
+
+val LocalLocales = uiLocalOf(
+    debugName = "Environment.Locales",
+    debugValueFormatter = UiLocaleList::toString,
+    defaultFactory = { UiLocaleList.Undetermined },
+)
+
+val LocalLayoutDirection = uiLocalOf(
+    debugName = "Environment.LayoutDirection",
+    defaultFactory = { UiLayoutDirection.Ltr },
 )
 
 /**
@@ -74,13 +42,23 @@ private val LocalEnvironment = uiLocalOf(
  */
 object Environment {
     val density: UiDensity
-        get() = UiLocals.current(LocalEnvironment).density
+        get() = UiLocals.current(LocalDensity)
 
     val localeTags: List<String>
-        get() = UiLocals.current(LocalEnvironment).localeTags
+        get() = UiLocals.current(LocalLocales).tags
+
+    val locales: UiLocaleList
+        get() = UiLocals.current(LocalLocales)
 
     val layoutDirection: UiLayoutDirection
-        get() = UiLocals.current(LocalEnvironment).layoutDirection
+        get() = UiLocals.current(LocalLayoutDirection)
+
+    val values: UiEnvironmentValues
+        get() = UiEnvironmentValues(
+            density = density,
+            locales = locales,
+            layoutDirection = layoutDirection,
+        )
 }
 
 /**
@@ -95,7 +73,11 @@ fun UiTreeBuilder.UiEnvironment(
     val resolvedValues = values
         ?: androidContext?.let(AndroidEnvironmentBridge::fromContext)
         ?: UiEnvironmentDefaults.values()
-    ProvideLocal(LocalEnvironment, resolvedValues) {
+    ProvideLocals(
+        LocalDensity provides resolvedValues.density,
+        LocalLocales provides resolvedValues.locales,
+        LocalLayoutDirection provides resolvedValues.layoutDirection,
+    ) {
         content()
     }
 }

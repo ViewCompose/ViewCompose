@@ -5,23 +5,29 @@ package com.viewcompose.widget.core
  * Test responsibility: covers Dimensions behavior in widget-core context and guards DSL, state, or theme contracts against regressions.
  */
 
+import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.environment.UiLocaleList
+import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class DimensionsTest {
     @Test
-    fun `dp uses current environment density`() {
-        var resolved = 0
-        var floatResolved = 0
+    fun `dp remains logical inside an overridden environment`() {
+        var resolved = UiDp.Zero
+        var floatResolved = UiDp.Zero
 
         buildVNodeTree {
             UiEnvironment(
                 values = UiEnvironmentValues(
                     density = UiDensity(
                         density = 2f,
-                        scaledDensity = 3f,
+                        fontScale = 1.5f,
                     ),
-                    localeTags = listOf("en-US"),
+                    locales = UiLocaleList.of("en-US"),
                     layoutDirection = UiLayoutDirection.Ltr,
                 ),
             ) {
@@ -30,13 +36,34 @@ class DimensionsTest {
             }
         }
 
-        assertEquals(16, resolved)
-        assertEquals(16, floatResolved)
+        assertEquals(8.dp, resolved)
+        assertEquals(8.4f.dp, floatResolved)
     }
 
     @Test
     fun `sp keeps semantic text units`() {
-        assertEquals(14, 14.sp)
-        assertEquals(15, 14.6f.sp)
+        assertEquals(UiSp(14f), 14.sp)
+        assertEquals(UiSp(14.6f), 14.6f.sp)
+    }
+
+    @Test
+    fun `control defaults are density independent`() {
+        val controls = UiControlSizeDefaults.default()
+
+        assertEquals(44.dp, controls.button.mediumHeight)
+        assertEquals(42.dp, controls.segmentedControl.mediumHeight)
+        assertEquals(80.dp, controls.navigationBar.height)
+        assertEquals(56.dp, controls.fab.mediumSize)
+    }
+
+    @Test
+    fun `theme defaults retain logical dimensions`() {
+        val tokens = UiThemeDefaults.light()
+
+        assertEquals(44.dp, tokens.controls.button.mediumHeight)
+        assertEquals(42.dp, tokens.controls.segmentedControl.mediumHeight)
+        assertEquals(80.dp, tokens.controls.navigationBar.height)
+        assertEquals(56.dp, tokens.controls.fab.mediumSize)
+        assertEquals(20.dp, tokens.shapes.medium.uniformAbsoluteSizeOrNull)
     }
 }

@@ -1,5 +1,7 @@
 package com.viewcompose.ui.node.spec
 
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * ConstraintLayout 节点的约束集合属性。
  * Constraint-set properties for a ConstraintLayout node.
@@ -34,11 +36,11 @@ data class ConstraintItemSpec(
     val baselineToBottom: ConstraintAnchorLink? = null,
     val width: ConstraintDimension = ConstraintDimension.WrapContent,
     val height: ConstraintDimension = ConstraintDimension.WrapContent,
-    val widthMin: Int? = null,
-    val widthMax: Int? = null,
+    val widthMin: UiDp? = null,
+    val widthMax: UiDp? = null,
     val widthPercent: Float? = null,
-    val heightMin: Int? = null,
-    val heightMax: Int? = null,
+    val heightMin: UiDp? = null,
+    val heightMax: UiDp? = null,
     val heightPercent: Float? = null,
     val constrainedWidth: Boolean = false,
     val constrainedHeight: Boolean = false,
@@ -50,8 +52,8 @@ data class ConstraintItemSpec(
 
 data class ConstraintAnchorLink(
     val target: ConstraintAnchorTarget,
-    val margin: Int = 0,
-    val goneMargin: Int? = null,
+    val margin: UiDp = UiDp.Zero,
+    val goneMargin: UiDp? = null,
 )
 
 data class ConstraintAnchorTarget(
@@ -84,7 +86,7 @@ enum class ConstraintAnchor {
 
 data class ConstraintCircleSpec(
     val targetId: String,
-    val radius: Int,
+    val radius: UiDp,
     val angle: Float,
 )
 
@@ -96,7 +98,7 @@ sealed interface ConstraintDimension {
     data object MatchParent : ConstraintDimension
 
     data class Fixed(
-        val value: Int,
+        val value: UiDp,
     ) : ConstraintDimension
 }
 
@@ -115,7 +117,7 @@ enum class ConstraintGuidelineDirection {
 
 sealed interface ConstraintGuidelinePosition {
     data class Offset(
-        val value: Int,
+        val value: UiDp,
     ) : ConstraintGuidelinePosition
 
     data class Fraction(
@@ -127,7 +129,7 @@ data class ConstraintBarrierSpec(
     val id: String,
     val direction: ConstraintBarrierDirection,
     val referencedIds: List<String>,
-    val margin: Int = 0,
+    val margin: UiDp = UiDp.Zero,
     val allowsGoneWidgets: Boolean = true,
 )
 
@@ -162,8 +164,8 @@ data class ConstraintFlowSpec(
     val referencedIds: List<String>,
     val orientation: ConstraintFlowOrientation = ConstraintFlowOrientation.Horizontal,
     val wrapMode: ConstraintFlowWrapMode = ConstraintFlowWrapMode.None,
-    val horizontalGap: Int = 0,
-    val verticalGap: Int = 0,
+    val horizontalGap: UiDp = UiDp.Zero,
+    val verticalGap: UiDp = UiDp.Zero,
     val horizontalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread,
     val verticalStyle: ConstraintChainStyle = ConstraintChainStyle.Spread,
     val firstHorizontalStyle: ConstraintChainStyle? = null,
@@ -179,11 +181,11 @@ data class ConstraintFlowSpec(
     val horizontalAlign: ConstraintFlowHorizontalAlign = ConstraintFlowHorizontalAlign.Center,
     val verticalAlign: ConstraintFlowVerticalAlign = ConstraintFlowVerticalAlign.Center,
     val maxElementsWrap: Int = -1,
-    val padding: Int = 0,
-    val paddingStart: Int = 0,
-    val paddingEnd: Int = 0,
-    val paddingTop: Int = 0,
-    val paddingBottom: Int = 0,
+    val padding: UiDp = UiDp.Zero,
+    val paddingStart: UiDp = UiDp.Zero,
+    val paddingEnd: UiDp = UiDp.Zero,
+    val paddingTop: UiDp = UiDp.Zero,
+    val paddingBottom: UiDp = UiDp.Zero,
 )
 
 enum class ConstraintFlowOrientation {
@@ -214,21 +216,21 @@ data class ConstraintGroupSpec(
     val id: String,
     val referencedIds: List<String>,
     val visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
-    val elevation: Float = 0f,
+    val elevation: UiDp = UiDp.Zero,
 )
 
 data class ConstraintLayerSpec(
     val id: String,
     val referencedIds: List<String>,
     val visibility: ConstraintHelperVisibility = ConstraintHelperVisibility.Visible,
-    val elevation: Float = 0f,
+    val elevation: UiDp = UiDp.Zero,
     val rotation: Float = 0f,
     val scaleX: Float = 1f,
     val scaleY: Float = 1f,
-    val translationX: Float = 0f,
-    val translationY: Float = 0f,
-    val pivotX: Float? = null,
-    val pivotY: Float? = null,
+    val translationX: UiDp = UiDp.Zero,
+    val translationY: UiDp = UiDp.Zero,
+    val pivotX: UiDp? = null,
+    val pivotY: UiDp? = null,
 )
 
 data class ConstraintPlaceholderSpec(

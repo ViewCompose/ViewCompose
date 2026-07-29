@@ -9,6 +9,7 @@ import com.viewcompose.animation.core.sampleAnimationValue
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.widget.core.LaunchedEffect
 import com.viewcompose.widget.core.LocalAnimationCoroutineContext
 import com.viewcompose.widget.core.LocalMonotonicFrameClock
@@ -215,11 +216,15 @@ class Transition<S> internal constructor(
 
     fun animateDp(
         animationSpec: () -> AnimationSpec = { tween() },
-        targetValueByState: (S) -> Int,
-    ): State<Int> {
-        return animateInt(
-            animationSpec = animationSpec,
-            targetValueByState = targetValueByState,
+        targetValueByState: (S) -> UiDp,
+    ): State<UiDp> {
+        return animateValueInternal(
+            converter = AnimationUnitConverters.Dp,
+            transitionSpec = { _, _ -> animationSpec() },
+            segmentEndpoints = { _, target, current ->
+                current to targetValueByState(target)
+            },
+            valueForSettledState = targetValueByState,
         )
     }
 }

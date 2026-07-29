@@ -4,16 +4,18 @@ import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
+import com.viewcompose.ui.unit.UiDimension
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 布局约束、尺寸、边距和对齐相关的 modifier 元素模型。
  * Modifier element models for layout constraints, sizing, margins, and alignment.
  */
 data class PaddingModifierElement(
-    val left: Int,
-    val top: Int,
-    val right: Int,
-    val bottom: Int,
+    val left: UiDp,
+    val top: UiDp,
+    val right: UiDp,
+    val bottom: UiDp,
 ) : ModifierElement
 
 data class SystemBarsInsetsPaddingModifierElement(
@@ -31,31 +33,31 @@ data class ImeInsetsPaddingModifierElement(
 ) : ModifierElement
 
 data class MarginModifierElement(
-    val left: Int,
-    val top: Int,
-    val right: Int,
-    val bottom: Int,
+    val left: UiDp,
+    val top: UiDp,
+    val right: UiDp,
+    val bottom: UiDp,
 ) : ModifierElement
 
 data class SizeModifierElement(
-    val width: Int,
-    val height: Int,
+    val width: UiDimension,
+    val height: UiDimension,
 ) : ModifierElement
 
 data class WidthModifierElement(
-    val width: Int,
+    val width: UiDimension,
 ) : ModifierElement
 
 data class HeightModifierElement(
-    val height: Int,
+    val height: UiDimension,
 ) : ModifierElement
 
 data class MinHeightModifierElement(
-    val minHeight: Int,
+    val minHeight: UiDp,
 ) : ModifierElement
 
 data class MinWidthModifierElement(
-    val minWidth: Int,
+    val minWidth: UiDp,
 ) : ModifierElement
 
 data class LayoutIdModifierElement(
@@ -84,6 +86,6 @@ data class VerticalAlignModifierElement(
 ) : ModifierElement
 
 data class OffsetModifierElement(
-    val x: Float,
-    val y: Float,
+    val x: UiDp,
+    val y: UiDp,
 ) : ModifierElement

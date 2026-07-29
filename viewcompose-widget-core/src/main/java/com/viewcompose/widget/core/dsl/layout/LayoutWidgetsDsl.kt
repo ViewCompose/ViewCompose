@@ -20,6 +20,7 @@ import com.viewcompose.ui.node.spec.PullToRefreshNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
 import com.viewcompose.ui.node.spec.ScrollableColumnNodeProps
 import com.viewcompose.ui.node.spec.ScrollableRowNodeProps
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 发射 Box 容器节点。
@@ -112,7 +113,7 @@ fun UiTreeBuilder.Spacer(
  */
 fun UiTreeBuilder.Divider(
     color: Int = DividerDefaults.color(),
-    thickness: Int = DividerDefaults.thickness(),
+    thickness: UiDp = DividerDefaults.thickness(),
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -133,7 +134,7 @@ fun UiTreeBuilder.Divider(
  */
 fun UiTreeBuilder.Row(
     key: Any? = null,
-    spacing: Int = 0,
+    spacing: UiDp = UiDp.Zero,
     arrangement: MainAxisArrangement = MainAxisArrangement.Start,
     verticalAlignment: VerticalAlignment = VerticalAlignment.Top,
     modifier: Modifier = Modifier,
@@ -158,7 +159,7 @@ fun UiTreeBuilder.Row(
  */
 fun UiTreeBuilder.Column(
     key: Any? = null,
-    spacing: Int = 0,
+    spacing: UiDp = UiDp.Zero,
     arrangement: MainAxisArrangement = MainAxisArrangement.Start,
     horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start,
     modifier: Modifier = Modifier,
@@ -183,7 +184,7 @@ fun UiTreeBuilder.Column(
  */
 fun UiTreeBuilder.ScrollableColumn(
     key: Any? = null,
-    spacing: Int = 0,
+    spacing: UiDp = UiDp.Zero,
     arrangement: MainAxisArrangement = MainAxisArrangement.Start,
     horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start,
     focusFollowKeyboard: Boolean = false,
@@ -210,7 +211,7 @@ fun UiTreeBuilder.ScrollableColumn(
  */
 fun UiTreeBuilder.ScrollableRow(
     key: Any? = null,
-    spacing: Int = 0,
+    spacing: UiDp = UiDp.Zero,
     arrangement: MainAxisArrangement = MainAxisArrangement.Start,
     verticalAlignment: VerticalAlignment = VerticalAlignment.Top,
     modifier: Modifier = Modifier,
@@ -235,8 +236,8 @@ fun UiTreeBuilder.ScrollableRow(
  */
 fun UiTreeBuilder.FlowRow(
     key: Any? = null,
-    horizontalSpacing: Int = 0,
-    verticalSpacing: Int = 0,
+    horizontalSpacing: UiDp = UiDp.Zero,
+    verticalSpacing: UiDp = UiDp.Zero,
     maxItemsInEachRow: Int = Int.MAX_VALUE,
     modifier: Modifier = Modifier,
     content: LayoutScope.() -> Unit,
@@ -260,8 +261,8 @@ fun UiTreeBuilder.FlowRow(
  */
 fun UiTreeBuilder.FlowColumn(
     key: Any? = null,
-    horizontalSpacing: Int = 0,
-    verticalSpacing: Int = 0,
+    horizontalSpacing: UiDp = UiDp.Zero,
+    verticalSpacing: UiDp = UiDp.Zero,
     maxItemsInEachColumn: Int = Int.MAX_VALUE,
     modifier: Modifier = Modifier,
     content: LayoutScope.() -> Unit,

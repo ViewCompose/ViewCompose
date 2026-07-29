@@ -63,11 +63,11 @@ internal class DeclarativeNavigationBarLayout(
     private var indicatorColorState: Int = Color.TRANSPARENT
     private var rippleColorState: Int = Color.TRANSPARENT
     private var iconSizeState: Int = 0
-    private var labelSizeSpState: Int = 0
+    private var labelSizePxState: Float = 0f
     private var labelFontWeightState: Int? = null
     private var labelFontFamilyState: UiFontFamily? = null
     private var labelLetterSpacingState: Float? = null
-    private var labelLineHeightSpState: Int? = null
+    private var labelLineHeightPxState: Int? = null
     private var labelIncludeFontPaddingState: Boolean = false
     private var badgeColorState: Int = Color.TRANSPARENT
     private var badgeTextColorState: Int = Color.TRANSPARENT
@@ -90,11 +90,11 @@ internal class DeclarativeNavigationBarLayout(
         indicatorColor: Int,
         rippleColor: Int,
         iconSize: Int,
-        labelSizeSp: Int,
+        labelSizePx: Float,
         labelFontWeight: Int?,
         labelFontFamily: UiFontFamily?,
         labelLetterSpacingEm: Float?,
-        labelLineHeightSp: Int?,
+        labelLineHeightPx: Int?,
         labelIncludeFontPadding: Boolean,
         badgeColor: Int,
         badgeTextColor: Int,
@@ -125,11 +125,11 @@ internal class DeclarativeNavigationBarLayout(
             unselectedLabelColorState != unselectedLabelColor ||
             indicatorColorState != indicatorColor ||
             iconSizeState != iconSize ||
-            labelSizeSpState != labelSizeSp ||
+            labelSizePxState != labelSizePx ||
             labelFontWeightState != labelFontWeight ||
             labelFontFamilyState != labelFontFamily ||
             labelLetterSpacingState != labelLetterSpacingEm ||
-            labelLineHeightSpState != labelLineHeightSp ||
+            labelLineHeightPxState != labelLineHeightPx ||
             labelIncludeFontPaddingState != labelIncludeFontPadding ||
             badgeColorState != badgeColor ||
             badgeTextColorState != badgeTextColor
@@ -157,11 +157,11 @@ internal class DeclarativeNavigationBarLayout(
         indicatorColorState = indicatorColor
         rippleColorState = rippleColor
         iconSizeState = iconSize
-        labelSizeSpState = labelSizeSp
+        labelSizePxState = labelSizePx
         labelFontWeightState = labelFontWeight
         labelFontFamilyState = labelFontFamily
         labelLetterSpacingState = labelLetterSpacingEm
-        labelLineHeightSpState = labelLineHeightSp
+        labelLineHeightPxState = labelLineHeightPx
         labelIncludeFontPaddingState = labelIncludeFontPadding
         badgeColorState = badgeColor
         badgeTextColorState = badgeTextColor
@@ -175,11 +175,11 @@ internal class DeclarativeNavigationBarLayout(
                 unselectedLabelColor = unselectedLabelColor,
                 indicatorColor = indicatorColor,
                 iconSize = iconSize,
-                labelSizeSp = labelSizeSp,
+                labelSizePx = labelSizePx,
                 labelFontWeight = labelFontWeight,
                 labelFontFamily = labelFontFamily,
                 labelLetterSpacingEm = labelLetterSpacingEm,
-                labelLineHeightSp = labelLineHeightSp,
+                labelLineHeightPx = labelLineHeightPx,
                 labelIncludeFontPadding = labelIncludeFontPadding,
                 badgeColor = badgeColor,
                 badgeTextColor = badgeTextColor,
@@ -201,11 +201,11 @@ internal class DeclarativeNavigationBarLayout(
                     unselectedLabelColor = unselectedLabelColor,
                     indicatorColor = indicatorColor,
                     iconSize = iconSize,
-                    labelSizeSp = labelSizeSp,
+                    labelSizePx = labelSizePx,
                     labelFontWeight = labelFontWeight,
                     labelFontFamily = labelFontFamily,
                     labelLetterSpacingEm = labelLetterSpacingEm,
-                    labelLineHeightSp = labelLineHeightSp,
+                    labelLineHeightPx = labelLineHeightPx,
                     labelIncludeFontPadding = labelIncludeFontPadding,
                     badgeColor = badgeColor,
                     badgeTextColor = badgeTextColor,
@@ -346,11 +346,11 @@ internal class DeclarativeNavigationBarLayout(
         unselectedLabelColor: Int,
         indicatorColor: Int,
         iconSize: Int,
-        labelSizeSp: Int,
+        labelSizePx: Float,
         labelFontWeight: Int?,
         labelFontFamily: UiFontFamily?,
         labelLetterSpacingEm: Float?,
-        labelLineHeightSp: Int?,
+        labelLineHeightPx: Int?,
         labelIncludeFontPadding: Boolean,
         badgeColor: Int,
         badgeTextColor: Int,
@@ -365,11 +365,11 @@ internal class DeclarativeNavigationBarLayout(
                 unselectedLabelColor = unselectedLabelColor,
                 indicatorColor = indicatorColor,
                 iconSize = iconSize,
-                labelSizeSp = labelSizeSp,
+                labelSizePx = labelSizePx,
                 labelFontWeight = labelFontWeight,
                 labelFontFamily = labelFontFamily,
                 labelLetterSpacingEm = labelLetterSpacingEm,
-                labelLineHeightSp = labelLineHeightSp,
+                labelLineHeightPx = labelLineHeightPx,
                 labelIncludeFontPadding = labelIncludeFontPadding,
                 badgeColor = badgeColor,
                 badgeTextColor = badgeTextColor,
@@ -386,11 +386,11 @@ internal class DeclarativeNavigationBarLayout(
         unselectedLabelColor: Int,
         indicatorColor: Int,
         iconSize: Int,
-        labelSizeSp: Int,
+        labelSizePx: Float,
         labelFontWeight: Int?,
         labelFontFamily: UiFontFamily?,
         labelLetterSpacingEm: Float?,
-        labelLineHeightSp: Int?,
+        labelLineHeightPx: Int?,
         labelIncludeFontPadding: Boolean,
         badgeColor: Int,
         badgeTextColor: Int,
@@ -405,11 +405,11 @@ internal class DeclarativeNavigationBarLayout(
                 unselectedLabelColor = unselectedLabelColor,
                 indicatorColor = indicatorColor,
                 iconSize = iconSize,
-                labelSizeSp = labelSizeSp,
+                labelSizePx = labelSizePx,
                 labelFontWeight = labelFontWeight,
                 labelFontFamily = labelFontFamily,
                 labelLetterSpacingEm = labelLetterSpacingEm,
-                labelLineHeightSp = labelLineHeightSp,
+                labelLineHeightPx = labelLineHeightPx,
                 labelIncludeFontPadding = labelIncludeFontPadding,
                 badgeColor = badgeColor,
                 badgeTextColor = badgeTextColor,
@@ -426,11 +426,11 @@ internal class DeclarativeNavigationBarLayout(
         unselectedLabelColor: Int,
         indicatorColor: Int,
         iconSize: Int,
-        labelSizeSp: Int,
+        labelSizePx: Float,
         labelFontWeight: Int?,
         labelFontFamily: UiFontFamily?,
         labelLetterSpacingEm: Float?,
-        labelLineHeightSp: Int?,
+        labelLineHeightPx: Int?,
         labelIncludeFontPadding: Boolean,
         badgeColor: Int,
         badgeTextColor: Int,
@@ -544,11 +544,11 @@ internal class DeclarativeNavigationBarLayout(
                 ContentViewBinder.applyTextAppearance(
                     view = this,
                     textColor = textColor,
-                    textSizeSp = labelSizeSp,
+                    textSizePx = labelSizePx,
                     fontWeight = labelFontWeight,
                     fontFamily = labelFontFamily,
                     letterSpacingEm = labelLetterSpacingEm,
-                    lineHeightSp = labelLineHeightSp,
+                    lineHeightPx = labelLineHeightPx,
                     includeFontPadding = labelIncludeFontPadding,
                 )
             } else if (currentTextColor != textColor) {

@@ -5,7 +5,7 @@ import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import com.viewcompose.widget.core.UiColors
-import com.viewcompose.widget.core.UiControlSizing
+import com.viewcompose.widget.core.UiControlSizeDefaults
 import com.viewcompose.widget.core.UiButtonSizing
 import com.viewcompose.widget.core.UiProgressIndicatorSizing
 import com.viewcompose.widget.core.UiSegmentedControlSizing
@@ -18,8 +18,8 @@ import com.viewcompose.ui.shape.UiCorner
 import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.widget.core.UiTypography
-import com.viewcompose.widget.core.dp
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 
 /**
  * demo 应用支持的主题模式。
@@ -45,10 +45,74 @@ internal fun UiShape.demoLabel(): String {
 
 private fun UiCorner.demoLabel(): String {
     val sizeLabel = when (val cornerSize = size) {
-        is UiCornerSize.Absolute -> "${cornerSize.pixels}px"
+        is UiCornerSize.Absolute -> {
+            val value = cornerSize.size.value
+            if (value == value.toInt().toFloat()) "${value.toInt()}dp" else "${value}dp"
+        }
         is UiCornerSize.Relative -> "${(cornerSize.fraction * 100).toInt()}%"
     }
     return "${family.name.lowercase()} $sizeLabel"
+}
+
+/**
+ * 创建稳定、与设备环境无关的 demo 主题 token。
+ * Creates stable demo theme tokens that are independent of the device environment.
+ */
+private fun createDemoThemeTokens(
+    colors: UiColors,
+    typography: UiTypography,
+    metadata: UiThemeMetadata,
+): UiThemeTokens {
+    val defaultControls = UiControlSizeDefaults.default()
+    return UiThemeTokens(
+        colors = colors,
+        typography = typography,
+        shapes = UiShapes(
+            small = UiShape.rounded(18.dp),
+            medium = UiShape.rounded(24.dp),
+        ),
+        controls = defaultControls.copy(
+            button = UiButtonSizing(
+                compactHeight = 38.dp,
+                mediumHeight = 46.dp,
+                largeHeight = 54.dp,
+                compactHorizontalPadding = 14.dp,
+                mediumHorizontalPadding = 18.dp,
+                largeHorizontalPadding = 22.dp,
+                compactVerticalPadding = 8.dp,
+                mediumVerticalPadding = 10.dp,
+                largeVerticalPadding = 12.dp,
+            ),
+            textField = UiTextFieldSizing(
+                compactHeight = 42.dp,
+                mediumHeight = 50.dp,
+                largeHeight = 58.dp,
+                compactHorizontalPadding = 14.dp,
+                mediumHorizontalPadding = 16.dp,
+                largeHorizontalPadding = 18.dp,
+                compactVerticalPadding = 8.dp,
+                mediumVerticalPadding = 10.dp,
+                largeVerticalPadding = 12.dp,
+            ),
+            segmentedControl = UiSegmentedControlSizing(
+                compactHeight = 38.dp,
+                mediumHeight = 44.dp,
+                largeHeight = 50.dp,
+                compactHorizontalPadding = 12.dp,
+                mediumHorizontalPadding = 14.dp,
+                largeHorizontalPadding = 18.dp,
+                compactVerticalPadding = 6.dp,
+                mediumVerticalPadding = 8.dp,
+                largeVerticalPadding = 10.dp,
+            ),
+            progressIndicator = UiProgressIndicatorSizing(
+                linearTrackThickness = 6.dp,
+                circularSize = 36.dp,
+                circularTrackThickness = 4.dp,
+            ),
+        ),
+        metadata = metadata,
+    )
 }
 
 /**
@@ -63,7 +127,7 @@ object DemoThemeTokens {
      * demo 浅色主题 token。
      * Demo light-theme tokens.
      */
-    val light: UiThemeTokens = UiThemeTokens(
+    val light: UiThemeTokens = createDemoThemeTokens(
         colors = UiColors(
             background = 0xFFF7F2EA.toInt(),
             surface = 0xFFEFE4D2.toInt(),
@@ -83,50 +147,6 @@ object DemoThemeTokens {
             bodyMedium = UiTextStyle(fontSizeSp = 16.sp),
             labelMedium = UiTextStyle(fontSizeSp = 14.sp),
         ),
-        shapes = UiShapes(
-            small = UiShape.rounded(18.dp),
-            medium = UiShape.rounded(24.dp),
-        ),
-        controls = UiControlSizing(
-            button = UiButtonSizing(
-                compactHeight = 38.dp,
-                mediumHeight = 46.dp,
-                largeHeight = 54.dp,
-                compactHorizontalPadding = 14.dp,
-                mediumHorizontalPadding = 18.dp,
-                largeHorizontalPadding = 22.dp,
-                compactVerticalPadding = 8.dp,
-                mediumVerticalPadding = 10.dp,
-                largeVerticalPadding = 12.dp,
-            ),
-            textField = UiTextFieldSizing(
-                compactHeight = 42.dp,
-                mediumHeight = 50.dp,
-                largeHeight = 58.dp,
-                compactHorizontalPadding = 14.dp,
-                mediumHorizontalPadding = 16.dp,
-                largeHorizontalPadding = 18.dp,
-                compactVerticalPadding = 8.dp,
-                mediumVerticalPadding = 10.dp,
-                largeVerticalPadding = 12.dp,
-            ),
-            segmentedControl = UiSegmentedControlSizing(
-                compactHeight = 38.dp,
-                mediumHeight = 44.dp,
-                largeHeight = 50.dp,
-                compactHorizontalPadding = 12.dp,
-                mediumHorizontalPadding = 14.dp,
-                largeHorizontalPadding = 18.dp,
-                compactVerticalPadding = 6.dp,
-                mediumVerticalPadding = 8.dp,
-                largeVerticalPadding = 10.dp,
-            ),
-            progressIndicator = UiProgressIndicatorSizing(
-                linearTrackThickness = 6.dp,
-                circularSize = 36.dp,
-                circularTrackThickness = 4.dp,
-            ),
-        ),
         metadata = UiThemeMetadata(isDark = false),
     )
 
@@ -134,7 +154,7 @@ object DemoThemeTokens {
      * demo 深色主题 token。
      * Demo dark-theme tokens.
      */
-    val dark: UiThemeTokens = UiThemeTokens(
+    val dark: UiThemeTokens = createDemoThemeTokens(
         colors = UiColors(
             background = 0xFF1F1B18.toInt(),
             surface = 0xFF2C2621.toInt(),
@@ -154,72 +174,14 @@ object DemoThemeTokens {
             bodyMedium = UiTextStyle(fontSizeSp = 16.sp),
             labelMedium = UiTextStyle(fontSizeSp = 14.sp),
         ),
-        shapes = UiShapes(
-            small = UiShape.rounded(18.dp),
-            medium = UiShape.rounded(24.dp),
-        ),
-        controls = UiControlSizing(
-            button = UiButtonSizing(
-                compactHeight = 38.dp,
-                mediumHeight = 46.dp,
-                largeHeight = 54.dp,
-                compactHorizontalPadding = 14.dp,
-                mediumHorizontalPadding = 18.dp,
-                largeHorizontalPadding = 22.dp,
-                compactVerticalPadding = 8.dp,
-                mediumVerticalPadding = 10.dp,
-                largeVerticalPadding = 12.dp,
-            ),
-            textField = UiTextFieldSizing(
-                compactHeight = 42.dp,
-                mediumHeight = 50.dp,
-                largeHeight = 58.dp,
-                compactHorizontalPadding = 14.dp,
-                mediumHorizontalPadding = 16.dp,
-                largeHorizontalPadding = 18.dp,
-                compactVerticalPadding = 8.dp,
-                mediumVerticalPadding = 10.dp,
-                largeVerticalPadding = 12.dp,
-            ),
-            segmentedControl = UiSegmentedControlSizing(
-                compactHeight = 38.dp,
-                mediumHeight = 44.dp,
-                largeHeight = 50.dp,
-                compactHorizontalPadding = 12.dp,
-                mediumHorizontalPadding = 14.dp,
-                largeHorizontalPadding = 18.dp,
-                compactVerticalPadding = 6.dp,
-                mediumVerticalPadding = 8.dp,
-                largeVerticalPadding = 10.dp,
-            ),
-            progressIndicator = UiProgressIndicatorSizing(
-                linearTrackThickness = 6.dp,
-                circularSize = 36.dp,
-                circularTrackThickness = 4.dp,
-            ),
-        ),
         metadata = UiThemeMetadata(isDark = true),
     )
 
     /**
-     * 结合 Android Context 的系统夜间模式解析最终 token。
-     * Resolves final tokens using the system night mode from Android Context.
+     * 选择稳定的明暗主题 token，不读取或解析环境。
+     * Selects stable light/dark theme tokens without reading or resolving the environment.
      */
-    fun resolve(
-        mode: DemoThemeMode,
-        context: Context,
-    ): UiThemeTokens {
-        return resolve(
-            mode = mode,
-            isSystemDark = isSystemDark(context),
-        )
-    }
-
-    /**
-     * 使用显式系统明暗状态解析最终 token，方便测试或非 Android Context 调用。
-     * Resolves final tokens from an explicit system-dark flag for tests or non-Context callers.
-     */
-    fun resolve(
+    fun select(
         mode: DemoThemeMode,
         isSystemDark: Boolean,
     ): UiThemeTokens {

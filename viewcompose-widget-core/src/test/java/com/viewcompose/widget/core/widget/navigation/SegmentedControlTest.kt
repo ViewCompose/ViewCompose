@@ -6,6 +6,7 @@ package com.viewcompose.widget.core
  */
 
 import com.viewcompose.ui.modifier.HeightModifierElement
+import com.viewcompose.ui.unit.UiDimension
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
@@ -44,7 +45,7 @@ class SegmentedControlTest {
         assertEquals(SegmentedControlDefaults.textStyle().fontSizeSp, spec.textSizeSp)
         assertEquals(3, spec.items.size)
         assertEquals("System", spec.items[0].label)
-        assertEquals(SegmentedControlDefaults.height(), height.height)
+        assertEquals(UiDimension.Exact(SegmentedControlDefaults.height()), height.height)
         assertTrue(node.spec is SegmentedControlNodeProps)
 
         spec.onSelectionChange?.invoke(2)
@@ -86,14 +87,14 @@ class SegmentedControlTest {
     fun `segmented control emits full text style fields`() {
         val customTheme = UiThemeDefaults.light().copy(
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 30),
-                bodyMedium = UiTextStyle(fontSizeSp = 18),
-                labelMedium = UiTextStyle(fontSizeSp = 14),
+                titleMedium = UiTextStyle(fontSizeSp = 30.sp),
+                bodyMedium = UiTextStyle(fontSizeSp = 18.sp),
+                labelMedium = UiTextStyle(fontSizeSp = 14.sp),
                 labelLarge = UiTextStyle(
-                    fontSizeSp = 15,
+                    fontSizeSp = 15.sp,
                     fontWeight = 700,
                     letterSpacingEm = 0.05f,
-                    lineHeightSp = 22,
+                    lineHeightSp = 22.sp,
                     includeFontPadding = true,
                 ),
             ),

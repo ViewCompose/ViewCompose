@@ -1,10 +1,13 @@
 package com.viewcompose.ui.modifier
 
+import com.viewcompose.ui.unit.UiDimension
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * 布局类 modifier 的声明式扩展入口。
  * Declarative extension entrypoints for layout modifiers.
  */
-fun Modifier.padding(all: Int): Modifier {
+fun Modifier.padding(all: UiDp): Modifier {
     return padding(
         horizontal = all,
         vertical = all,
@@ -12,8 +15,8 @@ fun Modifier.padding(all: Int): Modifier {
 }
 
 fun Modifier.padding(
-    horizontal: Int = 0,
-    vertical: Int = 0,
+    horizontal: UiDp = UiDp.Zero,
+    vertical: UiDp = UiDp.Zero,
 ): Modifier {
     return padding(
         left = horizontal,
@@ -24,10 +27,10 @@ fun Modifier.padding(
 }
 
 fun Modifier.padding(
-    left: Int = 0,
-    top: Int = 0,
-    right: Int = 0,
-    bottom: Int = 0,
+    left: UiDp = UiDp.Zero,
+    top: UiDp = UiDp.Zero,
+    right: UiDp = UiDp.Zero,
+    bottom: UiDp = UiDp.Zero,
 ): Modifier {
     return then(
         PaddingModifierElement(
@@ -71,7 +74,7 @@ fun Modifier.imeInsetsPadding(
     )
 }
 
-fun Modifier.margin(all: Int): Modifier {
+fun Modifier.margin(all: UiDp): Modifier {
     return margin(
         horizontal = all,
         vertical = all,
@@ -79,8 +82,8 @@ fun Modifier.margin(all: Int): Modifier {
 }
 
 fun Modifier.margin(
-    horizontal: Int = 0,
-    vertical: Int = 0,
+    horizontal: UiDp = UiDp.Zero,
+    vertical: UiDp = UiDp.Zero,
 ): Modifier {
     return margin(
         left = horizontal,
@@ -91,10 +94,10 @@ fun Modifier.margin(
 }
 
 fun Modifier.margin(
-    left: Int = 0,
-    top: Int = 0,
-    right: Int = 0,
-    bottom: Int = 0,
+    left: UiDp = UiDp.Zero,
+    top: UiDp = UiDp.Zero,
+    right: UiDp = UiDp.Zero,
+    bottom: UiDp = UiDp.Zero,
 ): Modifier {
     return then(
         MarginModifierElement(
@@ -107,36 +110,36 @@ fun Modifier.margin(
 }
 
 fun Modifier.size(
-    width: Int,
-    height: Int,
+    width: UiDp,
+    height: UiDp,
 ): Modifier {
     return then(
         SizeModifierElement(
-            width = width,
-            height = height,
+            width = UiDimension.Exact(width),
+            height = UiDimension.Exact(height),
         ),
     )
 }
 
-fun Modifier.width(width: Int): Modifier {
+fun Modifier.width(width: UiDp): Modifier {
     return then(
-        WidthModifierElement(width),
+        WidthModifierElement(UiDimension.Exact(width)),
     )
 }
 
-fun Modifier.height(height: Int): Modifier {
+fun Modifier.height(height: UiDp): Modifier {
     return then(
-        HeightModifierElement(height),
+        HeightModifierElement(UiDimension.Exact(height)),
     )
 }
 
-fun Modifier.minHeight(minHeight: Int): Modifier {
+fun Modifier.minHeight(minHeight: UiDp): Modifier {
     return then(
         MinHeightModifierElement(minHeight),
     )
 }
 
-fun Modifier.minWidth(minWidth: Int): Modifier {
+fun Modifier.minWidth(minWidth: UiDp): Modifier {
     return then(
         MinWidthModifierElement(minWidth),
     )
@@ -149,8 +152,8 @@ fun Modifier.layoutId(id: String): Modifier {
 }
 
 fun Modifier.offset(
-    x: Float = 0f,
-    y: Float = 0f,
+    x: UiDp = UiDp.Zero,
+    y: UiDp = UiDp.Zero,
 ): Modifier {
     return then(
         OffsetModifierElement(
@@ -161,18 +164,18 @@ fun Modifier.offset(
 }
 
 fun Modifier.fillMaxWidth(): Modifier {
-    return width(MATCH_PARENT)
+    return then(WidthModifierElement(UiDimension.MatchParent))
 }
 
 fun Modifier.fillMaxHeight(): Modifier {
-    return height(MATCH_PARENT)
+    return then(HeightModifierElement(UiDimension.MatchParent))
 }
 
 fun Modifier.fillMaxSize(): Modifier {
-    return size(
-        width = MATCH_PARENT,
-        height = MATCH_PARENT,
+    return then(
+        SizeModifierElement(
+            width = UiDimension.MatchParent,
+            height = UiDimension.MatchParent,
+        ),
     )
 }
-
-private const val MATCH_PARENT: Int = -1

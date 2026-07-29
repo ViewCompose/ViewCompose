@@ -1,4 +1,5 @@
 package com.viewcompose.ui.node.spec
+import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
@@ -15,17 +16,17 @@ data class TabRowNodeProps(
     val onTabSelected: ((Int) -> Unit)?,
     val pagerState: PagerState?,
     val indicatorColor: Int,
-    val indicatorHeight: Int,
-    val indicatorCornerRadius: Int,
+    val indicatorHeight: UiDp,
+    val indicatorCornerRadius: UiDp,
     val indicatorPosition: TabIndicatorPosition,
     val indicatorWidthMode: TabIndicatorWidthMode,
-    val indicatorFixedWidth: Int,
+    val indicatorFixedWidth: UiDp,
     val containerColor: Int,
     val scrollable: Boolean,
     val equalWidth: Boolean,
     val rippleColor: Int,
-    val itemSpacing: Int,
-    val itemPaddingHorizontal: Int,
-    val itemPaddingVertical: Int,
-    val minItemWidth: Int,
+    val itemSpacing: UiDp,
+    val itemPaddingHorizontal: UiDp,
+    val itemPaddingVertical: UiDp,
+    val minItemWidth: UiDp,
 ) : NodeSpec

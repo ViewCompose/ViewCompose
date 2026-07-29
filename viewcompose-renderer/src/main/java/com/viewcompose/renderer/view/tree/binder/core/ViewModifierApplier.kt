@@ -1,11 +1,17 @@
 package com.viewcompose.renderer.view.tree
 
+import android.os.LocaleList
 import android.view.View
+import android.widget.TextView
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.resolve
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.roundToPx
 
 /**
  * 将已解析 modifier 增量应用到 Android View，集中维护可复用 View 的原始状态缓存与回滚规则。
@@ -29,6 +35,22 @@ internal object ViewModifierApplier {
         ModifierInteractionApplier.applyNativeViewConfigs(view, node)
     }
 
+    private fun applyEnvironment(
+        view: View,
+        node: VNode,
+    ) {
+        view.setTag(R.id.viewcompose_environment_values, node.environment)
+        view.layoutDirection = when (node.environment.layoutDirection) {
+            UiLayoutDirection.Ltr -> View.LAYOUT_DIRECTION_LTR
+            UiLayoutDirection.Rtl -> View.LAYOUT_DIRECTION_RTL
+        }
+        if (view is TextView) {
+            view.textLocales = LocaleList.forLanguageTags(
+                node.environment.locales.tags.joinToString(separator = ","),
+            )
+        }
+    }
+
     fun cacheOriginalBackground(view: View) {
         ModifierSurfaceStyleApplier.cacheOriginalBackground(view)
     }
@@ -40,18 +62,19 @@ internal object ViewModifierApplier {
     fun applyStylePatch(
         view: View,
         backgroundColor: Int,
-        borderWidth: Int,
+        borderWidth: UiDp,
         borderColor: Int,
         shape: UiShape,
         rippleColor: Int,
         clickable: Boolean,
     ) {
         val resolved = view.getTag(R.id.viewcompose_resolved_modifiers) as? ResolvedModifiers
+        val environment = view.requireUiEnvironment()
         ModifierSurfaceStyleApplier.applyBackgroundAndInteraction(
             view = view,
             backgroundDrawableResId = resolved?.backgroundDrawableRes?.resId,
             backgroundColor = resolved?.backgroundColor?.color ?: backgroundColor,
-            borderWidth = resolved?.border?.width ?: borderWidth,
+            borderWidth = environment.roundToPx(resolved?.border?.width ?: borderWidth),
             borderColor = resolved?.border?.color ?: borderColor,
             cornerRadius = resolved?.cornerRadius,
             rippleColor = rippleColor,
@@ -68,6 +91,7 @@ internal object ViewModifierApplier {
         defaultRippleColor: Int,
         resolved: ResolvedModifiers = node.modifier.resolve(),
     ) {
+        applyEnvironment(view, node)
         val nodeStyle = ModifierNodeStyleResolver.resolveNodeStyle(
             node = node,
             resolved = resolved,
@@ -150,11 +174,11 @@ internal object ViewModifierApplier {
             ModifierInteractionApplier.applyTextAppearanceIfTextView(
                 view = view,
                 textColor = nodeStyle.textColor,
-                textSizeSp = nodeStyle.textSizeSp,
+                textSizePx = nodeStyle.textSizePx,
                 fontWeight = nodeStyle.fontWeight,
                 fontFamily = nodeStyle.fontFamily,
                 letterSpacingEm = nodeStyle.letterSpacingEm,
-                lineHeightSp = nodeStyle.lineHeightSp,
+                lineHeightPx = nodeStyle.lineHeightPx,
                 includeFontPadding = nodeStyle.includeFontPadding,
             )
         }
@@ -244,11 +268,11 @@ internal object ViewModifierApplier {
         val previousStyle = previous.nodeStyle
         val nextStyle = next.nodeStyle
         return previousStyle.textColor != nextStyle.textColor ||
-            previousStyle.textSizeSp != nextStyle.textSizeSp ||
+            previousStyle.textSizePx != nextStyle.textSizePx ||
             previousStyle.fontWeight != nextStyle.fontWeight ||
             previousStyle.fontFamily != nextStyle.fontFamily ||
             previousStyle.letterSpacingEm != nextStyle.letterSpacingEm ||
-            previousStyle.lineHeightSp != nextStyle.lineHeightSp ||
+            previousStyle.lineHeightPx != nextStyle.lineHeightPx ||
             previousStyle.includeFontPadding != nextStyle.includeFontPadding
     }
 }

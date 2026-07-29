@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.container
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/container 中的 Navigation Container Invalidation 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Navigation Container Invalidation behavior in renderer view/container and guards render and patch contracts against regressions.
@@ -100,11 +104,11 @@ class NavigationContainerInvalidationTest {
             indicatorColor = 0xFFE0E0E0.toInt(),
             rippleColor = 0x22000000,
             iconSize = 24,
-            labelSizeSp = 12,
+            labelSizePx = 12f,
             labelFontWeight = null,
             labelFontFamily = null,
             labelLetterSpacingEm = null,
-            labelLineHeightSp = null,
+            labelLineHeightPx = null,
             labelIncludeFontPadding = false,
             badgeColor = 0xFFFF0000.toInt(),
             badgeTextColor = 0xFFFFFFFF.toInt(),

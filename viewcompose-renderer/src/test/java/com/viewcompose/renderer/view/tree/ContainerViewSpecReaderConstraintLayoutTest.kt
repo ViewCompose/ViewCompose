@@ -1,5 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Container View Spec Reader Constraint Layout 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Container View Spec Reader Constraint Layout behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -40,12 +42,12 @@ class ContainerViewSpecReaderConstraintLayoutTest {
             constraints = mapOf(
                 "title" to ConstraintItemSpec(
                     width = ConstraintDimension.FillToConstraints,
-                    widthMin = 120,
+                    widthMin = 120.dp,
                     widthPercent = 0.4f,
                     constrainedWidth = true,
                     start = ConstraintAnchorLink(
                         target = ConstraintAnchorTarget.parent(ConstraintAnchor.Start),
-                        margin = 16,
+                        margin = 16.dp,
                     ),
                 ),
             ),
@@ -65,7 +67,7 @@ class ContainerViewSpecReaderConstraintLayoutTest {
                     id = "end-barrier",
                     direction = ConstraintBarrierDirection.End,
                     referencedIds = listOf("title"),
-                    margin = 12,
+                    margin = 12.dp,
                 ),
             ),
             chains = listOf(

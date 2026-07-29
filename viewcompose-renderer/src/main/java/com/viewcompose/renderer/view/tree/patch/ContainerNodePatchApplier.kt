@@ -48,6 +48,10 @@ import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.resolvePadding
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 
 /**
  * 容器、集合和导航节点的细粒度 patch 应用器。
@@ -65,7 +69,7 @@ internal object ContainerNodePatchApplier {
         val previous = patch.previous
         val next = patch.next
         if (previous.spacing != next.spacing) {
-            view.itemSpacing = next.spacing
+            view.itemSpacing = view.requireUiEnvironment().roundToPx(next.spacing)
         }
         if (previous.arrangement != next.arrangement) {
             view.mainAxisArrangement = next.arrangement
@@ -84,7 +88,7 @@ internal object ContainerNodePatchApplier {
         val previous = patch.previous
         val next = patch.next
         if (previous.spacing != next.spacing) {
-            view.itemSpacing = next.spacing
+            view.itemSpacing = view.requireUiEnvironment().roundToPx(next.spacing)
         }
         if (previous.arrangement != next.arrangement) {
             view.mainAxisArrangement = next.arrangement
@@ -102,6 +106,7 @@ internal object ContainerNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
+        val environment = view.requireUiEnvironment()
         if (previous.contentAlignment != next.contentAlignment) {
             with(ContainerViewSpecReader) {
                 view.contentGravity = next.contentAlignment.toGravity()
@@ -159,6 +164,7 @@ internal object ContainerNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
+        val environment = view.requireUiEnvironment()
         if (previous.reusePolicy != next.reusePolicy || previous.motionPolicy != next.motionPolicy) {
             FrameworkRecyclerViewDefaults.applyLazyColumnDefaults(
                 recyclerView = view,
@@ -189,10 +195,14 @@ internal object ContainerNodePatchApplier {
             )
         }
         if (previous.contentPadding != next.contentPadding) {
-            ContainerViewBinder.applyLazyListPadding(view, next.contentPadding)
+            ContainerViewBinder.applyLazyListPadding(view, environment.resolvePadding(next.contentPadding))
         }
         if (previous.spacing != next.spacing) {
-            ContainerViewBinder.applyLazyListSpacing(view, next.spacing, LinearLayoutManager.VERTICAL)
+            ContainerViewBinder.applyLazyListSpacing(
+                view,
+                environment.roundToPx(next.spacing),
+                LinearLayoutManager.VERTICAL,
+            )
         }
         if (previous.items != next.items || previous.items.hasSessionIdentityChange(next.items)) {
             // item equals 相同但 session factory/updater 引用变化时也要提交，保证闭包刷新。
@@ -211,7 +221,7 @@ internal object ContainerNodePatchApplier {
         next.state?.attach(
             UiLazyListConnector(
                 recyclerView = view,
-                mainAxisItemSpacing = next.spacing,
+                mainAxisItemSpacing = environment.roundToPx(next.spacing),
             ),
         )
     }
@@ -222,6 +232,7 @@ internal object ContainerNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
+        val environment = view.requireUiEnvironment()
         if (previous.reusePolicy != next.reusePolicy || previous.motionPolicy != next.motionPolicy) {
             FrameworkRecyclerViewDefaults.applyLazyRowDefaults(
                 recyclerView = view,
@@ -250,10 +261,14 @@ internal object ContainerNodePatchApplier {
             )
         }
         if (previous.contentPadding != next.contentPadding) {
-            ContainerViewBinder.applyLazyListPadding(view, next.contentPadding)
+            ContainerViewBinder.applyLazyListPadding(view, environment.resolvePadding(next.contentPadding))
         }
         if (previous.spacing != next.spacing) {
-            ContainerViewBinder.applyLazyListSpacing(view, next.spacing, LinearLayoutManager.HORIZONTAL)
+            ContainerViewBinder.applyLazyListSpacing(
+                view,
+                environment.roundToPx(next.spacing),
+                LinearLayoutManager.HORIZONTAL,
+            )
         }
         if (previous.items != next.items || previous.items.hasSessionIdentityChange(next.items)) {
             val adapter = view.adapter as? LazyListAdapter
@@ -269,7 +284,7 @@ internal object ContainerNodePatchApplier {
         next.state?.attach(
             UiLazyListConnector(
                 recyclerView = view,
-                mainAxisItemSpacing = next.spacing,
+                mainAxisItemSpacing = environment.roundToPx(next.spacing),
             ),
         )
     }
@@ -278,6 +293,7 @@ internal object ContainerNodePatchApplier {
         view: DeclarativeSegmentedControlLayout,
         patch: SegmentedControlNodePatch,
     ) {
+        val environment = view.requireUiEnvironment()
         PagerViewBinder.bindSegmentedControl(
             view = view,
             spec = PagerViewBinder.SegmentedControlSpec(
@@ -291,14 +307,15 @@ internal object ContainerNodePatchApplier {
                 textColor = patch.next.textColor,
                 selectedTextColor = patch.next.selectedTextColor,
                 rippleColor = patch.next.rippleColor,
-                textSizeSp = patch.next.textSizeSp,
+                textSizePx = environment.toPx(patch.next.textSizeSp),
                 fontWeight = patch.next.fontWeight,
                 fontFamily = patch.next.fontFamily,
                 letterSpacingEm = patch.next.letterSpacingEm,
-                lineHeightSp = patch.next.lineHeightSp,
+                lineHeightPx = patch.next.lineHeightSp?.let(environment.density::roundToPx),
                 includeFontPadding = patch.next.includeFontPadding,
-                paddingHorizontal = patch.next.paddingHorizontal,
-                paddingVertical = patch.next.paddingVertical,
+                paddingHorizontal = environment.roundToPx(patch.next.paddingHorizontal),
+                paddingVertical = environment.roundToPx(patch.next.paddingVertical),
+                density = environment.density,
             ),
         )
     }
@@ -310,7 +327,7 @@ internal object ContainerNodePatchApplier {
         val previous = patch.previous
         val next = patch.next
         if (previous.spacing != next.spacing) {
-            view.innerLayout.itemSpacing = next.spacing
+            view.innerLayout.itemSpacing = view.requireUiEnvironment().roundToPx(next.spacing)
         }
         if (previous.arrangement != next.arrangement) {
             view.innerLayout.mainAxisArrangement = next.arrangement
@@ -335,7 +352,7 @@ internal object ContainerNodePatchApplier {
         val previous = patch.previous
         val next = patch.next
         if (previous.spacing != next.spacing) {
-            view.innerLayout.itemSpacing = next.spacing
+            view.innerLayout.itemSpacing = view.requireUiEnvironment().roundToPx(next.spacing)
         }
         if (previous.arrangement != next.arrangement) {
             view.innerLayout.mainAxisArrangement = next.arrangement
@@ -353,11 +370,12 @@ internal object ContainerNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
+        val environment = view.requireUiEnvironment()
         if (previous.horizontalSpacing != next.horizontalSpacing) {
-            view.horizontalSpacing = next.horizontalSpacing
+            view.horizontalSpacing = environment.roundToPx(next.horizontalSpacing)
         }
         if (previous.verticalSpacing != next.verticalSpacing) {
-            view.verticalSpacing = next.verticalSpacing
+            view.verticalSpacing = environment.roundToPx(next.verticalSpacing)
         }
         if (previous.maxItemsInEachRow != next.maxItemsInEachRow) {
             view.maxItemsInEachRow = next.maxItemsInEachRow
@@ -370,11 +388,12 @@ internal object ContainerNodePatchApplier {
     ) {
         val previous = patch.previous
         val next = patch.next
+        val environment = view.requireUiEnvironment()
         if (previous.horizontalSpacing != next.horizontalSpacing) {
-            view.horizontalSpacing = next.horizontalSpacing
+            view.horizontalSpacing = environment.roundToPx(next.horizontalSpacing)
         }
         if (previous.verticalSpacing != next.verticalSpacing) {
-            view.verticalSpacing = next.verticalSpacing
+            view.verticalSpacing = environment.roundToPx(next.verticalSpacing)
         }
         if (previous.maxItemsInEachColumn != next.maxItemsInEachColumn) {
             view.maxItemsInEachColumn = next.maxItemsInEachColumn
@@ -385,6 +404,7 @@ internal object ContainerNodePatchApplier {
         view: DeclarativeNavigationBarLayout,
         patch: NavigationBarNodePatch,
     ) {
+        val environment = view.requireUiEnvironment()
         CollectionViewBinder.bindNavigationBar(
             view = view,
             spec = CollectionViewBinder.NavigationBarSpec(
@@ -398,12 +418,12 @@ internal object ContainerNodePatchApplier {
                 unselectedLabelColor = patch.next.unselectedLabelColor,
                 indicatorColor = patch.next.indicatorColor,
                 rippleColor = patch.next.rippleColor,
-                iconSize = patch.next.iconSize,
-                labelSizeSp = patch.next.labelSizeSp,
+                iconSize = environment.roundToPx(patch.next.iconSize),
+                labelSizePx = environment.toPx(patch.next.labelSizeSp),
                 labelFontWeight = patch.next.labelFontWeight,
                 labelFontFamily = patch.next.labelFontFamily,
                 labelLetterSpacingEm = patch.next.labelLetterSpacingEm,
-                labelLineHeightSp = patch.next.labelLineHeightSp,
+                labelLineHeightPx = patch.next.labelLineHeightSp?.let(environment.density::roundToPx),
                 labelIncludeFontPadding = patch.next.labelIncludeFontPadding,
                 badgeColor = patch.next.badgeColor,
                 badgeTextColor = patch.next.badgeTextColor,
@@ -434,6 +454,7 @@ internal object ContainerNodePatchApplier {
         view: DeclarativeTabRowLayout,
         patch: TabRowNodePatch,
     ) {
+        val environment = view.requireUiEnvironment()
         PagerViewBinder.bindTabRow(
             view = view,
             spec = PagerViewBinder.TabRowSpec(
@@ -442,19 +463,19 @@ internal object ContainerNodePatchApplier {
                 onTabSelected = patch.next.onTabSelected,
                 pagerState = patch.next.pagerState,
                 indicatorColor = patch.next.indicatorColor,
-                indicatorHeight = patch.next.indicatorHeight,
-                indicatorCornerRadius = patch.next.indicatorCornerRadius,
+                indicatorHeight = environment.roundToPx(patch.next.indicatorHeight),
+                indicatorCornerRadius = environment.roundToPx(patch.next.indicatorCornerRadius),
                 indicatorPosition = patch.next.indicatorPosition,
                 indicatorWidthMode = patch.next.indicatorWidthMode,
-                indicatorFixedWidth = patch.next.indicatorFixedWidth,
+                indicatorFixedWidth = environment.roundToPx(patch.next.indicatorFixedWidth),
                 containerColor = patch.next.containerColor,
                 scrollable = patch.next.scrollable,
                 equalWidth = patch.next.equalWidth,
                 rippleColor = patch.next.rippleColor,
-                itemSpacing = patch.next.itemSpacing,
-                itemPaddingHorizontal = patch.next.itemPaddingHorizontal,
-                itemPaddingVertical = patch.next.itemPaddingVertical,
-                minItemWidth = patch.next.minItemWidth,
+                itemSpacing = environment.roundToPx(patch.next.itemSpacing),
+                itemPaddingHorizontal = environment.roundToPx(patch.next.itemPaddingHorizontal),
+                itemPaddingVertical = environment.roundToPx(patch.next.itemPaddingVertical),
+                minItemWidth = environment.roundToPx(patch.next.minItemWidth),
             ),
         )
     }
@@ -483,13 +504,14 @@ internal object ContainerNodePatchApplier {
         view: DeclarativeLazyVerticalGridLayout,
         patch: LazyVerticalGridNodePatch,
     ) {
+        val environment = view.requireUiEnvironment()
         CollectionViewBinder.bindLazyVerticalGrid(
             view = view,
             spec = CollectionViewBinder.LazyVerticalGridSpec(
                 spanCount = patch.next.spanCount,
-                contentPadding = patch.next.contentPadding,
-                horizontalSpacing = patch.next.horizontalSpacing,
-                verticalSpacing = patch.next.verticalSpacing,
+                contentPadding = environment.resolvePadding(patch.next.contentPadding),
+                horizontalSpacing = environment.roundToPx(patch.next.horizontalSpacing),
+                verticalSpacing = environment.roundToPx(patch.next.verticalSpacing),
                 items = patch.next.items,
                 state = patch.next.state,
                 reverseLayout = patch.next.reverseLayout,

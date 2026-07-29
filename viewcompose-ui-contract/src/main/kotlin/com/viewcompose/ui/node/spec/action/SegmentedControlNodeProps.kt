@@ -2,6 +2,8 @@ package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * SegmentedControl 节点传给 renderer 的完整属性快照。
@@ -18,12 +20,12 @@ data class SegmentedControlNodeProps(
     val textColor: Int,
     val selectedTextColor: Int,
     val rippleColor: Int,
-    val textSizeSp: Int,
+    val textSizeSp: UiSp,
     val fontWeight: Int? = null,
     val fontFamily: UiFontFamily? = null,
     val letterSpacingEm: Float? = null,
-    val lineHeightSp: Int? = null,
+    val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean = false,
-    val paddingHorizontal: Int,
-    val paddingVertical: Int,
+    val paddingHorizontal: UiDp,
+    val paddingVertical: UiDp,
 ) : NodeSpec

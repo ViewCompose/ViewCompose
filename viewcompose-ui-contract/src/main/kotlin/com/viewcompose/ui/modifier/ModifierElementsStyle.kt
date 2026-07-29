@@ -1,6 +1,7 @@
 package com.viewcompose.ui.modifier
 
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 背景、边框、裁剪、层级和图形变换相关的 modifier 元素模型。
@@ -15,15 +16,15 @@ data class BackgroundDrawableResModifierElement(
 ) : ModifierElement
 
 data class BorderModifierElement(
-    val width: Int,
+    val width: UiDp,
     val color: Int,
 ) : ModifierElement
 
 data class CornerRadiusModifierElement(
-    val topStart: Int,
-    val topEnd: Int,
-    val bottomEnd: Int,
-    val bottomStart: Int,
+    val topStart: UiDp,
+    val topEnd: UiDp,
+    val bottomEnd: UiDp,
+    val bottomStart: UiDp,
 ) : ModifierElement {
     val isUniform: Boolean
         get() = topStart == topEnd && topEnd == bottomEnd && bottomEnd == bottomStart
@@ -38,7 +39,7 @@ data class ClipModifierElement(
 ) : ModifierElement
 
 data class ElevationModifierElement(
-    val elevation: Int,
+    val elevation: UiDp,
 ) : ModifierElement
 
 data class AlphaModifierElement(

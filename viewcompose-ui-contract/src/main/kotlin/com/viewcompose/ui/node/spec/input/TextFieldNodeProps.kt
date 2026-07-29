@@ -8,6 +8,8 @@ import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * TextField 节点的文本状态、键盘、装饰和回调属性。
@@ -29,19 +31,19 @@ data class TextFieldNodeProps(
     val hintColor: Int,
     val readOnly: Boolean,
     val textColor: Int,
-    val textSizeSp: Int,
+    val textSizeSp: UiSp,
     val fontWeight: Int? = null,
     val fontFamily: UiFontFamily? = null,
     val letterSpacingEm: Float? = null,
-    val lineHeightSp: Int? = null,
+    val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean = false,
     val backgroundColor: Int,
-    val borderWidth: Int,
+    val borderWidth: UiDp,
     val borderColor: Int,
     val shape: UiShape,
-    val minHeight: Int,
-    val paddingHorizontal: Int,
-    val paddingVertical: Int,
+    val minHeight: UiDp,
+    val paddingHorizontal: UiDp,
+    val paddingVertical: UiDp,
     val cursorColor: Int = 0,
     val receiveContent: ReceiveContentConfiguration = ReceiveContentConfiguration.Default,
 ) : NodeSpec

@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Modifier Node Style Resolver 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Modifier Node Style Resolver behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -45,20 +49,20 @@ class ModifierNodeStyleResolverTest {
                 enabled = true,
                 onClick = null,
                 textColor = 0xFF000000.toInt(),
-                textSizeSp = 14,
+                textSizeSp = 14.sp,
                 backgroundColor = 0xFFE0E0E0.toInt(),
-                borderWidth = 0,
+                borderWidth = 0.dp,
                 borderColor = 0,
-                shape = UiShape.rounded(0),
+                shape = UiShape.rounded(0.dp),
                 rippleColor = 0x33000000,
-                minHeight = 0,
-                paddingHorizontal = 0,
-                paddingVertical = 0,
+                minHeight = 0.dp,
+                paddingHorizontal = 0.dp,
+                paddingVertical = 0.dp,
                 leadingIcon = null,
                 trailingIcon = null,
                 iconTint = 0,
-                iconSize = 0,
-                iconSpacing = 0,
+                iconSize = 0.dp,
+                iconSpacing = 0.dp,
             ),
             modifier = modifier,
             children = emptyList(),

@@ -13,13 +13,13 @@ class LocalTextStyleTest {
     @Test
     fun `text defaults to local text style`() {
         val tree = buildVNodeTree {
-            ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 42)) {
+            ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 42.sp)) {
                 Text("hello")
             }
         }
 
         val spec = tree.single().spec as TextNodeProps
-        assertEquals(42, spec.textSizeSp)
+        assertEquals(42.sp, spec.textSizeSp)
     }
 
     @Test
@@ -35,9 +35,9 @@ class LocalTextStyleTest {
     @Test
     fun `nested provide text style overrides outer`() {
         val tree = buildVNodeTree {
-            ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 20)) {
+            ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 20.sp)) {
                 Text("outer")
-                ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 12)) {
+                ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 12.sp)) {
                     Text("inner")
                 }
             }
@@ -46,32 +46,32 @@ class LocalTextStyleTest {
         val outer = tree[0].spec as TextNodeProps
         val inner = tree[1].spec as TextNodeProps
 
-        assertEquals(20, outer.textSizeSp)
-        assertEquals(12, inner.textSizeSp)
+        assertEquals(20.sp, outer.textSizeSp)
+        assertEquals(12.sp, inner.textSizeSp)
     }
 
     @Test
     fun `explicit style parameter overrides local text style`() {
         val tree = buildVNodeTree {
-            ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 42)) {
-                Text("hello", style = UiTextStyle(fontSizeSp = 10))
+            ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 42.sp)) {
+                Text("hello", style = UiTextStyle(fontSizeSp = 10.sp))
             }
         }
 
         val spec = tree.single().spec as TextNodeProps
-        assertEquals(10, spec.textSizeSp)
+        assertEquals(10.sp, spec.textSizeSp)
     }
 
     @Test
     fun `TextStyle current reads provided value`() {
-        var captured = 0
+        var captured = 0.sp
         buildVNodeTree {
-            ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 99)) {
+            ProvideLocal(LocalTextStyle, UiTextStyle(fontSizeSp = 99.sp)) {
                 captured = TextStyle.current.fontSizeSp
                 Text("probe")
             }
         }
 
-        assertEquals(99, captured)
+        assertEquals(99.sp, captured)
     }
 }

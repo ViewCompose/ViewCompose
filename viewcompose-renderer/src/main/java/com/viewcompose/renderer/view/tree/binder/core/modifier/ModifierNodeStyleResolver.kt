@@ -13,6 +13,9 @@ import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.renderer.modifier.ResolvedModifiers
+import com.viewcompose.renderer.view.PaddingPx
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 
 /**
  * 将 modifier 与 NodeSpec 中的视觉字段合并为 renderer 样式模型。
@@ -31,21 +34,27 @@ internal object ModifierNodeStyleResolver {
         return NodeStyle(
             backgroundDrawableResId = resolved.backgroundDrawableRes?.resId,
             backgroundColor = resolved.backgroundColor?.color ?: readNodeBackgroundColor(node),
-            borderWidth = resolved.border?.width ?: readNodeBorderWidth(node) ?: 0,
+            borderWidth = node.environment.roundToPx(
+                resolved.border?.width ?: readNodeBorderWidth(node) ?: com.viewcompose.ui.unit.UiDp.Zero,
+            ),
             borderColor = resolved.border?.color ?: readNodeBorderColor(node) ?: Color.TRANSPARENT,
             cornerRadius = resolved.cornerRadius,
             shape = resolved.shape?.shape
                 ?: if (resolved.cornerRadius == null) readNodeShape(node) else null,
-            padding = resolved.padding ?: readNodePadding(node),
-            minHeight = resolved.minHeight?.minHeight ?: readNodeMinHeight(node) ?: 0,
-            minWidth = resolved.minWidth?.minWidth ?: 0,
+            padding = (resolved.padding ?: readNodePadding(node))?.toPx(node),
+            minHeight = node.environment.roundToPx(
+                resolved.minHeight?.minHeight ?: readNodeMinHeight(node) ?: com.viewcompose.ui.unit.UiDp.Zero,
+            ),
+            minWidth = node.environment.roundToPx(
+                resolved.minWidth?.minWidth ?: com.viewcompose.ui.unit.UiDp.Zero,
+            ),
             rippleColor = readNodeRippleColor(node) ?: defaultRippleColor,
             textColor = readNodeTextColor(node),
-            textSizeSp = readNodeTextSize(node),
+            textSizePx = readNodeTextSize(node)?.let(node.environment::toPx),
             fontWeight = readNodeFontWeight(node),
             fontFamily = readNodeFontFamily(node),
             letterSpacingEm = readNodeLetterSpacing(node),
-            lineHeightSp = readNodeLineHeight(node),
+            lineHeightPx = readNodeLineHeight(node)?.let(node.environment.density::roundToPx),
             includeFontPadding = readNodeIncludeFontPadding(node),
             clickable = resolved.clickable != null || readNodeClickable(node),
         )
@@ -76,7 +85,7 @@ internal object ModifierNodeStyleResolver {
         else -> null
     }
 
-    private fun readNodeTextSize(node: VNode): Int? = when (val spec = node.spec) {
+    private fun readNodeTextSize(node: VNode): com.viewcompose.ui.unit.UiSp? = when (val spec = node.spec) {
         is ButtonNodeProps -> spec.textSizeSp
         is TextNodeProps -> spec.textSizeSp
         is TextFieldNodeProps -> spec.textSizeSp
@@ -91,7 +100,7 @@ internal object ModifierNodeStyleResolver {
         else -> null
     }
 
-    private fun readNodeBorderWidth(node: VNode): Int? = when (val spec = node.spec) {
+    private fun readNodeBorderWidth(node: VNode): com.viewcompose.ui.unit.UiDp? = when (val spec = node.spec) {
         is ButtonNodeProps -> spec.borderWidth
         is TextFieldNodeProps -> spec.borderWidth
         is IconButtonNodeProps -> spec.borderWidth
@@ -126,7 +135,7 @@ internal object ModifierNodeStyleResolver {
         else -> false
     }
 
-    private fun readNodeMinHeight(node: VNode): Int? = when (val spec = node.spec) {
+    private fun readNodeMinHeight(node: VNode): com.viewcompose.ui.unit.UiDp? = when (val spec = node.spec) {
         is ButtonNodeProps -> spec.minHeight
         is TextFieldNodeProps -> spec.minHeight
         else -> null
@@ -178,7 +187,7 @@ internal object ModifierNodeStyleResolver {
         else -> null
     }
 
-    private fun readNodeLineHeight(node: VNode): Int? = when (val spec = node.spec) {
+    private fun readNodeLineHeight(node: VNode): com.viewcompose.ui.unit.UiSp? = when (val spec = node.spec) {
         is ButtonNodeProps -> spec.lineHeightSp
         is TextNodeProps -> spec.lineHeightSp
         is TextFieldNodeProps -> spec.lineHeightSp
@@ -193,6 +202,16 @@ internal object ModifierNodeStyleResolver {
         is ToggleNodeProps -> spec.includeFontPadding
         else -> null
     }
+
+    private fun PaddingModifierElement.toPx(node: VNode): PaddingPx {
+        return PaddingPx(
+            left = node.environment.roundToPx(left),
+            top = node.environment.roundToPx(top),
+            right = node.environment.roundToPx(right),
+            bottom = node.environment.roundToPx(bottom),
+        )
+    }
+
 }
 
 /**
@@ -206,16 +225,16 @@ internal data class NodeStyle(
     val borderColor: Int,
     val cornerRadius: CornerRadiusModifierElement?,
     val shape: UiShape? = null,
-    val padding: PaddingModifierElement?,
+    val padding: PaddingPx?,
     val minHeight: Int,
     val minWidth: Int,
     val rippleColor: Int,
     val textColor: Int?,
-    val textSizeSp: Int?,
+    val textSizePx: Float?,
     val fontWeight: Int?,
     val fontFamily: UiFontFamily?,
     val letterSpacingEm: Float?,
-    val lineHeightSp: Int?,
+    val lineHeightPx: Int?,
     val includeFontPadding: Boolean?,
     val clickable: Boolean,
 )
@@ -226,7 +245,7 @@ internal data class NodeStyle(
  */
 internal data class HostStyle(
     val hasWindowInsetsPadding: Boolean,
-    val padding: PaddingModifierElement?,
+    val padding: PaddingPx?,
     val minHeight: Int,
     val minWidth: Int,
 )

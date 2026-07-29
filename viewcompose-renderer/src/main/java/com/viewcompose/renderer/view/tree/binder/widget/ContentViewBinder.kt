@@ -5,7 +5,6 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.text.TextUtils
-import android.util.TypedValue
 import android.view.Gravity
 import android.widget.Button
 import android.widget.TextView
@@ -24,6 +23,7 @@ import com.viewcompose.renderer.interop.toTypefaceOrNull
 import com.viewcompose.renderer.view.container.DeclarativeCanvasLayout
 import com.viewcompose.text.TextDocument
 import com.viewcompose.ui.graphics.DrawBlock
+import com.viewcompose.renderer.view.roundToPx
 
 /**
  * 绑定文本、按钮和画布等内容节点，集中处理 Android TextView/Button 的样式还原与事件桥接。
@@ -39,7 +39,7 @@ internal object ContentViewBinder {
         val fontWeight: Int? = null,
         val fontFamily: UiFontFamily? = null,
         val letterSpacingEm: Float? = null,
-        val lineHeightSp: Int? = null,
+        val lineHeightPx: Int? = null,
         val includeFontPadding: Boolean = false,
         val textDecoration: TextDecoration = TextDecoration.None,
     )
@@ -75,7 +75,7 @@ internal object ContentViewBinder {
             fontWeight = spec.fontWeight,
             fontFamily = spec.fontFamily,
             letterSpacingEm = spec.letterSpacingEm,
-            lineHeightSp = spec.lineHeightSp,
+            lineHeightPx = spec.lineHeightPx,
             includeFontPadding = spec.includeFontPadding,
         )
         applyTextDecoration(view, spec.textDecoration)
@@ -136,7 +136,7 @@ internal object ContentViewBinder {
             fontWeight = spec.fontWeight,
             fontFamily = spec.fontFamily,
             letterSpacingEm = spec.letterSpacingEm,
-            lineHeightSp = spec.lineHeightSp,
+            lineHeightPx = spec.lineHeightSp?.let(node.environment.density::roundToPx),
             includeFontPadding = spec.includeFontPadding,
             textDecoration = spec.textDecoration,
         )
@@ -147,11 +147,11 @@ internal object ContentViewBinder {
         return ButtonSpec(
             text = spec.text,
             enabled = spec.enabled,
-            iconSpacing = spec.iconSpacing,
+            iconSpacing = node.environment.roundToPx(spec.iconSpacing),
             leadingIcon = spec.leadingIcon,
             trailingIcon = spec.trailingIcon,
             iconTint = spec.iconTint,
-            iconSize = spec.iconSize,
+            iconSize = node.environment.roundToPx(spec.iconSize),
             onClick = spec.onClick,
         )
     }
@@ -243,30 +243,26 @@ internal object ContentViewBinder {
     internal fun applyTextAppearance(
         view: TextView,
         textColor: Int? = null,
-        textSizeSp: Int? = null,
+        textSizePx: Float? = null,
         fontWeight: Int? = null,
         fontFamily: UiFontFamily? = null,
         letterSpacingEm: Float? = null,
-        lineHeightSp: Int? = null,
+        lineHeightPx: Int? = null,
         includeFontPadding: Boolean? = null,
     ) {
         ensureOriginalTextAppearanceCached(view)
         if (textColor != null) {
             view.setTextColor(textColor)
         }
-        if (textSizeSp != null) {
-            view.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSizeSp.toFloat())
+        if (textSizePx != null) {
+            view.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, textSizePx)
         }
         applyTypeface(view, fontWeight, fontFamily)
         val originalLetterSpacing = view.getTag(R.id.viewcompose_original_letter_spacing) as? Float ?: 0f
         view.letterSpacing = letterSpacingEm ?: originalLetterSpacing
         val originalLineHeight = view.getTag(R.id.viewcompose_original_line_height) as? Int ?: view.lineHeight
-        if (lineHeightSp != null) {
-            TextViewCompat.setLineHeight(
-                view,
-                TypedValue.COMPLEX_UNIT_SP,
-                lineHeightSp.toFloat(),
-            )
+        if (lineHeightPx != null) {
+            TextViewCompat.setLineHeight(view, lineHeightPx)
         } else {
             TextViewCompat.setLineHeight(view, originalLineHeight)
         }

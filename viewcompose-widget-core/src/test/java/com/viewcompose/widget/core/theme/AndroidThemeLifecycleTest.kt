@@ -44,11 +44,11 @@ class AndroidThemeLifecycleTest {
         )
 
         assertEquals(UiCornerFamily.Cut, tokens.shapes.small.topStart.family)
-        assertEquals(UiCornerSize.Absolute(12), tokens.shapes.small.topStart.size)
+        assertEquals(UiCornerSize.Absolute(12.dp), tokens.shapes.small.topStart.size)
         assertEquals(UiCornerFamily.Rounded, tokens.shapes.small.topEnd.family)
         assertEquals(UiCornerSize.Relative(0.5f), tokens.shapes.small.topEnd.size)
         assertEquals(UiCornerFamily.Cut, tokens.shapes.small.bottomStart.family)
-        assertEquals(UiCornerSize.Absolute(20), tokens.shapes.small.bottomStart.size)
+        assertEquals(UiCornerSize.Absolute(20.dp), tokens.shapes.small.bottomStart.size)
         assertEquals(UiThemeOrigin.AndroidTheme, tokens.metadata.origin)
     }
 

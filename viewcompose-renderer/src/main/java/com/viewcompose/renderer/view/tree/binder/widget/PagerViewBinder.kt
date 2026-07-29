@@ -18,6 +18,9 @@ import com.viewcompose.renderer.view.container.DeclarativeTabRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeVerticalPagerLayout
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 
 /**
  * 绑定分页、分段控件和标签栏节点，保持 PagerState 与 Android 容器滚动状态一致。
@@ -36,14 +39,15 @@ internal object PagerViewBinder {
         val textColor: Int,
         val selectedTextColor: Int,
         val rippleColor: Int,
-        val textSizeSp: Int,
+        val textSizePx: Float,
         val fontWeight: Int? = null,
         val fontFamily: UiFontFamily? = null,
         val letterSpacingEm: Float? = null,
-        val lineHeightSp: Int? = null,
+        val lineHeightPx: Int? = null,
         val includeFontPadding: Boolean = false,
         val paddingHorizontal: Int,
         val paddingVertical: Int,
+        val density: UiDensity,
     )
 
     data class HorizontalPagerSpec(
@@ -105,14 +109,15 @@ internal object PagerViewBinder {
             textColor = spec.textColor,
             selectedTextColor = spec.selectedTextColor,
             rippleColor = spec.rippleColor,
-            textSizeSp = spec.textSizeSp,
+            textSizePx = spec.textSizePx,
             fontWeight = spec.fontWeight,
             fontFamily = spec.fontFamily,
             letterSpacingEm = spec.letterSpacingEm,
-            lineHeightSp = spec.lineHeightSp,
+            lineHeightPx = spec.lineHeightPx,
             includeFontPadding = spec.includeFontPadding,
             paddingHorizontal = spec.paddingHorizontal,
             paddingVertical = spec.paddingVertical,
+            density = spec.density,
         )
     }
 
@@ -200,14 +205,15 @@ internal object PagerViewBinder {
             textColor = spec.textColor,
             selectedTextColor = spec.selectedTextColor,
             rippleColor = spec.rippleColor,
-            textSizeSp = spec.textSizeSp,
+            textSizePx = node.environment.toPx(spec.textSizeSp),
             fontWeight = spec.fontWeight,
             fontFamily = spec.fontFamily,
             letterSpacingEm = spec.letterSpacingEm,
-            lineHeightSp = spec.lineHeightSp,
+            lineHeightPx = spec.lineHeightSp?.let(node.environment.density::roundToPx),
             includeFontPadding = spec.includeFontPadding,
-            paddingHorizontal = spec.paddingHorizontal,
-            paddingVertical = spec.paddingVertical,
+            paddingHorizontal = node.environment.roundToPx(spec.paddingHorizontal),
+            paddingVertical = node.environment.roundToPx(spec.paddingVertical),
+            density = node.environment.density,
         )
     }
 
@@ -233,19 +239,19 @@ internal object PagerViewBinder {
             onTabSelected = spec.onTabSelected,
             pagerState = spec.pagerState,
             indicatorColor = spec.indicatorColor,
-            indicatorHeight = spec.indicatorHeight,
-            indicatorCornerRadius = spec.indicatorCornerRadius,
+            indicatorHeight = node.environment.roundToPx(spec.indicatorHeight),
+            indicatorCornerRadius = node.environment.roundToPx(spec.indicatorCornerRadius),
             indicatorPosition = spec.indicatorPosition,
             indicatorWidthMode = spec.indicatorWidthMode,
-            indicatorFixedWidth = spec.indicatorFixedWidth,
+            indicatorFixedWidth = node.environment.roundToPx(spec.indicatorFixedWidth),
             containerColor = spec.containerColor,
             scrollable = spec.scrollable,
             equalWidth = spec.equalWidth,
             rippleColor = spec.rippleColor,
-            itemSpacing = spec.itemSpacing,
-            itemPaddingHorizontal = spec.itemPaddingHorizontal,
-            itemPaddingVertical = spec.itemPaddingVertical,
-            minItemWidth = spec.minItemWidth,
+            itemSpacing = node.environment.roundToPx(spec.itemSpacing),
+            itemPaddingHorizontal = node.environment.roundToPx(spec.itemPaddingHorizontal),
+            itemPaddingVertical = node.environment.roundToPx(spec.itemPaddingVertical),
+            minItemWidth = node.environment.roundToPx(spec.minItemWidth),
         )
     }
 

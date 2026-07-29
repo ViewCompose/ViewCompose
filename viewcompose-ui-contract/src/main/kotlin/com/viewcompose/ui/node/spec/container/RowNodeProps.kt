@@ -1,4 +1,5 @@
 package com.viewcompose.ui.node.spec
+import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
@@ -8,7 +9,7 @@ import com.viewcompose.ui.layout.VerticalAlignment
  * Spacing and vertical-alignment properties for a Row node.
  */
 data class RowNodeProps(
-    val spacing: Int,
+    val spacing: UiDp,
     val arrangement: MainAxisArrangement,
     val verticalAlignment: VerticalAlignment,
 ) : NodeSpec

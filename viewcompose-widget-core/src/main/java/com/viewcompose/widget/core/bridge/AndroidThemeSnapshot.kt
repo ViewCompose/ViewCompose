@@ -11,6 +11,8 @@ import com.viewcompose.ui.shape.UiCorner
 import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * Android theme 中可读取到的颜色和状态色快照。
@@ -87,11 +89,11 @@ internal data class AndroidThemeShapeSnapshot(
  * Parsed result of Android textAppearance attributes.
  */
 internal data class AndroidTextStyleSnapshot(
-    val fontSizeSp: Int? = null,
+    val fontSizeSp: UiSp? = null,
     val fontWeight: Int? = null,
     val fontFamily: Typeface? = null,
     val letterSpacingEm: Float? = null,
-    val lineHeightSp: Int? = null,
+    val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean? = null,
 )
 
@@ -346,23 +348,24 @@ private fun TypedArray.getStyleShapeOrNull(context: Context, index: Int): UiShap
     )
     return try {
         val defaultFamily = styleArray.readCornerFamily(index = 0)
-        val defaultSize = styleArray.readCornerSize(index = 5)
-            ?: UiCornerSize.Absolute(0)
+        val density = context.resources.displayMetrics.density
+        val defaultSize = styleArray.readCornerSize(index = 5, density = density)
+            ?: UiCornerSize.Absolute(UiDp.Zero)
         val topLeft = UiCorner(
             family = styleArray.readCornerFamily(index = 1, fallback = defaultFamily),
-            size = styleArray.readCornerSize(index = 6) ?: defaultSize,
+            size = styleArray.readCornerSize(index = 6, density = density) ?: defaultSize,
         )
         val topRight = UiCorner(
             family = styleArray.readCornerFamily(index = 2, fallback = defaultFamily),
-            size = styleArray.readCornerSize(index = 7) ?: defaultSize,
+            size = styleArray.readCornerSize(index = 7, density = density) ?: defaultSize,
         )
         val bottomRight = UiCorner(
             family = styleArray.readCornerFamily(index = 3, fallback = defaultFamily),
-            size = styleArray.readCornerSize(index = 8) ?: defaultSize,
+            size = styleArray.readCornerSize(index = 8, density = density) ?: defaultSize,
         )
         val bottomLeft = UiCorner(
             family = styleArray.readCornerFamily(index = 4, fallback = defaultFamily),
-            size = styleArray.readCornerSize(index = 9) ?: defaultSize,
+            size = styleArray.readCornerSize(index = 9, density = density) ?: defaultSize,
         )
         if (context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
             UiShape(
@@ -395,7 +398,10 @@ private fun TypedArray.readCornerFamily(
     }
 }
 
-private fun TypedArray.readCornerSize(index: Int): UiCornerSize? {
+private fun TypedArray.readCornerSize(
+    index: Int,
+    density: Float,
+): UiCornerSize? {
     if (!hasValue(index)) return null
     return when (peekValue(index)?.type) {
         TypedValue.TYPE_FRACTION -> UiCornerSize.Relative(
@@ -403,7 +409,7 @@ private fun TypedArray.readCornerSize(index: Int): UiCornerSize? {
         )
 
         TypedValue.TYPE_DIMENSION -> UiCornerSize.Absolute(
-            pixels = getDimensionPixelSize(index, 0).coerceAtLeast(0),
+            size = UiDp(getDimension(index, 0f).coerceAtLeast(0f) / density),
         )
 
         else -> null
@@ -460,8 +466,8 @@ private fun resolveFontFamily(context: Context, styleArray: TypedArray): Typefac
     return null
 }
 
-private fun Context.pxToSp(value: Int): Int {
+private fun Context.pxToSp(value: Int): UiSp {
     val density = resources.displayMetrics.density
     val fontScale = resources.configuration.fontScale.takeIf { it > 0f } ?: 1f
-    return kotlin.math.round(value / (density * fontScale)).toInt()
+    return UiSp(value / (density * fontScale))
 }

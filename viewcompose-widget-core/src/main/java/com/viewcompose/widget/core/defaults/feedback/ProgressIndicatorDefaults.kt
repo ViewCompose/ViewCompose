@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * 线性和圆形进度指示器的默认颜色与尺寸 token。
  * Default color and sizing tokens for linear and circular progress indicators.
@@ -18,7 +20,7 @@ object ProgressIndicatorDefaults {
         return override?.linearTrack ?: Theme.colors.outlineVariant
     }
 
-    fun linearTrackThickness(): Int = Theme.controls.progressIndicator.linearTrackThickness
+    fun linearTrackThickness(): UiDp = Theme.controls.progressIndicator.linearTrackThickness
 
     fun circularIndicatorColor(): Int {
         val override = UiLocals.current(LocalProgressIndicatorColors)
@@ -30,7 +32,7 @@ object ProgressIndicatorDefaults {
         return override?.circularTrack ?: Theme.colors.outlineVariant
     }
 
-    fun circularSize(): Int = Theme.controls.progressIndicator.circularSize
+    fun circularSize(): UiDp = Theme.controls.progressIndicator.circularSize
 
-    fun circularTrackThickness(): Int = Theme.controls.progressIndicator.circularTrackThickness
+    fun circularTrackThickness(): UiDp = Theme.controls.progressIndicator.circularTrackThickness
 }

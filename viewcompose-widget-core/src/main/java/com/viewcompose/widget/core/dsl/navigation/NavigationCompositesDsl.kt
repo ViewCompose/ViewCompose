@@ -12,6 +12,8 @@ import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * 顶部应用栏组合组件。
@@ -127,8 +129,8 @@ fun UiTreeBuilder.NavigationBar(
     unselectedLabelColor: Int = NavigationBarDefaults.unselectedLabelColor(),
     indicatorColor: Int = NavigationBarDefaults.indicatorColor(),
     rippleColor: Int = NavigationBarDefaults.rippleColor(),
-    iconSize: Int = NavigationBarDefaults.iconSize(),
-    labelSizeSp: Int = NavigationBarDefaults.labelSizeSp(),
+    iconSize: UiDp = NavigationBarDefaults.iconSize(),
+    labelSizeSp: UiSp = NavigationBarDefaults.labelSizeSp(),
     labelStyle: UiTextStyle = NavigationBarDefaults.labelStyle(),
     badgeColor: Int = NavigationBarDefaults.badgeColor(),
     badgeTextColor: Int = NavigationBarDefaults.badgeTextColor(),

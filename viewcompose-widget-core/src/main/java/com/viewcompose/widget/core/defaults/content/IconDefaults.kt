@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * Icon DSL 的默认尺寸和 tint。
  * Default size and tint for the Icon DSL.
@@ -8,7 +10,7 @@ package com.viewcompose.widget.core
  * tint inherits ContentColor by default so icons follow Surface/Text content color context.
  */
 object IconDefaults {
-    fun size(): Int = 24.dp
+    fun size(): UiDp = 24.dp
 
     fun tint(): Int = ContentColor.current
 }

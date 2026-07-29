@@ -34,9 +34,9 @@ import com.viewcompose.widget.core.UiLocals
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiThemeOverride
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.rememberTextFieldState
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.sp
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.widget.core.provides
 import com.viewcompose.widget.core.uiLocalOf

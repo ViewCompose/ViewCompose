@@ -1,6 +1,8 @@
 package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.NavigationBarItem
+import com.viewcompose.ui.unit.UiDp
+import com.viewcompose.ui.unit.UiSp
 
 /**
  * NavigationBar 节点的 item 集合和选中状态属性。
@@ -17,12 +19,12 @@ data class NavigationBarNodeProps(
     val unselectedLabelColor: Int,
     val indicatorColor: Int,
     val rippleColor: Int,
-    val iconSize: Int,
-    val labelSizeSp: Int,
+    val iconSize: UiDp,
+    val labelSizeSp: UiSp,
     val labelFontWeight: Int? = null,
     val labelFontFamily: UiFontFamily? = null,
     val labelLetterSpacingEm: Float? = null,
-    val labelLineHeightSp: Int? = null,
+    val labelLineHeightSp: UiSp? = null,
     val labelIncludeFontPadding: Boolean = false,
     val badgeColor: Int,
     val badgeTextColor: Int,

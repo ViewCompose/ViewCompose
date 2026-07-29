@@ -14,6 +14,7 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 组合式 FloatingActionButton，由 Box、主题 token 和点击 modifier 构成。
@@ -76,7 +77,7 @@ fun UiTreeBuilder.ExtendedFloatingActionButton(
     ProvideLocal(LocalContentColor, contentColor) {
         Row(
             key = key,
-            spacing = if (icon != null) FabDefaults.extendedIconSpacing() else 0,
+            spacing = if (icon != null) FabDefaults.extendedIconSpacing() else UiDp.Zero,
             verticalAlignment = VerticalAlignment.Center,
             modifier = semanticModifier,
         ) {
@@ -129,7 +130,7 @@ fun UiTreeBuilder.Chip(
     val semanticModifier = Modifier
         .height(ChipDefaults.height())
         .backgroundColor(bgColor)
-        .let { m -> if (bw > 0) m.border(bw, bc) else m }
+        .let { m -> if (bw > UiDp.Zero) m.border(bw, bc) else m }
         .shape(shape)
         .clip()
         .let { m ->

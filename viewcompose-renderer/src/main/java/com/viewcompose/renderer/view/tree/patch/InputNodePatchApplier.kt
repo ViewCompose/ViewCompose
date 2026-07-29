@@ -9,10 +9,15 @@ import com.viewcompose.renderer.view.tree.InputViewBinder
 import com.viewcompose.renderer.view.tree.SliderNodePatch
 import com.viewcompose.renderer.view.tree.TextFieldNodePatch
 import com.viewcompose.renderer.view.tree.ToggleNodePatch
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.toPx
 import com.viewcompose.renderer.view.tree.ViewModifierApplier
 import com.viewcompose.renderer.view.tree.ViewComposeEditText
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.renderer.view.toPx
 
 /**
  * 输入类节点的细粒度 patch 应用器。
@@ -27,6 +32,7 @@ internal object InputNodePatchApplier {
         view: ViewComposeEditText,
         patch: TextFieldNodePatch,
     ) {
+        val environment = view.requireUiEnvironment()
         val previous = patch.previous
         val next = patch.next
         val nextSpec = InputViewBinder.readTextFieldSpec(next)
@@ -79,11 +85,11 @@ internal object InputNodePatchApplier {
             ContentViewBinder.applyTextAppearance(
                 view = view,
                 textColor = next.textColor,
-                textSizeSp = next.textSizeSp,
+                textSizePx = environment.toPx(next.textSizeSp),
                 fontWeight = next.fontWeight,
                 fontFamily = next.fontFamily,
                 letterSpacingEm = next.letterSpacingEm,
-                lineHeightSp = next.lineHeightSp,
+                lineHeightPx = next.lineHeightSp?.let(environment.density::roundToPx),
                 includeFontPadding = next.includeFontPadding,
             )
         }
@@ -104,17 +110,17 @@ internal object InputNodePatchApplier {
             )
         }
         if (previous.minHeight != next.minHeight) {
-            view.minimumHeight = next.minHeight
+            view.minimumHeight = environment.roundToPx(next.minHeight)
         }
         if (
             previous.paddingHorizontal != next.paddingHorizontal ||
             previous.paddingVertical != next.paddingVertical
         ) {
             view.setPadding(
-                next.paddingHorizontal,
-                next.paddingVertical,
-                next.paddingHorizontal,
-                next.paddingVertical,
+                environment.roundToPx(next.paddingHorizontal),
+                environment.roundToPx(next.paddingVertical),
+                environment.roundToPx(next.paddingHorizontal),
+                environment.roundToPx(next.paddingVertical),
             )
         }
     }
@@ -175,14 +181,15 @@ internal object InputNodePatchApplier {
             }
         }
         if (hasTextAppearanceChange(previous, next)) {
+            val environment = view.requireUiEnvironment()
             ContentViewBinder.applyTextAppearance(
                 view = view,
                 textColor = next.textColor,
-                textSizeSp = next.textSizeSp,
+                textSizePx = environment.toPx(next.textSizeSp),
                 fontWeight = next.fontWeight,
                 fontFamily = next.fontFamily,
                 letterSpacingEm = next.letterSpacingEm,
-                lineHeightSp = next.lineHeightSp,
+                lineHeightPx = next.lineHeightSp?.let(environment.density::roundToPx),
                 includeFontPadding = next.includeFontPadding,
             )
         }

@@ -10,7 +10,11 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.SnapshotApplyConflictException
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.environment.UiLocaleList
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
+import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.widget.core.Button
 import com.viewcompose.widget.core.DisposableEffect
 import com.viewcompose.widget.core.Environment
@@ -20,15 +24,12 @@ import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.RenderTreeNode
-import com.viewcompose.widget.core.UiDensity
 import com.viewcompose.widget.core.UiEnvironment
-import com.viewcompose.widget.core.UiEnvironmentValues
-import com.viewcompose.widget.core.UiLayoutDirection
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.sp
 import com.viewcompose.runtime.MutableState
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -236,9 +237,9 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     values = UiEnvironmentValues(
                         density = UiDensity(
                             density = 1.25f,
-                            scaledDensity = 1.25f,
+                            fontScale = 1f,
                         ),
-                        localeTags = listOf("en-US"),
+                        locales = UiLocaleList.of("en-US"),
                         layoutDirection = UiLayoutDirection.Ltr,
                     ),
                 ) {

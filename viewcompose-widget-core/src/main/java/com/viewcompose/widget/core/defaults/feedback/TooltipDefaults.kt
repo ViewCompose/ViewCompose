@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -15,7 +17,7 @@ object TooltipDefaults {
 
     fun shape(): UiShape = Theme.shapes.small
 
-    fun horizontalPadding(): Int = Theme.controls.tooltip.horizontalPadding
+    fun horizontalPadding(): UiDp = Theme.controls.tooltip.horizontalPadding
 
-    fun verticalPadding(): Int = Theme.controls.tooltip.verticalPadding
+    fun verticalPadding(): UiDp = Theme.controls.tooltip.verticalPadding
 }

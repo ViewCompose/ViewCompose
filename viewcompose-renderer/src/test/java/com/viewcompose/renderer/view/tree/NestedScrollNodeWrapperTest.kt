@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Nested Scroll Node Wrapper 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Nested Scroll Node Wrapper behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -30,7 +34,7 @@ class NestedScrollNodeWrapperTest {
             key = "panel",
             spec = EmptyNodeSpec,
             modifier = Modifier
-                .width(120)
+                .width(120.dp)
                 .then(NestedScrollModifierElement(outerConnection, null))
                 .backgroundColor(0xFF112233.toInt())
                 .then(NestedScrollModifierElement(innerConnection, null)),

@@ -10,7 +10,7 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.rememberLazyListState
 
 /**

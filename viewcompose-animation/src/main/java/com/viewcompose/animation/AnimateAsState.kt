@@ -7,6 +7,7 @@ import com.viewcompose.animation.core.runAnimation
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.widget.core.LaunchedEffect
 import com.viewcompose.widget.core.LocalAnimationCoroutineContext
 import com.viewcompose.widget.core.LocalMonotonicFrameClock
@@ -82,11 +83,12 @@ fun animateColorAsState(
 }
 
 fun animateDpAsState(
-    targetValue: Int,
+    targetValue: UiDp,
     animationSpec: AnimationSpec = tween(),
-): State<Int> {
-    return animateIntAsState(
+): State<UiDp> {
+    return animateValueAsState(
         targetValue = targetValue,
+        converter = AnimationUnitConverters.Dp,
         animationSpec = animationSpec,
     )
 }

@@ -14,6 +14,7 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextFieldImeAction
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 发射搜索栏组合控件。
@@ -87,12 +88,12 @@ fun UiTreeBuilder.SearchBar(
             textColor = SearchBarDefaults.contentColor(),
             textStyle = SearchBarDefaults.textStyle(),
             backgroundColor = 0x00000000,
-            borderWidth = 0,
+            borderWidth = UiDp.Zero,
             borderColor = 0x00000000,
-            shape = UiShape.rounded(0),
-            minHeight = 0,
-            paddingHorizontal = 0,
-            paddingVertical = 0,
+            shape = UiShape.rounded(UiDp.Zero),
+            minHeight = UiDp.Zero,
+            paddingHorizontal = UiDp.Zero,
+            paddingVertical = UiDp.Zero,
             modifier = Modifier.weight(1f).fillMaxHeight(),
         )
         if (trailingIcon != null) {

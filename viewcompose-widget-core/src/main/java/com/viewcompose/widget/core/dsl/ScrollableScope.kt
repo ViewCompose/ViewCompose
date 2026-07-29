@@ -11,6 +11,7 @@ import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.ui.state.PagerState
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 滚动容器内部可用的 DSL scope。
@@ -30,8 +31,8 @@ class ScrollableScope internal constructor() {
         items: List<T>,
         key: (T) -> Any,
         contentType: (T) -> Any? = { null },
-        contentPadding: Int = 0,
-        spacing: Int = 0,
+        contentPadding: UiDp = UiDp.Zero,
+        spacing: UiDp = UiDp.Zero,
         state: LazyListState? = null,
         reverseLayout: Boolean = false,
         userScrollEnabled: Boolean = true,
@@ -64,7 +65,7 @@ class ScrollableScope internal constructor() {
 
     fun LazyColumn(
         contentPadding: LazyContentPadding = LazyContentPadding.None,
-        spacing: Int = 0,
+        spacing: UiDp = UiDp.Zero,
         state: LazyListState? = null,
         reverseLayout: Boolean = false,
         userScrollEnabled: Boolean = true,
@@ -94,7 +95,7 @@ class ScrollableScope internal constructor() {
 
     fun ScrollableColumn(
         key: Any? = null,
-        spacing: Int = 0,
+        spacing: UiDp = UiDp.Zero,
         arrangement: MainAxisArrangement = MainAxisArrangement.Start,
         horizontalAlignment: HorizontalAlignment = HorizontalAlignment.Start,
         focusFollowKeyboard: Boolean = false,
@@ -121,8 +122,8 @@ class ScrollableScope internal constructor() {
         items: List<T>,
         key: (T) -> Any,
         contentType: (T) -> Any? = { null },
-        contentPadding: Int = 0,
-        spacing: Int = 0,
+        contentPadding: UiDp = UiDp.Zero,
+        spacing: UiDp = UiDp.Zero,
         state: LazyListState? = null,
         reverseLayout: Boolean = false,
         userScrollEnabled: Boolean = true,
@@ -153,7 +154,7 @@ class ScrollableScope internal constructor() {
 
     fun LazyRow(
         contentPadding: LazyContentPadding = LazyContentPadding.None,
-        spacing: Int = 0,
+        spacing: UiDp = UiDp.Zero,
         state: LazyListState? = null,
         reverseLayout: Boolean = false,
         userScrollEnabled: Boolean = true,
@@ -181,7 +182,7 @@ class ScrollableScope internal constructor() {
 
     fun ScrollableRow(
         key: Any? = null,
-        spacing: Int = 0,
+        spacing: UiDp = UiDp.Zero,
         arrangement: MainAxisArrangement = MainAxisArrangement.Start,
         verticalAlignment: VerticalAlignment = VerticalAlignment.Top,
         modifier: Modifier = Modifier,
@@ -199,9 +200,9 @@ class ScrollableScope internal constructor() {
         key: (T) -> Any,
         contentType: (T) -> Any? = { null },
         span: (T) -> Int = { 1 },
-        contentPadding: Int = 0,
-        horizontalSpacing: Int = 0,
-        verticalSpacing: Int = 0,
+        contentPadding: UiDp = UiDp.Zero,
+        horizontalSpacing: UiDp = UiDp.Zero,
+        verticalSpacing: UiDp = UiDp.Zero,
         state: LazyListState? = null,
         reverseLayout: Boolean = false,
         userScrollEnabled: Boolean = true,
@@ -238,8 +239,8 @@ class ScrollableScope internal constructor() {
     fun LazyVerticalGrid(
         spanCount: Int = 2,
         contentPadding: LazyContentPadding = LazyContentPadding.None,
-        horizontalSpacing: Int = 0,
-        verticalSpacing: Int = 0,
+        horizontalSpacing: UiDp = UiDp.Zero,
+        verticalSpacing: UiDp = UiDp.Zero,
         state: LazyListState? = null,
         reverseLayout: Boolean = false,
         userScrollEnabled: Boolean = true,

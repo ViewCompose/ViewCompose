@@ -1,5 +1,7 @@
 package com.viewcompose.renderer.modifier
 
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer modifier 中的 Resolved Modifiers 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Resolved Modifiers behavior in renderer modifier and guards render and patch contracts against regressions.
@@ -105,7 +107,7 @@ class ResolvedModifiersTest {
                     constraint = ConstraintItemSpec(
                         start = ConstraintAnchorLink(
                             target = ConstraintAnchorTarget.parent(ConstraintAnchor.Start),
-                            margin = 16,
+                            margin = 16.dp,
                         ),
                     ),
                 ),
@@ -114,7 +116,7 @@ class ResolvedModifiersTest {
 
         assertEquals("card", resolved.layoutId?.layoutId)
         assertEquals("card", resolved.constraint?.referenceId)
-        assertEquals(16, resolved.constraint?.constraint?.start?.margin)
+        assertEquals(16.dp, resolved.constraint?.constraint?.start?.margin)
     }
 
     @Test

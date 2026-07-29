@@ -1,5 +1,6 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.environment.UiLayoutDirection
 /**
  * 声明 popup 相对锚点的首选对齐方式。
  * Declares the preferred alignment of a popup relative to its anchor.

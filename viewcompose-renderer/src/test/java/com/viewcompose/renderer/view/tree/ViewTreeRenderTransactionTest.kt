@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 View Tree Render Transaction 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers View Tree Render Transaction behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -9,10 +13,12 @@ import android.content.Context
 import android.graphics.RectF
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.TextView
 import com.google.android.material.shape.CutCornerTreatment
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.modifier.Modifier
@@ -24,8 +30,10 @@ import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.node.spec.ColumnNodeProps
+import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDensity
 import com.google.android.material.shape.MaterialShapeDrawable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -43,10 +51,32 @@ class ViewTreeRenderTransactionTest {
         get() = RuntimeEnvironment.getApplication()
 
     @Test
+    fun `environment density and font scale are reapplied to an existing text view`() {
+        val container = FrameLayout(context)
+        val firstNode = environmentTextNode(density = 2f, fontScale = 1f)
+        val first = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(firstNode),
+        )
+        val textView = container.getChildAt(0) as TextView
+        assertEquals(20f, textView.textSize, 0.01f)
+
+        ViewTreeRenderer.renderInto(
+            container = container,
+            previous = first.mountedNodes,
+            nodes = listOf(environmentTextNode(density = 3f, fontScale = 1.5f)),
+        )
+
+        assertSame(textView, container.getChildAt(0))
+        assertEquals(45f, textView.textSize, 0.01f)
+    }
+
+    @Test
     fun `node style patch preserves modifier shape override`() {
         val container = FrameLayout(context)
         val state = TextFieldState(TextFieldValue("value"))
-        val modifierShape = UiShape.cut(14)
+        val modifierShape = UiShape.cut(14.dp)
         val modifier = Modifier.shape(modifierShape)
         val initialResult = ViewTreeRenderer.renderInto(
             container = container,
@@ -55,7 +85,7 @@ class ViewTreeRenderTransactionTest {
                 textFieldNode(
                     state = state,
                     modifier = modifier,
-                    nodeShape = UiShape.rounded(4),
+                    nodeShape = UiShape.rounded(4.dp),
                 ),
             ),
         )
@@ -70,7 +100,7 @@ class ViewTreeRenderTransactionTest {
                 textFieldNode(
                     state = state,
                     modifier = modifier,
-                    nodeShape = UiShape.rounded(28),
+                    nodeShape = UiShape.rounded(28.dp),
                     backgroundColor = 0xFF112233.toInt(),
                 ),
             ),
@@ -421,7 +451,7 @@ class ViewTreeRenderTransactionTest {
             type = NodeType.Column,
             key = "column",
             spec = ColumnNodeProps(
-                spacing = 0,
+                spacing = 0.dp,
                 arrangement = MainAxisArrangement.Start,
                 horizontalAlignment = HorizontalAlignment.Start,
             ),
@@ -429,10 +459,34 @@ class ViewTreeRenderTransactionTest {
         )
     }
 
+    private fun environmentTextNode(
+        density: Float,
+        fontScale: Float,
+    ): VNode {
+        return VNode(
+            type = NodeType.Text,
+            key = "environment-text",
+            spec = TextNodeProps(
+                text = "Environment",
+                maxLines = 1,
+                overflow = com.viewcompose.ui.node.TextOverflow.Clip,
+                textAlign = com.viewcompose.ui.node.TextAlign.Start,
+                textColor = 0xFF000000.toInt(),
+                textSizeSp = 10.sp,
+            ),
+            environment = UiEnvironmentValues.Default.copy(
+                density = UiDensity(
+                    density = density,
+                    fontScale = fontScale,
+                ),
+            ),
+        )
+    }
+
     private fun textFieldNode(
         state: TextFieldState,
         modifier: Modifier = Modifier,
-        nodeShape: UiShape = UiShape.rounded(0),
+        nodeShape: UiShape = UiShape.rounded(0.dp),
         backgroundColor: Int = 0,
     ): VNode {
         return VNode(
@@ -455,14 +509,14 @@ class ViewTreeRenderTransactionTest {
                 hintColor = 0,
                 readOnly = false,
                 textColor = 0xFF000000.toInt(),
-                textSizeSp = 16,
+                textSizeSp = 16.sp,
                 backgroundColor = backgroundColor,
-                borderWidth = 0,
+                borderWidth = 0.dp,
                 borderColor = 0,
                 shape = nodeShape,
-                minHeight = 0,
-                paddingHorizontal = 0,
-                paddingVertical = 0,
+                minHeight = 0.dp,
+                paddingHorizontal = 0.dp,
+                paddingVertical = 0.dp,
             ),
         )
     }

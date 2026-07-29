@@ -10,6 +10,8 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.overlay.OVERLAY_ANCHOR_TAG_KEY
 import com.viewcompose.renderer.modifier.ResolvedModifiers
+import com.viewcompose.renderer.view.requireUiEnvironment
+import com.viewcompose.renderer.view.toPx
 
 /**
  * 应用可见性、transform、anchor、testTag、点击和焦点等通用交互 modifier。
@@ -27,6 +29,7 @@ internal object ModifierInteractionApplier {
         minWidth: Int,
     ) {
         val layer = resolved.graphicsLayer
+        val environment = view.requireUiEnvironment()
         // anchor 元数据只来自显式 modifier，避免 NodeSpec 默认值误注册 overlay 锚点。
         // Anchor metadata is sourced only from resolved modifier elements.
         applyAnchorId(view, resolved.overlayAnchor?.anchorId)
@@ -37,10 +40,10 @@ internal object ModifierInteractionApplier {
             Visibility.Invisible -> View.INVISIBLE
             Visibility.Gone -> View.GONE
         }
-        view.translationX = layer?.translationX ?: resolved.offset?.x ?: 0f
-        view.translationY = layer?.translationY ?: resolved.offset?.y ?: 0f
+        view.translationX = layer?.translationX ?: resolved.offset?.x?.let(environment::toPx) ?: 0f
+        view.translationY = layer?.translationY ?: resolved.offset?.y?.let(environment::toPx) ?: 0f
         view.translationZ = resolved.zIndex?.zIndex ?: 0f
-        view.elevation = resolved.elevation?.elevation?.toFloat() ?: 0f
+        view.elevation = resolved.elevation?.elevation?.let(environment::toPx) ?: 0f
         view.scaleX = layer?.scaleX ?: 1f
         view.scaleY = layer?.scaleY ?: 1f
         view.rotation = layer?.rotationZ ?: 0f
@@ -119,22 +122,22 @@ internal object ModifierInteractionApplier {
     fun applyTextAppearanceIfTextView(
         view: View,
         textColor: Int?,
-        textSizeSp: Int?,
+        textSizePx: Float?,
         fontWeight: Int?,
         fontFamily: com.viewcompose.ui.node.spec.UiFontFamily?,
         letterSpacingEm: Float?,
-        lineHeightSp: Int?,
+        lineHeightPx: Int?,
         includeFontPadding: Boolean?,
     ) {
         if (view !is TextView) return
         ContentViewBinder.applyTextAppearance(
             view = view,
             textColor = textColor,
-            textSizeSp = textSizeSp,
+            textSizePx = textSizePx,
             fontWeight = fontWeight,
             fontFamily = fontFamily,
             letterSpacingEm = letterSpacingEm,
-            lineHeightSp = lineHeightSp,
+            lineHeightPx = lineHeightPx,
             includeFontPadding = includeFontPadding,
         )
     }

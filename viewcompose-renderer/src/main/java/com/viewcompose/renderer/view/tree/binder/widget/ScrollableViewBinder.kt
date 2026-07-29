@@ -7,6 +7,7 @@ import com.viewcompose.ui.node.spec.PullToRefreshNodeProps
 import com.viewcompose.renderer.view.container.DeclarativeScrollableColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeScrollableRowLayout
 import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
+import com.viewcompose.renderer.view.roundToPx
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
 /**
@@ -57,7 +58,7 @@ internal object ScrollableViewBinder {
         val spec = node.requireSpec<ScrollableColumnNodeProps>()
         return ScrollableColumnSpec(
             linearSpec = ContainerViewBinder.LinearSpec(
-                spacing = spec.spacing,
+                spacing = node.environment.roundToPx(spec.spacing),
                 arrangement = spec.arrangement,
                 gravity = with(ContainerViewSpecReader) { spec.horizontalAlignment.toGravity() },
             ),
@@ -68,7 +69,7 @@ internal object ScrollableViewBinder {
     fun readScrollableRowSpec(node: VNode): ContainerViewBinder.LinearSpec {
         val spec = node.requireSpec<ScrollableRowNodeProps>()
         return ContainerViewBinder.LinearSpec(
-            spacing = spec.spacing,
+            spacing = node.environment.roundToPx(spec.spacing),
             arrangement = spec.arrangement,
             gravity = with(ContainerViewSpecReader) { spec.verticalAlignment.toGravity() },
         )

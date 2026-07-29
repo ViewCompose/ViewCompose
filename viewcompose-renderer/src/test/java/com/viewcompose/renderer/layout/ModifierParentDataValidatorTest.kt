@@ -1,5 +1,7 @@
 package com.viewcompose.renderer.layout
 
+import com.viewcompose.ui.unit.sp
+
 /*
  * 测试职责：覆盖 renderer layout 中的 Modifier Parent Data Validator 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Modifier Parent Data Validator behavior in renderer layout and guards render and patch contracts against regressions.

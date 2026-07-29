@@ -70,10 +70,10 @@ class LazyColumnTest {
     @Test
     fun `structured lazy scope emits sticky header content types and policies`() {
         val padding = LazyContentPadding(
-            start = 4,
-            top = 8,
-            end = 12,
-            bottom = 16,
+            start = 4.dp,
+            top = 8.dp,
+            end = 12.dp,
+            bottom = 16.dp,
         )
         val prefetch = LazyLayoutPrefetchPolicy(
             initialPrefetchItemCount = 5,

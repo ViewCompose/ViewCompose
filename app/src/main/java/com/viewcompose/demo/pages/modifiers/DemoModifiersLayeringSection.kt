@@ -18,8 +18,8 @@ import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 
 internal fun UiTreeBuilder.ModifierOffsetZIndexSection() {
     ScenarioSection(
@@ -51,7 +51,7 @@ internal fun UiTreeBuilder.ModifierOffsetZIndexSection() {
                     .size(80.dp, 60.dp)
                     .backgroundColor(Theme.colors.secondary)
                     .cornerRadius(8.dp)
-                    .offset(x = 40.dp.toFloat(), y = 20.dp.toFloat())
+                    .offset(x = 40.dp, y = 20.dp)
                     .zIndex(2f),
             ) {
                 Text(text = "zIndex=2")
@@ -62,7 +62,7 @@ internal fun UiTreeBuilder.ModifierOffsetZIndexSection() {
                     .size(80.dp, 60.dp)
                     .backgroundColor(Theme.colors.surfaceVariant)
                     .cornerRadius(8.dp)
-                    .offset(x = 80.dp.toFloat(), y = 40.dp.toFloat())
+                    .offset(x = 80.dp, y = 40.dp)
                     .zIndex(0f),
             ) {
                 Text(text = "zIndex=0")

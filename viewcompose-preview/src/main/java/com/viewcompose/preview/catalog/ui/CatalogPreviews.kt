@@ -23,8 +23,8 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.widget.core.Column
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.dp
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 
 @Preview(
     name = "Content",

@@ -38,15 +38,15 @@ class TextFieldTest {
                 outline = 6,
             ),
             typography = UiTypography(
-                titleMedium = UiTextStyle(fontSizeSp = 31),
+                titleMedium = UiTextStyle(fontSizeSp = 31.sp),
                 bodyMedium = UiTextStyle(
-                    fontSizeSp = 19,
+                    fontSizeSp = 19.sp,
                     fontWeight = 500,
                     letterSpacingEm = 0.03f,
-                    lineHeightSp = 26,
+                    lineHeightSp = 26.sp,
                     includeFontPadding = true,
                 ),
-                labelMedium = UiTextStyle(fontSizeSp = 13),
+                labelMedium = UiTextStyle(fontSizeSp = 13.sp),
             ),
         )
         val tree = buildVNodeTree {

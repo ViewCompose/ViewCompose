@@ -1,5 +1,7 @@
 package com.viewcompose.ui.shape
 
+import com.viewcompose.ui.unit.UiDp
+
 /**
  * 角形状族，描述圆角或切角。
  * Corner family describing rounded or cut corners.
@@ -11,10 +13,10 @@ enum class UiCornerFamily {
 
 sealed interface UiCornerSize {
     data class Absolute(
-        val pixels: Int,
+        val size: UiDp,
     ) : UiCornerSize {
         init {
-            require(pixels >= 0) { "Corner size must be non-negative." }
+            require(size >= UiDp.Zero) { "Corner size must be non-negative." }
         }
     }
 
@@ -41,19 +43,19 @@ data class UiShape(
     val isUniform: Boolean
         get() = topStart == topEnd && topEnd == bottomEnd && bottomEnd == bottomStart
 
-    val uniformAbsoluteSizeOrNull: Int?
+    val uniformAbsoluteSizeOrNull: UiDp?
         get() = if (isUniform) {
-            (topStart.size as? UiCornerSize.Absolute)?.pixels
+            (topStart.size as? UiCornerSize.Absolute)?.size
         } else {
             null
         }
 
-    fun inset(pixels: Int): UiShape {
-        val amount = pixels.coerceAtLeast(0)
+    fun inset(amount: UiDp): UiShape {
+        val resolvedAmount = if (amount < UiDp.Zero) UiDp.Zero else amount
         fun UiCorner.insetCorner(): UiCorner {
             val nextSize = when (val current = size) {
                 is UiCornerSize.Absolute -> UiCornerSize.Absolute(
-                    (current.pixels - amount).coerceAtLeast(0),
+                    if (current.size > resolvedAmount) current.size - resolvedAmount else UiDp.Zero,
                 )
                 is UiCornerSize.Relative -> current
             }
@@ -68,7 +70,7 @@ data class UiShape(
     }
 
     companion object {
-        fun rounded(size: Int): UiShape {
+        fun rounded(size: UiDp): UiShape {
             return uniform(
                 family = UiCornerFamily.Rounded,
                 size = UiCornerSize.Absolute(size),
@@ -82,7 +84,7 @@ data class UiShape(
             )
         }
 
-        fun cut(size: Int): UiShape {
+        fun cut(size: UiDp): UiShape {
             return uniform(
                 family = UiCornerFamily.Cut,
                 size = UiCornerSize.Absolute(size),
@@ -103,10 +105,10 @@ data class UiShape(
         }
 
         fun rounded(
-            topStart: Int = 0,
-            topEnd: Int = 0,
-            bottomEnd: Int = 0,
-            bottomStart: Int = 0,
+            topStart: UiDp = UiDp.Zero,
+            topEnd: UiDp = UiDp.Zero,
+            bottomEnd: UiDp = UiDp.Zero,
+            bottomStart: UiDp = UiDp.Zero,
         ): UiShape {
             return UiShape(
                 topStart = UiCorner(UiCornerFamily.Rounded, UiCornerSize.Absolute(topStart)),

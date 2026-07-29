@@ -10,6 +10,7 @@ import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
 import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
 import com.viewcompose.ui.node.spec.ConstraintItemSpec
+import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -19,13 +20,13 @@ class ModifierContractTest {
     @Test
     fun `independently rebuilt modifier chains compare structurally`() {
         val first = Modifier
-            .padding(horizontal = 12, vertical = 8)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
             .backgroundColor(0xFF112233.toInt())
         val second = Modifier
-            .padding(horizontal = 12, vertical = 8)
+            .padding(horizontal = 12.dp, vertical = 8.dp)
             .backgroundColor(0xFF112233.toInt())
         val changed = Modifier
-            .padding(horizontal = 16, vertical = 8)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .backgroundColor(0xFF112233.toInt())
 
         assertEquals(first, second)
@@ -36,8 +37,8 @@ class ModifierContractTest {
     @Test
     fun `then keeps modifier element order`() {
         val modifier = Modifier
-            .padding(8)
-            .then(Modifier.margin(4))
+            .padding(8.dp)
+            .then(Modifier.margin(4.dp))
             .overlayAnchor("anchor-1")
 
         assertEquals(3, modifier.elements.size)
@@ -111,7 +112,7 @@ class ModifierContractTest {
                     constraint = ConstraintItemSpec(
                         top = ConstraintAnchorLink(
                             target = ConstraintAnchorTarget.parent(ConstraintAnchor.Top),
-                            margin = 12,
+                            margin = 12.dp,
                         ),
                     ),
                 ),
@@ -121,7 +122,7 @@ class ModifierContractTest {
         assertEquals("hero-card", (modifier.elements[0] as LayoutIdModifierElement).layoutId)
         val constraintElement = modifier.elements[1] as ConstraintModifierElement
         assertEquals("hero-card", constraintElement.referenceId)
-        assertEquals(12, constraintElement.constraint.top?.margin)
+        assertEquals(12.dp, constraintElement.constraint.top?.margin)
     }
 
     @Test

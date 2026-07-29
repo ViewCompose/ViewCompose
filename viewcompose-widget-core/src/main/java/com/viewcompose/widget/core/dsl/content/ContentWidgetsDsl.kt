@@ -12,6 +12,7 @@ import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.node.spec.ImageNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 发射纯文本节点。
@@ -127,7 +128,7 @@ fun UiTreeBuilder.Icon(
     source: ImageSource,
     contentDescription: String? = null,
     tint: Int = IconDefaults.tint(),
-    size: Int = IconDefaults.size(),
+    size: UiDp = IconDefaults.size(),
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {

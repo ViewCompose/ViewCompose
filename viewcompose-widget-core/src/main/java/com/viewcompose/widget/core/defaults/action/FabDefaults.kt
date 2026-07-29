@@ -1,5 +1,7 @@
 package com.viewcompose.widget.core
 
+import com.viewcompose.ui.unit.UiDp
+
 import com.viewcompose.ui.shape.UiShape
 
 /**
@@ -24,7 +26,7 @@ object FabDefaults {
 
     fun contentColor(): Int = Theme.colors.onPrimaryContainer
 
-    fun size(size: FabSize = FabSize.Medium): Int {
+    fun size(size: FabSize = FabSize.Medium): UiDp {
         return when (size) {
             FabSize.Small -> Theme.controls.fab.smallSize
             FabSize.Medium -> Theme.controls.fab.mediumSize
@@ -32,7 +34,7 @@ object FabDefaults {
         }
     }
 
-    fun iconSize(size: FabSize = FabSize.Medium): Int {
+    fun iconSize(size: FabSize = FabSize.Medium): UiDp {
         return when (size) {
             FabSize.Small -> Theme.controls.fab.smallIconSize
             FabSize.Medium -> Theme.controls.fab.mediumIconSize
@@ -48,15 +50,15 @@ object FabDefaults {
         }
     }
 
-    fun elevation(): Int = Theme.controls.fab.elevation
+    fun elevation(): UiDp = Theme.controls.fab.elevation
 
-    fun extendedHeight(): Int = Theme.controls.fab.extendedHeight
+    fun extendedHeight(): UiDp = Theme.controls.fab.extendedHeight
 
     fun extendedShape(): UiShape = Theme.shapes.large
 
-    fun extendedHorizontalPadding(): Int = Theme.controls.fab.extendedHorizontalPadding
+    fun extendedHorizontalPadding(): UiDp = Theme.controls.fab.extendedHorizontalPadding
 
-    fun extendedIconSpacing(): Int = Theme.controls.fab.extendedIconSpacing
+    fun extendedIconSpacing(): UiDp = Theme.controls.fab.extendedIconSpacing
 
     fun extendedTextStyle(): UiTextStyle = TextDefaults.labelLargeStyle()
 

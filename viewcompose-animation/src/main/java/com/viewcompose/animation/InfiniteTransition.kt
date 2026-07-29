@@ -9,6 +9,7 @@ import com.viewcompose.animation.core.runAnimation
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.widget.core.LaunchedEffect
 import com.viewcompose.widget.core.LocalAnimationCoroutineContext
 import com.viewcompose.widget.core.LocalMonotonicFrameClock
@@ -81,16 +82,16 @@ fun InfiniteTransition.animateColor(
 }
 
 fun InfiniteTransition.animateDp(
-    initialValue: Int,
-    targetValue: Int,
+    initialValue: UiDp,
+    targetValue: UiDp,
     animationSpec: InfiniteRepeatableSpec = infiniteRepeatable(
         animation = tween(),
     ),
-): State<Int> {
+): State<UiDp> {
     return animateValue(
         initialValue = initialValue,
         targetValue = targetValue,
-        converter = AnimationConverters.Int,
+        converter = AnimationUnitConverters.Dp,
         animationSpec = animationSpec,
     )
 }

@@ -1,5 +1,9 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.ui.unit.sp
+
+import com.viewcompose.ui.unit.dp
+
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Container Policy Spec Reader 行为，防止渲染和 patch 契约在后续重构中回退。
  * Test responsibility: covers Container Policy Spec Reader behavior in renderer view/tree and guards render and patch contracts against regressions.
@@ -28,7 +32,7 @@ class ContainerPolicySpecReaderTest {
                 type = NodeType.LazyColumn,
                 spec = LazyColumnNodeProps(
                     contentPadding = LazyContentPadding.None,
-                    spacing = 0,
+                    spacing = 0.dp,
                     items = emptyList(),
                 ),
             ),
@@ -58,8 +62,8 @@ class ContainerPolicySpecReaderTest {
             node = VNode(
                 type = NodeType.LazyColumn,
                 spec = LazyColumnNodeProps(
-                    contentPadding = LazyContentPadding.all(8),
-                    spacing = 4,
+                    contentPadding = LazyContentPadding.all(8.dp),
+                    spacing = 4.dp,
                     items = emptyList(),
                     reusePolicy = reuse,
                     motionPolicy = motion,
@@ -76,9 +80,9 @@ class ContainerPolicySpecReaderTest {
                 type = NodeType.LazyVerticalGrid,
                 spec = LazyVerticalGridNodeProps(
                     spanCount = 2,
-                    contentPadding = LazyContentPadding.all(8),
-                    horizontalSpacing = 4,
-                    verticalSpacing = 4,
+                    contentPadding = LazyContentPadding.all(8.dp),
+                    horizontalSpacing = 4.dp,
+                    verticalSpacing = 4.dp,
                     items = emptyList(),
                     state = null,
                     reusePolicy = reuse,
@@ -136,7 +140,7 @@ class ContainerPolicySpecReaderTest {
             node = VNode(
                 type = NodeType.ScrollableColumn,
                 spec = ScrollableColumnNodeProps(
-                    spacing = 12,
+                    spacing = 12.dp,
                     arrangement = com.viewcompose.ui.layout.MainAxisArrangement.SpaceBetween,
                     horizontalAlignment = com.viewcompose.ui.layout.HorizontalAlignment.Center,
                     focusFollowKeyboard = true,
