@@ -11,7 +11,7 @@ import com.viewcompose.widget.core.Switch
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 
 internal fun UiTreeBuilder.ShowcaseCheckbox() {

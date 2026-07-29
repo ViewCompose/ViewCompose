@@ -47,9 +47,9 @@ import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.sp
 
 internal fun UiTreeBuilder.LayoutPage(
     initialPageIndex: Int = 0,
@@ -217,7 +217,7 @@ internal fun UiTreeBuilder.LayoutPage(
                         text = "固定标签",
                         modifier = Modifier
                             .align(BoxAlignment.BottomEnd)
-                            .offset(x = (-8).dp.toFloat(), y = (-8).dp.toFloat())
+                            .offset(x = (-8).dp, y = (-8).dp)
                             .zIndex(1f)
                             .backgroundColor(Theme.colors.secondary)
                             .padding(horizontal = 10.dp, vertical = 6.dp),
@@ -1453,8 +1453,8 @@ internal fun UiTreeBuilder.LayoutPage(
                             rotation = if (constraintVirtualAlternateState.value) 30f else 0f,
                             scaleX = if (constraintVirtualAlternateState.value) 1.16f else 1f,
                             scaleY = if (constraintVirtualAlternateState.value) 1.16f else 1f,
-                            translationX = if (constraintVirtualAlternateState.value) 24f else 0f,
-                            translationY = if (constraintVirtualAlternateState.value) -10f else 0f,
+                            translationX = if (constraintVirtualAlternateState.value) 24.dp else 0.dp,
+                            translationY = if (constraintVirtualAlternateState.value) (-10).dp else 0.dp,
                         )
                         Surface(
                             variant = SurfaceVariant.Default,

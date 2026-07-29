@@ -30,9 +30,9 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
     val themeModeState = remember { mutableStateOf(DemoThemeSession.mode) }
     val remoteImageLoader = remember { CoilRemoteImageLoader(root.context.applicationContext) }
     val activity = root.context.findAppCompatActivity()
-    val themeTokens = DemoThemeTokens.resolve(
+    val themeTokens = DemoThemeTokens.select(
         mode = themeModeState.value,
-        context = root.context,
+        isSystemDark = DemoThemeTokens.isSystemDark(root.context),
     )
     ProvideRemoteImageLoader(remoteImageLoader) {
         val scaffoldContent: UiTreeBuilder.() -> Unit = {

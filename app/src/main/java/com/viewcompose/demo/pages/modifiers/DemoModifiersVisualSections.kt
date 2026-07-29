@@ -28,8 +28,8 @@ import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
-import com.viewcompose.widget.core.sp
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 
 internal fun UiTreeBuilder.ModifierElevationSection() {
     ScenarioSection(
@@ -121,7 +121,7 @@ internal fun UiTreeBuilder.ModifierBorderClipSection() {
                 modifier = Modifier
                     .size(200.dp, 200.dp)
                     .backgroundColor(Theme.colors.primary)
-                    .offset(x = (-20).dp.toFloat(), y = (-20).dp.toFloat()),
+                    .offset(x = (-20).dp, y = (-20).dp),
             ) {}
             Text(
                 text = "溢出的蓝色方块被裁切",

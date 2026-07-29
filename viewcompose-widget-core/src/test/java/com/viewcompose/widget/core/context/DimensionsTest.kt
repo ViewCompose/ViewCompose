@@ -45,6 +45,7 @@ class DimensionsTest {
         assertEquals(UiSp(14f), 14.sp)
         assertEquals(UiSp(14.6f), 14.6f.sp)
     }
+
     @Test
     fun `control defaults are density independent`() {
         val controls = UiControlSizeDefaults.default()

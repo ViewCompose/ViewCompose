@@ -20,7 +20,7 @@ import com.viewcompose.widget.core.TopAppBar
 import com.viewcompose.widget.core.TopAppBarDefaults
 import com.viewcompose.widget.core.UiTheme
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.dp
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 
 /**
