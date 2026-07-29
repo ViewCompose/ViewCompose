@@ -10,6 +10,7 @@ import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
+import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.testTag
@@ -501,7 +502,7 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
             selectedIndex = navIndexState.value,
             onItemSelected = { navIndexState.value = it },
             modifier = Modifier
-                .padding(bottom = 8.dp)
+                .margin(bottom = 8.dp)
                 .testTag(DemoTestTags.DIAGNOSTICS_THEME_NAVIGATION),
         ) {
             Item(label = "Home", icon = ImageSource.Resource(R.drawable.demo_media_icon))
