@@ -12,6 +12,7 @@ import com.viewcompose.ui.unit.dp
 import android.view.View
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.resolve
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.modifier.Modifier
@@ -19,7 +20,9 @@ import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.dropShadow
+import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
@@ -34,6 +37,28 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ModifierInteractionApplierTest {
+    @Test
+    fun `zIndex uses decoration order without changing platform shadow height`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        val node = vnode(
+            Modifier
+                .elevation(6.dp)
+                .zIndex(4f),
+        )
+
+        ViewModifierApplier.applyModifier(view, node, defaultRippleColor = 0)
+
+        assertEquals(4f, DecorationChildDrawingOrder.zIndex(view))
+        assertEquals(0f, view.translationZ)
+        assertEquals(6f, view.elevation)
+
+        ViewModifierApplier.applyModifier(view, vnode(Modifier), defaultRippleColor = 0)
+
+        assertEquals(0f, DecorationChildDrawingOrder.zIndex(view))
+        assertEquals(0f, view.translationZ)
+        assertEquals(0f, view.elevation)
+    }
+
     @Test
     fun `incremental modifier application still applies changed layout domain`() {
         val view = View(RuntimeEnvironment.getApplication())

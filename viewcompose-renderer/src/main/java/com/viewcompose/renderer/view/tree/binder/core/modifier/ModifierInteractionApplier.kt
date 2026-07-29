@@ -42,7 +42,9 @@ internal object ModifierInteractionApplier {
         }
         view.translationX = layer?.translationX ?: resolved.offset?.x?.let(environment::toPx) ?: 0f
         view.translationY = layer?.translationY ?: resolved.offset?.y?.let(environment::toPx) ?: 0f
-        view.translationZ = resolved.zIndex?.zIndex ?: 0f
+        // zIndex 由父级稳定绘制顺序处理，不能写入 translationZ，否则会改变平台阴影。
+        // Parent-side stable drawing order owns zIndex; translationZ would alter platform shadows.
+        view.translationZ = 0f
         view.elevation = resolved.elevation?.elevation?.let(environment::toPx) ?: 0f
         view.scaleX = layer?.scaleX ?: 1f
         view.scaleY = layer?.scaleY ?: 1f

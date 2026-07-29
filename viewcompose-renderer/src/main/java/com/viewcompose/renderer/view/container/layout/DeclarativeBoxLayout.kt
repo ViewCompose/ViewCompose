@@ -7,6 +7,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 
 /**
@@ -36,7 +37,11 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         // Keep elevation shadows and overflow visuals visible, similar to Compose container defaults.
         clipChildren = false
         clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
     }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
 
     override fun onMeasure(
         widthMeasureSpec: Int,
@@ -49,11 +54,13 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
 
     override fun onViewAdded(child: View) {
         super.onViewAdded(child)
+        DecorationChildDrawingOrder.invalidate(this)
         applyGravityToChild(child)
     }
 
     override fun onViewRemoved(child: View) {
         super.onViewRemoved(child)
+        DecorationChildDrawingOrder.invalidate(this)
     }
 
     override fun drawChild(

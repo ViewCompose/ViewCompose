@@ -13,6 +13,7 @@ import com.viewcompose.renderer.layout.CrossAxisPlacementCalculator
 import com.viewcompose.renderer.layout.LinearArrangementCalculator
 import com.viewcompose.renderer.layout.LinearCrossAxisAlignmentResolver
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import kotlin.math.max
 
@@ -49,7 +50,11 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
     init {
         clipChildren = false
         clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
     }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
 
     override fun onMeasure(
         widthMeasureSpec: Int,

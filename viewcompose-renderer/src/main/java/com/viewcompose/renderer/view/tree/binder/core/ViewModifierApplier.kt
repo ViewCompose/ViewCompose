@@ -7,6 +7,7 @@ import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.resolve
 import com.viewcompose.shadow.android.ResolvedShadowSpec
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.shadow.android.ShadowSpecResolver
 import com.viewcompose.ui.environment.UiLayoutDirection
@@ -126,6 +127,12 @@ internal object ViewModifierApplier {
             ShadowDecorationLayer.update(
                 view = view,
                 spec = next.shadowSpec,
+            )
+        }
+        if (previous == null || previous.resolved.zIndex != resolved.zIndex) {
+            DecorationChildDrawingOrder.update(
+                view = view,
+                zIndex = resolved.zIndex?.zIndex ?: 0f,
             )
         }
         if (previous == null || graphicsChanged(previous, next)) {

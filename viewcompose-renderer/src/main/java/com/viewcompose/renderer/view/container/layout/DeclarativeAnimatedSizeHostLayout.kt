@@ -12,6 +12,7 @@ import android.view.animation.LinearInterpolator
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.ui.modifier.ContentSizeAnimationSpecModel
 import com.viewcompose.ui.modifier.ContentSizeEasingModel
@@ -47,9 +48,13 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
     private var sizeAnimator: ValueAnimator? = null
 
     init {
+        isChildrenDrawingOrderEnabled = true
         clipChildren = true
         clipToPadding = true
     }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
 
     override fun onMeasure(
         widthMeasureSpec: Int,

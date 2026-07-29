@@ -14,6 +14,7 @@ import com.viewcompose.ui.gesture.NestedScrollDispatcherConnector
 import com.viewcompose.ui.gesture.NestedScrollSource
 import com.viewcompose.ui.gesture.ScrollDelta
 import com.viewcompose.ui.gesture.ScrollVelocity
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import kotlin.math.roundToInt
 
@@ -40,7 +41,11 @@ internal class DeclarativeNestedScrollHostLayout(
     init {
         clipChildren = false
         clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
     }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
 
     fun update(
         connection: NestedScrollConnection,

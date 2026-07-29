@@ -17,6 +17,7 @@ import com.viewcompose.ui.modifier.graphicsLayer
 import com.viewcompose.ui.modifier.dropShadow
 import com.viewcompose.ui.modifier.dropShadows
 import com.viewcompose.ui.modifier.layoutId
+import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
 import com.viewcompose.ui.modifier.ConstraintModifierElement
 import com.viewcompose.ui.modifier.GesturePriorityModifierElement
@@ -33,6 +34,16 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class ResolvedModifiersTest {
+    @Test
+    fun `resolve sums repeated zIndex modifiers`() {
+        val resolved = Modifier
+            .zIndex(2f)
+            .zIndex(-0.5f)
+            .resolve()
+
+        assertEquals(1.5f, resolved.zIndex?.zIndex)
+    }
+
     @Test
     fun `resolve captures background drawable resource modifier`() {
         val resolved = Modifier

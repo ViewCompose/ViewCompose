@@ -118,6 +118,9 @@ fun Modifier.alpha(alpha: Float): Modifier {
 }
 
 fun Modifier.zIndex(zIndex: Float): Modifier {
+    require(zIndex.isFinite()) {
+        "Modifier.zIndex must be finite."
+    }
     return then(
         ZIndexModifierElement(zIndex),
     )

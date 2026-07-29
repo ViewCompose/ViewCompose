@@ -116,7 +116,11 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is MinWidthModifierElement -> result.minWidth = element
             is AnimateContentSizeModifierElement -> result.animateContentSize = element
             is VisibilityModifierElement -> result.visibility = element
-            is ZIndexModifierElement -> result.zIndex = element
+            is ZIndexModifierElement -> {
+                result.zIndex = ZIndexModifierElement(
+                    zIndex = (result.zIndex?.zIndex ?: 0f) + element.zIndex,
+                )
+            }
             is GraphicsLayerModifierElement -> result.graphicsLayer = element
             is PointerInputModifierElement -> result.pointerInput = element
             is CombinedClickableModifierElement -> result.combinedClickable = element

@@ -20,6 +20,28 @@ class ShadowDecorationHostLayout @JvmOverloads constructor(
     init {
         clipChildren = false
         clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
+    }
+
+    override fun onViewAdded(child: View) {
+        super.onViewAdded(child)
+        DecorationChildDrawingOrder.invalidate(this)
+    }
+
+    override fun onViewRemoved(child: View) {
+        super.onViewRemoved(child)
+        DecorationChildDrawingOrder.invalidate(this)
+    }
+
+    override fun getChildDrawingOrder(
+        childCount: Int,
+        drawingPosition: Int,
+    ): Int {
+        return DecorationChildDrawingOrder.getChildDrawingOrder(
+            parent = this,
+            childCount = childCount,
+            drawingPosition = drawingPosition,
+        )
     }
 
     override fun drawChild(

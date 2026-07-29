@@ -64,7 +64,13 @@ data class AlphaModifierElement(
 
 data class ZIndexModifierElement(
     val zIndex: Float,
-) : ModifierElement
+) : ModifierElement {
+    init {
+        require(zIndex.isFinite()) {
+            "ZIndexModifierElement.zIndex must be finite."
+        }
+    }
+}
 
 data class TransformOrigin(
     val pivotFractionX: Float,

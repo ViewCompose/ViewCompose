@@ -17,6 +17,7 @@ import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.spec.ConstraintAnchor
@@ -92,7 +93,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     init {
         clipChildren = false
         clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
     }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         flushPendingConstraintRebuild()
@@ -129,6 +134,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     override fun onViewAdded(child: View) {
         super.onViewAdded(child)
+        DecorationChildDrawingOrder.invalidate(this)
         if (!mutatingHelperViews) {
             requestConstraintRebuild()
         }
@@ -136,6 +142,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     override fun onViewRemoved(child: View) {
         super.onViewRemoved(child)
+        DecorationChildDrawingOrder.invalidate(this)
         if (!mutatingHelperViews) {
             requestConstraintRebuild()
         }

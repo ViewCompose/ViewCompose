@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import kotlin.math.max
 
@@ -20,7 +21,11 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
     init {
         clipChildren = false
         clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
     }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
 
     var horizontalSpacing: Int = 0
         set(value) {

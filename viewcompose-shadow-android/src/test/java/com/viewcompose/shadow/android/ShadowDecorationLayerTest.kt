@@ -27,6 +27,34 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ShadowDecorationLayerTest {
     @Test
+    fun `decoration host draws overlapping children by declarative zIndex`() {
+        val context = RuntimeEnvironment.getApplication()
+        val host = ShadowDecorationHostLayout(context)
+        val higher = SolidColorView(context, Color.RED)
+        val lower = SolidColorView(context, Color.BLUE)
+        host.addView(higher, FrameLayout.LayoutParams(20, 20))
+        host.addView(lower, FrameLayout.LayoutParams(20, 20))
+        DecorationChildDrawingOrder.update(higher, 2f)
+        DecorationChildDrawingOrder.update(lower, 1f)
+        host.measure(
+            View.MeasureSpec.makeMeasureSpec(20, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(20, View.MeasureSpec.EXACTLY),
+        )
+        host.layout(0, 0, 20, 20)
+
+        val raisedBitmap = Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888)
+        host.draw(Canvas(raisedBitmap))
+
+        assertEquals(Color.RED, raisedBitmap.getPixel(10, 10))
+
+        DecorationChildDrawingOrder.update(higher, 0f)
+        val loweredBitmap = Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888)
+        host.draw(Canvas(loweredBitmap))
+
+        assertEquals(Color.BLUE, loweredBitmap.getPixel(10, 10))
+    }
+
+    @Test
     fun `host draws shadow outside child before child content`() {
         val context = RuntimeEnvironment.getApplication()
         val host = TestDecorationHost(context).apply {
