@@ -137,8 +137,12 @@ Implemented bridge foundation:
 
 - The `com.viewcompose.preview` Gradle plugin registers one discovery task per Android application
   or library variant through the public AGP Variant and Scoped Artifacts APIs.
-- `PreviewBuildManifest` exports project classes, runtime and boot classpaths, sources, resources,
-  merged Manifest, SDK location, namespace, SDK bounds, and a content fingerprint.
+- `PreviewBuildManifest` exports project classes, runtime and boot classpaths, sources, merged
+  Manifest, SDK location, namespace, min/target/compile SDK bounds, resource package names, and a
+  content fingerprint.
+- The resource environment keeps local, project-module, and external-AAR resources and assets as
+  separate ordered input roles. This is the same information Layoutlib needs to resolve dependency
+  themes and resources without loading the application in Gradle.
 - `CompiledPreviewScanner` reads JVM bytecode with ASM instead of loading application classes into
   the Gradle daemon. Direct, repeatable, built-in, and project-defined meta-preview annotations are
   supported.
@@ -146,8 +150,8 @@ Implemented bridge foundation:
   discovery diagnostics while valid previews remain usable.
 - `discover<Variant>ViewComposePreviews` atomically writes `build-manifest.json` and
   `descriptors.json` under `build/viewcompose-preview/<variant>`.
-- A TestKit Android fixture compiles a real preview function and verifies the exported build model
-  and descriptor catalog end to end.
+- A TestKit Android fixture compiles a real preview function with local resources/assets and
+  AndroidX resources, then verifies the exported build model and descriptor catalog end to end.
 
 Remaining in this stage:
 

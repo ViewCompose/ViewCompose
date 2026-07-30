@@ -9,6 +9,11 @@ import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE
+import org.gradle.api.file.FileCollection
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 
@@ -56,6 +61,25 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
     aggregate: TaskProvider<Task>,
 ) {
     androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+        val moduleResources = variant.runtimeConfiguration.artifactFiles(
+            artifactType = ANDROID_RES_ARTIFACT_TYPE,
+            componentFilter = { identifier -> identifier is ProjectComponentIdentifier },
+        )
+        val libraryResources = variant.runtimeConfiguration.artifactFiles(
+            artifactType = ANDROID_RES_ARTIFACT_TYPE,
+            componentFilter = { identifier -> identifier !is ProjectComponentIdentifier },
+        )
+        val moduleAssets = variant.runtimeConfiguration.artifactFiles(
+            artifactType = ANDROID_ASSETS_ARTIFACT_TYPE,
+            componentFilter = { identifier -> identifier is ProjectComponentIdentifier },
+        )
+        val libraryAssets = variant.runtimeConfiguration.artifactFiles(
+            artifactType = ANDROID_ASSETS_ARTIFACT_TYPE,
+            componentFilter = { identifier -> identifier !is ProjectComponentIdentifier },
+        )
+        val resourcePackageFiles = variant.runtimeConfiguration.artifactFiles(
+            artifactType = ANDROID_SYMBOL_WITH_PACKAGE_ARTIFACT_TYPE,
+        )
         val task = project.tasks.register(
             variant.computeTaskName("discover", "ViewComposePreviews"),
             DiscoverViewComposePreviewsTask::class.java,
@@ -78,7 +102,13 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
             discovery.bootClasspath.from(androidComponents.sdkComponents.bootClasspath)
             discovery.sourceDirectories.from(variant.sources.java?.all)
             discovery.sourceDirectories.from(variant.sources.kotlin?.all)
-            discovery.resourceDirectories.from(variant.sources.res?.all)
+            discovery.localResourceDirectories.from(variant.sources.res?.all)
+            discovery.moduleResourceDirectories.from(moduleResources)
+            discovery.libraryResourceDirectories.from(libraryResources)
+            discovery.localAssetDirectories.from(variant.sources.assets?.all)
+            discovery.moduleAssetDirectories.from(moduleAssets)
+            discovery.libraryAssetDirectories.from(libraryAssets)
+            discovery.resourcePackageFiles.from(resourcePackageFiles)
             discovery.mergedManifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
             val artifactRoot = project.layout.buildDirectory.dir(
                 "viewcompose-preview/${variant.name}",
@@ -103,4 +133,18 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
     }
 }
 
+private fun Configuration.artifactFiles(
+    artifactType: String,
+    componentFilter: (ComponentIdentifier) -> Boolean = { true },
+): FileCollection {
+    return incoming.artifactView { view ->
+        view.attributes.attribute(ARTIFACT_TYPE_ATTRIBUTE, artifactType)
+        view.componentFilter(componentFilter)
+    }.files
+}
+
 private const val TASK_GROUP = "viewcompose preview"
+private const val ANDROID_RES_ARTIFACT_TYPE = "android-res"
+private const val ANDROID_ASSETS_ARTIFACT_TYPE = "android-assets"
+private const val ANDROID_SYMBOL_WITH_PACKAGE_ARTIFACT_TYPE =
+    "android-symbol-with-package-name"

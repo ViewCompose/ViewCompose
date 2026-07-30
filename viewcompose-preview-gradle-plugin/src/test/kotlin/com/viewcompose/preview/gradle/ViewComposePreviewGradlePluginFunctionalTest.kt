@@ -1,6 +1,7 @@
 package com.viewcompose.preview.gradle
 
 import com.viewcompose.preview.tooling.PreviewProtocolJson
+import com.viewcompose.preview.tooling.PreviewBuildInputKind
 import com.viewcompose.preview.tooling.PreviewTheme
 import java.io.File
 import java.util.Properties
@@ -45,6 +46,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         project.resolve("local.properties").writeText(
             "sdk.dir=${sdkDirectory!!.absolutePath.replace("\\", "\\\\")}",
         )
+        project.resolve("gradle.properties").writeText("android.useAndroidX=true\n")
         project.resolve("app/build.gradle").apply {
             parentFile.mkdirs()
             writeText(
@@ -65,12 +67,24 @@ class ViewComposePreviewGradlePluginFunctionalTest {
                         versionName "1"
                     }
                 }
+
+                dependencies {
+                    implementation "androidx.appcompat:appcompat-resources:1.7.0"
+                }
                 """.trimIndent(),
             )
         }
         project.resolve("app/src/main/AndroidManifest.xml").apply {
             parentFile.mkdirs()
             writeText("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" />")
+        }
+        project.resolve("app/src/main/res/values/strings.xml").apply {
+            parentFile.mkdirs()
+            writeText("<resources><string name=\"app_name\">Fixture</string></resources>")
+        }
+        project.resolve("app/src/main/assets/app.txt").apply {
+            parentFile.mkdirs()
+            writeText("app asset")
         }
         project.writeJava(
             "app/src/main/java/com/viewcompose/widget/core/UiTreeBuilder.java",
@@ -162,8 +176,16 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         assertEquals(":app", manifest.modulePath)
         assertEquals("debug", manifest.buildVariant)
         assertEquals("sample.fixture", manifest.namespace)
+        assertEquals(35, manifest.compileSdk)
+        assertTrue("sample.fixture" in manifest.resourcePackageNames)
+        assertTrue(manifest.resourcePackageNames.size > 1)
         assertEquals(manifest.inputFingerprint, catalog.buildFingerprint)
         assertTrue(manifest.inputs.isNotEmpty())
+        val inputKinds = manifest.inputs.map { input -> input.kind }.toSet()
+        assertTrue(PreviewBuildInputKind.LocalResourceDirectory in inputKinds)
+        assertTrue(PreviewBuildInputKind.LibraryResourceDirectory in inputKinds)
+        assertTrue(PreviewBuildInputKind.LocalAssetDirectory in inputKinds)
+        assertTrue(PreviewBuildInputKind.ResourcePackageFile in inputKinds)
         assertEquals(1, catalog.descriptors.size)
         val descriptor = catalog.descriptors.single()
         assertEquals("card", descriptor.entryPoint.methodName)

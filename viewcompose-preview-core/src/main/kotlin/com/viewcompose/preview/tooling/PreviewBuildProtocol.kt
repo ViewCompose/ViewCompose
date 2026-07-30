@@ -15,7 +15,13 @@ enum class PreviewBuildInputKind {
     RuntimeClasspath,
     BootClasspath,
     SourceDirectory,
-    ResourceDirectory,
+    LocalResourceDirectory,
+    ModuleResourceDirectory,
+    LibraryResourceDirectory,
+    LocalAssetDirectory,
+    ModuleAssetDirectory,
+    LibraryAssetDirectory,
+    ResourcePackageFile,
 }
 
 /**
@@ -49,9 +55,11 @@ data class PreviewBuildManifest(
     val androidGradlePluginVersion: String,
     val minSdk: Int,
     val targetSdk: Int,
+    val compileSdk: Int,
     val sdkDirectory: String,
     val mergedManifestPath: String,
     val artifactRootDirectory: String,
+    val resourcePackageNames: List<String>,
     val inputs: List<PreviewBuildInput>,
     val inputFingerprint: String,
 ) {
@@ -65,12 +73,25 @@ data class PreviewBuildManifest(
         }
         require(minSdk > 0) { "Preview build minSdk must be greater than zero." }
         require(targetSdk > 0) { "Preview build targetSdk must be greater than zero." }
+        require(compileSdk > 0) { "Preview build compileSdk must be greater than zero." }
         require(sdkDirectory.isNotBlank()) { "Preview SDK directory must not be blank." }
         require(mergedManifestPath.isNotBlank()) {
             "Preview merged manifest path must not be blank."
         }
         require(artifactRootDirectory.isNotBlank()) {
             "Preview artifact root directory must not be blank."
+        }
+        require(resourcePackageNames.isNotEmpty()) {
+            "Preview resourcePackageNames must not be empty."
+        }
+        require(resourcePackageNames.none(String::isBlank)) {
+            "Preview resourcePackageNames must not contain blank values."
+        }
+        require(resourcePackageNames == resourcePackageNames.distinct().sorted()) {
+            "Preview resourcePackageNames must be unique and sorted."
+        }
+        require(namespace in resourcePackageNames) {
+            "Preview resourcePackageNames must contain the module namespace."
         }
         require(inputs.map(PreviewBuildInput::kind).distinct().size == inputs.size) {
             "Preview build input kinds must be unique."

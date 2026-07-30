@@ -71,7 +71,31 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val resourceDirectories: ConfigurableFileCollection
+    abstract val localResourceDirectories: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val moduleResourceDirectories: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val libraryResourceDirectories: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val localAssetDirectories: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val moduleAssetDirectories: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val libraryAssetDirectories: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val resourcePackageFiles: ConfigurableFileCollection
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -93,14 +117,26 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
         val runtimeFiles = runtimeClasspath.files
         val bootFiles = bootClasspath.files
         val sourceFiles = sourceDirectories.files
-        val resourceFiles = resourceDirectories.files
+        val localResourceFiles = localResourceDirectories.files
+        val moduleResourceFiles = moduleResourceDirectories.files
+        val libraryResourceFiles = libraryResourceDirectories.files
+        val localAssetFiles = localAssetDirectories.files
+        val moduleAssetFiles = moduleAssetDirectories.files
+        val libraryAssetFiles = libraryAssetDirectories.files
+        val packageFiles = resourcePackageFiles.files
         val manifestFile = mergedManifest.get().asFile
         val fingerprintGroups = linkedMapOf(
+            "assets-library" to libraryAssetFiles,
+            "assets-local" to localAssetFiles,
+            "assets-module" to moduleAssetFiles,
             "boot-classpath" to bootFiles,
             "manifest" to listOf(manifestFile),
             "project-class-directories" to projectDirectories,
             "project-class-jars" to projectJars,
-            "resources" to resourceFiles,
+            "resource-packages" to packageFiles,
+            "resources-library" to libraryResourceFiles,
+            "resources-local" to localResourceFiles,
+            "resources-module" to moduleResourceFiles,
             "runtime-classpath" to runtimeFiles,
             "sources" to sourceFiles,
         )
@@ -117,18 +153,30 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
             addInput(PreviewBuildInputKind.RuntimeClasspath, runtimeFiles)
             addInput(PreviewBuildInputKind.BootClasspath, bootFiles)
             addInput(PreviewBuildInputKind.SourceDirectory, sourceFiles)
-            addInput(PreviewBuildInputKind.ResourceDirectory, resourceFiles)
+            addInput(PreviewBuildInputKind.LocalResourceDirectory, localResourceFiles)
+            addInput(PreviewBuildInputKind.ModuleResourceDirectory, moduleResourceFiles)
+            addInput(PreviewBuildInputKind.LibraryResourceDirectory, libraryResourceFiles)
+            addInput(PreviewBuildInputKind.LocalAssetDirectory, localAssetFiles)
+            addInput(PreviewBuildInputKind.ModuleAssetDirectory, moduleAssetFiles)
+            addInput(PreviewBuildInputKind.LibraryAssetDirectory, libraryAssetFiles)
+            addInput(PreviewBuildInputKind.ResourcePackageFile, packageFiles)
         }.sortedBy { input -> input.kind.ordinal }
+        val resolvedNamespace = namespace.get()
         val manifest = PreviewBuildManifest(
             modulePath = modulePath.get(),
             buildVariant = buildVariant.get(),
-            namespace = namespace.get(),
+            namespace = resolvedNamespace,
             androidGradlePluginVersion = androidGradlePluginVersion.get(),
             minSdk = minSdk.get(),
             targetSdk = targetSdk.get(),
+            compileSdk = resolveCompileSdk(bootFiles),
             sdkDirectory = sdkDirectoryPath.get(),
             mergedManifestPath = manifestFile.normalizedAbsolutePath(),
             artifactRootDirectory = artifactRootDirectory.get().asFile.normalizedAbsolutePath(),
+            resourcePackageNames = buildResourcePackageNames(
+                namespace = resolvedNamespace,
+                packageFiles = packageFiles,
+            ),
             inputs = inputs,
             inputFingerprint = fingerprint,
         )
@@ -163,6 +211,42 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
     }
 }
 
+internal fun resolveCompileSdk(bootClasspath: Collection<File>): Int {
+    val apiLevels = bootClasspath.asSequence()
+        .map(File::normalizedAbsolutePath)
+        .mapNotNull { path ->
+            ANDROID_PLATFORM_PATTERN.find(path)
+                ?.groupValues
+                ?.get(1)
+                ?.toIntOrNull()
+        }
+        .distinct()
+        .sorted()
+        .toList()
+    require(apiLevels.size == 1) {
+        "Could not resolve one Android compile SDK from boot classpath: " +
+            bootClasspath.joinToString { file -> file.normalizedAbsolutePath() }
+    }
+    return apiLevels.single()
+}
+
+internal fun buildResourcePackageNames(
+    namespace: String,
+    packageFiles: Collection<File>,
+): List<String> {
+    return buildList {
+        add(namespace)
+        packageFiles.asSequence()
+            .filter(File::isFile)
+            .mapNotNull { file ->
+                file.useLines { lines ->
+                    lines.firstOrNull(String::isNotBlank)?.trim()
+                }
+            }
+            .forEach(::add)
+    }.distinct().sorted()
+}
+
 private fun File.normalizedAbsolutePath(): String = absoluteFile.normalize().path
 
 private fun File.writeTextAtomically(value: String) {
@@ -182,3 +266,5 @@ private fun File.writeTextAtomically(value: String) {
 }
 
 private fun File.resolveSibling(name: String): File = File(checkNotNull(parentFile), name)
+
+private val ANDROID_PLATFORM_PATTERN = Regex("""[/\\]platforms[/\\]android-(\d+)[/\\]""")

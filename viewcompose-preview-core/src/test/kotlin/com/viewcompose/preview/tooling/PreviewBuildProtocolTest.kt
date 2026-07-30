@@ -15,9 +15,11 @@ class PreviewBuildProtocolTest {
             androidGradlePluginVersion = "8.13.2",
             minSdk = 24,
             targetSdk = 35,
+            compileSdk = 35,
             sdkDirectory = "/sdk",
             mergedManifestPath = "/project/AndroidManifest.xml",
             artifactRootDirectory = "/project/build/viewcompose-preview/debug",
+            resourcePackageNames = listOf("com.example"),
             inputs = listOf(
                 PreviewBuildInput(
                     kind = PreviewBuildInputKind.ProjectClassDirectory,
