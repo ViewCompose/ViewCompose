@@ -12,6 +12,7 @@ import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.unit.sp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -127,7 +128,7 @@ class AndroidInteropRenderingUiTest {
                 overflow = TextOverflow.Clip,
                 textAlign = TextAlign.Start,
                 textColor = 0xFF000000.toInt(),
-                textSizeSp = 14,
+                textSizeSp = 14.sp,
             ),
             modifier = Modifier.then(
                 NativeViewElement(stableKey = nativeKey) { view ->
