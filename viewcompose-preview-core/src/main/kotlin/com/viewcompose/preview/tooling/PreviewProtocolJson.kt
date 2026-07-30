@@ -28,4 +28,16 @@ object PreviewProtocolJson {
 
     fun decodeRenderSnapshot(value: String): PreviewRenderSnapshot =
         format.decodeFromString(value)
+
+    fun encodeBuildManifest(manifest: PreviewBuildManifest): String =
+        format.encodeToString(manifest)
+
+    fun decodeBuildManifest(value: String): PreviewBuildManifest =
+        format.decodeFromString(value)
+
+    fun encodeDescriptorCatalog(catalog: PreviewDescriptorCatalog): String =
+        format.encodeToString(catalog)
+
+    fun decodeDescriptorCatalog(value: String): PreviewDescriptorCatalog =
+        format.decodeFromString(value)
 }

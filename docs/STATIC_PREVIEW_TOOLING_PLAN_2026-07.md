@@ -21,6 +21,8 @@ independent Gradle build.
 ```text
 ViewCompose
 ├── viewcompose-preview-core       pure Kotlin contracts and protocol
+├── viewcompose-preview-gradle-plugin
+│                                   Android variant export and bytecode discovery
 ├── viewcompose-preview-runner     isolated Android/Layoutlib renderer
 ├── viewcompose-preview            optional Compose Preview adapter and catalog
 └── tools/viewcompose-studio-plugin
@@ -130,6 +132,27 @@ Exit criteria:
 
 - A command can render one preview from `:app:debug`.
 - Source, dependency, and resource changes invalidate the correct cache.
+
+Implemented bridge foundation:
+
+- The `com.viewcompose.preview` Gradle plugin registers one discovery task per Android application
+  or library variant through the public AGP Variant and Scoped Artifacts APIs.
+- `PreviewBuildManifest` exports project classes, runtime and boot classpaths, sources, resources,
+  merged Manifest, SDK location, namespace, SDK bounds, and a content fingerprint.
+- `CompiledPreviewScanner` reads JVM bytecode with ASM instead of loading application classes into
+  the Gradle daemon. Direct, repeatable, built-in, and project-defined meta-preview annotations are
+  supported.
+- Invalid function signatures and invalid annotation configurations are emitted as structured
+  discovery diagnostics while valid previews remain usable.
+- `discover<Variant>ViewComposePreviews` atomically writes `build-manifest.json` and
+  `descriptors.json` under `build/viewcompose-preview/<variant>`.
+- A TestKit Android fixture compiles a real preview function and verifies the exported build model
+  and descriptor catalog end to end.
+
+Remaining in this stage:
+
+- Launch the Layoutlib worker from a single-preview task.
+- Add render-result caching keyed by build fingerprint, preview id, and variant id.
 
 ### Stage 4 — Android Studio plugin shell
 

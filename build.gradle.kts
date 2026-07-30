@@ -24,6 +24,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-lifecycle" to "com.viewcompose.lifecycle",
     "viewcompose-viewmodel" to "com.viewcompose.viewmodel",
     "viewcompose-preview-core" to "com.viewcompose.preview.tooling",
+    "viewcompose-preview-gradle-plugin" to "com.viewcompose.preview.gradle",
     "viewcompose-preview-runner" to "com.viewcompose.preview.runner",
     "viewcompose-preview" to "com.viewcompose.preview",
     "viewcompose-animation" to "com.viewcompose.animation",
@@ -41,6 +42,7 @@ val kotlinJvmModules = setOf(
     "viewcompose-runtime",
     "viewcompose-navigation-core",
     "viewcompose-preview-core",
+    "viewcompose-preview-gradle-plugin",
     "viewcompose-animation-core",
     "viewcompose-gesture-core",
     "viewcompose-graphics-core",
@@ -55,6 +57,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-lifecycle:compileDebugKotlin",
     ":viewcompose-viewmodel:compileDebugKotlin",
     ":viewcompose-preview-core:compileKotlin",
+    ":viewcompose-preview-gradle-plugin:compileKotlin",
     ":viewcompose-preview-runner:compileDebugKotlin",
     ":viewcompose-renderer:compileDebugKotlin",
     ":viewcompose-widget-core:compileDebugKotlin",
@@ -78,6 +81,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-lifecycle:testDebugUnitTest",
     ":viewcompose-viewmodel:testDebugUnitTest",
     ":viewcompose-preview-core:test",
+    ":viewcompose-preview-gradle-plugin:test",
     ":viewcompose-preview-runner:testDebugUnitTest",
     ":viewcompose-renderer:testDebugUnitTest",
     ":viewcompose-widget-core:testDebugUnitTest",
@@ -365,6 +369,51 @@ tasks.register("verifyPreviewRunnerBoundary") {
     }
 }
 
+tasks.register("verifyPreviewGradlePluginBoundary") {
+    group = "verification"
+    description = "Verify preview Gradle tooling uses public build APIs and stays renderer-free."
+    doLast {
+        val violations = mutableListOf<String>()
+        val pluginDir = rootDir.resolve("viewcompose-preview-gradle-plugin")
+        val pluginMainDir = pluginDir.resolve("src/main")
+        if (pluginMainDir.exists()) {
+            pluginMainDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import android.") ||
+                                trimmed.startsWith("import androidx.") ||
+                                trimmed.startsWith("import com.android.build.gradle.internal.") ||
+                                trimmed.startsWith("import com.android.tools.idea.") ||
+                                trimmed.startsWith("import com.viewcompose.preview.runner.")
+                            ) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+        val buildFile = pluginDir.resolve("build.gradle.kts")
+        if (buildFile.exists() && buildFile.readText().contains("viewcompose-preview-runner")) {
+            violations +=
+                "${buildFile.relativeTo(rootDir)} -> Gradle tooling must not depend on the renderer"
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Preview Gradle plugin boundary verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyNavigationCorePurity") {
     group = "verification"
     description = "Verify navigation-core remains Kotlin/JVM-pure without Android imports."
@@ -411,6 +460,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyGraphicsCorePurity")
     dependsOn("verifyPreviewCorePurity")
     dependsOn("verifyPreviewRunnerBoundary")
+    dependsOn("verifyPreviewGradlePluginBoundary")
     dependsOn(qaQuickTasks)
 }
 
