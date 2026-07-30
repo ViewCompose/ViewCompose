@@ -68,6 +68,63 @@ class InnerShadowBitmapRasterizerTest {
     }
 
     @Test
+    fun `rounded shape clips inner shadow at transparent corners`() {
+        val rasterizer = InnerShadowBitmapRasterizer()
+        val result = requireNotNull(
+            rasterizer.rasterize(
+                widthPx = 40,
+                heightPx = 30,
+                layoutDirection = View.LAYOUT_DIRECTION_LTR,
+                spec = InnerShadowSpecResolver.resolve(
+                    elements = listOf(
+                        InnerShadowModifierElement(
+                            shadows = listOf(
+                                UiShadow(
+                                    color = Color.RED,
+                                    blurRadius = 0.dp,
+                                    spreadRadius = 4.dp,
+                                ),
+                            ),
+                        ),
+                    ),
+                    defaultShape = UiShape.rounded(10.dp),
+                    density = UiDensity.Default,
+                ),
+            ),
+        )
+
+        assertEquals(Color.TRANSPARENT, result.bitmap.getPixel(0, 0))
+        assertEquals(Color.RED, result.bitmap.getPixel(1, 15))
+        assertEquals(Color.TRANSPARENT, result.bitmap.getPixel(20, 15))
+    }
+
+    @Test
+    fun `later inner shadow layer draws over earlier layer`() {
+        val rasterizer = InnerShadowBitmapRasterizer()
+        val result = requireNotNull(
+            rasterizer.rasterize(
+                widthPx = 40,
+                heightPx = 30,
+                layoutDirection = View.LAYOUT_DIRECTION_LTR,
+                spec = resolve(
+                    UiShadow(
+                        color = Color.RED,
+                        blurRadius = 0.dp,
+                        spreadRadius = 4.dp,
+                    ),
+                    UiShadow(
+                        color = Color.BLUE,
+                        blurRadius = 0.dp,
+                        spreadRadius = 4.dp,
+                    ),
+                ),
+            ),
+        )
+
+        assertEquals(Color.BLUE, result.bitmap.getPixel(1, 15))
+    }
+
+    @Test
     fun `same immutable inner shadow request is cached`() {
         val rasterizer = InnerShadowBitmapRasterizer()
         val spec = resolve(

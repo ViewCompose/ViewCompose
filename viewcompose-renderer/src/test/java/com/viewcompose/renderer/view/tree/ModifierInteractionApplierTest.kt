@@ -163,11 +163,19 @@ class ModifierInteractionApplierTest {
     }
 
     @Test
-    fun `inner shadow follows resolved shape without replacing click behavior`() {
+    fun `inner shadow follows shape without rebuilding ripple or click binding`() {
         val view = View(RuntimeEnvironment.getApplication())
         var clicks = 0
+        val onClick = { clicks += 1 }
+        val baseNode = vnode(
+            Modifier
+                .backgroundColor(0xFF112233.toInt())
+                .cornerRadius(6.dp)
+                .clickable(onClick),
+        )
         val shadowNode = vnode(
             Modifier
+                .backgroundColor(0xFF112233.toInt())
                 .cornerRadius(6.dp)
                 .innerShadow(
                     UiShadow(
@@ -176,14 +184,19 @@ class ModifierInteractionApplierTest {
                         offsetY = 2.dp,
                     ),
                 )
-                .clickable { clicks += 1 },
+                .clickable(onClick),
         )
 
-        ViewModifierApplier.applyModifier(view, shadowNode, defaultRippleColor = 0)
+        ViewModifierApplier.applyModifier(view, baseNode, defaultRippleColor = 0x22000000)
+        val initialBackground = view.background
+        val initialClickBinding = view.getTag(R.id.viewcompose_modifier_click_listener)
+        ViewModifierApplier.applyModifier(view, shadowNode, defaultRippleColor = 0x22000000)
 
         val installed = requireNotNull(ShadowDecorationLayer.innerSpecOrNull(view))
         assertEquals(1, installed.layerCount)
         assertEquals(6.dp, installed.groups.single().shape.uniformAbsoluteSizeOrNull)
+        assertSame(initialBackground, view.background)
+        assertSame(initialClickBinding, view.getTag(R.id.viewcompose_modifier_click_listener))
         view.performClick()
         assertEquals(1, clicks)
 

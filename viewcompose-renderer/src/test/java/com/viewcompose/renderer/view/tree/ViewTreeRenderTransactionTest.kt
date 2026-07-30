@@ -15,13 +15,16 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.google.android.material.shape.CutCornerTreatment
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
 import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.innerShadow
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
@@ -118,6 +121,56 @@ class ViewTreeRenderTransactionTest {
             ),
             0.001f,
         )
+    }
+
+    @Test
+    fun `inner shadow preserves native text editing across modifier patch`() {
+        val container = FrameLayout(context)
+        val state = TextFieldState(TextFieldValue("value"))
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                textFieldNode(
+                    state = state,
+                    modifier = Modifier.innerShadow(
+                        UiShadow(
+                            color = 0x33000000,
+                            blurRadius = 4.dp,
+                        ),
+                    ),
+                ),
+            ),
+        )
+        val editText = initial.mountedNodes.single().view as ViewComposeEditText
+        editText.setSelection(2)
+        editText.text?.insert(2, "X")
+
+        assertEquals("vaXlue", state.value.text)
+        assertEquals(3, editText.selectionStart)
+        requireNotNull(ShadowDecorationLayer.innerSpecOrNull(editText))
+
+        val patched = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(
+                textFieldNode(
+                    state = state,
+                    modifier = Modifier.innerShadow(
+                        UiShadow(
+                            color = 0x55000000,
+                            blurRadius = 6.dp,
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        assertSame(editText, patched.mountedNodes.single().view)
+        assertEquals("vaXlue", editText.text.toString())
+        assertEquals(3, editText.selectionStart)
+        assertEquals(6f, requireNotNull(ShadowDecorationLayer.innerSpecOrNull(editText))
+            .groups.single().shadows.single().blurRadiusPx, 0.001f)
     }
 
     @Test
