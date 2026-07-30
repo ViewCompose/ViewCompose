@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,7 +32,9 @@ import androidx.compose.ui.unit.dp
  * Compose control implementation of the complex-layout performance scenario.
  */
 @Composable
-internal fun ComposeComplexLayoutPerformanceScreen() {
+internal fun ComposeComplexLayoutPerformanceScreen(
+    shadowsEnabled: Boolean,
+) {
     var revision by remember { mutableIntStateOf(0) }
     val cards = performanceDashboardCards(revision)
     Column(
@@ -40,7 +43,11 @@ internal fun ComposeComplexLayoutPerformanceScreen() {
             .background(Color(PERFORMANCE_BACKGROUND_COLOR)),
     ) {
         ComposeComplexLayoutPerformanceHeader(
-            engineName = PerformanceEngine.Compose.displayName,
+            engineName = if (shadowsEnabled) {
+                "${PerformanceEngine.Compose.displayName} Shadow"
+            } else {
+                PerformanceEngine.Compose.displayName
+            },
             revision = revision,
             onUpdate = {
                 revision += 1
@@ -58,7 +65,10 @@ internal fun ComposeComplexLayoutPerformanceScreen() {
                 .padding(8.dp),
         ) {
             cards.forEach { card ->
-                ComposeDashboardCard(card)
+                ComposeDashboardCard(
+                    card = card,
+                    shadowsEnabled = shadowsEnabled,
+                )
             }
         }
     }
@@ -137,14 +147,28 @@ private fun ComposeComplexLayoutAction(
  * Compose control card; its structure should stay equally complex to the ViewCompose version.
  */
 @Composable
-private fun ComposeDashboardCard(card: PerformanceDashboardCard) {
+private fun ComposeDashboardCard(
+    card: PerformanceDashboardCard,
+    shadowsEnabled: Boolean,
+) {
+    val shape = RoundedCornerShape(12.dp)
+    val shadowModifier = if (shadowsEnabled) {
+        Modifier.shadow(
+            elevation = 8.dp,
+            shape = shape,
+            clip = false,
+        )
+    } else {
+        Modifier
+    }
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .then(shadowModifier)
             .background(
                 color = Color(PERFORMANCE_SURFACE_COLOR),
-                shape = RoundedCornerShape(12.dp),
+                shape = shape,
             )
             .padding(12.dp),
     ) {

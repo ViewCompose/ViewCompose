@@ -1,10 +1,12 @@
 package com.viewcompose.performance
 
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
+import com.viewcompose.ui.modifier.dropShadows
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
@@ -24,7 +26,9 @@ import com.viewcompose.widget.core.remember
  * ViewCompose 版本的列表性能场景。
  * ViewCompose implementation of the list performance scenario.
  */
-internal fun UiTreeBuilder.ViewComposeListPerformanceScreen() {
+internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
+    shadowsEnabled: Boolean,
+) {
     val revisionState = remember { mutableStateOf(0) }
     val revision = revisionState.value
     val rows = performanceListRows(revision)
@@ -34,7 +38,11 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen() {
             .backgroundColor(PERFORMANCE_BACKGROUND_COLOR),
     ) {
         ListPerformanceHeader(
-            engineName = PerformanceEngine.ViewCompose.displayName,
+            engineName = if (shadowsEnabled) {
+                "${PerformanceEngine.ViewCompose.displayName} Shadow"
+            } else {
+                PerformanceEngine.ViewCompose.displayName
+            },
             revision = revision,
             onMutate = {
                 revisionState.value = revisionState.value + 1
@@ -53,7 +61,10 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen() {
                 .fillMaxWidth()
                 .weight(1f),
         ) { row ->
-            PerformanceListRow(row)
+            PerformanceListRow(
+                row = row,
+                shadowsEnabled = shadowsEnabled,
+            )
         }
     }
 }
@@ -122,14 +133,23 @@ private fun UiTreeBuilder.PerformanceAction(
  * 单行使用稳定 key 的 Surface，便于测量列表重排时的节点复用。
  * Row surface uses a stable key so list reordering measures node reuse.
  */
-private fun UiTreeBuilder.PerformanceListRow(row: PerformanceListRow) {
+private fun UiTreeBuilder.PerformanceListRow(
+    row: PerformanceListRow,
+    shadowsEnabled: Boolean,
+) {
+    val baseModifier = Modifier
+        .fillMaxWidth()
+        .backgroundColor(PERFORMANCE_SURFACE_COLOR)
+        .cornerRadius(10.dp)
+        .padding(10.dp)
+    val rowModifier = if (shadowsEnabled) {
+        baseModifier.dropShadows(PerformanceRowShadows)
+    } else {
+        baseModifier
+    }
     Surface(
         key = row.id,
-        modifier = Modifier
-            .fillMaxWidth()
-            .backgroundColor(PERFORMANCE_SURFACE_COLOR)
-            .cornerRadius(10.dp)
-            .padding(10.dp),
+        modifier = rowModifier,
     ) {
         Row(
             spacing = 10.dp,
@@ -180,3 +200,17 @@ private fun UiTreeBuilder.PerformanceListRow(row: PerformanceListRow) {
         }
     }
 }
+
+private val PerformanceRowShadows = listOf(
+    UiShadow(
+        color = 0x24000000,
+        blurRadius = 5.dp,
+        offsetY = 2.dp,
+    ),
+    UiShadow(
+        color = 0x14000000,
+        blurRadius = 10.dp,
+        spreadRadius = 1.dp,
+        offsetY = 5.dp,
+    ),
+)

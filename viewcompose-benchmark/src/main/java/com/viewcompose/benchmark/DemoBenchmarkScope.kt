@@ -79,14 +79,19 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
     engine: String,
     scenario: String,
     expectedText: String,
+    shadowRenderPolicy: String? = null,
 ) {
     prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait { intent ->
         intent.removeExtra("demo_module_key")
         intent.removeExtra("state_page_index")
+        intent.removeExtra("shadow_render_policy")
         intent.putExtra("performance_engine", engine)
         intent.putExtra("performance_scenario", scenario)
+        shadowRenderPolicy?.let { policy ->
+            intent.putExtra("shadow_render_policy", policy)
+        }
         intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
     }
     waitForText(expectedText)

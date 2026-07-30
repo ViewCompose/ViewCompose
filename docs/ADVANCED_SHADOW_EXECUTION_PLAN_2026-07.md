@@ -170,6 +170,36 @@ View 的最终 bounds/transform 在绘制前解析，避免每次 patch 主动�
 3. 列表、复杂布局、页面转场三类基准。
 4. 根据数据决定 Auto/Fast/Exact 策略，不凭实现直觉选择默认后端。
 
+当前 Phase 4 已建立 API 29+ RenderNode display-list 试验后端，以及列表滚动/变更、
+复杂布局滚动/更新的 ViewCompose/Compose 成对基准。`Auto` 暂时保持
+`ExactBitmap`；RenderNode 只能通过基准参数显式启用，待多轮同机数据通过后再决定默认策略。
+
+后端对比必须使用同一台设备和相同温控条件，分别保存结果，不能用单轮冒烟数据作结论：
+
+```shell
+# 精确 Bitmap 基线（默认 10 轮）
+./gradlew :viewcompose-benchmark:connectedBenchmarkAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.benchmark.ShadowPerformanceComparisonBenchmark \
+  -Pandroid.testInstrumentationRunnerArguments.shadowRenderPolicy=exact_bitmap
+
+# 保存上一步生成的 benchmarkData.json 后，再运行 RenderNode
+./gradlew :viewcompose-benchmark:connectedBenchmarkAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.benchmark.ShadowPerformanceComparisonBenchmark \
+  -Pandroid.testInstrumentationRunnerArguments.shadowRenderPolicy=render_node
+
+# 使用 Compose 控制组归一化设备波动，并执行回归门禁
+./gradlew benchmarkComparisonReport \
+  -PbenchmarkResult=/absolute/path/to/render-node-benchmarkData.json \
+  -PbenchmarkBaseline=/absolute/path/to/exact-bitmap-benchmarkData.json
+```
+
+调试构建可通过 `shadow_render_policy=render_node` 启动性能页，并在
+`ViewComposeShadow` 日志中确认实际后端和降级原因。API 29 以下或软件 Canvas 会自动回退
+到 Bitmap；运行时 RenderNode 失败也会回退且计入诊断。
+
+RenderEffect 动态模糊和页面转场阴影基准暂不进入默认链路：当前公开阴影契约是静态规格，
+先以列表和复杂布局数据确定 display-list 是否有稳定收益，再为动画阴影建立独立预算。
+
 ### Phase 5：Demo 与文档
 
 1. 单层/多层/彩色/偏移/spread/inner shadow 对照。

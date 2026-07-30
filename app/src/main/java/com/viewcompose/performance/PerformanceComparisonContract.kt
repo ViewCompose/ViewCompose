@@ -15,6 +15,12 @@ const val EXTRA_PERFORMANCE_ENGINE: String = "performance_engine"
 const val EXTRA_PERFORMANCE_SCENARIO: String = "performance_scenario"
 
 /**
+ * benchmark 指定高级阴影后端策略的 extra key。
+ * Intent extra key used by benchmarks to select the advanced-shadow backend policy.
+ */
+const val EXTRA_SHADOW_RENDER_POLICY: String = "shadow_render_policy"
+
+/**
  * 性能对比页支持的渲染引擎。
  * Rendering engines supported by the performance comparison screen.
  */
@@ -57,6 +63,12 @@ internal enum class PerformanceScenario(
     ),
     ComplexLayout(
         wireValue = "complex_layout",
+    ),
+    ShadowList(
+        wireValue = "shadow_list",
+    ),
+    ShadowComplexLayout(
+        wireValue = "shadow_complex_layout",
     ),
     ;
 

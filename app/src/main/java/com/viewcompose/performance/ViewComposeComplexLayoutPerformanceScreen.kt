@@ -1,10 +1,12 @@
 package com.viewcompose.performance
 
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.cornerRadius
+import com.viewcompose.ui.modifier.dropShadows
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
@@ -24,7 +26,9 @@ import com.viewcompose.widget.core.remember
  * ViewCompose 版本的复杂布局性能场景。
  * ViewCompose implementation of the complex-layout performance scenario.
  */
-internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen() {
+internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen(
+    shadowsEnabled: Boolean,
+) {
     val revisionState = remember { mutableStateOf(0) }
     val revision = revisionState.value
     val cards = performanceDashboardCards(revision)
@@ -34,7 +38,11 @@ internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen() {
             .backgroundColor(PERFORMANCE_BACKGROUND_COLOR),
     ) {
         ComplexLayoutPerformanceHeader(
-            engineName = PerformanceEngine.ViewCompose.displayName,
+            engineName = if (shadowsEnabled) {
+                "${PerformanceEngine.ViewCompose.displayName} Shadow"
+            } else {
+                PerformanceEngine.ViewCompose.displayName
+            },
             revision = revision,
             onUpdate = {
                 revisionState.value = revisionState.value + 1
@@ -51,7 +59,10 @@ internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen() {
                 .padding(8.dp),
         ) {
             cards.forEach { card ->
-                DashboardCard(card)
+                DashboardCard(
+                    card = card,
+                    shadowsEnabled = shadowsEnabled,
+                )
             }
         }
     }
@@ -121,14 +132,23 @@ private fun UiTreeBuilder.ComplexLayoutAction(
  * 复杂布局卡片包含嵌套行列、标签和条件明细，用于放大布局与 patch 成本。
  * Complex cards include nested rows, tags, and conditional details to amplify layout and patch cost.
  */
-private fun UiTreeBuilder.DashboardCard(card: PerformanceDashboardCard) {
+private fun UiTreeBuilder.DashboardCard(
+    card: PerformanceDashboardCard,
+    shadowsEnabled: Boolean,
+) {
+    val baseModifier = Modifier
+        .fillMaxWidth()
+        .backgroundColor(PERFORMANCE_SURFACE_COLOR)
+        .cornerRadius(12.dp)
+        .padding(12.dp)
+    val cardModifier = if (shadowsEnabled) {
+        baseModifier.dropShadows(PerformanceDashboardShadows)
+    } else {
+        baseModifier
+    }
     Surface(
         key = card.id,
-        modifier = Modifier
-            .fillMaxWidth()
-            .backgroundColor(PERFORMANCE_SURFACE_COLOR)
-            .cornerRadius(12.dp)
-            .padding(12.dp),
+        modifier = cardModifier,
     ) {
         Column(
             spacing = 10.dp,
@@ -164,6 +184,20 @@ private fun UiTreeBuilder.DashboardCard(card: PerformanceDashboardCard) {
         }
     }
 }
+
+private val PerformanceDashboardShadows = listOf(
+    UiShadow(
+        color = 0x28000000,
+        blurRadius = 7.dp,
+        offsetY = 3.dp,
+    ),
+    UiShadow(
+        color = 0x12000000,
+        blurRadius = 14.dp,
+        spreadRadius = 1.dp,
+        offsetY = 7.dp,
+    ),
+)
 
 private fun UiTreeBuilder.DashboardCardHeader(card: PerformanceDashboardCard) {
     Row(
