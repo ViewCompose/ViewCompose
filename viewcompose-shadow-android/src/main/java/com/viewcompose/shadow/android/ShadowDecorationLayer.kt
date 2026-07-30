@@ -1,9 +1,13 @@
 package com.viewcompose.shadow.android
 
+import android.annotation.TargetApi
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
+import java.util.EnumMap
 import kotlin.math.roundToInt
 
 /**
@@ -22,6 +26,29 @@ object ShadowDecorationLayer {
     private val bitmapPaint = Paint(
         Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG,
     )
+    private var renderNodeRenderer: ShadowDisplayListRenderer? = null
+    @Volatile
+    private var renderPolicy: ShadowRenderPolicy = ShadowRenderPolicy.Auto
+    private var bitmapDraws: Long = 0
+    private var renderNodeDraws: Long = 0
+    private val decisionsByReason = EnumMap<ShadowRenderDecisionReason, Long>(
+        ShadowRenderDecisionReason::class.java,
+    )
+    private var lastDecision: ShadowRenderBackendDecision? = null
+
+    /**
+     * 设置后续阴影绘制策略。默认 Auto 在基准结论落地前仍使用精确 Bitmap。
+     * Sets the policy for subsequent shadow draws. Auto remains exact-bitmap until benchmarked.
+     *
+     * @return true when the policy changed.
+     */
+    fun setRenderPolicy(policy: ShadowRenderPolicy): Boolean {
+        if (renderPolicy == policy) return false
+        renderPolicy = policy
+        return true
+    }
+
+    fun renderPolicy(): ShadowRenderPolicy = renderPolicy
 
     /**
      * 更新节点的不可变阴影规格。空规格会移除旧阴影。
@@ -106,14 +133,14 @@ object ShadowDecorationLayer {
         if (!child.matrix.isIdentity) {
             canvas.concat(child.matrix)
         }
-        bitmapPaint.alpha = (child.alpha * 255f)
-            .roundToInt()
-            .coerceIn(0, 255)
-        canvas.drawBitmap(
-            raster.bitmap,
+        canvas.translate(
             raster.drawOffsetXPx,
             raster.drawOffsetYPx,
-            bitmapPaint,
+        )
+        drawRaster(
+            canvas = canvas,
+            bitmap = raster.bitmap,
+            alpha = child.alpha,
         )
         canvas.restoreToCount(saveCount)
     }
@@ -145,14 +172,10 @@ object ShadowDecorationLayer {
         if (!child.matrix.isIdentity) {
             canvas.concat(child.matrix)
         }
-        bitmapPaint.alpha = (child.alpha * 255f)
-            .roundToInt()
-            .coerceIn(0, 255)
-        canvas.drawBitmap(
-            raster.bitmap,
-            0f,
-            0f,
-            bitmapPaint,
+        drawRaster(
+            canvas = canvas,
+            bitmap = raster.bitmap,
+            alpha = child.alpha,
         )
         canvas.restoreToCount(saveCount)
     }
@@ -166,6 +189,30 @@ object ShadowDecorationLayer {
     /** Returns diagnostics for the process-wide bounded inner-shadow cache. */
     fun innerCacheStats(): ShadowRasterCacheStats = innerRasterizer.stats()
 
+    /** 返回当前后端策略、实际绘制次数和 display-list 缓存统计。 */
+    fun backendStats(): ShadowRenderBackendStats {
+        val renderNodeStats = renderNodeRenderer?.stats()
+        return ShadowRenderBackendStats(
+            policy = renderPolicy,
+            bitmapDraws = bitmapDraws,
+            renderNodeDraws = renderNodeDraws,
+            renderNodeRecordings = renderNodeStats?.recordings ?: 0,
+            renderNodeCacheHits = renderNodeStats?.hits ?: 0,
+            renderNodeCacheEvictions = renderNodeStats?.evictions ?: 0,
+            renderNodeCachedBytes = renderNodeStats?.cachedBytes ?: 0,
+            decisionsByReason = decisionsByReason.toMap(),
+            lastDecision = lastDecision,
+        )
+    }
+
+    /** 清空后端计数但保留当前策略和缓存。 / Clears backend counters while retaining policy/cache. */
+    fun resetBackendDiagnostics() {
+        bitmapDraws = 0
+        renderNodeDraws = 0
+        decisionsByReason.clear()
+        lastDecision = null
+    }
+
     /**
      * 清空静态阴影缓存；主要供内存压力处理与测试使用。
      * Clears static shadow rasters, primarily for memory pressure handling and tests.
@@ -173,5 +220,65 @@ object ShadowDecorationLayer {
     fun clearCache() {
         rasterizer.clear()
         innerRasterizer.clear()
+        renderNodeRenderer?.clear()
+    }
+
+    private fun drawRaster(
+        canvas: Canvas,
+        bitmap: Bitmap,
+        alpha: Float,
+    ) {
+        var decision = ShadowRenderBackendSelector.select(
+            policy = renderPolicy,
+            sdkInt = Build.VERSION.SDK_INT,
+            hardwareAccelerated = canvas.isHardwareAccelerated,
+        )
+        if (decision.backend == ShadowRenderBackend.RenderNodeDisplayList) {
+            try {
+                drawRenderNode(
+                    canvas = canvas,
+                    bitmap = bitmap,
+                    alpha = alpha,
+                )
+                renderNodeDraws += 1
+                recordDecision(decision)
+                return
+            } catch (_: RuntimeException) {
+                decision = ShadowRenderBackendDecision(
+                    backend = ShadowRenderBackend.Bitmap,
+                    reason = ShadowRenderDecisionReason.RenderNodeFailure,
+                )
+            }
+        }
+        bitmapPaint.alpha = (alpha * 255f)
+            .roundToInt()
+            .coerceIn(0, 255)
+        canvas.drawBitmap(bitmap, 0f, 0f, bitmapPaint)
+        bitmapDraws += 1
+        recordDecision(decision)
+    }
+
+    private fun recordDecision(decision: ShadowRenderBackendDecision) {
+        lastDecision = decision
+        decisionsByReason[decision.reason] = decisionsByReason.getOrDefault(
+            decision.reason,
+            0L,
+        ) + 1
+    }
+
+    @TargetApi(Build.VERSION_CODES.Q)
+    private fun drawRenderNode(
+        canvas: Canvas,
+        bitmap: Bitmap,
+        alpha: Float,
+    ) {
+        val renderer = renderNodeRenderer ?: RenderNodeShadowRenderer().also {
+            renderNodeRenderer = it
+        }
+        renderer.draw(
+            canvas = canvas,
+            bitmap = bitmap,
+            alpha = alpha,
+        )
     }
 }

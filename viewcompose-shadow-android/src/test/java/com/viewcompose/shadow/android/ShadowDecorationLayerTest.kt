@@ -201,6 +201,62 @@ class ShadowDecorationLayerTest {
         assertFalse(ShadowDecorationLayer.updateInner(child, ResolvedInnerShadowSpec.Empty))
     }
 
+    @Test
+    fun `render node experiment reports software canvas fallback`() {
+        ShadowDecorationLayer.clearCache()
+        ShadowDecorationLayer.resetBackendDiagnostics()
+        ShadowDecorationLayer.setRenderPolicy(
+            ShadowRenderPolicy.RenderNodeDisplayList,
+        )
+        try {
+            val context = RuntimeEnvironment.getApplication()
+            val host = TestDecorationHost(context)
+            val child = SolidColorView(context, Color.BLUE)
+            host.addView(child, FrameLayout.LayoutParams(20, 20))
+            ShadowDecorationLayer.update(
+                child,
+                ShadowSpecResolver.resolve(
+                    elements = listOf(
+                        DropShadowModifierElement(
+                            shadows = listOf(
+                                UiShadow(
+                                    color = Color.RED,
+                                    blurRadius = 0.dp,
+                                    spreadRadius = 2.dp,
+                                ),
+                            ),
+                        ),
+                    ),
+                    defaultShape = UiShape.rounded(0.dp),
+                    density = UiDensity.Default,
+                ),
+            )
+            host.measure(
+                View.MeasureSpec.makeMeasureSpec(40, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(40, View.MeasureSpec.EXACTLY),
+            )
+            host.layout(0, 0, 40, 40)
+
+            host.drawChildren(
+                Canvas(Bitmap.createBitmap(40, 40, Bitmap.Config.ARGB_8888)),
+            )
+
+            val stats = ShadowDecorationLayer.backendStats()
+            assertEquals(1L, stats.bitmapDraws)
+            assertEquals(0L, stats.renderNodeDraws)
+            assertEquals(
+                1L,
+                stats.decisionsByReason[ShadowRenderDecisionReason.SoftwareCanvas],
+            )
+            assertEquals(
+                ShadowRenderDecisionReason.SoftwareCanvas,
+                stats.lastDecision?.reason,
+            )
+        } finally {
+            ShadowDecorationLayer.setRenderPolicy(ShadowRenderPolicy.Auto)
+        }
+    }
+
     private class TestDecorationHost(
         context: Context,
     ) : FrameLayout(context) {
