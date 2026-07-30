@@ -58,6 +58,21 @@ data class DropShadowModifierElement(
     }
 }
 
+/**
+ * 一组共享可选 shape 的有序内阴影。
+ * An ordered group of inner shadows sharing an optional shape override.
+ */
+data class InnerShadowModifierElement(
+    val shadows: List<UiShadow>,
+    val shape: UiShape? = null,
+) : ModifierElement {
+    init {
+        require(shadows.isNotEmpty()) {
+            "InnerShadowModifierElement requires at least one shadow."
+        }
+    }
+}
+
 data class AlphaModifierElement(
     val alpha: Float,
 ) : ModifierElement

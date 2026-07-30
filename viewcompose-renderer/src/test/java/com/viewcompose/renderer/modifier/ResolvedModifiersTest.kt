@@ -17,6 +17,8 @@ import com.viewcompose.ui.modifier.graphicsLayer
 import com.viewcompose.ui.modifier.dropShadow
 import com.viewcompose.ui.modifier.dropShadows
 import com.viewcompose.ui.modifier.layoutId
+import com.viewcompose.ui.modifier.innerShadow
+import com.viewcompose.ui.modifier.innerShadows
 import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.modifier.CombinedClickableModifierElement
 import com.viewcompose.ui.modifier.ConstraintModifierElement
@@ -102,6 +104,28 @@ class ResolvedModifiersTest {
         assertEquals(2, resolved.dropShadows.size)
         assertEquals(listOf(first, second), resolved.dropShadows[0].shadows)
         assertEquals(listOf(third), resolved.dropShadows[1].shadows)
+    }
+
+    @Test
+    fun `resolve preserves every inner shadow group in declaration order`() {
+        val first = UiShadow(
+            color = 0x22000000,
+            blurRadius = 4.dp,
+        )
+        val second = UiShadow(
+            color = 0x33000000,
+            blurRadius = 10.dp,
+            offsetY = 3.dp,
+        )
+
+        val resolved = Modifier
+            .innerShadows(listOf(first))
+            .innerShadow(second)
+            .resolve()
+
+        assertEquals(2, resolved.innerShadows.size)
+        assertEquals(listOf(first), resolved.innerShadows[0].shadows)
+        assertEquals(listOf(second), resolved.innerShadows[1].shadows)
     }
 
     @Test

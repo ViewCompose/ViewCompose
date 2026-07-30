@@ -126,6 +126,48 @@ class ModifierContractTest {
     }
 
     @Test
+    fun `inner shadows preserve groups and defensively copy layers`() {
+        val layers = mutableListOf(
+            UiShadow(
+                color = 0x44000000,
+                blurRadius = 6.dp,
+                spreadRadius = 1.dp,
+                offsetX = 2.dp,
+            ),
+            UiShadow(
+                color = 0x22000000,
+                blurRadius = 12.dp,
+                offsetY = 4.dp,
+            ),
+        )
+        val finalShadow = UiShadow(
+            color = 0x33000000,
+            blurRadius = 3.dp,
+        )
+
+        val modifier = Modifier
+            .innerShadows(layers)
+            .innerShadow(finalShadow)
+        layers.clear()
+
+        assertEquals(2, modifier.elements.size)
+        val first = modifier.elements[0] as InnerShadowModifierElement
+        val second = modifier.elements[1] as InnerShadowModifierElement
+        assertEquals(2, first.shadows.size)
+        assertEquals(6.dp, first.shadows[0].blurRadius)
+        assertEquals(finalShadow, second.shadows.single())
+    }
+
+    @Test
+    fun `empty inner shadow group is a no-op`() {
+        val original = Modifier.padding(8.dp)
+
+        val result = original.innerShadows(emptyList())
+
+        assertTrue(result === original)
+    }
+
+    @Test
     fun `draw modifiers append in chaining order`() {
         val modifier = Modifier
             .drawBehind { _ ->

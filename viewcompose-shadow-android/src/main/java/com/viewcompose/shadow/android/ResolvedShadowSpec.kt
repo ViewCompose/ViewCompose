@@ -1,6 +1,7 @@
 package com.viewcompose.shadow.android
 
 import com.viewcompose.ui.modifier.DropShadowModifierElement
+import com.viewcompose.ui.modifier.InnerShadowModifierElement
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.UiDp
@@ -46,6 +47,25 @@ data class ResolvedShadowSpec(
 }
 
 /**
+ * 一个节点提交给前景装饰层的完整不可变内阴影规格。
+ * Complete immutable inner-shadow specification submitted to the foreground decoration plane.
+ */
+data class ResolvedInnerShadowSpec(
+    val density: UiDensity,
+    val groups: List<ResolvedShadowGroup>,
+) {
+    val layerCount: Int
+        get() = groups.sumOf { it.shadows.size }
+
+    companion object {
+        val Empty = ResolvedInnerShadowSpec(
+            density = UiDensity.Default,
+            groups = emptyList(),
+        )
+    }
+}
+
+/**
  * 在 Android 渲染边界统一解析 density 和默认 shape。
  * Resolves density and the node's default shape once at the Android rendering boundary.
  */
@@ -59,6 +79,39 @@ object ShadowSpecResolver {
     ): ResolvedShadowSpec {
         if (elements.isEmpty()) return ResolvedShadowSpec.Empty
         return ResolvedShadowSpec(
+            density = density,
+            groups = elements.map { element ->
+                ResolvedShadowGroup(
+                    shape = element.shape ?: defaultShape ?: Rectangle,
+                    shadows = element.shadows.map { shadow ->
+                        ResolvedShadowLayer(
+                            color = shadow.color,
+                            blurRadiusPx = density.toPx(shadow.blurRadius),
+                            spreadRadiusPx = density.toPx(shadow.spreadRadius),
+                            offsetXPx = density.toPx(shadow.offsetX),
+                            offsetYPx = density.toPx(shadow.offsetY),
+                        )
+                    },
+                )
+            },
+        )
+    }
+}
+
+/**
+ * 在 Android 渲染边界统一解析内阴影的 density 和默认 shape。
+ * Resolves inner-shadow density and default shape at the Android rendering boundary.
+ */
+object InnerShadowSpecResolver {
+    private val Rectangle = UiShape.rounded(UiDp.Zero)
+
+    fun resolve(
+        elements: List<InnerShadowModifierElement>,
+        defaultShape: UiShape?,
+        density: UiDensity,
+    ): ResolvedInnerShadowSpec {
+        if (elements.isEmpty()) return ResolvedInnerShadowSpec.Empty
+        return ResolvedInnerShadowSpec(
             density = density,
             groups = elements.map { element ->
                 ResolvedShadowGroup(

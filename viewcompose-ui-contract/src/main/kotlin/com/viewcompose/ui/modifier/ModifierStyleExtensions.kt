@@ -111,6 +111,37 @@ fun Modifier.dropShadows(
     )
 }
 
+/**
+ * 在节点内容之上添加一层精确内阴影。
+ * Adds one exact inner shadow above the node content.
+ */
+fun Modifier.innerShadow(
+    shadow: UiShadow,
+    shape: UiShape? = null,
+): Modifier {
+    return innerShadows(
+        shadows = listOf(shadow),
+        shape = shape,
+    )
+}
+
+/**
+ * 在节点内容之上添加一组按声明顺序绘制的精确内阴影。
+ * Adds declaration-ordered exact inner shadows above the node content.
+ */
+fun Modifier.innerShadows(
+    shadows: List<UiShadow>,
+    shape: UiShape? = null,
+): Modifier {
+    if (shadows.isEmpty()) return this
+    return then(
+        InnerShadowModifierElement(
+            shadows = shadows.toList(),
+            shape = shape,
+        ),
+    )
+}
+
 fun Modifier.alpha(alpha: Float): Modifier {
     return then(
         AlphaModifierElement(alpha),
