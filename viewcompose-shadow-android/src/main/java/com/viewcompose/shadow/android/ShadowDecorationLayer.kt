@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Build
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import java.util.EnumMap
@@ -209,6 +210,7 @@ object ShadowDecorationLayer {
     fun resetBackendDiagnostics() {
         bitmapDraws = 0
         renderNodeDraws = 0
+        renderNodeRenderer?.resetDiagnostics()
         decisionsByReason.clear()
         lastDecision = null
     }
@@ -259,6 +261,15 @@ object ShadowDecorationLayer {
     }
 
     private fun recordDecision(decision: ShadowRenderBackendDecision) {
+        if (
+            lastDecision != decision &&
+            renderPolicy != ShadowRenderPolicy.Auto
+        ) {
+            Log.i(
+                BackendLogTag,
+                "policy=${renderPolicy.wireValue} backend=${decision.backend} reason=${decision.reason}",
+            )
+        }
         lastDecision = decision
         decisionsByReason[decision.reason] = decisionsByReason.getOrDefault(
             decision.reason,
@@ -281,4 +292,6 @@ object ShadowDecorationLayer {
             alpha = alpha,
         )
     }
+
+    private const val BackendLogTag: String = "ViewComposeShadow"
 }

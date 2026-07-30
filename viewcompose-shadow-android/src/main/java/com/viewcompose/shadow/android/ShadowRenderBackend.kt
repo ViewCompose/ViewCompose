@@ -124,6 +124,8 @@ internal interface ShadowDisplayListRenderer {
 
     fun clear()
 
+    fun resetDiagnostics()
+
     fun stats(): RenderNodeShadowCacheStats
 }
 
@@ -184,6 +186,12 @@ internal class RenderNodeShadowRenderer(
 
     override fun clear() {
         cache.evictAll()
+    }
+
+    override fun resetDiagnostics() {
+        recordings = 0
+        hits = 0
+        evictions = 0
     }
 
     override fun stats(): RenderNodeShadowCacheStats {
