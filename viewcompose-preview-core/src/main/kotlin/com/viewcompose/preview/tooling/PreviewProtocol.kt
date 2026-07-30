@@ -1,5 +1,7 @@
 package com.viewcompose.preview.tooling
 
+import kotlinx.serialization.Serializable
+
 /**
  * Versioned boundary between Gradle/IDE clients and an isolated preview render worker.
  */
@@ -17,6 +19,7 @@ object ViewComposePreviewProtocol {
 /**
  * Source location used for diagnostics and IDE navigation.
  */
+@Serializable
 data class PreviewSourceLocation(
     val filePath: String,
     val line: Int,
@@ -33,6 +36,7 @@ data class PreviewSourceLocation(
 /**
  * Compiled JVM function that a render worker invokes for a preview.
  */
+@Serializable
 data class PreviewJvmEntryPoint(
     val ownerClassName: String,
     val methodName: String,
@@ -49,6 +53,7 @@ data class PreviewJvmEntryPoint(
 /**
  * IDE- and renderer-independent description of one preview function.
  */
+@Serializable
 data class PreviewDescriptor(
     val id: String,
     val displayName: String,
@@ -79,6 +84,7 @@ data class PreviewDescriptor(
  * Paths remain strings at this process boundary so the model can be consumed by Gradle, the IDE,
  * and workers using different filesystem abstractions.
  */
+@Serializable
 data class PreviewRenderRequest(
     val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION,
     val requestId: String,
@@ -109,6 +115,7 @@ data class PreviewRenderRequest(
 /**
  * Stable preview worker outcome. Failures are data rather than thrown across the process boundary.
  */
+@Serializable
 enum class PreviewRenderStatus {
     Success,
     CompileFailure,
@@ -118,6 +125,7 @@ enum class PreviewRenderStatus {
     ProtocolMismatch,
 }
 
+@Serializable
 enum class PreviewDiagnosticSeverity {
     Info,
     Warning,
@@ -127,6 +135,7 @@ enum class PreviewDiagnosticSeverity {
 /**
  * One structured compile, discovery, render, or export diagnostic.
  */
+@Serializable
 data class PreviewDiagnostic(
     val severity: PreviewDiagnosticSeverity,
     val message: String,
@@ -143,6 +152,7 @@ data class PreviewDiagnostic(
 /**
  * Files emitted by a successful or partially successful render.
  */
+@Serializable
 data class PreviewArtifacts(
     val imagePath: String? = null,
     val renderTreePath: String? = null,
@@ -160,6 +170,7 @@ data class PreviewArtifacts(
 /**
  * Response returned by an isolated preview worker.
  */
+@Serializable
 data class PreviewRenderResponse(
     val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION,
     val requestId: String,

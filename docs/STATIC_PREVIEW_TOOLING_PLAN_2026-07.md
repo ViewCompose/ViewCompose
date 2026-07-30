@@ -82,6 +82,17 @@ Exit criteria:
 - The runner output is byte-addressable through the protocol.
 - A broken preview returns a diagnostic rather than crashing the worker.
 
+Implemented foundation:
+
+- `StaticPreviewRenderer` injects a fully explicit environment and theme, then performs native
+  measure/layout.
+- `StaticPreviewWorker` atomically exports PNG and a JSON snapshot containing render tree, patch,
+  structure, warnings, bindings, and composition scopes.
+- `PreviewJvmEntryPointResolver` validates and invokes a public static
+  `UiTreeBuilder.() -> Unit` JVM method through an isolated class loader.
+- A Paparazzi/Layoutlib test proves the path renders Android Views without invoking Compose APIs,
+  while missing compiled symbols return structured diagnostics.
+
 ### Stage 2 — configuration matrix
 
 - Render Light and Dark from one descriptor.

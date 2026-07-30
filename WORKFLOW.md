@@ -272,12 +272,13 @@
 涉及组件新增、组件行为调整或视觉语义调整时，必须同步维护开发预览资产：
 
 1. `:viewcompose-preview-core` 只承载 Preview 注解、确定性配置和版本协议，主源码禁止 `android.*` / `androidx.*` import。
-2. `:viewcompose-preview` 的 `PreviewCatalog` 是组件预览单源，新增组件时必须补 `PreviewSpec`。
-3. Paparazzi 快照测试必须消费同一份 `PreviewCatalog`，禁止单独维护第二套截图样例。
-4. `qaPreview` 为硬门禁；修改组件视觉语义后必须更新快照基线并通过 `verifyPaparazziDebug`。
-5. preview 模块禁止依赖 `:app`，禁止 import demo 包路径。
-6. preview worker 和 IDE 插件只允许通过带 `protocolVersion/requestId` 的结构化数据协议通信。
-7. overlay 在 preview 场景只允许静态模拟，真实弹窗行为回归必须落在 instrumentation。
+2. `:viewcompose-preview-runner` 只负责原生 View 静态挂载、截图和诊断导出，禁止 Compose 与 IDE SDK 依赖。
+3. `:viewcompose-preview` 的 `PreviewCatalog` 是组件预览单源，新增组件时必须补 `PreviewSpec`。
+4. Paparazzi 快照测试必须消费同一份 `PreviewCatalog`，禁止单独维护第二套截图样例。
+5. `qaPreview` 为硬门禁；修改组件视觉语义后必须更新快照基线并通过完整协议/运行器/快照测试。
+6. preview 模块禁止依赖 `:app`，禁止 import demo 包路径。
+7. preview worker 和 IDE 插件只允许通过带 `protocolVersion/requestId` 的结构化数据协议通信。
+8. overlay 在 preview 场景只允许静态模拟，真实弹窗行为回归必须落在 instrumentation。
 
 ## 5.16 动画与手势约束
 

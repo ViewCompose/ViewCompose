@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.paparazzi) apply false
 }
 
@@ -23,6 +24,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-lifecycle" to "com.viewcompose.lifecycle",
     "viewcompose-viewmodel" to "com.viewcompose.viewmodel",
     "viewcompose-preview-core" to "com.viewcompose.preview.tooling",
+    "viewcompose-preview-runner" to "com.viewcompose.preview.runner",
     "viewcompose-preview" to "com.viewcompose.preview",
     "viewcompose-animation" to "com.viewcompose.animation",
     "viewcompose-animation-core" to "com.viewcompose.animation.core",
@@ -53,6 +55,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-lifecycle:compileDebugKotlin",
     ":viewcompose-viewmodel:compileDebugKotlin",
     ":viewcompose-preview-core:compileKotlin",
+    ":viewcompose-preview-runner:compileDebugKotlin",
     ":viewcompose-renderer:compileDebugKotlin",
     ":viewcompose-widget-core:compileDebugKotlin",
     ":viewcompose-overlay-android:compileDebugKotlin",
@@ -75,6 +78,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-lifecycle:testDebugUnitTest",
     ":viewcompose-viewmodel:testDebugUnitTest",
     ":viewcompose-preview-core:test",
+    ":viewcompose-preview-runner:testDebugUnitTest",
     ":viewcompose-renderer:testDebugUnitTest",
     ":viewcompose-widget-core:testDebugUnitTest",
     ":viewcompose-overlay-android:testDebugUnitTest",
@@ -317,6 +321,50 @@ tasks.register("verifyPreviewCorePurity") {
     }
 }
 
+tasks.register("verifyPreviewRunnerBoundary") {
+    group = "verification"
+    description = "Verify the native static preview runner stays independent from Compose."
+    doLast {
+        val violations = mutableListOf<String>()
+        val runnerDir = rootDir.resolve("viewcompose-preview-runner")
+        val runnerMainDir = runnerDir.resolve("src/main")
+        if (runnerMainDir.exists()) {
+            runnerMainDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (trimmed.startsWith("import androidx.compose.")) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+        val buildFile = runnerDir.resolve("build.gradle.kts")
+        if (buildFile.exists()) {
+            val buildScript = buildFile.readText()
+            listOf("libs.plugins.kotlin.compose", "libs.androidx.compose").forEach { marker ->
+                if (buildScript.contains(marker)) {
+                    violations +=
+                        "${buildFile.relativeTo(rootDir)} -> forbidden Compose dependency '$marker'"
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Preview-runner boundary verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyNavigationCorePurity") {
     group = "verification"
     description = "Verify navigation-core remains Kotlin/JVM-pure without Android imports."
@@ -362,6 +410,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyGestureCorePurity")
     dependsOn("verifyGraphicsCorePurity")
     dependsOn("verifyPreviewCorePurity")
+    dependsOn("verifyPreviewRunnerBoundary")
     dependsOn(qaQuickTasks)
 }
 
@@ -434,6 +483,10 @@ tasks.register<Exec>("testBenchmarkComparisonTool") {
 
 tasks.register("qaPreview") {
     group = "verification"
-    description = "Run preview snapshot verification for viewcompose-preview."
-    dependsOn(":viewcompose-preview:verifyPaparazziDebug")
+    description = "Run static-runner tests and preview snapshot verification."
+    dependsOn(
+        ":viewcompose-preview-core:test",
+        ":viewcompose-preview-runner:testDebugUnitTest",
+        ":viewcompose-preview:verifyPaparazziDebug",
+    )
 }

@@ -19,7 +19,7 @@
 
 - 技术基线：Kotlin + Android View System
 - SDK：`minSdk 24`、`compileSdk 36`
-- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-shadow-android`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview-core`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
+- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-shadow-android`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview-core`、`:viewcompose-preview-runner`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
 
 ### 2.1 模块职责
 
@@ -46,6 +46,7 @@
 | `viewcompose-lifecycle` | 生命周期感知的状态收集 API（`collectAsStateWithLifecycle`）与生命周期 Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
 | `viewcompose-viewmodel` | ViewModel/SavedStateHandle 协作 API（`viewModel`、`savedStateHandle`）与 ViewModel Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
 | `viewcompose-preview-core` | Preview 注解、确定性配置和跨进程请求/结果协议 | 纯 Kotlin/JVM；禁止 Android、Compose 与 IDE SDK 依赖 |
+| `viewcompose-preview-runner` | 隔离进程内的原生 View 静态渲染、图片导出和结构化诊断 | 允许 Android/Layoutlib；禁止 Compose 与 IDE SDK 依赖 |
 | `viewcompose-preview` | 开发预览与截图回归（Compose Preview bridge、PreviewCatalog、Paparazzi） | 仅开发态能力；不参与 app 运行时入口；禁止依赖 `:app` |
 | `viewcompose-benchmark` | 宏基准入口与性能回归数据采集 | 不承载业务 demo 与框架语义逻辑 |
 | `app` | demo、manual verification、ui tests 入口 | 不承载框架核心实现 |
@@ -260,11 +261,12 @@ flowchart TD
 ### 4.13 开发预览边界
 
 1. 平台无关 Preview 注解、确定性配置和进程协议集中在 `:viewcompose-preview-core`，禁止 Android、Compose 与 IDE SDK 依赖。
-2. Compose Preview 适配器、`PreviewCatalog` 与 Paparazzi 资产集中在 `:viewcompose-preview`，不允许回流 `app` 或核心运行时模块。
-3. Android Studio Preview 与 Paparazzi 必须共享 `PreviewCatalog` 单源，禁止双份示例维护。
-4. preview worker 与 IDE 插件必须通过带版本的结构化协议通信，业务渲染代码禁止运行在 IDE 进程内。
-5. overlay 在 preview 场景仅允许静态内容模拟；真实窗口行为继续由 instrumentation 覆盖。
-6. 新增组件（或关键复合组件）必须同轮补 `PreviewSpec` 与 Paparazzi 快照基线。
+2. 原生静态挂载、measure/layout/draw 与诊断导出集中在 `:viewcompose-preview-runner`；禁止 Compose 和 IDE SDK 依赖。
+3. Compose Preview 适配器、`PreviewCatalog` 与 Paparazzi 资产集中在 `:viewcompose-preview`，不允许回流 `app` 或核心运行时模块。
+4. Android Studio Preview 与 Paparazzi 必须共享 `PreviewCatalog` 单源，禁止双份示例维护。
+5. preview worker 与 IDE 插件必须通过带版本的结构化协议通信，业务渲染代码禁止运行在 IDE 进程内。
+6. overlay 在 preview 场景仅允许静态内容模拟；真实窗口行为继续由 instrumentation 覆盖。
+7. 新增组件（或关键复合组件）必须同轮补 `PreviewSpec` 与 Paparazzi 快照基线。
 
 ### 4.14 动画与手势边界
 

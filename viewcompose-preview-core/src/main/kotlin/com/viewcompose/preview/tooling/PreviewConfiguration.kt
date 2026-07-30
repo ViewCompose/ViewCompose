@@ -1,5 +1,7 @@
 package com.viewcompose.preview.tooling
 
+import kotlinx.serialization.Serializable
+
 /**
  * Stable defaults shared by annotations, Gradle tooling, and render workers.
  */
@@ -15,6 +17,7 @@ object PreviewDefaults {
 /**
  * Explicit theme used for a deterministic preview render.
  */
+@Serializable
 enum class PreviewTheme {
     Light,
     Dark,
@@ -23,6 +26,7 @@ enum class PreviewTheme {
 /**
  * Explicit layout direction used for a deterministic preview render.
  */
+@Serializable
 enum class PreviewLayoutDirection {
     Ltr,
     Rtl,
@@ -35,6 +39,7 @@ enum class PreviewLayoutDirection {
  * choices before sending a request so the same request produces the same preview in Gradle, CI,
  * and Android Studio.
  */
+@Serializable
 data class PreviewConfiguration(
     val widthDp: Int = PreviewDefaults.WIDTH_DP,
     val heightDp: Int = PreviewDefaults.HEIGHT_DP,
@@ -67,6 +72,7 @@ data class PreviewConfiguration(
 /**
  * Named configuration presented as one selectable preview variant.
  */
+@Serializable
 data class PreviewVariant(
     val id: String,
     val displayName: String,
