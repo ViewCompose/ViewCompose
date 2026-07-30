@@ -39,31 +39,47 @@ import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 import kotlin.math.min
 
-internal fun UiTreeBuilder.GraphicsPage() {
+internal fun UiTreeBuilder.GraphicsPage(
+    initialPageIndex: Int = GRAPHICS_PAGE_DRAWING,
+) {
+    val selectedPageState = remember {
+        mutableStateOf(
+            initialPageIndex.coerceIn(
+                GRAPHICS_PAGE_DRAWING,
+                GRAPHICS_PAGE_SHADOW_DIAGNOSTICS,
+            ),
+        )
+    }
     val blendMultiplyState = remember { mutableStateOf(false) }
     val drawContentVisibleState = remember { mutableStateOf(true) }
     val cacheKeyState = remember { mutableStateOf(0) }
     val cacheAccentState = remember { mutableStateOf(false) }
+    val shadowPageState = rememberGraphicsShadowPageState()
 
-    val sections = listOf(
-        "overview",
-        "primitives",
-        "path_clip",
-        "gradient_blend",
-        "draw_modifiers",
-        "cache",
-        "verify",
-    )
+    InstallGraphicsShadowLifecycle()
+    val sections = graphicsPageItems(selectedPageState.value)
     LazyColumn(
         items = sections,
         key = { it },
+        contentType = ::graphicsPageContentType,
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
             "overview" -> ChapterPageOverviewSection(
                 title = "Graphics",
-                goal = "验证 Canvas + draw modifier 管线是否稳定，并确认渐变、路径裁剪、混合和缓存语义可用于业务绘制。",
-                modules = listOf("viewcompose-graphics-core", "viewcompose-graphics", "viewcompose-renderer"),
+                goal = "验证 Canvas、draw modifier 与高级阴影装饰层是否稳定，并覆盖精确外阴影、内阴影、Lazy 缓存和后端诊断。",
+                modules = listOf(
+                    "viewcompose-graphics-core",
+                    "viewcompose-graphics",
+                    "viewcompose-shadow-android",
+                    "viewcompose-renderer",
+                ),
+            )
+
+            "page_filter" -> ChapterPageFilterSection(
+                pages = listOf("绘制", "外阴影", "内阴影", "Lazy/诊断"),
+                selectedIndex = selectedPageState.value,
+                onSelectionChange = { selectedPageState.value = it },
             )
 
             "primitives" -> ScenarioSection(
@@ -408,19 +424,11 @@ internal fun UiTreeBuilder.GraphicsPage() {
                 }
             }
 
-            else -> VerificationNotesSection(
-                what = "Graphics 页覆盖 Canvas 节点、draw modifiers、渐变/混合/路径/缓存。",
-                howToVerify = listOf(
-                    "在基础图元区确认线条、圆形、文字都可见。",
-                    "切换 Blend 模式，观察状态文案变化并对照图形叠色变化。",
-                    "切换 drawWithContent 透传，确认内容层可显示/隐藏。",
-                    "切换 cacheKey 与 accent，确认状态文案与图形同步更新。",
-                ),
-                expected = listOf(
-                    "Canvas 节点绘制稳定，无崩溃和空白。",
-                    "drawWithContent 可以控制内容层是否透传。",
-                    "drawWithCache 仅在 key 变化时重建缓存命令。",
-                ),
+            "verify" -> GraphicsVerificationNotes(selectedPageState.value)
+
+            else -> RenderGraphicsShadowSection(
+                section = section,
+                state = shadowPageState,
             )
         }
     }

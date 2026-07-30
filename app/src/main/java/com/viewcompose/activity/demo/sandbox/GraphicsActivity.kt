@@ -14,6 +14,15 @@ class GraphicsActivity : DemoRenderActivity() {
         root: ViewGroup,
         builder: UiTreeBuilder,
     ) {
-        builder.GraphicsPage()
+        builder.GraphicsPage(
+            initialPageIndex = intent.getIntExtra(
+                EXTRA_GRAPHICS_PAGE_INDEX,
+                GRAPHICS_PAGE_DRAWING,
+            ),
+        )
+    }
+
+    companion object {
+        internal const val EXTRA_GRAPHICS_PAGE_INDEX: String = "graphics_page_index"
     }
 }

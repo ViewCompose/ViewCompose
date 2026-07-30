@@ -171,10 +171,10 @@ internal val DEMO_MODULES = listOf(
     DemoModule(
         key = "graphics",
         title = "Graphics",
-        subtitle = "Canvas node, draw modifiers, gradients/blend, and draw cache scenarios.",
+        subtitle = "Canvas/draw pipelines plus precise multi-layer outer and inner shadows.",
         status = DemoModuleStatus.Available,
-        manualFocus = "canvas primitives, drawWithContent semantics, blend/filter, cache key invalidation",
-        benchmarkPath = "Catalog -> Graphics -> drawWithCache scenario",
+        manualFocus = "draw semantics, multi-layer shadow order, shape/spread, inner-shadow input interop",
+        benchmarkPath = "Catalog -> Graphics -> Lazy/诊断 -> 1000 shadow items",
         activityClass = GraphicsActivity::class.java,
     ),
     DemoModule(
