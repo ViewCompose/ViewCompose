@@ -133,7 +133,7 @@ Exit criteria:
 - A command can render one preview from `:app:debug`.
 - Source, dependency, and resource changes invalidate the correct cache.
 
-Implemented bridge foundation:
+Implemented:
 
 - The `com.viewcompose.preview` Gradle plugin registers one discovery task per Android application
   or library variant through the public AGP Variant and Scoped Artifacts APIs.
@@ -159,11 +159,15 @@ Implemented bridge foundation:
   `viewcompose-preview-runner`; the Android runner is found only on the isolated process classpath.
 - A real Layoutlib integration test renders a compiled ViewCompose entry through the host and
   verifies both PNG and render-tree artifacts.
-
-Remaining in this stage:
-
-- Wire the standalone host and Android runner distributions into a single-preview Gradle task.
-- Add render-result caching keyed by build fingerprint, preview id, and variant id.
+- `render<Variant>ViewComposePreview` selects one descriptor/configuration pair from the catalog,
+  launches the worker host in an isolated JDK 17 process, and reports structured failures without
+  loading application or Layoutlib classes into the Gradle daemon.
+- Render requests carry the exported build fingerprint. Planning and worker startup both reject a
+  stale catalog, mismatched module, variant, or fingerprint.
+- Successful PNG and render-tree results are reused from a content-addressed cache keyed by build
+  fingerprint, preview id, and variant id. `--rerender` explicitly bypasses it.
+- TestKit covers real Android variant discovery, the first single-preview render, and the following
+  cache hit. The standalone host additionally has a real Layoutlib integration test.
 
 ### Stage 4 — Android Studio plugin shell
 

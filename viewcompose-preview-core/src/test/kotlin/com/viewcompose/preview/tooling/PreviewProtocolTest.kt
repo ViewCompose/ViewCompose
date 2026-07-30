@@ -24,6 +24,7 @@ class PreviewProtocolTest {
             variantId = "dark",
             modulePath = ":app",
             buildVariant = "debug",
+            buildFingerprint = "a".repeat(64),
             outputDirectory = "build/viewcompose-preview/request-1",
         )
 
@@ -45,6 +46,18 @@ class PreviewProtocolTest {
                 variantId = "missing",
                 modulePath = ":app",
                 buildVariant = "debug",
+                buildFingerprint = "a".repeat(64),
+                outputDirectory = "build/viewcompose-preview/request-1",
+            )
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            PreviewRenderRequest(
+                requestId = "request-1",
+                descriptor = descriptor(light),
+                variantId = light.id,
+                modulePath = ":app",
+                buildVariant = "debug",
+                buildFingerprint = "stale",
                 outputDirectory = "build/viewcompose-preview/request-1",
             )
         }
@@ -101,6 +114,7 @@ class PreviewProtocolTest {
             variantId = variant.id,
             modulePath = ":sample",
             buildVariant = "debug",
+            buildFingerprint = "a".repeat(64),
             outputDirectory = "build/preview/request-json",
         )
         val response = PreviewRenderResponse(

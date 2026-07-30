@@ -49,6 +49,7 @@ class PreviewWorkerHostIntegrationTest {
             variantId = "default",
             modulePath = ":viewcompose-preview-runner",
             buildVariant = "debug",
+            buildFingerprint = "a".repeat(64),
             outputDirectory = outputDirectory.absolutePath,
         )
         val manifest = PreviewBuildManifest(

@@ -13,6 +13,13 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.type.ArtifactTypeDefinition.ARTIFACT_TYPE_ATTRIBUTE
+import org.gradle.api.attributes.Attribute
+import org.gradle.api.attributes.AttributeContainer
+import org.gradle.api.attributes.Bundling
+import org.gradle.api.attributes.Category
+import org.gradle.api.attributes.LibraryElements
+import org.gradle.api.attributes.Usage
+import org.gradle.api.attributes.java.TargetJvmVersion
 import org.gradle.api.file.FileCollection
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
@@ -22,6 +29,7 @@ import org.gradle.api.tasks.TaskProvider
  */
 class ViewComposePreviewGradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
+        val toolConfigurations = project.createPreviewToolConfigurations()
         val aggregate = project.tasks.register("viewComposePreviewDescriptors") { task ->
             task.group = TASK_GROUP
             task.description = "Exports ViewCompose preview descriptors for every Android variant."
@@ -36,6 +44,7 @@ class ViewComposePreviewGradlePlugin : Plugin<Project> {
                         ApplicationAndroidComponentsExtension::class.java,
                     ),
                     aggregate = aggregate,
+                    toolConfigurations = toolConfigurations,
                 )
             }
         }
@@ -48,6 +57,7 @@ class ViewComposePreviewGradlePlugin : Plugin<Project> {
                         LibraryAndroidComponentsExtension::class.java,
                     ),
                     aggregate = aggregate,
+                    toolConfigurations = toolConfigurations,
                 )
             }
         }
@@ -59,6 +69,7 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
     project: Project,
     androidComponents: AndroidComponentsExtension<DslT, BuilderT, VariantT>,
     aggregate: TaskProvider<Task>,
+    toolConfigurations: PreviewToolConfigurations,
 ) {
     androidComponents.onVariants(androidComponents.selector().all()) { variant ->
         val moduleResources = variant.runtimeConfiguration.artifactFiles(
@@ -80,6 +91,16 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
         val resourcePackageFiles = variant.runtimeConfiguration.artifactFiles(
             artifactType = ANDROID_SYMBOL_WITH_PACKAGE_ARTIFACT_TYPE,
         )
+        val runnerClasspath = project.configurations.create(
+            "viewComposePreview${variant.name.replaceFirstChar(Char::uppercase)}RunnerClasspath",
+        ) { configuration ->
+            configuration.isCanBeConsumed = false
+            configuration.isCanBeResolved = true
+            configuration.extendsFrom(toolConfigurations.runner)
+            configuration.attributes.copyFrom(variant.runtimeConfiguration.attributes)
+            configuration.description =
+                "Android runner classpath for '${variant.name}' ViewCompose previews."
+        }.artifactFiles(ANDROID_CLASSES_JAR_ARTIFACT_TYPE)
         val task = project.tasks.register(
             variant.computeTaskName("discover", "ViewComposePreviews"),
             DiscoverViewComposePreviewsTask::class.java,
@@ -129,7 +150,124 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
                 DiscoverViewComposePreviewsTask::projectClassJars,
                 DiscoverViewComposePreviewsTask::projectClassDirectories,
             )
+        project.tasks.register(
+            variant.computeTaskName("render", "ViewComposePreview"),
+            RenderViewComposePreviewTask::class.java,
+        ) { render ->
+            render.group = TASK_GROUP
+            render.description =
+                "Renders one ViewCompose static preview for the '${variant.name}' variant."
+            render.dependsOn(task)
+            render.buildManifestFile.set(task.flatMap { discovery ->
+                discovery.buildManifestFile
+            })
+            render.descriptorCatalogFile.set(task.flatMap { discovery ->
+                discovery.descriptorCatalogFile
+            })
+            render.workerClasspath.from(toolConfigurations.workerHost)
+            render.workerClasspath.from(runnerClasspath)
+            render.layoutlibRuntimeArchive.from(toolConfigurations.layoutlibRuntime)
+            render.layoutlibResourcesArchive.from(toolConfigurations.layoutlibResources)
+        }
         aggregate.configure { taskGroup -> taskGroup.dependsOn(task) }
+    }
+}
+
+private data class PreviewToolConfigurations(
+    val workerHost: Configuration,
+    val runner: Configuration,
+    val layoutlibRuntime: Configuration,
+    val layoutlibResources: Configuration,
+)
+
+private fun Project.createPreviewToolConfigurations(): PreviewToolConfigurations {
+    val workerHost = configurations.create(WORKER_HOST_CONFIGURATION_NAME) { configuration ->
+        configuration.isCanBeConsumed = false
+        configuration.isCanBeResolved = true
+        configuration.description = "Standalone ViewCompose preview worker host classpath."
+        configuration.attributes { attributes ->
+            attributes.attribute(
+                Usage.USAGE_ATTRIBUTE,
+                objects.named(Usage::class.java, Usage.JAVA_RUNTIME),
+            )
+            attributes.attribute(
+                Category.CATEGORY_ATTRIBUTE,
+                objects.named(Category::class.java, Category.LIBRARY),
+            )
+            attributes.attribute(
+                LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                objects.named(LibraryElements::class.java, LibraryElements.JAR),
+            )
+            attributes.attribute(
+                Bundling.BUNDLING_ATTRIBUTE,
+                objects.named(Bundling::class.java, Bundling.EXTERNAL),
+            )
+            attributes.attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 17)
+        }
+    }
+    val runner = configurations.create(RUNNER_CONFIGURATION_NAME) { configuration ->
+        configuration.isCanBeConsumed = false
+        configuration.isCanBeResolved = false
+        configuration.description =
+            "Android ViewCompose preview runner dependency bucket shared by all variants."
+    }
+    val runtime = configurations.create("viewComposePreviewLayoutlibRuntime") { configuration ->
+        configuration.isCanBeConsumed = false
+        configuration.isCanBeResolved = true
+        configuration.isTransitive = false
+        configuration.description = "Pinned native Layoutlib runtime for ViewCompose previews."
+        configuration.defaultDependencies { dependencies ->
+            dependencies.add(
+                project.dependencies.create(
+                    "com.android.tools.layoutlib:layoutlib-runtime:" +
+                        "$LAYOUTLIB_NATIVE_VERSION:${currentLayoutlibClassifier()}",
+                ),
+            )
+        }
+    }
+    val resources = configurations.create("viewComposePreviewLayoutlibResources") { configuration ->
+        configuration.isCanBeConsumed = false
+        configuration.isCanBeResolved = true
+        configuration.isTransitive = false
+        configuration.description = "Pinned framework Layoutlib resources for ViewCompose previews."
+        configuration.defaultDependencies { dependencies ->
+            dependencies.add(
+                project.dependencies.create(
+                    "com.android.tools.layoutlib:layoutlib-resources:$LAYOUTLIB_NATIVE_VERSION",
+                ),
+            )
+        }
+    }
+    return PreviewToolConfigurations(
+        workerHost = workerHost,
+        runner = runner,
+        layoutlibRuntime = runtime,
+        layoutlibResources = resources,
+    )
+}
+
+private fun AttributeContainer.copyFrom(source: AttributeContainer) {
+    source.keySet().forEach { rawAttribute ->
+        @Suppress("UNCHECKED_CAST")
+        val key = rawAttribute as Attribute<Any>
+        source.getAttribute(key)?.let { value ->
+            attribute(key, value)
+        }
+    }
+}
+
+private fun currentLayoutlibClassifier(): String {
+    val osName = System.getProperty("os.name").lowercase()
+    return when {
+        osName.startsWith("windows") -> "win"
+        osName.startsWith("mac") -> {
+            if (System.getProperty("os.arch").lowercase().startsWith("x86")) {
+                "mac"
+            } else {
+                "mac-arm"
+            }
+        }
+        else -> "linux"
     }
 }
 
@@ -148,3 +286,5 @@ private const val ANDROID_RES_ARTIFACT_TYPE = "android-res"
 private const val ANDROID_ASSETS_ARTIFACT_TYPE = "android-assets"
 private const val ANDROID_SYMBOL_WITH_PACKAGE_ARTIFACT_TYPE =
     "android-symbol-with-package-name"
+private const val ANDROID_CLASSES_JAR_ARTIFACT_TYPE = "android-classes-jar"
+private const val LAYOUTLIB_NATIVE_VERSION = "15.1.4"

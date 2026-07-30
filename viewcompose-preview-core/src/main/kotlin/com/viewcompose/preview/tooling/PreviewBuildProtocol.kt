@@ -99,9 +99,7 @@ data class PreviewBuildManifest(
         require(inputs == inputs.sortedBy { input -> input.kind.ordinal }) {
             "Preview build inputs must be sorted by kind."
         }
-        require(SHA_256_PATTERN.matches(inputFingerprint)) {
-            "Preview inputFingerprint must be a lowercase SHA-256 value."
-        }
+        requireSha256(inputFingerprint, "Preview inputFingerprint")
     }
 }
 
@@ -121,9 +119,7 @@ data class PreviewDescriptorCatalog(
         ViewComposePreviewProtocol.requireSupported(protocolVersion)
         require(modulePath.isNotBlank()) { "Preview catalog modulePath must not be blank." }
         require(buildVariant.isNotBlank()) { "Preview catalog buildVariant must not be blank." }
-        require(SHA_256_PATTERN.matches(buildFingerprint)) {
-            "Preview catalog buildFingerprint must be a lowercase SHA-256 value."
-        }
+        requireSha256(buildFingerprint, "Preview catalog buildFingerprint")
         require(descriptors.map(PreviewDescriptor::id).distinct().size == descriptors.size) {
             "Preview catalog descriptor ids must be unique."
         }
@@ -166,3 +162,12 @@ data class PreviewWorkerCommand(
 }
 
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")
+
+internal fun requireSha256(
+    value: String,
+    label: String,
+) {
+    require(SHA_256_PATTERN.matches(value)) {
+        "$label must be a lowercase SHA-256 value."
+    }
+}

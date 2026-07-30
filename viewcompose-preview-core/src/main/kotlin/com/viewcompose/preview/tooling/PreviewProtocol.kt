@@ -106,6 +106,7 @@ data class PreviewRenderRequest(
     val variantId: String,
     val modulePath: String,
     val buildVariant: String,
+    val buildFingerprint: String,
     val outputDirectory: String,
 ) {
     init {
@@ -117,6 +118,7 @@ data class PreviewRenderRequest(
         }
         require(modulePath.isNotBlank()) { "Preview modulePath must not be blank." }
         require(buildVariant.isNotBlank()) { "Preview buildVariant must not be blank." }
+        requireSha256(buildFingerprint, "Preview buildFingerprint")
         require(outputDirectory.isNotBlank()) {
             "Preview outputDirectory must not be blank."
         }

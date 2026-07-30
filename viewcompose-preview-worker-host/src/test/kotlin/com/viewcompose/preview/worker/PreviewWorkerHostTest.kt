@@ -123,6 +123,7 @@ class PreviewWorkerHostTest {
             variantId = "dark",
             modulePath = ":app",
             buildVariant = "debug",
+            buildFingerprint = "a".repeat(64),
             outputDirectory = "/output",
         )
     }

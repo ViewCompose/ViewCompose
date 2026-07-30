@@ -70,6 +70,16 @@ class ViewComposePreviewGradlePluginFunctionalTest {
 
                 dependencies {
                     implementation "androidx.appcompat:appcompat-resources:1.7.0"
+                    add(
+                        "viewComposePreviewWorkerHost",
+                        "org.jetbrains.kotlin:kotlin-stdlib:2.0.21"
+                    )
+                }
+
+                tasks.configureEach {
+                    if (name == "renderDebugViewComposePreview") {
+                        workerMainClass.set("sample.FakePreviewWorkerHost")
+                    }
                 }
                 """.trimIndent(),
             )
@@ -152,6 +162,62 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             }
             """,
         )
+        project.writeJava(
+            "app/src/main/java/sample/FakePreviewWorkerHost.java",
+            """
+            package sample;
+
+            import java.nio.charset.StandardCharsets;
+            import java.nio.file.Files;
+            import java.nio.file.Path;
+            import java.nio.file.Paths;
+
+            public final class FakePreviewWorkerHost {
+                public static void main(String[] args) throws Exception {
+                    String command = text(Paths.get(args[0]));
+                    Path requestPath = Paths.get(value(command, "renderRequestPath"));
+                    Path responsePath = Paths.get(value(command, "renderResponsePath"));
+                    String request = text(requestPath);
+                    String requestId = value(request, "requestId");
+                    String previewId = value(request, "id");
+                    String variantId = value(request, "variantId");
+                    Path output = Paths.get(value(request, "outputDirectory"));
+                    Files.createDirectories(output);
+                    Path image = output.resolve("preview.png");
+                    Path tree = output.resolve("render-tree.json");
+                    Files.write(image, new byte[] { 1 });
+                    Files.write(tree, "{}".getBytes(StandardCharsets.UTF_8));
+                    String response =
+                        "{\"protocolVersion\":1," +
+                        "\"requestId\":\"" + json(requestId) + "\"," +
+                        "\"previewId\":\"" + json(previewId) + "\"," +
+                        "\"variantId\":\"" + json(variantId) + "\"," +
+                        "\"status\":\"Success\"," +
+                        "\"artifacts\":{" +
+                        "\"imagePath\":\"" + json(image.toAbsolutePath().toString()) + "\"," +
+                        "\"renderTreePath\":\"" + json(tree.toAbsolutePath().toString()) + "\"}}";
+                    Files.write(responsePath, response.getBytes(StandardCharsets.UTF_8));
+                }
+
+                private static String text(Path path) throws Exception {
+                    return new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+                }
+
+                private static String value(String json, String key) {
+                    String marker = "\"" + key + "\"";
+                    int markerIndex = json.indexOf(marker);
+                    if (markerIndex < 0) throw new IllegalArgumentException("Missing " + key);
+                    int start = json.indexOf('"', json.indexOf(':', markerIndex) + 1) + 1;
+                    int end = json.indexOf('"', start);
+                    return json.substring(start, end);
+                }
+
+                private static String json(String value) {
+                    return value.replace("\\", "\\\\").replace("\"", "\\\"");
+                }
+            }
+            """,
+        )
 
         val result = GradleRunner.create()
             .withProjectDir(project)
@@ -193,6 +259,44 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         assertEquals(360, descriptor.variants.single().configuration.widthDp)
         assertEquals(720, descriptor.variants.single().configuration.heightDp)
         assertEquals(PreviewTheme.Dark, descriptor.variants.single().configuration.theme)
+
+        val tasks = GradleRunner.create()
+            .withProjectDir(project)
+            .withArguments(":app:tasks", "--all")
+            .withPluginClasspath()
+            .build()
+        assertTrue(tasks.output.contains("renderDebugViewComposePreview"))
+        assertTrue(tasks.output.contains("discoverDebugViewComposePreviews"))
+
+        val renderArguments = arrayOf(
+            ":app:renderDebugViewComposePreview",
+            "--preview-id",
+            descriptor.id,
+            "--variant-id",
+            descriptor.variants.single().id,
+            "--stacktrace",
+        )
+        val render = GradleRunner.create()
+            .withProjectDir(project)
+            .withArguments(*renderArguments)
+            .withPluginClasspath()
+            .build()
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            render.task(":app:renderDebugViewComposePreview")?.outcome,
+        )
+        assertTrue(render.output.contains("ViewCompose preview rendered:"))
+
+        val cached = GradleRunner.create()
+            .withProjectDir(project)
+            .withArguments(*renderArguments)
+            .withPluginClasspath()
+            .build()
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            cached.task(":app:renderDebugViewComposePreview")?.outcome,
+        )
+        assertTrue(cached.output.contains("ViewCompose preview cache hit:"))
     }
 
     private fun findAndroidSdkDirectory(): File? {

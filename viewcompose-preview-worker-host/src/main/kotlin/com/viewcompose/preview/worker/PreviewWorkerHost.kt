@@ -169,6 +169,10 @@ object PreviewWorkerHost {
             "Render request variant '${request.buildVariant}' does not match " +
                 "'${manifest.buildVariant}'."
         }
+        require(request.buildFingerprint == manifest.inputFingerprint) {
+            "Render request fingerprint '${request.buildFingerprint}' does not match " +
+                "'${manifest.inputFingerprint}'."
+        }
         require(File(command.layoutlibRuntimeRoot).isDirectory) {
             "Layoutlib runtime root does not exist: '${command.layoutlibRuntimeRoot}'."
         }

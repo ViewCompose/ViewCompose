@@ -288,6 +288,7 @@ class StaticPreviewWorkerPaparazziTest {
             variantId = entry.descriptor.variants.single().id,
             modulePath = ":sample",
             buildVariant = "debug",
+            buildFingerprint = "a".repeat(64),
             outputDirectory = outputDirectory.absolutePath,
         )
     }
