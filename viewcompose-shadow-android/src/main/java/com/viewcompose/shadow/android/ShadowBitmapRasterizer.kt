@@ -248,7 +248,7 @@ class ShadowBitmapRasterizer(
     }
 }
 
-private object ShadowShapePathFactory {
+internal object ShadowShapePathFactory {
     fun create(
         shape: UiShape,
         bounds: RectF,
