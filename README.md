@@ -264,6 +264,7 @@ Android 宿主会默认继承原生 Theme，并让框架 View、`AndroidView` �
 - [ARCHITECTURE.md](./ARCHITECTURE.md): 架构边界与模块职责 / Architecture boundaries and module responsibilities
 - [WORKFLOW.md](./WORKFLOW.md): 开发流程与门禁 / Development workflow and quality gates
 - [PERFORMANCE.md](./PERFORMANCE.md): 性能基线与约束 / Performance baseline and constraints
+- [SHADOWS.md](./SHADOWS.md): 高级外/内阴影、缓存与 Android 后端 / Advanced shadows, caching, and Android backends
 - [RENDER_FAILURES.md](./RENDER_FAILURES.md): 结构化渲染失败与 AndroidView 副作用边界 / Structured render failures and AndroidView effect boundary
 - [DIAGNOSTICS.md](./DIAGNOSTICS.md): Render Tree、Patch、Local 与重组原因诊断 / Runtime and renderer diagnostics
 - [LIFECYCLE_SAVED_STATE.md](./LIFECYCLE_SAVED_STATE.md): 生命周期与恢复事务 / Lifecycle and restoration transactions

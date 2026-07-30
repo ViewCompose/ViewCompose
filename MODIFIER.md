@@ -6,7 +6,7 @@
 
 目标是保证新增能力时落点明确，避免语义混放。
 
-## 2. 当前基线（2026-03）
+## 2. 当前基线（2026-07）
 
 1. identity 入口统一为 `Modifier`（`Modifier.Empty` 已移除）
 2. 文本语义类历史 modifier（如 `textColor/textSize`）已退场
@@ -21,6 +21,7 @@
 11. 图形绘制 modifier 已接入：`Modifier.drawBehind`、`Modifier.drawWithContent`、`Modifier.drawWithCache`（以及短写 `draw/drawCache`）；执行顺序按 modifier 链稳定，`drawWithContent` 可显式控制内容透传；底层执行保证 `DrawRoundRect` 四角半径与 `Drawable + DrawPaint` 组合语义不丢失
 12. 声明式焦点与硬件键盘输入已接入：`focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent` 映射原生 View 焦点搜索，并由 `LocalFocusManager` 提供会话级移动与清除能力
 13. 统一嵌套滚动协议已接入：`Modifier.nestedScroll(connection, dispatcher)` 通过透明宿主映射 AndroidX nested-scrolling parent/child 链，覆盖 pre/post scroll、pre/post fling、Lazy/Pager/普通滚动容器与自定义 drag/transform pan
+14. 高级阴影已接入：`dropShadow/dropShadows` 绘制在节点内容之前，`innerShadow/innerShadows` 绘制在完整内容之后；均支持有序多层、独立 shape、blur/spread/offset/color，并与 `elevation/zIndex` 解耦
 
 ## 3. API 清单（全量扫描）
 
@@ -33,9 +34,9 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(<[^>]+>\s*)?Modifier\.([A-Za-z0-9_]+)\(
 rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|ConstraintLayoutScope)\."
 ```
 
-当前扫描结果（2026-03）：
+当前扫描结果（2026-07）：
 
-1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`71`
+1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`76`
 2. `fun Modifier.*` 唯一 API 名称数：`62`
 3. scoped modifier 声明总数：`5`（`RowScope/ColumnScope/BoxScope`）
 4. renderer internal modifier 扩展：`1`（仅内部解析能力）
@@ -45,9 +46,10 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 1. `ui-contract 通用修饰`：平台无关的基础 `Modifier` 契约入口。
 2. `gesture 动作输入`：手势 DSL，依赖手势状态对象与策略内核。
 3. `graphics 绘制`：绘制阶段 API（含 `draw*` 短写）。
-4. `animation 尺寸动画`：`animateContentSize` 布局尺寸过渡入口。
-5. `host-android interop`：Android 平台互操作能力（`nativeView/android*`）。
-6. `renderer internal 解析/策略`：仅 renderer 内部使用，不给业务侧依赖。
+4. `graphics 阴影装饰`：平台无关阴影规格，由 Android decoration layer 执行。
+5. `animation 尺寸动画`：`animateContentSize` 布局尺寸过渡入口。
+6. `host-android interop`：Android 平台互操作能力（`nativeView/android*`）。
+7. `renderer internal 解析/策略`：仅 renderer 内部使用，不给业务侧依赖。
 
 ### 3.3 Global Modifier APIs（含 internal）
 
@@ -93,6 +95,10 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `drawWithCache` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | 构建并复用绘制缓存 | 全局 | 用于降低高频重绘成本 |
 | `draw` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | `drawBehind` 短写 | 全局 | 语义等价别名 |
 | `drawCache` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | `drawWithCache` 短写 | 全局 | 语义等价别名 |
+| `dropShadow` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加单层精确外阴影 | 全局 | 在节点内容前绘制；与 `elevation` 独立 |
+| `dropShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加有序多层精确外阴影 | 全局 | 同一调用内各层共享显式或节点默认 shape |
+| `innerShadow` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加单层精确内阴影 | 全局 | 在完整内容后绘制，不参与输入分发 |
+| `innerShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加有序多层精确内阴影 | 全局 | 裁切在 shape 内，声明靠后的层后绘制 |
 | `pointerInput` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 原始指针事件处理入口 | 全局 | 可返回 `Consumed` 强拦截后续手势 |
 | `combinedClickable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 点击/双击/长按组合入口 | 全局 | 无回调时 no-op，不吞事件 |
 | `draggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 连续拖拽手势 | 全局 | 通过 `DraggableState` 回调位移 |
@@ -118,6 +124,41 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `align` | `ColumnScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置交叉轴（水平）对齐 | `Column` 子项 | 参数 `HorizontalAlignment` |
 | `align` | `BoxScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置子项在 Box 内对齐 | `Box` 子项 | 参数 `BoxAlignment` |
 | `constrainAs / constrain` | `ConstraintLayout` 子项上下文 | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 声明子项约束 parent-data | `ConstraintLayout` 子项 | 入口是全局 `Modifier` 扩展，但语义仅在 `ConstraintLayout` 生效 |
+
+### 3.5 高级阴影示例与约束
+
+```kotlin
+val cardShape = UiShape.rounded(20.dp)
+
+Surface(
+    modifier = Modifier
+        .shape(cardShape)
+        .dropShadows(
+            shadows = listOf(
+                UiShadow(
+                    color = 0x33000000,
+                    blurRadius = 12.dp,
+                    offsetY = 5.dp,
+                ),
+                UiShadow(
+                    color = 0x223B82F6,
+                    blurRadius = 18.dp,
+                    spreadRadius = 2.dp,
+                    offsetX = (-4).dp,
+                ),
+            ),
+            shape = cardShape,
+        ),
+) {
+    Content()
+}
+```
+
+1. 要求像素级 blur/spread/offset/color 或多层合成时使用 `dropShadow(s)`；Material 高程语义继续使用 `elevation`。
+2. 需要稳定轮廓时推荐同时为内容和阴影传入同一个 `UiShape`；未显式传入时使用节点 `shape/cornerRadius`，再回退矩形。
+3. 阴影不扩张布局 bounds。外阴影需要调用侧保留视觉空间，并避免在非 viewport 祖先上启用不必要裁切。
+4. 高频动画优先变换节点的 translation/scale/rotation/alpha；逐帧动画 blur、spread、shape 或尺寸会产生新的栅格 key。
+5. 完整后端、缓存和诊断规则见 [SHADOWS.md](/Users/gzq/AndroidStudioProjects/UIFramework/SHADOWS.md)。
 
 ### 3.5 一致性校验（扫描对照）
 

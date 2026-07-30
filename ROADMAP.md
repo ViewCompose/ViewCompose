@@ -17,7 +17,7 @@
 
 性能专项仍保留独立深度文档见 [PERFORMANCE.md](/Users/gzq/AndroidStudioProjects/UIFramework/PERFORMANCE.md)。
 
-## 2. 当前基线（2026-03）
+## 2. 当前基线（2026-07）
 
 ### 2.1 框架层
 
@@ -57,6 +57,7 @@
 32. 手势并发已收口：拖动、锚点拖动、双指变换和 pointer input 具备结构化取消原因；变换接管后不恢复旧拖动，系统取消不再触发 fling/settle。
 33. 复杂图形场景已增强：`DrawScene` 支持不可变复用、嵌套 transform/clip 与 Canvas 状态隔离，并拒绝不平衡 save/restore。
 34. 富文本文档与 Receive Content 已落地：span、段落、链接、行内附件共享 `TextDocument`；clipboard、drag/drop、IME content 统一转换、变换、插入、撤销和保存恢复。
+35. 高级阴影装饰层已落地：`viewcompose-shadow-android` 提供有序多层外阴影、前景内阴影、有界栅格缓存、RenderNode 实验后端和结构化诊断；默认 `Auto` 依据首轮发布态基准保持 ExactBitmap。
 
 ### 2.2 Demo 与验证层
 
@@ -64,8 +65,9 @@
 2. 已实现章节具备统一 scenario 模板
 3. instrumentation 已覆盖关键 smoke 回归路径，延迟 session 容器专项已覆盖 `LazyVerticalGrid`、`HorizontalPager`、`VerticalPager` 与 `ModalBottomSheet`
 4. 基线更新（2026-03-08）：tag-first UI 测试迁移与关键组件族 smoke 已完成；当前 `qaQuick` 可通过，`qaFull` 存在 1 条已知失败（`DemoVisualUiTest.inputSearch_focusSearchBar_doesNotAutoScrollList`，详见 `app/build/reports/androidTests/connected/debug/index.html`）。
+5. `Graphics` Demo 已新增外阴影、内阴影与 Lazy/诊断 3 个子页，覆盖多层/彩色/offset/spread/shape、输入互操作、1000 项稳定 key、缓存命中和实际后端选择。
 
-## 2.3 里程碑进度快照（2026-03-09）
+## 2.3 里程碑进度快照（2026-07-30）
 
 | Milestone | 状态 | 完成态字段（C/U/D/UI） | 说明 |
 | --- | --- | --- | --- |
@@ -76,6 +78,7 @@
 | E：开发预览与截图回归 | In Progress | C:✅ U:✅ D:✅ UI:✅ | `viewcompose-preview` + Compose Preview + Paparazzi + `qaPreview` 已落地；下一步补全新增组件自动缺口提示与深色快照集 |
 | F：动画与手势首轮覆盖 | Completed | C:✅ U:✅ D:✅ UI:✅ | 已完成 `viewcompose-animation-core` + `viewcompose-animation` 分层、`Transition` 共享时钟重构、`AnimatedVisibility` Compose 语义对齐、`animateContentSize` 布局级动画落地、`Animatable` 易用性重构、`InfiniteTransition` typed API、Android interop（MotionLayout/TransitionManager/ObjectAnimator/ViewPropertyAnimator/DynamicAnimation）与 demo+preview+回归测试收口 |
 | G：Graphics 2D 主链能力 | Completed | C:✅ U:✅ D:✅ UI:⚠ | 已完成 `viewcompose-graphics-core` + `viewcompose-graphics` 分层、Canvas/draw modifiers/drawWithCache、renderer 渲染管线与 `AndroidGraphicsInterop`，并完成 v2 P0 语义收口（RoundRect/Drawable/ImageFilter Chain）；`qaFull` 当前受 ActivityScenario 生命周期不稳定影响待单独收口 |
+| H：高级阴影装饰层 | Completed | C:✅ U:✅ D:✅ UI:✅ | 多层外阴影、内阴影、shape/spread/offset、Lazy 缓存、后端诊断与 Compose 成对基准已闭环；Samsung SM-G991B 定向设备回归通过，Auto 保持 ExactBitmap |
 
 ## 3. 统一设计原则
 
@@ -104,7 +107,7 @@
 | ConstraintLayout | 已新增 `viewcompose-widget-constraintlayout` 与 renderer 映射，核心能力覆盖 anchors/helpers/constraintSet + advanced dimensions/weights/circle/baseline extensions + Virtual Helpers（Flow/Group/Layer/Placeholder） | 下一步推进 MotionLayout interop 专题（保持 host-android 边界） |
 | Animation | `viewcompose-animation-core` + `viewcompose-animation` 已完成内核/DSL 分层；`Transition` 为共享时间线语义，`Animatable` 支持最后一次 mutation 生效的 cancel/retarget/stop；`AnimatedVisibility` 与 `animateContentSize` 已落地 | 发布态性能画像与更多复杂场景样例 |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
-| Graphics | `viewcompose-graphics-core` + `viewcompose-graphics` + renderer Canvas draw pipeline 已落地，支持 Canvas 节点、draw modifiers、缓存和不可变嵌套 `DrawScene` | 扩展 dark/tablet 预览快照与复杂图表/自定义控件样例 |
+| Graphics | 2D draw 主链与独立 `viewcompose-shadow-android` 装饰层已落地，支持 Canvas、draw modifiers、不可变 `DrawScene`、有序多层外/内阴影、静态栅格缓存和后端诊断 | 扩展 dark/tablet 快照；在明确预算下研究动态 RenderEffect/转场阴影 |
 | Performance | 已有 R8 release Macrobenchmark 基线，且 `DiffUtil + payload + SlotTable Lite + subtree skip` 主路径已落地；列表/复杂布局已建立同 target Compose 对照、内存指标、自动报告和归一化回归门禁 | 在真实设备持续积累配对基线并量化 baseline profile 收益 |
 
 ### 4.1 完成态字段定义（C/U/D/UI）

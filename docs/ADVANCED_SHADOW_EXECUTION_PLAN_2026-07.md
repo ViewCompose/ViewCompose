@@ -221,10 +221,13 @@ RenderEffect 动态模糊和页面转场阴影基准暂不进入默认链路：�
 
 ### Phase 5：Demo 与文档
 
-1. 单层/多层/彩色/偏移/spread/inner shadow 对照。
-2. Lazy 1000 项阴影滚动。
-3. 阴影缓存和降级原因诊断页。
-4. 同步 `ARCHITECTURE.md`、`MODIFIER.md`、`PERFORMANCE.md`、`ROADMAP.md`。
+状态：已完成。
+
+1. `Graphics -> 外阴影` 已覆盖单层/多层/彩色/偏移/正负 spread/cut shape。
+2. `Graphics -> 内阴影` 已覆盖单层/多层与 TextField/Button 输入互操作。
+3. `Graphics -> Lazy/诊断` 已覆盖 1000 项稳定 key、外/内缓存统计、实际后端和降级原因。
+4. 单元模型测试与 Samsung SM-G991B / Android 13 定向 instrumentation 已通过。
+5. `ARCHITECTURE.md`、`MODIFIER.md`、`PERFORMANCE.md`、`ROADMAP.md` 与 `SHADOWS.md` 已同步。
 
 ## 8. 验证与提交
 

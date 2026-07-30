@@ -292,6 +292,19 @@ flowchart TD
 7. `DrawImage` 的 `Drawable` 分支必须应用 `DrawPaint` 组合语义（alpha/blend/colorFilter/imageFilter），并在绘制后恢复原始 `bounds`。
 8. `ImageFilterModel.Chain` 必须在执行层可生效；当前 `Blur + Chain` 路径采用递归合并半径（高斯方差累加）后下发到平台滤镜，禁止直接忽略 `Chain`。
 
+### 4.15.1 高级阴影装饰边界
+
+1. 平台无关契约固定在 `viewcompose-ui-contract`：`UiShadow` 与 `dropShadow(s)/innerShadow(s)` 只保存有序、不可变的逻辑单位规格。
+2. Android 栅格化、缓存、后端选择和诊断固定在 `viewcompose-shadow-android`；该模块不得依赖 renderer、widget 或 app。
+3. renderer 只负责在 View 绑定边界解析 density、layout direction、默认 shape，并以事务化方式安装/移除不可变阴影规格。
+4. 框架容器通过 `DecorationChildDrawingOrder` 在 child 内容前绘制外阴影、在 child 完整内容与 foreground 后绘制内阴影；不得为每层阴影创建额外业务 View。
+5. 高级阴影不参与 measure/layout、hit test、焦点或无障碍；`zIndex`、Material `elevation` 与精确阴影保持三套独立语义。
+6. 多层阴影严格保留声明顺序；外阴影可超出 child bounds，但仍受最近 viewport/显式 clip chain 约束；内阴影必须裁切在 shape 内。
+7. 静态栅格缓存 key 必须覆盖尺寸、density、layout direction、shape 与完整规格；仅平移、缩放、旋转或 alpha 变化不得重建栅格。
+8. `ShadowRenderPolicy.Auto` 的当前默认后端是 `ExactBitmap`。`RenderNodeDisplayList` 只作为 API 29+ 显式实验策略；没有同设备发布态数据证明稳定收益前不得切换默认值。
+9. Lazy 回收、节点移除、事务回滚与 RenderSession dispose 必须同步移除阴影规格；进程级有界缓存只能保存不可变栅格，不能持有 View 或 Session。
+10. 公开使用规则、限制与验证入口见 [SHADOWS.md](/Users/gzq/AndroidStudioProjects/UIFramework/SHADOWS.md)。
+
 ### 4.16 Semantics 与无障碍边界
 
 1. 无障碍声明统一使用 `Modifier.semantics { ... }` 与 `SemanticsConfiguration`；`contentDescription` 只是该结构化契约的便捷入口，禁止新增平行单字段 Modifier。
