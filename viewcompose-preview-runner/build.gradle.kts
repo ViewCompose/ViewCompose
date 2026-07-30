@@ -42,4 +42,5 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.paparazzi)
+    testImplementation(project(":viewcompose-preview-worker-host"))
 }

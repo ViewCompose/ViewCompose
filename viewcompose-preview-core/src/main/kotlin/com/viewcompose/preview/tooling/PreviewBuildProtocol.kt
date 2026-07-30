@@ -133,4 +133,36 @@ data class PreviewDescriptorCatalog(
     }
 }
 
+/**
+ * One self-contained command consumed by the isolated Layoutlib host.
+ */
+@Serializable
+data class PreviewWorkerCommand(
+    val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION,
+    val buildManifestPath: String,
+    val renderRequestPath: String,
+    val renderResponsePath: String,
+    val layoutlibRuntimeRoot: String,
+    val layoutlibResourcesRoot: String,
+) {
+    init {
+        ViewComposePreviewProtocol.requireSupported(protocolVersion)
+        require(buildManifestPath.isNotBlank()) {
+            "Preview worker buildManifestPath must not be blank."
+        }
+        require(renderRequestPath.isNotBlank()) {
+            "Preview worker renderRequestPath must not be blank."
+        }
+        require(renderResponsePath.isNotBlank()) {
+            "Preview worker renderResponsePath must not be blank."
+        }
+        require(layoutlibRuntimeRoot.isNotBlank()) {
+            "Preview worker layoutlibRuntimeRoot must not be blank."
+        }
+        require(layoutlibResourcesRoot.isNotBlank()) {
+            "Preview worker layoutlibResourcesRoot must not be blank."
+        }
+    }
+}
+
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")

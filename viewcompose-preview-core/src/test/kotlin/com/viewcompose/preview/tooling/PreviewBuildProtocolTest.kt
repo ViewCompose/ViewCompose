@@ -38,6 +38,13 @@ class PreviewBuildProtocolTest {
             buildFingerprint = fingerprint,
             descriptors = emptyList(),
         )
+        val command = PreviewWorkerCommand(
+            buildManifestPath = "/project/build-manifest.json",
+            renderRequestPath = "/project/request.json",
+            renderResponsePath = "/project/response.json",
+            layoutlibRuntimeRoot = "/cache/layoutlib-runtime",
+            layoutlibResourcesRoot = "/cache/layoutlib-resources",
+        )
 
         assertEquals(
             manifest,
@@ -49,6 +56,12 @@ class PreviewBuildProtocolTest {
             catalog,
             PreviewProtocolJson.decodeDescriptorCatalog(
                 PreviewProtocolJson.encodeDescriptorCatalog(catalog),
+            ),
+        )
+        assertEquals(
+            command,
+            PreviewProtocolJson.decodeWorkerCommand(
+                PreviewProtocolJson.encodeWorkerCommand(command),
             ),
         )
     }

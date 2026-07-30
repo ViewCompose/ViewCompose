@@ -26,6 +26,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-preview-core" to "com.viewcompose.preview.tooling",
     "viewcompose-preview-gradle-plugin" to "com.viewcompose.preview.gradle",
     "viewcompose-preview-runner" to "com.viewcompose.preview.runner",
+    "viewcompose-preview-worker-host" to "com.viewcompose.preview.worker",
     "viewcompose-preview" to "com.viewcompose.preview",
     "viewcompose-animation" to "com.viewcompose.animation",
     "viewcompose-animation-core" to "com.viewcompose.animation.core",
@@ -43,6 +44,7 @@ val kotlinJvmModules = setOf(
     "viewcompose-navigation-core",
     "viewcompose-preview-core",
     "viewcompose-preview-gradle-plugin",
+    "viewcompose-preview-worker-host",
     "viewcompose-animation-core",
     "viewcompose-gesture-core",
     "viewcompose-graphics-core",
@@ -59,6 +61,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-preview-core:compileKotlin",
     ":viewcompose-preview-gradle-plugin:compileKotlin",
     ":viewcompose-preview-runner:compileDebugKotlin",
+    ":viewcompose-preview-worker-host:compileKotlin",
     ":viewcompose-renderer:compileDebugKotlin",
     ":viewcompose-widget-core:compileDebugKotlin",
     ":viewcompose-overlay-android:compileDebugKotlin",
@@ -83,6 +86,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-preview-core:test",
     ":viewcompose-preview-gradle-plugin:test",
     ":viewcompose-preview-runner:testDebugUnitTest",
+    ":viewcompose-preview-worker-host:test",
     ":viewcompose-renderer:testDebugUnitTest",
     ":viewcompose-widget-core:testDebugUnitTest",
     ":viewcompose-overlay-android:testDebugUnitTest",
@@ -414,6 +418,58 @@ tasks.register("verifyPreviewGradlePluginBoundary") {
     }
 }
 
+tasks.register("verifyPreviewWorkerHostBoundary") {
+    group = "verification"
+    description =
+        "Verify the preview worker host stays independent from Gradle, Android Studio, and runner binaries."
+    doLast {
+        val violations = mutableListOf<String>()
+        val hostDir = rootDir.resolve("viewcompose-preview-worker-host")
+        val sourceDir = hostDir.resolve("src/main")
+        if (sourceDir.exists()) {
+            sourceDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import org.gradle.") ||
+                                trimmed.startsWith("import com.intellij.") ||
+                                trimmed.startsWith("import org.jetbrains.android.")
+                            ) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+        val buildFile = hostDir.resolve("build.gradle.kts")
+        if (buildFile.exists()) {
+            val content = buildFile.readText()
+            listOf(
+                "viewcompose-preview-gradle-plugin",
+                "viewcompose-preview-runner",
+            ).forEach { forbiddenDependency ->
+                if (content.contains(forbiddenDependency)) {
+                    violations +=
+                        "viewcompose-preview-worker-host/build.gradle.kts -> " +
+                            "forbidden dependency '$forbiddenDependency'"
+                }
+            }
+        }
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Preview worker host boundary verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyNavigationCorePurity") {
     group = "verification"
     description = "Verify navigation-core remains Kotlin/JVM-pure without Android imports."
@@ -461,6 +517,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyPreviewCorePurity")
     dependsOn("verifyPreviewRunnerBoundary")
     dependsOn("verifyPreviewGradlePluginBoundary")
+    dependsOn("verifyPreviewWorkerHostBoundary")
     dependsOn(qaQuickTasks)
 }
 

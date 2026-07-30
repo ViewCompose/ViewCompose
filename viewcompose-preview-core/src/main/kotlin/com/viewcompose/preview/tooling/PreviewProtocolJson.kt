@@ -40,4 +40,10 @@ object PreviewProtocolJson {
 
     fun decodeDescriptorCatalog(value: String): PreviewDescriptorCatalog =
         format.decodeFromString(value)
+
+    fun encodeWorkerCommand(command: PreviewWorkerCommand): String =
+        format.encodeToString(command)
+
+    fun decodeWorkerCommand(value: String): PreviewWorkerCommand =
+        format.decodeFromString(value)
 }

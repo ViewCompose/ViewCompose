@@ -152,10 +152,17 @@ Implemented bridge foundation:
   `descriptors.json` under `build/viewcompose-preview/<variant>`.
 - A TestKit Android fixture compiles a real preview function with local resources/assets and
   AndroidX resources, then verifies the exported build model and descriptor catalog end to end.
+- `viewcompose-preview-worker-host` is a standalone JDK 17 executable boundary. It reads one
+  `PreviewWorkerCommand`, recreates the Paparazzi/Layoutlib environment, owns setup/teardown for
+  exactly one SDK session, and writes a structured response atomically.
+- The worker host has no compile-time dependency on Gradle, Android Studio, or
+  `viewcompose-preview-runner`; the Android runner is found only on the isolated process classpath.
+- A real Layoutlib integration test renders a compiled ViewCompose entry through the host and
+  verifies both PNG and render-tree artifacts.
 
 Remaining in this stage:
 
-- Launch the Layoutlib worker from a single-preview task.
+- Wire the standalone host and Android runner distributions into a single-preview Gradle task.
 - Add render-result caching keyed by build fingerprint, preview id, and variant id.
 
 ### Stage 4 — Android Studio plugin shell
