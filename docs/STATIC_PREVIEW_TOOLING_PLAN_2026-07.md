@@ -105,6 +105,20 @@ Exit criteria:
 - Light/Dark and LTR/RTL snapshots are independently addressable.
 - Invalid configurations fail before worker startup.
 
+Implemented foundation:
+
+- `PreviewConfigurationMatrix` expands ordered axes into a deterministic Cartesian product with
+  stable, path-safe variant IDs.
+- Built-in meta-annotations cover Light/Dark, phone/tablet, LTR/RTL, and default/large/accessibility
+  font scales without coupling discovery to Android Studio.
+- `PreviewArtifactLayout` gives Gradle, the worker, and the IDE one canonical artifact directory
+  for every preview/variant pair.
+- The worker rejects API-level mismatches before mounting and applies the resolved density, font
+  scale, locale, layout direction, theme, and device bounds to both ViewCompose locals and native
+  Android resources.
+- Unit and Layoutlib tests lock ordering, override precedence, validation, native output size, and
+  environment propagation.
+
 ### Stage 3 — Gradle bridge
 
 - Resolve active Android module/build variant.

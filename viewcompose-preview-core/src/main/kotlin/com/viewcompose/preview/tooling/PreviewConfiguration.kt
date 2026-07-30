@@ -79,10 +79,222 @@ data class PreviewVariant(
     val configuration: PreviewConfiguration,
 ) {
     init {
-        require(id.isNotBlank()) { "Preview variant id must not be blank." }
+        requireStablePreviewId(id, "Preview variant id")
         require(displayName.isNotBlank()) { "Preview variant displayName must not be blank." }
-        require(id.none(Char::isISOControl)) {
-            "Preview variant id must not contain control characters."
+    }
+}
+
+/**
+ * Nullable configuration fields used by a matrix option to override a base configuration.
+ */
+@Serializable
+data class PreviewConfigurationOverride(
+    val widthDp: Int? = null,
+    val heightDp: Int? = null,
+    val density: Float? = null,
+    val fontScale: Float? = null,
+    val localeTags: List<String>? = null,
+    val layoutDirection: PreviewLayoutDirection? = null,
+    val theme: PreviewTheme? = null,
+    val apiLevel: Int? = null,
+) {
+    fun applyTo(base: PreviewConfiguration): PreviewConfiguration {
+        return PreviewConfiguration(
+            widthDp = widthDp ?: base.widthDp,
+            heightDp = heightDp ?: base.heightDp,
+            density = density ?: base.density,
+            fontScale = fontScale ?: base.fontScale,
+            localeTags = localeTags ?: base.localeTags,
+            layoutDirection = layoutDirection ?: base.layoutDirection,
+            theme = theme ?: base.theme,
+            apiLevel = apiLevel ?: base.apiLevel,
+        )
+    }
+}
+
+/**
+ * One named choice on a preview matrix axis.
+ */
+@Serializable
+data class PreviewConfigurationOption(
+    val id: String,
+    val displayName: String,
+    val override: PreviewConfigurationOverride,
+) {
+    init {
+        requireStablePreviewId(id, "Preview configuration option id")
+        require(displayName.isNotBlank()) {
+            "Preview configuration option displayName must not be blank."
         }
     }
 }
+
+/**
+ * One independently selectable dimension of a preview matrix.
+ */
+@Serializable
+data class PreviewConfigurationAxis(
+    val id: String,
+    val displayName: String,
+    val options: List<PreviewConfigurationOption>,
+) {
+    init {
+        requireStablePreviewId(id, "Preview configuration axis id")
+        require(displayName.isNotBlank()) {
+            "Preview configuration axis displayName must not be blank."
+        }
+        require(options.isNotEmpty()) { "Preview configuration axis must contain options." }
+        val duplicateIds = options.groupingBy(PreviewConfigurationOption::id)
+            .eachCount()
+            .filterValues { count -> count > 1 }
+            .keys
+        require(duplicateIds.isEmpty()) {
+            "Preview configuration axis '$id' contains duplicate option ids: " +
+                duplicateIds.sorted().joinToString()
+        }
+    }
+}
+
+/**
+ * Deterministic Cartesian product used by Gradle, tests, and the IDE variant selector.
+ */
+@Serializable
+data class PreviewConfigurationMatrix(
+    val base: PreviewConfiguration = PreviewConfiguration(),
+    val axes: List<PreviewConfigurationAxis>,
+) {
+    init {
+        require(axes.isNotEmpty()) { "Preview configuration matrix must contain axes." }
+        val duplicateIds = axes.groupingBy(PreviewConfigurationAxis::id)
+            .eachCount()
+            .filterValues { count -> count > 1 }
+            .keys
+        require(duplicateIds.isEmpty()) {
+            "Preview configuration matrix contains duplicate axis ids: " +
+                duplicateIds.sorted().joinToString()
+        }
+    }
+
+    fun variants(): List<PreviewVariant> {
+        val combinations = axes.fold(
+            initial = listOf(MatrixCombination(configuration = base)),
+        ) { existing, axis ->
+            existing.flatMap { combination ->
+                axis.options.map { option ->
+                    MatrixCombination(
+                        optionIds = combination.optionIds + "${axis.id}-${option.id}",
+                        optionNames = combination.optionNames + option.displayName,
+                        configuration = option.override.applyTo(combination.configuration),
+                    )
+                }
+            }
+        }
+        return combinations.map { combination ->
+            PreviewVariant(
+                id = combination.optionIds.joinToString(MATRIX_ID_SEPARATOR),
+                displayName = combination.optionNames.joinToString(" / "),
+                configuration = combination.configuration,
+            )
+        }
+    }
+}
+
+/**
+ * Reusable axes covering the common first-party static preview configurations.
+ */
+object PreviewConfigurationPresets {
+    val Theme: PreviewConfigurationAxis = PreviewConfigurationAxis(
+        id = "theme",
+        displayName = "Theme",
+        options = listOf(
+            PreviewConfigurationOption(
+                id = "light",
+                displayName = "Light",
+                override = PreviewConfigurationOverride(theme = PreviewTheme.Light),
+            ),
+            PreviewConfigurationOption(
+                id = "dark",
+                displayName = "Dark",
+                override = PreviewConfigurationOverride(theme = PreviewTheme.Dark),
+            ),
+        ),
+    )
+
+    val LayoutDirection: PreviewConfigurationAxis = PreviewConfigurationAxis(
+        id = "layout-direction",
+        displayName = "Layout direction",
+        options = listOf(
+            PreviewConfigurationOption(
+                id = "ltr",
+                displayName = "LTR · en-US",
+                override = PreviewConfigurationOverride(
+                    localeTags = listOf("en-US"),
+                    layoutDirection = PreviewLayoutDirection.Ltr,
+                ),
+            ),
+            PreviewConfigurationOption(
+                id = "rtl",
+                displayName = "RTL · ar-EG",
+                override = PreviewConfigurationOverride(
+                    localeTags = listOf("ar-EG"),
+                    layoutDirection = PreviewLayoutDirection.Rtl,
+                ),
+            ),
+        ),
+    )
+
+    val Device: PreviewConfigurationAxis = PreviewConfigurationAxis(
+        id = "device",
+        displayName = "Device",
+        options = listOf(
+            PreviewConfigurationOption(
+                id = "phone",
+                displayName = "Phone",
+                override = PreviewConfigurationOverride(
+                    widthDp = 411,
+                    heightDp = 891,
+                    density = 1f,
+                ),
+            ),
+            PreviewConfigurationOption(
+                id = "tablet",
+                displayName = "Tablet",
+                override = PreviewConfigurationOverride(
+                    widthDp = 800,
+                    heightDp = 1280,
+                    density = 1f,
+                ),
+            ),
+        ),
+    )
+
+    val FontScale: PreviewConfigurationAxis = PreviewConfigurationAxis(
+        id = "font-scale",
+        displayName = "Font scale",
+        options = listOf(
+            PreviewConfigurationOption(
+                id = "font-default",
+                displayName = "Font 100%",
+                override = PreviewConfigurationOverride(fontScale = 1f),
+            ),
+            PreviewConfigurationOption(
+                id = "font-large",
+                displayName = "Font 130%",
+                override = PreviewConfigurationOverride(fontScale = 1.3f),
+            ),
+            PreviewConfigurationOption(
+                id = "font-largest",
+                displayName = "Font 200%",
+                override = PreviewConfigurationOverride(fontScale = 2f),
+            ),
+        ),
+    )
+}
+
+private data class MatrixCombination(
+    val optionIds: List<String> = emptyList(),
+    val optionNames: List<String> = emptyList(),
+    val configuration: PreviewConfiguration,
+)
+
+private const val MATRIX_ID_SEPARATOR: String = "__"

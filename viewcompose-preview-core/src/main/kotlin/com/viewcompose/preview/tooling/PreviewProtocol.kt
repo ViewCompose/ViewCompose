@@ -63,7 +63,7 @@ data class PreviewDescriptor(
     val sourceLocation: PreviewSourceLocation? = null,
 ) {
     init {
-        require(id.isNotBlank()) { "Preview descriptor id must not be blank." }
+        requireStablePreviewId(id, "Preview descriptor id")
         require(displayName.isNotBlank()) { "Preview descriptor displayName must not be blank." }
         require(variants.isNotEmpty()) { "Preview descriptor must contain at least one variant." }
         val duplicateVariantIds = variants
@@ -75,6 +75,20 @@ data class PreviewDescriptor(
             "Preview descriptor contains duplicate variant ids: " +
                 duplicateVariantIds.sorted().joinToString()
         }
+    }
+}
+
+/**
+ * Canonical artifact directory layout. IDs are path-safe by protocol validation.
+ */
+object PreviewArtifactLayout {
+    fun relativeDirectory(
+        previewId: String,
+        variantId: String,
+    ): String {
+        requireStablePreviewId(previewId, "Preview artifact preview id")
+        requireStablePreviewId(variantId, "Preview artifact variant id")
+        return "$previewId/$variantId"
     }
 }
 
@@ -197,3 +211,14 @@ data class PreviewRenderResponse(
         }
     }
 }
+
+internal fun requireStablePreviewId(
+    value: String,
+    label: String,
+) {
+    require(PREVIEW_ID_PATTERN.matches(value)) {
+        "$label must use lowercase ASCII words separated by hyphens or reserved '__': '$value'."
+    }
+}
+
+private val PREVIEW_ID_PATTERN = Regex("[a-z0-9]+(?:(?:-|__)[a-z0-9]+)*")

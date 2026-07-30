@@ -9,7 +9,7 @@ import kotlin.jvm.JvmRepeatable
  * independent from Android and Compose lets Gradle, an IDE plugin, or another host discover the
  * same entry point without loading a UI runtime.
  */
-@Target(AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 @JvmRepeatable(ViewComposePreviews::class)
@@ -29,7 +29,7 @@ annotation class ViewComposePreview(
 /**
  * JVM container used for repeatable [ViewComposePreview] declarations.
  */
-@Target(AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class ViewComposePreviews(

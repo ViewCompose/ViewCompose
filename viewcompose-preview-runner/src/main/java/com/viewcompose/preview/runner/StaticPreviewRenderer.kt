@@ -1,6 +1,7 @@
 package com.viewcompose.preview.runner
 
 import android.content.Context
+import android.os.Build
 import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
@@ -55,16 +56,23 @@ object StaticPreviewRenderer {
         }
 
         val configuration = request.configuration
+        val requestedApiLevel = configuration.apiLevel
+        if (requestedApiLevel != null && requestedApiLevel != Build.VERSION.SDK_INT) {
+            return StaticPreviewMountResult.Failure(
+                diagnostic = request.renderDiagnostic(
+                    message = "Preview worker API level does not match the request.",
+                    phase = "environment",
+                    details = "Requested API $requestedApiLevel, worker API " +
+                        "${Build.VERSION.SDK_INT}.",
+                ),
+            )
+        }
+        val previewContext = PreviewAndroidContextFactory.create(context, configuration)
         val widthPx = (configuration.widthDp * configuration.density).roundToInt()
             .coerceAtLeast(1)
         val heightPx = (configuration.heightDp * configuration.density).roundToInt()
             .coerceAtLeast(1)
-        val root = FrameLayout(context).apply {
-            layoutDirection = when (configuration.layoutDirection) {
-                PreviewLayoutDirection.Ltr -> View.LAYOUT_DIRECTION_LTR
-                PreviewLayoutDirection.Rtl -> View.LAYOUT_DIRECTION_RTL
-            }
-        }
+        val root = FrameLayout(previewContext)
         var renderResult: RenderTreeResult? = null
         var renderFailure: RenderFailure? = null
         var session: RenderSession? = null
@@ -101,6 +109,10 @@ object StaticPreviewRenderer {
                 }
             }
             session?.setRenderingActive(false)
+            root.layoutDirection = when (configuration.layoutDirection) {
+                PreviewLayoutDirection.Ltr -> View.LAYOUT_DIRECTION_LTR
+                PreviewLayoutDirection.Rtl -> View.LAYOUT_DIRECTION_RTL
+            }
 
             val failure = renderFailure
             val result = renderResult
