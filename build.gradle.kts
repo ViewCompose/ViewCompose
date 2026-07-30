@@ -22,6 +22,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-benchmark" to "com.viewcompose.benchmark",
     "viewcompose-lifecycle" to "com.viewcompose.lifecycle",
     "viewcompose-viewmodel" to "com.viewcompose.viewmodel",
+    "viewcompose-preview-core" to "com.viewcompose.preview.tooling",
     "viewcompose-preview" to "com.viewcompose.preview",
     "viewcompose-animation" to "com.viewcompose.animation",
     "viewcompose-animation-core" to "com.viewcompose.animation.core",
@@ -37,6 +38,7 @@ val kotlinJvmModules = setOf(
     "viewcompose-ui-contract",
     "viewcompose-runtime",
     "viewcompose-navigation-core",
+    "viewcompose-preview-core",
     "viewcompose-animation-core",
     "viewcompose-gesture-core",
     "viewcompose-graphics-core",
@@ -50,6 +52,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-host-android:compileDebugKotlin",
     ":viewcompose-lifecycle:compileDebugKotlin",
     ":viewcompose-viewmodel:compileDebugKotlin",
+    ":viewcompose-preview-core:compileKotlin",
     ":viewcompose-renderer:compileDebugKotlin",
     ":viewcompose-widget-core:compileDebugKotlin",
     ":viewcompose-overlay-android:compileDebugKotlin",
@@ -71,6 +74,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-host-android:testDebugUnitTest",
     ":viewcompose-lifecycle:testDebugUnitTest",
     ":viewcompose-viewmodel:testDebugUnitTest",
+    ":viewcompose-preview-core:test",
     ":viewcompose-renderer:testDebugUnitTest",
     ":viewcompose-widget-core:testDebugUnitTest",
     ":viewcompose-overlay-android:testDebugUnitTest",
@@ -277,6 +281,42 @@ tasks.register("verifyGraphicsCorePurity") {
     }
 }
 
+tasks.register("verifyPreviewCorePurity") {
+    group = "verification"
+    description = "Verify preview-core remains Kotlin/JVM-pure without Android or Compose imports."
+    doLast {
+        val violations = mutableListOf<String>()
+        val previewCoreMainDir = rootDir.resolve("viewcompose-preview-core").resolve("src/main")
+        if (previewCoreMainDir.exists()) {
+            previewCoreMainDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import android.") ||
+                                trimmed.startsWith("import androidx.")
+                            ) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Preview-core purity verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyNavigationCorePurity") {
     group = "verification"
     description = "Verify navigation-core remains Kotlin/JVM-pure without Android imports."
@@ -321,6 +361,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyNavigationCorePurity")
     dependsOn("verifyGestureCorePurity")
     dependsOn("verifyGraphicsCorePurity")
+    dependsOn("verifyPreviewCorePurity")
     dependsOn(qaQuickTasks)
 }
 

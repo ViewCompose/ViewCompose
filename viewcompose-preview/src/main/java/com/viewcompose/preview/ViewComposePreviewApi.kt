@@ -3,18 +3,9 @@ package com.viewcompose.preview
 import android.view.ViewGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.viewcompose.preview.host.PreviewThemeMode
 import com.viewcompose.preview.host.ViewComposePreviewHost
+import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.widget.core.UiTreeBuilder
-
-/**
- * 对外暴露的 Preview 主题选择。
- * Public theme selection exposed by the Preview bridge.
- */
-enum class ViewComposePreviewTheme {
-    Light,
-    Dark,
-}
 
 /**
  * 配置单个 ViewCompose Preview 的宿主行为。
@@ -24,7 +15,7 @@ enum class ViewComposePreviewTheme {
  * [debug] is forwarded to the Android render host so static previews can emit tree diagnostics.
  */
 data class ViewComposePreviewOptions(
-    val theme: ViewComposePreviewTheme = ViewComposePreviewTheme.Light,
+    val theme: PreviewTheme = PreviewTheme.Light,
     val debug: Boolean = false,
     val debugTag: String = "ViewComposePreview",
 )
@@ -41,7 +32,7 @@ fun ViewComposePreview(
 ) {
     ViewComposePreviewHost(
         modifier = modifier,
-        themeMode = options.theme.toHostThemeMode(),
+        themeMode = options.theme,
         debug = options.debug,
         debugTag = options.debugTag,
         content = { _ ->
@@ -62,16 +53,9 @@ fun ViewComposePreviewWithRoot(
 ) {
     ViewComposePreviewHost(
         modifier = modifier,
-        themeMode = options.theme.toHostThemeMode(),
+        themeMode = options.theme,
         debug = options.debug,
         debugTag = options.debugTag,
         content = content,
     )
-}
-
-private fun ViewComposePreviewTheme.toHostThemeMode(): PreviewThemeMode {
-    return when (this) {
-        ViewComposePreviewTheme.Light -> PreviewThemeMode.Light
-        ViewComposePreviewTheme.Dark -> PreviewThemeMode.Dark
-    }
 }

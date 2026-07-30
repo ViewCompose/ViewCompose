@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.viewcompose.preview.ViewComposePreview
 import com.viewcompose.preview.ViewComposePreviewOptions
-import com.viewcompose.preview.ViewComposePreviewTheme
 import com.viewcompose.preview.ViewComposePreviewWithRoot
+import com.viewcompose.preview.tooling.PreviewTheme
 
 /**
  * demo 模块对 IDE Preview 暴露的调试入口。
@@ -22,7 +22,7 @@ import com.viewcompose.preview.ViewComposePreviewWithRoot
 private fun DemoPreviewChapterLightPreview() {
     ViewComposePreview(
         options = ViewComposePreviewOptions(
-            theme = ViewComposePreviewTheme.Light,
+            theme = PreviewTheme.Light,
             debugTag = "DemoPreviewChapterLight",
         ),
     ) {
@@ -41,7 +41,7 @@ private fun DemoPreviewChapterLightPreview() {
 private fun DemoPreviewChapterDarkPreview() {
     ViewComposePreview(
         options = ViewComposePreviewOptions(
-            theme = ViewComposePreviewTheme.Dark,
+            theme = PreviewTheme.Dark,
             debugTag = "DemoPreviewChapterDark",
         ),
     ) {
@@ -61,7 +61,7 @@ private fun DemoPreviewChapterDarkPreview() {
 private fun DemoPreviewCatalogPageDarkPreview() {
     ViewComposePreviewWithRoot(
         options = ViewComposePreviewOptions(
-            theme = ViewComposePreviewTheme.Dark,
+            theme = PreviewTheme.Dark,
             debugTag = "DemoPreviewChapterDark",
         ),
     ) { root ->

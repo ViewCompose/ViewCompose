@@ -72,6 +72,7 @@
 | `viewcompose-graphics*` | Canvas/绘制命令内核与 DSL。 / Canvas and drawing command core + DSL. |
 | `viewcompose-shadow-android` | 高级阴影后端、缓存与 Decoration Layer 平台能力。 / Advanced shadow backends, caching, and Decoration Layer platform support. |
 | `viewcompose-widget-constraintlayout` | ConstraintLayout DSL 与 helper 能力。 / ConstraintLayout DSL and helper capabilities. |
+| `viewcompose-preview-core` | 纯 Kotlin Preview 注解、配置与工具协议。 / Pure Kotlin preview annotations, configuration, and tooling protocol. |
 | `viewcompose-preview` | 开发预览与 Paparazzi 快照回归。 / Dev preview and Paparazzi snapshot regression. |
 | `app` | Demo 应用与 UI 回归锚点。 / Demo app and UI regression anchors. |
 
