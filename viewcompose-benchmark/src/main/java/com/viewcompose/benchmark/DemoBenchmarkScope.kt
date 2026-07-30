@@ -79,14 +79,19 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
     engine: String,
     scenario: String,
     expectedText: String,
+    shadowRenderPolicy: String? = null,
 ) {
     prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait { intent ->
         intent.removeExtra("demo_module_key")
         intent.removeExtra("state_page_index")
+        intent.removeExtra("shadow_render_policy")
         intent.putExtra("performance_engine", engine)
         intent.putExtra("performance_scenario", scenario)
+        shadowRenderPolicy?.let { policy ->
+            intent.putExtra("shadow_render_policy", policy)
+        }
         intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
     }
     waitForText(expectedText)
@@ -186,7 +191,13 @@ internal fun MacrobenchmarkScope.waitForNavigationMotion() {
     SystemClock.sleep(NAVIGATION_MOTION_WAIT_MILLIS)
 }
 
-private fun prepareBenchmarkUiAutomation() {
+private fun MacrobenchmarkScope.prepareBenchmarkUiAutomation() {
+    // 构建或设备冷却期间屏幕可能自动休眠；锁屏会让 Perfetto 观测不到 RenderThread，
+    // 并使 UiAutomator 查找失败。每个 benchmark 入口都显式恢复可交互状态。
+    // The screen may sleep during builds or cooldown. A locked screen removes RenderThread slices
+    // from Perfetto and makes UiAutomator lookups fail, so every benchmark entry restores it.
+    device.wakeUp()
+    device.executeShellCommand("wm dismiss-keyguard")
     // 部分 OEM 构建会持续发送 accessibility/window 事件，UiAutomator 的隐式 idle 等待会拖满超时。
     // Some OEM builds keep accessibility/window events flowing, so UiAutomator idle waits hit timeout.
     // benchmark 已使用显式文本条件和固定动效窗口同步，因此可以关闭隐式 idle timeout。

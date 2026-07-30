@@ -133,6 +133,11 @@ internal object FrameworkRecyclerViewDefaults {
         animateMove: Boolean,
         animateChange: Boolean,
     ) {
+        // item 内部的 Decoration Host 需要越过 holder 边界绘制阴影；具体 Lazy 容器仍负责
+        // 把最终输出裁剪到自己的 viewport。
+        // Item Decoration Hosts must draw past holder bounds; each concrete lazy container still
+        // clips the final output to its own viewport.
+        recyclerView.clipChildren = false
         val anyMotionEnabled = animateInsert || animateRemove || animateMove || animateChange
         if (disableItemAnimator || !anyMotionEnabled) {
             recyclerView.itemAnimator = null

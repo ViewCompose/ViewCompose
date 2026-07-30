@@ -27,6 +27,8 @@ internal class ResolvedModifiers(
     var shape: ShapeModifierElement? = null,
     var clip: ClipModifierElement? = null,
     var elevation: ElevationModifierElement? = null,
+    var dropShadows: List<DropShadowModifierElement> = emptyList(),
+    var innerShadows: List<InnerShadowModifierElement> = emptyList(),
     var offset: OffsetModifierElement? = null,
     var padding: PaddingModifierElement? = null,
     var systemBarsInsetsPadding: SystemBarsInsetsPaddingModifierElement? = null,
@@ -106,6 +108,8 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             }
             is ClipModifierElement -> result.clip = element
             is ElevationModifierElement -> result.elevation = element
+            is DropShadowModifierElement -> result.dropShadows = result.dropShadows + element
+            is InnerShadowModifierElement -> result.innerShadows = result.innerShadows + element
             is OffsetModifierElement -> result.offset = element
             is PaddingModifierElement -> result.padding = element
             is SystemBarsInsetsPaddingModifierElement -> result.systemBarsInsetsPadding = element
@@ -114,7 +118,11 @@ internal fun Modifier.resolve(): ResolvedModifiers {
             is MinWidthModifierElement -> result.minWidth = element
             is AnimateContentSizeModifierElement -> result.animateContentSize = element
             is VisibilityModifierElement -> result.visibility = element
-            is ZIndexModifierElement -> result.zIndex = element
+            is ZIndexModifierElement -> {
+                result.zIndex = ZIndexModifierElement(
+                    zIndex = (result.zIndex?.zIndex ?: 0f) + element.zIndex,
+                )
+            }
             is GraphicsLayerModifierElement -> result.graphicsLayer = element
             is PointerInputModifierElement -> result.pointerInput = element
             is CombinedClickableModifierElement -> result.combinedClickable = element

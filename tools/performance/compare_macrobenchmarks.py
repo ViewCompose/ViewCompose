@@ -30,6 +30,26 @@ SCENARIOS = (
         "viewComposeComplexLayoutUpdate",
         "composeComplexLayoutUpdate",
     ),
+    (
+        "shadow_list_scroll",
+        "viewComposeShadowListScroll",
+        "composeShadowListScroll",
+    ),
+    (
+        "shadow_list_mutation",
+        "viewComposeShadowListMutation",
+        "composeShadowListMutation",
+    ),
+    (
+        "shadow_complex_layout_scroll",
+        "viewComposeShadowComplexLayoutScroll",
+        "composeShadowComplexLayoutScroll",
+    ),
+    (
+        "shadow_complex_layout_update",
+        "viewComposeShadowComplexLayoutUpdate",
+        "composeShadowComplexLayoutUpdate",
+    ),
 )
 
 SAMPLED_METRICS = ("frameDurationCpuMs", "frameOverrunMs")
@@ -164,8 +184,13 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def benchmark_entries(result: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """从 Macrobenchmark 结果中提取并校验必须的 benchmark 条目。
-    Extracts required benchmark entries from a Macrobenchmark result and validates them.
+    """提取 Macrobenchmark 条目并校验每个场景必须成对出现。
+    Extracts Macrobenchmark entries and requires each present scenario to be paired.
+
+    完整门禁可以包含全部场景；后端实验也可以只运行一个 benchmark class。两种情况下
+    都必须同时包含 ViewCompose 与 Compose 控制组，避免生成没有归一化基线的报告。
+    A full gate may contain every scenario, while backend experiments may run one benchmark class.
+    Both forms must retain the ViewCompose and Compose pair used for normalization.
     """
 
     entries = result.get("benchmarks")
@@ -175,17 +200,37 @@ def benchmark_entries(result: dict[str, Any]) -> dict[str, dict[str, Any]]:
     for entry in entries:
         if isinstance(entry, dict) and isinstance(entry.get("name"), str):
             indexed[entry["name"]] = entry
-    required = {
-        benchmark_name
-        for _, viewcompose_name, compose_name in SCENARIOS
-        for benchmark_name in (viewcompose_name, compose_name)
-    }
-    missing = sorted(required - indexed.keys())
-    if missing:
+    incomplete: list[str] = []
+    complete_pairs = 0
+    for scenario, viewcompose_name, compose_name in SCENARIOS:
+        viewcompose_present = viewcompose_name in indexed
+        compose_present = compose_name in indexed
+        if viewcompose_present and compose_present:
+            complete_pairs += 1
+        elif viewcompose_present or compose_present:
+            missing_name = compose_name if viewcompose_present else viewcompose_name
+            incomplete.append(f"{scenario}: {missing_name}")
+    if incomplete:
         raise ValueError(
-            "Benchmark result is missing comparison methods: " + ", ".join(missing),
+            "Benchmark result has incomplete comparison pairs: " + ", ".join(incomplete),
         )
+    if complete_pairs == 0:
+        raise ValueError("Benchmark result contains no supported comparison pairs.")
     return indexed
+
+
+def available_scenarios(
+    entries: dict[str, dict[str, Any]],
+) -> tuple[tuple[str, str, str], ...]:
+    """返回当前结果中完整存在的成对场景。
+    Returns paired scenarios fully present in the current result.
+    """
+
+    return tuple(
+        scenario
+        for scenario in SCENARIOS
+        if scenario[1] in entries and scenario[2] in entries
+    )
 
 
 def metric_value(
@@ -213,7 +258,7 @@ def build_comparisons(
     """
 
     comparisons: list[Comparison] = []
-    for scenario, viewcompose_name, compose_name in SCENARIOS:
+    for scenario, viewcompose_name, compose_name in available_scenarios(entries):
         viewcompose_entry = entries[viewcompose_name]
         compose_entry = entries[compose_name]
         for metric in SAMPLED_METRICS:
@@ -309,7 +354,7 @@ def build_stability(
     """
 
     stability: list[Stability] = []
-    for scenario, viewcompose_name, compose_name in SCENARIOS:
+    for scenario, viewcompose_name, compose_name in available_scenarios(entries):
         for engine, benchmark_name in (
             ("ViewCompose", viewcompose_name),
             ("Compose", compose_name),

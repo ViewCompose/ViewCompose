@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
@@ -16,6 +17,8 @@ import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
@@ -90,7 +93,11 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
     init {
         clipChildren = false
         clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
     }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         flushPendingConstraintRebuild()
@@ -112,8 +119,28 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
         LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        val drawn = super.drawChild(canvas, child, drawingTime)
+        ShadowDecorationLayer.drawOverChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return drawn
+    }
+
     override fun onViewAdded(child: View) {
         super.onViewAdded(child)
+        DecorationChildDrawingOrder.invalidate(this)
         if (!mutatingHelperViews) {
             requestConstraintRebuild()
         }
@@ -121,6 +148,7 @@ internal class DeclarativeConstraintLayout @JvmOverloads constructor(
 
     override fun onViewRemoved(child: View) {
         super.onViewRemoved(child)
+        DecorationChildDrawingOrder.invalidate(this)
         if (!mutatingHelperViews) {
             requestConstraintRebuild()
         }

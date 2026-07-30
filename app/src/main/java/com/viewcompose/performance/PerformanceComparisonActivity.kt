@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import com.viewcompose.host.android.setUiContent
+import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.shadow.android.ShadowRenderPolicy
 
 /**
  * 承载 ViewCompose 与 Compose 对照性能页面的 Activity。
@@ -19,13 +21,30 @@ class PerformanceComparisonActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val engine = PerformanceEngine.fromIntent(intent)
         val scenario = PerformanceScenario.fromIntent(intent)
+        val shadowPolicy = ShadowRenderPolicy.fromWireValue(
+            intent.getStringExtra(EXTRA_SHADOW_RENDER_POLICY),
+        )
+        ShadowDecorationLayer.setRenderPolicy(shadowPolicy)
+        ShadowDecorationLayer.resetBackendDiagnostics()
         when (engine) {
             PerformanceEngine.ViewCompose -> {
                 setUiContent(debug = false) {
                     when (scenario) {
-                        PerformanceScenario.List -> ViewComposeListPerformanceScreen()
+                        PerformanceScenario.List -> {
+                            ViewComposeListPerformanceScreen(shadowsEnabled = false)
+                        }
                         PerformanceScenario.ComplexLayout -> {
-                            ViewComposeComplexLayoutPerformanceScreen()
+                            ViewComposeComplexLayoutPerformanceScreen(
+                                shadowsEnabled = false,
+                            )
+                        }
+                        PerformanceScenario.ShadowList -> {
+                            ViewComposeListPerformanceScreen(shadowsEnabled = true)
+                        }
+                        PerformanceScenario.ShadowComplexLayout -> {
+                            ViewComposeComplexLayoutPerformanceScreen(
+                                shadowsEnabled = true,
+                            )
                         }
                     }
                 }
@@ -39,9 +58,21 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                         )
                         setContent {
                             when (scenario) {
-                                PerformanceScenario.List -> ComposeListPerformanceScreen()
+                                PerformanceScenario.List -> {
+                                    ComposeListPerformanceScreen(shadowsEnabled = false)
+                                }
                                 PerformanceScenario.ComplexLayout -> {
-                                    ComposeComplexLayoutPerformanceScreen()
+                                    ComposeComplexLayoutPerformanceScreen(
+                                        shadowsEnabled = false,
+                                    )
+                                }
+                                PerformanceScenario.ShadowList -> {
+                                    ComposeListPerformanceScreen(shadowsEnabled = true)
+                                }
+                                PerformanceScenario.ShadowComplexLayout -> {
+                                    ComposeComplexLayoutPerformanceScreen(
+                                        shadowsEnabled = true,
+                                    )
                                 }
                             }
                         }
@@ -49,5 +80,10 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        ShadowDecorationLayer.setRenderPolicy(ShadowRenderPolicy.Auto)
+        super.onDestroy()
     }
 }

@@ -30,7 +30,7 @@ import com.viewcompose.renderer.view.container.DeclarativeLazyVerticalGridLayout
 import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativeLinearLayout
 import com.viewcompose.renderer.view.container.DeclarativeNavigationBarLayout
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.viewcompose.renderer.view.container.DeclarativePullToRefreshLayout
 import com.viewcompose.renderer.view.container.DeclarativeScrollableColumnLayout
 import com.viewcompose.renderer.view.container.DeclarativeScrollableRowLayout
 import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
@@ -122,7 +122,7 @@ internal object ViewNodeFactory {
             NodeType.VerticalPager -> DeclarativeVerticalPagerLayout(context)
             NodeType.TabRow -> DeclarativeTabRowLayout(context)
             NodeType.LazyVerticalGrid -> DeclarativeLazyVerticalGridLayout(context)
-            NodeType.PullToRefresh -> SwipeRefreshLayout(context)
+            NodeType.PullToRefresh -> DeclarativePullToRefreshLayout(context)
         }
     }
 }

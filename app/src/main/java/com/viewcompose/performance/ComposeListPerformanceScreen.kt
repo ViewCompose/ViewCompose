@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +36,9 @@ import androidx.compose.ui.unit.sp
  * Compose control implementation of the list performance scenario.
  */
 @Composable
-internal fun ComposeListPerformanceScreen() {
+internal fun ComposeListPerformanceScreen(
+    shadowsEnabled: Boolean,
+) {
     var revision by remember { mutableIntStateOf(0) }
     val rows = performanceListRows(revision)
     Column(
@@ -44,7 +47,11 @@ internal fun ComposeListPerformanceScreen() {
             .background(Color(PERFORMANCE_BACKGROUND_COLOR)),
     ) {
         ComposeListPerformanceHeader(
-            engineName = PerformanceEngine.Compose.displayName,
+            engineName = if (shadowsEnabled) {
+                "${PerformanceEngine.Compose.displayName} Shadow"
+            } else {
+                PerformanceEngine.Compose.displayName
+            },
             revision = revision,
             onMutate = {
                 revision += 1
@@ -65,7 +72,10 @@ internal fun ComposeListPerformanceScreen() {
                 key = PerformanceListRow::id,
                 contentType = { "performance-list-row" },
             ) { row ->
-                ComposePerformanceListRow(row)
+                ComposePerformanceListRow(
+                    row = row,
+                    shadowsEnabled = shadowsEnabled,
+                )
             }
         }
     }
@@ -140,15 +150,29 @@ private fun ComposePerformanceAction(
 }
 
 @Composable
-private fun ComposePerformanceListRow(row: PerformanceListRow) {
+private fun ComposePerformanceListRow(
+    row: PerformanceListRow,
+    shadowsEnabled: Boolean,
+) {
+    val shape = RoundedCornerShape(10.dp)
+    val shadowModifier = if (shadowsEnabled) {
+        Modifier.shadow(
+            elevation = 6.dp,
+            shape = shape,
+            clip = false,
+        )
+    } else {
+        Modifier
+    }
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .then(shadowModifier)
             .background(
                 color = Color(PERFORMANCE_SURFACE_COLOR),
-                shape = RoundedCornerShape(10.dp),
+                shape = shape,
             )
             .padding(10.dp),
     ) {

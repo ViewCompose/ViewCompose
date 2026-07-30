@@ -1,8 +1,8 @@
 package com.viewcompose.ui.modifier
 
-import com.viewcompose.ui.unit.UiDp
-
+import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDp
 
 /**
  * 样式类 modifier 的声明式扩展入口。
@@ -80,6 +80,68 @@ fun Modifier.elevation(elevation: UiDp): Modifier {
     )
 }
 
+/**
+ * 添加一层精确外阴影。该能力与 Material elevation 独立。
+ * Adds one exact drop shadow independently from Material elevation.
+ */
+fun Modifier.dropShadow(
+    shadow: UiShadow,
+    shape: UiShape? = null,
+): Modifier {
+    return dropShadows(
+        shadows = listOf(shadow),
+        shape = shape,
+    )
+}
+
+/**
+ * 添加一组按声明顺序绘制的精确外阴影。
+ * Adds a group of exact drop shadows drawn in declaration order.
+ */
+fun Modifier.dropShadows(
+    shadows: List<UiShadow>,
+    shape: UiShape? = null,
+): Modifier {
+    if (shadows.isEmpty()) return this
+    return then(
+        DropShadowModifierElement(
+            shadows = shadows.toList(),
+            shape = shape,
+        ),
+    )
+}
+
+/**
+ * 在节点内容之上添加一层精确内阴影。
+ * Adds one exact inner shadow above the node content.
+ */
+fun Modifier.innerShadow(
+    shadow: UiShadow,
+    shape: UiShape? = null,
+): Modifier {
+    return innerShadows(
+        shadows = listOf(shadow),
+        shape = shape,
+    )
+}
+
+/**
+ * 在节点内容之上添加一组按声明顺序绘制的精确内阴影。
+ * Adds declaration-ordered exact inner shadows above the node content.
+ */
+fun Modifier.innerShadows(
+    shadows: List<UiShadow>,
+    shape: UiShape? = null,
+): Modifier {
+    if (shadows.isEmpty()) return this
+    return then(
+        InnerShadowModifierElement(
+            shadows = shadows.toList(),
+            shape = shape,
+        ),
+    )
+}
+
 fun Modifier.alpha(alpha: Float): Modifier {
     return then(
         AlphaModifierElement(alpha),
@@ -87,6 +149,9 @@ fun Modifier.alpha(alpha: Float): Modifier {
 }
 
 fun Modifier.zIndex(zIndex: Float): Modifier {
+    require(zIndex.isFinite()) {
+        "Modifier.zIndex must be finite."
+    }
     return then(
         ZIndexModifierElement(zIndex),
     )

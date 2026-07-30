@@ -29,6 +29,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-gesture-core" to "com.viewcompose.gesture.core",
     "viewcompose-graphics" to "com.viewcompose.graphics",
     "viewcompose-graphics-core" to "com.viewcompose.graphics.core",
+    "viewcompose-shadow-android" to "com.viewcompose.shadow.android",
     "viewcompose-widget-constraintlayout" to "com.viewcompose.widget.constraintlayout",
 )
 
@@ -60,6 +61,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-gesture-core:compileKotlin",
     ":viewcompose-graphics:compileDebugKotlin",
     ":viewcompose-graphics-core:compileKotlin",
+    ":viewcompose-shadow-android:compileDebugKotlin",
     ":viewcompose-widget-constraintlayout:compileDebugKotlin",
     ":app:compileDebugKotlin",
     ":viewcompose-runtime:test",
@@ -80,6 +82,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-gesture-core:test",
     ":viewcompose-graphics:testDebugUnitTest",
     ":viewcompose-graphics-core:test",
+    ":viewcompose-shadow-android:testDebugUnitTest",
     ":viewcompose-widget-constraintlayout:testDebugUnitTest",
     ":app:testDebugUnitTest",
 )

@@ -13,7 +13,7 @@
 
 - [PERFORMANCE_FULL_2026-03-06.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/PERFORMANCE_FULL_2026-03-06.md)
 
-## 2. 当前性能基线（2026-03）
+## 2. 当前性能基线（2026-07）
 
 ### 2.1 已建立能力
 
@@ -38,6 +38,7 @@
 19. 列表性能对比使用同一 target、同一份 1000 项数据与完全一致的交互脚本，分别运行 ViewCompose `LazyColumn` 和 Jetpack Compose `LazyColumn`；覆盖双向快速滚动与 keyed reorder + payload 内容更新。
 20. 复杂布局对比使用同一份 18 卡片仪表盘模型，分别运行 ViewCompose `ScrollableColumn` 与 Compose `Column.verticalScroll`；全部子树一次挂载，覆盖深层嵌套滚动、全卡片字段更新和条件详情子树变更。
 21. 两组对照均采集帧耗时与最大 heap/RSS；`compare_macrobenchmarks.py` 自动生成 Markdown/JSON 配对报告，并支持以 Compose 为同次运行控制组的归一化回归门禁。
+22. 高级阴影建立独立有界外/内栅格缓存，平移/缩放/旋转/alpha 重绘复用同一栅格；`ShadowPerformanceComparisonBenchmark` 覆盖 1000 项 Lazy 与复杂布局的滚动/变更，并用 Compose 作为同轮设备波动控制组。
 
 ### 2.2 发布态基准入口
 
@@ -104,6 +105,28 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 3. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
 4. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
 
+高级阴影对照基线是 `ShadowPerformanceComparisonBenchmark`：
+
+1. ViewCompose 与 Compose 使用相同的阴影层数、颜色、尺寸、shape、列表数据和复杂布局模型。
+2. 固定覆盖阴影列表滚动/变更、阴影复杂布局滚动/更新，共 8 个成对方法。
+3. `shadowRenderPolicy=exact_bitmap|render_node|auto` 只切换 ViewCompose 后端，不改变工作负载；Compose 结果用于归一化设备温度和后台噪声。
+4. 2026-07-30 在 Samsung SM-G991B / Android 13 上各运行 10 轮，RenderNode 相对 ExactBitmap 的 P50、P95 与 RSS 方向混杂，没有证明稳定收益。
+5. 因此 `Auto` 继续固定为 `ExactBitmap`；`RenderNodeDisplayList` 保留为显式实验策略，不能作为发布默认值。
+
+同机后端对比入口：
+
+```bash
+./gradlew :viewcompose-benchmark:connectedBenchmarkAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.benchmark.ShadowPerformanceComparisonBenchmark \
+  -Pandroid.testInstrumentationRunnerArguments.shadowRenderPolicy=exact_bitmap
+
+./gradlew :viewcompose-benchmark:connectedBenchmarkAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.benchmark.ShadowPerformanceComparisonBenchmark \
+  -Pandroid.testInstrumentationRunnerArguments.shadowRenderPolicy=render_node
+```
+
+完整数据与决策见 [ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)。
+
 自动报告与回归规则：
 
 1. 对照表固定输出 frame CPU P50/P95、frame overrun P50/P95、heap max 与 RSS anon max。
@@ -151,6 +174,10 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 10. 手势冲突策略调整必须同步验证滚动容器（Lazy/Scrollable/Pager）场景，避免通过“全量拦截”掩盖性能退化。
 11. 图形绘制链路优化必须优先保证 `drawWithCache` 语义稳定（依赖变化才重建缓存）；禁止把缓存重建放回每帧路径。
 12. 图像绘制优化不得牺牲语义：`Drawable` 路径必须保持 `DrawPaint` 生效，`ImageFilter.Chain` 不得被静默降级为 no-op。
+13. 静态阴影缓存 key 必须覆盖尺寸、density、layout direction、shape 与完整阴影规格；不得缓存 View、Session 或可变业务对象。
+14. 节点仅发生 translation/scale/rotation/alpha 变化时必须复用已有阴影栅格；blur/spread/shape/尺寸变化才允许重建。
+15. 阴影后端默认策略的任何调整都必须提供同设备、同构建、同工作负载的多轮配对数据，并通过 Compose 归一化门禁。
+16. 大尺寸、逐帧 blur/spread 或 RenderEffect 路径必须先定义内存/离屏预算；预算落地前不得进入默认列表或转场路径。
 
 ## 5. 反模式清单
 
@@ -186,6 +213,11 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 
 状态：R8 release 基准已建立，baseline profile 待推进
 目标：在当前无 ART 预编译基线上继续量化 baseline profile 等发布链路收益
+
+### Phase 6：高级阴影后端
+
+状态：静态精确后端、缓存、Compose 对照和首轮设备决策已完成；动态 RenderEffect 仍为研究项
+目标：维持 `Auto = ExactBitmap`，继续积累设备矩阵；只有在明确的内存与帧预算内评估动态 blur/转场阴影
 
 ## 7. 评审与提交流程
 

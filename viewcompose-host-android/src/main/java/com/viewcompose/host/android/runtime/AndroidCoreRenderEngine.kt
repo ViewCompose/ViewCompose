@@ -3,6 +3,7 @@ package com.viewcompose.host.android.runtime
 import android.view.ViewGroup
 import com.viewcompose.renderer.view.tree.MountedNode
 import com.viewcompose.renderer.view.tree.ViewTreeRenderer
+import com.viewcompose.shadow.android.ShadowDecorationHostLayout
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.widget.core.CoreRenderEngine
@@ -17,6 +18,7 @@ import com.viewcompose.widget.core.RenderTreeNode
 import com.viewcompose.widget.core.RenderPatchRecord
 import com.viewcompose.widget.core.RenderPatchOperation
 import com.viewcompose.widget.core.RenderFailureOperation
+import java.util.WeakHashMap
 
 /**
  * widget-core 与 renderer 模块之间的 Android 渲染引擎适配器。
@@ -26,14 +28,17 @@ import com.viewcompose.widget.core.RenderFailureOperation
  * widget-core depends only on CoreRenderEngine, while concrete MountedNode and diagnostic types are translated here.
  */
 class AndroidCoreRenderEngine : CoreRenderEngine {
+    private val decorationHosts = WeakHashMap<ViewGroup, ShadowDecorationHostLayout>()
+
     override fun renderInto(
         container: ViewGroup,
         previousMountedNodes: List<Any>,
         nodes: List<VNode>,
         collectDiagnostics: Boolean,
     ): CoreRenderFrame {
+        val renderHost = resolveRenderHost(container)
         val result = ViewTreeRenderer.renderInto(
-            container = container,
+            container = renderHost,
             previous = previousMountedNodes.filterIsInstance<MountedNode>(),
             nodes = nodes,
             collectDiagnostics = collectDiagnostics,
@@ -63,14 +68,48 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         container: ViewGroup,
         mountedNodes: List<Any>,
     ): List<CoreRenderCommitFailure> {
-        return ViewTreeRenderer.disposeMounted(
-            container = container,
+        val renderHost = decorationHosts[container] ?: container
+        val failures = ViewTreeRenderer.disposeMounted(
+            container = renderHost,
             mountedNodes = mountedNodes.filterIsInstance<MountedNode>(),
         ).map { failure ->
             CoreRenderCommitFailure(
                 operation = failure.operation?.toCoreOperation(),
                 nodeKey = failure.nodeKey,
                 cause = failure.cause,
+            )
+        }
+        if (renderHost !== container && renderHost.childCount == 0) {
+            container.removeView(renderHost)
+            decorationHosts.remove(container)
+        }
+        return failures
+    }
+
+    private fun resolveRenderHost(container: ViewGroup): ViewGroup {
+        if (container is ShadowDecorationHostLayout) return container
+        val existing = decorationHosts[container]
+        if (existing != null) {
+            if (existing.parent !== container) {
+                (existing.parent as? ViewGroup)?.removeView(existing)
+                container.addView(
+                    existing,
+                    ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                    ),
+                )
+            }
+            return existing
+        }
+        return ShadowDecorationHostLayout(container.context).also { host ->
+            decorationHosts[container] = host
+            container.addView(
+                host,
+                ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                ),
             )
         }
     }

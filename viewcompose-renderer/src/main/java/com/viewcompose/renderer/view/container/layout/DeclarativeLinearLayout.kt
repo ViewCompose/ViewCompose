@@ -13,6 +13,8 @@ import com.viewcompose.renderer.layout.CrossAxisPlacementCalculator
 import com.viewcompose.renderer.layout.LinearArrangementCalculator
 import com.viewcompose.renderer.layout.LinearCrossAxisAlignmentResolver
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 import kotlin.math.max
 
 /**
@@ -45,6 +47,15 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
             requestLayout()
         }
 
+    init {
+        clipChildren = false
+        clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
+    }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
+
     override fun onMeasure(
         widthMeasureSpec: Int,
         heightMeasureSpec: Int,
@@ -73,6 +84,25 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
             layoutVertically(visibleChildCount)
         }
         LayoutPassTracker.recordLayoutSince(javaClass, startNs)
+    }
+
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        val drawn = super.drawChild(canvas, child, drawingTime)
+        ShadowDecorationLayer.drawOverChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return drawn
     }
 
     private fun layoutHorizontally(

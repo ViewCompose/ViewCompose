@@ -115,7 +115,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         entries = comparison.benchmark_entries(result())
         comparisons = comparison.build_comparisons(entries)
 
-        self.assertEqual(24, len(comparisons))
+        self.assertEqual(len(comparison.SCENARIOS) * 6, len(comparisons))
         list_scroll = next(
             item
             for item in comparisons
@@ -126,6 +126,46 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         self.assertEqual(4.0, list_scroll.viewcompose)
         self.assertEqual(2.0, list_scroll.compose)
         self.assertEqual(100.0, list_scroll.relative_percent)
+        self.assertTrue(
+            any(item.scenario == "shadow_list_scroll" for item in comparisons),
+        )
+
+    def test_builds_partial_shadow_report_when_pairs_are_complete(self) -> None:
+        partial = result()
+        shadow_names = {
+            name
+            for scenario, viewcompose_name, compose_name in comparison.SCENARIOS
+            if scenario.startswith("shadow_")
+            for name in (viewcompose_name, compose_name)
+        }
+        partial["benchmarks"] = [
+            entry
+            for entry in partial["benchmarks"]
+            if entry["name"] in shadow_names
+        ]
+
+        entries = comparison.benchmark_entries(partial)
+        comparisons = comparison.build_comparisons(entries)
+        stability = comparison.build_stability(entries, 0.15)
+
+        self.assertEqual(4 * 6, len(comparisons))
+        self.assertTrue(
+            all(item.scenario.startswith("shadow_") for item in comparisons),
+        )
+        self.assertTrue(
+            all(item.scenario.startswith("shadow_") for item in stability),
+        )
+
+    def test_rejects_partial_scenario_without_compose_control(self) -> None:
+        partial = result()
+        partial["benchmarks"] = [
+            entry
+            for entry in partial["benchmarks"]
+            if entry["name"] == "viewComposeShadowListScroll"
+        ]
+
+        with self.assertRaisesRegex(ValueError, "incomplete comparison pairs"):
+            comparison.benchmark_entries(partial)
 
     def test_detects_regression_when_compose_control_is_stable(self) -> None:
         baseline = comparison.build_comparisons(

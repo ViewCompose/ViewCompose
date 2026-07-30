@@ -587,7 +587,7 @@ class NavHostPublicApiTest {
         fixture.session.render()
 
         assertEquals(initialRenderCount, renderCount)
-        assertTrue(fixture.root.getChildAt(0) === originalHost)
+        assertTrue(fixture.root.requireNavHostView() === originalHost)
         assertTrue(fixture.controller.isAttached)
         fixture.session.dispose()
     }
@@ -609,7 +609,7 @@ class NavHostPublicApiTest {
         fixture.session.render()
 
         assertTrue(renderCount > initialRenderCount)
-        assertTrue(fixture.root.getChildAt(0) === originalHost)
+        assertTrue(fixture.root.requireNavHostView() === originalHost)
         fixture.session.dispose()
     }
 
@@ -680,13 +680,13 @@ class NavHostPublicApiTest {
 
         assertFalse(controller.isAttached)
         assertEquals(NavFailurePhase.DestinationPreparation, failures.single().phase)
-        assertEquals(0, (root.getChildAt(0) as NavHostView).childCount)
+        assertEquals(0, root.requireNavHostView().childCount)
 
         failInitialDestination = false
         session.render()
 
         assertTrue(controller.isAttached)
-        assertEquals(1, (root.getChildAt(0) as NavHostView).childCount)
+        assertEquals(1, root.requireNavHostView().childCount)
         session.dispose()
     }
 
@@ -828,7 +828,7 @@ class NavHostPublicApiTest {
                 )
             }
         }
-        val navHostView = root.getChildAt(0) as NavHostView
+        val navHostView = root.requireNavHostView()
         return PublicHostFixture(
             root = root,
             lifecycleOwner = lifecycleOwner,

@@ -70,6 +70,7 @@
 | `viewcompose-animation*` | 动画内核与 DSL（含 `AnimatedVisibility` / `animateContentSize`）。 / Animation core + DSL. |
 | `viewcompose-gesture*` | 手势策略内核与 DSL（tap/drag/swipe/transform）。 / Gesture strategy core + DSL. |
 | `viewcompose-graphics*` | Canvas/绘制命令内核与 DSL。 / Canvas and drawing command core + DSL. |
+| `viewcompose-shadow-android` | 高级阴影后端、缓存与 Decoration Layer 平台能力。 / Advanced shadow backends, caching, and Decoration Layer platform support. |
 | `viewcompose-widget-constraintlayout` | ConstraintLayout DSL 与 helper 能力。 / ConstraintLayout DSL and helper capabilities. |
 | `viewcompose-preview` | 开发预览与 Paparazzi 快照回归。 / Dev preview and Paparazzi snapshot regression. |
 | `app` | Demo 应用与 UI 回归锚点。 / Demo app and UI regression anchors. |
@@ -263,6 +264,7 @@ Android 宿主会默认继承原生 Theme，并让框架 View、`AndroidView` �
 - [ARCHITECTURE.md](./ARCHITECTURE.md): 架构边界与模块职责 / Architecture boundaries and module responsibilities
 - [WORKFLOW.md](./WORKFLOW.md): 开发流程与门禁 / Development workflow and quality gates
 - [PERFORMANCE.md](./PERFORMANCE.md): 性能基线与约束 / Performance baseline and constraints
+- [SHADOWS.md](./SHADOWS.md): 高级外/内阴影、缓存与 Android 后端 / Advanced shadows, caching, and Android backends
 - [RENDER_FAILURES.md](./RENDER_FAILURES.md): 结构化渲染失败与 AndroidView 副作用边界 / Structured render failures and AndroidView effect boundary
 - [DIAGNOSTICS.md](./DIAGNOSTICS.md): Render Tree、Patch、Local 与重组原因诊断 / Runtime and renderer diagnostics
 - [LIFECYCLE_SAVED_STATE.md](./LIFECYCLE_SAVED_STATE.md): 生命周期与恢复事务 / Lifecycle and restoration transactions

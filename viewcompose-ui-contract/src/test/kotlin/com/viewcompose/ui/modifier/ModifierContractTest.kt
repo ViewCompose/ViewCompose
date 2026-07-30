@@ -6,6 +6,7 @@ package com.viewcompose.ui.modifier
  */
 
 import com.viewcompose.graphics.core.DrawCommand
+import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.node.spec.ConstraintAnchor
 import com.viewcompose.ui.node.spec.ConstraintAnchorLink
 import com.viewcompose.ui.node.spec.ConstraintAnchorTarget
@@ -79,6 +80,91 @@ class ModifierContractTest {
         assertEquals(0.5f, layer.transformOrigin?.pivotFractionX)
         assertEquals(0.5f, layer.transformOrigin?.pivotFractionY)
         assertEquals(true, layer.clip)
+    }
+
+    @Test
+    fun `drop shadows preserve layer and modifier declaration order`() {
+        val firstGroup = mutableListOf(
+            UiShadow(
+                color = 0x22000000,
+                blurRadius = 4.dp,
+                offsetY = 2.dp,
+            ),
+            UiShadow(
+                color = 0x18000000,
+                blurRadius = 16.dp,
+                spreadRadius = 2.dp,
+                offsetY = 8.dp,
+            ),
+        )
+        val finalShadow = UiShadow(
+            color = 0x33000000,
+            blurRadius = 6.dp,
+        )
+        val modifier = Modifier
+            .dropShadows(firstGroup)
+            .dropShadow(finalShadow)
+
+        firstGroup.clear()
+
+        assertEquals(2, modifier.elements.size)
+        val first = modifier.elements[0] as DropShadowModifierElement
+        val second = modifier.elements[1] as DropShadowModifierElement
+        assertEquals(2, first.shadows.size)
+        assertEquals(4.dp, first.shadows[0].blurRadius)
+        assertEquals(16.dp, first.shadows[1].blurRadius)
+        assertEquals(finalShadow, second.shadows.single())
+    }
+
+    @Test
+    fun `empty drop shadow group is a no-op`() {
+        val original = Modifier.padding(8.dp)
+
+        val result = original.dropShadows(emptyList())
+
+        assertTrue(result === original)
+    }
+
+    @Test
+    fun `inner shadows preserve groups and defensively copy layers`() {
+        val layers = mutableListOf(
+            UiShadow(
+                color = 0x44000000,
+                blurRadius = 6.dp,
+                spreadRadius = 1.dp,
+                offsetX = 2.dp,
+            ),
+            UiShadow(
+                color = 0x22000000,
+                blurRadius = 12.dp,
+                offsetY = 4.dp,
+            ),
+        )
+        val finalShadow = UiShadow(
+            color = 0x33000000,
+            blurRadius = 3.dp,
+        )
+
+        val modifier = Modifier
+            .innerShadows(layers)
+            .innerShadow(finalShadow)
+        layers.clear()
+
+        assertEquals(2, modifier.elements.size)
+        val first = modifier.elements[0] as InnerShadowModifierElement
+        val second = modifier.elements[1] as InnerShadowModifierElement
+        assertEquals(2, first.shadows.size)
+        assertEquals(6.dp, first.shadows[0].blurRadius)
+        assertEquals(finalShadow, second.shadows.single())
+    }
+
+    @Test
+    fun `empty inner shadow group is a no-op`() {
+        val original = Modifier.padding(8.dp)
+
+        val result = original.innerShadows(emptyList())
+
+        assertTrue(result === original)
     }
 
     @Test

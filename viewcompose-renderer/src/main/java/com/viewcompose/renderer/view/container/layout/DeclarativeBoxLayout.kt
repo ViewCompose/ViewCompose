@@ -1,11 +1,14 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 
 /**
  * Box/Surface 使用的 FrameLayout 容器。
@@ -34,7 +37,11 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         // Keep elevation shadows and overflow visuals visible, similar to Compose container defaults.
         clipChildren = false
         clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
     }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
 
     override fun onMeasure(
         widthMeasureSpec: Int,
@@ -47,11 +54,32 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
 
     override fun onViewAdded(child: View) {
         super.onViewAdded(child)
+        DecorationChildDrawingOrder.invalidate(this)
         applyGravityToChild(child)
     }
 
     override fun onViewRemoved(child: View) {
         super.onViewRemoved(child)
+        DecorationChildDrawingOrder.invalidate(this)
+    }
+
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        val drawn = super.drawChild(canvas, child, drawingTime)
+        ShadowDecorationLayer.drawOverChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return drawn
     }
 
     override fun onLayout(

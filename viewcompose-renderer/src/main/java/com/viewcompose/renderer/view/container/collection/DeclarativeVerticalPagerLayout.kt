@@ -15,6 +15,7 @@ import com.viewcompose.ui.state.PagerConnector
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.ShadowDecorationHostLayout
 
 /**
  * 纵向 Pager 的 Android ViewPager2 宿主。
@@ -184,7 +185,7 @@ internal class VerticalPagerAdapter : RecyclerView.Adapter<VerticalPagerViewHold
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VerticalPagerViewHolder {
-        val container = FrameLayout(parent.context).apply {
+        val container = ShadowDecorationHostLayout(parent.context).apply {
             layoutParams = RecyclerView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,

@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import android.view.View
 import android.widget.FrameLayout
 import androidx.core.view.NestedScrollingChildHelper
@@ -13,6 +14,8 @@ import com.viewcompose.ui.gesture.NestedScrollDispatcherConnector
 import com.viewcompose.ui.gesture.NestedScrollSource
 import com.viewcompose.ui.gesture.ScrollDelta
 import com.viewcompose.ui.gesture.ScrollVelocity
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
+import com.viewcompose.shadow.android.ShadowDecorationLayer
 import kotlin.math.roundToInt
 
 /**
@@ -35,6 +38,15 @@ internal class DeclarativeNestedScrollHostLayout(
     private var dispatcher: NestedScrollDispatcher? = null
     private val dispatcherConnector = HostDispatcherConnector()
 
+    init {
+        clipChildren = false
+        clipToPadding = false
+        isChildrenDrawingOrderEnabled = true
+    }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
+        DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
+
     fun update(
         connection: NestedScrollConnection,
         dispatcher: NestedScrollDispatcher?,
@@ -55,6 +67,25 @@ internal class DeclarativeNestedScrollHostLayout(
         connection = EmptyNestedScrollConnection
         childHelper.stopNestedScroll(ViewCompat.TYPE_TOUCH)
         childHelper.stopNestedScroll(ViewCompat.TYPE_NON_TOUCH)
+    }
+
+    override fun drawChild(
+        canvas: Canvas,
+        child: View,
+        drawingTime: Long,
+    ): Boolean {
+        ShadowDecorationLayer.drawBehindChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        val drawn = super.drawChild(canvas, child, drawingTime)
+        ShadowDecorationLayer.drawOverChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return drawn
     }
 
     override fun onStartNestedScroll(

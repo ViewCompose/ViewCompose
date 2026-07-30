@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.recyclerview.widget.RecyclerView
@@ -18,6 +19,13 @@ internal class DeclarativeLazyListView @JvmOverloads constructor(
      * Whether user touch scrolling is enabled while programmatic scroll and layout keep working.
      */
     var userScrollEnabled: Boolean = true
+
+    override fun dispatchDraw(canvas: Canvas) {
+        val saveCount = canvas.save()
+        canvas.clipRect(0, 0, width, height)
+        super.dispatchDraw(canvas)
+        canvas.restoreToCount(saveCount)
+    }
 
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         return userScrollEnabled && super.onInterceptTouchEvent(event)

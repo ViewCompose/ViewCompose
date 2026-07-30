@@ -19,7 +19,7 @@
 
 - 技术基线：Kotlin + Android View System
 - SDK：`minSdk 24`、`compileSdk 36`
-- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
+- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-shadow-android`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
 
 ### 2.1 模块职责
 
@@ -36,6 +36,7 @@
 | `viewcompose-gesture` | 平台无关手势 DSL 入口层（`pointerInput`、`combinedClickable`、`draggable/anchoredDraggable/transformable`） | 仅定义手势 modifier 与状态入口；不承载策略判定实现 |
 | `viewcompose-graphics-core` | 图形绘制内核（geometry/path/brush/draw command/draw cache） | 纯 Kotlin/JVM；禁止引入 Android 依赖；仅定义平台无关图形模型 |
 | `viewcompose-graphics` | 图形 DSL 集成层（`Canvas`、`drawBehind`、`drawWithContent`、`drawWithCache`） | 仅定义业务 API 与契约映射；不直接依赖 Android Canvas 实现 |
+| `viewcompose-shadow-android` | 高级阴影后端、缓存与 Decoration Layer Android 实现 | 只依赖 `ui-contract`；不依赖 renderer/widget/app；renderer 单向消费其平台 SPI |
 | `viewcompose-widget-core` | DSL、Theme/Defaults、Local 与 overlay 声明契约 | 不依赖 `viewcompose-renderer`；不放 Android 宿主入口 API |
 | `viewcompose-widget-constraintlayout` | ConstraintLayout 组件 DSL（`ConstraintLayout/createRef(s)/constrainAs/constrain/constraintSet`） | 仅承载约束布局 DSL 与 scope；平台渲染实现仍在 `viewcompose-renderer` |
 | `viewcompose-renderer` | Android View 渲染实现（reconcile、binder、patch、container） | 只消费 `ui-contract`，不承载业务 DSL |
@@ -290,6 +291,19 @@ flowchart TD
 6. `DrawRoundRect` 必须遵守四角半径语义：四角一致时走 `drawRoundRect` 快路径，非一致时走 `Path.addRoundRect`，禁止退回“只读 topLeft”实现。
 7. `DrawImage` 的 `Drawable` 分支必须应用 `DrawPaint` 组合语义（alpha/blend/colorFilter/imageFilter），并在绘制后恢复原始 `bounds`。
 8. `ImageFilterModel.Chain` 必须在执行层可生效；当前 `Blur + Chain` 路径采用递归合并半径（高斯方差累加）后下发到平台滤镜，禁止直接忽略 `Chain`。
+
+### 4.15.1 高级阴影装饰边界
+
+1. 平台无关契约固定在 `viewcompose-ui-contract`：`UiShadow` 与 `dropShadow(s)/innerShadow(s)` 只保存有序、不可变的逻辑单位规格。
+2. Android 栅格化、缓存、后端选择和诊断固定在 `viewcompose-shadow-android`；该模块不得依赖 renderer、widget 或 app。
+3. renderer 只负责在 View 绑定边界解析 density、layout direction、默认 shape，并以事务化方式安装/移除不可变阴影规格。
+4. 框架容器通过 `DecorationChildDrawingOrder` 在 child 内容前绘制外阴影、在 child 完整内容与 foreground 后绘制内阴影；不得为每层阴影创建额外业务 View。
+5. 高级阴影不参与 measure/layout、hit test、焦点或无障碍；`zIndex`、Material `elevation` 与精确阴影保持三套独立语义。
+6. 多层阴影严格保留声明顺序；外阴影可超出 child bounds，但仍受最近 viewport/显式 clip chain 约束；内阴影必须裁切在 shape 内。
+7. 静态栅格缓存 key 必须覆盖尺寸、density、layout direction、shape 与完整规格；仅平移、缩放、旋转或 alpha 变化不得重建栅格。
+8. `ShadowRenderPolicy.Auto` 的当前默认后端是 `ExactBitmap`。`RenderNodeDisplayList` 只作为 API 29+ 显式实验策略；没有同设备发布态数据证明稳定收益前不得切换默认值。
+9. Lazy 回收、节点移除、事务回滚与 RenderSession dispose 必须同步移除阴影规格；进程级有界缓存只能保存不可变栅格，不能持有 View 或 Session。
+10. 公开使用规则、限制与验证入口见 [SHADOWS.md](/Users/gzq/AndroidStudioProjects/UIFramework/SHADOWS.md)。
 
 ### 4.16 Semantics 与无障碍边界
 

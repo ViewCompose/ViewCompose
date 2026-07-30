@@ -7,7 +7,6 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
@@ -16,6 +15,7 @@ import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.shadow.android.ShadowDecorationHostLayout
 
 /**
  * TabRow 的可滚动 Android 宿主。
@@ -59,6 +59,8 @@ internal class DeclarativeTabRowLayout(
     init {
         isHorizontalScrollBarEnabled = false
         isFillViewport = true
+        clipChildren = false
+        clipToPadding = false
         addView(tabContainer, LayoutParams(
             LayoutParams.WRAP_CONTENT,
             LayoutParams.MATCH_PARENT,
@@ -75,6 +77,13 @@ internal class DeclarativeTabRowLayout(
         val startNs = LayoutPassTracker.beginTiming()
         super.onLayout(changed, l, t, r, b)
         LayoutPassTracker.recordLayoutSince(javaClass, startNs)
+    }
+
+    override fun dispatchDraw(canvas: Canvas) {
+        val saveCount = canvas.save()
+        canvas.clipRect(0, 0, width, height)
+        super.dispatchDraw(canvas)
+        canvas.restoreToCount(saveCount)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -202,7 +211,7 @@ internal class DeclarativeTabRowLayout(
         tabContainer.removeAllViews()
 
         newTabs.forEachIndexed { index, tab ->
-            val itemContainer = FrameLayout(context).apply {
+            val itemContainer = ShadowDecorationHostLayout(context).apply {
                 setPadding(
                     itemPaddingHorizontalPx, itemPaddingVerticalPx,
                     itemPaddingHorizontalPx, itemPaddingVerticalPx,
@@ -358,6 +367,8 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
 
     init {
         setWillNotDraw(false)
+        clipChildren = false
+        clipToPadding = false
         indicatorDrawable.shape = GradientDrawable.RECTANGLE
         indicatorDrawable.setColor(indicatorColor)
     }

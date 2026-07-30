@@ -18,6 +18,7 @@ import com.viewcompose.renderer.reconcile.RenderPatch
 import com.viewcompose.renderer.reconcile.ReusePatch
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.ChildHostViewGroup
+import com.viewcompose.shadow.android.DecorationChildDrawingOrder
 
 /**
  * 将 reconcile patch 应用到 Android View 树的事务管线。
@@ -140,7 +141,10 @@ internal object ViewTreePatchPipeline {
         // Newly inserted Views are removed first, then previous mounted-node and container state is restored.
         transaction.insertedNodes.toList().asReversed().forEach { mountedNode ->
             bestEffort {
-                (mountedNode.view.parent as? ViewGroup)?.removeView(mountedNode.view)
+                (mountedNode.view.parent as? ViewGroup)?.let { parent ->
+                    parent.removeView(mountedNode.view)
+                    DecorationChildDrawingOrder.invalidate(parent)
+                }
             }
         }
 
@@ -169,10 +173,12 @@ internal object ViewTreePatchPipeline {
                     val currentParent = child.parent as? ViewGroup
                     if (currentParent !== checkpoint.container) {
                         currentParent?.removeView(child)
+                        currentParent?.let(DecorationChildDrawingOrder::invalidate)
                         checkpoint.container.addView(
                             child,
                             index.coerceAtMost(checkpoint.container.childCount),
                         )
+                        DecorationChildDrawingOrder.invalidate(checkpoint.container)
                     } else {
                         moveViewToIndex(
                             container = checkpoint.container,
@@ -298,6 +304,7 @@ internal object ViewTreePatchPipeline {
                     patch.targetIndex.coerceAtMost(container.childCount),
                     checkNotNull(preparedPatch.layoutParams),
                 )
+                DecorationChildDrawingOrder.invalidate(container)
                 PatchApplicationResult(
                     mountedNode = mountedNode,
                     stats = if (collectStats) RenderStats(inserts = 1) else emptyStats,
@@ -463,6 +470,7 @@ internal object ViewTreePatchPipeline {
             target = container,
         )
         container.removeView(removal.payload.view)
+        DecorationChildDrawingOrder.invalidate(container)
         transaction.deferredRemovals += removal.payload
     }
 
@@ -719,6 +727,7 @@ internal object ViewTreePatchPipeline {
             view,
             targetIndex.coerceAtMost(container.childCount),
         )
+        DecorationChildDrawingOrder.invalidate(container)
     }
 
     private fun NodeBindingPlan.toPatchOperation(): RenderPatchOperation {
