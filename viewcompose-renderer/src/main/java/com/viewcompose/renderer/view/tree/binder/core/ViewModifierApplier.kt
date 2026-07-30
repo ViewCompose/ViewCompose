@@ -6,8 +6,10 @@ import android.widget.TextView
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.resolve
-import com.viewcompose.shadow.android.ResolvedShadowSpec
 import com.viewcompose.shadow.android.DecorationChildDrawingOrder
+import com.viewcompose.shadow.android.InnerShadowSpecResolver
+import com.viewcompose.shadow.android.ResolvedInnerShadowSpec
+import com.viewcompose.shadow.android.ResolvedShadowSpec
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.shadow.android.ShadowSpecResolver
 import com.viewcompose.ui.environment.UiLayoutDirection
@@ -110,6 +112,11 @@ internal object ViewModifierApplier {
             defaultShape = nodeStyle.resolveShadowShape(),
             density = node.environment.density,
         )
+        val innerShadowSpec = InnerShadowSpecResolver.resolve(
+            elements = resolved.innerShadows,
+            defaultShape = nodeStyle.resolveShadowShape(),
+            density = node.environment.density,
+        )
         val previous = view.getTag(
             R.id.viewcompose_applied_modifier_state,
         ) as? AppliedModifierState
@@ -120,6 +127,7 @@ internal object ViewModifierApplier {
             nodeStyle = nodeStyle,
             hostStyle = hostStyle,
             shadowSpec = shadowSpec,
+            innerShadowSpec = innerShadowSpec,
         )
         view.setTag(R.id.viewcompose_resolved_modifiers, resolved)
 
@@ -127,6 +135,12 @@ internal object ViewModifierApplier {
             ShadowDecorationLayer.update(
                 view = view,
                 spec = next.shadowSpec,
+            )
+        }
+        if (previous == null || previous.innerShadowSpec != next.innerShadowSpec) {
+            ShadowDecorationLayer.updateInner(
+                view = view,
+                spec = next.innerShadowSpec,
             )
         }
         if (previous == null || previous.resolved.zIndex != resolved.zIndex) {
@@ -322,4 +336,5 @@ private data class AppliedModifierState(
     val nodeStyle: NodeStyle,
     val hostStyle: HostStyle,
     val shadowSpec: ResolvedShadowSpec,
+    val innerShadowSpec: ResolvedInnerShadowSpec,
 )

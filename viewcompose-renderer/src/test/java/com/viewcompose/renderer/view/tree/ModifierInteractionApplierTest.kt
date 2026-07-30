@@ -21,6 +21,7 @@ import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.cornerRadius
 import com.viewcompose.ui.modifier.dropShadow
 import com.viewcompose.ui.modifier.elevation
+import com.viewcompose.ui.modifier.innerShadow
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.node.NodeType
@@ -159,6 +160,36 @@ class ModifierInteractionApplierTest {
         ViewModifierApplier.applyModifier(view, vnode(Modifier), defaultRippleColor = 0)
 
         assertNull(ShadowDecorationLayer.specOrNull(view))
+    }
+
+    @Test
+    fun `inner shadow follows resolved shape without replacing click behavior`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        var clicks = 0
+        val shadowNode = vnode(
+            Modifier
+                .cornerRadius(6.dp)
+                .innerShadow(
+                    UiShadow(
+                        color = 0x33000000,
+                        blurRadius = 8.dp,
+                        offsetY = 2.dp,
+                    ),
+                )
+                .clickable { clicks += 1 },
+        )
+
+        ViewModifierApplier.applyModifier(view, shadowNode, defaultRippleColor = 0)
+
+        val installed = requireNotNull(ShadowDecorationLayer.innerSpecOrNull(view))
+        assertEquals(1, installed.layerCount)
+        assertEquals(6.dp, installed.groups.single().shape.uniformAbsoluteSizeOrNull)
+        view.performClick()
+        assertEquals(1, clicks)
+
+        ViewModifierApplier.applyModifier(view, vnode(Modifier), defaultRippleColor = 0)
+
+        assertNull(ShadowDecorationLayer.innerSpecOrNull(view))
     }
 
     private fun vnode(modifier: Modifier): VNode {

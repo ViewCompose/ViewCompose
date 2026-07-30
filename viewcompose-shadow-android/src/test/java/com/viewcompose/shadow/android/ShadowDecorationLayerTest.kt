@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.modifier.DropShadowModifierElement
+import com.viewcompose.ui.modifier.InnerShadowModifierElement
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
@@ -56,6 +57,7 @@ class ShadowDecorationLayerTest {
 
     @Test
     fun `host draws shadow outside child before child content`() {
+        ShadowDecorationLayer.clearCache()
         val context = RuntimeEnvironment.getApplication()
         val host = TestDecorationHost(context).apply {
             clipChildren = false
@@ -111,9 +113,66 @@ class ShadowDecorationLayerTest {
     }
 
     @Test
-    fun `equal spec is skipped and empty spec removes decoration`() {
+    fun `host draws inner shadow over child content and follows transforms without rerasterizing`() {
+        ShadowDecorationLayer.clearCache()
+        val context = RuntimeEnvironment.getApplication()
+        val host = TestDecorationHost(context).apply {
+            clipChildren = false
+        }
+        val child = SolidColorView(context, Color.BLUE)
+        host.addView(
+            child,
+            FrameLayout.LayoutParams(20, 20).apply {
+                leftMargin = 20
+                topMargin = 20
+            },
+        )
+        val spec = InnerShadowSpecResolver.resolve(
+            elements = listOf(
+                InnerShadowModifierElement(
+                    shadows = listOf(
+                        UiShadow(
+                            color = Color.RED,
+                            blurRadius = 0.dp,
+                            spreadRadius = 4.dp,
+                        ),
+                    ),
+                ),
+            ),
+            defaultShape = UiShape.rounded(0.dp),
+            density = UiDensity.Default,
+        )
+        ShadowDecorationLayer.updateInner(child, spec)
+        host.measure(
+            View.MeasureSpec.makeMeasureSpec(80, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(80, View.MeasureSpec.EXACTLY),
+        )
+        host.layout(0, 0, 80, 80)
+
+        val bitmap = Bitmap.createBitmap(80, 80, Bitmap.Config.ARGB_8888)
+        host.drawChildren(Canvas(bitmap))
+
+        assertEquals(Color.TRANSPARENT, bitmap.getPixel(18, 30))
+        assertEquals(Color.RED, bitmap.getPixel(21, 30))
+        assertEquals(Color.BLUE, bitmap.getPixel(30, 30))
+
+        val statsAfterFirstDraw = ShadowDecorationLayer.innerCacheStats()
+        child.translationX = 10f
+        val translatedBitmap = Bitmap.createBitmap(80, 80, Bitmap.Config.ARGB_8888)
+        host.drawChildren(Canvas(translatedBitmap))
+        val statsAfterTranslation = ShadowDecorationLayer.innerCacheStats()
+
+        assertEquals(Color.TRANSPARENT, translatedBitmap.getPixel(21, 30))
+        assertEquals(Color.RED, translatedBitmap.getPixel(31, 30))
+        assertEquals(Color.BLUE, translatedBitmap.getPixel(40, 30))
+        assertEquals(statsAfterFirstDraw.misses, statsAfterTranslation.misses)
+        assertTrue(statsAfterTranslation.hits > statsAfterFirstDraw.hits)
+    }
+
+    @Test
+    fun `equal specs are skipped and empty specs remove decorations`() {
         val child = View(RuntimeEnvironment.getApplication())
-        val spec = ShadowSpecResolver.resolve(
+        val outerSpec = ShadowSpecResolver.resolve(
             elements = listOf(
                 DropShadowModifierElement(
                     shadows = listOf(UiShadow(blurRadius = 2.dp)),
@@ -122,11 +181,24 @@ class ShadowDecorationLayerTest {
             defaultShape = null,
             density = UiDensity.Default,
         )
+        val innerSpec = InnerShadowSpecResolver.resolve(
+            elements = listOf(
+                InnerShadowModifierElement(
+                    shadows = listOf(UiShadow(blurRadius = 2.dp)),
+                ),
+            ),
+            defaultShape = null,
+            density = UiDensity.Default,
+        )
 
-        assertTrue(ShadowDecorationLayer.update(child, spec))
-        assertFalse(ShadowDecorationLayer.update(child, spec))
+        assertTrue(ShadowDecorationLayer.update(child, outerSpec))
+        assertFalse(ShadowDecorationLayer.update(child, outerSpec))
         assertTrue(ShadowDecorationLayer.update(child, ResolvedShadowSpec.Empty))
         assertFalse(ShadowDecorationLayer.update(child, ResolvedShadowSpec.Empty))
+        assertTrue(ShadowDecorationLayer.updateInner(child, innerSpec))
+        assertFalse(ShadowDecorationLayer.updateInner(child, innerSpec))
+        assertTrue(ShadowDecorationLayer.updateInner(child, ResolvedInnerShadowSpec.Empty))
+        assertFalse(ShadowDecorationLayer.updateInner(child, ResolvedInnerShadowSpec.Empty))
     }
 
     private class TestDecorationHost(
@@ -146,7 +218,13 @@ class ShadowDecorationLayerTest {
                 parent = this,
                 child = child,
             )
-            return super.drawChild(canvas, child, drawingTime)
+            val drawn = super.drawChild(canvas, child, drawingTime)
+            ShadowDecorationLayer.drawOverChild(
+                canvas = canvas,
+                parent = this,
+                child = child,
+            )
+            return drawn
         }
     }
 

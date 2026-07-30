@@ -79,7 +79,13 @@ internal class DeclarativeNestedScrollHostLayout(
             parent = this,
             child = child,
         )
-        return super.drawChild(canvas, child, drawingTime)
+        val drawn = super.drawChild(canvas, child, drawingTime)
+        ShadowDecorationLayer.drawOverChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return drawn
     }
 
     override fun onStartNestedScroll(

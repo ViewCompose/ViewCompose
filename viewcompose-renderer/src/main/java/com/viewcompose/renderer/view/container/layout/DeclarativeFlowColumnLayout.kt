@@ -71,7 +71,13 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
             parent = this,
             child = child,
         )
-        return super.drawChild(canvas, child, drawingTime)
+        val drawn = super.drawChild(canvas, child, drawingTime)
+        ShadowDecorationLayer.drawOverChild(
+            canvas = canvas,
+            parent = this,
+            child = child,
+        )
+        return drawn
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
