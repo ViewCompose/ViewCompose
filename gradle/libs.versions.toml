@@ -21,6 +21,7 @@ kotlinxSerialization = "1.7.3"
 lifecycle = "2.8.7"
 composeUi = "1.7.8"
 paparazzi = "2.0.0-alpha01"
+paparazziWorker = "2.0.0-alpha02"
 dynamicanimation = "1.0.0"
 robolectric = "4.14.1"
 asm = "9.8"
@@ -56,6 +57,7 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "composeUi" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "composeUi" }
 paparazzi = { group = "app.cash.paparazzi", name = "paparazzi", version.ref = "paparazzi" }
+paparazzi-worker = { group = "app.cash.paparazzi", name = "paparazzi", version.ref = "paparazziWorker" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 asm = { group = "org.ow2.asm", name = "asm", version.ref = "asm" }
 

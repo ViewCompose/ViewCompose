@@ -42,5 +42,10 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.paparazzi)
-    testImplementation(project(":viewcompose-preview-worker-host"))
+    testImplementation(project(":viewcompose-preview-worker-host")) {
+        // The runner's Paparazzi plugin owns this test process and its matching
+        // Layoutlib native runtime. The production worker uses a newer isolated
+        // classpath, which must not replace the runner test engine transitively.
+        isTransitive = false
+    }
 }

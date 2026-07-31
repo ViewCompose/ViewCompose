@@ -10,6 +10,7 @@ import com.viewcompose.preview.tooling.PreviewLayoutDirection
 import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.PreviewVariant
+import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -49,7 +50,44 @@ class PreviewWorkerHostTest {
         assertEquals(com.android.resources.LayoutDirection.RTL, device.layoutDirection)
     }
 
-    private fun buildManifest(): PreviewBuildManifest {
+    @Test
+    fun `worker uses the merged application theme when it is a style reference`() {
+        val manifestFile = File.createTempFile("viewcompose-preview-manifest", ".xml")
+        try {
+            manifestFile.writeText(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                    <application
+                        android:label="Fixture"
+                        android:theme="@style/Theme.ViewCompose" />
+                </manifest>
+                """.trimIndent(),
+            )
+
+            val theme = PreviewWorkerHost.themeFor(
+                manifest = buildManifest(mergedManifestPath = manifestFile.absolutePath),
+                previewTheme = PreviewTheme.Dark,
+            )
+
+            assertEquals("Theme.ViewCompose", theme)
+        } finally {
+            manifestFile.delete()
+        }
+    }
+
+    @Test
+    fun `worker falls back to an Android theme when no application theme is exported`() {
+        val theme = PreviewWorkerHost.themeFor(
+            manifest = buildManifest(mergedManifestPath = "/missing/AndroidManifest.xml"),
+            previewTheme = PreviewTheme.Dark,
+        )
+
+        assertEquals("android:Theme.Material.NoActionBar", theme)
+    }
+
+    private fun buildManifest(
+        mergedManifestPath: String = "/project/AndroidManifest.xml",
+    ): PreviewBuildManifest {
         return PreviewBuildManifest(
             modulePath = ":app",
             buildVariant = "debug",
@@ -59,7 +97,7 @@ class PreviewWorkerHostTest {
             targetSdk = 35,
             compileSdk = 35,
             sdkDirectory = "/sdk",
-            mergedManifestPath = "/project/AndroidManifest.xml",
+            mergedManifestPath = mergedManifestPath,
             artifactRootDirectory = "/project/build/viewcompose-preview/debug",
             resourcePackageNames = listOf("sample.app", "sample.library"),
             inputs = listOf(

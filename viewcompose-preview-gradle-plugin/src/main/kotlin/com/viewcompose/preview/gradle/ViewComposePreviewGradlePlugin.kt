@@ -72,6 +72,9 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
     toolConfigurations: PreviewToolConfigurations,
 ) {
     androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+        val runtimeClasspath = variant.runtimeConfiguration.artifactFiles(
+            artifactType = ANDROID_CLASSES_JAR_ARTIFACT_TYPE,
+        )
         val moduleResources = variant.runtimeConfiguration.artifactFiles(
             artifactType = ANDROID_RES_ARTIFACT_TYPE,
             componentFilter = { identifier -> identifier is ProjectComponentIdentifier },
@@ -119,7 +122,7 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
                     directory.asFile.absolutePath
                 },
             )
-            discovery.runtimeClasspath.from(variant.runtimeConfiguration)
+            discovery.runtimeClasspath.from(runtimeClasspath)
             discovery.bootClasspath.from(androidComponents.sdkComponents.bootClasspath)
             discovery.sourceDirectories.from(variant.sources.java?.all)
             discovery.sourceDirectories.from(variant.sources.kotlin?.all)
@@ -287,4 +290,4 @@ private const val ANDROID_ASSETS_ARTIFACT_TYPE = "android-assets"
 private const val ANDROID_SYMBOL_WITH_PACKAGE_ARTIFACT_TYPE =
     "android-symbol-with-package-name"
 private const val ANDROID_CLASSES_JAR_ARTIFACT_TYPE = "android-classes-jar"
-private const val LAYOUTLIB_NATIVE_VERSION = "15.1.4"
+private const val LAYOUTLIB_NATIVE_VERSION = "15.2.3"

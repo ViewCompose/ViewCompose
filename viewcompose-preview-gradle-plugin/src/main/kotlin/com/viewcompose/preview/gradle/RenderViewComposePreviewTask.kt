@@ -166,7 +166,8 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             .filter { input ->
                 input.kind == PreviewBuildInputKind.ProjectClassDirectory ||
                     input.kind == PreviewBuildInputKind.ProjectClassJar ||
-                    input.kind == PreviewBuildInputKind.RuntimeClasspath
+                    input.kind == PreviewBuildInputKind.RuntimeClasspath ||
+                    input.kind == PreviewBuildInputKind.BootClasspath
             }
             .flatMap { input -> input.paths.asSequence() }
             .map(::File)

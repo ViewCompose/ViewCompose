@@ -41,6 +41,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             }
             rootProject.name = "preview-fixture"
             include(":app")
+            include(":library")
             """.trimIndent(),
         )
         project.resolve("local.properties").writeText(
@@ -70,6 +71,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
 
                 dependencies {
                     implementation "androidx.appcompat:appcompat-resources:1.7.0"
+                    implementation project(":library")
                     add(
                         "viewComposePreviewWorkerHost",
                         "org.jetbrains.kotlin:kotlin-stdlib:2.0.21"
@@ -83,6 +85,32 @@ class ViewComposePreviewGradlePluginFunctionalTest {
                 }
                 """.trimIndent(),
             )
+        }
+        project.resolve("library/build.gradle").apply {
+            parentFile.mkdirs()
+            writeText(
+                """
+                plugins {
+                    id "com.android.library" version "8.13.2"
+                }
+
+                android {
+                    namespace "sample.library"
+                    compileSdk 35
+                    defaultConfig {
+                        minSdk 24
+                    }
+                }
+                """.trimIndent(),
+            )
+        }
+        project.resolve("library/src/main/AndroidManifest.xml").apply {
+            parentFile.mkdirs()
+            writeText("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" />")
+        }
+        project.resolve("library/src/main/res/values/strings.xml").apply {
+            parentFile.mkdirs()
+            writeText("<resources><string name=\"library_name\">Library</string></resources>")
         }
         project.resolve("app/src/main/AndroidManifest.xml").apply {
             parentFile.mkdirs()

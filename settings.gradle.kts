@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("tools/viewcompose-preview-build")
     repositories {
         google {
             content {

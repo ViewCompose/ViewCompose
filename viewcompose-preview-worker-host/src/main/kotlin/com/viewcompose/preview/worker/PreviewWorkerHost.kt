@@ -107,6 +107,36 @@ object PreviewWorkerHost {
         )
     }
 
+    internal fun themeFor(
+        manifest: PreviewBuildManifest,
+        previewTheme: PreviewTheme,
+    ): String {
+        val fallback = when (previewTheme) {
+            PreviewTheme.Light -> "android:Theme.Material.Light.NoActionBar"
+            PreviewTheme.Dark -> "android:Theme.Material.NoActionBar"
+        }
+        val mergedManifest = File(manifest.mergedManifestPath)
+        if (!mergedManifest.isFile) return fallback
+        val applicationTag = APPLICATION_TAG_PATTERN
+            .find(mergedManifest.readText())
+            ?.value
+            ?: return fallback
+        val themeReference = ANDROID_THEME_PATTERN
+            .find(applicationTag)
+            ?.groupValues
+            ?.get(1)
+            ?: return fallback
+        return when {
+            themeReference.startsWith("@style/") ->
+                themeReference.removePrefix("@style/")
+
+            themeReference.startsWith("@android:style/") ->
+                "android:${themeReference.removePrefix("@android:style/")}"
+
+            else -> fallback
+        }
+    }
+
     private fun render(
         command: PreviewWorkerCommand,
         manifest: PreviewBuildManifest,
@@ -117,10 +147,7 @@ object PreviewWorkerHost {
         val sdk = PaparazziSdk(
             environment = environmentFor(manifest),
             deviceConfig = deviceConfigFor(request),
-            theme = when (request.configuration.theme) {
-                PreviewTheme.Light -> "android:Theme.Material.Light.NoActionBar"
-                PreviewTheme.Dark -> "android:Theme.Material.NoActionBar"
-            },
+            theme = themeFor(manifest, request.configuration.theme),
             supportsRtl = true,
             onNewFrame = {},
         )
@@ -245,3 +272,10 @@ private const val RUNNER_CLASS_NAME = "com.viewcompose.preview.runner.StaticPrev
 private const val LAYOUTLIB_RUNTIME_PROPERTY = "paparazzi.layoutlib.runtime.root"
 private const val LAYOUTLIB_RESOURCES_PROPERTY = "paparazzi.layoutlib.resources.root"
 private const val DENSITY_DEFAULT = 160
+private val APPLICATION_TAG_PATTERN = Regex(
+    pattern = """<application\b[^>]*>""",
+    option = RegexOption.DOT_MATCHES_ALL,
+)
+private val ANDROID_THEME_PATTERN = Regex(
+    pattern = """\bandroid:theme\s*=\s*["']([^"']+)["']""",
+)

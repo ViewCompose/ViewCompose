@@ -13,7 +13,7 @@ application {
 
 dependencies {
     implementation(project(":viewcompose-preview-core"))
-    implementation(libs.paparazzi)
+    implementation(libs.paparazzi.worker)
 
     testImplementation(libs.junit)
 }
