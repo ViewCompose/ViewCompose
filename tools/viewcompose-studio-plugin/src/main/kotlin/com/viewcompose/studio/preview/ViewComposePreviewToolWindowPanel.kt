@@ -298,7 +298,11 @@ internal class ViewComposePreviewToolWindowPanel(
 
         val doublePressTracker = PreviewDoublePressTracker()
         var pendingDetailItem: PreviewGalleryItem? = null
-        val showDetailTimer = Timer(GALLERY_DETAIL_OPEN_DELAY_MILLIS) {
+        val showDetailTimer = Timer(
+            (previewDoubleClickIntervalMillis() + GALLERY_DETAIL_OPEN_DELAY_PADDING_MILLIS)
+                .coerceAtMost(Int.MAX_VALUE.toLong())
+                .toInt(),
+        ) {
             pendingDetailItem?.let(::showDetail)
             pendingDetailItem = null
         }.apply {
@@ -402,6 +406,7 @@ internal class ViewComposePreviewToolWindowPanel(
     ): JComponent {
         val canvas = PreviewImageCanvas(
             image = image,
+            logicalWidthDp = item.logicalWidthDp,
             nativeViews = emptyList(),
             layoutDiagnostics = emptyList(),
             initialZoomOption = galleryDetailZoomOption,
@@ -410,7 +415,7 @@ internal class ViewComposePreviewToolWindowPanel(
             onNavigateToSource = {},
             onNodeSelected = {},
             onContinuousZoomChanged = { scale -> galleryDetailCustomScale = scale },
-            onBackgroundDoubleClick = {
+            onCanvasDoubleClick = {
                 onNavigateToSource(item.selection.toStudioSourceLocation())
             },
         )
@@ -441,7 +446,7 @@ internal class ViewComposePreviewToolWindowPanel(
             canvas = canvas,
             onZoomIn = { canvas.stepZoom(1) },
             onZoomOut = { canvas.stepZoom(-1) },
-            onActualSize = { selectZoom(PreviewZoomOption.Percent100) },
+            onActualSize = { selectZoom(PreviewZoomOption.ActualSize) },
             onFit = { selectZoom(PreviewZoomOption.Fit) },
         )
         return JPanel(BorderLayout()).apply {
@@ -542,6 +547,7 @@ internal class ViewComposePreviewToolWindowPanel(
         nodeSelectionCoordinator = selectionCoordinator
         val previewPanel = previewImagePanel(
             image = result.image,
+            logicalWidthDp = result.logicalWidthDp,
             nativeViews = snapshot?.nativeViewTree.orEmpty(),
             layoutDiagnostics = snapshot?.layoutDiagnostics.orEmpty(),
             selectionCoordinator = selectionCoordinator,
@@ -739,7 +745,11 @@ internal class ViewComposePreviewToolWindowPanel(
         views.forEach { view ->
             root.add(view.toSwingTreeNode(messages))
         }
-        val tree = sourceNavigableTree(root, selectionCoordinator).apply {
+        val tree = sourceNavigableTree(
+            root = root,
+            selectionCoordinator = selectionCoordinator,
+            selectionToolTipsOnly = true,
+        ).apply {
             isRootVisible = false
             showsRootHandles = true
         }
@@ -753,12 +763,14 @@ internal class ViewComposePreviewToolWindowPanel(
 
     private fun previewImagePanel(
         image: BufferedImage,
+        logicalWidthDp: Int,
         nativeViews: List<StudioPreviewNativeViewNode>,
         layoutDiagnostics: List<StudioPreviewLayoutDiagnostic>,
         selectionCoordinator: PreviewNodeSelectionCoordinator?,
     ): JComponent {
         val canvas = PreviewImageCanvas(
             image = image,
+            logicalWidthDp = logicalWidthDp,
             nativeViews = nativeViews,
             layoutDiagnostics = layoutDiagnostics,
             initialZoomOption = previewZoomOption,
@@ -801,7 +813,7 @@ internal class ViewComposePreviewToolWindowPanel(
             canvas = canvas,
             onZoomIn = { canvas.stepZoom(1) },
             onZoomOut = { canvas.stepZoom(-1) },
-            onActualSize = { selectZoom(PreviewZoomOption.Percent100) },
+            onActualSize = { selectZoom(PreviewZoomOption.ActualSize) },
             onFit = { selectZoom(PreviewZoomOption.Fit) },
         )
         val canvasLayer = PreviewCanvasLayer(
@@ -970,10 +982,12 @@ internal class ViewComposePreviewToolWindowPanel(
     private fun sourceNavigableTree(
         root: DefaultMutableTreeNode,
         selectionCoordinator: PreviewNodeSelectionCoordinator?,
+        selectionToolTipsOnly: Boolean = false,
     ): JTree {
         return object : JTree(root) {
             override fun getToolTipText(event: MouseEvent): String? {
                 val path = getPathForLocation(event.x, event.y)
+                if (selectionToolTipsOnly && path != selectionPath) return null
                 val node = path?.lastPathComponent as? DefaultMutableTreeNode
                 val entry = node?.userObject as? PreviewTreeEntry
                 return entry?.toolTip ?: messages.text("source.navigationHint")
@@ -1510,6 +1524,7 @@ internal class PreviewCanvasLayer(
 
 private class PreviewImageCanvas(
     private val image: BufferedImage,
+    logicalWidthDp: Int,
     private val nativeViews: List<StudioPreviewNativeViewNode>,
     private val layoutDiagnostics: List<StudioPreviewLayoutDiagnostic>,
     initialZoomOption: PreviewZoomOption,
@@ -1518,8 +1533,14 @@ private class PreviewImageCanvas(
     private val onNavigateToSource: (List<StudioPreviewSourceCallSite>) -> Unit,
     private val onNodeSelected: (String?) -> Unit,
     private val onContinuousZoomChanged: (Double) -> Unit,
-    private val onBackgroundDoubleClick: (() -> Unit)? = null,
+    private val onCanvasDoubleClick: (() -> Unit)? = null,
 ) : JComponent() {
+    private val actualSizeScale = logicalWidthDp.toDouble() / image.width
+
+    init {
+        require(logicalWidthDp > 0) { "Preview logical width must be positive." }
+    }
+
     var zoomOption: PreviewZoomOption = initialZoomOption
         set(value) {
             if (field == value && customScale == null) return
@@ -1666,19 +1687,10 @@ private class PreviewImageCanvas(
 
     private fun suppressToolTipForInteraction() {
         val manager = ToolTipManager.sharedInstance()
-        manager.mousePressed(
-            MouseEvent(
-                this,
-                MouseEvent.MOUSE_PRESSED,
-                System.currentTimeMillis(),
-                0,
-                0,
-                0,
-                1,
-                false,
-                MouseEvent.NOBUTTON,
-            ),
-        )
+        if (manager.isEnabled) {
+            manager.isEnabled = false
+            manager.isEnabled = true
+        }
         unregisterToolTip()
         toolTipResumeTimer.restart()
     }
@@ -1728,6 +1740,10 @@ private class PreviewImageCanvas(
     }
 
     private fun navigateAt(point: Point) {
+        onCanvasDoubleClick?.let { navigate ->
+            navigate()
+            return
+        }
         val mappedView = mappedViewAt(point.x, point.y)
         val sourceCallSites = mappedView
             ?.sourceCallSites
@@ -1735,8 +1751,6 @@ private class PreviewImageCanvas(
         if (sourceCallSites != null) {
             onNodeSelected(mappedView.nodeId)
             onNavigateToSource(sourceCallSites)
-        } else {
-            onBackgroundDoubleClick?.invoke()
         }
     }
 
@@ -1767,6 +1781,7 @@ private class PreviewImageCanvas(
             imageHeight = image.height,
             viewportWidth = viewportSize.width,
             viewportHeight = viewportSize.height,
+            actualSizeScale = actualSizeScale,
         )
         val scaledWidth = (image.width * scale).roundToInt().coerceAtLeast(1)
         val scaledHeight = (image.height * scale).roundToInt().coerceAtLeast(1)
@@ -1828,7 +1843,8 @@ private class PreviewImageCanvas(
     }
 
     override fun getToolTipText(event: MouseEvent): String? {
-        mappedViewAt(event.x, event.y) ?: return null
+        val mappedView = mappedViewAt(event.x, event.y) ?: return null
+        if (mappedView.nodeId != selectedView?.nodeId) return null
         return sourceNavigationHint
     }
 
@@ -1991,19 +2007,21 @@ private fun Graphics2D.paintViewBounds(
 ) {
     val bounds = view.bounds
     if (depth > 0 && bounds.width > 0 && bounds.height > 0) {
-        val baseColor = LAYOUT_BOUND_COLORS[(depth - 1) % LAYOUT_BOUND_COLORS.size]
+        val style = previewLayoutDepthStyle(depth)
+        val baseColor = style.color
         val scaledLeft = imageLeft + (bounds.left * scale).roundToInt()
         val scaledTop = imageTop + (bounds.top * scale).roundToInt()
         val scaledWidth = (bounds.width * scale).roundToInt().coerceAtLeast(1)
         val scaledHeight = (bounds.height * scale).roundToInt().coerceAtLeast(1)
-        color = Color(baseColor.red, baseColor.green, baseColor.blue, 22)
+        color = Color(baseColor.red, baseColor.green, baseColor.blue, style.fillAlpha)
         fillRect(
             scaledLeft,
             scaledTop,
             scaledWidth,
             scaledHeight,
         )
-        color = Color(baseColor.red, baseColor.green, baseColor.blue, 190)
+        color = Color(baseColor.red, baseColor.green, baseColor.blue, style.strokeAlpha)
+        stroke = BasicStroke(JBUI.scale(style.strokeWidth).toFloat())
         drawRect(
             scaledLeft,
             scaledTop,
@@ -2021,13 +2039,6 @@ private fun Graphics2D.paintViewBounds(
         )
     }
 }
-
-private val LAYOUT_BOUND_COLORS = listOf(
-    Color(0x2F, 0x80, 0xED),
-    Color(0x27, 0xAE, 0x60),
-    Color(0xF2, 0x99, 0x4A),
-    Color(0x9B, 0x51, 0xE0),
-)
 
 internal fun nativeViewToolTip(
     view: StudioPreviewNativeViewNode,
@@ -2243,7 +2254,7 @@ private const val GALLERY_CELL_HEIGHT = 390
 private const val GALLERY_IMAGE_WIDTH = 220
 private const val GALLERY_IMAGE_HEIGHT = 300
 private const val GALLERY_DETAIL_MEMORY_ENTRIES = 3
-private const val GALLERY_DETAIL_OPEN_DELAY_MILLIS = 280
+private const val GALLERY_DETAIL_OPEN_DELAY_PADDING_MILLIS = 60L
 private const val GALLERY_OVERLAY_MARGIN = 24
 private const val GALLERY_OVERLAY_MAX_WIDTH = 900
 private const val GALLERY_OVERLAY_MAX_HEIGHT = 1000

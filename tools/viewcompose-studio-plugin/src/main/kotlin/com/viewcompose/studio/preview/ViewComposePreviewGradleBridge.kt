@@ -76,6 +76,12 @@ internal sealed interface PreviewRenderOutcome {
     ) : PreviewRenderOutcome
 }
 
+internal val PreviewRenderOutcome.Success.logicalWidthDp: Int
+    get() = variants.firstOrNull { variant -> variant.id == selectedVariantId }
+        ?.widthDp
+        ?.takeIf { widthDp -> widthDp > 0 }
+        ?: DEFAULT_RENDER_LOGICAL_WIDTH_DP
+
 internal class ViewComposePreviewRenderCoordinator(
     projectRoot: Path,
     private val executor: PreviewGradleExecutor = IdePreviewGradleExecutor(),
@@ -588,4 +594,5 @@ private const val CACHE_HIT_MARKER = "ViewCompose preview cache hit:"
 private const val MAXIMUM_GRADLE_OUTPUT_LENGTH = 30_000
 private const val MAXIMUM_PREVIEW_IMAGE_BYTES = 64L * 1024L * 1024L
 private const val MAXIMUM_PREVIEW_IMAGE_PIXELS = 64L * 1024L * 1024L
+private const val DEFAULT_RENDER_LOGICAL_WIDTH_DP = 411
 private val GRADLE_PROJECT_SEGMENT = Regex("[A-Za-z0-9_.-]+")

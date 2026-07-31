@@ -67,6 +67,7 @@ internal class PreviewGalleryDiskCache(
                             thumbnailPath = thumbnailPath,
                             detailImagePath = detailImagePath,
                             cacheHit = true,
+                            logicalWidthDp = entry.metadata.logicalWidthDp,
                         )
                     }.getOrElse {
                         deleteGalleryEntry(entry.directory)
@@ -105,6 +106,7 @@ internal class PreviewGalleryDiskCache(
             thumbnailPath = destination.resolve(GALLERY_THUMBNAIL_FILE_NAME),
             detailImagePath = destination.resolve(GALLERY_DETAIL_IMAGE_FILE_NAME),
             cacheHit = result.cacheHit,
+            logicalWidthDp = result.logicalWidthDp,
         )
         runCatching {
             Files.createDirectories(temporary)
@@ -128,6 +130,7 @@ internal class PreviewGalleryDiskCache(
                     variantId = result.selectedVariantId,
                     variantName = result.variantName,
                     variantIndex = item.variantIndex,
+                    logicalWidthDp = item.logicalWidthDp,
                     createdAtMillis = timestamp,
                     lastAccessMillis = timestamp,
                 ),
@@ -228,6 +231,7 @@ internal class PreviewGalleryDiskCache(
         require(metadata.descriptorName.isNotBlank())
         require(metadata.variantId.isNotBlank())
         require(metadata.variantIndex >= 0)
+        require(metadata.logicalWidthDp > 0)
         return metadata
     }
 
@@ -254,6 +258,7 @@ private data class GalleryCacheMetadata(
     val variantId: String,
     val variantName: String,
     val variantIndex: Int,
+    val logicalWidthDp: Int,
     val createdAtMillis: Long,
     val lastAccessMillis: Long,
 )
@@ -285,6 +290,7 @@ internal fun PreviewRenderOutcome.Success.toBoundedGalleryItem(): PreviewGallery
         thumbnailPath = imagePath,
         detailImagePath = imagePath,
         cacheHit = cacheHit,
+        logicalWidthDp = logicalWidthDp,
     )
 }
 
@@ -363,7 +369,7 @@ private fun deleteGalleryEntry(path: Path) {
     }
 }
 
-private const val GALLERY_CACHE_SCHEMA_VERSION = 6
+private const val GALLERY_CACHE_SCHEMA_VERSION = 7
 private const val GALLERY_METADATA_FILE_NAME = "metadata.json"
 private const val GALLERY_THUMBNAIL_FILE_NAME = "thumbnail.png"
 private const val GALLERY_DETAIL_IMAGE_FILE_NAME = "detail.png"

@@ -30,6 +30,7 @@ class PreviewGalleryDiskCacheTest {
         assertEquals(720, item?.thumbnail?.height)
         assertEquals(800, ImageIO.read(written.detailImagePath.toFile()).width)
         assertEquals(1600, ImageIO.read(written.detailImagePath.toFile()).height)
+        assertEquals(411, item?.logicalWidthDp)
         assertTrue(item?.cacheHit == true)
         assertEquals(3, Files.walk(root).use { paths -> paths.filter(Files::isRegularFile).count() })
     }

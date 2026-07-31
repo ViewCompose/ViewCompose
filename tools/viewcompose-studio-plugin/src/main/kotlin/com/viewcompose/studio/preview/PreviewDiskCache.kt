@@ -287,7 +287,7 @@ private fun deleteRecursively(path: Path) {
     }
 }
 
-private const val CACHE_SCHEMA_VERSION = 5
+private const val CACHE_SCHEMA_VERSION = 6
 private const val METADATA_FILE_NAME = "metadata.json"
 private const val IMAGE_FILE_NAME = "preview.png"
 private const val RENDER_SNAPSHOT_FILE_NAME = "render-snapshot.json"

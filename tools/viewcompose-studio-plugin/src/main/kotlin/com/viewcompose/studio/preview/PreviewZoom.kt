@@ -3,16 +3,9 @@ package com.viewcompose.studio.preview
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-internal enum class PreviewZoomOption(
-    val fixedScale: Double?,
-) {
-    Fit(fixedScale = null),
-    Percent50(fixedScale = 0.5),
-    Percent75(fixedScale = 0.75),
-    Percent100(fixedScale = 1.0),
-    Percent125(fixedScale = 1.25),
-    Percent150(fixedScale = 1.5),
-    Percent200(fixedScale = 2.0),
+internal enum class PreviewZoomOption {
+    Fit,
+    ActualSize,
 }
 
 internal fun calculatePreviewScale(
@@ -21,11 +14,17 @@ internal fun calculatePreviewScale(
     imageHeight: Int,
     viewportWidth: Int,
     viewportHeight: Int,
+    actualSizeScale: Double = 1.0,
 ): Double {
     require(imageWidth > 0 && imageHeight > 0) {
         "Preview image dimensions must be positive."
     }
-    option.fixedScale?.let { scale -> return scale }
+    require(actualSizeScale.isFinite() && actualSizeScale > 0.0) {
+        "Actual preview scale must be finite and positive."
+    }
+    if (option == PreviewZoomOption.ActualSize) {
+        return clampPreviewScale(actualSizeScale)
+    }
     val availableWidth = (viewportWidth - PREVIEW_FIT_PADDING_PIXELS).coerceAtLeast(1)
     val availableHeight = (viewportHeight - PREVIEW_FIT_PADDING_PIXELS).coerceAtLeast(1)
     return minOf(

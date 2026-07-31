@@ -49,4 +49,5 @@ internal data class PreviewGalleryItem(
     val thumbnailPath: Path,
     val detailImagePath: Path,
     val cacheHit: Boolean,
+    val logicalWidthDp: Int = 411,
 )

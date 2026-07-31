@@ -1,5 +1,6 @@
 package com.viewcompose.studio.preview
 
+import java.awt.Toolkit
 import kotlin.math.abs
 
 internal enum class PreviewScrollAxis {
@@ -58,7 +59,7 @@ internal class PreviewTrackpadAxisLock(
 
 /** Detects a double press even when focus changes reset AWT's click counter. */
 internal class PreviewDoublePressTracker(
-    private val maximumIntervalMillis: Long = DEFAULT_DOUBLE_PRESS_INTERVAL_MILLIS,
+    private val maximumIntervalMillis: Long = previewDoubleClickIntervalMillis(),
     private val maximumDistancePixels: Int = DEFAULT_DOUBLE_PRESS_DISTANCE_PIXELS,
 ) {
     private var previousPress: PreviewPointerPress? = null
@@ -92,6 +93,15 @@ internal class PreviewDoublePressTracker(
     }
 }
 
+internal fun previewDoubleClickIntervalMillis(
+    desktopProperty: Any? = runCatching {
+        Toolkit.getDefaultToolkit().getDesktopProperty("awt.multiClickInterval")
+    }.getOrNull(),
+): Long = (desktopProperty as? Number)
+    ?.toLong()
+    ?.coerceIn(MINIMUM_DOUBLE_PRESS_INTERVAL_MILLIS, MAXIMUM_DOUBLE_PRESS_INTERVAL_MILLIS)
+    ?: FALLBACK_DOUBLE_PRESS_INTERVAL_MILLIS
+
 /** Prevents an IDE caret move caused by preview navigation from replacing the exact node choice. */
 internal class PreviewSourceSelectionGuard(
     private val clockNanos: () -> Long = System::nanoTime,
@@ -119,6 +129,8 @@ private data class PreviewPointerPress(
 private const val DEFAULT_AXIS_ACTIVATION_THRESHOLD = 0.25
 private const val DEFAULT_AXIS_DOMINANCE_RATIO = 1.35
 private const val DEFAULT_AXIS_RESET_DELAY_MILLIS = 180L
-private const val DEFAULT_DOUBLE_PRESS_INTERVAL_MILLIS = 500L
+private const val FALLBACK_DOUBLE_PRESS_INTERVAL_MILLIS = 500L
+private const val MINIMUM_DOUBLE_PRESS_INTERVAL_MILLIS = 250L
+private const val MAXIMUM_DOUBLE_PRESS_INTERVAL_MILLIS = 1_000L
 private const val DEFAULT_DOUBLE_PRESS_DISTANCE_PIXELS = 8
 private const val DEFAULT_SOURCE_SELECTION_GUARD_NANOS = 1_000_000_000L

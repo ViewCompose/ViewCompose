@@ -50,15 +50,16 @@ class PreviewZoomTest {
     }
 
     @Test
-    fun `fixed zoom ignores viewport dimensions`() {
+    fun `actual size maps one preview dp to one Studio logical pixel`() {
         assertEquals(
-            1.5,
+            1.0 / 2.625,
             calculatePreviewScale(
-                option = PreviewZoomOption.Percent150,
-                imageWidth = 400,
-                imageHeight = 800,
+                option = PreviewZoomOption.ActualSize,
+                imageWidth = 1_079,
+                imageHeight = 2_339,
                 viewportWidth = 100,
                 viewportHeight = 100,
+                actualSizeScale = 1.0 / 2.625,
             ),
             0.0001,
         )

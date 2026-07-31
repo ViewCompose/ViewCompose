@@ -55,6 +55,14 @@ class PreviewPointerGesturesTest {
     }
 
     @Test
+    fun `double press timing follows the bounded desktop preference`() {
+        assertEquals(720L, previewDoubleClickIntervalMillis(720))
+        assertEquals(250L, previewDoubleClickIntervalMillis(100))
+        assertEquals(1_000L, previewDoubleClickIntervalMillis(5_000))
+        assertEquals(500L, previewDoubleClickIntervalMillis("unsupported"))
+    }
+
+    @Test
     fun `preview navigation temporarily rejects caret linked selection`() {
         var now = 100L
         val guard = PreviewSourceSelectionGuard(

@@ -13,7 +13,7 @@ class StudioPreviewProtocolTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun `reads the stable catalog subset and ignores renderer configuration details`() {
+    fun `reads the stable catalog subset and logical preview width`() {
         val catalogFile = temporaryFolder.newFile("descriptors.json").toPath()
         Files.writeString(
             catalogFile,
@@ -28,6 +28,7 @@ class StudioPreviewProtocolTest {
         assertEquals("debug", catalog.buildVariant)
         assertEquals("sample-card", catalog.descriptors.single().id)
         assertEquals("default", catalog.descriptors.single().variants.single().id)
+        assertEquals(411, catalog.descriptors.single().variants.single().widthDp)
         assertEquals(
             "/project/src/Sample.kt",
             catalog.descriptors.single().sourceLocation?.filePath,

@@ -27,6 +27,7 @@ internal data class StudioPreviewDescriptor(
 internal data class StudioPreviewVariant(
     val id: String,
     val displayName: String,
+    val widthDp: Int = DEFAULT_STUDIO_PREVIEW_WIDTH_DP,
 )
 
 internal data class StudioPreviewSourceLocation(
@@ -484,9 +485,16 @@ private fun JsonObject.toDescriptor(): StudioPreviewDescriptor {
         group = optionalString("group").orEmpty(),
         variants = requiredArray("variants").map { element ->
             val variant = element.requiredObject("variant")
+            val configuration = variant.optionalObject("configuration")
             StudioPreviewVariant(
                 id = variant.requiredString("id").also(::requireStableId),
                 displayName = variant.requiredString("displayName"),
+                widthDp = (configuration?.optionalInt("widthDp")
+                    ?: DEFAULT_STUDIO_PREVIEW_WIDTH_DP).also { widthDp ->
+                    require(widthDp > 0) {
+                        "Preview protocol field 'widthDp' must be greater than zero."
+                    }
+                },
             )
         }.also { variants ->
             require(variants.isNotEmpty()) { "Preview descriptor must contain variants." }
@@ -652,5 +660,6 @@ private const val MAXIMUM_NATIVE_VIEW_PROPERTY_NAME_LENGTH = 64
 private const val MAXIMUM_NATIVE_VIEW_PROPERTY_VALUE_LENGTH = 256
 private const val MAXIMUM_RENDER_TREE_DEPTH = 256
 private const val MAXIMUM_RENDER_TREE_NODES = 100_000
+private const val DEFAULT_STUDIO_PREVIEW_WIDTH_DP = 411
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")
 private val STABLE_ID_PATTERN = Regex("[a-z0-9]+(?:(?:-|__)[a-z0-9]+)*")
