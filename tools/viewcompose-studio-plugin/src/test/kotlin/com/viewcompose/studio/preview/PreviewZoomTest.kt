@@ -5,9 +5,9 @@ import org.junit.Test
 
 class PreviewZoomTest {
     @Test
-    fun `fit scale keeps preview width visible and lets tall content scroll`() {
+    fun `fit scale keeps the entire tall preview visible`() {
         assertEquals(
-            1.0,
+            0.5,
             calculatePreviewScale(
                 option = PreviewZoomOption.Fit,
                 imageWidth = 400,
@@ -69,7 +69,15 @@ class PreviewZoomTest {
         assertEquals(1.25, calculateMagnifiedPreviewScale(1.0, 0.25), 0.0001)
         assertEquals(0.75, calculateMagnifiedPreviewScale(1.0, -0.25), 0.0001)
         assertEquals(4.0, calculateMagnifiedPreviewScale(3.0, 1.0), 0.0001)
-        assertEquals(0.1, calculateMagnifiedPreviewScale(0.2, -1.0), 0.0001)
+        assertEquals(0.05, calculateMagnifiedPreviewScale(0.2, -1.0), 0.0001)
+    }
+
+    @Test
+    fun `toolbar and trackpad zoom share the same safe range`() {
+        assertEquals(1.25, calculateButtonPreviewScale(1.0, 1), 0.0001)
+        assertEquals(0.8, calculateButtonPreviewScale(1.0, -1), 0.0001)
+        assertEquals(4.0, calculateButtonPreviewScale(4.0, 1), 0.0001)
+        assertEquals(0.05, calculateButtonPreviewScale(0.05, -1), 0.0001)
     }
 
     @Test

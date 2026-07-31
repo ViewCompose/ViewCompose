@@ -27,8 +27,26 @@ internal fun calculatePreviewScale(
     }
     option.fixedScale?.let { scale -> return scale }
     val availableWidth = (viewportWidth - PREVIEW_FIT_PADDING_PIXELS).coerceAtLeast(1)
-    return (availableWidth.toDouble() / imageWidth)
-        .coerceIn(MINIMUM_FIT_SCALE, MAXIMUM_FIT_SCALE)
+    val availableHeight = (viewportHeight - PREVIEW_FIT_PADDING_PIXELS).coerceAtLeast(1)
+    return minOf(
+        availableWidth.toDouble() / imageWidth,
+        availableHeight.toDouble() / imageHeight,
+        MAXIMUM_FIT_SCALE,
+    ).coerceAtLeast(MINIMUM_PREVIEW_SCALE)
+}
+
+internal fun calculateButtonPreviewScale(
+    currentScale: Double,
+    direction: Int,
+): Double {
+    require(currentScale.isFinite() && currentScale > 0.0) {
+        "Current preview scale must be finite and positive."
+    }
+    require(direction == -1 || direction == 1) {
+        "Preview zoom direction must be -1 or 1."
+    }
+    val factor = if (direction > 0) BUTTON_ZOOM_FACTOR else 1.0 / BUTTON_ZOOM_FACTOR
+    return clampPreviewScale(currentScale * factor)
 }
 
 internal fun calculateMagnifiedPreviewScale(
@@ -75,10 +93,10 @@ internal fun calculatePreviewScrollPosition(
 }
 
 private const val PREVIEW_FIT_PADDING_PIXELS = 16
-private const val MINIMUM_FIT_SCALE = 0.1
 private const val MAXIMUM_FIT_SCALE = 1.0
-private const val MINIMUM_PREVIEW_SCALE = 0.1
+private const val MINIMUM_PREVIEW_SCALE = 0.05
 private const val MAXIMUM_PREVIEW_SCALE = 4.0
 private const val MINIMUM_MAGNIFICATION_FACTOR = 0.01
 private const val WHEEL_ZOOM_BASE = 1.1
+private const val BUTTON_ZOOM_FACTOR = 1.25
 private const val PREVIEW_TRACKPAD_SCROLL_UNIT = 48.0
