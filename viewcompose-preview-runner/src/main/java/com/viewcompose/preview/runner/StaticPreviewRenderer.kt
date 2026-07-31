@@ -278,6 +278,14 @@ private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSna
                             value = local.value,
                         )
                     },
+                    sourceCallSites = scope.sourceCallSites.map { source ->
+                        PreviewSourceCallSite(
+                            className = source.className,
+                            methodName = source.methodName,
+                            fileName = source.fileName,
+                            lineNumber = source.lineNumber,
+                        )
+                    },
                 )
             },
         ),

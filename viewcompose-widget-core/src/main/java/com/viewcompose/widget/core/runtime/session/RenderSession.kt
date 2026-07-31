@@ -4,8 +4,10 @@ import android.os.Trace
 import android.util.Log
 import android.view.ViewGroup
 import com.viewcompose.runtime.composition.ComposerLite
+import com.viewcompose.runtime.composition.CompositionSourceCallSite
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
+import com.viewcompose.ui.tooling.UiNodeTooling
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -65,6 +67,16 @@ class RenderSession(
         warningLogger = { message -> Log.w(debugTag, message) },
         onInvalidated = { requestRender?.invoke() },
         localSnapshotInspector = LocalContext::describeSnapshot,
+        sourceCallSiteCollector = {
+            UiNodeTooling.captureCallSites().map { source ->
+                CompositionSourceCallSite(
+                    className = source.className,
+                    methodName = source.methodName,
+                    fileName = source.fileName,
+                    lineNumber = source.lineNumber,
+                )
+            }
+        },
     )
     private val runtime = platform.runtimeFactory
         .create(

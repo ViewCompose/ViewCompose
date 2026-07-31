@@ -127,6 +127,7 @@ data class PreviewRecomposeScope(
     val recomposed: Boolean,
     val skipped: Boolean,
     val locals: List<PreviewCompositionLocal> = emptyList(),
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
 )
 
 @Serializable

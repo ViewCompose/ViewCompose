@@ -283,42 +283,35 @@ internal class ViewComposePreviewToolWindowPanel(
     }
 
     private fun compositionPanel(snapshot: StudioPreviewCompositionSnapshot): JComponent {
-        val text = buildString {
-            appendLine(
-                messages.text(
-                    "composition.summary",
-                    snapshot.invalidatedScopeCount,
-                    snapshot.recomposedScopeCount,
-                    snapshot.skippedScopeCount,
-                ),
-            )
-            snapshot.scopes.forEach { scope ->
-                appendLine()
-                append(
-                    when {
-                        scope.recomposed -> messages.text("composition.recomposed")
-                        scope.skipped -> messages.text("composition.skipped")
-                        else -> messages.text("composition.clean")
-                    },
-                )
-                append(" · ${scope.path}")
-                appendLine()
-                append("  ${messages.text("composition.signature")}: ${scope.signature}")
-                if (scope.reasons.isNotEmpty()) {
-                    appendLine()
-                    append("  ${messages.text("composition.reasons")}: ${scope.reasons.joinToString()}")
-                }
-                scope.locals.forEach { local ->
-                    appendLine()
-                    append("  ${local.name} = ${local.value}")
-                }
-                appendLine()
+        if (snapshot.scopes.isEmpty()) {
+            return JBScrollPane(readOnlyText(messages.text("composition.empty"))).apply {
+                border = JBUI.Borders.empty(8)
             }
-        }.trim()
-        return JBScrollPane(
-            readOnlyText(text.ifBlank { messages.text("composition.empty") }),
-        ).apply {
-            border = JBUI.Borders.empty(8)
+        }
+        val summary = messages.text(
+            "composition.summary",
+            snapshot.invalidatedScopeCount,
+            snapshot.recomposedScopeCount,
+            snapshot.skippedScopeCount,
+        )
+        val root = DefaultMutableTreeNode(messages.text("tree.composition"))
+        snapshot.scopes.forEach { scope ->
+            root.add(scope.toSwingTreeNode(messages))
+        }
+        return JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(readOnlyText(summary), BorderLayout.NORTH)
+            add(
+                JBScrollPane(
+                    sourceNavigableTree(root, selectionCoordinator = null).apply {
+                        isRootVisible = false
+                        showsRootHandles = true
+                    },
+                ).apply {
+                    border = JBUI.Borders.emptyTop(8)
+                },
+                BorderLayout.CENTER,
+            )
         }
     }
 
@@ -758,6 +751,39 @@ private fun StudioPreviewPatchRecord.toSwingTreeNode(): DefaultMutableTreeNode {
             sourceCallSites = sourceCallSites,
         ),
     )
+}
+
+private fun StudioPreviewRecomposeScope.toSwingTreeNode(
+    messages: PreviewUiMessages,
+): DefaultMutableTreeNode {
+    val status = when {
+        recomposed -> messages.text("composition.recomposed")
+        skipped -> messages.text("composition.skipped")
+        else -> messages.text("composition.clean")
+    }
+    val node = DefaultMutableTreeNode(
+        PreviewTreeEntry(
+            label = "$status · $path",
+            nodeId = null,
+            sourceCallSites = sourceCallSites,
+        ),
+    )
+    node.add(
+        DefaultMutableTreeNode(
+            "${messages.text("composition.signature")}: $signature",
+        ),
+    )
+    if (reasons.isNotEmpty()) {
+        node.add(
+            DefaultMutableTreeNode(
+                "${messages.text("composition.reasons")}: ${reasons.joinToString()}",
+            ),
+        )
+    }
+    locals.forEach { local ->
+        node.add(DefaultMutableTreeNode("${local.name} = ${local.value}"))
+    }
+    return node
 }
 
 private fun StudioPreviewNativeViewNode.nodeCount(): Int {

@@ -23,6 +23,16 @@ data class CompositionLocalDiagnostic(
 )
 
 /**
+ * One JVM line-table call site associated with a composition scope.
+ */
+data class CompositionSourceCallSite(
+    val className: String,
+    val methodName: String,
+    val fileName: String,
+    val lineNumber: Int,
+)
+
+/**
  * 单个重组 scope 的诊断信息。
  * Diagnostic information for one recomposition scope.
  */
@@ -34,6 +44,7 @@ data class RecomposeScopeDiagnostic(
     val recomposed: Boolean,
     val skipped: Boolean,
     val locals: List<CompositionLocalDiagnostic> = emptyList(),
+    val sourceCallSites: List<CompositionSourceCallSite> = emptyList(),
 )
 
 /**

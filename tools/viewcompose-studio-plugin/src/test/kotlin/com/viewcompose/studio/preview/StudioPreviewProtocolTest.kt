@@ -165,6 +165,14 @@ class StudioPreviewProtocolTest {
                     "reasons": ["StateChanged"],
                     "recomposed": true,
                     "skipped": false,
+                    "sourceCallSites": [
+                      {
+                        "className": "sample.SampleKt",
+                        "methodName": "SampleCard",
+                        "fileName": "Sample.kt",
+                        "lineNumber": 21
+                      }
+                    ],
                     "locals": [
                       {
                         "name": "Theme",
@@ -200,6 +208,7 @@ class StudioPreviewProtocolTest {
         assertEquals("Insert", snapshot.patches.single().operation)
         assertEquals("node-title", snapshot.patches.single().nodeId)
         assertEquals(24, snapshot.patches.single().sourceCallSites.single().lineNumber)
+        assertEquals(21, snapshot.composition.scopes.single().sourceCallSites.single().lineNumber)
         assertTrue(snapshot.composition.scopes.single().recomposed)
         assertEquals(
             listOf("StateChanged"),

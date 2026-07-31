@@ -158,6 +158,7 @@ internal data class StudioPreviewRecomposeScope(
     val recomposed: Boolean,
     val skipped: Boolean,
     val locals: List<StudioPreviewCompositionLocal>,
+    val sourceCallSites: List<StudioPreviewSourceCallSite> = emptyList(),
 )
 
 internal data class StudioPreviewCompositionLocal(
@@ -376,6 +377,7 @@ private fun JsonObject.toRecomposeScope(): StudioPreviewRecomposeScope {
                 value = local.requiredString("value"),
             )
         },
+        sourceCallSites = sourceCallSites(),
     )
 }
 

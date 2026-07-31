@@ -89,4 +89,36 @@ class ComposerDiagnosticsTest {
         assertTrue(root.reasons.contains(RecompositionReason.ExplicitRequest))
         assertTrue(inputScope.reasons.contains(RecompositionReason.InputsChanged))
     }
+
+    @Test
+    fun `diagnostics preserve source call sites captured when scope is created`() {
+        var collectedLine = 31
+        val composer = ComposerLite(
+            sourceCallSiteCollector = {
+                listOf(
+                    CompositionSourceCallSite(
+                        className = "sample.SampleKt",
+                        methodName = "Sample",
+                        fileName = "Sample.kt",
+                        lineNumber = collectedLine,
+                    ),
+                )
+            },
+        )
+
+        composer.prepareRoot(collectDiagnostics = true) {
+            composer.runGroup(signature = "source") { 1 }
+        }.commit()
+        collectedLine = 99
+        composer.requestRootRecompose()
+        val update = composer.prepareRoot(collectDiagnostics = true) {
+            composer.runGroup(signature = "source") { 1 }
+        }
+        update.commit()
+
+        val scope = update.diagnostics.scopes.first { diagnostic ->
+            diagnostic.signature.contains("source")
+        }
+        assertEquals(31, scope.sourceCallSites.single().lineNumber)
+    }
 }

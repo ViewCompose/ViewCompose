@@ -97,7 +97,8 @@ object UiNodeTooling {
 
     fun metadataOf(node: VNode): UiNodeToolingMetadata? = node.toolingMetadata
 
-    private fun captureCallSites(): List<UiSourceCallSite> {
+    fun captureCallSites(): List<UiSourceCallSite> {
+        if ((captureDepth.get() ?: 0) == 0) return emptyList()
         return Throwable().stackTrace
             .asSequence()
             .filter { frame ->
@@ -122,6 +123,12 @@ object UiNodeTooling {
             className.startsWith("${UiNodeTooling::class.java.name}\$") ||
             className == UI_TREE_BUILDER_CLASS ||
             className.startsWith("$UI_TREE_BUILDER_CLASS\$") ||
+            className == COMPOSER_LITE_CLASS ||
+            className.startsWith("$COMPOSER_LITE_CLASS\$") ||
+            className == COMPOSER_CONTEXT_CLASS ||
+            className.startsWith("$COMPOSER_CONTEXT_CLASS\$") ||
+            className == RENDER_SESSION_CLASS ||
+            className.startsWith("$RENDER_SESSION_CLASS\$") ||
             className.startsWith("java.lang.reflect.") ||
             className.startsWith("jdk.internal.reflect.") ||
             className.startsWith("kotlin.jvm.internal.")
@@ -129,4 +136,10 @@ object UiNodeTooling {
 
     private const val MAX_CALL_SITES = 16
     private const val UI_TREE_BUILDER_CLASS = "com.viewcompose.widget.core.UiTreeBuilder"
+    private const val COMPOSER_LITE_CLASS =
+        "com.viewcompose.runtime.composition.ComposerLite"
+    private const val COMPOSER_CONTEXT_CLASS =
+        "com.viewcompose.widget.core.ComposerContext"
+    private const val RENDER_SESSION_CLASS =
+        "com.viewcompose.widget.core.RenderSession"
 }
