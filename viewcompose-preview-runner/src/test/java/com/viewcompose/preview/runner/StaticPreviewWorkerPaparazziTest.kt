@@ -119,6 +119,11 @@ class StaticPreviewWorkerPaparazziTest {
                 source.fileName == "StaticPreviewWorkerPaparazziTest.kt"
             },
         )
+        assertTrue(
+            renderText.sourceCallSites.none { source ->
+                source.className.startsWith("com.viewcompose.runtime.")
+            },
+        )
         val nativeRoot = snapshot.nativeViewTree.single()
         assertEquals("android.widget.FrameLayout", nativeRoot.className)
         assertEquals(request.configuration.widthDp, nativeRoot.bounds.right)

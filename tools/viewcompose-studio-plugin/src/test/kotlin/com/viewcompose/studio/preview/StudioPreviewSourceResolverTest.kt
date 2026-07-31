@@ -37,6 +37,42 @@ class StudioPreviewSourceResolverTest {
     }
 
     @Test
+    fun `prefers preview DSL source over runtime observation wrapper`() {
+        val runtime = callSite(
+            className = "com.viewcompose.runtime.observation.RuntimeObservation",
+            methodName = "observeReads",
+            fileName = "RuntimeObservation.kt",
+            lineNumber = 73,
+        )
+        val application = callSite(
+            className = "com.viewcompose.StaticDemoPreviewEntrypointsKt",
+            methodName = "StaticDemoPreview",
+            fileName = "StaticDemoPreviewEntrypoints.kt",
+            lineNumber = 41,
+        )
+
+        val source = resolveRuntimeSource(listOf(runtime, application)) { fileName ->
+            when (fileName) {
+                "RuntimeObservation.kt" -> listOf(
+                    "/project/viewcompose-runtime/src/main/java/com/viewcompose/runtime/" +
+                        "observation/RuntimeObservation.kt",
+                )
+                "StaticDemoPreviewEntrypoints.kt" -> listOf(
+                    "/project/app/src/debug/java/com/viewcompose/StaticDemoPreviewEntrypoints.kt",
+                )
+                else -> emptyList()
+            }
+        }
+
+        assertEquals(
+            "/project/app/src/debug/java/com/viewcompose/StaticDemoPreviewEntrypoints.kt",
+            source?.filePath,
+        )
+        assertEquals(41, source?.line)
+        assertEquals("StaticDemoPreview", source?.symbolName)
+    }
+
+    @Test
     fun `uses package match to disambiguate duplicate file names`() {
         val source = resolveRuntimeSource(
             callSites = listOf(

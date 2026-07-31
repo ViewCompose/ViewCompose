@@ -103,7 +103,9 @@ private data class RuntimeSourceCandidate(
 
 private val FRAMEWORK_SOURCE_SEGMENTS = listOf(
     "/viewcompose-host-android/",
+    "/viewcompose-preview-runner/",
     "/viewcompose-renderer/",
+    "/viewcompose-runtime/",
     "/viewcompose-ui-contract/",
     "/viewcompose-widget-core/",
 )

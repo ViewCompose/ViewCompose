@@ -121,6 +121,7 @@ object UiNodeTooling {
     private fun StackTraceElement.isToolingInfrastructure(): Boolean {
         return className == UiNodeTooling::class.java.name ||
             className.startsWith("${UiNodeTooling::class.java.name}\$") ||
+            className.startsWith(RUNTIME_INFRASTRUCTURE_PACKAGE) ||
             className == UI_TREE_BUILDER_CLASS ||
             className.startsWith("$UI_TREE_BUILDER_CLASS\$") ||
             className == COMPOSER_LITE_CLASS ||
@@ -135,6 +136,7 @@ object UiNodeTooling {
     }
 
     private const val MAX_CALL_SITES = 16
+    private const val RUNTIME_INFRASTRUCTURE_PACKAGE = "com.viewcompose.runtime."
     private const val UI_TREE_BUILDER_CLASS = "com.viewcompose.widget.core.UiTreeBuilder"
     private const val COMPOSER_LITE_CLASS =
         "com.viewcompose.runtime.composition.ComposerLite"
