@@ -14,6 +14,7 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -38,6 +39,7 @@ internal class ViewComposePreviewSelectionService(
     private val activeRequest = AtomicReference<ActivePreviewRequest?>()
     private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val editorFollowAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
+    private val galleryDiscoveryRetryAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val settings = ViewComposePreviewSettings.forProject(project)
     private val cacheRoot = project.basePath
         ?.let { previewCacheRoot(Path.of(PathManager.getSystemPath())) }
@@ -171,6 +173,7 @@ internal class ViewComposePreviewSelectionService(
         requestedVariantId: String?,
         forceRerender: Boolean = false,
     ) {
+        galleryDiscoveryRetryAlarm.cancelAllRequests()
         activeRequest.set(
             ActivePreviewRequest(
                 selection = selection,
@@ -281,7 +284,11 @@ internal class ViewComposePreviewSelectionService(
         }.queue()
     }
 
-    private fun showGallery(forceRerender: Boolean = false) {
+    private fun showGallery(
+        forceRerender: Boolean = false,
+        discoveryAttempt: Int = 0,
+    ) {
+        galleryDiscoveryRetryAlarm.cancelAllRequests()
         activeRequest.set(null)
         val generation = requestGeneration.incrementAndGet()
         activeIndicator.getAndSet(null)?.cancel()
@@ -303,6 +310,24 @@ internal class ViewComposePreviewSelectionService(
                 activeIndicator.set(indicator)
                 try {
                     val selections = ViewComposePreviewProjectScanner(project).scan()
+                    galleryDiscoveryRetryDelayMillis(discoveryAttempt)?.let { retryDelay ->
+                        if (selections.isEmpty()) {
+                            publish(
+                                generation = generation,
+                                state = ViewComposePreviewPanelState.GalleryLoading(
+                                    message = "Waiting for project indexes…",
+                                    previousResult = previous,
+                                ),
+                            )
+                            scheduleGalleryDiscoveryRetry(
+                                generation = generation,
+                                forceRerender = forceRerender,
+                                nextAttempt = discoveryAttempt + 1,
+                                delayMillis = retryDelay,
+                            )
+                            return
+                        }
+                    }
                     val cachedItems = if (forceRerender) {
                         emptyList()
                     } else {
@@ -410,6 +435,30 @@ internal class ViewComposePreviewSelectionService(
         }.queue()
     }
 
+    private fun scheduleGalleryDiscoveryRetry(
+        generation: Long,
+        forceRerender: Boolean,
+        nextAttempt: Int,
+        delayMillis: Int,
+    ) {
+        galleryDiscoveryRetryAlarm.addRequest(
+            {
+                if (project.isDisposed || generation != requestGeneration.get()) {
+                    return@addRequest
+                }
+                DumbService.getInstance(project).runWhenSmart {
+                    if (!project.isDisposed && generation == requestGeneration.get()) {
+                        showGallery(
+                            forceRerender = forceRerender,
+                            discoveryAttempt = nextAttempt,
+                        )
+                    }
+                }
+            },
+            delayMillis,
+        )
+    }
+
     private fun scheduleSavedInputRefresh(request: ActivePreviewRequest) {
         savedInputRefreshAlarm.cancelAllRequests()
         savedInputRefreshAlarm.addRequest(
@@ -515,6 +564,11 @@ internal class ViewComposePreviewSelectionService(
     }
 }
 
+internal fun galleryDiscoveryRetryDelayMillis(attempt: Int): Int? {
+    require(attempt >= 0)
+    return GALLERY_DISCOVERY_RETRY_DELAYS_MILLIS.getOrNull(attempt)
+}
+
 internal fun savedPreviewInputMatches(
     projectRoot: Path?,
     selection: PreviewSourceSelection,
@@ -558,6 +612,7 @@ private data class EditorSourceLocation(
 
 private const val EDITOR_FOLLOW_DELAY_MILLIS = 250
 private const val SAVED_INPUT_REFRESH_DELAY_MILLIS = 400
+private val GALLERY_DISCOVERY_RETRY_DELAYS_MILLIS = intArrayOf(500, 1_000, 2_000)
 private val IGNORED_INPUT_DIRECTORIES = setOf(
     ".git",
     ".gradle",
