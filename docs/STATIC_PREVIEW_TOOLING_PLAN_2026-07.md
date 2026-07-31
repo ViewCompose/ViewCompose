@@ -240,6 +240,8 @@ Implemented experience foundation:
   tab, and the layout-bounds toggle survive rerenders and UI-language changes.
 - The preview canvas supports fit-to-window and fixed 50–200% zoom. A title-bar refresh action
   bypasses the render cache for an explicit clean rerender.
+- While a newer frame is compiling, Studio keeps the last successful image visible and marks it
+  explicitly as the previous result, avoiding flicker without presenting stale output as current.
 - Source links in the header and structured compile/render diagnostics navigate to the exact file
   and line.
 
@@ -271,10 +273,7 @@ The remaining experience work is intentionally ranked by product value rather th
    useful for projects that routinely declare Light/Dark, locale, and screen-size matrices. The
    current single-variant selector remains faster and clearer for ordinary previews, so gallery
    mode should be optional rather than the default.
-2. **Medium priority — keep the last successful image visible while recompiling.** Low-to-moderate
-   implementation cost and reduces visual flicker, but it needs an explicit stale/loading state so
-   an old image is never mistaken for the latest result.
-3. **Low priority — preview history, favorites, and bulk export UI.** Straightforward but offers
+2. **Low priority — preview history, favorites, and bulk export UI.** Straightforward but offers
    little value until projects have a larger preview catalog, so it is not part of the current
    implementation target.
 
