@@ -6,17 +6,21 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBUI
+import java.awt.BasicStroke
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Dimension
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
+import java.awt.image.BufferedImage
 import javax.swing.Box
-import javax.swing.ImageIcon
+import javax.swing.JCheckBox
 import javax.swing.JComboBox
 import javax.swing.JComponent
-import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.JTree
-import javax.swing.SwingConstants
 import javax.swing.tree.DefaultMutableTreeNode
 
 internal class ViewComposePreviewToolWindowPanel(
@@ -95,22 +99,17 @@ internal class ViewComposePreviewToolWindowPanel(
             renderedHeader,
             BorderLayout.NORTH,
         )
-        val imageLabel = JLabel(ImageIcon(result.image)).apply {
-            horizontalAlignment = SwingConstants.CENTER
-            verticalAlignment = SwingConstants.TOP
-            border = JBUI.Borders.emptyTop(12)
-        }
-        val previewScrollPane = JBScrollPane(imageLabel).apply {
-            border = JBUI.Borders.empty()
-            preferredSize = Dimension(JBUI.scale(360), JBUI.scale(600))
-        }
         val snapshot = result.renderSnapshot
+        val previewPanel = previewImagePanel(
+            image = result.image,
+            nativeViews = snapshot?.nativeViewTree.orEmpty(),
+        )
         val renderedContent = if (snapshot == null) {
-            previewScrollPane
+            previewPanel
         } else {
             JTabbedPane().apply {
                 border = JBUI.Borders.emptyTop(8)
-                addTab("Preview", previewScrollPane)
+                addTab("Preview", previewPanel)
                 addTab("Structure", renderStructurePanel(snapshot))
                 addTab("Views", nativeViewsPanel(snapshot.nativeViewTree))
                 addTab("Composition", compositionPanel(snapshot.composition))
@@ -235,6 +234,46 @@ internal class ViewComposePreviewToolWindowPanel(
         }
         return JBScrollPane(tree).apply {
             border = JBUI.Borders.empty(8)
+        }
+    }
+
+    private fun previewImagePanel(
+        image: BufferedImage,
+        nativeViews: List<StudioPreviewNativeViewNode>,
+    ): JComponent {
+        val canvas = PreviewImageCanvas(
+            image = image,
+            nativeViews = nativeViews,
+        )
+        val imageScrollPane = JBScrollPane(canvas).apply {
+            border = JBUI.Borders.empty()
+            preferredSize = Dimension(JBUI.scale(360), JBUI.scale(600))
+        }
+        if (nativeViews.isEmpty()) return imageScrollPane
+
+        return JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(
+                JPanel(BorderLayout()).apply {
+                    isOpaque = false
+                    border = JBUI.Borders.empty(8, 4, 4, 4)
+                    add(
+                        JCheckBox("Show layout bounds").apply {
+                            isOpaque = false
+                            addActionListener {
+                                canvas.showLayoutBounds = isSelected
+                            }
+                        },
+                        BorderLayout.WEST,
+                    )
+                    add(
+                        JBLabel("${nativeViews.sumOf(StudioPreviewNativeViewNode::nodeCount)} Views"),
+                        BorderLayout.EAST,
+                    )
+                },
+                BorderLayout.NORTH,
+            )
+            add(imageScrollPane, BorderLayout.CENTER)
         }
     }
 
@@ -449,6 +488,92 @@ private fun StudioPreviewNativeViewNode.toSwingTreeNode(): DefaultMutableTreeNod
     }
     return swingNode
 }
+
+private fun StudioPreviewNativeViewNode.nodeCount(): Int {
+    return 1 + children.sumOf(StudioPreviewNativeViewNode::nodeCount)
+}
+
+private class PreviewImageCanvas(
+    private val image: BufferedImage,
+    private val nativeViews: List<StudioPreviewNativeViewNode>,
+) : JComponent() {
+    var showLayoutBounds: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            repaint()
+        }
+
+    init {
+        preferredSize = Dimension(image.width, image.height)
+        minimumSize = preferredSize
+        isOpaque = true
+    }
+
+    override fun paintComponent(graphics: Graphics) {
+        super.paintComponent(graphics)
+        val imageLeft = ((width - image.width) / 2).coerceAtLeast(0)
+        graphics.drawImage(image, imageLeft, 0, null)
+        if (!showLayoutBounds) return
+
+        val graphics2D = graphics.create() as Graphics2D
+        try {
+            graphics2D.setRenderingHint(
+                RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON,
+            )
+            graphics2D.stroke = BasicStroke(JBUI.scale(1).toFloat())
+            nativeViews.forEach { view ->
+                graphics2D.paintViewBounds(
+                    view = view,
+                    imageLeft = imageLeft,
+                    depth = 0,
+                )
+            }
+        } finally {
+            graphics2D.dispose()
+        }
+    }
+}
+
+private fun Graphics2D.paintViewBounds(
+    view: StudioPreviewNativeViewNode,
+    imageLeft: Int,
+    depth: Int,
+) {
+    val bounds = view.bounds
+    if (depth > 0 && bounds.width > 0 && bounds.height > 0) {
+        val baseColor = LAYOUT_BOUND_COLORS[(depth - 1) % LAYOUT_BOUND_COLORS.size]
+        color = Color(baseColor.red, baseColor.green, baseColor.blue, 22)
+        fillRect(
+            imageLeft + bounds.left,
+            bounds.top,
+            bounds.width,
+            bounds.height,
+        )
+        color = Color(baseColor.red, baseColor.green, baseColor.blue, 190)
+        drawRect(
+            imageLeft + bounds.left,
+            bounds.top,
+            (bounds.width - 1).coerceAtLeast(0),
+            (bounds.height - 1).coerceAtLeast(0),
+        )
+    }
+    view.children.forEach { child ->
+        paintViewBounds(
+            view = child,
+            imageLeft = imageLeft,
+            depth = depth + 1,
+        )
+    }
+}
+
+private val LAYOUT_BOUND_COLORS = listOf(
+    Color(0x2F, 0x80, 0xED),
+    Color(0x27, 0xAE, 0x60),
+    Color(0xF2, 0x99, 0x4A),
+    Color(0x9B, 0x51, 0xE0),
+)
 
 private data class PreviewVariantChoice(
     val id: String,
