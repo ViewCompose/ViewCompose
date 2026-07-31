@@ -13,6 +13,35 @@ class StudioPreviewProtocolTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
+    fun `reads optional worker phase timings`() {
+        val responseFile = temporaryFolder.newFile("response.json").toPath()
+        Files.writeString(
+            responseFile,
+            """
+            {
+              "protocolVersion": 1,
+              "requestId": "request",
+              "previewId": "sample",
+              "variantId": "light",
+              "status": "Success",
+              "artifacts": {"imagePath": "/tmp/preview.png"},
+              "diagnostics": [],
+              "durationMillis": 12,
+              "phaseTimings": [
+                {"phase": "layoutlib-setup", "durationMillis": 120},
+                {"phase": "mount-layout", "durationMillis": 8}
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        val response = StudioPreviewProtocolReader.readResponse(responseFile)
+
+        assertEquals(listOf("layoutlib-setup", "mount-layout"), response.phaseTimings.map { it.phase })
+        assertEquals(listOf(120L, 8L), response.phaseTimings.map { it.durationMillis })
+    }
+
+    @Test
     fun `reads the stable catalog subset and logical preview width`() {
         val catalogFile = temporaryFolder.newFile("descriptors.json").toPath()
         Files.writeString(

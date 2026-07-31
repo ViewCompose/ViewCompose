@@ -61,6 +61,12 @@ internal data class StudioPreviewRenderResponse(
     val renderTreePath: String?,
     val diagnostics: List<StudioPreviewDiagnostic>,
     val durationMillis: Long?,
+    val phaseTimings: List<StudioPreviewPhaseTiming>,
+)
+
+internal data class StudioPreviewPhaseTiming(
+    val phase: String,
+    val durationMillis: Long,
 )
 
 internal data class StudioPreviewRenderSnapshot(
@@ -214,6 +220,17 @@ internal enum class StudioPreviewRenderStatus {
 }
 
 internal object StudioPreviewProtocolReader {
+    fun readBuildManifestInputPaths(path: Path): List<String> {
+        val root = path.readJsonObject()
+        val protocolVersion = root.requiredInt("protocolVersion")
+        requireSupportedProtocol(protocolVersion, path)
+        return root.optionalArray("inputs").flatMap { element ->
+            element.requiredObject("build input")
+                .optionalArray("paths")
+                .map { pathElement -> pathElement.requiredStringValue("build input path") }
+        }
+    }
+
     fun readCatalog(path: Path): StudioPreviewCatalog {
         val root = path.readJsonObject()
         val protocolVersion = root.requiredInt("protocolVersion")
@@ -250,6 +267,15 @@ internal object StudioPreviewProtocolReader {
                 element.requiredObject("diagnostic").toDiagnostic()
             },
             durationMillis = root.optionalLong("durationMillis"),
+            phaseTimings = root.optionalArray("phaseTimings").map { element ->
+                val timing = element.requiredObject("phase timing")
+                StudioPreviewPhaseTiming(
+                    phase = timing.requiredString("phase"),
+                    durationMillis = timing.requiredLong("durationMillis").also { duration ->
+                        require(duration >= 0L) { "Preview phase timing must be non-negative." }
+                    },
+                )
+            },
         )
     }
 
@@ -572,6 +598,12 @@ private fun JsonObject.optionalLong(name: String): Long? {
     if (value.isJsonNull) return null
     return runCatching { value.asLong }.getOrElse {
         throw IllegalArgumentException("Preview protocol field '$name' must be a long.", it)
+    }
+}
+
+private fun JsonObject.requiredLong(name: String): Long {
+    return requireNotNull(optionalLong(name)) {
+        "Preview protocol field '$name' must be a long."
     }
 }
 

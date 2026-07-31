@@ -187,6 +187,18 @@ data class PreviewArtifacts(
     }
 }
 
+/** One deterministic phase measurement emitted by the isolated render pipeline. */
+@Serializable
+data class PreviewPhaseTiming(
+    val phase: String,
+    val durationMillis: Long,
+) {
+    init {
+        require(phase.isNotBlank()) { "Preview timing phase must not be blank." }
+        require(durationMillis >= 0L) { "Preview timing duration must be non-negative." }
+    }
+}
+
 /**
  * Response returned by an isolated preview worker.
  */
@@ -200,6 +212,7 @@ data class PreviewRenderResponse(
     val artifacts: PreviewArtifacts? = null,
     val diagnostics: List<PreviewDiagnostic> = emptyList(),
     val durationMillis: Long? = null,
+    val phaseTimings: List<PreviewPhaseTiming> = emptyList(),
 ) {
     init {
         ViewComposePreviewProtocol.requireSupported(protocolVersion)
@@ -208,6 +221,9 @@ data class PreviewRenderResponse(
         require(variantId.isNotBlank()) { "Preview response variantId must not be blank." }
         require(durationMillis == null || durationMillis >= 0L) {
             "Preview response durationMillis must be null or non-negative."
+        }
+        require(phaseTimings.map(PreviewPhaseTiming::phase).distinct().size == phaseTimings.size) {
+            "Preview response timing phases must be unique."
         }
         require(status != PreviewRenderStatus.Success || artifacts?.imagePath?.isNotBlank() == true) {
             "A successful preview response must contain an image artifact."

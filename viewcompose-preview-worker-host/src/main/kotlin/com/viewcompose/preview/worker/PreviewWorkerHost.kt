@@ -12,6 +12,7 @@ import com.viewcompose.preview.tooling.PreviewBuildManifest
 import com.viewcompose.preview.tooling.PreviewDiagnostic
 import com.viewcompose.preview.tooling.PreviewDiagnosticSeverity
 import com.viewcompose.preview.tooling.PreviewLayoutDirection
+import com.viewcompose.preview.tooling.PreviewPhaseTiming
 import com.viewcompose.preview.tooling.PreviewProtocolJson
 import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewRenderResponse
@@ -177,20 +178,33 @@ object PreviewWorkerHost {
             supportsRtl = true,
             onNewFrame = {},
         )
+        val setupStartedAtNanos = System.nanoTime()
         sdk.setup()
         var prepared = false
-        return try {
+        var response: PreviewRenderResponse? = null
+        var teardownTiming: PreviewPhaseTiming? = null
+        try {
             sdk.prepare()
             prepared = true
-            invokeRunner(
+            val setupTiming = phaseTiming("layoutlib-setup", setupStartedAtNanos)
+            val runnerResponse = invokeRunner(
                 context = sdk.context,
                 request = request,
             )
+            response = runnerResponse.copy(
+                phaseTimings = listOf(setupTiming) + runnerResponse.phaseTimings,
+            )
         } finally {
             if (prepared) {
+                val teardownStartedAtNanos = System.nanoTime()
                 sdk.teardown()
+                teardownTiming = phaseTiming("layoutlib-teardown", teardownStartedAtNanos)
             }
         }
+        val rendered = checkNotNull(response)
+        return rendered.copy(
+            phaseTimings = rendered.phaseTimings + checkNotNull(teardownTiming),
+        )
     }
 
     private fun invokeRunner(
@@ -242,6 +256,15 @@ object PreviewWorkerHost {
 
 private fun PreviewBuildManifest.paths(kind: PreviewBuildInputKind): List<String> {
     return inputs.firstOrNull { input -> input.kind == kind }?.paths.orEmpty()
+}
+
+private fun phaseTiming(
+    phase: String,
+    startedAtNanos: Long,
+): PreviewPhaseTiming {
+    val durationMillis = ((System.nanoTime() - startedAtNanos) / NANOS_PER_MILLISECOND)
+        .coerceAtLeast(0L)
+    return PreviewPhaseTiming(phase = phase, durationMillis = durationMillis)
 }
 
 private fun PreviewRenderRequest.failureResponse(error: Throwable): PreviewRenderResponse {
@@ -298,6 +321,7 @@ private const val RUNNER_CLASS_NAME = "com.viewcompose.preview.runner.StaticPrev
 private const val LAYOUTLIB_RUNTIME_PROPERTY = "paparazzi.layoutlib.runtime.root"
 private const val LAYOUTLIB_RESOURCES_PROPERTY = "paparazzi.layoutlib.resources.root"
 private const val DENSITY_DEFAULT = 160
+private const val NANOS_PER_MILLISECOND = 1_000_000L
 private val APPLICATION_TAG_PATTERN = Regex(
     pattern = """<application\b[^>]*>""",
     option = RegexOption.DOT_MATCHES_ALL,

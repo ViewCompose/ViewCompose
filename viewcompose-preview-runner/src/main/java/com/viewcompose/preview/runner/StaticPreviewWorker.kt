@@ -5,6 +5,7 @@ import com.viewcompose.preview.tooling.PreviewArtifacts
 import com.viewcompose.preview.tooling.PreviewDiagnostic
 import com.viewcompose.preview.tooling.PreviewDiagnosticSeverity
 import com.viewcompose.preview.tooling.PreviewProtocolJson
+import com.viewcompose.preview.tooling.PreviewPhaseTiming
 import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewRenderResponse
 import com.viewcompose.preview.tooling.PreviewRenderStatus
@@ -22,22 +23,29 @@ class StaticPreviewWorker(
         classLoader: ClassLoader,
     ): PreviewRenderResponse {
         val startedAtNanos = System.nanoTime()
+        val resolutionStartedAtNanos = System.nanoTime()
         return when (
             val resolution = PreviewJvmEntryPointResolver.resolve(
                 descriptor = request.descriptor,
                 classLoader = classLoader,
             )
         ) {
-            is PreviewEntryResolutionResult.Success -> render(
+            is PreviewEntryResolutionResult.Success -> renderResolved(
                 context = context,
                 request = request,
                 entry = resolution.entry,
+                initialTimings = listOf(
+                    phaseTiming("entry-resolution", resolutionStartedAtNanos),
+                ),
             )
 
             is PreviewEntryResolutionResult.Failure -> failureResponse(
                 request = request,
                 startedAtNanos = startedAtNanos,
                 diagnostic = resolution.diagnostic,
+                phaseTimings = listOf(
+                    phaseTiming("entry-resolution", resolutionStartedAtNanos),
+                ),
             )
         }
     }
@@ -47,28 +55,51 @@ class StaticPreviewWorker(
         request: PreviewRenderRequest,
         entry: StaticPreviewEntry,
     ): PreviewRenderResponse {
+        return renderResolved(
+            context = context,
+            request = request,
+            entry = entry,
+            initialTimings = emptyList(),
+        )
+    }
+
+    private fun renderResolved(
+        context: Context,
+        request: PreviewRenderRequest,
+        entry: StaticPreviewEntry,
+        initialTimings: List<PreviewPhaseTiming>,
+    ): PreviewRenderResponse {
         val startedAtNanos = System.nanoTime()
+        val mountStartedAtNanos = System.nanoTime()
         return when (val mount = StaticPreviewRenderer.mount(context, request, entry)) {
             is StaticPreviewMountResult.Failure -> failureResponse(
                 request = request,
                 startedAtNanos = startedAtNanos,
                 diagnostic = mount.diagnostic,
+                phaseTimings = initialTimings + phaseTiming("mount-layout", mountStartedAtNanos),
             )
 
             is StaticPreviewMountResult.Success -> mount.frame.use { frame ->
                 try {
+                    val phaseTimings = initialTimings.toMutableList().apply {
+                        add(phaseTiming("mount-layout", mountStartedAtNanos))
+                    }
                     val outputDirectory = File(request.outputDirectory)
                     ensureOutputDirectory(outputDirectory)
                     val imageFile = outputDirectory.resolve("preview.png")
                     val treeFile = outputDirectory.resolve("render-tree.json")
+                    val imageExportStartedAtNanos = System.nanoTime()
                     writeAtomically(imageFile) { temporary ->
                         captureBackend.capture(frame.rootView, temporary)
                     }
+                    phaseTimings += phaseTiming("image-export", imageExportStartedAtNanos)
+                    val snapshotExportStartedAtNanos = System.nanoTime()
                     writeAtomically(treeFile) { temporary ->
                         temporary.writeText(
                             PreviewProtocolJson.encodeRenderSnapshot(frame.snapshot),
                         )
                     }
+                    phaseTimings += phaseTiming("snapshot-export", snapshotExportStartedAtNanos)
                     PreviewRenderResponse(
                         requestId = request.requestId,
                         previewId = request.descriptor.id,
@@ -87,6 +118,7 @@ class StaticPreviewWorker(
                             )
                         },
                         durationMillis = elapsedMillis(startedAtNanos),
+                        phaseTimings = phaseTimings,
                     )
                 } catch (error: Throwable) {
                     error.throwIfFatalPreviewWorkerError()
@@ -100,6 +132,7 @@ class StaticPreviewWorker(
                             sourceLocation = request.descriptor.sourceLocation,
                             details = error.stackTraceToString(),
                         ),
+                        phaseTimings = initialTimings,
                     )
                 }
             }
@@ -110,6 +143,7 @@ class StaticPreviewWorker(
         request: PreviewRenderRequest,
         startedAtNanos: Long,
         diagnostic: PreviewDiagnostic,
+        phaseTimings: List<PreviewPhaseTiming> = emptyList(),
     ): PreviewRenderResponse {
         return PreviewRenderResponse(
             requestId = request.requestId,
@@ -118,6 +152,7 @@ class StaticPreviewWorker(
             status = PreviewRenderStatus.RenderFailure,
             diagnostics = listOf(diagnostic),
             durationMillis = elapsedMillis(startedAtNanos),
+            phaseTimings = phaseTimings,
         )
     }
 
@@ -160,6 +195,13 @@ class StaticPreviewWorker(
     private fun elapsedMillis(startedAtNanos: Long): Long {
         return ((System.nanoTime() - startedAtNanos) / NANOS_PER_MILLISECOND)
             .coerceAtLeast(0L)
+    }
+
+    private fun phaseTiming(
+        phase: String,
+        startedAtNanos: Long,
+    ): PreviewPhaseTiming {
+        return PreviewPhaseTiming(phase = phase, durationMillis = elapsedMillis(startedAtNanos))
     }
 
     private companion object {

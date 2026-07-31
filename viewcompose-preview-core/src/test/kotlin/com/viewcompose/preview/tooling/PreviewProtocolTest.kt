@@ -111,8 +111,18 @@ class PreviewProtocolTest {
             variantId = "light",
             status = PreviewRenderStatus.Success,
             artifacts = PreviewArtifacts(imagePath = "preview.png"),
+            phaseTimings = listOf(PreviewPhaseTiming("mount-layout", 8)),
         )
         assertEquals(PreviewRenderStatus.Success, response.status)
+        assertEquals(8L, response.phaseTimings.single().durationMillis)
+        assertThrows(IllegalArgumentException::class.java) {
+            response.copy(
+                phaseTimings = listOf(
+                    PreviewPhaseTiming("mount-layout", 1),
+                    PreviewPhaseTiming("mount-layout", 2),
+                ),
+            )
+        }
     }
 
     @Test
