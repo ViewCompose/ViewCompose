@@ -34,7 +34,9 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 
 - bounded ViewCompose project detection without loading Gradle or Android plugin internals;
 - a lazily initialized, dockable `ViewCompose Preview` tool window;
+- Kotlin gutter markers for direct and source meta-annotated ViewCompose preview functions;
+- project-scoped source selection that opens the matching symbol in the preview tool window;
 - an explicit AI-261 minimum build and exact local-build verification.
 
-Rendering, Kotlin gutter markers, refresh/cancellation, and diagnostics are added in later slices
-on top of this stable shell.
+Rendering, refresh/cancellation, and diagnostics are added in later slices on top of this stable
+shell.

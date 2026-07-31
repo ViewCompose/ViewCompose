@@ -1,0 +1,76 @@
+package com.viewcompose.studio.preview
+
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import org.jetbrains.kotlin.psi.KtNamedFunction
+
+class ViewComposePreviewLineMarkerProviderTest : BasePlatformTestCase() {
+    fun testImportedPreviewAnnotationCreatesMarker() {
+        val function = configureFunction(
+            """
+            package sample
+
+            import com.viewcompose.preview.tooling.ViewComposePreview
+
+            @ViewComposePreview
+            fun ExamplePreview() = Unit
+            """.trimIndent(),
+            symbolName = "ExamplePreview",
+        )
+
+        assertNotNull(
+            ViewComposePreviewLineMarkerProvider()
+                .getLineMarkerInfo(checkNotNull(function.nameIdentifier)),
+        )
+    }
+
+    fun testSourceMetaAnnotationCreatesMarker() {
+        val function = configureFunction(
+            """
+            package sample
+
+            import com.viewcompose.preview.tooling.ViewComposePreview
+
+            @ViewComposePreview
+            annotation class CatalogPreview
+
+            @CatalogPreview
+            fun ExamplePreview() = Unit
+            """.trimIndent(),
+            symbolName = "ExamplePreview",
+        )
+
+        assertNotNull(
+            ViewComposePreviewLineMarkerProvider()
+                .getLineMarkerInfo(checkNotNull(function.nameIdentifier)),
+        )
+    }
+
+    fun testUnrelatedAnnotationWithSameShortNameDoesNotCreateMarker() {
+        val function = configureFunction(
+            """
+            package sample
+
+            annotation class ViewComposePreview
+
+            @ViewComposePreview
+            fun ExamplePreview() = Unit
+            """.trimIndent(),
+            symbolName = "ExamplePreview",
+        )
+
+        assertNull(
+            ViewComposePreviewLineMarkerProvider()
+                .getLineMarkerInfo(checkNotNull(function.nameIdentifier)),
+        )
+    }
+
+    private fun configureFunction(
+        source: String,
+        symbolName: String,
+    ): KtNamedFunction {
+        val file = myFixture.configureByText("Sample.kt", source)
+        return PsiTreeUtil.findChildrenOfType(file, KtNamedFunction::class.java)
+            .single { function -> function.name == symbolName }
+    }
+}

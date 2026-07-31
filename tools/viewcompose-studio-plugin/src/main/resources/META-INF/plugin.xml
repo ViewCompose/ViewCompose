@@ -4,8 +4,18 @@
     <vendor>ViewCompose</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.kotlin</depends>
+
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <!--suppress PluginXmlValidity -->
+        <supportsKotlinPluginMode supportsK2="true"/>
+    </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <codeInsight.lineMarkerProvider
+            language="kotlin"
+            implementationClass="com.viewcompose.studio.preview.ViewComposePreviewLineMarkerProvider"/>
         <toolWindow
             id="ViewCompose Preview"
             anchor="right"

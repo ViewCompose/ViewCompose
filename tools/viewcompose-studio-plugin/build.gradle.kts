@@ -68,6 +68,8 @@ repositories {
 dependencies {
     intellijPlatform {
         local(androidStudioHome.absolutePath)
+        bundledPlugin("com.intellij.java")
+        bundledPlugin("org.jetbrains.kotlin")
         testFramework(TestFrameworkType.Platform)
     }
     testImplementation("junit:junit:4.13.2")
@@ -82,6 +84,11 @@ kotlin {
 
 intellijPlatform {
     buildSearchableOptions = false
+    pluginVerification {
+        ides {
+            local(androidStudioHome)
+        }
+    }
     pluginConfiguration {
         id = "com.viewcompose.studio.preview"
         name = "ViewCompose Preview"

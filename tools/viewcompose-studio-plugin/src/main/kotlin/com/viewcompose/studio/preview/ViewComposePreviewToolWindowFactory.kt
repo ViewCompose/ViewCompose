@@ -1,5 +1,7 @@
 package com.viewcompose.studio.preview
 
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -7,6 +9,8 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
 import java.nio.file.Path
+
+internal const val VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID = "ViewCompose Preview"
 
 class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
     override suspend fun isApplicableAsync(project: Project): Boolean {
@@ -20,10 +24,17 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         val panel = ViewComposePreviewToolWindowPanel(
             detection = project.viewComposeDetection(),
         )
+        val selectionService = project.service<ViewComposePreviewSelectionService>()
+        selectionService.attach(panel)
         val content = ContentFactory.getInstance().createContent(
             panel,
             null,
             false,
+        )
+        content.setDisposer(
+            Disposable {
+                selectionService.detach(panel)
+            },
         )
         content.preferredFocusableComponent = panel.preferredFocusComponent
         toolWindow.contentManager.addContent(content)

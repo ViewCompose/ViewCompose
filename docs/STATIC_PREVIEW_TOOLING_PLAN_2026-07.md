@@ -192,12 +192,16 @@ Implemented shell foundation:
   APIs.
 - A lazily initialized `ViewCompose Preview` tool window is registered only for detected projects
   and provides the stable UI host for later render states.
-- Unit tests cover project detection, while plugin configuration, archive structure, and sandbox
-  installation are verified against the pinned local Android Studio SDK.
+- Kotlin preview functions receive a leaf-attached gutter marker. Direct, repeatable-container,
+  aliased-import, and source meta-annotation forms share the same bounded classifier.
+- Clicking the marker records the exact source file, symbol, and line in a project service, then
+  opens the matching selection in the lazily created tool window.
+- Unit tests cover project detection, source-selection validation, direct annotations, source
+  meta-annotations, and same-short-name rejection. Plugin configuration, archive structure, and
+  sandbox installation are verified against the pinned local Android Studio SDK.
 
 Remaining in this stage:
 
-- Add Kotlin preview-function line markers and open the matching tool window selection.
 - Invoke the single-preview Gradle task and display progress, image, and structured errors.
 
 ### Stage 5 — automatic refresh and navigation
