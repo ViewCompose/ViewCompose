@@ -9,6 +9,7 @@ import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import java.awt.Cursor
 import java.awt.BasicStroke
 import java.awt.BorderLayout
@@ -20,6 +21,7 @@ import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.GridLayout
 import java.awt.Insets
+import java.awt.LayoutManager
 import java.awt.Point
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
@@ -992,9 +994,30 @@ internal class ViewComposePreviewToolWindowPanel(
                 return entry?.toolTip ?: messages.text("source.navigationHint")
             }
         }
-        val selectionToolTip = PreviewSelectionToolTipController(tree)
+        val selectionDetailsPopup = if (selectionToolTipsOnly) {
+            PreviewPersistentDetailsPopupController(tree)
+        } else {
+            null
+        }
         return tree.apply {
             var applyingLinkedSelection = false
+            fun showSelectionDetails(path: javax.swing.tree.TreePath) {
+                val node = path.lastPathComponent as? DefaultMutableTreeNode ?: return
+                val entry = node.userObject as? PreviewTreeEntry ?: return
+                val text = entry.toolTip ?: return
+                SwingUtilities.invokeLater {
+                    if (selectionPath == path) {
+                        val bounds = getPathBounds(path) ?: return@invokeLater
+                        selectionDetailsPopup?.show(
+                            text = text,
+                            anchor = Point(
+                                bounds.x + bounds.width / 2,
+                                bounds.y + bounds.height,
+                            ),
+                        )
+                    }
+                }
+            }
             if (!selectionToolTipsOnly) {
                 toolTipText = messages.text("source.navigationHint")
             }
@@ -1003,31 +1026,27 @@ internal class ViewComposePreviewToolWindowPanel(
                     selectionCoordinator?.select(selectionPath.nodeId())
                 }
                 if (selectionToolTipsOnly) {
-                    selectionToolTip.hide()
+                    selectionDetailsPopup?.hide()
                     val path = selectionPath ?: return@addTreeSelectionListener
-                    val node = path.lastPathComponent as? DefaultMutableTreeNode
-                    val entry = node?.userObject as? PreviewTreeEntry
-                    val text = entry?.toolTip ?: return@addTreeSelectionListener
-                    SwingUtilities.invokeLater {
-                        if (selectionPath == path) {
-                            val bounds = getPathBounds(path) ?: return@invokeLater
-                            selectionToolTip.show(
-                                text = text,
-                                anchor = Point(
-                                    bounds.x + bounds.width / 2,
-                                    bounds.y + bounds.height,
-                                ),
-                            )
-                        }
-                    }
+                    showSelectionDetails(path)
                 }
             }
-            addMouseWheelListener { selectionToolTip.hide() }
+            addMouseWheelListener { selectionDetailsPopup?.hide() }
             addMouseListener(
                 object : MouseAdapter() {
+                    override fun mousePressed(event: MouseEvent) {
+                        if (!selectionToolTipsOnly || !SwingUtilities.isLeftMouseButton(event)) {
+                            return
+                        }
+                        val path = getPathForLocation(event.x, event.y) ?: return
+                        if (selectionPath == path) {
+                            showSelectionDetails(path)
+                        }
+                    }
+
                     override fun mouseClicked(event: MouseEvent) {
                         if (event.clickCount < 2) return
-                        selectionToolTip.hide()
+                        selectionDetailsPopup?.hide()
                         val path = getPathForLocation(event.x, event.y) ?: return
                         selectionPath = path
                         path.sourceCallSites()?.let(::navigateToRuntimeSource)
@@ -1042,7 +1061,7 @@ internal class ViewComposePreviewToolWindowPanel(
                 SOURCE_NAVIGATION_ACTION,
                 object : AbstractAction() {
                     override fun actionPerformed(event: java.awt.event.ActionEvent?) {
-                        selectionToolTip.hide()
+                        selectionDetailsPopup?.hide()
                         selectionPath?.sourceCallSites()?.let(::navigateToRuntimeSource)
                     }
                 },
@@ -1407,13 +1426,8 @@ internal class PreviewGalleryOverlay(
     private val detailBody = JPanel(BorderLayout()).apply {
         isOpaque = false
     }
-    private val detailCard = JPanel(BorderLayout()).apply {
-        isOpaque = true
-        background = JBColor(Color(0xFA, 0xFA, 0xFA), Color(0x2B, 0x2D, 0x30))
-        border = BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(PREVIEW_TOOLBAR_BORDER),
-            JBUI.Borders.empty(6),
-        )
+    private val detailCard = PreviewRoundedCardPanel(BorderLayout()).apply {
+        border = JBUI.Borders.empty(10)
         add(
             JPanel(FlowLayout(FlowLayout.RIGHT, 0, 0)).apply {
                 isOpaque = false
@@ -1516,6 +1530,60 @@ internal class PreviewGalleryOverlay(
     override fun isOptimizedDrawingEnabled(): Boolean = false
 }
 
+private class PreviewRoundedCardPanel(
+    layout: LayoutManager,
+) : JPanel(layout) {
+    init {
+        isOpaque = false
+    }
+
+    override fun paintComponent(graphics: Graphics) {
+        super.paintComponent(graphics)
+        val graphics2D = graphics.create() as Graphics2D
+        try {
+            graphics2D.setRenderingHint(
+                RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON,
+            )
+            val shadowInset = JBUI.scale(3)
+            val arc = JBUI.scale(14)
+            val cardWidth = (width - shadowInset * 2 - 1).coerceAtLeast(0)
+            val cardHeight = (height - shadowInset * 2 - 1).coerceAtLeast(0)
+            if (cardWidth <= 0 || cardHeight <= 0) return
+            graphics2D.color = Color(0, 0, 0, 38)
+            graphics2D.fillRoundRect(
+                shadowInset,
+                shadowInset + JBUI.scale(1),
+                cardWidth,
+                cardHeight,
+                arc,
+                arc,
+            )
+            graphics2D.color = PREVIEW_POPUP_BACKGROUND
+            graphics2D.fillRoundRect(
+                shadowInset,
+                shadowInset,
+                cardWidth,
+                cardHeight,
+                arc,
+                arc,
+            )
+            graphics2D.color = PREVIEW_TOOLBAR_BORDER
+            graphics2D.stroke = BasicStroke(JBUI.scale(1).toFloat())
+            graphics2D.drawRoundRect(
+                shadowInset,
+                shadowInset,
+                cardWidth,
+                cardHeight,
+                arc,
+                arc,
+            )
+        } finally {
+            graphics2D.dispose()
+        }
+    }
+}
+
 internal class PreviewCanvasLayer(
     private val scrollPane: JComponent,
     private val floatingToolbar: JComponent,
@@ -1589,7 +1657,8 @@ private class PreviewImageCanvas(
             repaint()
         }
 
-    private var viewportSize: Dimension = Dimension(image.width, image.height)
+    private var viewportSize: Dimension = Dimension()
+    private var viewportReady: Boolean = false
     private var scale: Double = 1.0
     private var customScale: Double? = initialCustomScale?.let(::clampPreviewScale)
     private var selectedView: StudioPreviewNativeViewNode? = null
@@ -1602,6 +1671,7 @@ private class PreviewImageCanvas(
     init {
         minimumSize = Dimension(1, 1)
         isOpaque = true
+        background = UIUtil.getPanelBackground()
         isFocusable = true
         addMouseWheelListener { event ->
             suppressToolTipForInteraction()
@@ -1672,7 +1742,7 @@ private class PreviewImageCanvas(
                 }
             },
         )
-        updateScale()
+        preferredSize = Dimension(1, 1)
     }
 
     override fun addNotify() {
@@ -1777,8 +1847,10 @@ private class PreviewImageCanvas(
     }
 
     fun updateViewportSize(size: Dimension) {
-        if (size.width <= 0 || size.height <= 0 || size == viewportSize) return
+        if (size.width <= 0 || size.height <= 0) return
+        if (viewportReady && size == viewportSize) return
         viewportSize = Dimension(size)
+        viewportReady = true
         updateScale()
     }
 
@@ -1791,6 +1863,7 @@ private class PreviewImageCanvas(
     }
 
     private fun updateScale() {
+        if (!viewportReady) return
         scale = customScale ?: calculatePreviewScale(
             option = zoomOption,
             imageWidth = image.width,
@@ -1860,6 +1933,9 @@ private class PreviewImageCanvas(
 
     override fun paintComponent(graphics: Graphics) {
         super.paintComponent(graphics)
+        graphics.color = background
+        graphics.fillRect(0, 0, width, height)
+        if (!viewportReady) return
         val placement = imagePlacement()
         val graphics2D = graphics.create() as Graphics2D
         try {
@@ -2076,6 +2152,7 @@ private val LAYOUT_DIAGNOSTIC_WARNING_COLOR = Color(0xEF, 0x6C, 0x00)
 private val LAYOUT_DIAGNOSTIC_INFO_COLOR = Color(0xF9, 0xA8, 0x25)
 private val PREVIEW_TOOLBAR_BACKGROUND = JBColor(Color(0xF5, 0xF5, 0xF5), Color(0x2B, 0x2D, 0x30))
 private val PREVIEW_TOOLBAR_BORDER = JBColor(Color(0xC9, 0xC9, 0xC9), Color(0x4A, 0x4D, 0x52))
+private val PREVIEW_POPUP_BACKGROUND = JBColor(Color(0xFA, 0xFA, 0xFA), Color(0x2B, 0x2D, 0x30))
 
 private const val SOURCE_NAVIGATION_ACTION = "viewcompose.preview.navigateToRuntimeSource"
 private const val ZOOM_EPSILON = 0.001
