@@ -26,12 +26,16 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         val selectionService = project.service<ViewComposePreviewSelectionService>()
         val projectRoot = project.basePath?.let(Path::of)
         val settings = ViewComposePreviewSettings.forProject(project)
+        val runtimeSourceResolver = StudioPreviewSourceResolver(project)
         val panel = ViewComposePreviewToolWindowPanel(
             detection = project.viewComposeDetection(),
             projectRoot = projectRoot,
             initialLanguage = settings.language,
             onVariantSelected = selectionService::selectVariant,
             onNavigateToSource = { source -> project.navigateToSource(source) },
+            onNavigateToRuntimeSource = { callSites ->
+                runtimeSourceResolver.resolve(callSites)?.let(project::navigateToSource)
+            },
         )
         fun refreshOptionsActions() {
             toolWindow.setAdditionalGearActions(

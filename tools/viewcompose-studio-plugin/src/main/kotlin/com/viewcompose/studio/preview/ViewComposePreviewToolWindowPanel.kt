@@ -1,11 +1,13 @@
 package com.viewcompose.studio.preview
 
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBUI
+import java.awt.Cursor
 import java.awt.BasicStroke
 import java.awt.BorderLayout
 import java.awt.Color
@@ -18,7 +20,11 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.awt.event.MouseMotionAdapter
 import java.nio.file.Path
+import javax.swing.AbstractAction
 import javax.swing.Box
 import javax.swing.JCheckBox
 import javax.swing.JComboBox
@@ -26,7 +32,9 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.JTree
+import javax.swing.KeyStroke
 import javax.swing.SwingUtilities
+import javax.swing.ToolTipManager
 import javax.swing.tree.DefaultMutableTreeNode
 import kotlin.math.roundToInt
 
@@ -36,6 +44,7 @@ internal class ViewComposePreviewToolWindowPanel(
     initialLanguage: PreviewUiLanguage,
     private val onVariantSelected: (String) -> Unit,
     private val onNavigateToSource: (StudioPreviewSourceLocation) -> Unit,
+    private val onNavigateToRuntimeSource: (List<StudioPreviewSourceCallSite>) -> Unit,
 ) : SimpleToolWindowPanel(true, true) {
     private val contentPanel = JPanel(BorderLayout())
     private val detectionEvidence = detection.evidencePath
@@ -224,7 +233,7 @@ internal class ViewComposePreviewToolWindowPanel(
             add(readOnlyText(summary), BorderLayout.NORTH)
             add(
                 JBScrollPane(
-                    JTree(root).apply {
+                    sourceNavigableTree(root).apply {
                         isRootVisible = false
                         showsRootHandles = true
                     },
@@ -281,7 +290,7 @@ internal class ViewComposePreviewToolWindowPanel(
         views.forEach { view ->
             root.add(view.toSwingTreeNode())
         }
-        val tree = JTree(root).apply {
+        val tree = sourceNavigableTree(root).apply {
             isRootVisible = false
             showsRootHandles = true
         }
@@ -301,6 +310,8 @@ internal class ViewComposePreviewToolWindowPanel(
             image = image,
             nativeViews = nativeViews,
             initialZoomOption = previewZoomOption,
+            sourceNavigationHint = messages.text("source.navigationHint"),
+            onNavigateToSource = onNavigateToRuntimeSource,
         ).apply {
             showLayoutBounds = this@ViewComposePreviewToolWindowPanel.showLayoutBounds
         }
@@ -420,6 +431,34 @@ internal class ViewComposePreviewToolWindowPanel(
             wrapStyleWord = true
             background = contentPanel.background
             border = JBUI.Borders.empty(8)
+        }
+    }
+
+    private fun sourceNavigableTree(root: DefaultMutableTreeNode): JTree {
+        return JTree(root).apply {
+            toolTipText = messages.text("source.navigationHint")
+            addMouseListener(
+                object : MouseAdapter() {
+                    override fun mouseClicked(event: MouseEvent) {
+                        if (event.clickCount < 2) return
+                        val path = getPathForLocation(event.x, event.y) ?: return
+                        selectionPath = path
+                        path.sourceCallSites()?.let(onNavigateToRuntimeSource)
+                    }
+                },
+            )
+            inputMap.put(
+                KeyStroke.getKeyStroke("ENTER"),
+                SOURCE_NAVIGATION_ACTION,
+            )
+            actionMap.put(
+                SOURCE_NAVIGATION_ACTION,
+                object : AbstractAction() {
+                    override fun actionPerformed(event: java.awt.event.ActionEvent?) {
+                        selectionPath?.sourceCallSites()?.let(onNavigateToRuntimeSource)
+                    }
+                },
+            )
         }
     }
 
@@ -581,7 +620,12 @@ private fun StudioPreviewRenderTreeNode.toSwingTreeNode(): DefaultMutableTreeNod
         append(type)
         key?.let { value -> append(" · key=$value") }
     }
-    val swingNode = DefaultMutableTreeNode(label)
+    val swingNode = DefaultMutableTreeNode(
+        PreviewTreeEntry(
+            label = label,
+            sourceCallSites = sourceCallSites,
+        ),
+    )
     children.forEach { child ->
         swingNode.add(child.toSwingTreeNode())
     }
@@ -611,7 +655,12 @@ private fun StudioPreviewNativeViewNode.toSwingTreeNode(): DefaultMutableTreeNod
             append(visibility)
         }
     }
-    val swingNode = DefaultMutableTreeNode(label)
+    val swingNode = DefaultMutableTreeNode(
+        PreviewTreeEntry(
+            label = label,
+            sourceCallSites = sourceCallSites,
+        ),
+    )
     children.forEach { child ->
         swingNode.add(child.toSwingTreeNode())
     }
@@ -626,6 +675,8 @@ private class PreviewImageCanvas(
     private val image: BufferedImage,
     private val nativeViews: List<StudioPreviewNativeViewNode>,
     initialZoomOption: PreviewZoomOption,
+    private val sourceNavigationHint: String,
+    private val onNavigateToSource: (List<StudioPreviewSourceCallSite>) -> Unit,
 ) : JComponent() {
     var zoomOption: PreviewZoomOption = initialZoomOption
         set(value) {
@@ -643,10 +694,41 @@ private class PreviewImageCanvas(
 
     private var viewportSize: Dimension = Dimension(image.width, image.height)
     private var scale: Double = 1.0
+    private var selectedView: StudioPreviewNativeViewNode? = null
 
     init {
         minimumSize = Dimension(1, 1)
         isOpaque = true
+        ToolTipManager.sharedInstance().registerComponent(this)
+        addMouseMotionListener(
+            object : MouseMotionAdapter() {
+                override fun mouseMoved(event: MouseEvent) {
+                    cursor = if (mappedViewAt(event.x, event.y) == null) {
+                        Cursor.getDefaultCursor()
+                    } else {
+                        Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                    }
+                }
+            },
+        )
+        addMouseListener(
+            object : MouseAdapter() {
+                override fun mouseExited(event: MouseEvent) {
+                    cursor = Cursor.getDefaultCursor()
+                }
+
+                override fun mouseClicked(event: MouseEvent) {
+                    selectedView = mappedViewAt(event.x, event.y)
+                    repaint()
+                    if (event.clickCount >= 2) {
+                        selectedView
+                            ?.sourceCallSites
+                            ?.takeIf(List<StudioPreviewSourceCallSite>::isNotEmpty)
+                            ?.let(onNavigateToSource)
+                    }
+                }
+            },
+        )
         updateScale()
     }
 
@@ -674,12 +756,14 @@ private class PreviewImageCanvas(
         repaint()
     }
 
+    override fun getToolTipText(event: MouseEvent): String? {
+        val view = mappedViewAt(event.x, event.y) ?: return null
+        return "$sourceNavigationHint · ${view.className.substringAfterLast('.')}"
+    }
+
     override fun paintComponent(graphics: Graphics) {
         super.paintComponent(graphics)
-        val scaledWidth = (image.width * scale).roundToInt().coerceAtLeast(1)
-        val scaledHeight = (image.height * scale).roundToInt().coerceAtLeast(1)
-        val imageLeft = ((width - scaledWidth) / 2).coerceAtLeast(0)
-        val imageTop = ((height - scaledHeight) / 2).coerceAtLeast(0)
+        val placement = imagePlacement()
         val graphics2D = graphics.create() as Graphics2D
         try {
             graphics2D.setRenderingHint(
@@ -692,27 +776,89 @@ private class PreviewImageCanvas(
             )
             graphics2D.drawImage(
                 image,
-                imageLeft,
-                imageTop,
-                scaledWidth,
-                scaledHeight,
+                placement.left,
+                placement.top,
+                placement.width,
+                placement.height,
                 null,
             )
-            if (!showLayoutBounds) return
-            graphics2D.stroke = BasicStroke(JBUI.scale(1).toFloat())
-            nativeViews.forEach { view ->
-                graphics2D.paintViewBounds(
+            if (showLayoutBounds) {
+                graphics2D.stroke = BasicStroke(JBUI.scale(1).toFloat())
+                nativeViews.forEach { view ->
+                    graphics2D.paintViewBounds(
+                        view = view,
+                        imageLeft = placement.left,
+                        imageTop = placement.top,
+                        scale = scale,
+                        depth = 0,
+                    )
+                }
+            }
+            selectedView?.let { view ->
+                graphics2D.paintSelectedView(
                     view = view,
-                    imageLeft = imageLeft,
-                    imageTop = imageTop,
+                    imageLeft = placement.left,
+                    imageTop = placement.top,
                     scale = scale,
-                    depth = 0,
                 )
             }
         } finally {
             graphics2D.dispose()
         }
     }
+
+    private fun mappedViewAt(
+        componentX: Int,
+        componentY: Int,
+    ): StudioPreviewNativeViewNode? {
+        val placement = imagePlacement()
+        if (
+            componentX < placement.left ||
+            componentX >= placement.left + placement.width ||
+            componentY < placement.top ||
+            componentY >= placement.top + placement.height
+        ) {
+            return null
+        }
+        val imageX = ((componentX - placement.left) / scale).toInt()
+        val imageY = ((componentY - placement.top) / scale).toInt()
+        return findMappedNativeViewAt(nativeViews, imageX, imageY)
+    }
+
+    private fun imagePlacement(): PreviewImagePlacement {
+        val scaledWidth = (image.width * scale).roundToInt().coerceAtLeast(1)
+        val scaledHeight = (image.height * scale).roundToInt().coerceAtLeast(1)
+        return PreviewImagePlacement(
+            left = ((width - scaledWidth) / 2).coerceAtLeast(0),
+            top = ((height - scaledHeight) / 2).coerceAtLeast(0),
+            width = scaledWidth,
+            height = scaledHeight,
+        )
+    }
+}
+
+private fun Graphics2D.paintSelectedView(
+    view: StudioPreviewNativeViewNode,
+    imageLeft: Int,
+    imageTop: Int,
+    scale: Double,
+) {
+    val bounds = view.bounds
+    if (bounds.width <= 0 || bounds.height <= 0) return
+    val scaledLeft = imageLeft + (bounds.left * scale).roundToInt()
+    val scaledTop = imageTop + (bounds.top * scale).roundToInt()
+    val scaledWidth = (bounds.width * scale).roundToInt().coerceAtLeast(1)
+    val scaledHeight = (bounds.height * scale).roundToInt().coerceAtLeast(1)
+    color = Color(SOURCE_SELECTION_COLOR.red, SOURCE_SELECTION_COLOR.green, SOURCE_SELECTION_COLOR.blue, 28)
+    fillRect(scaledLeft, scaledTop, scaledWidth, scaledHeight)
+    color = SOURCE_SELECTION_COLOR
+    stroke = BasicStroke(JBUI.scale(2).toFloat())
+    drawRect(
+        scaledLeft,
+        scaledTop,
+        (scaledWidth - 1).coerceAtLeast(0),
+        (scaledHeight - 1).coerceAtLeast(0),
+    )
 }
 
 private fun Graphics2D.paintViewBounds(
@@ -760,6 +906,31 @@ private val LAYOUT_BOUND_COLORS = listOf(
     Color(0x27, 0xAE, 0x60),
     Color(0xF2, 0x99, 0x4A),
     Color(0x9B, 0x51, 0xE0),
+)
+
+private val SOURCE_SELECTION_COLOR = JBColor(Color(0x2F, 0x80, 0xED), Color(0x64, 0xB5, 0xF6))
+
+private const val SOURCE_NAVIGATION_ACTION = "viewcompose.preview.navigateToRuntimeSource"
+
+private data class PreviewTreeEntry(
+    val label: String,
+    val sourceCallSites: List<StudioPreviewSourceCallSite>,
+) {
+    override fun toString(): String = label
+}
+
+private fun javax.swing.tree.TreePath.sourceCallSites(): List<StudioPreviewSourceCallSite>? {
+    val node = lastPathComponent as? DefaultMutableTreeNode ?: return null
+    return (node.userObject as? PreviewTreeEntry)
+        ?.sourceCallSites
+        ?.takeIf(List<StudioPreviewSourceCallSite>::isNotEmpty)
+}
+
+private data class PreviewImagePlacement(
+    val left: Int,
+    val top: Int,
+    val width: Int,
+    val height: Int,
 )
 
 private data class PreviewVariantChoice(
