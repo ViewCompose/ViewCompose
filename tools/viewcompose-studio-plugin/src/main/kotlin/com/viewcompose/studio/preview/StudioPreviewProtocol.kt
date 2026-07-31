@@ -62,6 +62,70 @@ internal data class StudioPreviewRenderResponse(
     val durationMillis: Long?,
 )
 
+internal data class StudioPreviewRenderSnapshot(
+    val stats: StudioPreviewRenderStats,
+    val structure: StudioPreviewRenderStructure,
+    val warnings: List<String>,
+    val tree: List<StudioPreviewRenderTreeNode>,
+    val patches: List<StudioPreviewPatchRecord>,
+    val composition: StudioPreviewCompositionSnapshot,
+)
+
+internal data class StudioPreviewRenderStats(
+    val inserts: Int,
+    val reuses: Int,
+    val removals: Int,
+    val reboundNodes: Int,
+    val patchedNodes: Int,
+    val skippedBindings: Int,
+    val skippedSubtrees: Int,
+)
+
+internal data class StudioPreviewRenderStructure(
+    val vnodeCount: Int,
+    val mountedNodeCount: Int,
+    val maxVNodeDepth: Int,
+    val maxMountedDepth: Int,
+)
+
+internal data class StudioPreviewRenderTreeNode(
+    val type: String,
+    val key: String?,
+    val children: List<StudioPreviewRenderTreeNode>,
+)
+
+internal data class StudioPreviewPatchRecord(
+    val operation: String,
+    val type: String,
+    val key: String?,
+    val parentKey: String?,
+    val index: Int,
+    val moved: Boolean,
+    val detail: String?,
+)
+
+internal data class StudioPreviewCompositionSnapshot(
+    val invalidatedScopeCount: Int,
+    val recomposedScopeCount: Int,
+    val skippedScopeCount: Int,
+    val scopes: List<StudioPreviewRecomposeScope>,
+)
+
+internal data class StudioPreviewRecomposeScope(
+    val path: String,
+    val signature: String,
+    val depth: Int,
+    val reasons: List<String>,
+    val recomposed: Boolean,
+    val skipped: Boolean,
+    val locals: List<StudioPreviewCompositionLocal>,
+)
+
+internal data class StudioPreviewCompositionLocal(
+    val name: String,
+    val value: String,
+)
+
 internal enum class StudioPreviewRenderStatus {
     Success,
     CompileFailure,
@@ -110,6 +174,113 @@ internal object StudioPreviewProtocolReader {
             durationMillis = root.optionalLong("durationMillis"),
         )
     }
+
+    fun readRenderSnapshot(path: Path): StudioPreviewRenderSnapshot {
+        val size = Files.size(path)
+        require(size in 1..MAXIMUM_RENDER_SNAPSHOT_BYTES) {
+            "Preview render snapshot '$path' has unsupported size $size bytes."
+        }
+        val root = path.readJsonObject()
+        val budget = SnapshotParseBudget()
+        return StudioPreviewRenderSnapshot(
+            stats = root.optionalObject("stats").toRenderStats(),
+            structure = root.optionalObject("structure").toRenderStructure(),
+            warnings = root.optionalArray("warnings").map { element ->
+                element.requiredStringValue("warning")
+            },
+            tree = root.optionalArray("tree").map { element ->
+                element.requiredObject("tree node").toRenderTreeNode(
+                    budget = budget,
+                    depth = 0,
+                )
+            },
+            patches = root.optionalArray("patches").map { element ->
+                element.requiredObject("patch").toPatchRecord()
+            },
+            composition = root.optionalObject("composition").toCompositionSnapshot(),
+        )
+    }
+}
+
+private fun JsonObject?.toRenderStats(): StudioPreviewRenderStats {
+    return StudioPreviewRenderStats(
+        inserts = this?.optionalInt("inserts") ?: 0,
+        reuses = this?.optionalInt("reuses") ?: 0,
+        removals = this?.optionalInt("removals") ?: 0,
+        reboundNodes = this?.optionalInt("reboundNodes") ?: 0,
+        patchedNodes = this?.optionalInt("patchedNodes") ?: 0,
+        skippedBindings = this?.optionalInt("skippedBindings") ?: 0,
+        skippedSubtrees = this?.optionalInt("skippedSubtrees") ?: 0,
+    )
+}
+
+private fun JsonObject?.toRenderStructure(): StudioPreviewRenderStructure {
+    return StudioPreviewRenderStructure(
+        vnodeCount = this?.optionalInt("vnodeCount") ?: 0,
+        mountedNodeCount = this?.optionalInt("mountedNodeCount") ?: 0,
+        maxVNodeDepth = this?.optionalInt("maxVNodeDepth") ?: 0,
+        maxMountedDepth = this?.optionalInt("maxMountedDepth") ?: 0,
+    )
+}
+
+private fun JsonObject.toRenderTreeNode(
+    budget: SnapshotParseBudget,
+    depth: Int,
+): StudioPreviewRenderTreeNode {
+    budget.recordNode(depth)
+    return StudioPreviewRenderTreeNode(
+        type = requiredString("type"),
+        key = optionalString("key"),
+        children = optionalArray("children").map { child ->
+            child.requiredObject("tree child").toRenderTreeNode(
+                budget = budget,
+                depth = depth + 1,
+            )
+        },
+    )
+}
+
+private fun JsonObject.toPatchRecord(): StudioPreviewPatchRecord {
+    return StudioPreviewPatchRecord(
+        operation = requiredString("operation"),
+        type = requiredString("type"),
+        key = optionalString("key"),
+        parentKey = optionalString("parentKey"),
+        index = optionalInt("index") ?: 0,
+        moved = optionalBoolean("moved") ?: false,
+        detail = optionalString("detail"),
+    )
+}
+
+private fun JsonObject?.toCompositionSnapshot(): StudioPreviewCompositionSnapshot {
+    return StudioPreviewCompositionSnapshot(
+        invalidatedScopeCount = this?.optionalInt("invalidatedScopeCount") ?: 0,
+        recomposedScopeCount = this?.optionalInt("recomposedScopeCount") ?: 0,
+        skippedScopeCount = this?.optionalInt("skippedScopeCount") ?: 0,
+        scopes = this?.optionalArray("scopes").orEmpty().map { element ->
+            element.requiredObject("recompose scope").toRecomposeScope()
+        },
+    )
+}
+
+private fun JsonObject.toRecomposeScope(): StudioPreviewRecomposeScope {
+    return StudioPreviewRecomposeScope(
+        path = requiredString("path"),
+        signature = requiredString("signature"),
+        depth = optionalInt("depth") ?: 0,
+        reasons = optionalArray("reasons").map { element ->
+            element.requiredStringValue("recomposition reason")
+        },
+        recomposed = optionalBoolean("recomposed") ?: false,
+        skipped = optionalBoolean("skipped") ?: false,
+        locals = optionalArray("locals").map { element ->
+            val local = element.requiredObject("composition local")
+            StudioPreviewCompositionLocal(
+                name = local.requiredString("name"),
+                value = local.requiredString("value"),
+            )
+        },
+    )
 }
 
 private fun JsonObject.toDescriptor(): StudioPreviewDescriptor {
@@ -202,6 +373,15 @@ private fun JsonObject.optionalLong(name: String): Long? {
     }
 }
 
+private fun JsonObject.optionalBoolean(name: String): Boolean? {
+    val value = get(name) ?: return null
+    if (value.isJsonNull) return null
+    require(value.isJsonPrimitive && value.asJsonPrimitive.isBoolean) {
+        "Preview protocol field '$name' must be a boolean when present."
+    }
+    return value.asBoolean
+}
+
 private fun JsonObject.requiredArray(name: String): List<JsonElement> {
     val value = get(name)
     require(value != null && value.isJsonArray) {
@@ -247,6 +427,30 @@ private fun requireStableId(value: String) {
     }
 }
 
+private fun JsonElement.requiredStringValue(label: String): String {
+    require(isJsonPrimitive && asJsonPrimitive.isString) {
+        "Preview protocol '$label' must be a string."
+    }
+    return asString
+}
+
+private class SnapshotParseBudget {
+    private var nodeCount: Int = 0
+
+    fun recordNode(depth: Int) {
+        require(depth <= MAXIMUM_RENDER_TREE_DEPTH) {
+            "Preview render tree exceeds the maximum depth of $MAXIMUM_RENDER_TREE_DEPTH."
+        }
+        nodeCount += 1
+        require(nodeCount <= MAXIMUM_RENDER_TREE_NODES) {
+            "Preview render tree exceeds the maximum node count of $MAXIMUM_RENDER_TREE_NODES."
+        }
+    }
+}
+
 private const val SUPPORTED_PREVIEW_PROTOCOL_VERSION = 1
+private const val MAXIMUM_RENDER_SNAPSHOT_BYTES = 16L * 1024L * 1024L
+private const val MAXIMUM_RENDER_TREE_DEPTH = 256
+private const val MAXIMUM_RENDER_TREE_NODES = 100_000
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")
 private val STABLE_ID_PATTERN = Regex("[a-z0-9]+(?:(?:-|__)[a-z0-9]+)*")

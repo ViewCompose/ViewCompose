@@ -62,6 +62,7 @@ internal sealed interface PreviewRenderOutcome {
         val image: BufferedImage,
         val imagePath: Path,
         val renderTreePath: Path?,
+        val renderSnapshot: StudioPreviewRenderSnapshot?,
         val diagnostics: List<StudioPreviewDiagnostic>,
         val durationMillis: Long?,
         val cacheHit: Boolean,
@@ -168,6 +169,20 @@ internal class ViewComposePreviewRenderCoordinator(
             val renderTreePath = response.renderTreePath?.let { path ->
                 match.resolveArtifact(path, "render tree")
             }
+            val renderSnapshotResult = renderTreePath?.let { path ->
+                runCatching { StudioPreviewProtocolReader.readRenderSnapshot(path) }
+            }
+            val snapshotDiagnostic = renderSnapshotResult
+                ?.exceptionOrNull()
+                ?.let { error ->
+                    StudioPreviewDiagnostic(
+                        severity = StudioPreviewDiagnosticSeverity.Warning,
+                        message = "The preview rendered, but its diagnostic snapshot could not be read.",
+                        phase = "render-tree",
+                        sourceLocation = match.descriptor.sourceLocation,
+                        details = error.message,
+                    )
+                }
             PreviewRenderOutcome.Success(
                 selection = selection,
                 descriptorId = match.descriptor.id,
@@ -178,7 +193,8 @@ internal class ViewComposePreviewRenderCoordinator(
                 image = loadBoundedPreviewImage(imagePath),
                 imagePath = imagePath,
                 renderTreePath = renderTreePath,
-                diagnostics = response.diagnostics,
+                renderSnapshot = renderSnapshotResult?.getOrNull(),
+                diagnostics = response.diagnostics + listOfNotNull(snapshotDiagnostic),
                 durationMillis = response.durationMillis,
                 cacheHit = CACHE_HIT_MARKER in render.standardOutput,
             )

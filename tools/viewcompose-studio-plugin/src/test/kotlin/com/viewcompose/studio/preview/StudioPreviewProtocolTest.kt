@@ -3,6 +3,7 @@ package com.viewcompose.studio.preview
 import java.nio.file.Files
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -47,6 +48,92 @@ class StudioPreviewProtocolTest {
         assertThrows(IllegalArgumentException::class.java) {
             StudioPreviewProtocolReader.readCatalog(catalogFile)
         }
+    }
+
+    @Test
+    fun `reads bounded render tree composition and patch diagnostics`() {
+        val snapshotFile = temporaryFolder.newFile("render-tree.json").toPath()
+        Files.writeString(
+            snapshotFile,
+            """
+            {
+              "stats": {
+                "inserts": 4,
+                "reuses": 2,
+                "removals": 1,
+                "reboundNodes": 3,
+                "patchedNodes": 2,
+                "skippedBindings": 5,
+                "skippedSubtrees": 6
+              },
+              "structure": {
+                "vnodeCount": 7,
+                "mountedNodeCount": 6,
+                "maxVNodeDepth": 3,
+                "maxMountedDepth": 2
+              },
+              "warnings": ["sample warning"],
+              "tree": [
+                {
+                  "type": "Column",
+                  "key": "root",
+                  "children": [
+                    {
+                      "type": "Text",
+                      "key": "title",
+                      "children": []
+                    }
+                  ]
+                }
+              ],
+              "patches": [
+                {
+                  "operation": "Insert",
+                  "type": "Text",
+                  "key": "title",
+                  "parentKey": "root",
+                  "index": 0,
+                  "moved": false,
+                  "detail": "mounted"
+                }
+              ],
+              "composition": {
+                "invalidatedScopeCount": 1,
+                "recomposedScopeCount": 1,
+                "skippedScopeCount": 0,
+                "scopes": [
+                  {
+                    "path": "root/content",
+                    "signature": "abc",
+                    "depth": 1,
+                    "reasons": ["StateChanged"],
+                    "recomposed": true,
+                    "skipped": false,
+                    "locals": [
+                      {
+                        "name": "Theme",
+                        "value": "Dark"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """.trimIndent(),
+        )
+
+        val snapshot = StudioPreviewProtocolReader.readRenderSnapshot(snapshotFile)
+
+        assertEquals(7, snapshot.structure.vnodeCount)
+        assertEquals(4, snapshot.stats.inserts)
+        assertEquals("Text", snapshot.tree.single().children.single().type)
+        assertEquals("Insert", snapshot.patches.single().operation)
+        assertTrue(snapshot.composition.scopes.single().recomposed)
+        assertEquals(
+            listOf("StateChanged"),
+            snapshot.composition.scopes.single().reasons,
+        )
+        assertEquals("Dark", snapshot.composition.scopes.single().locals.single().value)
     }
 }
 

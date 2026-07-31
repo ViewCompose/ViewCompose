@@ -69,6 +69,7 @@ class ViewComposePreviewGradleBridgeTest {
         assertEquals("dark", success.selectedVariantId)
         assertEquals("Dark", success.variantName)
         assertEquals(listOf("default", "dark"), success.variants.map(StudioPreviewVariant::id))
+        assertTrue(success.renderSnapshot != null)
         assertFalse(success.cacheHit)
         assertEquals(
             listOf(

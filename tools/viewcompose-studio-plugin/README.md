@@ -40,6 +40,7 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - an in-window selector for every declared preview configuration;
 - automatic refresh when the selected preview source is saved;
 - clickable structured diagnostics that navigate back to their source location;
+- bounded render-snapshot inspection with VNode structure, patch, skip, and recomposition details;
 - bounded PNG loading plus structured render diagnostics and Gradle failure output;
 - an explicit AI-261 minimum build and exact local-build verification.
 
