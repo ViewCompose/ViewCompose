@@ -59,6 +59,12 @@ protocol instead of linking renderer internals into the IDE process.
     instances. Each worker process handles at most eight sequential renders and then exits.
 15. Studio image retention is budgeted by decoded pixel bytes rather than PNG count or file size;
     every project-owned listener, task, popup, and image cache has an explicit disposal boundary.
+16. Performance data crosses the same versioned boundary as render results. Layoutlib setup,
+    mount/layout, artifact export, Gradle execution, and Studio decoding remain separately visible.
+17. Global preview loading is viewport-first. It may use two bounded render calls per module to
+    show the visible screen early, but discovery and compilation are still shared.
+18. Studio uses one cancellable Gradle Tooling API connection per project. Layoutlib remains in a
+    short-lived external worker, and the connection is closed with the project service.
 
 ## 4. Delivery stages
 
@@ -245,10 +251,10 @@ Implemented experience foundation:
 - When the preview tool window is visible, moving the editor caret into another
   `@ViewComposePreview` function follows that function after a short debounce. Merely browsing
   code while the tool window is hidden never starts Gradle.
-- Saving the selected source, another Kotlin/Java source, Android resource, asset, Manifest, or
-  Gradle configuration under the project schedules one debounced refresh. Generated `build`,
-  `.gradle`, `.idea`, and VCS output is ignored, so the preview can follow direct project
-  dependencies without reacting to its own build artifacts.
+- Saving the selected source, a source/resource/asset in its module, or an input module inferred
+  from the exported build manifest schedules one debounced refresh. Unrelated modules and
+  generated `build`, `.gradle`, `.idea`, and VCS output are ignored. Root Gradle configuration and
+  version catalogs remain project-wide inputs.
 - Editor following and save refresh are project-level options, enabled by default and exposed in
   the tool-window gear menu.
 - User-driven superseding requests cancel their active progress indicator and cannot publish over
@@ -259,6 +265,16 @@ Implemented experience foundation:
   rendering in one Gradle invocation; a renamed or removed descriptor falls back to full
   discovery. Initial discovery targets debug directly and falls back to the all-variant aggregate
   only when a conventional debug task does not exist.
+- Gradle discovery and rendering use one project-scoped Tooling API connection, removing repeated
+  wrapper-client JVM startup while preserving Gradle daemon reuse, cancellation, and isolated
+  Layoutlib workers.
+- The all-previews gallery publishes placeholders before compilation, renders the current viewport
+  first, preserves scroll position across partial results, and fills remaining previews in one
+  second bounded batch. Disk-cache metadata is read eagerly, but PNG thumbnails decode only when a
+  card becomes visible.
+- Low-memory notifications clear high-resolution gallery details and decoded thumbnails. Phase
+  timings are available from the preview header and `idea.log`, so cold, warm, saved-input, and
+  gallery regressions can be attributed rather than guessed from one total duration.
 - The selected preview variant survives save refreshes. Preview zoom, the selected diagnostics
   tab, and the layout-bounds toggle survive rerenders and UI-language changes.
 - The preview canvas supports fit-to-window and fixed 50–200% zoom. A title-bar refresh action

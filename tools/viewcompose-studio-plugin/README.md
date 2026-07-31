@@ -36,14 +36,18 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - a lazily initialized, dockable `ViewCompose Preview` tool window;
 - Kotlin gutter markers for direct and source meta-annotated ViewCompose preview functions;
 - project-scoped source selection that opens the matching symbol in the preview tool window;
-- cancellable Gradle-wrapper discovery and isolated single-preview rendering;
+- a project-scoped Gradle Tooling API connection with cancellation, avoiding a new wrapper client
+  JVM for every discovery/render operation while keeping Layoutlib in the isolated worker;
 - a globally bounded Studio-owned disk cache that restores previews before invoking Gradle
   (64 detailed entries, 30 days, and 256 MiB across projects, with least-recently-used cleanup);
-- a lightweight all-previews gallery that discovers every annotated Kotlin preview, reuses cached
-  thumbnails, compiles each Gradle module once, and opens source on double-click; its separate
-  thumbnail tier retains up to 1024 entries for 30 days within 128 MiB;
+- a lightweight all-previews gallery that immediately shows placeholders, prioritizes the visible
+  viewport, then fills the remainder in a second bounded batch; cached thumbnails decode lazily,
+  and the separate thumbnail tier retains up to 1024 entries for 30 days within 128 MiB;
 - an in-window selector for every declared preview configuration;
-- automatic refresh when the selected preview source is saved;
+- manifest-derived automatic refresh for the selected module and its real project dependencies;
+- low-memory release of gallery thumbnails and high-resolution quick-look images;
+- phase timings for Gradle, Layoutlib setup/teardown, mount/layout, artifact export, and Studio
+  decoding, exposed in the rendered-header tooltip and structured IDE log;
 - clickable structured diagnostics that navigate back to their source location;
 - bounded render-snapshot inspection with VNode structure, patch, skip, and recomposition details;
 - a native Android View tree with final measured sizes and root-relative layout coordinates;
