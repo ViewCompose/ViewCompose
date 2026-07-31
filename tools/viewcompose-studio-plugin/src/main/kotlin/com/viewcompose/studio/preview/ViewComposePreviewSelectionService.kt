@@ -303,32 +303,36 @@ internal class ViewComposePreviewSelectionService(
                 activeIndicator.set(indicator)
                 try {
                     val selections = ViewComposePreviewProjectScanner(project).scan()
-                    val cachedBySelection: Map<PreviewSourceSelection, PreviewGalleryItem> =
-                        if (forceRerender) {
-                            emptyMap()
-                        } else {
-                            selections.mapNotNull { selection ->
-                                galleryCache
-                                    ?.read(selection)
-                                    ?.let { item -> selection to item }
-                            }.toMap()
-                        }
+                    val cachedItems = if (forceRerender) {
+                        emptyList()
+                    } else {
+                        galleryCache?.readAll(selections).orEmpty()
+                    }
+                    val cachedBySelection = cachedItems.groupBy(PreviewGalleryItem::selection)
                     val missing = selections.filterNot(cachedBySelection::containsKey)
-                    if (cachedBySelection.isNotEmpty()) {
+                    fun ordered(items: Collection<PreviewGalleryItem>): List<PreviewGalleryItem> {
+                        return items.sortedWith(
+                            compareBy(
+                                { item -> selections.indexOf(item.selection) },
+                                PreviewGalleryItem::variantIndex,
+                                PreviewGalleryItem::variantId,
+                            ),
+                        )
+                    }
+                    if (cachedItems.isNotEmpty()) {
                         publish(
                             generation = generation,
                             state = ViewComposePreviewPanelState.GalleryLoading(
                                 message = "Rendering ${missing.size} uncached previews…",
                                 previousResult = PreviewGalleryResult(
-                                    items = selections.mapNotNull(cachedBySelection::get),
+                                    items = ordered(cachedItems),
                                     failures = emptyList(),
                                 ),
                             ),
                         )
                     }
                     val root = project.basePath?.let(Path::of)
-                    val renderedGalleryItems =
-                        linkedMapOf<PreviewSourceSelection, PreviewGalleryItem>()
+                    val renderedGalleryItems = mutableListOf<PreviewGalleryItem>()
                     val failures = mutableListOf<PreviewRenderOutcome.Failure>()
                     fun consume(outcome: PreviewRenderOutcome) {
                         when (outcome) {
@@ -336,7 +340,7 @@ internal class ViewComposePreviewSelectionService(
                                 val item = runCatching {
                                     galleryCache?.write(outcome)
                                 }.getOrNull() ?: outcome.toBoundedGalleryItem()
-                                renderedGalleryItems[outcome.selection] = item
+                                renderedGalleryItems += item
                             }
                             is PreviewRenderOutcome.Failure -> failures += outcome
                         }
@@ -362,10 +366,7 @@ internal class ViewComposePreviewSelectionService(
                                     state = ViewComposePreviewPanelState.GalleryLoading(
                                         message = message,
                                         previousResult = PreviewGalleryResult(
-                                            items = selections.mapNotNull { selection ->
-                                                cachedBySelection[selection]
-                                                    ?: renderedGalleryItems[selection]
-                                            },
+                                            items = ordered(cachedItems + renderedGalleryItems),
                                             failures = failures.toList(),
                                         ),
                                     ),
@@ -375,9 +376,7 @@ internal class ViewComposePreviewSelectionService(
                         )
                     }
                     galleryCache?.prune()
-                    val items = selections.mapNotNull { selection ->
-                        cachedBySelection[selection] ?: renderedGalleryItems[selection]
-                    }
+                    val items = ordered(cachedItems + renderedGalleryItems)
                     publish(
                         generation = generation,
                         state = ViewComposePreviewPanelState.Gallery(

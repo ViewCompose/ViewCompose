@@ -141,10 +141,7 @@ internal class ViewComposePreviewRenderCoordinator(
         }
     }
 
-    /**
-     * Renders one default preview per annotated function while compiling each Gradle module only
-     * once. This is the lightweight source for the all-previews gallery.
-     */
+    /** Renders every variant while compiling each Gradle module only once. */
     fun renderAll(
         selections: List<PreviewSourceSelection>,
         forceRerender: Boolean = false,
@@ -206,23 +203,27 @@ internal class ViewComposePreviewRenderCoordinator(
                 }
                 return@forEach
             }
-            moduleSelections.forEach { selection ->
+            moduleSelections.forEach selectionLoop@ { selection ->
                 indicator.checkCanceled()
-                completed += 1
-                val match = findMatchingPreview(
+                val matches = findMatchingPreviews(
                     target = target,
                     selection = selection,
-                    requestedVariantId = null,
                 )
-                val outcome = if (match == null) {
-                    PreviewRenderOutcome.Failure(
-                        selection = selection,
-                        title = "No compiled preview matched this function",
-                        diagnostics = readCatalogDiagnostics(target),
-                        details = "The function may have an unsupported signature.",
+                if (matches.isEmpty()) {
+                    onOutcome(
+                        PreviewRenderOutcome.Failure(
+                            selection = selection,
+                            title = "No compiled preview matched this function",
+                            diagnostics = readCatalogDiagnostics(target),
+                            details = "The function may have an unsupported signature.",
+                        ),
                     )
-                } else {
-                    runCatching {
+                    return@selectionLoop
+                }
+                matches.forEach { match ->
+                    indicator.checkCanceled()
+                    completed += 1
+                    val outcome = runCatching {
                         renderMatch(
                             target = target,
                             selection = selection,
@@ -231,8 +232,8 @@ internal class ViewComposePreviewRenderCoordinator(
                             indicator = indicator,
                             onProgress = {
                                 onProgress(
-                                    "Rendering $completed/${selections.size}: " +
-                                        match.descriptor.displayName,
+                                    "Rendering preview $completed: " +
+                                        match.variant.displayName,
                                 )
                             },
                         )
@@ -240,8 +241,8 @@ internal class ViewComposePreviewRenderCoordinator(
                         if (error is ProcessCanceledException) throw error
                         toolingFailure(selection, error)
                     }
+                    onOutcome(outcome)
                 }
-                onOutcome(outcome)
             }
         }
     }
@@ -406,6 +407,18 @@ internal class ViewComposePreviewRenderCoordinator(
                 { match -> match.variant.id },
             ),
         ).firstOrNull()
+    }
+
+    private fun findMatchingPreviews(
+        target: PreviewGradleTarget,
+        selection: PreviewSourceSelection,
+    ): List<PreviewCatalogMatch> {
+        val first = findMatchingPreview(
+            target = target,
+            selection = selection,
+            requestedVariantId = null,
+        ) ?: return emptyList()
+        return first.descriptor.variants.map { variant -> first.copy(variant = variant) }
     }
 
     private fun readCatalogDiagnostics(target: PreviewGradleTarget): List<StudioPreviewDiagnostic> {

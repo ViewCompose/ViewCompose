@@ -2,6 +2,7 @@ package com.viewcompose.studio.preview
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
@@ -16,13 +17,12 @@ internal class ViewComposePreviewProjectScanner(
         return ReadAction.nonBlocking<List<PreviewSourceSelection>> {
             val scope = GlobalSearchScope.projectScope(project)
             val psiManager = PsiManager.getInstance(project)
+            val fileIndex = ProjectFileIndex.getInstance(project)
             FilenameIndex.getAllFilesByExt(project, "kt", scope)
                 .asSequence()
                 .filter { file ->
-                    file.path
-                        .replace('\\', '/')
-                        .split('/')
-                        .none { segment -> segment in IGNORED_SOURCE_DIRECTORIES }
+                    isSupportedPreviewSourcePath(file.path) &&
+                        !fileIndex.isInTestSourceContent(file)
                 }
                 .mapNotNull(psiManager::findFile)
                 .filterIsInstance<KtFile>()
@@ -41,6 +41,14 @@ internal class ViewComposePreviewProjectScanner(
                 )
                 .toList()
         }.inSmartMode(project).executeSynchronously()
+    }
+}
+
+internal fun isSupportedPreviewSourcePath(path: String): Boolean {
+    val segments = path.replace('\\', '/').split('/')
+    if (segments.any { segment -> segment in IGNORED_SOURCE_DIRECTORIES }) return false
+    return segments.windowed(size = 2).none { (parent, sourceSet) ->
+        parent == "src" && sourceSet.endsWith("Test", ignoreCase = true)
     }
 }
 

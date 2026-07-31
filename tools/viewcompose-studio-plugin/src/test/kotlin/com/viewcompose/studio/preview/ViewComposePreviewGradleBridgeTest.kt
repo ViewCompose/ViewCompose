@@ -149,7 +149,11 @@ class ViewComposePreviewGradleBridgeTest {
                         .windowed(2)
                         .single { pair -> pair.first() == "--preview-id" }
                         .last()
-                    writeSuccessfulResponse(moduleRoot, "default", previewId)
+                    val variantId = invocation.arguments
+                        .windowed(2)
+                        .single { pair -> pair.first() == "--variant-id" }
+                        .last()
+                    writeSuccessfulResponse(moduleRoot, variantId, previewId)
                     PreviewGradleResult(0, "ViewCompose preview rendered:", "")
                 }
 
@@ -169,7 +173,7 @@ class ViewComposePreviewGradleBridgeTest {
             indicator = TestProgressIndicator(),
         )
 
-        assertEquals(2, outcomes.filterIsInstance<PreviewRenderOutcome.Success>().size)
+        assertEquals(3, outcomes.filterIsInstance<PreviewRenderOutcome.Success>().size)
         assertEquals(
             1,
             invocations.count { invocation ->
@@ -177,7 +181,7 @@ class ViewComposePreviewGradleBridgeTest {
             },
         )
         assertEquals(
-            2,
+            3,
             invocations.count { invocation ->
                 invocation.arguments.first().endsWith("renderDebugViewComposePreview")
             },
@@ -265,7 +269,10 @@ class ViewComposePreviewGradleBridgeTest {
                   "id": "first-card",
                   "displayName": "First Card",
                   "group": "Gallery",
-                  "variants": [{"id": "default", "displayName": "Default"}],
+                  "variants": [
+                    {"id": "default", "displayName": "Default"},
+                    {"id": "dark", "displayName": "Dark"}
+                  ],
                   "sourceLocation": {
                     "filePath": "${firstSource.toJsonText()}",
                     "line": 1,

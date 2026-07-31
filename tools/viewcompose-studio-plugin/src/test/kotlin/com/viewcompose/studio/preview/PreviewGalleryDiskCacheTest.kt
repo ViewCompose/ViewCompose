@@ -6,7 +6,6 @@ import java.nio.file.Path
 import java.time.Duration
 import javax.imageio.ImageIO
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -23,7 +22,7 @@ class PreviewGalleryDiskCacheTest {
         val selection = selection("LargePreview")
 
         val written = cache.write(result(selection, width = 800, height = 1600))
-        val item = cache.read(selection)
+        val item = cache.readAll(listOf(selection)).singleOrNull()
 
         assertEquals(360, written.thumbnail.width)
         assertEquals(720, written.thumbnail.height)
@@ -33,6 +32,23 @@ class PreviewGalleryDiskCacheTest {
         assertEquals(1600, ImageIO.read(written.detailImagePath.toFile()).height)
         assertTrue(item?.cacheHit == true)
         assertEquals(3, Files.walk(root).use { paths -> paths.filter(Files::isRegularFile).count() })
+    }
+
+    @Test
+    fun `stores every variant of the same preview function independently`() {
+        val root = temporaryFolder.newFolder("gallery-variants").toPath()
+        val cache = PreviewGalleryDiskCache(root)
+        val selection = selection("ThemedPreview")
+        val variants = listOf(
+            StudioPreviewVariant("light", "Light"),
+            StudioPreviewVariant("dark", "Dark"),
+        )
+
+        cache.write(result(selection, selectedVariantId = "light", variants = variants))
+        cache.write(result(selection, selectedVariantId = "dark", variants = variants))
+
+        val items = cache.readAll(listOf(selection))
+        assertEquals(listOf("light", "dark"), items.map(PreviewGalleryItem::variantId))
     }
 
     @Test
@@ -51,17 +67,24 @@ class PreviewGalleryDiskCacheTest {
         now += 10
         cache.write(result(selection("Three")))
 
-        assertNull(cache.read(selection("One")))
-        assertEquals("Two", cache.read(selection("Two"))?.selection?.symbolName)
+        assertTrue(cache.readAll(listOf(selection("One"))).isEmpty())
+        assertEquals(
+            "Two",
+            cache.readAll(listOf(selection("Two"))).singleOrNull()?.selection?.symbolName,
+        )
         now += 200
         cache.prune()
-        assertNull(cache.read(selection("Two")))
+        assertTrue(cache.readAll(listOf(selection("Two"))).isEmpty())
     }
 
     private fun result(
         selection: PreviewSourceSelection,
         width: Int = 4,
         height: Int = 6,
+        selectedVariantId: String = "default",
+        variants: List<StudioPreviewVariant> = listOf(
+            StudioPreviewVariant("default", "Default"),
+        ),
     ): PreviewRenderOutcome.Success {
         val artifactRoot = temporaryFolder.newFolder().toPath()
         val imagePath = artifactRoot.resolve("preview.png")
@@ -71,9 +94,9 @@ class PreviewGalleryDiskCacheTest {
             selection = selection,
             descriptorId = selection.symbolName.lowercase(),
             descriptorName = selection.symbolName,
-            variants = listOf(StudioPreviewVariant("default", "Default")),
-            selectedVariantId = "default",
-            variantName = "Default",
+            variants = variants,
+            selectedVariantId = selectedVariantId,
+            variantName = variants.single { variant -> variant.id == selectedVariantId }.displayName,
             image = image,
             imagePath = imagePath,
             renderTreePath = null,

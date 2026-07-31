@@ -38,49 +38,69 @@ internal class PreviewGalleryDiskCache(
         require(!maxAge.isNegative && !maxAge.isZero)
     }
 
-    fun read(selection: PreviewSourceSelection): PreviewGalleryItem? =
+    fun readAll(selections: Collection<PreviewSourceSelection>): List<PreviewGalleryItem> =
         synchronized(GALLERY_CACHE_LOCK) {
             pruneIfDue()
-            val identity = selection.galleryCacheIdentity()
-            val directory = cacheRoot.resolve(galleryCacheHash(identity))
-            runCatching {
-                val metadata = readMetadata(directory)
-                require(metadata.sourceIdentity == identity)
-                val thumbnailPath = directory.resolve(GALLERY_THUMBNAIL_FILE_NAME)
-                val detailImagePath = directory.resolve(GALLERY_DETAIL_IMAGE_FILE_NAME)
-                val thumbnail = loadBoundedPreviewImage(thumbnailPath)
-                require(Files.isRegularFile(detailImagePath))
-                writeMetadata(
-                    directory,
-                    metadata.copy(lastAccessMillis = nowMillis()),
-                )
-                PreviewGalleryItem(
-                    selection = selection,
-                    descriptorName = metadata.descriptorName,
-                    variantName = metadata.variantName,
-                    thumbnail = thumbnail,
-                    thumbnailPath = thumbnailPath,
-                    detailImagePath = detailImagePath,
-                    cacheHit = true,
-                )
-            }.getOrElse {
-                deleteGalleryEntry(directory)
-                null
+            val selectionOrder = selections.withIndex().associate { (index, selection) ->
+                selection.galleryCacheIdentity() to (selection to index)
             }
+            galleryEntries()
+                .mapNotNull { entry ->
+                    val (selection, sourceIndex) = selectionOrder[entry.metadata.sourceIdentity]
+                        ?: return@mapNotNull null
+                    runCatching {
+                        val thumbnailPath = entry.directory.resolve(GALLERY_THUMBNAIL_FILE_NAME)
+                        val detailImagePath = entry.directory.resolve(GALLERY_DETAIL_IMAGE_FILE_NAME)
+                        val thumbnail = loadBoundedPreviewImage(thumbnailPath)
+                        require(Files.isRegularFile(detailImagePath))
+                        writeMetadata(
+                            entry.directory,
+                            entry.metadata.copy(lastAccessMillis = nowMillis()),
+                        )
+                        sourceIndex to PreviewGalleryItem(
+                            selection = selection,
+                            descriptorName = entry.metadata.descriptorName,
+                            variantId = entry.metadata.variantId,
+                            variantName = entry.metadata.variantName,
+                            variantIndex = entry.metadata.variantIndex,
+                            thumbnail = thumbnail,
+                            thumbnailPath = thumbnailPath,
+                            detailImagePath = detailImagePath,
+                            cacheHit = true,
+                        )
+                    }.getOrElse {
+                        deleteGalleryEntry(entry.directory)
+                        null
+                    }
+                }
+                .sortedWith(
+                    compareBy(
+                        { (sourceIndex, _) -> sourceIndex },
+                        { (_, item) -> item.variantIndex },
+                        { (_, item) -> item.variantId },
+                    ),
+                )
+                .map { (_, item) -> item }
         }
 
     fun write(result: PreviewRenderOutcome.Success): PreviewGalleryItem =
         synchronized(GALLERY_CACHE_LOCK) {
         Files.createDirectories(cacheRoot)
         val identity = result.selection.galleryCacheIdentity()
-        val destination = cacheRoot.resolve(galleryCacheHash(identity))
+        val destination = cacheRoot.resolve(
+            galleryCacheHash("$identity\u0000${result.selectedVariantId}"),
+        )
         val temporary = cacheRoot.resolve(".tmp-${UUID.randomUUID()}")
         val thumbnail = result.image.toGalleryThumbnail()
         val detailImage = result.image.toGalleryDetailImage()
         val item = PreviewGalleryItem(
             selection = result.selection,
             descriptorName = result.descriptorName,
+            variantId = result.selectedVariantId,
             variantName = result.variantName,
+            variantIndex = result.variants.indexOfFirst { variant ->
+                variant.id == result.selectedVariantId
+            }.coerceAtLeast(0),
             thumbnail = thumbnail,
             thumbnailPath = destination.resolve(GALLERY_THUMBNAIL_FILE_NAME),
             detailImagePath = destination.resolve(GALLERY_DETAIL_IMAGE_FILE_NAME),
@@ -105,7 +125,9 @@ internal class PreviewGalleryDiskCache(
                     schemaVersion = GALLERY_CACHE_SCHEMA_VERSION,
                     sourceIdentity = identity,
                     descriptorName = result.descriptorName,
+                    variantId = result.selectedVariantId,
                     variantName = result.variantName,
+                    variantIndex = item.variantIndex,
                     createdAtMillis = timestamp,
                     lastAccessMillis = timestamp,
                 ),
@@ -204,6 +226,8 @@ internal class PreviewGalleryDiskCache(
         require(metadata.schemaVersion == GALLERY_CACHE_SCHEMA_VERSION)
         require(metadata.sourceIdentity.isNotBlank())
         require(metadata.descriptorName.isNotBlank())
+        require(metadata.variantId.isNotBlank())
+        require(metadata.variantIndex >= 0)
         return metadata
     }
 
@@ -227,7 +251,9 @@ private data class GalleryCacheMetadata(
     val schemaVersion: Int,
     val sourceIdentity: String,
     val descriptorName: String,
+    val variantId: String,
     val variantName: String,
+    val variantIndex: Int,
     val createdAtMillis: Long,
     val lastAccessMillis: Long,
 )
@@ -250,7 +276,11 @@ internal fun PreviewRenderOutcome.Success.toBoundedGalleryItem(): PreviewGallery
     return PreviewGalleryItem(
         selection = selection,
         descriptorName = descriptorName,
+        variantId = selectedVariantId,
         variantName = variantName,
+        variantIndex = variants.indexOfFirst { variant ->
+            variant.id == selectedVariantId
+        }.coerceAtLeast(0),
         thumbnail = image.toGalleryThumbnail(),
         thumbnailPath = imagePath,
         detailImagePath = imagePath,
@@ -333,7 +363,7 @@ private fun deleteGalleryEntry(path: Path) {
     }
 }
 
-private const val GALLERY_CACHE_SCHEMA_VERSION = 5
+private const val GALLERY_CACHE_SCHEMA_VERSION = 6
 private const val GALLERY_METADATA_FILE_NAME = "metadata.json"
 private const val GALLERY_THUMBNAIL_FILE_NAME = "thumbnail.png"
 private const val GALLERY_DETAIL_IMAGE_FILE_NAME = "detail.png"
