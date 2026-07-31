@@ -25,7 +25,7 @@ class UiNodeToolingTest {
         val metadata = requireNotNull(UiNodeTooling.metadataOf(node))
 
         assertTrue(metadata.nodeId.startsWith("node-"))
-        assertTrue(metadata.callSites.size in 1..16)
+        assertTrue(metadata.callSites.size in 1..32)
         assertTrue(
             metadata.callSites.any { site ->
                 site.fileName == "UiNodeToolingTest.kt" &&
@@ -33,6 +33,32 @@ class UiNodeToolingTest {
                     site.lineNumber > 0
             },
         )
+    }
+
+    @Test
+    fun `source selection removes runtime infrastructure and retains deep application callers`() {
+        val infrastructure = List(24) { index ->
+            StackTraceElement(
+                "com.viewcompose.host.android.runtime.FrameRuntime$index",
+                "render",
+                "FrameRuntime.kt",
+                index + 1,
+            )
+        }
+        val application = StackTraceElement(
+            "com.example.DeepPreviewKt",
+            "DeepPreview",
+            "DeepPreview.kt",
+            73,
+        )
+
+        val callSites = UiNodeTooling.selectSourceCallSites(
+            (infrastructure + application).asSequence(),
+        )
+
+        assertEquals(1, callSites.size)
+        assertEquals("com.example.DeepPreviewKt", callSites.single().className)
+        assertEquals(73, callSites.single().lineNumber)
     }
 
     @Test

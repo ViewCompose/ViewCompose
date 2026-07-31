@@ -37,6 +37,70 @@ class StudioPreviewSourceResolverTest {
     }
 
     @Test
+    fun `framework package match cannot outrank application source layout`() {
+        val source = resolveRuntimeSource(
+            callSites = listOf(
+                callSite(
+                    className = "com.viewcompose.host.android.runtime.AndroidFrameAlignedRenderSessionRuntime",
+                    methodName = "render",
+                    fileName = "AndroidFrameAlignedRenderSessionRuntime.kt",
+                    lineNumber = 50,
+                ),
+                callSite(
+                    className = "com.viewcompose.DemoAboutPageKt",
+                    methodName = "AboutPage",
+                    fileName = "DemoAboutPage.kt",
+                    lineNumber = 53,
+                ),
+            ),
+            findCandidatePaths = { fileName ->
+                when (fileName) {
+                    "AndroidFrameAlignedRenderSessionRuntime.kt" -> listOf(
+                        "/project/viewcompose-host-android/src/main/java/com/viewcompose/host/android/" +
+                            "runtime/AndroidFrameAlignedRenderSessionRuntime.kt",
+                    )
+                    "DemoAboutPage.kt" -> listOf(
+                        "/project/app/src/main/java/com/viewcompose/demo/pages/about/DemoAboutPage.kt",
+                    )
+                    else -> emptyList()
+                }
+            },
+        )
+
+        assertEquals(
+            "/project/app/src/main/java/com/viewcompose/demo/pages/about/DemoAboutPage.kt",
+            source?.filePath,
+        )
+        assertEquals(53, source?.line)
+        assertEquals("AboutPage", source?.symbolName)
+    }
+
+    @Test
+    fun `falls back to framework source when no application source exists`() {
+        val source = resolveRuntimeSource(
+            callSites = listOf(
+                callSite(
+                    className = "com.viewcompose.widget.material.TextKt",
+                    methodName = "Text",
+                    fileName = "Text.kt",
+                    lineNumber = 42,
+                ),
+            ),
+            findCandidatePaths = {
+                listOf(
+                    "/project/viewcompose-widget-core/src/main/java/com/viewcompose/widget/material/Text.kt",
+                )
+            },
+        )
+
+        assertEquals(
+            "/project/viewcompose-widget-core/src/main/java/com/viewcompose/widget/material/Text.kt",
+            source?.filePath,
+        )
+        assertEquals(42, source?.line)
+    }
+
+    @Test
     fun `prefers preview DSL source over runtime observation wrapper`() {
         val runtime = callSite(
             className = "com.viewcompose.runtime.observation.RuntimeObservation",

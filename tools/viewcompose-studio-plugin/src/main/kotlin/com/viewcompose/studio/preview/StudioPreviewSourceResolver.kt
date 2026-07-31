@@ -29,7 +29,7 @@ internal fun resolveRuntimeSource(
     callSites: List<StudioPreviewSourceCallSite>,
     findCandidatePaths: (fileName: String) -> List<String>,
 ): StudioPreviewSourceLocation? {
-    return callSites.asSequence()
+    val candidates = callSites.asSequence()
         .flatMapIndexed { callSiteIndex, callSite ->
             findCandidatePaths(callSite.fileName)
                 .asSequence()
@@ -45,6 +45,19 @@ internal fun resolveRuntimeSource(
                     )
                 }
         }
+        .toList()
+    val authoredCandidates = candidates.filter { candidate ->
+        !candidate.path.isFrameworkSource() && !candidate.path.isGeneratedSource()
+    }
+    val projectCandidates = candidates.filterNot { candidate ->
+        candidate.path.isFrameworkSource()
+    }
+    val eligibleCandidates = authoredCandidates.ifEmpty {
+        projectCandidates.ifEmpty {
+            candidates
+        }
+    }
+    return eligibleCandidates
         .maxWithOrNull(
             compareBy<RuntimeSourceCandidate> { candidate -> candidate.score }
                 .thenByDescending { candidate -> candidate.path },
@@ -82,30 +95,29 @@ private fun sourceCandidateScore(
         "/src/test/" in normalizedPath -> 60
         else -> 0
     }
-    if (
-        "/build/" in normalizedPath ||
-        "/generated/" in normalizedPath ||
-        "/.gradle/" in normalizedPath
-    ) {
+    if (normalizedPath.isGeneratedSource()) {
         score -= 300
     }
-    if (FRAMEWORK_SOURCE_SEGMENTS.any(normalizedPath::contains)) {
+    if (normalizedPath.isFrameworkSource()) {
         score -= 50
     }
     return score
+}
+
+private fun String.isFrameworkSource(): Boolean {
+    val normalizedPath = replace('\\', '/')
+    return "/viewcompose-" in normalizedPath
+}
+
+private fun String.isGeneratedSource(): Boolean {
+    val normalizedPath = replace('\\', '/')
+    return "/build/" in normalizedPath ||
+        "/generated/" in normalizedPath ||
+        "/.gradle/" in normalizedPath
 }
 
 private data class RuntimeSourceCandidate(
     val callSite: StudioPreviewSourceCallSite,
     val path: String,
     val score: Int,
-)
-
-private val FRAMEWORK_SOURCE_SEGMENTS = listOf(
-    "/viewcompose-host-android/",
-    "/viewcompose-preview-runner/",
-    "/viewcompose-renderer/",
-    "/viewcompose-runtime/",
-    "/viewcompose-ui-contract/",
-    "/viewcompose-widget-core/",
 )

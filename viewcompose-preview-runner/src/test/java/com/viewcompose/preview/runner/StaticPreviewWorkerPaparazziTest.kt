@@ -121,7 +121,8 @@ class StaticPreviewWorkerPaparazziTest {
         )
         assertTrue(
             renderText.sourceCallSites.none { source ->
-                source.className.startsWith("com.viewcompose.runtime.")
+                source.className.startsWith("com.viewcompose.runtime.") ||
+                    source.className.startsWith("com.viewcompose.host.android.runtime.")
             },
         )
         val nativeRoot = snapshot.nativeViewTree.single()
