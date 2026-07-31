@@ -114,8 +114,12 @@ class StaticPreviewWorkerPaparazziTest {
         assertTrue(imageFile.isFile)
         assertTrue(imageFile.length() > 0L)
         val pngDimensions = imageFile.readPngDimensions()
-        assertEquals(request.configuration.widthDp, pngDimensions.first)
-        assertEquals(request.configuration.viewportHeightDp, pngDimensions.second)
+        val expectedWidthPx = (request.configuration.widthDp * request.configuration.density)
+            .roundToInt()
+        val expectedHeightPx =
+            (request.configuration.viewportHeightDp * request.configuration.density).roundToInt()
+        assertEquals(expectedWidthPx, pngDimensions.first)
+        assertEquals(expectedHeightPx, pngDimensions.second)
         assertTrue(treeFile.isFile)
 
         val snapshot = PreviewProtocolJson.decodeRenderSnapshot(treeFile.readText())
@@ -137,8 +141,8 @@ class StaticPreviewWorkerPaparazziTest {
         )
         val nativeRoot = snapshot.nativeViewTree.single()
         assertEquals("android.widget.FrameLayout", nativeRoot.className)
-        assertEquals(request.configuration.widthDp, nativeRoot.bounds.right)
-        assertEquals(request.configuration.viewportHeightDp, nativeRoot.bounds.bottom)
+        assertEquals(expectedWidthPx, nativeRoot.bounds.right)
+        assertEquals(expectedHeightPx, nativeRoot.bounds.bottom)
         val nativeText = checkNotNull(nativeRoot.findNativeView("android.widget.TextView"))
         assertTrue(nativeText.bounds.right > nativeText.bounds.left)
         assertTrue(nativeText.bounds.bottom > nativeText.bounds.top)
@@ -188,8 +192,16 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals(PreviewRenderStatus.Success, response.status)
         val artifacts = checkNotNull(response.artifacts)
         val dimensions = File(checkNotNull(artifacts.imagePath)).readPngDimensions()
-        assertEquals(240, dimensions.first)
-        assertTrue(dimensions.second > PreviewConfiguration().viewportHeightDp)
+        assertEquals(
+            (autoHeightRequest.configuration.widthDp * autoHeightRequest.configuration.density)
+                .roundToInt(),
+            dimensions.first,
+        )
+        assertTrue(
+            dimensions.second >
+                (autoHeightRequest.configuration.viewportHeightDp *
+                    autoHeightRequest.configuration.density).roundToInt(),
+        )
         val snapshot = PreviewProtocolJson.decodeRenderSnapshot(
             File(checkNotNull(artifacts.renderTreePath)).readText(),
         )

@@ -27,7 +27,14 @@ object PreviewDefaults {
      * Safety ceiling for auto-height screenshots before density and pixel-budget limits apply.
      */
     const val MAX_AUTO_HEIGHT_DP: Int = 4_096
-    const val DENSITY: Float = 1f
+    /**
+     * Reference-phone density shared with Compose Preview's 411 x 891 dp phone configuration.
+     * 420 dpi / Android's 160 dpi baseline = 2.625 physical pixels per dp.
+     */
+    const val DENSITY: Float = 2.625f
+
+    /** Reference-tablet density used by Compose Preview's 240 dpi tablet configuration. */
+    const val TABLET_DENSITY: Float = 1.5f
     const val FONT_SCALE: Float = 1f
     const val LOCALE_TAG: String = "en-US"
     const val UNSPECIFIED_API_LEVEL: Int = -1
@@ -294,7 +301,7 @@ object PreviewConfigurationPresets {
                 override = PreviewConfigurationOverride(
                     widthDp = 411,
                     heightDp = 891,
-                    density = 1f,
+                    density = PreviewDefaults.DENSITY,
                 ),
             ),
             PreviewConfigurationOption(
@@ -303,7 +310,7 @@ object PreviewConfigurationPresets {
                 override = PreviewConfigurationOverride(
                     widthDp = 800,
                     heightDp = 1280,
-                    density = 1f,
+                    density = PreviewDefaults.TABLET_DENSITY,
                 ),
             ),
         ),

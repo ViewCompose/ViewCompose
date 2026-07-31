@@ -28,11 +28,16 @@ class PreviewConfigurationMatrixTest {
             variants.first().displayName,
         )
         val last = variants.last().configuration
+        val first = variants.first().configuration
+        assertEquals(411, first.widthDp)
+        assertEquals(891, first.heightDp)
+        assertEquals(2.625f, first.density)
         assertEquals(PreviewTheme.Dark, last.theme)
         assertEquals(PreviewLayoutDirection.Rtl, last.layoutDirection)
         assertEquals(listOf("ar-EG"), last.localeTags)
         assertEquals(800, last.widthDp)
         assertEquals(1280, last.heightDp)
+        assertEquals(1.5f, last.density)
         assertEquals(2f, last.fontScale)
     }
 
