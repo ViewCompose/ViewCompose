@@ -65,6 +65,44 @@ class ViewComposePreviewLineMarkerProviderTest : BasePlatformTestCase() {
         )
     }
 
+    fun testCaretInsidePreviewFunctionBuildsSourceSelection() {
+        myFixture.configureByText(
+            "Sample.kt",
+            """
+            package sample
+
+            import com.viewcompose.preview.tooling.ViewComposePreview
+
+            @ViewComposePreview
+            fun ExamplePreview() {
+                val title = "Pre<caret>view"
+            }
+            """.trimIndent(),
+        )
+
+        val selection = myFixture.file.previewSelectionAtOffset(myFixture.caretOffset)
+
+        assertNotNull(selection)
+        assertEquals("ExamplePreview", selection?.symbolName)
+        assertEquals(6, selection?.line)
+        assertTrue(selection?.filePath?.endsWith("/Sample.kt") == true)
+    }
+
+    fun testCaretOutsidePreviewFunctionDoesNotBuildSourceSelection() {
+        myFixture.configureByText(
+            "Sample.kt",
+            """
+            package sample
+
+            fun RegularFunction() {
+                Unit<caret>
+            }
+            """.trimIndent(),
+        )
+
+        assertNull(myFixture.file.previewSelectionAtOffset(myFixture.caretOffset))
+    }
+
     private fun configureFunction(
         source: String,
         symbolName: String,

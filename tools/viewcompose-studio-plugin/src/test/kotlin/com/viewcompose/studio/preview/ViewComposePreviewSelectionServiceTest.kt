@@ -12,9 +12,15 @@ class ViewComposePreviewSelectionServiceTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun `refreshes only when the selected preview source changes`() {
-        val source = temporaryFolder.newFile("SamplePreview.kt").toPath()
-        val sibling = temporaryFolder.newFile("Other.kt").toPath()
+    fun `refreshes when the selected preview source or project source changes`() {
+        val projectRoot = temporaryFolder.newFolder("project").toPath()
+        val source = projectRoot.resolve("app/src/main/kotlin/SamplePreview.kt").also { path ->
+            Files.createDirectories(checkNotNull(path.parent))
+            Files.writeString(path, "")
+        }
+        val sibling = projectRoot.resolve("app/src/main/kotlin/Other.kt").also { path ->
+            Files.writeString(path, "")
+        }
         val selection = PreviewSourceSelection(
             filePath = source.toString(),
             symbolName = "SamplePreview",
@@ -22,25 +28,66 @@ class ViewComposePreviewSelectionServiceTest {
         )
 
         assertTrue(
-            savedSourceMatches(
+            savedPreviewInputMatches(
+                projectRoot = projectRoot,
                 selection = selection,
                 changedPaths = listOf(source.toString()),
             ),
         )
-        assertFalse(
-            savedSourceMatches(
+        assertTrue(
+            savedPreviewInputMatches(
+                projectRoot = projectRoot,
                 selection = selection,
                 changedPaths = listOf(sibling.toString()),
             ),
         )
-        assertFalse(
-            savedSourceMatches(
+    }
+
+    @Test
+    fun `refreshes for dependency resources but ignores generated output and unrelated files`() {
+        val projectRoot = temporaryFolder.newFolder("dependency-project").toPath()
+        val source = projectRoot.resolve("app/src/main/kotlin/SamplePreview.kt").also { path ->
+            Files.createDirectories(checkNotNull(path.parent))
+            Files.writeString(path, "")
+        }
+        val selection = PreviewSourceSelection(
+            filePath = source.toString(),
+            symbolName = "SamplePreview",
+            line = 12,
+        )
+        val dependencyResource =
+            projectRoot.resolve("ui-theme/src/main/res/values/colors.xml").also { path ->
+                Files.createDirectories(checkNotNull(path.parent))
+                Files.writeString(path, "")
+            }
+        val generatedSource =
+            projectRoot.resolve("app/build/generated/SamplePreview.kt").also { path ->
+                Files.createDirectories(checkNotNull(path.parent))
+                Files.writeString(path, "")
+            }
+        val notes = projectRoot.resolve("notes.md").also { path ->
+            Files.writeString(path, "")
+        }
+
+        assertTrue(
+            savedPreviewInputMatches(
+                projectRoot = projectRoot,
                 selection = selection,
-                changedPaths = listOf(
-                    Files.createDirectories(
-                        temporaryFolder.root.toPath().resolve("build/generated"),
-                    ).resolve("SamplePreview.kt").toString(),
-                ),
+                changedPaths = listOf(dependencyResource.toString()),
+            ),
+        )
+        assertFalse(
+            savedPreviewInputMatches(
+                projectRoot = projectRoot,
+                selection = selection,
+                changedPaths = listOf(generatedSource.toString()),
+            ),
+        )
+        assertFalse(
+            savedPreviewInputMatches(
+                projectRoot = projectRoot,
+                selection = selection,
+                changedPaths = listOf(notes.toString()),
             ),
         )
     }

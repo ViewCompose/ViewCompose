@@ -3,14 +3,23 @@ package com.viewcompose.studio.preview
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.event.CaretEvent
+import com.intellij.openapi.editor.event.CaretListener
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.FileEditorManagerEvent
+import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.util.Alarm
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
@@ -25,6 +34,8 @@ internal class ViewComposePreviewSelectionService(
     private val requestGeneration = AtomicLong(0)
     private val activeIndicator = AtomicReference<ProgressIndicator?>()
     private val activeRequest = AtomicReference<ActivePreviewRequest?>()
+    private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
+    private val editorFollowAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
 
     @Volatile
     private var attachedPanel: ViewComposePreviewToolWindowPanel? = null
@@ -35,25 +46,48 @@ internal class ViewComposePreviewSelectionService(
             object : BulkFileListener {
                 override fun after(events: List<VFileEvent>) {
                     val request = activeRequest.get() ?: return
-                    if (!savedSourceMatches(request.selection, events.map { event -> event.path })) {
+                    if (
+                        !savedPreviewInputMatches(
+                            projectRoot = project.basePath?.let(Path::of),
+                            selection = request.selection,
+                            changedPaths = events.map(VFileEvent::getPath),
+                        )
+                    ) {
                         return
                     }
                     ApplicationManager.getApplication().invokeLater {
                         if (!project.isDisposed && request == activeRequest.get()) {
-                            render(
-                                selection = request.selection,
-                                requestedVariantId = request.variantId,
-                            )
+                            scheduleSavedInputRefresh(request)
                         }
                     }
                 }
             },
+        )
+        project.messageBus.connect(this).subscribe(
+            FileEditorManagerListener.FILE_EDITOR_MANAGER,
+            object : FileEditorManagerListener {
+                override fun selectionChanged(event: FileEditorManagerEvent) {
+                    scheduleEditorFollow(
+                        FileEditorManager.getInstance(project).selectedTextEditor,
+                    )
+                }
+            },
+        )
+        EditorFactory.getInstance().eventMulticaster.addCaretListener(
+            object : CaretListener {
+                override fun caretPositionChanged(event: CaretEvent) {
+                    if (event.editor.project != project) return
+                    scheduleEditorFollow(event.editor)
+                }
+            },
+            this,
         )
     }
 
     fun attach(panel: ViewComposePreviewToolWindowPanel) {
         attachedPanel = panel
         panel.showState(currentState.get())
+        scheduleEditorFollow(FileEditorManager.getInstance(project).selectedTextEditor)
     }
 
     fun detach(panel: ViewComposePreviewToolWindowPanel) {
@@ -180,6 +214,56 @@ internal class ViewComposePreviewSelectionService(
         }.queue()
     }
 
+    private fun scheduleSavedInputRefresh(request: ActivePreviewRequest) {
+        savedInputRefreshAlarm.cancelAllRequests()
+        savedInputRefreshAlarm.addRequest(
+            {
+                if (!project.isDisposed && request == activeRequest.get()) {
+                    render(
+                        selection = request.selection,
+                        requestedVariantId = request.variantId,
+                    )
+                }
+            },
+            SAVED_INPUT_REFRESH_DELAY_MILLIS,
+        )
+    }
+
+    private fun scheduleEditorFollow(editor: Editor?) {
+        editorFollowAlarm.cancelAllRequests()
+        if (editor == null || editor.project != project || editor.isDisposed) return
+        editorFollowAlarm.addRequest(
+            {
+                if (
+                    project.isDisposed ||
+                    editor.isDisposed ||
+                    !isPreviewToolWindowVisible()
+                ) {
+                    return@addRequest
+                }
+                val documentManager = PsiDocumentManager.getInstance(project)
+                documentManager.commitDocument(editor.document)
+                val selection = ApplicationManager.getApplication()
+                    .runReadAction<PreviewSourceSelection?> {
+                        val file = documentManager.getPsiFile(editor.document)
+                            ?: return@runReadAction null
+                        file.previewSelectionAtOffset(editor.caretModel.offset)
+                    }
+                    ?: return@addRequest
+                val current = activeRequest.get()
+                if (current?.selection == selection) return@addRequest
+                render(selection = selection, requestedVariantId = null)
+            },
+            EDITOR_FOLLOW_DELAY_MILLIS,
+        )
+    }
+
+    private fun isPreviewToolWindowVisible(): Boolean {
+        return ToolWindowManager.getInstance(project)
+            .getToolWindow(VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID)
+            ?.isVisible == true
+    }
+
     override fun dispose() {
         activeIndicator.getAndSet(null)?.cancel()
         attachedPanel = null
@@ -199,13 +283,25 @@ internal class ViewComposePreviewSelectionService(
     }
 }
 
-internal fun savedSourceMatches(
+internal fun savedPreviewInputMatches(
+    projectRoot: Path?,
     selection: PreviewSourceSelection,
     changedPaths: List<String>,
 ): Boolean {
     val selectedPath = selection.filePath.normalizedPathOrNull() ?: return false
+    val normalizedRoot = projectRoot?.toAbsolutePath()?.normalize()
     return changedPaths.any { changedPath ->
-        changedPath.normalizedPathOrNull() == selectedPath
+        val path = changedPath.normalizedPathOrNull() ?: return@any false
+        if (path == selectedPath) return@any true
+        if (normalizedRoot == null || !path.startsWith(normalizedRoot)) return@any false
+        val relativePath = normalizedRoot.relativize(path)
+        if (relativePath.any { segment -> segment.toString() in IGNORED_INPUT_DIRECTORIES }) {
+            return@any false
+        }
+        path.fileName
+            ?.toString()
+            ?.substringAfterLast('.', missingDelimiterValue = "")
+            ?.lowercase() in PREVIEW_INPUT_EXTENSIONS
     }
 }
 
@@ -216,4 +312,32 @@ private fun String.normalizedPathOrNull(): Path? {
 private data class ActivePreviewRequest(
     val selection: PreviewSourceSelection,
     val variantId: String?,
+)
+
+private const val EDITOR_FOLLOW_DELAY_MILLIS = 250
+private const val SAVED_INPUT_REFRESH_DELAY_MILLIS = 400
+private val IGNORED_INPUT_DIRECTORIES = setOf(
+    ".git",
+    ".gradle",
+    ".idea",
+    "build",
+    "out",
+)
+private val PREVIEW_INPUT_EXTENSIONS = setOf(
+    "gradle",
+    "gif",
+    "java",
+    "jpeg",
+    "jpg",
+    "json",
+    "kt",
+    "kts",
+    "otf",
+    "png",
+    "properties",
+    "svg",
+    "toml",
+    "ttf",
+    "webp",
+    "xml",
 )

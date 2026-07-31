@@ -10,6 +10,7 @@ import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import java.util.function.Supplier
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -20,18 +21,7 @@ class ViewComposePreviewLineMarkerProvider : LineMarkerProvider {
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
         val function = element.parent as? KtNamedFunction ?: return null
         if (function.nameIdentifier !== element) return null
-        if (!function.hasViewComposePreviewAnnotation()) return null
-
-        val symbolName = function.name ?: return null
-        val virtualFile = function.containingFile.virtualFile ?: return null
-        val document = PsiDocumentManager.getInstance(function.project)
-            .getDocument(function.containingFile)
-            ?: return null
-        val selection = PreviewSourceSelection(
-            filePath = virtualFile.path,
-            symbolName = symbolName,
-            line = document.getLineNumber(function.textOffset) + 1,
-        )
+        val selection = function.toPreviewSourceSelection() ?: return null
         return LineMarkerInfo(
             element,
             element.textRange,
@@ -47,7 +37,35 @@ class ViewComposePreviewLineMarkerProvider : LineMarkerProvider {
     }
 }
 
-private fun KtNamedFunction.hasViewComposePreviewAnnotation(): Boolean {
+internal fun KtNamedFunction.toPreviewSourceSelection(): PreviewSourceSelection? {
+    if (!hasViewComposePreviewAnnotation()) return null
+    val symbolName = name ?: return null
+    val virtualFile = containingFile.virtualFile ?: return null
+    val document = PsiDocumentManager.getInstance(project)
+        .getDocument(containingFile)
+        ?: return null
+    return PreviewSourceSelection(
+        filePath = virtualFile.path,
+        symbolName = symbolName,
+        line = document.getLineNumber(textOffset) + 1,
+    )
+}
+
+internal fun PsiFile.previewSelectionAtOffset(offset: Int): PreviewSourceSelection? {
+    if (textLength == 0) return null
+    val boundedOffset = offset.coerceIn(0, textLength - 1)
+    val element = findElementAt(boundedOffset)
+        ?: boundedOffset.takeIf { value -> value > 0 }
+            ?.let { value -> findElementAt(value - 1) }
+        ?: return null
+    return PsiTreeUtil.getParentOfType(
+        element,
+        KtNamedFunction::class.java,
+        false,
+    )?.toPreviewSourceSelection()
+}
+
+internal fun KtNamedFunction.hasViewComposePreviewAnnotation(): Boolean {
     return annotationEntries.any { annotation ->
         annotation.isViewComposePreviewAnnotation(
             depth = 0,
