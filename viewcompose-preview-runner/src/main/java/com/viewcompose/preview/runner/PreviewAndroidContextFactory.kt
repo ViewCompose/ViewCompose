@@ -12,7 +12,8 @@ import kotlin.math.roundToInt
  * Creates a resource Context matching the resolved preview configuration.
  *
  * UiEnvironment remains the DSL source of truth, while this Context keeps native Android Views,
- * resource qualifiers, AndroidView interop, and framework defaults on the same configuration.
+ * resource qualifiers, AndroidView interop, and application-theme token resolution on the same
+ * configuration.
  */
 object PreviewAndroidContextFactory {
     fun create(

@@ -19,22 +19,25 @@ import com.viewcompose.preview.tooling.PreviewConfiguration
 import com.viewcompose.preview.tooling.PreviewDescriptor
 import com.viewcompose.preview.tooling.PreviewJvmEntryPoint
 import com.viewcompose.preview.tooling.PreviewLayoutDiagnosticKind
+import com.viewcompose.preview.tooling.PreviewLayoutDirection
 import com.viewcompose.preview.tooling.PreviewNativeViewNode
 import com.viewcompose.preview.tooling.PreviewProtocolJson
 import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewRenderStatus
 import com.viewcompose.preview.tooling.PreviewRenderTreeNode
-import com.viewcompose.preview.tooling.PreviewLayoutDirection
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.PreviewVariant
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.widget.core.AndroidDynamicColorPolicy
+import com.viewcompose.widget.core.AndroidThemeBridge
 import com.viewcompose.widget.core.Environment
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiThemeDefaults
+import com.viewcompose.widget.core.UiThemeOrigin
+import com.viewcompose.widget.core.UiThemeTokens
 import com.viewcompose.widget.core.UiTreeBuilder
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -291,7 +294,9 @@ class StaticPreviewWorkerPaparazziTest {
             configuration = configuration,
         )
         val descriptor = entry().descriptor.copy(variants = listOf(variant))
+        var observedTheme: UiThemeTokens? = null
         val configuredEntry = StaticPreviewEntry(descriptor) {
+            observedTheme = Theme.current
             Text(
                 "${Environment.density.density}|" +
                     "${Environment.density.fontScale}|" +
@@ -341,14 +346,12 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals("ar-rEG", configuration.toDeviceConfig().locale)
         assertEquals(View.LAYOUT_DIRECTION_RTL, observedResourceLayoutDirection)
         assertEquals(Configuration.UI_MODE_NIGHT_YES, observedNightMode)
+        assertEquals(UiThemeOrigin.AndroidTheme, observedTheme?.metadata?.origin)
     }
 
     @Test
-    fun `preview canvas paints the requested theme background`() {
-        listOf(
-            PreviewTheme.Light to UiThemeDefaults.light().colors.background,
-            PreviewTheme.Dark to UiThemeDefaults.dark().colors.background,
-        ).forEachIndexed { index, (theme, expectedBackground) ->
+    fun `preview canvas paints the configured application theme background`() {
+        PreviewTheme.entries.forEachIndexed { index, theme ->
             val variant = PreviewVariant(
                 id = theme.name.lowercase(),
                 displayName = theme.name,
@@ -369,6 +372,14 @@ class StaticPreviewWorkerPaparazziTest {
             paparazzi.unsafeUpdateConfig(
                 deviceConfig = themedRequest.configuration.toDeviceConfig(),
             )
+            val configuredContext = PreviewAndroidContextFactory.create(
+                base = paparazzi.context,
+                preview = themedRequest.configuration,
+            )
+            val expectedBackground = AndroidThemeBridge.fromContext(
+                context = configuredContext,
+                dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+            ).colors.background
 
             val mount = StaticPreviewRenderer.mount(
                 context = paparazzi.context,

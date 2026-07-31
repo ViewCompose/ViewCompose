@@ -27,11 +27,12 @@ import com.viewcompose.ui.environment.UiLocaleList
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.widget.core.AndroidDynamicColorPolicy
+import com.viewcompose.widget.core.AndroidThemeBridge
 import com.viewcompose.widget.core.RenderFailure
 import com.viewcompose.widget.core.RenderTreeResult
 import com.viewcompose.widget.core.UiEnvironment
 import com.viewcompose.widget.core.UiTheme
-import com.viewcompose.widget.core.UiThemeDefaults
 import java.io.Closeable
 import kotlin.math.roundToInt
 
@@ -75,11 +76,14 @@ object StaticPreviewRenderer {
             .coerceAtLeast(1)
         val heightPx = (configuration.heightDp * configuration.density).roundToInt()
             .coerceAtLeast(1)
-        val themeTokens = when (configuration.theme) {
-            PreviewTheme.Light -> UiThemeDefaults.light()
-            PreviewTheme.Dark -> UiThemeDefaults.dark()
-        }
-        val root = FrameLayout(previewContext).apply {
+        // Resolve the same Android application theme as a real host. Dynamic color is disabled so
+        // one preview request remains reproducible across Studio, Gradle, and CI machines.
+        val resolvedTheme = AndroidThemeBridge.resolveContext(
+            context = previewContext,
+            dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+        )
+        val themeTokens = AndroidThemeBridge.fromResolvedTheme(resolvedTheme)
+        val root = FrameLayout(resolvedTheme.context).apply {
             setBackgroundColor(themeTokens.colors.background)
         }
         var renderResult: RenderTreeResult? = null

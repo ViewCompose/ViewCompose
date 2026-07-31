@@ -15,7 +15,11 @@ object PreviewDefaults {
 }
 
 /**
- * Explicit theme used for a deterministic preview render.
+ * Explicit day/night resource mode used for a deterministic preview render.
+ *
+ * The renderer resolves colors, shapes, and typography from the previewed application's Android
+ * theme. This value selects that theme's light or dark resource configuration; it does not replace
+ * the application theme with framework-default tokens.
  */
 @Serializable
 enum class PreviewTheme {
