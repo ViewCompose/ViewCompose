@@ -89,7 +89,8 @@ class ViewComposePreviewGradleBridgeTest {
                 pair == listOf("--variant-id", "dark")
             },
         )
-        assertTrue("--rerender=true" in invocations.last().arguments)
+        assertTrue("--rerender" in invocations.last().arguments)
+        assertFalse("--rerender=true" in invocations.last().arguments)
     }
 
     @Test
@@ -164,6 +165,7 @@ class ViewComposePreviewGradleBridgeTest {
                 PreviewSourceSelection(firstSource.toString(), "FirstCard", 1),
                 PreviewSourceSelection(secondSource.toString(), "SecondCard", 1),
             ),
+            forceRerender = true,
             indicator = TestProgressIndicator(),
         )
 
@@ -180,6 +182,14 @@ class ViewComposePreviewGradleBridgeTest {
                 invocation.arguments.first().endsWith("renderDebugViewComposePreview")
             },
         )
+        invocations
+            .filter { invocation ->
+                invocation.arguments.first().endsWith("renderDebugViewComposePreview")
+            }
+            .forEach { invocation ->
+                assertTrue("--rerender" in invocation.arguments)
+                assertFalse("--rerender=true" in invocation.arguments)
+            }
     }
 
     private fun writeCatalog(

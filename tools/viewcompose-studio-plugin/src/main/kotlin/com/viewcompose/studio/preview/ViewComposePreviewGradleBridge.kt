@@ -264,7 +264,7 @@ internal class ViewComposePreviewRenderCoordinator(
                     match.descriptor.id,
                     "--variant-id",
                     match.variant.id,
-                ) + if (forceRerender) listOf("--rerender=true") else emptyList(),
+                ) + if (forceRerender) listOf("--rerender") else emptyList(),
             ),
             indicator = indicator,
         )
