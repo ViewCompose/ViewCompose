@@ -3,6 +3,7 @@ package com.viewcompose.preview.runner
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import app.cash.paparazzi.detectEnvironment
+import android.content.Context
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.content.res.Configuration
@@ -14,6 +15,8 @@ import com.android.resources.Density
 import com.android.resources.LayoutDirection
 import com.android.resources.NightMode
 import com.android.resources.ScreenOrientation
+import com.viewcompose.preview.PreviewThemeProvider
+import com.viewcompose.preview.PreviewThemeResolution
 import com.viewcompose.preview.tooling.PreviewClippingState
 import com.viewcompose.preview.tooling.PreviewConfiguration
 import com.viewcompose.preview.tooling.PreviewDescriptor
@@ -328,6 +331,45 @@ class StaticPreviewWorkerPaparazziTest {
     }
 
     @Test
+    fun `resolver installs the application theme provider for root and DSL content`() {
+        resolvedProviderEntryTokens = null
+        PaparazziTestPreviewThemeProvider.lastTokens = null
+        val original = entry()
+        val themedEntry = original.copy(
+            descriptor = original.descriptor.copy(
+                entryPoint = PreviewJvmEntryPoint(
+                    ownerClassName =
+                        "com.viewcompose.preview.runner.StaticPreviewWorkerPaparazziTestKt",
+                    methodName = "providerResolvedPreviewEntryPoint",
+                    methodDescriptor = "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V",
+                ),
+                themeProviderClassName = PaparazziTestPreviewThemeProvider::class.java.name,
+            ),
+        )
+        val request = request(
+            entry = themedEntry,
+            outputDirectory = temporaryFolder.newFolder("provider-themed-preview"),
+        )
+        var rootBackground: Int? = null
+        val worker = StaticPreviewWorker { view, outputFile ->
+            rootBackground = (view.background as ColorDrawable).color
+            AndroidBitmapCaptureBackend.capture(view, outputFile)
+        }
+        paparazzi.unsafeUpdateConfig(deviceConfig = request.configuration.toDeviceConfig())
+
+        val response = worker.render(
+            context = paparazzi.context,
+            request = request,
+            classLoader = checkNotNull(javaClass.classLoader),
+        )
+
+        assertEquals(PreviewRenderStatus.Success, response.status)
+        val providedTokens = checkNotNull(PaparazziTestPreviewThemeProvider.lastTokens)
+        assertEquals(PROVIDER_BACKGROUND_COLOR, rootBackground)
+        assertEquals(providedTokens, resolvedProviderEntryTokens)
+    }
+
+    @Test
     fun `explicit configuration reaches DSL and native canvas deterministically`() {
         val configuration = PreviewConfiguration(
             widthDp = 200,
@@ -573,6 +615,38 @@ fun UiTreeBuilder.resolvedStaticPreviewEntryPoint() {
     Text("Resolved static preview")
 }
 
+private var resolvedProviderEntryTokens: UiThemeTokens? = null
+
+fun UiTreeBuilder.providerResolvedPreviewEntryPoint() {
+    resolvedProviderEntryTokens = Theme.current
+    Text("Provider themed preview")
+}
+
+class PaparazziTestPreviewThemeProvider : PreviewThemeProvider {
+    override fun resolve(
+        context: Context,
+        theme: PreviewTheme,
+    ): PreviewThemeResolution {
+        val tokens = AndroidThemeBridge.fromContext(
+            context = context,
+            dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+        ).let { base ->
+            base.copy(
+                colors = base.colors.copy(background = PROVIDER_BACKGROUND_COLOR),
+            )
+        }
+        lastTokens = tokens
+        return PreviewThemeResolution(
+            context = context,
+            tokens = tokens,
+        )
+    }
+
+    companion object {
+        var lastTokens: UiThemeTokens? = null
+    }
+}
+
 private fun PreviewConfiguration.toDeviceConfig(): DeviceConfig {
     val densityDpi = (density * DENSITY_DEFAULT).roundToInt().coerceAtLeast(1)
     val resolvedHeightDp = viewportHeightDp
@@ -611,3 +685,4 @@ private fun String.toAndroidResourceLocale(): String {
 }
 
 private const val DENSITY_DEFAULT: Int = 160
+private const val PROVIDER_BACKGROUND_COLOR: Int = 0xFF123456.toInt()

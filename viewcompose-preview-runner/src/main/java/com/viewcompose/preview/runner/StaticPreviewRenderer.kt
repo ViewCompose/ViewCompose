@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
+import com.viewcompose.preview.PreviewThemeResolution
 import com.viewcompose.preview.tooling.PreviewCompositionLocal
 import com.viewcompose.preview.tooling.PreviewCompositionSnapshot
 import com.viewcompose.preview.tooling.PreviewDiagnostic
@@ -80,14 +81,36 @@ object StaticPreviewRenderer {
             .coerceAtLeast(1)
         val viewportHeightPx = (configuration.viewportHeightDp * configuration.density).roundToInt()
             .coerceAtLeast(1)
-        // Resolve the same Android application theme as a real host. Dynamic color is disabled so
-        // one preview request remains reproducible across Studio, Gradle, and CI machines.
-        val resolvedTheme = AndroidThemeBridge.resolveContext(
-            context = previewContext,
-            dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
-        )
-        val themeTokens = AndroidThemeBridge.fromResolvedTheme(resolvedTheme)
-        val root = FrameLayout(resolvedTheme.context).apply {
+        val resolvedPreviewTheme = entry.themeProvider?.let { provider ->
+            try {
+                provider.resolve(
+                    context = previewContext,
+                    theme = configuration.theme,
+                )
+            } catch (error: Throwable) {
+                error.throwIfFatalPreviewWorkerError()
+                return StaticPreviewMountResult.Failure(
+                    diagnostic = request.renderDiagnostic(
+                        message = "Application preview theme provider failed.",
+                        phase = "theme-provider",
+                        details = error.stackTraceToString(),
+                    ),
+                )
+            }
+        } ?: run {
+            // The default path mirrors the native Android host. Dynamic color stays disabled so a
+            // request remains reproducible across Studio, Gradle, and CI machines.
+            val resolvedAndroidTheme = AndroidThemeBridge.resolveContext(
+                context = previewContext,
+                dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+            )
+            PreviewThemeResolution(
+                context = resolvedAndroidTheme.context,
+                tokens = AndroidThemeBridge.fromResolvedTheme(resolvedAndroidTheme),
+            )
+        }
+        val themeTokens = resolvedPreviewTheme.tokens
+        val root = FrameLayout(resolvedPreviewTheme.context).apply {
             setBackgroundColor(themeTokens.colors.background)
         }
         var renderResult: RenderTreeResult? = null

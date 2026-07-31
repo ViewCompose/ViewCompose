@@ -30,6 +30,10 @@ class CompiledPreviewScannerTest {
             )
         }
         classes.writeClass(
+            "sample/DemoPreviewThemeProvider",
+            previewThemeProviderClass("sample/DemoPreviewThemeProvider"),
+        )
+        classes.writeClass(
             "sample/PreviewSamplesKt",
             previewClass(
                 methods = listOf(
@@ -80,6 +84,7 @@ class CompiledPreviewScannerTest {
         assertEquals(360, sample.variants.single().configuration.widthDp)
         assertEquals(720, sample.variants.single().configuration.heightDp)
         assertEquals(PreviewTheme.Dark, sample.variants.single().configuration.theme)
+        assertEquals("sample.DemoPreviewThemeProvider", sample.themeProviderClassName)
         assertEquals(40, sample.sourceLocation?.line)
         assertEquals(
             sourceFile.absolutePath,
@@ -93,6 +98,32 @@ class CompiledPreviewScannerTest {
             listOf(PreviewTheme.Light, PreviewTheme.Dark),
             themes.variants.map { variant -> variant.configuration.theme },
         )
+        assertEquals("sample.DemoPreviewThemeProvider", themes.themeProviderClassName)
+    }
+
+    @Test
+    fun `multiple module theme providers fail discovery deterministically`() {
+        val classes = temporaryFolder.newFolder("duplicate-theme-providers")
+        classes.writeClass(
+            "sample/FirstThemeProvider",
+            previewThemeProviderClass("sample/FirstThemeProvider"),
+        )
+        classes.writeClass(
+            "sample/SecondThemeProvider",
+            previewThemeProviderClass("sample/SecondThemeProvider"),
+        )
+
+        val output = CompiledPreviewScanner(
+            projectClassDirectories = listOf(classes),
+            projectClassJars = emptyList(),
+            annotationClasspath = emptyList(),
+            sourceDirectories = emptyList(),
+        ).scan()
+
+        assertTrue(output.descriptors.isEmpty())
+        assertEquals(1, output.diagnostics.size)
+        assertTrue(output.diagnostics.single().details.orEmpty().contains("FirstThemeProvider"))
+        assertTrue(output.diagnostics.single().details.orEmpty().contains("SecondThemeProvider"))
     }
 
     @Test
@@ -214,6 +245,21 @@ class CompiledPreviewScannerTest {
         return writer.toByteArray()
     }
 
+    private fun previewThemeProviderClass(internalName: String): ByteArray {
+        val writer = ClassWriter(0)
+        writer.visit(
+            Opcodes.V11,
+            Opcodes.ACC_PUBLIC or Opcodes.ACC_FINAL,
+            internalName,
+            null,
+            "java/lang/Object",
+            null,
+        )
+        writer.visitAnnotation(PREVIEW_THEME_PROVIDER_DESCRIPTOR, false).visitEnd()
+        writer.visitEnd()
+        return writer.toByteArray()
+    }
+
     private fun File.writeClass(
         internalName: String,
         bytes: ByteArray,
@@ -252,6 +298,8 @@ class CompiledPreviewScannerTest {
             "Lcom/viewcompose/preview/tooling/ViewComposePreview;"
         const val PREVIEWS_DESCRIPTOR =
             "Lcom/viewcompose/preview/tooling/ViewComposePreviews;"
+        const val PREVIEW_THEME_PROVIDER_DESCRIPTOR =
+            "Lcom/viewcompose/preview/tooling/ViewComposePreviewThemeProvider;"
         const val LAYOUT_DIRECTION_DESCRIPTOR =
             "Lcom/viewcompose/preview/tooling/PreviewLayoutDirection;"
         const val THEME_DESCRIPTOR =

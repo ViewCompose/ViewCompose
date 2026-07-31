@@ -76,8 +76,25 @@ internal class CompiledPreviewScanner(
                 }
             }
 
-        val descriptors = mutableListOf<PreviewDescriptor>()
         val diagnostics = mutableListOf<PreviewDiagnostic>()
+        val themeProviderClasses = scannedClasses.values
+            .filter { scanned -> PREVIEW_THEME_PROVIDER_DESCRIPTOR in scanned.annotations }
+            .sortedBy(ScannedClass::internalName)
+        val themeProviderClassName = themeProviderClasses.singleOrNull()
+            ?.internalName
+            ?.replace('/', '.')
+        if (themeProviderClasses.size > 1) {
+            diagnostics += PreviewDiagnostic(
+                severity = PreviewDiagnosticSeverity.Error,
+                message = "A preview module may declare only one theme provider.",
+                phase = "discovery",
+                details = themeProviderClasses.joinToString(
+                    prefix = "Providers: ",
+                ) { scanned -> scanned.internalName.replace('/', '.') },
+            )
+        }
+
+        val descriptors = mutableListOf<PreviewDescriptor>()
         scannedClasses.values
             .sortedBy(ScannedClass::internalName)
             .forEach { owner ->
@@ -137,6 +154,7 @@ internal class CompiledPreviewScanner(
                                         ),
                                         variants = variants,
                                         sourceLocation = sourceLocation,
+                                        themeProviderClassName = themeProviderClassName,
                                     )
                                 }
                             }
@@ -573,6 +591,8 @@ private const val PREVIEW_DESCRIPTOR =
     "Lcom/viewcompose/preview/tooling/ViewComposePreview;"
 private const val PREVIEWS_DESCRIPTOR =
     "Lcom/viewcompose/preview/tooling/ViewComposePreviews;"
+private const val PREVIEW_THEME_PROVIDER_DESCRIPTOR =
+    "Lcom/viewcompose/preview/tooling/ViewComposePreviewThemeProvider;"
 private const val ENTRY_POINT_DESCRIPTOR =
     "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V"
 private val SOURCE_FILE_EXTENSIONS = setOf("java", "kt")

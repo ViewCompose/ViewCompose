@@ -61,10 +61,14 @@ data class PreviewDescriptor(
     val entryPoint: PreviewJvmEntryPoint,
     val variants: List<PreviewVariant>,
     val sourceLocation: PreviewSourceLocation? = null,
+    val themeProviderClassName: String? = null,
 ) {
     init {
         requireStablePreviewId(id, "Preview descriptor id")
         require(displayName.isNotBlank()) { "Preview descriptor displayName must not be blank." }
+        require(themeProviderClassName == null || themeProviderClassName.isNotBlank()) {
+            "Preview descriptor themeProviderClassName must be null or non-blank."
+        }
         require(variants.isNotEmpty()) { "Preview descriptor must contain at least one variant." }
         val duplicateVariantIds = variants
             .groupingBy(PreviewVariant::id)

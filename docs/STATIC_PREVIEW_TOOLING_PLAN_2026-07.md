@@ -50,6 +50,9 @@ protocol instead of linking renderer internals into the IDE process.
     production rendering semantics.
 11. Runtime source identity is captured only inside an explicit tooling frame, survives VNode
     wrapping and native View mounting, and never participates in VNode equality or reconciliation.
+12. An application-owned preview theme is resolved once and shared by the preview root Context,
+    native Android Views, and the outermost ViewCompose `UiTheme`; Studio never serializes runtime
+    `UiThemeTokens` objects across the process boundary.
 
 ## 4. Delivery stages
 
@@ -90,6 +93,10 @@ Implemented foundation:
 
 - `StaticPreviewRenderer` injects a fully explicit environment and theme, then performs native
   measure/layout.
+- A module may mark exactly one debug-only `PreviewThemeProvider` with
+  `@ViewComposePreviewThemeProvider`. Compiled discovery records its class name, and the isolated
+  runner loads it with the application class loader. The provider returns one Context/token pair,
+  which prevents native Views and the DSL tree from silently using different theme sources.
 - `StaticPreviewWorker` atomically exports PNG and a JSON snapshot containing render tree, patch,
   structure, warnings, bindings, and composition scopes.
 - `PreviewJvmEntryPointResolver` validates and invokes a public static

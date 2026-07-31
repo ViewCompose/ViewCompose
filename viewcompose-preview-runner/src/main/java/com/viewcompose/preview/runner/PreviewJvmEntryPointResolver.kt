@@ -1,5 +1,6 @@
 package com.viewcompose.preview.runner
 
+import com.viewcompose.preview.PreviewThemeProvider
 import com.viewcompose.preview.tooling.PreviewDescriptor
 import com.viewcompose.preview.tooling.PreviewDiagnostic
 import com.viewcompose.preview.tooling.PreviewDiagnosticSeverity
@@ -46,7 +47,27 @@ object PreviewJvmEntryPointResolver {
                     ),
                 )
 
-                else -> candidates.single().toEntry(descriptor)
+                else -> {
+                    val themeProvider = try {
+                        resolveThemeProvider(
+                            className = descriptor.themeProviderClassName,
+                            classLoader = classLoader,
+                        )
+                    } catch (error: Throwable) {
+                        error.throwIfFatalPreviewWorkerError()
+                        return PreviewEntryResolutionResult.Failure(
+                            descriptor.diagnostic(
+                                message = "Failed to load the application preview theme provider.",
+                                details = error.stackTraceToString(),
+                                phase = "theme-provider-resolution",
+                            ),
+                        )
+                    }
+                    candidates.single().toEntry(
+                        descriptor = descriptor,
+                        themeProvider = themeProvider,
+                    )
+                }
             }
         } catch (error: Throwable) {
             error.throwIfFatalPreviewWorkerError()
@@ -59,7 +80,10 @@ object PreviewJvmEntryPointResolver {
         }
     }
 
-    private fun Method.toEntry(descriptor: PreviewDescriptor): PreviewEntryResolutionResult {
+    private fun Method.toEntry(
+        descriptor: PreviewDescriptor,
+        themeProvider: PreviewThemeProvider?,
+    ): PreviewEntryResolutionResult {
         if (!Modifier.isStatic(modifiers)) {
             return PreviewEntryResolutionResult.Failure(
                 descriptor.diagnostic("Preview entry point must be a static JVM method."),
@@ -87,7 +111,10 @@ object PreviewJvmEntryPointResolver {
             )
         }
         return PreviewEntryResolutionResult.Success(
-            entry = StaticPreviewEntry(descriptor) {
+            entry = StaticPreviewEntry(
+                descriptor = descriptor,
+                themeProvider = themeProvider,
+            ) {
                 try {
                     invoke(null, this)
                 } catch (error: InvocationTargetException) {
@@ -111,14 +138,31 @@ object PreviewJvmEntryPointResolver {
     private fun PreviewDescriptor.diagnostic(
         message: String,
         details: String? = null,
+        phase: String = "entry-resolution",
     ): PreviewDiagnostic {
         return PreviewDiagnostic(
             severity = PreviewDiagnosticSeverity.Error,
             message = message,
-            phase = "entry-resolution",
+            phase = phase,
             sourceLocation = sourceLocation,
             details = details,
         )
+    }
+
+    private fun resolveThemeProvider(
+        className: String?,
+        classLoader: ClassLoader,
+    ): PreviewThemeProvider? {
+        if (className == null) return null
+        val providerClass = classLoader.loadClass(className)
+        require(PreviewThemeProvider::class.java.isAssignableFrom(providerClass)) {
+            "Preview theme provider '$className' must implement " +
+                "${PreviewThemeProvider::class.java.name}."
+        }
+        val instance = runCatching {
+            providerClass.getField("INSTANCE").get(null)
+        }.getOrNull() ?: providerClass.getConstructor().newInstance()
+        return instance as PreviewThemeProvider
     }
 }
 
