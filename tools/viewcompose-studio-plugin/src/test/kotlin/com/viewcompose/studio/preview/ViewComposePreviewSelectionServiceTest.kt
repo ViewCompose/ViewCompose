@@ -14,6 +14,10 @@ class ViewComposePreviewSelectionServiceTest {
     @Test
     fun `refreshes when the selected preview source or project source changes`() {
         val projectRoot = temporaryFolder.newFolder("project").toPath()
+        val appRoot = projectRoot.resolve("app").also { directory ->
+            Files.createDirectories(directory)
+        }
+        Files.writeString(appRoot.resolve("build.gradle.kts"), "")
         val source = projectRoot.resolve("app/src/main/kotlin/SamplePreview.kt").also { path ->
             Files.createDirectories(checkNotNull(path.parent))
             Files.writeString(path, "")
@@ -46,6 +50,10 @@ class ViewComposePreviewSelectionServiceTest {
     @Test
     fun `refreshes for dependency resources but ignores generated output and unrelated files`() {
         val projectRoot = temporaryFolder.newFolder("dependency-project").toPath()
+        val appRoot = projectRoot.resolve("app").also { directory ->
+            Files.createDirectories(directory)
+        }
+        Files.writeString(appRoot.resolve("build.gradle.kts"), "")
         val source = projectRoot.resolve("app/src/main/kotlin/SamplePreview.kt").also { path ->
             Files.createDirectories(checkNotNull(path.parent))
             Files.writeString(path, "")
@@ -68,12 +76,28 @@ class ViewComposePreviewSelectionServiceTest {
         val notes = projectRoot.resolve("notes.md").also { path ->
             Files.writeString(path, "")
         }
+        val unrelatedSource = projectRoot.resolve("unrelated/src/main/kotlin/Other.kt").also { path ->
+            Files.createDirectories(checkNotNull(path.parent))
+            Files.writeString(path, "")
+        }
+        val versionCatalog = projectRoot.resolve("gradle/libs.versions.toml").also { path ->
+            Files.createDirectories(checkNotNull(path.parent))
+            Files.writeString(path, "")
+        }
+        val scope = PreviewInputScope.create(
+            projectRoot = projectRoot,
+            moduleRoot = appRoot,
+            manifestInputPaths = listOf(
+                projectRoot.resolve("ui-theme/build/intermediates/runtime.jar").toString(),
+            ),
+        )
 
         assertTrue(
             savedPreviewInputMatches(
                 projectRoot = projectRoot,
                 selection = selection,
                 changedPaths = listOf(dependencyResource.toString()),
+                inputScope = scope,
             ),
         )
         assertFalse(
@@ -81,6 +105,23 @@ class ViewComposePreviewSelectionServiceTest {
                 projectRoot = projectRoot,
                 selection = selection,
                 changedPaths = listOf(generatedSource.toString()),
+                inputScope = scope,
+            ),
+        )
+        assertFalse(
+            savedPreviewInputMatches(
+                projectRoot = projectRoot,
+                selection = selection,
+                changedPaths = listOf(unrelatedSource.toString()),
+                inputScope = scope,
+            ),
+        )
+        assertTrue(
+            savedPreviewInputMatches(
+                projectRoot = projectRoot,
+                selection = selection,
+                changedPaths = listOf(versionCatalog.toString()),
+                inputScope = scope,
             ),
         )
         assertFalse(
@@ -88,6 +129,7 @@ class ViewComposePreviewSelectionServiceTest {
                 projectRoot = projectRoot,
                 selection = selection,
                 changedPaths = listOf(notes.toString()),
+                inputScope = scope,
             ),
         )
     }

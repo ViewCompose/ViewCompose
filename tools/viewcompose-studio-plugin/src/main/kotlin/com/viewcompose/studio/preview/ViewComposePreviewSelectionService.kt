@@ -11,6 +11,7 @@ import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -38,15 +39,20 @@ internal class ViewComposePreviewSelectionService(
     private val editorFollowGeneration = AtomicLong(0)
     private val activeIndicator = AtomicReference<ProgressIndicator?>()
     private val activeRequest = AtomicReference<ActivePreviewRequest?>()
+    private val galleryPriorityOrder = AtomicReference<PreviewGalleryPriorityOrder?>()
     private val automaticRefreshGate = PreviewAutomaticRefreshGate<ActivePreviewRequest>()
     private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val editorFollowAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val galleryDiscoveryRetryAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val settings = ViewComposePreviewSettings.forProject(project)
+    private val logger = Logger.getInstance(ViewComposePreviewSelectionService::class.java)
     private val cacheRoot = project.basePath
         ?.let { previewCacheRoot(Path.of(PathManager.getSystemPath())) }
     private val diskCache = cacheRoot?.resolve("detail")?.let(::PreviewDiskCache)
     private val galleryCache = cacheRoot?.resolve("gallery")?.let(::PreviewGalleryDiskCache)
+    private val gradleExecutor = project.basePath
+        ?.let(Path::of)
+        ?.let(::PersistentPreviewGradleExecutor)
 
     @Volatile
     private var attachedPanel: ViewComposePreviewToolWindowPanel? = null
@@ -58,11 +64,16 @@ internal class ViewComposePreviewSelectionService(
                 override fun after(events: List<VFileEvent>) {
                     if (!settings.autoRefreshOnSave) return
                     val request = activeRequest.get() ?: return
+                    val inputScope = currentState.get()
+                        .previousSuccessOrNull()
+                        ?.takeIf { result -> result.selection == request.selection }
+                        ?.inputScope
                     if (
                         !savedPreviewInputMatches(
                             projectRoot = project.basePath?.let(Path::of),
                             selection = request.selection,
                             changedPaths = events.map(VFileEvent::getPath),
+                            inputScope = inputScope,
                         )
                     ) {
                         return
@@ -169,6 +180,10 @@ internal class ViewComposePreviewSelectionService(
         scheduleEditorFollow()
     }
 
+    fun prioritizeGallery(selections: List<PreviewSourceSelection>) {
+        galleryPriorityOrder.get()?.prioritize(selections)
+    }
+
     private fun render(
         selection: PreviewSourceSelection,
         requestedVariantId: String?,
@@ -185,6 +200,7 @@ internal class ViewComposePreviewSelectionService(
             return
         }
         galleryDiscoveryRetryAlarm.cancelAllRequests()
+        galleryPriorityOrder.set(null)
         activeRequest.set(nextRequest)
         val generation = requestGeneration.incrementAndGet()
         if (refreshPolicy == PreviewRefreshPolicy.SavedInput) {
@@ -218,8 +234,16 @@ internal class ViewComposePreviewSelectionService(
                 }
                 try {
                     val root = project.basePath?.let(Path::of)
+                    val cacheReadStartedAtNanos = System.nanoTime()
                     val cached = if (refreshPolicy.useStudioCache) {
-                        diskCache?.read(selection, requestedVariantId)
+                        diskCache?.read(selection, requestedVariantId)?.let { result ->
+                            result.copy(
+                                performanceTrace = result.performanceTrace.plus(
+                                    phase = "studio-cache-read",
+                                    durationMillis = elapsedMillis(cacheReadStartedAtNanos),
+                                ),
+                            )
+                        }
                     } else {
                         null
                     }
@@ -233,7 +257,7 @@ internal class ViewComposePreviewSelectionService(
                             details = "Android Studio did not provide a project base directory.",
                         )
                     } else {
-                        val coordinator = ViewComposePreviewRenderCoordinator(root)
+                        val coordinator = renderCoordinator(root)
                         val progress: (String) -> Unit = { message ->
                             publish(
                                 generation = generation,
@@ -268,6 +292,7 @@ internal class ViewComposePreviewSelectionService(
                     if (outcome is PreviewRenderOutcome.Success &&
                         generation == requestGeneration.get()
                     ) {
+                        logPerformance(outcome)
                         if (cached == null) {
                             runCatching { diskCache?.write(outcome) }
                         }
@@ -335,6 +360,7 @@ internal class ViewComposePreviewSelectionService(
         discoveryAttempt: Int = 0,
     ) {
         galleryDiscoveryRetryAlarm.cancelAllRequests()
+        galleryPriorityOrder.set(null)
         automaticRefreshGate.clear()
         activeRequest.set(null)
         val generation = requestGeneration.incrementAndGet()
@@ -355,6 +381,7 @@ internal class ViewComposePreviewSelectionService(
             override fun run(indicator: ProgressIndicator) {
                 if (generation != requestGeneration.get()) return
                 activeIndicator.set(indicator)
+                var ownedPriorityOrder: PreviewGalleryPriorityOrder? = null
                 try {
                     val selections = ViewComposePreviewProjectScanner(project).scan()
                     galleryDiscoveryRetryDelayMillis(discoveryAttempt)?.let { retryDelay ->
@@ -382,6 +409,11 @@ internal class ViewComposePreviewSelectionService(
                     }
                     val cachedBySelection = cachedItems.groupBy(PreviewGalleryItem::selection)
                     val missing = selections.filterNot(cachedBySelection::containsKey)
+                    val priorityOrder = PreviewGalleryPriorityOrder(missing)
+                    ownedPriorityOrder = priorityOrder
+                    if (generation == requestGeneration.get()) {
+                        galleryPriorityOrder.set(priorityOrder)
+                    }
                     fun ordered(items: Collection<PreviewGalleryItem>): List<PreviewGalleryItem> {
                         return items.sortedWith(
                             compareBy(
@@ -391,30 +423,35 @@ internal class ViewComposePreviewSelectionService(
                             ),
                         )
                     }
-                    if (cachedItems.isNotEmpty()) {
-                        publish(
-                            generation = generation,
-                            state = ViewComposePreviewPanelState.GalleryLoading(
-                                message = "Rendering ${missing.size} uncached previews…",
-                                previousResult = PreviewGalleryResult(
-                                    items = ordered(cachedItems),
-                                    failures = emptyList(),
-                                ),
+                    val pendingSelections = missing.toMutableSet()
+                    publish(
+                        generation = generation,
+                        state = ViewComposePreviewPanelState.GalleryLoading(
+                            message = "Rendering ${missing.size} uncached previews…",
+                            previousResult = PreviewGalleryResult(
+                                items = ordered(cachedItems),
+                                failures = emptyList(),
+                                pendingSelections = pendingSelections.toList(),
                             ),
-                        )
-                    }
+                        ),
+                    )
                     val root = project.basePath?.let(Path::of)
                     val renderedGalleryItems = mutableListOf<PreviewGalleryItem>()
                     val failures = mutableListOf<PreviewRenderOutcome.Failure>()
                     fun consume(outcome: PreviewRenderOutcome) {
                         when (outcome) {
                             is PreviewRenderOutcome.Success -> {
+                                logPerformance(outcome)
+                                pendingSelections.remove(outcome.selection)
                                 val item = runCatching {
                                     galleryCache?.write(outcome)
                                 }.getOrNull() ?: outcome.toBoundedGalleryItem()
                                 renderedGalleryItems += item
                             }
-                            is PreviewRenderOutcome.Failure -> failures += outcome
+                            is PreviewRenderOutcome.Failure -> {
+                                pendingSelections.remove(outcome.selection)
+                                failures += outcome
+                            }
                         }
                     }
                     if (root == null) {
@@ -428,7 +465,7 @@ internal class ViewComposePreviewSelectionService(
                             )
                         }
                     } else {
-                        ViewComposePreviewRenderCoordinator(root).renderAllEach(
+                        renderCoordinator(root).renderAllEach(
                             selections = missing,
                             forceRerender = forceRerender,
                             indicator = indicator,
@@ -440,10 +477,31 @@ internal class ViewComposePreviewSelectionService(
                                         previousResult = PreviewGalleryResult(
                                             items = ordered(cachedItems + renderedGalleryItems),
                                             failures = failures.toList(),
+                                            pendingSelections = pendingSelections.toList(),
                                         ),
                                     ),
                                 )
                             },
+                            batchStrategy = PreviewGalleryBatchStrategy(
+                                firstBatchSelectionCount = GALLERY_INITIAL_RENDER_COUNT,
+                                priorityOrder = priorityOrder,
+                                batchCompleted = {
+                                    publish(
+                                        generation = generation,
+                                        state = ViewComposePreviewPanelState.GalleryLoading(
+                                            message = "Rendering ${pendingSelections.size} " +
+                                                "remaining previews…",
+                                            previousResult = PreviewGalleryResult(
+                                                items = ordered(
+                                                    cachedItems + renderedGalleryItems,
+                                                ),
+                                                failures = failures.toList(),
+                                                pendingSelections = pendingSelections.toList(),
+                                            ),
+                                        ),
+                                    )
+                                },
+                            ),
                             onOutcome = ::consume,
                         )
                     }
@@ -452,7 +510,11 @@ internal class ViewComposePreviewSelectionService(
                     publish(
                         generation = generation,
                         state = ViewComposePreviewPanelState.Gallery(
-                            PreviewGalleryResult(items = items, failures = failures.toList()),
+                            PreviewGalleryResult(
+                                items = items,
+                                failures = failures.toList(),
+                                pendingSelections = emptyList(),
+                            ),
                         ),
                     )
                 } catch (cancelled: ProcessCanceledException) {
@@ -465,6 +527,9 @@ internal class ViewComposePreviewSelectionService(
                         ),
                     )
                 } finally {
+                    ownedPriorityOrder?.let { order ->
+                        galleryPriorityOrder.compareAndSet(order, null)
+                    }
                     activeIndicator.compareAndSet(indicator, null)
                 }
             }
@@ -603,11 +668,31 @@ internal class ViewComposePreviewSelectionService(
             ?.isVisible == true
     }
 
+    private fun renderCoordinator(root: Path): ViewComposePreviewRenderCoordinator {
+        val executor = gradleExecutor
+        return if (executor == null) {
+            ViewComposePreviewRenderCoordinator(root)
+        } else {
+            ViewComposePreviewRenderCoordinator(root, executor)
+        }
+    }
+
+    private fun logPerformance(result: PreviewRenderOutcome.Success) {
+        val phases = result.performanceTrace.phases.joinToString(",") { phase ->
+            "${phase.phase}=${phase.durationMillis}${if (phase.shared) "s" else ""}"
+        }
+        logger.info(
+            "ViewCompose preview performance: descriptor=${result.descriptorId}, " +
+                "variant=${result.selectedVariantId}, cache=${result.cacheHit}, phases=[$phases]",
+        )
+    }
+
     override fun dispose() {
         requestGeneration.incrementAndGet()
         automaticRefreshGate.clear()
         activeIndicator.getAndSet(null)?.cancel()
         activeRequest.set(null)
+        gradleExecutor?.close()
         attachedPanel = null
         currentState.getAndSet(ViewComposePreviewPanelState.Empty).releaseImages()
     }
@@ -671,10 +756,10 @@ private fun ViewComposePreviewPanelState.releaseImages() {
         is ViewComposePreviewPanelState.Loading -> previousResult?.image?.flush()
         is ViewComposePreviewPanelState.Rendered -> result.image.flush()
         is ViewComposePreviewPanelState.GalleryLoading -> {
-            previousResult?.items?.forEach { item -> item.thumbnail.flush() }
+            previousResult?.items?.forEach(PreviewGalleryItem::releaseThumbnail)
         }
         is ViewComposePreviewPanelState.Gallery -> {
-            result.items.forEach { item -> item.thumbnail.flush() }
+            result.items.forEach(PreviewGalleryItem::releaseThumbnail)
         }
     }
 }
@@ -688,26 +773,14 @@ internal fun savedPreviewInputMatches(
     projectRoot: Path?,
     selection: PreviewSourceSelection,
     changedPaths: List<String>,
+    inputScope: PreviewInputScope? = null,
 ): Boolean {
-    val selectedPath = selection.filePath.normalizedPathOrNull() ?: return false
-    val normalizedRoot = projectRoot?.toAbsolutePath()?.normalize()
-    return changedPaths.any { changedPath ->
-        val path = changedPath.normalizedPathOrNull() ?: return@any false
-        if (path == selectedPath) return@any true
-        if (normalizedRoot == null || !path.startsWith(normalizedRoot)) return@any false
-        val relativePath = normalizedRoot.relativize(path)
-        if (relativePath.any { segment -> segment.toString() in IGNORED_INPUT_DIRECTORIES }) {
-            return@any false
+    val scope = inputScope ?: PreviewInputScope.forSelection(projectRoot, selection)
+    return scope?.matches(selection, changedPaths)
+        ?: changedPaths.any { changedPath ->
+            changedPath.normalizedPathOrNull()?.toString() ==
+                selection.filePath.normalizedPathOrNull()?.toString()
         }
-        path.fileName
-            ?.toString()
-            ?.substringAfterLast('.', missingDelimiterValue = "")
-            ?.lowercase() in PREVIEW_INPUT_EXTENSIONS
-    }
-}
-
-private fun String.normalizedPathOrNull(): Path? {
-    return runCatching { Path.of(this).toAbsolutePath().normalize() }.getOrNull()
 }
 
 private data class ActivePreviewRequest(
@@ -727,29 +800,11 @@ private data class EditorSourceLocation(
 
 private const val EDITOR_FOLLOW_DELAY_MILLIS = 250
 private const val SAVED_INPUT_REFRESH_DELAY_MILLIS = 400
+private const val GALLERY_INITIAL_RENDER_COUNT = 6
+private const val NANOS_PER_MILLISECOND = 1_000_000L
 private val GALLERY_DISCOVERY_RETRY_DELAYS_MILLIS = intArrayOf(500, 1_000, 2_000)
-private val IGNORED_INPUT_DIRECTORIES = setOf(
-    ".git",
-    ".gradle",
-    ".idea",
-    "build",
-    "out",
-)
-private val PREVIEW_INPUT_EXTENSIONS = setOf(
-    "gradle",
-    "gif",
-    "java",
-    "jpeg",
-    "jpg",
-    "json",
-    "kt",
-    "kts",
-    "otf",
-    "png",
-    "properties",
-    "svg",
-    "toml",
-    "ttf",
-    "webp",
-    "xml",
-)
+
+private fun elapsedMillis(startedAtNanos: Long): Long {
+    return ((System.nanoTime() - startedAtNanos) / NANOS_PER_MILLISECOND)
+        .coerceAtLeast(0L)
+}

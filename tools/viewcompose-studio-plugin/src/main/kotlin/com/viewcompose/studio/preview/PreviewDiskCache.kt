@@ -73,6 +73,10 @@ internal class PreviewDiskCache(
                 diagnostics = metadata.diagnostics,
                 durationMillis = metadata.durationMillis,
                 cacheHit = true,
+                performanceTrace = PreviewPerformanceTrace(
+                    phases = metadata.performancePhases.orEmpty(),
+                ),
+                inputScope = metadata.inputScope,
             )
         }.getOrElse {
             deleteRecursively(candidate.directory)
@@ -115,6 +119,8 @@ internal class PreviewDiskCache(
                     variantName = result.variantName,
                     diagnostics = result.diagnostics,
                     durationMillis = result.durationMillis,
+                    performancePhases = result.performanceTrace.phases,
+                    inputScope = result.inputScope,
                     createdAtMillis = timestamp,
                     lastAccessMillis = timestamp,
                 ),
@@ -239,6 +245,8 @@ private data class CachedPreviewMetadata(
     val variantName: String,
     val diagnostics: List<StudioPreviewDiagnostic>,
     val durationMillis: Long?,
+    val performancePhases: List<PreviewPerformancePhase>?,
+    val inputScope: PreviewInputScope?,
     val createdAtMillis: Long,
     val lastAccessMillis: Long,
 )

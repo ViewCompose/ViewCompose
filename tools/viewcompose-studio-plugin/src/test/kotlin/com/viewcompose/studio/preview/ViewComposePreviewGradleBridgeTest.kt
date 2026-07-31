@@ -72,6 +72,9 @@ class ViewComposePreviewGradleBridgeTest {
         assertEquals(listOf("default", "dark"), success.variants.map(StudioPreviewVariant::id))
         assertTrue(success.renderSnapshot != null)
         assertFalse(success.cacheHit)
+        assertTrue(success.performanceTrace.phases.any { phase ->
+            phase.phase == "gradle-discovery"
+        })
         assertEquals(
             listOf(
                 ":feature:catalog:discoverDebugViewComposePreviews",
@@ -248,6 +251,61 @@ class ViewComposePreviewGradleBridgeTest {
                 assertTrue("--rerender" in invocation.arguments)
                 assertFalse("--rerender=true" in invocation.arguments)
             }
+    }
+
+    @Test
+    fun `gallery renders visible selections first with one discovery and two render calls`() {
+        val projectRoot = temporaryFolder.newFolder("prioritized-gallery").toPath()
+        Files.writeString(projectRoot.resolve("gradlew"), "")
+        val moduleRoot = Files.createDirectories(projectRoot.resolve("app"))
+        Files.writeString(moduleRoot.resolve("build.gradle.kts"), "plugins {}")
+        val firstSource = moduleRoot.resolve("src/main/kotlin/sample/First.kt")
+        val secondSource = moduleRoot.resolve("src/main/kotlin/sample/Second.kt")
+        Files.createDirectories(checkNotNull(firstSource.parent))
+        Files.writeString(firstSource, "fun FirstCard() = Unit")
+        Files.writeString(secondSource, "fun SecondCard() = Unit")
+        val first = PreviewSourceSelection(firstSource.toString(), "FirstCard", 1)
+        val second = PreviewSourceSelection(secondSource.toString(), "SecondCard", 1)
+        val order = PreviewGalleryPriorityOrder(listOf(first, second)).apply {
+            prioritize(listOf(second))
+        }
+        val renderedBatches = mutableListOf<List<String>>()
+        val executor = PreviewGradleExecutor { invocation, _ ->
+            when {
+                invocation.arguments.first().endsWith("discoverDebugViewComposePreviews") -> {
+                    writeGalleryCatalog(moduleRoot, firstSource, secondSource)
+                    PreviewGradleResult(0, "descriptors exported", "")
+                }
+                invocation.arguments.first().endsWith("renderDebugViewComposePreview") -> {
+                    val targetsFile = invocation.arguments.windowed(2)
+                        .single { pair -> pair.first() == "--preview-targets-file" }
+                        .last()
+                    val targets = Files.readAllLines(Path.of(targetsFile)).map { line ->
+                        line.substringBefore('\t')
+                    }
+                    renderedBatches += targets
+                    Files.readAllLines(Path.of(targetsFile)).forEach { line ->
+                        val fields = line.split('\t')
+                        writeSuccessfulResponse(moduleRoot, fields[1], fields[0])
+                    }
+                    PreviewGradleResult(0, "ViewCompose preview rendered:", "")
+                }
+                else -> PreviewGradleResult(1, "", "Unexpected task")
+            }
+        }
+
+        ViewComposePreviewRenderCoordinator(projectRoot, executor).renderAllEach(
+            selections = listOf(first, second),
+            indicator = TestProgressIndicator(),
+            batchStrategy = PreviewGalleryBatchStrategy(
+                firstBatchSelectionCount = 1,
+                priorityOrder = order,
+                batchCompleted = {},
+            ),
+            onOutcome = {},
+        )
+
+        assertEquals(listOf(listOf("second-card"), listOf("first-card", "first-card")), renderedBatches)
     }
 
     private fun writeCatalog(

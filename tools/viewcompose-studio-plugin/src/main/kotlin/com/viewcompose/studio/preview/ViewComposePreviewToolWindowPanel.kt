@@ -2,7 +2,9 @@ package com.viewcompose.studio.preview
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.LowMemoryWatcher
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
@@ -64,6 +66,7 @@ internal class ViewComposePreviewToolWindowPanel(
     private val onNavigateToSource: (StudioPreviewSourceLocation) -> Unit,
     private val onNavigateToRuntimeSource: (List<StudioPreviewSourceCallSite>) -> Unit,
     private val onPresentationChanged: (String?, PreviewSourceSelection?) -> Unit = { _, _ -> },
+    private val onGalleryDemanded: (List<PreviewSourceSelection>) -> Unit = {},
 ) : SimpleToolWindowPanel(true, true), Disposable {
     private val contentPanel = JPanel(BorderLayout())
     private val detectionEvidence = detection.evidencePath
@@ -84,6 +87,8 @@ internal class ViewComposePreviewToolWindowPanel(
     private var galleryDetailWorker: SwingWorker<BufferedImage, Unit>? = null
     private val galleryThumbnails = mutableMapOf<Path, Icon>()
     private val galleryDetailImages = PreviewImageMemoryCache(GALLERY_DETAIL_MEMORY_BYTES)
+    private var galleryScrollPane: JBScrollPane? = null
+    private var galleryScrollPosition: Point = Point(0, 0)
     private var disposed = false
     private val messages: PreviewUiMessages
         get() = PreviewUiMessages.forLanguage(language)
@@ -93,17 +98,48 @@ internal class ViewComposePreviewToolWindowPanel(
 
     init {
         setContent(contentPanel)
+        LowMemoryWatcher.register(
+            Runnable {
+                ApplicationManager.getApplication().invokeLater {
+                    if (!disposed) releaseMemoryPressureCaches()
+                }
+            },
+            this,
+        )
         showState(ViewComposePreviewPanelState.Empty)
+    }
+
+    internal fun releaseMemoryPressureCaches() {
+        galleryDetailWorker?.cancel(true)
+        galleryDetailWorker = null
+        galleryDetailImages.clear()
+        galleryThumbnails.clear()
+        when (val state = currentState) {
+            is ViewComposePreviewPanelState.Gallery ->
+                state.result.items.forEach(PreviewGalleryItem::releaseThumbnail)
+            is ViewComposePreviewPanelState.GalleryLoading ->
+                state.previousResult?.items?.forEach(PreviewGalleryItem::releaseThumbnail)
+            else -> Unit
+        }
+        if (currentState.isGalleryState()) {
+            showState(currentState)
+        } else {
+            contentPanel.repaint()
+        }
     }
 
     fun showState(state: ViewComposePreviewPanelState) {
         if (disposed) return
         galleryDetailWorker?.cancel(true)
         galleryDetailWorker = null
+        galleryScrollPane?.viewport?.viewPosition?.let { position ->
+            galleryScrollPosition = Point(position)
+        }
+        galleryScrollPane = null
         if (currentState.isGalleryState() && !state.isGalleryState()) {
             galleryDetailImages.clear()
+            galleryThumbnails.clear()
         }
-        galleryThumbnails.clear()
         val previousSource = currentState.previewPresentation().source
         val nextSource = state.previewPresentation().source
         if (nextSource != null && previousSource != nextSource) {
@@ -220,7 +256,7 @@ internal class ViewComposePreviewToolWindowPanel(
     }
 
     private fun galleryContent(result: PreviewGalleryResult): JComponent {
-        if (result.items.isEmpty()) {
+        if (result.items.isEmpty() && result.pendingSelections.isEmpty()) {
             return readOnlyText(
                 if (result.failures.isEmpty()) {
                     messages.text("gallery.empty")
@@ -229,20 +265,60 @@ internal class ViewComposePreviewToolWindowPanel(
                 },
             )
         }
-        val list = JBList(result.items).apply {
+        val cells = buildList {
+            result.items.forEach { item -> add(PreviewGalleryCell.Rendered(item)) }
+            val renderedSelections = result.items.mapTo(hashSetOf(), PreviewGalleryItem::selection)
+            result.pendingSelections
+                .filterNot(renderedSelections::contains)
+                .forEach { selection -> add(PreviewGalleryCell.Pending(selection)) }
+        }
+        val list = JBList(cells).apply {
             layoutOrientation = JList.HORIZONTAL_WRAP
             visibleRowCount = -1
             fixedCellWidth = JBUI.scale(GALLERY_CELL_WIDTH)
             fixedCellHeight = JBUI.scale(GALLERY_CELL_HEIGHT)
             selectionMode = ListSelectionModel.SINGLE_SELECTION
             cellRenderer = ListCellRenderer { _, value, _, isSelected, _ ->
-                galleryCard(value, isSelected)
+                when (value) {
+                    is PreviewGalleryCell.Rendered -> galleryCard(value.item, isSelected)
+                    is PreviewGalleryCell.Pending -> galleryPlaceholderCard(
+                        value.selection,
+                        isSelected,
+                    )
+                }
             }
             toolTipText = messages.text("gallery.navigationHint")
         }
         val galleryScrollPane = JBScrollPane(list).apply {
             border = JBUI.Borders.emptyTop(8)
             verticalScrollBar.unitIncrement = JBUI.scale(24)
+        }
+        this.galleryScrollPane = galleryScrollPane
+        var lastDemand: List<PreviewSourceSelection> = emptyList()
+        fun demandVisiblePreviews() {
+            if (list.model.size == 0) return
+            val first = list.firstVisibleIndex.takeIf { index -> index >= 0 } ?: 0
+            val last = list.lastVisibleIndex.takeIf { index -> index >= first } ?: first
+            val from = (first - GALLERY_PREFETCH_CELLS).coerceAtLeast(0)
+            val to = (last + GALLERY_PREFETCH_CELLS).coerceAtMost(list.model.size - 1)
+            val demanded = (from..to).mapNotNull { index ->
+                (list.model.getElementAt(index) as? PreviewGalleryCell.Pending)?.selection
+            }
+            if (demanded.isNotEmpty() && demanded != lastDemand) {
+                lastDemand = demanded
+                onGalleryDemanded(demanded)
+            }
+        }
+        galleryScrollPane.viewport.addChangeListener { demandVisiblePreviews() }
+        SwingUtilities.invokeLater {
+            val viewport = galleryScrollPane.viewport
+            val maximumX = (viewport.viewSize.width - viewport.extentSize.width).coerceAtLeast(0)
+            val maximumY = (viewport.viewSize.height - viewport.extentSize.height).coerceAtLeast(0)
+            viewport.viewPosition = Point(
+                galleryScrollPosition.x.coerceIn(0, maximumX),
+                galleryScrollPosition.y.coerceIn(0, maximumY),
+            )
+            demandVisiblePreviews()
         }
         val detailHost = JPanel(BorderLayout()).apply {
             isOpaque = false
@@ -324,7 +400,7 @@ internal class ViewComposePreviewToolWindowPanel(
                     if (!SwingUtilities.isLeftMouseButton(event)) return
                     val index = list.locationToIndex(event.point)
                     if (index < 0 || !list.getCellBounds(index, index).contains(event.point)) return
-                    val item = list.model.getElementAt(index)
+                    val cell = list.model.getElementAt(index)
                     list.selectedIndex = index
                     val isDoublePress = doublePressTracker.register(
                         awtClickCount = event.clickCount,
@@ -336,10 +412,19 @@ internal class ViewComposePreviewToolWindowPanel(
                         showDetailTimer.stop()
                         pendingDetailItem = null
                         event.consume()
-                        onNavigateToSource(item.selection.toStudioSourceLocation())
+                        onNavigateToSource(cell.selection.toStudioSourceLocation())
                     } else {
-                        pendingDetailItem = item
-                        showDetailTimer.restart()
+                        when (cell) {
+                            is PreviewGalleryCell.Rendered -> {
+                                pendingDetailItem = cell.item
+                                showDetailTimer.restart()
+                            }
+                            is PreviewGalleryCell.Pending -> {
+                                pendingDetailItem = null
+                                showDetailTimer.stop()
+                                onGalleryDemanded(listOf(cell.selection))
+                            }
+                        }
                     }
                 }
             }
@@ -349,7 +434,9 @@ internal class ViewComposePreviewToolWindowPanel(
             "openDetail",
             object : AbstractAction() {
                 override fun actionPerformed(event: java.awt.event.ActionEvent?) {
-                    list.selectedValue?.let(::showDetail)
+                    (list.selectedValue as? PreviewGalleryCell.Rendered)
+                        ?.item
+                        ?.let(::showDetail)
                 }
             },
         )
@@ -404,6 +491,37 @@ internal class ViewComposePreviewToolWindowPanel(
                     horizontalAlignment = JBLabel.CENTER
                     verticalAlignment = JBLabel.CENTER
                     border = JBUI.Borders.emptyTop(8)
+                },
+                BorderLayout.CENTER,
+            )
+        }
+    }
+
+    private fun galleryPlaceholderCard(
+        selection: PreviewSourceSelection,
+        selected: Boolean,
+    ): JComponent {
+        return JPanel(BorderLayout()).apply {
+            isOpaque = true
+            background = if (selected) {
+                JBColor(Color(0xE8, 0xF0, 0xFE), Color(0x35, 0x3A, 0x43))
+            } else {
+                contentPanel.background
+            }
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PREVIEW_TOOLBAR_BORDER, JBUI.scale(1)),
+                JBUI.Borders.empty(8),
+            )
+            add(
+                JBLabel(selection.symbolName).apply {
+                    font = font.deriveFont(Font.BOLD)
+                },
+                BorderLayout.NORTH,
+            )
+            add(
+                JBLabel(messages.text("gallery.detailLoading")).apply {
+                    horizontalAlignment = JBLabel.CENTER
+                    foreground = JBColor.GRAY
                 },
                 BorderLayout.CENTER,
             )
@@ -527,6 +645,13 @@ internal class ViewComposePreviewToolWindowPanel(
             trailing = selector,
         ).apply {
             border = JBUI.Borders.empty(0, 2, 2, 2)
+            result.performanceTrace.phases.takeIf(List<PreviewPerformancePhase>::isNotEmpty)
+                ?.let { phases ->
+                    toolTipText = phases.joinToString(" · ") { phase ->
+                        "${phase.phase}: ${phase.durationMillis} ms" +
+                            if (phase.shared) " (shared)" else ""
+                    }
+                }
         }
         contentPanel.add(
             renderedHeader,
@@ -2211,6 +2336,21 @@ private data class PreviewImagePlacement(
     val height: Int,
 )
 
+private sealed interface PreviewGalleryCell {
+    val selection: PreviewSourceSelection
+
+    data class Rendered(
+        val item: PreviewGalleryItem,
+    ) : PreviewGalleryCell {
+        override val selection: PreviewSourceSelection
+            get() = item.selection
+    }
+
+    data class Pending(
+        override val selection: PreviewSourceSelection,
+    ) : PreviewGalleryCell
+}
+
 private class RetinaPreviewIcon(
     private val image: BufferedImage,
     private val width: Int,
@@ -2335,6 +2475,7 @@ private const val GALLERY_IMAGE_WIDTH = 220
 private const val GALLERY_IMAGE_HEIGHT = 300
 private const val GALLERY_DETAIL_MEMORY_BYTES = 64L * 1024L * 1024L
 private const val GALLERY_DETAIL_OPEN_DELAY_PADDING_MILLIS = 60L
+private const val GALLERY_PREFETCH_CELLS = 4
 private const val GALLERY_OVERLAY_MARGIN = 24
 private const val GALLERY_OVERLAY_MAX_WIDTH = 900
 private const val GALLERY_OVERLAY_MAX_HEIGHT = 1000

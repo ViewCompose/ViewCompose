@@ -37,7 +37,7 @@ abstract class VerifyAndroidStudioBuildTask : DefaultTask() {
 }
 
 group = "com.viewcompose.studio"
-version = "0.1.0-alpha28"
+version = "0.1.0-alpha29"
 
 val expectedAndroidStudioBuild = "AI-261.25134.95.2612.15914620"
 val configuredAndroidStudioPath = providers
@@ -69,6 +69,7 @@ dependencies {
     intellijPlatform {
         local(androidStudioHome.absolutePath)
         bundledPlugin("com.intellij.java")
+        bundledPlugin("com.intellij.gradle")
         bundledPlugin("org.jetbrains.kotlin")
         testFramework(TestFrameworkType.Platform)
     }

@@ -6,6 +6,7 @@ import java.nio.file.Path
 import java.time.Duration
 import javax.imageio.ImageIO
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -33,6 +34,9 @@ class PreviewGalleryDiskCacheTest {
         assertEquals(411, item?.logicalWidthDp)
         assertTrue(item?.cacheHit == true)
         assertEquals(3, Files.walk(root).use { paths -> paths.filter(Files::isRegularFile).count() })
+        val firstDecode = checkNotNull(item).thumbnail
+        item.releaseThumbnail()
+        assertNotSame(firstDecode, item.thumbnail)
     }
 
     @Test

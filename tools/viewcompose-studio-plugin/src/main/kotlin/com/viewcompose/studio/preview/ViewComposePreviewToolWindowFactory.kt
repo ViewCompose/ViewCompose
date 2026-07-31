@@ -42,6 +42,7 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
                 toolWindow.stripeTitle = title ?: VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID
                 toolWindow.title = ""
             },
+            onGalleryDemanded = selectionService::prioritizeGallery,
         )
         fun refreshOptionsActions() {
             toolWindow.setAdditionalGearActions(

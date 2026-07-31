@@ -20,6 +20,7 @@ internal data class PreviewGradleResult(
     val exitCode: Int,
     val standardOutput: String,
     val errorOutput: String,
+    val durationMillis: Long = 0L,
 )
 
 internal fun interface PreviewGradleExecutor {
@@ -34,6 +35,7 @@ internal class IdePreviewGradleExecutor : PreviewGradleExecutor {
         invocation: PreviewGradleInvocation,
         indicator: ProgressIndicator,
     ): PreviewGradleResult {
+        val startedAtNanos = System.nanoTime()
         val commandLine = GeneralCommandLine(invocation.executable.toString())
             .withWorkingDirectory(invocation.workingDirectory)
             .withParameters(invocation.arguments)
@@ -47,6 +49,7 @@ internal class IdePreviewGradleExecutor : PreviewGradleExecutor {
             exitCode = output.exitCode,
             standardOutput = output.stdout,
             errorOutput = output.stderr,
+            durationMillis = elapsedMillis(startedAtNanos),
         )
     }
 }
@@ -66,6 +69,8 @@ internal sealed interface PreviewRenderOutcome {
         val diagnostics: List<StudioPreviewDiagnostic>,
         val durationMillis: Long?,
         val cacheHit: Boolean,
+        val performanceTrace: PreviewPerformanceTrace = PreviewPerformanceTrace(),
+        val inputScope: PreviewInputScope? = null,
     ) : PreviewRenderOutcome
 
     data class Failure(
@@ -130,7 +135,7 @@ internal class ViewComposePreviewRenderCoordinator(
                 forceRerender = forceRerender,
                 indicator = indicator,
                 onProgress = onProgress,
-            )
+            ).withPerformancePhase("gradle-discovery", discovery.durationMillis)
         }.getOrElse { error ->
             if (error is ProcessCanceledException) throw error
             PreviewRenderOutcome.Failure(
@@ -194,6 +199,7 @@ internal class ViewComposePreviewRenderCoordinator(
                 buildVariant = PREFERRED_BUILD_VARIANT,
             ) ?: return null
             readMatchOutcome(
+                target = target,
                 selection = selection,
                 match = match,
                 render = render,
@@ -231,6 +237,7 @@ internal class ViewComposePreviewRenderCoordinator(
         forceRerender: Boolean = false,
         indicator: ProgressIndicator,
         onProgress: (String) -> Unit = {},
+        batchStrategy: PreviewGalleryBatchStrategy? = null,
         onOutcome: (PreviewRenderOutcome) -> Unit,
     ) {
         if (selections.isEmpty()) return
@@ -289,18 +296,36 @@ internal class ViewComposePreviewRenderCoordinator(
                 .groupBy { selectionMatch -> selectionMatch.match.catalog.buildVariant }
                 .forEach { (_, variantMatches) ->
                     indicator.checkCanceled()
-                    completed += variantMatches.size
-                    onProgress(
-                        "Rendering ${variantMatches.size} previews in one batch " +
-                            "($completed total)…",
-                    )
-                    renderBatch(
-                        target = target,
-                        matches = variantMatches,
-                        forceRerender = forceRerender,
-                        indicator = indicator,
-                        onOutcome = onOutcome,
-                    )
+                    val batches = batchStrategy
+                        ?.batches(variantMatches)
+                        ?: listOf(variantMatches)
+                    batches.forEach { batch ->
+                        if (batch.isEmpty()) return@forEach
+                        indicator.checkCanceled()
+                        completed += batch.size
+                        onProgress(
+                            "Rendering ${batch.size} previews in one batch " +
+                                "($completed total)…",
+                        )
+                        renderBatch(
+                            target = target,
+                            matches = batch,
+                            forceRerender = forceRerender,
+                            indicator = indicator,
+                            onOutcome = { outcome ->
+                                onOutcome(
+                                    outcome.withPerformancePhase(
+                                        phase = "gradle-discovery",
+                                        durationMillis = discovery.durationMillis,
+                                        shared = true,
+                                    ),
+                                )
+                            },
+                        )
+                        batchStrategy?.onBatchCompleted(
+                            batch.mapTo(linkedSetOf(), PreviewSelectionMatch::selection),
+                        )
+                    }
                 }
         }
     }
@@ -352,6 +377,7 @@ internal class ViewComposePreviewRenderCoordinator(
                 indicator.checkCanceled()
                 val outcome = runCatching {
                     readMatchOutcome(
+                        target = target,
                         selection = selectionMatch.selection,
                         match = selectionMatch.match,
                         render = render,
@@ -402,6 +428,7 @@ internal class ViewComposePreviewRenderCoordinator(
 
         indicator.checkCanceled()
         return readMatchOutcome(
+            target = target,
             selection = selection,
             match = match,
             render = render,
@@ -409,6 +436,7 @@ internal class ViewComposePreviewRenderCoordinator(
     }
 
     private fun readMatchOutcome(
+        target: PreviewGradleTarget,
         selection: PreviewSourceSelection,
         match: PreviewCatalogMatch,
         render: PreviewGradleResult,
@@ -432,9 +460,11 @@ internal class ViewComposePreviewRenderCoordinator(
         val renderTreePath = response.renderTreePath?.let { path ->
             match.resolveArtifact(path, "render tree")
         }
+        val snapshotDecodeStartedAtNanos = System.nanoTime()
         val renderSnapshotResult = renderTreePath?.let { path ->
             runCatching { StudioPreviewProtocolReader.readRenderSnapshot(path) }
         }
+        val snapshotDecodeMillis = elapsedMillis(snapshotDecodeStartedAtNanos)
         val snapshotDiagnostic = renderSnapshotResult
             ?.exceptionOrNull()
             ?.let { error ->
@@ -446,6 +476,15 @@ internal class ViewComposePreviewRenderCoordinator(
                     details = error.message,
                 )
             }
+        val imageDecodeStartedAtNanos = System.nanoTime()
+        val image = loadBoundedPreviewImage(imagePath)
+        val imageDecodeMillis = elapsedMillis(imageDecodeStartedAtNanos)
+        val workerPhases = response.phaseTimings.map { timing ->
+            PreviewPerformancePhase(
+                phase = timing.phase,
+                durationMillis = timing.durationMillis,
+            )
+        }
         return PreviewRenderOutcome.Success(
             selection = selection,
             descriptorId = match.descriptor.id,
@@ -453,13 +492,26 @@ internal class ViewComposePreviewRenderCoordinator(
             variants = match.descriptor.variants,
             selectedVariantId = match.variant.id,
             variantName = match.variant.displayName,
-            image = loadBoundedPreviewImage(imagePath),
+            image = image,
             imagePath = imagePath,
             renderTreePath = renderTreePath,
             renderSnapshot = renderSnapshotResult?.getOrNull(),
             diagnostics = response.diagnostics + listOfNotNull(snapshotDiagnostic),
             durationMillis = response.durationMillis,
             cacheHit = match.wasCacheHit(render.standardOutput),
+            performanceTrace = PreviewPerformanceTrace(workerPhases)
+                .plus("gradle-render", render.durationMillis, shared = true)
+                .plus("snapshot-decode", snapshotDecodeMillis)
+                .plus("image-decode", imageDecodeMillis),
+            inputScope = PreviewInputScope.create(
+                projectRoot = target.projectRoot,
+                moduleRoot = target.moduleRoot,
+                manifestInputPaths = runCatching {
+                    StudioPreviewProtocolReader.readBuildManifestInputPaths(
+                        match.catalogPath.parent.resolve(BUILD_MANIFEST_FILE_NAME),
+                    )
+                }.getOrDefault(emptyList()),
+            ),
         )
     }
 
@@ -621,6 +673,29 @@ internal class ViewComposePreviewRenderCoordinator(
     }
 }
 
+internal class PreviewGalleryBatchStrategy(
+    private val firstBatchSelectionCount: Int,
+    private val priorityOrder: PreviewGalleryPriorityOrder,
+    private val batchCompleted: (Set<PreviewSourceSelection>) -> Unit,
+) {
+    init {
+        require(firstBatchSelectionCount > 0)
+    }
+
+    fun batches(matches: List<PreviewSelectionMatch>): List<List<PreviewSelectionMatch>> {
+        if (matches.isEmpty()) return emptyList()
+        val orderedSelections = priorityOrder.order(matches.map(PreviewSelectionMatch::selection))
+        val firstSelections = orderedSelections.take(firstBatchSelectionCount).toHashSet()
+        val first = matches.filter { match -> match.selection in firstSelections }
+        val remaining = matches.filterNot { match -> match.selection in firstSelections }
+        return listOf(first, remaining).filter(List<PreviewSelectionMatch>::isNotEmpty)
+    }
+
+    fun onBatchCompleted(selections: Set<PreviewSourceSelection>) {
+        batchCompleted(selections)
+    }
+}
+
 private data class PreviewGradleTarget(
     val projectRoot: Path,
     val moduleRoot: Path,
@@ -648,7 +723,7 @@ private data class PreviewGradleTarget(
     }
 }
 
-private data class PreviewCatalogMatch(
+internal data class PreviewCatalogMatch(
     val catalogPath: Path,
     val catalog: StudioPreviewCatalog,
     val descriptor: StudioPreviewDescriptor,
@@ -691,7 +766,7 @@ private data class PreviewCatalogMatch(
     }
 }
 
-private data class PreviewSelectionMatch(
+internal data class PreviewSelectionMatch(
     val selection: PreviewSourceSelection,
     val match: PreviewCatalogMatch,
 )
@@ -753,6 +828,28 @@ private fun PreviewGradleResult.isUnknownPreviewFailure(descriptorId: String): B
     return "Unknown ViewCompose preview '$descriptorId'" in output
 }
 
+private fun PreviewRenderOutcome.withPerformancePhase(
+    phase: String,
+    durationMillis: Long,
+    shared: Boolean = false,
+): PreviewRenderOutcome {
+    return when (this) {
+        is PreviewRenderOutcome.Success -> copy(
+            performanceTrace = performanceTrace.plus(
+                phase = phase,
+                durationMillis = durationMillis,
+                shared = shared,
+            ),
+        )
+        is PreviewRenderOutcome.Failure -> this
+    }
+}
+
+private fun elapsedMillis(startedAtNanos: Long): Long {
+    return ((System.nanoTime() - startedAtNanos) / NANOS_PER_MILLISECOND)
+        .coerceAtLeast(0L)
+}
+
 internal fun loadBoundedPreviewImage(path: Path): BufferedImage {
     val size = Files.size(path)
     require(size in 1..MAXIMUM_PREVIEW_IMAGE_BYTES) {
@@ -779,12 +876,14 @@ internal fun loadBoundedPreviewImage(path: Path): BufferedImage {
 }
 
 private const val DESCRIPTOR_CATALOG_FILE_NAME = "descriptors.json"
+private const val BUILD_MANIFEST_FILE_NAME = "build-manifest.json"
 private const val RESPONSE_FILE_NAME = "response.json"
 private const val CACHE_HIT_MARKER = "ViewCompose preview cache hit:"
 private const val MAXIMUM_GRADLE_OUTPUT_LENGTH = 30_000
 private const val MAXIMUM_PREVIEW_IMAGE_BYTES = 64L * 1024L * 1024L
 // Keep Studio's decoded-image ceiling aligned with the renderer's auto-height capture budget.
 private const val MAXIMUM_PREVIEW_IMAGE_PIXELS = 16_000_000L
+private const val NANOS_PER_MILLISECOND = 1_000_000L
 private const val DEFAULT_RENDER_LOGICAL_WIDTH_DP = 411
 private const val PREFERRED_DISCOVERY_TASK_NAME = "discoverDebugViewComposePreviews"
 private const val AGGREGATE_DISCOVERY_TASK_NAME = "viewComposePreviewDescriptors"

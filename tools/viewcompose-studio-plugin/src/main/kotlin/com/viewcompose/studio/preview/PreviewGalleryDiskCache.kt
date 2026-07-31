@@ -51,7 +51,7 @@ internal class PreviewGalleryDiskCache(
                     runCatching {
                         val thumbnailPath = entry.directory.resolve(GALLERY_THUMBNAIL_FILE_NAME)
                         val detailImagePath = entry.directory.resolve(GALLERY_DETAIL_IMAGE_FILE_NAME)
-                        val thumbnail = loadBoundedPreviewImage(thumbnailPath)
+                        require(Files.isRegularFile(thumbnailPath))
                         require(Files.isRegularFile(detailImagePath))
                         writeMetadata(
                             entry.directory,
@@ -63,7 +63,6 @@ internal class PreviewGalleryDiskCache(
                             variantId = entry.metadata.variantId,
                             variantName = entry.metadata.variantName,
                             variantIndex = entry.metadata.variantIndex,
-                            thumbnail = thumbnail,
                             thumbnailPath = thumbnailPath,
                             detailImagePath = detailImagePath,
                             cacheHit = true,

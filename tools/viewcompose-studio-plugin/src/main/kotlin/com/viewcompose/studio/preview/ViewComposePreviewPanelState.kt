@@ -37,17 +37,34 @@ internal sealed interface ViewComposePreviewPanelState {
 internal data class PreviewGalleryResult(
     val items: List<PreviewGalleryItem>,
     val failures: List<PreviewRenderOutcome.Failure>,
+    val pendingSelections: List<PreviewSourceSelection> = emptyList(),
 )
 
-internal data class PreviewGalleryItem(
+internal class PreviewGalleryItem(
     val selection: PreviewSourceSelection,
     val descriptorName: String,
     val variantId: String,
     val variantName: String,
     val variantIndex: Int,
-    val thumbnail: BufferedImage,
+    thumbnail: BufferedImage? = null,
     val thumbnailPath: Path,
     val detailImagePath: Path,
     val cacheHit: Boolean,
     val logicalWidthDp: Int = 411,
-)
+) {
+    @Volatile
+    private var retainedThumbnail: BufferedImage? = thumbnail
+
+    val thumbnail: BufferedImage
+        @Synchronized get() {
+            return retainedThumbnail ?: loadBoundedPreviewImage(thumbnailPath).also { image ->
+                retainedThumbnail = image
+            }
+        }
+
+    @Synchronized
+    fun releaseThumbnail() {
+        retainedThumbnail?.flush()
+        retainedThumbnail = null
+    }
+}
