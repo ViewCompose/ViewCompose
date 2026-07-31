@@ -88,6 +88,7 @@ data class PreviewNativeViewNode(
     val clippingAncestorClassName: String? = null,
     val clippingAncestorNodeId: String? = null,
     val clippingExpected: Boolean = false,
+    val properties: Map<String, String> = emptyMap(),
     val nodeId: String? = null,
     val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
     val synthetic: Boolean = false,

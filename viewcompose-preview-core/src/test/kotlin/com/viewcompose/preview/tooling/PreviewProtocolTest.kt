@@ -178,6 +178,10 @@ class PreviewProtocolTest {
                         right = 1080,
                         bottom = 1920,
                     ),
+                    properties = mapOf(
+                        "enabled" to "true",
+                        "childCount" to "1",
+                    ),
                 ),
             ),
             layoutDiagnostics = listOf(

@@ -148,6 +148,8 @@ class StaticPreviewWorkerPaparazziTest {
         assertTrue(nativeText.bounds.bottom > nativeText.bounds.top)
         assertEquals(renderText.nodeId, nativeText.nodeId)
         assertEquals(renderText.sourceCallSites, nativeText.sourceCallSites)
+        assertEquals("true", nativeText.properties["enabled"])
+        assertTrue(nativeText.properties["text"].orEmpty().isNotBlank())
         val insertPatch = snapshot.patches.single { patch -> patch.type == "Text" }
         assertEquals(renderText.nodeId, insertPatch.nodeId)
         assertEquals(renderText.sourceCallSites, insertPatch.sourceCallSites)
@@ -234,6 +236,8 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals(60, capturedChild.visibleBounds?.left)
         assertEquals(100, capturedChild.visibleBounds?.right)
         assertEquals("android.widget.FrameLayout", capturedChild.clippingAncestorClassName)
+        assertEquals("Partially visible", capturedChild.properties["text"])
+        assertEquals("true", capturedChild.properties["enabled"])
     }
 
     @Test

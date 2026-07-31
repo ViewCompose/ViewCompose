@@ -2,6 +2,7 @@ package com.viewcompose.preview.runner
 
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import com.viewcompose.preview.tooling.PreviewClippingState
 import com.viewcompose.preview.tooling.PreviewDiagnosticSeverity
@@ -165,11 +166,79 @@ internal object PreviewNativeViewSnapshotter {
             clippingAncestorClassName = visibleGeometry.clippingSource?.sourceClassName,
             clippingAncestorNodeId = visibleGeometry.clippingSource?.sourceNodeId,
             clippingExpected = visibleGeometry.clippingSource?.expected == true,
+            properties = view.previewProperties(),
             nodeId = tooling?.nodeId,
             sourceCallSites = sourceCallSites,
             synthetic = tooling?.synthetic == true,
             children = childNodes,
         )
+    }
+}
+
+private fun View.previewProperties(): Map<String, String> = buildMap {
+    layoutParams?.let { params ->
+        put("layoutWidth", params.width.layoutDimensionName())
+        put("layoutHeight", params.height.layoutDimensionName())
+    }
+    put("enabled", isEnabled.toString())
+    put("clickable", isClickable.toString())
+    put("focusable", isFocusable.toString())
+    put("selected", isSelected.toString())
+    put("alpha", alpha.compactDecimal())
+    put("padding", "$paddingLeft, $paddingTop, $paddingRight, $paddingBottom")
+    if (id != View.NO_ID) put("id", "0x${id.toUInt().toString(16)}")
+    contentDescription?.toString()?.trim()?.takeIf(String::isNotEmpty)?.let { description ->
+        put("contentDescription", description.previewText())
+    }
+    if (elevation != 0f) put("elevationPx", elevation.compactDecimal())
+    if (translationX != 0f || translationY != 0f || translationZ != 0f) {
+        put(
+            "translationPx",
+            "${translationX.compactDecimal()}, ${translationY.compactDecimal()}, " +
+                translationZ.compactDecimal(),
+        )
+    }
+    when (this@previewProperties) {
+        is TextView -> {
+            text?.toString()?.takeIf(String::isNotEmpty)?.let { value ->
+                put("text", value.previewText())
+            }
+            put("textSizePx", textSize.compactDecimal())
+            put("maxLines", maxLines.toString())
+            put("gravity", gravity.toString())
+            ellipsize?.let { mode -> put("ellipsize", mode.toString()) }
+        }
+        is ImageView -> {
+            put("scaleType", scaleType.toString())
+            drawable?.let { value ->
+                put("drawableSize", "${value.intrinsicWidth} × ${value.intrinsicHeight}")
+            }
+        }
+    }
+    if (this@previewProperties is ViewGroup) {
+        put("childCount", childCount.toString())
+        put("clipChildren", clipChildren.toString())
+        put("clipToPadding", clipToPadding.toString())
+    }
+}
+
+private fun Int.layoutDimensionName(): String = when (this) {
+    ViewGroup.LayoutParams.MATCH_PARENT -> "match_parent"
+    ViewGroup.LayoutParams.WRAP_CONTENT -> "wrap_content"
+    else -> "$this px"
+}
+
+private fun Float.compactDecimal(): String {
+    val rounded = (this * 100f).roundToInt() / 100f
+    return rounded.toString()
+}
+
+private fun String.previewText(): String {
+    val singleLine = replace('\n', ' ').replace('\r', ' ')
+    return if (singleLine.length <= MAXIMUM_PREVIEW_PROPERTY_TEXT_LENGTH) {
+        singleLine
+    } else {
+        singleLine.take(MAXIMUM_PREVIEW_PROPERTY_TEXT_LENGTH - 1) + "…"
     }
 }
 
@@ -411,3 +480,5 @@ private data class VisibleGeometry(
     val bounds: PreviewLayoutBounds?,
     val clippingSource: ClipRegion?,
 )
+
+private const val MAXIMUM_PREVIEW_PROPERTY_TEXT_LENGTH = 120

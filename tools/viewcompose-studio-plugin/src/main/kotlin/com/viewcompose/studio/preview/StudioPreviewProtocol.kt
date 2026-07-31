@@ -117,6 +117,7 @@ internal data class StudioPreviewNativeViewNode(
     val clippingAncestorClassName: String?,
     val clippingAncestorNodeId: String?,
     val clippingExpected: Boolean,
+    val properties: Map<String, String> = emptyMap(),
     val nodeId: String?,
     val sourceCallSites: List<StudioPreviewSourceCallSite>,
     val synthetic: Boolean,
@@ -351,6 +352,19 @@ private fun JsonObject.toNativeViewNode(
         clippingAncestorClassName = optionalString("clippingAncestorClassName"),
         clippingAncestorNodeId = optionalString("clippingAncestorNodeId"),
         clippingExpected = optionalBoolean("clippingExpected") ?: false,
+        properties = optionalObject("properties")
+            ?.entrySet()
+            .orEmpty()
+            .take(MAXIMUM_NATIVE_VIEW_PROPERTIES)
+            .mapNotNull { (name, value) ->
+                value.takeIf { element ->
+                    element.isJsonPrimitive && element.asJsonPrimitive.isString
+                }?.asString?.let { propertyValue ->
+                    name.take(MAXIMUM_NATIVE_VIEW_PROPERTY_NAME_LENGTH) to
+                        propertyValue.take(MAXIMUM_NATIVE_VIEW_PROPERTY_VALUE_LENGTH)
+                }
+            }
+            .toMap(),
         nodeId = optionalString("nodeId"),
         sourceCallSites = sourceCallSites(),
         synthetic = optionalBoolean("synthetic") ?: false,
@@ -633,6 +647,9 @@ private const val MAXIMUM_RENDER_SNAPSHOT_BYTES = 16L * 1024L * 1024L
 private const val MAXIMUM_SOURCE_CALL_SITES = 16
 private const val MAXIMUM_LAYOUT_DIAGNOSTICS = 10_000
 private const val MAXIMUM_LAYOUT_DIAGNOSTIC_METRICS = 32
+private const val MAXIMUM_NATIVE_VIEW_PROPERTIES = 32
+private const val MAXIMUM_NATIVE_VIEW_PROPERTY_NAME_LENGTH = 64
+private const val MAXIMUM_NATIVE_VIEW_PROPERTY_VALUE_LENGTH = 256
 private const val MAXIMUM_RENDER_TREE_DEPTH = 256
 private const val MAXIMUM_RENDER_TREE_NODES = 100_000
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")

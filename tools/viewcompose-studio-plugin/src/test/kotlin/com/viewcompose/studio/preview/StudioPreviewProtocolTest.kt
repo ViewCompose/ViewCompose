@@ -128,6 +128,10 @@ class StudioPreviewProtocolTest {
                       "clippingState": "PartiallyClipped",
                       "clippingAncestorClassName": "android.widget.FrameLayout",
                       "clippingExpected": false,
+                      "properties": {
+                        "enabled": "true",
+                        "text": "Preview title"
+                      },
                       "nodeId": "node-title",
                       "sourceCallSites": [
                         {
@@ -252,6 +256,10 @@ class StudioPreviewProtocolTest {
             snapshot.nativeViewTree.single().children.single().clippingState,
         )
         assertEquals(168, snapshot.nativeViewTree.single().children.single().visibleBounds?.width)
+        assertEquals(
+            "Preview title",
+            snapshot.nativeViewTree.single().children.single().properties["text"],
+        )
         assertEquals(
             StudioPreviewLayoutDiagnosticKind.PartiallyClipped,
             snapshot.layoutDiagnostics.single().kind,
