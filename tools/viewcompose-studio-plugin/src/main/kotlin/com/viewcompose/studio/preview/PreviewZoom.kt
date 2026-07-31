@@ -1,5 +1,7 @@
 package com.viewcompose.studio.preview
 
+import kotlin.math.pow
+
 internal enum class PreviewZoomOption(
     val fixedScale: Double?,
 ) {
@@ -28,6 +30,41 @@ internal fun calculatePreviewScale(
         .coerceIn(MINIMUM_FIT_SCALE, MAXIMUM_FIT_SCALE)
 }
 
+internal fun calculateMagnifiedPreviewScale(
+    currentScale: Double,
+    magnification: Double,
+): Double {
+    require(currentScale.isFinite() && currentScale > 0.0) {
+        "Current preview scale must be finite and positive."
+    }
+    require(magnification.isFinite()) { "Preview magnification must be finite." }
+    return clampPreviewScale(
+        currentScale * (1.0 + magnification).coerceAtLeast(MINIMUM_MAGNIFICATION_FACTOR),
+    )
+}
+
+internal fun calculateWheelPreviewScale(
+    currentScale: Double,
+    preciseWheelRotation: Double,
+): Double {
+    require(currentScale.isFinite() && currentScale > 0.0) {
+        "Current preview scale must be finite and positive."
+    }
+    require(preciseWheelRotation.isFinite()) { "Preview wheel rotation must be finite." }
+    return clampPreviewScale(
+        currentScale * WHEEL_ZOOM_BASE.pow(-preciseWheelRotation),
+    )
+}
+
+internal fun clampPreviewScale(scale: Double): Double {
+    require(scale.isFinite()) { "Preview scale must be finite." }
+    return scale.coerceIn(MINIMUM_PREVIEW_SCALE, MAXIMUM_PREVIEW_SCALE)
+}
+
 private const val PREVIEW_FIT_PADDING_PIXELS = 16
 private const val MINIMUM_FIT_SCALE = 0.1
 private const val MAXIMUM_FIT_SCALE = 1.0
+private const val MINIMUM_PREVIEW_SCALE = 0.1
+private const val MAXIMUM_PREVIEW_SCALE = 4.0
+private const val MINIMUM_MAGNIFICATION_FACTOR = 0.01
+private const val WHEEL_ZOOM_BASE = 1.1

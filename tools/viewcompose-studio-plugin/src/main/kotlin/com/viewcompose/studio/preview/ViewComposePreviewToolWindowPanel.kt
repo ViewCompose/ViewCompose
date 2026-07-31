@@ -67,6 +67,7 @@ internal class ViewComposePreviewToolWindowPanel(
     private var language = initialLanguage
     private var currentState: ViewComposePreviewPanelState = ViewComposePreviewPanelState.Empty
     private var previewZoomOption: PreviewZoomOption = PreviewZoomOption.Fit
+    private var previewCustomScale: Double? = null
     private var selectedDiagnosticsTabIndex: Int = 0
     private var showLayoutBounds: Boolean = false
     private var showLayoutDiagnostics: Boolean = true
@@ -557,9 +558,11 @@ internal class ViewComposePreviewToolWindowPanel(
             nativeViews = nativeViews,
             layoutDiagnostics = layoutDiagnostics,
             initialZoomOption = previewZoomOption,
+            initialCustomScale = previewCustomScale,
             sourceNavigationHint = messages.text("source.navigationHint"),
             onNavigateToSource = onNavigateToRuntimeSource,
             onNodeSelected = { nodeId -> selectionCoordinator?.select(nodeId) },
+            onContinuousZoomChanged = { scale -> previewCustomScale = scale },
         ).apply {
             showLayoutBounds = this@ViewComposePreviewToolWindowPanel.showLayoutBounds
             showLayoutDiagnostics =
@@ -586,6 +589,7 @@ internal class ViewComposePreviewToolWindowPanel(
 
         fun selectZoom(option: PreviewZoomOption) {
             previewZoomOption = option
+            previewCustomScale = null
             canvas.zoomOption = option
             SwingUtilities.invokeLater(::updateCanvasScale)
         }
@@ -1210,14 +1214,17 @@ private class PreviewImageCanvas(
     private val nativeViews: List<StudioPreviewNativeViewNode>,
     private val layoutDiagnostics: List<StudioPreviewLayoutDiagnostic>,
     initialZoomOption: PreviewZoomOption,
+    initialCustomScale: Double?,
     private val sourceNavigationHint: String,
     private val onNavigateToSource: (List<StudioPreviewSourceCallSite>) -> Unit,
     private val onNodeSelected: (String?) -> Unit,
+    private val onContinuousZoomChanged: (Double) -> Unit,
 ) : JComponent() {
     var zoomOption: PreviewZoomOption = initialZoomOption
         set(value) {
-            if (field == value) return
+            if (field == value && customScale == null) return
             field = value
+            customScale = null
             updateScale()
         }
 
@@ -1253,14 +1260,27 @@ private class PreviewImageCanvas(
 
     private var viewportSize: Dimension = Dimension(image.width, image.height)
     private var scale: Double = 1.0
+    private var customScale: Double? = initialCustomScale?.let(::clampPreviewScale)
     private var selectedView: StudioPreviewNativeViewNode? = null
     private var panStartPoint: Point? = null
     private var panStartViewPosition: Point? = null
+    private var nativeMagnificationRegistration: AutoCloseable? = null
 
     init {
         minimumSize = Dimension(1, 1)
         isOpaque = true
         ToolTipManager.sharedInstance().registerComponent(this)
+        addMouseWheelListener { event ->
+            if (!event.isControlDown) return@addMouseWheelListener
+            event.consume()
+            applyContinuousScale(
+                nextScale = calculateWheelPreviewScale(
+                    currentScale = scale,
+                    preciseWheelRotation = event.preciseWheelRotation,
+                ),
+                anchorPoint = event.point,
+            )
+        }
         addMouseMotionListener(
             object : MouseMotionAdapter() {
                 override fun mouseMoved(event: MouseEvent) {
@@ -1322,6 +1342,35 @@ private class PreviewImageCanvas(
         updateScale()
     }
 
+    override fun addNotify() {
+        super.addNotify()
+        if (nativeMagnificationRegistration == null) {
+            nativeMagnificationRegistration = installNativePreviewMagnificationListener(this) {
+                magnification ->
+                val zoom = {
+                    applyContinuousScale(
+                        nextScale = calculateMagnifiedPreviewScale(
+                            currentScale = scale,
+                            magnification = magnification,
+                        ),
+                        anchorPoint = null,
+                    )
+                }
+                if (SwingUtilities.isEventDispatchThread()) {
+                    zoom()
+                } else {
+                    SwingUtilities.invokeLater(zoom)
+                }
+            }
+        }
+    }
+
+    override fun removeNotify() {
+        nativeMagnificationRegistration?.close()
+        nativeMagnificationRegistration = null
+        super.removeNotify()
+    }
+
     private fun previewViewport(): JViewport? {
         return SwingUtilities.getAncestorOfClass(JViewport::class.java, this) as? JViewport
     }
@@ -1340,7 +1389,7 @@ private class PreviewImageCanvas(
     }
 
     private fun updateScale() {
-        scale = calculatePreviewScale(
+        scale = customScale ?: calculatePreviewScale(
             option = zoomOption,
             imageWidth = image.width,
             imageHeight = image.height,
@@ -1355,6 +1404,48 @@ private class PreviewImageCanvas(
         )
         revalidate()
         repaint()
+    }
+
+    private fun applyContinuousScale(
+        nextScale: Double,
+        anchorPoint: Point?,
+    ) {
+        val resolvedScale = clampPreviewScale(nextScale)
+        if (kotlin.math.abs(resolvedScale - scale) < ZOOM_EPSILON) return
+        val viewport = previewViewport()
+        val oldPlacement = imagePlacement()
+        val oldScale = scale
+        val oldViewPosition = viewport?.viewPosition ?: Point()
+        val oldExtent = viewport?.extentSize ?: viewportSize
+        val anchorCanvas = anchorPoint ?: Point(
+            oldViewPosition.x + oldExtent.width / 2,
+            oldViewPosition.y + oldExtent.height / 2,
+        )
+        val anchorViewportOffset = Point(
+            anchorCanvas.x - oldViewPosition.x,
+            anchorCanvas.y - oldViewPosition.y,
+        )
+        val imageAnchorX = (anchorCanvas.x - oldPlacement.left) / oldScale
+        val imageAnchorY = (anchorCanvas.y - oldPlacement.top) / oldScale
+
+        customScale = resolvedScale
+        onContinuousZoomChanged(resolvedScale)
+        updateScale()
+        if (viewport != null) {
+            SwingUtilities.invokeLater {
+                val placement = imagePlacement()
+                val maxX = (viewport.viewSize.width - viewport.extentSize.width).coerceAtLeast(0)
+                val maxY = (viewport.viewSize.height - viewport.extentSize.height).coerceAtLeast(0)
+                viewport.viewPosition = Point(
+                    (placement.left + imageAnchorX * scale - anchorViewportOffset.x)
+                        .roundToInt()
+                        .coerceIn(0, maxX),
+                    (placement.top + imageAnchorY * scale - anchorViewportOffset.y)
+                        .roundToInt()
+                        .coerceIn(0, maxY),
+                )
+            }
+        }
     }
 
     override fun getToolTipText(event: MouseEvent): String? {
@@ -1373,7 +1464,11 @@ private class PreviewImageCanvas(
             )
             graphics2D.setRenderingHint(
                 RenderingHints.KEY_INTERPOLATION,
-                RenderingHints.VALUE_INTERPOLATION_BILINEAR,
+                if (scale < 1.0) {
+                    RenderingHints.VALUE_INTERPOLATION_BICUBIC
+                } else {
+                    RenderingHints.VALUE_INTERPOLATION_BILINEAR
+                },
             )
             graphics2D.drawImage(
                 image,

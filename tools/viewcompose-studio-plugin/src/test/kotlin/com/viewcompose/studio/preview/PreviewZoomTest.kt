@@ -63,4 +63,21 @@ class PreviewZoomTest {
             0.0001,
         )
     }
+
+    @Test
+    fun `native magnification supports continuous zoom within safe bounds`() {
+        assertEquals(1.25, calculateMagnifiedPreviewScale(1.0, 0.25), 0.0001)
+        assertEquals(0.75, calculateMagnifiedPreviewScale(1.0, -0.25), 0.0001)
+        assertEquals(4.0, calculateMagnifiedPreviewScale(3.0, 1.0), 0.0001)
+        assertEquals(0.1, calculateMagnifiedPreviewScale(0.2, -1.0), 0.0001)
+    }
+
+    @Test
+    fun `control wheel fallback zooms continuously in both directions`() {
+        val zoomedIn = calculateWheelPreviewScale(1.0, -1.0)
+        val zoomedOut = calculateWheelPreviewScale(1.0, 1.0)
+
+        assertEquals(1.1, zoomedIn, 0.0001)
+        assertEquals(1.0 / 1.1, zoomedOut, 0.0001)
+    }
 }
