@@ -122,82 +122,13 @@ internal class ViewComposePreviewRenderCoordinator(
                     details = "The function may have an unsupported signature, or the module may " +
                         "not apply the com.viewcompose.preview Gradle plugin.",
                 )
-
-            onProgress("Rendering ${match.descriptor.displayName}…")
-            indicator.text = "Rendering ${match.descriptor.displayName}"
-            val render = executor.execute(
-                invocation = target.invocation(
-                    taskName = renderTaskName(match.catalog.buildVariant),
-                    additionalArguments = listOf(
-                        "--preview-id",
-                        match.descriptor.id,
-                        "--variant-id",
-                        match.variant.id,
-                    ) + if (forceRerender) listOf("--rerender=true") else emptyList(),
-                ),
-                indicator = indicator,
-            )
-            if (render.exitCode != 0) {
-                return PreviewRenderOutcome.Failure(
-                    selection = selection,
-                    title = "Preview render failed",
-                    diagnostics = match.readResponseOrNull()
-                        ?.diagnostics
-                        .orEmpty(),
-                    details = render.presentableFailure(),
-                )
-            }
-
-            indicator.checkCanceled()
-            val response = match.readResponse()
-            require(response.previewId == match.descriptor.id) {
-                "Preview response '${response.previewId}' does not match " +
-                    "'${match.descriptor.id}'."
-            }
-            require(response.variantId == match.variant.id) {
-                "Preview response variant '${response.variantId}' does not match " +
-                    "'${match.variant.id}'."
-            }
-            if (response.status != StudioPreviewRenderStatus.Success) {
-                return PreviewRenderOutcome.Failure(
-                    selection = selection,
-                    title = "Preview ${response.status.name}",
-                    diagnostics = response.diagnostics,
-                    details = render.presentableOutput(),
-                )
-            }
-            val imagePath = match.resolveArtifact(response.imagePath, "preview image")
-            val renderTreePath = response.renderTreePath?.let { path ->
-                match.resolveArtifact(path, "render tree")
-            }
-            val renderSnapshotResult = renderTreePath?.let { path ->
-                runCatching { StudioPreviewProtocolReader.readRenderSnapshot(path) }
-            }
-            val snapshotDiagnostic = renderSnapshotResult
-                ?.exceptionOrNull()
-                ?.let { error ->
-                    StudioPreviewDiagnostic(
-                        severity = StudioPreviewDiagnosticSeverity.Warning,
-                        message = "The preview rendered, but its diagnostic snapshot could not be read.",
-                        phase = "render-tree",
-                        sourceLocation = match.descriptor.sourceLocation,
-                        details = error.message,
-                    )
-                }
-            PreviewRenderOutcome.Success(
+            renderMatch(
+                target = target,
                 selection = selection,
-                descriptorId = match.descriptor.id,
-                descriptorName = match.descriptor.displayName,
-                variants = match.descriptor.variants,
-                selectedVariantId = match.variant.id,
-                variantName = match.variant.displayName,
-                image = loadBoundedPreviewImage(imagePath),
-                imagePath = imagePath,
-                renderTreePath = renderTreePath,
-                renderSnapshot = renderSnapshotResult?.getOrNull(),
-                diagnostics = response.diagnostics + listOfNotNull(snapshotDiagnostic),
-                durationMillis = response.durationMillis,
-                cacheHit = CACHE_HIT_MARKER in render.standardOutput,
+                match = match,
+                forceRerender = forceRerender,
+                indicator = indicator,
+                onProgress = onProgress,
             )
         }.getOrElse { error ->
             if (error is ProcessCanceledException) throw error
@@ -208,6 +139,207 @@ internal class ViewComposePreviewRenderCoordinator(
                 details = error.message ?: error::class.java.simpleName,
             )
         }
+    }
+
+    /**
+     * Renders one default preview per annotated function while compiling each Gradle module only
+     * once. This is the lightweight source for the all-previews gallery.
+     */
+    fun renderAll(
+        selections: List<PreviewSourceSelection>,
+        forceRerender: Boolean = false,
+        indicator: ProgressIndicator,
+        onProgress: (String) -> Unit = {},
+    ): List<PreviewRenderOutcome> {
+        val outcomes = mutableListOf<PreviewRenderOutcome>()
+        renderAllEach(
+            selections = selections,
+            forceRerender = forceRerender,
+            indicator = indicator,
+            onProgress = onProgress,
+            onOutcome = outcomes::add,
+        )
+        return outcomes
+    }
+
+    /**
+     * Streaming gallery renderer. A full-size image is handed to [onOutcome] as soon as it is
+     * available so callers can downsample and release it before the next preview is rendered.
+     */
+    fun renderAllEach(
+        selections: List<PreviewSourceSelection>,
+        forceRerender: Boolean = false,
+        indicator: ProgressIndicator,
+        onProgress: (String) -> Unit = {},
+        onOutcome: (PreviewRenderOutcome) -> Unit,
+    ) {
+        if (selections.isEmpty()) return
+        val groupedTargets = linkedMapOf<PreviewGradleTarget, MutableList<PreviewSourceSelection>>()
+        selections.distinct().forEach { selection ->
+            runCatching { locateGradleTarget(selection) }
+                .onSuccess { target ->
+                    groupedTargets.getOrPut(target, ::mutableListOf) += selection
+                }
+                .onFailure { error ->
+                    onOutcome(toolingFailure(selection, error))
+                }
+        }
+        var completed = 0
+        groupedTargets.forEach { (target, moduleSelections) ->
+            indicator.checkCanceled()
+            onProgress("Compiling preview descriptors for ${target.modulePath}…")
+            indicator.text = "Compiling ViewCompose preview descriptors"
+            val discovery = executor.execute(
+                invocation = target.invocation("viewComposePreviewDescriptors"),
+                indicator = indicator,
+            )
+            if (discovery.exitCode != 0) {
+                moduleSelections.forEach { selection ->
+                    onOutcome(
+                        PreviewRenderOutcome.Failure(
+                            selection = selection,
+                            title = "Preview discovery failed",
+                            diagnostics = emptyList(),
+                            details = discovery.presentableFailure(),
+                        ),
+                    )
+                }
+                return@forEach
+            }
+            moduleSelections.forEach { selection ->
+                indicator.checkCanceled()
+                completed += 1
+                val match = findMatchingPreview(
+                    target = target,
+                    selection = selection,
+                    requestedVariantId = null,
+                )
+                val outcome = if (match == null) {
+                    PreviewRenderOutcome.Failure(
+                        selection = selection,
+                        title = "No compiled preview matched this function",
+                        diagnostics = readCatalogDiagnostics(target),
+                        details = "The function may have an unsupported signature.",
+                    )
+                } else {
+                    runCatching {
+                        renderMatch(
+                            target = target,
+                            selection = selection,
+                            match = match,
+                            forceRerender = forceRerender,
+                            indicator = indicator,
+                            onProgress = {
+                                onProgress(
+                                    "Rendering $completed/${selections.size}: " +
+                                        match.descriptor.displayName,
+                                )
+                            },
+                        )
+                    }.getOrElse { error ->
+                        if (error is ProcessCanceledException) throw error
+                        toolingFailure(selection, error)
+                    }
+                }
+                onOutcome(outcome)
+            }
+        }
+    }
+
+    private fun renderMatch(
+        target: PreviewGradleTarget,
+        selection: PreviewSourceSelection,
+        match: PreviewCatalogMatch,
+        forceRerender: Boolean,
+        indicator: ProgressIndicator,
+        onProgress: (String) -> Unit,
+    ): PreviewRenderOutcome {
+        onProgress("Rendering ${match.descriptor.displayName}…")
+        indicator.text = "Rendering ${match.descriptor.displayName}"
+        val render = executor.execute(
+            invocation = target.invocation(
+                taskName = renderTaskName(match.catalog.buildVariant),
+                additionalArguments = listOf(
+                    "--preview-id",
+                    match.descriptor.id,
+                    "--variant-id",
+                    match.variant.id,
+                ) + if (forceRerender) listOf("--rerender=true") else emptyList(),
+            ),
+            indicator = indicator,
+        )
+        if (render.exitCode != 0) {
+            return PreviewRenderOutcome.Failure(
+                selection = selection,
+                title = "Preview render failed",
+                diagnostics = match.readResponseOrNull()
+                    ?.diagnostics
+                    .orEmpty(),
+                details = render.presentableFailure(),
+            )
+        }
+
+        indicator.checkCanceled()
+        val response = match.readResponse()
+        require(response.previewId == match.descriptor.id) {
+            "Preview response '${response.previewId}' does not match '${match.descriptor.id}'."
+        }
+        require(response.variantId == match.variant.id) {
+            "Preview response variant '${response.variantId}' does not match '${match.variant.id}'."
+        }
+        if (response.status != StudioPreviewRenderStatus.Success) {
+            return PreviewRenderOutcome.Failure(
+                selection = selection,
+                title = "Preview ${response.status.name}",
+                diagnostics = response.diagnostics,
+                details = render.presentableOutput(),
+            )
+        }
+        val imagePath = match.resolveArtifact(response.imagePath, "preview image")
+        val renderTreePath = response.renderTreePath?.let { path ->
+            match.resolveArtifact(path, "render tree")
+        }
+        val renderSnapshotResult = renderTreePath?.let { path ->
+            runCatching { StudioPreviewProtocolReader.readRenderSnapshot(path) }
+        }
+        val snapshotDiagnostic = renderSnapshotResult
+            ?.exceptionOrNull()
+            ?.let { error ->
+                StudioPreviewDiagnostic(
+                    severity = StudioPreviewDiagnosticSeverity.Warning,
+                    message = "The preview rendered, but its diagnostic snapshot could not be read.",
+                    phase = "render-tree",
+                    sourceLocation = match.descriptor.sourceLocation,
+                    details = error.message,
+                )
+            }
+        return PreviewRenderOutcome.Success(
+            selection = selection,
+            descriptorId = match.descriptor.id,
+            descriptorName = match.descriptor.displayName,
+            variants = match.descriptor.variants,
+            selectedVariantId = match.variant.id,
+            variantName = match.variant.displayName,
+            image = loadBoundedPreviewImage(imagePath),
+            imagePath = imagePath,
+            renderTreePath = renderTreePath,
+            renderSnapshot = renderSnapshotResult?.getOrNull(),
+            diagnostics = response.diagnostics + listOfNotNull(snapshotDiagnostic),
+            durationMillis = response.durationMillis,
+            cacheHit = CACHE_HIT_MARKER in render.standardOutput,
+        )
+    }
+
+    private fun toolingFailure(
+        selection: PreviewSourceSelection,
+        error: Throwable,
+    ): PreviewRenderOutcome.Failure {
+        return PreviewRenderOutcome.Failure(
+            selection = selection,
+            title = "Preview tooling failed",
+            diagnostics = emptyList(),
+            details = error.message ?: error::class.java.simpleName,
+        )
     }
 
     private fun locateGradleTarget(selection: PreviewSourceSelection): PreviewGradleTarget {
@@ -412,7 +544,7 @@ private fun PreviewGradleResult.presentableOutput(): String? {
         .takeIf(String::isNotBlank)
 }
 
-private fun loadBoundedPreviewImage(path: Path): BufferedImage {
+internal fun loadBoundedPreviewImage(path: Path): BufferedImage {
     val size = Files.size(path)
     require(size in 1..MAXIMUM_PREVIEW_IMAGE_BYTES) {
         "Preview image '$path' has unsupported size $size bytes."

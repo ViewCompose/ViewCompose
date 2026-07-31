@@ -123,6 +123,65 @@ class ViewComposePreviewGradleBridgeTest {
         assertEquals(1, invocationCount)
     }
 
+    @Test
+    fun `gallery compiles a module once before rendering all previews`() {
+        val projectRoot = temporaryFolder.newFolder("gallery-project").toPath()
+        Files.writeString(projectRoot.resolve("gradlew"), "")
+        val moduleRoot = Files.createDirectories(projectRoot.resolve("app"))
+        Files.writeString(moduleRoot.resolve("build.gradle.kts"), "plugins {}")
+        val firstSource = moduleRoot.resolve("src/main/kotlin/sample/First.kt")
+        val secondSource = moduleRoot.resolve("src/main/kotlin/sample/Second.kt")
+        Files.createDirectories(checkNotNull(firstSource.parent))
+        Files.writeString(firstSource, "fun FirstCard() = Unit")
+        Files.writeString(secondSource, "fun SecondCard() = Unit")
+        val invocations = mutableListOf<PreviewGradleInvocation>()
+        val executor = PreviewGradleExecutor { invocation, _ ->
+            invocations += invocation
+            when {
+                invocation.arguments.first().endsWith("viewComposePreviewDescriptors") -> {
+                    writeGalleryCatalog(moduleRoot, firstSource, secondSource)
+                    PreviewGradleResult(0, "descriptors exported", "")
+                }
+
+                invocation.arguments.first().endsWith("renderDebugViewComposePreview") -> {
+                    val previewId = invocation.arguments
+                        .windowed(2)
+                        .single { pair -> pair.first() == "--preview-id" }
+                        .last()
+                    writeSuccessfulResponse(moduleRoot, "default", previewId)
+                    PreviewGradleResult(0, "ViewCompose preview rendered:", "")
+                }
+
+                else -> PreviewGradleResult(1, "", "Unexpected task")
+            }
+        }
+
+        val outcomes = ViewComposePreviewRenderCoordinator(
+            projectRoot = projectRoot,
+            executor = executor,
+        ).renderAll(
+            selections = listOf(
+                PreviewSourceSelection(firstSource.toString(), "FirstCard", 1),
+                PreviewSourceSelection(secondSource.toString(), "SecondCard", 1),
+            ),
+            indicator = TestProgressIndicator(),
+        )
+
+        assertEquals(2, outcomes.filterIsInstance<PreviewRenderOutcome.Success>().size)
+        assertEquals(
+            1,
+            invocations.count { invocation ->
+                invocation.arguments.first().endsWith("viewComposePreviewDescriptors")
+            },
+        )
+        assertEquals(
+            2,
+            invocations.count { invocation ->
+                invocation.arguments.first().endsWith("renderDebugViewComposePreview")
+            },
+        )
+    }
+
     private fun writeCatalog(
         moduleRoot: Path,
         source: Path,
@@ -141,11 +200,12 @@ class ViewComposePreviewGradleBridgeTest {
     private fun writeSuccessfulResponse(
         moduleRoot: Path,
         variantId: String,
+        descriptorId: String = "sample-card",
     ) {
         val output = moduleRoot
             .resolve("build/viewcompose-preview/debug/render-cache")
             .resolve("a".repeat(64))
-            .resolve("sample-card/$variantId")
+            .resolve("$descriptorId/$variantId")
         Files.createDirectories(output)
         val image = output.resolve("preview.png")
         ImageIO.write(
@@ -161,7 +221,7 @@ class ViewComposePreviewGradleBridgeTest {
             {
               "protocolVersion": 1,
               "requestId": "request",
-              "previewId": "sample-card",
+              "previewId": "$descriptorId",
               "variantId": "$variantId",
               "status": "Success",
               "artifacts": {
@@ -170,6 +230,53 @@ class ViewComposePreviewGradleBridgeTest {
               },
               "diagnostics": [],
               "durationMillis": 12
+            }
+            """.trimIndent(),
+        )
+    }
+
+    private fun writeGalleryCatalog(
+        moduleRoot: Path,
+        firstSource: Path,
+        secondSource: Path,
+    ) {
+        val catalog = moduleRoot.resolve("build/viewcompose-preview/debug/descriptors.json")
+        Files.createDirectories(checkNotNull(catalog.parent))
+        Files.writeString(
+            catalog,
+            """
+            {
+              "protocolVersion": 1,
+              "modulePath": ":app",
+              "buildVariant": "debug",
+              "buildFingerprint": "${"a".repeat(64)}",
+              "descriptors": [
+                {
+                  "id": "first-card",
+                  "displayName": "First Card",
+                  "group": "Gallery",
+                  "variants": [{"id": "default", "displayName": "Default"}],
+                  "sourceLocation": {
+                    "filePath": "${firstSource.toJsonText()}",
+                    "line": 1,
+                    "column": 1,
+                    "symbolName": "FirstCard"
+                  }
+                },
+                {
+                  "id": "second-card",
+                  "displayName": "Second Card",
+                  "group": "Gallery",
+                  "variants": [{"id": "default", "displayName": "Default"}],
+                  "sourceLocation": {
+                    "filePath": "${secondSource.toJsonText()}",
+                    "line": 1,
+                    "column": 1,
+                    "symbolName": "SecondCard"
+                  }
+                }
+              ],
+              "diagnostics": []
             }
             """.trimIndent(),
         )

@@ -8,6 +8,7 @@ import com.intellij.openapi.project.DumbAwareAction
 
 internal fun createPreviewTitleActions(
     language: PreviewUiLanguage,
+    onShowGallery: () -> Unit,
     isOpenSourceEnabled: () -> Boolean,
     onOpenSource: () -> Unit,
     isRefreshEnabled: () -> Boolean,
@@ -15,6 +16,17 @@ internal fun createPreviewTitleActions(
 ): List<AnAction> {
     val messages = PreviewUiMessages.forLanguage(language)
     return listOf(
+        object : DumbAwareAction(
+            messages.text("action.gallery"),
+            messages.text("action.gallery.description"),
+            AllIcons.Actions.ShowAsTree,
+        ) {
+            override fun actionPerformed(event: AnActionEvent) {
+                onShowGallery()
+            }
+
+            override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+        },
         object : DumbAwareAction(
             messages.text("action.openSource"),
             messages.text("action.openSource.description"),

@@ -41,6 +41,16 @@ class PreviewPanelPresentationTest {
         assertEquals(selection, presentation.source)
     }
 
+    @Test
+    fun `gallery uses the default tool window title and no source action`() {
+        val presentation = ViewComposePreviewPanelState.Gallery(
+            PreviewGalleryResult(items = emptyList(), failures = emptyList()),
+        ).previewPresentation()
+
+        assertNull(presentation.title)
+        assertNull(presentation.source)
+    }
+
     private fun selection(): PreviewSourceSelection {
         return PreviewSourceSelection(
             filePath = "/project/app/src/debug/java/com/viewcompose/StaticDemoPreviewEntrypoints.kt",

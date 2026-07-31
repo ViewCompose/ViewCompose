@@ -70,6 +70,7 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
             toolWindow.setTitleActions(
                 createPreviewTitleActions(
                     language = settings.language,
+                    onShowGallery = selectionService::showGalleryAndShow,
                     isOpenSourceEnabled = { currentPreviewSource != null },
                     onOpenSource = {
                         currentPreviewSource
@@ -109,15 +110,6 @@ private fun Project.navigateToSource(source: StudioPreviewSourceLocation) {
         (source.line - 1).coerceAtLeast(0),
         (source.column - 1).coerceAtLeast(0),
     ).navigate(true)
-}
-
-private fun PreviewSourceSelection.toStudioSourceLocation(): StudioPreviewSourceLocation {
-    return StudioPreviewSourceLocation(
-        filePath = filePath,
-        line = line,
-        column = 1,
-        symbolName = symbolName,
-    )
 }
 
 private fun Project.viewComposeDetection(): ViewComposeProjectDetection {

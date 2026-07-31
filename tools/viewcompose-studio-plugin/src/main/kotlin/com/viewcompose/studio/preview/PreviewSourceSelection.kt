@@ -11,3 +11,12 @@ internal data class PreviewSourceSelection(
         require(line > 0) { "Preview source line must be positive." }
     }
 }
+
+internal fun PreviewSourceSelection.toStudioSourceLocation(): StudioPreviewSourceLocation {
+    return StudioPreviewSourceLocation(
+        filePath = filePath,
+        line = line,
+        column = 1,
+        symbolName = symbolName,
+    )
+}

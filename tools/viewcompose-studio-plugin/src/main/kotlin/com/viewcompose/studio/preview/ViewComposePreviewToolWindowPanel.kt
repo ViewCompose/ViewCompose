@@ -5,6 +5,7 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBUI
@@ -35,13 +36,17 @@ import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JComboBox
+import javax.swing.ImageIcon
 import javax.swing.JLayeredPane
+import javax.swing.JList
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.JToggleButton
 import javax.swing.JTree
 import javax.swing.JViewport
 import javax.swing.KeyStroke
+import javax.swing.ListCellRenderer
+import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
 import javax.swing.ToolTipManager
 import javax.swing.tree.DefaultMutableTreeNode
@@ -68,6 +73,7 @@ internal class ViewComposePreviewToolWindowPanel(
     private var selectedRuntimeNodeId: String? = null
     private var latestCaretLocation: PreviewCaretLocation? = null
     private var nodeSelectionCoordinator: PreviewNodeSelectionCoordinator? = null
+    private val galleryThumbnails = mutableMapOf<Path, ImageIcon>()
     private val messages: PreviewUiMessages
         get() = PreviewUiMessages.forLanguage(language)
 
@@ -90,6 +96,9 @@ internal class ViewComposePreviewToolWindowPanel(
             is ViewComposePreviewPanelState.Loading -> showLoadingState(state)
             is ViewComposePreviewPanelState.Rendered -> showRenderedState(state.result)
             is ViewComposePreviewPanelState.Failed -> showFailureState(state.result)
+            is ViewComposePreviewPanelState.GalleryLoading -> showGalleryLoadingState(state)
+            is ViewComposePreviewPanelState.Gallery -> showGalleryState(state.result)
+            is ViewComposePreviewPanelState.GalleryFailed -> showGalleryFailureState(state.details)
         }
         contentPanel.revalidate()
         contentPanel.repaint()
@@ -119,6 +128,148 @@ internal class ViewComposePreviewToolWindowPanel(
             ),
             BorderLayout.NORTH,
         )
+    }
+
+    private fun showGalleryLoadingState(state: ViewComposePreviewPanelState.GalleryLoading) {
+        contentPanel.border = JBUI.Borders.empty(12)
+        contentPanel.add(
+            header(
+                title = messages.text("gallery.title"),
+                description = messages.loadingMessage(state.message),
+            ),
+            BorderLayout.NORTH,
+        )
+        state.previousResult?.let { result ->
+            contentPanel.add(galleryContent(result), BorderLayout.CENTER)
+        }
+    }
+
+    private fun showGalleryState(result: PreviewGalleryResult) {
+        contentPanel.border = JBUI.Borders.empty(12)
+        contentPanel.add(
+            header(
+                title = messages.text("gallery.title"),
+                description = messages.text(
+                    "gallery.summary",
+                    result.items.size,
+                    result.failures.size,
+                ),
+            ),
+            BorderLayout.NORTH,
+        )
+        contentPanel.add(galleryContent(result), BorderLayout.CENTER)
+    }
+
+    private fun showGalleryFailureState(details: String) {
+        contentPanel.border = JBUI.Borders.empty(24)
+        contentPanel.add(
+            header(
+                title = messages.text("gallery.title"),
+                description = messages.text("gallery.failure"),
+            ),
+            BorderLayout.NORTH,
+        )
+        contentPanel.add(
+            JBScrollPane(readOnlyText(details)).apply {
+                border = JBUI.Borders.emptyTop(8)
+            },
+            BorderLayout.CENTER,
+        )
+    }
+
+    private fun galleryContent(result: PreviewGalleryResult): JComponent {
+        if (result.items.isEmpty()) {
+            return readOnlyText(
+                if (result.failures.isEmpty()) {
+                    messages.text("gallery.empty")
+                } else {
+                    messages.text("gallery.allFailed", result.failures.size)
+                },
+            )
+        }
+        val list = JBList(result.items).apply {
+            layoutOrientation = JList.HORIZONTAL_WRAP
+            visibleRowCount = -1
+            fixedCellWidth = JBUI.scale(GALLERY_CELL_WIDTH)
+            fixedCellHeight = JBUI.scale(GALLERY_CELL_HEIGHT)
+            selectionMode = ListSelectionModel.SINGLE_SELECTION
+            cellRenderer = ListCellRenderer { _, value, _, isSelected, _ ->
+                galleryCard(value, isSelected)
+            }
+            toolTipText = messages.text("gallery.navigationHint")
+            addMouseListener(
+                object : MouseAdapter() {
+                    override fun mouseClicked(event: MouseEvent) {
+                        if (event.clickCount < 2) return
+                        val index = locationToIndex(event.point)
+                        if (index < 0 || !getCellBounds(index, index).contains(event.point)) return
+                        val item = model.getElementAt(index)
+                        onNavigateToSource(item.selection.toStudioSourceLocation())
+                    }
+                },
+            )
+        }
+        return JBScrollPane(list).apply {
+            border = JBUI.Borders.emptyTop(8)
+            verticalScrollBar.unitIncrement = JBUI.scale(24)
+        }
+    }
+
+    private fun galleryCard(
+        result: PreviewGalleryItem,
+        selected: Boolean,
+    ): JComponent {
+        val thumbnail = galleryThumbnails.getOrPut(result.imagePath) {
+            val scale = minOf(
+                GALLERY_IMAGE_WIDTH.toDouble() / result.image.width,
+                GALLERY_IMAGE_HEIGHT.toDouble() / result.image.height,
+                1.0,
+            )
+            val width = (result.image.width * scale).roundToInt().coerceAtLeast(1)
+            val height = (result.image.height * scale).roundToInt().coerceAtLeast(1)
+            ImageIcon(result.image.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH))
+        }
+        return JPanel(BorderLayout()).apply {
+            isOpaque = true
+            background = if (selected) {
+                JBColor(Color(0xE8, 0xF0, 0xFE), Color(0x35, 0x3A, 0x43))
+            } else {
+                contentPanel.background
+            }
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(
+                    if (selected) SOURCE_SELECTION_COLOR else PREVIEW_TOOLBAR_BORDER,
+                    if (selected) JBUI.scale(2) else JBUI.scale(1),
+                ),
+                JBUI.Borders.empty(8),
+            )
+            add(
+                JPanel(BorderLayout()).apply {
+                    isOpaque = false
+                    add(
+                        JBLabel(result.descriptorName).apply {
+                            font = font.deriveFont(Font.BOLD)
+                        },
+                        BorderLayout.NORTH,
+                    )
+                    add(
+                        JBLabel(result.variantName).apply {
+                            foreground = JBColor.GRAY
+                        },
+                        BorderLayout.SOUTH,
+                    )
+                },
+                BorderLayout.NORTH,
+            )
+            add(
+                JBLabel(thumbnail).apply {
+                    horizontalAlignment = JBLabel.CENTER
+                    verticalAlignment = JBLabel.CENTER
+                    border = JBUI.Borders.emptyTop(8)
+                },
+                BorderLayout.CENTER,
+            )
+        }
     }
 
     private fun showLoadingState(state: ViewComposePreviewPanelState.Loading) {
@@ -1520,5 +1671,17 @@ internal fun ViewComposePreviewPanelState.previewPresentation(): PreviewPanelPre
             title = result.selection.symbolName,
             source = result.selection,
         )
+        is ViewComposePreviewPanelState.GalleryLoading,
+        is ViewComposePreviewPanelState.Gallery,
+        is ViewComposePreviewPanelState.GalleryFailed,
+        -> PreviewPanelPresentation(
+            title = null,
+            source = null,
+        )
     }
 }
+
+private const val GALLERY_CELL_WIDTH = 260
+private const val GALLERY_CELL_HEIGHT = 390
+private const val GALLERY_IMAGE_WIDTH = 220
+private const val GALLERY_IMAGE_HEIGHT = 300

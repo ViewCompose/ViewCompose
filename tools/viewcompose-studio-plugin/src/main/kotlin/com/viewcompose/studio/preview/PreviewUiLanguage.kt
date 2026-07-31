@@ -48,6 +48,16 @@ internal class PreviewUiMessages private constructor(
             message == "Preparing static preview…" -> text("loading.preparing")
             message == "Compiling preview descriptors…" -> text("loading.compiling")
             message == "Matching compiled preview…" -> text("loading.matching")
+            message == "Discovering project previews…" -> text("loading.gallery.discovery")
+            message.startsWith("Rendering ") && message.endsWith(" uncached previews…") -> {
+                text("loading.gallery.uncached")
+            }
+            message.startsWith("Compiling preview descriptors for ") -> {
+                text("loading.gallery.compiling")
+            }
+            message.startsWith("Rendering ") && ':' in message -> {
+                message
+            }
             message.startsWith("Rendering ") && message.endsWith("…") -> {
                 text(
                     "loading.rendering",

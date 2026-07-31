@@ -2,6 +2,7 @@ package com.viewcompose.studio.preview
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -38,6 +39,10 @@ internal class ViewComposePreviewSelectionService(
     private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val editorFollowAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val settings = ViewComposePreviewSettings.forProject(project)
+    private val cacheRoot = project.basePath
+        ?.let { previewCacheRoot(Path.of(PathManager.getSystemPath())) }
+    private val diskCache = cacheRoot?.resolve("detail")?.let(::PreviewDiskCache)
+    private val galleryCache = cacheRoot?.resolve("gallery")?.let(::PreviewGalleryDiskCache)
 
     @Volatile
     private var attachedPanel: ViewComposePreviewToolWindowPanel? = null
@@ -90,6 +95,9 @@ internal class ViewComposePreviewSelectionService(
     fun attach(panel: ViewComposePreviewToolWindowPanel) {
         attachedPanel = panel
         panel.showState(currentState.get())
+        if (currentState.get() == ViewComposePreviewPanelState.Empty) {
+            showGallery()
+        }
         scheduleEditorFollow(FileEditorManager.getInstance(project).selectedTextEditor)
     }
 
@@ -120,7 +128,17 @@ internal class ViewComposePreviewSelectionService(
     }
 
     fun refreshCurrent() {
-        val request = activeRequest.get() ?: return
+        val request = activeRequest.get()
+        if (request == null) {
+            if (
+                currentState.get() is ViewComposePreviewPanelState.Gallery ||
+                currentState.get() is ViewComposePreviewPanelState.GalleryLoading ||
+                currentState.get() is ViewComposePreviewPanelState.GalleryFailed
+            ) {
+                showGallery(forceRerender = true)
+            }
+            return
+        }
         render(
             selection = request.selection,
             requestedVariantId = request.variantId,
@@ -128,7 +146,21 @@ internal class ViewComposePreviewSelectionService(
         )
     }
 
-    fun hasActivePreview(): Boolean = activeRequest.get() != null
+    fun hasActivePreview(): Boolean {
+        return activeRequest.get() != null ||
+            currentState.get() is ViewComposePreviewPanelState.Gallery ||
+            currentState.get() is ViewComposePreviewPanelState.GalleryLoading ||
+            currentState.get() is ViewComposePreviewPanelState.GalleryFailed
+    }
+
+    fun showGalleryAndShow() {
+        showGallery()
+        ToolWindowManager.getInstance(project).invokeLater {
+            ToolWindowManager.getInstance(project)
+                .getToolWindow(VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID)
+                ?.show()
+        }
+    }
 
     fun followSelectedEditor() {
         scheduleEditorFollow(FileEditorManager.getInstance(project).selectedTextEditor)
@@ -172,7 +204,14 @@ internal class ViewComposePreviewSelectionService(
                 }
                 try {
                     val root = project.basePath?.let(Path::of)
-                    val outcome = if (root == null) {
+                    val cached = if (!forceRerender) {
+                        diskCache?.read(selection, requestedVariantId)
+                    } else {
+                        null
+                    }
+                    val outcome = if (cached != null) {
+                        cached
+                    } else if (root == null) {
                         PreviewRenderOutcome.Failure(
                             selection = selection,
                             title = "Preview project is unavailable",
@@ -200,6 +239,9 @@ internal class ViewComposePreviewSelectionService(
                     if (outcome is PreviewRenderOutcome.Success &&
                         generation == requestGeneration.get()
                     ) {
+                        if (cached == null) {
+                            runCatching { diskCache?.write(outcome) }
+                        }
                         activeRequest.set(
                             ActivePreviewRequest(
                                 selection = outcome.selection,
@@ -239,6 +281,136 @@ internal class ViewComposePreviewSelectionService(
         }.queue()
     }
 
+    private fun showGallery(forceRerender: Boolean = false) {
+        activeRequest.set(null)
+        val generation = requestGeneration.incrementAndGet()
+        activeIndicator.getAndSet(null)?.cancel()
+        val previous = (currentState.get() as? ViewComposePreviewPanelState.Gallery)?.result
+        publish(
+            generation = generation,
+            state = ViewComposePreviewPanelState.GalleryLoading(
+                message = "Discovering project previews…",
+                previousResult = previous,
+            ),
+        )
+        object : Task.Backgroundable(
+            project,
+            "Load ViewCompose Preview Gallery",
+            true,
+        ) {
+            override fun run(indicator: ProgressIndicator) {
+                if (generation != requestGeneration.get()) return
+                activeIndicator.set(indicator)
+                try {
+                    val selections = ViewComposePreviewProjectScanner(project).scan()
+                    val cachedBySelection: Map<PreviewSourceSelection, PreviewGalleryItem> =
+                        if (forceRerender) {
+                            emptyMap()
+                        } else {
+                            selections.mapNotNull { selection ->
+                                galleryCache
+                                    ?.read(selection)
+                                    ?.let { item -> selection to item }
+                            }.toMap()
+                        }
+                    val missing = selections.filterNot(cachedBySelection::containsKey)
+                    if (cachedBySelection.isNotEmpty()) {
+                        publish(
+                            generation = generation,
+                            state = ViewComposePreviewPanelState.GalleryLoading(
+                                message = "Rendering ${missing.size} uncached previews…",
+                                previousResult = PreviewGalleryResult(
+                                    items = selections.mapNotNull(cachedBySelection::get),
+                                    failures = emptyList(),
+                                ),
+                            ),
+                        )
+                    }
+                    val root = project.basePath?.let(Path::of)
+                    val renderedGalleryItems =
+                        linkedMapOf<PreviewSourceSelection, PreviewGalleryItem>()
+                    val failures = mutableListOf<PreviewRenderOutcome.Failure>()
+                    fun consume(outcome: PreviewRenderOutcome) {
+                        when (outcome) {
+                            is PreviewRenderOutcome.Success -> {
+                                val item = runCatching {
+                                    galleryCache?.write(outcome)
+                                }.getOrNull() ?: outcome.toBoundedGalleryItem()
+                                renderedGalleryItems[outcome.selection] = item
+                            }
+                            is PreviewRenderOutcome.Failure -> failures += outcome
+                        }
+                    }
+                    if (root == null) {
+                        missing.forEach { selection ->
+                            consume(
+                                PreviewRenderOutcome.Failure(
+                                    selection = selection,
+                                    title = "Preview project is unavailable",
+                                    diagnostics = emptyList(),
+                                ),
+                            )
+                        }
+                    } else {
+                        ViewComposePreviewRenderCoordinator(root).renderAllEach(
+                            selections = missing,
+                            forceRerender = forceRerender,
+                            indicator = indicator,
+                            onProgress = { message ->
+                                publish(
+                                    generation = generation,
+                                    state = ViewComposePreviewPanelState.GalleryLoading(
+                                        message = message,
+                                        previousResult = PreviewGalleryResult(
+                                            items = selections.mapNotNull { selection ->
+                                                cachedBySelection[selection]
+                                                    ?: renderedGalleryItems[selection]
+                                            },
+                                            failures = failures.toList(),
+                                        ),
+                                    ),
+                                )
+                            },
+                            onOutcome = ::consume,
+                        )
+                    }
+                    galleryCache?.prune()
+                    val items = selections.mapNotNull { selection ->
+                        cachedBySelection[selection] ?: renderedGalleryItems[selection]
+                    }
+                    publish(
+                        generation = generation,
+                        state = ViewComposePreviewPanelState.Gallery(
+                            PreviewGalleryResult(items = items, failures = failures.toList()),
+                        ),
+                    )
+                } catch (cancelled: ProcessCanceledException) {
+                    throw cancelled
+                } catch (error: Throwable) {
+                    publish(
+                        generation = generation,
+                        state = ViewComposePreviewPanelState.GalleryFailed(
+                            error.message ?: error::class.java.simpleName,
+                        ),
+                    )
+                } finally {
+                    activeIndicator.compareAndSet(indicator, null)
+                }
+            }
+
+            override fun onCancel() {
+                publish(
+                    generation = generation,
+                    state = previous
+                        ?.let(ViewComposePreviewPanelState::Gallery)
+                        ?: ViewComposePreviewPanelState.GalleryFailed(
+                            "Preview gallery loading was cancelled.",
+                        ),
+                )
+            }
+        }.queue()
+    }
+
     private fun scheduleSavedInputRefresh(request: ActivePreviewRequest) {
         savedInputRefreshAlarm.cancelAllRequests()
         savedInputRefreshAlarm.addRequest(
@@ -247,6 +419,7 @@ internal class ViewComposePreviewSelectionService(
                     render(
                         selection = request.selection,
                         requestedVariantId = request.variantId,
+                        forceRerender = true,
                     )
                 }
             },

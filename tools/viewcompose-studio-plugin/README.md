@@ -37,6 +37,11 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - Kotlin gutter markers for direct and source meta-annotated ViewCompose preview functions;
 - project-scoped source selection that opens the matching symbol in the preview tool window;
 - cancellable Gradle-wrapper discovery and isolated single-preview rendering;
+- a globally bounded Studio-owned disk cache that restores previews before invoking Gradle
+  (64 detailed entries, 30 days, and 256 MiB across projects, with least-recently-used cleanup);
+- a lightweight all-previews gallery that discovers every annotated Kotlin preview, reuses cached
+  thumbnails, compiles each Gradle module once, and opens source on double-click; its separate
+  thumbnail tier retains up to 1024 entries for 30 days within 128 MiB;
 - an in-window selector for every declared preview configuration;
 - automatic refresh when the selected preview source is saved;
 - clickable structured diagnostics that navigate back to their source location;
