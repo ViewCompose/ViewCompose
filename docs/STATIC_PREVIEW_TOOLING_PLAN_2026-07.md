@@ -274,6 +274,14 @@ Implemented:
 - VNode and Android View trees use the same source metadata and support double-click or Enter
   navigation. Source resolution prefers application/project sources over framework internals and
   excludes generated build output.
+- Editor caret movement performs the reverse lookup from project source lines to runtime node IDs.
+  Canvas, VNode tree, Android View tree, and patch diagnostics share one linked selection without
+  triggering a new render.
+- Patch records retain the affected node identity and source chain for insert, remove, rebind,
+  modifier patch, and skip operations.
+- Composition scopes retain their creation-site source chain independently of VNode identity, so
+  recomposition reasons and skipped scopes can navigate to source without inventing an unreliable
+  scope-to-View association.
 
 ## 5. Experience backlog priority
 
