@@ -35,12 +35,34 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         )
         fun refreshOptionsActions() {
             toolWindow.setAdditionalGearActions(
-                createPreviewOptionsActionGroup(settings.language) { language ->
-                    if (settings.language == language) return@createPreviewOptionsActionGroup
-                    settings.language = language
-                    panel.setLanguage(language)
-                    refreshOptionsActions()
-                },
+                createPreviewOptionsActionGroup(
+                    language = settings.language,
+                    onLanguageSelected = { language ->
+                        if (settings.language != language) {
+                            settings.language = language
+                            panel.setLanguage(language)
+                            refreshOptionsActions()
+                        }
+                    },
+                    followEditor = { settings.followEditor },
+                    onFollowEditorChanged = { enabled ->
+                        settings.followEditor = enabled
+                        if (enabled) {
+                            selectionService.followSelectedEditor()
+                        }
+                    },
+                    autoRefreshOnSave = { settings.autoRefreshOnSave },
+                    onAutoRefreshOnSaveChanged = { enabled ->
+                        settings.autoRefreshOnSave = enabled
+                    },
+                ),
+            )
+            toolWindow.setTitleActions(
+                createPreviewTitleActions(
+                    language = settings.language,
+                    isRefreshEnabled = selectionService::hasActivePreview,
+                    onRefresh = selectionService::refreshCurrent,
+                ),
             )
         }
         refreshOptionsActions()

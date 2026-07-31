@@ -8,6 +8,10 @@ import com.intellij.openapi.actionSystem.ToggleAction
 internal fun createPreviewOptionsActionGroup(
     language: PreviewUiLanguage,
     onLanguageSelected: (PreviewUiLanguage) -> Unit,
+    followEditor: () -> Boolean,
+    onFollowEditorChanged: (Boolean) -> Unit,
+    autoRefreshOnSave: () -> Boolean,
+    onAutoRefreshOnSaveChanged: (Boolean) -> Unit,
 ): DefaultActionGroup {
     val messages = PreviewUiMessages.forLanguage(language)
     val languageGroup = DefaultActionGroup(
@@ -24,6 +28,21 @@ internal fun createPreviewOptionsActionGroup(
         )
     }
     return DefaultActionGroup().apply {
+        add(
+            PreviewBooleanToggleAction(
+                text = messages.text("menu.followEditor"),
+                isEnabled = followEditor,
+                onChanged = onFollowEditorChanged,
+            ),
+        )
+        add(
+            PreviewBooleanToggleAction(
+                text = messages.text("menu.autoRefreshOnSave"),
+                isEnabled = autoRefreshOnSave,
+                onChanged = onAutoRefreshOnSaveChanged,
+            ),
+        )
+        addSeparator()
         add(languageGroup)
     }
 }
@@ -51,6 +70,23 @@ private class PreviewLanguageAction(
         if (state) {
             onSelected(language)
         }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+}
+
+private class PreviewBooleanToggleAction(
+    text: String,
+    private val isEnabled: () -> Boolean,
+    private val onChanged: (Boolean) -> Unit,
+) : ToggleAction(text) {
+    override fun isSelected(event: AnActionEvent): Boolean = isEnabled()
+
+    override fun setSelected(
+        event: AnActionEvent,
+        state: Boolean,
+    ) {
+        onChanged(state)
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT

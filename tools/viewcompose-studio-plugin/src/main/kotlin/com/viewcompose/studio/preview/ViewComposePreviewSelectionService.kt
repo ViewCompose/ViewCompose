@@ -36,6 +36,7 @@ internal class ViewComposePreviewSelectionService(
     private val activeRequest = AtomicReference<ActivePreviewRequest?>()
     private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val editorFollowAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
+    private val settings = ViewComposePreviewSettings.forProject(project)
 
     @Volatile
     private var attachedPanel: ViewComposePreviewToolWindowPanel? = null
@@ -45,6 +46,7 @@ internal class ViewComposePreviewSelectionService(
             VirtualFileManager.VFS_CHANGES,
             object : BulkFileListener {
                 override fun after(events: List<VFileEvent>) {
+                    if (!settings.autoRefreshOnSave) return
                     val request = activeRequest.get() ?: return
                     if (
                         !savedPreviewInputMatches(
@@ -116,9 +118,25 @@ internal class ViewComposePreviewSelectionService(
         )
     }
 
+    fun refreshCurrent() {
+        val request = activeRequest.get() ?: return
+        render(
+            selection = request.selection,
+            requestedVariantId = request.variantId,
+            forceRerender = true,
+        )
+    }
+
+    fun hasActivePreview(): Boolean = activeRequest.get() != null
+
+    fun followSelectedEditor() {
+        scheduleEditorFollow(FileEditorManager.getInstance(project).selectedTextEditor)
+    }
+
     private fun render(
         selection: PreviewSourceSelection,
         requestedVariantId: String?,
+        forceRerender: Boolean = false,
     ) {
         activeRequest.set(
             ActivePreviewRequest(
@@ -128,11 +146,15 @@ internal class ViewComposePreviewSelectionService(
         )
         val generation = requestGeneration.incrementAndGet()
         activeIndicator.getAndSet(null)?.cancel()
+        val previousResult = (currentState.get() as? ViewComposePreviewPanelState.Rendered)
+            ?.result
+            ?.takeIf { result -> result.selection == selection }
         publish(
             generation = generation,
             state = ViewComposePreviewPanelState.Loading(
                 selection = selection,
                 message = "Preparing static preview…",
+                previousResult = previousResult,
             ),
         )
         object : Task.Backgroundable(
@@ -160,6 +182,7 @@ internal class ViewComposePreviewSelectionService(
                         ViewComposePreviewRenderCoordinator(root).render(
                             selection = selection,
                             requestedVariantId = requestedVariantId,
+                            forceRerender = forceRerender,
                             indicator = indicator,
                             onProgress = { message ->
                                 publish(
@@ -167,6 +190,7 @@ internal class ViewComposePreviewSelectionService(
                                     state = ViewComposePreviewPanelState.Loading(
                                         selection = selection,
                                         message = message,
+                                        previousResult = previousResult,
                                     ),
                                 )
                             },
@@ -231,6 +255,7 @@ internal class ViewComposePreviewSelectionService(
 
     private fun scheduleEditorFollow(editor: Editor?) {
         editorFollowAlarm.cancelAllRequests()
+        if (!settings.followEditor) return
         if (editor == null || editor.project != project || editor.isDisposed) return
         editorFollowAlarm.addRequest(
             {

@@ -85,6 +85,7 @@ internal class ViewComposePreviewRenderCoordinator(
     fun render(
         selection: PreviewSourceSelection,
         requestedVariantId: String? = null,
+        forceRerender: Boolean = false,
         indicator: ProgressIndicator,
         onProgress: (String) -> Unit = {},
     ): PreviewRenderOutcome {
@@ -132,7 +133,7 @@ internal class ViewComposePreviewRenderCoordinator(
                         match.descriptor.id,
                         "--variant-id",
                         match.variant.id,
-                    ),
+                    ) + if (forceRerender) listOf("--rerender=true") else emptyList(),
                 ),
                 indicator = indicator,
             )

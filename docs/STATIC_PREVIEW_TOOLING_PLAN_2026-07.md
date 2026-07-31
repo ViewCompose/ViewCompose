@@ -223,6 +223,26 @@ Exit criteria:
 - Old results cannot replace newer output.
 - Clicking a diagnostic opens its source line.
 
+Implemented experience foundation:
+
+- When the preview tool window is visible, moving the editor caret into another
+  `@ViewComposePreview` function follows that function after a short debounce. Merely browsing
+  code while the tool window is hidden never starts Gradle.
+- Saving the selected source, another Kotlin/Java source, Android resource, asset, Manifest, or
+  Gradle configuration under the project schedules one debounced refresh. Generated `build`,
+  `.gradle`, `.idea`, and VCS output is ignored, so the preview can follow direct project
+  dependencies without reacting to its own build artifacts.
+- Editor following and save refresh are project-level options, enabled by default and exposed in
+  the tool-window gear menu.
+- Superseded requests cancel their active progress indicator and cannot publish over a newer
+  selection.
+- The selected preview variant survives save refreshes. Preview zoom, the selected diagnostics
+  tab, and the layout-bounds toggle survive rerenders and UI-language changes.
+- The preview canvas supports fit-to-window and fixed 50–200% zoom. A title-bar refresh action
+  bypasses the render cache for an explicit clean rerender.
+- Source links in the header and structured compile/render diagnostics navigate to the exact file
+  and line.
+
 ### Stage 6 — diagnostics
 
 - Display VNode and native View trees.
@@ -235,7 +255,45 @@ Exit criteria:
 - The diagnostics panel and screenshot describe the same committed frame.
 - Diagnostics remain disabled by default outside tooling renders.
 
-## 5. Deferred scope
+Implemented:
+
+- Studio displays the committed VNode tree, native Android View tree, render structure, patch
+  records, composition scopes, invalidation reasons, and binding skip/reuse statistics exported by
+  the runner.
+- Native measured/layout bounds are displayed in the View tree and can be overlaid on the preview
+  image. Overlay coordinates follow preview zoom.
+
+## 5. Experience backlog priority
+
+The remaining experience work is intentionally ranked by product value rather than feature count.
+
+1. **Medium priority — multi-variant gallery and comparison.** Moderate implementation cost and
+   useful for projects that routinely declare Light/Dark, locale, and screen-size matrices. The
+   current single-variant selector remains faster and clearer for ordinary previews, so gallery
+   mode should be optional rather than the default.
+2. **Medium priority — keep the last successful image visible while recompiling.** Low-to-moderate
+   implementation cost and reduces visual flicker, but it needs an explicit stale/loading state so
+   an old image is never mistaken for the latest result.
+3. **Low priority — preview history, favorites, and bulk export UI.** Straightforward but offers
+   little value until projects have a larger preview catalog, so it is not part of the current
+   implementation target.
+
+The following items require an explicit maintenance/value decision before implementation:
+
+- **Editor Design Surface / custom file-editor split:** high implementation and compatibility cost.
+  It requires owning an IntelliJ `FileEditorProvider`, split-editor lifecycle, focus, persistence,
+  and Android Studio-version compatibility. The dockable right-side tool window already covers the
+  main static-preview workflow.
+- **Unsaved-code Live Edit:** very high cost. Gradle cannot compile editor buffers; this requires an
+  incremental Kotlin compilation daemon or bytecode replacement pipeline and substantially changes
+  the isolation model.
+- **Click rendered View/VNode and navigate to its exact DSL call:** high cost. Current runtime nodes
+  do not retain source origins. Accurate mapping needs compiler instrumentation or source-location
+  metadata at every DSL emission site; stack-trace sampling would be slower and unreliable.
+- **Interactive input, gestures, IME, and animation timelines:** high cost and currently low value
+  for the requested static-preview workflow.
+
+## 6. Deferred scope
 
 - Unsaved-code Live Edit.
 - Compiler plugin or bytecode hot replacement.

@@ -59,6 +59,7 @@ class ViewComposePreviewGradleBridgeTest {
                 line = 10,
             ),
             requestedVariantId = "dark",
+            forceRerender = true,
             indicator = TestProgressIndicator(),
         )
 
@@ -88,6 +89,7 @@ class ViewComposePreviewGradleBridgeTest {
                 pair == listOf("--variant-id", "dark")
             },
         )
+        assertTrue("--rerender=true" in invocations.last().arguments)
     }
 
     @Test

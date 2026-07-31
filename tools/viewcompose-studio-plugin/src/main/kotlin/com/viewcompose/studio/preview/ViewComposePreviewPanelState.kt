@@ -6,6 +6,7 @@ internal sealed interface ViewComposePreviewPanelState {
     data class Loading(
         val selection: PreviewSourceSelection,
         val message: String,
+        val previousResult: PreviewRenderOutcome.Success? = null,
     ) : ViewComposePreviewPanelState
 
     data class Rendered(

@@ -11,10 +11,13 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
+import java.awt.FlowLayout
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import java.awt.event.ComponentAdapter
+import java.awt.event.ComponentEvent
 import java.nio.file.Path
 import javax.swing.Box
 import javax.swing.JCheckBox
@@ -23,7 +26,9 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.JTree
+import javax.swing.SwingUtilities
 import javax.swing.tree.DefaultMutableTreeNode
+import kotlin.math.roundToInt
 
 internal class ViewComposePreviewToolWindowPanel(
     detection: ViewComposeProjectDetection,
@@ -37,6 +42,9 @@ internal class ViewComposePreviewToolWindowPanel(
     private val projectRoot = projectRoot?.toAbsolutePath()?.normalize()
     private var language = initialLanguage
     private var currentState: ViewComposePreviewPanelState = ViewComposePreviewPanelState.Empty
+    private var previewZoomOption: PreviewZoomOption = PreviewZoomOption.Fit
+    private var selectedDiagnosticsTabIndex: Int = 0
+    private var showLayoutBounds: Boolean = false
     private val messages: PreviewUiMessages
         get() = PreviewUiMessages.forLanguage(language)
 
@@ -81,15 +89,30 @@ internal class ViewComposePreviewToolWindowPanel(
     }
 
     private fun showLoadingState(state: ViewComposePreviewPanelState.Loading) {
-        contentPanel.border = JBUI.Borders.empty(24)
+        val previousResult = state.previousResult
+        contentPanel.border = if (previousResult == null) {
+            JBUI.Borders.empty(24)
+        } else {
+            JBUI.Borders.empty(12)
+        }
         contentPanel.add(
             header(
                 title = state.selection.symbolName,
-                description = messages.loadingMessage(state.message),
+                description = if (previousResult == null) {
+                    messages.loadingMessage(state.message)
+                } else {
+                    messages.text(
+                        "loading.showingPrevious",
+                        messages.loadingMessage(state.message),
+                    )
+                },
                 selection = state.selection,
             ),
             BorderLayout.NORTH,
         )
+        previousResult?.let { result ->
+            contentPanel.add(renderedContent(result), BorderLayout.CENTER)
+        }
     }
 
     private fun showRenderedState(result: PreviewRenderOutcome.Success) {
@@ -107,6 +130,16 @@ internal class ViewComposePreviewToolWindowPanel(
             renderedHeader,
             BorderLayout.NORTH,
         )
+        contentPanel.add(renderedContent(result), BorderLayout.CENTER)
+        if (result.diagnostics.isNotEmpty()) {
+            contentPanel.add(
+                diagnosticsPanel(result.diagnostics),
+                BorderLayout.SOUTH,
+            )
+        }
+    }
+
+    private fun renderedContent(result: PreviewRenderOutcome.Success): JComponent {
         val snapshot = result.renderSnapshot
         val previewPanel = previewImagePanel(
             image = result.image,
@@ -122,15 +155,13 @@ internal class ViewComposePreviewToolWindowPanel(
                 addTab(messages.text("tab.views"), nativeViewsPanel(snapshot.nativeViewTree))
                 addTab(messages.text("tab.composition"), compositionPanel(snapshot.composition))
                 addTab(messages.text("tab.patches"), patchesPanel(snapshot.patches))
+                selectedIndex = selectedDiagnosticsTabIndex.coerceIn(0, tabCount - 1)
+                addChangeListener {
+                    selectedDiagnosticsTabIndex = selectedIndex
+                }
             }
         }
-        contentPanel.add(renderedContent, BorderLayout.CENTER)
-        if (result.diagnostics.isNotEmpty()) {
-            contentPanel.add(
-                diagnosticsPanel(result.diagnostics),
-                BorderLayout.SOUTH,
-            )
-        }
+        return renderedContent
     }
 
     private fun variantSelector(result: PreviewRenderOutcome.Success): JComponent {
@@ -269,12 +300,54 @@ internal class ViewComposePreviewToolWindowPanel(
         val canvas = PreviewImageCanvas(
             image = image,
             nativeViews = nativeViews,
-        )
+            initialZoomOption = previewZoomOption,
+        ).apply {
+            showLayoutBounds = this@ViewComposePreviewToolWindowPanel.showLayoutBounds
+        }
         val imageScrollPane = JBScrollPane(canvas).apply {
             border = JBUI.Borders.empty()
             preferredSize = Dimension(JBUI.scale(360), JBUI.scale(600))
         }
-        if (nativeViews.isEmpty()) return imageScrollPane
+        fun updateCanvasScale() {
+            canvas.updateViewportSize(imageScrollPane.viewport.extentSize)
+        }
+        imageScrollPane.viewport.addComponentListener(
+            object : ComponentAdapter() {
+                override fun componentResized(event: ComponentEvent) {
+                    updateCanvasScale()
+                }
+            },
+        )
+        SwingUtilities.invokeLater(::updateCanvasScale)
+
+        val zoomChoices = PreviewZoomOption.entries.map { option ->
+            PreviewZoomChoice(
+                option = option,
+                displayName = when (option) {
+                    PreviewZoomOption.Fit -> messages.text("preview.zoom.fit")
+                    else -> messages.text(
+                        "preview.zoom.percent",
+                        checkNotNull(option.fixedScale).times(100).roundToInt(),
+                    )
+                },
+            )
+        }
+        val zoomSelector = JComboBox(zoomChoices.toTypedArray()).apply {
+            toolTipText = messages.text("preview.zoom")
+            accessibleContext.accessibleName = messages.text("preview.zoom")
+            selectedItem = zoomChoices.first { choice ->
+                choice.option == previewZoomOption
+            }
+            addActionListener {
+                val choice = selectedItem as? PreviewZoomChoice
+                    ?: return@addActionListener
+                if (choice.option != previewZoomOption) {
+                    previewZoomOption = choice.option
+                    canvas.zoomOption = choice.option
+                    SwingUtilities.invokeLater(::updateCanvasScale)
+                }
+            }
+        }
 
         return JPanel(BorderLayout()).apply {
             isOpaque = false
@@ -282,22 +355,37 @@ internal class ViewComposePreviewToolWindowPanel(
                 JPanel(BorderLayout()).apply {
                     isOpaque = false
                     border = JBUI.Borders.empty(8, 4, 4, 4)
+                    if (nativeViews.isNotEmpty()) {
+                        add(
+                            JCheckBox(messages.text("preview.showLayoutBounds")).apply {
+                                isOpaque = false
+                                isSelected = showLayoutBounds
+                                addActionListener {
+                                    canvas.showLayoutBounds = isSelected
+                                    showLayoutBounds = isSelected
+                                }
+                            },
+                            BorderLayout.WEST,
+                        )
+                    }
                     add(
-                        JCheckBox(messages.text("preview.showLayoutBounds")).apply {
+                        JPanel(FlowLayout(FlowLayout.RIGHT, JBUI.scale(8), 0)).apply {
                             isOpaque = false
-                            addActionListener {
-                                canvas.showLayoutBounds = isSelected
+                            if (nativeViews.isNotEmpty()) {
+                                add(
+                                    JBLabel(
+                                        messages.text(
+                                            "preview.viewCount",
+                                            nativeViews.sumOf(
+                                                StudioPreviewNativeViewNode::nodeCount,
+                                            ),
+                                        ),
+                                    ),
+                                )
                             }
+                            add(JBLabel(messages.text("preview.zoom")))
+                            add(zoomSelector)
                         },
-                        BorderLayout.WEST,
-                    )
-                    add(
-                        JBLabel(
-                            messages.text(
-                                "preview.viewCount",
-                                nativeViews.sumOf(StudioPreviewNativeViewNode::nodeCount),
-                            ),
-                        ),
                         BorderLayout.EAST,
                     )
                 },
@@ -537,7 +625,15 @@ private fun StudioPreviewNativeViewNode.nodeCount(): Int {
 private class PreviewImageCanvas(
     private val image: BufferedImage,
     private val nativeViews: List<StudioPreviewNativeViewNode>,
+    initialZoomOption: PreviewZoomOption,
 ) : JComponent() {
+    var zoomOption: PreviewZoomOption = initialZoomOption
+        set(value) {
+            if (field == value) return
+            field = value
+            updateScale()
+        }
+
     var showLayoutBounds: Boolean = false
         set(value) {
             if (field == value) return
@@ -545,29 +641,71 @@ private class PreviewImageCanvas(
             repaint()
         }
 
+    private var viewportSize: Dimension = Dimension(image.width, image.height)
+    private var scale: Double = 1.0
+
     init {
-        preferredSize = Dimension(image.width, image.height)
-        minimumSize = preferredSize
+        minimumSize = Dimension(1, 1)
         isOpaque = true
+        updateScale()
+    }
+
+    fun updateViewportSize(size: Dimension) {
+        if (size.width <= 0 || size.height <= 0 || size == viewportSize) return
+        viewportSize = Dimension(size)
+        updateScale()
+    }
+
+    private fun updateScale() {
+        scale = calculatePreviewScale(
+            option = zoomOption,
+            imageWidth = image.width,
+            imageHeight = image.height,
+            viewportWidth = viewportSize.width,
+            viewportHeight = viewportSize.height,
+        )
+        val scaledWidth = (image.width * scale).roundToInt().coerceAtLeast(1)
+        val scaledHeight = (image.height * scale).roundToInt().coerceAtLeast(1)
+        preferredSize = Dimension(
+            scaledWidth.coerceAtLeast(viewportSize.width),
+            scaledHeight.coerceAtLeast(viewportSize.height),
+        )
+        revalidate()
+        repaint()
     }
 
     override fun paintComponent(graphics: Graphics) {
         super.paintComponent(graphics)
-        val imageLeft = ((width - image.width) / 2).coerceAtLeast(0)
-        graphics.drawImage(image, imageLeft, 0, null)
-        if (!showLayoutBounds) return
-
+        val scaledWidth = (image.width * scale).roundToInt().coerceAtLeast(1)
+        val scaledHeight = (image.height * scale).roundToInt().coerceAtLeast(1)
+        val imageLeft = ((width - scaledWidth) / 2).coerceAtLeast(0)
+        val imageTop = ((height - scaledHeight) / 2).coerceAtLeast(0)
         val graphics2D = graphics.create() as Graphics2D
         try {
             graphics2D.setRenderingHint(
                 RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON,
             )
+            graphics2D.setRenderingHint(
+                RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BILINEAR,
+            )
+            graphics2D.drawImage(
+                image,
+                imageLeft,
+                imageTop,
+                scaledWidth,
+                scaledHeight,
+                null,
+            )
+            if (!showLayoutBounds) return
             graphics2D.stroke = BasicStroke(JBUI.scale(1).toFloat())
             nativeViews.forEach { view ->
                 graphics2D.paintViewBounds(
                     view = view,
                     imageLeft = imageLeft,
+                    imageTop = imageTop,
+                    scale = scale,
                     depth = 0,
                 )
             }
@@ -580,30 +718,38 @@ private class PreviewImageCanvas(
 private fun Graphics2D.paintViewBounds(
     view: StudioPreviewNativeViewNode,
     imageLeft: Int,
+    imageTop: Int,
+    scale: Double,
     depth: Int,
 ) {
     val bounds = view.bounds
     if (depth > 0 && bounds.width > 0 && bounds.height > 0) {
         val baseColor = LAYOUT_BOUND_COLORS[(depth - 1) % LAYOUT_BOUND_COLORS.size]
+        val scaledLeft = imageLeft + (bounds.left * scale).roundToInt()
+        val scaledTop = imageTop + (bounds.top * scale).roundToInt()
+        val scaledWidth = (bounds.width * scale).roundToInt().coerceAtLeast(1)
+        val scaledHeight = (bounds.height * scale).roundToInt().coerceAtLeast(1)
         color = Color(baseColor.red, baseColor.green, baseColor.blue, 22)
         fillRect(
-            imageLeft + bounds.left,
-            bounds.top,
-            bounds.width,
-            bounds.height,
+            scaledLeft,
+            scaledTop,
+            scaledWidth,
+            scaledHeight,
         )
         color = Color(baseColor.red, baseColor.green, baseColor.blue, 190)
         drawRect(
-            imageLeft + bounds.left,
-            bounds.top,
-            (bounds.width - 1).coerceAtLeast(0),
-            (bounds.height - 1).coerceAtLeast(0),
+            scaledLeft,
+            scaledTop,
+            (scaledWidth - 1).coerceAtLeast(0),
+            (scaledHeight - 1).coerceAtLeast(0),
         )
     }
     view.children.forEach { child ->
         paintViewBounds(
             view = child,
             imageLeft = imageLeft,
+            imageTop = imageTop,
+            scale = scale,
             depth = depth + 1,
         )
     }
@@ -618,6 +764,13 @@ private val LAYOUT_BOUND_COLORS = listOf(
 
 private data class PreviewVariantChoice(
     val id: String,
+    val displayName: String,
+) {
+    override fun toString(): String = displayName
+}
+
+private data class PreviewZoomChoice(
+    val option: PreviewZoomOption,
     val displayName: String,
 ) {
     override fun toString(): String = displayName

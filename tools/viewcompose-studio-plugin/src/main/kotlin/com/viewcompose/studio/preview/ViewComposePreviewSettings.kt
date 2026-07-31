@@ -16,6 +16,18 @@ internal class ViewComposePreviewSettings(
             }
         }
 
+    var followEditor: Boolean
+        get() = properties.getBoolean(FOLLOW_EDITOR_KEY, true)
+        set(value) {
+            properties.setValue(FOLLOW_EDITOR_KEY, value, true)
+        }
+
+    var autoRefreshOnSave: Boolean
+        get() = properties.getBoolean(AUTO_REFRESH_ON_SAVE_KEY, true)
+        set(value) {
+            properties.setValue(AUTO_REFRESH_ON_SAVE_KEY, value, true)
+        }
+
     companion object {
         fun forProject(project: Project): ViewComposePreviewSettings {
             return ViewComposePreviewSettings(PropertiesComponent.getInstance(project))
@@ -24,3 +36,5 @@ internal class ViewComposePreviewSettings(
 }
 
 private const val LANGUAGE_KEY = "viewcompose.preview.ui.language"
+private const val FOLLOW_EDITOR_KEY = "viewcompose.preview.followEditor"
+private const val AUTO_REFRESH_ON_SAVE_KEY = "viewcompose.preview.autoRefreshOnSave"
