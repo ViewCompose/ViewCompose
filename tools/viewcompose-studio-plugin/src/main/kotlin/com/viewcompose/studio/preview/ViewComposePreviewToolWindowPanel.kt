@@ -1,6 +1,7 @@
 package com.viewcompose.studio.preview
 
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
@@ -9,6 +10,7 @@ import java.awt.BorderLayout
 import java.awt.Dimension
 import javax.swing.Box
 import javax.swing.ImageIcon
+import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -16,6 +18,8 @@ import javax.swing.SwingConstants
 
 internal class ViewComposePreviewToolWindowPanel(
     detection: ViewComposeProjectDetection,
+    private val onVariantSelected: (String) -> Unit,
+    private val onNavigateToSource: (StudioPreviewSourceLocation) -> Unit,
 ) : SimpleToolWindowPanel(true, true) {
     private val contentPanel = JPanel(BorderLayout())
     private val detectionEvidence = detection.evidencePath
@@ -70,12 +74,22 @@ internal class ViewComposePreviewToolWindowPanel(
         contentPanel.border = JBUI.Borders.empty(12)
         val duration = result.durationMillis?.let { millis -> " · ${millis} ms" }.orEmpty()
         val cache = if (result.cacheHit) " · cache" else ""
+        val renderedHeader = JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(
+                header(
+                    title = result.descriptorName,
+                    description = "${result.variantName}$duration$cache",
+                    selection = result.selection,
+                ),
+                BorderLayout.CENTER,
+            )
+            if (result.variants.size > 1) {
+                add(variantSelector(result), BorderLayout.EAST)
+            }
+        }
         contentPanel.add(
-            header(
-                title = result.descriptorName,
-                description = "${result.variantName}$duration$cache",
-                selection = result.selection,
-            ),
+            renderedHeader,
             BorderLayout.NORTH,
         )
         val imageLabel = JLabel(ImageIcon(result.image)).apply {
@@ -94,6 +108,39 @@ internal class ViewComposePreviewToolWindowPanel(
             contentPanel.add(
                 diagnosticsPanel(result.diagnostics),
                 BorderLayout.SOUTH,
+            )
+        }
+    }
+
+    private fun variantSelector(result: PreviewRenderOutcome.Success): JComponent {
+        val choices = result.variants.map { variant ->
+            PreviewVariantChoice(
+                id = variant.id,
+                displayName = variant.displayName,
+            )
+        }
+        return Box.createVerticalBox().apply {
+            border = JBUI.Borders.emptyLeft(16)
+            add(
+                JBLabel("Configuration").apply {
+                    alignmentX = RIGHT_ALIGNMENT
+                },
+            )
+            add(Box.createVerticalStrut(JBUI.scale(6)))
+            add(
+                JComboBox(choices.toTypedArray()).apply {
+                    alignmentX = RIGHT_ALIGNMENT
+                    selectedItem = choices.first { choice ->
+                        choice.id == result.selectedVariantId
+                    }
+                    addActionListener {
+                        val choice = selectedItem as? PreviewVariantChoice
+                            ?: return@addActionListener
+                        if (choice.id != result.selectedVariantId) {
+                            onVariantSelected(choice.id)
+                        }
+                    }
+                },
             )
         }
     }
@@ -129,8 +176,17 @@ internal class ViewComposePreviewToolWindowPanel(
             background = contentPanel.background
         }
         contentPanel.add(
-            JBScrollPane(textArea).apply {
-                border = JBUI.Borders.empty()
+            JPanel(BorderLayout()).apply {
+                isOpaque = false
+                diagnosticSourceLinks(result.diagnostics)?.let { links ->
+                    add(links, BorderLayout.NORTH)
+                }
+                add(
+                    JBScrollPane(textArea).apply {
+                        border = JBUI.Borders.empty()
+                    },
+                    BorderLayout.CENTER,
+                )
             },
             BorderLayout.CENTER,
         )
@@ -183,17 +239,69 @@ internal class ViewComposePreviewToolWindowPanel(
     private fun diagnosticsPanel(
         diagnostics: List<StudioPreviewDiagnostic>,
     ): JComponent {
-        val message = diagnostics.joinToString("\n") { diagnostic ->
-            "[${diagnostic.severity}] ${diagnostic.message}"
-        }
-        return JBLabel("<html>${message.toPresentableText().replace("\n", "<br>")}</html>").apply {
+        return Box.createVerticalBox().apply {
             border = JBUI.Borders.emptyTop(8)
+            diagnostics.forEachIndexed { index, diagnostic ->
+                if (index > 0) {
+                    add(Box.createVerticalStrut(JBUI.scale(4)))
+                }
+                add(
+                    JBLabel(
+                        "<html>" +
+                            "[${diagnostic.severity}] ${diagnostic.message}".toPresentableText() +
+                            "</html>",
+                    ).apply {
+                        alignmentX = LEFT_ALIGNMENT
+                    },
+                )
+                diagnostic.sourceLocation?.let { source ->
+                    add(
+                        ActionLink(source.presentableLinkText()) {
+                            onNavigateToSource(source)
+                        }.apply {
+                            alignmentX = LEFT_ALIGNMENT
+                        },
+                    )
+                }
+            }
+        }
+    }
+
+    private fun diagnosticSourceLinks(
+        diagnostics: List<StudioPreviewDiagnostic>,
+    ): JComponent? {
+        val sources = diagnostics.mapNotNull(StudioPreviewDiagnostic::sourceLocation).distinct()
+        if (sources.isEmpty()) return null
+        return Box.createVerticalBox().apply {
+            border = JBUI.Borders.empty(12, 0, 4, 0)
+            sources.forEach { source ->
+                add(
+                    ActionLink(source.presentableLinkText()) {
+                        onNavigateToSource(source)
+                    }.apply {
+                        alignmentX = LEFT_ALIGNMENT
+                    },
+                )
+            }
         }
     }
 }
 
+private data class PreviewVariantChoice(
+    val id: String,
+    val displayName: String,
+) {
+    override fun toString(): String = displayName
+}
+
 private fun java.nio.file.Path.toPresentablePath(): String {
     return toString().toPresentableText()
+}
+
+private fun StudioPreviewSourceLocation.presentableLinkText(): String {
+    val fileName = runCatching { java.nio.file.Path.of(filePath).fileName.toString() }
+        .getOrDefault(filePath)
+    return "Open $fileName:$line"
 }
 
 private fun String.toPresentableText(): String {

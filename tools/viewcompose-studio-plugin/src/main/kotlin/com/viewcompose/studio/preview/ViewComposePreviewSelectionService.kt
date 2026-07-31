@@ -1,28 +1,55 @@
 package com.viewcompose.studio.preview
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.ToolWindowManager
 import java.nio.file.Path
-import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 
 @Service(Service.Level.PROJECT)
 internal class ViewComposePreviewSelectionService(
     private val project: Project,
-) {
+) : Disposable {
     private val currentState = AtomicReference<ViewComposePreviewPanelState>(
         ViewComposePreviewPanelState.Empty,
     )
     private val requestGeneration = AtomicLong(0)
     private val activeIndicator = AtomicReference<ProgressIndicator?>()
+    private val activeRequest = AtomicReference<ActivePreviewRequest?>()
 
     @Volatile
     private var attachedPanel: ViewComposePreviewToolWindowPanel? = null
+
+    init {
+        project.messageBus.connect(this).subscribe(
+            VirtualFileManager.VFS_CHANGES,
+            object : BulkFileListener {
+                override fun after(events: List<VFileEvent>) {
+                    val request = activeRequest.get() ?: return
+                    if (!savedSourceMatches(request.selection, events.map { event -> event.path })) {
+                        return
+                    }
+                    ApplicationManager.getApplication().invokeLater {
+                        if (!project.isDisposed && request == activeRequest.get()) {
+                            render(
+                                selection = request.selection,
+                                requestedVariantId = request.variantId,
+                            )
+                        }
+                    }
+                }
+            },
+        )
+    }
 
     fun attach(panel: ViewComposePreviewToolWindowPanel) {
         attachedPanel = panel
@@ -36,6 +63,35 @@ internal class ViewComposePreviewSelectionService(
     }
 
     fun selectAndShow(selection: PreviewSourceSelection) {
+        render(selection = selection, requestedVariantId = null)
+        ToolWindowManager.getInstance(project).invokeLater {
+            ToolWindowManager.getInstance(project)
+                .getToolWindow(VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID)
+                ?.show()
+        }
+    }
+
+    fun selectVariant(variantId: String) {
+        val rendered = currentState.get() as? ViewComposePreviewPanelState.Rendered ?: return
+        val result = rendered.result
+        if (variantId == result.selectedVariantId) return
+        if (result.variants.none { variant -> variant.id == variantId }) return
+        render(
+            selection = result.selection,
+            requestedVariantId = variantId,
+        )
+    }
+
+    private fun render(
+        selection: PreviewSourceSelection,
+        requestedVariantId: String?,
+    ) {
+        activeRequest.set(
+            ActivePreviewRequest(
+                selection = selection,
+                variantId = requestedVariantId,
+            ),
+        )
         val generation = requestGeneration.incrementAndGet()
         activeIndicator.getAndSet(null)?.cancel()
         publish(
@@ -45,11 +101,6 @@ internal class ViewComposePreviewSelectionService(
                 message = "Preparing static preview…",
             ),
         )
-        ToolWindowManager.getInstance(project).invokeLater {
-            ToolWindowManager.getInstance(project)
-                .getToolWindow(VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID)
-                ?.show()
-        }
         object : Task.Backgroundable(
             project,
             "Render ViewCompose Preview",
@@ -74,6 +125,7 @@ internal class ViewComposePreviewSelectionService(
                     } else {
                         ViewComposePreviewRenderCoordinator(root).render(
                             selection = selection,
+                            requestedVariantId = requestedVariantId,
                             indicator = indicator,
                             onProgress = { message ->
                                 publish(
@@ -84,6 +136,16 @@ internal class ViewComposePreviewSelectionService(
                                     ),
                                 )
                             },
+                        )
+                    }
+                    if (outcome is PreviewRenderOutcome.Success &&
+                        generation == requestGeneration.get()
+                    ) {
+                        activeRequest.set(
+                            ActivePreviewRequest(
+                                selection = outcome.selection,
+                                variantId = outcome.selectedVariantId,
+                            ),
                         )
                     }
                     publish(
@@ -118,6 +180,11 @@ internal class ViewComposePreviewSelectionService(
         }.queue()
     }
 
+    override fun dispose() {
+        activeIndicator.getAndSet(null)?.cancel()
+        attachedPanel = null
+    }
+
     private fun publish(
         generation: Long,
         state: ViewComposePreviewPanelState,
@@ -131,3 +198,22 @@ internal class ViewComposePreviewSelectionService(
         }
     }
 }
+
+internal fun savedSourceMatches(
+    selection: PreviewSourceSelection,
+    changedPaths: List<String>,
+): Boolean {
+    val selectedPath = selection.filePath.normalizedPathOrNull() ?: return false
+    return changedPaths.any { changedPath ->
+        changedPath.normalizedPathOrNull() == selectedPath
+    }
+}
+
+private fun String.normalizedPathOrNull(): Path? {
+    return runCatching { Path.of(this).toAbsolutePath().normalize() }.getOrNull()
+}
+
+private data class ActivePreviewRequest(
+    val selection: PreviewSourceSelection,
+    val variantId: String?,
+)

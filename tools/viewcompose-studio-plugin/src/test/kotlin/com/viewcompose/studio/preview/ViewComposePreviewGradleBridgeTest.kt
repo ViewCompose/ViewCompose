@@ -37,7 +37,11 @@ class ViewComposePreviewGradleBridgeTest {
                 }
 
                 invocation.arguments.first().endsWith("renderDebugViewComposePreview") -> {
-                    writeSuccessfulResponse(moduleRoot)
+                    val variantId = invocation.arguments
+                        .windowed(2)
+                        .single { pair -> pair.first() == "--variant-id" }
+                        .last()
+                    writeSuccessfulResponse(moduleRoot, variantId)
                     PreviewGradleResult(0, "ViewCompose preview rendered:", "")
                 }
 
@@ -54,6 +58,7 @@ class ViewComposePreviewGradleBridgeTest {
                 symbolName = "SampleCard",
                 line = 10,
             ),
+            requestedVariantId = "dark",
             indicator = TestProgressIndicator(),
         )
 
@@ -61,7 +66,9 @@ class ViewComposePreviewGradleBridgeTest {
         val success = outcome as PreviewRenderOutcome.Success
         assertEquals(2, success.image.width)
         assertEquals(3, success.image.height)
-        assertEquals("Default", success.variantName)
+        assertEquals("dark", success.selectedVariantId)
+        assertEquals("Dark", success.variantName)
+        assertEquals(listOf("default", "dark"), success.variants.map(StudioPreviewVariant::id))
         assertFalse(success.cacheHit)
         assertEquals(
             listOf(
@@ -73,6 +80,11 @@ class ViewComposePreviewGradleBridgeTest {
         assertTrue(
             invocations.last().arguments.windowed(2).any { pair ->
                 pair == listOf("--preview-id", "sample-card")
+            },
+        )
+        assertTrue(
+            invocations.last().arguments.windowed(2).any { pair ->
+                pair == listOf("--variant-id", "dark")
             },
         )
     }
@@ -114,14 +126,23 @@ class ViewComposePreviewGradleBridgeTest {
     ) {
         val catalog = moduleRoot.resolve("build/viewcompose-preview/debug/descriptors.json")
         Files.createDirectories(checkNotNull(catalog.parent))
-        Files.writeString(catalog, catalogJson(source.toString()))
+        Files.writeString(
+            catalog,
+            catalogJson(
+                sourcePath = source.toString(),
+                includeDarkVariant = true,
+            ),
+        )
     }
 
-    private fun writeSuccessfulResponse(moduleRoot: Path) {
+    private fun writeSuccessfulResponse(
+        moduleRoot: Path,
+        variantId: String,
+    ) {
         val output = moduleRoot
             .resolve("build/viewcompose-preview/debug/render-cache")
             .resolve("a".repeat(64))
-            .resolve("sample-card/default")
+            .resolve("sample-card/$variantId")
         Files.createDirectories(output)
         val image = output.resolve("preview.png")
         ImageIO.write(
@@ -138,7 +159,7 @@ class ViewComposePreviewGradleBridgeTest {
               "protocolVersion": 1,
               "requestId": "request",
               "previewId": "sample-card",
-              "variantId": "default",
+              "variantId": "$variantId",
               "status": "Success",
               "artifacts": {
                 "imagePath": "${image.toJsonText()}",

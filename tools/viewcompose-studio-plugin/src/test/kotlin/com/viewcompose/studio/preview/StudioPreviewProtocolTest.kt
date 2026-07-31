@@ -53,7 +53,21 @@ class StudioPreviewProtocolTest {
 internal fun catalogJson(
     sourcePath: String,
     descriptorId: String = "sample-card",
+    includeDarkVariant: Boolean = false,
 ): String {
+    val darkVariant = if (includeDarkVariant) {
+        """,
+                {
+                  "id": "dark",
+                  "displayName": "Dark",
+                  "configuration": {
+                    "widthDp": 411,
+                    "heightDp": 891
+                  }
+                }"""
+    } else {
+        ""
+    }
     return """
         {
           "protocolVersion": 1,
@@ -77,7 +91,7 @@ internal fun catalogJson(
                     "widthDp": 411,
                     "heightDp": 891
                   }
-                }
+                }$darkVariant
               ],
               "sourceLocation": {
                 "filePath": "$sourcePath",

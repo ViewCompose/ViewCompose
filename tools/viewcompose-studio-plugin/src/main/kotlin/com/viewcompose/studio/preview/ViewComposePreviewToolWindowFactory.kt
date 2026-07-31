@@ -1,10 +1,12 @@
 package com.viewcompose.studio.preview
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
@@ -21,10 +23,12 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         project: Project,
         toolWindow: ToolWindow,
     ) {
+        val selectionService = project.service<ViewComposePreviewSelectionService>()
         val panel = ViewComposePreviewToolWindowPanel(
             detection = project.viewComposeDetection(),
+            onVariantSelected = selectionService::selectVariant,
+            onNavigateToSource = { source -> project.navigateToSource(source) },
         )
-        val selectionService = project.service<ViewComposePreviewSelectionService>()
         selectionService.attach(panel)
         val content = ContentFactory.getInstance().createContent(
             panel,
@@ -39,6 +43,19 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         content.preferredFocusableComponent = panel.preferredFocusComponent
         toolWindow.contentManager.addContent(content)
     }
+}
+
+private fun Project.navigateToSource(source: StudioPreviewSourceLocation) {
+    val path = runCatching { Path.of(source.filePath).toAbsolutePath().normalize() }
+        .getOrNull()
+        ?: return
+    val file = VfsUtil.findFile(path, true) ?: return
+    OpenFileDescriptor(
+        this,
+        file,
+        (source.line - 1).coerceAtLeast(0),
+        (source.column - 1).coerceAtLeast(0),
+    ).navigate(true)
 }
 
 private fun Project.viewComposeDetection(): ViewComposeProjectDetection {

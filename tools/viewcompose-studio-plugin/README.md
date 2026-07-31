@@ -37,9 +37,12 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - Kotlin gutter markers for direct and source meta-annotated ViewCompose preview functions;
 - project-scoped source selection that opens the matching symbol in the preview tool window;
 - cancellable Gradle-wrapper discovery and isolated single-preview rendering;
+- an in-window selector for every declared preview configuration;
+- automatic refresh when the selected preview source is saved;
+- clickable structured diagnostics that navigate back to their source location;
 - bounded PNG loading plus structured render diagnostics and Gradle failure output;
 - an explicit AI-261 minimum build and exact local-build verification.
 
-The current alpha deterministically prefers the `debug` descriptor catalog and the first declared
-preview variant. Variant controls, saved-document refresh, and source navigation are added in later
-slices on top of this rendering path.
+The current alpha deterministically prefers the `debug` descriptor catalog. Initial rendering uses
+the first declared configuration; the selected configuration is then retained across source-save
+refreshes when it still exists.

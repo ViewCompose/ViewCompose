@@ -54,7 +54,10 @@ internal class IdePreviewGradleExecutor : PreviewGradleExecutor {
 internal sealed interface PreviewRenderOutcome {
     data class Success(
         val selection: PreviewSourceSelection,
+        val descriptorId: String,
         val descriptorName: String,
+        val variants: List<StudioPreviewVariant>,
+        val selectedVariantId: String,
         val variantName: String,
         val image: BufferedImage,
         val imagePath: Path,
@@ -80,6 +83,7 @@ internal class ViewComposePreviewRenderCoordinator(
 
     fun render(
         selection: PreviewSourceSelection,
+        requestedVariantId: String? = null,
         indicator: ProgressIndicator,
         onProgress: (String) -> Unit = {},
     ): PreviewRenderOutcome {
@@ -104,7 +108,11 @@ internal class ViewComposePreviewRenderCoordinator(
 
             indicator.checkCanceled()
             onProgress("Matching compiled preview…")
-            val match = findMatchingPreview(target, selection)
+            val match = findMatchingPreview(
+                target = target,
+                selection = selection,
+                requestedVariantId = requestedVariantId,
+            )
                 ?: return PreviewRenderOutcome.Failure(
                     selection = selection,
                     title = "No compiled preview matched this function",
@@ -162,7 +170,10 @@ internal class ViewComposePreviewRenderCoordinator(
             }
             PreviewRenderOutcome.Success(
                 selection = selection,
+                descriptorId = match.descriptor.id,
                 descriptorName = match.descriptor.displayName,
+                variants = match.descriptor.variants,
+                selectedVariantId = match.variant.id,
                 variantName = match.variant.displayName,
                 image = loadBoundedPreviewImage(imagePath),
                 imagePath = imagePath,
@@ -220,6 +231,7 @@ internal class ViewComposePreviewRenderCoordinator(
     private fun findMatchingPreview(
         target: PreviewGradleTarget,
         selection: PreviewSourceSelection,
+        requestedVariantId: String?,
     ): PreviewCatalogMatch? {
         val candidates = readCatalogFiles(target)
             .flatMap { catalogFile ->
@@ -231,7 +243,9 @@ internal class ViewComposePreviewRenderCoordinator(
                         catalogPath = catalogFile,
                         catalog = catalog,
                         descriptor = descriptor,
-                        variant = descriptor.variants.first(),
+                        variant = descriptor.variants
+                            .firstOrNull { variant -> variant.id == requestedVariantId }
+                            ?: descriptor.variants.first(),
                     )
                 }
             }
