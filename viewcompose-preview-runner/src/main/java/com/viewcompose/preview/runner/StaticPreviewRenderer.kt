@@ -3,18 +3,14 @@ package com.viewcompose.preview.runner
 import android.content.Context
 import android.os.Build
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
-import com.viewcompose.renderer.view.tree.ViewNodeToolingRegistry
 import com.viewcompose.preview.tooling.PreviewCompositionLocal
 import com.viewcompose.preview.tooling.PreviewCompositionSnapshot
 import com.viewcompose.preview.tooling.PreviewDiagnostic
 import com.viewcompose.preview.tooling.PreviewDiagnosticSeverity
 import com.viewcompose.preview.tooling.PreviewLayoutDirection
-import com.viewcompose.preview.tooling.PreviewLayoutBounds
-import com.viewcompose.preview.tooling.PreviewNativeViewNode
 import com.viewcompose.preview.tooling.PreviewNodeBindingStats
 import com.viewcompose.preview.tooling.PreviewPatchRecord
 import com.viewcompose.preview.tooling.PreviewRecomposeScope
@@ -202,6 +198,7 @@ private fun PreviewRenderRequest.renderDiagnostic(
 }
 
 private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSnapshot {
+    val nativeViewCapture = PreviewNativeViewSnapshotter.capture(rootView)
     return PreviewRenderSnapshot(
         stats = PreviewRenderStats(
             inserts = stats.inserts,
@@ -239,12 +236,8 @@ private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSna
                 children = node.children.toPreviewTreeNodes(),
             )
         },
-        nativeViewTree = listOf(
-            rootView.toPreviewNativeViewNode(
-                absoluteLeft = 0,
-                absoluteTop = 0,
-            ),
-        ),
+        nativeViewTree = nativeViewCapture.roots,
+        layoutDiagnostics = nativeViewCapture.layoutDiagnostics,
         patches = patches.map { patch ->
             val tooling = patch.toolingMetadata
             PreviewPatchRecord(
@@ -292,49 +285,6 @@ private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSna
     )
 }
 
-private fun View.toPreviewNativeViewNode(
-    absoluteLeft: Int,
-    absoluteTop: Int,
-): PreviewNativeViewNode {
-    val tooling = ViewNodeToolingRegistry.metadataOf(this)
-    val nodeLeft = absoluteLeft + translationX.roundToInt()
-    val nodeTop = absoluteTop + translationY.roundToInt()
-    val childOriginLeft = nodeLeft - scrollX
-    val childOriginTop = nodeTop - scrollY
-    val childNodes = if (this is ViewGroup) {
-        List(childCount) { index ->
-            val child = getChildAt(index)
-            child.toPreviewNativeViewNode(
-                absoluteLeft = childOriginLeft + child.left,
-                absoluteTop = childOriginTop + child.top,
-            )
-        }
-    } else {
-        emptyList()
-    }
-    return PreviewNativeViewNode(
-        className = javaClass.name,
-        bounds = PreviewLayoutBounds(
-            left = nodeLeft,
-            top = nodeTop,
-            right = nodeLeft + width,
-            bottom = nodeTop + height,
-        ),
-        measuredWidth = measuredWidth,
-        measuredHeight = measuredHeight,
-        visibility = when (visibility) {
-            View.VISIBLE -> "VISIBLE"
-            View.INVISIBLE -> "INVISIBLE"
-            View.GONE -> "GONE"
-            else -> visibility.toString()
-        },
-        nodeId = tooling?.nodeId,
-        sourceCallSites = tooling.toPreviewSourceCallSites(),
-        synthetic = tooling?.synthetic == true,
-        children = childNodes,
-    )
-}
-
 private fun List<com.viewcompose.widget.core.RenderTreeNode>.toPreviewTreeNodes():
     List<PreviewRenderTreeNode> {
     return map { node ->
@@ -350,7 +300,7 @@ private fun List<com.viewcompose.widget.core.RenderTreeNode>.toPreviewTreeNodes(
     }
 }
 
-private fun UiNodeToolingMetadata?.toPreviewSourceCallSites(): List<PreviewSourceCallSite> {
+internal fun UiNodeToolingMetadata?.toPreviewSourceCallSites(): List<PreviewSourceCallSite> {
     return this?.callSites.orEmpty().map { source ->
         PreviewSourceCallSite(
             className = source.className,

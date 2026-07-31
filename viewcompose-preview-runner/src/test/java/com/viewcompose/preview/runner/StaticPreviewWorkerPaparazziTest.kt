@@ -8,14 +8,17 @@ import android.os.Build
 import android.content.res.Configuration
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.TextView
 import com.android.resources.Density
 import com.android.resources.LayoutDirection
 import com.android.resources.NightMode
 import com.android.resources.ScreenOrientation
+import com.viewcompose.preview.tooling.PreviewClippingState
 import com.viewcompose.preview.tooling.PreviewConfiguration
 import com.viewcompose.preview.tooling.PreviewDescriptor
 import com.viewcompose.preview.tooling.PreviewJvmEntryPoint
+import com.viewcompose.preview.tooling.PreviewLayoutDiagnosticKind
 import com.viewcompose.preview.tooling.PreviewNativeViewNode
 import com.viewcompose.preview.tooling.PreviewProtocolJson
 import com.viewcompose.preview.tooling.PreviewRenderRequest
@@ -24,6 +27,10 @@ import com.viewcompose.preview.tooling.PreviewRenderTreeNode
 import com.viewcompose.preview.tooling.PreviewLayoutDirection
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.PreviewVariant
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.width
+import com.viewcompose.ui.node.TextOverflow
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.Environment
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.Theme
@@ -125,6 +132,82 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals(renderText.nodeId, insertPatch.nodeId)
         assertEquals(renderText.sourceCallSites, insertPatch.sourceCallSites)
         assertNotNull(snapshot.composition)
+    }
+
+    @Test
+    fun `snapshot captures effective bounds after parent clipping`() {
+        val root = FrameLayout(paparazzi.context)
+        val child = TextView(paparazzi.context).apply {
+            text = "Partially visible"
+        }
+        root.addView(
+            child,
+            FrameLayout.LayoutParams(80, 24).apply {
+                leftMargin = 60
+            },
+        )
+        root.measure(
+            View.MeasureSpec.makeMeasureSpec(100, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(100, View.MeasureSpec.EXACTLY),
+        )
+        root.layout(0, 0, 100, 100)
+
+        val capture = PreviewNativeViewSnapshotter.capture(root)
+        val capturedChild = capture.roots.single().children.single()
+
+        assertEquals(PreviewClippingState.PartiallyClipped, capturedChild.clippingState)
+        assertEquals(60, capturedChild.visibleBounds?.left)
+        assertEquals(100, capturedChild.visibleBounds?.right)
+        assertEquals("android.widget.FrameLayout", capturedChild.clippingAncestorClassName)
+    }
+
+    @Test
+    fun `source aware text ellipsis is exported as a layout diagnostic`() {
+        val variant = PreviewVariant(
+            id = "truncated",
+            displayName = "Truncated",
+            configuration = PreviewConfiguration(
+                widthDp = 120,
+                heightDp = 80,
+            ),
+        )
+        val truncatedEntry = StaticPreviewEntry(
+            descriptor = entry().descriptor.copy(variants = listOf(variant)),
+        ) {
+            Text(
+                text = "This preview text cannot fit on one short line",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.width(48.dp),
+            )
+        }
+        val truncatedRequest = request(
+            entry = truncatedEntry,
+            outputDirectory = temporaryFolder.newFolder("truncated-preview"),
+        )
+        paparazzi.unsafeUpdateConfig(
+            deviceConfig = truncatedRequest.configuration.toDeviceConfig(),
+        )
+
+        val mount = StaticPreviewRenderer.mount(
+            context = paparazzi.context,
+            request = truncatedRequest,
+            entry = truncatedEntry,
+        )
+
+        assertTrue(mount is StaticPreviewMountResult.Success)
+        (mount as StaticPreviewMountResult.Success).frame.use { frame ->
+            val diagnostic = frame.snapshot.layoutDiagnostics.single { candidate ->
+                candidate.kind == PreviewLayoutDiagnosticKind.TextEllipsized
+            }
+            assertTrue(diagnostic.nodeId?.startsWith("node-") == true)
+            assertTrue(
+                diagnostic.sourceCallSites.any { source ->
+                    source.fileName == "StaticPreviewWorkerPaparazziTest.kt"
+                },
+            )
+            assertTrue(diagnostic.metrics.getValue("ellipsizedLineCount") > 0)
+        }
     }
 
     @Test

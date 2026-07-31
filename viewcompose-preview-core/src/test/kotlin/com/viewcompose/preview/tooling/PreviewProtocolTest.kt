@@ -154,6 +154,30 @@ class PreviewProtocolTest {
                     measuredWidth = 1080,
                     measuredHeight = 1920,
                     visibility = "VISIBLE",
+                    visibleBounds = PreviewLayoutBounds(
+                        left = 0,
+                        top = 0,
+                        right = 1080,
+                        bottom = 1920,
+                    ),
+                ),
+            ),
+            layoutDiagnostics = listOf(
+                PreviewLayoutDiagnostic(
+                    kind = PreviewLayoutDiagnosticKind.TextEllipsized,
+                    severity = PreviewDiagnosticSeverity.Info,
+                    className = "android.widget.TextView",
+                    bounds = PreviewLayoutBounds(
+                        left = 32,
+                        top = 48,
+                        right = 256,
+                        bottom = 112,
+                    ),
+                    metrics = mapOf(
+                        "lineCount" to 1,
+                        "ellipsizedLineCount" to 1,
+                    ),
+                    nodeId = "node-title",
                 ),
             ),
             composition = PreviewCompositionSnapshot(

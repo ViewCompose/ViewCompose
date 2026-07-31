@@ -16,6 +16,7 @@ data class PreviewRenderSnapshot(
     val warnings: List<String> = emptyList(),
     val tree: List<PreviewRenderTreeNode> = emptyList(),
     val nativeViewTree: List<PreviewNativeViewNode> = emptyList(),
+    val layoutDiagnostics: List<PreviewLayoutDiagnostic> = emptyList(),
     val patches: List<PreviewPatchRecord> = emptyList(),
     val composition: PreviewCompositionSnapshot = PreviewCompositionSnapshot(),
 )
@@ -82,11 +83,23 @@ data class PreviewNativeViewNode(
     val measuredWidth: Int,
     val measuredHeight: Int,
     val visibility: String,
+    val visibleBounds: PreviewLayoutBounds? = null,
+    val clippingState: PreviewClippingState = PreviewClippingState.NotClipped,
+    val clippingAncestorClassName: String? = null,
+    val clippingAncestorNodeId: String? = null,
+    val clippingExpected: Boolean = false,
     val nodeId: String? = null,
     val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
     val synthetic: Boolean = false,
     val children: List<PreviewNativeViewNode> = emptyList(),
 )
+
+@Serializable
+enum class PreviewClippingState {
+    NotClipped,
+    PartiallyClipped,
+    FullyClipped,
+}
 
 @Serializable
 data class PreviewLayoutBounds(
@@ -95,6 +108,37 @@ data class PreviewLayoutBounds(
     val right: Int,
     val bottom: Int,
 )
+
+/**
+ * One source-aware layout condition captured after Android measure and layout complete.
+ *
+ * The protocol stores structured facts instead of a preformatted message so IDE clients can
+ * localize and present the same diagnostic in different ways.
+ */
+@Serializable
+data class PreviewLayoutDiagnostic(
+    val kind: PreviewLayoutDiagnosticKind,
+    val severity: PreviewDiagnosticSeverity,
+    val className: String,
+    val bounds: PreviewLayoutBounds,
+    val visibleBounds: PreviewLayoutBounds? = null,
+    val clippingAncestorClassName: String? = null,
+    val clippingAncestorNodeId: String? = null,
+    val clippingExpected: Boolean = false,
+    val metrics: Map<String, Int> = emptyMap(),
+    val nodeId: String? = null,
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
+)
+
+@Serializable
+enum class PreviewLayoutDiagnosticKind {
+    ZeroLayoutSize,
+    PartiallyClipped,
+    FullyClipped,
+    TextEllipsized,
+    TextContentClipped,
+}
 
 @Serializable
 data class PreviewPatchRecord(
