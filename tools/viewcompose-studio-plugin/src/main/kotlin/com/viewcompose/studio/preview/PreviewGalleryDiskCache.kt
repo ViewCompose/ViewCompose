@@ -17,9 +17,9 @@ import kotlin.math.roundToInt
 /**
  * High-cardinality cache for the all-previews gallery.
  *
- * Gallery entries deliberately contain only a bounded thumbnail and source metadata. Full images,
- * render trees, and diagnostics stay in [PreviewDiskCache], so a large gallery cannot evict the
- * detailed previews the user recently inspected.
+ * Gallery entries contain a Retina-ready thumbnail, a bounded quick-look image, and source
+ * metadata. Render trees and diagnostics stay in [PreviewDiskCache]. The quick-look image is loaded
+ * lazily by the UI, while byte and entry limits keep high-cardinality projects bounded.
  */
 internal class PreviewGalleryDiskCache(
     cacheRoot: Path,
@@ -46,8 +46,10 @@ internal class PreviewGalleryDiskCache(
             runCatching {
                 val metadata = readMetadata(directory)
                 require(metadata.sourceIdentity == identity)
-                val imagePath = directory.resolve(GALLERY_IMAGE_FILE_NAME)
-                val image = loadBoundedPreviewImage(imagePath)
+                val thumbnailPath = directory.resolve(GALLERY_THUMBNAIL_FILE_NAME)
+                val detailImagePath = directory.resolve(GALLERY_DETAIL_IMAGE_FILE_NAME)
+                val thumbnail = loadBoundedPreviewImage(thumbnailPath)
+                require(Files.isRegularFile(detailImagePath))
                 writeMetadata(
                     directory,
                     metadata.copy(lastAccessMillis = nowMillis()),
@@ -56,8 +58,9 @@ internal class PreviewGalleryDiskCache(
                     selection = selection,
                     descriptorName = metadata.descriptorName,
                     variantName = metadata.variantName,
-                    image = image,
-                    imagePath = imagePath,
+                    thumbnail = thumbnail,
+                    thumbnailPath = thumbnailPath,
+                    detailImagePath = detailImagePath,
                     cacheHit = true,
                 )
             }.getOrElse {
@@ -72,15 +75,28 @@ internal class PreviewGalleryDiskCache(
         val identity = result.selection.galleryCacheIdentity()
         val destination = cacheRoot.resolve(galleryCacheHash(identity))
         val temporary = cacheRoot.resolve(".tmp-${UUID.randomUUID()}")
-        val item = result.toBoundedGalleryItem(
-            imagePath = destination.resolve(GALLERY_IMAGE_FILE_NAME),
+        val thumbnail = result.image.toGalleryThumbnail()
+        val detailImage = result.image.toGalleryDetailImage()
+        val item = PreviewGalleryItem(
+            selection = result.selection,
+            descriptorName = result.descriptorName,
+            variantName = result.variantName,
+            thumbnail = thumbnail,
+            thumbnailPath = destination.resolve(GALLERY_THUMBNAIL_FILE_NAME),
+            detailImagePath = destination.resolve(GALLERY_DETAIL_IMAGE_FILE_NAME),
+            cacheHit = result.cacheHit,
         )
         runCatching {
             Files.createDirectories(temporary)
             ImageIO.write(
-                item.image,
+                thumbnail,
                 "png",
-                temporary.resolve(GALLERY_IMAGE_FILE_NAME).toFile(),
+                temporary.resolve(GALLERY_THUMBNAIL_FILE_NAME).toFile(),
+            )
+            ImageIO.write(
+                detailImage,
+                "png",
+                temporary.resolve(GALLERY_DETAIL_IMAGE_FILE_NAME).toFile(),
             )
             val timestamp = nowMillis()
             writeMetadata(
@@ -229,33 +245,51 @@ private fun galleryCacheHash(value: String): String {
         .joinToString(separator = "") { byte -> "%02x".format(byte) }
 }
 
-internal fun PreviewRenderOutcome.Success.toBoundedGalleryItem(
-    imagePath: Path = this.imagePath,
-): PreviewGalleryItem {
+/** In-memory fallback used when the gallery cache is unavailable or cannot be written. */
+internal fun PreviewRenderOutcome.Success.toBoundedGalleryItem(): PreviewGalleryItem {
     return PreviewGalleryItem(
         selection = selection,
         descriptorName = descriptorName,
         variantName = variantName,
-        image = image.toGalleryThumbnail(),
-        imagePath = imagePath,
+        thumbnail = image.toGalleryThumbnail(),
+        thumbnailPath = imagePath,
+        detailImagePath = imagePath,
         cacheHit = cacheHit,
     )
 }
 
 private fun BufferedImage.toGalleryThumbnail(): BufferedImage {
+    return scaleToGalleryBounds(
+        maximumWidth = GALLERY_THUMBNAIL_MAX_WIDTH,
+        maximumHeight = GALLERY_THUMBNAIL_MAX_HEIGHT,
+    )
+}
+
+private fun BufferedImage.toGalleryDetailImage(): BufferedImage {
+    return scaleToGalleryBounds(
+        maximumWidth = GALLERY_DETAIL_MAX_WIDTH,
+        maximumHeight = GALLERY_DETAIL_MAX_HEIGHT,
+    )
+}
+
+private fun BufferedImage.scaleToGalleryBounds(
+    maximumWidth: Int,
+    maximumHeight: Int,
+): BufferedImage {
     val scale = minOf(
-        GALLERY_THUMBNAIL_MAX_WIDTH.toDouble() / width,
-        GALLERY_THUMBNAIL_MAX_HEIGHT.toDouble() / height,
+        maximumWidth.toDouble() / width,
+        maximumHeight.toDouble() / height,
         1.0,
     )
+    if (scale >= 1.0) return this
     val targetWidth = (width * scale).roundToInt().coerceAtLeast(1)
     val targetHeight = (height * scale).roundToInt().coerceAtLeast(1)
-    val thumbnail = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB)
-    val graphics = thumbnail.createGraphics()
+    val scaled = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB)
+    val graphics = scaled.createGraphics()
     try {
         graphics.setRenderingHint(
             RenderingHints.KEY_INTERPOLATION,
-            RenderingHints.VALUE_INTERPOLATION_BILINEAR,
+            RenderingHints.VALUE_INTERPOLATION_BICUBIC,
         )
         graphics.setRenderingHint(
             RenderingHints.KEY_RENDERING,
@@ -265,7 +299,7 @@ private fun BufferedImage.toGalleryThumbnail(): BufferedImage {
     } finally {
         graphics.dispose()
     }
-    return thumbnail
+    return scaled
 }
 
 private fun moveGalleryEntry(
@@ -299,12 +333,15 @@ private fun deleteGalleryEntry(path: Path) {
     }
 }
 
-private const val GALLERY_CACHE_SCHEMA_VERSION = 4
+private const val GALLERY_CACHE_SCHEMA_VERSION = 5
 private const val GALLERY_METADATA_FILE_NAME = "metadata.json"
-private const val GALLERY_IMAGE_FILE_NAME = "thumbnail.png"
+private const val GALLERY_THUMBNAIL_FILE_NAME = "thumbnail.png"
+private const val GALLERY_DETAIL_IMAGE_FILE_NAME = "detail.png"
 private const val MAXIMUM_GALLERY_METADATA_BYTES = 256L * 1024L
-private const val GALLERY_THUMBNAIL_MAX_WIDTH = 240
-private const val GALLERY_THUMBNAIL_MAX_HEIGHT = 360
+private const val GALLERY_THUMBNAIL_MAX_WIDTH = 480
+private const val GALLERY_THUMBNAIL_MAX_HEIGHT = 720
+private const val GALLERY_DETAIL_MAX_WIDTH = 1_080
+private const val GALLERY_DETAIL_MAX_HEIGHT = 4_096
 private const val DEFAULT_GALLERY_MAX_ENTRIES = 1024
 private const val DEFAULT_GALLERY_MAX_BYTES = 128L * 1024L * 1024L
 private const val GALLERY_PRUNE_INTERVAL_MILLIS = 60L * 1000L

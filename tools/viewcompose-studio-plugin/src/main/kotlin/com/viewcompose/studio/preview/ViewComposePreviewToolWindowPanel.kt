@@ -28,7 +28,9 @@ import java.awt.event.ComponentEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
+import java.awt.event.MouseWheelEvent
 import java.nio.file.Path
+import java.util.LinkedHashMap
 import javax.swing.AbstractAction
 import javax.swing.BorderFactory
 import javax.swing.Box
@@ -36,10 +38,11 @@ import javax.swing.JButton
 import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JComboBox
-import javax.swing.ImageIcon
+import javax.swing.Icon
 import javax.swing.JLayeredPane
 import javax.swing.JList
 import javax.swing.JPanel
+import javax.swing.JSplitPane
 import javax.swing.JTabbedPane
 import javax.swing.JToggleButton
 import javax.swing.JTree
@@ -48,6 +51,7 @@ import javax.swing.KeyStroke
 import javax.swing.ListCellRenderer
 import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
+import javax.swing.SwingWorker
 import javax.swing.ToolTipManager
 import javax.swing.tree.DefaultMutableTreeNode
 import kotlin.math.roundToInt
@@ -68,13 +72,25 @@ internal class ViewComposePreviewToolWindowPanel(
     private var currentState: ViewComposePreviewPanelState = ViewComposePreviewPanelState.Empty
     private var previewZoomOption: PreviewZoomOption = PreviewZoomOption.Fit
     private var previewCustomScale: Double? = null
+    private var galleryDetailZoomOption: PreviewZoomOption = PreviewZoomOption.Fit
+    private var galleryDetailCustomScale: Double? = null
     private var selectedDiagnosticsTabIndex: Int = 0
     private var showLayoutBounds: Boolean = false
     private var showLayoutDiagnostics: Boolean = true
     private var selectedRuntimeNodeId: String? = null
     private var latestCaretLocation: PreviewCaretLocation? = null
     private var nodeSelectionCoordinator: PreviewNodeSelectionCoordinator? = null
-    private val galleryThumbnails = mutableMapOf<Path, ImageIcon>()
+    private var galleryDetailWorker: SwingWorker<BufferedImage, Unit>? = null
+    private val galleryThumbnails = mutableMapOf<Path, Icon>()
+    private val galleryDetailImages = object : LinkedHashMap<Path, BufferedImage>(
+        GALLERY_DETAIL_MEMORY_ENTRIES + 1,
+        0.75f,
+        true,
+    ) {
+        override fun removeEldestEntry(
+            eldest: MutableMap.MutableEntry<Path, BufferedImage>?,
+        ): Boolean = size > GALLERY_DETAIL_MEMORY_ENTRIES
+    }
     private val messages: PreviewUiMessages
         get() = PreviewUiMessages.forLanguage(language)
 
@@ -87,6 +103,9 @@ internal class ViewComposePreviewToolWindowPanel(
     }
 
     fun showState(state: ViewComposePreviewPanelState) {
+        galleryDetailWorker?.cancel(true)
+        galleryDetailWorker = null
+        galleryThumbnails.clear()
         currentState = state
         val presentation = state.previewPresentation()
         onPresentationChanged(presentation.title, presentation.source)
@@ -200,19 +219,100 @@ internal class ViewComposePreviewToolWindowPanel(
             toolTipText = messages.text("gallery.navigationHint")
             addMouseListener(
                 object : MouseAdapter() {
-                    override fun mouseClicked(event: MouseEvent) {
-                        if (event.clickCount < 2) return
+                    override fun mousePressed(event: MouseEvent) {
+                        if (!isPreviewSourceNavigationPress(
+                                clickCount = event.clickCount,
+                                isPrimaryButton = SwingUtilities.isLeftMouseButton(event),
+                            )
+                        ) {
+                            return
+                        }
                         val index = locationToIndex(event.point)
                         if (index < 0 || !getCellBounds(index, index).contains(event.point)) return
                         val item = model.getElementAt(index)
+                        event.consume()
                         onNavigateToSource(item.selection.toStudioSourceLocation())
                     }
                 },
             )
         }
-        return JBScrollPane(list).apply {
+        val galleryScrollPane = JBScrollPane(list).apply {
             border = JBUI.Borders.emptyTop(8)
             verticalScrollBar.unitIncrement = JBUI.scale(24)
+        }
+        val detailHost = JPanel(BorderLayout()).apply {
+            isOpaque = false
+            border = JBUI.Borders.empty(8, 12, 0, 0)
+            add(readOnlyText(messages.text("gallery.detailEmpty")), BorderLayout.CENTER)
+        }
+        var detailGeneration = 0
+
+        fun showDetail(item: PreviewGalleryItem) {
+            galleryDetailWorker?.cancel(true)
+            galleryDetailWorker = null
+            detailGeneration += 1
+            val generation = detailGeneration
+            galleryDetailZoomOption = PreviewZoomOption.Fit
+            galleryDetailCustomScale = null
+            fun present(image: BufferedImage) {
+                if (generation != detailGeneration || list.selectedValue != item) return
+                detailHost.removeAll()
+                detailHost.add(galleryDetailPanel(item, image), BorderLayout.CENTER)
+                detailHost.revalidate()
+                detailHost.repaint()
+            }
+
+            galleryDetailImages[item.detailImagePath]?.let { cached ->
+                present(cached)
+                return
+            }
+            detailHost.removeAll()
+            detailHost.add(readOnlyText(messages.text("gallery.detailLoading")), BorderLayout.CENTER)
+            detailHost.revalidate()
+            detailHost.repaint()
+            galleryDetailWorker = object : SwingWorker<BufferedImage, Unit>() {
+                override fun doInBackground(): BufferedImage {
+                    return loadBoundedPreviewImage(item.detailImagePath)
+                }
+
+                override fun done() {
+                    if (isCancelled || generation != detailGeneration) return
+                    galleryDetailWorker = null
+                    runCatching { get() }
+                        .onSuccess { image ->
+                            galleryDetailImages[item.detailImagePath] = image
+                            present(image)
+                        }
+                        .onFailure {
+                            detailHost.removeAll()
+                            detailHost.add(
+                                readOnlyText(messages.text("gallery.detailFailure")),
+                                BorderLayout.CENTER,
+                            )
+                            detailHost.revalidate()
+                            detailHost.repaint()
+                        }
+                }
+            }.also { worker -> worker.execute() }
+        }
+
+        list.addListSelectionListener { event ->
+            if (!event.valueIsAdjusting) {
+                list.selectedValue?.let(::showDetail)
+            }
+        }
+        list.selectedIndex = 0
+        return JSplitPane(
+            JSplitPane.HORIZONTAL_SPLIT,
+            galleryScrollPane,
+            detailHost,
+        ).apply {
+            isOpaque = false
+            border = JBUI.Borders.empty()
+            resizeWeight = GALLERY_SPLIT_RESIZE_WEIGHT
+            dividerSize = JBUI.scale(5)
+            leftComponent.minimumSize = Dimension(JBUI.scale(280), 1)
+            rightComponent.minimumSize = Dimension(JBUI.scale(320), 1)
         }
     }
 
@@ -220,15 +320,12 @@ internal class ViewComposePreviewToolWindowPanel(
         result: PreviewGalleryItem,
         selected: Boolean,
     ): JComponent {
-        val thumbnail = galleryThumbnails.getOrPut(result.imagePath) {
-            val scale = minOf(
-                GALLERY_IMAGE_WIDTH.toDouble() / result.image.width,
-                GALLERY_IMAGE_HEIGHT.toDouble() / result.image.height,
-                1.0,
+        val thumbnail = galleryThumbnails.getOrPut(result.thumbnailPath) {
+            RetinaPreviewIcon(
+                image = result.thumbnail,
+                width = JBUI.scale(GALLERY_IMAGE_WIDTH),
+                height = JBUI.scale(GALLERY_IMAGE_HEIGHT),
             )
-            val width = (result.image.width * scale).roundToInt().coerceAtLeast(1)
-            val height = (result.image.height * scale).roundToInt().coerceAtLeast(1)
-            ImageIcon(result.image.getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH))
         }
         return JPanel(BorderLayout()).apply {
             isOpaque = true
@@ -268,6 +365,95 @@ internal class ViewComposePreviewToolWindowPanel(
                     verticalAlignment = JBLabel.CENTER
                     border = JBUI.Borders.emptyTop(8)
                 },
+                BorderLayout.CENTER,
+            )
+        }
+    }
+
+    private fun galleryDetailPanel(
+        item: PreviewGalleryItem,
+        image: BufferedImage,
+    ): JComponent {
+        val canvas = PreviewImageCanvas(
+            image = image,
+            nativeViews = emptyList(),
+            layoutDiagnostics = emptyList(),
+            initialZoomOption = galleryDetailZoomOption,
+            initialCustomScale = galleryDetailCustomScale,
+            sourceNavigationHint = messages.text("source.navigationHint"),
+            onNavigateToSource = {},
+            onNodeSelected = {},
+            onContinuousZoomChanged = { scale -> galleryDetailCustomScale = scale },
+            onBackgroundDoubleClick = {
+                onNavigateToSource(item.selection.toStudioSourceLocation())
+            },
+        )
+        val imageScrollPane = JBScrollPane(canvas).apply {
+            border = JBUI.Borders.empty()
+            verticalScrollBar.unitIncrement = JBUI.scale(24)
+            horizontalScrollBar.unitIncrement = JBUI.scale(24)
+        }
+        fun updateCanvasScale() {
+            canvas.updateViewportSize(imageScrollPane.viewport.extentSize)
+        }
+        imageScrollPane.viewport.addComponentListener(
+            object : ComponentAdapter() {
+                override fun componentResized(event: ComponentEvent) {
+                    updateCanvasScale()
+                }
+            },
+        )
+        SwingUtilities.invokeLater(::updateCanvasScale)
+
+        fun selectZoom(option: PreviewZoomOption) {
+            galleryDetailZoomOption = option
+            galleryDetailCustomScale = null
+            canvas.zoomOption = option
+            SwingUtilities.invokeLater(::updateCanvasScale)
+        }
+        fun selectRelativeZoom(direction: Int) {
+            val fixedOptions = PreviewZoomOption.entries
+                .filter { option -> option.fixedScale != null }
+                .sortedBy { option -> option.fixedScale }
+            val currentScale = canvas.currentScale
+            val option = if (direction > 0) {
+                fixedOptions.firstOrNull { option ->
+                    checkNotNull(option.fixedScale) > currentScale + ZOOM_EPSILON
+                } ?: fixedOptions.last()
+            } else {
+                fixedOptions.lastOrNull { option ->
+                    checkNotNull(option.fixedScale) < currentScale - ZOOM_EPSILON
+                } ?: fixedOptions.first()
+            }
+            selectZoom(option)
+        }
+        val zoomToolbar = previewZoomToolbar(
+            canvas = canvas,
+            onZoomIn = { selectRelativeZoom(1) },
+            onZoomOut = { selectRelativeZoom(-1) },
+            onActualSize = { selectZoom(PreviewZoomOption.Percent100) },
+            onFit = { selectZoom(PreviewZoomOption.Fit) },
+        )
+        return JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(
+                JPanel(GridLayout(0, 1, 0, JBUI.scale(3))).apply {
+                    isOpaque = false
+                    add(
+                        JBLabel(item.descriptorName).apply {
+                            font = font.deriveFont(Font.BOLD)
+                        },
+                    )
+                    add(JBLabel(item.variantName).apply { foreground = JBColor.GRAY })
+                    add(JBLabel(messages.text("gallery.detailHint")).apply { foreground = JBColor.GRAY })
+                },
+                BorderLayout.NORTH,
+            )
+            add(
+                PreviewCanvasLayer(
+                    scrollPane = imageScrollPane,
+                    floatingToolbar = zoomToolbar,
+                ),
                 BorderLayout.CENTER,
             )
         }
@@ -1219,6 +1405,7 @@ private class PreviewImageCanvas(
     private val onNavigateToSource: (List<StudioPreviewSourceCallSite>) -> Unit,
     private val onNodeSelected: (String?) -> Unit,
     private val onContinuousZoomChanged: (Double) -> Unit,
+    private val onBackgroundDoubleClick: (() -> Unit)? = null,
 ) : JComponent() {
     var zoomOption: PreviewZoomOption = initialZoomOption
         set(value) {
@@ -1269,17 +1456,21 @@ private class PreviewImageCanvas(
     init {
         minimumSize = Dimension(1, 1)
         isOpaque = true
+        isFocusable = true
         ToolTipManager.sharedInstance().registerComponent(this)
         addMouseWheelListener { event ->
-            if (!event.isControlDown) return@addMouseWheelListener
-            event.consume()
-            applyContinuousScale(
-                nextScale = calculateWheelPreviewScale(
-                    currentScale = scale,
-                    preciseWheelRotation = event.preciseWheelRotation,
-                ),
-                anchorPoint = event.point,
-            )
+            if (event.isControlDown) {
+                event.consume()
+                applyContinuousScale(
+                    nextScale = calculateWheelPreviewScale(
+                        currentScale = scale,
+                        preciseWheelRotation = event.preciseWheelRotation,
+                    ),
+                    anchorPoint = event.point,
+                )
+            } else {
+                applyTrackpadScroll(event)
+            }
         }
         addMouseMotionListener(
             object : MouseMotionAdapter() {
@@ -1316,6 +1507,16 @@ private class PreviewImageCanvas(
                 }
 
                 override fun mousePressed(event: MouseEvent) {
+                    requestFocusInWindow()
+                    if (isPreviewSourceNavigationPress(
+                            clickCount = event.clickCount,
+                            isPrimaryButton = SwingUtilities.isLeftMouseButton(event),
+                        )
+                    ) {
+                        event.consume()
+                        navigateAt(event.point)
+                        return
+                    }
                     if (!panEnabled) return
                     panStartPoint = event.point
                     panStartViewPosition = previewViewport()?.viewPosition
@@ -1327,15 +1528,9 @@ private class PreviewImageCanvas(
                 }
 
                 override fun mouseClicked(event: MouseEvent) {
-                    if (panEnabled) return
+                    if (panEnabled || event.clickCount != 1) return
                     val mappedView = mappedViewAt(event.x, event.y)
                     onNodeSelected(mappedView?.nodeId)
-                    if (event.clickCount >= 2) {
-                        mappedView
-                            ?.sourceCallSites
-                            ?.takeIf(List<StudioPreviewSourceCallSite>::isNotEmpty)
-                            ?.let(onNavigateToSource)
-                    }
                 }
             },
         )
@@ -1373,6 +1568,47 @@ private class PreviewImageCanvas(
 
     private fun previewViewport(): JViewport? {
         return SwingUtilities.getAncestorOfClass(JViewport::class.java, this) as? JViewport
+    }
+
+    private fun applyTrackpadScroll(event: MouseWheelEvent) {
+        val viewport = previewViewport() ?: return
+        val oldPosition = viewport.viewPosition
+        val maximumX = (viewport.viewSize.width - viewport.extentSize.width).coerceAtLeast(0)
+        val maximumY = (viewport.viewSize.height - viewport.extentSize.height).coerceAtLeast(0)
+        val nextPosition = if (event.isShiftDown) {
+            Point(
+                calculatePreviewScrollPosition(
+                    currentPosition = oldPosition.x,
+                    maximumPosition = maximumX,
+                    preciseWheelRotation = event.preciseWheelRotation,
+                ),
+                oldPosition.y,
+            )
+        } else {
+            Point(
+                oldPosition.x,
+                calculatePreviewScrollPosition(
+                    currentPosition = oldPosition.y,
+                    maximumPosition = maximumY,
+                    preciseWheelRotation = event.preciseWheelRotation,
+                ),
+            )
+        }
+        if (nextPosition != oldPosition) {
+            viewport.viewPosition = nextPosition
+            event.consume()
+        }
+    }
+
+    private fun navigateAt(point: Point) {
+        val sourceCallSites = mappedViewAt(point.x, point.y)
+            ?.sourceCallSites
+            ?.takeIf(List<StudioPreviewSourceCallSite>::isNotEmpty)
+        if (sourceCallSites != null) {
+            onNavigateToSource(sourceCallSites)
+        } else {
+            onBackgroundDoubleClick?.invoke()
+        }
     }
 
     fun selectNode(nodeId: String?) {
@@ -1704,6 +1940,46 @@ private data class PreviewImagePlacement(
     val height: Int,
 )
 
+private class RetinaPreviewIcon(
+    private val image: BufferedImage,
+    private val width: Int,
+    private val height: Int,
+) : Icon {
+    override fun getIconWidth(): Int = width
+
+    override fun getIconHeight(): Int = height
+
+    override fun paintIcon(
+        component: java.awt.Component?,
+        graphics: Graphics,
+        x: Int,
+        y: Int,
+    ) {
+        val scale = minOf(
+            width.toDouble() / image.width,
+            height.toDouble() / image.height,
+        )
+        val targetWidth = (image.width * scale).roundToInt().coerceAtLeast(1)
+        val targetHeight = (image.height * scale).roundToInt().coerceAtLeast(1)
+        val left = x + (width - targetWidth) / 2
+        val top = y + (height - targetHeight) / 2
+        val graphics2D = graphics.create() as Graphics2D
+        try {
+            graphics2D.setRenderingHint(
+                RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BICUBIC,
+            )
+            graphics2D.setRenderingHint(
+                RenderingHints.KEY_RENDERING,
+                RenderingHints.VALUE_RENDER_QUALITY,
+            )
+            graphics2D.drawImage(image, left, top, targetWidth, targetHeight, null)
+        } finally {
+            graphics2D.dispose()
+        }
+    }
+}
+
 private data class PreviewVariantChoice(
     val id: String,
     val displayName: String,
@@ -1780,3 +2056,5 @@ private const val GALLERY_CELL_WIDTH = 260
 private const val GALLERY_CELL_HEIGHT = 390
 private const val GALLERY_IMAGE_WIDTH = 220
 private const val GALLERY_IMAGE_HEIGHT = 300
+private const val GALLERY_DETAIL_MEMORY_ENTRIES = 3
+private const val GALLERY_SPLIT_RESIZE_WEIGHT = 0.58

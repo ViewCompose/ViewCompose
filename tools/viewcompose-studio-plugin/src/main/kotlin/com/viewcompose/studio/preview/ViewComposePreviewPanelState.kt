@@ -43,7 +43,8 @@ internal data class PreviewGalleryItem(
     val selection: PreviewSourceSelection,
     val descriptorName: String,
     val variantName: String,
-    val image: BufferedImage,
-    val imagePath: Path,
+    val thumbnail: BufferedImage,
+    val thumbnailPath: Path,
+    val detailImagePath: Path,
     val cacheHit: Boolean,
 )

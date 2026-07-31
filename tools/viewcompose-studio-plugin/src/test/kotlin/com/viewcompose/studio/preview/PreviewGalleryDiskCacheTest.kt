@@ -17,7 +17,7 @@ class PreviewGalleryDiskCacheTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun `stores a bounded thumbnail without a diagnostic snapshot`() {
+    fun `stores a Retina thumbnail and a lazy bounded detail image`() {
         val root = temporaryFolder.newFolder("gallery").toPath()
         val cache = PreviewGalleryDiskCache(root)
         val selection = selection("LargePreview")
@@ -25,12 +25,14 @@ class PreviewGalleryDiskCacheTest {
         val written = cache.write(result(selection, width = 800, height = 1600))
         val item = cache.read(selection)
 
-        assertEquals(180, written.image.width)
-        assertEquals(360, written.image.height)
-        assertEquals(180, item?.image?.width)
-        assertEquals(360, item?.image?.height)
+        assertEquals(360, written.thumbnail.width)
+        assertEquals(720, written.thumbnail.height)
+        assertEquals(360, item?.thumbnail?.width)
+        assertEquals(720, item?.thumbnail?.height)
+        assertEquals(800, ImageIO.read(written.detailImagePath.toFile()).width)
+        assertEquals(1600, ImageIO.read(written.detailImagePath.toFile()).height)
         assertTrue(item?.cacheHit == true)
-        assertEquals(2, Files.walk(root).use { paths -> paths.filter(Files::isRegularFile).count() })
+        assertEquals(3, Files.walk(root).use { paths -> paths.filter(Files::isRegularFile).count() })
     }
 
     @Test

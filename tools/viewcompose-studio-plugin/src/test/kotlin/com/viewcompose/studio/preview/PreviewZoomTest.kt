@@ -1,6 +1,8 @@
 package com.viewcompose.studio.preview
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PreviewZoomTest {
@@ -79,5 +81,19 @@ class PreviewZoomTest {
 
         assertEquals(1.1, zoomedIn, 0.0001)
         assertEquals(1.0 / 1.1, zoomedOut, 0.0001)
+    }
+
+    @Test
+    fun `trackpad scrolling remains precise and bounded`() {
+        assertEquals(124, calculatePreviewScrollPosition(100, 500, 0.5))
+        assertEquals(0, calculatePreviewScrollPosition(10, 500, -2.0))
+        assertEquals(500, calculatePreviewScrollPosition(490, 500, 2.0))
+    }
+
+    @Test
+    fun `source navigation starts on the second primary-button press`() {
+        assertFalse(isPreviewSourceNavigationPress(clickCount = 1, isPrimaryButton = true))
+        assertTrue(isPreviewSourceNavigationPress(clickCount = 2, isPrimaryButton = true))
+        assertFalse(isPreviewSourceNavigationPress(clickCount = 2, isPrimaryButton = false))
     }
 }
