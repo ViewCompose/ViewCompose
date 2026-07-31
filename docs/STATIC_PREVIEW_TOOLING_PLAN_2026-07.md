@@ -277,6 +277,8 @@ Implemented:
 - Editor caret movement performs the reverse lookup from project source lines to runtime node IDs.
   Canvas, VNode tree, Android View tree, and patch diagnostics share one linked selection without
   triggering a new render.
+- Multiline DSL reverse lookup uses the enclosing Kotlin call expression's exact start line rather
+  than a proximity heuristic, preventing neighboring declarations from being selected by mistake.
 - Patch records retain the affected node identity and source chain for insert, remove, rebind,
   modifier patch, and skip operations.
 - Composition scopes retain their creation-site source chain independently of VNode identity, so
