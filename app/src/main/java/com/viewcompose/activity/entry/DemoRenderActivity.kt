@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.viewcompose.host.android.setUiContent
 import com.viewcompose.overlay.android.host.AndroidOverlayHost
+import com.viewcompose.widget.core.AndroidDynamicColorPolicy
 import com.viewcompose.widget.core.UiTreeBuilder
 
 /**
@@ -44,6 +45,9 @@ abstract class DemoRenderActivity : AppCompatActivity() {
         setUiContent(
             debug = true,
             debugTag = "ViewComposeSample",
+            // DemoThemeTokens are intentionally device-independent. Keep the native View context
+            // on the same stable application theme instead of adding a wallpaper-derived overlay.
+            dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
             overlayHostFactory = ::AndroidOverlayHost,
             onRenderResult = DemoRenderDiagnosticsStore::record,
         ) { root ->

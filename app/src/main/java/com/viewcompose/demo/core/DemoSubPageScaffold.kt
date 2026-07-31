@@ -35,11 +35,10 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
     val themeModeState = remember { mutableStateOf(DemoThemeSession.mode) }
     val remoteImageLoader = remember { CoilRemoteImageLoader(root.context.applicationContext) }
     val activity = root.context.findAppCompatActivity()
-    val overrideTheme = when (themeModeState.value) {
-        DemoThemeMode.System -> null
-        DemoThemeMode.Light -> DemoThemeTokens.light
-        DemoThemeMode.Dark -> DemoThemeTokens.dark
-    }
+    val themeTokens = DemoThemeTokens.select(
+        mode = themeModeState.value,
+        isSystemDark = DemoThemeTokens.isSystemDark(root.context),
+    )
     ProvideRemoteImageLoader(remoteImageLoader) {
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
             val currentTheme = Theme.current
@@ -78,12 +77,6 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
                 }
             }
         }
-        if (overrideTheme == null) {
-            // System 模式使用上层解析后的主题，避免在子页重复包一层相同 token。
-            // System mode uses the already resolved parent theme and avoids wrapping identical tokens.
-            scaffoldContent()
-        } else {
-            UiTheme(tokens = overrideTheme, content = scaffoldContent)
-        }
+        UiTheme(tokens = themeTokens, content = scaffoldContent)
     }
 }
