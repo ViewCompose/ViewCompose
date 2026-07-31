@@ -48,6 +48,8 @@ protocol instead of linking renderer internals into the IDE process.
 9. Normal `qaQuick` remains independent from Android Studio plugin assembly.
 10. Source locations and render diagnostics are additive metadata; preview tooling must not change
     production rendering semantics.
+11. Runtime source identity is captured only inside an explicit tooling frame, survives VNode
+    wrapping and native View mounting, and never participates in VNode equality or reconciliation.
 
 ## 4. Delivery stages
 
@@ -264,6 +266,14 @@ Implemented:
   the runner.
 - Native measured/layout bounds are displayed in the View tree and can be overlaid on the preview
   image. Overlay coordinates follow preview zoom.
+- Tooling renders capture a bounded DSL call chain for every emitted VNode and preserve one stable
+  node ID through semantic copies, synthetic wrapper nodes, renderer diagnostics, and native View
+  mounting. Normal app rendering performs no stack capture or source-metadata allocation.
+- The preview canvas resolves the deepest mapped native View under the pointer. A single click
+  highlights it, while double-clicking opens the highest-value project source call site.
+- VNode and Android View trees use the same source metadata and support double-click or Enter
+  navigation. Source resolution prefers application/project sources over framework internals and
+  excludes generated build output.
 
 ## 5. Experience backlog priority
 
@@ -286,9 +296,6 @@ The following items require an explicit maintenance/value decision before implem
 - **Unsaved-code Live Edit:** very high cost. Gradle cannot compile editor buffers; this requires an
   incremental Kotlin compilation daemon or bytecode replacement pipeline and substantially changes
   the isolation model.
-- **Click rendered View/VNode and navigate to its exact DSL call:** high cost. Current runtime nodes
-  do not retain source origins. Accurate mapping needs compiler instrumentation or source-location
-  metadata at every DSL emission site; stack-trace sampling would be slower and unreliable.
 - **Interactive input, gestures, IME, and animation timelines:** high cost and currently low value
   for the requested static-preview workflow.
 
