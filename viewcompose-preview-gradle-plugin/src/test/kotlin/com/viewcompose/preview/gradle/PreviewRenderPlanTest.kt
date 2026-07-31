@@ -23,6 +23,7 @@ class PreviewRenderPlanTest {
             catalog = catalog(manifest, descriptor),
             previewId = descriptor.id,
             requestedVariantId = null,
+            renderRuntimeFingerprint = RENDER_RUNTIME_FINGERPRINT,
         )
 
         assertEquals("default", plan.variant.id)
@@ -31,7 +32,7 @@ class PreviewRenderPlanTest {
             plan.cacheRelativeDirectory,
         )
         assertEquals(
-            "${manifest.inputFingerprint}:sample-card:default",
+            "${manifest.inputFingerprint}:$RENDER_RUNTIME_FINGERPRINT:sample-card:default",
             plan.requestId,
         )
     }
@@ -50,6 +51,7 @@ class PreviewRenderPlanTest {
                 catalog = catalog,
                 previewId = descriptor.id,
                 requestedVariantId = null,
+                renderRuntimeFingerprint = RENDER_RUNTIME_FINGERPRINT,
             )
         }
         assertThrows(IllegalArgumentException::class.java) {
@@ -58,6 +60,7 @@ class PreviewRenderPlanTest {
                 catalog = catalog,
                 previewId = descriptor.id,
                 requestedVariantId = "missing",
+                renderRuntimeFingerprint = RENDER_RUNTIME_FINGERPRINT,
             )
         }
         assertEquals(
@@ -67,6 +70,7 @@ class PreviewRenderPlanTest {
                 catalog = catalog,
                 previewId = descriptor.id,
                 requestedVariantId = "dark",
+                renderRuntimeFingerprint = RENDER_RUNTIME_FINGERPRINT,
             ).variant.id,
         )
     }
@@ -85,6 +89,7 @@ class PreviewRenderPlanTest {
                 catalog = stale,
                 previewId = descriptor.id,
                 requestedVariantId = null,
+                renderRuntimeFingerprint = RENDER_RUNTIME_FINGERPRINT,
             )
         }
     }
@@ -137,5 +142,9 @@ class PreviewRenderPlanTest {
             displayName = id.replaceFirstChar(Char::uppercase),
             configuration = PreviewConfiguration(),
         )
+    }
+
+    private companion object {
+        val RENDER_RUNTIME_FINGERPRINT: String = "b".repeat(64)
     }
 }

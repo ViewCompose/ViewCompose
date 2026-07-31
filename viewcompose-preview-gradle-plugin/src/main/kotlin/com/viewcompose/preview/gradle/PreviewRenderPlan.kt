@@ -18,6 +18,7 @@ internal fun planPreviewRender(
     catalog: PreviewDescriptorCatalog,
     previewId: String,
     requestedVariantId: String?,
+    renderRuntimeFingerprint: String,
 ): PreviewRenderPlan {
     require(catalog.modulePath == manifest.modulePath) {
         "Preview catalog module '${catalog.modulePath}' does not match '${manifest.modulePath}'."
@@ -57,7 +58,8 @@ internal fun planPreviewRender(
     return PreviewRenderPlan(
         descriptor = descriptor,
         variant = variant,
-        requestId = "${manifest.inputFingerprint}:${descriptor.id}:${variant.id}",
+        requestId =
+            "${manifest.inputFingerprint}:$renderRuntimeFingerprint:${descriptor.id}:${variant.id}",
         cacheRelativeDirectory =
             "render-cache/${manifest.inputFingerprint}/$artifactDirectory",
     )

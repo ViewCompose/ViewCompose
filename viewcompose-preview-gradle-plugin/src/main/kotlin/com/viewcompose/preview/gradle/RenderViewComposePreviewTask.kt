@@ -104,18 +104,29 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         val catalog = PreviewProtocolJson.decodeDescriptorCatalog(
             descriptorCatalogFile.get().asFile.readText(),
         )
+        val renderRuntimeFingerprint = PreviewInputFingerprint.calculate(
+            mapOf(
+                "worker-classpath" to workerClasspath.files,
+                "layoutlib-runtime" to layoutlibRuntimeArchive.files,
+                "layoutlib-resources" to layoutlibResourcesArchive.files,
+            ),
+        )
         val plan = planPreviewRender(
             manifest = manifest,
             catalog = catalog,
             previewId = previewId.get(),
             requestedVariantId = variantId.orNull,
+            renderRuntimeFingerprint = renderRuntimeFingerprint,
         )
         val outputDirectory = File(
             manifest.artifactRootDirectory,
             plan.cacheRelativeDirectory,
         )
         val responseFile = outputDirectory.resolve(RESPONSE_FILE_NAME)
-        if (!rerender.get() && responseFile.isSuccessfulCachedResponse()) {
+        if (
+            !rerender.get() &&
+            responseFile.isSuccessfulCachedResponse(expectedRequestId = plan.requestId)
+        ) {
             logger.lifecycle(
                 "ViewCompose preview cache hit: ${responseFile.absolutePath}",
             )
@@ -261,11 +272,12 @@ private fun ConfigurableFileCollection.requireSingleFile(label: String): File {
     return singleFile
 }
 
-private fun File.isSuccessfulCachedResponse(): Boolean {
+private fun File.isSuccessfulCachedResponse(expectedRequestId: String): Boolean {
     if (!isFile) return false
     val response = runCatching {
         PreviewProtocolJson.decodeResponse(readText())
     }.getOrNull() ?: return false
+    if (response.requestId != expectedRequestId) return false
     if (response.status != PreviewRenderStatus.Success) return false
     val artifacts = response.artifacts ?: return false
     return listOfNotNull(artifacts.imagePath, artifacts.renderTreePath)
