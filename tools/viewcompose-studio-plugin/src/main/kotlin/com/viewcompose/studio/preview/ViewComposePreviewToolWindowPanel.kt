@@ -38,6 +38,7 @@ import javax.swing.JComboBox
 import javax.swing.JLayeredPane
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
+import javax.swing.JToggleButton
 import javax.swing.JTree
 import javax.swing.JViewport
 import javax.swing.KeyStroke
@@ -129,7 +130,7 @@ internal class ViewComposePreviewToolWindowPanel(
         }
         contentPanel.add(
             header(
-                title = state.selection.symbolName,
+                title = null,
                 description = if (previousResult == null) {
                     messages.loadingMessage(state.message)
                 } else {
@@ -152,7 +153,7 @@ internal class ViewComposePreviewToolWindowPanel(
         val cache = if (result.cacheHit) " · ${messages.text("render.cache")}" else ""
         val selector = if (result.variants.size > 1) variantSelector(result) else null
         val renderedHeader = header(
-            title = result.descriptorName,
+            title = null,
             description = "${result.variantName}$duration$cache",
             trailing = selector,
         )
@@ -560,11 +561,16 @@ internal class ViewComposePreviewToolWindowPanel(
                 JBUI.Borders.empty(2),
             )
             add(
-                toolbarButton(
-                    tooltip = messages.text("preview.pan"),
-                    icon = AllIcons.General.Drag,
-                ) {
-                    canvas.panEnabled = !canvas.panEnabled
+                JToggleButton(AllIcons.General.Drag).apply {
+                    isFocusable = false
+                    isOpaque = false
+                    toolTipText = messages.text("preview.pan")
+                    accessibleContext.accessibleName = messages.text("preview.pan")
+                    margin = Insets(JBUI.scale(5), JBUI.scale(7), JBUI.scale(5), JBUI.scale(7))
+                    preferredSize = Dimension(JBUI.scale(38), JBUI.scale(34))
+                    addActionListener {
+                        canvas.panEnabled = isSelected
+                    }
                 },
             )
             add(
@@ -729,17 +735,19 @@ internal class ViewComposePreviewToolWindowPanel(
     }
 
     private fun header(
-        title: String,
+        title: String?,
         description: String,
         includeDetectionEvidence: Boolean = false,
         trailing: JComponent? = null,
     ): JComponent {
         val primaryInfo = Box.createVerticalBox().apply {
-            add(JBLabel(title).apply {
-                alignmentX = LEFT_ALIGNMENT
-                font = font.deriveFont(Font.BOLD)
-            })
-            add(Box.createVerticalStrut(JBUI.scale(5)))
+            title?.let { text ->
+                add(JBLabel(text).apply {
+                    alignmentX = LEFT_ALIGNMENT
+                    font = font.deriveFont(Font.BOLD)
+                })
+                add(Box.createVerticalStrut(JBUI.scale(5)))
+            }
             add(JBLabel(description).apply {
                 alignmentX = LEFT_ALIGNMENT
             })
@@ -1015,14 +1023,17 @@ private fun StudioPreviewNativeViewNode.nodeCount(): Int {
     return 1 + children.sumOf(StudioPreviewNativeViewNode::nodeCount)
 }
 
-private class PreviewCanvasLayer(
+internal class PreviewCanvasLayer(
     private val scrollPane: JComponent,
     private val floatingToolbar: JComponent,
 ) : JLayeredPane() {
     init {
         isOpaque = false
-        add(scrollPane, DEFAULT_LAYER)
-        add(floatingToolbar, PALETTE_LAYER)
+        add(scrollPane)
+        setLayer(scrollPane, DEFAULT_LAYER)
+        add(floatingToolbar)
+        setLayer(floatingToolbar, DRAG_LAYER)
+        moveToFront(floatingToolbar)
     }
 
     override fun doLayout() {
@@ -1035,9 +1046,12 @@ private class PreviewCanvasLayer(
             toolbarSize.width,
             toolbarSize.height,
         )
+        floatingToolbar.doLayout()
     }
 
     override fun getPreferredSize(): Dimension = scrollPane.preferredSize
+
+    override fun isOptimizedDrawingEnabled(): Boolean = false
 }
 
 private class PreviewImageCanvas(

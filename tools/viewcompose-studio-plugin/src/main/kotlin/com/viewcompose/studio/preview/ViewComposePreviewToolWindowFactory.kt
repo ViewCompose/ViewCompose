@@ -39,7 +39,8 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
             },
             onPresentationChanged = { title, source ->
                 currentPreviewSource = source
-                toolWindow.title = title ?: VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID
+                toolWindow.stripeTitle = title ?: VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID
+                toolWindow.title = ""
             },
         )
         fun refreshOptionsActions() {
