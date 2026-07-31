@@ -8,6 +8,7 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.AndroidViewOperation
+import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.layoutModifiersChanged
 import com.viewcompose.renderer.modifier.resolve
@@ -258,6 +259,7 @@ internal object ViewTreePatchPipeline {
                     key = removal.payload.vnode.key,
                     parentKey = parentNodeKey,
                     index = removal.previousIndex,
+                    toolingMetadata = UiNodeTooling.metadataOf(removal.payload.vnode),
                 ))
             }
         }
@@ -295,6 +297,7 @@ internal object ViewTreePatchPipeline {
                         key = patch.nextVNode.key,
                         parentKey = parentNodeKey,
                         index = patch.targetIndex,
+                        toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                     ))
                 }
                 captureContainer(
@@ -331,6 +334,7 @@ internal object ViewTreePatchPipeline {
                             key = patch.nextVNode.key,
                             parentKey = parentNodeKey,
                             index = patch.targetIndex,
+                            toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                         ))
                     }
                     return PatchApplicationResult(
@@ -446,6 +450,7 @@ internal object ViewTreePatchPipeline {
                         detail = (bindingPlan as? NodeBindingPlan.Patch)
                             ?.patch
                             ?.let { nodePatch -> nodePatch::class.simpleName },
+                        toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                     ))
                 }
                 PatchApplicationResult(

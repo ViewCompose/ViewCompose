@@ -194,7 +194,10 @@ internal class ViewComposePreviewToolWindowPanel(
                     nativeViewsPanel(snapshot.nativeViewTree, selectionCoordinator),
                 )
                 addTab(messages.text("tab.composition"), compositionPanel(snapshot.composition))
-                addTab(messages.text("tab.patches"), patchesPanel(snapshot.patches))
+                addTab(
+                    messages.text("tab.patches"),
+                    patchesPanel(snapshot.patches, selectionCoordinator),
+                )
                 selectedIndex = selectedDiagnosticsTabIndex.coerceIn(0, tabCount - 1)
                 addChangeListener {
                     selectedDiagnosticsTabIndex = selectedIndex
@@ -446,20 +449,25 @@ internal class ViewComposePreviewToolWindowPanel(
         }
     }
 
-    private fun patchesPanel(patches: List<StudioPreviewPatchRecord>): JComponent {
-        val text = patches.joinToString("\n") { patch ->
-            buildString {
-                append(patch.operation)
-                append(" · ")
-                append(patch.type)
-                patch.key?.let { key -> append(" · key=$key") }
-                patch.parentKey?.let { key -> append(" · parent=$key") }
-                append(" · index=${patch.index}")
-                if (patch.moved) append(" · moved")
-                patch.detail?.let { detail -> append(" · $detail") }
+    private fun patchesPanel(
+        patches: List<StudioPreviewPatchRecord>,
+        selectionCoordinator: PreviewNodeSelectionCoordinator?,
+    ): JComponent {
+        if (patches.isEmpty()) {
+            return JBScrollPane(readOnlyText(messages.text("patch.empty"))).apply {
+                border = JBUI.Borders.empty(8)
             }
-        }.ifBlank { messages.text("patch.empty") }
-        return JBScrollPane(readOnlyText(text)).apply {
+        }
+        val root = DefaultMutableTreeNode(messages.text("tree.patches"))
+        patches.forEach { patch ->
+            root.add(patch.toSwingTreeNode())
+        }
+        return JBScrollPane(
+            sourceNavigableTree(root, selectionCoordinator).apply {
+                isRootVisible = false
+                showsRootHandles = true
+            },
+        ).apply {
             border = JBUI.Borders.empty(8)
         }
     }
@@ -730,6 +738,26 @@ private fun StudioPreviewNativeViewNode.toSwingTreeNode(): DefaultMutableTreeNod
         swingNode.add(child.toSwingTreeNode())
     }
     return swingNode
+}
+
+private fun StudioPreviewPatchRecord.toSwingTreeNode(): DefaultMutableTreeNode {
+    val label = buildString {
+        append(operation)
+        append(" · ")
+        append(type)
+        key?.let { key -> append(" · key=$key") }
+        parentKey?.let { key -> append(" · parent=$key") }
+        append(" · index=$index")
+        if (moved) append(" · moved")
+        detail?.let { detail -> append(" · $detail") }
+    }
+    return DefaultMutableTreeNode(
+        PreviewTreeEntry(
+            label = label,
+            nodeId = nodeId,
+            sourceCallSites = sourceCallSites,
+        ),
+    )
 }
 
 private fun StudioPreviewNativeViewNode.nodeCount(): Int {

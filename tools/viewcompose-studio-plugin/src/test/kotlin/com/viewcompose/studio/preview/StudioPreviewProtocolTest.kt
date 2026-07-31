@@ -141,7 +141,16 @@ class StudioPreviewProtocolTest {
                   "parentKey": "root",
                   "index": 0,
                   "moved": false,
-                  "detail": "mounted"
+                  "detail": "mounted",
+                  "nodeId": "node-title",
+                  "sourceCallSites": [
+                    {
+                      "className": "sample.SampleKt",
+                      "methodName": "SampleCard",
+                      "fileName": "Sample.kt",
+                      "lineNumber": 24
+                    }
+                  ]
                 }
               ],
               "composition": {
@@ -189,6 +198,8 @@ class StudioPreviewProtocolTest {
             snapshot.nativeViewTree.single().children.single().nodeId,
         )
         assertEquals("Insert", snapshot.patches.single().operation)
+        assertEquals("node-title", snapshot.patches.single().nodeId)
+        assertEquals(24, snapshot.patches.single().sourceCallSites.single().lineNumber)
         assertTrue(snapshot.composition.scopes.single().recomposed)
         assertEquals(
             listOf("StateChanged"),

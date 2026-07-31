@@ -246,6 +246,7 @@ private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSna
             ),
         ),
         patches = patches.map { patch ->
+            val tooling = patch.toolingMetadata
             PreviewPatchRecord(
                 operation = patch.operation.name,
                 type = patch.type.toString(),
@@ -254,6 +255,9 @@ private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSna
                 index = patch.index,
                 moved = patch.moved,
                 detail = patch.detail,
+                nodeId = tooling?.nodeId,
+                sourceCallSites = tooling.toPreviewSourceCallSites(),
+                synthetic = tooling?.synthetic == true,
             )
         },
         composition = PreviewCompositionSnapshot(

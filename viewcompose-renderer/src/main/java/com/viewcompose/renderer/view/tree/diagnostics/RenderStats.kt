@@ -144,6 +144,7 @@ data class RenderPatchRecord(
     val index: Int,
     val moved: Boolean = false,
     val detail: String? = null,
+    val toolingMetadata: UiNodeToolingMetadata? = null,
 )
 
 /**

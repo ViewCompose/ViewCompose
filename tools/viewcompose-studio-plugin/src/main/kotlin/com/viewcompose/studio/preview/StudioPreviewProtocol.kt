@@ -138,6 +138,9 @@ internal data class StudioPreviewPatchRecord(
     val index: Int,
     val moved: Boolean,
     val detail: String?,
+    val nodeId: String? = null,
+    val sourceCallSites: List<StudioPreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
 )
 
 internal data class StudioPreviewCompositionSnapshot(
@@ -339,6 +342,9 @@ private fun JsonObject.toPatchRecord(): StudioPreviewPatchRecord {
         index = optionalInt("index") ?: 0,
         moved = optionalBoolean("moved") ?: false,
         detail = optionalString("detail"),
+        nodeId = optionalString("nodeId"),
+        sourceCallSites = sourceCallSites(),
+        synthetic = optionalBoolean("synthetic") ?: false,
     )
 }
 

@@ -175,6 +175,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             index = index,
             moved = moved,
             detail = detail,
+            toolingMetadata = toolingMetadata,
         )
     }
 

@@ -121,6 +121,9 @@ class StaticPreviewWorkerPaparazziTest {
         assertTrue(nativeText.bounds.bottom > nativeText.bounds.top)
         assertEquals(renderText.nodeId, nativeText.nodeId)
         assertEquals(renderText.sourceCallSites, nativeText.sourceCallSites)
+        val insertPatch = snapshot.patches.single { patch -> patch.type == "Text" }
+        assertEquals(renderText.nodeId, insertPatch.nodeId)
+        assertEquals(renderText.sourceCallSites, insertPatch.sourceCallSites)
         assertNotNull(snapshot.composition)
     }
 

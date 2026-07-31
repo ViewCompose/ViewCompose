@@ -105,6 +105,9 @@ data class PreviewPatchRecord(
     val index: Int,
     val moved: Boolean = false,
     val detail: String? = null,
+    val nodeId: String? = null,
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
 )
 
 @Serializable
