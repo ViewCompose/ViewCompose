@@ -35,6 +35,7 @@ internal class ViewComposePreviewSelectionService(
         ViewComposePreviewPanelState.Empty,
     )
     private val requestGeneration = AtomicLong(0)
+    private val editorFollowGeneration = AtomicLong(0)
     private val activeIndicator = AtomicReference<ProgressIndicator?>()
     private val activeRequest = AtomicReference<ActivePreviewRequest?>()
     private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
@@ -77,9 +78,7 @@ internal class ViewComposePreviewSelectionService(
             FileEditorManagerListener.FILE_EDITOR_MANAGER,
             object : FileEditorManagerListener {
                 override fun selectionChanged(event: FileEditorManagerEvent) {
-                    scheduleEditorFollow(
-                        FileEditorManager.getInstance(project).selectedTextEditor,
-                    )
+                    scheduleEditorFollow()
                 }
             },
         )
@@ -100,7 +99,7 @@ internal class ViewComposePreviewSelectionService(
         if (currentState.get() == ViewComposePreviewPanelState.Empty) {
             showGallery()
         }
-        scheduleEditorFollow(FileEditorManager.getInstance(project).selectedTextEditor)
+        scheduleEditorFollow()
     }
 
     fun detach(panel: ViewComposePreviewToolWindowPanel) {
@@ -165,7 +164,7 @@ internal class ViewComposePreviewSelectionService(
     }
 
     fun followSelectedEditor() {
-        scheduleEditorFollow(FileEditorManager.getInstance(project).selectedTextEditor)
+        scheduleEditorFollow()
     }
 
     private fun render(
@@ -475,65 +474,76 @@ internal class ViewComposePreviewSelectionService(
         )
     }
 
-    private fun scheduleEditorFollow(editor: Editor?) {
+    private fun scheduleEditorFollow(editorHint: Editor? = null) {
         editorFollowAlarm.cancelAllRequests()
+        val generation = editorFollowGeneration.incrementAndGet()
         if (!settings.followEditor) return
-        if (editor == null || editor.project != project || editor.isDisposed) return
         editorFollowAlarm.addRequest(
             {
-                if (
-                    project.isDisposed ||
-                    editor.isDisposed ||
-                    !isPreviewToolWindowVisible()
-                ) {
+                if (project.isDisposed || !isPreviewToolWindowVisible()) {
                     return@addRequest
                 }
-                val documentManager = PsiDocumentManager.getInstance(project)
-                documentManager.commitDocument(editor.document)
-                val followTarget = ApplicationManager.getApplication()
-                    .runReadAction<EditorFollowTarget?> {
-                        val file = documentManager.getPsiFile(editor.document)
-                            ?: return@runReadAction null
-                        val caretOffset = editor.caretModel.offset
-                        val lineCandidates = linkedSetOf(
-                            editor.document.getLineNumber(caretOffset) + 1,
-                        )
-                        if (file.textLength > 0) {
-                            val elementOffset = caretOffset.coerceIn(0, file.textLength - 1)
-                            generateSequence(file.findElementAt(elementOffset)) { element ->
-                                element.parent
-                            }
-                                .filterIsInstance<KtCallExpression>()
-                                .firstOrNull()
-                                ?.textRange
-                                ?.startOffset
-                                ?.let { callOffset ->
-                                    lineCandidates +=
-                                        editor.document.getLineNumber(callOffset) + 1
-                                }
+                DumbService.getInstance(project).runWhenSmart {
+                    ApplicationManager.getApplication().invokeLater {
+                        if (
+                            project.isDisposed ||
+                            generation != editorFollowGeneration.get() ||
+                            !isPreviewToolWindowVisible()
+                        ) {
+                            return@invokeLater
                         }
-                        EditorFollowTarget(
-                            selection = file.previewSelectionAtOffset(caretOffset),
-                            sourceLocation = file.virtualFile?.path?.let { filePath ->
-                                EditorSourceLocation(
-                                    filePath = filePath,
-                                    lineCandidates = lineCandidates.toList(),
+                        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+                            ?: editorHint
+                            ?: return@invokeLater
+                        if (editor.project != project || editor.isDisposed) return@invokeLater
+                        val documentManager = PsiDocumentManager.getInstance(project)
+                        documentManager.commitDocument(editor.document)
+                        val followTarget = ApplicationManager.getApplication()
+                            .runReadAction<EditorFollowTarget?> {
+                                val file = documentManager.getPsiFile(editor.document)
+                                    ?: return@runReadAction null
+                                val caretOffset = editor.caretModel.offset
+                                val lineCandidates = linkedSetOf(
+                                    editor.document.getLineNumber(caretOffset) + 1,
                                 )
-                            },
-                        )
+                                if (file.textLength > 0) {
+                                    val elementOffset = caretOffset.coerceIn(0, file.textLength - 1)
+                                    generateSequence(file.findElementAt(elementOffset)) { element ->
+                                        element.parent
+                                    }
+                                        .filterIsInstance<KtCallExpression>()
+                                        .firstOrNull()
+                                        ?.textRange
+                                        ?.startOffset
+                                        ?.let { callOffset ->
+                                            lineCandidates +=
+                                                editor.document.getLineNumber(callOffset) + 1
+                                        }
+                                }
+                                EditorFollowTarget(
+                                    selection = file.previewSelectionNearestToOffset(caretOffset),
+                                    sourceLocation = file.virtualFile?.path?.let { filePath ->
+                                        EditorSourceLocation(
+                                            filePath = filePath,
+                                            lineCandidates = lineCandidates.toList(),
+                                        )
+                                    },
+                                )
+                            }
+                            ?: return@invokeLater
+                        followTarget.sourceLocation?.let { source ->
+                            attachedPanel?.selectSourceLocation(
+                                filePath = source.filePath,
+                                lineCandidates = source.lineCandidates,
+                            )
+                        }
+                        val selection = followTarget.selection
+                            ?: return@invokeLater
+                        val current = activeRequest.get()
+                        if (current?.selection == selection) return@invokeLater
+                        render(selection = selection, requestedVariantId = null)
                     }
-                    ?: return@addRequest
-                followTarget.sourceLocation?.let { source ->
-                    attachedPanel?.selectSourceLocation(
-                        filePath = source.filePath,
-                        lineCandidates = source.lineCandidates,
-                    )
                 }
-                val selection = followTarget.selection
-                    ?: return@addRequest
-                val current = activeRequest.get()
-                if (current?.selection == selection) return@addRequest
-                render(selection = selection, requestedVariantId = null)
             },
             EDITOR_FOLLOW_DELAY_MILLIS,
         )

@@ -103,6 +103,31 @@ class ViewComposePreviewLineMarkerProviderTest : BasePlatformTestCase() {
         assertNull(myFixture.file.previewSelectionAtOffset(myFixture.caretOffset))
     }
 
+    fun testFileFollowChoosesThePreviewNearestToTheCaret() {
+        myFixture.configureByText(
+            "Sample.kt",
+            """
+            package sample
+
+            import com.viewcompose.preview.tooling.ViewComposePreview
+
+            @ViewComposePreview
+            fun FirstPreview() = Unit
+
+            fun Helper() {
+                Unit<caret>
+            }
+
+            @ViewComposePreview
+            fun SecondPreview() = Unit
+            """.trimIndent(),
+        )
+
+        val selection = myFixture.file.previewSelectionNearestToOffset(myFixture.caretOffset)
+
+        assertEquals("SecondPreview", selection?.symbolName)
+    }
+
     private fun configureFunction(
         source: String,
         symbolName: String,

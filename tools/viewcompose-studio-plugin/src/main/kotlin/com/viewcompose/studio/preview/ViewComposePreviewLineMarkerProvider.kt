@@ -65,6 +65,25 @@ internal fun PsiFile.previewSelectionAtOffset(offset: Int): PreviewSourceSelecti
     )?.toPreviewSourceSelection()
 }
 
+internal fun PsiFile.previewSelectionNearestToOffset(offset: Int): PreviewSourceSelection? {
+    previewSelectionAtOffset(offset)?.let { selection -> return selection }
+    val boundedOffset = offset.coerceIn(0, textLength.coerceAtLeast(1) - 1)
+    return PsiTreeUtil.findChildrenOfType(this, KtNamedFunction::class.java)
+        .asSequence()
+        .mapNotNull { function ->
+            function.toPreviewSourceSelection()?.let { selection -> function to selection }
+        }
+        .minByOrNull { (function, _) ->
+            val range = function.textRange
+            when {
+                boundedOffset < range.startOffset -> range.startOffset - boundedOffset
+                boundedOffset > range.endOffset -> boundedOffset - range.endOffset
+                else -> 0
+            }
+        }
+        ?.second
+}
+
 internal fun KtNamedFunction.hasViewComposePreviewAnnotation(): Boolean {
     return annotationEntries.any { annotation ->
         annotation.isViewComposePreviewAnnotation(
