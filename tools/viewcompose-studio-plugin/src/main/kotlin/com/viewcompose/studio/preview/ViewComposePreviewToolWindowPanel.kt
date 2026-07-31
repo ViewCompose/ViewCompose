@@ -1,6 +1,7 @@
 package com.viewcompose.studio.preview
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
@@ -32,7 +33,6 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
 import java.awt.event.MouseWheelEvent
 import java.nio.file.Path
-import java.util.LinkedHashMap
 import javax.swing.AbstractAction
 import javax.swing.BorderFactory
 import javax.swing.Box
@@ -64,7 +64,7 @@ internal class ViewComposePreviewToolWindowPanel(
     private val onNavigateToSource: (StudioPreviewSourceLocation) -> Unit,
     private val onNavigateToRuntimeSource: (List<StudioPreviewSourceCallSite>) -> Unit,
     private val onPresentationChanged: (String?, PreviewSourceSelection?) -> Unit = { _, _ -> },
-) : SimpleToolWindowPanel(true, true) {
+) : SimpleToolWindowPanel(true, true), Disposable {
     private val contentPanel = JPanel(BorderLayout())
     private val detectionEvidence = detection.evidencePath
     private val projectRoot = projectRoot?.toAbsolutePath()?.normalize()
@@ -83,15 +83,8 @@ internal class ViewComposePreviewToolWindowPanel(
     private var nodeSelectionCoordinator: PreviewNodeSelectionCoordinator? = null
     private var galleryDetailWorker: SwingWorker<BufferedImage, Unit>? = null
     private val galleryThumbnails = mutableMapOf<Path, Icon>()
-    private val galleryDetailImages = object : LinkedHashMap<Path, BufferedImage>(
-        GALLERY_DETAIL_MEMORY_ENTRIES + 1,
-        0.75f,
-        true,
-    ) {
-        override fun removeEldestEntry(
-            eldest: MutableMap.MutableEntry<Path, BufferedImage>?,
-        ): Boolean = size > GALLERY_DETAIL_MEMORY_ENTRIES
-    }
+    private val galleryDetailImages = PreviewImageMemoryCache(GALLERY_DETAIL_MEMORY_BYTES)
+    private var disposed = false
     private val messages: PreviewUiMessages
         get() = PreviewUiMessages.forLanguage(language)
 
@@ -104,8 +97,12 @@ internal class ViewComposePreviewToolWindowPanel(
     }
 
     fun showState(state: ViewComposePreviewPanelState) {
+        if (disposed) return
         galleryDetailWorker?.cancel(true)
         galleryDetailWorker = null
+        if (currentState.isGalleryState() && !state.isGalleryState()) {
+            galleryDetailImages.clear()
+        }
         galleryThumbnails.clear()
         val previousSource = currentState.previewPresentation().source
         val nextSource = state.previewPresentation().source
@@ -149,6 +146,18 @@ internal class ViewComposePreviewToolWindowPanel(
         if (this.language == language) return
         this.language = language
         showState(currentState)
+    }
+
+    override fun dispose() {
+        if (disposed) return
+        disposed = true
+        galleryDetailWorker?.cancel(true)
+        galleryDetailWorker = null
+        galleryDetailImages.close()
+        galleryThumbnails.clear()
+        nodeSelectionCoordinator = null
+        currentState = ViewComposePreviewPanelState.Empty
+        contentPanel.removeAll()
     }
 
     private fun showEmptyState() {
@@ -281,7 +290,7 @@ internal class ViewComposePreviewToolWindowPanel(
                     galleryDetailWorker = null
                     runCatching { get() }
                         .onSuccess { image ->
-                            galleryDetailImages[item.detailImagePath] = image
+                            galleryDetailImages.put(item.detailImagePath, image)
                             present(image)
                         }
                         .onFailure {
@@ -2314,11 +2323,17 @@ internal fun ViewComposePreviewPanelState.previewPresentation(): PreviewPanelPre
     }
 }
 
+private fun ViewComposePreviewPanelState.isGalleryState(): Boolean {
+    return this is ViewComposePreviewPanelState.GalleryLoading ||
+        this is ViewComposePreviewPanelState.Gallery ||
+        this is ViewComposePreviewPanelState.GalleryFailed
+}
+
 private const val GALLERY_CELL_WIDTH = 260
 private const val GALLERY_CELL_HEIGHT = 390
 private const val GALLERY_IMAGE_WIDTH = 220
 private const val GALLERY_IMAGE_HEIGHT = 300
-private const val GALLERY_DETAIL_MEMORY_ENTRIES = 3
+private const val GALLERY_DETAIL_MEMORY_BYTES = 64L * 1024L * 1024L
 private const val GALLERY_DETAIL_OPEN_DELAY_PADDING_MILLIS = 60L
 private const val GALLERY_OVERLAY_MARGIN = 24
 private const val GALLERY_OVERLAY_MAX_WIDTH = 900

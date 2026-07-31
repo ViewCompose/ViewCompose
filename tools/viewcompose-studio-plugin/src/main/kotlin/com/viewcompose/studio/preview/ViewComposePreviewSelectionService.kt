@@ -38,6 +38,7 @@ internal class ViewComposePreviewSelectionService(
     private val editorFollowGeneration = AtomicLong(0)
     private val activeIndicator = AtomicReference<ProgressIndicator?>()
     private val activeRequest = AtomicReference<ActivePreviewRequest?>()
+    private val automaticRefreshGate = PreviewAutomaticRefreshGate<ActivePreviewRequest>()
     private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val editorFollowAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val galleryDiscoveryRetryAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
@@ -125,6 +126,7 @@ internal class ViewComposePreviewSelectionService(
         render(
             selection = result.selection,
             requestedVariantId = variantId,
+            refreshPolicy = PreviewRefreshPolicy.Variant,
         )
     }
 
@@ -143,7 +145,7 @@ internal class ViewComposePreviewSelectionService(
         render(
             selection = request.selection,
             requestedVariantId = request.variantId,
-            forceRerender = true,
+            refreshPolicy = PreviewRefreshPolicy.Manual,
         )
     }
 
@@ -170,19 +172,29 @@ internal class ViewComposePreviewSelectionService(
     private fun render(
         selection: PreviewSourceSelection,
         requestedVariantId: String?,
-        forceRerender: Boolean = false,
+        refreshPolicy: PreviewRefreshPolicy = PreviewRefreshPolicy.Open,
     ) {
-        galleryDiscoveryRetryAlarm.cancelAllRequests()
-        activeRequest.set(
-            ActivePreviewRequest(
-                selection = selection,
-                variantId = requestedVariantId,
-            ),
+        val nextRequest = ActivePreviewRequest(
+            selection = selection,
+            variantId = requestedVariantId,
         )
+        if (
+            refreshPolicy == PreviewRefreshPolicy.SavedInput &&
+            automaticRefreshGate.deferIfActive(nextRequest)
+        ) {
+            return
+        }
+        galleryDiscoveryRetryAlarm.cancelAllRequests()
+        activeRequest.set(nextRequest)
         val generation = requestGeneration.incrementAndGet()
+        if (refreshPolicy == PreviewRefreshPolicy.SavedInput) {
+            automaticRefreshGate.markActive(generation)
+        } else {
+            automaticRefreshGate.supersede(generation)
+        }
         activeIndicator.getAndSet(null)?.cancel()
-        val previousResult = (currentState.get() as? ViewComposePreviewPanelState.Rendered)
-            ?.result
+        val previousResult = currentState.get()
+            .previousSuccessOrNull()
             ?.takeIf { result -> result.selection == selection }
         publish(
             generation = generation,
@@ -206,7 +218,7 @@ internal class ViewComposePreviewSelectionService(
                 }
                 try {
                     val root = project.basePath?.let(Path::of)
-                    val cached = if (!forceRerender) {
+                    val cached = if (refreshPolicy.useStudioCache) {
                         diskCache?.read(selection, requestedVariantId)
                     } else {
                         null
@@ -221,21 +233,36 @@ internal class ViewComposePreviewSelectionService(
                             details = "Android Studio did not provide a project base directory.",
                         )
                     } else {
-                        ViewComposePreviewRenderCoordinator(root).render(
+                        val coordinator = ViewComposePreviewRenderCoordinator(root)
+                        val progress: (String) -> Unit = { message ->
+                            publish(
+                                generation = generation,
+                                state = ViewComposePreviewPanelState.Loading(
+                                    selection = selection,
+                                    message = message,
+                                    previousResult = previousResult,
+                                ),
+                            )
+                        }
+                        val knownOutcome = previousResult
+                            ?.takeIf { refreshPolicy.useKnownDescriptor }
+                            ?.let { result ->
+                                coordinator.renderKnownDebug(
+                                    selection = selection,
+                                    descriptorId = result.descriptorId,
+                                    requestedVariantId = requestedVariantId
+                                        ?: result.selectedVariantId,
+                                    forceRerender = refreshPolicy.forceGradleRerender,
+                                    indicator = indicator,
+                                    onProgress = progress,
+                                )
+                            }
+                        knownOutcome ?: coordinator.render(
                             selection = selection,
                             requestedVariantId = requestedVariantId,
-                            forceRerender = forceRerender,
+                            forceRerender = refreshPolicy.forceGradleRerender,
                             indicator = indicator,
-                            onProgress = { message ->
-                                publish(
-                                    generation = generation,
-                                    state = ViewComposePreviewPanelState.Loading(
-                                        selection = selection,
-                                        message = message,
-                                        previousResult = previousResult,
-                                    ),
-                                )
-                            },
+                            onProgress = progress,
                         )
                     }
                     if (outcome is PreviewRenderOutcome.Success &&
@@ -265,6 +292,7 @@ internal class ViewComposePreviewSelectionService(
                     throw cancelled
                 } finally {
                     activeIndicator.compareAndSet(indicator, null)
+                    finishRender(generation)
                 }
             }
 
@@ -279,8 +307,27 @@ internal class ViewComposePreviewSelectionService(
                         ),
                     ),
                 )
+                finishRender(generation)
             }
         }.queue()
+    }
+
+    private fun finishRender(generation: Long) {
+        val pending = automaticRefreshGate.complete(generation) ?: return
+        ApplicationManager.getApplication().invokeLater {
+            val current = activeRequest.get()
+            if (
+                !project.isDisposed &&
+                current != null &&
+                pending.selection == current.selection
+            ) {
+                render(
+                    selection = pending.selection,
+                    requestedVariantId = pending.variantId ?: current.variantId,
+                    refreshPolicy = PreviewRefreshPolicy.SavedInput,
+                )
+            }
+        }
     }
 
     private fun showGallery(
@@ -288,6 +335,7 @@ internal class ViewComposePreviewSelectionService(
         discoveryAttempt: Int = 0,
     ) {
         galleryDiscoveryRetryAlarm.cancelAllRequests()
+        automaticRefreshGate.clear()
         activeRequest.set(null)
         val generation = requestGeneration.incrementAndGet()
         activeIndicator.getAndSet(null)?.cancel()
@@ -466,7 +514,7 @@ internal class ViewComposePreviewSelectionService(
                     render(
                         selection = request.selection,
                         requestedVariantId = request.variantId,
-                        forceRerender = true,
+                        refreshPolicy = PreviewRefreshPolicy.SavedInput,
                     )
                 }
             },
@@ -556,8 +604,12 @@ internal class ViewComposePreviewSelectionService(
     }
 
     override fun dispose() {
+        requestGeneration.incrementAndGet()
+        automaticRefreshGate.clear()
         activeIndicator.getAndSet(null)?.cancel()
+        activeRequest.set(null)
         attachedPanel = null
+        currentState.getAndSet(ViewComposePreviewPanelState.Empty).releaseImages()
     }
 
     private fun publish(
@@ -570,6 +622,59 @@ internal class ViewComposePreviewSelectionService(
             if (!project.isDisposed && generation == requestGeneration.get()) {
                 attachedPanel?.showState(state)
             }
+        }
+    }
+}
+
+internal enum class PreviewRefreshPolicy(
+    val useStudioCache: Boolean,
+    val forceGradleRerender: Boolean,
+    val useKnownDescriptor: Boolean,
+) {
+    Open(
+        useStudioCache = true,
+        forceGradleRerender = false,
+        useKnownDescriptor = false,
+    ),
+    Variant(
+        useStudioCache = true,
+        forceGradleRerender = false,
+        useKnownDescriptor = true,
+    ),
+    SavedInput(
+        useStudioCache = false,
+        forceGradleRerender = false,
+        useKnownDescriptor = true,
+    ),
+    Manual(
+        useStudioCache = false,
+        forceGradleRerender = true,
+        useKnownDescriptor = true,
+    ),
+}
+
+private fun ViewComposePreviewPanelState.previousSuccessOrNull(): PreviewRenderOutcome.Success? {
+    return when (this) {
+        is ViewComposePreviewPanelState.Rendered -> result
+        is ViewComposePreviewPanelState.Loading -> previousResult
+        else -> null
+    }
+}
+
+private fun ViewComposePreviewPanelState.releaseImages() {
+    when (this) {
+        ViewComposePreviewPanelState.Empty,
+        is ViewComposePreviewPanelState.Failed,
+        is ViewComposePreviewPanelState.GalleryFailed,
+        -> Unit
+
+        is ViewComposePreviewPanelState.Loading -> previousResult?.image?.flush()
+        is ViewComposePreviewPanelState.Rendered -> result.image.flush()
+        is ViewComposePreviewPanelState.GalleryLoading -> {
+            previousResult?.items?.forEach { item -> item.thumbnail.flush() }
+        }
+        is ViewComposePreviewPanelState.Gallery -> {
+            result.items.forEach { item -> item.thumbnail.flush() }
         }
     }
 }

@@ -31,7 +31,7 @@ class ViewComposePreviewGradleBridgeTest {
         val executor = PreviewGradleExecutor { invocation, _ ->
             invocations += invocation
             when {
-                invocation.arguments.first().endsWith("viewComposePreviewDescriptors") -> {
+                invocation.arguments.first().endsWith("discoverDebugViewComposePreviews") -> {
                     writeCatalog(moduleRoot, source)
                     PreviewGradleResult(0, "descriptors exported", "")
                 }
@@ -74,7 +74,7 @@ class ViewComposePreviewGradleBridgeTest {
         assertFalse(success.cacheHit)
         assertEquals(
             listOf(
-                ":feature:catalog:viewComposePreviewDescriptors",
+                ":feature:catalog:discoverDebugViewComposePreviews",
                 ":feature:catalog:renderDebugViewComposePreview",
             ),
             invocations.map { invocation -> invocation.arguments.first() },
@@ -125,6 +125,49 @@ class ViewComposePreviewGradleBridgeTest {
     }
 
     @Test
+    fun `known preview incrementally compiles and renders in one Gradle invocation`() {
+        val projectRoot = temporaryFolder.newFolder("known-project").toPath()
+        Files.writeString(projectRoot.resolve("gradlew"), "")
+        val moduleRoot = Files.createDirectories(projectRoot.resolve("app"))
+        Files.writeString(moduleRoot.resolve("build.gradle.kts"), "plugins {}")
+        val source = moduleRoot.resolve("src/main/kotlin/sample/Sample.kt")
+        Files.createDirectories(checkNotNull(source.parent))
+        Files.writeString(source, "fun SampleCard() = Unit")
+        val invocations = mutableListOf<PreviewGradleInvocation>()
+        val executor = PreviewGradleExecutor { invocation, _ ->
+            invocations += invocation
+            writeCatalog(moduleRoot, source)
+            writeSuccessfulResponse(moduleRoot, "dark")
+            PreviewGradleResult(0, "ViewCompose preview rendered:", "")
+        }
+
+        val outcome = ViewComposePreviewRenderCoordinator(
+            projectRoot = projectRoot,
+            executor = executor,
+        ).renderKnownDebug(
+            selection = PreviewSourceSelection(
+                filePath = source.toString(),
+                symbolName = "SampleCard",
+                line = 10,
+            ),
+            descriptorId = "sample-card",
+            requestedVariantId = "dark",
+            indicator = TestProgressIndicator(),
+        )
+
+        assertTrue(outcome is PreviewRenderOutcome.Success)
+        assertEquals(1, invocations.size)
+        assertTrue(
+            invocations.single().arguments.first().endsWith("renderDebugViewComposePreview"),
+        )
+        assertFalse(
+            invocations.single().arguments.any { argument ->
+                argument.endsWith("discoverDebugViewComposePreviews")
+            },
+        )
+    }
+
+    @Test
     fun `gallery compiles a module once before rendering all previews`() {
         val projectRoot = temporaryFolder.newFolder("gallery-project").toPath()
         Files.writeString(projectRoot.resolve("gradlew"), "")
@@ -136,24 +179,27 @@ class ViewComposePreviewGradleBridgeTest {
         Files.writeString(firstSource, "fun FirstCard() = Unit")
         Files.writeString(secondSource, "fun SecondCard() = Unit")
         val invocations = mutableListOf<PreviewGradleInvocation>()
+        var renderedBatchTargets = emptyList<Pair<String, String>>()
         val executor = PreviewGradleExecutor { invocation, _ ->
             invocations += invocation
             when {
-                invocation.arguments.first().endsWith("viewComposePreviewDescriptors") -> {
+                invocation.arguments.first().endsWith("discoverDebugViewComposePreviews") -> {
                     writeGalleryCatalog(moduleRoot, firstSource, secondSource)
                     PreviewGradleResult(0, "descriptors exported", "")
                 }
 
                 invocation.arguments.first().endsWith("renderDebugViewComposePreview") -> {
-                    val previewId = invocation.arguments
+                    val targetsFile = invocation.arguments
                         .windowed(2)
-                        .single { pair -> pair.first() == "--preview-id" }
+                        .single { pair -> pair.first() == "--preview-targets-file" }
                         .last()
-                    val variantId = invocation.arguments
-                        .windowed(2)
-                        .single { pair -> pair.first() == "--variant-id" }
-                        .last()
-                    writeSuccessfulResponse(moduleRoot, variantId, previewId)
+                    renderedBatchTargets = Files.readAllLines(Path.of(targetsFile)).map { line ->
+                        val fields = line.split('\t')
+                        fields[0] to fields[1]
+                    }
+                    renderedBatchTargets.forEach { (previewId, variantId) ->
+                        writeSuccessfulResponse(moduleRoot, variantId, previewId)
+                    }
                     PreviewGradleResult(0, "ViewCompose preview rendered:", "")
                 }
 
@@ -177,14 +223,22 @@ class ViewComposePreviewGradleBridgeTest {
         assertEquals(
             1,
             invocations.count { invocation ->
-                invocation.arguments.first().endsWith("viewComposePreviewDescriptors")
+                invocation.arguments.first().endsWith("discoverDebugViewComposePreviews")
             },
         )
         assertEquals(
-            3,
+            1,
             invocations.count { invocation ->
                 invocation.arguments.first().endsWith("renderDebugViewComposePreview")
             },
+        )
+        assertEquals(
+            listOf(
+                "first-card" to "default",
+                "first-card" to "dark",
+                "second-card" to "default",
+            ),
+            renderedBatchTargets,
         )
         invocations
             .filter { invocation ->

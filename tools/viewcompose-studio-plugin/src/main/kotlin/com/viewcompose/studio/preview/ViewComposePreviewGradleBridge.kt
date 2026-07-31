@@ -99,12 +99,7 @@ internal class ViewComposePreviewRenderCoordinator(
             val target = locateGradleTarget(selection)
             onProgress("Compiling preview descriptors…")
             indicator.text = "Compiling ViewCompose preview descriptors"
-            val discovery = executor.execute(
-                invocation = target.invocation(
-                    taskName = "viewComposePreviewDescriptors",
-                ),
-                indicator = indicator,
-            )
+            val discovery = discoverPreviews(target, indicator)
             if (discovery.exitCode != 0) {
                 return PreviewRenderOutcome.Failure(
                     selection = selection,
@@ -144,6 +139,68 @@ internal class ViewComposePreviewRenderCoordinator(
                 diagnostics = emptyList(),
                 details = error.message ?: error::class.java.simpleName,
             )
+        }
+    }
+
+    /**
+     * Fast path for an already compiled preview. The render task owns its discovery dependency, so
+     * Gradle can incrementally compile, rediscover, and render in one invocation after a save.
+     * Returns null only when the stable descriptor or conventional debug task no longer exists.
+     */
+    fun renderKnownDebug(
+        selection: PreviewSourceSelection,
+        descriptorId: String,
+        requestedVariantId: String,
+        forceRerender: Boolean = false,
+        indicator: ProgressIndicator,
+        onProgress: (String) -> Unit = {},
+    ): PreviewRenderOutcome? {
+        return runCatching {
+            val target = locateGradleTarget(selection)
+            val taskName = renderTaskName(PREFERRED_BUILD_VARIANT)
+            onProgress("Incrementally compiling and rendering preview…")
+            indicator.text = "Incrementally compiling ViewCompose preview"
+            val render = executor.execute(
+                invocation = target.invocation(
+                    taskName = taskName,
+                    additionalArguments = listOf(
+                        "--preview-id",
+                        descriptorId,
+                        "--variant-id",
+                        requestedVariantId,
+                    ) + if (forceRerender) listOf("--rerender") else emptyList(),
+                ),
+                indicator = indicator,
+            )
+            if (
+                render.isMissingTaskFailure(taskName) ||
+                render.isUnknownPreviewFailure(descriptorId)
+            ) {
+                return null
+            }
+            if (render.exitCode != 0) {
+                return PreviewRenderOutcome.Failure(
+                    selection = selection,
+                    title = "Preview render failed",
+                    diagnostics = emptyList(),
+                    details = render.presentableFailure(),
+                )
+            }
+            indicator.checkCanceled()
+            val match = findMatchingPreviewById(
+                target = target,
+                descriptorId = descriptorId,
+                requestedVariantId = requestedVariantId,
+                buildVariant = PREFERRED_BUILD_VARIANT,
+            ) ?: return null
+            readMatchOutcome(
+                selection = selection,
+                match = match,
+                render = render,
+            )
+        }.getOrElse { error ->
+            if (error is ProcessCanceledException) throw error
+            toolingFailure(selection, error)
         }
     }
 
@@ -192,10 +249,7 @@ internal class ViewComposePreviewRenderCoordinator(
             indicator.checkCanceled()
             onProgress("Compiling preview descriptors for ${target.modulePath}…")
             indicator.text = "Compiling ViewCompose preview descriptors"
-            val discovery = executor.execute(
-                invocation = target.invocation("viewComposePreviewDescriptors"),
-                indicator = indicator,
-            )
+            val discovery = discoverPreviews(target, indicator)
             if (discovery.exitCode != 0) {
                 moduleSelections.forEach { selection ->
                     onOutcome(
@@ -209,6 +263,7 @@ internal class ViewComposePreviewRenderCoordinator(
                 }
                 return@forEach
             }
+            val selectionMatches = mutableListOf<PreviewSelectionMatch>()
             moduleSelections.forEach selectionLoop@ { selection ->
                 indicator.checkCanceled()
                 val matches = findMatchingPreviews(
@@ -227,29 +282,88 @@ internal class ViewComposePreviewRenderCoordinator(
                     return@selectionLoop
                 }
                 matches.forEach { match ->
-                    indicator.checkCanceled()
-                    completed += 1
-                    val outcome = runCatching {
-                        renderMatch(
-                            target = target,
-                            selection = selection,
-                            match = match,
-                            forceRerender = forceRerender,
-                            indicator = indicator,
-                            onProgress = {
-                                onProgress(
-                                    "Rendering preview $completed: " +
-                                        match.variant.displayName,
-                                )
-                            },
-                        )
-                    }.getOrElse { error ->
-                        if (error is ProcessCanceledException) throw error
-                        toolingFailure(selection, error)
-                    }
-                    onOutcome(outcome)
+                    selectionMatches += PreviewSelectionMatch(selection, match)
                 }
             }
+            selectionMatches
+                .groupBy { selectionMatch -> selectionMatch.match.catalog.buildVariant }
+                .forEach { (_, variantMatches) ->
+                    indicator.checkCanceled()
+                    completed += variantMatches.size
+                    onProgress(
+                        "Rendering ${variantMatches.size} previews in one batch " +
+                            "($completed total)…",
+                    )
+                    renderBatch(
+                        target = target,
+                        matches = variantMatches,
+                        forceRerender = forceRerender,
+                        indicator = indicator,
+                        onOutcome = onOutcome,
+                    )
+                }
+        }
+    }
+
+    private fun renderBatch(
+        target: PreviewGradleTarget,
+        matches: List<PreviewSelectionMatch>,
+        forceRerender: Boolean,
+        indicator: ProgressIndicator,
+        onOutcome: (PreviewRenderOutcome) -> Unit,
+    ) {
+        if (matches.isEmpty()) return
+        val batchFile = Files.createTempFile("viewcompose-preview-targets-", ".tsv")
+        try {
+            Files.writeString(
+                batchFile,
+                matches.joinToString(separator = "\n", postfix = "\n") { selectionMatch ->
+                    "${selectionMatch.match.descriptor.id}\t" +
+                        selectionMatch.match.variant.id
+                },
+            )
+            indicator.text = "Rendering ${matches.size} ViewCompose previews"
+            val render = executor.execute(
+                invocation = target.invocation(
+                    taskName = renderTaskName(matches.first().match.catalog.buildVariant),
+                    additionalArguments = listOf(
+                        "--preview-targets-file",
+                        batchFile.toAbsolutePath().normalize().toString(),
+                    ) + if (forceRerender) listOf("--rerender") else emptyList(),
+                ),
+                indicator = indicator,
+            )
+            if (render.exitCode != 0) {
+                matches.forEach { selectionMatch ->
+                    onOutcome(
+                        PreviewRenderOutcome.Failure(
+                            selection = selectionMatch.selection,
+                            title = "Preview batch render failed",
+                            diagnostics = selectionMatch.match.readResponseOrNull()
+                                ?.diagnostics
+                                .orEmpty(),
+                            details = render.presentableFailure(),
+                        ),
+                    )
+                }
+                return
+            }
+            matches.forEach { selectionMatch ->
+                indicator.checkCanceled()
+                val outcome = runCatching {
+                    readMatchOutcome(
+                        selection = selectionMatch.selection,
+                        match = selectionMatch.match,
+                        render = render,
+                    )
+                }.getOrElse { error ->
+                    if (error is ProcessCanceledException) throw error
+                    toolingFailure(selectionMatch.selection, error)
+                }
+                onOutcome(outcome)
+            }
+        } finally {
+            runCatching { Files.deleteIfExists(batchFile) }
         }
     }
 
@@ -287,6 +401,18 @@ internal class ViewComposePreviewRenderCoordinator(
         }
 
         indicator.checkCanceled()
+        return readMatchOutcome(
+            selection = selection,
+            match = match,
+            render = render,
+        )
+    }
+
+    private fun readMatchOutcome(
+        selection: PreviewSourceSelection,
+        match: PreviewCatalogMatch,
+        render: PreviewGradleResult,
+    ): PreviewRenderOutcome {
         val response = match.readResponse()
         require(response.previewId == match.descriptor.id) {
             "Preview response '${response.previewId}' does not match '${match.descriptor.id}'."
@@ -333,7 +459,7 @@ internal class ViewComposePreviewRenderCoordinator(
             renderSnapshot = renderSnapshotResult?.getOrNull(),
             diagnostics = response.diagnostics + listOfNotNull(snapshotDiagnostic),
             durationMillis = response.durationMillis,
-            cacheHit = CACHE_HIT_MARKER in render.standardOutput,
+            cacheHit = match.wasCacheHit(render.standardOutput),
         )
     }
 
@@ -346,6 +472,22 @@ internal class ViewComposePreviewRenderCoordinator(
             title = "Preview tooling failed",
             diagnostics = emptyList(),
             details = error.message ?: error::class.java.simpleName,
+        )
+    }
+
+    private fun discoverPreviews(
+        target: PreviewGradleTarget,
+        indicator: ProgressIndicator,
+    ): PreviewGradleResult {
+        val preferred = executor.execute(
+            invocation = target.invocation(PREFERRED_DISCOVERY_TASK_NAME),
+            indicator = indicator,
+        )
+        if (!preferred.isMissingTaskFailure(PREFERRED_DISCOVERY_TASK_NAME)) return preferred
+        indicator.checkCanceled()
+        return executor.execute(
+            invocation = target.invocation(AGGREGATE_DISCOVERY_TASK_NAME),
+            indicator = indicator,
         )
     }
 
@@ -413,6 +555,33 @@ internal class ViewComposePreviewRenderCoordinator(
                 { match -> match.variant.id },
             ),
         ).firstOrNull()
+    }
+
+    private fun findMatchingPreviewById(
+        target: PreviewGradleTarget,
+        descriptorId: String,
+        requestedVariantId: String,
+        buildVariant: String,
+    ): PreviewCatalogMatch? {
+        return readCatalogFiles(target)
+            .asSequence()
+            .map { catalogFile -> catalogFile to StudioPreviewProtocolReader.readCatalog(catalogFile) }
+            .filter { (_, catalog) -> catalog.buildVariant == buildVariant }
+            .mapNotNull { (catalogFile, catalog) ->
+                val descriptor = catalog.descriptors
+                    .firstOrNull { candidate -> candidate.id == descriptorId }
+                    ?: return@mapNotNull null
+                val variant = descriptor.variants
+                    .firstOrNull { candidate -> candidate.id == requestedVariantId }
+                    ?: return@mapNotNull null
+                PreviewCatalogMatch(
+                    catalogPath = catalogFile,
+                    catalog = catalog,
+                    descriptor = descriptor,
+                    variant = variant,
+                )
+            }
+            .firstOrNull()
     }
 
     private fun findMatchingPreviews(
@@ -504,6 +673,10 @@ private data class PreviewCatalogMatch(
         return runCatching(::readResponse).getOrNull()
     }
 
+    fun wasCacheHit(standardOutput: String): Boolean {
+        return "$CACHE_HIT_MARKER ${responsePath.toAbsolutePath().normalize()}" in standardOutput
+    }
+
     fun resolveArtifact(
         rawPath: String?,
         label: String,
@@ -517,6 +690,11 @@ private data class PreviewCatalogMatch(
         return path
     }
 }
+
+private data class PreviewSelectionMatch(
+    val selection: PreviewSourceSelection,
+    val match: PreviewCatalogMatch,
+)
 
 private fun StudioPreviewSourceLocation.matches(selection: PreviewSourceSelection): Boolean {
     if (symbolName != selection.symbolName) return false
@@ -563,6 +741,18 @@ private fun PreviewGradleResult.presentableOutput(): String? {
         .takeIf(String::isNotBlank)
 }
 
+private fun PreviewGradleResult.isMissingTaskFailure(taskName: String): Boolean {
+    if (exitCode == 0) return false
+    val output = "$errorOutput\n$standardOutput".lowercase()
+    return taskName.lowercase() in output && "not found in project" in output
+}
+
+private fun PreviewGradleResult.isUnknownPreviewFailure(descriptorId: String): Boolean {
+    if (exitCode == 0) return false
+    val output = "$errorOutput\n$standardOutput"
+    return "Unknown ViewCompose preview '$descriptorId'" in output
+}
+
 internal fun loadBoundedPreviewImage(path: Path): BufferedImage {
     val size = Files.size(path)
     require(size in 1..MAXIMUM_PREVIEW_IMAGE_BYTES) {
@@ -593,6 +783,10 @@ private const val RESPONSE_FILE_NAME = "response.json"
 private const val CACHE_HIT_MARKER = "ViewCompose preview cache hit:"
 private const val MAXIMUM_GRADLE_OUTPUT_LENGTH = 30_000
 private const val MAXIMUM_PREVIEW_IMAGE_BYTES = 64L * 1024L * 1024L
-private const val MAXIMUM_PREVIEW_IMAGE_PIXELS = 64L * 1024L * 1024L
+// Keep Studio's decoded-image ceiling aligned with the renderer's auto-height capture budget.
+private const val MAXIMUM_PREVIEW_IMAGE_PIXELS = 16_000_000L
 private const val DEFAULT_RENDER_LOGICAL_WIDTH_DP = 411
+private const val PREFERRED_DISCOVERY_TASK_NAME = "discoverDebugViewComposePreviews"
+private const val AGGREGATE_DISCOVERY_TASK_NAME = "viewComposePreviewDescriptors"
+private const val PREFERRED_BUILD_VARIANT = "debug"
 private val GRADLE_PROJECT_SEGMENT = Regex("[A-Za-z0-9_.-]+")

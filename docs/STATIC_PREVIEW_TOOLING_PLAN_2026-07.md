@@ -53,6 +53,12 @@ protocol instead of linking renderer internals into the IDE process.
 12. An application-owned preview theme is resolved once and shared by the preview root Context,
     native Android Views, and the outermost ViewCompose `UiTheme`; Studio never serializes runtime
     `UiThemeTokens` objects across the process boundary.
+13. Automatic save refresh is latest-wins and must not repeatedly cancel an expensive compile or
+    Layoutlib render already in flight. User-driven selection and manual refresh may preempt work.
+14. Gallery throughput is improved through bounded batching, never unbounded parallel Layoutlib
+    instances. Each worker process handles at most eight sequential renders and then exits.
+15. Studio image retention is budgeted by decoded pixel bytes rather than PNG count or file size;
+    every project-owned listener, task, popup, and image cache has an explicit disposal boundary.
 
 ## 4. Delivery stages
 
@@ -162,15 +168,17 @@ Implemented:
 - A TestKit Android fixture compiles a real preview function with local resources/assets and
   AndroidX resources, then verifies the exported build model and descriptor catalog end to end.
 - `viewcompose-preview-worker-host` is a standalone JDK 17 executable boundary. It reads one
-  `PreviewWorkerCommand`, recreates the Paparazzi/Layoutlib environment, owns setup/teardown for
-  exactly one SDK session, and writes a structured response atomically.
+  `PreviewWorkerCommand` or one bounded `PreviewWorkerBatchCommand`, recreates the
+  Paparazzi/Layoutlib environment, owns setup/teardown for every SDK session, and writes each
+  structured response atomically. The short-lived process exits after at most eight renders.
 - The worker host has no compile-time dependency on Gradle, Android Studio, or
   `viewcompose-preview-runner`; the Android runner is found only on the isolated process classpath.
 - A real Layoutlib integration test renders a compiled ViewCompose entry through the host and
   verifies both PNG and render-tree artifacts.
-- `render<Variant>ViewComposePreview` selects one descriptor/configuration pair from the catalog,
-  launches the worker host in an isolated JDK 17 process, and reports structured failures without
-  loading application or Layoutlib classes into the Gradle daemon.
+- `render<Variant>ViewComposePreview` selects one descriptor/configuration pair or consumes an IDE
+  batch target file. Layoutlib archives and the application classpath are prepared once per task;
+  uncached targets are rendered in bounded worker batches without loading application or Layoutlib
+  classes into the Gradle daemon.
 - Render requests carry the exported build fingerprint. Planning and worker startup both reject a
   stale catalog, mismatched module, variant, or fingerprint.
 - Successful PNG and render-tree results are reused from a content-addressed cache keyed by build
@@ -243,8 +251,14 @@ Implemented experience foundation:
   dependencies without reacting to its own build artifacts.
 - Editor following and save refresh are project-level options, enabled by default and exposed in
   the tool-window gear menu.
-- Superseded requests cancel their active progress indicator and cannot publish over a newer
-  selection.
+- User-driven superseding requests cancel their active progress indicator and cannot publish over
+  a newer selection. Save events arriving during a render collapse to the latest request and run
+  once after the current render instead of repeatedly terminating Gradle.
+- After the first successful render, save refresh, variant changes, and manual refresh reuse the
+  stable descriptor id. The debug render task performs incremental compilation, discovery, and
+  rendering in one Gradle invocation; a renamed or removed descriptor falls back to full
+  discovery. Initial discovery targets debug directly and falls back to the all-variant aggregate
+  only when a conventional debug task does not exist.
 - The selected preview variant survives save refreshes. Preview zoom, the selected diagnostics
   tab, and the layout-bounds toggle survive rerenders and UI-language changes.
 - The preview canvas supports fit-to-window and fixed 50–200% zoom. A title-bar refresh action

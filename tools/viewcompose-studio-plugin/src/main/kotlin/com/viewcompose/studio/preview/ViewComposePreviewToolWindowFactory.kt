@@ -92,6 +92,7 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         content.setDisposer(
             Disposable {
                 selectionService.detach(panel)
+                panel.dispose()
             },
         )
         content.preferredFocusableComponent = panel.preferredFocusComponent
