@@ -10,10 +10,12 @@ import java.awt.BasicStroke
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
+import java.awt.Font
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import java.nio.file.Path
 import javax.swing.Box
 import javax.swing.JCheckBox
 import javax.swing.JComboBox
@@ -25,11 +27,18 @@ import javax.swing.tree.DefaultMutableTreeNode
 
 internal class ViewComposePreviewToolWindowPanel(
     detection: ViewComposeProjectDetection,
+    projectRoot: Path?,
+    initialLanguage: PreviewUiLanguage,
     private val onVariantSelected: (String) -> Unit,
     private val onNavigateToSource: (StudioPreviewSourceLocation) -> Unit,
 ) : SimpleToolWindowPanel(true, true) {
     private val contentPanel = JPanel(BorderLayout())
     private val detectionEvidence = detection.evidencePath
+    private val projectRoot = projectRoot?.toAbsolutePath()?.normalize()
+    private var language = initialLanguage
+    private var currentState: ViewComposePreviewPanelState = ViewComposePreviewPanelState.Empty
+    private val messages: PreviewUiMessages
+        get() = PreviewUiMessages.forLanguage(language)
 
     val preferredFocusComponent: JComponent
         get() = contentPanel
@@ -40,6 +49,7 @@ internal class ViewComposePreviewToolWindowPanel(
     }
 
     fun showState(state: ViewComposePreviewPanelState) {
+        currentState = state
         contentPanel.removeAll()
         when (state) {
             ViewComposePreviewPanelState.Empty -> showEmptyState()
@@ -51,13 +61,18 @@ internal class ViewComposePreviewToolWindowPanel(
         contentPanel.repaint()
     }
 
+    fun setLanguage(language: PreviewUiLanguage) {
+        if (this.language == language) return
+        this.language = language
+        showState(currentState)
+    }
+
     private fun showEmptyState() {
         contentPanel.border = JBUI.Borders.empty(24)
         contentPanel.add(
             header(
-                title = "No preview selected",
-                description =
-                    "Use a ViewCompose preview gutter action to render a static Android View.",
+                title = messages.text("empty.title"),
+                description = messages.text("empty.description"),
                 selection = null,
                 includeDetectionEvidence = true,
             ),
@@ -70,7 +85,7 @@ internal class ViewComposePreviewToolWindowPanel(
         contentPanel.add(
             header(
                 title = state.selection.symbolName,
-                description = state.message,
+                description = messages.loadingMessage(state.message),
                 selection = state.selection,
             ),
             BorderLayout.NORTH,
@@ -80,21 +95,14 @@ internal class ViewComposePreviewToolWindowPanel(
     private fun showRenderedState(result: PreviewRenderOutcome.Success) {
         contentPanel.border = JBUI.Borders.empty(12)
         val duration = result.durationMillis?.let { millis -> " · ${millis} ms" }.orEmpty()
-        val cache = if (result.cacheHit) " · cache" else ""
-        val renderedHeader = JPanel(BorderLayout()).apply {
-            isOpaque = false
-            add(
-                header(
-                    title = result.descriptorName,
-                    description = "${result.variantName}$duration$cache",
-                    selection = result.selection,
-                ),
-                BorderLayout.CENTER,
-            )
-            if (result.variants.size > 1) {
-                add(variantSelector(result), BorderLayout.EAST)
-            }
-        }
+        val cache = if (result.cacheHit) " · ${messages.text("render.cache")}" else ""
+        val selector = if (result.variants.size > 1) variantSelector(result) else null
+        val renderedHeader = header(
+            title = result.descriptorName,
+            description = "${result.variantName}$duration$cache",
+            selection = result.selection,
+            trailing = selector,
+        )
         contentPanel.add(
             renderedHeader,
             BorderLayout.NORTH,
@@ -109,11 +117,11 @@ internal class ViewComposePreviewToolWindowPanel(
         } else {
             JTabbedPane().apply {
                 border = JBUI.Borders.emptyTop(8)
-                addTab("Preview", previewPanel)
-                addTab("Structure", renderStructurePanel(snapshot))
-                addTab("Views", nativeViewsPanel(snapshot.nativeViewTree))
-                addTab("Composition", compositionPanel(snapshot.composition))
-                addTab("Patches", patchesPanel(snapshot.patches))
+                addTab(messages.text("tab.preview"), previewPanel)
+                addTab(messages.text("tab.structure"), renderStructurePanel(snapshot))
+                addTab(messages.text("tab.views"), nativeViewsPanel(snapshot.nativeViewTree))
+                addTab(messages.text("tab.composition"), compositionPanel(snapshot.composition))
+                addTab(messages.text("tab.patches"), patchesPanel(snapshot.patches))
             }
         }
         contentPanel.add(renderedContent, BorderLayout.CENTER)
@@ -132,17 +140,17 @@ internal class ViewComposePreviewToolWindowPanel(
                 displayName = variant.displayName,
             )
         }
-        return Box.createVerticalBox().apply {
+        return JPanel(BorderLayout()).apply {
+            isOpaque = false
             border = JBUI.Borders.emptyLeft(16)
             add(
-                JBLabel("Configuration").apply {
-                    alignmentX = RIGHT_ALIGNMENT
-                },
-            )
-            add(Box.createVerticalStrut(JBUI.scale(6)))
-            add(
                 JComboBox(choices.toTypedArray()).apply {
-                    alignmentX = RIGHT_ALIGNMENT
+                    toolTipText = messages.text("configuration")
+                    accessibleContext.accessibleName = messages.text("configuration")
+                    val boundedWidth = preferredSize.width
+                        .coerceAtLeast(JBUI.scale(180))
+                        .coerceAtMost(JBUI.scale(280))
+                    preferredSize = Dimension(boundedWidth, preferredSize.height)
                     selectedItem = choices.first { choice ->
                         choice.id == result.selectedVariantId
                     }
@@ -154,6 +162,7 @@ internal class ViewComposePreviewToolWindowPanel(
                         }
                     }
                 },
+                BorderLayout.NORTH,
             )
         }
     }
@@ -161,14 +170,21 @@ internal class ViewComposePreviewToolWindowPanel(
     private fun renderStructurePanel(snapshot: StudioPreviewRenderSnapshot): JComponent {
         val structure = snapshot.structure
         val stats = snapshot.stats
-        val summary = """
-            VNodes: ${structure.vnodeCount} · Mounted: ${structure.mountedNodeCount}
-            Depth: ${structure.maxVNodeDepth} · Mounted depth: ${structure.maxMountedDepth}
-            Insert: ${stats.inserts} · Reuse: ${stats.reuses} · Remove: ${stats.removals}
-            Rebound: ${stats.reboundNodes} · Patched: ${stats.patchedNodes}
-            Skipped bindings: ${stats.skippedBindings} · Skipped subtrees: ${stats.skippedSubtrees}
-        """.trimIndent()
-        val root = DefaultMutableTreeNode("VNode tree")
+        val summary = messages.text(
+            "structure.summary",
+            structure.vnodeCount,
+            structure.mountedNodeCount,
+            structure.maxVNodeDepth,
+            structure.maxMountedDepth,
+            stats.inserts,
+            stats.reuses,
+            stats.removals,
+            stats.reboundNodes,
+            stats.patchedNodes,
+            stats.skippedBindings,
+            stats.skippedSubtrees,
+        )
+        val root = DefaultMutableTreeNode(messages.text("tree.vnode"))
         snapshot.tree.forEach { node ->
             root.add(node.toSwingTreeNode())
         }
@@ -192,19 +208,28 @@ internal class ViewComposePreviewToolWindowPanel(
     private fun compositionPanel(snapshot: StudioPreviewCompositionSnapshot): JComponent {
         val text = buildString {
             appendLine(
-                "Invalidated: ${snapshot.invalidatedScopeCount} · " +
-                    "Recomposed: ${snapshot.recomposedScopeCount} · " +
-                    "Skipped: ${snapshot.skippedScopeCount}",
+                messages.text(
+                    "composition.summary",
+                    snapshot.invalidatedScopeCount,
+                    snapshot.recomposedScopeCount,
+                    snapshot.skippedScopeCount,
+                ),
             )
             snapshot.scopes.forEach { scope ->
                 appendLine()
-                append(if (scope.recomposed) "RECOMPOSED" else if (scope.skipped) "SKIPPED" else "CLEAN")
+                append(
+                    when {
+                        scope.recomposed -> messages.text("composition.recomposed")
+                        scope.skipped -> messages.text("composition.skipped")
+                        else -> messages.text("composition.clean")
+                    },
+                )
                 append(" · ${scope.path}")
                 appendLine()
-                append("  signature: ${scope.signature}")
+                append("  ${messages.text("composition.signature")}: ${scope.signature}")
                 if (scope.reasons.isNotEmpty()) {
                     appendLine()
-                    append("  reasons: ${scope.reasons.joinToString()}")
+                    append("  ${messages.text("composition.reasons")}: ${scope.reasons.joinToString()}")
                 }
                 scope.locals.forEach { local ->
                     appendLine()
@@ -214,14 +239,14 @@ internal class ViewComposePreviewToolWindowPanel(
             }
         }.trim()
         return JBScrollPane(
-            readOnlyText(text.ifBlank { "No composition scopes were recorded." }),
+            readOnlyText(text.ifBlank { messages.text("composition.empty") }),
         ).apply {
             border = JBUI.Borders.empty(8)
         }
     }
 
     private fun nativeViewsPanel(views: List<StudioPreviewNativeViewNode>): JComponent {
-        val root = DefaultMutableTreeNode("Android View tree")
+        val root = DefaultMutableTreeNode(messages.text("tree.androidView"))
         views.forEach { view ->
             root.add(view.toSwingTreeNode())
         }
@@ -258,7 +283,7 @@ internal class ViewComposePreviewToolWindowPanel(
                     isOpaque = false
                     border = JBUI.Borders.empty(8, 4, 4, 4)
                     add(
-                        JCheckBox("Show layout bounds").apply {
+                        JCheckBox(messages.text("preview.showLayoutBounds")).apply {
                             isOpaque = false
                             addActionListener {
                                 canvas.showLayoutBounds = isSelected
@@ -267,7 +292,12 @@ internal class ViewComposePreviewToolWindowPanel(
                         BorderLayout.WEST,
                     )
                     add(
-                        JBLabel("${nativeViews.sumOf(StudioPreviewNativeViewNode::nodeCount)} Views"),
+                        JBLabel(
+                            messages.text(
+                                "preview.viewCount",
+                                nativeViews.sumOf(StudioPreviewNativeViewNode::nodeCount),
+                            ),
+                        ),
                         BorderLayout.EAST,
                     )
                 },
@@ -289,7 +319,7 @@ internal class ViewComposePreviewToolWindowPanel(
                 if (patch.moved) append(" · moved")
                 patch.detail?.let { detail -> append(" · $detail") }
             }
-        }.ifBlank { "No patch operations were recorded." }
+        }.ifBlank { messages.text("patch.empty") }
         return JBScrollPane(readOnlyText(text)).apply {
             border = JBUI.Borders.empty(8)
         }
@@ -309,7 +339,7 @@ internal class ViewComposePreviewToolWindowPanel(
         contentPanel.border = JBUI.Borders.empty(24)
         contentPanel.add(
             header(
-                title = result.title,
+                title = messages.failureTitle(result.title),
                 description = result.selection.symbolName,
                 selection = result.selection,
             ),
@@ -328,7 +358,7 @@ internal class ViewComposePreviewToolWindowPanel(
             }
             result.details?.let(::append)
         }.trim()
-        val textArea = JBTextArea(diagnostics.ifBlank { "No diagnostic details were produced." }).apply {
+        val textArea = JBTextArea(diagnostics.ifBlank { messages.text("diagnostic.empty") }).apply {
             isEditable = false
             lineWrap = true
             wrapStyleWord = true
@@ -357,41 +387,56 @@ internal class ViewComposePreviewToolWindowPanel(
         description: String,
         selection: PreviewSourceSelection?,
         includeDetectionEvidence: Boolean = false,
+        trailing: JComponent? = null,
     ): JComponent {
-        return Box.createVerticalBox().apply {
-            add(
-                JBLabel("<html><b>${title.toPresentableText()}</b></html>").apply {
-                    alignmentX = LEFT_ALIGNMENT
-                },
-            )
-            add(Box.createVerticalStrut(JBUI.scale(8)))
-            add(
-                JBLabel("<html>${description.toPresentableText()}</html>").apply {
-                    alignmentX = LEFT_ALIGNMENT
-                },
-            )
-            selection?.let { source ->
-                add(Box.createVerticalStrut(JBUI.scale(8)))
-                add(
-                    JBLabel(
-                        "<html>${source.filePath.toPresentableText()}: ${source.line}</html>",
-                    ).apply {
-                        alignmentX = LEFT_ALIGNMENT
-                    },
-                )
-            }
+        val primaryInfo = Box.createVerticalBox().apply {
+            add(JBLabel(title).apply {
+                alignmentX = LEFT_ALIGNMENT
+                font = font.deriveFont(Font.BOLD)
+            })
+            add(Box.createVerticalStrut(JBUI.scale(5)))
+            add(JBLabel(description).apply {
+                alignmentX = LEFT_ALIGNMENT
+            })
             if (includeDetectionEvidence) {
                 detectionEvidence?.let { evidencePath ->
-                    add(Box.createVerticalStrut(JBUI.scale(16)))
+                    add(Box.createVerticalStrut(JBUI.scale(12)))
                     add(
                         JBLabel(
-                            "<html>Project detected from:<br>" +
-                                "${evidencePath.toPresentablePath()}</html>",
+                            messages.text(
+                                "project.detectedFrom",
+                                presentableProjectPath(projectRoot, evidencePath.toString()),
+                            ),
                         ).apply {
                             alignmentX = LEFT_ALIGNMENT
+                            toolTipText = evidencePath.toString()
                         },
                     )
                 }
+            }
+        }
+        return JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(primaryInfo, BorderLayout.CENTER)
+            trailing?.let { component ->
+                add(component, BorderLayout.EAST)
+            }
+            selection?.let { source ->
+                add(
+                    JPanel(BorderLayout()).apply {
+                        isOpaque = false
+                        border = JBUI.Borders.emptyTop(6)
+                        add(
+                            ActionLink(source.presentablePathText(projectRoot)) {
+                                onNavigateToSource(source.toStudioSourceLocation())
+                            }.apply {
+                                toolTipText = source.filePath
+                            },
+                            BorderLayout.WEST,
+                        )
+                    },
+                    BorderLayout.SOUTH,
+                )
             }
         }
     }
@@ -406,17 +451,13 @@ internal class ViewComposePreviewToolWindowPanel(
                     add(Box.createVerticalStrut(JBUI.scale(4)))
                 }
                 add(
-                    JBLabel(
-                        "<html>" +
-                            "[${diagnostic.severity}] ${diagnostic.message}".toPresentableText() +
-                            "</html>",
-                    ).apply {
+                    JBLabel("[${diagnostic.severity}] ${diagnostic.message}").apply {
                         alignmentX = LEFT_ALIGNMENT
                     },
                 )
                 diagnostic.sourceLocation?.let { source ->
                     add(
-                        ActionLink(source.presentableLinkText()) {
+                        ActionLink(source.presentableLinkText(projectRoot, messages)) {
                             onNavigateToSource(source)
                         }.apply {
                             alignmentX = LEFT_ALIGNMENT
@@ -436,7 +477,7 @@ internal class ViewComposePreviewToolWindowPanel(
             border = JBUI.Borders.empty(12, 0, 4, 0)
             sources.forEach { source ->
                 add(
-                    ActionLink(source.presentableLinkText()) {
+                    ActionLink(source.presentableLinkText(projectRoot, messages)) {
                         onNavigateToSource(source)
                     }.apply {
                         alignmentX = LEFT_ALIGNMENT
@@ -582,19 +623,47 @@ private data class PreviewVariantChoice(
     override fun toString(): String = displayName
 }
 
-private fun java.nio.file.Path.toPresentablePath(): String {
-    return toString().toPresentableText()
+internal fun presentableProjectPath(
+    projectRoot: Path?,
+    filePath: String,
+): String {
+    val normalizedPath = runCatching {
+        Path.of(filePath).toAbsolutePath().normalize()
+    }.getOrNull() ?: return filePath
+    val normalizedRoot = projectRoot?.toAbsolutePath()?.normalize()
+    val relativePath = if (
+        normalizedRoot != null &&
+        normalizedPath.startsWith(normalizedRoot)
+    ) {
+        normalizedRoot.relativize(normalizedPath)
+    } else {
+        null
+    }
+    return relativePath
+        ?.joinToString(separator = "/") { segment -> segment.toString() }
+        ?: normalizedPath.toString()
 }
 
-private fun StudioPreviewSourceLocation.presentableLinkText(): String {
-    val fileName = runCatching { java.nio.file.Path.of(filePath).fileName.toString() }
-        .getOrDefault(filePath)
-    return "Open $fileName:$line"
+private fun PreviewSourceSelection.presentablePathText(projectRoot: Path?): String {
+    return "${presentableProjectPath(projectRoot, filePath)}:$line"
 }
 
-private fun String.toPresentableText(): String {
-    return this
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
+private fun PreviewSourceSelection.toStudioSourceLocation(): StudioPreviewSourceLocation {
+    return StudioPreviewSourceLocation(
+        filePath = filePath,
+        line = line,
+        column = 1,
+        symbolName = symbolName,
+    )
+}
+
+private fun StudioPreviewSourceLocation.presentableLinkText(
+    projectRoot: Path?,
+    messages: PreviewUiMessages,
+): String {
+    return messages.text(
+        "source.open",
+        presentableProjectPath(projectRoot, filePath),
+        line,
+    )
 }
