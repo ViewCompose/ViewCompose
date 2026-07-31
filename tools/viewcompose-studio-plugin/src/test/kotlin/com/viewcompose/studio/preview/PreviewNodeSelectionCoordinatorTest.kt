@@ -46,6 +46,64 @@ class PreviewNodeSelectionCoordinatorTest {
     }
 
     @Test
+    fun `direct container call site wins over the same line inherited by a child`() {
+        val columnCallSite = callSite(line = 20)
+        val textCallSite = callSite(line = 21)
+        val snapshot = snapshot().copy(
+            tree = listOf(
+                StudioPreviewRenderTreeNode(
+                    type = "Column",
+                    key = null,
+                    nodeId = "column-node",
+                    sourceCallSites = listOf(columnCallSite),
+                    synthetic = false,
+                    children = listOf(
+                        StudioPreviewRenderTreeNode(
+                            type = "Text",
+                            key = null,
+                            nodeId = "text-node",
+                            sourceCallSites = listOf(textCallSite, columnCallSite),
+                            synthetic = false,
+                            children = emptyList(),
+                        ),
+                    ),
+                ),
+            ),
+            nativeViewTree = listOf(
+                nativeView(
+                    className = "android.widget.LinearLayout",
+                    nodeId = "column-node",
+                    sourceCallSites = listOf(columnCallSite),
+                    children = listOf(
+                        nativeView(
+                            className = "android.widget.TextView",
+                            nodeId = "text-node",
+                            sourceCallSites = listOf(textCallSite, columnCallSite),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        val coordinator = PreviewNodeSelectionCoordinator(
+            snapshot = snapshot,
+            initialNodeId = null,
+            onSelectionChanged = {},
+        )
+
+        coordinator.selectSource(
+            filePath = "/project/app/src/main/java/com/example/AboutPage.kt",
+            line = 20,
+        )
+        assertEquals("column-node", coordinator.selectedNodeId)
+
+        coordinator.selectSource(
+            filePath = "/project/app/src/main/java/com/example/AboutPage.kt",
+            line = 21,
+        )
+        assertEquals("text-node", coordinator.selectedNodeId)
+    }
+
+    @Test
     fun `unmapped source clears linked selection`() {
         val coordinator = PreviewNodeSelectionCoordinator(
             snapshot = snapshot(),
@@ -77,12 +135,7 @@ class PreviewNodeSelectionCoordinatorTest {
     }
 
     private fun snapshot(): StudioPreviewRenderSnapshot {
-        val callSite = StudioPreviewSourceCallSite(
-            className = "com.example.AboutPageKt",
-            methodName = "AboutPage",
-            fileName = "AboutPage.kt",
-            lineNumber = 42,
-        )
+        val callSite = callSite(line = 42)
         return StudioPreviewRenderSnapshot(
             stats = StudioPreviewRenderStats(
                 inserts = 1,
@@ -111,31 +164,10 @@ class PreviewNodeSelectionCoordinatorTest {
                 ),
             ),
             nativeViewTree = listOf(
-                StudioPreviewNativeViewNode(
+                nativeView(
                     className = "android.widget.TextView",
-                    bounds = StudioPreviewLayoutBounds(
-                        left = 0,
-                        top = 0,
-                        right = 100,
-                        bottom = 40,
-                    ),
-                    measuredWidth = 100,
-                    measuredHeight = 40,
-                    visibility = "VISIBLE",
-                    visibleBounds = StudioPreviewLayoutBounds(
-                        left = 0,
-                        top = 0,
-                        right = 100,
-                        bottom = 40,
-                    ),
-                    clippingState = StudioPreviewClippingState.NotClipped,
-                    clippingAncestorClassName = null,
-                    clippingAncestorNodeId = null,
-                    clippingExpected = false,
                     nodeId = "text-node",
                     sourceCallSites = listOf(callSite),
-                    synthetic = false,
-                    children = emptyList(),
                 ),
             ),
             layoutDiagnostics = emptyList(),
@@ -146,6 +178,39 @@ class PreviewNodeSelectionCoordinatorTest {
                 skippedScopeCount = 0,
                 scopes = emptyList(),
             ),
+        )
+    }
+
+    private fun callSite(line: Int): StudioPreviewSourceCallSite {
+        return StudioPreviewSourceCallSite(
+            className = "com.example.AboutPageKt",
+            methodName = "AboutPage",
+            fileName = "AboutPage.kt",
+            lineNumber = line,
+        )
+    }
+
+    private fun nativeView(
+        className: String,
+        nodeId: String,
+        sourceCallSites: List<StudioPreviewSourceCallSite>,
+        children: List<StudioPreviewNativeViewNode> = emptyList(),
+    ): StudioPreviewNativeViewNode {
+        return StudioPreviewNativeViewNode(
+            className = className,
+            bounds = StudioPreviewLayoutBounds(0, 0, 100, 40),
+            measuredWidth = 100,
+            measuredHeight = 40,
+            visibility = "VISIBLE",
+            visibleBounds = StudioPreviewLayoutBounds(0, 0, 100, 40),
+            clippingState = StudioPreviewClippingState.NotClipped,
+            clippingAncestorClassName = null,
+            clippingAncestorNodeId = null,
+            clippingExpected = false,
+            nodeId = nodeId,
+            sourceCallSites = sourceCallSites,
+            synthetic = false,
+            children = children,
         )
     }
 }

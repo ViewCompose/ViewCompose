@@ -41,19 +41,30 @@ internal class PreviewRuntimeNodeIndex private constructor(
     ): String? {
         val validLines = lineCandidates.filterTo(LinkedHashSet()) { line -> line > 0 }
         if (validLines.isEmpty()) return null
+        val lineRanks = validLines.withIndex().associate { (rank, line) -> line to rank }
         val fileName = runCatching { Path.of(filePath).fileName?.toString() }
             .getOrNull()
             ?.takeIf(String::isNotBlank)
             ?: return null
         val match = entries.values.asSequence()
             .flatMap { entry ->
-                entry.sourceCallSites.asSequence()
-                    .filter { callSite -> callSite.fileName == fileName }
-                    .filter { callSite -> callSite.lineNumber in validLines }
-                    .map { RuntimeSourceMatch(entry) }
+                entry.sourceCallSites.asSequence().mapIndexedNotNull { callSiteRank, callSite ->
+                    val lineRank = lineRanks[callSite.lineNumber]
+                    if (callSite.fileName != fileName || lineRank == null) {
+                        null
+                    } else {
+                        RuntimeSourceMatch(
+                            entry = entry,
+                            lineRank = lineRank,
+                            callSiteRank = callSiteRank,
+                        )
+                    }
+                }
             }
             .minWithOrNull(
-                compareBy<RuntimeSourceMatch> { match -> match.entry.synthetic }
+                compareBy<RuntimeSourceMatch> { match -> match.lineRank }
+                    .thenBy { match -> match.callSiteRank }
+                    .thenBy { match -> match.entry.synthetic }
                     .thenByDescending { match -> match.entry.hasNativeView }
                     .thenByDescending { match -> match.entry.depth }
                     .thenBy { match -> match.entry.order },
@@ -169,6 +180,8 @@ private data class RuntimeNodeEntry(
 
 private data class RuntimeSourceMatch(
     val entry: RuntimeNodeEntry,
+    val lineRank: Int,
+    val callSiteRank: Int,
 )
 
 private fun StudioPreviewLayoutBounds.contains(
