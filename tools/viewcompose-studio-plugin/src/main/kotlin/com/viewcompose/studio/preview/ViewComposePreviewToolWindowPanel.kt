@@ -42,7 +42,6 @@ import javax.swing.Icon
 import javax.swing.JLayeredPane
 import javax.swing.JList
 import javax.swing.JPanel
-import javax.swing.JSplitPane
 import javax.swing.JTabbedPane
 import javax.swing.JToggleButton
 import javax.swing.JTree
@@ -52,6 +51,7 @@ import javax.swing.ListCellRenderer
 import javax.swing.ListSelectionModel
 import javax.swing.SwingUtilities
 import javax.swing.SwingWorker
+import javax.swing.Timer
 import javax.swing.ToolTipManager
 import javax.swing.tree.DefaultMutableTreeNode
 import kotlin.math.roundToInt
@@ -217,24 +217,6 @@ internal class ViewComposePreviewToolWindowPanel(
                 galleryCard(value, isSelected)
             }
             toolTipText = messages.text("gallery.navigationHint")
-            addMouseListener(
-                object : MouseAdapter() {
-                    override fun mousePressed(event: MouseEvent) {
-                        if (!isPreviewSourceNavigationPress(
-                                clickCount = event.clickCount,
-                                isPrimaryButton = SwingUtilities.isLeftMouseButton(event),
-                            )
-                        ) {
-                            return
-                        }
-                        val index = locationToIndex(event.point)
-                        if (index < 0 || !getCellBounds(index, index).contains(event.point)) return
-                        val item = model.getElementAt(index)
-                        event.consume()
-                        onNavigateToSource(item.selection.toStudioSourceLocation())
-                    }
-                },
-            )
         }
         val galleryScrollPane = JBScrollPane(list).apply {
             border = JBUI.Borders.emptyTop(8)
@@ -242,9 +224,16 @@ internal class ViewComposePreviewToolWindowPanel(
         }
         val detailHost = JPanel(BorderLayout()).apply {
             isOpaque = false
-            border = JBUI.Borders.empty(8, 12, 0, 0)
+            border = JBUI.Borders.empty(8)
             add(readOnlyText(messages.text("gallery.detailEmpty")), BorderLayout.CENTER)
         }
+        val overlay = PreviewGalleryOverlay(
+            content = galleryScrollPane,
+            onDismiss = {
+                galleryDetailWorker?.cancel(true)
+                galleryDetailWorker = null
+            },
+        )
         var detailGeneration = 0
 
         fun showDetail(item: PreviewGalleryItem) {
@@ -255,21 +244,20 @@ internal class ViewComposePreviewToolWindowPanel(
             galleryDetailZoomOption = PreviewZoomOption.Fit
             galleryDetailCustomScale = null
             fun present(image: BufferedImage) {
-                if (generation != detailGeneration || list.selectedValue != item) return
+                if (generation != detailGeneration || !overlay.isDetailVisible) return
                 detailHost.removeAll()
                 detailHost.add(galleryDetailPanel(item, image), BorderLayout.CENTER)
                 detailHost.revalidate()
                 detailHost.repaint()
             }
 
+            detailHost.removeAll()
+            detailHost.add(readOnlyText(messages.text("gallery.detailLoading")), BorderLayout.CENTER)
+            overlay.showDetail(detailHost)
             galleryDetailImages[item.detailImagePath]?.let { cached ->
                 present(cached)
                 return
             }
-            detailHost.removeAll()
-            detailHost.add(readOnlyText(messages.text("gallery.detailLoading")), BorderLayout.CENTER)
-            detailHost.revalidate()
-            detailHost.repaint()
             galleryDetailWorker = object : SwingWorker<BufferedImage, Unit>() {
                 override fun doInBackground(): BufferedImage {
                     return loadBoundedPreviewImage(item.detailImagePath)
@@ -296,24 +284,50 @@ internal class ViewComposePreviewToolWindowPanel(
             }.also { worker -> worker.execute() }
         }
 
-        list.addListSelectionListener { event ->
-            if (!event.valueIsAdjusting) {
-                list.selectedValue?.let(::showDetail)
+        val doublePressTracker = PreviewDoublePressTracker()
+        var pendingDetailItem: PreviewGalleryItem? = null
+        val showDetailTimer = Timer(GALLERY_DETAIL_OPEN_DELAY_MILLIS) {
+            pendingDetailItem?.let(::showDetail)
+            pendingDetailItem = null
+        }.apply {
+            isRepeats = false
+        }
+        list.addMouseListener(
+            object : MouseAdapter() {
+                override fun mousePressed(event: MouseEvent) {
+                    if (!SwingUtilities.isLeftMouseButton(event)) return
+                    val index = list.locationToIndex(event.point)
+                    if (index < 0 || !list.getCellBounds(index, index).contains(event.point)) return
+                    val item = list.model.getElementAt(index)
+                    list.selectedIndex = index
+                    val isDoublePress = doublePressTracker.register(
+                        awtClickCount = event.clickCount,
+                        eventMillis = event.`when`,
+                        x = event.x,
+                        y = event.y,
+                    )
+                    if (isDoublePress) {
+                        showDetailTimer.stop()
+                        pendingDetailItem = null
+                        event.consume()
+                        onNavigateToSource(item.selection.toStudioSourceLocation())
+                    } else {
+                        pendingDetailItem = item
+                        showDetailTimer.restart()
+                    }
+                }
             }
-        }
-        list.selectedIndex = 0
-        return JSplitPane(
-            JSplitPane.HORIZONTAL_SPLIT,
-            galleryScrollPane,
-            detailHost,
-        ).apply {
-            isOpaque = false
-            border = JBUI.Borders.empty()
-            resizeWeight = GALLERY_SPLIT_RESIZE_WEIGHT
-            dividerSize = JBUI.scale(5)
-            leftComponent.minimumSize = Dimension(JBUI.scale(280), 1)
-            rightComponent.minimumSize = Dimension(JBUI.scale(320), 1)
-        }
+        )
+        list.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("ENTER"), "openDetail")
+        list.actionMap.put(
+            "openDetail",
+            object : AbstractAction() {
+                override fun actionPerformed(event: java.awt.event.ActionEvent?) {
+                    list.selectedValue?.let(::showDetail)
+                }
+            },
+        )
+        return overlay
     }
 
     private fun galleryCard(
@@ -1364,6 +1378,122 @@ private fun StudioPreviewNativeViewNode.nodeCount(): Int {
     return 1 + children.sumOf(StudioPreviewNativeViewNode::nodeCount)
 }
 
+internal class PreviewGalleryOverlay(
+    private val content: JComponent,
+    private val onDismiss: () -> Unit,
+) : JLayeredPane() {
+    private val detailBody = JPanel(BorderLayout()).apply {
+        isOpaque = false
+    }
+    private val detailCard = JPanel(BorderLayout()).apply {
+        isOpaque = true
+        background = JBColor(Color(0xFA, 0xFA, 0xFA), Color(0x2B, 0x2D, 0x30))
+        border = BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(PREVIEW_TOOLBAR_BORDER),
+            JBUI.Borders.empty(6),
+        )
+        add(
+            JPanel(FlowLayout(FlowLayout.RIGHT, 0, 0)).apply {
+                isOpaque = false
+                add(
+                    JButton(AllIcons.Actions.Close).apply {
+                        isFocusable = false
+                        isContentAreaFilled = false
+                        border = JBUI.Borders.empty(4)
+                        addActionListener { dismissDetail() }
+                    },
+                )
+            },
+            BorderLayout.NORTH,
+        )
+        add(detailBody, BorderLayout.CENTER)
+    }
+    private val backdrop = object : JPanel(null) {
+        override fun paintComponent(graphics: Graphics) {
+            super.paintComponent(graphics)
+            graphics.color = Color(0, 0, 0, GALLERY_OVERLAY_ALPHA)
+            graphics.fillRect(0, 0, width, height)
+        }
+    }.apply {
+        isOpaque = false
+        isVisible = false
+        isFocusable = true
+        add(detailCard)
+        addMouseListener(
+            object : MouseAdapter() {
+                override fun mousePressed(event: MouseEvent) {
+                    if (!detailCard.bounds.contains(event.point)) {
+                        dismissDetail()
+                    }
+                }
+            },
+        )
+        addMouseWheelListener(MouseWheelEvent::consume)
+    }
+
+    val isDetailVisible: Boolean
+        get() = backdrop.isVisible
+
+    init {
+        isOpaque = false
+        add(content)
+        setLayer(content, DEFAULT_LAYER)
+        add(backdrop)
+        setLayer(backdrop, MODAL_LAYER)
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke("ESCAPE"), "dismissDetail")
+        actionMap.put(
+            "dismissDetail",
+            object : AbstractAction() {
+                override fun actionPerformed(event: java.awt.event.ActionEvent?) {
+                    dismissDetail()
+                }
+            },
+        )
+    }
+
+    fun showDetail(component: JComponent) {
+        detailBody.removeAll()
+        detailBody.add(component, BorderLayout.CENTER)
+        backdrop.isVisible = true
+        revalidate()
+        repaint()
+        SwingUtilities.invokeLater { backdrop.requestFocusInWindow() }
+    }
+
+    private fun dismissDetail() {
+        if (!backdrop.isVisible) return
+        backdrop.isVisible = false
+        detailBody.removeAll()
+        onDismiss()
+        content.requestFocusInWindow()
+        revalidate()
+        repaint()
+    }
+
+    override fun doLayout() {
+        content.setBounds(0, 0, width, height)
+        backdrop.setBounds(0, 0, width, height)
+        val margin = JBUI.scale(GALLERY_OVERLAY_MARGIN)
+        val cardWidth = (width - margin * 2)
+            .coerceAtMost(JBUI.scale(GALLERY_OVERLAY_MAX_WIDTH))
+            .coerceAtLeast(1)
+        val cardHeight = (height - margin * 2)
+            .coerceAtMost(JBUI.scale(GALLERY_OVERLAY_MAX_HEIGHT))
+            .coerceAtLeast(1)
+        detailCard.setBounds(
+            ((width - cardWidth) / 2).coerceAtLeast(0),
+            ((height - cardHeight) / 2).coerceAtLeast(0),
+            cardWidth,
+            cardHeight,
+        )
+        detailCard.doLayout()
+    }
+
+    override fun getPreferredSize(): Dimension = content.preferredSize
+
+    override fun isOptimizedDrawingEnabled(): Boolean = false
+}
+
 internal class PreviewCanvasLayer(
     private val scrollPane: JComponent,
     private val floatingToolbar: JComponent,
@@ -1452,6 +1582,8 @@ private class PreviewImageCanvas(
     private var panStartPoint: Point? = null
     private var panStartViewPosition: Point? = null
     private var nativeMagnificationRegistration: AutoCloseable? = null
+    private val trackpadAxisLock = PreviewTrackpadAxisLock()
+    private val doublePressTracker = PreviewDoublePressTracker()
 
     init {
         minimumSize = Dimension(1, 1)
@@ -1460,6 +1592,7 @@ private class PreviewImageCanvas(
         ToolTipManager.sharedInstance().registerComponent(this)
         addMouseWheelListener { event ->
             if (event.isControlDown) {
+                trackpadAxisLock.reset()
                 event.consume()
                 applyContinuousScale(
                     nextScale = calculateWheelPreviewScale(
@@ -1508,11 +1641,14 @@ private class PreviewImageCanvas(
 
                 override fun mousePressed(event: MouseEvent) {
                     requestFocusInWindow()
-                    if (isPreviewSourceNavigationPress(
-                            clickCount = event.clickCount,
-                            isPrimaryButton = SwingUtilities.isLeftMouseButton(event),
-                        )
-                    ) {
+                    val isPrimaryButton = SwingUtilities.isLeftMouseButton(event)
+                    val isDoublePress = isPrimaryButton && doublePressTracker.register(
+                        awtClickCount = event.clickCount,
+                        eventMillis = event.`when`,
+                        x = event.x,
+                        y = event.y,
+                    )
+                    if (isDoublePress) {
                         event.consume()
                         navigateAt(event.point)
                         return
@@ -1575,28 +1711,38 @@ private class PreviewImageCanvas(
         val oldPosition = viewport.viewPosition
         val maximumX = (viewport.viewSize.width - viewport.extentSize.width).coerceAtLeast(0)
         val maximumY = (viewport.viewSize.height - viewport.extentSize.height).coerceAtLeast(0)
-        val nextPosition = if (event.isShiftDown) {
+        if (maximumX == 0 && maximumY == 0) return
+        event.consume()
+        val horizontalRotation = if (event.isShiftDown) event.preciseWheelRotation else 0.0
+        val verticalRotation = if (event.isShiftDown) 0.0 else event.preciseWheelRotation
+        val axis = trackpadAxisLock.resolve(
+            horizontalRotation = horizontalRotation,
+            verticalRotation = verticalRotation,
+            eventMillis = event.`when`,
+        ) ?: return
+        val nextPosition = if (axis == PreviewScrollAxis.Horizontal) {
+            if (horizontalRotation == 0.0) return
             Point(
                 calculatePreviewScrollPosition(
                     currentPosition = oldPosition.x,
                     maximumPosition = maximumX,
-                    preciseWheelRotation = event.preciseWheelRotation,
+                    preciseWheelRotation = horizontalRotation,
                 ),
                 oldPosition.y,
             )
         } else {
+            if (verticalRotation == 0.0) return
             Point(
                 oldPosition.x,
                 calculatePreviewScrollPosition(
                     currentPosition = oldPosition.y,
                     maximumPosition = maximumY,
-                    preciseWheelRotation = event.preciseWheelRotation,
+                    preciseWheelRotation = verticalRotation,
                 ),
             )
         }
         if (nextPosition != oldPosition) {
             viewport.viewPosition = nextPosition
-            event.consume()
         }
     }
 
@@ -2057,4 +2203,8 @@ private const val GALLERY_CELL_HEIGHT = 390
 private const val GALLERY_IMAGE_WIDTH = 220
 private const val GALLERY_IMAGE_HEIGHT = 300
 private const val GALLERY_DETAIL_MEMORY_ENTRIES = 3
-private const val GALLERY_SPLIT_RESIZE_WEIGHT = 0.58
+private const val GALLERY_DETAIL_OPEN_DELAY_MILLIS = 280
+private const val GALLERY_OVERLAY_MARGIN = 24
+private const val GALLERY_OVERLAY_MAX_WIDTH = 900
+private const val GALLERY_OVERLAY_MAX_HEIGHT = 1000
+private const val GALLERY_OVERLAY_ALPHA = 150

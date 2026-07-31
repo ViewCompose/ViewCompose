@@ -1,8 +1,6 @@
 package com.viewcompose.studio.preview
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PreviewZoomTest {
@@ -90,10 +88,4 @@ class PreviewZoomTest {
         assertEquals(500, calculatePreviewScrollPosition(490, 500, 2.0))
     }
 
-    @Test
-    fun `source navigation starts on the second primary-button press`() {
-        assertFalse(isPreviewSourceNavigationPress(clickCount = 1, isPrimaryButton = true))
-        assertTrue(isPreviewSourceNavigationPress(clickCount = 2, isPrimaryButton = true))
-        assertFalse(isPreviewSourceNavigationPress(clickCount = 2, isPrimaryButton = false))
-    }
 }

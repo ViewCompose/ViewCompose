@@ -74,11 +74,6 @@ internal fun calculatePreviewScrollPosition(
         .coerceIn(0, maximumPosition)
 }
 
-internal fun isPreviewSourceNavigationPress(
-    clickCount: Int,
-    isPrimaryButton: Boolean,
-): Boolean = isPrimaryButton && clickCount >= 2
-
 private const val PREVIEW_FIT_PADDING_PIXELS = 16
 private const val MINIMUM_FIT_SCALE = 0.1
 private const val MAXIMUM_FIT_SCALE = 1.0
