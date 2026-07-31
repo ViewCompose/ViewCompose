@@ -60,6 +60,9 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
     abstract val projectClassDirectories: ListProperty<Directory>
 
     @get:Classpath
+    abstract val annotationClasspath: ConfigurableFileCollection
+
+    @get:Classpath
     abstract val runtimeClasspath: ConfigurableFileCollection
 
     @get:Classpath
@@ -114,6 +117,7 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
     fun discover() {
         val projectJars = projectClassJars.get().map(RegularFile::getAsFile)
         val projectDirectories = projectClassDirectories.get().map(Directory::getAsFile)
+        val annotationFiles = annotationClasspath.files
         val runtimeFiles = runtimeClasspath.files
         val bootFiles = bootClasspath.files
         val sourceFiles = sourceDirectories.files
@@ -129,6 +133,7 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
             "assets-library" to libraryAssetFiles,
             "assets-local" to localAssetFiles,
             "assets-module" to moduleAssetFiles,
+            "annotation-classpath" to annotationFiles,
             "boot-classpath" to bootFiles,
             "manifest" to listOf(manifestFile),
             "project-class-directories" to projectDirectories,
@@ -144,7 +149,7 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
         val discovery = CompiledPreviewScanner(
             projectClassDirectories = projectDirectories,
             projectClassJars = projectJars,
-            annotationClasspath = runtimeFiles,
+            annotationClasspath = annotationFiles,
             sourceDirectories = sourceFiles,
         ).scan()
         val inputs = buildList {

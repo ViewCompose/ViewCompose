@@ -1,5 +1,7 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -14,6 +16,13 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(
+    name = "AboutPage · Light",
+    group = "Demo",
+    widthDp = 411,
+    heightDp = 891,
+    theme = PreviewTheme.Light,
+)
 internal fun UiTreeBuilder.AboutPage() {
     LazyColumn(
         items = listOf("title", "architecture", "stats", "version", "links"),

@@ -3,6 +3,7 @@ package com.viewcompose.preview.gradle
 import com.viewcompose.preview.tooling.PreviewProtocolJson
 import com.viewcompose.preview.tooling.PreviewBuildInputKind
 import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.ViewComposePreview
 import java.io.File
 import java.util.Properties
 import org.gradle.testkit.runner.GradleRunner
@@ -23,6 +24,12 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         val sdkDirectory = findAndroidSdkDirectory()
         assumeTrue("Android SDK is required for the Gradle plugin functional test.", sdkDirectory != null)
         val project = temporaryFolder.newFolder("android-project")
+        val previewCoreLocation = File(
+            ViewComposePreview::class.java.protectionDomain.codeSource.location.toURI(),
+        )
+        val previewCorePath = previewCoreLocation.absolutePath
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
         project.resolve("settings.gradle").writeText(
             """
             pluginManagement {
@@ -72,6 +79,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
                 dependencies {
                     implementation "androidx.appcompat:appcompat-resources:1.7.0"
                     implementation project(":library")
+                    compileOnly files('$previewCorePath')
                     add(
                         "viewComposePreviewWorkerHost",
                         "org.jetbrains.kotlin:kotlin-stdlib:2.0.21"
@@ -132,48 +140,10 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             """,
         )
         project.writeJava(
-            "app/src/main/java/com/viewcompose/preview/tooling/PreviewTheme.java",
-            """
-            package com.viewcompose.preview.tooling;
-            public enum PreviewTheme { Light, Dark }
-            """,
-        )
-        project.writeJava(
-            "app/src/main/java/com/viewcompose/preview/tooling/PreviewLayoutDirection.java",
-            """
-            package com.viewcompose.preview.tooling;
-            public enum PreviewLayoutDirection { Ltr, Rtl }
-            """,
-        )
-        project.writeJava(
-            "app/src/main/java/com/viewcompose/preview/tooling/ViewComposePreview.java",
-            """
-            package com.viewcompose.preview.tooling;
-            import java.lang.annotation.ElementType;
-            import java.lang.annotation.Retention;
-            import java.lang.annotation.RetentionPolicy;
-            import java.lang.annotation.Target;
-
-            @Target(ElementType.METHOD)
-            @Retention(RetentionPolicy.RUNTIME)
-            public @interface ViewComposePreview {
-                String name() default "";
-                String group() default "";
-                int widthDp() default 411;
-                int heightDp() default 891;
-                float density() default 1f;
-                float fontScale() default 1f;
-                String localeTag() default "en-US";
-                PreviewLayoutDirection layoutDirection() default PreviewLayoutDirection.Ltr;
-                PreviewTheme theme() default PreviewTheme.Light;
-                int apiLevel() default -1;
-            }
-            """,
-        )
-        project.writeJava(
             "app/src/main/java/sample/SamplePreviews.java",
             """
             package sample;
+            import com.viewcompose.preview.tooling.PreviewLightDark;
             import com.viewcompose.preview.tooling.PreviewTheme;
             import com.viewcompose.preview.tooling.ViewComposePreview;
             import com.viewcompose.widget.core.UiTreeBuilder;
@@ -187,6 +157,9 @@ class ViewComposePreviewGradlePluginFunctionalTest {
                     theme = PreviewTheme.Dark
                 )
                 public static void card(UiTreeBuilder builder) {}
+
+                @PreviewLightDark
+                public static void themes(UiTreeBuilder builder) {}
             }
             """,
         )
@@ -252,6 +225,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             .withArguments(
                 "--stacktrace",
                 ":app:discoverDebugViewComposePreviews",
+                ":app:discoverReleaseViewComposePreviews",
             )
             .withPluginClasspath()
             .build()
@@ -259,6 +233,10 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         assertEquals(
             TaskOutcome.SUCCESS,
             result.task(":app:discoverDebugViewComposePreviews")?.outcome,
+        )
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            result.task(":app:discoverReleaseViewComposePreviews")?.outcome,
         )
         val output = project.resolve("app/build/viewcompose-preview/debug")
         val manifest = PreviewProtocolJson.decodeBuildManifest(
@@ -280,13 +258,31 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         assertTrue(PreviewBuildInputKind.LibraryResourceDirectory in inputKinds)
         assertTrue(PreviewBuildInputKind.LocalAssetDirectory in inputKinds)
         assertTrue(PreviewBuildInputKind.ResourcePackageFile in inputKinds)
-        assertEquals(1, catalog.descriptors.size)
-        val descriptor = catalog.descriptors.single()
+        assertEquals(2, catalog.descriptors.size)
+        val descriptor = catalog.descriptors.single { preview ->
+            preview.entryPoint.methodName == "card"
+        }
         assertEquals("card", descriptor.entryPoint.methodName)
         assertEquals("demo", descriptor.group)
         assertEquals(360, descriptor.variants.single().configuration.widthDp)
         assertEquals(720, descriptor.variants.single().configuration.heightDp)
         assertEquals(PreviewTheme.Dark, descriptor.variants.single().configuration.theme)
+        val themes = catalog.descriptors.single { preview ->
+            preview.entryPoint.methodName == "themes"
+        }
+        assertEquals(
+            listOf(PreviewTheme.Light, PreviewTheme.Dark),
+            themes.variants.map { variant -> variant.configuration.theme },
+        )
+        val releaseCatalog = PreviewProtocolJson.decodeDescriptorCatalog(
+            project.resolve(
+                "app/build/viewcompose-preview/release/descriptors.json",
+            ).readText(),
+        )
+        assertEquals(
+            catalog.descriptors.map { preview -> preview.entryPoint.methodName }.sorted(),
+            releaseCatalog.descriptors.map { preview -> preview.entryPoint.methodName }.sorted(),
+        )
 
         val tasks = GradleRunner.create()
             .withProjectDir(project)

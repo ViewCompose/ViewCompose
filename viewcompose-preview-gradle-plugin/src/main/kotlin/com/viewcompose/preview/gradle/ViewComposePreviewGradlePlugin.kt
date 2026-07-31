@@ -72,6 +72,9 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
     toolConfigurations: PreviewToolConfigurations,
 ) {
     androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+        val annotationClasspath = variant.compileConfiguration.artifactFiles(
+            artifactType = ANDROID_CLASSES_JAR_ARTIFACT_TYPE,
+        )
         val runtimeClasspath = variant.runtimeConfiguration.artifactFiles(
             artifactType = ANDROID_CLASSES_JAR_ARTIFACT_TYPE,
         )
@@ -122,6 +125,7 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
                     directory.asFile.absolutePath
                 },
             )
+            discovery.annotationClasspath.from(annotationClasspath)
             discovery.runtimeClasspath.from(runtimeClasspath)
             discovery.bootClasspath.from(androidComponents.sdkComponents.bootClasspath)
             discovery.sourceDirectories.from(variant.sources.java?.all)

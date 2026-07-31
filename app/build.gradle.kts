@@ -63,6 +63,7 @@ dependencies {
     implementation(project(":viewcompose-viewmodel"))
     implementation(project(":viewcompose-overlay-android"))
     implementation(project(":viewcompose-image-coil"))
+    compileOnly(project(":viewcompose-preview-core"))
     debugImplementation(project(":viewcompose-preview"))
     add(
         "viewComposePreviewWorkerHost",
