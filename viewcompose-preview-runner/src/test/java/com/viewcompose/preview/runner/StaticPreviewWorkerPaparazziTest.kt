@@ -4,6 +4,7 @@ import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import app.cash.paparazzi.detectEnvironment
 import android.content.Context
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.content.res.Configuration
@@ -216,6 +217,7 @@ class StaticPreviewWorkerPaparazziTest {
         val root = FrameLayout(paparazzi.context)
         val child = TextView(paparazzi.context).apply {
             text = "Partially visible"
+            setTextColor(Color.rgb(12, 34, 56))
         }
         root.addView(
             child,
@@ -237,6 +239,7 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals(100, capturedChild.visibleBounds?.right)
         assertEquals("android.widget.FrameLayout", capturedChild.clippingAncestorClassName)
         assertEquals("Partially visible", capturedChild.properties["text"])
+        assertEquals("#FF0C2238", capturedChild.properties["textColor"])
         assertEquals("true", capturedChild.properties["enabled"])
     }
 

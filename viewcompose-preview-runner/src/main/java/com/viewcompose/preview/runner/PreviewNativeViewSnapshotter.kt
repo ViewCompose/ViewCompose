@@ -204,6 +204,7 @@ private fun View.previewProperties(): Map<String, String> = buildMap {
                 put("text", value.previewText())
             }
             put("textSizePx", textSize.compactDecimal())
+            put("textColor", currentTextColor.argbHex())
             put("maxLines", maxLines.toString())
             put("gravity", gravity.toString())
             ellipsize?.let { mode -> put("ellipsize", mode.toString()) }
@@ -232,6 +233,11 @@ private fun Float.compactDecimal(): String {
     val rounded = (this * 100f).roundToInt() / 100f
     return rounded.toString()
 }
+
+private fun Int.argbHex(): String = "#" + toUInt()
+    .toString(16)
+    .padStart(8, '0')
+    .uppercase()
 
 private fun String.previewText(): String {
     val singleLine = replace('\n', ' ').replace('\r', ' ')
