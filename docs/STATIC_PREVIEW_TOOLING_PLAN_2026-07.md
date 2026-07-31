@@ -284,6 +284,14 @@ Implemented:
 - Composition scopes retain their creation-site source chain independently of VNode identity, so
   recomposition reasons and skipped scopes can navigate to source without inventing an unreliable
   scope-to-View association.
+- The runner exports each native View's actual visible bounds after ancestor clipping, the clipping
+  source, and whether that clipping belongs to a scrolling container. Canvas hit testing uses the
+  visible region instead of selecting pixels that were clipped away.
+- Source-aware layout diagnostics detect collapsed visible content, partial/full clipping,
+  ellipsized text, and text content clipped by height or line constraints. The Studio Layout tab,
+  canvas issue overlay, VNode tree, native View tree, and editor all share the same node selection.
+- Layout diagnostics remain structured protocol data rather than preformatted English messages,
+  allowing Studio to localize the same captured frame in English or Simplified Chinese.
 
 ## 5. Experience backlog priority
 
