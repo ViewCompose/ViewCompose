@@ -36,7 +36,10 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - a lazily initialized, dockable `ViewCompose Preview` tool window;
 - Kotlin gutter markers for direct and source meta-annotated ViewCompose preview functions;
 - project-scoped source selection that opens the matching symbol in the preview tool window;
+- cancellable Gradle-wrapper discovery and isolated single-preview rendering;
+- bounded PNG loading plus structured render diagnostics and Gradle failure output;
 - an explicit AI-261 minimum build and exact local-build verification.
 
-Rendering, refresh/cancellation, and diagnostics are added in later slices on top of this stable
-shell.
+The current alpha deterministically prefers the `debug` descriptor catalog and the first declared
+preview variant. Variant controls, saved-document refresh, and source navigation are added in later
+slices on top of this rendering path.

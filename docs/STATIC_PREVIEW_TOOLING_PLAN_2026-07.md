@@ -196,13 +196,18 @@ Implemented shell foundation:
   aliased-import, and source meta-annotation forms share the same bounded classifier.
 - Clicking the marker records the exact source file, symbol, and line in a project service, then
   opens the matching selection in the lazily created tool window.
+- The project service launches Gradle wrapper work in a cancellable background task. Discovery and
+  rendering remain separate processes, and superseded selections cannot publish stale UI state.
+- The IDE reads only the stable catalog/response subset, matches descriptors by source identity,
+  prefers the debug catalog deterministically, and invokes the existing single-preview task with
+  its descriptor and first declared variant.
+- Successful PNG output is decoded under file-size, pixel-count, and artifact-root boundaries.
+  Render diagnostics and bounded Gradle output are displayed in the same tool window on failure.
 - Unit tests cover project detection, source-selection validation, direct annotations, source
-  meta-annotations, and same-short-name rejection. Plugin configuration, archive structure, and
-  sandbox installation are verified against the pinned local Android Studio SDK.
-
-Remaining in this stage:
-
-- Invoke the single-preview Gradle task and display progress, image, and structured errors.
+  meta-annotations, same-short-name rejection, protocol hardening, nested-module task planning,
+  render result loading, and discovery failure handling. Plugin configuration, archive structure,
+  binary compatibility, and sandbox installation are verified against the pinned local Android
+  Studio SDK.
 
 ### Stage 5 — automatic refresh and navigation
 
