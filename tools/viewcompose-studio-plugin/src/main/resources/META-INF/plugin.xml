@@ -1,0 +1,15 @@
+<idea-plugin>
+    <id>com.viewcompose.studio.preview</id>
+    <name>ViewCompose Preview</name>
+    <vendor>ViewCompose</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow
+            id="ViewCompose Preview"
+            anchor="right"
+            icon="/icons/viewcomposePreview.svg"
+            factoryClass="com.viewcompose.studio.preview.ViewComposePreviewToolWindowFactory"/>
+    </extensions>
+</idea-plugin>

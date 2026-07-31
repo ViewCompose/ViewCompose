@@ -181,6 +181,25 @@ Exit criteria:
 - The plugin installs into the pinned Android Studio build.
 - A gutter action opens the matching static preview.
 
+Implemented shell foundation:
+
+- `tools/viewcompose-studio-plugin` is an independent Gradle 9.6.1 build using IntelliJ Platform
+  Gradle Plugin 2.18.1 and Kotlin/JVM 21. The root Android build does not include or evaluate it.
+- The build resolves the local Android Studio SDK and verifies the exact
+  `AI-261.25134.95.2612.15914620` product before verification, sandbox preparation, or packaging.
+- Project detection is a bounded file-system scan for the preview Gradle plugin or an exported
+  descriptor catalog. It does not trigger Gradle sync or depend on Android plugin implementation
+  APIs.
+- A lazily initialized `ViewCompose Preview` tool window is registered only for detected projects
+  and provides the stable UI host for later render states.
+- Unit tests cover project detection, while plugin configuration, archive structure, and sandbox
+  installation are verified against the pinned local Android Studio SDK.
+
+Remaining in this stage:
+
+- Add Kotlin preview-function line markers and open the matching tool window selection.
+- Invoke the single-preview Gradle task and display progress, image, and structured errors.
+
 ### Stage 5 — automatic refresh and navigation
 
 - Debounce saved document changes.
