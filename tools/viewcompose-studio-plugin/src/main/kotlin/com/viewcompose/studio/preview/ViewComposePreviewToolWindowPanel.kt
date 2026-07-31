@@ -54,6 +54,9 @@ internal class ViewComposePreviewToolWindowPanel(
     private var previewZoomOption: PreviewZoomOption = PreviewZoomOption.Fit
     private var selectedDiagnosticsTabIndex: Int = 0
     private var showLayoutBounds: Boolean = false
+    private var selectedRuntimeNodeId: String? = null
+    private var latestCaretLocation: PreviewCaretLocation? = null
+    private var nodeSelectionCoordinator: PreviewNodeSelectionCoordinator? = null
     private val messages: PreviewUiMessages
         get() = PreviewUiMessages.forLanguage(language)
 
@@ -67,6 +70,7 @@ internal class ViewComposePreviewToolWindowPanel(
 
     fun showState(state: ViewComposePreviewPanelState) {
         currentState = state
+        nodeSelectionCoordinator = null
         contentPanel.removeAll()
         when (state) {
             ViewComposePreviewPanelState.Empty -> showEmptyState()
@@ -76,6 +80,14 @@ internal class ViewComposePreviewToolWindowPanel(
         }
         contentPanel.revalidate()
         contentPanel.repaint()
+    }
+
+    fun selectSourceLocation(
+        filePath: String,
+        line: Int,
+    ) {
+        latestCaretLocation = PreviewCaretLocation(filePath, line)
+        nodeSelectionCoordinator?.selectSource(filePath, line)
     }
 
     fun setLanguage(language: PreviewUiLanguage) {
@@ -150,9 +162,22 @@ internal class ViewComposePreviewToolWindowPanel(
 
     private fun renderedContent(result: PreviewRenderOutcome.Success): JComponent {
         val snapshot = result.renderSnapshot
+        val selectionCoordinator = snapshot?.let {
+            PreviewNodeSelectionCoordinator(
+                snapshot = it,
+                initialNodeId = selectedRuntimeNodeId,
+                onSelectionChanged = { nodeId -> selectedRuntimeNodeId = nodeId },
+            ).also { coordinator ->
+                latestCaretLocation?.let { caret ->
+                    coordinator.selectSource(caret.filePath, caret.line)
+                }
+            }
+        }
+        nodeSelectionCoordinator = selectionCoordinator
         val previewPanel = previewImagePanel(
             image = result.image,
             nativeViews = snapshot?.nativeViewTree.orEmpty(),
+            selectionCoordinator = selectionCoordinator,
         )
         val renderedContent = if (snapshot == null) {
             previewPanel
@@ -160,8 +185,14 @@ internal class ViewComposePreviewToolWindowPanel(
             JTabbedPane().apply {
                 border = JBUI.Borders.emptyTop(8)
                 addTab(messages.text("tab.preview"), previewPanel)
-                addTab(messages.text("tab.structure"), renderStructurePanel(snapshot))
-                addTab(messages.text("tab.views"), nativeViewsPanel(snapshot.nativeViewTree))
+                addTab(
+                    messages.text("tab.structure"),
+                    renderStructurePanel(snapshot, selectionCoordinator),
+                )
+                addTab(
+                    messages.text("tab.views"),
+                    nativeViewsPanel(snapshot.nativeViewTree, selectionCoordinator),
+                )
                 addTab(messages.text("tab.composition"), compositionPanel(snapshot.composition))
                 addTab(messages.text("tab.patches"), patchesPanel(snapshot.patches))
                 selectedIndex = selectedDiagnosticsTabIndex.coerceIn(0, tabCount - 1)
@@ -207,7 +238,10 @@ internal class ViewComposePreviewToolWindowPanel(
         }
     }
 
-    private fun renderStructurePanel(snapshot: StudioPreviewRenderSnapshot): JComponent {
+    private fun renderStructurePanel(
+        snapshot: StudioPreviewRenderSnapshot,
+        selectionCoordinator: PreviewNodeSelectionCoordinator?,
+    ): JComponent {
         val structure = snapshot.structure
         val stats = snapshot.stats
         val summary = messages.text(
@@ -233,7 +267,7 @@ internal class ViewComposePreviewToolWindowPanel(
             add(readOnlyText(summary), BorderLayout.NORTH)
             add(
                 JBScrollPane(
-                    sourceNavigableTree(root).apply {
+                    sourceNavigableTree(root, selectionCoordinator).apply {
                         isRootVisible = false
                         showsRootHandles = true
                     },
@@ -285,12 +319,15 @@ internal class ViewComposePreviewToolWindowPanel(
         }
     }
 
-    private fun nativeViewsPanel(views: List<StudioPreviewNativeViewNode>): JComponent {
+    private fun nativeViewsPanel(
+        views: List<StudioPreviewNativeViewNode>,
+        selectionCoordinator: PreviewNodeSelectionCoordinator?,
+    ): JComponent {
         val root = DefaultMutableTreeNode(messages.text("tree.androidView"))
         views.forEach { view ->
             root.add(view.toSwingTreeNode())
         }
-        val tree = sourceNavigableTree(root).apply {
+        val tree = sourceNavigableTree(root, selectionCoordinator).apply {
             isRootVisible = false
             showsRootHandles = true
         }
@@ -305,6 +342,7 @@ internal class ViewComposePreviewToolWindowPanel(
     private fun previewImagePanel(
         image: BufferedImage,
         nativeViews: List<StudioPreviewNativeViewNode>,
+        selectionCoordinator: PreviewNodeSelectionCoordinator?,
     ): JComponent {
         val canvas = PreviewImageCanvas(
             image = image,
@@ -312,9 +350,11 @@ internal class ViewComposePreviewToolWindowPanel(
             initialZoomOption = previewZoomOption,
             sourceNavigationHint = messages.text("source.navigationHint"),
             onNavigateToSource = onNavigateToRuntimeSource,
+            onNodeSelected = { nodeId -> selectionCoordinator?.select(nodeId) },
         ).apply {
             showLayoutBounds = this@ViewComposePreviewToolWindowPanel.showLayoutBounds
         }
+        selectionCoordinator?.register(canvas::selectNode)
         val imageScrollPane = JBScrollPane(canvas).apply {
             border = JBUI.Borders.empty()
             preferredSize = Dimension(JBUI.scale(360), JBUI.scale(600))
@@ -434,9 +474,18 @@ internal class ViewComposePreviewToolWindowPanel(
         }
     }
 
-    private fun sourceNavigableTree(root: DefaultMutableTreeNode): JTree {
+    private fun sourceNavigableTree(
+        root: DefaultMutableTreeNode,
+        selectionCoordinator: PreviewNodeSelectionCoordinator?,
+    ): JTree {
         return JTree(root).apply {
+            var applyingLinkedSelection = false
             toolTipText = messages.text("source.navigationHint")
+            addTreeSelectionListener {
+                if (!applyingLinkedSelection) {
+                    selectionCoordinator?.select(selectionPath.nodeId())
+                }
+            }
             addMouseListener(
                 object : MouseAdapter() {
                     override fun mouseClicked(event: MouseEvent) {
@@ -459,6 +508,20 @@ internal class ViewComposePreviewToolWindowPanel(
                     }
                 },
             )
+            selectionCoordinator?.register { nodeId ->
+                applyingLinkedSelection = true
+                try {
+                    val linkedPath = nodeId?.let(root::findNodePath)
+                    if (linkedPath == null) {
+                        clearSelection()
+                    } else {
+                        selectionPath = linkedPath
+                        scrollPathToVisible(linkedPath)
+                    }
+                } finally {
+                    applyingLinkedSelection = false
+                }
+            }
         }
     }
 
@@ -623,6 +686,7 @@ private fun StudioPreviewRenderTreeNode.toSwingTreeNode(): DefaultMutableTreeNod
     val swingNode = DefaultMutableTreeNode(
         PreviewTreeEntry(
             label = label,
+            nodeId = nodeId,
             sourceCallSites = sourceCallSites,
         ),
     )
@@ -658,6 +722,7 @@ private fun StudioPreviewNativeViewNode.toSwingTreeNode(): DefaultMutableTreeNod
     val swingNode = DefaultMutableTreeNode(
         PreviewTreeEntry(
             label = label,
+            nodeId = nodeId,
             sourceCallSites = sourceCallSites,
         ),
     )
@@ -677,6 +742,7 @@ private class PreviewImageCanvas(
     initialZoomOption: PreviewZoomOption,
     private val sourceNavigationHint: String,
     private val onNavigateToSource: (List<StudioPreviewSourceCallSite>) -> Unit,
+    private val onNodeSelected: (String?) -> Unit,
 ) : JComponent() {
     var zoomOption: PreviewZoomOption = initialZoomOption
         set(value) {
@@ -718,10 +784,10 @@ private class PreviewImageCanvas(
                 }
 
                 override fun mouseClicked(event: MouseEvent) {
-                    selectedView = mappedViewAt(event.x, event.y)
-                    repaint()
+                    val mappedView = mappedViewAt(event.x, event.y)
+                    onNodeSelected(mappedView?.nodeId)
                     if (event.clickCount >= 2) {
-                        selectedView
+                        mappedView
                             ?.sourceCallSites
                             ?.takeIf(List<StudioPreviewSourceCallSite>::isNotEmpty)
                             ?.let(onNavigateToSource)
@@ -730,6 +796,13 @@ private class PreviewImageCanvas(
             },
         )
         updateScale()
+    }
+
+    fun selectNode(nodeId: String?) {
+        val next = nodeId?.let { id -> findNativeViewByNodeId(nativeViews, id) }
+        if (next == selectedView) return
+        selectedView = next
+        repaint()
     }
 
     fun updateViewportSize(size: Dimension) {
@@ -914,6 +987,7 @@ private const val SOURCE_NAVIGATION_ACTION = "viewcompose.preview.navigateToRunt
 
 private data class PreviewTreeEntry(
     val label: String,
+    val nodeId: String?,
     val sourceCallSites: List<StudioPreviewSourceCallSite>,
 ) {
     override fun toString(): String = label
@@ -925,6 +999,28 @@ private fun javax.swing.tree.TreePath.sourceCallSites(): List<StudioPreviewSourc
         ?.sourceCallSites
         ?.takeIf(List<StudioPreviewSourceCallSite>::isNotEmpty)
 }
+
+private fun javax.swing.tree.TreePath?.nodeId(): String? {
+    val node = this?.lastPathComponent as? DefaultMutableTreeNode ?: return null
+    return (node.userObject as? PreviewTreeEntry)?.nodeId
+}
+
+private fun DefaultMutableTreeNode.findNodePath(nodeId: String): javax.swing.tree.TreePath? {
+    val nodes = depthFirstEnumeration()
+    while (nodes.hasMoreElements()) {
+        val node = nodes.nextElement() as? DefaultMutableTreeNode ?: continue
+        val entry = node.userObject as? PreviewTreeEntry ?: continue
+        if (entry.nodeId == nodeId) {
+            return javax.swing.tree.TreePath(node.path)
+        }
+    }
+    return null
+}
+
+private data class PreviewCaretLocation(
+    val filePath: String,
+    val line: Int,
+)
 
 private data class PreviewImagePlacement(
     val left: Int,

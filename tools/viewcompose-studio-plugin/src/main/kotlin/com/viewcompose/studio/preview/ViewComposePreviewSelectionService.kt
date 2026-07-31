@@ -10,6 +10,7 @@ import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -268,6 +269,15 @@ internal class ViewComposePreviewSelectionService(
                 }
                 val documentManager = PsiDocumentManager.getInstance(project)
                 documentManager.commitDocument(editor.document)
+                FileDocumentManager.getInstance()
+                    .getFile(editor.document)
+                    ?.path
+                    ?.let { filePath ->
+                        attachedPanel?.selectSourceLocation(
+                            filePath = filePath,
+                            line = editor.document.getLineNumber(editor.caretModel.offset) + 1,
+                        )
+                    }
                 val selection = ApplicationManager.getApplication()
                     .runReadAction<PreviewSourceSelection?> {
                         val file = documentManager.getPsiFile(editor.document)
