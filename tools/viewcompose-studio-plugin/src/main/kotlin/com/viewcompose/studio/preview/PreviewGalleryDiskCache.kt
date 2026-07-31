@@ -299,7 +299,7 @@ private fun deleteGalleryEntry(path: Path) {
     }
 }
 
-private const val GALLERY_CACHE_SCHEMA_VERSION = 2
+private const val GALLERY_CACHE_SCHEMA_VERSION = 3
 private const val GALLERY_METADATA_FILE_NAME = "metadata.json"
 private const val GALLERY_IMAGE_FILE_NAME = "thumbnail.png"
 private const val MAXIMUM_GALLERY_METADATA_BYTES = 256L * 1024L
