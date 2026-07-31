@@ -36,4 +36,11 @@ internal class PreviewNodeSelectionCoordinator(
     ) {
         select(index.findNodeId(filePath, line))
     }
+
+    fun selectSource(
+        filePath: String,
+        lineCandidates: Collection<Int>,
+    ) {
+        select(index.findNodeId(filePath, lineCandidates))
+    }
 }

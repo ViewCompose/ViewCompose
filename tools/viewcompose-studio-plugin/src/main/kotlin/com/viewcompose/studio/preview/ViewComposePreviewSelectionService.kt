@@ -10,7 +10,6 @@ import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -24,6 +23,7 @@ import com.intellij.util.Alarm
 import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import org.jetbrains.kotlin.psi.KtCallExpression
 
 @Service(Service.Level.PROJECT)
 internal class ViewComposePreviewSelectionService(
@@ -269,21 +269,46 @@ internal class ViewComposePreviewSelectionService(
                 }
                 val documentManager = PsiDocumentManager.getInstance(project)
                 documentManager.commitDocument(editor.document)
-                FileDocumentManager.getInstance()
-                    .getFile(editor.document)
-                    ?.path
-                    ?.let { filePath ->
-                        attachedPanel?.selectSourceLocation(
-                            filePath = filePath,
-                            line = editor.document.getLineNumber(editor.caretModel.offset) + 1,
-                        )
-                    }
-                val selection = ApplicationManager.getApplication()
-                    .runReadAction<PreviewSourceSelection?> {
+                val followTarget = ApplicationManager.getApplication()
+                    .runReadAction<EditorFollowTarget?> {
                         val file = documentManager.getPsiFile(editor.document)
                             ?: return@runReadAction null
-                        file.previewSelectionAtOffset(editor.caretModel.offset)
+                        val caretOffset = editor.caretModel.offset
+                        val lineCandidates = linkedSetOf(
+                            editor.document.getLineNumber(caretOffset) + 1,
+                        )
+                        if (file.textLength > 0) {
+                            val elementOffset = caretOffset.coerceIn(0, file.textLength - 1)
+                            generateSequence(file.findElementAt(elementOffset)) { element ->
+                                element.parent
+                            }
+                                .filterIsInstance<KtCallExpression>()
+                                .firstOrNull()
+                                ?.textRange
+                                ?.startOffset
+                                ?.let { callOffset ->
+                                    lineCandidates +=
+                                        editor.document.getLineNumber(callOffset) + 1
+                                }
+                        }
+                        EditorFollowTarget(
+                            selection = file.previewSelectionAtOffset(caretOffset),
+                            sourceLocation = file.virtualFile?.path?.let { filePath ->
+                                EditorSourceLocation(
+                                    filePath = filePath,
+                                    lineCandidates = lineCandidates.toList(),
+                                )
+                            },
+                        )
                     }
+                    ?: return@addRequest
+                followTarget.sourceLocation?.let { source ->
+                    attachedPanel?.selectSourceLocation(
+                        filePath = source.filePath,
+                        lineCandidates = source.lineCandidates,
+                    )
+                }
+                val selection = followTarget.selection
                     ?: return@addRequest
                 val current = activeRequest.get()
                 if (current?.selection == selection) return@addRequest
@@ -347,6 +372,16 @@ private fun String.normalizedPathOrNull(): Path? {
 private data class ActivePreviewRequest(
     val selection: PreviewSourceSelection,
     val variantId: String?,
+)
+
+private data class EditorFollowTarget(
+    val selection: PreviewSourceSelection?,
+    val sourceLocation: EditorSourceLocation?,
+)
+
+private data class EditorSourceLocation(
+    val filePath: String,
+    val lineCandidates: List<Int>,
 )
 
 private const val EDITOR_FOLLOW_DELAY_MILLIS = 250

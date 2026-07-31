@@ -84,10 +84,10 @@ internal class ViewComposePreviewToolWindowPanel(
 
     fun selectSourceLocation(
         filePath: String,
-        line: Int,
+        lineCandidates: Collection<Int>,
     ) {
-        latestCaretLocation = PreviewCaretLocation(filePath, line)
-        nodeSelectionCoordinator?.selectSource(filePath, line)
+        latestCaretLocation = PreviewCaretLocation(filePath, lineCandidates.toList())
+        nodeSelectionCoordinator?.selectSource(filePath, lineCandidates)
     }
 
     fun setLanguage(language: PreviewUiLanguage) {
@@ -169,7 +169,7 @@ internal class ViewComposePreviewToolWindowPanel(
                 onSelectionChanged = { nodeId -> selectedRuntimeNodeId = nodeId },
             ).also { coordinator ->
                 latestCaretLocation?.let { caret ->
-                    coordinator.selectSource(caret.filePath, caret.line)
+                    coordinator.selectSource(caret.filePath, caret.lineCandidates)
                 }
             }
         }
@@ -1073,7 +1073,7 @@ private fun DefaultMutableTreeNode.findNodePath(nodeId: String): javax.swing.tre
 
 private data class PreviewCaretLocation(
     val filePath: String,
-    val line: Int,
+    val lineCandidates: List<Int>,
 )
 
 private data class PreviewImagePlacement(

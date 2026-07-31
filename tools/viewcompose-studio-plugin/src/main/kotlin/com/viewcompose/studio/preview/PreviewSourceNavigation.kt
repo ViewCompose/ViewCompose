@@ -1,7 +1,6 @@
 package com.viewcompose.studio.preview
 
 import java.nio.file.Path
-import kotlin.math.abs
 
 internal fun findMappedNativeViewAt(
     views: List<StudioPreviewNativeViewNode>,
@@ -34,8 +33,14 @@ internal class PreviewRuntimeNodeIndex private constructor(
     fun findNodeId(
         filePath: String,
         line: Int,
+    ): String? = findNodeId(filePath, listOf(line))
+
+    fun findNodeId(
+        filePath: String,
+        lineCandidates: Collection<Int>,
     ): String? {
-        if (line <= 0) return null
+        val validLines = lineCandidates.filterTo(LinkedHashSet()) { line -> line > 0 }
+        if (validLines.isEmpty()) return null
         val fileName = runCatching { Path.of(filePath).fileName?.toString() }
             .getOrNull()
             ?.takeIf(String::isNotBlank)
@@ -44,17 +49,11 @@ internal class PreviewRuntimeNodeIndex private constructor(
             .flatMap { entry ->
                 entry.sourceCallSites.asSequence()
                     .filter { callSite -> callSite.fileName == fileName }
-                    .map { callSite ->
-                        RuntimeSourceMatch(
-                            entry = entry,
-                            distance = abs(callSite.lineNumber - line),
-                        )
-                    }
+                    .filter { callSite -> callSite.lineNumber in validLines }
+                    .map { RuntimeSourceMatch(entry) }
             }
-            .filter { match -> match.distance <= MAXIMUM_CARET_LINE_DISTANCE }
             .minWithOrNull(
-                compareBy<RuntimeSourceMatch> { match -> match.distance }
-                    .thenBy { match -> match.entry.synthetic }
+                compareBy<RuntimeSourceMatch> { match -> match.entry.synthetic }
                     .thenByDescending { match -> match.entry.hasNativeView }
                     .thenByDescending { match -> match.entry.depth }
                     .thenBy { match -> match.entry.order },
@@ -164,10 +163,7 @@ private data class RuntimeNodeEntry(
 
 private data class RuntimeSourceMatch(
     val entry: RuntimeNodeEntry,
-    val distance: Int,
 )
-
-private const val MAXIMUM_CARET_LINE_DISTANCE = 8
 
 private fun StudioPreviewLayoutBounds.contains(
     x: Int,

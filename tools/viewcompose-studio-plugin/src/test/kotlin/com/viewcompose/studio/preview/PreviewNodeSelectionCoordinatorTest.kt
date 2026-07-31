@@ -39,7 +39,7 @@ class PreviewNodeSelectionCoordinatorTest {
 
         coordinator.selectSource(
             filePath = "/project/app/src/main/java/com/example/AboutPage.kt",
-            line = 46,
+            lineCandidates = listOf(46, 42),
         )
 
         assertEquals("text-node", coordinator.selectedNodeId)
