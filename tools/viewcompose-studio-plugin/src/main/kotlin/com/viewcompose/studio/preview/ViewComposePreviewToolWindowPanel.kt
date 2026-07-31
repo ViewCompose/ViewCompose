@@ -1884,14 +1884,12 @@ private class PreviewImageCanvas(
                 null,
             )
             if (showLayoutBounds) {
-                graphics2D.stroke = BasicStroke(JBUI.scale(1).toFloat())
-                nativeViews.forEach { view ->
+                previewLayoutBoundLayers(nativeViews).forEach { layer ->
                     graphics2D.paintViewBounds(
-                        view = view,
+                        layer = layer,
                         imageLeft = placement.left,
                         imageTop = placement.top,
                         scale = scale,
-                        depth = 0,
                     )
                 }
             }
@@ -2009,45 +2007,26 @@ private fun Graphics2D.paintSelectedView(
 }
 
 private fun Graphics2D.paintViewBounds(
-    view: StudioPreviewNativeViewNode,
+    layer: PreviewLayoutBoundLayer,
     imageLeft: Int,
     imageTop: Int,
     scale: Double,
-    depth: Int,
 ) {
-    val bounds = view.bounds
-    if (depth > 0 && bounds.width > 0 && bounds.height > 0) {
-        val style = previewLayoutDepthStyle(depth)
-        val baseColor = style.color
-        val scaledLeft = imageLeft + (bounds.left * scale).roundToInt()
-        val scaledTop = imageTop + (bounds.top * scale).roundToInt()
-        val scaledWidth = (bounds.width * scale).roundToInt().coerceAtLeast(1)
-        val scaledHeight = (bounds.height * scale).roundToInt().coerceAtLeast(1)
-        color = Color(baseColor.red, baseColor.green, baseColor.blue, style.fillAlpha)
-        fillRect(
-            scaledLeft,
-            scaledTop,
-            scaledWidth,
-            scaledHeight,
-        )
-        color = Color(baseColor.red, baseColor.green, baseColor.blue, style.strokeAlpha)
-        stroke = BasicStroke(JBUI.scale(style.strokeWidth).toFloat())
-        drawRect(
-            scaledLeft,
-            scaledTop,
-            (scaledWidth - 1).coerceAtLeast(0),
-            (scaledHeight - 1).coerceAtLeast(0),
-        )
-    }
-    view.children.forEach { child ->
-        paintViewBounds(
-            view = child,
-            imageLeft = imageLeft,
-            imageTop = imageTop,
-            scale = scale,
-            depth = depth + 1,
-        )
-    }
+    val bounds = layer.bounds
+    val style = previewLayoutDepthStyle(layer.depth)
+    val baseColor = style.color
+    val scaledLeft = imageLeft + (bounds.left * scale).roundToInt()
+    val scaledTop = imageTop + (bounds.top * scale).roundToInt()
+    val scaledWidth = (bounds.width * scale).roundToInt().coerceAtLeast(1)
+    val scaledHeight = (bounds.height * scale).roundToInt().coerceAtLeast(1)
+    color = Color(baseColor.red, baseColor.green, baseColor.blue, style.strokeAlpha)
+    stroke = BasicStroke(JBUI.scale(1).toFloat())
+    drawRect(
+        scaledLeft,
+        scaledTop,
+        (scaledWidth - 1).coerceAtLeast(0),
+        (scaledHeight - 1).coerceAtLeast(0),
+    )
 }
 
 internal fun nativeViewToolTip(
