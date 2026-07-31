@@ -1,5 +1,6 @@
 package com.viewcompose.studio.preview
 
+import java.awt.Point
 import java.lang.reflect.Proxy
 import javax.swing.JComponent
 
@@ -10,7 +11,7 @@ import javax.swing.JComponent
  */
 internal fun installNativePreviewMagnificationListener(
     component: JComponent,
-    onMagnification: (Double) -> Unit,
+    onMagnification: (magnification: Double, anchorPoint: Point?) -> Unit,
 ): AutoCloseable? {
     return runCatching {
         val listenerClass = Class.forName("com.apple.eawt.event.MagnificationListener")
@@ -40,7 +41,12 @@ internal fun installNativePreviewMagnificationListener(
                     magnification
                         ?.toDouble()
                         ?.takeIf(Double::isFinite)
-                        ?.let(onMagnification)
+                        ?.let { value ->
+                            onMagnification(
+                                value,
+                                runCatching { component.mousePosition?.let(::Point) }.getOrNull(),
+                            )
+                        }
                     event?.javaClass?.getMethod("consume")?.invoke(event)
                     null
                 }

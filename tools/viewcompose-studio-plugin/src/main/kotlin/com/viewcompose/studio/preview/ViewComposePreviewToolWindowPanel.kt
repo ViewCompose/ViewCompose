@@ -77,6 +77,7 @@ internal class ViewComposePreviewToolWindowPanel(
     private var showLayoutBounds: Boolean = false
     private var showLayoutDiagnostics: Boolean = true
     private var selectedRuntimeNodeId: String? = null
+    private val sourceSelectionGuard = PreviewSourceSelectionGuard()
     private var latestCaretLocation: PreviewCaretLocation? = null
     private var nodeSelectionCoordinator: PreviewNodeSelectionCoordinator? = null
     private var galleryDetailWorker: SwingWorker<BufferedImage, Unit>? = null
@@ -133,8 +134,14 @@ internal class ViewComposePreviewToolWindowPanel(
         filePath: String,
         lineCandidates: Collection<Int>,
     ) {
+        if (!sourceSelectionGuard.acceptsCaretSelection()) return
         latestCaretLocation = PreviewCaretLocation(filePath, lineCandidates.toList())
         nodeSelectionCoordinator?.selectSource(filePath, lineCandidates)
+    }
+
+    private fun navigateToRuntimeSource(callSites: List<StudioPreviewSourceCallSite>) {
+        sourceSelectionGuard.beginNavigation()
+        onNavigateToRuntimeSource(callSites)
     }
 
     fun setLanguage(language: PreviewUiLanguage) {
@@ -757,7 +764,7 @@ internal class ViewComposePreviewToolWindowPanel(
             initialZoomOption = previewZoomOption,
             initialCustomScale = previewCustomScale,
             sourceNavigationHint = messages.text("source.navigationHint"),
-            onNavigateToSource = onNavigateToRuntimeSource,
+            onNavigateToSource = ::navigateToRuntimeSource,
             onNodeSelected = { nodeId -> selectionCoordinator?.select(nodeId) },
             onContinuousZoomChanged = { scale -> previewCustomScale = scale },
         ).apply {
@@ -985,7 +992,7 @@ internal class ViewComposePreviewToolWindowPanel(
                         if (event.clickCount < 2) return
                         val path = getPathForLocation(event.x, event.y) ?: return
                         selectionPath = path
-                        path.sourceCallSites()?.let(onNavigateToRuntimeSource)
+                        path.sourceCallSites()?.let(::navigateToRuntimeSource)
                     }
                 },
             )
@@ -997,7 +1004,7 @@ internal class ViewComposePreviewToolWindowPanel(
                 SOURCE_NAVIGATION_ACTION,
                 object : AbstractAction() {
                     override fun actionPerformed(event: java.awt.event.ActionEvent?) {
-                        selectionPath?.sourceCallSites()?.let(onNavigateToRuntimeSource)
+                        selectionPath?.sourceCallSites()?.let(::navigateToRuntimeSource)
                     }
                 },
             )
@@ -1540,15 +1547,21 @@ private class PreviewImageCanvas(
     private var customScale: Double? = initialCustomScale?.let(::clampPreviewScale)
     private var selectedView: StudioPreviewNativeViewNode? = null
     private var nativeMagnificationRegistration: AutoCloseable? = null
+    private var toolTipRegistered: Boolean = false
     private val trackpadAxisLock = PreviewTrackpadAxisLock()
     private val doublePressTracker = PreviewDoublePressTracker()
+    private val toolTipResumeTimer = Timer(PREVIEW_TOOLTIP_RESUME_DELAY_MILLIS) {
+        registerToolTip()
+    }.apply {
+        isRepeats = false
+    }
 
     init {
         minimumSize = Dimension(1, 1)
         isOpaque = true
         isFocusable = true
-        ToolTipManager.sharedInstance().registerComponent(this)
         addMouseWheelListener { event ->
+            suppressToolTipForInteraction()
             if (event.isControlDown) {
                 trackpadAxisLock.reset()
                 event.consume()
@@ -1608,16 +1621,18 @@ private class PreviewImageCanvas(
 
     override fun addNotify() {
         super.addNotify()
+        registerToolTip()
         if (nativeMagnificationRegistration == null) {
             nativeMagnificationRegistration = installNativePreviewMagnificationListener(this) {
-                magnification ->
+                magnification, anchorPoint ->
                 val zoom = {
+                    suppressToolTipForInteraction()
                     applyContinuousScale(
                         nextScale = calculateMagnifiedPreviewScale(
                             currentScale = scale,
                             magnification = magnification,
                         ),
-                        anchorPoint = null,
+                        anchorPoint = anchorPoint,
                     )
                 }
                 if (SwingUtilities.isEventDispatchThread()) {
@@ -1632,7 +1647,40 @@ private class PreviewImageCanvas(
     override fun removeNotify() {
         nativeMagnificationRegistration?.close()
         nativeMagnificationRegistration = null
+        toolTipResumeTimer.stop()
+        unregisterToolTip()
         super.removeNotify()
+    }
+
+    private fun registerToolTip() {
+        if (toolTipRegistered || !isDisplayable) return
+        ToolTipManager.sharedInstance().registerComponent(this)
+        toolTipRegistered = true
+    }
+
+    private fun unregisterToolTip() {
+        if (!toolTipRegistered) return
+        ToolTipManager.sharedInstance().unregisterComponent(this)
+        toolTipRegistered = false
+    }
+
+    private fun suppressToolTipForInteraction() {
+        val manager = ToolTipManager.sharedInstance()
+        manager.mousePressed(
+            MouseEvent(
+                this,
+                MouseEvent.MOUSE_PRESSED,
+                System.currentTimeMillis(),
+                0,
+                0,
+                0,
+                1,
+                false,
+                MouseEvent.NOBUTTON,
+            ),
+        )
+        unregisterToolTip()
+        toolTipResumeTimer.restart()
     }
 
     private fun previewViewport(): JViewport? {
@@ -1680,10 +1728,12 @@ private class PreviewImageCanvas(
     }
 
     private fun navigateAt(point: Point) {
-        val sourceCallSites = mappedViewAt(point.x, point.y)
+        val mappedView = mappedViewAt(point.x, point.y)
+        val sourceCallSites = mappedView
             ?.sourceCallSites
             ?.takeIf(List<StudioPreviewSourceCallSite>::isNotEmpty)
         if (sourceCallSites != null) {
+            onNodeSelected(mappedView.nodeId)
             onNavigateToSource(sourceCallSites)
         } else {
             onBackgroundDoubleClick?.invoke()
@@ -1754,29 +1804,32 @@ private class PreviewImageCanvas(
         onContinuousZoomChanged(resolvedScale)
         updateScale()
         if (viewport != null) {
-            SwingUtilities.invokeLater {
-                val placement = imagePlacement()
-                val maxX = (viewport.viewSize.width - viewport.extentSize.width).coerceAtLeast(0)
-                val maxY = (viewport.viewSize.height - viewport.extentSize.height).coerceAtLeast(0)
-                viewport.viewPosition = Point(
-                    (placement.left + imageAnchorX * scale - anchorViewportOffset.x)
-                        .roundToInt()
-                        .coerceIn(0, maxX),
-                    (placement.top + imageAnchorY * scale - anchorViewportOffset.y)
-                        .roundToInt()
-                        .coerceIn(0, maxY),
-                )
-            }
+            viewport.viewSize = preferredSize
+            val placement = imagePlacement()
+            val maxX = (viewport.viewSize.width - viewport.extentSize.width).coerceAtLeast(0)
+            val maxY = (viewport.viewSize.height - viewport.extentSize.height).coerceAtLeast(0)
+            viewport.viewPosition = Point(
+                calculateAnchoredPreviewPosition(
+                    imageOffset = placement.left,
+                    imageAnchor = imageAnchorX,
+                    scale = scale,
+                    anchorViewportOffset = anchorViewportOffset.x,
+                    maximumPosition = maxX,
+                ),
+                calculateAnchoredPreviewPosition(
+                    imageOffset = placement.top,
+                    imageAnchor = imageAnchorY,
+                    scale = scale,
+                    anchorViewportOffset = anchorViewportOffset.y,
+                    maximumPosition = maxY,
+                ),
+            )
         }
     }
 
     override fun getToolTipText(event: MouseEvent): String? {
-        val view = mappedViewAt(event.x, event.y) ?: return null
-        return nativeViewToolTip(
-            view = view,
-            messages = null,
-            sourceNavigationHint = sourceNavigationHint,
-        )
+        mappedViewAt(event.x, event.y) ?: return null
+        return sourceNavigationHint
     }
 
     override fun paintComponent(graphics: Graphics) {
@@ -2026,6 +2079,7 @@ private val PREVIEW_TOOLBAR_BORDER = JBColor(Color(0xC9, 0xC9, 0xC9), Color(0x4A
 
 private const val SOURCE_NAVIGATION_ACTION = "viewcompose.preview.navigateToRuntimeSource"
 private const val ZOOM_EPSILON = 0.001
+private const val PREVIEW_TOOLTIP_RESUME_DELAY_MILLIS = 500
 
 private data class PreviewTreeEntry(
     val label: String,

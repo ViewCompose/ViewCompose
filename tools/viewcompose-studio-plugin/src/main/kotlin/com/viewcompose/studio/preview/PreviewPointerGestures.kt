@@ -92,6 +92,24 @@ internal class PreviewDoublePressTracker(
     }
 }
 
+/** Prevents an IDE caret move caused by preview navigation from replacing the exact node choice. */
+internal class PreviewSourceSelectionGuard(
+    private val clockNanos: () -> Long = System::nanoTime,
+    private val durationNanos: Long = DEFAULT_SOURCE_SELECTION_GUARD_NANOS,
+) {
+    private var suppressedUntilNanos: Long = 0L
+
+    init {
+        require(durationNanos > 0L)
+    }
+
+    fun beginNavigation() {
+        suppressedUntilNanos = clockNanos() + durationNanos
+    }
+
+    fun acceptsCaretSelection(): Boolean = clockNanos() >= suppressedUntilNanos
+}
+
 private data class PreviewPointerPress(
     val eventMillis: Long,
     val x: Int,
@@ -103,3 +121,4 @@ private const val DEFAULT_AXIS_DOMINANCE_RATIO = 1.35
 private const val DEFAULT_AXIS_RESET_DELAY_MILLIS = 180L
 private const val DEFAULT_DOUBLE_PRESS_INTERVAL_MILLIS = 500L
 private const val DEFAULT_DOUBLE_PRESS_DISTANCE_PIXELS = 8
+private const val DEFAULT_SOURCE_SELECTION_GUARD_NANOS = 1_000_000_000L

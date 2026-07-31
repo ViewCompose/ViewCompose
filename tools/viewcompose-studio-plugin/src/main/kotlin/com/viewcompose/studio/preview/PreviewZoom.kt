@@ -92,6 +92,21 @@ internal fun calculatePreviewScrollPosition(
         .coerceIn(0, maximumPosition)
 }
 
+internal fun calculateAnchoredPreviewPosition(
+    imageOffset: Int,
+    imageAnchor: Double,
+    scale: Double,
+    anchorViewportOffset: Int,
+    maximumPosition: Int,
+): Int {
+    require(imageAnchor.isFinite()) { "Preview image anchor must be finite." }
+    require(scale.isFinite() && scale > 0.0) { "Preview scale must be finite and positive." }
+    require(maximumPosition >= 0) { "Maximum preview position must be non-negative." }
+    return (imageOffset + imageAnchor * scale - anchorViewportOffset)
+        .roundToInt()
+        .coerceIn(0, maximumPosition)
+}
+
 private const val PREVIEW_FIT_PADDING_PIXELS = 16
 private const val MAXIMUM_FIT_SCALE = 1.0
 private const val MINIMUM_PREVIEW_SCALE = 0.05

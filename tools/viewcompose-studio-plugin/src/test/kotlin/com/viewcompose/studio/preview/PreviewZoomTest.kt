@@ -96,4 +96,28 @@ class PreviewZoomTest {
         assertEquals(500, calculatePreviewScrollPosition(490, 500, 2.0))
     }
 
+    @Test
+    fun `anchored zoom keeps the same image point under the pointer`() {
+        assertEquals(
+            400,
+            calculateAnchoredPreviewPosition(
+                imageOffset = 0,
+                imageAnchor = 300.0,
+                scale = 2.0,
+                anchorViewportOffset = 200,
+                maximumPosition = 1_000,
+            ),
+        )
+        assertEquals(
+            0,
+            calculateAnchoredPreviewPosition(
+                imageOffset = 100,
+                imageAnchor = 50.0,
+                scale = 0.5,
+                anchorViewportOffset = 200,
+                maximumPosition = 1_000,
+            ),
+        )
+    }
+
 }

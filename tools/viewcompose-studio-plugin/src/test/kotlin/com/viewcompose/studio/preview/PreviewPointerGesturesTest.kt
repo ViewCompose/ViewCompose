@@ -53,4 +53,21 @@ class PreviewPointerGesturesTest {
         assertFalse(tracker.register(awtClickCount = 1, eventMillis = 1_200, x = 50, y = 50))
         assertTrue(tracker.register(awtClickCount = 2, eventMillis = 2_000, x = 0, y = 0))
     }
+
+    @Test
+    fun `preview navigation temporarily rejects caret linked selection`() {
+        var now = 100L
+        val guard = PreviewSourceSelectionGuard(
+            clockNanos = { now },
+            durationNanos = 50L,
+        )
+
+        assertTrue(guard.acceptsCaretSelection())
+        guard.beginNavigation()
+        assertFalse(guard.acceptsCaretSelection())
+        now = 149L
+        assertFalse(guard.acceptsCaretSelection())
+        now = 150L
+        assertTrue(guard.acceptsCaretSelection())
+    }
 }
