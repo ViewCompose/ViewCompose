@@ -3,6 +3,7 @@ package com.viewcompose.preview.runner
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import app.cash.paparazzi.detectEnvironment
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.content.res.Configuration
 import android.view.View
@@ -26,6 +27,7 @@ import com.viewcompose.preview.tooling.PreviewVariant
 import com.viewcompose.widget.core.Environment
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.Theme
+import com.viewcompose.widget.core.UiThemeDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -238,6 +240,47 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals("ar-rEG", configuration.toDeviceConfig().locale)
         assertEquals(View.LAYOUT_DIRECTION_RTL, observedResourceLayoutDirection)
         assertEquals(Configuration.UI_MODE_NIGHT_YES, observedNightMode)
+    }
+
+    @Test
+    fun `preview canvas paints the requested theme background`() {
+        listOf(
+            PreviewTheme.Light to UiThemeDefaults.light().colors.background,
+            PreviewTheme.Dark to UiThemeDefaults.dark().colors.background,
+        ).forEachIndexed { index, (theme, expectedBackground) ->
+            val variant = PreviewVariant(
+                id = theme.name.lowercase(),
+                displayName = theme.name,
+                configuration = PreviewConfiguration(
+                    theme = theme,
+                    apiLevel = Build.VERSION.SDK_INT,
+                ),
+            )
+            val themedEntry = entry().let { original ->
+                original.copy(
+                    descriptor = original.descriptor.copy(variants = listOf(variant)),
+                )
+            }
+            val themedRequest = request(
+                entry = themedEntry,
+                outputDirectory = temporaryFolder.newFolder("theme-canvas-$index"),
+            )
+            paparazzi.unsafeUpdateConfig(
+                deviceConfig = themedRequest.configuration.toDeviceConfig(),
+            )
+
+            val mount = StaticPreviewRenderer.mount(
+                context = paparazzi.context,
+                request = themedRequest,
+                entry = themedEntry,
+            )
+
+            assertTrue(mount is StaticPreviewMountResult.Success)
+            (mount as StaticPreviewMountResult.Success).frame.use { frame ->
+                val background = frame.rootView.background as ColorDrawable
+                assertEquals(expectedBackground, background.color)
+            }
+        }
     }
 
     @Test

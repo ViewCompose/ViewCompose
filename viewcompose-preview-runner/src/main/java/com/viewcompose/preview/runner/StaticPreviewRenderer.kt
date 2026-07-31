@@ -75,7 +75,13 @@ object StaticPreviewRenderer {
             .coerceAtLeast(1)
         val heightPx = (configuration.heightDp * configuration.density).roundToInt()
             .coerceAtLeast(1)
-        val root = FrameLayout(previewContext)
+        val themeTokens = when (configuration.theme) {
+            PreviewTheme.Light -> UiThemeDefaults.light()
+            PreviewTheme.Dark -> UiThemeDefaults.dark()
+        }
+        val root = FrameLayout(previewContext).apply {
+            setBackgroundColor(themeTokens.colors.background)
+        }
         var renderResult: RenderTreeResult? = null
         var renderFailure: RenderFailure? = null
         var session: RenderSession? = null
@@ -102,10 +108,7 @@ object StaticPreviewRenderer {
                     ),
                 ) {
                     UiTheme(
-                        tokens = when (configuration.theme) {
-                            PreviewTheme.Light -> UiThemeDefaults.light()
-                            PreviewTheme.Dark -> UiThemeDefaults.dark()
-                        },
+                        tokens = themeTokens,
                     ) {
                         entry.content(this)
                     }
