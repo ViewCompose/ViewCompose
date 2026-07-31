@@ -15,6 +15,7 @@ import com.android.resources.ScreenOrientation
 import com.viewcompose.preview.tooling.PreviewConfiguration
 import com.viewcompose.preview.tooling.PreviewDescriptor
 import com.viewcompose.preview.tooling.PreviewJvmEntryPoint
+import com.viewcompose.preview.tooling.PreviewNativeViewNode
 import com.viewcompose.preview.tooling.PreviewProtocolJson
 import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewRenderStatus
@@ -102,6 +103,13 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals(1, snapshot.structure.vnodeCount)
         assertEquals(1, snapshot.stats.inserts)
         assertTrue(snapshot.tree.containsNodeType("Text"))
+        val nativeRoot = snapshot.nativeViewTree.single()
+        assertEquals("android.widget.FrameLayout", nativeRoot.className)
+        assertEquals(request.configuration.widthDp, nativeRoot.bounds.right)
+        assertEquals(request.configuration.heightDp, nativeRoot.bounds.bottom)
+        val nativeText = checkNotNull(nativeRoot.findNativeView("android.widget.TextView"))
+        assertTrue(nativeText.bounds.right > nativeText.bounds.left)
+        assertTrue(nativeText.bounds.bottom > nativeText.bounds.top)
         assertNotNull(snapshot.composition)
     }
 
@@ -296,6 +304,13 @@ class StaticPreviewWorkerPaparazziTest {
     private fun List<PreviewRenderTreeNode>.containsNodeType(type: String): Boolean {
         return any { node ->
             node.type == type || node.children.containsNodeType(type)
+        }
+    }
+
+    private fun PreviewNativeViewNode.findNativeView(className: String): PreviewNativeViewNode? {
+        if (this.className == className) return this
+        return children.firstNotNullOfOrNull { child ->
+            child.findNativeView(className)
         }
     }
 
