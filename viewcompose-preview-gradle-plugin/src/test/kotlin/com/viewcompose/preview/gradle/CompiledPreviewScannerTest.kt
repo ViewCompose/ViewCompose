@@ -21,10 +21,14 @@ class CompiledPreviewScannerTest {
     fun `discovers direct and dependency meta previews without loading classes`() {
         val classes = temporaryFolder.newFolder("classes")
         val sources = temporaryFolder.newFolder("sources")
-        sources.resolve("sample").mkdirs()
-        sources.resolve("sample/PreviewSamples.kt").writeText(
-            "\n".repeat(39) + "fun sample() = Unit\nfun themes() = Unit\n",
-        )
+        val sourceFile = sources.resolve("unconventional/path/PreviewSamples.kt").apply {
+            parentFile.mkdirs()
+            writeText(
+                "package sample\n" +
+                    "\n".repeat(38) +
+                    "fun sample() = Unit\nfun themes() = Unit\n",
+            )
+        }
         classes.writeClass(
             "sample/PreviewSamplesKt",
             previewClass(
@@ -78,7 +82,7 @@ class CompiledPreviewScannerTest {
         assertEquals(PreviewTheme.Dark, sample.variants.single().configuration.theme)
         assertEquals(40, sample.sourceLocation?.line)
         assertEquals(
-            sources.resolve("sample/PreviewSamples.kt").absolutePath,
+            sourceFile.absolutePath,
             sample.sourceLocation?.filePath,
         )
 

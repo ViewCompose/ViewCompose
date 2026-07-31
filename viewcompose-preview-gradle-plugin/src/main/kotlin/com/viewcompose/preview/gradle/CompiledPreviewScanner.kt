@@ -38,6 +38,19 @@ internal class CompiledPreviewScanner(
     )
     private val scannedClasses = linkedMapOf<String, ScannedClass>()
     private val metaPreviewCache = mutableMapOf<String, List<RawPreview>>()
+    private val sourceFilesByName: Map<String, List<File>> by lazy {
+        sourceDirectories.asSequence()
+            .filter(File::isDirectory)
+            .flatMap { directory ->
+                directory.walkTopDown()
+                    .filter { file ->
+                        file.isFile && file.extension in SOURCE_FILE_EXTENSIONS
+                    }
+            }
+            .distinctBy(File::getAbsolutePath)
+            .sortedBy(File::getAbsolutePath)
+            .groupBy(File::getName)
+    }
 
     fun scan(): PreviewDiscoveryOutput {
         projectClassDirectories
@@ -194,9 +207,13 @@ internal class CompiledPreviewScanner(
         val relativePath = listOf(packagePath, sourceFile.orEmpty())
             .filter(String::isNotBlank)
             .joinToString("/")
-        val resolvedFile = sourceDirectories.asSequence()
+        val conventionalFile = sourceDirectories.asSequence()
             .map { root -> root.resolve(relativePath) }
             .firstOrNull(File::isFile)
+        val resolvedFile = conventionalFile ?: resolveUnconventionalSourceFile(
+            sourceFile = sourceFile,
+            packagePath = packagePath,
+        )
         return PreviewSourceLocation(
             filePath = resolvedFile?.absolutePath
                 ?: sourceFile
@@ -204,6 +221,29 @@ internal class CompiledPreviewScanner(
             line = method.firstLine.coerceAtLeast(1),
             symbolName = method.name,
         )
+    }
+
+    private fun resolveUnconventionalSourceFile(
+        sourceFile: String?,
+        packagePath: String,
+    ): File? {
+        val candidates = sourceFile?.let(sourceFilesByName::get).orEmpty()
+        if (candidates.size == 1) return candidates.single()
+        val expectedPackage = packagePath.replace('/', '.')
+        return candidates.singleOrNull { candidate ->
+            candidate.declaredPackage() == expectedPackage
+        }
+    }
+}
+
+private fun File.declaredPackage(): String? {
+    return useLines { lines ->
+        lines.map(String::trim)
+            .firstOrNull { line -> line.startsWith("package ") }
+            ?.removePrefix("package ")
+            ?.substringBefore(';')
+            ?.trim()
+            ?.takeIf(String::isNotEmpty)
     }
 }
 
@@ -535,3 +575,4 @@ private const val PREVIEWS_DESCRIPTOR =
     "Lcom/viewcompose/preview/tooling/ViewComposePreviews;"
 private const val ENTRY_POINT_DESCRIPTOR =
     "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V"
+private val SOURCE_FILE_EXTENSIONS = setOf("java", "kt")
