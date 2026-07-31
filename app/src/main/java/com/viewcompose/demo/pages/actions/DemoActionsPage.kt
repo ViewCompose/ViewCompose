@@ -1,5 +1,7 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
@@ -44,6 +46,22 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
+
+@ViewComposePreview(
+    name = "ActionsPage · Light",
+    group = "Demo",
+    widthDp = 411,
+    theme = PreviewTheme.Light,
+)
+@ViewComposePreview(
+    name = "ActionsPage · Dark",
+    group = "Demo",
+    widthDp = 411,
+    theme = PreviewTheme.Dark,
+)
+fun UiTreeBuilder.PreviewActionsPage() {
+    ActionsPage(initialPageIndex = 0)
+}
 
 internal fun UiTreeBuilder.ActionsPage(
     initialPageIndex: Int = 0,
