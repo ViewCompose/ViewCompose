@@ -41,6 +41,8 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - automatic refresh when the selected preview source is saved;
 - clickable structured diagnostics that navigate back to their source location;
 - bounded render-snapshot inspection with VNode structure, patch, skip, and recomposition details;
+- a native Android View tree with final measured sizes and root-relative layout coordinates;
+- an optional color-coded layout-bound overlay drawn directly over the static preview;
 - bounded PNG loading plus structured render diagnostics and Gradle failure output;
 - an explicit AI-261 minimum build and exact local-build verification.
 
