@@ -92,7 +92,17 @@ internal data class StudioPreviewRenderStructure(
 internal data class StudioPreviewRenderTreeNode(
     val type: String,
     val key: String?,
+    val nodeId: String?,
+    val sourceCallSites: List<StudioPreviewSourceCallSite>,
+    val synthetic: Boolean,
     val children: List<StudioPreviewRenderTreeNode>,
+)
+
+internal data class StudioPreviewSourceCallSite(
+    val className: String,
+    val methodName: String,
+    val fileName: String,
+    val lineNumber: Int,
 )
 
 internal data class StudioPreviewNativeViewNode(
@@ -101,6 +111,9 @@ internal data class StudioPreviewNativeViewNode(
     val measuredWidth: Int,
     val measuredHeight: Int,
     val visibility: String,
+    val nodeId: String?,
+    val sourceCallSites: List<StudioPreviewSourceCallSite>,
+    val synthetic: Boolean,
     val children: List<StudioPreviewNativeViewNode>,
 )
 
@@ -260,6 +273,9 @@ private fun JsonObject.toRenderTreeNode(
     return StudioPreviewRenderTreeNode(
         type = requiredString("type"),
         key = optionalString("key"),
+        nodeId = optionalString("nodeId"),
+        sourceCallSites = sourceCallSites(),
+        synthetic = optionalBoolean("synthetic") ?: false,
         children = optionalArray("children").map { child ->
             child.requiredObject("tree child").toRenderTreeNode(
                 budget = budget,
@@ -288,6 +304,9 @@ private fun JsonObject.toNativeViewNode(
         measuredWidth = optionalInt("measuredWidth") ?: 0,
         measuredHeight = optionalInt("measuredHeight") ?: 0,
         visibility = optionalString("visibility") ?: "VISIBLE",
+        nodeId = optionalString("nodeId"),
+        sourceCallSites = sourceCallSites(),
+        synthetic = optionalBoolean("synthetic") ?: false,
         children = optionalArray("children").map { child ->
             child.requiredObject("native View child").toNativeViewNode(
                 budget = budget,
@@ -295,6 +314,20 @@ private fun JsonObject.toNativeViewNode(
             )
         },
     )
+}
+
+private fun JsonObject.sourceCallSites(): List<StudioPreviewSourceCallSite> {
+    return optionalArray("sourceCallSites")
+        .take(MAXIMUM_SOURCE_CALL_SITES)
+        .map { element ->
+            val source = element.requiredObject("source call site")
+            StudioPreviewSourceCallSite(
+                className = source.requiredString("className"),
+                methodName = source.requiredString("methodName"),
+                fileName = source.requiredString("fileName"),
+                lineNumber = source.requiredInt("lineNumber"),
+            )
+        }
 }
 
 private fun JsonObject.toPatchRecord(): StudioPreviewPatchRecord {
@@ -507,6 +540,7 @@ private class SnapshotParseBudget {
 
 private const val SUPPORTED_PREVIEW_PROTOCOL_VERSION = 1
 private const val MAXIMUM_RENDER_SNAPSHOT_BYTES = 16L * 1024L * 1024L
+private const val MAXIMUM_SOURCE_CALL_SITES = 16
 private const val MAXIMUM_RENDER_TREE_DEPTH = 256
 private const val MAXIMUM_RENDER_TREE_NODES = 100_000
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")

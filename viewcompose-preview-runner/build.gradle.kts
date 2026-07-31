@@ -39,6 +39,7 @@ dependencies {
     implementation(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-widget-core"))
     implementation(project(":viewcompose-host-android"))
+    implementation(project(":viewcompose-renderer"))
 
     testImplementation(libs.junit)
     testImplementation(libs.paparazzi)

@@ -51,7 +51,21 @@ data class PreviewRenderStructure(
 data class PreviewRenderTreeNode(
     val type: String,
     val key: String? = null,
+    val nodeId: String? = null,
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
     val children: List<PreviewRenderTreeNode> = emptyList(),
+)
+
+/**
+ * One JVM line-table call site associated with a preview node.
+ */
+@Serializable
+data class PreviewSourceCallSite(
+    val className: String,
+    val methodName: String,
+    val fileName: String,
+    val lineNumber: Int,
 )
 
 /**
@@ -68,6 +82,9 @@ data class PreviewNativeViewNode(
     val measuredWidth: Int,
     val measuredHeight: Int,
     val visibility: String,
+    val nodeId: String? = null,
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
     val children: List<PreviewNativeViewNode> = emptyList(),
 )
 

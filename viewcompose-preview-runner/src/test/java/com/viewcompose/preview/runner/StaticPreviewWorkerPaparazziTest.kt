@@ -105,6 +105,13 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals(1, snapshot.structure.vnodeCount)
         assertEquals(1, snapshot.stats.inserts)
         assertTrue(snapshot.tree.containsNodeType("Text"))
+        val renderText = checkNotNull(snapshot.tree.findNodeType("Text"))
+        assertTrue(renderText.nodeId?.startsWith("node-") == true)
+        assertTrue(
+            renderText.sourceCallSites.any { source ->
+                source.fileName == "StaticPreviewWorkerPaparazziTest.kt"
+            },
+        )
         val nativeRoot = snapshot.nativeViewTree.single()
         assertEquals("android.widget.FrameLayout", nativeRoot.className)
         assertEquals(request.configuration.widthDp, nativeRoot.bounds.right)
@@ -112,6 +119,8 @@ class StaticPreviewWorkerPaparazziTest {
         val nativeText = checkNotNull(nativeRoot.findNativeView("android.widget.TextView"))
         assertTrue(nativeText.bounds.right > nativeText.bounds.left)
         assertTrue(nativeText.bounds.bottom > nativeText.bounds.top)
+        assertEquals(renderText.nodeId, nativeText.nodeId)
+        assertEquals(renderText.sourceCallSites, nativeText.sourceCallSites)
         assertNotNull(snapshot.composition)
     }
 
@@ -347,6 +356,12 @@ class StaticPreviewWorkerPaparazziTest {
     private fun List<PreviewRenderTreeNode>.containsNodeType(type: String): Boolean {
         return any { node ->
             node.type == type || node.children.containsNodeType(type)
+        }
+    }
+
+    private fun List<PreviewRenderTreeNode>.findNodeType(type: String): PreviewRenderTreeNode? {
+        return firstNotNullOfOrNull { node ->
+            node.takeIf { it.type == type } ?: node.children.findNodeType(type)
         }
     }
 

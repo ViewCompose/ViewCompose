@@ -2,6 +2,8 @@ package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.AndroidViewOperation
+import com.viewcompose.ui.tooling.UiNodeTooling
+import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 
 /**
  * 单次 render/reconcile 的操作统计。
@@ -109,6 +111,7 @@ data class RenderTreeResult(
 data class RenderTreeNode(
     val type: NodeType,
     val key: Any?,
+    val toolingMetadata: UiNodeToolingMetadata? = null,
     val children: List<RenderTreeNode> = emptyList(),
 ) {
     companion object {
@@ -121,6 +124,7 @@ data class RenderTreeNode(
                 RenderTreeNode(
                     type = node.type,
                     key = node.key,
+                    toolingMetadata = UiNodeTooling.metadataOf(node),
                     children = from(node.children),
                 )
             }

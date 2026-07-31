@@ -81,6 +81,15 @@ class StudioPreviewProtocolTest {
                     {
                       "type": "Text",
                       "key": "title",
+                      "nodeId": "node-title",
+                      "sourceCallSites": [
+                        {
+                          "className": "sample.SampleKt",
+                          "methodName": "SampleCard",
+                          "fileName": "Sample.kt",
+                          "lineNumber": 24
+                        }
+                      ],
                       "children": []
                     }
                   ]
@@ -110,6 +119,15 @@ class StudioPreviewProtocolTest {
                       "measuredWidth": 224,
                       "measuredHeight": 64,
                       "visibility": "VISIBLE",
+                      "nodeId": "node-title",
+                      "sourceCallSites": [
+                        {
+                          "className": "sample.SampleKt",
+                          "methodName": "SampleCard",
+                          "fileName": "Sample.kt",
+                          "lineNumber": 24
+                        }
+                      ],
                       "children": []
                     }
                   ]
@@ -156,11 +174,20 @@ class StudioPreviewProtocolTest {
         assertEquals(7, snapshot.structure.vnodeCount)
         assertEquals(4, snapshot.stats.inserts)
         assertEquals("Text", snapshot.tree.single().children.single().type)
+        assertEquals("node-title", snapshot.tree.single().children.single().nodeId)
+        assertEquals(
+            24,
+            snapshot.tree.single().children.single().sourceCallSites.single().lineNumber,
+        )
         assertEquals(
             "android.widget.TextView",
             snapshot.nativeViewTree.single().children.single().className,
         )
         assertEquals(224, snapshot.nativeViewTree.single().children.single().bounds.width)
+        assertEquals(
+            "node-title",
+            snapshot.nativeViewTree.single().children.single().nodeId,
+        )
         assertEquals("Insert", snapshot.patches.single().operation)
         assertTrue(snapshot.composition.scopes.single().recomposed)
         assertEquals(

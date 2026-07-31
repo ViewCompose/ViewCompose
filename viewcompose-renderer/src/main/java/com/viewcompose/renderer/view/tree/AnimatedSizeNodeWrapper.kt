@@ -16,6 +16,7 @@ import com.viewcompose.ui.modifier.ZIndexModifierElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
+import com.viewcompose.ui.tooling.UiNodeTooling
 
 /**
  * 将 animateContentSize modifier 提升为显式 AnimatedSizeHost 节点。
@@ -51,7 +52,10 @@ internal object AnimatedSizeNodeWrapper {
             return if (wrappedChildren === node.children) {
                 node
             } else {
-                node.copy(children = wrappedChildren)
+                UiNodeTooling.inheritCopy(
+                    target = node.copy(children = wrappedChildren),
+                    source = node,
+                )
             }
         }
         val animateElement = node.modifier.elements
@@ -61,24 +65,34 @@ internal object AnimatedSizeNodeWrapper {
             ?: return if (wrappedChildren === node.children) {
                 node
             } else {
-                node.copy(children = wrappedChildren)
+                UiNodeTooling.inheritCopy(
+                    target = node.copy(children = wrappedChildren),
+                    source = node,
+                )
             }
         val withoutAnimate = node.modifier.elements.filterNot { it is AnimateContentSizeModifierElement }
         val (hostElements, childElements) = splitHostAndChildElements(withoutAnimate)
         // 尺寸、margin、parent-data 等布局 modifier 必须留在外层 host，内容 modifier 留给原节点。
         // Layout modifiers such as size, margin, and parent data must stay on the outer host; content modifiers stay on the original node.
-        val wrappedChild = node.copy(
-            modifier = childElements.toModifier(),
-            children = wrappedChildren,
-        )
-        return VNode(
-            type = NodeType.AnimatedSizeHost,
-            key = node.key?.let(::AnimatedSizeHostKey),
-            spec = AnimatedSizeHostNodeProps(
-                animationSpec = animateElement.animationSpec,
+        val wrappedChild = UiNodeTooling.inheritCopy(
+            target = node.copy(
+                modifier = childElements.toModifier(),
+                children = wrappedChildren,
             ),
-            modifier = hostElements.toModifier(),
-            children = listOf(wrappedChild),
+            source = node,
+        )
+        return UiNodeTooling.inheritSynthetic(
+            target = VNode(
+                type = NodeType.AnimatedSizeHost,
+                key = node.key?.let(::AnimatedSizeHostKey),
+                spec = AnimatedSizeHostNodeProps(
+                    animationSpec = animateElement.animationSpec,
+                ),
+                modifier = hostElements.toModifier(),
+                children = listOf(wrappedChild),
+            ),
+            source = node,
+            discriminator = "animated-size",
         )
     }
 

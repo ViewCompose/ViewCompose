@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
+import com.viewcompose.renderer.view.tree.ViewNodeToolingRegistry
 import com.viewcompose.preview.tooling.PreviewCompositionLocal
 import com.viewcompose.preview.tooling.PreviewCompositionSnapshot
 import com.viewcompose.preview.tooling.PreviewDiagnostic
@@ -22,10 +23,13 @@ import com.viewcompose.preview.tooling.PreviewRenderSnapshot
 import com.viewcompose.preview.tooling.PreviewRenderStats
 import com.viewcompose.preview.tooling.PreviewRenderStructure
 import com.viewcompose.preview.tooling.PreviewRenderTreeNode
+import com.viewcompose.preview.tooling.PreviewSourceCallSite
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.environment.UiLocaleList
+import com.viewcompose.ui.tooling.UiNodeTooling
+import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.widget.core.RenderFailure
 import com.viewcompose.widget.core.RenderTreeResult
@@ -86,8 +90,9 @@ object StaticPreviewRenderer {
         var renderFailure: RenderFailure? = null
         var session: RenderSession? = null
 
-        return try {
-            session = renderInto(
+        return UiNodeTooling.withSourceCapture {
+            try {
+                session = renderInto(
                 container = root,
                 debug = false,
                 debugTag = "ViewComposePreview",
@@ -147,16 +152,17 @@ object StaticPreviewRenderer {
                     ),
                 )
             }
-        } catch (error: Throwable) {
-            error.throwIfFatalPreviewWorkerError()
-            session?.dispose()
-            StaticPreviewMountResult.Failure(
-                diagnostic = request.renderDiagnostic(
-                    message = "Preview render threw ${error::class.java.simpleName}.",
-                    phase = "render",
-                    details = error.stackTraceToString(),
-                ),
-            )
+            } catch (error: Throwable) {
+                error.throwIfFatalPreviewWorkerError()
+                session?.dispose()
+                StaticPreviewMountResult.Failure(
+                    diagnostic = request.renderDiagnostic(
+                        message = "Preview render threw ${error::class.java.simpleName}.",
+                        phase = "render",
+                        details = error.stackTraceToString(),
+                    ),
+                )
+            }
         }
     }
 }
@@ -223,9 +229,13 @@ private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSna
         ),
         warnings = warnings,
         tree = tree.map { node ->
+            val tooling = node.toolingMetadata
             PreviewRenderTreeNode(
                 type = node.type.toString(),
                 key = node.key?.toString(),
+                nodeId = tooling?.nodeId,
+                sourceCallSites = tooling.toPreviewSourceCallSites(),
+                synthetic = tooling?.synthetic == true,
                 children = node.children.toPreviewTreeNodes(),
             )
         },
@@ -274,6 +284,7 @@ private fun View.toPreviewNativeViewNode(
     absoluteLeft: Int,
     absoluteTop: Int,
 ): PreviewNativeViewNode {
+    val tooling = ViewNodeToolingRegistry.metadataOf(this)
     val nodeLeft = absoluteLeft + translationX.roundToInt()
     val nodeTop = absoluteTop + translationY.roundToInt()
     val childOriginLeft = nodeLeft - scrollX
@@ -305,6 +316,9 @@ private fun View.toPreviewNativeViewNode(
             View.GONE -> "GONE"
             else -> visibility.toString()
         },
+        nodeId = tooling?.nodeId,
+        sourceCallSites = tooling.toPreviewSourceCallSites(),
+        synthetic = tooling?.synthetic == true,
         children = childNodes,
     )
 }
@@ -312,10 +326,25 @@ private fun View.toPreviewNativeViewNode(
 private fun List<com.viewcompose.widget.core.RenderTreeNode>.toPreviewTreeNodes():
     List<PreviewRenderTreeNode> {
     return map { node ->
+        val tooling = node.toolingMetadata
         PreviewRenderTreeNode(
             type = node.type.toString(),
             key = node.key?.toString(),
+            nodeId = tooling?.nodeId,
+            sourceCallSites = tooling.toPreviewSourceCallSites(),
+            synthetic = tooling?.synthetic == true,
             children = node.children.toPreviewTreeNodes(),
+        )
+    }
+}
+
+private fun UiNodeToolingMetadata?.toPreviewSourceCallSites(): List<PreviewSourceCallSite> {
+    return this?.callSites.orEmpty().map { source ->
+        PreviewSourceCallSite(
+            className = source.className,
+            methodName = source.methodName,
+            fileName = source.fileName,
+            lineNumber = source.lineNumber,
         )
     }
 }

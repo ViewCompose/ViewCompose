@@ -150,6 +150,10 @@ internal object ViewTreePatchPipeline {
 
         transaction.mountedCheckpoints.values.forEach { checkpoint ->
             checkpoint.mountedNode.vnode = checkpoint.vnode
+            ViewNodeToolingRegistry.bind(
+                view = checkpoint.mountedNode.view,
+                node = checkpoint.vnode,
+            )
             checkpoint.mountedNode.children = checkpoint.children
             checkpoint.mountedNode.disposed = checkpoint.disposed
             checkpoint.mountedNode.view.layoutParams = checkpoint.layoutParams
@@ -416,6 +420,10 @@ internal object ViewTreePatchPipeline {
                 }
                 mountedNode.children = childResult.mountedNodes
                 mountedNode.vnode = patch.nextVNode
+                ViewNodeToolingRegistry.bind(
+                    view = mountedNode.view,
+                    node = patch.nextVNode,
+                )
                 if (needsMove) {
                     captureContainer(
                         transaction = transaction,
@@ -537,6 +545,10 @@ internal object ViewTreePatchPipeline {
         val mountedNode = MountedNode(
             vnode = node,
             view = view,
+        )
+        ViewNodeToolingRegistry.bind(
+            view = view,
+            node = node,
         )
         transaction.insertedNodes += mountedNode
         ViewModifierApplier.cacheOriginalBackground(view)
