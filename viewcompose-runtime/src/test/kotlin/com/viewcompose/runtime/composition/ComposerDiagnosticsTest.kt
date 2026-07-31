@@ -12,6 +12,19 @@ import org.junit.Test
 
 class ComposerDiagnosticsTest {
     @Test
+    fun `root diagnostic signature is stable across composition sessions`() {
+        fun rootSignature(): String {
+            val result = ComposerLite()
+                .prepareRoot(collectDiagnostics = true) { Unit }
+            result.commit()
+            return result.diagnostics.scopes.single { scope -> scope.depth == 0 }.signature
+        }
+
+        assertEquals("Root", rootSignature())
+        assertEquals(rootSignature(), rootSignature())
+    }
+
+    @Test
     fun `diagnostics explain state invalidation skips and captured locals`() {
         val state = mutableStateOf(0)
         val composer = ComposerLite(

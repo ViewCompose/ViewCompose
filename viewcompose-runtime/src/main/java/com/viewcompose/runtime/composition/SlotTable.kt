@@ -19,5 +19,7 @@ class SlotTable {
         root.disposeRecursively()
     }
 
-    internal object RootSignature
+    internal object RootSignature {
+        override fun toString(): String = "Root"
+    }
 }
