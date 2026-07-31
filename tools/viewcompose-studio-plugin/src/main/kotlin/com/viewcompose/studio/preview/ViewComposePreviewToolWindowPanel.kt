@@ -54,6 +54,7 @@ internal class ViewComposePreviewToolWindowPanel(
     private var previewZoomOption: PreviewZoomOption = PreviewZoomOption.Fit
     private var selectedDiagnosticsTabIndex: Int = 0
     private var showLayoutBounds: Boolean = false
+    private var showLayoutDiagnostics: Boolean = true
     private var selectedRuntimeNodeId: String? = null
     private var latestCaretLocation: PreviewCaretLocation? = null
     private var nodeSelectionCoordinator: PreviewNodeSelectionCoordinator? = null
@@ -177,6 +178,7 @@ internal class ViewComposePreviewToolWindowPanel(
         val previewPanel = previewImagePanel(
             image = result.image,
             nativeViews = snapshot?.nativeViewTree.orEmpty(),
+            layoutDiagnostics = snapshot?.layoutDiagnostics.orEmpty(),
             selectionCoordinator = selectionCoordinator,
         )
         val renderedContent = if (snapshot == null) {
@@ -185,6 +187,10 @@ internal class ViewComposePreviewToolWindowPanel(
             JTabbedPane().apply {
                 border = JBUI.Borders.emptyTop(8)
                 addTab(messages.text("tab.preview"), previewPanel)
+                addTab(
+                    messages.text("tab.layout"),
+                    layoutDiagnosticsPanel(snapshot.layoutDiagnostics, selectionCoordinator),
+                )
                 addTab(
                     messages.text("tab.structure"),
                     renderStructurePanel(snapshot, selectionCoordinator),
@@ -315,13 +321,58 @@ internal class ViewComposePreviewToolWindowPanel(
         }
     }
 
+    private fun layoutDiagnosticsPanel(
+        diagnostics: List<StudioPreviewLayoutDiagnostic>,
+        selectionCoordinator: PreviewNodeSelectionCoordinator?,
+    ): JComponent {
+        if (diagnostics.isEmpty()) {
+            return JBScrollPane(readOnlyText(messages.text("layout.empty"))).apply {
+                border = JBUI.Borders.empty(8)
+            }
+        }
+        val warningCount = diagnostics.count { diagnostic ->
+            diagnostic.severity == StudioPreviewDiagnosticSeverity.Warning
+        }
+        val infoCount = diagnostics.count { diagnostic ->
+            diagnostic.severity == StudioPreviewDiagnosticSeverity.Info
+        }
+        val root = DefaultMutableTreeNode(messages.text("tree.layoutDiagnostics"))
+        diagnostics.forEach { diagnostic ->
+            root.add(diagnostic.toSwingTreeNode(messages))
+        }
+        return JPanel(BorderLayout()).apply {
+            isOpaque = false
+            add(
+                readOnlyText(
+                    messages.text(
+                        "layout.summary",
+                        warningCount,
+                        infoCount,
+                    ),
+                ),
+                BorderLayout.NORTH,
+            )
+            add(
+                JBScrollPane(
+                    sourceNavigableTree(root, selectionCoordinator).apply {
+                        isRootVisible = false
+                        showsRootHandles = true
+                    },
+                ).apply {
+                    border = JBUI.Borders.emptyTop(8)
+                },
+                BorderLayout.CENTER,
+            )
+        }
+    }
+
     private fun nativeViewsPanel(
         views: List<StudioPreviewNativeViewNode>,
         selectionCoordinator: PreviewNodeSelectionCoordinator?,
     ): JComponent {
         val root = DefaultMutableTreeNode(messages.text("tree.androidView"))
         views.forEach { view ->
-            root.add(view.toSwingTreeNode())
+            root.add(view.toSwingTreeNode(messages))
         }
         val tree = sourceNavigableTree(root, selectionCoordinator).apply {
             isRootVisible = false
@@ -338,17 +389,21 @@ internal class ViewComposePreviewToolWindowPanel(
     private fun previewImagePanel(
         image: BufferedImage,
         nativeViews: List<StudioPreviewNativeViewNode>,
+        layoutDiagnostics: List<StudioPreviewLayoutDiagnostic>,
         selectionCoordinator: PreviewNodeSelectionCoordinator?,
     ): JComponent {
         val canvas = PreviewImageCanvas(
             image = image,
             nativeViews = nativeViews,
+            layoutDiagnostics = layoutDiagnostics,
             initialZoomOption = previewZoomOption,
             sourceNavigationHint = messages.text("source.navigationHint"),
             onNavigateToSource = onNavigateToRuntimeSource,
             onNodeSelected = { nodeId -> selectionCoordinator?.select(nodeId) },
         ).apply {
             showLayoutBounds = this@ViewComposePreviewToolWindowPanel.showLayoutBounds
+            showLayoutDiagnostics =
+                this@ViewComposePreviewToolWindowPanel.showLayoutDiagnostics
         }
         selectionCoordinator?.register(canvas::selectNode)
         val imageScrollPane = JBScrollPane(canvas).apply {
@@ -402,14 +457,33 @@ internal class ViewComposePreviewToolWindowPanel(
                 JPanel(BorderLayout()).apply {
                     isOpaque = false
                     border = JBUI.Borders.empty(8, 4, 4, 4)
-                    if (nativeViews.isNotEmpty()) {
+                    if (nativeViews.isNotEmpty() || layoutDiagnostics.isNotEmpty()) {
                         add(
-                            JCheckBox(messages.text("preview.showLayoutBounds")).apply {
+                            JPanel(FlowLayout(FlowLayout.LEFT, JBUI.scale(8), 0)).apply {
                                 isOpaque = false
-                                isSelected = showLayoutBounds
-                                addActionListener {
-                                    canvas.showLayoutBounds = isSelected
-                                    showLayoutBounds = isSelected
+                                if (nativeViews.isNotEmpty()) {
+                                    add(
+                                        JCheckBox(messages.text("preview.showLayoutBounds")).apply {
+                                            isOpaque = false
+                                            isSelected = showLayoutBounds
+                                            addActionListener {
+                                                canvas.showLayoutBounds = isSelected
+                                                showLayoutBounds = isSelected
+                                            }
+                                        },
+                                    )
+                                }
+                                if (layoutDiagnostics.isNotEmpty()) {
+                                    add(
+                                        JCheckBox(messages.text("preview.showLayoutIssues")).apply {
+                                            isOpaque = false
+                                            isSelected = showLayoutDiagnostics
+                                            addActionListener {
+                                                canvas.showLayoutDiagnostics = isSelected
+                                                showLayoutDiagnostics = isSelected
+                                            }
+                                        },
+                                    )
                                 }
                             },
                             BorderLayout.WEST,
@@ -697,7 +771,9 @@ private fun StudioPreviewRenderTreeNode.toSwingTreeNode(): DefaultMutableTreeNod
     return swingNode
 }
 
-private fun StudioPreviewNativeViewNode.toSwingTreeNode(): DefaultMutableTreeNode {
+private fun StudioPreviewNativeViewNode.toSwingTreeNode(
+    messages: PreviewUiMessages,
+): DefaultMutableTreeNode {
     val simpleClassName = className.substringAfterLast('.')
     val label = buildString {
         append(simpleClassName)
@@ -719,6 +795,17 @@ private fun StudioPreviewNativeViewNode.toSwingTreeNode(): DefaultMutableTreeNod
             append(" · ")
             append(visibility)
         }
+        when (clippingState) {
+            StudioPreviewClippingState.PartiallyClipped -> {
+                append(" · ")
+                append(messages.text("layout.clipping.partial"))
+            }
+            StudioPreviewClippingState.FullyClipped -> {
+                append(" · ")
+                append(messages.text("layout.clipping.full"))
+            }
+            StudioPreviewClippingState.NotClipped -> Unit
+        }
     }
     val swingNode = DefaultMutableTreeNode(
         PreviewTreeEntry(
@@ -728,9 +815,84 @@ private fun StudioPreviewNativeViewNode.toSwingTreeNode(): DefaultMutableTreeNod
         ),
     )
     children.forEach { child ->
-        swingNode.add(child.toSwingTreeNode())
+        swingNode.add(child.toSwingTreeNode(messages))
     }
     return swingNode
+}
+
+private fun StudioPreviewLayoutDiagnostic.toSwingTreeNode(
+    messages: PreviewUiMessages,
+): DefaultMutableTreeNode {
+    val simpleClassName = className.substringAfterLast('.')
+    val kindLabel = messages.text(
+        when (kind) {
+            StudioPreviewLayoutDiagnosticKind.ZeroLayoutSize -> "layout.kind.zeroSize"
+            StudioPreviewLayoutDiagnosticKind.PartiallyClipped -> "layout.kind.partialClip"
+            StudioPreviewLayoutDiagnosticKind.FullyClipped -> "layout.kind.fullClip"
+            StudioPreviewLayoutDiagnosticKind.TextEllipsized -> "layout.kind.textEllipsized"
+            StudioPreviewLayoutDiagnosticKind.TextContentClipped -> "layout.kind.textClipped"
+            StudioPreviewLayoutDiagnosticKind.Unknown -> "layout.kind.unknown"
+        },
+    )
+    val node = DefaultMutableTreeNode(
+        PreviewTreeEntry(
+            label = "[${severity.name}] $kindLabel · $simpleClassName",
+            nodeId = nodeId,
+            sourceCallSites = sourceCallSites,
+        ),
+    )
+    node.add(
+        DefaultMutableTreeNode(
+            messages.text(
+                "layout.bounds",
+                bounds.width,
+                bounds.height,
+                bounds.left,
+                bounds.top,
+            ),
+        ),
+    )
+    visibleBounds?.let { visible ->
+        if (visible != bounds) {
+            node.add(
+                DefaultMutableTreeNode(
+                    messages.text(
+                        "layout.visibleBounds",
+                        visible.width,
+                        visible.height,
+                        visible.left,
+                        visible.top,
+                    ),
+                ),
+            )
+        }
+    }
+    clippingAncestorClassName?.let { ancestor ->
+        node.add(
+            DefaultMutableTreeNode(
+                messages.text(
+                    "layout.clippedBy",
+                    ancestor.substringAfterLast('.'),
+                    if (clippingExpected) {
+                        messages.text("layout.expectedClipSuffix")
+                    } else {
+                        ""
+                    },
+                ),
+            ),
+        )
+    }
+    if (metrics.isNotEmpty()) {
+        node.add(
+            DefaultMutableTreeNode(
+                messages.text(
+                    "layout.metrics",
+                    metrics.entries.joinToString { (name, value) -> "$name=$value" },
+                ),
+            ),
+        )
+    }
+    return node
 }
 
 private fun StudioPreviewPatchRecord.toSwingTreeNode(): DefaultMutableTreeNode {
@@ -793,6 +955,7 @@ private fun StudioPreviewNativeViewNode.nodeCount(): Int {
 private class PreviewImageCanvas(
     private val image: BufferedImage,
     private val nativeViews: List<StudioPreviewNativeViewNode>,
+    private val layoutDiagnostics: List<StudioPreviewLayoutDiagnostic>,
     initialZoomOption: PreviewZoomOption,
     private val sourceNavigationHint: String,
     private val onNavigateToSource: (List<StudioPreviewSourceCallSite>) -> Unit,
@@ -806,6 +969,13 @@ private class PreviewImageCanvas(
         }
 
     var showLayoutBounds: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            repaint()
+        }
+
+    var showLayoutDiagnostics: Boolean = true
         set(value) {
             if (field == value) return
             field = value
@@ -921,6 +1091,16 @@ private class PreviewImageCanvas(
                     )
                 }
             }
+            if (showLayoutDiagnostics) {
+                layoutDiagnostics.forEach { diagnostic ->
+                    graphics2D.paintLayoutDiagnostic(
+                        diagnostic = diagnostic,
+                        imageLeft = placement.left,
+                        imageTop = placement.top,
+                        scale = scale,
+                    )
+                }
+            }
             selectedView?.let { view ->
                 graphics2D.paintSelectedView(
                     view = view,
@@ -962,6 +1142,42 @@ private class PreviewImageCanvas(
             height = scaledHeight,
         )
     }
+}
+
+private fun Graphics2D.paintLayoutDiagnostic(
+    diagnostic: StudioPreviewLayoutDiagnostic,
+    imageLeft: Int,
+    imageTop: Int,
+    scale: Double,
+) {
+    val bounds = diagnostic.bounds
+    if (bounds.width <= 0 || bounds.height <= 0) return
+    val scaledLeft = imageLeft + (bounds.left * scale).roundToInt()
+    val scaledTop = imageTop + (bounds.top * scale).roundToInt()
+    val scaledWidth = (bounds.width * scale).roundToInt().coerceAtLeast(1)
+    val scaledHeight = (bounds.height * scale).roundToInt().coerceAtLeast(1)
+    val issueColor = when (diagnostic.severity) {
+        StudioPreviewDiagnosticSeverity.Error -> LAYOUT_DIAGNOSTIC_ERROR_COLOR
+        StudioPreviewDiagnosticSeverity.Warning -> LAYOUT_DIAGNOSTIC_WARNING_COLOR
+        StudioPreviewDiagnosticSeverity.Info -> LAYOUT_DIAGNOSTIC_INFO_COLOR
+    }
+    color = Color(issueColor.red, issueColor.green, issueColor.blue, 22)
+    fillRect(scaledLeft, scaledTop, scaledWidth, scaledHeight)
+    color = Color(issueColor.red, issueColor.green, issueColor.blue, 220)
+    stroke = BasicStroke(
+        JBUI.scale(2).toFloat(),
+        BasicStroke.CAP_BUTT,
+        BasicStroke.JOIN_MITER,
+        10f,
+        floatArrayOf(JBUI.scale(5).toFloat(), JBUI.scale(3).toFloat()),
+        0f,
+    )
+    drawRect(
+        scaledLeft,
+        scaledTop,
+        (scaledWidth - 1).coerceAtLeast(0),
+        (scaledHeight - 1).coerceAtLeast(0),
+    )
 }
 
 private fun Graphics2D.paintSelectedView(
@@ -1036,6 +1252,9 @@ private val LAYOUT_BOUND_COLORS = listOf(
 )
 
 private val SOURCE_SELECTION_COLOR = JBColor(Color(0x2F, 0x80, 0xED), Color(0x64, 0xB5, 0xF6))
+private val LAYOUT_DIAGNOSTIC_ERROR_COLOR = Color(0xC6, 0x28, 0x28)
+private val LAYOUT_DIAGNOSTIC_WARNING_COLOR = Color(0xEF, 0x6C, 0x00)
+private val LAYOUT_DIAGNOSTIC_INFO_COLOR = Color(0xF9, 0xA8, 0x25)
 
 private const val SOURCE_NAVIGATION_ACTION = "viewcompose.preview.navigateToRuntimeSource"
 

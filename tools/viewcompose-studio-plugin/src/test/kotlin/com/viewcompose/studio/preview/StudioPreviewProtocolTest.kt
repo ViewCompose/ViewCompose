@@ -119,6 +119,15 @@ class StudioPreviewProtocolTest {
                       "measuredWidth": 224,
                       "measuredHeight": 64,
                       "visibility": "VISIBLE",
+                      "visibleBounds": {
+                        "left": 32,
+                        "top": 48,
+                        "right": 200,
+                        "bottom": 112
+                      },
+                      "clippingState": "PartiallyClipped",
+                      "clippingAncestorClassName": "android.widget.FrameLayout",
+                      "clippingExpected": false,
                       "nodeId": "node-title",
                       "sourceCallSites": [
                         {
@@ -129,6 +138,39 @@ class StudioPreviewProtocolTest {
                         }
                       ],
                       "children": []
+                    }
+                  ]
+                }
+              ],
+              "layoutDiagnostics": [
+                {
+                  "kind": "PartiallyClipped",
+                  "severity": "Warning",
+                  "className": "android.widget.TextView",
+                  "bounds": {
+                    "left": 32,
+                    "top": 48,
+                    "right": 256,
+                    "bottom": 112
+                  },
+                  "visibleBounds": {
+                    "left": 32,
+                    "top": 48,
+                    "right": 200,
+                    "bottom": 112
+                  },
+                  "clippingAncestorClassName": "android.widget.FrameLayout",
+                  "clippingExpected": false,
+                  "metrics": {
+                    "hiddenWidth": 56
+                  },
+                  "nodeId": "node-title",
+                  "sourceCallSites": [
+                    {
+                      "className": "sample.SampleKt",
+                      "methodName": "SampleCard",
+                      "fileName": "Sample.kt",
+                      "lineNumber": 24
                     }
                   ]
                 }
@@ -205,6 +247,17 @@ class StudioPreviewProtocolTest {
             "node-title",
             snapshot.nativeViewTree.single().children.single().nodeId,
         )
+        assertEquals(
+            StudioPreviewClippingState.PartiallyClipped,
+            snapshot.nativeViewTree.single().children.single().clippingState,
+        )
+        assertEquals(168, snapshot.nativeViewTree.single().children.single().visibleBounds?.width)
+        assertEquals(
+            StudioPreviewLayoutDiagnosticKind.PartiallyClipped,
+            snapshot.layoutDiagnostics.single().kind,
+        )
+        assertEquals("node-title", snapshot.layoutDiagnostics.single().nodeId)
+        assertEquals(56, snapshot.layoutDiagnostics.single().metrics["hiddenWidth"])
         assertEquals("Insert", snapshot.patches.single().operation)
         assertEquals("node-title", snapshot.patches.single().nodeId)
         assertEquals(24, snapshot.patches.single().sourceCallSites.single().lineNumber)

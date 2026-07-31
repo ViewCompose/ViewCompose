@@ -68,6 +68,7 @@ internal data class StudioPreviewRenderSnapshot(
     val warnings: List<String>,
     val tree: List<StudioPreviewRenderTreeNode>,
     val nativeViewTree: List<StudioPreviewNativeViewNode>,
+    val layoutDiagnostics: List<StudioPreviewLayoutDiagnostic>,
     val patches: List<StudioPreviewPatchRecord>,
     val composition: StudioPreviewCompositionSnapshot,
 )
@@ -111,11 +112,22 @@ internal data class StudioPreviewNativeViewNode(
     val measuredWidth: Int,
     val measuredHeight: Int,
     val visibility: String,
+    val visibleBounds: StudioPreviewLayoutBounds?,
+    val clippingState: StudioPreviewClippingState,
+    val clippingAncestorClassName: String?,
+    val clippingAncestorNodeId: String?,
+    val clippingExpected: Boolean,
     val nodeId: String?,
     val sourceCallSites: List<StudioPreviewSourceCallSite>,
     val synthetic: Boolean,
     val children: List<StudioPreviewNativeViewNode>,
 )
+
+internal enum class StudioPreviewClippingState {
+    NotClipped,
+    PartiallyClipped,
+    FullyClipped,
+}
 
 internal data class StudioPreviewLayoutBounds(
     val left: Int,
@@ -128,6 +140,30 @@ internal data class StudioPreviewLayoutBounds(
 
     val height: Int
         get() = bottom - top
+}
+
+internal data class StudioPreviewLayoutDiagnostic(
+    val kind: StudioPreviewLayoutDiagnosticKind,
+    val severity: StudioPreviewDiagnosticSeverity,
+    val className: String,
+    val bounds: StudioPreviewLayoutBounds,
+    val visibleBounds: StudioPreviewLayoutBounds?,
+    val clippingAncestorClassName: String?,
+    val clippingAncestorNodeId: String?,
+    val clippingExpected: Boolean,
+    val metrics: Map<String, Int>,
+    val nodeId: String?,
+    val sourceCallSites: List<StudioPreviewSourceCallSite>,
+    val synthetic: Boolean,
+)
+
+internal enum class StudioPreviewLayoutDiagnosticKind {
+    ZeroLayoutSize,
+    PartiallyClipped,
+    FullyClipped,
+    TextEllipsized,
+    TextContentClipped,
+    Unknown,
 }
 
 internal data class StudioPreviewPatchRecord(
@@ -240,6 +276,11 @@ internal object StudioPreviewProtocolReader {
                     depth = 0,
                 )
             },
+            layoutDiagnostics = root.optionalArray("layoutDiagnostics")
+                .take(MAXIMUM_LAYOUT_DIAGNOSTICS)
+                .map { element ->
+                    element.requiredObject("layout diagnostic").toLayoutDiagnostic()
+                },
             patches = root.optionalArray("patches").map { element ->
                 element.requiredObject("patch").toPatchRecord()
             },
@@ -294,20 +335,22 @@ private fun JsonObject.toNativeViewNode(
     depth: Int,
 ): StudioPreviewNativeViewNode {
     budget.recordNode(depth)
-    val bounds = requireNotNull(optionalObject("bounds")) {
+    val bounds = requireNotNull(optionalLayoutBounds("bounds")) {
         "Preview protocol field 'bounds' must be an object."
     }
     return StudioPreviewNativeViewNode(
         className = requiredString("className"),
-        bounds = StudioPreviewLayoutBounds(
-            left = bounds.requiredInt("left"),
-            top = bounds.requiredInt("top"),
-            right = bounds.requiredInt("right"),
-            bottom = bounds.requiredInt("bottom"),
-        ),
+        bounds = bounds,
         measuredWidth = optionalInt("measuredWidth") ?: 0,
         measuredHeight = optionalInt("measuredHeight") ?: 0,
         visibility = optionalString("visibility") ?: "VISIBLE",
+        visibleBounds = optionalLayoutBounds("visibleBounds"),
+        clippingState = optionalString("clippingState")
+            ?.let { state -> runCatching { enumValueOf<StudioPreviewClippingState>(state) }.getOrNull() }
+            ?: StudioPreviewClippingState.NotClipped,
+        clippingAncestorClassName = optionalString("clippingAncestorClassName"),
+        clippingAncestorNodeId = optionalString("clippingAncestorNodeId"),
+        clippingExpected = optionalBoolean("clippingExpected") ?: false,
         nodeId = optionalString("nodeId"),
         sourceCallSites = sourceCallSites(),
         synthetic = optionalBoolean("synthetic") ?: false,
@@ -317,6 +360,45 @@ private fun JsonObject.toNativeViewNode(
                 depth = depth + 1,
             )
         },
+    )
+}
+
+private fun JsonObject.toLayoutDiagnostic(): StudioPreviewLayoutDiagnostic {
+    val kindName = requiredString("kind")
+    val metricsObject = optionalObject("metrics")
+    return StudioPreviewLayoutDiagnostic(
+        kind = runCatching {
+            enumValueOf<StudioPreviewLayoutDiagnosticKind>(kindName)
+        }.getOrDefault(StudioPreviewLayoutDiagnosticKind.Unknown),
+        severity = enumValueOf(requiredString("severity")),
+        className = requiredString("className"),
+        bounds = requireNotNull(optionalLayoutBounds("bounds")) {
+            "Preview layout diagnostic field 'bounds' must be an object."
+        },
+        visibleBounds = optionalLayoutBounds("visibleBounds"),
+        clippingAncestorClassName = optionalString("clippingAncestorClassName"),
+        clippingAncestorNodeId = optionalString("clippingAncestorNodeId"),
+        clippingExpected = optionalBoolean("clippingExpected") ?: false,
+        metrics = metricsObject
+            ?.entrySet()
+            .orEmpty()
+            .take(MAXIMUM_LAYOUT_DIAGNOSTIC_METRICS)
+            .associate { (name, _) ->
+                name to checkNotNull(metricsObject?.optionalInt(name))
+            },
+        nodeId = optionalString("nodeId"),
+        sourceCallSites = sourceCallSites(),
+        synthetic = optionalBoolean("synthetic") ?: false,
+    )
+}
+
+private fun JsonObject.optionalLayoutBounds(name: String): StudioPreviewLayoutBounds? {
+    val bounds = optionalObject(name) ?: return null
+    return StudioPreviewLayoutBounds(
+        left = bounds.requiredInt("left"),
+        top = bounds.requiredInt("top"),
+        right = bounds.requiredInt("right"),
+        bottom = bounds.requiredInt("bottom"),
     )
 }
 
@@ -549,6 +631,8 @@ private class SnapshotParseBudget {
 private const val SUPPORTED_PREVIEW_PROTOCOL_VERSION = 1
 private const val MAXIMUM_RENDER_SNAPSHOT_BYTES = 16L * 1024L * 1024L
 private const val MAXIMUM_SOURCE_CALL_SITES = 16
+private const val MAXIMUM_LAYOUT_DIAGNOSTICS = 10_000
+private const val MAXIMUM_LAYOUT_DIAGNOSTIC_METRICS = 32
 private const val MAXIMUM_RENDER_TREE_DEPTH = 256
 private const val MAXIMUM_RENDER_TREE_NODES = 100_000
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")

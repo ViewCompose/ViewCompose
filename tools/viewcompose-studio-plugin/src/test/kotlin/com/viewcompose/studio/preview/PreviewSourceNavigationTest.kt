@@ -60,6 +60,21 @@ class PreviewSourceNavigationTest {
         assertNull(findMappedNativeViewAt(listOf(hidden.copy(visibility = "VISIBLE")), x = 120, y = 20))
     }
 
+    @Test
+    fun `hit testing excludes the clipped portion of a mapped view`() {
+        val clipped = nativeView(
+            className = "android.widget.TextView",
+            bounds = bounds(0, 0, 100, 40),
+            sourceLine = 20,
+        ).copy(
+            visibleBounds = bounds(0, 0, 60, 40),
+            clippingState = StudioPreviewClippingState.PartiallyClipped,
+        )
+
+        assertEquals(clipped, findMappedNativeViewAt(listOf(clipped), x = 40, y = 20))
+        assertNull(findMappedNativeViewAt(listOf(clipped), x = 80, y = 20))
+    }
+
     private fun nativeView(
         className: String,
         bounds: StudioPreviewLayoutBounds,
@@ -73,6 +88,11 @@ class PreviewSourceNavigationTest {
             measuredWidth = bounds.width,
             measuredHeight = bounds.height,
             visibility = visibility,
+            visibleBounds = bounds,
+            clippingState = StudioPreviewClippingState.NotClipped,
+            clippingAncestorClassName = null,
+            clippingAncestorNodeId = null,
+            clippingExpected = false,
             nodeId = sourceLine?.let { "node-$it" },
             sourceCallSites = sourceLine?.let { line ->
                 listOf(

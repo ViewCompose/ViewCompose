@@ -123,7 +123,13 @@ private fun StudioPreviewNativeViewNode.findMappedDescendantAt(
     x: Int,
     y: Int,
 ): StudioPreviewNativeViewNode? {
-    if (visibility != "VISIBLE" || !bounds.contains(x, y)) return null
+    if (visibility != "VISIBLE") return null
+    val hitBounds = when {
+        clippingState == StudioPreviewClippingState.FullyClipped -> return null
+        visibleBounds != null -> visibleBounds
+        else -> bounds
+    }
+    if (!hitBounds.contains(x, y)) return null
     children.asReversed().forEach { child ->
         child.findMappedDescendantAt(x, y)?.let { mappedChild ->
             return mappedChild
