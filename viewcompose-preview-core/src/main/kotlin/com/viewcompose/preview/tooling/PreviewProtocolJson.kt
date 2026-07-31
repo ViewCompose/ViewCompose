@@ -46,4 +46,10 @@ object PreviewProtocolJson {
 
     fun decodeWorkerCommand(value: String): PreviewWorkerCommand =
         format.decodeFromString(value)
+
+    fun encodeWorkerBatchCommand(command: PreviewWorkerBatchCommand): String =
+        format.encodeToString(command)
+
+    fun decodeWorkerBatchCommand(value: String): PreviewWorkerBatchCommand =
+        format.decodeFromString(value)
 }

@@ -161,6 +161,30 @@ data class PreviewWorkerCommand(
     }
 }
 
+/**
+ * Bounded collection of isolated render commands executed sequentially by one short-lived host.
+ * The host process still exits after the batch, preventing Layoutlib state from leaking into Gradle
+ * or Android Studio while avoiding one JVM startup per gallery tile.
+ */
+@Serializable
+data class PreviewWorkerBatchCommand(
+    val protocolVersion: Int = ViewComposePreviewProtocol.CURRENT_VERSION,
+    val commands: List<PreviewWorkerCommand>,
+) {
+    init {
+        ViewComposePreviewProtocol.requireSupported(protocolVersion)
+        require(commands.isNotEmpty()) { "Preview worker batch must not be empty." }
+        require(commands.size <= MAX_PREVIEW_WORKER_BATCH_SIZE) {
+            "Preview worker batch exceeds $MAX_PREVIEW_WORKER_BATCH_SIZE commands."
+        }
+        require(commands.map(PreviewWorkerCommand::renderResponsePath).distinct().size == commands.size) {
+            "Preview worker batch response paths must be unique."
+        }
+    }
+}
+
+const val MAX_PREVIEW_WORKER_BATCH_SIZE: Int = 8
+
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")
 
 internal fun requireSha256(

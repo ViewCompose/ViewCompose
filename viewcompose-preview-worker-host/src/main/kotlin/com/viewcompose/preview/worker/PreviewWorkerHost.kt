@@ -21,6 +21,7 @@ import com.viewcompose.preview.tooling.PreviewWorkerCommand
 import com.viewcompose.preview.tooling.viewportHeightDp
 import java.io.File
 import kotlin.math.roundToInt
+import kotlinx.serialization.json.jsonObject
 
 /**
  * Standalone JVM entry point that owns one Layoutlib lifecycle and one render request.
@@ -31,11 +32,34 @@ object PreviewWorkerHost {
         require(args.size == 1) {
             "Expected one argument containing the PreviewWorkerCommand JSON path."
         }
-        execute(File(args.single()))
+        val commandFile = File(args.single())
+        val commandJson = commandFile.readText()
+        if (PreviewProtocolJson.format.parseToJsonElement(commandJson).jsonObject.containsKey("commands")) {
+            executeBatch(commandJson)
+        } else {
+            execute(commandJson)
+        }
     }
 
     fun execute(commandFile: File): PreviewRenderResponse {
-        val command = PreviewProtocolJson.decodeWorkerCommand(commandFile.readText())
+        return execute(commandFile.readText())
+    }
+
+    internal fun executeBatch(commandFile: File): List<PreviewRenderResponse> {
+        return executeBatch(commandFile.readText())
+    }
+
+    private fun executeBatch(commandJson: String): List<PreviewRenderResponse> {
+        val batch = PreviewProtocolJson.decodeWorkerBatchCommand(commandJson)
+        return batch.commands.map(::execute)
+    }
+
+    private fun execute(commandJson: String): PreviewRenderResponse {
+        val command = PreviewProtocolJson.decodeWorkerCommand(commandJson)
+        return execute(command)
+    }
+
+    private fun execute(command: PreviewWorkerCommand): PreviewRenderResponse {
         val requestFile = File(command.renderRequestPath)
         val request = PreviewProtocolJson.decodeRequest(requestFile.readText())
         val response = try {

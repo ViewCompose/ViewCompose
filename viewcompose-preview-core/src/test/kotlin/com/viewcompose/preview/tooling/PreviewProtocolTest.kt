@@ -116,6 +116,30 @@ class PreviewProtocolTest {
     }
 
     @Test
+    fun `worker batch round trips and enforces bounded process size`() {
+        fun command(index: Int) = PreviewWorkerCommand(
+            buildManifestPath = "manifest.json",
+            renderRequestPath = "request-$index.json",
+            renderResponsePath = "response-$index.json",
+            layoutlibRuntimeRoot = "runtime",
+            layoutlibResourcesRoot = "resources",
+        )
+        val batch = PreviewWorkerBatchCommand(commands = listOf(command(1), command(2)))
+
+        assertEquals(
+            batch,
+            PreviewProtocolJson.decodeWorkerBatchCommand(
+                PreviewProtocolJson.encodeWorkerBatchCommand(batch),
+            ),
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            PreviewWorkerBatchCommand(
+                commands = (0..MAX_PREVIEW_WORKER_BATCH_SIZE).map(::command),
+            )
+        }
+    }
+
+    @Test
     fun `request response and render snapshot round trip through canonical json`() {
         val variant = PreviewVariant(
             id = "dark-rtl",

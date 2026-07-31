@@ -1,10 +1,13 @@
 package com.viewcompose.preview.gradle
 
+import com.viewcompose.preview.tooling.MAX_PREVIEW_WORKER_BATCH_SIZE
 import com.viewcompose.preview.tooling.PreviewBuildInputKind
+import com.viewcompose.preview.tooling.PreviewBuildManifest
 import com.viewcompose.preview.tooling.PreviewProtocolJson
 import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewRenderResponse
 import com.viewcompose.preview.tooling.PreviewRenderStatus
+import com.viewcompose.preview.tooling.PreviewWorkerBatchCommand
 import com.viewcompose.preview.tooling.PreviewWorkerCommand
 import java.io.File
 import java.util.zip.ZipFile
@@ -26,7 +29,7 @@ import org.gradle.process.ExecOperations
 import org.gradle.work.DisableCachingByDefault
 
 /**
- * Selects and renders one preview in a fresh JVM, backed by a content-addressed artifact cache.
+ * Renders one preview or a bounded batch in a short-lived JVM, backed by a content-addressed cache.
  */
 @DisableCachingByDefault(
     because = "The task owns a content-addressed render cache and launches an isolated JVM.",
@@ -35,6 +38,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     private val execOperations: ExecOperations,
 ) : DefaultTask() {
     @get:Input
+    @get:Optional
     abstract val previewId: Property<String>
 
     @get:Input
@@ -54,6 +58,11 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val descriptorCatalogFile: RegularFileProperty
+
+    @get:InputFile
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val batchTargetsFile: RegularFileProperty
 
     @get:Classpath
     abstract val workerClasspath: ConfigurableFileCollection
@@ -86,6 +95,14 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     }
 
     @Option(
+        option = "preview-targets-file",
+        description = "TSV file containing preview-id and variant-id pairs to render in one build.",
+    )
+    fun selectPreviewTargetsFile(value: String) {
+        batchTargetsFile.set(File(value))
+    }
+
+    @Option(
         option = "rerender",
         description = "Ignore an existing successful content-addressed render.",
     )
@@ -97,6 +114,12 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     fun renderPreview() {
         require(Runtime.version().feature() >= MINIMUM_JAVA_VERSION) {
             "ViewCompose static preview requires JDK $MINIMUM_JAVA_VERSION or newer."
+        }
+        require(batchTargetsFile.isPresent.xor(previewId.isPresent)) {
+            "Specify exactly one of --preview-id or --preview-targets-file."
+        }
+        require(!batchTargetsFile.isPresent || !variantId.isPresent) {
+            "--variant-id cannot be combined with --preview-targets-file."
         }
         val manifest = PreviewProtocolJson.decodeBuildManifest(
             buildManifestFile.get().asFile.readText(),
@@ -111,42 +134,31 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
                 "layoutlib-resources" to layoutlibResourcesArchive.files,
             ),
         )
-        val plan = planPreviewRender(
-            manifest = manifest,
-            catalog = catalog,
-            previewId = previewId.get(),
-            requestedVariantId = variantId.orNull,
-            renderRuntimeFingerprint = renderRuntimeFingerprint,
-        )
-        val outputDirectory = File(
-            manifest.artifactRootDirectory,
-            plan.cacheRelativeDirectory,
-        )
-        val responseFile = outputDirectory.resolve(RESPONSE_FILE_NAME)
-        if (
-            !rerender.get() &&
-            responseFile.isSuccessfulCachedResponse(expectedRequestId = plan.requestId)
-        ) {
-            logger.lifecycle(
-                "ViewCompose preview cache hit: ${responseFile.absolutePath}",
+        val targets = if (batchTargetsFile.isPresent) {
+            batchTargetsFile.get().asFile.readPreviewBatchTargets()
+        } else {
+            listOf(PreviewBatchTarget(previewId.get(), variantId.orNull ?: ""))
+        }
+        val plans = targets.map { target ->
+            planPreviewRender(
+                manifest = manifest,
+                catalog = catalog,
+                previewId = target.previewId,
+                requestedVariantId = target.variantId.ifBlank { null },
+                renderRuntimeFingerprint = renderRuntimeFingerprint,
             )
-            return
         }
-        check(outputDirectory.isDirectory || outputDirectory.mkdirs()) {
-            "Could not create ViewCompose preview output '${outputDirectory.absolutePath}'."
+        val pendingPlans = plans.filterNot { plan ->
+            val responseFile = plan.responseFile(manifest)
+            val cacheHit = !rerender.get() &&
+                responseFile.isSuccessfulCachedResponse(expectedRequestId = plan.requestId)
+            if (cacheHit) {
+                logger.lifecycle("ViewCompose preview cache hit: ${responseFile.absolutePath}")
+            }
+            cacheHit
         }
-        val request = PreviewRenderRequest(
-            requestId = plan.requestId,
-            descriptor = plan.descriptor,
-            variantId = plan.variant.id,
-            modulePath = manifest.modulePath,
-            buildVariant = manifest.buildVariant,
-            buildFingerprint = manifest.inputFingerprint,
-            outputDirectory = outputDirectory.absolutePath,
-        )
-        val requestFile = outputDirectory.resolve(REQUEST_FILE_NAME).apply {
-            writeTextAtomically(PreviewProtocolJson.encodeRequest(request))
-        }
+        if (pendingPlans.isEmpty()) return
+
         val runtimeRoot = materializeArchive(
             archive = layoutlibRuntimeArchive.requireSingleFile("Layoutlib runtime"),
             label = "layoutlib-runtime",
@@ -154,18 +166,6 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         val resourcesRoot = materializeArchive(
             archive = layoutlibResourcesArchive.requireSingleFile("Layoutlib resources"),
             label = "layoutlib-resources",
-        )
-        val commandFile = outputDirectory.resolve(COMMAND_FILE_NAME)
-        commandFile.writeTextAtomically(
-            PreviewProtocolJson.encodeWorkerCommand(
-                PreviewWorkerCommand(
-                    buildManifestPath = buildManifestFile.get().asFile.absolutePath,
-                    renderRequestPath = requestFile.absolutePath,
-                    renderResponsePath = responseFile.absolutePath,
-                    layoutlibRuntimeRoot = runtimeRoot.absolutePath,
-                    layoutlibResourcesRoot = resourcesRoot.absolutePath,
-                ),
-            ),
         )
         val hostFiles = workerClasspath.files
         require(hostFiles.isNotEmpty()) {
@@ -183,6 +183,142 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             .flatMap { input -> input.paths.asSequence() }
             .map(::File)
             .toList()
+        val prepared = pendingPlans.map { plan ->
+            preparePlan(
+                plan = plan,
+                manifest = manifest,
+                runtimeRoot = runtimeRoot,
+                resourcesRoot = resourcesRoot,
+            )
+        }
+        val failures = if (batchTargetsFile.isPresent) {
+            prepared.chunked(MAX_PREVIEW_WORKER_BATCH_SIZE)
+                .flatMapIndexed { batchIndex, batch ->
+                    executeBatch(
+                        batch = batch,
+                        batchIndex = batchIndex,
+                        hostFiles = hostFiles,
+                        applicationClasspath = applicationClasspath,
+                    )
+                }
+        } else {
+            listOfNotNull(
+                executeSingle(
+                    prepared = prepared.single(),
+                    hostFiles = hostFiles,
+                    applicationClasspath = applicationClasspath,
+                ),
+            )
+        }
+        if (failures.isNotEmpty() && !batchTargetsFile.isPresent) {
+            throw failures.single().second
+        }
+        failures.forEach { (plan, error) ->
+            logger.error(
+                "ViewCompose preview '${plan.descriptor.id}/${plan.variant.id}' failed: " +
+                    (error.message ?: error::class.java.simpleName),
+            )
+        }
+    }
+
+    private fun preparePlan(
+        plan: PreviewRenderPlan,
+        manifest: PreviewBuildManifest,
+        runtimeRoot: File,
+        resourcesRoot: File,
+    ): PreparedPreviewExecution {
+        val outputDirectory = File(
+            manifest.artifactRootDirectory,
+            plan.cacheRelativeDirectory,
+        )
+        val responseFile = outputDirectory.resolve(RESPONSE_FILE_NAME)
+        check(outputDirectory.isDirectory || outputDirectory.mkdirs()) {
+            "Could not create ViewCompose preview output '${outputDirectory.absolutePath}'."
+        }
+        if (responseFile.exists()) {
+            check(responseFile.delete()) {
+                "Could not invalidate stale ViewCompose preview response " +
+                    "'${responseFile.absolutePath}'."
+            }
+        }
+        val request = PreviewRenderRequest(
+            requestId = plan.requestId,
+            descriptor = plan.descriptor,
+            variantId = plan.variant.id,
+            modulePath = manifest.modulePath,
+            buildVariant = manifest.buildVariant,
+            buildFingerprint = manifest.inputFingerprint,
+            outputDirectory = outputDirectory.absolutePath,
+        )
+        val requestFile = outputDirectory.resolve(REQUEST_FILE_NAME).apply {
+            writeTextAtomically(PreviewProtocolJson.encodeRequest(request))
+        }
+        val commandFile = outputDirectory.resolve(COMMAND_FILE_NAME)
+        val command = PreviewWorkerCommand(
+            buildManifestPath = buildManifestFile.get().asFile.absolutePath,
+            renderRequestPath = requestFile.absolutePath,
+            renderResponsePath = responseFile.absolutePath,
+            layoutlibRuntimeRoot = runtimeRoot.absolutePath,
+            layoutlibResourcesRoot = resourcesRoot.absolutePath,
+        )
+        commandFile.writeTextAtomically(PreviewProtocolJson.encodeWorkerCommand(command))
+        return PreparedPreviewExecution(
+            plan = plan,
+            request = request,
+            responseFile = responseFile,
+            command = command,
+            commandFile = commandFile,
+        )
+    }
+
+    private fun executeSingle(
+        prepared: PreparedPreviewExecution,
+        hostFiles: Collection<File>,
+        applicationClasspath: List<File>,
+    ): Pair<PreviewRenderPlan, Throwable>? {
+        return runCatching {
+            val exitValue = executeWorker(
+                commandFile = prepared.commandFile,
+                hostFiles = hostFiles,
+                applicationClasspath = applicationClasspath,
+            )
+            validateExecution(prepared, exitValue)
+        }.exceptionOrNull()?.let { error -> prepared.plan to error }
+    }
+
+    private fun executeBatch(
+        batch: List<PreparedPreviewExecution>,
+        batchIndex: Int,
+        hostFiles: Collection<File>,
+        applicationClasspath: List<File>,
+    ): List<Pair<PreviewRenderPlan, Throwable>> {
+        val batchCommandFile = temporaryDir.resolve("batch-command-$batchIndex.json")
+        batchCommandFile.writeTextAtomically(
+            PreviewProtocolJson.encodeWorkerBatchCommand(
+                PreviewWorkerBatchCommand(commands = batch.map(PreparedPreviewExecution::command)),
+            ),
+        )
+        val executionResult = runCatching {
+            executeWorker(
+                commandFile = batchCommandFile,
+                hostFiles = hostFiles,
+                applicationClasspath = applicationClasspath,
+            )
+        }
+        val executionError = executionResult.exceptionOrNull()
+        return batch.mapNotNull { prepared ->
+            val error = executionError ?: runCatching {
+                validateExecution(prepared, checkNotNull(executionResult.getOrNull()))
+            }.exceptionOrNull()
+            error?.let { prepared.plan to it }
+        }
+    }
+
+    private fun executeWorker(
+        commandFile: File,
+        hostFiles: Collection<File>,
+        applicationClasspath: List<File>,
+    ): Int {
         val execution = execOperations.javaexec { spec ->
             spec.classpath(hostFiles + applicationClasspath)
             spec.mainClass.set(workerMainClass)
@@ -190,9 +326,17 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             spec.jvmArgs("-Djava.awt.headless=true")
             spec.isIgnoreExitValue = true
         }
-        if (execution.exitValue != 0 && !responseFile.isFile) {
+        return execution.exitValue
+    }
+
+    private fun validateExecution(
+        prepared: PreparedPreviewExecution,
+        exitValue: Int,
+    ) {
+        val responseFile = prepared.responseFile
+        if (exitValue != 0 && !responseFile.isFile) {
             throw GradleException(
-                "ViewCompose preview worker exited with code ${execution.exitValue} " +
+                "ViewCompose preview worker exited with code $exitValue " +
                     "without a response.",
             )
         }
@@ -200,7 +344,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             "ViewCompose preview worker did not write '${responseFile.absolutePath}'."
         }
         val response = PreviewProtocolJson.decodeResponse(responseFile.readText())
-        validateResponse(request, response)
+        validateResponse(prepared.request, response)
         if (response.status != PreviewRenderStatus.Success) {
             throw GradleException(
                 buildString {
@@ -262,6 +406,18 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         }
         return destination
     }
+}
+
+private data class PreparedPreviewExecution(
+    val plan: PreviewRenderPlan,
+    val request: PreviewRenderRequest,
+    val responseFile: File,
+    val command: PreviewWorkerCommand,
+    val commandFile: File,
+)
+
+private fun PreviewRenderPlan.responseFile(manifest: PreviewBuildManifest): File {
+    return File(manifest.artifactRootDirectory, cacheRelativeDirectory).resolve(RESPONSE_FILE_NAME)
 }
 
 private fun ConfigurableFileCollection.requireSingleFile(label: String): File {
