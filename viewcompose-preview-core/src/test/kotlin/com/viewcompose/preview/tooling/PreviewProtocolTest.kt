@@ -142,6 +142,20 @@ class PreviewProtocolTest {
                     children = listOf(PreviewRenderTreeNode(type = "Text")),
                 ),
             ),
+            nativeViewTree = listOf(
+                PreviewNativeViewNode(
+                    className = "android.widget.FrameLayout",
+                    bounds = PreviewLayoutBounds(
+                        left = 0,
+                        top = 0,
+                        right = 1080,
+                        bottom = 1920,
+                    ),
+                    measuredWidth = 1080,
+                    measuredHeight = 1920,
+                    visibility = "VISIBLE",
+                ),
+            ),
             composition = PreviewCompositionSnapshot(
                 recomposedScopeCount = 1,
                 scopes = listOf(

@@ -15,6 +15,7 @@ data class PreviewRenderSnapshot(
     val structure: PreviewRenderStructure = PreviewRenderStructure(),
     val warnings: List<String> = emptyList(),
     val tree: List<PreviewRenderTreeNode> = emptyList(),
+    val nativeViewTree: List<PreviewNativeViewNode> = emptyList(),
     val patches: List<PreviewPatchRecord> = emptyList(),
     val composition: PreviewCompositionSnapshot = PreviewCompositionSnapshot(),
 )
@@ -51,6 +52,31 @@ data class PreviewRenderTreeNode(
     val type: String,
     val key: String? = null,
     val children: List<PreviewRenderTreeNode> = emptyList(),
+)
+
+/**
+ * One laid-out Android View captured after the static preview root completes measure and layout.
+ *
+ * [bounds] are absolute pixel coordinates relative to the preview root. Keeping this separate from
+ * the VNode tree makes wrapper Views, lazy-container children, and platform-owned descendants
+ * visible without coupling the stable preview protocol to renderer internals.
+ */
+@Serializable
+data class PreviewNativeViewNode(
+    val className: String,
+    val bounds: PreviewLayoutBounds,
+    val measuredWidth: Int,
+    val measuredHeight: Int,
+    val visibility: String,
+    val children: List<PreviewNativeViewNode> = emptyList(),
+)
+
+@Serializable
+data class PreviewLayoutBounds(
+    val left: Int,
+    val top: Int,
+    val right: Int,
+    val bottom: Int,
 )
 
 @Serializable

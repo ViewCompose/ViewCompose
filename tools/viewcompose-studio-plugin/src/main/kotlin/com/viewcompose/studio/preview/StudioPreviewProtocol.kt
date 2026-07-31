@@ -67,6 +67,7 @@ internal data class StudioPreviewRenderSnapshot(
     val structure: StudioPreviewRenderStructure,
     val warnings: List<String>,
     val tree: List<StudioPreviewRenderTreeNode>,
+    val nativeViewTree: List<StudioPreviewNativeViewNode>,
     val patches: List<StudioPreviewPatchRecord>,
     val composition: StudioPreviewCompositionSnapshot,
 )
@@ -93,6 +94,28 @@ internal data class StudioPreviewRenderTreeNode(
     val key: String?,
     val children: List<StudioPreviewRenderTreeNode>,
 )
+
+internal data class StudioPreviewNativeViewNode(
+    val className: String,
+    val bounds: StudioPreviewLayoutBounds,
+    val measuredWidth: Int,
+    val measuredHeight: Int,
+    val visibility: String,
+    val children: List<StudioPreviewNativeViewNode>,
+)
+
+internal data class StudioPreviewLayoutBounds(
+    val left: Int,
+    val top: Int,
+    val right: Int,
+    val bottom: Int,
+) {
+    val width: Int
+        get() = right - left
+
+    val height: Int
+        get() = bottom - top
+}
 
 internal data class StudioPreviewPatchRecord(
     val operation: String,
@@ -194,6 +217,12 @@ internal object StudioPreviewProtocolReader {
                     depth = 0,
                 )
             },
+            nativeViewTree = root.optionalArray("nativeViewTree").map { element ->
+                element.requiredObject("native View node").toNativeViewNode(
+                    budget = budget,
+                    depth = 0,
+                )
+            },
             patches = root.optionalArray("patches").map { element ->
                 element.requiredObject("patch").toPatchRecord()
             },
@@ -233,6 +262,34 @@ private fun JsonObject.toRenderTreeNode(
         key = optionalString("key"),
         children = optionalArray("children").map { child ->
             child.requiredObject("tree child").toRenderTreeNode(
+                budget = budget,
+                depth = depth + 1,
+            )
+        },
+    )
+}
+
+private fun JsonObject.toNativeViewNode(
+    budget: SnapshotParseBudget,
+    depth: Int,
+): StudioPreviewNativeViewNode {
+    budget.recordNode(depth)
+    val bounds = requireNotNull(optionalObject("bounds")) {
+        "Preview protocol field 'bounds' must be an object."
+    }
+    return StudioPreviewNativeViewNode(
+        className = requiredString("className"),
+        bounds = StudioPreviewLayoutBounds(
+            left = bounds.requiredInt("left"),
+            top = bounds.requiredInt("top"),
+            right = bounds.requiredInt("right"),
+            bottom = bounds.requiredInt("bottom"),
+        ),
+        measuredWidth = optionalInt("measuredWidth") ?: 0,
+        measuredHeight = optionalInt("measuredHeight") ?: 0,
+        visibility = optionalString("visibility") ?: "VISIBLE",
+        children = optionalArray("children").map { child ->
+            child.requiredObject("native View child").toNativeViewNode(
                 budget = budget,
                 depth = depth + 1,
             )

@@ -86,6 +86,35 @@ class StudioPreviewProtocolTest {
                   ]
                 }
               ],
+              "nativeViewTree": [
+                {
+                  "className": "android.widget.FrameLayout",
+                  "bounds": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 1080,
+                    "bottom": 1920
+                  },
+                  "measuredWidth": 1080,
+                  "measuredHeight": 1920,
+                  "visibility": "VISIBLE",
+                  "children": [
+                    {
+                      "className": "android.widget.TextView",
+                      "bounds": {
+                        "left": 32,
+                        "top": 48,
+                        "right": 256,
+                        "bottom": 112
+                      },
+                      "measuredWidth": 224,
+                      "measuredHeight": 64,
+                      "visibility": "VISIBLE",
+                      "children": []
+                    }
+                  ]
+                }
+              ],
               "patches": [
                 {
                   "operation": "Insert",
@@ -127,6 +156,11 @@ class StudioPreviewProtocolTest {
         assertEquals(7, snapshot.structure.vnodeCount)
         assertEquals(4, snapshot.stats.inserts)
         assertEquals("Text", snapshot.tree.single().children.single().type)
+        assertEquals(
+            "android.widget.TextView",
+            snapshot.nativeViewTree.single().children.single().className,
+        )
+        assertEquals(224, snapshot.nativeViewTree.single().children.single().bounds.width)
         assertEquals("Insert", snapshot.patches.single().operation)
         assertTrue(snapshot.composition.scopes.single().recomposed)
         assertEquals(

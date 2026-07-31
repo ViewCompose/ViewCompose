@@ -3,6 +3,7 @@ package com.viewcompose.preview.runner
 import android.content.Context
 import android.os.Build
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
@@ -11,6 +12,8 @@ import com.viewcompose.preview.tooling.PreviewCompositionSnapshot
 import com.viewcompose.preview.tooling.PreviewDiagnostic
 import com.viewcompose.preview.tooling.PreviewDiagnosticSeverity
 import com.viewcompose.preview.tooling.PreviewLayoutDirection
+import com.viewcompose.preview.tooling.PreviewLayoutBounds
+import com.viewcompose.preview.tooling.PreviewNativeViewNode
 import com.viewcompose.preview.tooling.PreviewNodeBindingStats
 import com.viewcompose.preview.tooling.PreviewPatchRecord
 import com.viewcompose.preview.tooling.PreviewRecomposeScope
@@ -136,7 +139,7 @@ object StaticPreviewRenderer {
                 StaticPreviewMountResult.Success(
                     frame = StaticPreviewFrame(
                         rootView = root,
-                        snapshot = result.toPreviewSnapshot(),
+                        snapshot = result.toPreviewSnapshot(root),
                         session = checkNotNull(session),
                     ),
                 )
@@ -189,7 +192,7 @@ private fun PreviewRenderRequest.renderDiagnostic(
     )
 }
 
-private fun RenderTreeResult.toPreviewSnapshot(): PreviewRenderSnapshot {
+private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSnapshot {
     return PreviewRenderSnapshot(
         stats = PreviewRenderStats(
             inserts = stats.inserts,
@@ -223,6 +226,12 @@ private fun RenderTreeResult.toPreviewSnapshot(): PreviewRenderSnapshot {
                 children = node.children.toPreviewTreeNodes(),
             )
         },
+        nativeViewTree = listOf(
+            rootView.toPreviewNativeViewNode(
+                absoluteLeft = 0,
+                absoluteTop = 0,
+            ),
+        ),
         patches = patches.map { patch ->
             PreviewPatchRecord(
                 operation = patch.operation.name,
@@ -255,6 +264,45 @@ private fun RenderTreeResult.toPreviewSnapshot(): PreviewRenderSnapshot {
                 )
             },
         ),
+    )
+}
+
+private fun View.toPreviewNativeViewNode(
+    absoluteLeft: Int,
+    absoluteTop: Int,
+): PreviewNativeViewNode {
+    val nodeLeft = absoluteLeft + translationX.roundToInt()
+    val nodeTop = absoluteTop + translationY.roundToInt()
+    val childOriginLeft = nodeLeft - scrollX
+    val childOriginTop = nodeTop - scrollY
+    val childNodes = if (this is ViewGroup) {
+        List(childCount) { index ->
+            val child = getChildAt(index)
+            child.toPreviewNativeViewNode(
+                absoluteLeft = childOriginLeft + child.left,
+                absoluteTop = childOriginTop + child.top,
+            )
+        }
+    } else {
+        emptyList()
+    }
+    return PreviewNativeViewNode(
+        className = javaClass.name,
+        bounds = PreviewLayoutBounds(
+            left = nodeLeft,
+            top = nodeTop,
+            right = nodeLeft + width,
+            bottom = nodeTop + height,
+        ),
+        measuredWidth = measuredWidth,
+        measuredHeight = measuredHeight,
+        visibility = when (visibility) {
+            View.VISIBLE -> "VISIBLE"
+            View.INVISIBLE -> "INVISIBLE"
+            View.GONE -> "GONE"
+            else -> visibility.toString()
+        },
+        children = childNodes,
     )
 }
 

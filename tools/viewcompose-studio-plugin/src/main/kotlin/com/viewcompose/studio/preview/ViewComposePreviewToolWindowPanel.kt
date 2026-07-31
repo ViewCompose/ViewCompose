@@ -112,6 +112,7 @@ internal class ViewComposePreviewToolWindowPanel(
                 border = JBUI.Borders.emptyTop(8)
                 addTab("Preview", previewScrollPane)
                 addTab("Structure", renderStructurePanel(snapshot))
+                addTab("Views", nativeViewsPanel(snapshot.nativeViewTree))
                 addTab("Composition", compositionPanel(snapshot.composition))
                 addTab("Patches", patchesPanel(snapshot.patches))
             }
@@ -216,6 +217,23 @@ internal class ViewComposePreviewToolWindowPanel(
         return JBScrollPane(
             readOnlyText(text.ifBlank { "No composition scopes were recorded." }),
         ).apply {
+            border = JBUI.Borders.empty(8)
+        }
+    }
+
+    private fun nativeViewsPanel(views: List<StudioPreviewNativeViewNode>): JComponent {
+        val root = DefaultMutableTreeNode("Android View tree")
+        views.forEach { view ->
+            root.add(view.toSwingTreeNode())
+        }
+        val tree = JTree(root).apply {
+            isRootVisible = false
+            showsRootHandles = true
+        }
+        repeat(tree.rowCount) { row ->
+            tree.expandRow(row)
+        }
+        return JBScrollPane(tree).apply {
             border = JBUI.Borders.empty(8)
         }
     }
@@ -394,6 +412,36 @@ private fun StudioPreviewRenderTreeNode.toSwingTreeNode(): DefaultMutableTreeNod
     val label = buildString {
         append(type)
         key?.let { value -> append(" · key=$value") }
+    }
+    val swingNode = DefaultMutableTreeNode(label)
+    children.forEach { child ->
+        swingNode.add(child.toSwingTreeNode())
+    }
+    return swingNode
+}
+
+private fun StudioPreviewNativeViewNode.toSwingTreeNode(): DefaultMutableTreeNode {
+    val simpleClassName = className.substringAfterLast('.')
+    val label = buildString {
+        append(simpleClassName)
+        append(" · ")
+        append(bounds.width)
+        append('×')
+        append(bounds.height)
+        append(" @ ")
+        append(bounds.left)
+        append(',')
+        append(bounds.top)
+        if (measuredWidth != bounds.width || measuredHeight != bounds.height) {
+            append(" · measured=")
+            append(measuredWidth)
+            append('×')
+            append(measuredHeight)
+        }
+        if (visibility != "VISIBLE") {
+            append(" · ")
+            append(visibility)
+        }
     }
     val swingNode = DefaultMutableTreeNode(label)
     children.forEach { child ->
