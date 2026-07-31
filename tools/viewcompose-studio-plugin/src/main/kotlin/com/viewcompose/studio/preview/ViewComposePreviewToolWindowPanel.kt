@@ -1,5 +1,6 @@
 package com.viewcompose.studio.preview
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
@@ -16,6 +17,9 @@ import java.awt.Font
 import java.awt.FlowLayout
 import java.awt.Graphics
 import java.awt.Graphics2D
+import java.awt.GridLayout
+import java.awt.Insets
+import java.awt.Point
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.awt.event.ComponentAdapter
@@ -25,13 +29,17 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
 import java.nio.file.Path
 import javax.swing.AbstractAction
+import javax.swing.BorderFactory
 import javax.swing.Box
+import javax.swing.JButton
 import javax.swing.JCheckBox
-import javax.swing.JComboBox
 import javax.swing.JComponent
+import javax.swing.JComboBox
+import javax.swing.JLayeredPane
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.JTree
+import javax.swing.JViewport
 import javax.swing.KeyStroke
 import javax.swing.SwingUtilities
 import javax.swing.ToolTipManager
@@ -45,6 +53,7 @@ internal class ViewComposePreviewToolWindowPanel(
     private val onVariantSelected: (String) -> Unit,
     private val onNavigateToSource: (StudioPreviewSourceLocation) -> Unit,
     private val onNavigateToRuntimeSource: (List<StudioPreviewSourceCallSite>) -> Unit,
+    private val onPresentationChanged: (String?, PreviewSourceSelection?) -> Unit = { _, _ -> },
 ) : SimpleToolWindowPanel(true, true) {
     private val contentPanel = JPanel(BorderLayout())
     private val detectionEvidence = detection.evidencePath
@@ -71,6 +80,8 @@ internal class ViewComposePreviewToolWindowPanel(
 
     fun showState(state: ViewComposePreviewPanelState) {
         currentState = state
+        val presentation = state.previewPresentation()
+        onPresentationChanged(presentation.title, presentation.source)
         nodeSelectionCoordinator = null
         contentPanel.removeAll()
         when (state) {
@@ -103,7 +114,6 @@ internal class ViewComposePreviewToolWindowPanel(
             header(
                 title = messages.text("empty.title"),
                 description = messages.text("empty.description"),
-                selection = null,
                 includeDetectionEvidence = true,
             ),
             BorderLayout.NORTH,
@@ -128,7 +138,6 @@ internal class ViewComposePreviewToolWindowPanel(
                         messages.loadingMessage(state.message),
                     )
                 },
-                selection = state.selection,
             ),
             BorderLayout.NORTH,
         )
@@ -145,7 +154,6 @@ internal class ViewComposePreviewToolWindowPanel(
         val renderedHeader = header(
             title = result.descriptorName,
             description = "${result.variantName}$duration$cache",
-            selection = result.selection,
             trailing = selector,
         )
         contentPanel.add(
@@ -409,6 +417,8 @@ internal class ViewComposePreviewToolWindowPanel(
         val imageScrollPane = JBScrollPane(canvas).apply {
             border = JBUI.Borders.empty()
             preferredSize = Dimension(JBUI.scale(360), JBUI.scale(600))
+            verticalScrollBar.unitIncrement = JBUI.scale(24)
+            horizontalScrollBar.unitIncrement = JBUI.scale(24)
         }
         fun updateCanvasScale() {
             canvas.updateViewportSize(imageScrollPane.viewport.extentSize)
@@ -422,34 +432,38 @@ internal class ViewComposePreviewToolWindowPanel(
         )
         SwingUtilities.invokeLater(::updateCanvasScale)
 
-        val zoomChoices = PreviewZoomOption.entries.map { option ->
-            PreviewZoomChoice(
-                option = option,
-                displayName = when (option) {
-                    PreviewZoomOption.Fit -> messages.text("preview.zoom.fit")
-                    else -> messages.text(
-                        "preview.zoom.percent",
-                        checkNotNull(option.fixedScale).times(100).roundToInt(),
-                    )
-                },
-            )
+        fun selectZoom(option: PreviewZoomOption) {
+            previewZoomOption = option
+            canvas.zoomOption = option
+            SwingUtilities.invokeLater(::updateCanvasScale)
         }
-        val zoomSelector = JComboBox(zoomChoices.toTypedArray()).apply {
-            toolTipText = messages.text("preview.zoom")
-            accessibleContext.accessibleName = messages.text("preview.zoom")
-            selectedItem = zoomChoices.first { choice ->
-                choice.option == previewZoomOption
+        fun selectRelativeZoom(direction: Int) {
+            val fixedOptions = PreviewZoomOption.entries
+                .filter { option -> option.fixedScale != null }
+                .sortedBy { option -> option.fixedScale }
+            val currentScale = canvas.currentScale
+            val option = if (direction > 0) {
+                fixedOptions.firstOrNull { option ->
+                    checkNotNull(option.fixedScale) > currentScale + ZOOM_EPSILON
+                } ?: fixedOptions.last()
+            } else {
+                fixedOptions.lastOrNull { option ->
+                    checkNotNull(option.fixedScale) < currentScale - ZOOM_EPSILON
+                } ?: fixedOptions.first()
             }
-            addActionListener {
-                val choice = selectedItem as? PreviewZoomChoice
-                    ?: return@addActionListener
-                if (choice.option != previewZoomOption) {
-                    previewZoomOption = choice.option
-                    canvas.zoomOption = choice.option
-                    SwingUtilities.invokeLater(::updateCanvasScale)
-                }
-            }
+            selectZoom(option)
         }
+        val zoomToolbar = previewZoomToolbar(
+            canvas = canvas,
+            onZoomIn = { selectRelativeZoom(1) },
+            onZoomOut = { selectRelativeZoom(-1) },
+            onActualSize = { selectZoom(PreviewZoomOption.Percent100) },
+            onFit = { selectZoom(PreviewZoomOption.Fit) },
+        )
+        val canvasLayer = PreviewCanvasLayer(
+            scrollPane = imageScrollPane,
+            floatingToolbar = zoomToolbar,
+        )
 
         return JPanel(BorderLayout()).apply {
             isOpaque = false
@@ -504,15 +518,83 @@ internal class ViewComposePreviewToolWindowPanel(
                                     ),
                                 )
                             }
-                            add(JBLabel(messages.text("preview.zoom")))
-                            add(zoomSelector)
                         },
                         BorderLayout.EAST,
                     )
                 },
                 BorderLayout.NORTH,
             )
-            add(imageScrollPane, BorderLayout.CENTER)
+            add(canvasLayer, BorderLayout.CENTER)
+        }
+    }
+
+    private fun previewZoomToolbar(
+        canvas: PreviewImageCanvas,
+        onZoomIn: () -> Unit,
+        onZoomOut: () -> Unit,
+        onActualSize: () -> Unit,
+        onFit: () -> Unit,
+    ): JComponent {
+        fun toolbarButton(
+            tooltip: String,
+            icon: javax.swing.Icon? = null,
+            text: String? = null,
+            action: () -> Unit,
+        ): JButton {
+            return JButton(icon).apply {
+                this.text = text
+                isFocusable = false
+                isOpaque = false
+                toolTipText = tooltip
+                accessibleContext.accessibleName = tooltip
+                margin = Insets(JBUI.scale(5), JBUI.scale(7), JBUI.scale(5), JBUI.scale(7))
+                preferredSize = Dimension(JBUI.scale(38), JBUI.scale(34))
+                addActionListener { action() }
+            }
+        }
+        return JPanel(GridLayout(0, 1, 0, 0)).apply {
+            isOpaque = true
+            background = PREVIEW_TOOLBAR_BACKGROUND
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PREVIEW_TOOLBAR_BORDER),
+                JBUI.Borders.empty(2),
+            )
+            add(
+                toolbarButton(
+                    tooltip = messages.text("preview.pan"),
+                    icon = AllIcons.General.Drag,
+                ) {
+                    canvas.panEnabled = !canvas.panEnabled
+                },
+            )
+            add(
+                toolbarButton(
+                    tooltip = messages.text("preview.zoom.in"),
+                    icon = AllIcons.General.ZoomIn,
+                    action = onZoomIn,
+                ),
+            )
+            add(
+                toolbarButton(
+                    tooltip = messages.text("preview.zoom.out"),
+                    icon = AllIcons.General.ZoomOut,
+                    action = onZoomOut,
+                ),
+            )
+            add(
+                toolbarButton(
+                    tooltip = messages.text("preview.zoom.actual"),
+                    text = "1:1",
+                    action = onActualSize,
+                ),
+            )
+            add(
+                toolbarButton(
+                    tooltip = messages.text("preview.zoom.fit"),
+                    icon = AllIcons.General.FitContent,
+                    action = onFit,
+                ),
+            )
         }
     }
 
@@ -606,7 +688,6 @@ internal class ViewComposePreviewToolWindowPanel(
             header(
                 title = messages.failureTitle(result.title),
                 description = result.selection.symbolName,
-                selection = result.selection,
             ),
             BorderLayout.NORTH,
         )
@@ -650,7 +731,6 @@ internal class ViewComposePreviewToolWindowPanel(
     private fun header(
         title: String,
         description: String,
-        selection: PreviewSourceSelection?,
         includeDetectionEvidence: Boolean = false,
         trailing: JComponent? = null,
     ): JComponent {
@@ -685,23 +765,6 @@ internal class ViewComposePreviewToolWindowPanel(
             add(primaryInfo, BorderLayout.CENTER)
             trailing?.let { component ->
                 add(component, BorderLayout.EAST)
-            }
-            selection?.let { source ->
-                add(
-                    JPanel(BorderLayout()).apply {
-                        isOpaque = false
-                        border = JBUI.Borders.emptyTop(6)
-                        add(
-                            ActionLink(source.presentablePathText(projectRoot)) {
-                                onNavigateToSource(source.toStudioSourceLocation())
-                            }.apply {
-                                toolTipText = source.filePath
-                            },
-                            BorderLayout.WEST,
-                        )
-                    },
-                    BorderLayout.SOUTH,
-                )
             }
         }
     }
@@ -952,6 +1015,31 @@ private fun StudioPreviewNativeViewNode.nodeCount(): Int {
     return 1 + children.sumOf(StudioPreviewNativeViewNode::nodeCount)
 }
 
+private class PreviewCanvasLayer(
+    private val scrollPane: JComponent,
+    private val floatingToolbar: JComponent,
+) : JLayeredPane() {
+    init {
+        isOpaque = false
+        add(scrollPane, DEFAULT_LAYER)
+        add(floatingToolbar, PALETTE_LAYER)
+    }
+
+    override fun doLayout() {
+        scrollPane.setBounds(0, 0, width, height)
+        val toolbarSize = floatingToolbar.preferredSize
+        val margin = JBUI.scale(12)
+        floatingToolbar.setBounds(
+            (width - toolbarSize.width - margin).coerceAtLeast(0),
+            (height - toolbarSize.height - margin).coerceAtLeast(0),
+            toolbarSize.width,
+            toolbarSize.height,
+        )
+    }
+
+    override fun getPreferredSize(): Dimension = scrollPane.preferredSize
+}
+
 private class PreviewImageCanvas(
     private val image: BufferedImage,
     private val nativeViews: List<StudioPreviewNativeViewNode>,
@@ -982,9 +1070,27 @@ private class PreviewImageCanvas(
             repaint()
         }
 
+    var panEnabled: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            panStartPoint = null
+            panStartViewPosition = null
+            cursor = if (value) {
+                Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR)
+            } else {
+                Cursor.getDefaultCursor()
+            }
+        }
+
+    val currentScale: Double
+        get() = scale
+
     private var viewportSize: Dimension = Dimension(image.width, image.height)
     private var scale: Double = 1.0
     private var selectedView: StudioPreviewNativeViewNode? = null
+    private var panStartPoint: Point? = null
+    private var panStartViewPosition: Point? = null
 
     init {
         minimumSize = Dimension(1, 1)
@@ -993,21 +1099,50 @@ private class PreviewImageCanvas(
         addMouseMotionListener(
             object : MouseMotionAdapter() {
                 override fun mouseMoved(event: MouseEvent) {
-                    cursor = if (mappedViewAt(event.x, event.y) == null) {
+                    if (panEnabled) {
+                        cursor = Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR)
+                    } else if (mappedViewAt(event.x, event.y) == null) {
                         Cursor.getDefaultCursor()
                     } else {
                         Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
                     }
+                }
+
+                override fun mouseDragged(event: MouseEvent) {
+                    if (!panEnabled) return
+                    val viewport = previewViewport() ?: return
+                    val startPoint = panStartPoint ?: return
+                    val startPosition = panStartViewPosition ?: return
+                    val maxX = (viewport.viewSize.width - viewport.extentSize.width).coerceAtLeast(0)
+                    val maxY = (viewport.viewSize.height - viewport.extentSize.height).coerceAtLeast(0)
+                    viewport.viewPosition = Point(
+                        (startPosition.x - (event.x - startPoint.x)).coerceIn(0, maxX),
+                        (startPosition.y - (event.y - startPoint.y)).coerceIn(0, maxY),
+                    )
                 }
             },
         )
         addMouseListener(
             object : MouseAdapter() {
                 override fun mouseExited(event: MouseEvent) {
-                    cursor = Cursor.getDefaultCursor()
+                    if (!panEnabled) {
+                        cursor = Cursor.getDefaultCursor()
+                    }
+                }
+
+                override fun mousePressed(event: MouseEvent) {
+                    if (!panEnabled) return
+                    panStartPoint = event.point
+                    panStartViewPosition = previewViewport()?.viewPosition
+                }
+
+                override fun mouseReleased(event: MouseEvent) {
+                    panStartPoint = null
+                    panStartViewPosition = null
                 }
 
                 override fun mouseClicked(event: MouseEvent) {
+                    if (panEnabled) return
                     val mappedView = mappedViewAt(event.x, event.y)
                     onNodeSelected(mappedView?.nodeId)
                     if (event.clickCount >= 2) {
@@ -1020,6 +1155,10 @@ private class PreviewImageCanvas(
             },
         )
         updateScale()
+    }
+
+    private fun previewViewport(): JViewport? {
+        return SwingUtilities.getAncestorOfClass(JViewport::class.java, this) as? JViewport
     }
 
     fun selectNode(nodeId: String?) {
@@ -1255,8 +1394,11 @@ private val SOURCE_SELECTION_COLOR = JBColor(Color(0x2F, 0x80, 0xED), Color(0x64
 private val LAYOUT_DIAGNOSTIC_ERROR_COLOR = Color(0xC6, 0x28, 0x28)
 private val LAYOUT_DIAGNOSTIC_WARNING_COLOR = Color(0xEF, 0x6C, 0x00)
 private val LAYOUT_DIAGNOSTIC_INFO_COLOR = Color(0xF9, 0xA8, 0x25)
+private val PREVIEW_TOOLBAR_BACKGROUND = JBColor(Color(0xF5, 0xF5, 0xF5), Color(0x2B, 0x2D, 0x30))
+private val PREVIEW_TOOLBAR_BORDER = JBColor(Color(0xC9, 0xC9, 0xC9), Color(0x4A, 0x4D, 0x52))
 
 private const val SOURCE_NAVIGATION_ACTION = "viewcompose.preview.navigateToRuntimeSource"
+private const val ZOOM_EPSILON = 0.001
 
 private data class PreviewTreeEntry(
     val label: String,
@@ -1309,13 +1451,6 @@ private data class PreviewVariantChoice(
     override fun toString(): String = displayName
 }
 
-private data class PreviewZoomChoice(
-    val option: PreviewZoomOption,
-    val displayName: String,
-) {
-    override fun toString(): String = displayName
-}
-
 internal fun presentableProjectPath(
     projectRoot: Path?,
     filePath: String,
@@ -1337,19 +1472,6 @@ internal fun presentableProjectPath(
         ?: normalizedPath.toString()
 }
 
-private fun PreviewSourceSelection.presentablePathText(projectRoot: Path?): String {
-    return "${presentableProjectPath(projectRoot, filePath)}:$line"
-}
-
-private fun PreviewSourceSelection.toStudioSourceLocation(): StudioPreviewSourceLocation {
-    return StudioPreviewSourceLocation(
-        filePath = filePath,
-        line = line,
-        column = 1,
-        symbolName = symbolName,
-    )
-}
-
 private fun StudioPreviewSourceLocation.presentableLinkText(
     projectRoot: Path?,
     messages: PreviewUiMessages,
@@ -1359,4 +1481,30 @@ private fun StudioPreviewSourceLocation.presentableLinkText(
         presentableProjectPath(projectRoot, filePath),
         line,
     )
+}
+
+internal data class PreviewPanelPresentation(
+    val title: String?,
+    val source: PreviewSourceSelection?,
+)
+
+internal fun ViewComposePreviewPanelState.previewPresentation(): PreviewPanelPresentation {
+    return when (this) {
+        ViewComposePreviewPanelState.Empty -> PreviewPanelPresentation(
+            title = null,
+            source = null,
+        )
+        is ViewComposePreviewPanelState.Loading -> PreviewPanelPresentation(
+            title = previousResult?.descriptorName ?: selection.symbolName,
+            source = selection,
+        )
+        is ViewComposePreviewPanelState.Rendered -> PreviewPanelPresentation(
+            title = result.descriptorName,
+            source = result.selection,
+        )
+        is ViewComposePreviewPanelState.Failed -> PreviewPanelPresentation(
+            title = result.selection.symbolName,
+            source = result.selection,
+        )
+    }
 }

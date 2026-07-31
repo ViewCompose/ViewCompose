@@ -5,15 +5,30 @@ import org.junit.Test
 
 class PreviewZoomTest {
     @Test
-    fun `fit scale keeps the complete image inside the viewport`() {
+    fun `fit scale keeps preview width visible and lets tall content scroll`() {
         assertEquals(
-            0.5,
+            1.0,
             calculatePreviewScale(
                 option = PreviewZoomOption.Fit,
                 imageWidth = 400,
                 imageHeight = 800,
                 viewportWidth = 416,
                 viewportHeight = 416,
+            ),
+            0.0001,
+        )
+    }
+
+    @Test
+    fun `fit scale shrinks a wide preview to the viewport width`() {
+        assertEquals(
+            0.5,
+            calculatePreviewScale(
+                option = PreviewZoomOption.Fit,
+                imageWidth = 800,
+                imageHeight = 400,
+                viewportWidth = 416,
+                viewportHeight = 900,
             ),
             0.0001,
         )

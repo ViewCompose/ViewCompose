@@ -27,6 +27,7 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         val projectRoot = project.basePath?.let(Path::of)
         val settings = ViewComposePreviewSettings.forProject(project)
         val runtimeSourceResolver = StudioPreviewSourceResolver(project)
+        var currentPreviewSource: PreviewSourceSelection? = null
         val panel = ViewComposePreviewToolWindowPanel(
             detection = project.viewComposeDetection(),
             projectRoot = projectRoot,
@@ -35,6 +36,10 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
             onNavigateToSource = { source -> project.navigateToSource(source) },
             onNavigateToRuntimeSource = { callSites ->
                 runtimeSourceResolver.resolve(callSites)?.let(project::navigateToSource)
+            },
+            onPresentationChanged = { title, source ->
+                currentPreviewSource = source
+                toolWindow.title = title ?: VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID
             },
         )
         fun refreshOptionsActions() {
@@ -64,6 +69,12 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
             toolWindow.setTitleActions(
                 createPreviewTitleActions(
                     language = settings.language,
+                    isOpenSourceEnabled = { currentPreviewSource != null },
+                    onOpenSource = {
+                        currentPreviewSource
+                            ?.toStudioSourceLocation()
+                            ?.let(project::navigateToSource)
+                    },
                     isRefreshEnabled = selectionService::hasActivePreview,
                     onRefresh = selectionService::refreshCurrent,
                 ),
@@ -97,6 +108,15 @@ private fun Project.navigateToSource(source: StudioPreviewSourceLocation) {
         (source.line - 1).coerceAtLeast(0),
         (source.column - 1).coerceAtLeast(0),
     ).navigate(true)
+}
+
+private fun PreviewSourceSelection.toStudioSourceLocation(): StudioPreviewSourceLocation {
+    return StudioPreviewSourceLocation(
+        filePath = filePath,
+        line = line,
+        column = 1,
+        symbolName = symbolName,
+    )
 }
 
 private fun Project.viewComposeDetection(): ViewComposeProjectDetection {

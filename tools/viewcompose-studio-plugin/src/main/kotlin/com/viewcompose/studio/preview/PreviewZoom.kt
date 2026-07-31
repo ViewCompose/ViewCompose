@@ -1,7 +1,5 @@
 package com.viewcompose.studio.preview
 
-import kotlin.math.min
-
 internal enum class PreviewZoomOption(
     val fixedScale: Double?,
 ) {
@@ -26,11 +24,8 @@ internal fun calculatePreviewScale(
     }
     option.fixedScale?.let { scale -> return scale }
     val availableWidth = (viewportWidth - PREVIEW_FIT_PADDING_PIXELS).coerceAtLeast(1)
-    val availableHeight = (viewportHeight - PREVIEW_FIT_PADDING_PIXELS).coerceAtLeast(1)
-    return min(
-        availableWidth.toDouble() / imageWidth,
-        availableHeight.toDouble() / imageHeight,
-    ).coerceIn(MINIMUM_FIT_SCALE, MAXIMUM_FIT_SCALE)
+    return (availableWidth.toDouble() / imageWidth)
+        .coerceIn(MINIMUM_FIT_SCALE, MAXIMUM_FIT_SCALE)
 }
 
 private const val PREVIEW_FIT_PADDING_PIXELS = 16
