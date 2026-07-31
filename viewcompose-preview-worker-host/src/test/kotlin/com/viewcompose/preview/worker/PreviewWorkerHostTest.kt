@@ -51,6 +51,21 @@ class PreviewWorkerHostTest {
     }
 
     @Test
+    fun `auto height maps to a concrete initial Layoutlib viewport`() {
+        val device = PreviewWorkerHost.deviceConfigFor(
+            renderRequest(
+                configuration = PreviewConfiguration(
+                    widthDp = 411,
+                    density = 1f,
+                ),
+            ),
+        )
+
+        assertEquals(411, device.screenWidth)
+        assertEquals(891, device.screenHeight)
+    }
+
+    @Test
     fun `worker uses the merged application theme when it is a style reference`() {
         val manifestFile = File.createTempFile("viewcompose-preview-manifest", ".xml")
         try {
@@ -130,8 +145,8 @@ class PreviewWorkerHostTest {
         )
     }
 
-    private fun renderRequest(): PreviewRenderRequest {
-        val configuration = PreviewConfiguration(
+    private fun renderRequest(
+        configuration: PreviewConfiguration = PreviewConfiguration(
             widthDp = 360,
             heightDp = 720,
             density = 1.25f,
@@ -139,7 +154,8 @@ class PreviewWorkerHostTest {
             localeTags = listOf("ar-EG"),
             layoutDirection = PreviewLayoutDirection.Rtl,
             theme = PreviewTheme.Dark,
-        )
+        ),
+    ): PreviewRenderRequest {
         val descriptor = PreviewDescriptor(
             id = "sample",
             displayName = "Sample",

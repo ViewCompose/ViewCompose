@@ -7,7 +7,26 @@ import kotlinx.serialization.Serializable
  */
 object PreviewDefaults {
     const val WIDTH_DP: Int = 411
-    const val HEIGHT_DP: Int = 891
+    /**
+     * Annotation/configuration value requesting a bounded full-content render.
+     */
+    const val AUTO_HEIGHT_DP: Int = -1
+
+    /**
+     * Initial device viewport used while resolving an [AUTO_HEIGHT_DP] preview.
+     */
+    const val VIEWPORT_HEIGHT_DP: Int = 891
+
+    /**
+     * Default preview height. Auto previews keep at least one viewport and grow when their root
+     * content can still scroll vertically.
+     */
+    const val HEIGHT_DP: Int = AUTO_HEIGHT_DP
+
+    /**
+     * Safety ceiling for auto-height screenshots before density and pixel-budget limits apply.
+     */
+    const val MAX_AUTO_HEIGHT_DP: Int = 4_096
     const val DENSITY: Float = 1f
     const val FONT_SCALE: Float = 1f
     const val LOCALE_TAG: String = "en-US"
@@ -56,7 +75,9 @@ data class PreviewConfiguration(
 ) {
     init {
         require(widthDp > 0) { "Preview widthDp must be greater than zero." }
-        require(heightDp > 0) { "Preview heightDp must be greater than zero." }
+        require(heightDp == PreviewDefaults.AUTO_HEIGHT_DP || heightDp > 0) {
+            "Preview heightDp must be PreviewDefaults.AUTO_HEIGHT_DP or greater than zero."
+        }
         require(density.isFinite() && density > 0f) {
             "Preview density must be finite and greater than zero."
         }
@@ -72,6 +93,22 @@ data class PreviewConfiguration(
         }
     }
 }
+
+/**
+ * Concrete device height used by Android resources and the first layout pass.
+ */
+val PreviewConfiguration.viewportHeightDp: Int
+    get() = if (heightDp == PreviewDefaults.AUTO_HEIGHT_DP) {
+        PreviewDefaults.VIEWPORT_HEIGHT_DP
+    } else {
+        heightDp
+    }
+
+/**
+ * Whether the screenshot canvas may grow beyond [viewportHeightDp].
+ */
+val PreviewConfiguration.isAutoHeight: Boolean
+    get() = heightDp == PreviewDefaults.AUTO_HEIGHT_DP
 
 /**
  * Named configuration presented as one selectable preview variant.

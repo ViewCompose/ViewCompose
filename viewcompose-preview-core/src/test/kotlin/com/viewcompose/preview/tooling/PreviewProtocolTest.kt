@@ -6,6 +6,24 @@ import org.junit.Test
 
 class PreviewProtocolTest {
     @Test
+    fun `default height is auto while positive heights remain fixed viewports`() {
+        val automatic = PreviewConfiguration()
+        val fixed = PreviewConfiguration(heightDp = 720)
+
+        assertEquals(PreviewDefaults.AUTO_HEIGHT_DP, automatic.heightDp)
+        assertEquals(PreviewDefaults.VIEWPORT_HEIGHT_DP, automatic.viewportHeightDp)
+        assertEquals(true, automatic.isAutoHeight)
+        assertEquals(720, fixed.viewportHeightDp)
+        assertEquals(false, fixed.isAutoHeight)
+        assertThrows(IllegalArgumentException::class.java) {
+            PreviewConfiguration(heightDp = 0)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            PreviewConfiguration(heightDp = -2)
+        }
+    }
+
+    @Test
     fun `request resolves selected variant configuration`() {
         val light = PreviewVariant(
             id = "light",

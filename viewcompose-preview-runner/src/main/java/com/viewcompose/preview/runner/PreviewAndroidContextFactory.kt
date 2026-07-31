@@ -6,6 +6,7 @@ import android.os.LocaleList
 import com.viewcompose.preview.tooling.PreviewConfiguration
 import com.viewcompose.preview.tooling.PreviewLayoutDirection
 import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.viewportHeightDp
 import kotlin.math.roundToInt
 
 /**
@@ -20,13 +21,14 @@ object PreviewAndroidContextFactory {
         base: Context,
         preview: PreviewConfiguration,
     ): Context {
+        val viewportHeightDp = preview.viewportHeightDp
         val configuration = Configuration(base.resources.configuration).apply {
             densityDpi = (preview.density * DENSITY_DEFAULT).roundToInt().coerceAtLeast(1)
             fontScale = preview.fontScale
             screenWidthDp = preview.widthDp
-            screenHeightDp = preview.heightDp
-            smallestScreenWidthDp = minOf(preview.widthDp, preview.heightDp)
-            orientation = if (preview.widthDp > preview.heightDp) {
+            screenHeightDp = viewportHeightDp
+            smallestScreenWidthDp = minOf(preview.widthDp, viewportHeightDp)
+            orientation = if (preview.widthDp > viewportHeightDp) {
                 Configuration.ORIENTATION_LANDSCAPE
             } else {
                 Configuration.ORIENTATION_PORTRAIT

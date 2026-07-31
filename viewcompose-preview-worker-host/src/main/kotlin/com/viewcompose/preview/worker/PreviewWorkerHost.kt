@@ -18,6 +18,7 @@ import com.viewcompose.preview.tooling.PreviewRenderResponse
 import com.viewcompose.preview.tooling.PreviewRenderStatus
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.PreviewWorkerCommand
+import com.viewcompose.preview.tooling.viewportHeightDp
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -79,15 +80,16 @@ object PreviewWorkerHost {
 
     internal fun deviceConfigFor(request: PreviewRenderRequest): DeviceConfig {
         val configuration = request.configuration
+        val viewportHeightDp = configuration.viewportHeightDp
         val densityDpi = (configuration.density * DENSITY_DEFAULT)
             .roundToInt()
             .coerceAtLeast(1)
         return DeviceConfig.PIXEL_5.copy(
             screenWidth = (configuration.widthDp * configuration.density).roundToInt(),
-            screenHeight = (configuration.heightDp * configuration.density).roundToInt(),
+            screenHeight = (viewportHeightDp * configuration.density).roundToInt(),
             xdpi = densityDpi,
             ydpi = densityDpi,
-            orientation = if (configuration.widthDp > configuration.heightDp) {
+            orientation = if (configuration.widthDp > viewportHeightDp) {
                 ScreenOrientation.LANDSCAPE
             } else {
                 ScreenOrientation.PORTRAIT

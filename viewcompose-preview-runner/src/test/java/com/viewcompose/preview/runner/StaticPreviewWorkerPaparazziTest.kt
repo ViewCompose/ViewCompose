@@ -27,12 +27,16 @@ import com.viewcompose.preview.tooling.PreviewRenderStatus
 import com.viewcompose.preview.tooling.PreviewRenderTreeNode
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.PreviewVariant
+import com.viewcompose.preview.tooling.viewportHeightDp
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.fillMaxSize
+import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.AndroidDynamicColorPolicy
 import com.viewcompose.widget.core.AndroidThemeBridge
+import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.Environment
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.Theme
@@ -108,7 +112,7 @@ class StaticPreviewWorkerPaparazziTest {
         assertTrue(imageFile.length() > 0L)
         val pngDimensions = imageFile.readPngDimensions()
         assertEquals(request.configuration.widthDp, pngDimensions.first)
-        assertEquals(request.configuration.heightDp, pngDimensions.second)
+        assertEquals(request.configuration.viewportHeightDp, pngDimensions.second)
         assertTrue(treeFile.isFile)
 
         val snapshot = PreviewProtocolJson.decodeRenderSnapshot(treeFile.readText())
@@ -131,7 +135,7 @@ class StaticPreviewWorkerPaparazziTest {
         val nativeRoot = snapshot.nativeViewTree.single()
         assertEquals("android.widget.FrameLayout", nativeRoot.className)
         assertEquals(request.configuration.widthDp, nativeRoot.bounds.right)
-        assertEquals(request.configuration.heightDp, nativeRoot.bounds.bottom)
+        assertEquals(request.configuration.viewportHeightDp, nativeRoot.bounds.bottom)
         val nativeText = checkNotNull(nativeRoot.findNativeView("android.widget.TextView"))
         assertTrue(nativeText.bounds.right > nativeText.bounds.left)
         assertTrue(nativeText.bounds.bottom > nativeText.bounds.top)
@@ -141,6 +145,53 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals(renderText.nodeId, insertPatch.nodeId)
         assertEquals(renderText.sourceCallSites, insertPatch.sourceCallSites)
         assertNotNull(snapshot.composition)
+    }
+
+    @Test
+    fun `auto height expands a fill-parent lazy column until all content is visible`() {
+        val variant = PreviewVariant(
+            id = "auto-height",
+            displayName = "Auto height",
+            configuration = PreviewConfiguration(widthDp = 240),
+        )
+        val autoHeightEntry = StaticPreviewEntry(
+            descriptor = entry().descriptor.copy(variants = listOf(variant)),
+        ) {
+            LazyColumn(
+                items = (0 until 24).toList(),
+                key = { index -> index },
+                modifier = Modifier.fillMaxSize(),
+            ) { index ->
+                Text(
+                    text = "Row $index",
+                    modifier = Modifier.height(80.dp),
+                )
+            }
+        }
+        val autoHeightRequest = request(
+            entry = autoHeightEntry,
+            outputDirectory = temporaryFolder.newFolder("auto-height-preview"),
+        )
+        paparazzi.unsafeUpdateConfig(
+            deviceConfig = autoHeightRequest.configuration.toDeviceConfig(),
+        )
+
+        val response = StaticPreviewWorker().render(
+            context = paparazzi.context,
+            request = autoHeightRequest,
+            entry = autoHeightEntry,
+        )
+
+        assertEquals(PreviewRenderStatus.Success, response.status)
+        val artifacts = checkNotNull(response.artifacts)
+        val dimensions = File(checkNotNull(artifacts.imagePath)).readPngDimensions()
+        assertEquals(240, dimensions.first)
+        assertTrue(dimensions.second > PreviewConfiguration().viewportHeightDp)
+        val snapshot = PreviewProtocolJson.decodeRenderSnapshot(
+            File(checkNotNull(artifacts.renderTreePath)).readText(),
+        )
+        assertEquals(dimensions.second, snapshot.nativeViewTree.single().bounds.bottom)
+        assertTrue(snapshot.warnings.none { warning -> warning.contains("capture limit") })
     }
 
     @Test
@@ -524,12 +575,13 @@ fun UiTreeBuilder.resolvedStaticPreviewEntryPoint() {
 
 private fun PreviewConfiguration.toDeviceConfig(): DeviceConfig {
     val densityDpi = (density * DENSITY_DEFAULT).roundToInt().coerceAtLeast(1)
+    val resolvedHeightDp = viewportHeightDp
     return DeviceConfig.PIXEL_5.copy(
         screenWidth = (widthDp * density).roundToInt(),
-        screenHeight = (heightDp * density).roundToInt(),
+        screenHeight = (resolvedHeightDp * density).roundToInt(),
         xdpi = densityDpi,
         ydpi = densityDpi,
-        orientation = if (widthDp > heightDp) {
+        orientation = if (widthDp > resolvedHeightDp) {
             ScreenOrientation.LANDSCAPE
         } else {
             ScreenOrientation.PORTRAIT

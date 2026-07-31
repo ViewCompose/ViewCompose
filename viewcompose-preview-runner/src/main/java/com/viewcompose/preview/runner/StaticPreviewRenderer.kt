@@ -3,6 +3,7 @@ package com.viewcompose.preview.runner
 import android.content.Context
 import android.os.Build
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
@@ -10,6 +11,7 @@ import com.viewcompose.preview.tooling.PreviewCompositionLocal
 import com.viewcompose.preview.tooling.PreviewCompositionSnapshot
 import com.viewcompose.preview.tooling.PreviewDiagnostic
 import com.viewcompose.preview.tooling.PreviewDiagnosticSeverity
+import com.viewcompose.preview.tooling.PreviewDefaults
 import com.viewcompose.preview.tooling.PreviewLayoutDirection
 import com.viewcompose.preview.tooling.PreviewNodeBindingStats
 import com.viewcompose.preview.tooling.PreviewPatchRecord
@@ -21,6 +23,8 @@ import com.viewcompose.preview.tooling.PreviewRenderStructure
 import com.viewcompose.preview.tooling.PreviewRenderTreeNode
 import com.viewcompose.preview.tooling.PreviewSourceCallSite
 import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.isAutoHeight
+import com.viewcompose.preview.tooling.viewportHeightDp
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.environment.UiLocaleList
@@ -74,7 +78,7 @@ object StaticPreviewRenderer {
         val previewContext = PreviewAndroidContextFactory.create(context, configuration)
         val widthPx = (configuration.widthDp * configuration.density).roundToInt()
             .coerceAtLeast(1)
-        val heightPx = (configuration.heightDp * configuration.density).roundToInt()
+        val viewportHeightPx = (configuration.viewportHeightDp * configuration.density).roundToInt()
             .coerceAtLeast(1)
         // Resolve the same Android application theme as a real host. Dynamic color is disabled so
         // one preview request remains reproducible across Studio, Gradle, and CI machines.
@@ -139,15 +143,23 @@ object StaticPreviewRenderer {
                     ),
                 )
             } else {
-                root.measure(
-                    View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(heightPx, View.MeasureSpec.EXACTLY),
+                val layoutResult = root.layoutForPreview(
+                    widthPx = widthPx,
+                    viewportHeightPx = viewportHeightPx,
+                    autoHeight = configuration.isAutoHeight,
+                    maxHeightPx = autoHeightLimitPx(
+                        widthPx = widthPx,
+                        density = configuration.density,
+                        viewportHeightPx = viewportHeightPx,
+                    ),
                 )
-                root.layout(0, 0, widthPx, heightPx)
                 StaticPreviewMountResult.Success(
                     frame = StaticPreviewFrame(
                         rootView = root,
-                        snapshot = result.toPreviewSnapshot(root),
+                        snapshot = result.toPreviewSnapshot(
+                            rootView = root,
+                            additionalWarnings = layoutResult.warnings,
+                        ),
                         session = checkNotNull(session),
                     ),
                 )
@@ -165,6 +177,153 @@ object StaticPreviewRenderer {
             }
         }
     }
+}
+
+private data class PreviewRootLayoutResult(
+    val heightPx: Int,
+    val warnings: List<String> = emptyList(),
+)
+
+/**
+ * Measures one concrete viewport first, then expands only when a scrollable descendant actually
+ * grows with the root. This keeps intentionally fixed nested scrollers fixed while allowing
+ * fill-parent page containers such as LazyColumn/RecyclerView to expose their complete content.
+ */
+private fun View.layoutForPreview(
+    widthPx: Int,
+    viewportHeightPx: Int,
+    autoHeight: Boolean,
+    maxHeightPx: Int,
+): PreviewRootLayoutResult {
+    layoutExactly(widthPx, viewportHeightPx)
+    if (!autoHeight) {
+        return PreviewRootLayoutResult(heightPx = viewportHeightPx)
+    }
+
+    var currentHeightPx = viewportHeightPx
+    var scrollableHeights = forwardScrollableDescendantHeights()
+    if (scrollableHeights.isEmpty()) {
+        return PreviewRootLayoutResult(heightPx = currentHeightPx)
+    }
+
+    var expandableScrollers: Set<View>? = null
+    while (currentHeightPx < maxHeightPx) {
+        val nextHeightPx = minOf(
+            maxHeightPx,
+            maxOf(currentHeightPx * 2, currentHeightPx + viewportHeightPx),
+        )
+        layoutExactly(widthPx, nextHeightPx)
+        val nextScrollableHeights = forwardScrollableDescendantHeights()
+        val growingScrollers = scrollableHeights.mapNotNullTo(linkedSetOf()) { (view, height) ->
+            view.takeIf { nextScrollableHeights.getOrDefault(view, view.height) > height }
+        }
+        if (expandableScrollers == null) {
+            expandableScrollers = growingScrollers
+        }
+        val targets = checkNotNull(expandableScrollers)
+        if (targets.isEmpty()) {
+            layoutExactly(widthPx, currentHeightPx)
+            return PreviewRootLayoutResult(heightPx = currentHeightPx)
+        }
+        if (targets.none { view -> view.canScrollVertically(1) }) {
+            val resolvedHeightPx = findMinimumExpandedHeight(
+                widthPx = widthPx,
+                lowerScrollableHeightPx = currentHeightPx,
+                upperCompleteHeightPx = nextHeightPx,
+                scrollTargets = targets,
+            )
+            return PreviewRootLayoutResult(heightPx = resolvedHeightPx)
+        }
+        if (growingScrollers.none(targets::contains)) {
+            layoutExactly(widthPx, currentHeightPx)
+            return PreviewRootLayoutResult(
+                heightPx = currentHeightPx,
+                warnings = listOf(
+                    "Auto-height preview could not expand a vertically scrollable container " +
+                        "beyond ${currentHeightPx}px.",
+                ),
+            )
+        }
+
+        currentHeightPx = nextHeightPx
+        scrollableHeights = nextScrollableHeights
+    }
+
+    return PreviewRootLayoutResult(
+        heightPx = currentHeightPx,
+        warnings = if (expandableScrollers.orEmpty().none { view ->
+                view.canScrollVertically(1)
+            }
+        ) {
+            emptyList()
+        } else {
+            listOf(
+                "Auto-height preview reached its bounded capture limit at ${currentHeightPx}px " +
+                    "while vertical content could still scroll.",
+            )
+        },
+    )
+}
+
+private fun View.findMinimumExpandedHeight(
+    widthPx: Int,
+    lowerScrollableHeightPx: Int,
+    upperCompleteHeightPx: Int,
+    scrollTargets: Set<View>,
+): Int {
+    var lower = lowerScrollableHeightPx
+    var upper = upperCompleteHeightPx
+    while (upper - lower > 1) {
+        val candidate = lower + ((upper - lower) / 2)
+        layoutExactly(widthPx, candidate)
+        if (scrollTargets.any { view -> view.canScrollVertically(1) }) {
+            lower = candidate
+        } else {
+            upper = candidate
+        }
+    }
+    layoutExactly(widthPx, upper)
+    return upper
+}
+
+private fun View.layoutExactly(
+    widthPx: Int,
+    heightPx: Int,
+) {
+    measure(
+        View.MeasureSpec.makeMeasureSpec(widthPx, View.MeasureSpec.EXACTLY),
+        View.MeasureSpec.makeMeasureSpec(heightPx, View.MeasureSpec.EXACTLY),
+    )
+    layout(0, 0, widthPx, heightPx)
+}
+
+private fun View.forwardScrollableDescendantHeights(
+    destination: MutableMap<View, Int> = linkedMapOf(),
+): Map<View, Int> {
+    if (visibility == View.VISIBLE && canScrollVertically(1)) {
+        destination[this] = height
+    }
+    if (this is ViewGroup) {
+        repeat(childCount) { index ->
+            getChildAt(index).forwardScrollableDescendantHeights(destination)
+        }
+    }
+    return destination
+}
+
+private fun autoHeightLimitPx(
+    widthPx: Int,
+    density: Float,
+    viewportHeightPx: Int,
+): Int {
+    val densityLimit = (PreviewDefaults.MAX_AUTO_HEIGHT_DP * density).roundToInt()
+    val pixelBudgetLimit = (MAX_AUTO_CAPTURE_PIXELS / widthPx.coerceAtLeast(1))
+        .coerceAtMost(Int.MAX_VALUE.toLong())
+        .toInt()
+    return maxOf(
+        viewportHeightPx,
+        minOf(densityLimit, pixelBudgetLimit),
+    )
 }
 
 sealed interface StaticPreviewMountResult {
@@ -201,7 +360,10 @@ private fun PreviewRenderRequest.renderDiagnostic(
     )
 }
 
-private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSnapshot {
+private fun RenderTreeResult.toPreviewSnapshot(
+    rootView: View,
+    additionalWarnings: List<String> = emptyList(),
+): PreviewRenderSnapshot {
     val nativeViewCapture = PreviewNativeViewSnapshotter.capture(rootView)
     return PreviewRenderSnapshot(
         stats = PreviewRenderStats(
@@ -228,7 +390,7 @@ private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSna
             maxVNodeDepth = structure.maxVNodeDepth,
             maxMountedDepth = structure.maxMountedDepth,
         ),
-        warnings = warnings,
+        warnings = (warnings + additionalWarnings).distinct(),
         tree = tree.map { node ->
             val tooling = node.toolingMetadata
             PreviewRenderTreeNode(
@@ -288,6 +450,8 @@ private fun RenderTreeResult.toPreviewSnapshot(rootView: View): PreviewRenderSna
         ),
     )
 }
+
+private const val MAX_AUTO_CAPTURE_PIXELS: Long = 16_000_000L
 
 private fun List<com.viewcompose.widget.core.RenderTreeNode>.toPreviewTreeNodes():
     List<PreviewRenderTreeNode> {
