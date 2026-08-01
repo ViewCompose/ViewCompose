@@ -53,8 +53,8 @@ Surface(
 
 ## 3. Android 绘制模型
 
-`viewcompose-shadow-android` 不替换 TextView、EditText、RecyclerView，也不为每层阴影创建
-额外业务 View。renderer 将逻辑规格在绑定边界解析为像素规格，框架父容器按以下顺序绘制：
+`viewcompose-shadow-android` 是可选后端，不替换 TextView、EditText、RecyclerView，也不为每层阴影创建
+额外业务 View。renderer 把逻辑规格提交给 Decoration SPI，阴影后端解析像素规格，框架父容器按以下顺序绘制：
 
 ```text
 outer shadow decoration
@@ -67,6 +67,17 @@ inner shadow decoration
 
 阴影不参与 measure/layout。调用侧需要为外阴影保留视觉间距；普通容器允许 child 装饰溢出，
 Lazy viewport 仍负责裁切离开视口的内容。
+
+renderer 与 Android host 不依赖阴影模块。依赖中没有 `viewcompose-shadow-android` 时，阴影 modifier
+稳定降级为 no-op，其余渲染能力继续工作；加入模块后可由 ServiceLoader 自动发现，也可在应用启动时显式调用：
+
+```kotlin
+ShadowDecorationLayer.install()
+```
+
+`setUiContent` 的必要根容器直接具备通用装饰协议，不再额外嵌套阴影 FrameLayout。普通页面没有活跃
+阴影 child 时，父容器只做一次布尔快速判断并直接进入原生 `drawChild`，不会逐 child 查询阴影标签；
+没有非零 `zIndex` 时也不会启用自定义 child drawing order 或创建排序索引。
 
 ## 4. Shape 与多层语义
 

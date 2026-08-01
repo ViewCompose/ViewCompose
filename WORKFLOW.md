@@ -136,13 +136,14 @@
 2. `viewModel`/`savedStateHandle` 放在 `:viewcompose-viewmodel`（`com.viewcompose.viewmodel`）。
 3. 宿主默认 Local 注入由 `viewcompose-host-android` 的 host bridge 负责，不在上述模块重复实现注入逻辑。
 
-## 5.3 服务提供者优先约束（Overlay/Host）
+## 5.3 服务提供者优先约束（Overlay/Host/Decoration）
 
 扩展装配默认走服务契约（SPI），反射仅作为最后兜底且需单独评审：
 
 1. overlay 默认装配必须通过 `OverlayHostFactoryProvider + ServiceLoader`，禁止新增 `Class.forName` 字符串反射主路径。
 2. `viewcompose-overlay-android` 的默认实现必须通过 `META-INF/services` 注册 provider；缺失时行为必须稳定回退 no-op 并可观测日志提示。
-3. 若确实需要反射（临时兼容场景），必须在同一步补充架构文档与契约测试，并登记移除计划，不得长期保留。
+3. 可选 View 装饰后端必须通过 `AndroidViewDecorationBackend + ServiceLoader` 接入；renderer/host 禁止反向依赖具体阴影实现，缺失后端时必须稳定 no-op。
+4. 若确实需要反射（临时兼容场景），必须在同一步补充架构文档与契约测试，并登记移除计划，不得长期保留。
 
 ## 5.4 Local API 一致性
 

@@ -70,7 +70,7 @@
 | `viewcompose-animation*` | 动画内核与 DSL（含 `AnimatedVisibility` / `animateContentSize`）。 / Animation core + DSL. |
 | `viewcompose-gesture*` | 手势策略内核与 DSL（tap/drag/swipe/transform）。 / Gesture strategy core + DSL. |
 | `viewcompose-graphics*` | Canvas/绘制命令内核与 DSL。 / Canvas and drawing command core + DSL. |
-| `viewcompose-shadow-android` | 高级阴影后端、缓存与 Decoration Layer 平台能力。 / Advanced shadow backends, caching, and Decoration Layer platform support. |
+| `viewcompose-shadow-android` | 可选高级阴影后端与缓存；renderer/host 不依赖它。 / Optional advanced shadow backend and caches; renderer/host do not depend on it. |
 | `viewcompose-widget-constraintlayout` | ConstraintLayout DSL 与 helper 能力。 / ConstraintLayout DSL and helper capabilities. |
 | `viewcompose-preview-core` | 纯 Kotlin Preview 注解、配置与工具协议。 / Pure Kotlin preview annotations, configuration, and tooling protocol. |
 | `viewcompose-preview-runner` | 无 Compose 的原生 View 静态预览运行器。 / Compose-free native View static preview runner. |
