@@ -96,7 +96,7 @@ class PreviewConfigurationMatrixTest {
     }
 
     @Test
-    fun `built in multi previews expose runtime meta annotations`() {
+    fun `built in multi previews stay out of runtime reflection`() {
         val lightDark = PreviewLightDark::class.java
             .getAnnotationsByType(ViewComposePreview::class.java)
         val directions = PreviewLtrRtl::class.java
@@ -104,11 +104,8 @@ class PreviewConfigurationMatrixTest {
         val fontScales = PreviewFontScales::class.java
             .getAnnotationsByType(ViewComposePreview::class.java)
 
-        assertEquals(listOf(PreviewTheme.Light, PreviewTheme.Dark), lightDark.map { it.theme })
-        assertEquals(
-            listOf(PreviewLayoutDirection.Ltr, PreviewLayoutDirection.Rtl),
-            directions.map { it.layoutDirection },
-        )
-        assertEquals(listOf(1f, 1.3f, 2f), fontScales.map { it.fontScale })
+        assertTrue(lightDark.isEmpty())
+        assertTrue(directions.isEmpty())
+        assertTrue(fontScales.isEmpty())
     }
 }

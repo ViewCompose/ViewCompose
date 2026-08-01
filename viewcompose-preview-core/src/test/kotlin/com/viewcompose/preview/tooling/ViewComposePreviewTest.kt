@@ -6,26 +6,19 @@ import org.junit.Test
 
 class ViewComposePreviewTest {
     @Test
-    fun `repeatable annotations retain independent configurations at runtime`() {
+    fun `preview annotations stay out of runtime reflection`() {
         val annotations = PreviewFixtures::class.java
             .getDeclaredMethod("catalog")
             .getAnnotationsByType(ViewComposePreview::class.java)
 
-        assertEquals(2, annotations.size)
-        assertEquals(PreviewTheme.Light, annotations[0].theme)
-        assertEquals(PreviewTheme.Dark, annotations[1].theme)
-        assertEquals(PreviewLayoutDirection.Rtl, annotations[1].layoutDirection)
+        assertEquals(0, annotations.size)
     }
 
     @Test
     fun `annotation converts unspecified API level to resolved null`() {
-        val annotation = PreviewFixtures::class.java
-            .getDeclaredMethod("defaultConfiguration")
-            .getAnnotation(ViewComposePreview::class.java)
-
         assertEquals(
             PreviewConfiguration(),
-            annotation.toPreviewConfiguration(),
+            ViewComposePreview().toPreviewConfiguration(),
         )
     }
 

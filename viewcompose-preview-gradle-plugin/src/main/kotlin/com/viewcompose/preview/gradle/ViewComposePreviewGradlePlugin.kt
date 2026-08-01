@@ -2,6 +2,8 @@ package com.viewcompose.preview.gradle
 
 import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
@@ -73,6 +75,14 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
     toolConfigurations: PreviewToolConfigurations,
 ) {
     androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+        if (!variant.debuggable) {
+            variant.instrumentation.transformClassesWith(
+                StripViewComposePreviewAnnotationsVisitorFactory::class.java,
+                InstrumentationScope.PROJECT,
+            ) {}
+            variant.instrumentation.setAsmFramesComputationMode(FramesComputationMode.COPY_FRAMES)
+            return@onVariants
+        }
         val annotationClasspath = variant.compileConfiguration.artifactFiles(
             artifactType = ANDROID_CLASSES_JAR_ARTIFACT_TYPE,
         )

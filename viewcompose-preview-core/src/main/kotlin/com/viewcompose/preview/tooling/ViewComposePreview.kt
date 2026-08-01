@@ -7,14 +7,15 @@ import kotlin.jvm.JvmRepeatable
  *
  * The function signature is validated by the preview discovery layer. Keeping this annotation
  * independent from Android and Compose lets Gradle, an IDE plugin, or another host discover the
- * same entry point without loading a UI runtime.
+ * same entry point without loading a UI runtime. The Gradle plugin preserves this metadata for
+ * debuggable variants and removes it from non-debuggable Android output before packaging.
  *
  * [heightDp] defaults to [PreviewDefaults.AUTO_HEIGHT_DP]. Auto-height previews start from a
  * standard device viewport and grow to capture vertically scrollable root content. Pass a positive
  * height to keep a fixed viewport when the scroll boundary itself is what the preview validates.
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.BINARY)
 @MustBeDocumented
 @JvmRepeatable(ViewComposePreviews::class)
 annotation class ViewComposePreview(
@@ -34,7 +35,7 @@ annotation class ViewComposePreview(
  * JVM container used for repeatable [ViewComposePreview] declarations.
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.BINARY)
 @MustBeDocumented
 annotation class ViewComposePreviews(
     val value: Array<ViewComposePreview>,

@@ -5,10 +5,13 @@ import com.viewcompose.preview.tooling.PreviewBuildInputKind
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.ViewComposePreview
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.util.Properties
+import java.util.zip.ZipFile
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
@@ -228,7 +231,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             .withArguments(
                 "--stacktrace",
                 ":app:discoverDebugViewComposePreviews",
-                ":app:discoverReleaseViewComposePreviews",
+                ":app:assembleRelease",
             )
             .withPluginClasspath()
             .build()
@@ -239,7 +242,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         )
         assertEquals(
             TaskOutcome.SUCCESS,
-            result.task(":app:discoverReleaseViewComposePreviews")?.outcome,
+            result.task(":app:assembleRelease")?.outcome,
         )
         val output = project.resolve("app/build/viewcompose-preview/debug")
         val manifest = PreviewProtocolJson.decodeBuildManifest(
@@ -277,14 +280,28 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             listOf(PreviewTheme.Light, PreviewTheme.Dark),
             themes.variants.map { variant -> variant.configuration.theme },
         )
-        val releaseCatalog = PreviewProtocolJson.decodeDescriptorCatalog(
-            project.resolve(
-                "app/build/viewcompose-preview/release/descriptors.json",
-            ).readText(),
+        val releaseApk = project.resolve("app/build/outputs/apk/release/app-release-unsigned.apk")
+        assertTrue(releaseApk.isFile)
+        val releaseDexText = ZipFile(releaseApk).use { zip ->
+            zip.entries().asSequence()
+                .filter { entry -> entry.name.matches(Regex("classes[0-9]*\\.dex")) }
+                .joinToString(separator = "") { entry ->
+                    String(
+                        zip.getInputStream(entry).use { input -> input.readBytes() },
+                        StandardCharsets.ISO_8859_1,
+                    )
+                }
+        }
+        assertTrue(releaseDexText.contains("Lsample/SamplePreviews;"))
+        assertFalse(
+            releaseDexText.contains(
+                "Lcom/viewcompose/preview/tooling/ViewComposePreview;",
+            ),
         )
-        assertEquals(
-            catalog.descriptors.map { preview -> preview.entryPoint.methodName }.sorted(),
-            releaseCatalog.descriptors.map { preview -> preview.entryPoint.methodName }.sorted(),
+        assertFalse(
+            releaseDexText.contains(
+                "Lcom/viewcompose/preview/tooling/PreviewLightDark;",
+            ),
         )
 
         val tasks = GradleRunner.create()
@@ -295,6 +312,8 @@ class ViewComposePreviewGradlePluginFunctionalTest {
         assertTrue(tasks.output.contains("renderDebugViewComposePreview"))
         assertTrue(tasks.output.contains("refreshDebugViewComposePreview"))
         assertTrue(tasks.output.contains("discoverDebugViewComposePreviews"))
+        assertFalse(tasks.output.contains("renderReleaseViewComposePreview"))
+        assertFalse(tasks.output.contains("discoverReleaseViewComposePreviews"))
 
         val renderArguments = arrayOf(
             ":app:renderDebugViewComposePreview",
