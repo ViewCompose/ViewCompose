@@ -64,6 +64,8 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - bounded render-snapshot inspection with VNode structure, patch, skip, and recomposition details;
 - a native Android View tree with final measured sizes and root-relative layout coordinates;
 - an optional color-coded layout-bound overlay drawn directly over the static preview;
+- adaptive trackpad axis locking that filters diagonal noise but switches horizontal/vertical
+  intent without waiting for inertial-scroll or scrollbar fade timers;
 - bounded PNG loading plus structured render diagnostics and Gradle failure output;
 - an explicit AI-261 minimum build and exact local-build verification.
 

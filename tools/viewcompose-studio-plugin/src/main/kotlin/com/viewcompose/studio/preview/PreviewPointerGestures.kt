@@ -8,16 +8,29 @@ internal enum class PreviewScrollAxis {
     Vertical,
 }
 
-/** Locks one trackpad gesture sequence to its dominant axis and filters diagonal noise. */
+/**
+ * Locks a trackpad gesture to its dominant axis while allowing a new orthogonal intent to take
+ * over without waiting for inertial scrolling to stop completely.
+ */
 internal class PreviewTrackpadAxisLock(
     private val activationThreshold: Double = DEFAULT_AXIS_ACTIVATION_THRESHOLD,
     private val dominanceRatio: Double = DEFAULT_AXIS_DOMINANCE_RATIO,
     private val resetDelayMillis: Long = DEFAULT_AXIS_RESET_DELAY_MILLIS,
+    private val switchSampleCount: Int = DEFAULT_AXIS_SWITCH_SAMPLE_COUNT,
 ) {
     private var lockedAxis: PreviewScrollAxis? = null
     private var accumulatedHorizontal = 0.0
     private var accumulatedVertical = 0.0
+    private var accumulatedOpposite = 0.0
+    private var oppositeSamples = 0
     private var lastEventMillis: Long? = null
+
+    init {
+        require(activationThreshold > 0.0)
+        require(dominanceRatio > 1.0)
+        require(resetDelayMillis >= 0L)
+        require(switchSampleCount > 0)
+    }
 
     fun resolve(
         horizontalRotation: Double,
@@ -34,9 +47,17 @@ internal class PreviewTrackpadAxisLock(
             reset()
         }
         lastEventMillis = eventMillis
-        lockedAxis?.let { axis -> return axis }
-        accumulatedHorizontal += abs(horizontalRotation)
-        accumulatedVertical += abs(verticalRotation)
+        val horizontalMagnitude = abs(horizontalRotation)
+        val verticalMagnitude = abs(verticalRotation)
+        lockedAxis?.let { axis ->
+            return resolveLockedAxis(
+                axis = axis,
+                horizontalMagnitude = horizontalMagnitude,
+                verticalMagnitude = verticalMagnitude,
+            )
+        }
+        accumulatedHorizontal += horizontalMagnitude
+        accumulatedVertical += verticalMagnitude
         val dominant = maxOf(accumulatedHorizontal, accumulatedVertical)
         val secondary = minOf(accumulatedHorizontal, accumulatedVertical)
         if (dominant < activationThreshold) return null
@@ -49,10 +70,55 @@ internal class PreviewTrackpadAxisLock(
         return lockedAxis
     }
 
+    private fun resolveLockedAxis(
+        axis: PreviewScrollAxis,
+        horizontalMagnitude: Double,
+        verticalMagnitude: Double,
+    ): PreviewScrollAxis {
+        val lockedMagnitude = when (axis) {
+            PreviewScrollAxis.Horizontal -> horizontalMagnitude
+            PreviewScrollAxis.Vertical -> verticalMagnitude
+        }
+        val oppositeMagnitude = when (axis) {
+            PreviewScrollAxis.Horizontal -> verticalMagnitude
+            PreviewScrollAxis.Vertical -> horizontalMagnitude
+        }
+        val isOppositeIntent = oppositeMagnitude > 0.0 &&
+            (lockedMagnitude == 0.0 || oppositeMagnitude >= lockedMagnitude * dominanceRatio)
+        if (!isOppositeIntent) {
+            resetSwitchCandidate()
+            return axis
+        }
+        accumulatedOpposite += oppositeMagnitude
+        oppositeSamples += 1
+        val discreteWheelIntent = oppositeMagnitude >= DISCRETE_WHEEL_ROTATION
+        if (
+            accumulatedOpposite < activationThreshold ||
+            (oppositeSamples < switchSampleCount && !discreteWheelIntent)
+        ) {
+            return axis
+        }
+        val nextAxis = axis.opposite()
+        lockedAxis = nextAxis
+        resetSwitchCandidate()
+        return nextAxis
+    }
+
+    private fun PreviewScrollAxis.opposite(): PreviewScrollAxis = when (this) {
+        PreviewScrollAxis.Horizontal -> PreviewScrollAxis.Vertical
+        PreviewScrollAxis.Vertical -> PreviewScrollAxis.Horizontal
+    }
+
+    private fun resetSwitchCandidate() {
+        accumulatedOpposite = 0.0
+        oppositeSamples = 0
+    }
+
     fun reset() {
         lockedAxis = null
         accumulatedHorizontal = 0.0
         accumulatedVertical = 0.0
+        resetSwitchCandidate()
         lastEventMillis = null
     }
 }
@@ -129,6 +195,8 @@ private data class PreviewPointerPress(
 private const val DEFAULT_AXIS_ACTIVATION_THRESHOLD = 0.25
 private const val DEFAULT_AXIS_DOMINANCE_RATIO = 1.35
 private const val DEFAULT_AXIS_RESET_DELAY_MILLIS = 180L
+private const val DEFAULT_AXIS_SWITCH_SAMPLE_COUNT = 2
+private const val DISCRETE_WHEEL_ROTATION = 1.0
 private const val FALLBACK_DOUBLE_PRESS_INTERVAL_MILLIS = 500L
 private const val MINIMUM_DOUBLE_PRESS_INTERVAL_MILLIS = 250L
 private const val MAXIMUM_DOUBLE_PRESS_INTERVAL_MILLIS = 1_000L
