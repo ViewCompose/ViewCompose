@@ -11,6 +11,8 @@ internal fun createPreviewTitleActions(
     onShowGallery: () -> Unit,
     isOpenSourceEnabled: () -> Boolean,
     onOpenSource: () -> Unit,
+    isFullRefreshEnabled: () -> Boolean,
+    onFullRefresh: () -> Unit,
     isRefreshEnabled: () -> Boolean,
     onRefresh: () -> Unit,
 ): List<AnAction> {
@@ -23,6 +25,21 @@ internal fun createPreviewTitleActions(
         ) {
             override fun actionPerformed(event: AnActionEvent) {
                 onShowGallery()
+            }
+
+            override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT
+        },
+        object : DumbAwareAction(
+            messages.text("action.fullRefresh"),
+            messages.text("action.fullRefresh.description"),
+            AllIcons.Actions.Compile,
+        ) {
+            override fun actionPerformed(event: AnActionEvent) {
+                onFullRefresh()
+            }
+
+            override fun update(event: AnActionEvent) {
+                event.presentation.isEnabled = isFullRefreshEnabled()
             }
 
             override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.EDT

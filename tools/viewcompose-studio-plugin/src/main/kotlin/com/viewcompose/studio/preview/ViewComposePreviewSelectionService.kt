@@ -89,7 +89,12 @@ internal class ViewComposePreviewSelectionService(
                         return
                     }
                     ApplicationManager.getApplication().invokeLater {
-                        if (!project.isDisposed && request == activeRequest.get()) {
+                        val shouldRefresh = shouldRunAutomaticPreviewRefresh(
+                            projectDisposed = project.isDisposed,
+                            activeRequestMatches = request == activeRequest.get(),
+                            toolWindowVisible = isPreviewToolWindowVisible(),
+                        )
+                        if (shouldRefresh) {
                             scheduleSavedInputRefresh(
                                 request = request,
                                 refreshPolicy = if (
@@ -181,6 +186,17 @@ internal class ViewComposePreviewSelectionService(
             refreshPolicy = PreviewRefreshPolicy.Manual,
         )
     }
+
+    fun fullRefreshCurrent() {
+        val request = activeRequest.get() ?: return
+        render(
+            selection = request.selection,
+            requestedVariantId = request.variantId,
+            refreshPolicy = PreviewRefreshPolicy.Full,
+        )
+    }
+
+    fun hasSelectedPreview(): Boolean = activeRequest.get() != null
 
     fun hasActivePreview(): Boolean {
         return activeRequest.get() != null ||
@@ -302,6 +318,7 @@ internal class ViewComposePreviewSelectionService(
                                         ?: result.selectedVariantId,
                                     fastRefresh = refreshPolicy.fastGradleRefresh,
                                     forceRerender = refreshPolicy.forceGradleRerender,
+                                    forceFullRebuild = refreshPolicy.forceFullRebuild,
                                     indicator = indicator,
                                     onProgress = progress,
                                 )
@@ -310,6 +327,7 @@ internal class ViewComposePreviewSelectionService(
                             selection = selection,
                             requestedVariantId = requestedVariantId,
                             forceRerender = refreshPolicy.forceGradleRerender,
+                            forceFullRebuild = refreshPolicy.forceFullRebuild,
                             indicator = indicator,
                             onProgress = progress,
                         )
@@ -366,11 +384,14 @@ internal class ViewComposePreviewSelectionService(
         val pending = automaticRefreshGate.complete(generation) ?: return
         ApplicationManager.getApplication().invokeLater {
             val current = activeRequest.get()
-            if (
-                !project.isDisposed &&
-                current != null &&
-                pending.request.selection == current.selection
-            ) {
+            val shouldRefresh = shouldRunAutomaticPreviewRefresh(
+                projectDisposed = project.isDisposed,
+                activeRequestMatches = current != null &&
+                    pending.request.selection == current.selection,
+                toolWindowVisible = isPreviewToolWindowVisible(),
+            )
+            if (shouldRefresh) {
+                checkNotNull(current)
                 render(
                     selection = pending.request.selection,
                     requestedVariantId = pending.request.variantId ?: current.variantId,
@@ -614,7 +635,12 @@ internal class ViewComposePreviewSelectionService(
             {
                 val pendingPolicy = pendingSavedRefreshPolicy.getAndSet(null)
                     ?: refreshPolicy
-                if (!project.isDisposed && request == activeRequest.get()) {
+                val shouldRefresh = shouldRunAutomaticPreviewRefresh(
+                    projectDisposed = project.isDisposed,
+                    activeRequestMatches = request == activeRequest.get(),
+                    toolWindowVisible = isPreviewToolWindowVisible(),
+                )
+                if (shouldRefresh) {
                     render(
                         selection = request.selection,
                         requestedVariantId = request.variantId,
@@ -755,6 +781,7 @@ internal enum class PreviewRefreshPolicy(
     val useStudioCache: Boolean,
     val forceGradleRerender: Boolean,
     val useKnownDescriptor: Boolean,
+    val forceFullRebuild: Boolean = false,
     val automatic: Boolean = false,
     val fastGradleRefresh: Boolean = false,
 ) {
@@ -785,6 +812,12 @@ internal enum class PreviewRefreshPolicy(
         useStudioCache = false,
         forceGradleRerender = true,
         useKnownDescriptor = true,
+    ),
+    Full(
+        useStudioCache = false,
+        forceGradleRerender = true,
+        useKnownDescriptor = true,
+        forceFullRebuild = true,
     ),
 }
 
@@ -842,6 +875,12 @@ internal fun savedPreviewFastRefreshEligible(
     val changed = changedPaths.mapNotNull(String::normalizedPathOrNull)
     return changed.isNotEmpty() && changed.all { path -> path == selected }
 }
+
+internal fun shouldRunAutomaticPreviewRefresh(
+    projectDisposed: Boolean,
+    activeRequestMatches: Boolean,
+    toolWindowVisible: Boolean,
+): Boolean = !projectDisposed && activeRequestMatches && toolWindowVisible
 
 private data class ActivePreviewRequest(
     val selection: PreviewSourceSelection,

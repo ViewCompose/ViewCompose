@@ -78,6 +78,8 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
                             ?.toStudioSourceLocation()
                             ?.let(project::navigateToSource)
                     },
+                    isFullRefreshEnabled = selectionService::hasSelectedPreview,
+                    onFullRefresh = selectionService::fullRefreshCurrent,
                     isRefreshEnabled = selectionService::hasActivePreview,
                     onRefresh = selectionService::refreshCurrent,
                 ),

@@ -12,6 +12,40 @@ class ViewComposePreviewSelectionServiceTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
+    fun `full refresh reruns the complete known preview task graph`() {
+        assertFalse(PreviewRefreshPolicy.Full.useStudioCache)
+        assertTrue(PreviewRefreshPolicy.Full.useKnownDescriptor)
+        assertTrue(PreviewRefreshPolicy.Full.forceGradleRerender)
+        assertTrue(PreviewRefreshPolicy.Full.forceFullRebuild)
+        assertFalse(PreviewRefreshPolicy.Manual.forceFullRebuild)
+    }
+
+    @Test
+    fun `automatic refresh only runs for the visible active preview`() {
+        assertTrue(
+            shouldRunAutomaticPreviewRefresh(
+                projectDisposed = false,
+                activeRequestMatches = true,
+                toolWindowVisible = true,
+            ),
+        )
+        assertFalse(
+            shouldRunAutomaticPreviewRefresh(
+                projectDisposed = false,
+                activeRequestMatches = true,
+                toolWindowVisible = false,
+            ),
+        )
+        assertFalse(
+            shouldRunAutomaticPreviewRefresh(
+                projectDisposed = false,
+                activeRequestMatches = false,
+                toolWindowVisible = true,
+            ),
+        )
+    }
+
+    @Test
     fun `refreshes when the selected preview source or project source changes`() {
         val projectRoot = temporaryFolder.newFolder("project").toPath()
         val appRoot = projectRoot.resolve("app").also { directory ->

@@ -57,6 +57,7 @@ class ViewComposePreviewGradleBridgeTest {
             ),
             requestedVariantId = "dark",
             forceRerender = true,
+            forceFullRebuild = true,
             indicator = TestProgressIndicator(),
         )
 
@@ -86,6 +87,8 @@ class ViewComposePreviewGradleBridgeTest {
             invocations.last().projectProperty("viewComposePreviewVariantId") == "dark",
         )
         assertEquals("true", invocations.last().projectProperty("viewComposePreviewRerender"))
+        assertTrue("--rerun-tasks" in invocations.first().buildArguments)
+        assertFalse("--rerun-tasks" in invocations.last().buildArguments)
         assertFalse(invocations.last().buildArguments.any { argument ->
             argument.startsWith("--preview-") || argument == "--rerender"
         })
@@ -161,6 +164,27 @@ class ViewComposePreviewGradleBridgeTest {
         assertFalse(
             invocations.single().task.endsWith("discoverDebugViewComposePreviews"),
         )
+
+        val fullOutcome = ViewComposePreviewRenderCoordinator(
+            projectRoot = projectRoot,
+            executor = executor,
+        ).renderKnownDebug(
+            selection = PreviewSourceSelection(
+                filePath = source.toString(),
+                symbolName = "SampleCard",
+                line = 10,
+            ),
+            descriptorId = "sample-card",
+            requestedVariantId = "dark",
+            forceRerender = true,
+            forceFullRebuild = true,
+            indicator = TestProgressIndicator(),
+        )
+
+        assertTrue(fullOutcome is PreviewRenderOutcome.Success)
+        assertEquals(2, invocations.size)
+        assertTrue("--rerun-tasks" in invocations.last().buildArguments)
+        assertEquals("true", invocations.last().projectProperty("viewComposePreviewRerender"))
     }
 
     @Test
@@ -204,6 +228,53 @@ class ViewComposePreviewGradleBridgeTest {
         assertTrue(
             invocations.single().task.endsWith("refreshDebugViewComposePreview"),
         )
+    }
+
+    @Test
+    fun `full rebuild rematches a changed preview identity without rebuilding twice`() {
+        val projectRoot = temporaryFolder.newFolder("full-rematch-project").toPath()
+        Files.writeString(projectRoot.resolve("gradlew"), "")
+        val moduleRoot = Files.createDirectories(projectRoot.resolve("app"))
+        Files.writeString(moduleRoot.resolve("build.gradle.kts"), "plugins {}")
+        val source = moduleRoot.resolve("src/main/kotlin/sample/Sample.kt")
+        Files.createDirectories(checkNotNull(source.parent))
+        Files.writeString(source, "fun SampleCard() = Unit")
+        val invocations = mutableListOf<PreviewGradleInvocation>()
+        val executor = PreviewGradleExecutor { invocation, _ ->
+            invocations += invocation
+            writeCatalog(moduleRoot, source)
+            if (invocations.size == 1) {
+                PreviewGradleResult(
+                    exitCode = 1,
+                    standardOutput = "",
+                    errorOutput = "Unknown ViewCompose preview 'old-card'.",
+                )
+            } else {
+                writeSuccessfulResponse(moduleRoot, "dark")
+                PreviewGradleResult(0, "ViewCompose preview rendered:", "")
+            }
+        }
+
+        val outcome = ViewComposePreviewRenderCoordinator(
+            projectRoot = projectRoot,
+            executor = executor,
+        ).renderKnownDebug(
+            selection = PreviewSourceSelection(
+                filePath = source.toString(),
+                symbolName = "SampleCard",
+                line = 10,
+            ),
+            descriptorId = "old-card",
+            requestedVariantId = "dark",
+            forceRerender = true,
+            forceFullRebuild = true,
+            indicator = TestProgressIndicator(),
+        )
+
+        assertTrue(outcome is PreviewRenderOutcome.Success)
+        assertEquals(2, invocations.size)
+        assertTrue("--rerun-tasks" in invocations.first().buildArguments)
+        assertFalse("--rerun-tasks" in invocations.last().buildArguments)
     }
 
     @Test

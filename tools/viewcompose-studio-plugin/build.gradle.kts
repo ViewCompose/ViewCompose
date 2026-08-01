@@ -37,7 +37,7 @@ abstract class VerifyAndroidStudioBuildTask : DefaultTask() {
 }
 
 group = "com.viewcompose.studio"
-version = "0.1.0-alpha31"
+version = "0.1.0-alpha32"
 
 val expectedAndroidStudioBuild = "AI-261.25134.95.2612.15914620"
 val configuredAndroidStudioPath = providers

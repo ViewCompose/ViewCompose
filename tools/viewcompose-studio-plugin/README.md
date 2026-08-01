@@ -51,6 +51,9 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - a source-save fast path for the selected Kotlin/Java preview file: compile the current variant,
   rescan current project bytecode, and reuse the last validated resource/toolchain contract;
   signature, descriptor, or baseline changes fail closed and fall back to complete discovery;
+- no save-triggered compilation while the preview tool window is collapsed or hidden;
+- separate incremental-refresh and full-update title actions; full update reruns the complete
+  compile/discovery/render task graph and rediscovers if the known entry identity changed;
 - low-memory release of gallery thumbnails and high-resolution quick-look images;
 - phase timings for Gradle, Layoutlib setup/teardown, mount/layout, artifact export, and Studio
   decoding, including a distinct `gradle-fast-refresh` phase, exposed in the rendered-header

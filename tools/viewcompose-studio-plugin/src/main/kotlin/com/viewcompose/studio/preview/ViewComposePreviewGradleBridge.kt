@@ -108,6 +108,7 @@ internal class ViewComposePreviewRenderCoordinator(
         selection: PreviewSourceSelection,
         requestedVariantId: String? = null,
         forceRerender: Boolean = false,
+        forceFullRebuild: Boolean = false,
         indicator: ProgressIndicator,
         onProgress: (String) -> Unit = {},
     ): PreviewRenderOutcome {
@@ -115,7 +116,11 @@ internal class ViewComposePreviewRenderCoordinator(
             val target = locateGradleTarget(selection)
             onProgress("Compiling preview descriptors…")
             indicator.text = "Compiling ViewCompose preview descriptors"
-            val discovery = discoverPreviews(target, indicator)
+            val discovery = discoverPreviews(
+                target = target,
+                indicator = indicator,
+                forceFullRebuild = forceFullRebuild,
+            )
             if (discovery.exitCode != 0) {
                 return PreviewRenderOutcome.Failure(
                     selection = selection,
@@ -169,6 +174,7 @@ internal class ViewComposePreviewRenderCoordinator(
         requestedVariantId: String,
         fastRefresh: Boolean = false,
         forceRerender: Boolean = false,
+        forceFullRebuild: Boolean = false,
         indicator: ProgressIndicator,
         onProgress: (String) -> Unit = {},
     ): PreviewRenderOutcome? {
@@ -179,10 +185,10 @@ internal class ViewComposePreviewRenderCoordinator(
             } else {
                 renderTaskName(PREFERRED_BUILD_VARIANT)
             }
-            val progressMessage = if (fastRefresh) {
-                "Compiling changed source and refreshing preview…"
-            } else {
-                "Incrementally compiling and rendering preview…"
+            val progressMessage = when {
+                forceFullRebuild -> "Fully rebuilding and rendering preview…"
+                fastRefresh -> "Compiling changed source and refreshing preview…"
+                else -> "Incrementally compiling and rendering preview…"
             }
             onProgress(progressMessage)
             indicator.text = progressMessage
@@ -193,16 +199,32 @@ internal class ViewComposePreviewRenderCoordinator(
                         descriptorId = descriptorId,
                         variantId = requestedVariantId,
                         forceRerender = forceRerender,
-                    ),
+                    ) + if (forceFullRebuild) listOf("--rerun-tasks") else emptyList(),
                 ),
                 indicator = indicator,
             )
             if (
                 render.isMissingTaskFailure(taskName) ||
-                render.isUnknownPreviewFailure(descriptorId) ||
                 (fastRefresh && render.isFastRefreshFallback())
             ) {
                 return null
+            }
+            if (render.isUnknownPreviewFailure(descriptorId)) {
+                if (!forceFullRebuild) return null
+                indicator.checkCanceled()
+                val rematched = findMatchingPreview(
+                    target = target,
+                    selection = selection,
+                    requestedVariantId = requestedVariantId,
+                ) ?: return null
+                return renderMatch(
+                    target = target,
+                    selection = selection,
+                    match = rematched,
+                    forceRerender = true,
+                    indicator = indicator,
+                    onProgress = onProgress,
+                )
             }
             if (render.exitCode != 0) {
                 return PreviewRenderOutcome.Failure(
@@ -561,15 +583,23 @@ internal class ViewComposePreviewRenderCoordinator(
     private fun discoverPreviews(
         target: PreviewGradleTarget,
         indicator: ProgressIndicator,
+        forceFullRebuild: Boolean = false,
     ): PreviewGradleResult {
+        val buildArguments = if (forceFullRebuild) listOf("--rerun-tasks") else emptyList()
         val preferred = executor.execute(
-            invocation = target.invocation(PREFERRED_DISCOVERY_TASK_NAME),
+            invocation = target.invocation(
+                taskName = PREFERRED_DISCOVERY_TASK_NAME,
+                additionalBuildArguments = buildArguments,
+            ),
             indicator = indicator,
         )
         if (!preferred.isMissingTaskFailure(PREFERRED_DISCOVERY_TASK_NAME)) return preferred
         indicator.checkCanceled()
         return executor.execute(
-            invocation = target.invocation(AGGREGATE_DISCOVERY_TASK_NAME),
+            invocation = target.invocation(
+                taskName = AGGREGATE_DISCOVERY_TASK_NAME,
+                additionalBuildArguments = buildArguments,
+            ),
             indicator = indicator,
         )
     }

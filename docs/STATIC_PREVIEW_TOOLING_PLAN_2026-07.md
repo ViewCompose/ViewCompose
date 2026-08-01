@@ -275,6 +275,9 @@ Implemented experience foundation:
   version catalogs remain project-wide inputs.
 - Editor following and save refresh are project-level options, enabled by default and exposed in
   the tool-window gear menu.
+- Save events are ignored while the preview tool window is collapsed or hidden. The title bar
+  exposes separate incremental refresh and full update actions; full update reruns the complete
+  compile/discovery/render task graph and rediscovers if the known entry identity changed.
 - User-driven superseding requests cancel their active progress indicator and cannot publish over
   a newer selection. Save events arriving during a render collapse to the latest request and run
   once after the current render instead of repeatedly terminating Gradle.
