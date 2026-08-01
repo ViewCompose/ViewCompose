@@ -25,7 +25,7 @@ import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 import java.util.Locale
 
-@ViewComposePreview(name = "Settings · Light", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Settings · Light", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewSettingsLight() {
     SettingsPage(
         themeModeState = mutableStateOf(DemoThemeMode.Light),
@@ -36,7 +36,6 @@ internal fun UiTreeBuilder.PreviewSettingsLight() {
 @ViewComposePreview(
     name = "Settings · Dark",
     group = "Demo/Pages",
-    heightDp = 891,
     theme = PreviewTheme.Dark,
 )
 internal fun UiTreeBuilder.PreviewSettingsDark() {

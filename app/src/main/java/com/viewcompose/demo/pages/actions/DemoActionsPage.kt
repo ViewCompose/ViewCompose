@@ -63,17 +63,17 @@ fun UiTreeBuilder.PreviewActionsPage() {
     ActionsPage(initialPageIndex = 0)
 }
 
-@ViewComposePreview(name = "Actions · FAB", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Actions · FAB", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewActionsFab() {
     ActionsPage(initialPageIndex = 1)
 }
 
-@ViewComposePreview(name = "Actions · Chip", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Actions · Chip", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewActionsChip() {
     ActionsPage(initialPageIndex = 2)
 }
 
-@ViewComposePreview(name = "Actions · List items", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Actions · List items", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewActionsListItems() {
     ActionsPage(initialPageIndex = 3)
 }

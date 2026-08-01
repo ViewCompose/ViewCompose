@@ -39,17 +39,17 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 
-@ViewComposePreview(name = "Navigation · App bar", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Navigation · App bar", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewNavigationAppBar() {
     NavigationPage(initialPageIndex = 0)
 }
 
-@ViewComposePreview(name = "Navigation · Navigation bar", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Navigation · Navigation bar", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewNavigationBar() {
     NavigationPage(initialPageIndex = 1)
 }
 
-@ViewComposePreview(name = "Navigation · Scaffold", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Navigation · Scaffold", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewNavigationScaffold() {
     NavigationPage(initialPageIndex = 2)
 }

@@ -46,37 +46,37 @@ import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberLazyListState
 import com.viewcompose.ui.unit.sp
 
-@ViewComposePreview(name = "Collections · Controls", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Collections · Controls", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsControls() {
     CollectionPage(initialPageIndex = 0)
 }
 
-@ViewComposePreview(name = "Collections · List", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Collections · List", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsList() {
     CollectionPage(initialPageIndex = 1)
 }
 
-@ViewComposePreview(name = "Collections · Stress", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Collections · Stress", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsStress() {
     CollectionPage(initialPageIndex = 2)
 }
 
-@ViewComposePreview(name = "Collections · Interop", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Collections · Interop", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsInterop() {
     CollectionPage(initialPageIndex = 3)
 }
 
-@ViewComposePreview(name = "Collections · Lazy row", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Collections · Lazy row", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsLazyRow() {
     CollectionPage(initialPageIndex = 4)
 }
 
-@ViewComposePreview(name = "Collections · Grid", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Collections · Grid", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsGrid() {
     CollectionPage(initialPageIndex = 5)
 }
 
-@ViewComposePreview(name = "Collections · Pull refresh", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Collections · Pull refresh", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewCollectionsPullRefresh() {
     CollectionPage(initialPageIndex = 6)
 }

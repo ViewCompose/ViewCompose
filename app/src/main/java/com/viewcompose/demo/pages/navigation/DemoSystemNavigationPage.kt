@@ -36,7 +36,7 @@ import com.viewcompose.widget.core.TopAppBarDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.rememberSaveable
 
-@ViewComposePreview(name = "System navigation", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "System navigation", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewSystemNavigation() {
     SystemNavigationDemoPage(
         root = null,

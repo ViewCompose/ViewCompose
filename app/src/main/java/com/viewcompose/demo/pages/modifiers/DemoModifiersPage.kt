@@ -9,17 +9,17 @@ import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
 
-@ViewComposePreview(name = "Modifiers · Visual", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Modifiers · Visual", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewModifiersVisual() {
     ModifiersPage(initialPageIndex = 0)
 }
 
-@ViewComposePreview(name = "Modifiers · Size", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Modifiers · Size", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewModifiersSize() {
     ModifiersPage(initialPageIndex = 1)
 }
 
-@ViewComposePreview(name = "Modifiers · Accessibility", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Modifiers · Accessibility", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewModifiersAccessibility() {
     ModifiersPage(initialPageIndex = 2)
 }

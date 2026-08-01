@@ -40,22 +40,22 @@ import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 import kotlin.math.min
 
-@ViewComposePreview(name = "Graphics · Drawing", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Graphics · Drawing", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGraphicsDrawing() {
     GraphicsPage(initialPageIndex = 0)
 }
 
-@ViewComposePreview(name = "Graphics · Outer shadow", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Graphics · Outer shadow", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGraphicsOuterShadow() {
     GraphicsPage(initialPageIndex = 1)
 }
 
-@ViewComposePreview(name = "Graphics · Inner shadow", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Graphics · Inner shadow", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGraphicsInnerShadow() {
     GraphicsPage(initialPageIndex = 2)
 }
 
-@ViewComposePreview(name = "Graphics · Lazy diagnostics", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Graphics · Lazy diagnostics", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGraphicsLazyDiagnostics() {
     GraphicsPage(initialPageIndex = 3)
 }

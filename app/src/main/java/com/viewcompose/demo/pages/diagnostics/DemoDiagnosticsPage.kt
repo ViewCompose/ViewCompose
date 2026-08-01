@@ -39,7 +39,7 @@ import java.util.Locale
 private const val SNAPSHOT_STABLE_FRAME_THRESHOLD = 2
 private val DIAGNOSTICS_COMMON_PAGE_ITEMS = listOf("page", "page_filter")
 
-@ViewComposePreview(name = "Diagnostics · Runtime", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Diagnostics · Runtime", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewDiagnosticsRuntime() {
     DiagnosticsPage(
         root = null,
@@ -47,7 +47,7 @@ internal fun UiTreeBuilder.PreviewDiagnosticsRuntime() {
     )
 }
 
-@ViewComposePreview(name = "Diagnostics · Theme", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Diagnostics · Theme", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewDiagnosticsTheme() {
     DiagnosticsPage(
         root = null,
@@ -55,7 +55,7 @@ internal fun UiTreeBuilder.PreviewDiagnosticsTheme() {
     )
 }
 
-@ViewComposePreview(name = "Diagnostics · Renderer", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Diagnostics · Renderer", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewDiagnosticsRenderer() {
     DiagnosticsPage(
         root = null,
@@ -63,7 +63,7 @@ internal fun UiTreeBuilder.PreviewDiagnosticsRenderer() {
     )
 }
 
-@ViewComposePreview(name = "Diagnostics · Gaps", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Diagnostics · Gaps", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewDiagnosticsGaps() {
     DiagnosticsPage(
         root = null,

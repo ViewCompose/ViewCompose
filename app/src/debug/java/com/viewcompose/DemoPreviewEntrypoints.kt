@@ -15,7 +15,6 @@ import com.viewcompose.preview.tooling.PreviewTheme
     name = "Demo Preview Chapter Light",
     group = "Demo/Preview",
     widthDp = 411,
-    heightDp = 891,
     showBackground = true,
 )
 @Composable
@@ -34,7 +33,6 @@ private fun DemoPreviewChapterLightPreview() {
     name = "Demo Preview Chapter Dark",
     group = "Demo/Preview",
     widthDp = 411,
-    heightDp = 891,
     showBackground = true,
 )
 @Composable
@@ -54,7 +52,6 @@ private fun DemoPreviewChapterDarkPreview() {
     name = "Demo Catalog Dark",
     group = "Demo/Preview",
     widthDp = 411,
-    heightDp = 891,
     showBackground = true,
 )
 @Composable

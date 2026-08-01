@@ -20,7 +20,7 @@ import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 
-@ViewComposePreview(name = "Demo catalog", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Demo catalog", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewDemoCatalog() {
     DemoCatalogPage(root = null)
 }

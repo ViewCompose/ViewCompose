@@ -56,27 +56,27 @@ import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.ui.unit.sp
 
-@ViewComposePreview(name = "Input · Fields", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Input · Fields", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputFields() {
     InputPage(initialPageIndex = 0)
 }
 
-@ViewComposePreview(name = "Input · Selection", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Input · Selection", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputSelection() {
     InputPage(initialPageIndex = 1)
 }
 
-@ViewComposePreview(name = "Input · Stress", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Input · Stress", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputStress() {
     InputPage(initialPageIndex = 2)
 }
 
-@ViewComposePreview(name = "Input · Search", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Input · Search", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputSearch() {
     InputPage(initialPageIndex = 3)
 }
 
-@ViewComposePreview(name = "Input · Summary", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Input · Summary", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewInputSummary() {
     InputPage(initialPageIndex = 4)
 }

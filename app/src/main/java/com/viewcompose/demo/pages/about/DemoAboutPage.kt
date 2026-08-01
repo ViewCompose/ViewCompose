@@ -20,7 +20,6 @@ import com.viewcompose.ui.unit.sp
     name = "AboutPage · Light",
     group = "Demo",
     widthDp = 411,
-    heightDp = 891,
     theme = PreviewTheme.Light,
 )
 internal fun UiTreeBuilder.AboutPage() {

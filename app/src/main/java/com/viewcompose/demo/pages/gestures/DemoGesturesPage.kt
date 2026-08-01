@@ -45,17 +45,17 @@ import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 import kotlin.math.roundToInt
 
-@ViewComposePreview(name = "Gestures · Tap", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Gestures · Tap", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGesturesTap() {
     GesturePage(initialPageIndex = 0)
 }
 
-@ViewComposePreview(name = "Gestures · Drag and swipe", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Gestures · Drag and swipe", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGesturesDragSwipe() {
     GesturePage(initialPageIndex = 1)
 }
 
-@ViewComposePreview(name = "Gestures · Transform", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Gestures · Transform", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewGesturesTransform() {
     GesturePage(initialPageIndex = 2)
 }

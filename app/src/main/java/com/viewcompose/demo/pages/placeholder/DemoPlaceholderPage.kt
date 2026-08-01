@@ -7,7 +7,7 @@ import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.UiTreeBuilder
 
-@ViewComposePreview(name = "Roadmap placeholder", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Roadmap placeholder", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewChapterPlaceholder() {
     ChapterPlaceholderPage(
         title = "规划章节",

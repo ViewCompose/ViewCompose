@@ -9,22 +9,22 @@ import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
 
-@ViewComposePreview(name = "Foundations · Guide", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Foundations · Guide", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewFoundationsGuide() {
     OverviewPage(initialPageIndex = 0, onOpenCapability = {})
 }
 
-@ViewComposePreview(name = "Foundations · Theme", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Foundations · Theme", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewFoundationsTheme() {
     OverviewPage(initialPageIndex = 1, onOpenCapability = {})
 }
 
-@ViewComposePreview(name = "Foundations · Media", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Foundations · Media", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewFoundationsMedia() {
     OverviewPage(initialPageIndex = 2, onOpenCapability = {})
 }
 
-@ViewComposePreview(name = "Foundations · Typography", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Foundations · Typography", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewFoundationsTypography() {
     OverviewPage(initialPageIndex = 3, onOpenCapability = {})
 }

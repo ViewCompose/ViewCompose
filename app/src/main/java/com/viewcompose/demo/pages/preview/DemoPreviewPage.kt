@@ -24,17 +24,17 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberTextFieldState
 
-@ViewComposePreview(name = "Preview · Bridge", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Preview · Bridge", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewToolingBridge() {
     PreviewPage(initialPageIndex = 0)
 }
 
-@ViewComposePreview(name = "Preview · Overlay mock", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Preview · Overlay mock", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewToolingOverlayMock() {
     PreviewPage(initialPageIndex = 1)
 }
 
-@ViewComposePreview(name = "Preview · Snapshot", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Preview · Snapshot", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewToolingSnapshot() {
     PreviewPage(initialPageIndex = 2)
 }

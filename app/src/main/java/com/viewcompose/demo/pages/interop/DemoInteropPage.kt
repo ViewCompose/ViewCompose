@@ -21,7 +21,7 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 
-@ViewComposePreview(name = "Interop", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "Interop", group = "Demo/Pages")
 internal fun UiTreeBuilder.InteropPage() {
     val alternateLabelsState = remember { mutableStateOf(false) }
     val benchmarkToggleState = remember { mutableStateOf(false) }

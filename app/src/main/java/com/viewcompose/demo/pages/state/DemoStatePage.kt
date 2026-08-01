@@ -42,22 +42,22 @@ import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.ui.unit.sp
 import com.viewcompose.viewmodel.savedStateHandle
 
-@ViewComposePreview(name = "State · Core", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "State · Core", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStateCore() {
     StatePage(initialPageIndex = 0, onOpenDiagnostics = {})
 }
 
-@ViewComposePreview(name = "State · Identity", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "State · Identity", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStateIdentity() {
     StatePage(initialPageIndex = 1, onOpenDiagnostics = {})
 }
 
-@ViewComposePreview(name = "State · Patch", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "State · Patch", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStatePatch() {
     StatePage(initialPageIndex = 2, onOpenDiagnostics = {})
 }
 
-@ViewComposePreview(name = "State · Checklist", group = "Demo/Pages", heightDp = 891)
+@ViewComposePreview(name = "State · Checklist", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStateChecklist() {
     StatePage(initialPageIndex = 3, onOpenDiagnostics = {})
 }
