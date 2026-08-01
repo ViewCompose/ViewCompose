@@ -44,6 +44,7 @@ class PreviewBuildProtocolTest {
             renderResponsePath = "/project/response.json",
             layoutlibRuntimeRoot = "/cache/layoutlib-runtime",
             layoutlibResourcesRoot = "/cache/layoutlib-resources",
+            renderClasspath = listOf("/project/classes", "/project/R.jar"),
         )
 
         assertEquals(

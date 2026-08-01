@@ -133,6 +133,7 @@ class PreviewProtocolTest {
             renderResponsePath = "response-$index.json",
             layoutlibRuntimeRoot = "runtime",
             layoutlibResourcesRoot = "resources",
+            renderClasspath = listOf("classes-$index"),
         )
         val batch = PreviewWorkerBatchCommand(commands = listOf(command(1), command(2)))
 

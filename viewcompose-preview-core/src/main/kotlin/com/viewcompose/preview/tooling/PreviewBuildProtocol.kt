@@ -62,6 +62,8 @@ data class PreviewBuildManifest(
     val resourcePackageNames: List<String>,
     val inputs: List<PreviewBuildInput>,
     val inputFingerprint: String,
+    /** Inputs retained by a warm Layoutlib process; project bytecode is intentionally excluded. */
+    val layoutlibCompatibilityFingerprint: String = inputFingerprint,
 ) {
     init {
         ViewComposePreviewProtocol.requireSupported(protocolVersion)
@@ -100,6 +102,10 @@ data class PreviewBuildManifest(
             "Preview build inputs must be sorted by kind."
         }
         requireSha256(inputFingerprint, "Preview inputFingerprint")
+        requireSha256(
+            layoutlibCompatibilityFingerprint,
+            "Preview layoutlibCompatibilityFingerprint",
+        )
     }
 }
 
@@ -140,6 +146,11 @@ data class PreviewWorkerCommand(
     val renderResponsePath: String,
     val layoutlibRuntimeRoot: String,
     val layoutlibResourcesRoot: String,
+    /**
+     * Reloadable project bytecode. The host keeps these paths out of its process classpath and
+     * creates a fresh child loader for every command.
+     */
+    val renderClasspath: List<String> = emptyList(),
 ) {
     init {
         ViewComposePreviewProtocol.requireSupported(protocolVersion)
@@ -157,6 +168,12 @@ data class PreviewWorkerCommand(
         }
         require(layoutlibResourcesRoot.isNotBlank()) {
             "Preview worker layoutlibResourcesRoot must not be blank."
+        }
+        require(renderClasspath.none(String::isBlank)) {
+            "Preview worker renderClasspath must not contain blank paths."
+        }
+        require(renderClasspath == renderClasspath.distinct()) {
+            "Preview worker renderClasspath paths must be unique."
         }
     }
 }

@@ -22,6 +22,21 @@ internal object PreviewInputFingerprint {
         return digest.digest().toHex()
     }
 
+    fun calculateByGroup(groups: Map<String, Collection<File>>): Map<String, String> {
+        return groups.toSortedMap().mapValues { (role, roots) ->
+            calculate(mapOf(role to roots))
+        }
+    }
+
+    fun combine(values: Map<String, String>): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        values.toSortedMap().forEach { (role, value) ->
+            digest.updateUtf8("role:$role\n")
+            digest.updateUtf8("value:$value\n")
+        }
+        return digest.digest().toHex()
+    }
+
     private fun entries(root: File): List<FingerprintEntry> {
         if (!root.exists()) {
             return listOf(

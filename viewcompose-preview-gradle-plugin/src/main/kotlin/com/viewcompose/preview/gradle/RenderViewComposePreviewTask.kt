@@ -49,6 +49,9 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     abstract val rerender: Property<Boolean>
 
     @get:Input
+    abstract val verifyWorkerReuse: Property<Boolean>
+
+    @get:Input
     abstract val workerMainClass: Property<String>
 
     @get:InputFile
@@ -65,7 +68,10 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     abstract val batchTargetsFile: RegularFileProperty
 
     @get:Classpath
-    abstract val workerClasspath: ConfigurableFileCollection
+    abstract val workerHostClasspath: ConfigurableFileCollection
+
+    @get:Classpath
+    abstract val runnerClasspath: ConfigurableFileCollection
 
     @get:Classpath
     abstract val layoutlibRuntimeArchive: ConfigurableFileCollection
@@ -75,6 +81,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
 
     init {
         rerender.convention(false)
+        verifyWorkerReuse.convention(false)
         workerMainClass.convention(DEFAULT_WORKER_MAIN_CLASS)
     }
 
@@ -110,6 +117,14 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         rerender.set(value)
     }
 
+    @Option(
+        option = "verify-worker-reuse",
+        description = "Render warm and cold paths and fail unless pixels and structure match.",
+    )
+    fun verifyWorkerReuse(value: Boolean) {
+        verifyWorkerReuse.set(value)
+    }
+
     @TaskAction
     fun renderPreview() {
         require(Runtime.version().feature() >= MINIMUM_JAVA_VERSION) {
@@ -129,7 +144,8 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         )
         val renderRuntimeFingerprint = PreviewInputFingerprint.calculate(
             mapOf(
-                "worker-classpath" to workerClasspath.files,
+                "worker-host-classpath" to workerHostClasspath.files,
+                "runner-classpath" to runnerClasspath.files,
                 "layoutlib-runtime" to layoutlibRuntimeArchive.files,
                 "layoutlib-resources" to layoutlibResourcesArchive.files,
             ),
@@ -167,28 +183,42 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             archive = layoutlibResourcesArchive.requireSingleFile("Layoutlib resources"),
             label = "layoutlib-resources",
         )
-        val hostFiles = workerClasspath.files
+        val hostFiles = workerHostClasspath.files
+        val runnerFiles = runnerClasspath.files
         require(hostFiles.isNotEmpty()) {
             "No ViewCompose preview worker is configured. Add the worker host and Android runner " +
                 "distributions to the '$WORKER_HOST_CONFIGURATION_NAME' and " +
                 "'$RUNNER_CONFIGURATION_NAME' configurations."
         }
-        val applicationClasspath = manifest.inputs.asSequence()
-            .filter { input ->
-                input.kind == PreviewBuildInputKind.ProjectClassDirectory ||
-                    input.kind == PreviewBuildInputKind.ProjectClassJar ||
-                    input.kind == PreviewBuildInputKind.RuntimeClasspath ||
-                    input.kind == PreviewBuildInputKind.BootClasspath
-            }
-            .flatMap { input -> input.paths.asSequence() }
-            .map(::File)
-            .toList()
+        val reloadableClasspath = manifest.paths(
+            PreviewBuildInputKind.ProjectClassDirectory,
+            PreviewBuildInputKind.ProjectClassJar,
+        )
+        val retainedRuntimeClasspath = manifest.paths(
+            PreviewBuildInputKind.RuntimeClasspath,
+            PreviewBuildInputKind.BootClasspath,
+        )
+        val resourceSymbols = PreviewResourceSymbolClasspath.materialize(
+            projectClasspath = reloadableClasspath,
+            artifactRoot = File(manifest.artifactRootDirectory),
+            compatibilityFingerprint = manifest.layoutlibCompatibilityFingerprint,
+        )
+        val processClasspath = (
+            hostFiles + runnerFiles + retainedRuntimeClasspath + resourceSymbols
+            ).distinctBy { file -> file.absoluteFile.normalize().path }
+        val workerCompatibilityFingerprint = PreviewInputFingerprint.combine(
+            mapOf(
+                "layoutlib-environment" to manifest.layoutlibCompatibilityFingerprint,
+                "render-runtime" to renderRuntimeFingerprint,
+            ),
+        )
         val prepared = pendingPlans.map { plan ->
             preparePlan(
                 plan = plan,
                 manifest = manifest,
                 runtimeRoot = runtimeRoot,
                 resourcesRoot = resourcesRoot,
+                renderClasspath = reloadableClasspath,
             )
         }
         val failures = if (batchTargetsFile.isPresent) {
@@ -197,16 +227,18 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
                     executeBatch(
                         batch = batch,
                         batchIndex = batchIndex,
-                        hostFiles = hostFiles,
-                        applicationClasspath = applicationClasspath,
+                        processClasspath = processClasspath,
+                        compatibilityFingerprint = workerCompatibilityFingerprint,
+                        artifactRoot = File(manifest.artifactRootDirectory),
                     )
                 }
         } else {
             listOfNotNull(
                 executeSingle(
                     prepared = prepared.single(),
-                    hostFiles = hostFiles,
-                    applicationClasspath = applicationClasspath,
+                    processClasspath = processClasspath,
+                    compatibilityFingerprint = workerCompatibilityFingerprint,
+                    artifactRoot = File(manifest.artifactRootDirectory),
                 ),
             )
         }
@@ -226,6 +258,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         manifest: PreviewBuildManifest,
         runtimeRoot: File,
         resourcesRoot: File,
+        renderClasspath: List<File>,
     ): PreparedPreviewExecution {
         val outputDirectory = File(
             manifest.artifactRootDirectory,
@@ -260,6 +293,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             renderResponsePath = responseFile.absolutePath,
             layoutlibRuntimeRoot = runtimeRoot.absolutePath,
             layoutlibResourcesRoot = resourcesRoot.absolutePath,
+            renderClasspath = renderClasspath.map(File::getAbsolutePath),
         )
         commandFile.writeTextAtomically(PreviewProtocolJson.encodeWorkerCommand(command))
         return PreparedPreviewExecution(
@@ -273,24 +307,49 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
 
     private fun executeSingle(
         prepared: PreparedPreviewExecution,
-        hostFiles: Collection<File>,
-        applicationClasspath: List<File>,
+        processClasspath: List<File>,
+        compatibilityFingerprint: String,
+        artifactRoot: File,
     ): Pair<PreviewRenderPlan, Throwable>? {
-        return runCatching {
+        val firstAttempt = runCatching {
             val exitValue = executeWorker(
                 commandFile = prepared.commandFile,
-                hostFiles = hostFiles,
-                applicationClasspath = applicationClasspath,
+                processClasspath = processClasspath,
+                renderClasspath = prepared.command.renderClasspath.map(::File),
+                compatibilityFingerprint = compatibilityFingerprint,
+                artifactRoot = artifactRoot,
             )
             validateExecution(prepared, exitValue)
-        }.exceptionOrNull()?.let { error -> prepared.plan to error }
+            if (verifyWorkerReuse.get() && workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS) {
+                verifyWorkerReuse(
+                    commandFile = prepared.commandFile,
+                    prepared = listOf(prepared),
+                    processClasspath = processClasspath,
+                    compatibilityFingerprint = compatibilityFingerprint,
+                    artifactRoot = artifactRoot,
+                )
+            }
+        }
+        val firstError = firstAttempt.exceptionOrNull() ?: return null
+        if (workerMainClass.get() != DEFAULT_WORKER_MAIN_CLASS) {
+            return prepared.plan to firstError
+        }
+        logger.warn(
+            "Warm ViewCompose preview failed; retrying once with a cold worker.",
+            firstError,
+        )
+        return runCatching {
+            val coldExit = executeIsolatedWorker(prepared.commandFile, processClasspath)
+            validateExecution(prepared, coldExit)
+        }.exceptionOrNull()?.let { coldError -> prepared.plan to coldError }
     }
 
     private fun executeBatch(
         batch: List<PreparedPreviewExecution>,
         batchIndex: Int,
-        hostFiles: Collection<File>,
-        applicationClasspath: List<File>,
+        processClasspath: List<File>,
+        compatibilityFingerprint: String,
+        artifactRoot: File,
     ): List<Pair<PreviewRenderPlan, Throwable>> {
         val batchCommandFile = temporaryDir.resolve("batch-command-$batchIndex.json")
         batchCommandFile.writeTextAtomically(
@@ -301,26 +360,168 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         val executionResult = runCatching {
             executeWorker(
                 commandFile = batchCommandFile,
-                hostFiles = hostFiles,
-                applicationClasspath = applicationClasspath,
+                processClasspath = processClasspath,
+                renderClasspath = batch.flatMap { prepared ->
+                    prepared.command.renderClasspath.map(::File)
+                }.distinctBy(File::getAbsolutePath),
+                compatibilityFingerprint = compatibilityFingerprint,
+                artifactRoot = artifactRoot,
             )
         }
         val executionError = executionResult.exceptionOrNull()
-        return batch.mapNotNull { prepared ->
+        var failures = batch.mapNotNull { prepared ->
             val error = executionError ?: runCatching {
                 validateExecution(prepared, checkNotNull(executionResult.getOrNull()))
             }.exceptionOrNull()
             error?.let { prepared.plan to it }
         }
+        if (failures.isNotEmpty() && workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS) {
+            logger.warn(
+                "Warm ViewCompose preview batch failed; retrying once with a cold worker.",
+                failures.first().second,
+            )
+            val coldResult = runCatching {
+                executeIsolatedWorker(batchCommandFile, processClasspath)
+            }
+            val coldError = coldResult.exceptionOrNull()
+            failures = batch.mapNotNull { prepared ->
+                val error = coldError ?: runCatching {
+                    validateExecution(prepared, checkNotNull(coldResult.getOrNull()))
+                }.exceptionOrNull()
+                error?.let { prepared.plan to it }
+            }
+        }
+        if (
+            failures.isEmpty() &&
+            verifyWorkerReuse.get() &&
+            workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS
+        ) {
+            val verificationError = runCatching {
+                verifyWorkerReuse(
+                    commandFile = batchCommandFile,
+                    prepared = batch,
+                    processClasspath = processClasspath,
+                    compatibilityFingerprint = compatibilityFingerprint,
+                    artifactRoot = artifactRoot,
+                )
+            }.exceptionOrNull()
+            if (verificationError != null) {
+                return batch.map { prepared -> prepared.plan to verificationError }
+            }
+        }
+        return failures
     }
 
     private fun executeWorker(
         commandFile: File,
-        hostFiles: Collection<File>,
-        applicationClasspath: List<File>,
+        processClasspath: List<File>,
+        renderClasspath: List<File>,
+        compatibilityFingerprint: String,
+        artifactRoot: File,
+    ): Int {
+        if (workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS) {
+            val workerDirectory = artifactRoot.resolve("worker")
+            val persistent = runCatching {
+                PersistentPreviewWorkerClient(
+                    endpointFile = workerDirectory.resolve("endpoint.properties"),
+                    logFile = workerDirectory.resolve("worker.log"),
+                    compatibilityFingerprint = compatibilityFingerprint,
+                    processClasspath = processClasspath,
+                    mainClass = workerMainClass.get(),
+                ).execute(commandFile)
+            }
+            persistent.getOrNull()?.let { result ->
+                logger.lifecycle(
+                    "ViewCompose preview worker ${result.processId}: " +
+                        "${result.message} processed=${result.processedCommands} " +
+                        "retiring=${result.retiring}",
+                )
+                return 0
+            }
+            logger.warn(
+                "Persistent ViewCompose preview worker failed; retrying in an isolated JVM.",
+                persistent.exceptionOrNull(),
+            )
+        }
+        val execution = execOperations.javaexec { spec ->
+            val classpath = if (workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS) {
+                processClasspath
+            } else {
+                processClasspath + renderClasspath
+            }
+            spec.classpath(classpath)
+            spec.mainClass.set(workerMainClass)
+            spec.args(commandFile.absolutePath)
+            spec.jvmArgs("-Djava.awt.headless=true")
+            spec.isIgnoreExitValue = true
+        }
+        return execution.exitValue
+    }
+
+    private fun verifyWorkerReuse(
+        commandFile: File,
+        prepared: List<PreparedPreviewExecution>,
+        processClasspath: List<File>,
+        compatibilityFingerprint: String,
+        artifactRoot: File,
+    ) {
+        val workerDirectory = artifactRoot.resolve("worker")
+        val client = PersistentPreviewWorkerClient(
+            endpointFile = workerDirectory.resolve("endpoint.properties"),
+            logFile = workerDirectory.resolve("worker.log"),
+            compatibilityFingerprint = compatibilityFingerprint,
+            processClasspath = processClasspath,
+            mainClass = workerMainClass.get(),
+        )
+        var warmExecution = client.execute(commandFile)
+        if (warmExecution.processedCommands <= prepared.size) {
+            warmExecution = client.execute(commandFile)
+        }
+        check(warmExecution.processedCommands > prepared.size) {
+            "Could not obtain a proven warm Layoutlib render for verification."
+        }
+        prepared.forEach { execution -> validateExecution(execution, 0) }
+        val warmArtifacts = prepared.mapIndexed { index, execution ->
+            val response = PreviewProtocolJson.decodeResponse(execution.responseFile.readText())
+            val artifacts = checkNotNull(response.artifacts)
+            val warmDirectory = temporaryDir.resolve("worker-reuse-verification/warm-$index")
+            check(warmDirectory.isDirectory || warmDirectory.mkdirs()) {
+                "Could not create warm verification directory '${warmDirectory.absolutePath}'."
+            }
+            WarmPreviewArtifacts(
+                image = File(checkNotNull(artifacts.imagePath)).copyTo(
+                    warmDirectory.resolve("preview.png"),
+                    overwrite = true,
+                ),
+                tree = File(checkNotNull(artifacts.renderTreePath)).copyTo(
+                    warmDirectory.resolve("render-tree.json"),
+                    overwrite = true,
+                ),
+            )
+        }
+        val coldExit = executeIsolatedWorker(commandFile, processClasspath)
+        prepared.forEach { execution -> validateExecution(execution, coldExit) }
+        prepared.zip(warmArtifacts).forEach { (execution, warm) ->
+            val response = PreviewProtocolJson.decodeResponse(execution.responseFile.readText())
+            val artifacts = checkNotNull(response.artifacts)
+            PreviewWorkerReuseVerifier.requireEquivalent(
+                warmImage = warm.image,
+                coldImage = File(checkNotNull(artifacts.imagePath)),
+                warmTree = warm.tree,
+                coldTree = File(checkNotNull(artifacts.renderTreePath)),
+            )
+        }
+        logger.lifecycle(
+            "ViewCompose preview worker reuse verified against ${prepared.size} cold render(s).",
+        )
+    }
+
+    private fun executeIsolatedWorker(
+        commandFile: File,
+        processClasspath: List<File>,
     ): Int {
         val execution = execOperations.javaexec { spec ->
-            spec.classpath(hostFiles + applicationClasspath)
+            spec.classpath(processClasspath)
             spec.mainClass.set(workerMainClass)
             spec.args(commandFile.absolutePath)
             spec.jvmArgs("-Djava.awt.headless=true")
@@ -416,8 +617,25 @@ private data class PreparedPreviewExecution(
     val commandFile: File,
 )
 
+private data class WarmPreviewArtifacts(
+    val image: File,
+    val tree: File,
+)
+
 private fun PreviewRenderPlan.responseFile(manifest: PreviewBuildManifest): File {
     return File(manifest.artifactRootDirectory, cacheRelativeDirectory).resolve(RESPONSE_FILE_NAME)
+}
+
+private fun PreviewBuildManifest.paths(
+    vararg kinds: PreviewBuildInputKind,
+): List<File> {
+    val selected = kinds.toSet()
+    return inputs.asSequence()
+        .filter { input -> input.kind in selected }
+        .flatMap { input -> input.paths.asSequence() }
+        .map(::File)
+        .filter(File::exists)
+        .toList()
 }
 
 private fun ConfigurableFileCollection.requireSingleFile(label: String): File {

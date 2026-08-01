@@ -129,6 +129,12 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
         val libraryAssetFiles = libraryAssetDirectories.files
         val packageFiles = resourcePackageFiles.files
         val manifestFile = mergedManifest.get().asFile
+        val resolvedNamespace = namespace.get()
+        val compileSdk = resolveCompileSdk(bootFiles)
+        val resourcePackageNames = buildResourcePackageNames(
+            namespace = resolvedNamespace,
+            packageFiles = packageFiles,
+        )
         val fingerprintGroups = linkedMapOf(
             "assets-library" to libraryAssetFiles,
             "assets-local" to localAssetFiles,
@@ -145,7 +151,18 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
             "runtime-classpath" to runtimeFiles,
             "sources" to sourceFiles,
         )
-        val fingerprint = PreviewInputFingerprint.calculate(fingerprintGroups)
+        val groupFingerprints = PreviewInputFingerprint.calculateByGroup(fingerprintGroups)
+        val fingerprint = PreviewInputFingerprint.combine(groupFingerprints)
+        val layoutlibCompatibilityFingerprint = PreviewInputFingerprint.combine(
+            buildMap {
+                LAYOUTLIB_COMPATIBILITY_GROUPS.forEach { group ->
+                    groupFingerprints[group]?.let { value -> put(group, value) }
+                }
+                put("compile-sdk", compileSdk.toString())
+                put("namespace", resolvedNamespace)
+                put("resource-package-names", resourcePackageNames.joinToString("\n"))
+            },
+        )
         val discovery = CompiledPreviewScanner(
             projectClassDirectories = projectDirectories,
             projectClassJars = projectJars,
@@ -166,7 +183,6 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
             addInput(PreviewBuildInputKind.LibraryAssetDirectory, libraryAssetFiles)
             addInput(PreviewBuildInputKind.ResourcePackageFile, packageFiles)
         }.sortedBy { input -> input.kind.ordinal }
-        val resolvedNamespace = namespace.get()
         val manifest = PreviewBuildManifest(
             modulePath = modulePath.get(),
             buildVariant = buildVariant.get(),
@@ -174,16 +190,14 @@ abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
             androidGradlePluginVersion = androidGradlePluginVersion.get(),
             minSdk = minSdk.get(),
             targetSdk = targetSdk.get(),
-            compileSdk = resolveCompileSdk(bootFiles),
+            compileSdk = compileSdk,
             sdkDirectory = sdkDirectoryPath.get(),
             mergedManifestPath = manifestFile.normalizedAbsolutePath(),
             artifactRootDirectory = artifactRootDirectory.get().asFile.normalizedAbsolutePath(),
-            resourcePackageNames = buildResourcePackageNames(
-                namespace = resolvedNamespace,
-                packageFiles = packageFiles,
-            ),
+            resourcePackageNames = resourcePackageNames,
             inputs = inputs,
             inputFingerprint = fingerprint,
+            layoutlibCompatibilityFingerprint = layoutlibCompatibilityFingerprint,
         )
         val catalog = PreviewDescriptorCatalog(
             modulePath = modulePath.get(),
@@ -273,3 +287,15 @@ private fun File.writeTextAtomically(value: String) {
 private fun File.resolveSibling(name: String): File = File(checkNotNull(parentFile), name)
 
 private val ANDROID_PLATFORM_PATTERN = Regex("""[/\\]platforms[/\\]android-(\d+)[/\\]""")
+private val LAYOUTLIB_COMPATIBILITY_GROUPS = setOf(
+    "assets-library",
+    "assets-local",
+    "assets-module",
+    "boot-classpath",
+    "manifest",
+    "resource-packages",
+    "resources-library",
+    "resources-local",
+    "resources-module",
+    "runtime-classpath",
+)

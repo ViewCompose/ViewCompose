@@ -47,4 +47,28 @@ class PreviewInputFingerprintTest {
             PreviewInputFingerprint.calculate(mapOf("classes" to listOf(second))),
         )
     }
+
+    @Test
+    fun `group fingerprints allow code changes without invalidating retained resources`() {
+        val root = temporaryFolder.newFolder("grouped")
+        val classes = root.resolve("classes").apply { mkdirs() }
+        val resources = root.resolve("res").apply { mkdirs() }
+        classes.resolve("Preview.class").writeText("first")
+        resources.resolve("values.xml").writeText("<resources />")
+        val first = PreviewInputFingerprint.calculateByGroup(
+            mapOf("classes" to listOf(classes), "resources" to listOf(resources)),
+        )
+
+        classes.resolve("Preview.class").writeText("second")
+        val second = PreviewInputFingerprint.calculateByGroup(
+            mapOf("classes" to listOf(classes), "resources" to listOf(resources)),
+        )
+
+        assertNotEquals(first.getValue("classes"), second.getValue("classes"))
+        assertEquals(first.getValue("resources"), second.getValue("resources"))
+        assertEquals(
+            PreviewInputFingerprint.combine(mapOf("resources" to first.getValue("resources"))),
+            PreviewInputFingerprint.combine(mapOf("resources" to second.getValue("resources"))),
+        )
+    }
 }

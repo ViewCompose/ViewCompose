@@ -171,8 +171,8 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
             render.descriptorCatalogFile.set(task.flatMap { discovery ->
                 discovery.descriptorCatalogFile
             })
-            render.workerClasspath.from(toolConfigurations.workerHost)
-            render.workerClasspath.from(runnerClasspath)
+            render.workerHostClasspath.from(toolConfigurations.workerHost)
+            render.runnerClasspath.from(runnerClasspath)
             render.layoutlibRuntimeArchive.from(toolConfigurations.layoutlibRuntime)
             render.layoutlibResourcesArchive.from(toolConfigurations.layoutlibResources)
         }

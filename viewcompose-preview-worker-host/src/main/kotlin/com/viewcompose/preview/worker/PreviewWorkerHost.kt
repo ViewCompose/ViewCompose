@@ -21,6 +21,7 @@ import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.PreviewWorkerCommand
 import com.viewcompose.preview.tooling.viewportHeightDp
 import java.io.File
+import java.net.URLClassLoader
 import kotlin.math.roundToInt
 import kotlinx.serialization.json.jsonObject
 
@@ -30,6 +31,16 @@ import kotlinx.serialization.json.jsonObject
 object PreviewWorkerHost {
     @JvmStatic
     fun main(args: Array<String>) {
+        if (args.firstOrNull() == WORKER_SERVER_ARGUMENT) {
+            require(args.size == 3) {
+                "Expected --server, endpoint path, and compatibility fingerprint."
+            }
+            PreviewWorkerServer(
+                endpointFile = File(args[1]),
+                compatibilityFingerprint = args[2],
+            ).run()
+            return
+        }
         require(args.size == 1) {
             "Expected one argument containing the PreviewWorkerCommand JSON path."
         }
@@ -64,19 +75,21 @@ object PreviewWorkerHost {
         val requestFile = File(command.renderRequestPath)
         val request = PreviewProtocolJson.decodeRequest(requestFile.readText())
         val response = try {
-            val manifest = PreviewProtocolJson.decodeBuildManifest(
-                File(command.buildManifestPath).readText(),
-            )
-            validateCommand(
-                command = command,
-                manifest = manifest,
-                request = request,
-            )
-            render(
-                command = command,
-                manifest = manifest,
-                request = request,
-            )
+            withPreviewRenderClassLoader(command.renderClasspath) {
+                val manifest = PreviewProtocolJson.decodeBuildManifest(
+                    File(command.buildManifestPath).readText(),
+                )
+                validateCommand(
+                    command = command,
+                    manifest = manifest,
+                    request = request,
+                )
+                render(
+                    command = command,
+                    manifest = manifest,
+                    request = request,
+                )
+            }
         } catch (error: Throwable) {
             error.throwIfFatal()
             request.failureResponse(error)
@@ -254,6 +267,27 @@ object PreviewWorkerHost {
     }
 }
 
+internal inline fun <T> withPreviewRenderClassLoader(
+    renderClasspath: List<String>,
+    parent: ClassLoader = PreviewWorkerHost::class.java.classLoader,
+    block: () -> T,
+): T {
+    if (renderClasspath.isEmpty()) return block()
+    val thread = Thread.currentThread()
+    val previous = thread.contextClassLoader
+    val loader = URLClassLoader(
+        renderClasspath.map { path -> File(path).toURI().toURL() }.toTypedArray(),
+        parent,
+    )
+    thread.contextClassLoader = loader
+    return try {
+        block()
+    } finally {
+        thread.contextClassLoader = previous
+        loader.close()
+    }
+}
+
 private fun PreviewBuildManifest.paths(kind: PreviewBuildInputKind): List<String> {
     return inputs.firstOrNull { input -> input.kind == kind }?.paths.orEmpty()
 }
@@ -318,6 +352,7 @@ private fun Throwable.throwIfFatal() {
 }
 
 private const val RUNNER_CLASS_NAME = "com.viewcompose.preview.runner.StaticPreviewWorker"
+private const val WORKER_SERVER_ARGUMENT = "--server"
 private const val LAYOUTLIB_RUNTIME_PROPERTY = "paparazzi.layoutlib.runtime.root"
 private const val LAYOUTLIB_RESOURCES_PROPERTY = "paparazzi.layoutlib.resources.root"
 private const val DENSITY_DEFAULT = 160
