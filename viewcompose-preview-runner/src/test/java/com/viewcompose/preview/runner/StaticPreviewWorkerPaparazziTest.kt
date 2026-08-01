@@ -209,6 +209,15 @@ class StaticPreviewWorkerPaparazziTest {
             File(checkNotNull(artifacts.renderTreePath)).readText(),
         )
         assertEquals(dimensions.second, snapshot.nativeViewTree.single().bounds.bottom)
+        assertTrue(
+            snapshot.layoutDiagnostics.none { diagnostic ->
+                !diagnostic.clippingExpected &&
+                    diagnostic.kind in setOf(
+                        PreviewLayoutDiagnosticKind.PartiallyClipped,
+                        PreviewLayoutDiagnosticKind.FullyClipped,
+                    )
+            },
+        )
         assertTrue(snapshot.warnings.none { warning -> warning.contains("capture limit") })
     }
 

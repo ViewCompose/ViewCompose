@@ -305,8 +305,15 @@ private fun View.findMinimumExpandedHeight(
             upper = candidate
         }
     }
-    layoutExactly(widthPx, upper)
-    return upper
+    // RecyclerView can report that forward scrolling has ended one physical pixel before its
+    // final child is fully inside the viewport. Keep the result inside the already-proven complete
+    // upper bound while stepping past that boolean transition boundary.
+    val guardedHeightPx = minOf(
+        upperCompleteHeightPx,
+        upper + AUTO_HEIGHT_COMPLETION_GUARD_PX,
+    )
+    layoutExactly(widthPx, guardedHeightPx)
+    return guardedHeightPx
 }
 
 private fun View.layoutExactly(
@@ -348,6 +355,8 @@ private fun autoHeightLimitPx(
         minOf(densityLimit, pixelBudgetLimit),
     )
 }
+
+private const val AUTO_HEIGHT_COMPLETION_GUARD_PX = 1
 
 sealed interface StaticPreviewMountResult {
     data class Success(
