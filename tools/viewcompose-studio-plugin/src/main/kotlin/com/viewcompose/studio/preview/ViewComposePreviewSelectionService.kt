@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -23,7 +24,11 @@ import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.util.Alarm
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Path
+import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import org.jetbrains.kotlin.psi.KtCallExpression
@@ -51,6 +56,8 @@ internal class ViewComposePreviewSelectionService(
             }
         }
     private val pendingSavedRefreshPolicy = AtomicReference<PreviewRefreshPolicy?>()
+    private val savedInputInvalidations = SavedPreviewInvalidationStore()
+    private val explicitSaveSuppressions = ConcurrentHashMap.newKeySet<String>()
     private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val editorFollowAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val galleryDiscoveryRetryAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
@@ -73,6 +80,11 @@ internal class ViewComposePreviewSelectionService(
             object : BulkFileListener {
                 override fun after(events: List<VFileEvent>) {
                     if (!settings.autoRefreshOnSave) return
+                    val changedPaths = unsuppressedSavedPreviewPaths(
+                        changedPaths = events.map(VFileEvent::getPath),
+                        explicitSaveSuppressions = explicitSaveSuppressions,
+                    )
+                    if (changedPaths.isEmpty()) return
                     val request = activeRequest.get() ?: return
                     val inputScope = currentState.get()
                         .previousSuccessOrNull()
@@ -82,8 +94,30 @@ internal class ViewComposePreviewSelectionService(
                         !savedPreviewInputMatches(
                             projectRoot = project.basePath?.let(Path::of),
                             selection = request.selection,
-                            changedPaths = events.map(VFileEvent::getPath),
+                            changedPaths = changedPaths,
                             inputScope = inputScope,
+                        )
+                    ) {
+                        return
+                    }
+                    val refreshPolicy = if (
+                        savedPreviewFastRefreshEligible(
+                            selection = request.selection,
+                            changedPaths = changedPaths,
+                        )
+                    ) {
+                        PreviewRefreshPolicy.SavedSourceInput
+                    } else {
+                        PreviewRefreshPolicy.SavedInput
+                    }
+                    val fingerprint = savedPreviewInputFingerprint(changedPaths) ?: return
+                    if (
+                        !savedInputInvalidations.record(
+                            PendingSavedPreviewRefresh(
+                                request = request,
+                                refreshPolicy = refreshPolicy,
+                                inputFingerprint = fingerprint,
+                            ),
                         )
                     ) {
                         return
@@ -95,19 +129,12 @@ internal class ViewComposePreviewSelectionService(
                             toolWindowVisible = isPreviewToolWindowVisible(),
                         )
                         if (shouldRefresh) {
-                            scheduleSavedInputRefresh(
-                                request = request,
-                                refreshPolicy = if (
-                                    savedPreviewFastRefreshEligible(
-                                        selection = request.selection,
-                                        changedPaths = events.map(VFileEvent::getPath),
-                                    )
-                                ) {
-                                    PreviewRefreshPolicy.SavedSourceInput
-                                } else {
-                                    PreviewRefreshPolicy.SavedInput
-                                },
-                            )
+                            savedInputInvalidations.consume(request)?.let { pending ->
+                                scheduleSavedInputRefresh(
+                                    request = pending.request,
+                                    refreshPolicy = pending.refreshPolicy,
+                                )
+                            }
                         }
                     }
                 }
@@ -147,6 +174,18 @@ internal class ViewComposePreviewSelectionService(
         }
     }
 
+    fun previewPanelVisibilityChanged(visible: Boolean) {
+        if (!visible || project.isDisposed) return
+        val request = activeRequest.get() ?: return
+        savedInputInvalidations.consume(request)?.let { pending ->
+            scheduleSavedInputRefresh(
+                request = pending.request,
+                refreshPolicy = pending.refreshPolicy,
+            )
+        }
+        scheduleEditorFollow()
+    }
+
     fun selectAndShow(selection: PreviewSourceSelection) {
         render(selection = selection, requestedVariantId = null)
         ToolWindowManager.getInstance(project).invokeLater {
@@ -169,6 +208,7 @@ internal class ViewComposePreviewSelectionService(
     }
 
     fun refreshCurrent() {
+        prepareExplicitRefresh()
         val request = activeRequest.get()
         if (request == null) {
             if (
@@ -188,6 +228,7 @@ internal class ViewComposePreviewSelectionService(
     }
 
     fun fullRefreshCurrent() {
+        prepareExplicitRefresh()
         val request = activeRequest.get() ?: return
         render(
             selection = request.selection,
@@ -409,6 +450,7 @@ internal class ViewComposePreviewSelectionService(
         galleryPriorityOrder.set(null)
         automaticRefreshGate.clear()
         pendingSavedRefreshPolicy.set(null)
+        savedInputInvalidations.discardPending()
         activeRequest.set(null)
         val generation = requestGeneration.incrementAndGet()
         activeIndicator.getAndSet(null)?.cancel()
@@ -652,6 +694,34 @@ internal class ViewComposePreviewSelectionService(
         )
     }
 
+    private fun prepareExplicitRefresh() {
+        savedInputRefreshAlarm.cancelAllRequests()
+        pendingSavedRefreshPolicy.set(null)
+        savedInputInvalidations.discardPending()
+        saveCurrentDocumentForExplicitRefresh()
+    }
+
+    private fun saveCurrentDocumentForExplicitRefresh() {
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return
+        if (editor.project != project || editor.isDisposed) return
+        val document = editor.document
+        val documentManager = FileDocumentManager.getInstance()
+        if (!documentManager.isDocumentUnsaved(document)) return
+        val file = documentManager.getFile(document) ?: return
+        val normalizedPath = file.path.normalizedPathOrNull()?.toString() ?: file.path
+        explicitSaveSuppressions.add(normalizedPath)
+        runCatching {
+            documentManager.saveDocument(document)
+            PsiDocumentManager.getInstance(project).commitDocument(document)
+        }.onFailure { error ->
+            explicitSaveSuppressions.remove(normalizedPath)
+            logger.warn("Could not save the active preview document before refresh.", error)
+        }
+        ApplicationManager.getApplication().invokeLater {
+            explicitSaveSuppressions.remove(normalizedPath)
+        }
+    }
+
     private fun scheduleEditorFollow(editorHint: Editor? = null) {
         editorFollowAlarm.cancelAllRequests()
         val generation = editorFollowGeneration.incrementAndGet()
@@ -756,6 +826,8 @@ internal class ViewComposePreviewSelectionService(
         requestGeneration.incrementAndGet()
         automaticRefreshGate.clear()
         pendingSavedRefreshPolicy.set(null)
+        savedInputInvalidations.discardPending()
+        explicitSaveSuppressions.clear()
         activeIndicator.getAndSet(null)?.cancel()
         activeRequest.set(null)
         gradleExecutor?.close()
@@ -882,15 +954,132 @@ internal fun shouldRunAutomaticPreviewRefresh(
     toolWindowVisible: Boolean,
 ): Boolean = !projectDisposed && activeRequestMatches && toolWindowVisible
 
-private data class ActivePreviewRequest(
+internal data class ActivePreviewRequest(
     val selection: PreviewSourceSelection,
     val variantId: String?,
 )
+
+internal data class PendingSavedPreviewRefresh(
+    val request: ActivePreviewRequest,
+    val refreshPolicy: PreviewRefreshPolicy,
+    val inputFingerprint: String,
+)
+
+internal class SavedPreviewInvalidationStore {
+    private var pending: PendingSavedPreviewRefresh? = null
+    private var lastRecordedKey: String? = null
+
+    @Synchronized
+    fun record(invalidation: PendingSavedPreviewRefresh): Boolean {
+        val key = invalidation.deduplicationKey()
+        if (key == lastRecordedKey) return false
+        lastRecordedKey = key
+        pending = pending
+            ?.takeIf { current -> current.request == invalidation.request }
+            ?.let { current ->
+                invalidation.copy(
+                    refreshPolicy = mergeSavedRefreshPolicies(
+                        current.refreshPolicy,
+                        invalidation.refreshPolicy,
+                    ),
+                )
+            }
+            ?: invalidation
+        return true
+    }
+
+    @Synchronized
+    fun consume(request: ActivePreviewRequest): PendingSavedPreviewRefresh? {
+        val value = pending
+        pending = null
+        return value?.takeIf { invalidation -> invalidation.request == request }
+    }
+
+    @Synchronized
+    fun discardPending() {
+        pending = null
+    }
+}
 
 private data class AutomaticPreviewRefreshRequest(
     val request: ActivePreviewRequest,
     val refreshPolicy: PreviewRefreshPolicy,
 )
+
+internal fun unsuppressedSavedPreviewPaths(
+    changedPaths: List<String>,
+    explicitSaveSuppressions: MutableSet<String>,
+): List<String> {
+    val normalizedPaths = changedPaths.map { rawPath ->
+        rawPath.normalizedPathOrNull()?.toString() ?: rawPath
+    }
+    val suppressedInBatch = normalizedPaths.filterTo(linkedSetOf()) { path ->
+        path in explicitSaveSuppressions
+    }
+    explicitSaveSuppressions.removeAll(suppressedInBatch)
+    return changedPaths.filterIndexed { index, _ ->
+        normalizedPaths[index] !in suppressedInBatch
+    }
+}
+
+internal fun savedPreviewInputFingerprint(changedPaths: List<String>): String? {
+    val normalized = changedPaths.mapNotNull(String::normalizedPathOrNull)
+        .distinct()
+        .sortedBy(Path::toString)
+    if (normalized.isEmpty()) return null
+    val digest = MessageDigest.getInstance("SHA-256")
+    normalized.forEach { path ->
+        digest.update(path.toString().toByteArray(StandardCharsets.UTF_8))
+        digest.update(0.toByte())
+        val signature = runCatching {
+            when {
+                Files.isRegularFile(path) -> {
+                    if (path.previewSourceExtension() in FAST_REFRESH_SOURCE_EXTENSIONS) {
+                        Files.newInputStream(path).use { input ->
+                            val buffer = ByteArray(SAVED_INPUT_FINGERPRINT_BUFFER_SIZE)
+                            while (true) {
+                                val count = input.read(buffer)
+                                if (count < 0) break
+                                digest.update(buffer, 0, count)
+                            }
+                        }
+                        "source"
+                    } else {
+                        "file:${Files.size(path)}:${Files.getLastModifiedTime(path)}"
+                    }
+                }
+                Files.isDirectory(path) -> "directory:${Files.getLastModifiedTime(path)}"
+                else -> "missing"
+            }
+        }.getOrDefault("unreadable")
+        digest.update(signature.toByteArray(StandardCharsets.UTF_8))
+        digest.update(0.toByte())
+    }
+    return digest.digest().joinToString(separator = "") { byte -> "%02x".format(byte) }
+}
+
+private fun PendingSavedPreviewRefresh.deduplicationKey(): String {
+    return listOf(
+        request.selection.filePath,
+        request.selection.symbolName,
+        request.variantId.orEmpty(),
+        inputFingerprint,
+    ).joinToString(separator = "\u0000")
+}
+
+private fun mergeSavedRefreshPolicies(
+    first: PreviewRefreshPolicy,
+    second: PreviewRefreshPolicy,
+): PreviewRefreshPolicy {
+    return if (
+        first == PreviewRefreshPolicy.SavedInput ||
+        second == PreviewRefreshPolicy.SavedInput
+    ) {
+        PreviewRefreshPolicy.SavedInput
+    } else {
+        PreviewRefreshPolicy.SavedSourceInput
+    }
+}
 
 private data class EditorFollowTarget(
     val selection: PreviewSourceSelection?,
@@ -904,6 +1093,7 @@ private data class EditorSourceLocation(
 
 private const val EDITOR_FOLLOW_DELAY_MILLIS = 250
 private const val SAVED_INPUT_REFRESH_DELAY_MILLIS = 400
+private const val SAVED_INPUT_FINGERPRINT_BUFFER_SIZE = 16 * 1024
 private const val GALLERY_INITIAL_RENDER_COUNT = 6
 private const val NANOS_PER_MILLISECOND = 1_000_000L
 private val GALLERY_DISCOVERY_RETRY_DELAYS_MILLIS = intArrayOf(500, 1_000, 2_000)

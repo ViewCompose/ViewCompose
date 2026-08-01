@@ -1,7 +1,11 @@
 package com.viewcompose.studio.preview
 
 import java.nio.file.Files
+import java.util.concurrent.ConcurrentHashMap
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -18,6 +22,85 @@ class ViewComposePreviewSelectionServiceTest {
         assertTrue(PreviewRefreshPolicy.Full.forceGradleRerender)
         assertTrue(PreviewRefreshPolicy.Full.forceFullRebuild)
         assertFalse(PreviewRefreshPolicy.Manual.forceFullRebuild)
+    }
+
+    @Test
+    fun `explicit document save is consumed once instead of scheduling automatic refresh`() {
+        val source = temporaryFolder.newFile("Preview.kt").toPath().toAbsolutePath().normalize()
+        val suppressions = ConcurrentHashMap.newKeySet<String>().apply {
+            add(source.toString())
+        }
+
+        assertTrue(
+            unsuppressedSavedPreviewPaths(
+                changedPaths = listOf(source.toString(), source.toString()),
+                explicitSaveSuppressions = suppressions,
+            ).isEmpty(),
+        )
+        assertEquals(
+            listOf(source.toString()),
+            unsuppressedSavedPreviewPaths(
+                changedPaths = listOf(source.toString()),
+                explicitSaveSuppressions = suppressions,
+            ),
+        )
+    }
+
+    @Test
+    fun `hidden preview retains one fingerprinted invalidation until it is shown`() {
+        val selection = PreviewSourceSelection(
+            filePath = "/project/Preview.kt",
+            symbolName = "Preview",
+            line = 1,
+        )
+        val request = ActivePreviewRequest(selection, "light")
+        val store = SavedPreviewInvalidationStore()
+
+        assertTrue(
+            store.record(
+                PendingSavedPreviewRefresh(
+                    request = request,
+                    refreshPolicy = PreviewRefreshPolicy.SavedSourceInput,
+                    inputFingerprint = "first",
+                ),
+            ),
+        )
+        assertFalse(
+            store.record(
+                PendingSavedPreviewRefresh(
+                    request = request,
+                    refreshPolicy = PreviewRefreshPolicy.SavedSourceInput,
+                    inputFingerprint = "first",
+                ),
+            ),
+        )
+        assertTrue(
+            store.record(
+                PendingSavedPreviewRefresh(
+                    request = request,
+                    refreshPolicy = PreviewRefreshPolicy.SavedInput,
+                    inputFingerprint = "second",
+                ),
+            ),
+        )
+
+        val pending = store.consume(request)
+        assertEquals(PreviewRefreshPolicy.SavedInput, pending?.refreshPolicy)
+        assertEquals("second", pending?.inputFingerprint)
+        assertNull(store.consume(request))
+    }
+
+    @Test
+    fun `saved source fingerprint changes only when source content changes`() {
+        val source = temporaryFolder.newFile("Fingerprint.kt").toPath()
+        Files.writeString(source, "Text(\"first\")")
+        val first = savedPreviewInputFingerprint(listOf(source.toString()))
+        val unchanged = savedPreviewInputFingerprint(listOf(source.toString()))
+        Files.writeString(source, "Text(\"second\")")
+        val second = savedPreviewInputFingerprint(listOf(source.toString()))
+
+        assertEquals(first, unchanged)
+        assertNotEquals(first, second)
     }
 
     @Test

@@ -10,6 +10,7 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
+import java.awt.event.HierarchyEvent
 import java.nio.file.Path
 
 internal const val VIEWCOMPOSE_PREVIEW_TOOL_WINDOW_ID = "ViewCompose Preview"
@@ -87,6 +88,11 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         }
         refreshOptionsActions()
         selectionService.attach(panel)
+        panel.addHierarchyListener { event ->
+            if (event.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+                selectionService.previewPanelVisibilityChanged(panel.isShowing)
+            }
+        }
         val content = ContentFactory.getInstance().createContent(
             panel,
             null,
@@ -100,6 +106,7 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
         )
         content.preferredFocusableComponent = panel.preferredFocusComponent
         toolWindow.contentManager.addContent(content)
+        selectionService.previewPanelVisibilityChanged(toolWindow.isVisible)
     }
 }
 
