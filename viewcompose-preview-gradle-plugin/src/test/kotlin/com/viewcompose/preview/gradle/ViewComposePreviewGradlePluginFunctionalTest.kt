@@ -87,7 +87,10 @@ class ViewComposePreviewGradlePluginFunctionalTest {
                 }
 
                 tasks.configureEach {
-                    if (name == "renderDebugViewComposePreview") {
+                    if (
+                        name == "renderDebugViewComposePreview" ||
+                        name == "refreshDebugViewComposePreview"
+                    ) {
                         workerMainClass.set("sample.FakePreviewWorkerHost")
                     }
                 }
@@ -290,6 +293,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             .withPluginClasspath()
             .build()
         assertTrue(tasks.output.contains("renderDebugViewComposePreview"))
+        assertTrue(tasks.output.contains("refreshDebugViewComposePreview"))
         assertTrue(tasks.output.contains("discoverDebugViewComposePreviews"))
 
         val renderArguments = arrayOf(
@@ -319,6 +323,52 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             cached.task(":app:renderDebugViewComposePreview")?.outcome,
         )
         assertTrue(cached.output.contains("ViewCompose preview cache hit:"))
+
+        val previewsSource = project.resolve("app/src/main/java/sample/SamplePreviews.java")
+        previewsSource.writeText(
+            previewsSource.readText().replace(
+                "public static void card(UiTreeBuilder builder) {}",
+                "public static void card(UiTreeBuilder builder) { int changed = 1; }",
+            ),
+        )
+        val fastRefresh = GradleRunner.create()
+            .withProjectDir(project)
+            .withArguments(
+                ":app:refreshDebugViewComposePreview",
+                "-P$PREVIEW_ID_PROJECT_PROPERTY=${descriptor.id}",
+                "-P$PREVIEW_VARIANT_ID_PROJECT_PROPERTY=${descriptor.variants.single().id}",
+                "--stacktrace",
+            )
+            .withPluginClasspath()
+            .build()
+        assertEquals(
+            TaskOutcome.SUCCESS,
+            fastRefresh.task(":app:refreshDebugViewComposePreview")?.outcome,
+        )
+        assertEquals(null, fastRefresh.task(":app:discoverDebugViewComposePreviews"))
+        assertTrue(fastRefresh.output.contains("ViewCompose preview rendered:"))
+        val fastManifest = PreviewProtocolJson.decodeBuildManifest(
+            output.resolve(FAST_BUILD_MANIFEST_FILE_NAME).readText(),
+        )
+        val fastCatalog = PreviewProtocolJson.decodeDescriptorCatalog(
+            output.resolve(FAST_DESCRIPTOR_CATALOG_FILE_NAME).readText(),
+        )
+        assertEquals(fastManifest.inputFingerprint, fastCatalog.buildFingerprint)
+        assertTrue(fastManifest.inputFingerprint != manifest.inputFingerprint)
+        assertTrue(fastCatalog.descriptors.any { preview -> preview.id == descriptor.id })
+
+        output.resolve("build-manifest.json").delete()
+        val missingBaseline = GradleRunner.create()
+            .withProjectDir(project)
+            .withArguments(
+                ":app:refreshDebugViewComposePreview",
+                "-P$PREVIEW_ID_PROJECT_PROPERTY=${descriptor.id}",
+                "-P$PREVIEW_VARIANT_ID_PROJECT_PROPERTY=${descriptor.variants.single().id}",
+                "--stacktrace",
+            )
+            .withPluginClasspath()
+            .buildAndFail()
+        assertTrue(missingBaseline.output.contains(FAST_REFRESH_FALLBACK_MARKER))
     }
 
     private fun findAndroidSdkDirectory(): File? {

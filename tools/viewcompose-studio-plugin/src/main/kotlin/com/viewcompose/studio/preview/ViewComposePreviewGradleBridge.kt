@@ -159,23 +159,33 @@ internal class ViewComposePreviewRenderCoordinator(
     }
 
     /**
-     * Fast path for an already compiled preview. The render task owns its discovery dependency, so
-     * Gradle can incrementally compile, rediscover, and render in one invocation after a save.
-     * Returns null only when the stable descriptor or conventional debug task no longer exists.
+     * Path for an already compiled preview. Source-only saves select the dedicated refresh task;
+     * other known-preview operations retain the complete render task. Either path returns null
+     * when its stable descriptor/environment is no longer valid so the caller can rediscover.
      */
     fun renderKnownDebug(
         selection: PreviewSourceSelection,
         descriptorId: String,
         requestedVariantId: String,
+        fastRefresh: Boolean = false,
         forceRerender: Boolean = false,
         indicator: ProgressIndicator,
         onProgress: (String) -> Unit = {},
     ): PreviewRenderOutcome? {
         return runCatching {
             val target = locateGradleTarget(selection)
-            val taskName = renderTaskName(PREFERRED_BUILD_VARIANT)
-            onProgress("Incrementally compiling and rendering preview…")
-            indicator.text = "Incrementally compiling ViewCompose preview"
+            val taskName = if (fastRefresh) {
+                refreshTaskName(PREFERRED_BUILD_VARIANT)
+            } else {
+                renderTaskName(PREFERRED_BUILD_VARIANT)
+            }
+            val progressMessage = if (fastRefresh) {
+                "Compiling changed source and refreshing preview…"
+            } else {
+                "Incrementally compiling and rendering preview…"
+            }
+            onProgress(progressMessage)
+            indicator.text = progressMessage
             val render = executor.execute(
                 invocation = target.invocation(
                     taskName = taskName,
@@ -189,7 +199,8 @@ internal class ViewComposePreviewRenderCoordinator(
             )
             if (
                 render.isMissingTaskFailure(taskName) ||
-                render.isUnknownPreviewFailure(descriptorId)
+                render.isUnknownPreviewFailure(descriptorId) ||
+                (fastRefresh && render.isFastRefreshFallback())
             ) {
                 return null
             }
@@ -207,12 +218,22 @@ internal class ViewComposePreviewRenderCoordinator(
                 descriptorId = descriptorId,
                 requestedVariantId = requestedVariantId,
                 buildVariant = PREFERRED_BUILD_VARIANT,
+                catalogRelativePath = if (fastRefresh) {
+                    FAST_DESCRIPTOR_CATALOG_RELATIVE_PATH
+                } else {
+                    null
+                },
             ) ?: return null
             readMatchOutcome(
                 target = target,
                 selection = selection,
                 match = match,
                 render = render,
+                gradlePhase = if (fastRefresh) {
+                    "gradle-fast-refresh"
+                } else {
+                    "gradle-render"
+                },
             )
         }.getOrElse { error ->
             if (error is ProcessCanceledException) throw error
@@ -449,6 +470,7 @@ internal class ViewComposePreviewRenderCoordinator(
         selection: PreviewSourceSelection,
         match: PreviewCatalogMatch,
         render: PreviewGradleResult,
+        gradlePhase: String = "gradle-render",
     ): PreviewRenderOutcome {
         val response = match.readResponse()
         require(response.previewId == match.descriptor.id) {
@@ -509,7 +531,7 @@ internal class ViewComposePreviewRenderCoordinator(
             durationMillis = response.durationMillis,
             cacheHit = match.wasCacheHit(render.standardOutput),
             performanceTrace = PreviewPerformanceTrace(workerPhases)
-                .plus("gradle-render", render.durationMillis, shared = true)
+                .plus(gradlePhase, render.durationMillis, shared = true)
                 .plus("snapshot-decode", snapshotDecodeMillis)
                 .plus("image-decode", imageDecodeMillis),
             inputScope = PreviewInputScope.create(
@@ -623,8 +645,19 @@ internal class ViewComposePreviewRenderCoordinator(
         descriptorId: String,
         requestedVariantId: String,
         buildVariant: String,
+        catalogRelativePath: String? = null,
     ): PreviewCatalogMatch? {
-        return readCatalogFiles(target)
+        val catalogFiles = if (catalogRelativePath == null) {
+            readCatalogFiles(target)
+        } else {
+            listOf(
+                target.moduleRoot
+                    .resolve("build/viewcompose-preview")
+                    .resolve(buildVariant)
+                    .resolve(catalogRelativePath),
+            ).filter(Files::isRegularFile)
+        }
+        return catalogFiles
             .asSequence()
             .map { catalogFile -> catalogFile to StudioPreviewProtocolReader.readCatalog(catalogFile) }
             .filter { (_, catalog) -> catalog.buildVariant == buildVariant }
@@ -821,6 +854,11 @@ private fun renderTaskName(buildVariant: String): String {
     return "render${buildVariant.replaceFirstChar(Char::uppercase)}ViewComposePreview"
 }
 
+private fun refreshTaskName(buildVariant: String): String {
+    require(buildVariant.isNotBlank()) { "Preview build variant must not be blank." }
+    return "refresh${buildVariant.replaceFirstChar(Char::uppercase)}ViewComposePreview"
+}
+
 private fun buildVariantPriority(buildVariant: String): Int {
     return when {
         buildVariant == "debug" -> 0
@@ -847,6 +885,12 @@ private fun PreviewGradleResult.isMissingTaskFailure(taskName: String): Boolean 
     if (exitCode == 0) return false
     val output = "$errorOutput\n$standardOutput".lowercase()
     return taskName.lowercase() in output && "not found in project" in output
+}
+
+private fun PreviewGradleResult.isFastRefreshFallback(): Boolean {
+    if (exitCode == 0) return false
+    return FAST_REFRESH_FALLBACK_MARKER in errorOutput ||
+        FAST_REFRESH_FALLBACK_MARKER in standardOutput
 }
 
 private fun PreviewGradleResult.isUnknownPreviewFailure(descriptorId: String): Boolean {
@@ -919,4 +963,6 @@ private const val PREVIEW_ID_PROJECT_PROPERTY = "viewComposePreviewId"
 private const val PREVIEW_VARIANT_ID_PROJECT_PROPERTY = "viewComposePreviewVariantId"
 private const val PREVIEW_TARGETS_FILE_PROJECT_PROPERTY = "viewComposePreviewTargetsFile"
 private const val PREVIEW_RERENDER_PROJECT_PROPERTY = "viewComposePreviewRerender"
+private const val FAST_DESCRIPTOR_CATALOG_RELATIVE_PATH = "fast-descriptors.json"
+private const val FAST_REFRESH_FALLBACK_MARKER = "VIEWCOMPOSE_FAST_REFRESH_FALLBACK"
 private val GRADLE_PROJECT_SEGMENT = Regex("[A-Za-z0-9_.-]+")

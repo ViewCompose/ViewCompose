@@ -67,3 +67,19 @@ app/build/viewcompose-preview/debug/render-cache/
 
 The cache key includes the exported build fingerprint, preview id, and configuration variant id.
 The task and worker both reject stale or mismatched manifests before rendering.
+
+After one complete render has established a validated manifest and toolchain contract, IDE tooling
+can refresh a known preview after a Kotlin/Java source save with:
+
+```text
+./gradlew :app:refreshDebugViewComposePreview \
+    -PviewComposePreviewId=com.example.SamplePreview \
+    -PviewComposePreviewVariantId=default
+```
+
+This task still runs the Android variant compiler, then rescans the current project bytecode. It
+does not resolve the complete preview resource/dependency graph or rerun full discovery. Missing or
+incompatible baseline data, a renamed preview, and signature/configuration changes emit the
+`VIEWCOMPOSE_FAST_REFRESH_FALLBACK` marker so callers can safely retry through full discovery.
+Resolved worker/Layoutlib inputs and content-addressed archive materialization are reused only while
+their validated files and runtime fingerprint remain unchanged.

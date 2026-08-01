@@ -40,7 +40,17 @@ internal class ViewComposePreviewSelectionService(
     private val activeIndicator = AtomicReference<ProgressIndicator?>()
     private val activeRequest = AtomicReference<ActivePreviewRequest?>()
     private val galleryPriorityOrder = AtomicReference<PreviewGalleryPriorityOrder?>()
-    private val automaticRefreshGate = PreviewAutomaticRefreshGate<ActivePreviewRequest>()
+    private val automaticRefreshGate =
+        PreviewAutomaticRefreshGate<AutomaticPreviewRefreshRequest> { pending, latest ->
+            when {
+                pending.request.selection != latest.request.selection -> latest
+                pending.refreshPolicy == PreviewRefreshPolicy.SavedInput -> pending.copy(
+                    request = latest.request,
+                )
+                else -> latest
+            }
+        }
+    private val pendingSavedRefreshPolicy = AtomicReference<PreviewRefreshPolicy?>()
     private val savedInputRefreshAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val editorFollowAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
     private val galleryDiscoveryRetryAlarm = Alarm(Alarm.ThreadToUse.SWING_THREAD, this)
@@ -80,7 +90,19 @@ internal class ViewComposePreviewSelectionService(
                     }
                     ApplicationManager.getApplication().invokeLater {
                         if (!project.isDisposed && request == activeRequest.get()) {
-                            scheduleSavedInputRefresh(request)
+                            scheduleSavedInputRefresh(
+                                request = request,
+                                refreshPolicy = if (
+                                    savedPreviewFastRefreshEligible(
+                                        selection = request.selection,
+                                        changedPaths = events.map(VFileEvent::getPath),
+                                    )
+                                ) {
+                                    PreviewRefreshPolicy.SavedSourceInput
+                                } else {
+                                    PreviewRefreshPolicy.SavedInput
+                                },
+                            )
                         }
                     }
                 }
@@ -194,8 +216,10 @@ internal class ViewComposePreviewSelectionService(
             variantId = requestedVariantId,
         )
         if (
-            refreshPolicy == PreviewRefreshPolicy.SavedInput &&
-            automaticRefreshGate.deferIfActive(nextRequest)
+            refreshPolicy.automatic &&
+            automaticRefreshGate.deferIfActive(
+                AutomaticPreviewRefreshRequest(nextRequest, refreshPolicy),
+            )
         ) {
             return
         }
@@ -203,7 +227,7 @@ internal class ViewComposePreviewSelectionService(
         galleryPriorityOrder.set(null)
         activeRequest.set(nextRequest)
         val generation = requestGeneration.incrementAndGet()
-        if (refreshPolicy == PreviewRefreshPolicy.SavedInput) {
+        if (refreshPolicy.automatic) {
             automaticRefreshGate.markActive(generation)
         } else {
             automaticRefreshGate.supersede(generation)
@@ -276,6 +300,7 @@ internal class ViewComposePreviewSelectionService(
                                     descriptorId = result.descriptorId,
                                     requestedVariantId = requestedVariantId
                                         ?: result.selectedVariantId,
+                                    fastRefresh = refreshPolicy.fastGradleRefresh,
                                     forceRerender = refreshPolicy.forceGradleRerender,
                                     indicator = indicator,
                                     onProgress = progress,
@@ -344,12 +369,12 @@ internal class ViewComposePreviewSelectionService(
             if (
                 !project.isDisposed &&
                 current != null &&
-                pending.selection == current.selection
+                pending.request.selection == current.selection
             ) {
                 render(
-                    selection = pending.selection,
-                    requestedVariantId = pending.variantId ?: current.variantId,
-                    refreshPolicy = PreviewRefreshPolicy.SavedInput,
+                    selection = pending.request.selection,
+                    requestedVariantId = pending.request.variantId ?: current.variantId,
+                    refreshPolicy = pending.refreshPolicy,
                 )
             }
         }
@@ -362,6 +387,7 @@ internal class ViewComposePreviewSelectionService(
         galleryDiscoveryRetryAlarm.cancelAllRequests()
         galleryPriorityOrder.set(null)
         automaticRefreshGate.clear()
+        pendingSavedRefreshPolicy.set(null)
         activeRequest.set(null)
         val generation = requestGeneration.incrementAndGet()
         activeIndicator.getAndSet(null)?.cancel()
@@ -571,15 +597,28 @@ internal class ViewComposePreviewSelectionService(
         )
     }
 
-    private fun scheduleSavedInputRefresh(request: ActivePreviewRequest) {
+    private fun scheduleSavedInputRefresh(
+        request: ActivePreviewRequest,
+        refreshPolicy: PreviewRefreshPolicy,
+    ) {
+        require(refreshPolicy.automatic)
+        pendingSavedRefreshPolicy.updateAndGet { pending ->
+            when {
+                pending == PreviewRefreshPolicy.SavedInput -> pending
+                refreshPolicy == PreviewRefreshPolicy.SavedInput -> refreshPolicy
+                else -> refreshPolicy
+            }
+        }
         savedInputRefreshAlarm.cancelAllRequests()
         savedInputRefreshAlarm.addRequest(
             {
+                val pendingPolicy = pendingSavedRefreshPolicy.getAndSet(null)
+                    ?: refreshPolicy
                 if (!project.isDisposed && request == activeRequest.get()) {
                     render(
                         selection = request.selection,
                         requestedVariantId = request.variantId,
-                        refreshPolicy = PreviewRefreshPolicy.SavedInput,
+                        refreshPolicy = pendingPolicy,
                     )
                 }
             },
@@ -690,6 +729,7 @@ internal class ViewComposePreviewSelectionService(
     override fun dispose() {
         requestGeneration.incrementAndGet()
         automaticRefreshGate.clear()
+        pendingSavedRefreshPolicy.set(null)
         activeIndicator.getAndSet(null)?.cancel()
         activeRequest.set(null)
         gradleExecutor?.close()
@@ -715,6 +755,8 @@ internal enum class PreviewRefreshPolicy(
     val useStudioCache: Boolean,
     val forceGradleRerender: Boolean,
     val useKnownDescriptor: Boolean,
+    val automatic: Boolean = false,
+    val fastGradleRefresh: Boolean = false,
 ) {
     Open(
         useStudioCache = true,
@@ -730,6 +772,14 @@ internal enum class PreviewRefreshPolicy(
         useStudioCache = false,
         forceGradleRerender = false,
         useKnownDescriptor = true,
+        automatic = true,
+    ),
+    SavedSourceInput(
+        useStudioCache = false,
+        forceGradleRerender = false,
+        useKnownDescriptor = true,
+        automatic = true,
+        fastGradleRefresh = true,
     ),
     Manual(
         useStudioCache = false,
@@ -783,9 +833,24 @@ internal fun savedPreviewInputMatches(
         }
 }
 
+internal fun savedPreviewFastRefreshEligible(
+    selection: PreviewSourceSelection,
+    changedPaths: List<String>,
+): Boolean {
+    val selected = selection.filePath.normalizedPathOrNull() ?: return false
+    if (selected.previewSourceExtension() !in FAST_REFRESH_SOURCE_EXTENSIONS) return false
+    val changed = changedPaths.mapNotNull(String::normalizedPathOrNull)
+    return changed.isNotEmpty() && changed.all { path -> path == selected }
+}
+
 private data class ActivePreviewRequest(
     val selection: PreviewSourceSelection,
     val variantId: String?,
+)
+
+private data class AutomaticPreviewRefreshRequest(
+    val request: ActivePreviewRequest,
+    val refreshPolicy: PreviewRefreshPolicy,
 )
 
 private data class EditorFollowTarget(
@@ -803,6 +868,13 @@ private const val SAVED_INPUT_REFRESH_DELAY_MILLIS = 400
 private const val GALLERY_INITIAL_RENDER_COUNT = 6
 private const val NANOS_PER_MILLISECOND = 1_000_000L
 private val GALLERY_DISCOVERY_RETRY_DELAYS_MILLIS = intArrayOf(500, 1_000, 2_000)
+private val FAST_REFRESH_SOURCE_EXTENSIONS = setOf("java", "kt")
+
+private fun Path.previewSourceExtension(): String = fileName
+    ?.toString()
+    ?.substringAfterLast('.', missingDelimiterValue = "")
+    ?.lowercase()
+    .orEmpty()
 
 private fun elapsedMillis(startedAtNanos: Long): Long {
     return ((System.nanoTime() - startedAtNanos) / NANOS_PER_MILLISECOND)

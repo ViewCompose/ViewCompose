@@ -3,6 +3,7 @@ package com.viewcompose.preview.gradle
 import com.viewcompose.preview.tooling.MAX_PREVIEW_WORKER_BATCH_SIZE
 import com.viewcompose.preview.tooling.PreviewBuildInputKind
 import com.viewcompose.preview.tooling.PreviewBuildManifest
+import com.viewcompose.preview.tooling.PreviewDescriptorCatalog
 import com.viewcompose.preview.tooling.PreviewProtocolJson
 import com.viewcompose.preview.tooling.PreviewRenderRequest
 import com.viewcompose.preview.tooling.PreviewRenderResponse
@@ -10,6 +11,8 @@ import com.viewcompose.preview.tooling.PreviewRenderStatus
 import com.viewcompose.preview.tooling.PreviewWorkerBatchCommand
 import com.viewcompose.preview.tooling.PreviewWorkerCommand
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.zip.ZipFile
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
@@ -20,6 +23,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -49,17 +53,20 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     abstract val rerender: Property<Boolean>
 
     @get:Input
+    abstract val fastRefresh: Property<Boolean>
+
+    @get:Input
     abstract val verifyWorkerReuse: Property<Boolean>
 
     @get:Input
     abstract val workerMainClass: Property<String>
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    // Kept outside Gradle's file validation deliberately: the source-save task must reach the
+    // action when its baseline is absent so it can emit the structured full-discovery fallback.
+    @get:Internal
     abstract val buildManifestFile: RegularFileProperty
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Internal
     abstract val descriptorCatalogFile: RegularFileProperty
 
     @get:InputFile
@@ -79,8 +86,18 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     @get:Classpath
     abstract val layoutlibResourcesArchive: ConfigurableFileCollection
 
+    @get:Internal
+    abstract val fastBuildManifestFile: RegularFileProperty
+
+    @get:Internal
+    abstract val fastDescriptorCatalogFile: RegularFileProperty
+
+    @get:Internal
+    abstract val renderToolchainFile: RegularFileProperty
+
     init {
         rerender.convention(false)
+        fastRefresh.convention(false)
         verifyWorkerReuse.convention(false)
         workerMainClass.convention(DEFAULT_WORKER_MAIN_CLASS)
     }
@@ -136,20 +153,42 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         require(!batchTargetsFile.isPresent || !variantId.isPresent) {
             "--variant-id cannot be combined with --preview-targets-file."
         }
-        val manifest = PreviewProtocolJson.decodeBuildManifest(
-            buildManifestFile.get().asFile.readText(),
+        val baselineManifestFile = requiredBaselineFile(
+            property = buildManifestFile,
+            label = "build manifest",
         )
-        val catalog = PreviewProtocolJson.decodeDescriptorCatalog(
-            descriptorCatalogFile.get().asFile.readText(),
+        val baselineCatalogFile = requiredBaselineFile(
+            property = descriptorCatalogFile,
+            label = "descriptor catalog",
         )
-        val renderRuntimeFingerprint = PreviewInputFingerprint.calculate(
-            mapOf(
-                "worker-host-classpath" to workerHostClasspath.files,
-                "runner-classpath" to runnerClasspath.files,
-                "layoutlib-runtime" to layoutlibRuntimeArchive.files,
-                "layoutlib-resources" to layoutlibResourcesArchive.files,
-            ),
+        val baselineManifest = PreviewProtocolJson.decodeBuildManifest(
+            baselineManifestFile.readText(),
         )
+        val baselineCatalog = PreviewProtocolJson.decodeDescriptorCatalog(
+            baselineCatalogFile.readText(),
+        )
+        val effectiveInputs = if (fastRefresh.get()) {
+            prepareFastInputs(
+                baselineManifest = baselineManifest,
+                baselineCatalog = baselineCatalog,
+            )
+        } else {
+            EffectivePreviewInputs(
+                manifest = baselineManifest,
+                catalog = baselineCatalog,
+                manifestFile = baselineManifestFile,
+            )
+        }
+        val manifest = effectiveInputs.manifest
+        val catalog = effectiveInputs.catalog
+        val toolchain = if (fastRefresh.get()) {
+            PreviewRenderToolchain.readFrom(renderToolchainFile.get().asFile)
+        } else {
+            resolveRenderToolchain().also { resolved ->
+                resolved.writeTo(renderToolchainFile.get().asFile)
+            }
+        }
+        val renderRuntimeFingerprint = toolchain.renderRuntimeFingerprint
         val targets = if (batchTargetsFile.isPresent) {
             batchTargetsFile.get().asFile.readPreviewBatchTargets()
         } else {
@@ -175,16 +214,21 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         }
         if (pendingPlans.isEmpty()) return
 
+        val artifactRoot = File(manifest.artifactRootDirectory)
         val runtimeRoot = materializeArchive(
-            archive = layoutlibRuntimeArchive.requireSingleFile("Layoutlib runtime"),
+            archive = toolchain.layoutlibRuntimeArchive,
             label = "layoutlib-runtime",
+            artifactRoot = artifactRoot,
+            fingerprint = renderRuntimeFingerprint,
         )
         val resourcesRoot = materializeArchive(
-            archive = layoutlibResourcesArchive.requireSingleFile("Layoutlib resources"),
+            archive = toolchain.layoutlibResourcesArchive,
             label = "layoutlib-resources",
+            artifactRoot = artifactRoot,
+            fingerprint = renderRuntimeFingerprint,
         )
-        val hostFiles = workerHostClasspath.files
-        val runnerFiles = runnerClasspath.files
+        val hostFiles = toolchain.workerHostClasspath
+        val runnerFiles = toolchain.runnerClasspath
         require(hostFiles.isNotEmpty()) {
             "No ViewCompose preview worker is configured. Add the worker host and Android runner " +
                 "distributions to the '$WORKER_HOST_CONFIGURATION_NAME' and " +
@@ -200,7 +244,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         )
         val resourceSymbols = PreviewResourceSymbolClasspath.materialize(
             projectClasspath = reloadableClasspath,
-            artifactRoot = File(manifest.artifactRootDirectory),
+            artifactRoot = artifactRoot,
             compatibilityFingerprint = manifest.layoutlibCompatibilityFingerprint,
         )
         val processClasspath = (
@@ -216,6 +260,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             preparePlan(
                 plan = plan,
                 manifest = manifest,
+                manifestFile = effectiveInputs.manifestFile,
                 runtimeRoot = runtimeRoot,
                 resourcesRoot = resourcesRoot,
                 renderClasspath = reloadableClasspath,
@@ -229,7 +274,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
                         batchIndex = batchIndex,
                         processClasspath = processClasspath,
                         compatibilityFingerprint = workerCompatibilityFingerprint,
-                        artifactRoot = File(manifest.artifactRootDirectory),
+                        artifactRoot = artifactRoot,
                     )
                 }
         } else {
@@ -238,7 +283,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
                     prepared = prepared.single(),
                     processClasspath = processClasspath,
                     compatibilityFingerprint = workerCompatibilityFingerprint,
-                    artifactRoot = File(manifest.artifactRootDirectory),
+                    artifactRoot = artifactRoot,
                 ),
             )
         }
@@ -253,9 +298,89 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         }
     }
 
+    private fun requiredBaselineFile(
+        property: RegularFileProperty,
+        label: String,
+    ): File {
+        val file = property.orNull?.asFile
+        val prefix = if (fastRefresh.get()) "$FAST_REFRESH_FALLBACK_MARKER " else ""
+        require(file?.isFile == true) {
+            "$prefix Preview $label has not been generated."
+        }
+        return file
+    }
+
+    private fun prepareFastInputs(
+        baselineManifest: PreviewBuildManifest,
+        baselineCatalog: PreviewDescriptorCatalog,
+    ): EffectivePreviewInputs {
+        val refreshed = prepareFastPreviewRefresh(
+            baselineManifest = baselineManifest,
+            baselineCatalog = baselineCatalog,
+            projectClassJars = baselineManifest.paths(
+                PreviewBuildInputKind.ProjectClassJar,
+            ),
+            projectClassDirectories = baselineManifest.paths(
+                PreviewBuildInputKind.ProjectClassDirectory,
+            ),
+        )
+        val selectedPreview = previewId.orNull
+        require(selectedPreview != null) {
+            "$FAST_REFRESH_FALLBACK_MARKER Fast refresh requires one known preview id."
+        }
+        val descriptor = refreshed.catalog.descriptors
+            .firstOrNull { candidate -> candidate.id == selectedPreview }
+        require(descriptor != null) {
+            "$FAST_REFRESH_FALLBACK_MARKER Preview '$selectedPreview' changed or was removed. " +
+                "Discovered: ${refreshed.catalog.descriptors.joinToString { it.id }}. " +
+                "Class directories: " +
+                "${baselineManifest.paths(PreviewBuildInputKind.ProjectClassDirectory)}."
+        }
+        val selectedVariant = variantId.orNull
+        require(
+            selectedVariant == null ||
+                descriptor.variants.any { candidate -> candidate.id == selectedVariant },
+        ) {
+            "$FAST_REFRESH_FALLBACK_MARKER Preview variant '$selectedVariant' changed or was removed."
+        }
+        val manifestFile = fastBuildManifestFile.get().asFile.apply {
+            writeTextAtomically(PreviewProtocolJson.encodeBuildManifest(refreshed.manifest))
+        }
+        fastDescriptorCatalogFile.get().asFile.writeTextAtomically(
+            PreviewProtocolJson.encodeDescriptorCatalog(refreshed.catalog),
+        )
+        return EffectivePreviewInputs(
+            manifest = refreshed.manifest,
+            catalog = refreshed.catalog,
+            manifestFile = manifestFile,
+        )
+    }
+
+    private fun resolveRenderToolchain(): PreviewRenderToolchain {
+        val hostFiles = workerHostClasspath.files.toList()
+        val runnerFiles = runnerClasspath.files.toList()
+        val runtimeArchive = layoutlibRuntimeArchive.requireSingleFile("Layoutlib runtime")
+        val resourcesArchive = layoutlibResourcesArchive.requireSingleFile("Layoutlib resources")
+        return PreviewRenderToolchain(
+            workerHostClasspath = hostFiles,
+            runnerClasspath = runnerFiles,
+            layoutlibRuntimeArchive = runtimeArchive,
+            layoutlibResourcesArchive = resourcesArchive,
+            renderRuntimeFingerprint = PreviewInputFingerprint.calculate(
+                mapOf(
+                    "worker-host-classpath" to hostFiles,
+                    "runner-classpath" to runnerFiles,
+                    "layoutlib-runtime" to listOf(runtimeArchive),
+                    "layoutlib-resources" to listOf(resourcesArchive),
+                ),
+            ),
+        )
+    }
+
     private fun preparePlan(
         plan: PreviewRenderPlan,
         manifest: PreviewBuildManifest,
+        manifestFile: File,
         runtimeRoot: File,
         resourcesRoot: File,
         renderClasspath: List<File>,
@@ -288,7 +413,7 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
         }
         val commandFile = outputDirectory.resolve(COMMAND_FILE_NAME)
         val command = PreviewWorkerCommand(
-            buildManifestPath = buildManifestFile.get().asFile.absolutePath,
+            buildManifestPath = manifestFile.absolutePath,
             renderRequestPath = requestFile.absolutePath,
             renderResponsePath = responseFile.absolutePath,
             layoutlibRuntimeRoot = runtimeRoot.absolutePath,
@@ -565,49 +690,102 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
     private fun materializeArchive(
         archive: File,
         label: String,
+        artifactRoot: File,
+        fingerprint: String,
     ): File {
         if (archive.isDirectory) {
             return archive
         }
         require(archive.isFile) { "$label archive does not exist: '${archive.absolutePath}'." }
-        val destination = temporaryDir.resolve(label)
-        if (destination.exists()) {
-            check(destination.deleteRecursively()) {
-                "Could not clear temporary $label directory '${destination.absolutePath}'."
-            }
+        val cacheRoot = artifactRoot.resolve("materialized/$fingerprint")
+        val destination = cacheRoot.resolve(label)
+        val readyMarker = destination.resolve(MATERIALIZED_READY_FILE_NAME)
+        if (readyMarker.isFile) return destination
+        check(cacheRoot.isDirectory || cacheRoot.mkdirs()) {
+            "Could not create materialized preview cache '${cacheRoot.absolutePath}'."
         }
-        check(destination.mkdirs()) {
-            "Could not create temporary $label directory '${destination.absolutePath}'."
+        val temporary = cacheRoot.resolve("$label.tmp-${System.nanoTime()}")
+        check(temporary.mkdirs()) {
+            "Could not create temporary $label directory '${temporary.absolutePath}'."
         }
-        val canonicalRoot = destination.canonicalFile
-        ZipFile(archive).use { zip ->
-            zip.entries().asSequence().forEach { entry ->
-                val target = File(destination, entry.name).canonicalFile
-                require(
-                    target == canonicalRoot ||
-                        target.path.startsWith(canonicalRoot.path + File.separator),
-                ) {
-                    "Unsafe entry '${entry.name}' in $label archive '${archive.absolutePath}'."
-                }
-                if (entry.isDirectory) {
-                    check(target.isDirectory || target.mkdirs()) {
-                        "Could not create $label directory '${target.absolutePath}'."
+        try {
+            val canonicalRoot = temporary.canonicalFile
+            ZipFile(archive).use { zip ->
+                zip.entries().asSequence().forEach { entry ->
+                    val target = File(temporary, entry.name).canonicalFile
+                    require(
+                        target == canonicalRoot ||
+                            target.path.startsWith(canonicalRoot.path + File.separator),
+                    ) {
+                        "Unsafe entry '${entry.name}' in $label archive '${archive.absolutePath}'."
                     }
-                } else {
-                    target.parentFile?.let { parent ->
-                        check(parent.isDirectory || parent.mkdirs()) {
-                            "Could not create $label directory '${parent.absolutePath}'."
+                    if (entry.isDirectory) {
+                        check(target.isDirectory || target.mkdirs()) {
+                            "Could not create $label directory '${target.absolutePath}'."
+                        }
+                    } else {
+                        target.parentFile?.let { parent ->
+                            check(parent.isDirectory || parent.mkdirs()) {
+                                "Could not create $label directory '${parent.absolutePath}'."
+                            }
+                        }
+                        zip.getInputStream(entry).use { input ->
+                            target.outputStream().use(input::copyTo)
                         }
                     }
-                    zip.getInputStream(entry).use { input ->
-                        target.outputStream().use(input::copyTo)
-                    }
                 }
             }
+            temporary.resolve(MATERIALIZED_READY_FILE_NAME).writeText("$fingerprint\n")
+            if (destination.exists() && !destination.deleteRecursively()) {
+                error("Could not replace materialized $label '${destination.absolutePath}'.")
+            }
+            runCatching {
+                Files.move(
+                    temporary.toPath(),
+                    destination.toPath(),
+                    StandardCopyOption.ATOMIC_MOVE,
+                )
+            }.getOrElse {
+                check(temporary.renameTo(destination)) {
+                    "Could not publish materialized $label '${destination.absolutePath}'."
+                }
+            }
+        } finally {
+            if (temporary.exists()) temporary.deleteRecursively()
         }
+        pruneMaterializedArchives(
+            materializedRoot = cacheRoot.parentFile,
+            activeFingerprint = fingerprint,
+        )
         return destination
     }
+
+    private fun pruneMaterializedArchives(
+        materializedRoot: File,
+        activeFingerprint: String,
+    ) {
+        val stale = materializedRoot.listFiles()
+            .orEmpty()
+            .filter { candidate ->
+                candidate.isDirectory &&
+                    candidate.name != activeFingerprint &&
+                    ".tmp-" !in candidate.name
+            }
+            .sortedByDescending(File::lastModified)
+            .drop(MAXIMUM_RETAINED_STALE_MATERIALIZED_RUNTIMES)
+        stale.forEach { candidate ->
+            check(candidate.deleteRecursively()) {
+                "Could not prune materialized preview runtime '${candidate.absolutePath}'."
+            }
+        }
+    }
 }
+
+private data class EffectivePreviewInputs(
+    val manifest: PreviewBuildManifest,
+    val catalog: PreviewDescriptorCatalog,
+    val manifestFile: File,
+)
 
 private data class PreparedPreviewExecution(
     val plan: PreviewRenderPlan,
@@ -700,3 +878,5 @@ private const val MINIMUM_JAVA_VERSION = 17
 private const val REQUEST_FILE_NAME = "request.json"
 private const val COMMAND_FILE_NAME = "command.json"
 private const val RESPONSE_FILE_NAME = "response.json"
+private const val MATERIALIZED_READY_FILE_NAME = ".ready"
+private const val MAXIMUM_RETAINED_STALE_MATERIALIZED_RUNTIMES = 1

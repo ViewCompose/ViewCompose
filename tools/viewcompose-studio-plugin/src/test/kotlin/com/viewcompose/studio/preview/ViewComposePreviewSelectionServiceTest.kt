@@ -133,4 +133,36 @@ class ViewComposePreviewSelectionServiceTest {
             ),
         )
     }
+
+    @Test
+    fun `fast refresh is limited to one saved Kotlin or Java preview source`() {
+        val projectRoot = temporaryFolder.newFolder("fast-source-project").toPath()
+        val source = projectRoot.resolve("app/src/main/kotlin/SamplePreview.kt").also { path ->
+            Files.createDirectories(checkNotNull(path.parent))
+            Files.writeString(path, "")
+        }
+        val sibling = source.resolveSibling("Other.kt").also { path -> Files.writeString(path, "") }
+        val resource = projectRoot.resolve("app/src/main/res/values/colors.xml").also { path ->
+            Files.createDirectories(checkNotNull(path.parent))
+            Files.writeString(path, "")
+        }
+        val selection = PreviewSourceSelection(
+            filePath = source.toString(),
+            symbolName = "SamplePreview",
+            line = 1,
+        )
+
+        assertTrue(
+            savedPreviewFastRefreshEligible(selection, listOf(source.toString())),
+        )
+        assertFalse(
+            savedPreviewFastRefreshEligible(
+                selection,
+                listOf(source.toString(), sibling.toString()),
+            ),
+        )
+        assertFalse(
+            savedPreviewFastRefreshEligible(selection, listOf(resource.toString())),
+        )
+    }
 }

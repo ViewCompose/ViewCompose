@@ -48,9 +48,13 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
   and the separate thumbnail tier retains up to 1024 entries for 30 days within 128 MiB;
 - an in-window selector for every declared preview configuration;
 - manifest-derived automatic refresh for the selected module and its real project dependencies;
+- a source-save fast path for the selected Kotlin/Java preview file: compile the current variant,
+  rescan current project bytecode, and reuse the last validated resource/toolchain contract;
+  signature, descriptor, or baseline changes fail closed and fall back to complete discovery;
 - low-memory release of gallery thumbnails and high-resolution quick-look images;
 - phase timings for Gradle, Layoutlib setup/teardown, mount/layout, artifact export, and Studio
-  decoding, exposed in the rendered-header tooltip and structured IDE log;
+  decoding, including a distinct `gradle-fast-refresh` phase, exposed in the rendered-header
+  tooltip and structured IDE log;
 - clickable structured diagnostics that navigate back to their source location;
 - bounded render-snapshot inspection with VNode structure, patch, skip, and recomposition details;
 - a native Android View tree with final measured sizes and root-relative layout coordinates;

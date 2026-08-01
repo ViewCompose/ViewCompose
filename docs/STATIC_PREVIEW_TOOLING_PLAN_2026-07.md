@@ -279,10 +279,13 @@ Implemented experience foundation:
   a newer selection. Save events arriving during a render collapse to the latest request and run
   once after the current render instead of repeatedly terminating Gradle.
 - After the first successful render, save refresh, variant changes, and manual refresh reuse the
-  stable descriptor id. The debug render task performs incremental compilation, discovery, and
-  rendering in one Gradle invocation; a renamed or removed descriptor falls back to full
-  discovery. Initial discovery targets debug directly and falls back to the all-variant aggregate
-  only when a conventional debug task does not exist.
+  stable descriptor id. Saving only the selected Kotlin/Java preview source uses a dedicated fast
+  task: it incrementally compiles the current variant, rescans current project bytecode, and reuses
+  the last complete resource/toolchain contract without executing full discovery. A missing or
+  incompatible baseline, renamed preview, changed signature, or changed configuration fails closed
+  and retries through full discovery. Other saved inputs retain the complete known-preview render
+  route. Initial discovery targets debug directly and falls back to the all-variant aggregate only
+  when a conventional debug task does not exist.
 - Gradle discovery and rendering use one project-scoped Tooling API connection, removing repeated
   wrapper-client JVM startup while preserving Gradle daemon reuse, cancellation, and external
   Layoutlib isolation. A compatible bounded Layoutlib worker can survive consecutive Tooling API
@@ -291,6 +294,10 @@ Implemented experience foundation:
   warm setup measured 31–44 ms. The warm batch passed exact cold-output equivalence, and a temporary
   source edit changed the output hash without changing the worker PID; reverting the edit restored
   the original hash exactly.
+- In the local source-edit profile, the stable fast route completed in 2.626 s end to end: Android
+  Kotlin compilation took 0.699 s and preview refresh/render took 0.476 s. The previous Studio
+  known-preview route typically measured about 6–7 s on the same project. These are development
+  machine measurements, not a cross-device benchmark, and remain exposed as separate timing phases.
 - The all-previews gallery publishes placeholders before compilation, renders the current viewport
   first, preserves scroll position across partial results, and fills remaining previews in one
   second bounded batch. Disk-cache metadata is read eagerly, but PNG thumbnails decode only when a

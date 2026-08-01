@@ -30,4 +30,17 @@ class PreviewAutomaticRefreshGateTest {
         assertNull(gate.complete(1))
         assertNull(gate.complete(2))
     }
+
+    @Test
+    fun `custom coalescing can preserve a more complete pending refresh`() {
+        val gate = PreviewAutomaticRefreshGate<String> { pending, latest ->
+            if (pending == "full") pending else latest
+        }
+        gate.markActive(1)
+
+        assertTrue(gate.deferIfActive("full"))
+        assertTrue(gate.deferIfActive("fast"))
+
+        assertEquals("full", gate.complete(1))
+    }
 }

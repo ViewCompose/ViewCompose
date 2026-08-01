@@ -164,6 +164,83 @@ class ViewComposePreviewGradleBridgeTest {
     }
 
     @Test
+    fun `saved source uses the known preview refresh task and fast catalog`() {
+        val projectRoot = temporaryFolder.newFolder("fast-known-project").toPath()
+        Files.writeString(projectRoot.resolve("gradlew"), "")
+        val moduleRoot = Files.createDirectories(projectRoot.resolve("app"))
+        Files.writeString(moduleRoot.resolve("build.gradle.kts"), "plugins {}")
+        val source = moduleRoot.resolve("src/main/kotlin/sample/Sample.kt")
+        Files.createDirectories(checkNotNull(source.parent))
+        Files.writeString(source, "fun SampleCard() = Unit")
+        val invocations = mutableListOf<PreviewGradleInvocation>()
+        val executor = PreviewGradleExecutor { invocation, _ ->
+            invocations += invocation
+            writeCatalog(
+                moduleRoot = moduleRoot,
+                source = source,
+                relativePath = "build/viewcompose-preview/debug/fast-descriptors.json",
+            )
+            writeSuccessfulResponse(moduleRoot, "dark")
+            PreviewGradleResult(0, "ViewCompose preview rendered:", "")
+        }
+
+        val outcome = ViewComposePreviewRenderCoordinator(
+            projectRoot = projectRoot,
+            executor = executor,
+        ).renderKnownDebug(
+            selection = PreviewSourceSelection(
+                filePath = source.toString(),
+                symbolName = "SampleCard",
+                line = 10,
+            ),
+            descriptorId = "sample-card",
+            requestedVariantId = "dark",
+            fastRefresh = true,
+            indicator = TestProgressIndicator(),
+        )
+
+        assertTrue("Unexpected outcome: $outcome", outcome is PreviewRenderOutcome.Success)
+        assertEquals(1, invocations.size)
+        assertTrue(
+            invocations.single().task.endsWith("refreshDebugViewComposePreview"),
+        )
+    }
+
+    @Test
+    fun `fast refresh requests full fallback when Gradle rejects cached inputs`() {
+        val projectRoot = temporaryFolder.newFolder("fast-fallback-project").toPath()
+        Files.writeString(projectRoot.resolve("gradlew"), "")
+        val moduleRoot = Files.createDirectories(projectRoot.resolve("app"))
+        Files.writeString(moduleRoot.resolve("build.gradle.kts"), "plugins {}")
+        val source = moduleRoot.resolve("src/main/kotlin/sample/Sample.kt")
+        Files.createDirectories(checkNotNull(source.parent))
+        Files.writeString(source, "fun SampleCard() = Unit")
+
+        val outcome = ViewComposePreviewRenderCoordinator(
+            projectRoot = projectRoot,
+            executor = PreviewGradleExecutor { _, _ ->
+                PreviewGradleResult(
+                    exitCode = 1,
+                    standardOutput = "VIEWCOMPOSE_FAST_REFRESH_FALLBACK descriptor changed",
+                    errorOutput = "",
+                )
+            },
+        ).renderKnownDebug(
+            selection = PreviewSourceSelection(
+                filePath = source.toString(),
+                symbolName = "SampleCard",
+                line = 10,
+            ),
+            descriptorId = "sample-card",
+            requestedVariantId = "dark",
+            fastRefresh = true,
+            indicator = TestProgressIndicator(),
+        )
+
+        assertEquals(null, outcome)
+    }
+
+    @Test
     fun `gallery compiles a module once before rendering all previews`() {
         val projectRoot = temporaryFolder.newFolder("gallery-project").toPath()
         Files.writeString(projectRoot.resolve("gradlew"), "")
@@ -305,8 +382,9 @@ class ViewComposePreviewGradleBridgeTest {
     private fun writeCatalog(
         moduleRoot: Path,
         source: Path,
+        relativePath: String = "build/viewcompose-preview/debug/descriptors.json",
     ) {
-        val catalog = moduleRoot.resolve("build/viewcompose-preview/debug/descriptors.json")
+        val catalog = moduleRoot.resolve(relativePath)
         Files.createDirectories(checkNotNull(catalog.parent))
         Files.writeString(
             catalog,

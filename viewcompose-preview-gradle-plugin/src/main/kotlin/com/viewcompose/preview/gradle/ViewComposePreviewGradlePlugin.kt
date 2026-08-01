@@ -108,6 +108,9 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
             configuration.description =
                 "Android runner classpath for '${variant.name}' ViewCompose previews."
         }.artifactFiles(ANDROID_CLASSES_JAR_ARTIFACT_TYPE)
+        val artifactRoot = project.layout.buildDirectory.dir(
+            "viewcompose-preview/${variant.name}",
+        )
         val task = project.tasks.register(
             variant.computeTaskName("discover", "ViewComposePreviews"),
             DiscoverViewComposePreviewsTask::class.java,
@@ -139,9 +142,6 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
             discovery.libraryAssetDirectories.from(libraryAssets)
             discovery.resourcePackageFiles.from(resourcePackageFiles)
             discovery.mergedManifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
-            val artifactRoot = project.layout.buildDirectory.dir(
-                "viewcompose-preview/${variant.name}",
-            )
             discovery.artifactRootDirectory.set(artifactRoot)
             discovery.buildManifestFile.set(
                 artifactRoot.map { directory -> directory.file("build-manifest.json") },
@@ -176,6 +176,9 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
             render.runnerClasspath.from(runnerClasspath)
             render.layoutlibRuntimeArchive.from(toolConfigurations.layoutlibRuntime)
             render.layoutlibResourcesArchive.from(toolConfigurations.layoutlibResources)
+            render.renderToolchainFile.set(
+                artifactRoot.map { directory -> directory.file(RENDER_TOOLCHAIN_FILE_NAME) },
+            )
             render.previewId.convention(
                 project.providers.gradleProperty(PREVIEW_ID_PROJECT_PROPERTY),
             )
@@ -189,6 +192,45 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
                 ),
             )
             render.rerender.convention(
+                project.providers.gradleProperty(PREVIEW_RERENDER_PROJECT_PROPERTY)
+                    .map(String::toBooleanStrict)
+                    .orElse(false),
+            )
+        }
+        project.tasks.register(
+            variant.computeTaskName("refresh", "ViewComposePreview"),
+            RenderViewComposePreviewTask::class.java,
+        ) { refresh ->
+            refresh.group = TASK_GROUP
+            refresh.description =
+                "Incrementally compiles and refreshes one known ViewCompose preview for the " +
+                    "'${variant.name}' variant."
+            refresh.dependsOn(variant.computeTaskName("compile", "Sources"))
+            refresh.fastRefresh.set(true)
+            // These are deliberately direct file locations. Depending on the discovery provider
+            // would pull the complete descriptor/resource graph back into the save fast path.
+            refresh.buildManifestFile.set(
+                artifactRoot.map { directory -> directory.file("build-manifest.json") },
+            )
+            refresh.descriptorCatalogFile.set(
+                artifactRoot.map { directory -> directory.file("descriptors.json") },
+            )
+            refresh.fastBuildManifestFile.set(
+                artifactRoot.map { directory -> directory.file(FAST_BUILD_MANIFEST_FILE_NAME) },
+            )
+            refresh.fastDescriptorCatalogFile.set(
+                artifactRoot.map { directory -> directory.file(FAST_DESCRIPTOR_CATALOG_FILE_NAME) },
+            )
+            refresh.renderToolchainFile.set(
+                artifactRoot.map { directory -> directory.file(RENDER_TOOLCHAIN_FILE_NAME) },
+            )
+            refresh.previewId.convention(
+                project.providers.gradleProperty(PREVIEW_ID_PROJECT_PROPERTY),
+            )
+            refresh.variantId.convention(
+                project.providers.gradleProperty(PREVIEW_VARIANT_ID_PROJECT_PROPERTY),
+            )
+            refresh.rerender.convention(
                 project.providers.gradleProperty(PREVIEW_RERENDER_PROJECT_PROPERTY)
                     .map(String::toBooleanStrict)
                     .orElse(false),
