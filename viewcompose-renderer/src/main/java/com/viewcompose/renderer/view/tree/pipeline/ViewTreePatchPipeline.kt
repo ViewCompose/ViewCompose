@@ -19,7 +19,7 @@ import com.viewcompose.renderer.reconcile.RenderPatch
 import com.viewcompose.renderer.reconcile.ReusePatch
 import com.viewcompose.renderer.view.container.DeclarativeConstraintLayout
 import com.viewcompose.renderer.view.container.ChildHostViewGroup
-import com.viewcompose.shadow.android.DecorationChildDrawingOrder
+import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
 
 /**
  * 将 reconcile patch 应用到 Android View 树的事务管线。

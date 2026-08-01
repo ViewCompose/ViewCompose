@@ -7,8 +7,9 @@ import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
-import com.viewcompose.shadow.android.DecorationChildDrawingOrder
-import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
+import com.viewcompose.renderer.decoration.DecorationDrawingOrderContainer
+import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 
 /**
  * Box/Surface 使用的 FrameLayout 容器。
@@ -20,7 +21,9 @@ import com.viewcompose.shadow.android.ShadowDecorationLayer
 internal class DeclarativeBoxLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : FrameLayout(context, attrs) {
+) : FrameLayout(context, attrs), DecorationDrawingOrderContainer {
+    private val decorationDrawing = ViewDecorationDrawing(this)
+
     companion object {
         const val UNSET_GRAVITY: Int = -1
     }
@@ -37,11 +40,14 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         // Keep elevation shadows and overflow visuals visible, similar to Compose container defaults.
         clipChildren = false
         clipToPadding = false
-        isChildrenDrawingOrderEnabled = true
     }
 
     override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
         DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
+
+    override fun setDecorationDrawingOrderEnabled(enabled: Boolean) {
+        isChildrenDrawingOrderEnabled = enabled
+    }
 
     override fun onMeasure(
         widthMeasureSpec: Int,
@@ -54,13 +60,15 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
 
     override fun onViewAdded(child: View) {
         super.onViewAdded(child)
-        DecorationChildDrawingOrder.invalidate(this)
+        DecorationChildDrawingOrder.onViewAdded(this, child)
+        decorationDrawing.onViewAdded(child)
         applyGravityToChild(child)
     }
 
     override fun onViewRemoved(child: View) {
+        decorationDrawing.onViewRemoved(child)
         super.onViewRemoved(child)
-        DecorationChildDrawingOrder.invalidate(this)
+        DecorationChildDrawingOrder.onViewRemoved(this, child)
     }
 
     override fun drawChild(
@@ -68,17 +76,14 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         child: View,
         drawingTime: Long,
     ): Boolean {
-        ShadowDecorationLayer.drawBehindChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        if (!decorationDrawing.hasDecoratedChildren) {
+            return super.drawChild(canvas, child, drawingTime)
+        }
+        val decoration = decorationDrawing.decorationOrNull(child)
+            ?: return super.drawChild(canvas, child, drawingTime)
+        decorationDrawing.drawBehindChild(canvas, child, decoration)
         val drawn = super.drawChild(canvas, child, drawingTime)
-        ShadowDecorationLayer.drawOverChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        decorationDrawing.drawOverChild(canvas, child, decoration)
         return drawn
     }
 

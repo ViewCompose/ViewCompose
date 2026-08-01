@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="viewcompose_applied_decoration" type="id" />
+    <item name="viewcompose_decoration_parent_drawing" type="id" />
+    <item name="viewcompose_decoration_render_host" type="id" />
+    <item name="viewcompose_sibling_z_index" type="id" />
+    <item name="viewcompose_sibling_drawing_order" type="id" />
+</resources>

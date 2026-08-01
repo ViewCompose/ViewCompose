@@ -13,8 +13,9 @@ import com.viewcompose.renderer.layout.CrossAxisPlacementCalculator
 import com.viewcompose.renderer.layout.LinearArrangementCalculator
 import com.viewcompose.renderer.layout.LinearCrossAxisAlignmentResolver
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
-import com.viewcompose.shadow.android.DecorationChildDrawingOrder
-import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
+import com.viewcompose.renderer.decoration.DecorationDrawingOrderContainer
+import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import kotlin.math.max
 
 /**
@@ -27,7 +28,9 @@ import kotlin.math.max
 internal class DeclarativeLinearLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : LinearLayout(context, attrs) {
+) : LinearLayout(context, attrs), DecorationDrawingOrderContainer {
+    private val decorationDrawing = ViewDecorationDrawing(this)
+
     companion object {
         private const val UNSPECIFIED_CHILD_GRAVITY: Int = -1
     }
@@ -50,11 +53,14 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
     init {
         clipChildren = false
         clipToPadding = false
-        isChildrenDrawingOrderEnabled = true
     }
 
     override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
         DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
+
+    override fun setDecorationDrawingOrderEnabled(enabled: Boolean) {
+        isChildrenDrawingOrderEnabled = enabled
+    }
 
     override fun onMeasure(
         widthMeasureSpec: Int,
@@ -91,18 +97,27 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
         child: View,
         drawingTime: Long,
     ): Boolean {
-        ShadowDecorationLayer.drawBehindChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        if (!decorationDrawing.hasDecoratedChildren) {
+            return super.drawChild(canvas, child, drawingTime)
+        }
+        val decoration = decorationDrawing.decorationOrNull(child)
+            ?: return super.drawChild(canvas, child, drawingTime)
+        decorationDrawing.drawBehindChild(canvas, child, decoration)
         val drawn = super.drawChild(canvas, child, drawingTime)
-        ShadowDecorationLayer.drawOverChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        decorationDrawing.drawOverChild(canvas, child, decoration)
         return drawn
+    }
+
+    override fun onViewAdded(child: View) {
+        super.onViewAdded(child)
+        DecorationChildDrawingOrder.onViewAdded(this, child)
+        decorationDrawing.onViewAdded(child)
+    }
+
+    override fun onViewRemoved(child: View) {
+        decorationDrawing.onViewRemoved(child)
+        super.onViewRemoved(child)
+        DecorationChildDrawingOrder.onViewRemoved(this, child)
     }
 
     private fun layoutHorizontally(

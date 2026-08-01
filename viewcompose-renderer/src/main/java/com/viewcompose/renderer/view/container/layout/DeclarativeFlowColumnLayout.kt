@@ -6,8 +6,9 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
-import com.viewcompose.shadow.android.DecorationChildDrawingOrder
-import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
+import com.viewcompose.renderer.decoration.DecorationDrawingOrderContainer
+import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import kotlin.math.max
 
 /**
@@ -17,15 +18,20 @@ import kotlin.math.max
 internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : ViewGroup(context, attrs) {
+) : ViewGroup(context, attrs), DecorationDrawingOrderContainer {
+    private val decorationDrawing = ViewDecorationDrawing(this)
+
     init {
         clipChildren = false
         clipToPadding = false
-        isChildrenDrawingOrderEnabled = true
     }
 
     override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
         DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
+
+    override fun setDecorationDrawingOrderEnabled(enabled: Boolean) {
+        isChildrenDrawingOrderEnabled = enabled
+    }
 
     var horizontalSpacing: Int = 0
         set(value) {
@@ -66,18 +72,27 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
         child: View,
         drawingTime: Long,
     ): Boolean {
-        ShadowDecorationLayer.drawBehindChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        if (!decorationDrawing.hasDecoratedChildren) {
+            return super.drawChild(canvas, child, drawingTime)
+        }
+        val decoration = decorationDrawing.decorationOrNull(child)
+            ?: return super.drawChild(canvas, child, drawingTime)
+        decorationDrawing.drawBehindChild(canvas, child, decoration)
         val drawn = super.drawChild(canvas, child, drawingTime)
-        ShadowDecorationLayer.drawOverChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        decorationDrawing.drawOverChild(canvas, child, decoration)
         return drawn
+    }
+
+    override fun onViewAdded(child: View) {
+        super.onViewAdded(child)
+        DecorationChildDrawingOrder.onViewAdded(this, child)
+        decorationDrawing.onViewAdded(child)
+    }
+
+    override fun onViewRemoved(child: View) {
+        decorationDrawing.onViewRemoved(child)
+        super.onViewRemoved(child)
+        DecorationChildDrawingOrder.onViewRemoved(this, child)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

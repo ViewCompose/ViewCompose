@@ -1,9 +1,14 @@
 package com.viewcompose.host.android.runtime
 
 import android.view.ViewGroup
+import com.viewcompose.renderer.R
+import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
+import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.renderer.view.tree.MountedNode
 import com.viewcompose.renderer.view.tree.ViewTreeRenderer
-import com.viewcompose.shadow.android.ShadowDecorationHostLayout
+import com.viewcompose.ui.modifier.DropShadowModifierElement
+import com.viewcompose.ui.modifier.InnerShadowModifierElement
+import com.viewcompose.ui.modifier.ZIndexModifierElement
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.widget.core.CoreRenderEngine
@@ -18,7 +23,6 @@ import com.viewcompose.widget.core.RenderTreeNode
 import com.viewcompose.widget.core.RenderPatchRecord
 import com.viewcompose.widget.core.RenderPatchOperation
 import com.viewcompose.widget.core.RenderFailureOperation
-import java.util.WeakHashMap
 
 /**
  * widget-core 与 renderer 模块之间的 Android 渲染引擎适配器。
@@ -28,18 +32,21 @@ import java.util.WeakHashMap
  * widget-core depends only on CoreRenderEngine, while concrete MountedNode and diagnostic types are translated here.
  */
 class AndroidCoreRenderEngine : CoreRenderEngine {
-    private val decorationHosts = WeakHashMap<ViewGroup, ShadowDecorationHostLayout>()
-
     override fun renderInto(
         container: ViewGroup,
         previousMountedNodes: List<Any>,
         nodes: List<VNode>,
         collectDiagnostics: Boolean,
     ): CoreRenderFrame {
-        val renderHost = resolveRenderHost(container)
+        val previous = previousMountedNodes.filterIsInstance<MountedNode>()
+        val hostResolution = resolveRenderHost(
+            container = container,
+            previousMountedNodes = previous,
+            nodes = nodes,
+        )
         val result = ViewTreeRenderer.renderInto(
-            container = renderHost,
-            previous = previousMountedNodes.filterIsInstance<MountedNode>(),
+            container = hostResolution.host,
+            previous = if (hostResolution.remounted) emptyList() else previous,
             nodes = nodes,
             collectDiagnostics = collectDiagnostics,
         )
@@ -54,7 +61,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
                     commit = effect.commit,
                 )
             },
-            commitFailures = result.commitFailures.map { failure ->
+            commitFailures = hostResolution.transitionFailures + result.commitFailures.map { failure ->
                 CoreRenderCommitFailure(
                     operation = failure.operation?.toCoreOperation(),
                     nodeKey = failure.nodeKey,
@@ -68,7 +75,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         container: ViewGroup,
         mountedNodes: List<Any>,
     ): List<CoreRenderCommitFailure> {
-        val renderHost = decorationHosts[container] ?: container
+        val renderHost = decorationHostOrNull(container) ?: container
         val failures = ViewTreeRenderer.disposeMounted(
             container = renderHost,
             mountedNodes = mountedNodes.filterIsInstance<MountedNode>(),
@@ -81,38 +88,111 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         }
         if (renderHost !== container && renderHost.childCount == 0) {
             container.removeView(renderHost)
-            decorationHosts.remove(container)
+            container.setTag(R.id.viewcompose_decoration_render_host, null)
         }
         return failures
     }
 
-    private fun resolveRenderHost(container: ViewGroup): ViewGroup {
-        if (container is ShadowDecorationHostLayout) return container
-        val existing = decorationHosts[container]
+    private fun resolveRenderHost(
+        container: ViewGroup,
+        previousMountedNodes: List<MountedNode>,
+        nodes: List<VNode>,
+    ): RenderHostResolution {
+        if (container is ViewDecorationHostLayout) {
+            return RenderHostResolution(host = container)
+        }
+        val existing = decorationHostOrNull(container)
+        val requiresHost = requiresRootHost(nodes)
+        if (!requiresHost) {
+            if (existing == null) {
+                return RenderHostResolution(host = container)
+            }
+            val failures = disposeForHostTransition(existing, previousMountedNodes)
+            container.removeView(existing)
+            container.setTag(R.id.viewcompose_decoration_render_host, null)
+            return RenderHostResolution(
+                host = container,
+                remounted = previousMountedNodes.isNotEmpty(),
+                transitionFailures = failures,
+            )
+        }
+
         if (existing != null) {
             if (existing.parent !== container) {
                 (existing.parent as? ViewGroup)?.removeView(existing)
-                container.addView(
-                    existing,
-                    ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    ),
-                )
+                attachDecorationHost(container, existing)
             }
-            return existing
+            return RenderHostResolution(host = existing)
         }
-        return ShadowDecorationHostLayout(container.context).also { host ->
-            decorationHosts[container] = host
-            container.addView(
-                host,
-                ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                ),
+
+        val transitionFailures = disposeForHostTransition(container, previousMountedNodes)
+        val host = ViewDecorationHostLayout(container.context).also { newHost ->
+            container.setTag(R.id.viewcompose_decoration_render_host, newHost)
+            attachDecorationHost(container, newHost)
+        }
+        return RenderHostResolution(
+            host = host,
+            remounted = previousMountedNodes.isNotEmpty(),
+            transitionFailures = transitionFailures,
+        )
+    }
+
+    private fun decorationHostOrNull(container: ViewGroup): ViewDecorationHostLayout? {
+        return container.getTag(
+            R.id.viewcompose_decoration_render_host,
+        ) as? ViewDecorationHostLayout
+    }
+
+    private fun attachDecorationHost(
+        container: ViewGroup,
+        host: ViewDecorationHostLayout,
+    ) {
+        container.addView(
+            host,
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+    }
+
+    private fun disposeForHostTransition(
+        host: ViewGroup,
+        mountedNodes: List<MountedNode>,
+    ): List<CoreRenderCommitFailure> {
+        if (mountedNodes.isEmpty()) return emptyList()
+        return ViewTreeRenderer.disposeMounted(
+            container = host,
+            mountedNodes = mountedNodes,
+        ).map { failure ->
+            CoreRenderCommitFailure(
+                operation = failure.operation?.toCoreOperation(),
+                nodeKey = failure.nodeKey,
+                cause = failure.cause,
             )
         }
     }
+
+    private fun requiresRootHost(nodes: List<VNode>): Boolean {
+        var hasShadow = false
+        nodes.forEach { node ->
+            node.modifier.elements.forEach { element ->
+                when (element) {
+                    is ZIndexModifierElement -> if (element.zIndex != 0f) return true
+                    is DropShadowModifierElement,
+                    is InnerShadowModifierElement,
+                    -> hasShadow = true
+                }
+            }
+        }
+        return hasShadow && AndroidViewDecorationRuntime.hasBackend()
+    }
+
+    private data class RenderHostResolution(
+        val host: ViewGroup,
+        val remounted: Boolean = false,
+        val transitionFailures: List<CoreRenderCommitFailure> = emptyList(),
+    )
 
     private fun com.viewcompose.renderer.view.tree.RenderStats.toCoreStats(): RenderStats {
         return RenderStats(

@@ -36,7 +36,7 @@
 | `viewcompose-gesture` | 平台无关手势 DSL 入口层（`pointerInput`、`combinedClickable`、`draggable/anchoredDraggable/transformable`） | 仅定义手势 modifier 与状态入口；不承载策略判定实现 |
 | `viewcompose-graphics-core` | 图形绘制内核（geometry/path/brush/draw command/draw cache） | 纯 Kotlin/JVM；禁止引入 Android 依赖；仅定义平台无关图形模型 |
 | `viewcompose-graphics` | 图形 DSL 集成层（`Canvas`、`drawBehind`、`drawWithContent`、`drawWithCache`） | 仅定义业务 API 与契约映射；不直接依赖 Android Canvas 实现 |
-| `viewcompose-shadow-android` | 高级阴影后端、缓存与 Decoration Layer Android 实现 | 只依赖 `ui-contract`；不依赖 renderer/widget/app；renderer 单向消费其平台 SPI |
+| `viewcompose-shadow-android` | 可选高级阴影后端、缓存与 Android 绘制实现 | 依赖 renderer 的最小 Decoration SPI；renderer/host 不依赖该模块；通过 ServiceLoader 或显式安装接入 |
 | `viewcompose-widget-core` | DSL、Theme/Defaults、Local 与 overlay 声明契约 | 不依赖 `viewcompose-renderer`；不放 Android 宿主入口 API |
 | `viewcompose-widget-constraintlayout` | ConstraintLayout 组件 DSL（`ConstraintLayout/createRef(s)/constrainAs/constrain/constraintSet`） | 仅承载约束布局 DSL 与 scope；平台渲染实现仍在 `viewcompose-renderer` |
 | `viewcompose-renderer` | Android View 渲染实现（reconcile、binder、patch、container） | 只消费 `ui-contract`，不承载业务 DSL |
@@ -300,15 +300,18 @@ flowchart TD
 ### 4.15.1 高级阴影装饰边界
 
 1. 平台无关契约固定在 `viewcompose-ui-contract`：`UiShadow` 与 `dropShadow(s)/innerShadow(s)` 只保存有序、不可变的逻辑单位规格。
-2. Android 栅格化、缓存、后端选择和诊断固定在 `viewcompose-shadow-android`；该模块不得依赖 renderer、widget 或 app。
-3. renderer 只负责在 View 绑定边界解析 density、layout direction、默认 shape，并以事务化方式安装/移除不可变阴影规格。
-4. 框架容器通过 `DecorationChildDrawingOrder` 在 child 内容前绘制外阴影、在 child 完整内容与 foreground 后绘制内阴影；不得为每层阴影创建额外业务 View。
-5. 高级阴影不参与 measure/layout、hit test、焦点或无障碍；`zIndex`、Material `elevation` 与精确阴影保持三套独立语义。
-6. 多层阴影严格保留声明顺序；外阴影可超出 child bounds，但仍受最近 viewport/显式 clip chain 约束；内阴影必须裁切在 shape 内。
-7. 静态栅格缓存 key 必须覆盖尺寸、density、layout direction、shape 与完整规格；仅平移、缩放、旋转或 alpha 变化不得重建栅格。
-8. `ShadowRenderPolicy.Auto` 的当前默认后端是 `ExactBitmap`。`RenderNodeDisplayList` 只作为 API 29+ 显式实验策略；没有同设备发布态数据证明稳定收益前不得切换默认值。
-9. Lazy 回收、节点移除、事务回滚与 RenderSession dispose 必须同步移除阴影规格；进程级有界缓存只能保存不可变栅格，不能持有 View 或 Session。
-10. 公开使用规则、限制与验证入口见 [SHADOWS.md](/Users/gzq/AndroidStudioProjects/UIFramework/SHADOWS.md)。
+2. renderer 只拥有 `AndroidViewDecorationBackend` 最小协议、通用宿主、父级活跃装饰索引和独立的 `zIndex` 排序；`viewcompose-renderer` 与 `viewcompose-host-android` 禁止依赖具体阴影模块。
+3. Android 栅格化、缓存、后端选择和诊断固定在可选 `viewcompose-shadow-android`；它通过 `META-INF/services` 注册后端，也允许应用启动时显式调用 `ShadowDecorationLayer.install()`。
+4. 后端缺失时 `dropShadow(s)/innerShadow(s)` 必须稳定降级为 no-op，核心渲染、Lazy、Pager、Tab、预览和宿主仍可独立编译运行。
+5. `setUiContent` 与静态预览的必要根容器必须保持普通 `FrameLayout`；只有顶层节点确实需要装饰或非零 `zIndex`、且现有容器不具备协议时，`renderInto` 才按需增加通用宿主。嵌套装饰由最近的框架布局容器直接绘制。
+6. 没有活跃装饰 child 时，容器 `drawChild` 只能执行一次父级布尔快速判断后直达原生绘制，不得逐 child 查询阴影 tag 或调用具体后端；存在活跃装饰时，每个 child 最多查询一次父级身份索引并复用于前后绘制平面；没有非零 `zIndex` 时必须关闭自定义 child drawing order，交回 Android 原生顺序。
+7. 框架容器在 child 内容前绘制外阴影、在 child 完整内容与 foreground 后绘制内阴影；不得为每层阴影创建额外业务 View。
+8. 高级阴影不参与 measure/layout、hit test、焦点或无障碍；`zIndex`、Material `elevation` 与精确阴影保持三套独立语义。
+9. 多层阴影严格保留声明顺序；外阴影可超出 child bounds，但仍受最近 viewport/显式 clip chain 约束；内阴影必须裁切在 shape 内。
+10. 静态栅格缓存 key 必须覆盖尺寸、density、layout direction、shape 与完整规格；仅平移、缩放、旋转或 alpha 变化不得重建栅格。
+11. `ShadowRenderPolicy.Auto` 的当前默认后端是 `ExactBitmap`。`RenderNodeDisplayList` 只作为 API 29+ 显式实验策略；没有同设备发布态数据证明稳定收益前不得切换默认值。
+12. Lazy 回收、节点移除、事务回滚与 RenderSession dispose 必须同步移除阴影规格；父级索引不得通过全局强引用持有 View，进程级缓存只能保存不可变栅格。
+13. 公开使用规则、限制与验证入口见 [SHADOWS.md](/Users/gzq/AndroidStudioProjects/UIFramework/SHADOWS.md)。
 
 ### 4.16 Semantics 与无障碍边界
 

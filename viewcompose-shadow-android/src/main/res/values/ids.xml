@@ -2,6 +2,4 @@
 <resources>
     <item name="viewcompose_shadow_spec" type="id" />
     <item name="viewcompose_inner_shadow_spec" type="id" />
-    <item name="viewcompose_sibling_z_index" type="id" />
-    <item name="viewcompose_sibling_drawing_order" type="id" />
 </resources>

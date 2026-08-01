@@ -31,7 +31,6 @@ dependencies {
     implementation(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-graphics-core"))
     implementation(project(":viewcompose-gesture-core"))
-    implementation(project(":viewcompose-shadow-android"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.recyclerview)

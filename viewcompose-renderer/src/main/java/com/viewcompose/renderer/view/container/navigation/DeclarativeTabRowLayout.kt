@@ -15,7 +15,7 @@ import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
-import com.viewcompose.shadow.android.ShadowDecorationHostLayout
+import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
  * TabRow 的可滚动 Android 宿主。
@@ -211,7 +211,7 @@ internal class DeclarativeTabRowLayout(
         tabContainer.removeAllViews()
 
         newTabs.forEachIndexed { index, tab ->
-            val itemContainer = ShadowDecorationHostLayout(context).apply {
+            val itemContainer = ViewDecorationHostLayout(context).apply {
                 setPadding(
                     itemPaddingHorizontalPx, itemPaddingVerticalPx,
                     itemPaddingHorizontalPx, itemPaddingVerticalPx,

@@ -6,8 +6,9 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
-import com.viewcompose.shadow.android.DecorationChildDrawingOrder
-import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
+import com.viewcompose.renderer.decoration.DecorationDrawingOrderContainer
+import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import kotlin.math.roundToInt
 
 /**
@@ -17,7 +18,9 @@ import kotlin.math.roundToInt
 internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-) : FrameLayout(context, attrs) {
+) : FrameLayout(context, attrs), DecorationDrawingOrderContainer {
+    private val decorationDrawing = ViewDecorationDrawing(this)
+
     var widthScale: Float = 1f
         set(value) {
             val clamped = value.coerceAtLeast(0f)
@@ -44,13 +47,16 @@ internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor
         }
 
     init {
-        isChildrenDrawingOrderEnabled = true
         clipChildren = true
         clipToPadding = true
     }
 
     override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int =
         DecorationChildDrawingOrder.getChildDrawingOrder(this, childCount, drawingPosition)
+
+    override fun setDecorationDrawingOrderEnabled(enabled: Boolean) {
+        isChildrenDrawingOrderEnabled = enabled
+    }
 
     override fun onMeasure(
         widthMeasureSpec: Int,
@@ -84,18 +90,27 @@ internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor
         child: View,
         drawingTime: Long,
     ): Boolean {
-        ShadowDecorationLayer.drawBehindChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        if (!decorationDrawing.hasDecoratedChildren) {
+            return super.drawChild(canvas, child, drawingTime)
+        }
+        val decoration = decorationDrawing.decorationOrNull(child)
+            ?: return super.drawChild(canvas, child, drawingTime)
+        decorationDrawing.drawBehindChild(canvas, child, decoration)
         val drawn = super.drawChild(canvas, child, drawingTime)
-        ShadowDecorationLayer.drawOverChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        decorationDrawing.drawOverChild(canvas, child, decoration)
         return drawn
+    }
+
+    override fun onViewAdded(child: View) {
+        super.onViewAdded(child)
+        DecorationChildDrawingOrder.onViewAdded(this, child)
+        decorationDrawing.onViewAdded(child)
+    }
+
+    override fun onViewRemoved(child: View) {
+        decorationDrawing.onViewRemoved(child)
+        super.onViewRemoved(child)
+        DecorationChildDrawingOrder.onViewRemoved(this, child)
     }
 
     private fun resolveAnimatedDimension(

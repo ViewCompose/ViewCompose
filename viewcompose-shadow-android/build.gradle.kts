@@ -27,6 +27,7 @@ android {
 
 dependencies {
     implementation(project(":viewcompose-ui-contract"))
+    implementation(project(":viewcompose-renderer"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }
