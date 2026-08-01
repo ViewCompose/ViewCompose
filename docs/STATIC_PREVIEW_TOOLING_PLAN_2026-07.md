@@ -56,7 +56,9 @@ protocol instead of linking renderer internals into the IDE process.
 13. Automatic save refresh is latest-wins and must not repeatedly cancel an expensive compile or
     Layoutlib render already in flight. User-driven selection and manual refresh may preempt work.
 14. Gallery throughput is improved through bounded batching, never unbounded parallel Layoutlib
-    instances. Each worker process handles at most eight sequential renders and then exits.
+    instances. One external worker may reuse Layoutlib across Gradle invocations, but it is
+    serialized per variant and retires after 24 renders, 120 seconds idle, a failed render, or
+    768 MiB used heap.
 15. Studio image retention is budgeted by decoded pixel bytes rather than PNG count or file size;
     every project-owned listener, task, popup, and image cache has an explicit disposal boundary.
 16. Performance data crosses the same versioned boundary as render results. Layoutlib setup,
@@ -64,7 +66,13 @@ protocol instead of linking renderer internals into the IDE process.
 17. Global preview loading is viewport-first. It may use two bounded render calls per module to
     show the visible screen early, but discovery and compilation are still shared.
 18. Studio uses one cancellable Gradle Tooling API connection per project. Layoutlib remains in a
-    short-lived external worker, and the connection is closed with the project service.
+    bounded external worker, and the connection is closed with the project service.
+19. Persistent workers retain only renderer/runtime/resource infrastructure. Project bytecode is
+    loaded by a fresh closeable class loader for every command; source-only changes must neither
+    restart Layoutlib nor observe stale application classes.
+20. Warm-worker output must pass an explicit cold-versus-warm equivalence gate. Pixels are exact;
+    render snapshots are exact after removing tooling-only node identities. Any transport or warm
+    render failure retries in an isolated process before the task reports failure.
 
 ## 4. Delivery stages
 
@@ -174,9 +182,10 @@ Implemented:
 - A TestKit Android fixture compiles a real preview function with local resources/assets and
   AndroidX resources, then verifies the exported build model and descriptor catalog end to end.
 - `viewcompose-preview-worker-host` is a standalone JDK 17 executable boundary. It reads one
-  `PreviewWorkerCommand` or one bounded `PreviewWorkerBatchCommand`, recreates the
-  Paparazzi/Layoutlib environment, owns setup/teardown for every SDK session, and writes each
-  structured response atomically. The short-lived process exits after at most eight renders.
+  `PreviewWorkerCommand` or one bounded `PreviewWorkerBatchCommand`, owns the
+  Paparazzi/Layoutlib environment, and writes each structured response atomically. Its loopback,
+  token-authenticated server is serialized and bounded by render count, idle time, used heap, and
+  failure retirement.
 - The worker host has no compile-time dependency on Gradle, Android Studio, or
   `viewcompose-preview-runner`; the Android runner is found only on the isolated process classpath.
 - A real Layoutlib integration test renders a compiled ViewCompose entry through the host and
@@ -185,6 +194,15 @@ Implemented:
   batch target file. Layoutlib archives and the application classpath are prepared once per task;
   uncached targets are rendered in bounded worker batches without loading application or Layoutlib
   classes into the Gradle daemon.
+- Worker compatibility is content-addressed across the Layoutlib environment, worker host,
+  runner, Layoutlib distribution, dependencies, resources, assets, and Manifest. Application class
+  directories/jars are deliberately excluded from that compatibility key and loaded through a new
+  per-command class loader. Generated `R` classes are the only project classes retained by the
+  worker because Layoutlib resolves them through its own class-loader boundary.
+- `--verify-worker-reuse` renders a proven warm result and an isolated cold result, then compares
+  exact PNG bytes and normalized render-snapshot semantics. Failed warm transport or rendering
+  automatically falls back to a cold worker, so reuse is an optimization rather than a correctness
+  dependency.
 - Render requests carry the exported build fingerprint. Planning and worker startup both reject a
   stale catalog, mismatched module, variant, or fingerprint.
 - Successful PNG and render-tree results are reused from a content-addressed cache keyed by build
@@ -266,8 +284,13 @@ Implemented experience foundation:
   discovery. Initial discovery targets debug directly and falls back to the all-variant aggregate
   only when a conventional debug task does not exist.
 - Gradle discovery and rendering use one project-scoped Tooling API connection, removing repeated
-  wrapper-client JVM startup while preserving Gradle daemon reuse, cancellation, and isolated
-  Layoutlib workers.
+  wrapper-client JVM startup while preserving Gradle daemon reuse, cancellation, and external
+  Layoutlib isolation. A compatible bounded Layoutlib worker can survive consecutive Tooling API
+  builds; source edits replace only the application class loader.
+- On the local five-preview verification set, cold Layoutlib setup measured about 2403 ms while
+  warm setup measured 31–44 ms. The warm batch passed exact cold-output equivalence, and a temporary
+  source edit changed the output hash without changing the worker PID; reverting the edit restored
+  the original hash exactly.
 - The all-previews gallery publishes placeholders before compilation, renders the current viewport
   first, preserves scroll position across partial results, and fills remaining previews in one
   second bounded batch. Disk-cache metadata is read eagerly, but PNG thumbnails decode only when a

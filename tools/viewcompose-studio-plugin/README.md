@@ -37,7 +37,10 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - Kotlin gutter markers for direct and source meta-annotated ViewCompose preview functions;
 - project-scoped source selection that opens the matching symbol in the preview tool window;
 - a project-scoped Gradle Tooling API connection with cancellation, avoiding a new wrapper client
-  JVM for every discovery/render operation while keeping Layoutlib in the isolated worker;
+  JVM for every discovery/render operation while keeping Layoutlib in a bounded external worker;
+- controlled Layoutlib worker reuse across compatible refreshes, with fresh application class
+  loaders, content-addressed invalidation, failure/capacity/memory/idle retirement, isolated-process
+  fallback, and an opt-in cold-versus-warm equivalence gate;
 - a globally bounded Studio-owned disk cache that restores previews before invoking Gradle
   (64 detailed entries, 30 days, and 256 MiB across projects, with least-recently-used cleanup);
 - a lightweight all-previews gallery that immediately shows placeholders, prioritizes the visible
