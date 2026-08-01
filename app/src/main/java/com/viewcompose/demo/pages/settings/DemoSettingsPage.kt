@@ -1,6 +1,8 @@
 package com.viewcompose
 
 import android.view.ViewGroup
+import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -23,9 +25,30 @@ import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 import java.util.Locale
 
+@ViewComposePreview(name = "Settings · Light", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewSettingsLight() {
+    SettingsPage(
+        themeModeState = mutableStateOf(DemoThemeMode.Light),
+        root = null,
+    )
+}
+
+@ViewComposePreview(
+    name = "Settings · Dark",
+    group = "Demo/Pages",
+    heightDp = 891,
+    theme = PreviewTheme.Dark,
+)
+internal fun UiTreeBuilder.PreviewSettingsDark() {
+    SettingsPage(
+        themeModeState = mutableStateOf(DemoThemeMode.Dark),
+        root = null,
+    )
+}
+
 internal fun UiTreeBuilder.SettingsPage(
     themeModeState: MutableState<DemoThemeMode>,
-    root: ViewGroup,
+    root: ViewGroup?,
 ) {
     val debugModeState = remember { mutableStateOf(true) }
     val langIndexState = remember { mutableStateOf(0) }
@@ -73,7 +96,15 @@ internal fun UiTreeBuilder.SettingsPage(
                         DiagnosticFact("区域设置", Environment.localeTags.firstOrNull() ?: "und"),
                         DiagnosticFact("布局方向", Environment.layoutDirection.name),
                         DiagnosticFact("密度", "${"%.2f".format(Locale.US, Environment.density.density)}x"),
-                        DiagnosticFact("主题模式", DemoThemeTokens.modeLabel(themeModeState.value, root.context)),
+                        DiagnosticFact(
+                            "主题模式",
+                            root?.context?.let { context ->
+                                DemoThemeTokens.modeLabel(themeModeState.value, context)
+                            } ?: DemoThemeTokens.modeLabel(
+                                mode = themeModeState.value,
+                                isSystemDark = themeModeState.value == DemoThemeMode.Dark,
+                            ),
+                        ),
                     ),
                 )
             }

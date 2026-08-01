@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.animation.AnimatedContent
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.animation.Crossfade
@@ -60,6 +61,36 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 import kotlinx.coroutines.withContext
+
+@ViewComposePreview(name = "Animation · Core", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewAnimationCore() {
+    AnimationPage(initialPageIndex = 0, initialInfinitePulse = false)
+}
+
+@ViewComposePreview(name = "Animation · Content", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewAnimationContent() {
+    AnimationPage(initialPageIndex = 1, initialInfinitePulse = false)
+}
+
+@ViewComposePreview(name = "Animation · List motion", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewAnimationListMotion() {
+    AnimationPage(initialPageIndex = 2, initialInfinitePulse = false)
+}
+
+@ViewComposePreview(name = "Animation · Specs", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewAnimationSpecs() {
+    AnimationPage(initialPageIndex = 3, initialInfinitePulse = false)
+}
+
+@ViewComposePreview(name = "Animation · Transition", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewAnimationTransition() {
+    AnimationPage(initialPageIndex = 4, initialInfinitePulse = false)
+}
+
+@ViewComposePreview(name = "Animation · Infinite", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewAnimationInfinite() {
+    AnimationPage(initialPageIndex = 5, initialInfinitePulse = false)
+}
 
 internal fun UiTreeBuilder.AnimationPage(
     initialPageIndex: Int = 0,

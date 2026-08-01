@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import android.widget.TextView
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
@@ -44,6 +45,41 @@ import com.viewcompose.widget.core.produceState
 import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberLazyListState
 import com.viewcompose.ui.unit.sp
+
+@ViewComposePreview(name = "Collections · Controls", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewCollectionsControls() {
+    CollectionPage(initialPageIndex = 0)
+}
+
+@ViewComposePreview(name = "Collections · List", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewCollectionsList() {
+    CollectionPage(initialPageIndex = 1)
+}
+
+@ViewComposePreview(name = "Collections · Stress", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewCollectionsStress() {
+    CollectionPage(initialPageIndex = 2)
+}
+
+@ViewComposePreview(name = "Collections · Interop", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewCollectionsInterop() {
+    CollectionPage(initialPageIndex = 3)
+}
+
+@ViewComposePreview(name = "Collections · Lazy row", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewCollectionsLazyRow() {
+    CollectionPage(initialPageIndex = 4)
+}
+
+@ViewComposePreview(name = "Collections · Grid", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewCollectionsGrid() {
+    CollectionPage(initialPageIndex = 5)
+}
+
+@ViewComposePreview(name = "Collections · Pull refresh", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewCollectionsPullRefresh() {
+    CollectionPage(initialPageIndex = 6)
+}
 
 internal fun UiTreeBuilder.CollectionPage(
     initialPageIndex: Int = 0,

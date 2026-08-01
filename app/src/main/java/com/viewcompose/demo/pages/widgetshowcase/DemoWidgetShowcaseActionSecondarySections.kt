@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -24,6 +25,7 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "Chip", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseChip() {
     val selectedState = remember { mutableStateOf(false) }
 
@@ -85,6 +87,7 @@ internal fun UiTreeBuilder.ShowcaseChip() {
     }
 }
 
+@ViewComposePreview(name = "FloatingActionButton", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseFab() {
     Column(
         spacing = 0.dp,

@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import android.graphics.Typeface
 import android.widget.TextView
 import com.viewcompose.ui.layout.BoxAlignment
@@ -29,6 +30,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "Modifiers · Size constraints", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierSizeConstraintsSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
@@ -178,6 +180,7 @@ internal fun UiTreeBuilder.ModifierSizeConstraintsSection() {
     }
 }
 
+@ViewComposePreview(name = "Modifiers · Accessibility", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierAccessibilitySection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
@@ -219,6 +222,7 @@ internal fun UiTreeBuilder.ModifierAccessibilitySection() {
     }
 }
 
+@ViewComposePreview(name = "Modifiers · Native view", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierNativeViewSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
@@ -251,6 +255,7 @@ internal fun UiTreeBuilder.ModifierNativeViewSection() {
     }
 }
 
+@ViewComposePreview(name = "Modifiers · Verification", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierVerificationSection() {
     VerificationNotesSection(
         what = "Modifier 展示应覆盖全部未展示的 Modifier 函数的视觉效果和行为。",

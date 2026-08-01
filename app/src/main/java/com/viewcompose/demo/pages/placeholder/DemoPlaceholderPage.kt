@@ -1,10 +1,21 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.UiTreeBuilder
+
+@ViewComposePreview(name = "Roadmap placeholder", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewChapterPlaceholder() {
+    ChapterPlaceholderPage(
+        title = "规划章节",
+        subtitle = "用于验证尚未落地模块的统一占位页面。",
+        plannedPages = listOf("高级场景", "平台集成", "性能诊断"),
+        currentGaps = listOf("能力仍在规划", "交互路径尚未接入"),
+    )
+}
 
 internal fun UiTreeBuilder.ChapterPlaceholderPage(
     title: String,

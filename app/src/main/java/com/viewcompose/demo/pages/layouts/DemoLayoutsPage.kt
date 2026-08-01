@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
@@ -50,6 +51,41 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
+
+@ViewComposePreview(name = "Layouts · Linear", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewLayoutsLinear() {
+    LayoutPage(initialPageIndex = 0)
+}
+
+@ViewComposePreview(name = "Layouts · Overlay", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewLayoutsOverlay() {
+    LayoutPage(initialPageIndex = 1)
+}
+
+@ViewComposePreview(name = "Layouts · Bounds", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewLayoutsBounds() {
+    LayoutPage(initialPageIndex = 2)
+}
+
+@ViewComposePreview(name = "Layouts · Flow", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewLayoutsFlow() {
+    LayoutPage(initialPageIndex = 3)
+}
+
+@ViewComposePreview(name = "Layouts · Scroll", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewLayoutsScroll() {
+    LayoutPage(initialPageIndex = 4)
+}
+
+@ViewComposePreview(name = "Layouts · Constraint", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewLayoutsConstraint() {
+    LayoutPage(initialPageIndex = 5)
+}
+
+@ViewComposePreview(name = "Layouts · Checklist", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewLayoutsChecklist() {
+    LayoutPage(initialPageIndex = 6)
+}
 
 internal fun UiTreeBuilder.LayoutPage(
     initialPageIndex: Int = 0,

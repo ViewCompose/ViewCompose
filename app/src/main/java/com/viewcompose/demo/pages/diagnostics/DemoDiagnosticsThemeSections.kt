@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import android.view.ViewGroup
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
@@ -78,7 +79,7 @@ internal val DIAGNOSTICS_THEME_SECTION_KEYS = listOf(
 )
 
 internal fun UiTreeBuilder.DiagnosticsThemeSection(
-    root: ViewGroup,
+    root: ViewGroup?,
     section: String,
 ) {
     when (section) {
@@ -94,8 +95,13 @@ internal fun UiTreeBuilder.DiagnosticsThemeSection(
     }
 }
 
-private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup) {
-    val modeLabel = DemoThemeTokens.modeLabel(DemoThemeSession.mode, root.context)
+private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) {
+    val modeLabel = root?.context?.let { context ->
+        DemoThemeTokens.modeLabel(DemoThemeSession.mode, context)
+    } ?: DemoThemeTokens.modeLabel(
+        mode = DemoThemeSession.mode,
+        isSystemDark = false,
+    )
     ScenarioSection(
         kind = ScenarioKind.Core,
         title = "Theme Snapshot",
@@ -623,6 +629,7 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
     }
 }
 
+@ViewComposePreview(name = "Diagnostics · Theme verification", group = "Demo/Sections")
 internal fun UiTreeBuilder.DiagnosticsThemeVerificationSection() {
     VerificationNotesSection(
         what = "该页是 Theme token 实际消费的权威人工回归入口，目标不是看数值对不对，而是确认 token 最终确实驱动了关键组件默认值。",

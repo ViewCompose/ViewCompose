@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -24,6 +25,7 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "Button", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseButton() {
     Column(
         spacing = 0.dp,
@@ -98,6 +100,7 @@ internal fun UiTreeBuilder.ShowcaseButton() {
     }
 }
 
+@ViewComposePreview(name = "IconButton", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseIconButton() {
     Column(
         spacing = 0.dp,
@@ -166,6 +169,7 @@ internal fun UiTreeBuilder.ShowcaseIconButton() {
     }
 }
 
+@ViewComposePreview(name = "SegmentedControl", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseSegmentedControl() {
     val selectedCompact = remember { mutableStateOf(0) }
     val selectedMedium = remember { mutableStateOf(1) }

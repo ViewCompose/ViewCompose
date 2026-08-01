@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import android.graphics.Typeface
 import androidx.appcompat.app.AppCompatActivity
 import com.viewcompose.ui.layout.VerticalAlignment
@@ -40,6 +41,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "Foundations · Progress", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsProgressSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
@@ -72,6 +74,7 @@ internal fun UiTreeBuilder.FoundationsProgressSection() {
     }
 }
 
+@ViewComposePreview(name = "Foundations · Media", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsMediaSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
@@ -167,6 +170,7 @@ internal fun UiTreeBuilder.FoundationsMediaSection() {
     }
 }
 
+@ViewComposePreview(name = "Foundations · Typography", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsTypographySection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
@@ -314,6 +318,7 @@ internal fun UiTreeBuilder.FoundationsJumpSection(
     }
 }
 
+@ViewComposePreview(name = "Foundations · Surface", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsSurfaceSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
@@ -334,6 +339,7 @@ internal fun UiTreeBuilder.FoundationsSurfaceSection() {
     }
 }
 
+@ViewComposePreview(name = "Foundations · Verification", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsVerificationSection() {
     VerificationNotesSection(
         what = "基础组件应验证当前主题、媒体和按钮家族在章节导航和主题切换下的一致性渲染。",

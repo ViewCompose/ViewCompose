@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import android.view.Choreographer
 import com.viewcompose.animation.animateColorAsState
 import com.viewcompose.animation.animateFloatAsState
@@ -43,6 +44,21 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 import kotlin.math.roundToInt
+
+@ViewComposePreview(name = "Gestures · Tap", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewGesturesTap() {
+    GesturePage(initialPageIndex = 0)
+}
+
+@ViewComposePreview(name = "Gestures · Drag and swipe", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewGesturesDragSwipe() {
+    GesturePage(initialPageIndex = 1)
+}
+
+@ViewComposePreview(name = "Gestures · Transform", group = "Demo/Pages", heightDp = 891)
+internal fun UiTreeBuilder.PreviewGesturesTransform() {
+    GesturePage(initialPageIndex = 2)
+}
 
 internal fun UiTreeBuilder.GesturePage(
     initialPageIndex: Int = 0,

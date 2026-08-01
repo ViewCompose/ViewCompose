@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.runtime.mutableStateOf
@@ -14,6 +15,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 
+@ViewComposePreview(name = "Checkbox", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseCheckbox() {
     val checked1 = remember { mutableStateOf(true) }
     val checked2 = remember { mutableStateOf(false) }
@@ -63,6 +65,7 @@ internal fun UiTreeBuilder.ShowcaseCheckbox() {
     }
 }
 
+@ViewComposePreview(name = "Switch", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseSwitch() {
     val checked1 = remember { mutableStateOf(true) }
     val checked2 = remember { mutableStateOf(false) }
@@ -112,6 +115,7 @@ internal fun UiTreeBuilder.ShowcaseSwitch() {
     }
 }
 
+@ViewComposePreview(name = "RadioButton", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseRadioButton() {
     val selectedIndex = remember { mutableStateOf(0) }
 
@@ -157,6 +161,7 @@ internal fun UiTreeBuilder.ShowcaseRadioButton() {
     }
 }
 
+@ViewComposePreview(name = "Slider", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseSlider() {
     val value1 = remember { mutableStateOf(50) }
     val value2 = remember { mutableStateOf(25) }
