@@ -39,8 +39,13 @@ dependencies {
     implementation(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-widget-core"))
     implementation(project(":viewcompose-host-android"))
+    implementation(project(":viewcompose-lifecycle"))
     implementation(project(":viewcompose-preview"))
     implementation(project(":viewcompose-renderer"))
+    implementation(project(":viewcompose-viewmodel"))
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.savedstate)
 
     testImplementation(libs.junit)
     testImplementation(libs.paparazzi)

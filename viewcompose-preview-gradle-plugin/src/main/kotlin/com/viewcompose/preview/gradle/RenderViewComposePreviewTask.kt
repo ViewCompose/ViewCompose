@@ -247,9 +247,12 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             artifactRoot = artifactRoot,
             compatibilityFingerprint = manifest.layoutlibCompatibilityFingerprint,
         )
-        val processClasspath = (
-            hostFiles + runnerFiles + retainedRuntimeClasspath + resourceSymbols
-            ).distinctBy { file -> file.absoluteFile.normalize().path }
+        val processClasspath = previewWorkerProcessClasspath(
+            hostFiles = hostFiles,
+            runnerFiles = runnerFiles,
+            targetRuntimeFiles = retainedRuntimeClasspath,
+            resourceSymbols = resourceSymbols,
+        )
         val workerCompatibilityFingerprint = PreviewInputFingerprint.combine(
             mapOf(
                 "layoutlib-environment" to manifest.layoutlibCompatibilityFingerprint,
@@ -779,6 +782,44 @@ abstract class RenderViewComposePreviewTask @Inject constructor(
             }
         }
     }
+}
+
+/**
+ * Lifecycle and SavedState classes must come from the Android target, not JVM/desktop variants
+ * pulled in by the tooling runner. Otherwise a target compiled against a newer AndroidX API can
+ * link against a binary-incompatible desktop class before its own Android class is visible.
+ */
+internal fun previewWorkerProcessClasspath(
+    hostFiles: List<File>,
+    runnerFiles: List<File>,
+    targetRuntimeFiles: List<File>,
+    resourceSymbols: File,
+): List<File> {
+    val targetOwnerRuntime = targetRuntimeFiles.filter(File::isAndroidOwnerRuntimeArtifact)
+    val effectiveRunnerFiles = if (targetOwnerRuntime.isEmpty()) {
+        runnerFiles
+    } else {
+        runnerFiles.filterNot(File::isDesktopOwnerRuntimeArtifact)
+    }
+    return (
+        hostFiles +
+            targetOwnerRuntime +
+            effectiveRunnerFiles +
+            targetRuntimeFiles.filterNot(targetOwnerRuntime.toHashSet()::contains) +
+            resourceSymbols
+        ).distinctBy { file -> file.absoluteFile.normalize().path }
+}
+
+private fun File.isAndroidOwnerRuntimeArtifact(): Boolean {
+    val artifactName = name.lowercase()
+    return !artifactName.contains("-desktop") &&
+        (artifactName.startsWith("lifecycle-") || artifactName.startsWith("savedstate-"))
+}
+
+private fun File.isDesktopOwnerRuntimeArtifact(): Boolean {
+    val artifactName = name.lowercase()
+    return artifactName.contains("-desktop") &&
+        (artifactName.startsWith("lifecycle-") || artifactName.startsWith("savedstate-"))
 }
 
 private data class EffectivePreviewInputs(

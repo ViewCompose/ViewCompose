@@ -1,5 +1,6 @@
 package com.viewcompose.preview.runner
 
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.view.View
@@ -7,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
+import com.viewcompose.lifecycle.ProvideLifecycleOwner
 import com.viewcompose.preview.PreviewThemeResolution
 import com.viewcompose.preview.tooling.PreviewCompositionLocal
 import com.viewcompose.preview.tooling.PreviewCompositionSnapshot
@@ -34,10 +36,12 @@ import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.widget.core.AndroidDynamicColorPolicy
 import com.viewcompose.widget.core.AndroidThemeBridge
+import com.viewcompose.widget.core.ProvideSaveableStateRegistry
 import com.viewcompose.widget.core.RenderFailure
 import com.viewcompose.widget.core.RenderTreeResult
 import com.viewcompose.widget.core.UiEnvironment
 import com.viewcompose.widget.core.UiTheme
+import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import java.io.Closeable
 import kotlin.math.roundToInt
 
@@ -113,6 +117,9 @@ object StaticPreviewRenderer {
         val root = FrameLayout(resolvedPreviewTheme.context).apply {
             setBackgroundColor(themeTokens.colors.background)
         }
+        val previewOwner = StaticPreviewHostOwner(
+            resolvedPreviewTheme.context.applicationContext as? Application,
+        )
         var renderResult: RenderTreeResult? = null
         var renderFailure: RenderFailure? = null
         var session: RenderSession? = null
@@ -126,23 +133,29 @@ object StaticPreviewRenderer {
                 onRenderResult = { result -> renderResult = result },
                 onRenderFailure = { failure -> renderFailure = failure },
             ) {
-                UiEnvironment(
-                    values = UiEnvironmentValues(
-                        density = UiDensity(
-                            density = configuration.density,
-                            fontScale = configuration.fontScale,
-                        ),
-                        locales = UiLocaleList.from(configuration.localeTags),
-                        layoutDirection = when (configuration.layoutDirection) {
-                            PreviewLayoutDirection.Ltr -> UiLayoutDirection.Ltr
-                            PreviewLayoutDirection.Rtl -> UiLayoutDirection.Rtl
-                        },
-                    ),
-                ) {
-                    UiTheme(
-                        tokens = themeTokens,
-                    ) {
-                        entry.content(this)
+                ProvideLifecycleOwner(previewOwner) {
+                    ProvideViewModelStoreOwner(previewOwner) {
+                        ProvideSaveableStateRegistry(previewOwner.compositionSaveableStateRegistry) {
+                            UiEnvironment(
+                                values = UiEnvironmentValues(
+                                    density = UiDensity(
+                                        density = configuration.density,
+                                        fontScale = configuration.fontScale,
+                                    ),
+                                    locales = UiLocaleList.from(configuration.localeTags),
+                                    layoutDirection = when (configuration.layoutDirection) {
+                                        PreviewLayoutDirection.Ltr -> UiLayoutDirection.Ltr
+                                        PreviewLayoutDirection.Rtl -> UiLayoutDirection.Rtl
+                                    },
+                                ),
+                            ) {
+                                UiTheme(
+                                    tokens = themeTokens,
+                                ) {
+                                    entry.content(this)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -156,6 +169,7 @@ object StaticPreviewRenderer {
             val result = renderResult
             if (failure != null || result == null) {
                 session?.dispose()
+                previewOwner.close()
                 StaticPreviewMountResult.Failure(
                     diagnostic = request.renderDiagnostic(
                         message = failure?.let {
@@ -184,12 +198,14 @@ object StaticPreviewRenderer {
                             additionalWarnings = layoutResult.warnings,
                         ),
                         session = checkNotNull(session),
+                        previewOwner = previewOwner,
                     ),
                 )
             }
             } catch (error: Throwable) {
                 error.throwIfFatalPreviewWorkerError()
                 session?.dispose()
+                previewOwner.close()
                 StaticPreviewMountResult.Failure(
                     diagnostic = request.renderDiagnostic(
                         message = "Preview render threw ${error::class.java.simpleName}.",
@@ -372,9 +388,14 @@ class StaticPreviewFrame internal constructor(
     val rootView: View,
     val snapshot: PreviewRenderSnapshot,
     private val session: RenderSession,
+    private val previewOwner: StaticPreviewHostOwner,
 ) : Closeable {
     override fun close() {
-        session.dispose()
+        try {
+            session.dispose()
+        } finally {
+            previewOwner.close()
+        }
     }
 }
 

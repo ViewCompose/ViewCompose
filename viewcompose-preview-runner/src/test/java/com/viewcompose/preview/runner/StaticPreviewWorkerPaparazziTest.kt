@@ -12,6 +12,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModelStoreOwner
 import com.android.resources.Density
 import com.android.resources.LayoutDirection
 import com.android.resources.NightMode
@@ -32,6 +35,7 @@ import com.viewcompose.preview.tooling.PreviewRenderTreeNode
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.PreviewVariant
 import com.viewcompose.preview.tooling.viewportHeightDp
+import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.height
@@ -42,11 +46,14 @@ import com.viewcompose.widget.core.AndroidDynamicColorPolicy
 import com.viewcompose.widget.core.AndroidThemeBridge
 import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.Environment
+import com.viewcompose.widget.core.LocalSaveableStateRegistry
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiThemeOrigin
 import com.viewcompose.widget.core.UiThemeTokens
 import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.viewmodel.LocalViewModelStoreOwner
+import com.viewcompose.viewmodel.savedStateHandle
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -155,6 +162,40 @@ class StaticPreviewWorkerPaparazziTest {
         assertEquals(renderText.nodeId, insertPatch.nodeId)
         assertEquals(renderText.sourceCallSites, insertPatch.sourceCallSites)
         assertNotNull(snapshot.composition)
+    }
+
+    @Test
+    fun `static preview provides frame scoped lifecycle viewmodel and saveable owners`() {
+        var lifecycleOwner: LifecycleOwner? = null
+        var viewModelStoreOwner: ViewModelStoreOwner? = null
+        var hasSaveableRegistry = false
+        val hostedEntry = entry().let { original ->
+            StaticPreviewEntry(descriptor = original.descriptor) {
+                lifecycleOwner = LocalLifecycleOwner.current
+                viewModelStoreOwner = LocalViewModelStoreOwner.current
+                hasSaveableRegistry = LocalSaveableStateRegistry.current != null
+                val handle = savedStateHandle(key = "preview-host-test")
+                Text("count=${handle.get<Int>("count") ?: 0}")
+            }
+        }
+        val request = request(
+            entry = hostedEntry,
+            outputDirectory = temporaryFolder.newFolder("hosted-preview"),
+        )
+        paparazzi.unsafeUpdateConfig(deviceConfig = request.configuration.toDeviceConfig())
+
+        val mount = StaticPreviewRenderer.mount(
+            context = paparazzi.context,
+            request = request,
+            entry = hostedEntry,
+        )
+
+        assertTrue(mount is StaticPreviewMountResult.Success)
+        assertEquals(Lifecycle.State.RESUMED, lifecycleOwner?.lifecycle?.currentState)
+        assertTrue(lifecycleOwner === viewModelStoreOwner)
+        assertTrue(hasSaveableRegistry)
+        (mount as StaticPreviewMountResult.Success).frame.close()
+        assertEquals(Lifecycle.State.DESTROYED, lifecycleOwner?.lifecycle?.currentState)
     }
 
     @Test
