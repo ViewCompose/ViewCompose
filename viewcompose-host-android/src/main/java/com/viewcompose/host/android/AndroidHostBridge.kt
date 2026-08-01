@@ -2,6 +2,7 @@ package com.viewcompose.host.android
 
 import android.content.Context
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -9,7 +10,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelStoreOwner
 import com.viewcompose.host.android.runtime.AndroidMonotonicFrameClock
-import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.widget.core.ProvideAnimationCoroutineContext
@@ -155,8 +155,8 @@ fun ComponentActivity.setUiContent(
 
 private fun buildUiContentRoot(
     context: Context,
-): ViewDecorationHostLayout {
-    return ViewDecorationHostLayout(context).apply {
+): FrameLayout {
+    return FrameLayout(context).apply {
         layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT,

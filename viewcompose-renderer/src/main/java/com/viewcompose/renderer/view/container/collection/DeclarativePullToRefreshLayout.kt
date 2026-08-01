@@ -37,9 +37,11 @@ internal class DeclarativePullToRefreshLayout(
         if (drawing == null || !drawing.hasDecoratedChildren) {
             return super.drawChild(canvas, child, drawingTime)
         }
-        drawing.drawBehindChild(canvas, child)
+        val decoration = drawing.decorationOrNull(child)
+            ?: return super.drawChild(canvas, child, drawingTime)
+        drawing.drawBehindChild(canvas, child, decoration)
         val drawn = super.drawChild(canvas, child, drawingTime)
-        drawing.drawOverChild(canvas, child)
+        drawing.drawOverChild(canvas, child, decoration)
         return drawn
     }
 

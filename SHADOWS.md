@@ -75,9 +75,11 @@ renderer 与 Android host 不依赖阴影模块。依赖中没有 `viewcompose-s
 ShadowDecorationLayer.install()
 ```
 
-`setUiContent` 的必要根容器直接具备通用装饰协议，不再额外嵌套阴影 FrameLayout。普通页面没有活跃
-阴影 child 时，父容器只做一次布尔快速判断并直接进入原生 `drawChild`，不会逐 child 查询阴影标签；
-没有非零 `zIndex` 时也不会启用自定义 child drawing order 或创建排序索引。
+`setUiContent` 与静态预览的必要根容器保持普通 `FrameLayout`。只有顶层节点自身使用阴影或非零
+`zIndex` 时才按需增加通用装饰宿主；布局内部的阴影由最近的框架容器直接绘制。普通父容器没有
+活跃阴影 child 时只做一次布尔快速判断并直接进入原生 `drawChild`，不会逐 child 查询阴影标签；
+存在活跃阴影时每个 child 只查询一次父级身份索引并复用于前后绘制。没有非零 `zIndex` 时也不会
+启用自定义 child drawing order 或创建排序索引。
 
 ## 4. Shape 与多层语义
 

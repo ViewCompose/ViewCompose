@@ -149,7 +149,7 @@ class StaticPreviewWorkerPaparazziTest {
         )
         val nativeRoot = snapshot.nativeViewTree.single()
         assertEquals(
-            "com.viewcompose.renderer.decoration.ViewDecorationHostLayout",
+            "android.widget.FrameLayout",
             nativeRoot.className,
         )
         assertEquals(expectedWidthPx, nativeRoot.bounds.right)

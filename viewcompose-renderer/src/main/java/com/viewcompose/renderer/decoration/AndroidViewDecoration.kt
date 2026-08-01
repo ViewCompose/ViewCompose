@@ -149,7 +149,8 @@ internal data class AppliedDecoration(
  * Per-parent active decoration index.
  *
  * The common no-decoration draw path is one boolean branch. It performs no child tag lookup and no
- * backend call. When decorations are active, identity lookup selects only decorated children.
+ * backend call. When decorations are active, one identity lookup per child is reused by both
+ * drawing planes and selects only decorated children.
  */
 internal class ViewDecorationDrawing(
     private val parent: ViewGroup,
@@ -173,9 +174,8 @@ internal class ViewDecorationDrawing(
     fun drawBehindChild(
         canvas: Canvas,
         child: View,
+        decoration: AppliedDecoration,
     ) {
-        if (!hasDecoratedChildren) return
-        val decoration = decoratedChildren?.get(child) ?: return
         if (!decoration.presence.behindChild) return
         decoration.backend.drawBehindChild(canvas, parent, child)
     }
@@ -183,11 +183,14 @@ internal class ViewDecorationDrawing(
     fun drawOverChild(
         canvas: Canvas,
         child: View,
+        decoration: AppliedDecoration,
     ) {
-        if (!hasDecoratedChildren) return
-        val decoration = decoratedChildren?.get(child) ?: return
         if (!decoration.presence.overChild) return
         decoration.backend.drawOverChild(canvas, parent, child)
+    }
+
+    fun decorationOrNull(child: View): AppliedDecoration? {
+        return decoratedChildren?.get(child)
     }
 
     internal fun update(

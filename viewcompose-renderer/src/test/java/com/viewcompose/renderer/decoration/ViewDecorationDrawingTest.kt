@@ -48,6 +48,7 @@ class ViewDecorationDrawingTest {
         val host = ViewDecorationHostLayout(RuntimeEnvironment.getApplication())
         val child = View(host.context)
         host.addView(child, FrameLayout.LayoutParams(20, 20))
+        host.addView(View(host.context), FrameLayout.LayoutParams(20, 20))
         AndroidViewDecorationRuntime.update(
             view = child,
             request = AndroidViewDecorationRequest(

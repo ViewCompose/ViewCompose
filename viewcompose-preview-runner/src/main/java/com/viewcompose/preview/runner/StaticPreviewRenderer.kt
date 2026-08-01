@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.view.View
 import android.view.ViewGroup
-import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
+import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
@@ -114,7 +114,7 @@ object StaticPreviewRenderer {
             )
         }
         val themeTokens = resolvedPreviewTheme.tokens
-        val root = ViewDecorationHostLayout(resolvedPreviewTheme.context).apply {
+        val root = FrameLayout(resolvedPreviewTheme.context).apply {
             setBackgroundColor(themeTokens.colors.background)
         }
         val previewOwner = StaticPreviewHostOwner(

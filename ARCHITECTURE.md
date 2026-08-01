@@ -303,8 +303,8 @@ flowchart TD
 2. renderer 只拥有 `AndroidViewDecorationBackend` 最小协议、通用宿主、父级活跃装饰索引和独立的 `zIndex` 排序；`viewcompose-renderer` 与 `viewcompose-host-android` 禁止依赖具体阴影模块。
 3. Android 栅格化、缓存、后端选择和诊断固定在可选 `viewcompose-shadow-android`；它通过 `META-INF/services` 注册后端，也允许应用启动时显式调用 `ShadowDecorationLayer.install()`。
 4. 后端缺失时 `dropShadow(s)/innerShadow(s)` 必须稳定降级为 no-op，核心渲染、Lazy、Pager、Tab、预览和宿主仍可独立编译运行。
-5. `setUiContent` 创建的必要根容器本身就是通用 Decoration Host，不得再嵌套额外 FrameLayout；任意 `renderInto` 容器只在顶层节点确实需要装饰或 `zIndex` 时按需增加宿主。
-6. 没有活跃装饰 child 时，容器 `drawChild` 只能执行一次父级布尔快速判断后直达原生绘制，不得逐 child 查询阴影 tag 或调用具体后端；没有非零 `zIndex` 时必须关闭自定义 child drawing order，交回 Android 原生顺序。
+5. `setUiContent` 与静态预览的必要根容器必须保持普通 `FrameLayout`；只有顶层节点确实需要装饰或非零 `zIndex`、且现有容器不具备协议时，`renderInto` 才按需增加通用宿主。嵌套装饰由最近的框架布局容器直接绘制。
+6. 没有活跃装饰 child 时，容器 `drawChild` 只能执行一次父级布尔快速判断后直达原生绘制，不得逐 child 查询阴影 tag 或调用具体后端；存在活跃装饰时，每个 child 最多查询一次父级身份索引并复用于前后绘制平面；没有非零 `zIndex` 时必须关闭自定义 child drawing order，交回 Android 原生顺序。
 7. 框架容器在 child 内容前绘制外阴影、在 child 完整内容与 foreground 后绘制内阴影；不得为每层阴影创建额外业务 View。
 8. 高级阴影不参与 measure/layout、hit test、焦点或无障碍；`zIndex`、Material `elevation` 与精确阴影保持三套独立语义。
 9. 多层阴影严格保留声明顺序；外阴影可超出 child bounds，但仍受最近 viewport/显式 clip chain 约束；内阴影必须裁切在 shape 内。

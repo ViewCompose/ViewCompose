@@ -123,9 +123,11 @@ internal class DeclarativeAnimatedSizeHostLayout @JvmOverloads constructor(
         if (!decorationDrawing.hasDecoratedChildren) {
             return super.drawChild(canvas, child, drawingTime)
         }
-        decorationDrawing.drawBehindChild(canvas, child)
+        val decoration = decorationDrawing.decorationOrNull(child)
+            ?: return super.drawChild(canvas, child, drawingTime)
+        decorationDrawing.drawBehindChild(canvas, child, decoration)
         val drawn = super.drawChild(canvas, child, drawingTime)
-        decorationDrawing.drawOverChild(canvas, child)
+        decorationDrawing.drawOverChild(canvas, child, decoration)
         return drawn
     }
 

@@ -8,6 +8,7 @@ package com.viewcompose.host.android
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import com.viewcompose.host.android.test.R as TestR
 import com.viewcompose.widget.core.AndroidDynamicColorPolicy
@@ -54,6 +55,7 @@ class AndroidHostThemeIntegrationTest {
 
         assertSame(root.context, overlayContext)
         assertSame(root.context, androidViewContext)
+        assertEquals(FrameLayout::class.java, root::class.java)
         assertEquals(0xFF2468AC.toInt(), capturedTokens?.colors?.primary)
         assertEquals(0xFF304050.toInt(), capturedTokens?.colors?.surface)
         assertEquals(0xFFF1F2F3.toInt(), capturedTokens?.colors?.onSurface)
