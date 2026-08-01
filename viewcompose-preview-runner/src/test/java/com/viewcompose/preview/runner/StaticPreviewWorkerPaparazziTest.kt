@@ -148,7 +148,10 @@ class StaticPreviewWorkerPaparazziTest {
             },
         )
         val nativeRoot = snapshot.nativeViewTree.single()
-        assertEquals("android.widget.FrameLayout", nativeRoot.className)
+        assertEquals(
+            "com.viewcompose.renderer.decoration.ViewDecorationHostLayout",
+            nativeRoot.className,
+        )
         assertEquals(expectedWidthPx, nativeRoot.bounds.right)
         assertEquals(expectedHeightPx, nativeRoot.bounds.bottom)
         val nativeText = checkNotNull(nativeRoot.findNativeView("android.widget.TextView"))

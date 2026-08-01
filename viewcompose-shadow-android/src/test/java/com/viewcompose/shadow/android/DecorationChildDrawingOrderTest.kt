@@ -2,6 +2,7 @@ package com.viewcompose.shadow.android
 
 import android.view.View
 import android.widget.FrameLayout
+import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

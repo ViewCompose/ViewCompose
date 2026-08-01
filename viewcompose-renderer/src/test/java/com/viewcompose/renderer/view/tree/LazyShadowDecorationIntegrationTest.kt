@@ -5,9 +5,9 @@ import com.viewcompose.renderer.view.container.DeclarativeLazyListView
 import com.viewcompose.renderer.view.container.DeclarativePullToRefreshLayout
 import com.viewcompose.renderer.view.container.HorizontalPagerAdapter
 import com.viewcompose.renderer.view.container.VerticalPagerAdapter
+import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
-import com.viewcompose.shadow.android.ShadowDecorationHostLayout
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.PullToRefreshNodeProps
@@ -37,9 +37,9 @@ class LazyShadowDecorationIntegrationTest {
         val horizontalPagerHolder = HorizontalPagerAdapter().onCreateViewHolder(parent, 0)
         val verticalPagerHolder = VerticalPagerAdapter().onCreateViewHolder(parent, 0)
 
-        assertTrue(lazyHolder.itemView is ShadowDecorationHostLayout)
-        assertTrue(horizontalPagerHolder.itemView is ShadowDecorationHostLayout)
-        assertTrue(verticalPagerHolder.itemView is ShadowDecorationHostLayout)
+        assertTrue(lazyHolder.itemView is ViewDecorationHostLayout)
+        assertTrue(horizontalPagerHolder.itemView is ViewDecorationHostLayout)
+        assertTrue(verticalPagerHolder.itemView is ViewDecorationHostLayout)
     }
 
     @Test

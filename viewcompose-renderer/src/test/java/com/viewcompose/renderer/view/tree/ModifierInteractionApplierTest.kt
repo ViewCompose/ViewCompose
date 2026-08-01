@@ -11,9 +11,10 @@ import com.viewcompose.ui.unit.dp
 
 import android.view.View
 import com.viewcompose.renderer.R
+import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
+import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
+import com.viewcompose.renderer.decoration.RecordingDecorationBackend
 import com.viewcompose.renderer.modifier.resolve
-import com.viewcompose.shadow.android.DecorationChildDrawingOrder
-import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
@@ -31,6 +32,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -38,6 +41,19 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class ModifierInteractionApplierTest {
+    private lateinit var decorationBackend: RecordingDecorationBackend
+
+    @Before
+    fun installDecorationBackend() {
+        decorationBackend = RecordingDecorationBackend()
+        AndroidViewDecorationRuntime.install(decorationBackend)
+    }
+
+    @After
+    fun resetDecorationBackend() {
+        AndroidViewDecorationRuntime.resetForTests()
+    }
+
     @Test
     fun `zIndex uses decoration order without changing platform shadow height`() {
         val view = View(RuntimeEnvironment.getApplication())
@@ -153,13 +169,13 @@ class ModifierInteractionApplierTest {
 
         ViewModifierApplier.applyModifier(view, shadowNode, defaultRippleColor = 0)
 
-        val installed = requireNotNull(ShadowDecorationLayer.specOrNull(view))
-        assertEquals(1, installed.layerCount)
-        assertEquals(6.dp, installed.groups.single().shape.uniformAbsoluteSizeOrNull)
+        val installed = requireNotNull(decorationBackend.requestOrNull(view))
+        assertEquals(1, installed.dropShadows.size)
+        assertEquals(6.dp, installed.defaultShape?.uniformAbsoluteSizeOrNull)
 
         ViewModifierApplier.applyModifier(view, vnode(Modifier), defaultRippleColor = 0)
 
-        assertNull(ShadowDecorationLayer.specOrNull(view))
+        assertNull(decorationBackend.requestOrNull(view))
     }
 
     @Test
@@ -192,9 +208,9 @@ class ModifierInteractionApplierTest {
         val initialClickBinding = view.getTag(R.id.viewcompose_modifier_click_listener)
         ViewModifierApplier.applyModifier(view, shadowNode, defaultRippleColor = 0x22000000)
 
-        val installed = requireNotNull(ShadowDecorationLayer.innerSpecOrNull(view))
-        assertEquals(1, installed.layerCount)
-        assertEquals(6.dp, installed.groups.single().shape.uniformAbsoluteSizeOrNull)
+        val installed = requireNotNull(decorationBackend.requestOrNull(view))
+        assertEquals(1, installed.innerShadows.size)
+        assertEquals(6.dp, installed.defaultShape?.uniformAbsoluteSizeOrNull)
         assertSame(initialBackground, view.background)
         assertSame(initialClickBinding, view.getTag(R.id.viewcompose_modifier_click_listener))
         view.performClick()
@@ -202,7 +218,7 @@ class ModifierInteractionApplierTest {
 
         ViewModifierApplier.applyModifier(view, vnode(Modifier), defaultRippleColor = 0)
 
-        assertNull(ShadowDecorationLayer.innerSpecOrNull(view))
+        assertNull(decorationBackend.requestOrNull(view))
     }
 
     private fun vnode(modifier: Modifier): VNode {

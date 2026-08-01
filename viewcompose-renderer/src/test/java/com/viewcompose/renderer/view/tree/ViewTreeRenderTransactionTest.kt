@@ -15,7 +15,8 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
 import com.google.android.material.shape.CutCornerTreatment
-import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
+import com.viewcompose.renderer.decoration.RecordingDecorationBackend
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
@@ -41,6 +42,8 @@ import com.google.android.material.shape.MaterialShapeDrawable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
@@ -50,6 +53,19 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
 class ViewTreeRenderTransactionTest {
+    private lateinit var decorationBackend: RecordingDecorationBackend
+
+    @Before
+    fun installDecorationBackend() {
+        decorationBackend = RecordingDecorationBackend()
+        AndroidViewDecorationRuntime.install(decorationBackend)
+    }
+
+    @After
+    fun resetDecorationBackend() {
+        AndroidViewDecorationRuntime.resetForTests()
+    }
+
     private val context: Context
         get() = RuntimeEnvironment.getApplication()
 
@@ -148,7 +164,7 @@ class ViewTreeRenderTransactionTest {
 
         assertEquals("vaXlue", state.value.text)
         assertEquals(3, editText.selectionStart)
-        requireNotNull(ShadowDecorationLayer.innerSpecOrNull(editText))
+        requireNotNull(decorationBackend.requestOrNull(editText))
 
         val patched = ViewTreeRenderer.renderInto(
             container = container,
@@ -169,8 +185,11 @@ class ViewTreeRenderTransactionTest {
         assertSame(editText, patched.mountedNodes.single().view)
         assertEquals("vaXlue", editText.text.toString())
         assertEquals(3, editText.selectionStart)
-        assertEquals(6f, requireNotNull(ShadowDecorationLayer.innerSpecOrNull(editText))
-            .groups.single().shadows.single().blurRadiusPx, 0.001f)
+        assertEquals(
+            6.dp,
+            requireNotNull(decorationBackend.requestOrNull(editText))
+                .innerShadows.single().shadows.single().blurRadius,
+        )
     }
 
     @Test

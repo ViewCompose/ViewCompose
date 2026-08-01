@@ -7,6 +7,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.view.View
 import android.widget.FrameLayout
+import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
+import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.modifier.DropShadowModifierElement
 import com.viewcompose.ui.modifier.InnerShadowModifierElement
@@ -30,7 +32,7 @@ class ShadowDecorationLayerTest {
     @Test
     fun `decoration host draws overlapping children by declarative zIndex`() {
         val context = RuntimeEnvironment.getApplication()
-        val host = ShadowDecorationHostLayout(context)
+        val host = ViewDecorationHostLayout(context)
         val higher = SolidColorView(context, Color.RED)
         val lower = SolidColorView(context, Color.BLUE)
         host.addView(higher, FrameLayout.LayoutParams(20, 20))

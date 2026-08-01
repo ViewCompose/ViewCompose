@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.view.View
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.viewcompose.shadow.android.ShadowDecorationLayer
+import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 
 /**
  * 支持 child Decoration Layer 的下拉刷新宿主。
@@ -13,7 +13,10 @@ import com.viewcompose.shadow.android.ShadowDecorationLayer
 internal class DeclarativePullToRefreshLayout(
     context: Context,
 ) : SwipeRefreshLayout(context) {
+    private var decorationDrawing: ViewDecorationDrawing? = null
+
     init {
+        decorationDrawing = ViewDecorationDrawing(this)
         clipChildren = false
         clipToPadding = false
     }
@@ -30,17 +33,23 @@ internal class DeclarativePullToRefreshLayout(
         child: View,
         drawingTime: Long,
     ): Boolean {
-        ShadowDecorationLayer.drawBehindChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        val drawing = decorationDrawing
+        if (drawing == null || !drawing.hasDecoratedChildren) {
+            return super.drawChild(canvas, child, drawingTime)
+        }
+        drawing.drawBehindChild(canvas, child)
         val drawn = super.drawChild(canvas, child, drawingTime)
-        ShadowDecorationLayer.drawOverChild(
-            canvas = canvas,
-            parent = this,
-            child = child,
-        )
+        drawing.drawOverChild(canvas, child)
         return drawn
+    }
+
+    override fun onViewAdded(child: View) {
+        super.onViewAdded(child)
+        decorationDrawing?.onViewAdded(child)
+    }
+
+    override fun onViewRemoved(child: View) {
+        decorationDrawing?.onViewRemoved(child)
+        super.onViewRemoved(child)
     }
 }

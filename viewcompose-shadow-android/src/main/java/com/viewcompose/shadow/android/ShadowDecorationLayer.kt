@@ -8,6 +8,7 @@ import android.os.Build
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import java.util.EnumMap
 import kotlin.math.roundToInt
 
@@ -22,6 +23,9 @@ import kotlin.math.roundToInt
  * child content, and inner shadow.
  */
 object ShadowDecorationLayer {
+    private val rendererBackend: ShadowViewDecorationBackend by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        ShadowViewDecorationBackend()
+    }
     private val rasterizer = ShadowBitmapRasterizer()
     private val innerRasterizer = InnerShadowBitmapRasterizer()
     private val bitmapPaint = Paint(
@@ -36,6 +40,11 @@ object ShadowDecorationLayer {
         ShadowRenderDecisionReason::class.java,
     )
     private var lastDecision: ShadowRenderBackendDecision? = null
+
+    /** Installs this optional module as the renderer's process-wide View decoration backend. */
+    fun install() {
+        AndroidViewDecorationRuntime.install(rendererBackend)
+    }
 
     /**
      * 设置后续阴影绘制策略。默认 Auto 在基准结论落地前仍使用精确 Bitmap。
