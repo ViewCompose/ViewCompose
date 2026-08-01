@@ -294,10 +294,8 @@ class ViewComposePreviewGradlePluginFunctionalTest {
 
         val renderArguments = arrayOf(
             ":app:renderDebugViewComposePreview",
-            "--preview-id",
-            descriptor.id,
-            "--variant-id",
-            descriptor.variants.single().id,
+            "-P$PREVIEW_ID_PROJECT_PROPERTY=${descriptor.id}",
+            "-P$PREVIEW_VARIANT_ID_PROJECT_PROPERTY=${descriptor.variants.single().id}",
             "--stacktrace",
         )
         val render = GradleRunner.create()

@@ -32,8 +32,6 @@ internal class PersistentPreviewGradleExecutor(
     ): PreviewGradleResult {
         check(!closed) { "Preview Gradle executor is closed." }
         require(invocation.workingDirectory.toAbsolutePath().normalize() == projectRoot)
-        val task = invocation.arguments.firstOrNull()
-            ?: error("Preview Gradle invocation has no task.")
         val standardOutput = ByteArrayOutputStream()
         val errorOutput = ByteArrayOutputStream()
         val cancellation = GradleConnector.newCancellationTokenSource()
@@ -53,8 +51,8 @@ internal class PersistentPreviewGradleExecutor(
                 connection = opened
             }
             activeConnection.newBuild()
-                .forTasks(task)
-                .withArguments(invocation.arguments.drop(1))
+                .forTasks(invocation.task)
+                .withArguments(invocation.buildArguments)
                 .setColorOutput(false)
                 .setStandardOutput(standardOutput)
                 .setStandardError(errorOutput)

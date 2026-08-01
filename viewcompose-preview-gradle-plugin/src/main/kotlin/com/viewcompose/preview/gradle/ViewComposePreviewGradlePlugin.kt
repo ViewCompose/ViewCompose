@@ -7,6 +7,7 @@ import com.android.build.api.variant.ApplicationAndroidComponentsExtension
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
+import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -175,6 +176,23 @@ private fun <DslT, BuilderT : VariantBuilder, VariantT : Variant> configureAndro
             render.runnerClasspath.from(runnerClasspath)
             render.layoutlibRuntimeArchive.from(toolConfigurations.layoutlibRuntime)
             render.layoutlibResourcesArchive.from(toolConfigurations.layoutlibResources)
+            render.previewId.convention(
+                project.providers.gradleProperty(PREVIEW_ID_PROJECT_PROPERTY),
+            )
+            render.variantId.convention(
+                project.providers.gradleProperty(PREVIEW_VARIANT_ID_PROJECT_PROPERTY),
+            )
+            render.batchTargetsFile.set(
+                project.layout.file(
+                    project.providers.gradleProperty(PREVIEW_TARGETS_FILE_PROJECT_PROPERTY)
+                        .map(::File),
+                ),
+            )
+            render.rerender.convention(
+                project.providers.gradleProperty(PREVIEW_RERENDER_PROJECT_PROPERTY)
+                    .map(String::toBooleanStrict)
+                    .orElse(false),
+            )
         }
         aggregate.configure { taskGroup -> taskGroup.dependsOn(task) }
     }
@@ -295,3 +313,7 @@ private const val ANDROID_SYMBOL_WITH_PACKAGE_ARTIFACT_TYPE =
     "android-symbol-with-package-name"
 private const val ANDROID_CLASSES_JAR_ARTIFACT_TYPE = "android-classes-jar"
 private const val LAYOUTLIB_NATIVE_VERSION = "15.2.3"
+internal const val PREVIEW_ID_PROJECT_PROPERTY = "viewComposePreviewId"
+internal const val PREVIEW_VARIANT_ID_PROJECT_PROPERTY = "viewComposePreviewVariantId"
+internal const val PREVIEW_TARGETS_FILE_PROJECT_PROPERTY = "viewComposePreviewTargetsFile"
+internal const val PREVIEW_RERENDER_PROJECT_PROPERTY = "viewComposePreviewRerender"

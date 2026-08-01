@@ -13,8 +13,19 @@ import javax.imageio.ImageIO
 internal data class PreviewGradleInvocation(
     val executable: Path,
     val workingDirectory: Path,
-    val arguments: List<String>,
-)
+    val task: String,
+    val buildArguments: List<String>,
+) {
+    init {
+        require(task.isNotBlank()) { "Preview Gradle invocation task must not be blank." }
+        require(buildArguments.none(String::isBlank)) {
+            "Preview Gradle build arguments must not contain blank values."
+        }
+    }
+
+    val commandLineArguments: List<String>
+        get() = listOf(task) + buildArguments
+}
 
 internal data class PreviewGradleResult(
     val exitCode: Int,
@@ -38,7 +49,7 @@ internal class IdePreviewGradleExecutor : PreviewGradleExecutor {
         val startedAtNanos = System.nanoTime()
         val commandLine = GeneralCommandLine(invocation.executable.toString())
             .withWorkingDirectory(invocation.workingDirectory)
-            .withParameters(invocation.arguments)
+            .withParameters(invocation.commandLineArguments)
             .withRedirectErrorStream(false)
         val output = CapturingProcessHandler(commandLine)
             .runProcessWithProgressIndicator(indicator)
@@ -168,12 +179,11 @@ internal class ViewComposePreviewRenderCoordinator(
             val render = executor.execute(
                 invocation = target.invocation(
                     taskName = taskName,
-                    additionalArguments = listOf(
-                        "--preview-id",
-                        descriptorId,
-                        "--variant-id",
-                        requestedVariantId,
-                    ) + if (forceRerender) listOf("--rerender") else emptyList(),
+                    additionalBuildArguments = previewSelectionBuildArguments(
+                        descriptorId = descriptorId,
+                        variantId = requestedVariantId,
+                        forceRerender = forceRerender,
+                    ),
                 ),
                 indicator = indicator,
             )
@@ -351,10 +361,10 @@ internal class ViewComposePreviewRenderCoordinator(
             val render = executor.execute(
                 invocation = target.invocation(
                     taskName = renderTaskName(matches.first().match.catalog.buildVariant),
-                    additionalArguments = listOf(
-                        "--preview-targets-file",
-                        batchFile.toAbsolutePath().normalize().toString(),
-                    ) + if (forceRerender) listOf("--rerender") else emptyList(),
+                    additionalBuildArguments = previewBatchBuildArguments(
+                        batchFile = batchFile,
+                        forceRerender = forceRerender,
+                    ),
                 ),
                 indicator = indicator,
             )
@@ -406,12 +416,11 @@ internal class ViewComposePreviewRenderCoordinator(
         val render = executor.execute(
             invocation = target.invocation(
                 taskName = renderTaskName(match.catalog.buildVariant),
-                additionalArguments = listOf(
-                    "--preview-id",
-                    match.descriptor.id,
-                    "--variant-id",
-                    match.variant.id,
-                ) + if (forceRerender) listOf("--rerender") else emptyList(),
+                additionalBuildArguments = previewSelectionBuildArguments(
+                    descriptorId = match.descriptor.id,
+                    variantId = match.variant.id,
+                    forceRerender = forceRerender,
+                ),
             ),
             indicator = indicator,
         )
@@ -704,7 +713,7 @@ private data class PreviewGradleTarget(
 ) {
     fun invocation(
         taskName: String,
-        additionalArguments: List<String> = emptyList(),
+        additionalBuildArguments: List<String> = emptyList(),
     ): PreviewGradleInvocation {
         val qualifiedTask = if (modulePath == ":") {
             ":$taskName"
@@ -714,13 +723,31 @@ private data class PreviewGradleTarget(
         return PreviewGradleInvocation(
             executable = wrapper,
             workingDirectory = projectRoot,
-            arguments = listOf(
-                qualifiedTask,
+            task = qualifiedTask,
+            buildArguments = listOf(
                 "--console=plain",
                 "--stacktrace",
-            ) + additionalArguments,
+            ) + additionalBuildArguments,
         )
     }
+}
+
+private fun previewSelectionBuildArguments(
+    descriptorId: String,
+    variantId: String,
+    forceRerender: Boolean,
+): List<String> = buildList {
+    add("-P$PREVIEW_ID_PROJECT_PROPERTY=$descriptorId")
+    add("-P$PREVIEW_VARIANT_ID_PROJECT_PROPERTY=$variantId")
+    if (forceRerender) add("-P$PREVIEW_RERENDER_PROJECT_PROPERTY=true")
+}
+
+private fun previewBatchBuildArguments(
+    batchFile: Path,
+    forceRerender: Boolean,
+): List<String> = buildList {
+    add("-P$PREVIEW_TARGETS_FILE_PROJECT_PROPERTY=${batchFile.toAbsolutePath().normalize()}")
+    if (forceRerender) add("-P$PREVIEW_RERENDER_PROJECT_PROPERTY=true")
 }
 
 internal data class PreviewCatalogMatch(
@@ -888,4 +915,8 @@ private const val DEFAULT_RENDER_LOGICAL_WIDTH_DP = 411
 private const val PREFERRED_DISCOVERY_TASK_NAME = "discoverDebugViewComposePreviews"
 private const val AGGREGATE_DISCOVERY_TASK_NAME = "viewComposePreviewDescriptors"
 private const val PREFERRED_BUILD_VARIANT = "debug"
+private const val PREVIEW_ID_PROJECT_PROPERTY = "viewComposePreviewId"
+private const val PREVIEW_VARIANT_ID_PROJECT_PROPERTY = "viewComposePreviewVariantId"
+private const val PREVIEW_TARGETS_FILE_PROJECT_PROPERTY = "viewComposePreviewTargetsFile"
+private const val PREVIEW_RERENDER_PROJECT_PROPERTY = "viewComposePreviewRerender"
 private val GRADLE_PROJECT_SEGMENT = Regex("[A-Za-z0-9_.-]+")

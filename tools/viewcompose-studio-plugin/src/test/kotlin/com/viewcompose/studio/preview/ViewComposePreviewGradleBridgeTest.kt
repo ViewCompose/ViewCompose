@@ -31,16 +31,13 @@ class ViewComposePreviewGradleBridgeTest {
         val executor = PreviewGradleExecutor { invocation, _ ->
             invocations += invocation
             when {
-                invocation.arguments.first().endsWith("discoverDebugViewComposePreviews") -> {
+                invocation.task.endsWith("discoverDebugViewComposePreviews") -> {
                     writeCatalog(moduleRoot, source)
                     PreviewGradleResult(0, "descriptors exported", "")
                 }
 
-                invocation.arguments.first().endsWith("renderDebugViewComposePreview") -> {
-                    val variantId = invocation.arguments
-                        .windowed(2)
-                        .single { pair -> pair.first() == "--variant-id" }
-                        .last()
+                invocation.task.endsWith("renderDebugViewComposePreview") -> {
+                    val variantId = invocation.projectProperty("viewComposePreviewVariantId")
                     writeSuccessfulResponse(moduleRoot, variantId)
                     PreviewGradleResult(0, "ViewCompose preview rendered:", "")
                 }
@@ -80,20 +77,18 @@ class ViewComposePreviewGradleBridgeTest {
                 ":feature:catalog:discoverDebugViewComposePreviews",
                 ":feature:catalog:renderDebugViewComposePreview",
             ),
-            invocations.map { invocation -> invocation.arguments.first() },
+            invocations.map(PreviewGradleInvocation::task),
         )
         assertTrue(
-            invocations.last().arguments.windowed(2).any { pair ->
-                pair == listOf("--preview-id", "sample-card")
-            },
+            invocations.last().projectProperty("viewComposePreviewId") == "sample-card",
         )
         assertTrue(
-            invocations.last().arguments.windowed(2).any { pair ->
-                pair == listOf("--variant-id", "dark")
-            },
+            invocations.last().projectProperty("viewComposePreviewVariantId") == "dark",
         )
-        assertTrue("--rerender" in invocations.last().arguments)
-        assertFalse("--rerender=true" in invocations.last().arguments)
+        assertEquals("true", invocations.last().projectProperty("viewComposePreviewRerender"))
+        assertFalse(invocations.last().buildArguments.any { argument ->
+            argument.startsWith("--preview-") || argument == "--rerender"
+        })
     }
 
     @Test
@@ -161,12 +156,10 @@ class ViewComposePreviewGradleBridgeTest {
         assertTrue(outcome is PreviewRenderOutcome.Success)
         assertEquals(1, invocations.size)
         assertTrue(
-            invocations.single().arguments.first().endsWith("renderDebugViewComposePreview"),
+            invocations.single().task.endsWith("renderDebugViewComposePreview"),
         )
         assertFalse(
-            invocations.single().arguments.any { argument ->
-                argument.endsWith("discoverDebugViewComposePreviews")
-            },
+            invocations.single().task.endsWith("discoverDebugViewComposePreviews"),
         )
     }
 
@@ -186,16 +179,15 @@ class ViewComposePreviewGradleBridgeTest {
         val executor = PreviewGradleExecutor { invocation, _ ->
             invocations += invocation
             when {
-                invocation.arguments.first().endsWith("discoverDebugViewComposePreviews") -> {
+                invocation.task.endsWith("discoverDebugViewComposePreviews") -> {
                     writeGalleryCatalog(moduleRoot, firstSource, secondSource)
                     PreviewGradleResult(0, "descriptors exported", "")
                 }
 
-                invocation.arguments.first().endsWith("renderDebugViewComposePreview") -> {
-                    val targetsFile = invocation.arguments
-                        .windowed(2)
-                        .single { pair -> pair.first() == "--preview-targets-file" }
-                        .last()
+                invocation.task.endsWith("renderDebugViewComposePreview") -> {
+                    val targetsFile = invocation.projectProperty(
+                        "viewComposePreviewTargetsFile",
+                    )
                     renderedBatchTargets = Files.readAllLines(Path.of(targetsFile)).map { line ->
                         val fields = line.split('\t')
                         fields[0] to fields[1]
@@ -226,13 +218,13 @@ class ViewComposePreviewGradleBridgeTest {
         assertEquals(
             1,
             invocations.count { invocation ->
-                invocation.arguments.first().endsWith("discoverDebugViewComposePreviews")
+                invocation.task.endsWith("discoverDebugViewComposePreviews")
             },
         )
         assertEquals(
             1,
             invocations.count { invocation ->
-                invocation.arguments.first().endsWith("renderDebugViewComposePreview")
+                invocation.task.endsWith("renderDebugViewComposePreview")
             },
         )
         assertEquals(
@@ -245,11 +237,13 @@ class ViewComposePreviewGradleBridgeTest {
         )
         invocations
             .filter { invocation ->
-                invocation.arguments.first().endsWith("renderDebugViewComposePreview")
+                invocation.task.endsWith("renderDebugViewComposePreview")
             }
             .forEach { invocation ->
-                assertTrue("--rerender" in invocation.arguments)
-                assertFalse("--rerender=true" in invocation.arguments)
+                assertEquals("true", invocation.projectProperty("viewComposePreviewRerender"))
+                assertFalse(invocation.buildArguments.any { argument ->
+                    argument.startsWith("--preview-") || argument == "--rerender"
+                })
             }
     }
 
@@ -272,14 +266,14 @@ class ViewComposePreviewGradleBridgeTest {
         val renderedBatches = mutableListOf<List<String>>()
         val executor = PreviewGradleExecutor { invocation, _ ->
             when {
-                invocation.arguments.first().endsWith("discoverDebugViewComposePreviews") -> {
+                invocation.task.endsWith("discoverDebugViewComposePreviews") -> {
                     writeGalleryCatalog(moduleRoot, firstSource, secondSource)
                     PreviewGradleResult(0, "descriptors exported", "")
                 }
-                invocation.arguments.first().endsWith("renderDebugViewComposePreview") -> {
-                    val targetsFile = invocation.arguments.windowed(2)
-                        .single { pair -> pair.first() == "--preview-targets-file" }
-                        .last()
+                invocation.task.endsWith("renderDebugViewComposePreview") -> {
+                    val targetsFile = invocation.projectProperty(
+                        "viewComposePreviewTargetsFile",
+                    )
                     val targets = Files.readAllLines(Path.of(targetsFile)).map { line ->
                         line.substringBefore('\t')
                     }
@@ -410,6 +404,12 @@ class ViewComposePreviewGradleBridgeTest {
             """.trimIndent(),
         )
     }
+}
+
+private fun PreviewGradleInvocation.projectProperty(name: String): String {
+    val prefix = "-P$name="
+    return buildArguments.single { argument -> argument.startsWith(prefix) }
+        .removePrefix(prefix)
 }
 
 private fun Path.toJsonText(): String {
