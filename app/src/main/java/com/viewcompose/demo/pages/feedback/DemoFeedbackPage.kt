@@ -1,11 +1,27 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
+
+@ViewComposePreview(name = "Feedback · Transient", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewFeedbackTransient() {
+    FeedbackPage(initialPageIndex = 0)
+}
+
+@ViewComposePreview(name = "Feedback · Dialog", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewFeedbackDialog() {
+    FeedbackPage(initialPageIndex = 1)
+}
+
+@ViewComposePreview(name = "Feedback · Menu", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewFeedbackMenu() {
+    FeedbackPage(initialPageIndex = 2)
+}
 
 internal fun UiTreeBuilder.FeedbackPage(
     initialPageIndex: Int = 0,

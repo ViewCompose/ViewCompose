@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import android.view.ViewGroup
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
@@ -35,8 +36,19 @@ import com.viewcompose.widget.core.TopAppBarDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.rememberSaveable
 
+@ViewComposePreview(name = "System navigation", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewSystemNavigation() {
+    SystemNavigationDemoPage(
+        root = null,
+        externalDeepLinkOutcome = mutableStateOf("尚未接收外部 Deep Link"),
+        diagnosticsEnabled = false,
+        onControllerReady = {},
+        onExit = {},
+    )
+}
+
 internal fun UiTreeBuilder.SystemNavigationDemoPage(
-    root: ViewGroup,
+    root: ViewGroup?,
     externalDeepLinkOutcome: MutableState<String>,
     diagnosticsEnabled: Boolean,
     onControllerReady: (NavHostController) -> Unit,
@@ -65,7 +77,7 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
 
     SideEffect {
         onControllerReady(controller)
-        root.context.findAppCompatActivity()?.title =
+        root?.context?.findAppCompatActivity()?.title =
             "系统导航 · ${stackState.activeStackId.value}"
     }
 

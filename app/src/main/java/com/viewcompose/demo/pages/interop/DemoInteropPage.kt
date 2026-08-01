@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import android.widget.TextView
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -20,6 +21,7 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "Interop", group = "Demo/Pages")
 internal fun UiTreeBuilder.InteropPage() {
     val alternateLabelsState = remember { mutableStateOf(false) }
     val benchmarkToggleState = remember { mutableStateOf(false) }

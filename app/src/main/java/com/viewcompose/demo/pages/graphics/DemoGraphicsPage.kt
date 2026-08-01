@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.graphics.Canvas
 import com.viewcompose.graphics.drawBehind
 import com.viewcompose.graphics.drawWithCache
@@ -38,6 +39,26 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 import kotlin.math.min
+
+@ViewComposePreview(name = "Graphics · Drawing", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewGraphicsDrawing() {
+    GraphicsPage(initialPageIndex = 0)
+}
+
+@ViewComposePreview(name = "Graphics · Outer shadow", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewGraphicsOuterShadow() {
+    GraphicsPage(initialPageIndex = 1)
+}
+
+@ViewComposePreview(name = "Graphics · Inner shadow", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewGraphicsInnerShadow() {
+    GraphicsPage(initialPageIndex = 2)
+}
+
+@ViewComposePreview(name = "Graphics · Lazy diagnostics", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewGraphicsLazyDiagnostics() {
+    GraphicsPage(initialPageIndex = 3)
+}
 
 internal fun UiTreeBuilder.GraphicsPage(
     initialPageIndex: Int = GRAPHICS_PAGE_DRAWING,

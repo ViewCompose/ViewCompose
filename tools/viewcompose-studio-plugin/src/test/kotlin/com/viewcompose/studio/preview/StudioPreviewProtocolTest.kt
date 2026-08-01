@@ -1,0 +1,366 @@
+package com.viewcompose.studio.preview
+
+import java.nio.file.Files
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+
+class StudioPreviewProtocolTest {
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
+    @Test
+    fun `reads optional worker phase timings`() {
+        val responseFile = temporaryFolder.newFile("response.json").toPath()
+        Files.writeString(
+            responseFile,
+            """
+            {
+              "protocolVersion": 1,
+              "requestId": "request",
+              "previewId": "sample",
+              "variantId": "light",
+              "status": "Success",
+              "artifacts": {"imagePath": "/tmp/preview.png"},
+              "diagnostics": [],
+              "durationMillis": 12,
+              "phaseTimings": [
+                {"phase": "layoutlib-setup", "durationMillis": 120},
+                {"phase": "mount-layout", "durationMillis": 8}
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        val response = StudioPreviewProtocolReader.readResponse(responseFile)
+
+        assertEquals(listOf("layoutlib-setup", "mount-layout"), response.phaseTimings.map { it.phase })
+        assertEquals(listOf(120L, 8L), response.phaseTimings.map { it.durationMillis })
+    }
+
+    @Test
+    fun `reads the stable catalog subset and logical preview width`() {
+        val catalogFile = temporaryFolder.newFile("descriptors.json").toPath()
+        Files.writeString(
+            catalogFile,
+            catalogJson(
+                sourcePath = "/project/src/Sample.kt",
+            ),
+        )
+
+        val catalog = StudioPreviewProtocolReader.readCatalog(catalogFile)
+
+        assertEquals(":app", catalog.modulePath)
+        assertEquals("debug", catalog.buildVariant)
+        assertEquals("sample-card", catalog.descriptors.single().id)
+        assertEquals("default", catalog.descriptors.single().variants.single().id)
+        assertEquals(411, catalog.descriptors.single().variants.single().widthDp)
+        assertEquals(
+            "/project/src/Sample.kt",
+            catalog.descriptors.single().sourceLocation?.filePath,
+        )
+    }
+
+    @Test
+    fun `rejects a path-unsafe descriptor id`() {
+        val catalogFile = temporaryFolder.newFile("unsafe.json").toPath()
+        Files.writeString(
+            catalogFile,
+            catalogJson(
+                sourcePath = "/project/src/Sample.kt",
+                descriptorId = "../sample",
+            ),
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            StudioPreviewProtocolReader.readCatalog(catalogFile)
+        }
+    }
+
+    @Test
+    fun `reads bounded render tree composition and patch diagnostics`() {
+        val snapshotFile = temporaryFolder.newFile("render-tree.json").toPath()
+        Files.writeString(
+            snapshotFile,
+            """
+            {
+              "stats": {
+                "inserts": 4,
+                "reuses": 2,
+                "removals": 1,
+                "reboundNodes": 3,
+                "patchedNodes": 2,
+                "skippedBindings": 5,
+                "skippedSubtrees": 6
+              },
+              "structure": {
+                "vnodeCount": 7,
+                "mountedNodeCount": 6,
+                "maxVNodeDepth": 3,
+                "maxMountedDepth": 2
+              },
+              "warnings": ["sample warning"],
+              "tree": [
+                {
+                  "type": "Column",
+                  "key": "root",
+                  "children": [
+                    {
+                      "type": "Text",
+                      "key": "title",
+                      "nodeId": "node-title",
+                      "sourceCallSites": [
+                        {
+                          "className": "sample.SampleKt",
+                          "methodName": "SampleCard",
+                          "fileName": "Sample.kt",
+                          "lineNumber": 24
+                        }
+                      ],
+                      "children": []
+                    }
+                  ]
+                }
+              ],
+              "nativeViewTree": [
+                {
+                  "className": "android.widget.FrameLayout",
+                  "bounds": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 1080,
+                    "bottom": 1920
+                  },
+                  "measuredWidth": 1080,
+                  "measuredHeight": 1920,
+                  "visibility": "VISIBLE",
+                  "children": [
+                    {
+                      "className": "android.widget.TextView",
+                      "bounds": {
+                        "left": 32,
+                        "top": 48,
+                        "right": 256,
+                        "bottom": 112
+                      },
+                      "measuredWidth": 224,
+                      "measuredHeight": 64,
+                      "visibility": "VISIBLE",
+                      "visibleBounds": {
+                        "left": 32,
+                        "top": 48,
+                        "right": 200,
+                        "bottom": 112
+                      },
+                      "clippingState": "PartiallyClipped",
+                      "clippingAncestorClassName": "android.widget.FrameLayout",
+                      "clippingExpected": false,
+                      "properties": {
+                        "enabled": "true",
+                        "text": "Preview title"
+                      },
+                      "nodeId": "node-title",
+                      "sourceCallSites": [
+                        {
+                          "className": "sample.SampleKt",
+                          "methodName": "SampleCard",
+                          "fileName": "Sample.kt",
+                          "lineNumber": 24
+                        }
+                      ],
+                      "children": []
+                    }
+                  ]
+                }
+              ],
+              "layoutDiagnostics": [
+                {
+                  "kind": "PartiallyClipped",
+                  "severity": "Warning",
+                  "className": "android.widget.TextView",
+                  "bounds": {
+                    "left": 32,
+                    "top": 48,
+                    "right": 256,
+                    "bottom": 112
+                  },
+                  "visibleBounds": {
+                    "left": 32,
+                    "top": 48,
+                    "right": 200,
+                    "bottom": 112
+                  },
+                  "clippingAncestorClassName": "android.widget.FrameLayout",
+                  "clippingExpected": false,
+                  "metrics": {
+                    "hiddenWidth": 56
+                  },
+                  "nodeId": "node-title",
+                  "sourceCallSites": [
+                    {
+                      "className": "sample.SampleKt",
+                      "methodName": "SampleCard",
+                      "fileName": "Sample.kt",
+                      "lineNumber": 24
+                    }
+                  ]
+                }
+              ],
+              "patches": [
+                {
+                  "operation": "Insert",
+                  "type": "Text",
+                  "key": "title",
+                  "parentKey": "root",
+                  "index": 0,
+                  "moved": false,
+                  "detail": "mounted",
+                  "nodeId": "node-title",
+                  "sourceCallSites": [
+                    {
+                      "className": "sample.SampleKt",
+                      "methodName": "SampleCard",
+                      "fileName": "Sample.kt",
+                      "lineNumber": 24
+                    }
+                  ]
+                }
+              ],
+              "composition": {
+                "invalidatedScopeCount": 1,
+                "recomposedScopeCount": 1,
+                "skippedScopeCount": 0,
+                "scopes": [
+                  {
+                    "path": "root/content",
+                    "signature": "abc",
+                    "depth": 1,
+                    "reasons": ["StateChanged"],
+                    "recomposed": true,
+                    "skipped": false,
+                    "sourceCallSites": [
+                      {
+                        "className": "sample.SampleKt",
+                        "methodName": "SampleCard",
+                        "fileName": "Sample.kt",
+                        "lineNumber": 21
+                      }
+                    ],
+                    "locals": [
+                      {
+                        "name": "Theme",
+                        "value": "Dark"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """.trimIndent(),
+        )
+
+        val snapshot = StudioPreviewProtocolReader.readRenderSnapshot(snapshotFile)
+
+        assertEquals(7, snapshot.structure.vnodeCount)
+        assertEquals(4, snapshot.stats.inserts)
+        assertEquals("Text", snapshot.tree.single().children.single().type)
+        assertEquals("node-title", snapshot.tree.single().children.single().nodeId)
+        assertEquals(
+            24,
+            snapshot.tree.single().children.single().sourceCallSites.single().lineNumber,
+        )
+        assertEquals(
+            "android.widget.TextView",
+            snapshot.nativeViewTree.single().children.single().className,
+        )
+        assertEquals(224, snapshot.nativeViewTree.single().children.single().bounds.width)
+        assertEquals(
+            "node-title",
+            snapshot.nativeViewTree.single().children.single().nodeId,
+        )
+        assertEquals(
+            StudioPreviewClippingState.PartiallyClipped,
+            snapshot.nativeViewTree.single().children.single().clippingState,
+        )
+        assertEquals(168, snapshot.nativeViewTree.single().children.single().visibleBounds?.width)
+        assertEquals(
+            "Preview title",
+            snapshot.nativeViewTree.single().children.single().properties["text"],
+        )
+        assertEquals(
+            StudioPreviewLayoutDiagnosticKind.PartiallyClipped,
+            snapshot.layoutDiagnostics.single().kind,
+        )
+        assertEquals("node-title", snapshot.layoutDiagnostics.single().nodeId)
+        assertEquals(56, snapshot.layoutDiagnostics.single().metrics["hiddenWidth"])
+        assertEquals("Insert", snapshot.patches.single().operation)
+        assertEquals("node-title", snapshot.patches.single().nodeId)
+        assertEquals(24, snapshot.patches.single().sourceCallSites.single().lineNumber)
+        assertEquals(21, snapshot.composition.scopes.single().sourceCallSites.single().lineNumber)
+        assertTrue(snapshot.composition.scopes.single().recomposed)
+        assertEquals(
+            listOf("StateChanged"),
+            snapshot.composition.scopes.single().reasons,
+        )
+        assertEquals("Dark", snapshot.composition.scopes.single().locals.single().value)
+    }
+}
+
+internal fun catalogJson(
+    sourcePath: String,
+    descriptorId: String = "sample-card",
+    includeDarkVariant: Boolean = false,
+): String {
+    val darkVariant = if (includeDarkVariant) {
+        """,
+                {
+                  "id": "dark",
+                  "displayName": "Dark",
+                  "configuration": {
+                    "widthDp": 411,
+                    "heightDp": 891
+                  }
+                }"""
+    } else {
+        ""
+    }
+    return """
+        {
+          "protocolVersion": 1,
+          "modulePath": ":app",
+          "buildVariant": "debug",
+          "buildFingerprint": "${"a".repeat(64)}",
+          "descriptors": [
+            {
+              "id": "$descriptorId",
+              "displayName": "SampleCard",
+              "group": "catalog",
+              "entryPoint": {
+                "ownerClassName": "sample.SampleKt",
+                "methodName": "SampleCard"
+              },
+              "variants": [
+                {
+                  "id": "default",
+                  "displayName": "Default",
+                  "configuration": {
+                    "widthDp": 411,
+                    "heightDp": 891
+                  }
+                }$darkVariant
+              ],
+              "sourceLocation": {
+                "filePath": "$sourcePath",
+                "line": 10,
+                "column": 1,
+                "symbolName": "SampleCard"
+              }
+            }
+          ],
+          "diagnostics": []
+        }
+    """.trimIndent()
+}

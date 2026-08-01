@@ -2,6 +2,7 @@ package com.viewcompose
 
 import android.view.Choreographer
 import android.view.ViewGroup
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
@@ -38,6 +39,38 @@ import java.util.Locale
 private const val SNAPSHOT_STABLE_FRAME_THRESHOLD = 2
 private val DIAGNOSTICS_COMMON_PAGE_ITEMS = listOf("page", "page_filter")
 
+@ViewComposePreview(name = "Diagnostics · Runtime", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewDiagnosticsRuntime() {
+    DiagnosticsPage(
+        root = null,
+        selectedPageState = mutableStateOf(0),
+    )
+}
+
+@ViewComposePreview(name = "Diagnostics · Theme", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewDiagnosticsTheme() {
+    DiagnosticsPage(
+        root = null,
+        selectedPageState = mutableStateOf(1),
+    )
+}
+
+@ViewComposePreview(name = "Diagnostics · Renderer", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewDiagnosticsRenderer() {
+    DiagnosticsPage(
+        root = null,
+        selectedPageState = mutableStateOf(2),
+    )
+}
+
+@ViewComposePreview(name = "Diagnostics · Gaps", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewDiagnosticsGaps() {
+    DiagnosticsPage(
+        root = null,
+        selectedPageState = mutableStateOf(3),
+    )
+}
+
 internal fun diagnosticsPageItems(selectedPage: Int): List<String> {
     return DIAGNOSTICS_COMMON_PAGE_ITEMS + when (selectedPage) {
         0 -> listOf("benchmark", "runtime", "verify")
@@ -48,7 +81,7 @@ internal fun diagnosticsPageItems(selectedPage: Int): List<String> {
 }
 
 internal fun UiTreeBuilder.DiagnosticsPage(
-    root: ViewGroup,
+    root: ViewGroup?,
     selectedPageState: MutableState<Int>,
     autoRefreshOnEnter: Boolean = false,
     entryHint: String? = null,

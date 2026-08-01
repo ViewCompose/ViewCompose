@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
@@ -22,6 +23,7 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "ListItem", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseListItem() {
     Column(
         spacing = 0.dp,
@@ -77,6 +79,7 @@ internal fun UiTreeBuilder.ShowcaseListItem() {
     }
 }
 
+@ViewComposePreview(name = "Card", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseCard() {
     Column(
         spacing = 0.dp,

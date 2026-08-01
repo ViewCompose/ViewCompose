@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("tools/viewcompose-preview-build")
     repositories {
         google {
             content {
@@ -34,6 +35,10 @@ include(":viewcompose-image-coil")
 include(":viewcompose-benchmark")
 include(":viewcompose-lifecycle")
 include(":viewcompose-viewmodel")
+include(":viewcompose-preview-core")
+include(":viewcompose-preview-gradle-plugin")
+include(":viewcompose-preview-runner")
+include(":viewcompose-preview-worker-host")
 include(":viewcompose-preview")
 include(":viewcompose-animation")
 include(":viewcompose-animation-core")

@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.margin
@@ -83,6 +84,7 @@ private val WIDGET_MAP: Map<String, WidgetEntry> by lazy {
     WIDGET_GROUPS.flatMap { it.widgets }.associateBy { it.key }
 }
 
+@ViewComposePreview(name = "Widget showcase", group = "Demo/Pages")
 internal fun UiTreeBuilder.WidgetShowcasePage() {
     val selectedWidget = remember { mutableStateOf<String?>(null) }
 

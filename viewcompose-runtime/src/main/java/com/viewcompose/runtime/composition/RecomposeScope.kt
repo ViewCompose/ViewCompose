@@ -14,6 +14,7 @@ class RecomposeScope internal constructor(
     internal var signature: Any,
     internal val parent: RecomposeScope?,
     internal val saveablePath: String = parent?.saveablePath ?: "root",
+    internal val sourceCallSites: List<CompositionSourceCallSite> = emptyList(),
 ) {
     internal val children: MutableList<RecomposeScope> = mutableListOf()
     internal val rememberSlots: MutableList<RememberSlot> = mutableListOf()

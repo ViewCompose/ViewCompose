@@ -16,6 +16,7 @@ import com.viewcompose.ui.modifier.ZIndexModifierElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.tooling.UiNodeTooling
 
 /**
  * 将 nestedScroll modifier 提升为显式 NestedScrollHost 节点。
@@ -51,7 +52,10 @@ internal object NestedScrollNodeWrapper {
             return if (wrappedChildren === node.children) {
                 node
             } else {
-                node.copy(children = wrappedChildren)
+                UiNodeTooling.inheritCopy(
+                    target = node.copy(children = wrappedChildren),
+                    source = node,
+                )
             }
         }
         val nestedElements = node.modifier.elements
@@ -60,7 +64,10 @@ internal object NestedScrollNodeWrapper {
             return if (wrappedChildren === node.children) {
                 node
             } else {
-                node.copy(children = wrappedChildren)
+                UiNodeTooling.inheritCopy(
+                    target = node.copy(children = wrappedChildren),
+                    source = node,
+                )
             }
         }
 
@@ -69,9 +76,12 @@ internal object NestedScrollNodeWrapper {
         val (hostLayoutElements, childElements) = splitHostAndChildElements(withoutNested)
         // 外层 host 继承影响父布局的 modifier，内层原节点保留绘制/交互类 modifier。
         // The outer host inherits parent-layout modifiers, while the inner original node keeps drawing/interaction modifiers.
-        var wrapped = node.copy(
-            modifier = childElements.toModifier(),
-            children = wrappedChildren,
+        var wrapped = UiNodeTooling.inheritCopy(
+            target = node.copy(
+                modifier = childElements.toModifier(),
+                children = wrappedChildren,
+            ),
+            source = node,
         )
         nestedElements.asReversed().forEachIndexed { reversedIndex, nestedElement ->
             val sourceIndex = nestedElements.lastIndex - reversedIndex
@@ -82,17 +92,21 @@ internal object NestedScrollNodeWrapper {
                 }
                 add(nestedElement)
             }
-            wrapped = VNode(
-                type = NodeType.NestedScrollHost,
-                key = node.key?.let { childKey ->
-                    NestedScrollHostKey(
-                        childKey = childKey,
-                        modifierIndex = sourceIndex,
-                    )
-                },
-                spec = EmptyNodeSpec,
-                modifier = hostElements.toModifier(),
-                children = listOf(wrapped),
+            wrapped = UiNodeTooling.inheritSynthetic(
+                target = VNode(
+                    type = NodeType.NestedScrollHost,
+                    key = node.key?.let { childKey ->
+                        NestedScrollHostKey(
+                            childKey = childKey,
+                            modifierIndex = sourceIndex,
+                        )
+                    },
+                    spec = EmptyNodeSpec,
+                    modifier = hostElements.toModifier(),
+                    children = listOf(wrapped),
+                ),
+                source = node,
+                discriminator = "nested-scroll-$sourceIndex",
             )
         }
         return wrapped

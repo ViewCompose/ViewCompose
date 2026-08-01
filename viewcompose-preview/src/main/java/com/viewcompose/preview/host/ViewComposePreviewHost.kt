@@ -10,21 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
+import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.OverlayHostDefaults
 import com.viewcompose.widget.core.UiEnvironment
 import com.viewcompose.widget.core.UiTheme
 import com.viewcompose.widget.core.UiThemeDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
-
-/**
- * Preview 宿主内部使用的主题模式。
- * Internal theme mode consumed by the Preview host.
- */
-enum class PreviewThemeMode {
-    Light,
-    Dark,
-}
 
 /**
  * 将 ViewCompose 渲染会话嵌入 Compose Preview 的 AndroidView 容器。
@@ -37,7 +29,7 @@ enum class PreviewThemeMode {
 @Composable
 fun ViewComposePreviewHost(
     modifier: Modifier = Modifier,
-    themeMode: PreviewThemeMode = PreviewThemeMode.Light,
+    themeMode: PreviewTheme = PreviewTheme.Light,
     debug: Boolean = false,
     debugTag: String = "ViewComposePreview",
     overlayHost: OverlayHost = OverlayHostDefaults.noOp,
@@ -68,8 +60,8 @@ fun ViewComposePreviewHost(
                     UiEnvironment(androidContext = container.context) {
                         UiTheme(
                             tokens = when (themeMode) {
-                                PreviewThemeMode.Light -> UiThemeDefaults.light()
-                                PreviewThemeMode.Dark -> UiThemeDefaults.dark()
+                                PreviewTheme.Light -> UiThemeDefaults.light()
+                                PreviewTheme.Dark -> UiThemeDefaults.dark()
                             },
                         ) {
                             latestContent.value.invoke(this, container)
@@ -90,7 +82,7 @@ private data class PreviewRenderConfig(
     val debug: Boolean,
     val debugTag: String,
     val overlayHost: OverlayHost,
-    val themeMode: PreviewThemeMode,
+    val themeMode: PreviewTheme,
 )
 
 /**

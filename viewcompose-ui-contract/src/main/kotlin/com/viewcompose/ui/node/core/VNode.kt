@@ -3,6 +3,7 @@ package com.viewcompose.ui.node
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.node.spec.NodeSpec
+import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 
 /**
  * 声明式 UI 树中的不可变虚拟节点。
@@ -18,4 +19,13 @@ data class VNode(
     val modifier: Modifier = Modifier,
     val children: List<VNode> = emptyList(),
     val environment: UiEnvironmentValues = UiEnvironmentValues.Default,
-)
+) {
+    /**
+     * Tooling-only identity and source information.
+     *
+     * This property deliberately lives outside the data-class constructor so it cannot affect
+     * semantic equality, hash codes, reconciliation, or normal composition reuse.
+     */
+    @Volatile
+    internal var toolingMetadata: UiNodeToolingMetadata? = null
+}

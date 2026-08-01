@@ -74,6 +74,7 @@ internal object ViewTreeDisposer {
             }
         }
         mountedNode.children = emptyList()
+        ViewNodeToolingRegistry.clear(mountedNode.view)
         if (mountedNode.vnode.type == NodeType.AndroidView) {
             disposeOperation {
                 mountedNode.vnode.runAndroidViewOperation(AndroidViewOperation.Release) {

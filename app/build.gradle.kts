@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.viewcompose.preview")
 }
 
 android {
@@ -62,7 +63,16 @@ dependencies {
     implementation(project(":viewcompose-viewmodel"))
     implementation(project(":viewcompose-overlay-android"))
     implementation(project(":viewcompose-image-coil"))
+    compileOnly(project(":viewcompose-preview-core"))
     debugImplementation(project(":viewcompose-preview"))
+    add(
+        "viewComposePreviewWorkerHost",
+        project(":viewcompose-preview-worker-host"),
+    )
+    add(
+        "viewComposePreviewRunner",
+        project(":viewcompose-preview-runner"),
+    )
     implementation(project(":viewcompose-navigation"))
 
     implementation(libs.androidx.core.ktx)

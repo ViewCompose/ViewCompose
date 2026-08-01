@@ -2,6 +2,7 @@ package com.viewcompose
 
 import android.content.Intent
 import android.view.ViewGroup
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -19,10 +20,15 @@ import com.viewcompose.widget.core.TextDefaults
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 
+@ViewComposePreview(name = "Demo catalog", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewDemoCatalog() {
+    DemoCatalogPage(root = null)
+}
+
 internal fun UiTreeBuilder.DemoCatalogPage(
-    root: ViewGroup,
+    root: ViewGroup?,
 ) {
-    val activity = root.context.findAppCompatActivity()
+    val activity = root?.context?.findAppCompatActivity()
     LazyColumn(
         items = listOf("intro", "available", "planned"),
         key = { it },

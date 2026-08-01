@@ -39,6 +39,7 @@ configurations.configureEach {
 }
 
 dependencies {
+    api(project(":viewcompose-preview-core"))
     implementation(project(":viewcompose-runtime"))
     implementation(project(":viewcompose-ui-contract"))
     api(project(":viewcompose-widget-core"))

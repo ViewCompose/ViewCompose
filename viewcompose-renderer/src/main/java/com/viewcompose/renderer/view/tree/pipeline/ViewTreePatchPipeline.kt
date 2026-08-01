@@ -8,6 +8,7 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.AndroidViewOperation
+import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.layoutModifiersChanged
 import com.viewcompose.renderer.modifier.resolve
@@ -150,6 +151,10 @@ internal object ViewTreePatchPipeline {
 
         transaction.mountedCheckpoints.values.forEach { checkpoint ->
             checkpoint.mountedNode.vnode = checkpoint.vnode
+            ViewNodeToolingRegistry.bind(
+                view = checkpoint.mountedNode.view,
+                node = checkpoint.vnode,
+            )
             checkpoint.mountedNode.children = checkpoint.children
             checkpoint.mountedNode.disposed = checkpoint.disposed
             checkpoint.mountedNode.view.layoutParams = checkpoint.layoutParams
@@ -254,6 +259,7 @@ internal object ViewTreePatchPipeline {
                     key = removal.payload.vnode.key,
                     parentKey = parentNodeKey,
                     index = removal.previousIndex,
+                    toolingMetadata = UiNodeTooling.metadataOf(removal.payload.vnode),
                 ))
             }
         }
@@ -291,6 +297,7 @@ internal object ViewTreePatchPipeline {
                         key = patch.nextVNode.key,
                         parentKey = parentNodeKey,
                         index = patch.targetIndex,
+                        toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                     ))
                 }
                 captureContainer(
@@ -327,6 +334,7 @@ internal object ViewTreePatchPipeline {
                             key = patch.nextVNode.key,
                             parentKey = parentNodeKey,
                             index = patch.targetIndex,
+                            toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                         ))
                     }
                     return PatchApplicationResult(
@@ -416,6 +424,10 @@ internal object ViewTreePatchPipeline {
                 }
                 mountedNode.children = childResult.mountedNodes
                 mountedNode.vnode = patch.nextVNode
+                ViewNodeToolingRegistry.bind(
+                    view = mountedNode.view,
+                    node = patch.nextVNode,
+                )
                 if (needsMove) {
                     captureContainer(
                         transaction = transaction,
@@ -438,6 +450,7 @@ internal object ViewTreePatchPipeline {
                         detail = (bindingPlan as? NodeBindingPlan.Patch)
                             ?.patch
                             ?.let { nodePatch -> nodePatch::class.simpleName },
+                        toolingMetadata = UiNodeTooling.metadataOf(patch.nextVNode),
                     ))
                 }
                 PatchApplicationResult(
@@ -537,6 +550,10 @@ internal object ViewTreePatchPipeline {
         val mountedNode = MountedNode(
             vnode = node,
             view = view,
+        )
+        ViewNodeToolingRegistry.bind(
+            view = view,
+            node = node,
         )
         transaction.insertedNodes += mountedNode
         ViewModifierApplier.cacheOriginalBackground(view)

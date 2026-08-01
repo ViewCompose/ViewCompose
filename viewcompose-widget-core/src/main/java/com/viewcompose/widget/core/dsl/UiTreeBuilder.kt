@@ -12,6 +12,7 @@ import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.NodeSpec
 import com.viewcompose.ui.node.spec.TabRowNodeProps
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
+import com.viewcompose.ui.tooling.UiNodeTooling
 
 /**
  * ViewCompose 声明式树构建器，负责把 widget DSL 调用收集为平台无关的 VNode 列表。
@@ -112,13 +113,15 @@ open class UiTreeBuilder {
                 } else {
                     UiTreeBuilder().apply(content).build()
                 }
-                nextNode = VNode(
-                    type = type,
-                    key = key,
-                    spec = spec,
-                    modifier = modifier,
-                    children = nestedChildren,
-                    environment = Environment.values,
+                nextNode = UiNodeTooling.attach(
+                    VNode(
+                        type = type,
+                        key = key,
+                        spec = spec,
+                        modifier = modifier,
+                        children = nestedChildren,
+                        environment = Environment.values,
+                    ),
                 )
                 scope.updateLocalSnapshot(LocalContext.snapshot())
             }
@@ -138,13 +141,15 @@ open class UiTreeBuilder {
         modifier: Modifier = Modifier,
         children: List<VNode> = emptyList(),
     ) {
-        this.children += VNode(
-            type = type,
-            key = key,
-            spec = spec,
-            modifier = modifier,
-            children = children,
-            environment = Environment.values,
+        this.children += UiNodeTooling.attach(
+            VNode(
+                type = type,
+                key = key,
+                spec = spec,
+                modifier = modifier,
+                children = children,
+                environment = Environment.values,
+            ),
         )
     }
 

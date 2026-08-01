@@ -154,6 +154,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         return RenderTreeNode(
             type = type,
             key = key,
+            toolingMetadata = toolingMetadata,
             children = children.map { child -> child.toCoreNode() },
         )
     }
@@ -174,6 +175,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             index = index,
             moved = moved,
             detail = detail,
+            toolingMetadata = toolingMetadata,
         )
     }
 

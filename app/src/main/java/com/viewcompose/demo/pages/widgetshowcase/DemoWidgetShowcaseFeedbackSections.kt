@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -22,6 +23,7 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.rememberTextFieldState
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "SearchBar", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseSearchBar() {
     val query1 = rememberTextFieldState()
     val query2 = rememberTextFieldState("搜索内容")
@@ -68,6 +70,7 @@ internal fun UiTreeBuilder.ShowcaseSearchBar() {
     }
 }
 
+@ViewComposePreview(name = "LinearProgressIndicator", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseLinearProgress() {
     Column(
         spacing = 0.dp,
@@ -105,6 +108,7 @@ internal fun UiTreeBuilder.ShowcaseLinearProgress() {
     }
 }
 
+@ViewComposePreview(name = "CircularProgressIndicator", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseCircularProgress() {
     Column(
         spacing = 0.dp,
@@ -150,6 +154,7 @@ internal fun UiTreeBuilder.ShowcaseCircularProgress() {
     }
 }
 
+@ViewComposePreview(name = "Badge", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseBadge() {
     Column(
         spacing = 0.dp,

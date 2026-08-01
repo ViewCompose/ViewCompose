@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -22,6 +23,21 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.widget.core.rememberTextFieldState
+
+@ViewComposePreview(name = "Preview · Bridge", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewToolingBridge() {
+    PreviewPage(initialPageIndex = 0)
+}
+
+@ViewComposePreview(name = "Preview · Overlay mock", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewToolingOverlayMock() {
+    PreviewPage(initialPageIndex = 1)
+}
+
+@ViewComposePreview(name = "Preview · Snapshot", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewToolingSnapshot() {
+    PreviewPage(initialPageIndex = 2)
+}
 
 internal fun UiTreeBuilder.PreviewPage(
     initialPageIndex: Int = 0,

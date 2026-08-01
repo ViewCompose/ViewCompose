@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
@@ -55,6 +56,7 @@ private val LocalDemoBizTokens = uiLocalOf {
 
 private val LocalDemoBizFeatureEnabled = uiLocalOf { false }
 
+@ViewComposePreview(name = "Foundations · Intro", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsIntroSection() {
     ScenarioSection(
         kind = ScenarioKind.Guide,
@@ -101,6 +103,7 @@ internal fun UiTreeBuilder.FoundationsBenchmarkSection(
     }
 }
 
+@ViewComposePreview(name = "Foundations · Theme", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsThemeSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
@@ -133,6 +136,7 @@ internal fun UiTreeBuilder.FoundationsThemeSection() {
     }
 }
 
+@ViewComposePreview(name = "Foundations · Business local", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsBusinessLocalSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,
@@ -212,6 +216,7 @@ private fun UiTreeBuilder.BusinessLocalPreviewCard(
     }
 }
 
+@ViewComposePreview(name = "Foundations · Overrides", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsOverridesSection() {
     ScenarioSection(
         kind = ScenarioKind.Core,

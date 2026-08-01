@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -23,6 +24,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "Text", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseText() {
     Column(
         spacing = 0.dp,
@@ -80,6 +82,7 @@ internal fun UiTreeBuilder.ShowcaseText() {
     }
 }
 
+@ViewComposePreview(name = "Image and Icon", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseImageIcon() {
     Column(
         spacing = 0.dp,
@@ -159,6 +162,7 @@ internal fun UiTreeBuilder.ShowcaseImageIcon() {
     }
 }
 
+@ViewComposePreview(name = "Divider", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseDivider() {
     Column(
         spacing = 0.dp,

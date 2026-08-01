@@ -16,6 +16,7 @@ class ComposerLite(
     private val warningLogger: ((String) -> Unit)? = null,
     private val onInvalidated: (() -> Unit)? = null,
     private val localSnapshotInspector: ((Any?) -> List<CompositionLocalDiagnostic>)? = null,
+    private val sourceCallSiteCollector: (() -> List<CompositionSourceCallSite>)? = null,
 ) {
     private val keyStack = mutableListOf<Any?>()
     private val warningKeys = HashSet<String>()
@@ -160,6 +161,7 @@ class ComposerLite(
                         index = index,
                         signature = normalizedSignature,
                     ),
+                    sourceCallSites = sourceCallSiteCollector?.invoke().orEmpty(),
                 ).also { scope ->
                     parent.children += scope
                     currentAttempt().newScopes += scope
@@ -196,6 +198,7 @@ class ComposerLite(
                         index = index,
                         signature = normalizedSignature,
                     ),
+                    sourceCallSites = sourceCallSiteCollector?.invoke().orEmpty(),
                 ).also { scope ->
                     parent.children += scope
                     currentAttempt().newScopes += scope
@@ -734,6 +737,7 @@ class ComposerLite(
                             }.getOrDefault(emptyList())
                         }
                         .orEmpty(),
+                    sourceCallSites = scope.sourceCallSites,
                 )
             }
         return CompositionDiagnostics(

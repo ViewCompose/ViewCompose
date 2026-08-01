@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
@@ -37,6 +38,21 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.sp
+
+@ViewComposePreview(name = "Navigation · App bar", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewNavigationAppBar() {
+    NavigationPage(initialPageIndex = 0)
+}
+
+@ViewComposePreview(name = "Navigation · Navigation bar", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewNavigationBar() {
+    NavigationPage(initialPageIndex = 1)
+}
+
+@ViewComposePreview(name = "Navigation · Scaffold", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewNavigationScaffold() {
+    NavigationPage(initialPageIndex = 2)
+}
 
 internal fun UiTreeBuilder.NavigationPage(
     initialPageIndex: Int = 0,

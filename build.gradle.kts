@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.paparazzi) apply false
 }
 
@@ -22,6 +23,10 @@ val modulePackageRoots = mapOf(
     "viewcompose-benchmark" to "com.viewcompose.benchmark",
     "viewcompose-lifecycle" to "com.viewcompose.lifecycle",
     "viewcompose-viewmodel" to "com.viewcompose.viewmodel",
+    "viewcompose-preview-core" to "com.viewcompose.preview.tooling",
+    "viewcompose-preview-gradle-plugin" to "com.viewcompose.preview.gradle",
+    "viewcompose-preview-runner" to "com.viewcompose.preview.runner",
+    "viewcompose-preview-worker-host" to "com.viewcompose.preview.worker",
     "viewcompose-preview" to "com.viewcompose.preview",
     "viewcompose-animation" to "com.viewcompose.animation",
     "viewcompose-animation-core" to "com.viewcompose.animation.core",
@@ -37,6 +42,9 @@ val kotlinJvmModules = setOf(
     "viewcompose-ui-contract",
     "viewcompose-runtime",
     "viewcompose-navigation-core",
+    "viewcompose-preview-core",
+    "viewcompose-preview-gradle-plugin",
+    "viewcompose-preview-worker-host",
     "viewcompose-animation-core",
     "viewcompose-gesture-core",
     "viewcompose-graphics-core",
@@ -50,6 +58,10 @@ val qaQuickTasks = listOf(
     ":viewcompose-host-android:compileDebugKotlin",
     ":viewcompose-lifecycle:compileDebugKotlin",
     ":viewcompose-viewmodel:compileDebugKotlin",
+    ":viewcompose-preview-core:compileKotlin",
+    ":viewcompose-preview-gradle-plugin:compileKotlin",
+    ":viewcompose-preview-runner:compileDebugKotlin",
+    ":viewcompose-preview-worker-host:compileKotlin",
     ":viewcompose-renderer:compileDebugKotlin",
     ":viewcompose-widget-core:compileDebugKotlin",
     ":viewcompose-overlay-android:compileDebugKotlin",
@@ -71,6 +83,10 @@ val qaQuickTasks = listOf(
     ":viewcompose-host-android:testDebugUnitTest",
     ":viewcompose-lifecycle:testDebugUnitTest",
     ":viewcompose-viewmodel:testDebugUnitTest",
+    ":viewcompose-preview-core:test",
+    ":viewcompose-preview-gradle-plugin:test",
+    ":viewcompose-preview-runner:testDebugUnitTest",
+    ":viewcompose-preview-worker-host:test",
     ":viewcompose-renderer:testDebugUnitTest",
     ":viewcompose-widget-core:testDebugUnitTest",
     ":viewcompose-overlay-android:testDebugUnitTest",
@@ -277,6 +293,183 @@ tasks.register("verifyGraphicsCorePurity") {
     }
 }
 
+tasks.register("verifyPreviewCorePurity") {
+    group = "verification"
+    description = "Verify preview-core remains Kotlin/JVM-pure without Android or Compose imports."
+    doLast {
+        val violations = mutableListOf<String>()
+        val previewCoreMainDir = rootDir.resolve("viewcompose-preview-core").resolve("src/main")
+        if (previewCoreMainDir.exists()) {
+            previewCoreMainDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import android.") ||
+                                trimmed.startsWith("import androidx.")
+                            ) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Preview-core purity verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyPreviewRunnerBoundary") {
+    group = "verification"
+    description = "Verify the native static preview runner stays independent from Compose."
+    doLast {
+        val violations = mutableListOf<String>()
+        val runnerDir = rootDir.resolve("viewcompose-preview-runner")
+        val runnerMainDir = runnerDir.resolve("src/main")
+        if (runnerMainDir.exists()) {
+            runnerMainDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (trimmed.startsWith("import androidx.compose.")) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+        val buildFile = runnerDir.resolve("build.gradle.kts")
+        if (buildFile.exists()) {
+            val buildScript = buildFile.readText()
+            listOf("libs.plugins.kotlin.compose", "libs.androidx.compose").forEach { marker ->
+                if (buildScript.contains(marker)) {
+                    violations +=
+                        "${buildFile.relativeTo(rootDir)} -> forbidden Compose dependency '$marker'"
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Preview-runner boundary verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyPreviewGradlePluginBoundary") {
+    group = "verification"
+    description = "Verify preview Gradle tooling uses public build APIs and stays renderer-free."
+    doLast {
+        val violations = mutableListOf<String>()
+        val pluginDir = rootDir.resolve("viewcompose-preview-gradle-plugin")
+        val pluginMainDir = pluginDir.resolve("src/main")
+        if (pluginMainDir.exists()) {
+            pluginMainDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import android.") ||
+                                trimmed.startsWith("import androidx.") ||
+                                trimmed.startsWith("import com.android.build.gradle.internal.") ||
+                                trimmed.startsWith("import com.android.tools.idea.") ||
+                                trimmed.startsWith("import com.viewcompose.preview.runner.")
+                            ) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+        val buildFile = pluginDir.resolve("build.gradle.kts")
+        if (buildFile.exists() && buildFile.readText().contains("viewcompose-preview-runner")) {
+            violations +=
+                "${buildFile.relativeTo(rootDir)} -> Gradle tooling must not depend on the renderer"
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Preview Gradle plugin boundary verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyPreviewWorkerHostBoundary") {
+    group = "verification"
+    description =
+        "Verify the preview worker host stays independent from Gradle, Android Studio, and runner binaries."
+    doLast {
+        val violations = mutableListOf<String>()
+        val hostDir = rootDir.resolve("viewcompose-preview-worker-host")
+        val sourceDir = hostDir.resolve("src/main")
+        if (sourceDir.exists()) {
+            sourceDir.walkTopDown()
+                .filter { it.isFile && (it.extension == "kt" || it.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import org.gradle.") ||
+                                trimmed.startsWith("import com.intellij.") ||
+                                trimmed.startsWith("import org.jetbrains.android.")
+                            ) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> forbidden import '$trimmed'"
+                            }
+                        }
+                    }
+                }
+        }
+        val buildFile = hostDir.resolve("build.gradle.kts")
+        if (buildFile.exists()) {
+            val content = buildFile.readText()
+            listOf(
+                "viewcompose-preview-gradle-plugin",
+                "viewcompose-preview-runner",
+            ).forEach { forbiddenDependency ->
+                if (content.contains(forbiddenDependency)) {
+                    violations +=
+                        "viewcompose-preview-worker-host/build.gradle.kts -> " +
+                            "forbidden dependency '$forbiddenDependency'"
+                }
+            }
+        }
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Preview worker host boundary verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyNavigationCorePurity") {
     group = "verification"
     description = "Verify navigation-core remains Kotlin/JVM-pure without Android imports."
@@ -321,6 +514,10 @@ tasks.register("qaQuick") {
     dependsOn("verifyNavigationCorePurity")
     dependsOn("verifyGestureCorePurity")
     dependsOn("verifyGraphicsCorePurity")
+    dependsOn("verifyPreviewCorePurity")
+    dependsOn("verifyPreviewRunnerBoundary")
+    dependsOn("verifyPreviewGradlePluginBoundary")
+    dependsOn("verifyPreviewWorkerHostBoundary")
     dependsOn(qaQuickTasks)
 }
 
@@ -393,6 +590,10 @@ tasks.register<Exec>("testBenchmarkComparisonTool") {
 
 tasks.register("qaPreview") {
     group = "verification"
-    description = "Run preview snapshot verification for viewcompose-preview."
-    dependsOn(":viewcompose-preview:verifyPaparazziDebug")
+    description = "Run static-runner tests and preview snapshot verification."
+    dependsOn(
+        ":viewcompose-preview-core:test",
+        ":viewcompose-preview-runner:testDebugUnitTest",
+        ":viewcompose-preview:verifyPaparazziDebug",
+    )
 }

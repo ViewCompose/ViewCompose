@@ -1,0 +1,182 @@
+package com.viewcompose.preview.tooling
+
+import kotlinx.serialization.Serializable
+
+/**
+ * Platform-neutral diagnostics emitted beside a static preview image.
+ *
+ * The model deliberately contains only stable strings and primitive values. It can cross a
+ * worker-process boundary without exposing Android Views, VNodes, Throwable instances, or other
+ * runtime-owned objects.
+ */
+@Serializable
+data class PreviewRenderSnapshot(
+    val stats: PreviewRenderStats = PreviewRenderStats(),
+    val structure: PreviewRenderStructure = PreviewRenderStructure(),
+    val warnings: List<String> = emptyList(),
+    val tree: List<PreviewRenderTreeNode> = emptyList(),
+    val nativeViewTree: List<PreviewNativeViewNode> = emptyList(),
+    val layoutDiagnostics: List<PreviewLayoutDiagnostic> = emptyList(),
+    val patches: List<PreviewPatchRecord> = emptyList(),
+    val composition: PreviewCompositionSnapshot = PreviewCompositionSnapshot(),
+)
+
+@Serializable
+data class PreviewRenderStats(
+    val inserts: Int = 0,
+    val reuses: Int = 0,
+    val removals: Int = 0,
+    val reboundNodes: Int = 0,
+    val patchedNodes: Int = 0,
+    val skippedBindings: Int = 0,
+    val skippedSubtrees: Int = 0,
+    val bindingsByType: Map<String, PreviewNodeBindingStats> = emptyMap(),
+)
+
+@Serializable
+data class PreviewNodeBindingStats(
+    val rebound: Int = 0,
+    val patched: Int = 0,
+    val skipped: Int = 0,
+)
+
+@Serializable
+data class PreviewRenderStructure(
+    val vnodeCount: Int = 0,
+    val mountedNodeCount: Int = 0,
+    val maxVNodeDepth: Int = 0,
+    val maxMountedDepth: Int = 0,
+)
+
+@Serializable
+data class PreviewRenderTreeNode(
+    val type: String,
+    val key: String? = null,
+    val nodeId: String? = null,
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
+    val children: List<PreviewRenderTreeNode> = emptyList(),
+)
+
+/**
+ * One JVM line-table call site associated with a preview node.
+ */
+@Serializable
+data class PreviewSourceCallSite(
+    val className: String,
+    val methodName: String,
+    val fileName: String,
+    val lineNumber: Int,
+)
+
+/**
+ * One laid-out Android View captured after the static preview root completes measure and layout.
+ *
+ * [bounds] are absolute pixel coordinates relative to the preview root. Keeping this separate from
+ * the VNode tree makes wrapper Views, lazy-container children, and platform-owned descendants
+ * visible without coupling the stable preview protocol to renderer internals.
+ */
+@Serializable
+data class PreviewNativeViewNode(
+    val className: String,
+    val bounds: PreviewLayoutBounds,
+    val measuredWidth: Int,
+    val measuredHeight: Int,
+    val visibility: String,
+    val visibleBounds: PreviewLayoutBounds? = null,
+    val clippingState: PreviewClippingState = PreviewClippingState.NotClipped,
+    val clippingAncestorClassName: String? = null,
+    val clippingAncestorNodeId: String? = null,
+    val clippingExpected: Boolean = false,
+    val properties: Map<String, String> = emptyMap(),
+    val nodeId: String? = null,
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
+    val children: List<PreviewNativeViewNode> = emptyList(),
+)
+
+@Serializable
+enum class PreviewClippingState {
+    NotClipped,
+    PartiallyClipped,
+    FullyClipped,
+}
+
+@Serializable
+data class PreviewLayoutBounds(
+    val left: Int,
+    val top: Int,
+    val right: Int,
+    val bottom: Int,
+)
+
+/**
+ * One source-aware layout condition captured after Android measure and layout complete.
+ *
+ * The protocol stores structured facts instead of a preformatted message so IDE clients can
+ * localize and present the same diagnostic in different ways.
+ */
+@Serializable
+data class PreviewLayoutDiagnostic(
+    val kind: PreviewLayoutDiagnosticKind,
+    val severity: PreviewDiagnosticSeverity,
+    val className: String,
+    val bounds: PreviewLayoutBounds,
+    val visibleBounds: PreviewLayoutBounds? = null,
+    val clippingAncestorClassName: String? = null,
+    val clippingAncestorNodeId: String? = null,
+    val clippingExpected: Boolean = false,
+    val metrics: Map<String, Int> = emptyMap(),
+    val nodeId: String? = null,
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
+)
+
+@Serializable
+enum class PreviewLayoutDiagnosticKind {
+    ZeroLayoutSize,
+    PartiallyClipped,
+    FullyClipped,
+    TextEllipsized,
+    TextContentClipped,
+}
+
+@Serializable
+data class PreviewPatchRecord(
+    val operation: String,
+    val type: String,
+    val key: String? = null,
+    val parentKey: String? = null,
+    val index: Int,
+    val moved: Boolean = false,
+    val detail: String? = null,
+    val nodeId: String? = null,
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+    val synthetic: Boolean = false,
+)
+
+@Serializable
+data class PreviewCompositionSnapshot(
+    val invalidatedScopeCount: Int = 0,
+    val recomposedScopeCount: Int = 0,
+    val skippedScopeCount: Int = 0,
+    val scopes: List<PreviewRecomposeScope> = emptyList(),
+)
+
+@Serializable
+data class PreviewRecomposeScope(
+    val path: String,
+    val signature: String,
+    val depth: Int,
+    val reasons: List<String> = emptyList(),
+    val recomposed: Boolean,
+    val skipped: Boolean,
+    val locals: List<PreviewCompositionLocal> = emptyList(),
+    val sourceCallSites: List<PreviewSourceCallSite> = emptyList(),
+)
+
+@Serializable
+data class PreviewCompositionLocal(
+    val name: String,
+    val value: String,
+)

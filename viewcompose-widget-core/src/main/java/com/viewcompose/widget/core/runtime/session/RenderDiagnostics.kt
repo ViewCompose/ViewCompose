@@ -2,6 +2,7 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.runtime.composition.CompositionDiagnostics
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 
 /**
  * renderer 一帧绑定行为的汇总统计。
@@ -59,6 +60,7 @@ data class RenderTreeResult(
 data class RenderTreeNode(
     val type: NodeType,
     val key: Any?,
+    val toolingMetadata: UiNodeToolingMetadata? = null,
     val children: List<RenderTreeNode> = emptyList(),
 )
 
@@ -74,6 +76,7 @@ data class RenderPatchRecord(
     val index: Int,
     val moved: Boolean = false,
     val detail: String? = null,
+    val toolingMetadata: UiNodeToolingMetadata? = null,
 )
 
 /**

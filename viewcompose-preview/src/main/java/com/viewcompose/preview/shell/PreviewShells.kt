@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.viewcompose.preview.ViewComposePreview
 import com.viewcompose.preview.ViewComposePreviewOptions
-import com.viewcompose.preview.ViewComposePreviewTheme
+import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.ui.modifier.Modifier as UiModifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
@@ -22,7 +22,7 @@ import com.viewcompose.ui.unit.sp
  */
 @Composable
 internal fun ViewComposePreviewSurface(
-    themeMode: ViewComposePreviewTheme,
+    themeMode: PreviewTheme,
     content: UiTreeBuilder.() -> Unit,
 ) {
     ViewComposePreview(
@@ -65,7 +65,7 @@ private fun UiTreeBuilder.previewBootstrapContent() {
 )
 @Composable
 private fun ViewComposePhoneLightPreview() {
-    ViewComposePreviewSurface(themeMode = ViewComposePreviewTheme.Light) {
+    ViewComposePreviewSurface(themeMode = PreviewTheme.Light) {
         previewBootstrapContent()
     }
 }
@@ -81,7 +81,7 @@ private fun ViewComposePhoneLightPreview() {
 )
 @Composable
 private fun ViewComposePhoneDarkPreview() {
-    ViewComposePreviewSurface(themeMode = ViewComposePreviewTheme.Dark) {
+    ViewComposePreviewSurface(themeMode = PreviewTheme.Dark) {
         previewBootstrapContent()
     }
 }
@@ -97,7 +97,7 @@ private fun ViewComposePhoneDarkPreview() {
 )
 @Composable
 private fun ViewComposeTabletLightPreview() {
-    ViewComposePreviewSurface(themeMode = ViewComposePreviewTheme.Light) {
+    ViewComposePreviewSurface(themeMode = PreviewTheme.Light) {
         previewBootstrapContent()
     }
 }
@@ -113,7 +113,7 @@ private fun ViewComposeTabletLightPreview() {
 )
 @Composable
 private fun ViewComposeTabletDarkPreview() {
-    ViewComposePreviewSurface(themeMode = ViewComposePreviewTheme.Dark) {
+    ViewComposePreviewSurface(themeMode = PreviewTheme.Dark) {
         previewBootstrapContent()
     }
 }

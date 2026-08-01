@@ -3,7 +3,6 @@ package com.viewcompose.preview.catalog.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import com.viewcompose.preview.ViewComposePreviewTheme
 import com.viewcompose.preview.catalog.PreviewCatalog
 import com.viewcompose.preview.catalog.model.PreviewSpecRef
 import com.viewcompose.preview.catalog.provider.CollectionPreviewSpecProvider
@@ -17,6 +16,7 @@ import com.viewcompose.preview.catalog.provider.InputPreviewSpecProvider
 import com.viewcompose.preview.catalog.provider.ModifierPreviewSpecProvider
 import com.viewcompose.preview.catalog.provider.NavigationPreviewSpecProvider
 import com.viewcompose.preview.shell.ViewComposePreviewSurface
+import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
@@ -163,7 +163,7 @@ private fun GraphicsCatalogPreview(
 @Composable
 internal fun PreviewCatalogSpecScreen(
     specId: String,
-    themeMode: ViewComposePreviewTheme = ViewComposePreviewTheme.Light,
+    themeMode: PreviewTheme = PreviewTheme.Light,
 ) {
     val spec = PreviewCatalog.require(specId)
     ViewComposePreviewSurface(themeMode = themeMode) {

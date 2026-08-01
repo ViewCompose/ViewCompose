@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
@@ -21,6 +22,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "Modifiers · Offset and z-index", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierOffsetZIndexSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,

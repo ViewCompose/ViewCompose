@@ -1,0 +1,129 @@
+package com.viewcompose.studio.preview
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class PreviewPointerGesturesTest {
+    @Test
+    fun `trackpad gesture switches axis without waiting for inertial scrolling to pause`() {
+        val lock = PreviewTrackpadAxisLock()
+
+        assertNull(lock.resolve(horizontalRotation = 0.08, verticalRotation = 0.0, eventMillis = 0))
+        assertNull(lock.resolve(horizontalRotation = 0.0, verticalRotation = 0.05, eventMillis = 10))
+        assertEquals(
+            PreviewScrollAxis.Horizontal,
+            lock.resolve(horizontalRotation = 0.20, verticalRotation = 0.0, eventMillis = 20),
+        )
+        assertEquals(
+            PreviewScrollAxis.Horizontal,
+            lock.resolve(horizontalRotation = 0.0, verticalRotation = 0.15, eventMillis = 30),
+        )
+        assertEquals(
+            PreviewScrollAxis.Vertical,
+            lock.resolve(horizontalRotation = 0.0, verticalRotation = 0.15, eventMillis = 40),
+        )
+        assertEquals(
+            PreviewScrollAxis.Vertical,
+            lock.resolve(horizontalRotation = 0.12, verticalRotation = 0.0, eventMillis = 50),
+        )
+        assertEquals(
+            PreviewScrollAxis.Horizontal,
+            lock.resolve(horizontalRotation = 0.14, verticalRotation = 0.0, eventMillis = 60),
+        )
+        assertEquals(
+            PreviewScrollAxis.Vertical,
+            lock.resolve(horizontalRotation = 0.0, verticalRotation = 0.30, eventMillis = 250),
+        )
+    }
+
+    @Test
+    fun `trackpad axis switch ignores isolated orthogonal noise`() {
+        val lock = PreviewTrackpadAxisLock()
+
+        assertEquals(
+            PreviewScrollAxis.Horizontal,
+            lock.resolve(horizontalRotation = 0.30, verticalRotation = 0.0, eventMillis = 0),
+        )
+        assertEquals(
+            PreviewScrollAxis.Horizontal,
+            lock.resolve(horizontalRotation = 0.0, verticalRotation = 0.20, eventMillis = 10),
+        )
+        assertEquals(
+            PreviewScrollAxis.Horizontal,
+            lock.resolve(horizontalRotation = 0.05, verticalRotation = 0.0, eventMillis = 20),
+        )
+        assertEquals(
+            PreviewScrollAxis.Horizontal,
+            lock.resolve(horizontalRotation = 0.0, verticalRotation = 0.20, eventMillis = 30),
+        )
+    }
+
+    @Test
+    fun `discrete wheel input can switch axis in one event`() {
+        val lock = PreviewTrackpadAxisLock()
+
+        assertEquals(
+            PreviewScrollAxis.Horizontal,
+            lock.resolve(horizontalRotation = 1.0, verticalRotation = 0.0, eventMillis = 0),
+        )
+        assertEquals(
+            PreviewScrollAxis.Vertical,
+            lock.resolve(horizontalRotation = 0.0, verticalRotation = 1.0, eventMillis = 10),
+        )
+    }
+
+    @Test
+    fun `trackpad gesture waits through diagonal noise before locking one axis`() {
+        val lock = PreviewTrackpadAxisLock()
+
+        assertNull(lock.resolve(horizontalRotation = 0.18, verticalRotation = 0.17, eventMillis = 0))
+        assertNull(lock.resolve(horizontalRotation = 0.10, verticalRotation = 0.12, eventMillis = 10))
+        assertEquals(
+            PreviewScrollAxis.Vertical,
+            lock.resolve(horizontalRotation = 0.0, verticalRotation = 0.30, eventMillis = 20),
+        )
+        assertEquals(
+            PreviewScrollAxis.Vertical,
+            lock.resolve(horizontalRotation = 0.80, verticalRotation = 0.0, eventMillis = 30),
+        )
+    }
+
+    @Test
+    fun `double press survives an AWT click-count reset but rejects drifts`() {
+        val tracker = PreviewDoublePressTracker()
+
+        assertFalse(tracker.register(awtClickCount = 1, eventMillis = 100, x = 20, y = 20))
+        assertTrue(tracker.register(awtClickCount = 1, eventMillis = 300, x = 23, y = 18))
+        assertFalse(tracker.register(awtClickCount = 1, eventMillis = 1_000, x = 20, y = 20))
+        assertFalse(tracker.register(awtClickCount = 1, eventMillis = 1_200, x = 50, y = 50))
+        assertTrue(tracker.register(awtClickCount = 2, eventMillis = 2_000, x = 0, y = 0))
+    }
+
+    @Test
+    fun `double press timing follows the bounded desktop preference`() {
+        assertEquals(720L, previewDoubleClickIntervalMillis(720))
+        assertEquals(250L, previewDoubleClickIntervalMillis(100))
+        assertEquals(1_000L, previewDoubleClickIntervalMillis(5_000))
+        assertEquals(500L, previewDoubleClickIntervalMillis("unsupported"))
+    }
+
+    @Test
+    fun `preview navigation temporarily rejects caret linked selection`() {
+        var now = 100L
+        val guard = PreviewSourceSelectionGuard(
+            clockNanos = { now },
+            durationNanos = 50L,
+        )
+
+        assertTrue(guard.acceptsCaretSelection())
+        guard.beginNavigation()
+        assertFalse(guard.acceptsCaretSelection())
+        now = 149L
+        assertFalse(guard.acceptsCaretSelection())
+        now = 150L
+        assertTrue(guard.acceptsCaretSelection())
+    }
+}

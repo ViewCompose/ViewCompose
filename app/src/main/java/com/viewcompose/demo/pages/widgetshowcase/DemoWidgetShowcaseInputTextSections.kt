@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.text.InputTransformation
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -16,6 +17,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.rememberTextFieldState
 
+@ViewComposePreview(name = "TextField", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseTextField() {
     val filledValue = rememberTextFieldState()
     val tonalValue = rememberTextFieldState()
@@ -107,6 +109,7 @@ internal fun UiTreeBuilder.ShowcaseTextField() {
     }
 }
 
+@ViewComposePreview(name = "TextField variants", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseTextFieldVariants() {
     val pwdValue = rememberTextFieldState()
     val emailValue = rememberTextFieldState()

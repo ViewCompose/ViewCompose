@@ -1,0 +1,923 @@
+package com.viewcompose.preview.gradle
+
+import com.viewcompose.preview.tooling.MAX_PREVIEW_WORKER_BATCH_SIZE
+import com.viewcompose.preview.tooling.PreviewBuildInputKind
+import com.viewcompose.preview.tooling.PreviewBuildManifest
+import com.viewcompose.preview.tooling.PreviewDescriptorCatalog
+import com.viewcompose.preview.tooling.PreviewProtocolJson
+import com.viewcompose.preview.tooling.PreviewRenderRequest
+import com.viewcompose.preview.tooling.PreviewRenderResponse
+import com.viewcompose.preview.tooling.PreviewRenderStatus
+import com.viewcompose.preview.tooling.PreviewWorkerBatchCommand
+import com.viewcompose.preview.tooling.PreviewWorkerCommand
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.util.zip.ZipFile
+import javax.inject.Inject
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.options.Option
+import org.gradle.process.ExecOperations
+import org.gradle.work.DisableCachingByDefault
+
+/**
+ * Renders one preview or a bounded batch in a short-lived JVM, backed by a content-addressed cache.
+ */
+@DisableCachingByDefault(
+    because = "The task owns a content-addressed render cache and launches an isolated JVM.",
+)
+abstract class RenderViewComposePreviewTask @Inject constructor(
+    private val execOperations: ExecOperations,
+) : DefaultTask() {
+    @get:Input
+    @get:Optional
+    abstract val previewId: Property<String>
+
+    @get:Input
+    @get:Optional
+    abstract val variantId: Property<String>
+
+    @get:Input
+    abstract val rerender: Property<Boolean>
+
+    @get:Input
+    abstract val fastRefresh: Property<Boolean>
+
+    @get:Input
+    abstract val verifyWorkerReuse: Property<Boolean>
+
+    @get:Input
+    abstract val workerMainClass: Property<String>
+
+    // Kept outside Gradle's file validation deliberately: the source-save task must reach the
+    // action when its baseline is absent so it can emit the structured full-discovery fallback.
+    @get:Internal
+    abstract val buildManifestFile: RegularFileProperty
+
+    @get:Internal
+    abstract val descriptorCatalogFile: RegularFileProperty
+
+    @get:InputFile
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val batchTargetsFile: RegularFileProperty
+
+    @get:Classpath
+    abstract val workerHostClasspath: ConfigurableFileCollection
+
+    @get:Classpath
+    abstract val runnerClasspath: ConfigurableFileCollection
+
+    @get:Classpath
+    abstract val layoutlibRuntimeArchive: ConfigurableFileCollection
+
+    @get:Classpath
+    abstract val layoutlibResourcesArchive: ConfigurableFileCollection
+
+    @get:Internal
+    abstract val fastBuildManifestFile: RegularFileProperty
+
+    @get:Internal
+    abstract val fastDescriptorCatalogFile: RegularFileProperty
+
+    @get:Internal
+    abstract val renderToolchainFile: RegularFileProperty
+
+    init {
+        rerender.convention(false)
+        fastRefresh.convention(false)
+        verifyWorkerReuse.convention(false)
+        workerMainClass.convention(DEFAULT_WORKER_MAIN_CLASS)
+    }
+
+    @Option(
+        option = "preview-id",
+        description = "Stable ViewCompose preview id from descriptors.json.",
+    )
+    fun selectPreview(value: String) {
+        previewId.set(value)
+    }
+
+    @Option(
+        option = "variant-id",
+        description = "Optional preview variant id; omitted only when the preview has one variant.",
+    )
+    fun selectVariant(value: String) {
+        variantId.set(value)
+    }
+
+    @Option(
+        option = "preview-targets-file",
+        description = "TSV file containing preview-id and variant-id pairs to render in one build.",
+    )
+    fun selectPreviewTargetsFile(value: String) {
+        batchTargetsFile.set(File(value))
+    }
+
+    @Option(
+        option = "rerender",
+        description = "Ignore an existing successful content-addressed render.",
+    )
+    fun forceRerender(value: Boolean) {
+        rerender.set(value)
+    }
+
+    @Option(
+        option = "verify-worker-reuse",
+        description = "Render warm and cold paths and fail unless pixels and structure match.",
+    )
+    fun verifyWorkerReuse(value: Boolean) {
+        verifyWorkerReuse.set(value)
+    }
+
+    @TaskAction
+    fun renderPreview() {
+        require(Runtime.version().feature() >= MINIMUM_JAVA_VERSION) {
+            "ViewCompose static preview requires JDK $MINIMUM_JAVA_VERSION or newer."
+        }
+        require(batchTargetsFile.isPresent.xor(previewId.isPresent)) {
+            "Specify exactly one of --preview-id or --preview-targets-file."
+        }
+        require(!batchTargetsFile.isPresent || !variantId.isPresent) {
+            "--variant-id cannot be combined with --preview-targets-file."
+        }
+        val baselineManifestFile = requiredBaselineFile(
+            property = buildManifestFile,
+            label = "build manifest",
+        )
+        val baselineCatalogFile = requiredBaselineFile(
+            property = descriptorCatalogFile,
+            label = "descriptor catalog",
+        )
+        val baselineManifest = PreviewProtocolJson.decodeBuildManifest(
+            baselineManifestFile.readText(),
+        )
+        val baselineCatalog = PreviewProtocolJson.decodeDescriptorCatalog(
+            baselineCatalogFile.readText(),
+        )
+        val effectiveInputs = if (fastRefresh.get()) {
+            prepareFastInputs(
+                baselineManifest = baselineManifest,
+                baselineCatalog = baselineCatalog,
+            )
+        } else {
+            EffectivePreviewInputs(
+                manifest = baselineManifest,
+                catalog = baselineCatalog,
+                manifestFile = baselineManifestFile,
+            )
+        }
+        val manifest = effectiveInputs.manifest
+        val catalog = effectiveInputs.catalog
+        val toolchain = if (fastRefresh.get()) {
+            PreviewRenderToolchain.readFrom(renderToolchainFile.get().asFile)
+        } else {
+            resolveRenderToolchain().also { resolved ->
+                resolved.writeTo(renderToolchainFile.get().asFile)
+            }
+        }
+        val renderRuntimeFingerprint = toolchain.renderRuntimeFingerprint
+        val targets = if (batchTargetsFile.isPresent) {
+            batchTargetsFile.get().asFile.readPreviewBatchTargets()
+        } else {
+            listOf(PreviewBatchTarget(previewId.get(), variantId.orNull ?: ""))
+        }
+        val plans = targets.map { target ->
+            planPreviewRender(
+                manifest = manifest,
+                catalog = catalog,
+                previewId = target.previewId,
+                requestedVariantId = target.variantId.ifBlank { null },
+                renderRuntimeFingerprint = renderRuntimeFingerprint,
+            )
+        }
+        val pendingPlans = plans.filterNot { plan ->
+            val responseFile = plan.responseFile(manifest)
+            val cacheHit = !rerender.get() &&
+                responseFile.isSuccessfulCachedResponse(expectedRequestId = plan.requestId)
+            if (cacheHit) {
+                logger.lifecycle("ViewCompose preview cache hit: ${responseFile.absolutePath}")
+            }
+            cacheHit
+        }
+        if (pendingPlans.isEmpty()) return
+
+        val artifactRoot = File(manifest.artifactRootDirectory)
+        val runtimeRoot = materializeArchive(
+            archive = toolchain.layoutlibRuntimeArchive,
+            label = "layoutlib-runtime",
+            artifactRoot = artifactRoot,
+            fingerprint = renderRuntimeFingerprint,
+        )
+        val resourcesRoot = materializeArchive(
+            archive = toolchain.layoutlibResourcesArchive,
+            label = "layoutlib-resources",
+            artifactRoot = artifactRoot,
+            fingerprint = renderRuntimeFingerprint,
+        )
+        val hostFiles = toolchain.workerHostClasspath
+        val runnerFiles = toolchain.runnerClasspath
+        require(hostFiles.isNotEmpty()) {
+            "No ViewCompose preview worker is configured. Add the worker host and Android runner " +
+                "distributions to the '$WORKER_HOST_CONFIGURATION_NAME' and " +
+                "'$RUNNER_CONFIGURATION_NAME' configurations."
+        }
+        val reloadableClasspath = manifest.paths(
+            PreviewBuildInputKind.ProjectClassDirectory,
+            PreviewBuildInputKind.ProjectClassJar,
+        )
+        val retainedRuntimeClasspath = manifest.paths(
+            PreviewBuildInputKind.RuntimeClasspath,
+            PreviewBuildInputKind.BootClasspath,
+        )
+        val resourceSymbols = PreviewResourceSymbolClasspath.materialize(
+            projectClasspath = reloadableClasspath,
+            artifactRoot = artifactRoot,
+            compatibilityFingerprint = manifest.layoutlibCompatibilityFingerprint,
+        )
+        val processClasspath = previewWorkerProcessClasspath(
+            hostFiles = hostFiles,
+            runnerFiles = runnerFiles,
+            targetRuntimeFiles = retainedRuntimeClasspath,
+            resourceSymbols = resourceSymbols,
+        )
+        val workerCompatibilityFingerprint = PreviewInputFingerprint.combine(
+            mapOf(
+                "layoutlib-environment" to manifest.layoutlibCompatibilityFingerprint,
+                "render-runtime" to renderRuntimeFingerprint,
+            ),
+        )
+        val prepared = pendingPlans.map { plan ->
+            preparePlan(
+                plan = plan,
+                manifest = manifest,
+                manifestFile = effectiveInputs.manifestFile,
+                runtimeRoot = runtimeRoot,
+                resourcesRoot = resourcesRoot,
+                renderClasspath = reloadableClasspath,
+            )
+        }
+        val failures = if (batchTargetsFile.isPresent) {
+            prepared.chunked(MAX_PREVIEW_WORKER_BATCH_SIZE)
+                .flatMapIndexed { batchIndex, batch ->
+                    executeBatch(
+                        batch = batch,
+                        batchIndex = batchIndex,
+                        processClasspath = processClasspath,
+                        compatibilityFingerprint = workerCompatibilityFingerprint,
+                        artifactRoot = artifactRoot,
+                    )
+                }
+        } else {
+            listOfNotNull(
+                executeSingle(
+                    prepared = prepared.single(),
+                    processClasspath = processClasspath,
+                    compatibilityFingerprint = workerCompatibilityFingerprint,
+                    artifactRoot = artifactRoot,
+                ),
+            )
+        }
+        if (failures.isNotEmpty() && !batchTargetsFile.isPresent) {
+            throw failures.single().second
+        }
+        failures.forEach { (plan, error) ->
+            logger.error(
+                "ViewCompose preview '${plan.descriptor.id}/${plan.variant.id}' failed: " +
+                    (error.message ?: error::class.java.simpleName),
+            )
+        }
+    }
+
+    private fun requiredBaselineFile(
+        property: RegularFileProperty,
+        label: String,
+    ): File {
+        val file = property.orNull?.asFile
+        val prefix = if (fastRefresh.get()) "$FAST_REFRESH_FALLBACK_MARKER " else ""
+        require(file?.isFile == true) {
+            "$prefix Preview $label has not been generated."
+        }
+        return file
+    }
+
+    private fun prepareFastInputs(
+        baselineManifest: PreviewBuildManifest,
+        baselineCatalog: PreviewDescriptorCatalog,
+    ): EffectivePreviewInputs {
+        val refreshed = prepareFastPreviewRefresh(
+            baselineManifest = baselineManifest,
+            baselineCatalog = baselineCatalog,
+            projectClassJars = baselineManifest.paths(
+                PreviewBuildInputKind.ProjectClassJar,
+            ),
+            projectClassDirectories = baselineManifest.paths(
+                PreviewBuildInputKind.ProjectClassDirectory,
+            ),
+        )
+        val selectedPreview = previewId.orNull
+        require(selectedPreview != null) {
+            "$FAST_REFRESH_FALLBACK_MARKER Fast refresh requires one known preview id."
+        }
+        val descriptor = refreshed.catalog.descriptors
+            .firstOrNull { candidate -> candidate.id == selectedPreview }
+        require(descriptor != null) {
+            "$FAST_REFRESH_FALLBACK_MARKER Preview '$selectedPreview' changed or was removed. " +
+                "Discovered: ${refreshed.catalog.descriptors.joinToString { it.id }}. " +
+                "Class directories: " +
+                "${baselineManifest.paths(PreviewBuildInputKind.ProjectClassDirectory)}."
+        }
+        val selectedVariant = variantId.orNull
+        require(
+            selectedVariant == null ||
+                descriptor.variants.any { candidate -> candidate.id == selectedVariant },
+        ) {
+            "$FAST_REFRESH_FALLBACK_MARKER Preview variant '$selectedVariant' changed or was removed."
+        }
+        val manifestFile = fastBuildManifestFile.get().asFile.apply {
+            writeTextAtomically(PreviewProtocolJson.encodeBuildManifest(refreshed.manifest))
+        }
+        fastDescriptorCatalogFile.get().asFile.writeTextAtomically(
+            PreviewProtocolJson.encodeDescriptorCatalog(refreshed.catalog),
+        )
+        return EffectivePreviewInputs(
+            manifest = refreshed.manifest,
+            catalog = refreshed.catalog,
+            manifestFile = manifestFile,
+        )
+    }
+
+    private fun resolveRenderToolchain(): PreviewRenderToolchain {
+        val hostFiles = workerHostClasspath.files.toList()
+        val runnerFiles = runnerClasspath.files.toList()
+        val runtimeArchive = layoutlibRuntimeArchive.requireSingleFile("Layoutlib runtime")
+        val resourcesArchive = layoutlibResourcesArchive.requireSingleFile("Layoutlib resources")
+        return PreviewRenderToolchain(
+            workerHostClasspath = hostFiles,
+            runnerClasspath = runnerFiles,
+            layoutlibRuntimeArchive = runtimeArchive,
+            layoutlibResourcesArchive = resourcesArchive,
+            renderRuntimeFingerprint = PreviewInputFingerprint.calculate(
+                mapOf(
+                    "worker-host-classpath" to hostFiles,
+                    "runner-classpath" to runnerFiles,
+                    "layoutlib-runtime" to listOf(runtimeArchive),
+                    "layoutlib-resources" to listOf(resourcesArchive),
+                ),
+            ),
+        )
+    }
+
+    private fun preparePlan(
+        plan: PreviewRenderPlan,
+        manifest: PreviewBuildManifest,
+        manifestFile: File,
+        runtimeRoot: File,
+        resourcesRoot: File,
+        renderClasspath: List<File>,
+    ): PreparedPreviewExecution {
+        val outputDirectory = File(
+            manifest.artifactRootDirectory,
+            plan.cacheRelativeDirectory,
+        )
+        val responseFile = outputDirectory.resolve(RESPONSE_FILE_NAME)
+        check(outputDirectory.isDirectory || outputDirectory.mkdirs()) {
+            "Could not create ViewCompose preview output '${outputDirectory.absolutePath}'."
+        }
+        if (responseFile.exists()) {
+            check(responseFile.delete()) {
+                "Could not invalidate stale ViewCompose preview response " +
+                    "'${responseFile.absolutePath}'."
+            }
+        }
+        val request = PreviewRenderRequest(
+            requestId = plan.requestId,
+            descriptor = plan.descriptor,
+            variantId = plan.variant.id,
+            modulePath = manifest.modulePath,
+            buildVariant = manifest.buildVariant,
+            buildFingerprint = manifest.inputFingerprint,
+            outputDirectory = outputDirectory.absolutePath,
+        )
+        val requestFile = outputDirectory.resolve(REQUEST_FILE_NAME).apply {
+            writeTextAtomically(PreviewProtocolJson.encodeRequest(request))
+        }
+        val commandFile = outputDirectory.resolve(COMMAND_FILE_NAME)
+        val command = PreviewWorkerCommand(
+            buildManifestPath = manifestFile.absolutePath,
+            renderRequestPath = requestFile.absolutePath,
+            renderResponsePath = responseFile.absolutePath,
+            layoutlibRuntimeRoot = runtimeRoot.absolutePath,
+            layoutlibResourcesRoot = resourcesRoot.absolutePath,
+            renderClasspath = renderClasspath.map(File::getAbsolutePath),
+        )
+        commandFile.writeTextAtomically(PreviewProtocolJson.encodeWorkerCommand(command))
+        return PreparedPreviewExecution(
+            plan = plan,
+            request = request,
+            responseFile = responseFile,
+            command = command,
+            commandFile = commandFile,
+        )
+    }
+
+    private fun executeSingle(
+        prepared: PreparedPreviewExecution,
+        processClasspath: List<File>,
+        compatibilityFingerprint: String,
+        artifactRoot: File,
+    ): Pair<PreviewRenderPlan, Throwable>? {
+        val firstAttempt = runCatching {
+            val exitValue = executeWorker(
+                commandFile = prepared.commandFile,
+                processClasspath = processClasspath,
+                renderClasspath = prepared.command.renderClasspath.map(::File),
+                compatibilityFingerprint = compatibilityFingerprint,
+                artifactRoot = artifactRoot,
+            )
+            validateExecution(prepared, exitValue)
+            if (verifyWorkerReuse.get() && workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS) {
+                verifyWorkerReuse(
+                    commandFile = prepared.commandFile,
+                    prepared = listOf(prepared),
+                    processClasspath = processClasspath,
+                    compatibilityFingerprint = compatibilityFingerprint,
+                    artifactRoot = artifactRoot,
+                )
+            }
+        }
+        val firstError = firstAttempt.exceptionOrNull() ?: return null
+        if (workerMainClass.get() != DEFAULT_WORKER_MAIN_CLASS) {
+            return prepared.plan to firstError
+        }
+        logger.warn(
+            "Warm ViewCompose preview failed; retrying once with a cold worker.",
+            firstError,
+        )
+        return runCatching {
+            val coldExit = executeIsolatedWorker(prepared.commandFile, processClasspath)
+            validateExecution(prepared, coldExit)
+        }.exceptionOrNull()?.let { coldError -> prepared.plan to coldError }
+    }
+
+    private fun executeBatch(
+        batch: List<PreparedPreviewExecution>,
+        batchIndex: Int,
+        processClasspath: List<File>,
+        compatibilityFingerprint: String,
+        artifactRoot: File,
+    ): List<Pair<PreviewRenderPlan, Throwable>> {
+        val batchCommandFile = temporaryDir.resolve("batch-command-$batchIndex.json")
+        batchCommandFile.writeTextAtomically(
+            PreviewProtocolJson.encodeWorkerBatchCommand(
+                PreviewWorkerBatchCommand(commands = batch.map(PreparedPreviewExecution::command)),
+            ),
+        )
+        val executionResult = runCatching {
+            executeWorker(
+                commandFile = batchCommandFile,
+                processClasspath = processClasspath,
+                renderClasspath = batch.flatMap { prepared ->
+                    prepared.command.renderClasspath.map(::File)
+                }.distinctBy(File::getAbsolutePath),
+                compatibilityFingerprint = compatibilityFingerprint,
+                artifactRoot = artifactRoot,
+            )
+        }
+        val executionError = executionResult.exceptionOrNull()
+        var failures = batch.mapNotNull { prepared ->
+            val error = executionError ?: runCatching {
+                validateExecution(prepared, checkNotNull(executionResult.getOrNull()))
+            }.exceptionOrNull()
+            error?.let { prepared.plan to it }
+        }
+        if (failures.isNotEmpty() && workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS) {
+            logger.warn(
+                "Warm ViewCompose preview batch failed; retrying once with a cold worker.",
+                failures.first().second,
+            )
+            val coldResult = runCatching {
+                executeIsolatedWorker(batchCommandFile, processClasspath)
+            }
+            val coldError = coldResult.exceptionOrNull()
+            failures = batch.mapNotNull { prepared ->
+                val error = coldError ?: runCatching {
+                    validateExecution(prepared, checkNotNull(coldResult.getOrNull()))
+                }.exceptionOrNull()
+                error?.let { prepared.plan to it }
+            }
+        }
+        if (
+            failures.isEmpty() &&
+            verifyWorkerReuse.get() &&
+            workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS
+        ) {
+            val verificationError = runCatching {
+                verifyWorkerReuse(
+                    commandFile = batchCommandFile,
+                    prepared = batch,
+                    processClasspath = processClasspath,
+                    compatibilityFingerprint = compatibilityFingerprint,
+                    artifactRoot = artifactRoot,
+                )
+            }.exceptionOrNull()
+            if (verificationError != null) {
+                return batch.map { prepared -> prepared.plan to verificationError }
+            }
+        }
+        return failures
+    }
+
+    private fun executeWorker(
+        commandFile: File,
+        processClasspath: List<File>,
+        renderClasspath: List<File>,
+        compatibilityFingerprint: String,
+        artifactRoot: File,
+    ): Int {
+        if (workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS) {
+            val workerDirectory = artifactRoot.resolve("worker")
+            val persistent = runCatching {
+                PersistentPreviewWorkerClient(
+                    endpointFile = workerDirectory.resolve("endpoint.properties"),
+                    logFile = workerDirectory.resolve("worker.log"),
+                    compatibilityFingerprint = compatibilityFingerprint,
+                    processClasspath = processClasspath,
+                    mainClass = workerMainClass.get(),
+                ).execute(commandFile)
+            }
+            persistent.getOrNull()?.let { result ->
+                logger.lifecycle(
+                    "ViewCompose preview worker ${result.processId}: " +
+                        "${result.message} processed=${result.processedCommands} " +
+                        "retiring=${result.retiring}",
+                )
+                return 0
+            }
+            logger.warn(
+                "Persistent ViewCompose preview worker failed; retrying in an isolated JVM.",
+                persistent.exceptionOrNull(),
+            )
+        }
+        val execution = execOperations.javaexec { spec ->
+            val classpath = if (workerMainClass.get() == DEFAULT_WORKER_MAIN_CLASS) {
+                processClasspath
+            } else {
+                processClasspath + renderClasspath
+            }
+            spec.classpath(classpath)
+            spec.mainClass.set(workerMainClass)
+            spec.args(commandFile.absolutePath)
+            spec.jvmArgs("-Djava.awt.headless=true")
+            spec.isIgnoreExitValue = true
+        }
+        return execution.exitValue
+    }
+
+    private fun verifyWorkerReuse(
+        commandFile: File,
+        prepared: List<PreparedPreviewExecution>,
+        processClasspath: List<File>,
+        compatibilityFingerprint: String,
+        artifactRoot: File,
+    ) {
+        val workerDirectory = artifactRoot.resolve("worker")
+        val client = PersistentPreviewWorkerClient(
+            endpointFile = workerDirectory.resolve("endpoint.properties"),
+            logFile = workerDirectory.resolve("worker.log"),
+            compatibilityFingerprint = compatibilityFingerprint,
+            processClasspath = processClasspath,
+            mainClass = workerMainClass.get(),
+        )
+        var warmExecution = client.execute(commandFile)
+        if (warmExecution.processedCommands <= prepared.size) {
+            warmExecution = client.execute(commandFile)
+        }
+        check(warmExecution.processedCommands > prepared.size) {
+            "Could not obtain a proven warm Layoutlib render for verification."
+        }
+        prepared.forEach { execution -> validateExecution(execution, 0) }
+        val warmArtifacts = prepared.mapIndexed { index, execution ->
+            val response = PreviewProtocolJson.decodeResponse(execution.responseFile.readText())
+            val artifacts = checkNotNull(response.artifacts)
+            val warmDirectory = temporaryDir.resolve("worker-reuse-verification/warm-$index")
+            check(warmDirectory.isDirectory || warmDirectory.mkdirs()) {
+                "Could not create warm verification directory '${warmDirectory.absolutePath}'."
+            }
+            WarmPreviewArtifacts(
+                image = File(checkNotNull(artifacts.imagePath)).copyTo(
+                    warmDirectory.resolve("preview.png"),
+                    overwrite = true,
+                ),
+                tree = File(checkNotNull(artifacts.renderTreePath)).copyTo(
+                    warmDirectory.resolve("render-tree.json"),
+                    overwrite = true,
+                ),
+            )
+        }
+        val coldExit = executeIsolatedWorker(commandFile, processClasspath)
+        prepared.forEach { execution -> validateExecution(execution, coldExit) }
+        prepared.zip(warmArtifacts).forEach { (execution, warm) ->
+            val response = PreviewProtocolJson.decodeResponse(execution.responseFile.readText())
+            val artifacts = checkNotNull(response.artifacts)
+            PreviewWorkerReuseVerifier.requireEquivalent(
+                warmImage = warm.image,
+                coldImage = File(checkNotNull(artifacts.imagePath)),
+                warmTree = warm.tree,
+                coldTree = File(checkNotNull(artifacts.renderTreePath)),
+            )
+        }
+        logger.lifecycle(
+            "ViewCompose preview worker reuse verified against ${prepared.size} cold render(s).",
+        )
+    }
+
+    private fun executeIsolatedWorker(
+        commandFile: File,
+        processClasspath: List<File>,
+    ): Int {
+        val execution = execOperations.javaexec { spec ->
+            spec.classpath(processClasspath)
+            spec.mainClass.set(workerMainClass)
+            spec.args(commandFile.absolutePath)
+            spec.jvmArgs("-Djava.awt.headless=true")
+            spec.isIgnoreExitValue = true
+        }
+        return execution.exitValue
+    }
+
+    private fun validateExecution(
+        prepared: PreparedPreviewExecution,
+        exitValue: Int,
+    ) {
+        val responseFile = prepared.responseFile
+        if (exitValue != 0 && !responseFile.isFile) {
+            throw GradleException(
+                "ViewCompose preview worker exited with code $exitValue " +
+                    "without a response.",
+            )
+        }
+        require(responseFile.isFile) {
+            "ViewCompose preview worker did not write '${responseFile.absolutePath}'."
+        }
+        val response = PreviewProtocolJson.decodeResponse(responseFile.readText())
+        validateResponse(prepared.request, response)
+        if (response.status != PreviewRenderStatus.Success) {
+            throw GradleException(
+                buildString {
+                    appendLine("ViewCompose preview render failed:")
+                    response.diagnostics.forEach { diagnostic ->
+                        append("- [${diagnostic.phase}] ${diagnostic.message}")
+                        diagnostic.details?.let { details -> append(": $details") }
+                        appendLine()
+                    }
+                    append("Structured response: ${responseFile.absolutePath}")
+                },
+            )
+        }
+        logger.lifecycle("ViewCompose preview rendered: ${responseFile.absolutePath}")
+    }
+
+    private fun materializeArchive(
+        archive: File,
+        label: String,
+        artifactRoot: File,
+        fingerprint: String,
+    ): File {
+        if (archive.isDirectory) {
+            return archive
+        }
+        require(archive.isFile) { "$label archive does not exist: '${archive.absolutePath}'." }
+        val cacheRoot = artifactRoot.resolve("materialized/$fingerprint")
+        val destination = cacheRoot.resolve(label)
+        val readyMarker = destination.resolve(MATERIALIZED_READY_FILE_NAME)
+        if (readyMarker.isFile) return destination
+        check(cacheRoot.isDirectory || cacheRoot.mkdirs()) {
+            "Could not create materialized preview cache '${cacheRoot.absolutePath}'."
+        }
+        val temporary = cacheRoot.resolve("$label.tmp-${System.nanoTime()}")
+        check(temporary.mkdirs()) {
+            "Could not create temporary $label directory '${temporary.absolutePath}'."
+        }
+        try {
+            val canonicalRoot = temporary.canonicalFile
+            ZipFile(archive).use { zip ->
+                zip.entries().asSequence().forEach { entry ->
+                    val target = File(temporary, entry.name).canonicalFile
+                    require(
+                        target == canonicalRoot ||
+                            target.path.startsWith(canonicalRoot.path + File.separator),
+                    ) {
+                        "Unsafe entry '${entry.name}' in $label archive '${archive.absolutePath}'."
+                    }
+                    if (entry.isDirectory) {
+                        check(target.isDirectory || target.mkdirs()) {
+                            "Could not create $label directory '${target.absolutePath}'."
+                        }
+                    } else {
+                        target.parentFile?.let { parent ->
+                            check(parent.isDirectory || parent.mkdirs()) {
+                                "Could not create $label directory '${parent.absolutePath}'."
+                            }
+                        }
+                        zip.getInputStream(entry).use { input ->
+                            target.outputStream().use(input::copyTo)
+                        }
+                    }
+                }
+            }
+            temporary.resolve(MATERIALIZED_READY_FILE_NAME).writeText("$fingerprint\n")
+            if (destination.exists() && !destination.deleteRecursively()) {
+                error("Could not replace materialized $label '${destination.absolutePath}'.")
+            }
+            runCatching {
+                Files.move(
+                    temporary.toPath(),
+                    destination.toPath(),
+                    StandardCopyOption.ATOMIC_MOVE,
+                )
+            }.getOrElse {
+                check(temporary.renameTo(destination)) {
+                    "Could not publish materialized $label '${destination.absolutePath}'."
+                }
+            }
+        } finally {
+            if (temporary.exists()) temporary.deleteRecursively()
+        }
+        pruneMaterializedArchives(
+            materializedRoot = cacheRoot.parentFile,
+            activeFingerprint = fingerprint,
+        )
+        return destination
+    }
+
+    private fun pruneMaterializedArchives(
+        materializedRoot: File,
+        activeFingerprint: String,
+    ) {
+        val stale = materializedRoot.listFiles()
+            .orEmpty()
+            .filter { candidate ->
+                candidate.isDirectory &&
+                    candidate.name != activeFingerprint &&
+                    ".tmp-" !in candidate.name
+            }
+            .sortedByDescending(File::lastModified)
+            .drop(MAXIMUM_RETAINED_STALE_MATERIALIZED_RUNTIMES)
+        stale.forEach { candidate ->
+            check(candidate.deleteRecursively()) {
+                "Could not prune materialized preview runtime '${candidate.absolutePath}'."
+            }
+        }
+    }
+}
+
+/**
+ * Lifecycle and SavedState classes must come from the Android target, not JVM/desktop variants
+ * pulled in by the tooling runner. Otherwise a target compiled against a newer AndroidX API can
+ * link against a binary-incompatible desktop class before its own Android class is visible.
+ */
+internal fun previewWorkerProcessClasspath(
+    hostFiles: List<File>,
+    runnerFiles: List<File>,
+    targetRuntimeFiles: List<File>,
+    resourceSymbols: File,
+): List<File> {
+    val targetOwnerRuntime = targetRuntimeFiles.filter(File::isAndroidOwnerRuntimeArtifact)
+    val effectiveRunnerFiles = if (targetOwnerRuntime.isEmpty()) {
+        runnerFiles
+    } else {
+        runnerFiles.filterNot(File::isDesktopOwnerRuntimeArtifact)
+    }
+    return (
+        hostFiles +
+            targetOwnerRuntime +
+            effectiveRunnerFiles +
+            targetRuntimeFiles.filterNot(targetOwnerRuntime.toHashSet()::contains) +
+            resourceSymbols
+        ).distinctBy { file -> file.absoluteFile.normalize().path }
+}
+
+private fun File.isAndroidOwnerRuntimeArtifact(): Boolean {
+    val artifactName = name.lowercase()
+    return !artifactName.contains("-desktop") &&
+        (artifactName.startsWith("lifecycle-") || artifactName.startsWith("savedstate-"))
+}
+
+private fun File.isDesktopOwnerRuntimeArtifact(): Boolean {
+    val artifactName = name.lowercase()
+    return artifactName.contains("-desktop") &&
+        (artifactName.startsWith("lifecycle-") || artifactName.startsWith("savedstate-"))
+}
+
+private data class EffectivePreviewInputs(
+    val manifest: PreviewBuildManifest,
+    val catalog: PreviewDescriptorCatalog,
+    val manifestFile: File,
+)
+
+private data class PreparedPreviewExecution(
+    val plan: PreviewRenderPlan,
+    val request: PreviewRenderRequest,
+    val responseFile: File,
+    val command: PreviewWorkerCommand,
+    val commandFile: File,
+)
+
+private data class WarmPreviewArtifacts(
+    val image: File,
+    val tree: File,
+)
+
+private fun PreviewRenderPlan.responseFile(manifest: PreviewBuildManifest): File {
+    return File(manifest.artifactRootDirectory, cacheRelativeDirectory).resolve(RESPONSE_FILE_NAME)
+}
+
+private fun PreviewBuildManifest.paths(
+    vararg kinds: PreviewBuildInputKind,
+): List<File> {
+    val selected = kinds.toSet()
+    return inputs.asSequence()
+        .filter { input -> input.kind in selected }
+        .flatMap { input -> input.paths.asSequence() }
+        .map(::File)
+        .filter(File::exists)
+        .toList()
+}
+
+private fun ConfigurableFileCollection.requireSingleFile(label: String): File {
+    require(files.size == 1) {
+        "$label must resolve exactly one archive, but resolved: " +
+            files.joinToString { file -> file.absolutePath }
+    }
+    return singleFile
+}
+
+private fun File.isSuccessfulCachedResponse(expectedRequestId: String): Boolean {
+    if (!isFile) return false
+    val response = runCatching {
+        PreviewProtocolJson.decodeResponse(readText())
+    }.getOrNull() ?: return false
+    if (response.requestId != expectedRequestId) return false
+    if (response.status != PreviewRenderStatus.Success) return false
+    val artifacts = response.artifacts ?: return false
+    return listOfNotNull(artifacts.imagePath, artifacts.renderTreePath)
+        .all { path -> File(path).isFile }
+}
+
+private fun validateResponse(
+    request: PreviewRenderRequest,
+    response: PreviewRenderResponse,
+) {
+    require(response.requestId == request.requestId) {
+        "Preview worker response request id '${response.requestId}' does not match " +
+            "'${request.requestId}'."
+    }
+    require(response.previewId == request.descriptor.id) {
+        "Preview worker response preview id '${response.previewId}' does not match " +
+            "'${request.descriptor.id}'."
+    }
+    require(response.variantId == request.variantId) {
+        "Preview worker response variant id '${response.variantId}' does not match " +
+            "'${request.variantId}'."
+    }
+}
+
+private fun File.writeTextAtomically(value: String) {
+    parentFile?.let { parent ->
+        check(parent.isDirectory || parent.mkdirs()) {
+            "Could not create ViewCompose preview directory '${parent.absolutePath}'."
+        }
+    }
+    val temporary = File(checkNotNull(parentFile), "$name.tmp")
+    temporary.writeText(value)
+    if (exists()) {
+        check(delete()) { "Could not replace ViewCompose preview file '$absolutePath'." }
+    }
+    check(temporary.renameTo(this)) {
+        "Could not publish ViewCompose preview file '$absolutePath'."
+    }
+}
+
+internal const val WORKER_HOST_CONFIGURATION_NAME = "viewComposePreviewWorkerHost"
+internal const val RUNNER_CONFIGURATION_NAME = "viewComposePreviewRunner"
+private const val DEFAULT_WORKER_MAIN_CLASS =
+    "com.viewcompose.preview.worker.PreviewWorkerHost"
+private const val MINIMUM_JAVA_VERSION = 17
+private const val REQUEST_FILE_NAME = "request.json"
+private const val COMMAND_FILE_NAME = "command.json"
+private const val RESPONSE_FILE_NAME = "response.json"
+private const val MATERIALIZED_READY_FILE_NAME = ".ready"
+private const val MAXIMUM_RETAINED_STALE_MATERIALIZED_RUNTIMES = 1

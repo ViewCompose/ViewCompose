@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.alpha
@@ -31,6 +32,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
+@ViewComposePreview(name = "Modifiers · Elevation", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierElevationSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
@@ -61,6 +63,7 @@ internal fun UiTreeBuilder.ModifierElevationSection() {
     }
 }
 
+@ViewComposePreview(name = "Modifiers · Border and clip", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierBorderClipSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
@@ -131,6 +134,7 @@ internal fun UiTreeBuilder.ModifierBorderClipSection() {
     }
 }
 
+@ViewComposePreview(name = "Modifiers · Alpha and ripple", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierAlphaRippleSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
@@ -200,6 +204,7 @@ internal fun UiTreeBuilder.ModifierAlphaRippleSection() {
     }
 }
 
+@ViewComposePreview(name = "Modifiers · Background drawable", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierBackgroundDrawableSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
@@ -253,6 +258,7 @@ internal fun UiTreeBuilder.ModifierBackgroundDrawableSection() {
     }
 }
 
+@ViewComposePreview(name = "Modifiers · Corners", group = "Demo/Sections")
 internal fun UiTreeBuilder.ModifierCornerSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,

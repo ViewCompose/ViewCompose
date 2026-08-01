@@ -1,12 +1,33 @@
 package com.viewcompose
 
 import androidx.appcompat.app.AppCompatActivity
+import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.widget.core.LazyColumn
 import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
+
+@ViewComposePreview(name = "Foundations · Guide", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewFoundationsGuide() {
+    OverviewPage(initialPageIndex = 0, onOpenCapability = {})
+}
+
+@ViewComposePreview(name = "Foundations · Theme", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewFoundationsTheme() {
+    OverviewPage(initialPageIndex = 1, onOpenCapability = {})
+}
+
+@ViewComposePreview(name = "Foundations · Media", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewFoundationsMedia() {
+    OverviewPage(initialPageIndex = 2, onOpenCapability = {})
+}
+
+@ViewComposePreview(name = "Foundations · Typography", group = "Demo/Pages")
+internal fun UiTreeBuilder.PreviewFoundationsTypography() {
+    OverviewPage(initialPageIndex = 3, onOpenCapability = {})
+}
 
 internal fun UiTreeBuilder.OverviewPage(
     initialPageIndex: Int = 0,
