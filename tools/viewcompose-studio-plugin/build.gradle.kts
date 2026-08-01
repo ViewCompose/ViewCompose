@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -37,7 +38,7 @@ abstract class VerifyAndroidStudioBuildTask : DefaultTask() {
 }
 
 group = "com.viewcompose.studio"
-version = "0.1.0-alpha34"
+version = "1.0.0"
 
 val expectedAndroidStudioBuild = "AI-261.25134.95.2612.15914620"
 val configuredAndroidStudioPath = providers
@@ -80,6 +81,7 @@ kotlin {
     jvmToolchain(21)
     compilerOptions {
         jvmTarget = JvmTarget.JVM_21
+        jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
     }
 }
 

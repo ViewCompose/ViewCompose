@@ -69,6 +69,6 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - bounded PNG loading plus structured render diagnostics and Gradle failure output;
 - an explicit AI-261 minimum build and exact local-build verification.
 
-The current alpha deterministically prefers the `debug` descriptor catalog. Initial rendering uses
-the first declared configuration; the selected configuration is then retained across source-save
-refreshes when it still exists.
+The stable 1.0 release deterministically prefers the `debug` descriptor catalog. Initial rendering
+uses the first declared configuration; the selected configuration is then retained across
+source-save refreshes when it still exists.
