@@ -13,7 +13,7 @@
 
 历史长版快照见：
 
-- [ARCHITECTURE_FULL_2026-03-06.md](../archive/ARCHITECTURE_FULL_2026-03-06.md)
+- [ARCHITECTURE_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/ARCHITECTURE_FULL_2026-03-06.md)
 
 ## 2. 当前基线（2026-07）
 

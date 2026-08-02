@@ -12,7 +12,7 @@
 
 历史阶段文档见：
 
-- [NODE_PROPS_FULL_2026-03-06.md](../archive/NODE_PROPS_FULL_2026-03-06.md)
+- [NODE_PROPS_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/NODE_PROPS_FULL_2026-03-06.md)
 
 ## 2. 当前硬边界
 

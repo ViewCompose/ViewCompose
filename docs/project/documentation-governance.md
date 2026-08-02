@@ -41,6 +41,7 @@ The source tree and future public site use the following content boundaries:
 | `docs/project/` | Contributor workflow, release, verification, roadmap, and governance | Updated with project process |
 | `docs/project/plans/` | Active multi-step plans that must survive across sessions | Archived when complete |
 | `docs/archive/` | Completed plans, audits, snapshots, and superseded documents | Historical; never current truth |
+| `website/` | Docusaurus presentation, generated-data adapters, and local site tooling | Evolves with the hosted site |
 | Generated API output | Per-artifact, per-version KDoc/Javadoc HTML | Generated during release; never edited or committed |
 
 The currently reserved top-level categories may be introduced incrementally. New categories require
@@ -283,9 +284,10 @@ Active documents use lowercase kebab-case names, except directory indexes named 
 numeric prefixes. Use descriptive stable names instead of dates unless the date is part of a
 versioned record.
 
-All repository links are relative. Never commit `file://` links, local absolute paths, or links to
-uncommitted generated output. When a document moves, update incoming links and add a hosted redirect
-in the same release.
+Links between active repository documents are relative. Historical evidence under `docs/archive/`
+is excluded from the hosted site and may use its canonical GitHub URL when linked from a public
+page. Never commit `file://` links, local absolute paths, or links to uncommitted generated output.
+When a document moves, update incoming links and add a hosted redirect in the same release.
 
 Images and diagrams must have meaningful alternative text. Prefer text, tables, and Mermaid for
 maintainable technical diagrams. Store indispensable binary assets near the owning documentation
@@ -346,6 +348,7 @@ Every documentation review verifies:
 - localization status is honest;
 - `./gradlew verifyDocumentationStructure` passes.
 
-The structure gate is included in `qaQuick`. The hosted-site phase must add generated API checks,
-site build, link/anchor validation, sample compilation, and accessibility checks before deployment.
-Generated output and deployment credentials must remain outside the repository.
+The structure gate is included in `qaQuick`. The documentation workflow additionally generates the
+complete versioned Dokka catalog, type-checks Docusaurus, enforces production-build link checking,
+and deploys only from `main`. Sample compilation and accessibility automation remain production
+hardening work. Generated output and deployment credentials must remain outside the repository.

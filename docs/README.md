@@ -1,3 +1,8 @@
+---
+title: ViewCompose Documentation
+slug: /documentation
+---
+
 # ViewCompose Documentation
 
 This directory is the canonical documentation entrance for ViewCompose. It is organized for both
@@ -5,7 +10,8 @@ human readers and AI-assisted maintenance, and it is also the content boundary f
 GitHub-hosted documentation site.
 
 The repository state and active documents below are authoritative. Files under
-[`archive/`](./archive/README.md) are historical evidence only.
+[`archive/`](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md) are
+historical evidence only.
 
 ## Choose a reading path
 
@@ -24,6 +30,7 @@ The repository state and active documents below are authoritative. Files under
 Long-lived contracts, boundaries, and runtime semantics:
 
 - [Architecture overview](./architecture/overview.md)
+- [Architecture decisions](./architecture/decisions/README.md)
 - [Modifier model](./architecture/modifier.md)
 - [NodeSpec model](./architecture/node-spec.md)
 - [State snapshots](./architecture/state-snapshots.md)
@@ -64,6 +71,7 @@ Current process, release, and planning information:
 
 - [Development workflow](./project/workflow.md)
 - [Documentation governance](./project/documentation-governance.md)
+- [Documentation site operations](./project/documentation-site.md)
 - [Publishing](./project/publishing.md)
 - [Roadmap](./project/roadmap.md)
 - [Capability verification](./project/capability-verification.md)

@@ -158,10 +158,11 @@ under [`tools/viewcompose-studio-plugin`](./tools/viewcompose-studio-plugin).
 
 ## Documentation
 
-The hosted documentation site is the next project milestone. Until it is available,
-[`docs/README.md`](docs/README.md) is the stable documentation entrance for architecture, APIs, guides,
-performance, tooling, and roadmap material. The README intentionally stays focused on project
-identity and first-time adoption.
+The hosted documentation system is maintained in this repository and publishes to
+[`docs.viewcompose.com`](https://docs.viewcompose.com). [`docs/README.md`](docs/README.md) remains
+the canonical source entrance and offline fallback for architecture, APIs, guides, performance,
+tooling, and roadmap material. The README intentionally stays focused on project identity and
+first-time adoption.
 
 ## Build and contribute
 

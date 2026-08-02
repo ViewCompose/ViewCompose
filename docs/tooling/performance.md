@@ -11,7 +11,7 @@
 
 历史长版分析见：
 
-- [PERFORMANCE_FULL_2026-03-06.md](../archive/PERFORMANCE_FULL_2026-03-06.md)
+- [PERFORMANCE_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/PERFORMANCE_FULL_2026-03-06.md)
 
 ## 2. 当前性能基线（2026-07）
 
@@ -125,7 +125,7 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
   -Pandroid.testInstrumentationRunnerArguments.shadowRenderPolicy=render_node
 ```
 
-完整数据与决策见[高级阴影执行记录](../archive/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)。
+完整数据与决策见[高级阴影执行记录](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)。
 
 自动报告与回归规则：
 

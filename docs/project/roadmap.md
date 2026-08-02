@@ -245,4 +245,4 @@
 | `OVERLAY_COMPONENTS_ROADMAP.md` | 本文档 + 归档保留 |
 | `UI_TESTING.md` | 本文档 + 归档保留 |
 
-归档目录见 [docs/archive/README.md](../archive/README.md)。
+归档目录见 [docs/archive/README.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md)。
