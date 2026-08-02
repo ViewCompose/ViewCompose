@@ -1,38 +1,70 @@
 package com.viewcompose.animation.core
 
 /**
- * 在业务值和可逐维插值 Float 向量之间转换。
- * Converts between domain values and Float vectors that can be interpolated component by component.
+ * Converts a domain value to and from independently interpolated floating-point dimensions.
+ *
+ * Implementations must use a stable vector dimension for every value of [T]. [toVector] should
+ * return an independently mutable array because the engine reads it as per-frame scratch data;
+ * [fromVector] must not retain the supplied array. Conversion runs on the animation coroutine's
+ * frame context and may occur once per endpoint per sample, so implementations should be fast,
+ * deterministic, and free of blocking work.
+ *
+ * @sample com.viewcompose.animation.core.samples.customAnimationConverterSample
+ *
+ * @param T domain value represented by the converter
  */
 interface AnimationConverter<T> {
+    /**
+     * Creates the interpolation vector for [value].
+     *
+     * @param value domain value to decompose
+     * @return an independently mutable vector with the converter's stable dimension count
+     */
     fun toVector(value: T): FloatArray
 
+    /**
+     * Reconstructs a domain value from an interpolated [vector].
+     *
+     * @param vector per-sample dimensions owned by the caller
+     * @return a domain value reconstructed without retaining [vector]
+     */
     fun fromVector(vector: FloatArray): T
 }
 
-/**
- * 框架内置的常用动画值 converter。
- * Built-in converters for common animated value types.
- */
+/** Provides stateless converters for common scalar and Android-compatible packed values. */
 object AnimationConverters {
-    val Float: AnimationConverter<Float> = object : AnimationConverter<Float> {
-        override fun toVector(value: Float): FloatArray = floatArrayOf(value)
+    /**
+     * Converts a [kotlin.Float] to one interpolation dimension.
+     *
+     * An empty vector converts to `0f`; extra dimensions are ignored.
+     */
+    val Float: AnimationConverter<kotlin.Float> = object : AnimationConverter<kotlin.Float> {
+        override fun toVector(value: kotlin.Float): FloatArray = floatArrayOf(value)
 
-        override fun fromVector(vector: FloatArray): Float = vector.firstOrNull() ?: 0f
-    }
-
-    val Int: AnimationConverter<Int> = object : AnimationConverter<Int> {
-        override fun toVector(value: Int): FloatArray = floatArrayOf(value.toFloat())
-
-        override fun fromVector(vector: FloatArray): Int = (vector.firstOrNull() ?: 0f).toInt()
+        override fun fromVector(vector: FloatArray): kotlin.Float = vector.firstOrNull() ?: 0f
     }
 
     /**
-     * ARGB int converter，按 A/R/G/B 四个通道独立插值。
-     * ARGB int converter that interpolates A/R/G/B channels independently.
+     * Converts an [kotlin.Int] to one floating-point interpolation dimension.
+     *
+     * Reconstructed values truncate toward zero. An empty vector converts to `0`; extra dimensions
+     * are ignored. Large integers may lose precision while represented as a [kotlin.Float].
      */
-    val ColorInt: AnimationConverter<Int> = object : AnimationConverter<Int> {
-        override fun toVector(value: Int): FloatArray {
+    val Int: AnimationConverter<kotlin.Int> = object : AnimationConverter<kotlin.Int> {
+        override fun toVector(value: kotlin.Int): FloatArray = floatArrayOf(value.toFloat())
+
+        override fun fromVector(vector: FloatArray): kotlin.Int = (vector.firstOrNull() ?: 0f).toInt()
+    }
+
+    /**
+     * Converts a packed ARGB [kotlin.Int] into alpha, red, green, and blue dimensions.
+     *
+     * Reconstruction truncates and clamps each channel to `0..255`. Missing alpha defaults to 255;
+     * missing color channels default to zero; extra dimensions are ignored. Interpolation is in
+     * encoded channel space and is not gamma-correct or color-space aware.
+     */
+    val ColorInt: AnimationConverter<kotlin.Int> = object : AnimationConverter<kotlin.Int> {
+        override fun toVector(value: kotlin.Int): FloatArray {
             val a = (value shr 24) and 0xFF
             val r = (value shr 16) and 0xFF
             val g = (value shr 8) and 0xFF
@@ -40,7 +72,7 @@ object AnimationConverters {
             return floatArrayOf(a.toFloat(), r.toFloat(), g.toFloat(), b.toFloat())
         }
 
-        override fun fromVector(vector: FloatArray): Int {
+        override fun fromVector(vector: FloatArray): kotlin.Int {
             val a = vector.getOrElse(0) { 255f }.toInt().coerceIn(0, 255)
             val r = vector.getOrElse(1) { 0f }.toInt().coerceIn(0, 255)
             val g = vector.getOrElse(2) { 0f }.toInt().coerceIn(0, 255)
