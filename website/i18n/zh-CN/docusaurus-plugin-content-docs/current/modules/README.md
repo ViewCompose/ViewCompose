@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 525383b836798fb36a416facebe057705f573f60c4c4ddfc94acbd3efbb31e63
+translation_source_hash: f43b09ebb288d86c800ce8c489e69430638f0e976c96f26f3c4929d56ce20111
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 | 产物 | 分类 | 运行时职责 | 手册 |
 | --- | --- | --- | --- |
 | `viewcompose-runtime` | 基础 | 平台无关的状态与观察运行时 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-runtime) |
-| `viewcompose-text-core` | 基础 | 平台无关的文本编辑模型 | 规划中 |
+| `viewcompose-text-core` | 基础 | 平台无关的文本编辑模型 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-text-core) |
 | `viewcompose-ui-contract` | 基础 | 平台无关的 UI 契约与节点规范 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract) |
 | `viewcompose-navigation-core` | 导航 | 平台无关的导航状态与事务 | 规划中 |
 | `viewcompose-navigation` | 导航 | Android 导航宿主集成 | 规划中 |

@@ -4,8 +4,16 @@ import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 
 /**
- * 可编辑文本、selection、IME composition 和 undo history 的稳定可观察 owner。
- * Stable, observable owner of editable text, selection, IME composition, and undo history.
+ * Stable observable owner of editable text, selection, IME composition, and undo history.
+ *
+ * Reads participate in the ViewCompose snapshot runtime. Edit transactions and history stacks are
+ * thread-confined and should be accessed from the owning UI thread. Programmatic document changes
+ * become individual undo units. A sequence of IME composition updates is coalesced into one undo
+ * unit when composition commits.
+ *
+ * @sample com.viewcompose.text.samples.textFieldStateSample
+ * @param initialValue first committed editable snapshot
+ * @property historyLimit maximum number of retained undo entries; must be positive
  */
 class TextFieldState(
     initialValue: TextFieldValue = TextFieldValue(""),
@@ -21,27 +29,34 @@ class TextFieldState(
     private val redoStack = ArrayDeque<TextFieldValue>()
     private var compositionBase: TextFieldValue? = null
 
+    /** Current complete editable snapshot. */
     val value: TextFieldValue
         get() = valueState.value
 
+    /** Current plain-text projection. */
     val text: String
         get() = value.text
 
+    /** Current immutable rich-text document. */
     val document: TextDocument
         get() = value.document
 
+    /** Current directional selection or cursor range. */
     val selection: TextRange
         get() = value.selection
 
+    /** Active ephemeral IME composition range, if any. */
     val composition: TextRange?
         get() = value.composition
 
+    /** Whether [undo] can restore a previous committed document. */
     val canUndo: Boolean
         get() {
             historyVersion.value
             return undoStack.isNotEmpty()
         }
 
+    /** Whether [redo] can reapply a document removed by [undo]. */
     val canRedo: Boolean
         get() {
             historyVersion.value
@@ -49,8 +64,12 @@ class TextFieldState(
         }
 
     /**
-     * 应用业务代码发起的编辑。文本内容变化会结束任何活跃 IME composition。
-     * Applies an application-owned edit. Text changes terminate any active IME composition.
+     * Applies one atomic application-owned edit.
+     *
+     * [block] receives an isolated buffer initialized from the current value. A document change
+     * terminates active IME composition, adds the previous document to undo history, and clears redo
+     * history. Selection-only changes do not create a history entry. Input transformations are not
+     * applied to programmatic edits.
      */
     fun edit(block: TextFieldBuffer.() -> Unit) {
         val current = valueState.value
@@ -68,25 +87,34 @@ class TextFieldState(
         commitProgrammaticValue(current, next)
     }
 
+    /** Replaces the document with plain [text] as one edit and places the cursor at the end. */
     fun setTextAndPlaceCursorAtEnd(text: String) {
         edit {
             replaceAll(text)
         }
     }
 
+    /** Replaces the rich document as one edit and places the cursor at the end. */
     fun setDocumentAndPlaceCursorAtEnd(document: TextDocument) {
         edit {
             replaceAll(document)
         }
     }
 
+    /** Replaces the document with empty plain text. */
     fun clearText() {
         setTextAndPlaceCursorAtEnd("")
     }
 
     /**
-     * 应用平台 adapter 提出的用户编辑，并返回最终接受值。
      * Applies a user edit proposed by a platform adapter and returns the accepted value.
+     *
+     * [inputTransformation] may rewrite or reject the proposal before commit. Selection-only and
+     * in-progress composition changes update the value without creating independent undo units.
+     *
+     * @param proposedValue complete platform-proposed editable snapshot
+     * @param inputTransformation optional synchronous policy applied to an isolated buffer
+     * @return the final committed value after transformation and history handling
      */
     fun updateFromInput(
         proposedValue: TextFieldValue,
@@ -103,6 +131,7 @@ class TextFieldState(
         return valueState.value
     }
 
+    /** Restores the previous document without IME composition, returning whether history existed. */
     fun undo(): Boolean {
         if (undoStack.isEmpty()) return false
         val current = valueState.value.withoutComposition()
@@ -113,6 +142,7 @@ class TextFieldState(
         return true
     }
 
+    /** Reapplies the next redo document without IME composition, returning whether history existed. */
     fun redo(): Boolean {
         if (redoStack.isEmpty()) return false
         val current = valueState.value.withoutComposition()
@@ -123,6 +153,7 @@ class TextFieldState(
         return true
     }
 
+    /** Clears undo, redo, and any pending IME composition baseline without changing [value]. */
     fun clearHistory() {
         if (undoStack.isEmpty() && redoStack.isEmpty()) return
         undoStack.clear()
@@ -157,8 +188,7 @@ class TextFieldState(
 
         when {
             current.composition == null && next.composition != null -> {
-                // IME composition 开始时记录基线，组合结束后把整段输入合并为一个 undo 单元。
-                // Capture the baseline when IME composition starts so the final commit becomes one undo unit.
+                // Capture the pre-composition baseline so the final IME commit is one undo unit.
                 compositionBase = current.withoutComposition()
             }
 
@@ -197,7 +227,9 @@ class TextFieldState(
         return if (composition == null) this else copy(composition = null)
     }
 
+    /** Text-field state defaults. */
     companion object {
+        /** Default maximum number of retained undo entries. */
         const val DEFAULT_HISTORY_LIMIT: Int = 100
     }
 }

@@ -1,12 +1,14 @@
 package com.viewcompose.text
 
 /**
- * 平台文本编辑器使用的有方向 UTF-16 范围。
- * A directional UTF-16 range used by platform text editors.
+ * Directional UTF-16 range used by platform text-editing contracts.
  *
- * [start] 和 [end] 会刻意保留选择方向；需要有序范围时使用 [min] 和 [max]。
- * [start] and [end] intentionally preserve selection direction. Use [min] and [max] when an ordered
- * range is required.
+ * [start] and [end] preserve selection direction and are independently non-negative. Use [min] and
+ * [max] for ordered document operations. A range is not bound to a document; document and field
+ * constructors validate upper bounds when they accept one.
+ *
+ * @property start directional anchor offset in UTF-16 code units
+ * @property end directional active offset in UTF-16 code units
  */
 data class TextRange(
     val start: Int,
@@ -17,15 +19,19 @@ data class TextRange(
         require(end >= 0) { "TextRange end must be non-negative." }
     }
 
+    /** Whether both directional offsets identify the same cursor position. */
     val collapsed: Boolean
         get() = start == end
 
+    /** Smaller ordered offset. */
     val min: Int
         get() = minOf(start, end)
 
+    /** Larger ordered offset. */
     val max: Int
         get() = maxOf(start, end)
 
+    /** Ordered range length in UTF-16 code units. */
     val length: Int
         get() = max - min
 }
