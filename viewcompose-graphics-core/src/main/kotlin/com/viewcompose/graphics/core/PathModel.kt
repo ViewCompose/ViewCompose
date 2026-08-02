@@ -1,22 +1,18 @@
 package com.viewcompose.graphics.core
 
-/**
- * 路径填充规则，决定自交路径或嵌套轮廓的内部区域计算方式。
- * Path fill rule that defines how interiors are computed for self-intersecting or nested contours.
- */
+/** Selects the winding rule used to determine the interior of self-intersecting or nested paths. */
 enum class PathFillType {
     NonZero,
     EvenOdd,
 }
 
-/**
- * 平台中立的路径命令序列，渲染器按顺序转换为原生 Path。
- * Platform-neutral path command sequence that renderers convert to native Path objects in order.
- */
+/** Describes one immutable operation in a renderer-replayable path command sequence. */
 sealed interface PathCommand {
     /**
-     * 移动当前点，不绘制线段。
-     * Moves the current point without drawing a segment.
+     * Starts or repositions a contour without drawing a segment.
+     *
+     * @property x target horizontal coordinate
+     * @property y target vertical coordinate
      */
     data class MoveTo(
         val x: Float,
@@ -24,8 +20,10 @@ sealed interface PathCommand {
     ) : PathCommand
 
     /**
-     * 从当前点绘制直线到目标点。
-     * Draws a straight line from the current point to the target point.
+     * Draws a straight segment from the current point to the target.
+     *
+     * @property x target horizontal coordinate
+     * @property y target vertical coordinate
      */
     data class LineTo(
         val x: Float,
@@ -33,8 +31,12 @@ sealed interface PathCommand {
     ) : PathCommand
 
     /**
-     * 二次贝塞尔曲线命令，x1/y1 为控制点，x2/y2 为终点。
-     * Quadratic Bezier command where x1/y1 is the control point and x2/y2 is the end point.
+     * Draws a quadratic Bézier segment from the current point.
+     *
+     * @property x1 control-point horizontal coordinate
+     * @property y1 control-point vertical coordinate
+     * @property x2 endpoint horizontal coordinate
+     * @property y2 endpoint vertical coordinate
      */
     data class QuadTo(
         val x1: Float,
@@ -44,8 +46,14 @@ sealed interface PathCommand {
     ) : PathCommand
 
     /**
-     * 三次贝塞尔曲线命令，包含两个控制点和一个终点。
-     * Cubic Bezier command containing two control points and one end point.
+     * Draws a cubic Bézier segment from the current point.
+     *
+     * @property x1 first control-point horizontal coordinate
+     * @property y1 first control-point vertical coordinate
+     * @property x2 second control-point horizontal coordinate
+     * @property y2 second control-point vertical coordinate
+     * @property x3 endpoint horizontal coordinate
+     * @property y3 endpoint vertical coordinate
      */
     data class CubicTo(
         val x1: Float,
@@ -57,8 +65,15 @@ sealed interface PathCommand {
     ) : PathCommand
 
     /**
-     * 沿椭圆边界绘制弧线，可选择是否强制移动到弧线起点。
-     * Draws an arc on the oval bounds and can force a move to the arc start.
+     * Adds an arc along [oval].
+     *
+     * Angles follow Android Canvas convention: degrees are measured clockwise from the positive x
+     * axis in the default y-down coordinate space.
+     *
+     * @property oval axis-aligned bounds of the source ellipse
+     * @property startAngleDegrees starting angle in degrees
+     * @property sweepAngleDegrees signed angular sweep in degrees
+     * @property forceMoveTo whether to begin a new contour at the arc start instead of connecting it
      */
     data class ArcTo(
         val oval: Rect,
@@ -67,16 +82,20 @@ sealed interface PathCommand {
         val forceMoveTo: Boolean,
     ) : PathCommand
 
-    /**
-     * 闭合当前轮廓。
-     * Closes the current contour.
-     */
+    /** Closes the current contour with a segment to its starting point. */
     data object Close : PathCommand
 }
 
 /**
- * 不可变路径模型，保存填充规则和路径命令快照。
- * Immutable path model that stores the fill rule and a snapshot of path commands.
+ * Stores a platform-neutral path fill rule and ordered command sequence.
+ *
+ * The supplied command list is retained by the data class rather than defensively copied. Builder
+ * APIs provide a snapshot; direct callers should not mutate a mutable list after construction.
+ * Numeric coordinates are stored without finite-value validation.
+ *
+ * @property fillType winding rule used for filling and clipping
+ * @property commands commands replayed in list order by a renderer
+ * @sample com.viewcompose.graphics.core.samples.pathSample
  */
 data class PathModel(
     val fillType: PathFillType = PathFillType.NonZero,
@@ -84,22 +103,21 @@ data class PathModel(
 )
 
 /**
- * 路径构建器，用链式 API 记录命令并在 build 时复制为不可变模型。
- * Path builder that records commands through a fluent API and copies them into an immutable model on build.
+ * Mutable fluent builder that snapshots an ordered command list into [PathModel].
+ *
+ * The builder can be reused after [build]; previously built models are unaffected by later commands.
  */
 class PathBuilder {
     private val commands = mutableListOf<PathCommand>()
     private var fillType: PathFillType = PathFillType.NonZero
 
-    /**
-     * 设置后续构建出的路径填充规则。
-     * Sets the fill rule for the path produced by this builder.
-     */
+    /** Sets the fill rule captured by subsequent [build] calls and returns this builder. */
     fun fillType(fillType: PathFillType): PathBuilder {
         this.fillType = fillType
         return this
     }
 
+    /** Adds a contour move to ([x], [y]) and returns this builder. */
     fun moveTo(
         x: Float,
         y: Float,
@@ -108,6 +126,7 @@ class PathBuilder {
         return this
     }
 
+    /** Adds a straight segment to ([x], [y]) and returns this builder. */
     fun lineTo(
         x: Float,
         y: Float,
@@ -116,6 +135,7 @@ class PathBuilder {
         return this
     }
 
+    /** Adds a quadratic Bézier through control point ([x1], [y1]) to ([x2], [y2]). */
     fun quadTo(
         x1: Float,
         y1: Float,
@@ -126,6 +146,7 @@ class PathBuilder {
         return this
     }
 
+    /** Adds a cubic Bézier through two control points to endpoint ([x3], [y3]). */
     fun cubicTo(
         x1: Float,
         y1: Float,
@@ -138,6 +159,14 @@ class PathBuilder {
         return this
     }
 
+    /**
+     * Adds an elliptical arc and returns this builder.
+     *
+     * @param oval ellipse bounds
+     * @param startAngleDegrees clockwise start angle in degrees in the default coordinate space
+     * @param sweepAngleDegrees signed sweep in degrees
+     * @param forceMoveTo whether the arc begins a new contour
+     */
     fun arcTo(
         oval: Rect,
         startAngleDegrees: Float,
@@ -153,11 +182,13 @@ class PathBuilder {
         return this
     }
 
+    /** Closes the current contour and returns this builder. */
     fun close(): PathBuilder {
         commands += PathCommand.Close
         return this
     }
 
+    /** Returns an independent immutable command-list snapshot with the current fill type. */
     fun build(): PathModel {
         return PathModel(
             fillType = fillType,
@@ -167,8 +198,9 @@ class PathBuilder {
 }
 
 /**
- * 使用 DSL 构建不可变路径模型。
- * Builds an immutable path model with a DSL block.
+ * Builds a [PathModel] with a fresh [PathBuilder].
+ *
+ * @sample com.viewcompose.graphics.core.samples.pathSample
  */
 fun path(builder: PathBuilder.() -> Unit): PathModel {
     return PathBuilder().apply(builder).build()

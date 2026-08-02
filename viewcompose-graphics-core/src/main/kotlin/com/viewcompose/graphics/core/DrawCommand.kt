@@ -1,28 +1,24 @@
 package com.viewcompose.graphics.core
 
 /**
- * 平台中立的绘制命令，作为 DSL/契约层与具体渲染器之间的稳定边界。
- * Platform-neutral draw command used as the stable boundary between DSL/contracts and concrete renderers.
+ * Defines one platform-neutral operation in an ordered renderer command stream.
  *
- * 命令对象应保持不可变，渲染器必须按列表顺序执行。
- * Command objects should remain immutable, and renderers must execute them in list order.
+ * Renderers execute commands in list order and carry canvas state until a matching restore. Most
+ * numeric inputs are stored without validation and use the current drawing coordinate space,
+ * normally physical pixels on Android.
  */
 sealed interface DrawCommand {
-    /**
-     * 保存当前画布状态。
-     * Saves the current canvas state.
-     */
+    /** Pushes the current transform, clip, and paint-related canvas state. */
     data object Save : DrawCommand
 
-    /**
-     * 恢复最近一次保存的画布状态。
-     * Restores the most recently saved canvas state.
-     */
+    /** Pops the state from the most recent [Save] or [SaveLayer]. */
     data object Restore : DrawCommand
 
     /**
-     * 保存图层并可选限制边界，常用于透明度、滤镜或混合模式隔离。
-     * Saves a layer with optional bounds, typically for alpha, filters, or blend-mode isolation.
+     * Pushes canvas state and redirects drawing to an isolated layer.
+     *
+     * @property bounds optional layer bounds; `null` delegates bounds choice to the renderer
+     * @property paint compositing paint applied when the layer is restored
      */
     data class SaveLayer(
         val bounds: Rect? = null,
@@ -30,8 +26,10 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 平移当前画布坐标系。
-     * Translates the current canvas coordinate space.
+     * Translates the current coordinate space.
+     *
+     * @property dx horizontal translation
+     * @property dy vertical translation
      */
     data class Translate(
         val dx: Float,
@@ -39,8 +37,11 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 以 pivot 为中心缩放当前画布坐标系。
-     * Scales the current canvas coordinate space around the pivot.
+     * Scales the current coordinate space around [pivot].
+     *
+     * @property sx horizontal scale multiplier
+     * @property sy vertical scale multiplier
+     * @property pivot fixed point in the pre-scale coordinate space
      */
     data class Scale(
         val sx: Float,
@@ -49,8 +50,10 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 以 pivot 为中心旋转当前画布坐标系。
-     * Rotates the current canvas coordinate space around the pivot.
+     * Rotates the current coordinate space around [pivot].
+     *
+     * @property degrees clockwise angle in the default Android y-down coordinate space
+     * @property pivot fixed point in the pre-rotation coordinate space
      */
     data class Rotate(
         val degrees: Float,
@@ -58,8 +61,10 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 倾斜当前画布坐标系。
-     * Skews the current canvas coordinate space.
+     * Skews the current coordinate space.
+     *
+     * @property kx horizontal skew factor
+     * @property ky vertical skew factor
      */
     data class Skew(
         val kx: Float,
@@ -67,32 +72,38 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 拼接自定义 3x3 变换矩阵。
-     * Concatenates a custom 3x3 transform matrix.
+     * Concatenates [matrix] with the current canvas transform.
+     *
+     * @property matrix row-major 3-by-3 transform
      */
     data class Concat(
         val matrix: Matrix3,
     ) : DrawCommand
 
     /**
-     * 以矩形裁剪后续绘制内容。
-     * Clips following draw content to a rectangle.
+     * Intersects the current clip with [rect] for subsequent commands.
+     *
+     * @property rect clip rectangle in the current coordinate space
      */
     data class ClipRect(
         val rect: Rect,
     ) : DrawCommand
 
     /**
-     * 以路径裁剪后续绘制内容。
-     * Clips following draw content to a path.
+     * Intersects the current clip with [path] for subsequent commands.
+     *
+     * @property path path and fill rule defining the clip region
      */
     data class ClipPath(
         val path: PathModel,
     ) : DrawCommand
 
     /**
-     * 绘制嵌套场景，允许以独立 transform/clip 组合复用命令列表。
-     * Draws a nested scene so command lists can be reused with an independent transform/clip.
+     * Replays a validated nested scene under an independent transform and optional clip.
+     *
+     * @property scene immutable scene to replay
+     * @property transform transform applied around nested command execution
+     * @property clip optional clip applied around nested command execution
      */
     data class DrawScene(
         val scene: com.viewcompose.graphics.core.DrawScene,
@@ -101,8 +112,11 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 绘制直线，默认使用描边画笔。
-     * Draws a line, using a stroke paint by default.
+     * Draws a line segment.
+     *
+     * @property from segment start
+     * @property to segment end
+     * @property paint stroke paint by default; renderers interpret other styles if supplied
      */
     data class DrawLine(
         val from: Offset,
@@ -111,8 +125,10 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 绘制矩形。
-     * Draws a rectangle.
+     * Draws an axis-aligned rectangle.
+     *
+     * @property rect rectangle bounds
+     * @property paint paint used for fill or stroke
      */
     data class DrawRect(
         val rect: Rect,
@@ -120,8 +136,10 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 绘制圆角矩形。
      * Draws a rounded rectangle.
+     *
+     * @property roundRect bounds and independent corner radii
+     * @property paint paint used for fill or stroke
      */
     data class DrawRoundRect(
         val roundRect: RoundRect,
@@ -129,8 +147,11 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 绘制圆形。
      * Draws a circle.
+     *
+     * @property center circle center
+     * @property radius radius in current coordinate units
+     * @property paint paint used for fill or stroke
      */
     data class DrawCircle(
         val center: Offset,
@@ -139,8 +160,10 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 在矩形边界内绘制椭圆。
-     * Draws an oval inside the rectangle bounds.
+     * Draws an ellipse fitted to [rect].
+     *
+     * @property rect ellipse bounds
+     * @property paint paint used for fill or stroke
      */
     data class DrawOval(
         val rect: Rect,
@@ -148,8 +171,13 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 绘制弧线，可选择是否连接到圆心形成扇形。
-     * Draws an arc and can connect it to the center to form a wedge.
+     * Draws an elliptical arc or center-connected wedge.
+     *
+     * @property oval source ellipse bounds
+     * @property startAngleDegrees clockwise start angle from the positive x axis
+     * @property sweepAngleDegrees signed angular sweep
+     * @property useCenter whether to connect arc endpoints to the ellipse center
+     * @property paint paint used for fill or stroke
      */
     data class DrawArc(
         val oval: Rect,
@@ -160,8 +188,10 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 绘制路径模型。
      * Draws a path model.
+     *
+     * @property path path commands and fill rule
+     * @property paint paint used for fill or stroke
      */
     data class DrawPath(
         val path: PathModel,
@@ -169,8 +199,12 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 绘制图像，可选指定源矩形和目标矩形。
-     * Draws an image with optional source and destination rectangles.
+     * Draws a host-resolved image region into an optional destination.
+     *
+     * @property image stable image reference resolved by the host
+     * @property src optional source-pixel crop; `null` selects the full image
+     * @property dst optional destination bounds; `null` uses renderer-native intrinsic placement
+     * @property paint opacity, filtering, and blend request
      */
     data class DrawImage(
         val image: ImageRef,
@@ -180,8 +214,12 @@ sealed interface DrawCommand {
     ) : DrawCommand
 
     /**
-     * 在指定基线原点绘制文本。
-     * Draws text at the specified baseline origin.
+     * Draws one unwrapped text string from a baseline origin.
+     *
+     * @property text text passed unchanged to the renderer
+     * @property origin baseline origin in the current coordinate space
+     * @property style minimal type size and emphasis request
+     * @property paint color, alpha, filter, and blend request
      */
     data class DrawText(
         val text: String,
@@ -192,18 +230,25 @@ sealed interface DrawCommand {
 }
 
 /**
- * 不可变绘制场景，是一组已经校验 save/restore 平衡的命令快照。
- * Immutable draw scene containing a validated snapshot of commands with balanced save/restore pairs.
+ * Stores an immutable snapshot of commands with balanced canvas save and restore operations.
+ *
+ * Construction copies the command list and rejects underflow or leftover save depth. Nested
+ * [DrawCommand.DrawScene] values are already validated independently and do not affect the outer
+ * scene's balance.
+ *
+ * @sample com.viewcompose.graphics.core.samples.drawSceneSample
  */
 class DrawScene internal constructor(
     commands: List<DrawCommand>,
 ) {
+    /** Ordered immutable command-list snapshot replayed by renderers. */
     val commands: List<DrawCommand> = commands.toList()
 
     init {
         validateSaveRestoreBalance(this.commands)
     }
 
+    /** Compares scenes by their ordered command lists. */
     override fun equals(other: Any?): Boolean {
         return this === other || (
             other is DrawScene &&
@@ -211,8 +256,10 @@ class DrawScene internal constructor(
             )
     }
 
+    /** Computes a hash from the ordered command list. */
     override fun hashCode(): Int = commands.hashCode()
 
+    /** Returns a diagnostic representation containing the command list. */
     override fun toString(): String = "DrawScene(commands=$commands)"
 
     private fun validateSaveRestoreBalance(commands: List<DrawCommand>) {
@@ -240,8 +287,11 @@ class DrawScene internal constructor(
 }
 
 /**
- * 图像引用的轻量描述，stableId 用于宿主侧缓存或资源定位。
- * Lightweight image reference whose stableId is used by hosts for caching or resource lookup.
+ * Identifies an image without embedding platform bitmap ownership in a draw scene.
+ *
+ * @property stableId host-defined equality key used for lookup or caching
+ * @property width declared intrinsic pixel width
+ * @property height declared intrinsic pixel height
  */
 data class ImageRef(
     val stableId: Any,
@@ -250,8 +300,13 @@ data class ImageRef(
 )
 
 /**
- * 文本绘制样式的最小跨平台模型。
- * Minimal cross-platform model for text drawing style.
+ * Describes the minimal cross-platform text style supported by draw commands.
+ *
+ * It does not model font family, locale, shaping, wrapping, alignment, or rich spans.
+ *
+ * @property textSizePx requested physical-pixel text size
+ * @property isBold whether to request a bold typeface style
+ * @property isItalic whether to request an italic typeface style
  */
 data class TextStyle(
     val textSizePx: Float = 14f,

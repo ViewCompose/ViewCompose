@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 2f1a74e89333e057a108cdd4fea406e18d2c256f20581e0861d5853e106b1c8b
+translation_source_hash: 72888c037427bfb6b7ff6a2415dcf7e3181dc9cce91b52dcc5c6ce3aa10c3763
 translation_status: current
 ---
 
@@ -37,7 +37,7 @@ translation_status: current
 | `viewcompose-animation` | 动画 | 动画 DSL 与组合集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation) |
 | `viewcompose-gesture-core` | 手势 | 平台无关的手势策略 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-gesture-core) |
 | `viewcompose-gesture` | 手势 | 手势 DSL 与状态 API | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-gesture) |
-| `viewcompose-graphics-core` | 图形 | 平台无关的图形模型 | 规划中 |
+| `viewcompose-graphics-core` | 图形 | 平台无关的图形模型 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-graphics-core) |
 | `viewcompose-graphics` | 图形 | 绘制 DSL 与组合集成 | 规划中 |
 | `viewcompose-shadow-android` | 可选 Android 后端 | 高级 Android 阴影渲染 | 规划中 |
 | `viewcompose-widget-constraintlayout` | 可选控件 | ConstraintLayout DSL | 规划中 |
