@@ -87,6 +87,10 @@ overviews, and staged enforcement.
 - `viewcompose-image-coil` has a reviewed Q2/Q3 baseline covering Android target acceptance,
   asynchronous replacement, Coil-owned cancellation and caching, loader ownership, compiled
   samples, and an always-on strict Dokka warning gate;
+- `viewcompose-preview-core` has a reviewed Q2/Q3 baseline covering annotation signatures,
+  deterministic configuration matrices, stable identity, build/worker boundaries, exact protocol
+  negotiation, JSON compatibility, source-aware diagnostics, compiled samples, and an always-on
+  strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -143,12 +147,13 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-image-coil` was repaired from one initially undocumented declaration to a
-zero-warning strict baseline. Target acceptance, asynchronous enqueueing, target-aware replacement,
-Coil-owned caching and caller-owned loader lifecycle were reviewed; a compiled sample and bilingual
+2026-08-02: `viewcompose-preview-core` was repaired from 239 initially undocumented declarations to
+a zero-warning strict baseline. Annotation JVM signatures, deterministic configuration matrices,
+stable identities, build and worker commands, exact protocol negotiation, canonical JSON, response
+invariants and source-aware render diagnostics were reviewed; compiled samples and a bilingual
 module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-preview-core`, add its module manual and focused samples, then enable
-its module-level strict warning gate without changing API behavior.
+Audit and repair `viewcompose-preview-gradle-plugin`, add its module manual and focused samples,
+then enable its module-level strict warning gate without changing API behavior.

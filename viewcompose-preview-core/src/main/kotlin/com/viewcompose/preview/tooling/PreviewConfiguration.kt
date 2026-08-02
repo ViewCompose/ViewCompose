@@ -2,10 +2,9 @@ package com.viewcompose.preview.tooling
 
 import kotlinx.serialization.Serializable
 
-/**
- * Stable defaults shared by annotations, Gradle tooling, and render workers.
- */
+/** Stable defaults shared by annotations, Gradle tooling, and render workers. */
 object PreviewDefaults {
+    /** Default logical width of the reference phone preview. */
     const val WIDTH_DP: Int = 411
     /**
      * Annotation/configuration value requesting a bounded full-content render.
@@ -27,6 +26,7 @@ object PreviewDefaults {
      * Safety ceiling for auto-height screenshots before density and pixel-budget limits apply.
      */
     const val MAX_AUTO_HEIGHT_DP: Int = 4_096
+
     /**
      * Reference-phone density shared with Compose Preview's 411 x 891 dp phone configuration.
      * 420 dpi / Android's 160 dpi baseline = 2.625 physical pixels per dp.
@@ -35,8 +35,14 @@ object PreviewDefaults {
 
     /** Reference-tablet density used by Compose Preview's 240 dpi tablet configuration. */
     const val TABLET_DENSITY: Float = 1.5f
+
+    /** Default font-scale multiplier. */
     const val FONT_SCALE: Float = 1f
+
+    /** Default BCP-47 locale tag. */
     const val LOCALE_TAG: String = "en-US"
+
+    /** Annotation sentinel that delegates API selection to the render environment. */
     const val UNSPECIFIED_API_LEVEL: Int = -1
 }
 
@@ -68,6 +74,16 @@ enum class PreviewLayoutDirection {
  * This model intentionally contains no "system" values. A caller must resolve system-dependent
  * choices before sending a request so the same request produces the same preview in Gradle, CI,
  * and Android Studio.
+ *
+ * @sample com.viewcompose.preview.tooling.samples.previewConfigurationMatrixSample
+ * @property widthDp logical canvas width; must be greater than zero
+ * @property heightDp positive fixed viewport height or [PreviewDefaults.AUTO_HEIGHT_DP]
+ * @property density positive finite physical-pixels-per-dp scale
+ * @property fontScale positive finite scale applied to `sp` text
+ * @property localeTags non-empty ordered BCP-47 locale preference list without blank entries
+ * @property layoutDirection explicit layout direction independent of the host system
+ * @property theme explicit light or dark application-resource mode
+ * @property apiLevel positive Android API level, or `null` to use the worker-supported default
  */
 @Serializable
 data class PreviewConfiguration(
@@ -101,9 +117,7 @@ data class PreviewConfiguration(
     }
 }
 
-/**
- * Concrete device height used by Android resources and the first layout pass.
- */
+/** Concrete device height used by Android resources and the first layout pass. */
 val PreviewConfiguration.viewportHeightDp: Int
     get() = if (heightDp == PreviewDefaults.AUTO_HEIGHT_DP) {
         PreviewDefaults.VIEWPORT_HEIGHT_DP
@@ -111,14 +125,16 @@ val PreviewConfiguration.viewportHeightDp: Int
         heightDp
     }
 
-/**
- * Whether the screenshot canvas may grow beyond [viewportHeightDp].
- */
+/** Whether the screenshot canvas may grow beyond [viewportHeightDp]. */
 val PreviewConfiguration.isAutoHeight: Boolean
     get() = heightDp == PreviewDefaults.AUTO_HEIGHT_DP
 
 /**
  * Named configuration presented as one selectable preview variant.
+ *
+ * @property id path-safe stable ID using lowercase ASCII words separated by `-` or reserved `__`
+ * @property displayName non-blank human-readable label
+ * @property configuration fully resolved render configuration
  */
 @Serializable
 data class PreviewVariant(
@@ -133,7 +149,20 @@ data class PreviewVariant(
 }
 
 /**
- * Nullable configuration fields used by a matrix option to override a base configuration.
+ * Nullable fields applied by one matrix option over a base configuration.
+ *
+ * A `null` field inherits the current value. Axes apply from first to last, so later options win
+ * when several axes override the same field. API level cannot explicitly reset a non-null base to
+ * `null`; construct a different base when that distinction is required.
+ *
+ * @property widthDp replacement logical width, or `null` to inherit
+ * @property heightDp replacement fixed/auto height, or `null` to inherit
+ * @property density replacement density, or `null` to inherit
+ * @property fontScale replacement font scale, or `null` to inherit
+ * @property localeTags replacement locale preference list, or `null` to inherit
+ * @property layoutDirection replacement direction, or `null` to inherit
+ * @property theme replacement resource mode, or `null` to inherit
+ * @property apiLevel replacement positive API level, or `null` to inherit
  */
 @Serializable
 data class PreviewConfigurationOverride(
@@ -146,6 +175,11 @@ data class PreviewConfigurationOverride(
     val theme: PreviewTheme? = null,
     val apiLevel: Int? = null,
 ) {
+    /**
+     * Returns a validated configuration with every non-null override applied to [base].
+     *
+     * @throws IllegalArgumentException when the resulting configuration violates its invariants
+     */
     fun applyTo(base: PreviewConfiguration): PreviewConfiguration {
         return PreviewConfiguration(
             widthDp = widthDp ?: base.widthDp,
@@ -162,6 +196,10 @@ data class PreviewConfigurationOverride(
 
 /**
  * One named choice on a preview matrix axis.
+ *
+ * @property id stable option ID, unique within its owning axis
+ * @property displayName non-blank label shown in tooling
+ * @property override fields applied when this option participates in a combination
  */
 @Serializable
 data class PreviewConfigurationOption(
@@ -179,6 +217,10 @@ data class PreviewConfigurationOption(
 
 /**
  * One independently selectable dimension of a preview matrix.
+ *
+ * @property id stable axis ID, unique within a matrix
+ * @property displayName non-blank label shown in tooling
+ * @property options non-empty options with unique stable IDs, preserved in declared order
  */
 @Serializable
 data class PreviewConfigurationAxis(
@@ -205,6 +247,10 @@ data class PreviewConfigurationAxis(
 
 /**
  * Deterministic Cartesian product used by Gradle, tests, and the IDE variant selector.
+ *
+ * @sample com.viewcompose.preview.tooling.samples.previewConfigurationMatrixSample
+ * @property base initial resolved configuration inherited by every combination
+ * @property axes non-empty ordered axes with unique IDs
  */
 @Serializable
 data class PreviewConfigurationMatrix(
@@ -223,6 +269,13 @@ data class PreviewConfigurationMatrix(
         }
     }
 
+    /**
+     * Expands all axes into variants in deterministic declaration order.
+     *
+     * IDs concatenate `axis-option` segments with the reserved `__` separator. Display names use
+     * ` / `. Later axes apply after earlier axes and therefore win on overlapping fields. The
+     * returned count is the product of option counts and no combinations are cached.
+     */
     fun variants(): List<PreviewVariant> {
         val combinations = axes.fold(
             initial = listOf(MatrixCombination(configuration = base)),
@@ -247,10 +300,9 @@ data class PreviewConfigurationMatrix(
     }
 }
 
-/**
- * Reusable axes covering the common first-party static preview configurations.
- */
+/** Reusable axes covering common first-party static preview configurations. */
 object PreviewConfigurationPresets {
+    /** Light and dark application-resource modes. */
     val Theme: PreviewConfigurationAxis = PreviewConfigurationAxis(
         id = "theme",
         displayName = "Theme",
@@ -268,6 +320,7 @@ object PreviewConfigurationPresets {
         ),
     )
 
+    /** LTR English and RTL Arabic locale/direction pairs. */
     val LayoutDirection: PreviewConfigurationAxis = PreviewConfigurationAxis(
         id = "layout-direction",
         displayName = "Layout direction",
@@ -291,6 +344,7 @@ object PreviewConfigurationPresets {
         ),
     )
 
+    /** Reference phone and tablet dimensions with matching densities. */
     val Device: PreviewConfigurationAxis = PreviewConfigurationAxis(
         id = "device",
         displayName = "Device",
@@ -316,6 +370,7 @@ object PreviewConfigurationPresets {
         ),
     )
 
+    /** Default, large, and accessibility-scale typography options. */
     val FontScale: PreviewConfigurationAxis = PreviewConfigurationAxis(
         id = "font-scale",
         displayName = "Font scale",
