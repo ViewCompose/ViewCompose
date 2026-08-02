@@ -3,14 +3,16 @@ package com.viewcompose.navigation
 import com.viewcompose.navigation.core.NavCommand
 
 /**
- * 应用在导航转场边界上的单个目的地视觉变换。
  * Visual transform applied to one destination at an edge of a navigation transition.
  *
- * [travelFraction] 以一个可见 pane 的宽度为基准，[travelDp] 会叠加到该距离上。实际方向由
- * Android 宿主根据导航命令和布局方向解析。
  * [travelFraction] is relative to one visible pane and [travelDp] is added to that distance. The
  * transition direction is resolved from the navigation command and layout direction by the Android
  * host.
+ *
+ * @property travelFraction finite unsigned pane-width fraction in `0..1`
+ * @property travelDp finite signed distance added before directional resolution
+ * @property alpha finite opacity in `0..1`
+ * @property scale finite positive uniform scale
  */
 data class NavDestinationTransform(
     val travelFraction: Float = 0f,
@@ -41,14 +43,13 @@ data class NavDestinationTransform(
 }
 
 /**
- * 原生导航 motion 使用的时间曲线。
  * Timing path used by native navigation motion.
  *
- * 公开构造函数会创建一条从 `(0, 0)` 到 `(1, 1)` 的三次贝塞尔曲线。系统 motion 可使用多段
- * 三次曲线，从而精确表示 Android `fast_out_extra_slow_in`，而不需要近似成单曲线。
  * The public constructor creates one cubic Bézier from `(0, 0)` to `(1, 1)`. System motion can use
  * multiple cubic segments so Android's `fast_out_extra_slow_in` path is represented without
  * approximating it as a single curve.
+ *
+ * @sample com.viewcompose.navigation.samples.navigationMotionSample
  */
 class NavMotionEasing private constructor(
     internal val segments: List<NavMotionPathSegment>,
@@ -96,10 +97,7 @@ class NavMotionEasing private constructor(
         }
     }
 
-    /**
-     * 将线性进度映射为 easing 后的进度，输入会被限制在 0..1。
-     * Maps linear progress to eased progress, clamping input to 0..1.
-     */
+    /** Maps linear progress to eased progress, clamping input to `0..1`. */
     fun transform(fraction: Float): Float {
         val targetX = fraction.coerceIn(0f, 1f)
         if (targetX == 0f || targetX == 1f) {
@@ -157,51 +155,37 @@ class NavMotionEasing private constructor(
             fraction * fraction * fraction * end
     }
 
+    /** Built-in curves used by Android navigation motion. */
     companion object {
-        /**
-         * 通用进入/退出转场曲线。
-         * General-purpose enter/exit transition curve.
-         */
+        /** General-purpose enter/exit transition curve. */
         val Standard = NavMotionEasing(
             x1 = 0.2f,
             y1 = 0f,
             x2 = 0f,
             y2 = 1f,
         )
-        /**
-         * 偏加速的曲线，适合离场或短距离 motion。
-         * Acceleration-biased curve for exits or short-distance motion.
-         */
+        /** Acceleration-biased curve for exits or short-distance motion. */
         val Accelerate = NavMotionEasing(
             x1 = 0.3f,
             y1 = 0f,
             x2 = 1f,
             y2 = 1f,
         )
-        /**
-         * 线性曲线，通常用于透明度或手势进度映射。
-         * Linear curve, usually used for alpha or gesture-progress mapping.
-         */
+        /** Linear curve, usually used for alpha or gesture-progress mapping. */
         val Linear = NavMotionEasing(
             x1 = 0f,
             y1 = 0f,
             x2 = 1f,
             y2 = 1f,
         )
-        /**
-         * Android predictive back 进度使用的系统手势曲线。
-         * System gesture curve used by Android predictive back progress.
-         */
+        /** System gesture curve used by Android predictive-Back progress. */
         val BackGesture = NavMotionEasing(
             x1 = 0.1f,
             y1 = 0.1f,
             x2 = 0f,
             y2 = 1f,
         )
-        /**
-         * 多段 emphasized 曲线，用于对齐当前 Android activity 转场观感。
-         * Multi-segment emphasized curve used to match current Android activity transitions.
-         */
+        /** Multi-segment emphasized curve used to match current Android activity transitions. */
         val Emphasized = NavMotionEasing(
             segments = listOf(
                 NavMotionPathSegment(
@@ -238,8 +222,11 @@ internal data class NavMotionPathSegment(
 }
 
 /**
- * 单个导航动画属性的独立时间配置。
- * Independent timing for one navigation property.
+ * Independent timing for one navigation property such as incoming or outgoing alpha.
+ *
+ * @property durationMillis non-negative active duration
+ * @property startDelayMillis non-negative delay before progress begins
+ * @property easing curve applied after delay
  */
 data class NavMotionTiming(
     val durationMillis: Long,
@@ -271,8 +258,11 @@ data class NavMotionTiming(
 }
 
 /**
- * 手势驱动导航 motion 收敛时使用的弹簧参数。
  * Physics used to settle gesture-driven navigation motion.
+ *
+ * @property stiffness finite positive DynamicAnimation spring stiffness
+ * @property dampingRatio finite positive damping ratio
+ * @property maxDurationMillis positive fallback duration preventing an indefinitely retained preview
  */
 data class NavSpringSpec(
     val stiffness: Float,
@@ -293,13 +283,19 @@ data class NavSpringSpec(
 }
 
 /**
- * predictive back 事务收敛前后使用的手势驱动 motion。
  * Gesture-driven motion used before and immediately after a predictive Back transaction settles.
  *
- * 进度速度根据 [velocitySampleWindowMillis] 估算，并在写入 commit/cancel motion 前按
- * [maxProgressVelocity] 限制，避免手势噪声放大为过强的初速度。
  * Progress velocity is estimated from [velocitySampleWindowMillis] and capped by
  * [maxProgressVelocity] before it becomes the initial velocity for commit or cancel motion.
+ *
+ * @property incomingStart transform of the revealed destination at gesture progress zero
+ * @property incomingEnd transform of the revealed destination at gesture progress one
+ * @property outgoingEnd transform of the current destination at gesture progress one
+ * @property progressEasing curve applied to dispatcher gesture progress
+ * @property commitMotion motion completing the outgoing destination after stack commit
+ * @property cancelSpring spring returning both destinations to committed state after cancellation
+ * @property velocitySampleWindowMillis positive sliding window used to estimate progress velocity
+ * @property maxProgressVelocity finite positive velocity clamp in progress units per second
  */
 data class NavPredictiveBackSpec(
     val incomingStart: NavDestinationTransform,
@@ -326,6 +322,7 @@ data class NavPredictiveBackSpec(
             outgoingEnd.isIdentity &&
             commitMotion.isDisabled
 
+    /** Predictive-Back defaults and disabled policy. */
     companion object {
         private val DefaultCommitMotion = NavDestinationMotionSpec(
             durationMillis = 450L,
@@ -344,10 +341,7 @@ data class NavPredictiveBackSpec(
             dampingRatio = 1f,
             maxDurationMillis = 450L,
         )
-        /**
-         * 关闭 predictive back 的预览和提交动效。
-         * Disables predictive-back preview and commit motion.
-         */
+        /** Disables predictive-Back preview and commit motion. */
         val None = NavPredictiveBackSpec(
             incomingStart = NavDestinationTransform(),
             incomingEnd = NavDestinationTransform(),
@@ -358,13 +352,17 @@ data class NavPredictiveBackSpec(
 }
 
 /**
- * 单个已提交导航命令的 motion 配置。
  * Motion for one committed navigation command.
  *
- * [incomingStart] 描述进入目的地在动画开始前的状态，[outgoingEnd] 描述离开目的地在动画结束时
- * 的状态。
  * [incomingStart] describes the entering destination before the animation. [outgoingEnd] describes
  * the leaving destination at the end of the animation.
+ *
+ * @property durationMillis non-negative geometry duration
+ * @property incomingStart initial transform of the entering destination
+ * @property outgoingEnd final transform of the leaving destination
+ * @property easing geometry interpolation curve
+ * @property incomingAlphaTiming independent incoming-alpha timing
+ * @property outgoingAlphaTiming independent outgoing-alpha timing
  */
 data class NavDestinationMotionSpec(
     val durationMillis: Long,
@@ -397,22 +395,27 @@ data class NavDestinationMotionSpec(
         get() = totalDurationMillis == 0L ||
             (incomingStart.isIdentity && outgoingEnd.isIdentity)
 
+    /** Common destination motion policies. */
     companion object {
-        /**
-         * 关闭已提交命令的常规转场 motion。
-         * Disables regular transition motion for committed commands.
-         */
+        /** Disables regular transition motion for committed commands. */
         val None = NavDestinationMotionSpec(durationMillis = 0L)
     }
 }
 
 /**
- * 导航事务提交后应用的、感知命令类型的原生 View motion 策略。
  * Command-aware native View motion policy applied after navigation transactions commit.
  *
- * motion 只属于视觉策略：改变它不会改变 back stack、目的地 ownership 或 lifecycle plan。
  * Motion remains visual policy: changing it never mutates the back stack, destination ownership, or
  * lifecycle plan.
+ *
+ * @sample com.viewcompose.navigation.samples.navigationMotionSample
+ * @property push motion after a standard push
+ * @property pop motion after a stack pop
+ * @property replace motion after replacing the active top
+ * @property reset motion after replacing the complete active stack
+ * @property stackSelection motion for selecting or returning through retained-stack history
+ * @property deepLink motion for an atomic deep-link stack mutation and selection
+ * @property predictiveBack gesture preview, cancel, and completion policy
  */
 data class NavTransitionSpec(
     val push: NavDestinationMotionSpec = DefaultPush,
@@ -437,9 +440,8 @@ data class NavTransitionSpec(
         }
     }
 
+    /** System-aligned defaults and disabled policy. */
     companion object {
-        // 对齐当前 AOSP activity_open_*.xml/activity_close_*.xml：96dp 位移、450ms
-        // fast_out_extra_slow_in 几何曲线，以及独立的 83ms alpha 时间窗。
         // Mirrors current AOSP activity_open_*.xml/activity_close_*.xml motion: 96dp travel,
         // 450ms fast_out_extra_slow_in geometry, and independently timed 83ms alpha windows.
         private val DefaultPush = NavDestinationMotionSpec(
@@ -506,7 +508,6 @@ data class NavTransitionSpec(
                 travelFraction = 0.015f,
             ),
         )
-        // 对齐 WM Shell DefaultCrossActivityBackAnimation 的几何关系和 back-gesture easing。
         // Mirrors WM Shell DefaultCrossActivityBackAnimation geometry and back-gesture easing.
         private val DefaultPredictiveBack = NavPredictiveBackSpec(
             incomingStart = NavDestinationTransform(
@@ -524,15 +525,9 @@ data class NavTransitionSpec(
             progressEasing = NavMotionEasing.BackGesture,
         )
 
-        /**
-         * 默认 motion 策略，贴近 Android 系统 activity 导航观感。
-         * Default motion policy, tuned to resemble Android system activity navigation.
-         */
+        /** Default motion policy, tuned to resemble Android system activity navigation. */
         val Default = NavTransitionSpec()
-        /**
-         * 关闭所有导航转场和 predictive back 视觉 motion。
-         * Disables all navigation transitions and predictive-back visual motion.
-         */
+        /** Disables all navigation transitions and predictive-Back visual motion. */
         val None = NavTransitionSpec(
             push = NavDestinationMotionSpec.None,
             pop = NavDestinationMotionSpec.None,

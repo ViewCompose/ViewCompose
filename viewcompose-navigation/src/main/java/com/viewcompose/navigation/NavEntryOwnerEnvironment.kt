@@ -17,19 +17,14 @@ private val LocalNavGraphOwnerScopeValue = uiLocalOf<NavGraphOwnerScope?>(
     },
 ) { null }
 
-/**
- * 访问当前正在渲染目的地的图 owner 层级。
- * Accesses the graph-owner hierarchy of the destination currently being rendered.
- */
+/** Accesses the graph-owner hierarchy of the destination currently being rendered. */
 object LocalNavGraphOwnerScope {
+    /** Current hierarchy, or `null` outside [NavHost] destination content. */
     val current: NavGraphOwnerScope?
         get() = UiLocals.current(LocalNavGraphOwnerScopeValue)
 }
 
-/**
- * 将目的地 owner 注入 lifecycle、ViewModelStore 和组合保存状态 locals。
- * Provides a destination owner into lifecycle, ViewModelStore, and composition saveable-state locals.
- */
+/** Provides a destination owner into lifecycle, ViewModelStore, and composition saveable-state locals. */
 internal fun UiTreeBuilder.ProvideNavEntryOwner(
     owner: NavEntryOwner,
     content: UiTreeBuilder.() -> Unit,
@@ -43,10 +38,7 @@ internal fun UiTreeBuilder.ProvideNavEntryOwner(
     }
 }
 
-/**
- * 为目的地子树暴露当前活跃的父图 owner 层级。
- * Exposes the active parent graph-owner hierarchy to a destination subtree.
- */
+/** Exposes the active parent graph-owner hierarchy to a destination subtree. */
 internal fun UiTreeBuilder.ProvideNavGraphOwnerScope(
     scope: NavGraphOwnerScope,
     content: UiTreeBuilder.() -> Unit,
@@ -59,9 +51,10 @@ internal fun UiTreeBuilder.ProvideNavGraphOwnerScope(
 }
 
 /**
- * 使用 [route] 对应的活跃图作为 [content] 的 Lifecycle、ViewModel 和 saved-state owner。
  * Runs [content] with the active graph identified by [route] as its Lifecycle, ViewModel, and
  * saved-state owner.
+ *
+ * @throws IllegalStateException outside destination content or when [route] is not an active parent
  */
 fun UiTreeBuilder.ProvideNavGraphOwner(
     route: String,

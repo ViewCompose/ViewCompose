@@ -48,6 +48,9 @@ overviews, and staged enforcement.
 - `viewcompose-navigation-core` has a reviewed Q2/Q3 baseline covering graphs, deep links,
   rollback-safe transactions, retained stacks, lifecycle planning, pane scenes, compiled samples,
   and an always-on strict Dokka warning gate;
+- `viewcompose-navigation` has a reviewed Q2/Q3 baseline covering destination and graph owners,
+  native host transactions, process-death restore, system and predictive Back, Android-aligned
+  motion, adaptive panes, compiled samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -84,8 +87,8 @@ Q2 or Q3 manual review.
    - `viewcompose-host-android` baseline and strict gate are complete;
    - add module/package overviews and cross-links.
 4. **Remaining families**
-   - text and platform-neutral navigation core are complete;
-   - Android navigation, lifecycle, ViewModel, overlay, animation, gesture, graphics, shadows,
+   - text and both navigation layers are complete;
+   - lifecycle, ViewModel, overlay, animation, gesture, graphics, shadows,
      constraint layout, image loading, and preview tooling;
    - enable strict checking after each module baseline is clean.
 5. **Immutable source and release integration**
@@ -104,12 +107,12 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-navigation-core` was repaired to a zero-warning strict baseline. Graph and
-route resolution, strict deep links, rollback-safe transactions, independent retained stacks,
-lifecycle planning, pane scenes, and restore compatibility were reviewed; compiled Q3 samples and a
-bilingual module manual were added.
+2026-08-02: `viewcompose-navigation` was repaired from 60 initially undocumented declarations to a
+zero-warning strict baseline. Native host transactions, destination and graph ownership, defensive
+restore, system and predictive Back, motion, and adaptive panes were reviewed; compiled Q3 samples
+and a bilingual module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-navigation`, add its Android host module manual and focused samples,
+Audit and repair `viewcompose-overlay-android`, add its module manual and focused samples,
 then enable its module-level strict warning gate without changing API behavior.

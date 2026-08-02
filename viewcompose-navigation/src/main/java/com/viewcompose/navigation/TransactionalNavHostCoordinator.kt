@@ -22,11 +22,8 @@ import com.viewcompose.widget.core.UiLocalSnapshot
 import java.util.ArrayDeque
 
 /**
- * 持有纯 back stack 与 Android 页面会话之间的同步提交边界。
  * Owns the synchronous commit boundary between the pure back stack and Android page sessions.
  *
- * 该类保持 internal，直到恢复、平台返回和转场完成都能共享同一个边界。所有方法都是主线程 API；
- * re-entrant 命令会进入队列，并且只在当前命令到达终态后 drain。
  * The class stays internal until restoration, platform back, and transition completion can share
  * this same boundary. All methods are main-thread APIs; re-entrant commands are queued and drained
  * only after the current command reaches a terminal result.
@@ -93,7 +90,6 @@ internal class TransactionalNavHostCoordinator(
         executing = true
         this.localSnapshot = localSnapshot
         destinationContent = content
-        // 记录本次 attach 新增的 session，失败时只回滚本轮创建的页面。
         // Track sessions created during this attach so failure rolls back only this attempt.
         val attachedEntryIds = mutableListOf<NavEntryId>()
         var result: NavHostAttachmentResult
@@ -143,7 +139,6 @@ internal class TransactionalNavHostCoordinator(
             "Navigation commands require an attached host; current=$state."
         }
         if (executing) {
-            // 导航回调可能在 render/lifecycle 回调中同步触发，统一排队避免重入破坏事务。
             // Navigation may be triggered from render/lifecycle callbacks; queue it to avoid re-entry.
             queuedCommands.addLast(command)
             return NavHostNavigationResult.Queued(command)
@@ -293,7 +288,6 @@ internal class TransactionalNavHostCoordinator(
             }
             val beforeScene = calculatePaneScene(currentSnapshot)
             val afterScene = calculatePaneScene(afterSnapshot)
-            // preview 只构造视觉上的 afterSnapshot，不提交纯栈；真正提交发生在 commitBackPreview。
             // Preview builds only a visual afterSnapshot; the pure stack commits in commitBackPreview.
             val preview = NavHostBackPreview(
                 id = NavHostBackPreviewId(++nextBackPreviewId),
@@ -484,7 +478,6 @@ internal class TransactionalNavHostCoordinator(
                 ?.transition
                 ?.retainedEntries
                 ?: controller.retainedEntries()
-            // 只刷新当前可见 entry，隐藏保留页会在重新展示时带着最新 environment 渲染。
             // Refresh only visible entries; hidden retained pages render with the latest environment later.
             val visibleEntryIds = when {
                 activeTransitionRecord != null -> {
@@ -749,7 +742,6 @@ internal class TransactionalNavHostCoordinator(
             }
         }
 
-        // 只有新增目的地成功 stage 后才提交纯栈；提交失败时必须移除候选会话并 rollback transaction。
         // Commit the pure stack only after the new destination stages; remove the candidate on commit failure.
         val committedSnapshot = try {
             traceSection("VC.Nav.CommitStack") {
@@ -918,7 +910,6 @@ internal class TransactionalNavHostCoordinator(
             ),
         )
         reconcileOwners(transition)
-        // 离场页面保持可见用于动画，但暂停渲染，避免 lifecycle 变化在首帧重建 View tree。
         // Outgoing pages stay visible for animation but pause rendering to avoid first-frame rebuilds.
         sessionStore.setRenderingActive(
             entryIds = transition.beforeScene.visibleEntryIds -
@@ -1070,7 +1061,6 @@ internal class TransactionalNavHostCoordinator(
                 NavBackPreviewTermination.Dispose -> active.handle?.dispose()
             }
         }.exceptionOrNull()?.let(failures::add)
-        // preview 从未提交纯栈，终止后回到开始手势时的 settled snapshot。
         // Preview never commits the pure stack, so termination returns to the gesture-start snapshot.
         runCatching {
             applySettledState(active.preview.snapshot)
@@ -1104,7 +1094,6 @@ internal class TransactionalNavHostCoordinator(
                 }
             }.exceptionOrNull()?.let(failures::add)
         }
-        // 已提交转场终止后再删除离场 session，确保动画期间 View 仍可绘制。
         // Remove outgoing sessions only after the committed transition terminates so they can animate.
         runCatching {
             removeSessions(

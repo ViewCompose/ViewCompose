@@ -28,10 +28,7 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.widget.core.RenderFrameReport
 import com.viewcompose.widget.core.rememberSaveable
 
-/**
- * 标记 NavHost 事务失败时所在的执行阶段。
- * Marks the execution phase where a NavHost transaction failed.
- */
+/** Execution phase in which a [NavHost] transaction failed. */
 enum class NavFailurePhase {
     DestinationPreparation,
     DestinationRefresh,
@@ -41,8 +38,13 @@ enum class NavFailurePhase {
 }
 
 /**
- * 描述一次导航渲染或提交失败的完整上下文。
- * Describes the full context captured when navigation rendering or commit fails.
+ * Complete diagnostic context captured when navigation rendering or commit fails.
+ *
+ * @property phase operation that failed
+ * @property failedEntry destination being prepared or refreshed, when applicable
+ * @property frameReport renderer report associated with the failure, when available
+ * @property cause original rendering, owner, or commit exception
+ * @property stackCommitted whether pure navigation state was already published before the failure
  */
 data class NavFailure(
     val phase: NavFailurePhase,
@@ -53,8 +55,9 @@ data class NavFailure(
 )
 
 /**
- * 将 [NavFailure] 包装成运行时异常，便于未处理失败沿调用栈显式暴露。
- * Wraps [NavFailure] as a runtime exception so unhandled failures surface explicitly.
+ * Runtime exception that surfaces an otherwise unhandled [NavFailure].
+ *
+ * @property failure complete structured failure context
  */
 class NavHostException(
     val failure: NavFailure,
@@ -77,27 +80,20 @@ class NavHostException(
     failure.cause,
 )
 
-/**
- * 导航命令的同步结果，始终携带产出时的栈快照。
- * Synchronous result of a navigation command, always carrying the observed stack snapshot.
- */
+/** Synchronous result of a navigation command with the committed state observed at return time. */
 sealed interface NavResult {
-    /**
-     * 结果产生时完整的已提交多栈状态。
-     * Complete committed multi-stack state observed when this result was produced.
-     */
+    /** Complete committed multi-stack state observed when this result was produced. */
     val stackState: NavStackSetSnapshot
 
-    /**
-     * 面向单目的地调用方的当前活跃栈投影。
-     * Active-stack projection for destination-oriented call sites.
-     */
+    /** Active-stack projection for destination-oriented call sites. */
     val snapshot: NavBackStackSnapshot
         get() = stackState.activeStack
 
     /**
-     * 命令已改变栈，并返回具体的栈变更摘要。
-     * The command changed the stack and returns the concrete mutation summary.
+     * The command changed and committed navigation state.
+     *
+     * @property stackState complete committed state after the command
+     * @property mutation concrete entry-owner delta applied by the host
      */
     data class Committed(
         override val stackState: NavStackSetSnapshot,
@@ -105,8 +101,10 @@ sealed interface NavResult {
     ) : NavResult
 
     /**
-     * 命令合法但没有造成状态变化。
      * The command was valid but did not change navigation state.
+     *
+     * @property stackState unchanged committed state
+     * @property reason structured no-change category
      */
     data class NoChange(
         override val stackState: NavStackSetSnapshot,
@@ -114,16 +112,19 @@ sealed interface NavResult {
     ) : NavResult
 
     /**
-     * 命令在转场期间被排队，稍后由宿主运行时串行执行。
      * The command was queued during a transition and will run serially later.
+     *
+     * @property stackState committed state before the queued command runs
      */
     data class Queued(
         override val stackState: NavStackSetSnapshot,
     ) : NavResult
 
     /**
-     * 命令失败，失败上下文可用于日志、降级或测试断言。
-     * The command failed; the failure context can drive logging, fallback, or tests.
+     * The command failed; the context can drive logging, fallback, or test assertions.
+     *
+     * @property stackState committed state retained after failure handling
+     * @property failure structured failure context
      */
     data class Failed(
         override val stackState: NavStackSetSnapshot,
@@ -131,54 +132,48 @@ sealed interface NavResult {
     ) : NavResult
 }
 
-/**
- * 深链解析与导航的结果集合。
- * Result set for deep-link resolution and navigation.
- */
+/** Exhaustive result of strict deep-link resolution and optional navigation. */
 sealed interface NavDeepLinkResult {
     /**
-     * 深链已匹配并尝试执行对应导航命令。
      * The deep link matched and attempted the corresponding navigation command.
+     *
+     * @property match winning graph declaration and decoded route
+     * @property navigationResult synchronous host transaction result
      */
     data class Navigated(
         val match: NavDeepLinkMatch,
         val navigationResult: NavResult,
     ) : NavDeepLinkResult
 
-    /**
-     * 当前图中没有任何深链规则匹配该 URI。
-     * No deep-link rule in the current graph matched the URI.
-     */
+    /** No deep-link rule in the current graph matched the URI. */
     data object NoMatch : NavDeepLinkResult
 
     /**
-     * URI 命中规则但因白名单、安全或参数校验被拒绝。
-     * The URI matched a rule but was rejected by allowlist, safety, or argument checks.
+     * The URI entered a rule domain but was rejected by safety or argument checks.
+     *
+     * @property rejection structured resolver diagnostic
      */
     data class Rejected(
         val rejection: NavDeepLinkRejection,
     ) : NavDeepLinkResult
 
-    /**
-     * 控制器未绑定导航图，因此不支持图级深链解析。
-     * This controller was created without a navigation graph and cannot resolve graph deep links.
-     */
+    /** This controller was created without a navigation graph and cannot resolve graph deep links. */
     data object Unsupported : NavDeepLinkResult
 }
 
 /**
- * 面向应用层的稳定控制器，管理一个或多个框架持有的导航栈。
  * Stable application-facing handle for one or more framework-owned navigation stacks.
  *
- * 同一个控制器同一时间只能挂载到一个 [NavHost]。导航命令要求宿主已连接，以保证每次栈变更、
- * 目的地渲染和生命周期变更处于同一个事务中。
  * A controller can be mounted by only one [NavHost] at a time. Commands require that host to be
  * attached so every stack mutation shares the destination render and lifecycle transaction.
  *
- * 通过 [rememberNavHostController] 记忆时，栈、目的地/图实例 ID、路由参数以及每个目的地/图
- * 的保存状态命名空间都会随宿主重建而恢复。
  * When remembered with [rememberNavHostController], the stack, destination and graph instance IDs,
  * route arguments, and every destination/graph saved-state namespace survive host recreation.
+ * All commands are main-thread APIs and may return [NavResult.Queued] while a visual transition is
+ * settling. Observe [navigationState] for the eventual committed state rather than treating a
+ * queued result as completion.
+ *
+ * @sample com.viewcompose.navigation.samples.navHostControllerSample
  */
 class NavHostController internal constructor(
     internal val backStackController: NavBackStackController,
@@ -190,52 +185,39 @@ class NavHostController internal constructor(
         backStackController.stackStateSnapshot(),
     )
 
-    /**
-     * 当前活跃栈的即时快照。
-     * Immediate snapshot of the currently active stack.
-     */
+    /** Immediate snapshot of the currently active stack. */
     val snapshot: NavBackStackSnapshot
         get() = backStackController.snapshot()
 
-    /**
-     * 所有栈的即时快照，包含当前活跃栈和选择历史。
-     * Immediate snapshot of all stacks, including the active stack and selection history.
-     */
+    /** Immediate snapshot of all stacks, including the active stack and selection history. */
     val stackState: NavStackSetSnapshot
         get() = backStackController.stackStateSnapshot()
 
-    /**
-     * 可观察的完整栈状态，供选中标签 UI 和导航诊断使用。
-     * Observable complete stack state for selected-tab UI and navigation diagnostics.
-     */
+    /** Observable complete stack state for selected-tab UI and navigation diagnostics. */
     val navigationState: State<NavStackSetSnapshot>
         get() = mutableNavigationState
 
-    /**
-     * 当前展示的栈 ID。
-     * ID of the stack currently presented by the host.
-     */
+    /** ID of the stack currently presented by the host. */
     val activeStackId: NavStackId
         get() = stackState.activeStackId
 
-    /**
-     * 控制器是否已绑定到一个活动 [NavHost]。
-     * Whether this controller is currently bound to an active [NavHost].
-     */
+    /** Whether this controller is currently bound to an active [NavHost]. */
     val isAttached: Boolean
         get() = binding != null
 
     /**
-     * 返回指定栈的快照，不会切换当前活跃栈。
      * Returns a snapshot for [stackId] without changing the active stack.
+     *
+     * @throws IllegalArgumentException if [stackId] is not declared
      */
     fun stackSnapshot(stackId: NavStackId): NavBackStackSnapshot {
         return backStackController.stackSnapshot(stackId)
     }
 
     /**
-     * 将 [route] 推入当前活跃栈，并按 [launchMode] 处理复用或新建目的地。
      * Pushes [route] onto the active stack, applying [launchMode] reuse or creation rules.
+     *
+     * @throws IllegalStateException when called off the main thread or without an attached host
      */
     @MainThread
     fun navigate(
@@ -250,35 +232,23 @@ class NavHostController internal constructor(
         )
     }
 
-    /**
-     * 弹出当前活跃栈顶部目的地。
-     * Pops the top destination from the active stack.
-     */
+    /** Pops the active top, or returns `NoChange` when the stack is at its root. */
     @MainThread
     fun popBackStack(): NavResult = execute(NavCommand.Pop)
 
-    /**
-     * 原子替换当前活跃栈的顶部目的地。
-     * Atomically replaces the top destination on the active stack.
-     */
+    /** Atomically replaces the top destination on the active stack. */
     @MainThread
     fun replaceTop(route: NavRoute): NavResult {
         return execute(NavCommand.ReplaceTop(route))
     }
 
-    /**
-     * 将当前活跃栈重置为单个 [route]。
-     * Resets the active stack to a single [route].
-     */
+    /** Resets the active stack to a single newly owned [route]. */
     @MainThread
     fun reset(route: NavRoute): NavResult {
         return execute(NavCommand.Reset(route))
     }
 
-    /**
-     * 原子展示 [stackId]，同时保留其他栈及其 owner。
-     * Atomically presents [stackId] while retaining every other stack and its owners.
-     */
+    /** Atomically presents [stackId] while retaining every other stack and its owners. */
     @MainThread
     fun selectStack(
         stackId: NavStackId,
@@ -293,8 +263,9 @@ class NavHostController internal constructor(
     }
 
     /**
-     * 解析导航图白名单 URI，并原子更新和选择目标栈。
      * Resolves an allowlisted graph URI and atomically updates and selects its destination stack.
+     *
+     * @return a resolver diagnostic, or `Navigated` containing the host transaction result
      */
     @MainThread
     fun navigateDeepLink(
@@ -325,10 +296,7 @@ class NavHostController internal constructor(
         }
     }
 
-    /**
-     * 解析 Android [Uri]，行为与字符串深链入口一致。
-     * Resolves an Android [Uri] with the same behavior as the string deep-link entry point.
-     */
+    /** Resolves an Android [Uri] with the same behavior as the string entry point. */
     @MainThread
     fun navigateDeepLink(
         uri: Uri,
@@ -340,10 +308,7 @@ class NavHostController internal constructor(
         )
     }
 
-    /**
-     * 将原生 Android VIEW intent 映射为同一套严格的图级深链事务。
-     * Maps a native Android VIEW intent into the same strict graph deep-link transaction.
-     */
+    /** Maps an Android `ACTION_VIEW` [Intent] into the same strict graph deep-link transaction. */
     @MainThread
     fun navigateDeepLink(
         intent: Intent,
@@ -431,23 +396,14 @@ class NavHostController internal constructor(
 }
 
 internal interface NavHostBinding {
-    /**
-     * 在宿主事务内执行命令。
-     * Executes a command inside the host transaction.
-     */
+    /** Executes a command inside the host transaction. */
     fun navigate(command: NavCommand): NavResult
 
-    /**
-     * 读取宿主当前可恢复状态。
-     * Reads the host's current restorable state.
-     */
+    /** Reads the host's current restorable state. */
     fun saveState(): NavHostRestorableState
 }
 
-/**
- * 创建以单个起始目的地启动的控制器，不绑定导航图。
- * Creates a controller started from a single destination without graph resolution.
- */
+/** Creates an unattached single-stack controller without graph resolution or deep links. */
 fun createNavHostController(
     startDestination: NavRoute,
 ): NavHostController {
@@ -457,10 +413,7 @@ fun createNavHostController(
     )
 }
 
-/**
- * 创建由 [graph] 解析目的地和深链的控制器。
- * Creates a controller whose destinations and deep links are resolved by [graph].
- */
+/** Creates an unattached single-stack controller whose routes and deep links use [graph]. */
 fun createNavHostController(
     graph: NavGraph,
 ): NavHostController {
@@ -470,10 +423,7 @@ fun createNavHostController(
     )
 }
 
-/**
- * 创建多栈控制器，不使用图级路由解析。
- * Creates a multi-stack controller without graph-based route resolution.
- */
+/** Creates an unattached multi-stack controller without graph-based route resolution. */
 fun createNavHostController(
     stackConfiguration: NavStackConfiguration,
 ): NavHostController {
@@ -483,10 +433,7 @@ fun createNavHostController(
     )
 }
 
-/**
- * 创建多栈控制器，并通过共享 [graph] 解析各栈目的地。
- * Creates a multi-stack controller that resolves every stack through shared [graph].
- */
+/** Creates an unattached multi-stack controller that resolves every stack through shared [graph]. */
 fun createNavHostController(
     stackConfiguration: NavStackConfiguration,
     graph: NavGraph,
@@ -549,12 +496,12 @@ internal fun createNavHostController(
 }
 
 /**
- * 记忆控制器，并通过当前 saveable-state registry 恢复完整宿主状态。
  * Remembers a controller and restores its complete host state through the current saveable-state
  * registry.
  *
- * 无效或不兼容的恢复数据会被丢弃，重新使用 [startDestination] 初始化。
  * Invalid or incompatible restored data is discarded in favor of [startDestination].
+ *
+ * @sample com.viewcompose.navigation.samples.rememberedNavHostSample
  */
 fun rememberNavHostController(
     startDestination: NavRoute,
@@ -568,14 +515,11 @@ fun rememberNavHostController(
 }
 
 /**
- * 记忆一个通过 [graph] 解析目的地的控制器。
  * Remembers a controller whose destinations are resolved through [graph].
  *
- * 进入图路由会原子打开其叶子起始目的地，并在结果 entry 上记录稳定的父图实例。
  * Entering a graph route atomically opens its leaf start destination and records stable parent-graph
  * instances on the resulting entry.
  *
- * 目的地会复用公共图实例，直到再次显式进入该图。
  * Destinations reuse common graph instances until that graph is entered again.
  */
 fun rememberNavHostController(
@@ -589,10 +533,7 @@ fun rememberNavHostController(
     }
 }
 
-/**
- * 记忆相互独立保留的导航栈，不启用图级路由解析。
- * Remembers independently retained navigation stacks without graph-based route resolution.
- */
+/** Remembers independently retained navigation stacks without graph-based route resolution. */
 fun rememberNavHostController(
     stackConfiguration: NavStackConfiguration,
 ): NavHostController {
@@ -604,10 +545,7 @@ fun rememberNavHostController(
     }
 }
 
-/**
- * 记忆相互独立保留的导航栈，并让这些栈共享 [graph] 路由解析。
- * Remembers independently retained navigation stacks whose routes share [graph].
- */
+/** Remembers independently retained navigation stacks whose routes share [graph]. */
 fun rememberNavHostController(
     stackConfiguration: NavStackConfiguration,
     graph: NavGraph,
