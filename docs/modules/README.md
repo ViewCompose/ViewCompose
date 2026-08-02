@@ -27,7 +27,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-preview-gradle-plugin` | Preview tooling | Preview discovery and Gradle tasks | [Available](./viewcompose-preview-gradle-plugin/README.md) |
 | `viewcompose-preview-runner` | Preview tooling | Layoutlib preview rendering runtime | [Available](./viewcompose-preview-runner/README.md) |
 | `viewcompose-preview-worker-host` | Preview tooling | Isolated preview worker host | [Available](./viewcompose-preview-worker-host/README.md) |
-| `viewcompose-preview` | Preview tooling | Development preview and snapshot integration | Planned |
+| `viewcompose-preview` | Preview tooling | Development preview and snapshot integration | [Available](./viewcompose-preview/README.md) |
 | `viewcompose-animation-core` | Animation | Platform-neutral animation engine contracts | [Available](./viewcompose-animation-core/README.md) |
 | `viewcompose-animation` | Animation | Animation DSL and composition integration | [Available](./viewcompose-animation/README.md) |
 | `viewcompose-gesture-core` | Gesture | Platform-neutral gesture policies | [Available](./viewcompose-gesture-core/README.md) |

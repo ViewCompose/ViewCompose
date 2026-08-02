@@ -8,11 +8,15 @@ import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.widget.core.UiTreeBuilder
 
 /**
- * 配置单个 ViewCompose Preview 的宿主行为。
- * Configures host behavior for one ViewCompose Preview.
+ * Configures the Compose-to-ViewCompose preview bridge.
  *
- * [debug] 会传递给 Android 渲染宿主，用于在静态预览中开启结构日志。
- * [debug] is forwarded to the Android render host so static previews can emit tree diagnostics.
+ * This convenience bridge selects `UiThemeDefaults` for [theme]. It does not invoke an application
+ * `PreviewThemeProvider`; use the ViewCompose static-preview runner when production theme fidelity
+ * is required.
+ *
+ * @property theme light or dark default ViewCompose token set installed around the DSL tree
+ * @property debug whether the Android render session emits its debug diagnostics
+ * @property debugTag log tag associated with debug output; ignored when [debug] is `false`
  */
 data class ViewComposePreviewOptions(
     val theme: PreviewTheme = PreviewTheme.Light,
@@ -21,8 +25,21 @@ data class ViewComposePreviewOptions(
 )
 
 /**
- * 在 Compose Preview 中渲染一段不依赖 Android root 的 ViewCompose DSL 内容。
- * Renders ViewCompose DSL content that does not need the Android root inside Compose Preview.
+ * Renders [content] inside a Compose `AndroidView` preview host.
+ *
+ * The host retains one ViewCompose render session across Compose recompositions. Updating [content]
+ * schedules a render on that session, while changes to [options] recreate the session so debug and
+ * theme boundaries remain coherent. Leaving the Compose composition disposes the session and its
+ * native View tree.
+ *
+ * Use [ViewComposePreviewWithRoot] when DSL code must inspect the hosting `ViewGroup`. This bridge
+ * is intended for Android Studio Compose Preview and does not replace the static-preview runner's
+ * application theme, configuration, diagnostics, or artifact pipeline.
+ *
+ * @param modifier Compose modifier applied to the hosting `AndroidView`
+ * @param options bridge theme and debug configuration
+ * @param content ViewCompose DSL body rendered without exposing the host root
+ * @sample com.viewcompose.preview.samples.composePreviewBridgeSample
  */
 @Composable
 fun ViewComposePreview(
@@ -42,8 +59,17 @@ fun ViewComposePreview(
 }
 
 /**
- * 在 Compose Preview 中渲染一段需要访问 Android root ViewGroup 的 ViewCompose DSL 内容。
- * Renders ViewCompose DSL content that needs access to the Android root ViewGroup in Compose Preview.
+ * Renders [content] inside a Compose preview and supplies its Android root `ViewGroup`.
+ *
+ * Session retention, recreation, disposal, and theme limitations are the same as
+ * [ViewComposePreview]. The root is owned by the bridge: content may use it as an interop anchor but
+ * must not remove it, retain it beyond the composition, or independently dispose its render
+ * session.
+ *
+ * @param modifier Compose modifier applied to the hosting `AndroidView`
+ * @param options bridge theme and debug configuration
+ * @param content ViewCompose DSL body receiving the bridge-owned Android root
+ * @sample com.viewcompose.preview.samples.composePreviewWithRootSample
  */
 @Composable
 fun ViewComposePreviewWithRoot(

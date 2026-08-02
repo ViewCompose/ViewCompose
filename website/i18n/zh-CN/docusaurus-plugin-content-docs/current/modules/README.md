@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 4de9b25925617a52e5894388f456d77cf79e43d2ab7f384e41b40f2f8ff5cb8a
+translation_source_hash: ba6e42348bcf59d26667543d9a109fbf7ce33ad80d6a4af2e44e8c1b47faf677
 translation_status: current
 ---
 
@@ -32,7 +32,7 @@ translation_status: current
 | `viewcompose-preview-gradle-plugin` | 预览工具 | 预览发现与 Gradle 任务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-gradle-plugin) |
 | `viewcompose-preview-runner` | 预览工具 | Layoutlib 预览渲染运行时 | [已提供](/modules/viewcompose-preview-runner/) |
 | `viewcompose-preview-worker-host` | 预览工具 | 隔离的预览 Worker 宿主 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-worker-host) |
-| `viewcompose-preview` | 预览工具 | 开发预览与快照集成 | 规划中 |
+| `viewcompose-preview` | 预览工具 | 开发预览与快照集成 | [已提供](/modules/viewcompose-preview/) |
 | `viewcompose-animation-core` | 动画 | 平台无关的动画引擎契约 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation-core) |
 | `viewcompose-animation` | 动画 | 动画 DSL 与组合集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation) |
 | `viewcompose-gesture-core` | 手势 | 平台无关的手势策略 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-gesture-core) |
