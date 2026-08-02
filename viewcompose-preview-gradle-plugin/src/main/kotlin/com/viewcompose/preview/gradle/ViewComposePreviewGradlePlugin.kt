@@ -29,8 +29,20 @@ import org.gradle.api.tasks.TaskProvider
 
 /**
  * Public Gradle bridge between Android variants and the isolated static-preview worker.
+ *
+ * @sample com.viewcompose.preview.gradle.samples.applyPreviewPluginSample
  */
 class ViewComposePreviewGradlePlugin : Plugin<Project> {
+    /**
+     * Registers preview tooling when an Android application or library plugin becomes available.
+     *
+     * Debuggable variants receive discovery, render, and fast-refresh tasks plus isolated tool
+     * configurations. Non-debuggable variants receive only project-class instrumentation that
+     * removes direct and composed preview annotations before DEX/AAR packaging. Applying the plugin
+     * before or after the Android plugin is supported; a project is configured at most once.
+     *
+     * @param project target Gradle project
+     */
     override fun apply(project: Project) {
         val toolConfigurations = project.createPreviewToolConfigurations()
         val aggregate = project.tasks.register("viewComposePreviewDescriptors") { task ->

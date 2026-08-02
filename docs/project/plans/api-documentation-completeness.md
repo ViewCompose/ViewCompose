@@ -91,6 +91,10 @@ overviews, and staged enforcement.
   deterministic configuration matrices, stable identity, build/worker boundaries, exact protocol
   negotiation, JSON compatibility, source-aware diagnostics, compiled samples, and an always-on
   strict Dokka warning gate;
+- `viewcompose-preview-gradle-plugin` has a reviewed Q2/Q3 baseline covering Android variant
+  registration, compiled discovery, canonical fingerprints, single and gallery rendering, fast
+  refresh, worker isolation/reuse verification, production annotation stripping, compiled samples,
+  and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -147,13 +151,13 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-preview-core` was repaired from 239 initially undocumented declarations to
-a zero-warning strict baseline. Annotation JVM signatures, deterministic configuration matrices,
-stable identities, build and worker commands, exact protocol negotiation, canonical JSON, response
-invariants and source-aware render diagnostics were reviewed; compiled samples and a bilingual
-module manual were added.
+2026-08-02: `viewcompose-preview-gradle-plugin` was repaired from 50 initially undocumented
+declarations to a zero-warning strict baseline. Variant registration, compiled discovery, canonical
+fingerprints, render selection and caching, fast refresh, worker isolation/reuse verification and
+production annotation stripping were reviewed; a compiled sample and bilingual module manual were
+added.
 
 ## Next action
 
-Audit and repair `viewcompose-preview-gradle-plugin`, add its module manual and focused samples,
-then enable its module-level strict warning gate without changing API behavior.
+Audit and repair `viewcompose-preview-worker-host`, add its module manual and focused samples, then
+enable its module-level strict warning gate without changing API behavior.

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: d13def647281c771982f63b7effcacc235583fd0d0f31f08b552e1f6601ee7ac
+translation_source_hash: 92ced7403428915f99b1e760f0bcfd0b23a9fd5ed78a1253ee2710f28b18c201
 translation_status: current
 ---
 
@@ -29,7 +29,7 @@ translation_status: current
 | `viewcompose-lifecycle` | 集成 | 感知生命周期的状态收集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-lifecycle) |
 | `viewcompose-viewmodel` | 集成 | ViewModel 与 SavedStateHandle 集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-viewmodel) |
 | `viewcompose-preview-core` | 预览工具 | 预览注解与工具协议 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-core) |
-| `viewcompose-preview-gradle-plugin` | 预览工具 | 预览发现与 Gradle 任务 | 规划中 |
+| `viewcompose-preview-gradle-plugin` | 预览工具 | 预览发现与 Gradle 任务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-gradle-plugin) |
 | `viewcompose-preview-runner` | 预览工具 | Layoutlib 预览渲染运行时 | 规划中 |
 | `viewcompose-preview-worker-host` | 预览工具 | 隔离的预览 Worker 宿主 | 规划中 |
 | `viewcompose-preview` | 预览工具 | 开发预览与快照集成 | 规划中 |

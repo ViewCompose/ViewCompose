@@ -32,87 +32,118 @@ import org.gradle.work.DisableCachingByDefault
     because = "The manifest intentionally contains machine-local absolute paths for the IDE worker.",
 )
 abstract class DiscoverViewComposePreviewsTask : DefaultTask() {
+    /** Owning Gradle project path exported into the manifest and catalog. */
     @get:Input
     abstract val modulePath: Property<String>
 
+    /** Android variant name being discovered. */
     @get:Input
     abstract val buildVariant: Property<String>
 
+    /** Android namespace owning the variant's generated resources. */
     @get:Input
     abstract val namespace: Property<String>
 
+    /** Android Gradle Plugin version that resolved the variant model. */
     @get:Input
     abstract val androidGradlePluginVersion: Property<String>
 
+    /** Variant minimum Android API level. */
     @get:Input
     abstract val minSdk: Property<Int>
 
+    /** Variant target Android API level. */
     @get:Input
     abstract val targetSdk: Property<Int>
 
+    /** Absolute Android SDK path exported for the isolated render process. */
     @get:Input
     abstract val sdkDirectoryPath: Property<String>
 
+    /** Project class JARs scanned for compiled preview annotations. */
     @get:Classpath
     abstract val projectClassJars: ListProperty<RegularFile>
 
+    /** Project class directories scanned for compiled preview annotations. */
     @get:Classpath
     abstract val projectClassDirectories: ListProperty<Directory>
 
+    /** Compile classpath used to resolve annotation and meta-annotation types. */
     @get:Classpath
     abstract val annotationClasspath: ConfigurableFileCollection
 
+    /** Variant runtime classpath retained by preview rendering. */
     @get:Classpath
     abstract val runtimeClasspath: ConfigurableFileCollection
 
+    /** Android boot classpath used to resolve the compile SDK and render framework classes. */
     @get:Classpath
     abstract val bootClasspath: ConfigurableFileCollection
 
+    /** Source roots used to map compiled methods back to declarations. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceDirectories: ConfigurableFileCollection
 
+    /** Variant-local Android resource directories. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val localResourceDirectories: ConfigurableFileCollection
 
+    /** Android resource directories supplied by project-module dependencies. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val moduleResourceDirectories: ConfigurableFileCollection
 
+    /** Android resource directories supplied by external libraries. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val libraryResourceDirectories: ConfigurableFileCollection
 
+    /** Variant-local Android asset directories. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val localAssetDirectories: ConfigurableFileCollection
 
+    /** Android asset directories supplied by project-module dependencies. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val moduleAssetDirectories: ConfigurableFileCollection
 
+    /** Android asset directories supplied by external libraries. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val libraryAssetDirectories: ConfigurableFileCollection
 
+    /** Symbol-package files used to enumerate resource namespaces. */
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val resourcePackageFiles: ConfigurableFileCollection
 
+    /** Merged Android manifest consumed by Layoutlib. */
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val mergedManifest: RegularFileProperty
 
+    /** Machine-local root used for render artifacts and content-addressed caches. */
     @get:Internal
     abstract val artifactRootDirectory: DirectoryProperty
 
+    /** Destination for the canonical build manifest JSON. */
     @get:OutputFile
     abstract val buildManifestFile: RegularFileProperty
 
+    /** Destination for discovered descriptors and structured discovery diagnostics. */
     @get:OutputFile
     abstract val descriptorCatalogFile: RegularFileProperty
 
+    /**
+     * Fingerprints build inputs, scans compiled bytecode, and atomically exports protocol JSON.
+     *
+     * The Gradle daemon never loads application classes. Collections are canonicalized before
+     * hashing, invalid preview functions become catalog diagnostics, and both output files are
+     * replaced only after their complete content is written.
+     */
     @TaskAction
     fun discover() {
         val projectJars = projectClassJars.get().map(RegularFile::getAsFile)
