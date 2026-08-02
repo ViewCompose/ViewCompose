@@ -3,8 +3,9 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.graphics.DrawBlock
 
 /**
- * Canvas 节点的绘制回调属性。
- * Drawing-callback properties for a Canvas node.
+ * Immutable renderer properties for a custom canvas node.
+ *
+ * @property onDraw drawing callback invoked by the renderer for each requested draw pass
  */
 data class CanvasNodeProps(
     val onDraw: DrawBlock,

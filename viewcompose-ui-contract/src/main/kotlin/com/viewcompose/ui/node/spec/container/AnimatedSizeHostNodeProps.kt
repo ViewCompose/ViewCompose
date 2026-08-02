@@ -3,8 +3,9 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.modifier.ContentSizeAnimationSpecModel
 
 /**
- * AnimatedSizeHost 节点用于尺寸动画的属性。
- * Properties used by an AnimatedSizeHost node for size animation.
+ * Immutable renderer properties for a host that animates content-size changes.
+ *
+ * @property animationSpec duration and easing model for the size transition
  */
 data class AnimatedSizeHostNodeProps(
     val animationSpec: ContentSizeAnimationSpecModel,

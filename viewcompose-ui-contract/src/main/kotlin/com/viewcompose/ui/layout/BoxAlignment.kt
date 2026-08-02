@@ -1,8 +1,10 @@
 package com.viewcompose.ui.layout
 
 /**
- * Box 子节点在九宫格中的对齐位置。
- * Child alignment positions within a Box's nine-slot grid.
+ * Selects one of the nine logical alignment positions available to a box child.
+ *
+ * Start/end positions are resolved from the current layout direction; center positions are
+ * direction-independent.
  */
 enum class BoxAlignment {
     TopStart,

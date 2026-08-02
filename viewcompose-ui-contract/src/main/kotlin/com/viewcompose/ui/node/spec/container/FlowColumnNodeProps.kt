@@ -1,9 +1,13 @@
 package com.viewcompose.ui.node.spec
+
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * FlowColumn 节点的间距属性。
- * Spacing properties for a FlowColumn node.
+ * Immutable renderer properties for a column-first wrapping flow.
+ *
+ * @property horizontalSpacing spacing between adjacent generated columns
+ * @property verticalSpacing spacing between adjacent items in a column
+ * @property maxItemsInEachColumn maximum items placed before wrapping to the next column
  */
 data class FlowColumnNodeProps(
     val horizontalSpacing: UiDp,

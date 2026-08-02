@@ -9,8 +9,20 @@ import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.state.LazyListState
 
 /**
- * LazyVerticalGrid 节点的网格、item 和复用策略属性。
- * Grid, item, and reuse-policy properties for a LazyVerticalGrid node.
+ * Immutable renderer properties for a vertically scrolling fixed-span grid.
+ *
+ * @property spanCount number of cells across the horizontal axis
+ * @property contentPadding logical padding inside the scrollable content
+ * @property horizontalSpacing spacing between adjacent columns
+ * @property verticalSpacing spacing between adjacent rows
+ * @property items ordered keyed item models
+ * @property state optional command and observation state attached to the native grid
+ * @property reverseLayout whether row placement and scrolling start from the opposite edge
+ * @property userScrollEnabled whether direct user scrolling is accepted
+ * @property prefetchPolicy eager preparation and native view-cache hints
+ * @property reusePolicy native item-view pool policy
+ * @property motionPolicy native item mutation animation policy
+ * @property focusFollowKeyboard whether focus navigation may scroll the focused item into view
  */
 data class LazyVerticalGridNodeProps(
     val spanCount: Int,

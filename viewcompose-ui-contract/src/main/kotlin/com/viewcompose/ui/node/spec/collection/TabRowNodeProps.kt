@@ -7,8 +7,26 @@ import com.viewcompose.ui.node.collection.TabRowTab
 import com.viewcompose.ui.state.PagerState
 
 /**
- * TabRow 节点的 tab 集合、选中项和指示器属性。
- * Tab collection, selection, and indicator properties for a TabRow node.
+ * Immutable renderer properties for a tab row and its selection indicator.
+ *
+ * @property tabs ordered tab models
+ * @property selectedIndex externally selected tab index
+ * @property onTabSelected callback receiving an accepted tab index
+ * @property pagerState optional pager state used to synchronize selection and indicator progress
+ * @property indicatorColor selected-tab indicator color
+ * @property indicatorHeight indicator cross-axis thickness
+ * @property indicatorCornerRadius indicator corner radius
+ * @property indicatorPosition edge at which the indicator is placed
+ * @property indicatorWidthMode strategy used to determine indicator width
+ * @property indicatorFixedWidth width used by the fixed-width strategy
+ * @property containerColor tab-row surface color
+ * @property scrollable whether tabs may exceed and scroll within the available width
+ * @property equalWidth whether available width is divided equally among tabs
+ * @property rippleColor pressed-state ripple color
+ * @property itemSpacing spacing between adjacent tabs
+ * @property itemPaddingHorizontal horizontal padding inside each tab
+ * @property itemPaddingVertical vertical padding inside each tab
+ * @property minItemWidth minimum width of each tab
  */
 data class TabRowNodeProps(
     val tabs: List<TabRowTab>,

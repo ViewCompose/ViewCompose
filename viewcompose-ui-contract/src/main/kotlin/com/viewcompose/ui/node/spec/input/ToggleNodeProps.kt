@@ -3,8 +3,25 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.unit.UiSp
 
 /**
- * Toggle 类节点的选中状态、文案和交互属性。
- * Checked state, label, and interaction properties for toggle-like nodes.
+ * Immutable renderer properties shared by checkbox, radio, switch, and toggle nodes.
+ *
+ * @property text optional visible label
+ * @property enabled whether the control accepts input
+ * @property checked externally controlled selected state
+ * @property controlColor default control color
+ * @property thumbColor optional switch thumb color
+ * @property trackColor optional switch track color
+ * @property checkedColor optional color used for the checked state
+ * @property uncheckedColor optional color used for the unchecked state
+ * @property onCheckedChange callback receiving an accepted checked state
+ * @property textColor label color
+ * @property textSizeSp label size in scale-independent pixels
+ * @property fontWeight optional platform label font weight
+ * @property fontFamily optional renderer-compatible label font family
+ * @property letterSpacingEm optional label letter spacing in em units
+ * @property lineHeightSp optional label line height
+ * @property includeFontPadding whether platform font top and bottom padding is included
+ * @property rippleColor pressed-state ripple color
  */
 data class ToggleNodeProps(
     val text: CharSequence?,

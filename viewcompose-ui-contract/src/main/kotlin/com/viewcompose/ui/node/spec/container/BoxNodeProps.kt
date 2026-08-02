@@ -3,8 +3,10 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.layout.BoxAlignment
 
 /**
- * Box 节点的默认对齐属性。
- * Default alignment properties for a Box node.
+ * Immutable renderer properties for an overlaying box container.
+ *
+ * @property contentAlignment default alignment for children without explicit box parent data
+ * @property rippleColor optional container-level pressed-state ripple color
  */
 data class BoxNodeProps(
     val contentAlignment: BoxAlignment,

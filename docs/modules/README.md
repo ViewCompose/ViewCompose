@@ -13,7 +13,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | --- | --- | --- | --- |
 | `viewcompose-runtime` | Foundation | Platform-neutral state and observation runtime | [Available](./viewcompose-runtime/README.md) |
 | `viewcompose-text-core` | Foundation | Platform-neutral text editing model | Planned |
-| `viewcompose-ui-contract` | Foundation | Platform-neutral UI contracts and node specifications | Planned |
+| `viewcompose-ui-contract` | Foundation | Platform-neutral UI contracts and node specifications | [Available](./viewcompose-ui-contract/README.md) |
 | `viewcompose-navigation-core` | Navigation | Platform-neutral navigation state and transactions | Planned |
 | `viewcompose-navigation` | Navigation | Android navigation host integration | Planned |
 | `viewcompose-renderer` | Rendering | Android View renderer and reconciliation engine | Planned |

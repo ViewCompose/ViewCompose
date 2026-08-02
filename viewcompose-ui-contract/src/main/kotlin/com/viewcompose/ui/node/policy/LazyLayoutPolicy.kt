@@ -1,9 +1,17 @@
 package com.viewcompose.ui.node.policy
+
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Lazy 容器内容内边距的 renderer 中立模型。
- * Renderer-neutral model for lazy container content padding.
+ * Defines non-negative logical content padding for a lazy container.
+ *
+ * Start and end are resolved by the renderer against the node's layout direction.
+ *
+ * @property start padding at the logical start edge
+ * @property top padding at the physical top edge
+ * @property end padding at the logical end edge
+ * @property bottom padding at the physical bottom edge
+ * @throws IllegalArgumentException if any edge is negative
  */
 data class LazyContentPadding(
     val start: UiDp = UiDp.Zero,
@@ -18,9 +26,16 @@ data class LazyContentPadding(
         require(bottom >= UiDp.Zero) { "Lazy content bottom padding must be non-negative." }
     }
 
+    /** Creates commonly used immutable padding values. */
     companion object {
+        /** Padding with every edge set to [UiDp.Zero]. */
         val None = LazyContentPadding()
 
+        /**
+         * Creates padding with [value] on every edge.
+         *
+         * @throws IllegalArgumentException if [value] is negative
+         */
         fun all(value: UiDp): LazyContentPadding {
             return LazyContentPadding(
                 start = value,
@@ -30,6 +45,13 @@ data class LazyContentPadding(
             )
         }
 
+        /**
+         * Creates padding with equal horizontal and equal vertical edges.
+         *
+         * @param horizontal value for start and end
+         * @param vertical value for top and bottom
+         * @throws IllegalArgumentException if either value is negative
+         */
         fun symmetric(
             horizontal: UiDp = UiDp.Zero,
             vertical: UiDp = UiDp.Zero,
@@ -44,6 +66,16 @@ data class LazyContentPadding(
     }
 }
 
+/**
+ * Configures eager preparation and native view caching for a lazy layout.
+ *
+ * These values are performance hints. A renderer may clamp or ignore them when its platform does
+ * not expose an equivalent capability; they must not affect semantic item content.
+ *
+ * @property initialPrefetchItemCount number of items to prepare ahead of the initial viewport
+ * @property itemViewCacheSize number of detached item views retained by the native container
+ * @throws IllegalArgumentException if either value is negative
+ */
 data class LazyLayoutPrefetchPolicy(
     val initialPrefetchItemCount: Int = 2,
     val itemViewCacheSize: Int = 2,

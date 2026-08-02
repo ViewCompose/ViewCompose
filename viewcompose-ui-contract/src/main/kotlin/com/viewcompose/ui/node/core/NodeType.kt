@@ -1,55 +1,118 @@
 package com.viewcompose.ui.node
 
 /**
- * renderer 识别的节点类型集合，是 VNode.spec 与平台 View 绑定器之间的分发键。
- * Node type set recognized by renderers; it dispatches VNode.spec objects to platform View binders.
+ * Selects the renderer binder that interprets a VNode's `NodeSpec`.
+ *
+ * This sealed hierarchy is an inter-module dispatch contract. Renderers should handle known values
+ * exhaustively and reject a node whose type/spec pair does not match. New node types may be added in
+ * a future artifact version and require a compatible renderer update.
  */
 sealed interface NodeType {
-    // 文本与输入节点。
-    // Text and input nodes.
+    /** Static or rich text content. */
     data object Text : NodeType
+
+    /** Editable text input. */
     data object TextField : NodeType
+
+    /** Boolean checkbox input. */
     data object Checkbox : NodeType
+
+    /** Boolean switch input. */
     data object Switch : NodeType
+
+    /** Mutually exclusive radio-button input. */
     data object RadioButton : NodeType
+
+    /** Continuous or stepped range slider input. */
     data object Slider : NodeType
 
-    // 反馈与操作节点。
-    // Feedback and action nodes.
+    /** Horizontal determinate or indeterminate progress feedback. */
     data object LinearProgressIndicator : NodeType
+
+    /** Circular determinate or indeterminate progress feedback. */
     data object CircularProgressIndicator : NodeType
+
+    /** Text/content action button. */
     data object Button : NodeType
+
+    /** Icon-only action button. */
     data object IconButton : NodeType
 
-    // 基础容器和布局节点。
-    // Basic container and layout nodes.
+    /** Horizontal linear child layout. */
     data object Row : NodeType
+
+    /** Vertical linear child layout. */
     data object Column : NodeType
+
+    /** Stacking child layout. */
     data object Box : NodeType
+
+    /** Styled surface container. */
     data object Surface : NodeType
+
+    /** Constraint-based child layout. */
     data object ConstraintLayout : NodeType
+
+    /** Host that animates child visibility changes. */
     data object AnimatedVisibilityHost : NodeType
+
+    /** Host that animates measured content-size changes. */
     data object AnimatedSizeHost : NodeType
+
+    /** Transparent renderer host participating in nested scrolling. */
     data object NestedScrollHost : NodeType
+
+    /** Empty fixed or modifier-sized layout node. */
     data object Spacer : NodeType
+
+    /** Horizontal or vertical dividing line. */
     data object Divider : NodeType
+
+    /** Command-recorded custom drawing surface. */
     data object Canvas : NodeType
+
+    /** Resource or remote image content. */
     data object Image : NodeType
+
+    /** Caller-supplied native Android View boundary. */
     data object AndroidView : NodeType
 
-    // 集合、滚动和导航节点。
-    // Collection, scrolling, and navigation nodes.
+    /** Vertically scrolling, virtualized item collection. */
     data object LazyColumn : NodeType
+
+    /** Horizontally scrolling, virtualized item collection. */
     data object LazyRow : NodeType
+
+    /** Single-selection segmented control. */
     data object SegmentedControl : NodeType
+
+    /** Vertically scrolling eager child container. */
     data object ScrollableColumn : NodeType
+
+    /** Horizontally scrolling eager child container. */
     data object ScrollableRow : NodeType
+
+    /** Horizontally wrapping flow layout. */
     data object FlowRow : NodeType
+
+    /** Vertically wrapping flow layout. */
     data object FlowColumn : NodeType
+
+    /** Primary destination navigation bar. */
     data object NavigationBar : NodeType
+
+    /** Horizontally paged virtualized content. */
     data object HorizontalPager : NodeType
+
+    /** Vertically paged virtualized content. */
     data object VerticalPager : NodeType
+
+    /** Horizontally arranged tab selector. */
     data object TabRow : NodeType
+
+    /** Vertically scrolling, virtualized grid. */
     data object LazyVerticalGrid : NodeType
+
+    /** Pull gesture container with refresh feedback. */
     data object PullToRefresh : NodeType
 }

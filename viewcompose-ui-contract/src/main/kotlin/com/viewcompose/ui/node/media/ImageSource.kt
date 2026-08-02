@@ -1,14 +1,28 @@
 package com.viewcompose.ui.node
 
 /**
- * 图片来源，renderer 根据类型选择资源或远程加载路径。
- * Image source used by the renderer to choose resource or remote loading paths.
+ * Selects a local Android resource or a remote URL as image content.
+ *
+ * Consumers should handle this sealed hierarchy exhaustively. Renderers resolve [Resource]
+ * directly and delegate a usable [Remote] URL to the configured [RemoteImageLoader].
  */
 sealed interface ImageSource {
+    /**
+     * Loads an Android drawable resource from the rendered View context.
+     *
+     * @property resId Android drawable resource identifier
+     */
     data class Resource(
         val resId: Int,
     ) : ImageSource
 
+    /**
+     * Requests content from a remote URL.
+     *
+     * A `null` or blank URL selects the fallback resource without invoking the remote loader.
+     *
+     * @property url remote URL, or `null` when no remote data is available
+     */
     data class Remote(
         val url: String?,
     ) : ImageSource

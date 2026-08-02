@@ -1,7 +1,10 @@
 package com.viewcompose.ui.node.spec
 
 /**
- * 节点规格标记接口，承载某一 NodeType 的平台无关属性快照。
- * Marker interface for node specs, carrying a platform-neutral property snapshot for one NodeType.
+ * Marks an immutable, platform-neutral property snapshot for one node type.
+ *
+ * A concrete spec is paired with a compatible `NodeType` by the DSL and renderer registry. Specs
+ * participate in VNode equality and therefore must describe render semantics without mutable
+ * platform objects unless the concrete contract explicitly defines an identity boundary.
  */
 interface NodeSpec

@@ -1,8 +1,7 @@
 package com.viewcompose.ui.input
 
 /**
- * 与平台键盘事件解耦的按键事件类型。
- * Platform-independent key event type.
+ * Classifies a platform-independent key event as a press, release, or unrecognized action.
  */
 enum class KeyEventType {
     KeyDown,
@@ -10,6 +9,13 @@ enum class KeyEventType {
     Unknown,
 }
 
+/**
+ * Identifies the logical key meanings recognized by ViewCompose input contracts.
+ *
+ * [Character] represents printable input whose code point is carried by
+ * [KeyEvent.unicodeCodePoint]. [Unknown] preserves an event that has no logical mapping; consumers
+ * may inspect [KeyEvent.nativeKeyCode] when Android-specific handling is required.
+ */
 enum class Key {
     Unknown,
     Character,
@@ -36,6 +42,16 @@ enum class Key {
  *
  * [nativeKeyCode] remains available for Android-specific keys without forcing the common
  * contract to mirror the entire platform key-code table.
+ *
+ * @property key logical key meaning, or [Key.Unknown] when no mapping exists
+ * @property type press/release classification
+ * @property nativeKeyCode unmodified platform key code, with platform-defined units
+ * @property unicodeCodePoint Unicode code point for character input, or `0` when unavailable
+ * @property repeatCount number of repeated key-down events reported by the platform
+ * @property isAltPressed whether an Alt modifier was active for this event
+ * @property isCtrlPressed whether a Control modifier was active for this event
+ * @property isMetaPressed whether a Meta modifier was active for this event
+ * @property isShiftPressed whether a Shift modifier was active for this event
  */
 data class KeyEvent(
     val key: Key,
