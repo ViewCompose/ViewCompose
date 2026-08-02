@@ -1,8 +1,10 @@
 package com.viewcompose.ui.focus
 
 /**
- * 平台无关焦点移动方向。
- * Platform-independent focus movement directions.
+ * Selects sequential, spatial, enter, or exit traversal for a focus request.
+ *
+ * Left/right are physical directions. Sequential next/previous behavior and enter/exit traversal
+ * are resolved by the platform focus manager.
  */
 enum class FocusDirection {
     Next,
@@ -16,14 +18,18 @@ enum class FocusDirection {
 }
 
 /**
- * 焦点状态快照，isFocused 表示自身聚焦，hasFocus 表示自身或子节点持有焦点。
- * Focus-state snapshot; isFocused means the target itself is focused, while hasFocus includes descendants.
+ * Captures focus ownership for a target and its descendants at one instant.
+ *
+ * @property isFocused whether the target itself owns focus
+ * @property hasFocus whether the target or any descendant owns focus
  */
 data class FocusState(
     val isFocused: Boolean,
     val hasFocus: Boolean,
 ) {
+    /** Provides common focus snapshots. */
     companion object {
+        /** Snapshot for a target whose subtree does not own focus. */
         val Inactive = FocusState(
             isFocused = false,
             hasFocus = false,
@@ -32,50 +38,69 @@ data class FocusState(
 }
 
 /**
- * render session 暴露的命令式焦点管理入口。
- * Imperative focus owner exposed by a render session.
+ * Exposes imperative focus operations owned by a render session.
+ *
+ * Calls execute synchronously on the caller's thread. An Android implementation requires the main
+ * thread and resolves traversal through the currently mounted native view tree.
  */
 interface FocusManager {
     /**
-     * 清除当前焦点，force 由平台决定是否绕过常规拒绝逻辑。
-     * Clears current focus; force lets the platform decide whether to bypass normal refusal rules.
+     * Clears focus from the currently focused target.
+     *
+     * @param force whether the platform may bypass normal focus-clear refusal behavior
      */
     fun clearFocus(force: Boolean = false)
 
     /**
-     * 按方向移动焦点，返回是否成功。
-     * Moves focus in a direction and returns whether it succeeded.
+     * Requests focus traversal in [direction].
+     *
+     * @param direction traversal direction resolved by the platform
+     * @return `true` if another target accepted focus
      */
     fun moveFocus(direction: FocusDirection): Boolean
 }
 
 /**
- * [FocusRequester] 使用的平台连接器。
- * Platform connector used by [FocusRequester].
+ * Bridges a [FocusRequester] to one renderer-owned focus target.
  *
- * 这是公开 renderer 边界，与 lazy 容器的 state connector 契约一致。业务代码不应直接实现。
- * This is a public renderer boundary, matching the state connector contracts used by lazy
- * containers. Application code should not implement it.
+ * This is a renderer implementation boundary rather than an application extension point.
+ * Properties are queried synchronously by the requester, and [requestFocus] executes on the
+ * requester's calling thread.
  */
 interface FocusRequesterConnector {
+    /** Stable identity for the mounted platform focus target. */
     val identity: Any
         get() = this
 
+    /**
+     * Key used to match a target across keyed reuse or remount.
+     *
+     * The default uses [identity]. Renderers may provide a durable semantic key.
+     */
     val restorationKey: Any
         get() = identity
 
+    /** Latest focus snapshot for this target and its descendants. */
     val focusState: FocusState
 
+    /**
+     * Requests focus or traversal from this target.
+     *
+     * @param direction requested focus direction
+     * @return `true` when the platform accepts the request
+     */
     fun requestFocus(direction: FocusDirection): Boolean
 }
 
 /**
- * 稳定的焦点句柄，可独立于平台 View 被 remember。
- * Stable focus handle that can be remembered independently of a platform View.
+ * Holds a stable focus handle independently of any platform View instance.
  *
- * 一个 requester 可连接多个目标；请求按连接顺序尝试，直到某个目标接受。
- * One requester may be attached to more than one target. Requests are offered in attachment
- * order until a target accepts them.
+ * One requester may attach to multiple targets. Requests are offered in attachment order until a
+ * target accepts. Connector membership and restoration state are synchronized; connector
+ * callbacks run synchronously on the caller's thread without holding the membership lock, except
+ * for focus-state inspection during [saveFocusedChild].
+ *
+ * @sample com.viewcompose.ui.samples.focusRequesterSample
  */
 class FocusRequester {
     private val lock = Any()
@@ -84,8 +109,11 @@ class FocusRequester {
     private var restorePending: Boolean = false
 
     /**
-     * 请求已连接目标获取焦点，按 attach 顺序尝试。
-     * Requests focus from attached targets in attach order.
+     * Requests focus from attached targets in attachment order.
+     *
+     * @param direction direction offered to each target
+     * @return `true` when one target accepts the request
+     * @throws IllegalStateException if no target is attached
      */
     fun requestFocus(direction: FocusDirection = FocusDirection.Enter): Boolean {
         val targets = synchronized(lock) {
@@ -99,8 +127,9 @@ class FocusRequester {
     }
 
     /**
-     * 保存当前持有焦点的目标，以便 keyed reuse 或重新挂载后恢复。
-     * Saves the currently focused target so it can be restored after keyed reuse or remount.
+     * Saves the restoration key of the first attached target whose subtree owns focus.
+     *
+     * @return `true` when a focused target was captured; `false` when none has focus
      */
     fun saveFocusedChild(): Boolean {
         val focused = synchronized(lock) {
@@ -114,12 +143,12 @@ class FocusRequester {
     }
 
     /**
-     * 恢复之前由 [saveFocusedChild] 捕获的目标。
      * Restores the target previously captured by [saveFocusedChild].
      *
-     * 如果目标临时 detach，恢复请求会保持 pending，并在相同 restoration key 的 connector 再次 attach 时重试。
-     * If the target is temporarily detached, the restore remains pending and is attempted when
-     * a connector carrying the same restoration key is attached again.
+     * A missing or rejecting target leaves restoration pending. A later [attach] with the same
+     * restoration key retries immediately.
+     *
+     * @return `true` when the matching target accepts focus; otherwise `false`
      */
     fun restoreFocusedChild(): Boolean {
         val target = synchronized(lock) {
@@ -140,8 +169,12 @@ class FocusRequester {
     }
 
     /**
-     * 连接一个平台焦点目标；如有 pending restore，会在 key 匹配时立即尝试恢复。
-     * Attaches one platform focus target; pending restore is attempted immediately when the key matches.
+     * Attaches one platform focus target.
+     *
+     * Reattaching the same connector is idempotent because membership uses equality semantics. A
+     * pending restoration with a matching key is attempted synchronously.
+     *
+     * @param connector renderer-owned focus target connector
      */
     fun attach(connector: FocusRequesterConnector) {
         val shouldRestore = synchronized(lock) {
@@ -156,8 +189,11 @@ class FocusRequester {
     }
 
     /**
-     * 断开一个平台焦点目标。
-     * Detaches one platform focus target.
+     * Detaches [connector] from future requests.
+     *
+     * Saved restoration state is retained so a target with the same key may restore after remount.
+     *
+     * @param connector target connector to remove
      */
     fun detach(connector: FocusRequesterConnector) {
         synchronized(lock) {
@@ -167,8 +203,18 @@ class FocusRequester {
 }
 
 /**
- * 声明式焦点属性，后声明的非空字段会覆盖先前字段。
- * Declarative focus properties where later non-null fields override earlier fields.
+ * Describes optional focus participation and directional traversal overrides for one node.
+ *
+ * A `null` field leaves the renderer or an earlier modifier value unchanged. [merge] applies a
+ * later set of properties by replacing only its non-null fields.
+ *
+ * @property canFocus whether the target may receive focus, or `null` to keep the inherited policy
+ * @property next explicit target for sequential next traversal
+ * @property previous explicit target for sequential previous traversal
+ * @property left explicit target for physical-left traversal
+ * @property right explicit target for physical-right traversal
+ * @property up explicit target for upward traversal
+ * @property down explicit target for downward traversal
  */
 data class FocusProperties(
     val canFocus: Boolean? = null,
@@ -179,6 +225,12 @@ data class FocusProperties(
     val up: FocusRequester? = null,
     val down: FocusRequester? = null,
 ) {
+    /**
+     * Returns properties with non-null values from [nextProperties] applied over this value.
+     *
+     * @param nextProperties later modifier values with higher precedence
+     * @return a new merged property set
+     */
     fun merge(nextProperties: FocusProperties): FocusProperties {
         return FocusProperties(
             canFocus = nextProperties.canFocus ?: canFocus,
@@ -191,6 +243,15 @@ data class FocusProperties(
         )
     }
 
+    /**
+     * Returns the explicit requester configured for [direction].
+     *
+     * [FocusDirection.Enter] and [FocusDirection.Exit] do not have fields in this contract and
+     * therefore return `null`.
+     *
+     * @param direction traversal direction to resolve
+     * @return the configured requester, or `null` when traversal remains platform-defined
+     */
     fun requesterFor(direction: FocusDirection): FocusRequester? {
         return when (direction) {
             FocusDirection.Next -> next
@@ -205,22 +266,39 @@ data class FocusProperties(
         }
     }
 
+    /** Provides common focus-property values. */
     companion object {
+        /** Property set that leaves every focus policy to the renderer or inherited modifiers. */
         val Default = FocusProperties()
     }
 }
 
 /**
- * focusProperties DSL 的临时接收器。
- * Temporary receiver used by the focusProperties DSL.
+ * Collects mutable assignments inside the `focusProperties` modifier DSL.
+ *
+ * The receiver is temporary and should not be retained. Each nullable property has the same
+ * meaning as its counterpart in [FocusProperties]; leaving it `null` preserves prior policy.
  */
 class FocusPropertiesReceiver {
+    /** Whether the target may receive focus, or `null` to keep inherited policy. */
     var canFocus: Boolean? = null
+
+    /** Explicit target for sequential next traversal, or `null` for platform resolution. */
     var next: FocusRequester? = null
+
+    /** Explicit target for sequential previous traversal, or `null` for platform resolution. */
     var previous: FocusRequester? = null
+
+    /** Explicit target for physical-left traversal, or `null` for platform resolution. */
     var left: FocusRequester? = null
+
+    /** Explicit target for physical-right traversal, or `null` for platform resolution. */
     var right: FocusRequester? = null
+
+    /** Explicit target for upward traversal, or `null` for platform resolution. */
     var up: FocusRequester? = null
+
+    /** Explicit target for downward traversal, or `null` for platform resolution. */
     var down: FocusRequester? = null
 
     internal fun build(): FocusProperties {

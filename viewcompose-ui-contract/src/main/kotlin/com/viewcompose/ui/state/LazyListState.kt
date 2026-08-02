@@ -3,14 +3,18 @@ package com.viewcompose.ui.state
 import com.viewcompose.runtime.mutableStateOf
 
 /**
- * lazy list/grid 的可观察状态。
- * Observable state for lazy lists and grids.
+ * Owns the observable anchor and layout snapshot for a lazy list or grid.
  *
- * renderer 负责平台滚动动作，本类负责持久锚点和最新的平台无关布局快照。
- * composition 中读取任何由 snapshot 支撑的公开属性，都会登记普通的 snapshot-state 依赖。
- * The renderer owns platform scrolling while this class owns the durable anchor and the latest
- * platform-independent layout snapshot. Reading any public snapshot-backed property during
- * composition registers a normal snapshot-state dependency.
+ * The renderer owns native scrolling and attaches through [LazyListConnector]. Reading [snapshot]
+ * or any derived property during composition records a normal snapshot-state dependency. Commands
+ * and listener registration are thread-confined to the owning renderer thread; Android callers use
+ * the main thread. Snapshot listeners run synchronously after a distinct snapshot is installed.
+ *
+ * @sample com.viewcompose.ui.samples.lazyListStateSample
+ * @param initialFirstVisibleItemIndex non-negative initial anchor index used before attachment
+ * @param initialFirstVisibleItemScrollOffset non-negative initial offset from the start edge in
+ * renderer units, normally physical pixels on Android
+ * @throws IllegalArgumentException if either initial value is negative
  */
 class LazyListState(
     initialFirstVisibleItemIndex: Int = 0,
@@ -27,50 +31,75 @@ class LazyListState(
         ),
     )
 
+    /** Latest immutable renderer snapshot; reads participate in snapshot observation. */
     val snapshot: LazyListStateSnapshot
         get() = snapshotState.value
 
+    /** Current non-negative first visible item index derived from [snapshot]. */
     val firstVisibleItemIndex: Int
         get() = snapshot.firstVisibleItemIndex
 
+    /** Current non-negative start-edge offset of the first visible item. */
     val firstVisibleItemScrollOffset: Int
         get() = snapshot.firstVisibleItemScrollOffset
 
+    /** Latest immutable visible-item and viewport information. */
     val layoutInfo: LazyListLayoutInfo
         get() = snapshot.layoutInfo
 
+    /** Whether the attached platform container reports an active scroll operation. */
     val isScrollInProgress: Boolean
         get() = snapshot.isScrollInProgress
 
+    /** Whether the platform container can scroll toward items before the current viewport. */
     val canScrollBackward: Boolean
         get() = snapshot.canScrollBackward
 
+    /** Whether the platform container can scroll toward items after the current viewport. */
     val canScrollForward: Boolean
         get() = snapshot.canScrollForward
 
+    /** Whether the latest reported scroll direction was backward. */
     val lastScrolledBackward: Boolean
         get() = snapshot.lastScrolledBackward
 
+    /** Whether the latest reported scroll direction was forward. */
     val lastScrolledForward: Boolean
         get() = snapshot.lastScrolledForward
 
+    /**
+     * Semantic key of the first visible item, or `null` when layout information has no matching item.
+     */
     val firstVisibleItemKey: Any?
         get() = layoutInfo.visibleItemsInfo
             .firstOrNull { item -> item.index == firstVisibleItemIndex }
             ?.key
 
+    /** Highest visible item index, or `0` when no visible item information is available. */
     val lastVisibleItemIndex: Int
         get() = layoutInfo.visibleItemsInfo.maxOfOrNull { item -> item.index } ?: 0
 
+    /** Whether backward scrolling is currently unavailable. */
     val isAtStart: Boolean
         get() = !canScrollBackward
 
+    /**
+     * Whether a non-empty data set currently reports no forward scrolling.
+     *
+     * Empty or not-yet-laid-out content returns `false` because an end boundary is not established.
+     */
     val isAtEnd: Boolean
         get() = layoutInfo.totalItemsCount > 0 && !canScrollForward
 
     /**
-     * 立即将 [index] 放到起始边缘，并按 [scrollOffset] 像素偏移。
-     * Immediately places [index] at the start edge, shifted by [scrollOffset] pixels.
+     * Immediately places [index] at the start edge with [scrollOffset].
+     *
+     * The local snapshot anchor updates before the renderer command, including while detached.
+     * An attached connector receives the command synchronously with animation disabled.
+     *
+     * @param index non-negative target item index
+     * @param scrollOffset non-negative offset from the start edge in renderer units
+     * @throws IllegalArgumentException if [index] or [scrollOffset] is negative
      */
     fun scrollToItem(
         index: Int,
@@ -93,8 +122,13 @@ class LazyListState(
     }
 
     /**
-     * 平滑滚动到 [index]；最终平台锚点会通过 [snapshot] 回传。
-     * Smoothly scrolls [index] into view. The final platform anchor is reported through [snapshot].
+     * Requests an animated scroll that places [index] at the start edge.
+     *
+     * This is a no-op while detached and does not predictively update [snapshot]. The connector
+     * reports intermediate and final state through its snapshot listener.
+     *
+     * @param index non-negative target item index
+     * @throws IllegalArgumentException if [index] is negative
      */
     fun animateScrollToItem(index: Int) {
         val targetIndex = index.requireValidIndex()
@@ -105,22 +139,40 @@ class LazyListState(
         )
     }
 
+    /** Requests cancellation of platform scrolling, or does nothing while detached. */
     fun stopScroll() {
         connector?.stopScroll()
     }
 
+    /**
+     * Registers [listener] for distinct future snapshots.
+     *
+     * Registration does not replay the current value. Re-adding an equal listener is idempotent.
+     *
+     * @param listener callback invoked synchronously after a snapshot update
+     */
     fun addOnSnapshotChangedListener(listener: (LazyListStateSnapshot) -> Unit) {
         listeners += listener
     }
 
+    /**
+     * Removes [listener] from future snapshot callbacks.
+     *
+     * @param listener previously registered callback; unknown callbacks are ignored
+     */
     fun removeOnSnapshotChangedListener(listener: (LazyListStateSnapshot) -> Unit) {
         listeners -= listener
     }
 
     /**
-     * renderer 连接边界。保持 public 是为了让平台 renderer 实现连接器，同时避免 UI contract 依赖 Android。
-     * Renderer attachment boundary. Public so a platform renderer can implement the connector
-     * without making the UI contract depend on Android.
+     * Rebinds this state to [nextConnector] at the platform renderer boundary.
+     *
+     * The previous connector's latest snapshot is captured before its listener is cleared. A new
+     * platform identity receives the retained anchor immediately; a replacement wrapper with the
+     * same [LazyListConnector.identity] does not issue a redundant scroll. Passing `null` detaches
+     * while retaining the latest snapshot. Reattaching the same connector instance is a no-op.
+     *
+     * @param nextConnector new renderer connector, or `null` to detach
      */
     fun attach(nextConnector: LazyListConnector?) {
         if (connector === nextConnector) {
@@ -163,29 +215,64 @@ class LazyListState(
 }
 
 /**
- * lazy list 状态与平台 renderer 之间的命令/快照桥接。
- * Command and snapshot bridge between LazyListState and the platform renderer.
+ * Bridges [LazyListState] commands and snapshots to one platform lazy container.
+ *
+ * This is a renderer implementation boundary rather than an application extension point. Methods
+ * are called synchronously on the state owner's renderer thread. Default optional operations make
+ * a minimal connector command-only and snapshot-silent.
  */
 interface LazyListConnector {
+    /**
+     * Stable identity of the native lazy container across connector-wrapper replacement.
+     *
+     * The default is connector object identity.
+     */
     val identity: Any
         get() = this
 
+    /**
+     * Places [index] at the start edge with [scrollOffset].
+     *
+     * @param index validated non-negative target index
+     * @param scrollOffset validated non-negative start-edge offset in renderer units
+     * @param animated whether the platform should animate toward the target
+     */
     fun scrollToItem(
         index: Int,
         scrollOffset: Int,
         animated: Boolean,
     )
 
+    /** Stops an active platform scroll when supported. */
     fun stopScroll() = Unit
 
+    /**
+     * Returns the latest platform snapshot, or `null` when synchronous capture is unavailable.
+     *
+     * @return immutable current snapshot or `null`
+     */
     fun currentSnapshot(): LazyListStateSnapshot? = null
 
+    /**
+     * Replaces the callback used for future platform snapshot changes.
+     *
+     * @param listener callback for distinct or platform-defined updates, or `null` to detach it
+     */
     fun setOnSnapshotChangedListener(listener: ((LazyListStateSnapshot) -> Unit)?) = Unit
 }
 
 /**
- * lazy list/grid 某一时刻的平台无关滚动与布局快照。
- * Platform-neutral scroll and layout snapshot for a lazy list/grid at one moment.
+ * Captures platform-neutral scroll and layout state for a lazy list or grid at one instant.
+ *
+ * @property firstVisibleItemIndex non-negative anchor index
+ * @property firstVisibleItemScrollOffset non-negative offset from the start edge in renderer units
+ * @property layoutInfo immutable visible-item and viewport information
+ * @property isScrollInProgress whether the platform reports an active scroll
+ * @property canScrollBackward whether content exists before the current viewport
+ * @property canScrollForward whether content exists after the current viewport
+ * @property lastScrolledBackward whether the latest reported direction was backward
+ * @property lastScrolledForward whether the latest reported direction was forward
+ * @throws IllegalArgumentException if an anchor value is negative or both last-direction flags are true
  */
 data class LazyListStateSnapshot(
     val firstVisibleItemIndex: Int,
@@ -205,7 +292,16 @@ data class LazyListStateSnapshot(
         }
     }
 
+    /** Creates initial snapshots before a renderer supplies layout information. */
     companion object {
+        /**
+         * Creates a non-scrolling snapshot with empty layout information.
+         *
+         * @param firstVisibleItemIndex non-negative initial anchor index
+         * @param firstVisibleItemScrollOffset non-negative start-edge offset in renderer units
+         * @return an initial immutable snapshot
+         * @throws IllegalArgumentException if either anchor value is negative
+         */
         fun initial(
             firstVisibleItemIndex: Int = 0,
             firstVisibleItemScrollOffset: Int = 0,
@@ -226,8 +322,23 @@ data class LazyListStateSnapshot(
 }
 
 /**
- * lazy list/grid 当前可见布局信息。
- * Current visible layout information for a lazy list/grid.
+ * Describes the visible viewport of a lazy list or grid.
+ *
+ * Offsets and sizes use renderer units, normally physical pixels on Android. The visible item list
+ * is an immutable list reference by convention; callers and connectors must not mutate a supplied
+ * mutable implementation after construction.
+ *
+ * @property visibleItemsInfo visible items in renderer-defined placement order
+ * @property viewportStartOffset inclusive main-axis viewport start
+ * @property viewportEndOffset exclusive main-axis viewport end
+ * @property totalItemsCount non-negative total data-set size
+ * @property beforeContentPadding non-negative padding before content on the main axis
+ * @property afterContentPadding non-negative padding after content on the main axis
+ * @property mainAxisItemSpacing non-negative spacing between adjacent items
+ * @property orientation main axis used for offsets and sizes
+ * @property reverseLayout whether logical item order is placed from the opposite edge
+ * @throws IllegalArgumentException if viewport bounds, counts, padding, spacing, or visible indices
+ * violate the layout invariants
  */
 data class LazyListLayoutInfo(
     val visibleItemsInfo: List<LazyListItemInfo>,
@@ -255,10 +366,13 @@ data class LazyListLayoutInfo(
         }
     }
 
+    /** Non-negative main-axis viewport size derived from end minus start. */
     val viewportSize: Int
         get() = viewportEndOffset - viewportStartOffset
 
+    /** Provides common lazy-layout snapshots. */
     companion object {
+        /** Empty vertical viewport used before the first renderer layout. */
         val Empty = LazyListLayoutInfo(
             visibleItemsInfo = emptyList(),
             viewportStartOffset = 0,
@@ -274,8 +388,16 @@ data class LazyListLayoutInfo(
 }
 
 /**
- * 单个可见 lazy item 的平台无关布局信息。
- * Platform-neutral layout information for one visible lazy item.
+ * Describes one visible lazy item in platform-neutral renderer units.
+ *
+ * @property index non-negative data-set index
+ * @property key semantic item identity retained across moves
+ * @property contentType optional reuse classification supplied by the DSL
+ * @property offset item start relative to the viewport start; may be negative when partially clipped
+ * @property size non-negative main-axis size
+ * @property spanIndex non-negative starting span for grid layouts
+ * @property spanSize positive number of spans occupied by the item
+ * @throws IllegalArgumentException if index, size, or span values violate their ranges
  */
 data class LazyListItemInfo(
     val index: Int,
@@ -294,10 +416,7 @@ data class LazyListItemInfo(
     }
 }
 
-/**
- * lazy list 主轴方向。
- * Main-axis orientation for a lazy list.
- */
+/** Selects a vertical or horizontal main axis for lazy-list layout information. */
 enum class LazyListOrientation {
     Vertical,
     Horizontal,
