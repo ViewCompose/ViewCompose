@@ -1,17 +1,18 @@
 package com.viewcompose.runtime.observation
 
-/**
- * 可被运行时观察读取的状态对象。
- * State object whose reads can be observed by the runtime.
- */
+/** Internal subscription contract for state objects whose reads can be observed. */
 internal interface ObservableState {
     fun addObserver(observer: Observation)
     fun removeObserver(observer: Observation)
 }
 
 /**
- * 一次读取观察会话，保存被读取的状态集合并在任一状态变化时回调失效。
- * One read-observation session that stores read states and calls back when any of them invalidates.
+ * Owns the state subscriptions collected by one [RuntimeObservation.observeReads] call.
+ *
+ * Each state is subscribed at most once per observation. A successful state commit invokes the
+ * observation callback on the applying thread once for each changed observed state, so one
+ * multi-state transaction may invoke it more than once. Call [dispose] when the consumer no longer
+ * needs invalidations so observed states can release the subscription.
  */
 class Observation internal constructor(
     private val onInvalidated: () -> Unit,
@@ -36,8 +37,11 @@ class Observation internal constructor(
     }
 
     /**
-     * 停止观察并从所有已记录状态上注销。
-     * Stops observing and unregisters from every recorded state.
+     * Detaches this observation from every state read during collection.
+     *
+     * Disposal is idempotent and safe to call concurrently with subscription changes. It prevents
+     * future invalidations but does not cancel a callback that has already begun racing with
+     * disposal.
      */
     fun dispose() {
         synchronized(stateLock) {
@@ -51,16 +55,22 @@ class Observation internal constructor(
     }
 }
 
-/**
- * 读取观察入口，使用线程局部变量把状态读取归属到当前观察会话。
- * Entry point for read observation, using thread-local state to attach reads to the active observation.
- */
+/** Collects snapshot-state reads and exposes their later invalidations. */
 object RuntimeObservation {
     private val currentObservation = ThreadLocal<Observation?>()
 
     /**
-     * 执行 block 并收集其中读取到的可观察状态。
-     * Runs block and collects observable states read inside it.
+     * Runs [block] and collects every observable state read on the current thread.
+     *
+     * Nested calls temporarily replace the outer observation and restore it before returning. When
+     * [block] throws, the partial observation is disposed and the same exception is rethrown. The
+     * caller owns the returned [Observation] and MUST dispose it.
+     *
+     * @sample com.viewcompose.runtime.samples.runtimeObservationSample
+     * @param T type of value returned by [block]
+     * @param onInvalidated callback invoked on the thread that commits a dependency change
+     * @param block synchronous calculation whose state reads are collected
+     * @return the calculation result and its active observation
      */
     fun <T> observeReads(
         onInvalidated: () -> Unit,

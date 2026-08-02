@@ -2,16 +2,16 @@ package com.viewcompose.runtime
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * 快照应用结果，成功表示写入已进入目标快照或全局状态。
- * Result of applying a snapshot; success means writes reached the target snapshot or global state.
- */
+/** Reports whether every buffered write from a [MutableSnapshot] was applied atomically. */
 sealed interface SnapshotApplyResult {
+    /** Indicates that all buffered writes were applied, or that the snapshot contained no changes. */
     data object Success : SnapshotApplyResult
 
     /**
-     * 应用失败，conflictCount 表示无法通过策略合并的状态数量。
-     * Apply failure; conflictCount is the number of states that policies could not merge.
+     * Reports that no writes were applied because one or more concurrent changes could not merge.
+     *
+     * @property conflictCount number of state objects whose mutation policies returned `null` from
+     * [SnapshotMutationPolicy.merge]
      */
     data class Failure(
         val conflictCount: Int,
@@ -19,19 +19,27 @@ sealed interface SnapshotApplyResult {
 }
 
 /**
- * 可变快照应用到全局状态时发生不可合并冲突。
- * Thrown when a mutable snapshot cannot be merged into global state.
+ * Indicates that an automatic mutable-snapshot transaction encountered unmergeable changes.
+ *
+ * Explicit [MutableSnapshot.apply] calls report the same condition as [SnapshotApplyResult.Failure]
+ * instead of throwing this exception.
+ *
+ * @param message detail message exposed by [IllegalStateException]
  */
 class SnapshotApplyConflictException(
     message: String,
 ) : IllegalStateException(message)
 
 /**
- * 只读快照，固定一个 readId 来提供一致的状态读取视图。
- * Read-only snapshot that pins a readId to provide a consistent state view.
+ * Pins a consistent, read-only view of snapshot-managed state until it is disposed.
  *
- * 快照必须 dispose/close，以便运行时裁剪不再需要的历史状态记录。
- * Snapshots must be disposed/closed so the runtime can prune obsolete historical state records.
+ * [enter] installs this snapshot in a thread-local context, so all state reads in the block observe
+ * the version captured when the snapshot was taken. Nested entries restore the previous context.
+ * The snapshot retains historical state records needed by its version; callers MUST invoke [close]
+ * or [dispose], preferably with `use`, when reads are complete.
+ *
+ * A snapshot does not make arbitrary work thread-safe. Do not dispose an instance while an [enter]
+ * block is active, and serialize concurrent use of the same instance.
  */
 open class Snapshot internal constructor(
     internal val readId: Int,
@@ -39,18 +47,32 @@ open class Snapshot internal constructor(
     private val disposed = AtomicBoolean(false)
 
     /**
-     * 在当前线程进入该快照并执行 block，嵌套进入会在栈上恢复之前上下文。
-     * Enters this snapshot on the current thread and runs block; nested entries restore the previous context.
+     * Runs [block] with this snapshot as the current read context on the calling thread.
+     *
+     * The previous snapshot context is restored even when [block] throws. Writes made without an
+     * explicitly entered [MutableSnapshot] still use an automatic global transaction and do not
+     * change the values read through this pinned snapshot.
+     *
+     * @param R type of value returned by [block]
+     * @param block synchronous work executed under this snapshot
+     * @return the value returned by [block]
+     * @throws IllegalStateException if this snapshot has already been disposed
      */
     fun <R> enter(block: () -> R): R {
         ensureActive()
         return SnapshotRuntime.enterSnapshot(this, block)
     }
 
+    /** Releases this snapshot when used through [AutoCloseable]. */
     override fun close() {
         dispose()
     }
 
+    /**
+     * Releases the pinned read version and allows obsolete state history to be pruned.
+     *
+     * Disposal is idempotent. An instance cannot be entered again after disposal.
+     */
     open fun dispose() {
         if (disposed.compareAndSet(false, true)) {
             SnapshotRuntime.disposeSnapshot(readId)
@@ -61,28 +83,52 @@ open class Snapshot internal constructor(
         check(!disposed.get()) { "Snapshot is disposed." }
     }
 
+    /** Provides factories and transaction helpers for the process-wide snapshot runtime. */
     companion object {
         /**
-         * 捕获当前可见状态的一致只读快照。
-         * Captures a consistent read-only snapshot of currently visible state.
+         * Captures a read-only snapshot of the state visible in the current context.
+         *
+         * A snapshot created inside another snapshot inherits that context's read version. The
+         * caller owns the result and MUST close or dispose it.
+         *
+         * @return a new active snapshot pinned to the current visible version
          */
         fun takeSnapshot(): Snapshot = SnapshotRuntime.takeSnapshot()
 
         /**
-         * 创建可写快照；调用方负责 apply 后 dispose。
-         * Creates a writable snapshot; callers are responsible for applying and disposing it.
+         * Creates a mutable snapshot from the state visible in the current context.
+         *
+         * When called inside another [MutableSnapshot], the new snapshot becomes its child and a
+         * successful [MutableSnapshot.apply] merges writes into the parent buffer. Otherwise, apply
+         * targets global state. The caller owns the result and MUST dispose it after applying or
+         * abandoning its writes.
+         *
+         * @return a new active mutable snapshot with no buffered writes
          */
         fun takeMutableSnapshot(): MutableSnapshot = SnapshotRuntime.takeMutableSnapshot()
 
         /**
-         * 返回当前全局快照版本号。
-         * Returns the current global snapshot version.
+         * Returns the identifier of the latest globally committed snapshot version.
+         *
+         * Identifiers increase monotonically for the lifetime of the runtime but are not guaranteed
+         * to be contiguous. Use this value for diagnostics and cache validation, not persistence.
+         *
+         * @return the current process-local global snapshot identifier
          */
         fun currentGlobalId(): Int = SnapshotRuntime.currentGlobalId()
 
         /**
-         * 在可变快照中执行 block 并自动应用，冲突会抛出异常。
-         * Runs block in a mutable snapshot and applies it automatically; conflicts are thrown.
+         * Runs [block] in a new mutable snapshot and applies all writes on successful return.
+         *
+         * When called inside a mutable snapshot, the transaction applies to the parent buffer;
+         * otherwise it applies to global state. If [block] throws, no apply is attempted. The
+         * temporary snapshot is disposed in every outcome.
+         *
+         * @sample com.viewcompose.runtime.samples.mutableSnapshotSample
+         * @param R type of value returned by [block]
+         * @param block transaction body whose state writes are buffered
+         * @return the value returned by [block] after a successful apply
+         * @throws SnapshotApplyConflictException if concurrent writes cannot be merged
          */
         fun <R> withMutableSnapshot(block: () -> R): R {
             val snapshot = takeMutableSnapshot()
@@ -104,8 +150,15 @@ open class Snapshot internal constructor(
 }
 
 /**
- * 可变快照，暂存写入并在 apply 时合并到父快照或全局状态。
- * Mutable snapshot that buffers writes and merges them into its parent snapshot or global state on apply.
+ * Buffers state writes and applies them atomically to a parent snapshot or global state.
+ *
+ * Reads first observe this snapshot's buffered writes, then parent buffers, then the version pinned
+ * at creation. [apply] may be retried after [SnapshotApplyResult.Failure], but a successful apply is
+ * terminal; do not enter or write through the snapshot afterward. The caller MUST [dispose] the
+ * snapshot whether it is applied or abandoned.
+ *
+ * Mutable snapshots are not safe for concurrent entry or mutation. Conflicting destination writes
+ * are resolved independently through each state's [SnapshotMutationPolicy].
  */
 class MutableSnapshot internal constructor(
     readId: Int,
@@ -117,8 +170,15 @@ class MutableSnapshot internal constructor(
     internal var applied: Boolean = false
 
     /**
-     * 应用暂存写入；同一个可变快照只能成功应用一次。
-     * Applies buffered writes; the same mutable snapshot can be successfully applied only once.
+     * Applies every buffered write to this snapshot's parent buffer or to global state.
+     *
+     * The operation is atomic: a [SnapshotApplyResult.Failure] leaves the destination unchanged and
+     * allows the caller to adjust or retry the active snapshot. A successful result, including an
+     * empty apply, prevents any subsequent apply call.
+     *
+     * @return [SnapshotApplyResult.Success] when all writes apply, or
+     * [SnapshotApplyResult.Failure] with the number of unmergeable state objects
+     * @throws IllegalStateException if this snapshot is disposed or already applied successfully
      */
     fun apply(): SnapshotApplyResult {
         ensureActive()
@@ -130,6 +190,7 @@ class MutableSnapshot internal constructor(
         }
     }
 
+    /** Discards buffered writes and releases the pinned read version. */
     override fun dispose() {
         super.dispose()
         writes.clear()

@@ -1,28 +1,21 @@
 package com.viewcompose.runtime.composition
 
 /**
- * remembered 值进入或离开已提交 composition 时接收生命周期回调。
- * Receives lifecycle callbacks when a remembered value enters or leaves a committed composition.
+ * Receives lifecycle callbacks when a remembered value enters or leaves committed composition.
  *
- * 未成功提交的 composition 中创建的值会收到 [onAbandoned]，不会收到 [onRemembered]。
- * Values created by an unsuccessful composition receive [onAbandoned] instead of [onRemembered].
+ * A value created by an aborted or failed attempt receives [onAbandoned] instead of
+ * [onRemembered]. Replacing or removing a committed value invokes [onForgotten]. Callbacks execute
+ * synchronously on the thread that commits, aborts, or disposes the owning [ComposerLite]. The
+ * runtime continues cleanup after a callback failure and rethrows the first failure with later
+ * failures suppressed.
  */
 interface RememberObserver {
-    /**
-     * 值已进入已提交 composition。
-     * The value has entered a committed composition.
-     */
+    /** Called once after this value first enters a successfully committed composition. */
     fun onRemembered()
 
-    /**
-     * 值已从已提交 composition 中移除。
-     * The value has left a committed composition.
-     */
+    /** Called after this remembered value leaves committed composition or its composer is disposed. */
     fun onForgotten()
 
-    /**
-     * 值在 composition 尝试失败或放弃时被清理。
-     * The value is cleaned up after a failed or abandoned composition attempt.
-     */
+    /** Called when this newly created value is discarded before it becomes committed. */
     fun onAbandoned()
 }

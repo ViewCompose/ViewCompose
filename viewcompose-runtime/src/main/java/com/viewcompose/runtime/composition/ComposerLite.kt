@@ -4,11 +4,25 @@ import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.runtime.Snapshot
 
 /**
- * 面向节点组增量重组的 SlotTable-lite composer。
- * SlotTable-lite composer for node-group incremental recomposition.
+ * Coordinates transactional, group-based incremental composition without compiler-generated flags.
  *
- * 该运行时刻意不依赖编译器生成的 stability/changed flags，所有跳过逻辑由 scope 输入和状态观察驱动。
- * This runtime intentionally avoids compiler-generated stability/changed flags; skipping is driven by scope inputs and state observation.
+ * [runGroup] builds a positional scope tree in [slotTable]. A committed group result is reused when
+ * its explicit inputs are equal and none of its observed state has invalidated the scope. State
+ * invalidations are coalesced in [invalidationQueue]. Composition runs in a pinned read [Snapshot]
+ * and [prepareRoot] lets a host commit or roll back runtime changes together with another mutable
+ * tree.
+ *
+ * Composer instances are thread-confined. Calls that compose, commit, abort, run effects, or dispose
+ * an instance MUST be serialized by its owner.
+ *
+ * @sample com.viewcompose.runtime.samples.composerLiteSample
+ * @param slotTable scope/slot tree owned by this composer
+ * @param invalidationQueue queue that coalesces state-driven scope invalidations
+ * @param warningLogger optional sink for structural-drift warnings, emitted once per drift location
+ * @param onInvalidated optional callback invoked when a clean scope first becomes dirty; repeated
+ * invalidations before the next composition are coalesced
+ * @param localSnapshotInspector optional formatter for opaque local snapshots included in diagnostics
+ * @param sourceCallSiteCollector optional collector invoked only when a new scope is created
  */
 class ComposerLite(
     private val slotTable: SlotTable = SlotTable(),
@@ -28,20 +42,31 @@ class ComposerLite(
     private var explicitRootRequestPending: Boolean = false
 
     /**
-     * 是否存在尚未处理的失效 scope。
-     * Returns whether there are invalidated scopes waiting to be processed.
+     * Returns whether state-driven scope invalidations are waiting in the queue.
+     *
+     * An explicit [requestRootRecompose] is tracked separately and does not make this property
+     * return `true` unless a state-driven invalidation is also queued.
+     *
+     * @return `true` when [drainInvalidations] can drain at least one scope
      */
     fun hasPendingInvalidations(): Boolean = invalidationQueue.isNotEmpty()
 
     /**
-     * 取出并压缩失效 scope，父 scope 覆盖子 scope 的重组需求。
-     * Drains and compacts invalidated scopes, where a parent scope covers its children.
+     * Removes and returns queued state invalidations after ancestor compaction.
+     *
+     * Draining does not make scopes clean; the next root composition consumes their dirty state.
+     *
+     * @return invalidated scopes in effective insertion order, excluding covered descendants
      */
     fun drainInvalidations(): List<RecomposeScope> = invalidationQueue.drainCompacted()
 
     /**
-     * 请求根节点重组，通常用于宿主显式刷新或全局环境变化。
-     * Requests root recomposition, typically for host-driven refreshes or global environment changes.
+     * Marks the root dirty for the next composition attempt.
+     *
+     * Hosts use this for explicit refreshes or environment changes that are not represented by an
+     * observed [State]. The request is preserved when a prepared composition aborts. This method
+     * does not invoke the [onInvalidated] constructor callback because the caller already owns the
+     * scheduling decision.
      */
     fun requestRootRecompose() {
         explicitRootRequestPending = true
@@ -49,8 +74,16 @@ class ComposerLite(
     }
 
     /**
-     * 组合根内容并立即提交成功结果。
-     * Composes root content and commits the successful result immediately.
+     * Composes [block], commits the runtime transaction, and returns its candidate value.
+     *
+     * This is equivalent to [prepareRoot] followed by [PreparedComposition.commit]. Committed
+     * disposable and one-shot effects remain pending until [commitSideEffects] is called.
+     *
+     * @param T type of value produced by the root composition
+     * @param block root content executed in a consistent read snapshot
+     * @return the committed value produced by [block]
+     * @throws IllegalStateException for re-entrant composition or when another prepared composition
+     * has not been committed or aborted
      */
     fun <T> composeRoot(block: () -> T): T {
         val prepared = prepareRoot(block = block)
@@ -59,13 +92,18 @@ class ComposerLite(
     }
 
     /**
-     * 组合候选结果，但暂不提交 slot table 或观察者变化。
-     * Composes a candidate result without committing slot-table or observer changes.
+     * Composes a candidate root result without finalizing scope, observation, or effect changes.
      *
-     * 宿主如果还要把结果应用到另一棵可变树，应在应用成功后调用 [PreparedComposition.commit]，
-     * 失败时调用 [PreparedComposition.abort]。
-     * Hosts that apply the result to another mutable tree should call [PreparedComposition.commit]
-     * only after that apply succeeds, or [PreparedComposition.abort] when it fails.
+     * The block runs inside a pinned read snapshot. A host that applies the result to another mutable
+     * tree calls [PreparedComposition.commit] only after that apply succeeds, or
+     * [PreparedComposition.abort] when it fails. A thrown block automatically rolls back before the
+     * exception is rethrown. Only one prepared composition may be active for this composer.
+     *
+     * @param T type of candidate value produced by the root composition
+     * @param collectDiagnostics whether to record bounded scope decisions for this attempt
+     * @param block root content used to prepare the candidate transaction
+     * @return an owned prepared composition that MUST be committed or aborted
+     * @throws IllegalStateException for re-entrant composition or an unfinished prepared composition
      */
     fun <T> prepareRoot(
         collectDiagnostics: Boolean = false,
@@ -138,8 +176,21 @@ class ComposerLite(
     }
 
     /**
-     * 运行一个结构化节点组，并根据 signature/inputs 决定复用、重组或结构回退。
-     * Runs one structured node group and uses signature/inputs to decide reuse, recomposition, or structure fallback.
+     * Runs or reuses one positional group in the current composition scope.
+     *
+     * [signature] and the active [withKeys] stack identify the group at its sibling position. A
+     * mismatch replaces that group and all following siblings at the drift point. Equal [inputs]
+     * permit reuse while the scope is clean; changed inputs mark the scope dirty. When the body does
+     * run, [reuseResult] may retain the previous result identity after comparing it with the newly
+     * calculated value.
+     *
+     * @param T type of value cached for the group
+     * @param signature stable structural identity at the current sibling position
+     * @param inputs value compared with `equals` to detect explicit input changes
+     * @param reuseResult optional predicate returning `true` to retain the previous result instance
+     * @param block group body, receiving the opaque scope owned by this composer
+     * @return the cached, newly calculated, or explicitly reused group result
+     * @throws IllegalStateException when called outside an active composition attempt
      */
     fun <T> runGroup(
         signature: Any,
@@ -228,8 +279,18 @@ class ComposerLite(
     }
 
     /**
-     * 在当前 scope 的 remember slot 中缓存计算值。
-     * Caches a calculated value in the current scope's remember slot.
+     * Returns a value retained in the next positional remember slot of the current scope.
+     *
+     * [calculation] runs when no slot exists or when the combined [withKeys] and [keys] list changes
+     * by structural equality. Slot changes are transactional: abort restores the previously
+     * committed value. Values implementing [RememberObserver] receive lifecycle callbacks when the
+     * prepared composition commits or aborts.
+     *
+     * @param T type of value retained by the slot
+     * @param keys local keys appended after the active [withKeys] key stack
+     * @param calculation factory invoked when the slot cannot be reused
+     * @return the committed retained value or the current attempt's candidate value
+     * @throws IllegalStateException when called outside an active composition attempt
      */
     fun <T> remember(
         keys: List<Any?>,
@@ -257,8 +318,17 @@ class ComposerLite(
     }
 
     /**
-     * 注册需要在提交后生效、在 key 变化或离开 composition 时清理的副作用。
-     * Registers an effect that starts after commit and cleans up when keys change or leave composition.
+     * Registers a keyed effect in the next positional effect slot of the current scope.
+     *
+     * [effect] does not run during composition or [PreparedComposition.commit]. It runs when the host
+     * next calls [commitSideEffects]. Equal combined keys retain the existing effect. Changed keys
+     * dispose the old effect immediately before starting the replacement; leaving composition or
+     * disposing the composer also invokes the active cleanup callback. Aborted candidates never
+     * start and leave the committed effect unchanged.
+     *
+     * @param keys local keys appended after the active [withKeys] key stack
+     * @param effect operation that starts the effect and optionally returns its cleanup callback
+     * @throws IllegalStateException when called outside an active composition attempt
      */
     fun disposableEffect(
         keys: List<Any?>,
@@ -294,22 +364,27 @@ class ComposerLite(
     }
 
     /**
-     * 注册提交后执行的一次性副作用。
-     * Registers a one-shot side effect to run after commit.
+     * Registers [effect] to run once after the current composition commits.
+     *
+     * The operation is discarded if the prepared composition aborts and runs when the host next
+     * calls [commitSideEffects].
+     *
+     * @param effect one-shot operation to execute after committed disposable-effect changes
+     * @throws IllegalStateException when called outside an active composition attempt
      */
     fun sideEffect(effect: () -> Unit) {
         currentAttempt().pendingSideEffects += effect
     }
 
     /**
-     * 返回当前 composition scope 中下一个 saveable slot 的确定性 key。
-     * Returns a deterministic key for the next saveable slot in the current composition scope.
+     * Returns a deterministic key for the next positional saveable slot in the current scope.
      *
-     * key 基于节点组路径、局部 saveable slot 位置和显式 [withKeys] 值。
-     * 自定义 key 对象必须在宿主重建前后保持稳定的 `hashCode`。
-     * The key is based on the node-group path, the local saveable slot position, and any explicit
-     * [withKeys] values. Callers that provide custom key objects must keep their `hashCode` stable
-     * across host recreation.
+     * The key combines the structural group path, local slot position, and a hash of active
+     * [withKeys] values. Call order is therefore part of the saveable-state contract. Custom key
+     * objects MUST keep equal values and stable `hashCode` results across host recreation.
+     *
+     * @return an opaque key stable for the same structure, slot position, and explicit keys
+     * @throws IllegalStateException when no composition attempt is active
      */
     fun nextSaveableKey(): String {
         check(composing) {
@@ -321,8 +396,11 @@ class ComposerLite(
     }
 
     /**
-     * 执行已提交 composition 收集到的 disposable effect 和 side effect。
-     * Runs disposable effects and side effects collected by the committed composition.
+     * Runs all effect operations queued by committed compositions.
+     *
+     * Disposable-effect replacements run before one-shot side effects, each in registration order.
+     * Every operation is attempted even after a failure. The queue is cleared before execution, so
+     * failed operations are not retried; the first failure is rethrown with later failures suppressed.
      */
     fun commitSideEffects() {
         if (pendingDisposableEffects.isEmpty() && pendingSideEffects.isEmpty()) return
@@ -352,8 +430,16 @@ class ComposerLite(
     }
 
     /**
-     * 在当前调用栈追加显式 key，影响 remember/saveable 的局部 key 空间。
-     * Appends explicit keys to the current call stack, affecting the local remember/saveable key space.
+     * Runs [block] with [keys] appended to the current positional-key namespace.
+     *
+     * The keys affect group signatures, [remember], [disposableEffect], and [nextSaveableKey]. The
+     * previous key stack is restored when [block] returns or throws. An empty list executes [block]
+     * without changing the namespace.
+     *
+     * @param T type of value returned by [block]
+     * @param keys stable values that distinguish this nested composition path
+     * @param block synchronous work executed with the extended key namespace
+     * @return the value returned by [block]
      */
     fun <T> withKeys(
         keys: List<Any?>,
@@ -374,8 +460,11 @@ class ComposerLite(
     }
 
     /**
-     * 释放 composer 管理的所有 scope、pending effect 和失效队列。
-     * Disposes all scopes, pending effects, and invalidation queues owned by this composer.
+     * Disposes every scope, observation, remembered value, active effect, and pending operation.
+     *
+     * An active prepared composition is aborted first. Pending effects that never started are
+     * discarded. Cleanup continues after failures and rethrows the first failure with later failures
+     * suppressed. Disposal is terminal; the instance MUST NOT be composed again.
      */
     fun dispose() {
         val failures = mutableListOf<Throwable>()
@@ -793,14 +882,34 @@ class ComposerLite(
         }
     }
 
+    /**
+     * Owns one candidate composition transaction until it is committed or aborted.
+     *
+     * The owning [ComposerLite] cannot start another composition while this transaction remains
+     * active. Instances are thread-confined to their composer. Committing finalizes scope and
+     * remember lifecycles but leaves effects queued for [ComposerLite.commitSideEffects].
+     *
+     * @param T type of candidate root value
+     */
     class PreparedComposition<T> internal constructor(
+        /** Candidate root value produced before the transaction is committed. */
         val value: T,
+        /** Bounded diagnostics captured for this attempt, or an empty summary when disabled. */
         val diagnostics: CompositionDiagnostics,
         private val onCommit: () -> Unit,
         private val onAbort: () -> Unit,
     ) {
         private var completed: Boolean = false
 
+        /**
+     * Commits scope, observation, and remember changes to the owning composer.
+     *
+     * Lifecycle callback failures propagate after the runtime transaction has become committed;
+     * the transaction cannot be retried or aborted afterward.
+     *
+     * @throws IllegalStateException if this transaction was already committed or aborted, or is
+     * no longer the composer's active transaction
+         */
         fun commit() {
             check(!completed) {
                 "Prepared composition is already completed."
@@ -809,6 +918,13 @@ class ComposerLite(
             onCommit()
         }
 
+        /**
+     * Rolls back the candidate scope tree and abandons newly remembered values.
+     *
+     * Aborting an already completed transaction is a no-op. State invalidations and explicit
+     * root requests consumed by the attempt are restored for the next composition. Cleanup callback
+     * failures propagate after rollback has begun and are not retried.
+         */
         fun abort() {
             if (completed) return
             completed = true
