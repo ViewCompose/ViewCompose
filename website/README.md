@@ -22,6 +22,18 @@ npm run typecheck
 npm run build
 ```
 
+The production build contains both the canonical English site and the Simplified Chinese locale.
+When changing localized content, also run:
+
+```bash
+npm run test:translations
+npm run verify:translations
+```
+
+Use `npm run write-translations` to append missing Docusaurus JSON message keys. It does not replace
+reviewed Chinese values. Markdown mirrors and their source fingerprints follow the
+[localization workflow](../docs/project/localization.md).
+
 Run `./gradlew assembleViewComposeApiDocs` without the property before verifying the complete
 published catalog. Generated catalog data, Dokka HTML, and site output are intentionally ignored by
 Git.
@@ -31,6 +43,7 @@ Git.
 - `docs/` owns prose, diagrams, governance, and module manuals.
 - `gradle/viewcompose-publishing.properties` owns published artifact versions.
 - `website/scripts/` derives site data from canonical repository metadata.
+- `website/i18n/` owns locale messages, reviewed Markdown mirrors, and translation policy.
 - `website/src/` owns presentation components only.
 - `website/generated/` is an ephemeral assembly boundary for Dokka output.
 - `.github/workflows/documentation.yml` owns verification and Pages deployment.

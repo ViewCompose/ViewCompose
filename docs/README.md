@@ -71,6 +71,7 @@ Current process, release, and planning information:
 
 - [Development workflow](./project/workflow.md)
 - [Documentation governance](./project/documentation-governance.md)
+- [Localization workflow](./project/localization.md)
 - [Documentation site operations](./project/documentation-site.md)
 - [Publishing](./project/publishing.md)
 - [Roadmap](./project/roadmap.md)
@@ -92,6 +93,8 @@ Current process, release, and planning information:
 8. Do not use archived documents as current requirements.
 9. Run `./gradlew verifyDocumentationStructure` before committing documentation changes. The same
    check is included in `qaQuick`.
+10. Follow the canonical-first [localization workflow](./project/localization.md) when changing
+    translated public content; never refresh a translation fingerprint without reviewing meaning.
 
 The complete contract, naming rules, lifecycle, and review checklist are defined in
 [Documentation governance](./project/documentation-governance.md).

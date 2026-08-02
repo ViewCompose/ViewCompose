@@ -3,5 +3,17 @@
   "compilerOptions": {
     "baseUrl": ".",
     "resolveJsonModule": true
-  }
+  },
+  "include": [
+    "docusaurus.config.ts",
+    "sidebars.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    ".docusaurus",
+    "build",
+    "generated",
+    "node_modules"
+  ]
 }

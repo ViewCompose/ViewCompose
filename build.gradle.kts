@@ -886,6 +886,10 @@ tasks.register("verifyDocumentationStructure") {
                 .filterNot { file ->
                     file.toPath().startsWith(documentationRoot.resolve("archive").toPath())
                 }
+                .filterNot { file ->
+                    // Docusaurus owns locale-aware routing and translation freshness checks.
+                    file.toPath().startsWith(rootDir.resolve("website/i18n").toPath())
+                }
                 .toList()
 
         checkedMarkdown.forEach { file ->

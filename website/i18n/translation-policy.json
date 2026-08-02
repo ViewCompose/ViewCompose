@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "locale": "zh-CN",
+  "required": [
+    "README.md",
+    "modules/README.md",
+    "project/localization.md"
+  ],
+  "staleMarker": ":::warning 翻译状态"
+}

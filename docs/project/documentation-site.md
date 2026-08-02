@@ -9,16 +9,18 @@ selection and trade-offs are recorded in
 
 ## Build pipeline
 
-The production artifact is assembled in four explicit stages:
+The production artifact is assembled in five explicit stages:
 
 1. `verifyDocumentationStructure` validates source placement, catalog parity, reachability, and
    repository links.
-2. `assembleViewComposeApiDocs` runs Dokka 2 for each published artifact and copies the result to
+2. `verify:translations` validates required Chinese coverage, canonical source fingerprints,
+   explicit stale status, and stale-warning markers.
+3. `assembleViewComposeApiDocs` runs Dokka 2 for each published artifact and copies the result to
    ignored, versioned paths under `website/generated/api/`.
-3. the website catalog generator reads publishing metadata and `docs/modules/README.md`; it does
+4. the website catalog generator reads publishing metadata and `docs/modules/README.md`; it does
    not maintain a second module registry.
-4. Docusaurus type-checks and builds the handwritten documents, site presentation, and generated
-   API output into `website/build/`.
+5. Docusaurus type-checks and builds the handwritten documents, site presentation, and generated
+   API output for both `en` and `zh-CN` into `website/build/`.
 
 Run the complete local verification from the repository root:
 
@@ -26,12 +28,19 @@ Run the complete local verification from the repository root:
 ./gradlew verifyDocumentationStructure assembleViewComposeApiDocs
 cd website
 npm ci
+npm run test:translations
+npm run verify:translations
 npm run typecheck
 npm run build
 ```
 
 During local iteration, `-PviewComposeDocsModules=artifact-a,artifact-b` limits Dokka assembly to an
 explicit subset. A production build never uses this shortcut.
+
+Run `npm run write-translations` when React, navbar, footer, or sidebar messages gain new keys. It
+adds missing JSON messages without overwriting reviewed Chinese translations. Markdown mirror
+layout, source fingerprints, required-page tiers, and stale recovery are defined in the
+[localization workflow](localization.md).
 
 ## API versions and aliases
 
@@ -64,6 +73,9 @@ identity token.
 - If Dokka fails, reproduce with a selected module and correct its source/API configuration.
 - If Docusaurus reports a broken link, preserve strict checking; generated static API links are the
   only links explicitly exempted from its route graph.
+- If translation verification reports source drift, review and update the Chinese meaning before
+  recording the new fingerprint. A tracked page may be explicitly marked stale; a required page
+  may not.
 - If deployment fails after a successful build, keep the last Pages deployment live and rerun only
   after checking repository Pages settings and the `github-pages` environment.
 - If the custom domain fails while the Pages artifact is healthy, diagnose DNS and domain
@@ -72,5 +84,6 @@ identity token.
 ## Last verified
 
 2026-08-02: all 25 published artifacts generated successfully; the production site built at about
-104 MB. One existing unresolved KDoc symbol link in `viewcompose-host-android` remains API quality
-work and does not invalidate the generated tree.
+104 MB. The English and Simplified Chinese locale builds, translation freshness gate, and custom
+domain deployment are active. One existing unresolved KDoc symbol link in
+`viewcompose-host-android` remains API quality work and does not invalidate the generated tree.

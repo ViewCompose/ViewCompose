@@ -281,7 +281,7 @@ Pages use the following enforcement tiers:
 
 | Tier | Content | Merge requirement |
 | --- | --- | --- |
-| Required | landing and installation pages, getting-started paths, core tutorials, migration instructions, release actions, and localization governance | Chinese mirror must exist and match the canonical source fingerprint |
+| Required | landing and installation pages, the artifact catalog, getting-started paths, core tutorials, migration instructions, and localization governance | Chinese mirror must exist and match the canonical source fingerprint |
 | Tracked | architecture, guides, tooling, and published module manuals | a missing translation is allowed; an existing translation must be current or explicitly marked stale |
 | English-only | generated API reference, temporary plans, historical archives, and internal evidence not published as user guidance | no Chinese mirror is required |
 
@@ -324,6 +324,9 @@ Correctness and security fixes update English first. When the Chinese mirror can
 the same urgent pull request, it is marked stale rather than left silently inaccurate. Translation
 review checks technical meaning, links, code samples, terminology, and locale-specific screenshots;
 it is not only a fluency review.
+
+Commands, front-matter fields, required-page configuration, and recovery steps are defined in the
+[localization workflow](localization.md).
 
 ## Change impact matrix
 

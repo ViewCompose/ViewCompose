@@ -1,5 +1,6 @@
 import type {ReactNode} from 'react';
 import Link from '@docusaurus/Link';
+import {translate} from '@docusaurus/Translate';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 import modules from '@site/src/generated/moduleCatalog.json';
@@ -24,14 +25,23 @@ const groupedModules = (modules as ModuleEntry[]).reduce<Record<string, ModuleEn
 function ApiReference(): ReactNode {
   return (
     <Layout
-      title="API Reference"
-      description="Versioned Kotlin and Java API reference for ViewCompose modules.">
+      title={translate({id: 'api.meta.title', message: 'API Reference'})}
+      description={translate({
+        id: 'api.meta.description',
+        message: 'Versioned Kotlin and Java API reference for ViewCompose modules.',
+      })}>
       <main className={styles.page}>
         <header className={styles.header}>
-          <p>Generated with Dokka</p>
-          <Heading as="h1">API Reference</Heading>
+          <p>{translate({id: 'api.header.eyebrow', message: 'Generated with Dokka'})}</p>
+          <Heading as="h1">
+            {translate({id: 'api.header.title', message: 'API Reference'})}
+          </Heading>
           <span>
-            Kotlin KDoc and Java Javadoc are published independently for every Maven artifact.
+            {translate({
+              id: 'api.header.description',
+              message:
+                'Kotlin KDoc and Java Javadoc are published independently for every Maven artifact.',
+            })}
           </span>
         </header>
 
@@ -52,7 +62,10 @@ function ApiReference(): ReactNode {
                     <Link
                       to={`/api/${module.artifact}/${module.version}/`}
                       data-noBrokenLinkCheck>
-                      Open {module.version} reference →
+                      {translate(
+                        {id: 'api.module.openReference', message: 'Open {version} reference →'},
+                        {version: module.version},
+                      )}
                     </Link>
                   </article>
                 ))}

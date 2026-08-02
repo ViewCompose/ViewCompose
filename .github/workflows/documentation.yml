@@ -77,6 +77,10 @@ jobs:
       - name: Verify documentation sources
         run: ./gradlew verifyDocumentationStructure --stacktrace
 
+      - name: Verify documentation translations
+        working-directory: website
+        run: npm run test:translations && npm run verify:translations
+
       - name: Generate versioned API reference
         run: ./gradlew assembleViewComposeApiDocs --stacktrace
 
