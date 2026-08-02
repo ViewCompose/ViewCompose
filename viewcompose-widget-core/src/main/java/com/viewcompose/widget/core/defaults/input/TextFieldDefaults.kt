@@ -4,20 +4,14 @@ import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.shape.UiShape
 
-/**
- * TextField 的视觉变体。
- * Visual variants for TextField.
- */
+/** Visual treatment used to select TextField container and border defaults. */
 enum class TextFieldVariant {
     Filled,
     Tonal,
     Outlined,
 }
 
-/**
- * TextField 的尺寸档位。
- * Size tiers for TextField.
- */
+/** Interaction-density tier used to select TextField dimensions and typography. */
 enum class TextFieldSize {
     Compact,
     Medium,
@@ -25,13 +19,12 @@ enum class TextFieldSize {
 }
 
 /**
- * TextField DSL 的默认颜色、排版、形状和内边距 token。
- * Default color, typography, shape, and padding tokens for the TextField DSL.
+ * Resolves TextField colors, typography, shape, and dimensions from the current theme.
  *
- * 容器和边框颜色支持局部 override，用于单页或组件局部替换输入框风格。
- * Container and border colors support scoped overrides for page-level or component-local input styling.
+ * Scoped `TextFieldColorOverride` values replace container and border slots only.
  */
 object TextFieldDefaults {
+    /** Resolves editable text typography for [size]. */
     fun textStyle(
         size: TextFieldSize = TextFieldSize.Medium,
     ): UiTextStyle {
@@ -42,6 +35,7 @@ object TextFieldDefaults {
         }
     }
 
+    /** Resolves editable text color for enabled and error state. */
     fun textColor(
         enabled: Boolean = true,
         isError: Boolean = false,
@@ -53,6 +47,7 @@ object TextFieldDefaults {
         }
     }
 
+    /** Resolves placeholder color for enabled and error state. */
     fun hintColor(
         enabled: Boolean = true,
         isError: Boolean = false,
@@ -64,20 +59,25 @@ object TextFieldDefaults {
         }
     }
 
+    /** Resolves label color using placeholder color semantics. */
     fun labelColor(
         enabled: Boolean = true,
         isError: Boolean = false,
     ): Int = hintColor(enabled = enabled, isError = isError)
 
+    /** Resolves supporting text color using placeholder color semantics. */
     fun supportingTextColor(
         enabled: Boolean = true,
         isError: Boolean = false,
     ): Int = hintColor(enabled = enabled, isError = isError)
 
+    /** Returns medium label typography. */
     fun labelTextStyle(): UiTextStyle = TextDefaults.labelMediumStyle()
 
+    /** Returns medium label typography for supporting text. */
     fun supportingTextStyle(): UiTextStyle = TextDefaults.labelMediumStyle()
 
+    /** Resolves container color for [variant], [enabled], and [isError] state. */
     fun containerColor(
         variant: TextFieldVariant = TextFieldVariant.Filled,
         enabled: Boolean = true,
@@ -106,6 +106,7 @@ object TextFieldDefaults {
         }
     }
 
+    /** Resolves border color for [variant], [enabled], and [isError] state. */
     fun borderColor(
         variant: TextFieldVariant = TextFieldVariant.Filled,
         enabled: Boolean = true,
@@ -126,6 +127,7 @@ object TextFieldDefaults {
         }
     }
 
+    /** Resolves one-dp width for outlined fields and zero for other variants. */
     fun borderWidth(
         variant: TextFieldVariant = TextFieldVariant.Filled,
     ): UiDp {
@@ -135,8 +137,10 @@ object TextFieldDefaults {
         }
     }
 
+    /** Returns the current small theme shape. */
     fun shape(): UiShape = Theme.shapes.small
 
+    /** Resolves minimum field height for [size]. */
     fun height(
         size: TextFieldSize = TextFieldSize.Medium,
     ): UiDp {
@@ -147,6 +151,7 @@ object TextFieldDefaults {
         }
     }
 
+    /** Resolves start and end content padding for [size]. */
     fun horizontalPadding(
         size: TextFieldSize = TextFieldSize.Medium,
     ): UiDp {
@@ -157,6 +162,7 @@ object TextFieldDefaults {
         }
     }
 
+    /** Resolves top and bottom content padding for [size]. */
     fun verticalPadding(
         size: TextFieldSize = TextFieldSize.Medium,
     ): UiDp {
@@ -167,7 +173,9 @@ object TextFieldDefaults {
         }
     }
 
+    /** Returns the current pressed-state control highlight. */
     fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
 
+    /** Returns the current activated control color for the text cursor. */
     fun cursorColor(): Int = Theme.stateColors.controlActivated.resolve()
 }

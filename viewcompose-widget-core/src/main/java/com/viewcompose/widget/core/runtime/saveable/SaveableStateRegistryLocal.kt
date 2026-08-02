@@ -5,19 +5,14 @@ private val LocalSaveableStateRegistryValue = uiLocalOf<SaveableStateRegistry?>(
     debugValueFormatter = { registry -> if (registry == null) "none" else "installed" },
 ) { null }
 
-/**
- * 当前 composition 的可保存状态注册表。
- * Saveable-state registry for the current composition.
- */
+/** Exposes the saveable-state registry installed for the current composition. */
 object LocalSaveableStateRegistry {
+    /** Returns the nearest registry, or `null` when the host does not provide saveable state. */
     val current: SaveableStateRegistry?
         get() = UiLocals.current(LocalSaveableStateRegistryValue)
 }
 
-/**
- * 在 content 范围内安装可保存状态注册表。
- * Installs a saveable-state registry within the content scope.
- */
+/** Provides [registry] to saveable-state APIs while [content] is built. */
 fun UiTreeBuilder.ProvideSaveableStateRegistry(
     registry: SaveableStateRegistry,
     content: UiTreeBuilder.() -> Unit,

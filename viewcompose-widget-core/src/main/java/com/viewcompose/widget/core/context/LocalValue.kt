@@ -4,7 +4,6 @@ import com.viewcompose.runtime.composition.CompositionLocalDiagnostic
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * 单个 Composition Local 的内部存储描述。
  * Internal storage descriptor for one Composition Local.
  */
 internal class LocalValue<T>(
@@ -15,7 +14,6 @@ internal class LocalValue<T>(
     fun default(): T = defaultFactory()
 
     /**
-     * 将 local 值转成诊断信息，避免 diagnostics 暴露真实对象。
      * Converts a local value into diagnostics without exposing the original object.
      */
     fun describe(value: Any?): CompositionLocalDiagnostic {
@@ -35,7 +33,6 @@ internal class LocalValue<T>(
 }
 
 /**
- * 当前线程 local map 的不可变快照。
  * Immutable snapshot of the current thread-local local map.
  */
 internal data class LocalSnapshot(
@@ -43,11 +40,8 @@ internal data class LocalSnapshot(
 )
 
 /**
- * 当前所有 ViewCompose local 的不透明快照。
  * Opaque snapshot of every active ViewCompose local.
  *
- * 延迟子 session 在声明 content 时捕获该快照，并在后续渲染 content 时恢复。
- * 值保持不透明，防止 session 容器检查或修改另一个 composition 的 local map。
  * Delayed child sessions capture this while their content is declared and restore it whenever
  * that content is rendered. The values stay opaque so session containers cannot inspect or mutate
  * another composition's local map.
@@ -57,7 +51,6 @@ class UiLocalSnapshot internal constructor(
 )
 
 /**
- * 捕获当前活跃 ViewCompose locals。
  * Captures currently active ViewCompose locals.
  */
 fun captureUiLocalSnapshot(): UiLocalSnapshot {
@@ -65,7 +58,6 @@ fun captureUiLocalSnapshot(): UiLocalSnapshot {
 }
 
 /**
- * 在指定 locals 快照下执行 block。
  * Runs block under the specified locals snapshot.
  */
 fun <T> withUiLocalSnapshot(
@@ -76,7 +68,6 @@ fun <T> withUiLocalSnapshot(
 }
 
 /**
- * Composition Local 的线程局部运行时。
  * Thread-local runtime for Composition Locals.
  */
 internal object LocalContext {

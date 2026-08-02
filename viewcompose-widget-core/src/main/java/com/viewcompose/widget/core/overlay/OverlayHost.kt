@@ -6,17 +6,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.ServiceLoader
 
 /**
- * overlay 提交的 session 标识，用于隔离不同 RenderSession 的 overlay 请求。
- * Session id for overlay commits, isolating overlay requests from different RenderSessions.
+ * Identifies overlay commits owned by one render session.
+ *
+ * @property value stable identifier that must not be reused by simultaneously active sessions
  */
 data class OverlaySessionId(
     val value: String,
 )
 
-/**
- * 框架支持的 overlay 类型。
- * Overlay types supported by the framework.
- */
+/** Overlay surface and transient-feedback types supported by the core protocol. */
 enum class OverlayType {
     Dialog,
     Snackbar,
@@ -26,8 +24,15 @@ enum class OverlayType {
 }
 
 /**
- * 一条 overlay 声明请求。
- * One declarative overlay request.
+ * Describes one overlay that a render frame wants to keep active.
+ *
+ * A host scopes [key] by the committing [OverlaySessionId]. A later commit replaces the request
+ * with the same scoped key and removes requests omitted by that session.
+ *
+ * @property key stable identity within one render session
+ * @property type protocol discriminator used by specialized hosts
+ * @property payload type-specific behavior and presentation options
+ * @property contentToken optional type-specific content snapshot or identity token
  */
 data class OverlayRequest(
     val key: String,
@@ -37,28 +42,33 @@ data class OverlayRequest(
 )
 
 /**
- * overlay 宿主接口，平台实现负责展示和清理实际浮层。
- * Overlay host interface; platform implementations show and clear actual surfaces.
+ * Reconciles declarative overlay requests with platform surfaces.
+ *
+ * Calls are isolated by [OverlaySessionId]. Implementations must not remove overlays owned by a
+ * different session and must make repeated commits of an unchanged request idempotent.
  */
 interface OverlayHost {
+    /**
+     * Makes [requests] the complete desired overlay set for [sessionId].
+     *
+     * Requests previously committed by this session but absent from [requests] must be dismissed.
+     */
     fun commit(
         sessionId: OverlaySessionId,
         requests: List<OverlayRequest>,
     )
 
+    /** Dismisses every active overlay owned by [sessionId]. */
     fun clear(sessionId: OverlaySessionId)
 }
 
-/**
- * 从根 View 创建 OverlayHost 的服务提供者。
- * Service provider that creates an OverlayHost from a root View.
- */
+/** Creates a platform [OverlayHost] attached to a root Android [View]. */
 fun interface OverlayHostFactoryProvider {
+    /** Creates a host whose platform surfaces are attached to [rootView]'s window. */
     fun create(rootView: View): OverlayHost
 }
 
 /**
- * overlay host 默认实现和 Android service-provider 发现入口。
  * Default overlay host implementations and Android service-provider discovery entry point.
  */
 object OverlayHostDefaults {
@@ -69,6 +79,11 @@ object OverlayHostDefaults {
         resolveAndroidOverlayHostProvider()
     }
 
+    /**
+     * A host that ignores every request.
+     *
+     * This fallback keeps the core renderer operational when no platform overlay module is present.
+     */
     val noOp: OverlayHost = object : OverlayHost {
         override fun commit(
             sessionId: OverlaySessionId,
@@ -79,7 +94,6 @@ object OverlayHostDefaults {
     }
 
     /**
-     * 返回 Android overlay host；找不到 provider 时返回 no-op 并只记录一次提示。
      * Returns an Android overlay host, or a no-op host with one-time logging when no provider exists.
      */
     fun androidOrNoOp(rootView: View): OverlayHost {
@@ -133,17 +147,14 @@ internal val LocalOverlayHost = uiLocalOf(
     },
 ) { OverlayHostDefaults.noOp }
 
-/**
- * 当前 composition 中的 overlay host。
- * Overlay host for the current composition.
- */
+/** Exposes the overlay host installed for the current composition. */
 object OverlayHostContext {
+    /** Returns the nearest provided host, or [OverlayHostDefaults.noOp] when none is installed. */
     val current: OverlayHost
         get() = UiLocals.current(LocalOverlayHost)
 }
 
 /**
- * 在 content 范围内提供 overlay host。
  * Provides an overlay host within the content scope.
  */
 fun UiTreeBuilder.ProvideOverlayHost(

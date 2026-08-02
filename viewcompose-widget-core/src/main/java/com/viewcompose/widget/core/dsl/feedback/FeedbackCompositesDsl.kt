@@ -20,10 +20,8 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * 发射标准确认对话框组合。
  * Emits a standard confirmation dialog composite.
  *
- * AlertDialog 复用 Dialog overlay，并在 surface 内容中组装标题、正文、可选图标和操作按钮。
  * AlertDialog reuses the Dialog overlay and builds title, body, optional icon, and action buttons inside its surface content.
  */
 fun UiTreeBuilder.AlertDialog(
@@ -47,7 +45,6 @@ fun UiTreeBuilder.AlertDialog(
         dismissOnClickOutside = dismissOnClickOutside,
         onDismissRequest = onDismissRequest,
     ) {
-        // 组合层负责 Material-like 布局和 token 默认值，Dialog 只负责 overlay 生命周期。
         // The composite owns Material-like layout and token defaults, while Dialog owns overlay lifecycle.
         val shape = AlertDialogDefaults.shape()
         Box(
@@ -103,10 +100,8 @@ fun UiTreeBuilder.AlertDialog(
 }
 
 /**
- * 发射轻量文本 tooltip。
  * Emits a lightweight text tooltip.
  *
- * Tooltip 使用非 focusable Popup，避免抢占输入焦点，同时仍能随 anchorId 定位。
  * Tooltip uses a non-focusable Popup to avoid stealing input focus while still being anchored by anchorId.
  */
 fun UiTreeBuilder.PlainTooltip(
@@ -131,7 +126,6 @@ fun UiTreeBuilder.PlainTooltip(
         focusable = false,
         onDismissRequest = onDismissRequest,
     ) {
-        // tooltip 内容保持单一 surface，便于 presenter 做统一阴影和定位。
         // Tooltip content stays as one surface so presenters can apply consistent positioning and elevation.
         Box(
             contentAlignment = BoxAlignment.Center,
@@ -154,10 +148,8 @@ fun UiTreeBuilder.PlainTooltip(
 }
 
 /**
- * 发射锚定弹出菜单。
  * Emits an anchored dropdown menu.
  *
- * expanded 控制 Popup 请求是否存在；点击外部固定触发 onDismissRequest 关闭菜单。
  * expanded controls whether the Popup request exists; outside clicks always call onDismissRequest to close the menu.
  */
 fun UiTreeBuilder.DropdownMenu(
@@ -181,7 +173,6 @@ fun UiTreeBuilder.DropdownMenu(
         dismissOnClickOutside = true,
         onDismissRequest = onDismissRequest,
     ) {
-        // modifier 应用于菜单 surface 外层，菜单项仍保持内部统一 padding/高度。
         // modifier is applied to the menu surface, while items keep their internal padding and height defaults.
         Box(
             modifier = Modifier
@@ -201,10 +192,8 @@ fun UiTreeBuilder.DropdownMenu(
 }
 
 /**
- * 发射 dropdown menu 内的单个可选项。
  * Emits one selectable item inside a dropdown menu.
  *
- * disabled 状态通过 alpha 表达并移除 clickable，避免 renderer 收到不可用项点击事件。
  * The disabled state is expressed with alpha and removes clickable so the renderer cannot dispatch disabled item clicks.
  */
 fun UiTreeBuilder.DropdownMenuItem(
@@ -215,7 +204,6 @@ fun UiTreeBuilder.DropdownMenuItem(
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
-    // 这里先构建完整 modifier 链，确保 enabled/disabled 分支后仍能追加调用方 modifier。
     // Build the full modifier chain first so caller modifiers are appended after enabled/disabled behavior.
     val itemModifier = Modifier
         .fillMaxWidth()

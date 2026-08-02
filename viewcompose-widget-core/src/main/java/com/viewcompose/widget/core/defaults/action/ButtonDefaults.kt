@@ -4,10 +4,7 @@ import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.shape.UiShape
 
-/**
- * 按按钮视觉层级划分的默认样式变体。
- * Default style variants grouped by button visual hierarchy.
- */
+/** Visual hierarchy used to select Button colors, border, and container treatment. */
 enum class ButtonVariant {
     Primary,
     Secondary,
@@ -16,10 +13,7 @@ enum class ButtonVariant {
     Text,
 }
 
-/**
- * 按交互密度划分的按钮尺寸档位。
- * Button size tiers grouped by interaction density.
- */
+/** Interaction-density tier used to select Button dimensions and typography. */
 enum class ButtonSize {
     Compact,
     Medium,
@@ -27,13 +21,12 @@ enum class ButtonSize {
 }
 
 /**
- * Button DSL 的默认颜色、尺寸、字体和反馈 token。
- * Default color, size, typography, and feedback tokens for the Button DSL.
+ * Resolves Button colors, dimensions, typography, and feedback from the current theme.
  *
- * 颜色优先读取局部 override，再回退到当前 Theme token。
- * Colors read scoped overrides first and then fall back to current Theme tokens.
+ * Scoped `ButtonColorOverride` values take precedence over theme-derived colors.
  */
 object ButtonDefaults {
+    /** Resolves the container color for [variant] and [enabled] state. */
     fun containerColor(
         variant: ButtonVariant = ButtonVariant.Primary,
         enabled: Boolean = true,
@@ -64,6 +57,7 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves label and icon content color for [variant] and [enabled] state. */
     fun contentColor(
         variant: ButtonVariant = ButtonVariant.Primary,
         enabled: Boolean = true,
@@ -102,6 +96,7 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves the outlined border color, or transparency for non-outlined variants. */
     fun borderColor(
         variant: ButtonVariant = ButtonVariant.Primary,
         enabled: Boolean = true,
@@ -118,6 +113,7 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves a one-dp outlined border or zero width for other variants. */
     fun borderWidth(
         variant: ButtonVariant = ButtonVariant.Primary,
     ): UiDp {
@@ -127,8 +123,10 @@ object ButtonDefaults {
         }
     }
 
+    /** Returns the current small theme shape. */
     fun shape(): UiShape = Theme.shapes.small
 
+    /** Resolves the minimum height for [size]. */
     fun height(
         size: ButtonSize = ButtonSize.Medium,
     ): UiDp {
@@ -139,6 +137,7 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves start and end content padding for [size]. */
     fun horizontalPadding(
         size: ButtonSize = ButtonSize.Medium,
     ): UiDp {
@@ -149,6 +148,7 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves top and bottom content padding for [size]. */
     fun verticalPadding(
         size: ButtonSize = ButtonSize.Medium,
     ): UiDp {
@@ -159,6 +159,7 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves the label typography tier for [size]. */
     fun textStyle(
         size: ButtonSize = ButtonSize.Medium,
     ): UiTextStyle {
@@ -169,6 +170,7 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves leading and trailing icon size for [size]. */
     fun iconSize(
         size: ButtonSize = ButtonSize.Medium,
     ): UiDp {
@@ -179,6 +181,7 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves spacing between an icon and label for [size]. */
     fun iconSpacing(
         size: ButtonSize = ButtonSize.Medium,
     ): UiDp {
@@ -189,5 +192,6 @@ object ButtonDefaults {
         }
     }
 
+    /** Resolves the current pressed-state control highlight. */
     fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
 }

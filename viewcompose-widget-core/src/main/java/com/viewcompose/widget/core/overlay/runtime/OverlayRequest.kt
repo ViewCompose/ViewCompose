@@ -1,14 +1,12 @@
 package com.viewcompose.widget.core
 
 /**
- * 单帧 overlay 请求收集器。
  * Per-frame collector for overlay requests.
  */
 internal class OverlayRequestStore {
     private val requests = mutableListOf<OverlayRequest>()
 
     /**
-     * 开始新一帧渲染时清空上一帧请求。
      * Clears previous-frame requests when a new frame begins.
      */
     fun beginRender() {
@@ -23,7 +21,6 @@ internal class OverlayRequestStore {
 }
 
 /**
- * overlay 请求的线程局部上下文。
  * Thread-local context for overlay requests.
  */
 internal object OverlayRequestContext {
@@ -47,7 +44,6 @@ internal object OverlayRequestContext {
 }
 
 /**
- * 提交一条 overlay 请求；没有活跃 store 时请求会被忽略。
  * Submits one overlay request; the request is ignored when no store is active.
  */
 internal fun submitOverlayRequest(request: OverlayRequest) {

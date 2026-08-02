@@ -3,7 +3,6 @@ package com.viewcompose.widget.core
 import com.viewcompose.ui.state.LazyListState
 
 /**
- * 保存懒列表的首个可见项与滚动偏移，避免宿主重建后回到列表顶部。
  * Saves the first visible item and scroll offset so host recreation does not reset the list to the top.
  */
 private val LazyListStateSaver = listSaver<LazyListState>(
@@ -25,11 +24,10 @@ private val LazyListStateSaver = listSaver<LazyListState>(
 )
 
 /**
- * Remembers a lazy collection state and restores its first visible item and pixel offset.
- */
-/**
- * 创建可保存的懒列表状态，供 renderer 在实际 RecyclerView 滚动后回写当前位置。
- * Creates saveable lazy-list state that the renderer updates after real RecyclerView scrolling.
+ * Remembers lazy-collection state and restores its first visible item and pixel offset.
+ *
+ * The renderer writes actual scroll position back to the returned state. Both initial arguments
+ * are used only when no saved value exists for this call site.
  */
 fun rememberLazyListState(
     initialFirstVisibleItemIndex: Int = 0,

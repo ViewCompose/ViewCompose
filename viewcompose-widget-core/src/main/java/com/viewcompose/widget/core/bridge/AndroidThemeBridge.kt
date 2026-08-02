@@ -8,7 +8,6 @@ import com.google.android.material.color.DynamicColors
 import com.viewcompose.ui.unit.UiSp
 
 /**
- * Android 动态色策略。
  * Android dynamic color policy.
  */
 enum class AndroidDynamicColorPolicy {
@@ -17,10 +16,8 @@ enum class AndroidDynamicColorPolicy {
 }
 
 /**
- * 为一棵 ViewCompose 树选定的 Android context 和语义来源。
  * The Android context and semantic origin selected for one ViewCompose tree.
  *
- * 宿主必须使用 [context] 创建根 View 和所有 overlay，确保 framework token 与 native widget 解析同一套 Android theme。
  * Hosts must use [context] to create the root view as well as every overlay so
  * framework tokens and native widgets resolve the same Android theme.
  */
@@ -32,9 +29,11 @@ class AndroidResolvedTheme internal constructor(
 ) {
     private val mutableContext = MutableContextWrapper(initialContext)
 
+    /** Stable mutable wrapper used to create the root View and every overlay in this tree. */
     val context: Context
         get() = mutableContext
 
+    /** Semantic source of the context's currently resolved theme attributes. */
     var origin: UiThemeOrigin = initialOrigin
         private set
 
@@ -74,12 +73,10 @@ private fun resolveAndroidThemeContext(
 }
 
 /**
- * Android theme 解析桥接入口。
  * Bridge entry point for resolving Android themes.
  */
 object AndroidThemeBridge {
     /**
-     * 解析可供 View 和 overlay 共同使用的 Android theme context。
      * Resolves an Android theme context shared by Views and overlays.
      */
     fun resolveContext(
@@ -99,7 +96,6 @@ object AndroidThemeBridge {
     }
 
     /**
-     * 直接从 Android Context 读取 ViewCompose 主题 token。
      * Reads ViewCompose theme tokens directly from an Android Context.
      */
     fun fromContext(
@@ -115,7 +111,6 @@ object AndroidThemeBridge {
     }
 
     /**
-     * 从已解析 theme context 读取 token，并保留 origin/dark metadata。
      * Reads tokens from a resolved theme context and preserves origin/dark metadata.
      */
     fun fromResolvedTheme(
@@ -141,12 +136,10 @@ object AndroidThemeBridge {
 }
 
 /**
- * Android theme snapshot 到 ViewCompose token 的映射器。
  * Mapper from Android theme snapshots to ViewCompose tokens.
  */
 internal object ThemeTokenMapper {
     /**
-     * 从完整 Android snapshot 生成 token，缺失值回退到框架亮/暗默认主题。
      * Builds tokens from a complete Android snapshot, falling back to framework light/dark defaults.
      */
     fun fromSnapshot(
@@ -260,7 +253,6 @@ internal object ThemeTokenMapper {
     }
 
     /**
-     * 从属性读取函数生成 token，供测试或轻量桥接使用。
      * Builds tokens from attribute reader functions for tests or lightweight bridges.
      */
     fun fromThemeColors(
@@ -390,7 +382,6 @@ internal object ThemeTokenMapper {
 }
 
 /**
- * 从 textAppearance 资源解析 textSize 并转换为 sp。
  * Resolves textSize from a textAppearance resource and converts it to sp.
  */
 private fun Context.resolveTextAppearanceTextSizeSp(
@@ -418,7 +409,6 @@ private fun Context.resolveTextAppearanceTextSizeSp(
 }
 
 /**
- * 合并 Android 文本样式快照和 framework fallback。
  * Merges an Android text-style snapshot with framework fallback.
  */
 private fun resolveTextStyle(

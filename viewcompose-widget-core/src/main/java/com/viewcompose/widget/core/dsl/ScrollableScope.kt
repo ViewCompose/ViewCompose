@@ -14,19 +14,25 @@ import com.viewcompose.ui.state.PagerState
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * 滚动容器内部可用的 DSL scope。
- * DSL scope available inside scroll containers.
+ * Builds nested scrollable content without exposing the outer [UiTreeBuilder].
  *
- * 该 scope 使用独立 UiTreeBuilder 代理收集子节点，避免外层 builder 泄漏到嵌套滚动内容中。
- * This scope uses an internal UiTreeBuilder delegate to collect child nodes and avoid leaking the outer builder.
+ * Every function records its nodes in a private builder. This preserves DSL ownership when a
+ * scroll container nests lazy collections, pagers, or another scroll container.
  */
 @UiDslMarker
 class ScrollableScope internal constructor() {
     private val delegate = UiTreeBuilder()
 
-    // 纵向滚动。
-    // Vertical scrolling.
-
+    /**
+     * Adds a keyed lazy column from [items].
+     *
+     * [key] must remain stable for the lifetime of an item so mounted views and item state can be
+     * reused across moves. Duplicate keys are invalid.
+     *
+     * @param contentType groups structurally compatible items for view reuse
+     * @param state optional externally owned scroll state
+     * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
+     */
     fun <T> LazyColumn(
         items: List<T>,
         key: (T) -> Any,
@@ -63,6 +69,13 @@ class ScrollableScope internal constructor() {
         }
     }
 
+    /**
+     * Adds a lazy column whose items are declared through [LazyListScope].
+     *
+     * @param state optional externally owned scroll state
+     * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
+     * @param content declares keyed lazy items and item groups
+     */
     fun LazyColumn(
         contentPadding: LazyContentPadding = LazyContentPadding.None,
         spacing: UiDp = UiDp.Zero,
@@ -93,6 +106,11 @@ class ScrollableScope internal constructor() {
         }
     }
 
+    /**
+     * Adds a vertically scrolling column whose full child tree remains mounted.
+     *
+     * Prefer [LazyColumn] for large or unbounded collections.
+     */
     fun ScrollableColumn(
         key: Any? = null,
         spacing: UiDp = UiDp.Zero,
@@ -115,9 +133,15 @@ class ScrollableScope internal constructor() {
         }
     }
 
-    // 横向滚动。
-    // Horizontal scrolling.
-
+    /**
+     * Adds a keyed lazy row from [items].
+     *
+     * [key] must remain stable for the lifetime of an item so mounted views and item state can be
+     * reused across moves. Duplicate keys are invalid.
+     *
+     * @param contentType groups structurally compatible items for view reuse
+     * @param state optional externally owned scroll state
+     */
     fun <T> LazyRow(
         items: List<T>,
         key: (T) -> Any,
@@ -152,6 +176,12 @@ class ScrollableScope internal constructor() {
         }
     }
 
+    /**
+     * Adds a lazy row whose items are declared through [LazyListScope].
+     *
+     * @param state optional externally owned scroll state
+     * @param content declares keyed lazy items and item groups
+     */
     fun LazyRow(
         contentPadding: LazyContentPadding = LazyContentPadding.None,
         spacing: UiDp = UiDp.Zero,
@@ -180,6 +210,11 @@ class ScrollableScope internal constructor() {
         }
     }
 
+    /**
+     * Adds a horizontally scrolling row whose full child tree remains mounted.
+     *
+     * Prefer [LazyRow] for large or unbounded collections.
+     */
     fun ScrollableRow(
         key: Any? = null,
         spacing: UiDp = UiDp.Zero,
@@ -191,9 +226,15 @@ class ScrollableScope internal constructor() {
         with(delegate) { ScrollableRow(key, spacing, arrangement, verticalAlignment, modifier, content) }
     }
 
-    // 网格。
-    // Grid.
-
+    /**
+     * Adds a keyed lazy vertical grid from [items].
+     *
+     * [key] must remain stable and [span] must return a value in `1..spanCount`.
+     *
+     * @param contentType groups structurally compatible items for view reuse
+     * @param state optional externally owned scroll state
+     * @param focusFollowKeyboard whether keyboard focus should request the focused item into view
+     */
     fun <T> LazyVerticalGrid(
         items: List<T>,
         spanCount: Int = 2,
@@ -236,6 +277,13 @@ class ScrollableScope internal constructor() {
         }
     }
 
+    /**
+     * Adds a lazy vertical grid whose items are declared through [LazyGridScope].
+     *
+     * @param spanCount number of columns available to item spans
+     * @param state optional externally owned scroll state
+     * @param content declares keyed grid items and their spans
+     */
     fun LazyVerticalGrid(
         spanCount: Int = 2,
         contentPadding: LazyContentPadding = LazyContentPadding.None,
@@ -270,9 +318,15 @@ class ScrollableScope internal constructor() {
         }
     }
 
-    // 翻页。
-    // Paging.
-
+    /**
+     * Adds a horizontally scrolling pager.
+     *
+     * [onPageChanged] is invoked after the pager settles on a different page. [currentPage] remains
+     * the caller-owned source of truth and should be updated in response.
+     *
+     * @param pagerState optional externally owned pager state
+     * @param offscreenPageLimit number of adjacent pages retained on each side
+     */
     fun HorizontalPager(
         currentPage: Int,
         onPageChanged: (Int) -> Unit,
@@ -301,6 +355,15 @@ class ScrollableScope internal constructor() {
         }
     }
 
+    /**
+     * Adds a vertically scrolling pager.
+     *
+     * [onPageChanged] is invoked after the pager settles on a different page. [currentPage] remains
+     * the caller-owned source of truth and should be updated in response.
+     *
+     * @param pagerState optional externally owned pager state
+     * @param offscreenPageLimit number of adjacent pages retained on each side
+     */
     fun VerticalPager(
         currentPage: Int,
         onPageChanged: (Int) -> Unit,
@@ -332,7 +395,6 @@ class ScrollableScope internal constructor() {
     }
 
     /**
-     * 导出该 scope 收集到的子节点。
      * Exports child nodes collected by this scope.
      */
     internal fun build(): List<VNode> = delegate.build()

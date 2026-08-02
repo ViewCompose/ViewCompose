@@ -4,7 +4,6 @@ import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
 
 /**
- * 返回一个稳定 State 引用，但每次 composition 都写入最新值。
  * Returns a stable State reference while writing the latest value on every composition.
  */
 fun <T> rememberUpdatedState(
@@ -13,7 +12,6 @@ fun <T> rememberUpdatedState(
     val state = remember {
         mutableStateOf(newValue)
     }
-    // DisposableEffect 在提交阶段启动，此时本轮 composition snapshot 已关闭，因此 effect 回调能看到这里写入的值。
     // DisposableEffect starts in the commit phase after this composition snapshot closes, so effect callbacks observe this value.
     state.value = newValue
     return state

@@ -3,11 +3,8 @@ package com.viewcompose.widget.core
 import kotlin.coroutines.CoroutineContext
 
 /**
- * 原子安装每个 [RenderSession] 所需的平台能力。
  * Atomically installs the platform capabilities required by every [RenderSession].
  *
- * Android 应用通常由 `viewcompose-host-android` 完成安装。
- * 自定义宿主必须在创建 session 前安装一套完整平台能力。
  * Android applications normally receive this installation through `viewcompose-host-android`.
  * Custom hosts must install one complete platform before creating a session.
  */
@@ -26,7 +23,6 @@ fun installRenderSessionPlatform(
 }
 
 /**
- * RenderSession 运行所需的完整平台能力集合。
  * Complete platform capability set required by RenderSession.
  */
 internal data class RenderSessionPlatform(
@@ -36,7 +32,6 @@ internal data class RenderSessionPlatform(
 )
 
 /**
- * 进程级平台能力提供者。
  * Process-wide provider for platform capabilities.
  */
 internal object RenderSessionPlatformProvider {
@@ -50,7 +45,6 @@ internal object RenderSessionPlatformProvider {
 }
 
 /**
- * 一次性安装的平台注册表，防止同一进程混用多套 renderer/runtime。
  * One-shot platform registry that prevents mixing multiple renderer/runtime stacks in one process.
  */
 internal class RenderSessionPlatformRegistry {

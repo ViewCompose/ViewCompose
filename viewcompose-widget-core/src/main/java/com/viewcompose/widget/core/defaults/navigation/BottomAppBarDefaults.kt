@@ -2,16 +2,17 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.unit.UiDp
 
-/**
- * BottomAppBar DSL 的默认容器、尺寸和阴影 token。
- * Default container, sizing, and elevation tokens for the BottomAppBar DSL.
- */
+/** Default visual and size tokens for bottom app bars. */
 object BottomAppBarDefaults {
+    /** Returns the app-bar container color. */
     fun containerColor(): Int = Theme.colors.surface
 
+    /** Returns the app-bar height. */
     fun height(): UiDp = Theme.controls.appBar.bottomHeight
 
+    /** Returns the horizontal padding around app-bar content. */
     fun horizontalPadding(): UiDp = Theme.controls.appBar.bottomHorizontalPadding
 
+    /** Returns the app-bar elevation. */
     fun elevation(): UiDp = Theme.controls.appBar.bottomElevation
 }

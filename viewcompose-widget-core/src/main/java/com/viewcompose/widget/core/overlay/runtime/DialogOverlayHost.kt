@@ -1,23 +1,22 @@
 package com.viewcompose.widget.core
 
-/**
- * 表示平台层已经展示的对话框实例，支持原地更新和关闭。
- * Represents a platform dialog instance that can be updated in place or dismissed.
- */
+/** Represents a platform dialog instance that can be updated in place or dismissed. */
 interface DialogOverlayHandle {
+    /** Updates the active dialog to [spec] and [content] without changing its entry identity. */
     fun update(
         spec: DialogOverlaySpec,
         content: DialogOverlayContent,
     )
 
+    /** Permanently dismisses this platform dialog instance. */
     fun dismiss()
 }
 
 /**
- * 由平台实现的对话框展示入口，widget-core 只依赖这个最小契约。
  * Platform-provided dialog presentation entry point; widget-core depends only on this minimal contract.
  */
 interface DialogOverlayPresenter {
+    /** Creates and shows a platform dialog for [entryId]. */
     fun show(
         entryId: OverlayEntryId,
         spec: DialogOverlaySpec,
@@ -26,7 +25,6 @@ interface DialogOverlayPresenter {
 }
 
 /**
- * 将声明式 overlay 请求同步到对话框 presenter，并按 session/key 维护生命周期。
  * Synchronizes declarative overlay requests to a dialog presenter and owns lifecycle by session/key.
  */
 class DialogOverlayHost(

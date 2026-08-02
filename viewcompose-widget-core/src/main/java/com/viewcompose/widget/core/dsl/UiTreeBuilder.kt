@@ -15,7 +15,6 @@ import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 import com.viewcompose.ui.tooling.UiNodeTooling
 
 /**
- * ViewCompose 声明式树构建器，负责把 widget DSL 调用收集为平台无关的 VNode 列表。
  * ViewCompose declarative tree builder that collects widget DSL calls into platform-neutral VNode lists.
  */
 @UiDslMarker
@@ -23,11 +22,8 @@ open class UiTreeBuilder {
     private val children = mutableListOf<VNode>()
 
     /**
-     * 创建显式重组边界，但不产生 Android View。
      * Creates an explicit restart boundary without emitting an Android View.
      *
-     * [content] 中读取的 snapshot state 只会让该边界及其祖先失效。
-     * 普通 Kotlin 变量捕获必须放入 [inputs]，否则缓存结果不会因变量变化而刷新。
      * Snapshot state read by [content] invalidates only this boundary and its ancestors. Values
      * captured from ordinary Kotlin variables must be included in [inputs] so the cached result is
      * refreshed when they change.
@@ -63,10 +59,8 @@ open class UiTreeBuilder {
     }
 
     /**
-     * 发射一个 VNode，带 content 时会递归构建子树。
      * Emits one VNode and recursively builds its subtree when content is provided.
      *
-     * 在活跃 composition 中，节点会被包进 composer group 以支持增量重组和结果复用。
      * During active composition, the node is wrapped in a composer group for incremental recomposition and result reuse.
      */
     fun emit(
@@ -131,7 +125,6 @@ open class UiTreeBuilder {
     }
 
     /**
-     * 直接追加已经解析好的 VNode 数据，供内部 DSL 或测试绕过 composer group 使用。
      * Appends resolved VNode data directly, allowing internal DSLs or tests to bypass composer groups.
      */
     internal fun emitResolved(
@@ -197,7 +190,6 @@ open class UiTreeBuilder {
     }
 
     /**
-     * 节点重组输入，额外比较 session identity，避免懒容器内容 lambda 被误复用。
      * Node recomposition inputs that also compare session identity to avoid reusing stale lazy-container lambdas.
      */
     private class EmitInputs(
@@ -232,7 +224,6 @@ open class UiTreeBuilder {
 }
 
 /**
- * 在无宿主 session 的情况下构建一棵 VNode 树。
  * Builds one VNode tree without requiring a host session.
  */
 fun buildVNodeTree(content: UiTreeBuilder.() -> Unit): List<VNode> {
@@ -240,7 +231,6 @@ fun buildVNodeTree(content: UiTreeBuilder.() -> Unit): List<VNode> {
 }
 
 /**
- * 判断两个 VNode 是否可以直接复用上一轮结果。
  * Returns whether two VNodes can reuse the previous composition result.
  */
 private fun canReuseVNode(
@@ -257,7 +247,6 @@ private fun canReuseVNode(
 }
 
 /**
- * 只比较子节点对象引用，确保子树未被重新构建时才复用父结果。
  * Compares child node references only, ensuring parent reuse happens only when the subtree was not rebuilt.
  */
 private fun List<VNode>.hasSameElementReferences(other: List<VNode>): Boolean {
@@ -266,7 +255,6 @@ private fun List<VNode>.hasSameElementReferences(other: List<VNode>): Boolean {
 }
 
 /**
- * 比较带独立子 session 的节点是否仍指向相同内容工厂。
  * Compares whether nodes with child sessions still point to the same content factories.
  */
 private fun hasSameSessionIdentity(
@@ -303,7 +291,6 @@ private fun hasSameSessionIdentity(
 }
 
 /**
- * 比较 lazy item 的 session 工厂和 updater 引用是否保持不变。
  * Compares whether lazy item session factories and updaters keep the same references.
  */
 private fun List<LazyListItem>.hasSameSessionIdentity(other: List<LazyListItem>): Boolean {

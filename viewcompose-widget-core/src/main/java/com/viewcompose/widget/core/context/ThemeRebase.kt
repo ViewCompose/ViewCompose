@@ -1,11 +1,13 @@
 package com.viewcompose.widget.core
 
 /**
- * 基于当前 token 创建覆盖后的主题快照。
- * Creates an overridden theme snapshot from the current tokens.
+ * Creates an immutable partial override of this theme snapshot.
  *
- * 当 colors 被覆盖但 stateColors 未显式传入时，会重新派生默认状态色。
- * When colors are overridden but stateColors are not provided, default state colors are derived again.
+ * When [colors] is replaced without [stateColors], state colors are re-derived from the replacement
+ * scheme. Otherwise unspecified families preserve their current values. The result always reports
+ * [UiThemeOrigin.Override] while retaining the current darkness and revision metadata.
+ *
+ * @return a new theme snapshot; this instance is never mutated
  */
 fun UiThemeTokens.override(
     colors: UiColors? = null,

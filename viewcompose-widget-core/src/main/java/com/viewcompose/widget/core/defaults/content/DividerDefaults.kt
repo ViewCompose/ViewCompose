@@ -2,12 +2,11 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.unit.UiDp
 
-/**
- * Divider DSL 的默认线条 token。
- * Default line tokens for the Divider DSL.
- */
+/** Default visual tokens for divider components. */
 object DividerDefaults {
+    /** Returns the divider color for the current theme. */
     fun color(): Int = Theme.colors.outlineVariant
 
+    /** Returns the default divider thickness. */
     fun thickness(): UiDp = 1.dp
 }

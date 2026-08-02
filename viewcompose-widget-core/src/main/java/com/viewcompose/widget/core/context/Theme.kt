@@ -17,18 +17,19 @@ private val LocalTheme = uiLocalOf(
 )
 
 /**
- * Android theme 资源运行时变化时的显式失效入口。
- * Explicit invalidation entry point for hosts that mutate Android theme resources at runtime.
+ * Invalidates active Android-backed theme providers after runtime resource mutation.
  *
- * 例如宿主调用 Context.setTheme/applyStyle 后，可通过 refresh 触发重新读取 token。
- * For example, hosts can call refresh after Context.setTheme/applyStyle to force token reread.
+ * Configuration changes are observed automatically. A host that calls `Context.setTheme` or
+ * applies a style without a configuration change calls [refresh] on the main thread. Subscriptions
+ * are owned by active `UiTheme` effects and are removed when those providers leave composition.
  */
 class AndroidThemeRefreshController {
     private val listeners = linkedSetOf<() -> Unit>()
 
     /**
-     * 通知所有订阅的 theme lifecycle 重新读取 Android 主题。
-     * Notifies all subscribed theme lifecycles to reread the Android theme.
+     * Synchronously requests every active provider to reread its Android theme.
+     *
+     * @throws IllegalStateException when called off the Android main thread
      */
     fun refresh() {
         check(Looper.myLooper() == Looper.getMainLooper()) {
@@ -43,39 +44,51 @@ class AndroidThemeRefreshController {
     }
 }
 
-/**
- * 当前 composition 的主题访问入口。
- * Theme access entry point for the current composition.
- */
+/** Exposes the immutable theme snapshot and its token families for the current composition. */
 object Theme {
+    /** Current complete theme snapshot. */
     val current: UiThemeTokens
         get() = UiLocals.current(LocalTheme)
 
+    /** Current semantic color scheme. */
     val colors: UiColors
         get() = current.colors
 
+    /** Current state-aware component colors. */
     val stateColors: UiStateColors
         get() = current.stateColors
 
+    /** Current typography tiers. */
     val typography: UiTypography
         get() = current.typography
 
+    /** Current component shape tiers. */
     val shapes: UiShapes
         get() = current.shapes
 
+    /** Current core component sizing tokens. */
     val controls: UiControlSizing
         get() = current.controls
 
+    /** Current modal overlay tokens. */
     val overlays: UiOverlays
         get() = current.overlays
 }
 
 /**
- * 在 content 范围内提供主题 token。
- * Provides theme tokens within the content scope.
+ * Resolves and provides one theme snapshot while building [content].
  *
- * tokens、androidContext、resolvedAndroidTheme 三种来源互斥；未提供时使用 framework light 默认值。
- * tokens, androidContext, and resolvedAndroidTheme are mutually exclusive; framework light defaults are used when absent.
+ * [tokens], [androidContext], and [resolvedAndroidTheme] are mutually exclusive. Explicit tokens
+ * are used unchanged. A resolved Android theme keeps root Views and overlays on the same mutable
+ * themed context. A plain Android context is resolved according to [dynamicColorPolicy]. When no
+ * source is supplied, [UiThemeDefaults.light] is used.
+ *
+ * During mounted composition, Android-backed sources install a lifecycle that observes
+ * configuration changes and [refreshController]. Outside a composer, Android tokens are read once.
+ * Nested providers restore the previous theme after [content] returns.
+ *
+ * @sample com.viewcompose.widget.core.samples.themeProviderSample
+ * @throws IllegalArgumentException if more than one theme source is supplied
  */
 fun UiTreeBuilder.UiTheme(
     tokens: UiThemeTokens? = null,
@@ -141,7 +154,6 @@ fun UiTreeBuilder.UiTheme(
 }
 
 /**
- * Android 主题 token 生命周期，监听 configuration 变化并按 revision 推动重组。
  * Lifecycle for Android theme tokens, observing configuration changes and driving recomposition by revision.
  */
 @Suppress("DEPRECATION")
@@ -211,8 +223,10 @@ internal class AndroidThemeTokenLifecycle(
 }
 
 /**
- * 在当前主题基础上覆盖部分 token。
- * Overrides selected tokens on top of the current theme.
+ * Provides selected token families over the current theme while building [content].
+ *
+ * When [colors] changes without an explicit [stateColors], state colors are re-derived from the new
+ * scheme. The resulting metadata origin is [UiThemeOrigin.Override].
  */
 fun UiTreeBuilder.UiThemeOverride(
     colors: UiColors? = null,
@@ -239,8 +253,11 @@ fun UiTreeBuilder.UiThemeOverride(
 }
 
 /**
- * 使用 lambda 基于当前 token 计算覆盖值。
- * Computes token overrides from the current tokens with lambdas.
+ * Computes and provides selected token families from their current values.
+ *
+ * Every non-null transformation runs immediately and exactly once for this tree build before the
+ * delegated provider executes [content]. Color changes without a state-color transformation
+ * re-derive state colors through [UiThemeTokens.override].
  */
 fun UiTreeBuilder.UiThemeOverride(
     colors: (UiColors.() -> UiColors)? = null,

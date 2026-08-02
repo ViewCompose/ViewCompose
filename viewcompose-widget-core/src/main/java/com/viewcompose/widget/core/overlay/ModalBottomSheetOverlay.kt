@@ -1,8 +1,17 @@
 package com.viewcompose.widget.core
 
 /**
- * 描述模态底部面板 overlay 的业务行为和手势策略，不绑定具体 Android 实现。
- * Describes business behavior and gesture policy for a modal bottom sheet overlay without binding to Android APIs.
+ * Describes platform-neutral behavior for one modal bottom-sheet overlay.
+ *
+ * Callback identity does not participate in equality. Recomposition therefore updates a platform
+ * sheet only when a visual, navigation-bar, or dismissal policy changes.
+ *
+ * @property dismissOnBackPress whether a platform back action requests dismissal
+ * @property dismissOnClickOutside whether tapping the scrim requests dismissal
+ * @property skipPartiallyExpanded whether the presenter must omit a partially expanded state
+ * @property scrimOpacity opacity in `0.0..1.0` requested for the background scrim
+ * @property navigationBarColor optional platform navigation-bar color while the sheet is visible
+ * @property onDismissRequest invoked when the platform requests dismissal; the owner must remove the declaration
  */
 class ModalBottomSheetOverlaySpec(
     val dismissOnBackPress: Boolean = true,
@@ -12,6 +21,7 @@ class ModalBottomSheetOverlaySpec(
     val navigationBarColor: Int? = null,
     val onDismissRequest: (() -> Unit)? = null,
 ) {
+    /** Compares the visual and dismissal policy while intentionally ignoring callback identity. */
     override fun equals(other: Any?): Boolean {
         if (this === other) {
             return true
@@ -26,6 +36,7 @@ class ModalBottomSheetOverlaySpec(
             navigationBarColor == other.navigationBarColor
     }
 
+    /** Returns a hash of the visual and dismissal policy. */
     override fun hashCode(): Int {
         var result = dismissOnBackPress.hashCode()
         result = 31 * result + dismissOnClickOutside.hashCode()
@@ -37,8 +48,9 @@ class ModalBottomSheetOverlaySpec(
 }
 
 /**
- * 保存底部面板内容 token，供 overlay host 在同一 entry 更新时复用内容。
- * Stores the bottom-sheet content token so the overlay host can reuse content across updates to the same entry.
+ * Holds content that a runtime host can render into a bottom-sheet-owned surface.
+ *
+ * @property surface captured locals, overlay host, and declarative surface content
  */
 data class ModalBottomSheetOverlayContent(
     val surface: OverlaySurfaceContent,

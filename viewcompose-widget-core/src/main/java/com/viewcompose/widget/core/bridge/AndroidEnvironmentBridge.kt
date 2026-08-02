@@ -10,12 +10,10 @@ import com.viewcompose.ui.unit.UiDensity
 import java.util.Locale
 
 /**
- * Android Context 到 UiEnvironmentValues 的桥接器。
  * Bridge from Android Context to UiEnvironmentValues.
  */
 object AndroidEnvironmentBridge {
     /**
-     * 从 Android resources/configuration 读取密度、locale 和布局方向。
      * Reads density, locale, and layout direction from Android resources/configuration.
      */
     fun fromContext(context: Context): UiEnvironmentValues {
@@ -33,7 +31,6 @@ object AndroidEnvironmentBridge {
 }
 
 /**
- * Android environment 原始值到 ViewCompose 环境枚举的映射器。
  * Mapper from raw Android environment values to ViewCompose environment enums.
  */
 internal object EnvironmentValueMapper {

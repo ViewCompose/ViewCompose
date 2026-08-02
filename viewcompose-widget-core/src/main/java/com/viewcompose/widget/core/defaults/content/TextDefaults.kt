@@ -1,25 +1,21 @@
 package com.viewcompose.widget.core
 
-/**
- * 排版 token 的语义档位。
- * Semantic tiers for typography tokens.
- */
+/** Semantic size tiers used to select typography tokens. */
 enum class TypographyTier {
+    /** The largest style in a typography family. */
     Large,
+    /** The default style in a typography family. */
     Medium,
+    /** The smallest style in a typography family. */
     Small,
 }
 
-/**
- * 文本 DSL 的默认排版和颜色入口。
- * Default typography and color entry point for text DSLs.
- *
- * currentStyle/current color 从 composition local 读取，用于继承父级文本或 surface 的上下文。
- * currentStyle/current color read composition locals to inherit parent text or surface context.
- */
+/** Resolves default typography and color values for text components. */
 object TextDefaults {
+    /** Returns the text style inherited from the nearest text-style provider. */
     fun currentStyle(): UiTextStyle = TextStyle.current
 
+    /** Returns a title style at [tier] from the current theme. */
     fun titleStyle(tier: TypographyTier = TypographyTier.Medium): UiTextStyle {
         return when (tier) {
             TypographyTier.Large -> Theme.typography.titleLarge
@@ -28,6 +24,7 @@ object TextDefaults {
         }
     }
 
+    /** Returns a body style at [tier] from the current theme. */
     fun bodyStyle(tier: TypographyTier = TypographyTier.Medium): UiTextStyle {
         return when (tier) {
             TypographyTier.Large -> Theme.typography.bodyLarge
@@ -36,6 +33,7 @@ object TextDefaults {
         }
     }
 
+    /** Returns a label style at [tier] from the current theme. */
     fun labelStyle(tier: TypographyTier = TypographyTier.Medium): UiTextStyle {
         return when (tier) {
             TypographyTier.Large -> Theme.typography.labelLarge
@@ -44,25 +42,36 @@ object TextDefaults {
         }
     }
 
+    /** Returns the current theme's large title style. */
     fun titleLargeStyle(): UiTextStyle = titleStyle(TypographyTier.Large)
 
+    /** Returns the current theme's medium title style. */
     fun titleMediumStyle(): UiTextStyle = titleStyle(TypographyTier.Medium)
 
+    /** Returns the current theme's small title style. */
     fun titleSmallStyle(): UiTextStyle = titleStyle(TypographyTier.Small)
 
+    /** Returns the current theme's large body style. */
     fun bodyLargeStyle(): UiTextStyle = bodyStyle(TypographyTier.Large)
 
+    /** Returns the current theme's medium body style. */
     fun bodyMediumStyle(): UiTextStyle = bodyStyle(TypographyTier.Medium)
 
+    /** Returns the current theme's small body style. */
     fun bodySmallStyle(): UiTextStyle = bodyStyle(TypographyTier.Small)
 
+    /** Returns the current theme's large label style. */
     fun labelLargeStyle(): UiTextStyle = labelStyle(TypographyTier.Large)
 
+    /** Returns the current theme's medium label style. */
     fun labelMediumStyle(): UiTextStyle = labelStyle(TypographyTier.Medium)
 
+    /** Returns the current theme's small label style. */
     fun labelSmallStyle(): UiTextStyle = labelStyle(TypographyTier.Small)
 
+    /** Returns the primary text color inherited from the content-color provider. */
     fun primaryColor(): Int = ContentColor.current
 
+    /** Returns the current theme's secondary text color. */
     fun secondaryColor(): Int = Theme.colors.onSurfaceVariant
 }

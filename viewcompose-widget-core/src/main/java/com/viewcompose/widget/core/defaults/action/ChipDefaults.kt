@@ -4,10 +4,7 @@ import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.shape.UiShape
 
-/**
- * Chip 的语义变体，影响选中态容器和边框默认值。
- * Semantic chip variants that affect selected container and border defaults.
- */
+/** Semantic chip role used to select selected-container and border treatment. */
 enum class ChipVariant {
     Assist,
     Filter,
@@ -15,11 +12,9 @@ enum class ChipVariant {
     Suggestion,
 }
 
-/**
- * Chip DSL 的默认颜色、尺寸和交互反馈 token。
- * Default color, sizing, and interaction feedback tokens for the Chip DSL.
- */
+/** Resolves Chip colors, dimensions, typography, and feedback from the current theme. */
 object ChipDefaults {
+    /** Resolves the container color for [variant], [selected], and [enabled] state. */
     fun containerColor(
         variant: ChipVariant = ChipVariant.Assist,
         selected: Boolean = false,
@@ -32,6 +27,7 @@ object ChipDefaults {
         }
     }
 
+    /** Resolves label and icon content color for the complete chip state. */
     fun contentColor(
         variant: ChipVariant = ChipVariant.Assist,
         selected: Boolean = false,
@@ -44,6 +40,7 @@ object ChipDefaults {
         }
     }
 
+    /** Resolves border color for the complete chip state. */
     fun borderColor(
         variant: ChipVariant = ChipVariant.Assist,
         selected: Boolean = false,
@@ -55,6 +52,7 @@ object ChipDefaults {
         }
     }
 
+    /** Resolves zero width for a selected filter chip and one dp otherwise. */
     fun borderWidth(
         variant: ChipVariant = ChipVariant.Assist,
         selected: Boolean = false,
@@ -65,21 +63,30 @@ object ChipDefaults {
         }
     }
 
+    /** Returns the current small theme shape. */
     fun shape(): UiShape = Theme.shapes.small
 
+    /** Returns the current chip height token. */
     fun height(): UiDp = Theme.controls.chip.height
 
+    /** Returns the current default horizontal content padding. */
     fun horizontalPadding(): UiDp = Theme.controls.chip.horizontalPadding
 
+    /** Returns leading-edge padding used when a leading icon is present. */
     fun leadingIconPadding(): UiDp = Theme.controls.chip.leadingIconPadding
 
+    /** Returns the current leading icon size. */
     fun iconSize(): UiDp = Theme.controls.chip.iconSize
 
+    /** Returns the current trailing icon size. */
     fun trailingIconSize(): UiDp = Theme.controls.chip.trailingIconSize
 
+    /** Returns spacing between an icon and the label. */
     fun iconSpacing(): UiDp = Theme.controls.chip.iconSpacing
 
+    /** Returns the medium label typography style. */
     fun textStyle(): UiTextStyle = TextDefaults.labelMediumStyle()
 
+    /** Returns the current ripple color. */
     fun pressedColor(): Int = Theme.colors.ripple
 }

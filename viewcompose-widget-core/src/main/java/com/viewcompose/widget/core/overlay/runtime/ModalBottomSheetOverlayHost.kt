@@ -1,23 +1,22 @@
 package com.viewcompose.widget.core
 
-/**
- * 表示平台层已展示的模态底部面板实例。
- * Represents a platform modal bottom sheet instance currently shown.
- */
+/** Represents a platform modal bottom-sheet instance currently shown. */
 interface ModalBottomSheetOverlayHandle {
+    /** Updates the active sheet to [spec] and [content] without changing its entry identity. */
     fun update(
         spec: ModalBottomSheetOverlaySpec,
         content: ModalBottomSheetOverlayContent,
     )
 
+    /** Permanently dismisses this platform bottom-sheet instance. */
     fun dismiss()
 }
 
 /**
- * 由平台实现的底部面板展示入口，负责创建真实 UI 容器。
  * Platform-provided bottom sheet presenter responsible for creating the real UI container.
  */
 interface ModalBottomSheetOverlayPresenter {
+    /** Creates and shows a platform bottom sheet for [entryId]. */
     fun show(
         entryId: OverlayEntryId,
         spec: ModalBottomSheetOverlaySpec,
@@ -26,7 +25,6 @@ interface ModalBottomSheetOverlayPresenter {
 }
 
 /**
- * 将声明式底部面板 overlay 请求同步到平台 presenter，并复用相同 entry 的 handle。
  * Synchronizes declarative bottom sheet overlay requests to the platform presenter and reuses handles for the same entry.
  */
 class ModalBottomSheetOverlayHost(

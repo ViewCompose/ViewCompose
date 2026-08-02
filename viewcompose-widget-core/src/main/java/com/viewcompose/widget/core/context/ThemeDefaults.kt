@@ -3,11 +3,9 @@ package com.viewcompose.widget.core
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.shape.UiShape
 
-/**
- * 框架默认形状 token。
- * Framework default shape tokens.
- */
+/** Creates the framework baseline component shape tiers. */
 object UiShapeDefaults {
+    /** Returns a new immutable shape snapshot. */
     fun default(): UiShapes {
         return UiShapes(
             small = UiShape.rounded(14.dp),
@@ -16,11 +14,9 @@ object UiShapeDefaults {
     }
 }
 
-/**
- * 框架默认组件尺寸 token。
- * Framework default component size tokens.
- */
+/** Creates the framework baseline core component dimensions. */
 object UiControlSizeDefaults {
+    /** Returns a new immutable sizing snapshot. */
     fun default(): UiControlSizing {
         return UiControlSizing(
             button = UiButtonSizing(
@@ -74,11 +70,9 @@ object UiControlSizeDefaults {
     }
 }
 
-/**
- * 框架默认 overlay token。
- * Framework default overlay tokens.
- */
+/** Creates the framework baseline modal overlay tokens. */
 object UiOverlayDefaults {
+    /** Returns a new immutable overlay token snapshot. */
     fun default(): UiOverlays {
         return UiOverlays(
             scrimOpacity = 0.32f,
@@ -86,11 +80,9 @@ object UiOverlayDefaults {
     }
 }
 
-/**
- * 框架内置亮/暗主题 token。
- * Framework built-in light and dark theme tokens.
- */
+/** Creates complete built-in light and dark theme snapshots without reading Android resources. */
 object UiThemeDefaults {
+    /** Returns a new framework light-theme snapshot. */
     fun light(): UiThemeTokens {
         return UiThemeTokens(
             colors = UiColors(
@@ -135,6 +127,7 @@ object UiThemeDefaults {
         )
     }
 
+    /** Returns a new framework dark-theme snapshot. */
     fun dark(): UiThemeTokens {
         return UiThemeTokens(
             colors = UiColors(
