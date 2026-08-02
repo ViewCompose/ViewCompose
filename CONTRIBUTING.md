@@ -33,13 +33,18 @@ process-death restoration and platform Predictive Back. Run the merge gate docum
    [architecture](docs/architecture/overview.md), [workflow](docs/project/workflow.md), and
    [documentation governance](docs/project/documentation-governance.md) relevant to the change.
 2. Add/update tests for behavioral changes.
-3. Keep docs in sync when behavior or architecture changes.
+3. Apply the documentation change impact matrix before implementation and review.
+4. Keep source KDoc/Javadoc, the owning [module documentation](docs/modules/README.md), and
+   cross-module guides in sync with the contracts they describe.
+5. If a change has no documentation impact, explain why in the pull request rather than silently
+   omitting documentation.
 
 ## Pull Request Guidelines
 
 1. Explain what changed and why.
 2. List validation commands and results.
-3. Include screenshots/gifs for visual UI changes when helpful.
+3. Declare the documentation impact and list the pages or source comments updated.
+4. Include screenshots/gifs for visual UI changes when helpful.
 
 ## License
 

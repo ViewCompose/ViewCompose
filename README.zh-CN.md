@@ -152,9 +152,10 @@ Android Studio 静态预览插件，提供：
 
 ## 文档
 
-GitHub 托管的文档网站是项目的下一个阶段。在网站上线前，
-[`docs/README.md`](docs/README.md) 是稳定的文档入口，汇总架构、API、使用指南、性能、工具链和路线图。
-README 将有意保持简洁，只负责说明项目性质和首次接入所需信息。
+托管文档系统与源码在同一仓库维护，并发布到
+[`docs.viewcompose.com`](https://docs.viewcompose.com)。[`docs/README.md`](docs/README.md) 仍是规范的
+源码入口和离线入口，汇总架构、API、使用指南、性能、工具链和路线图。README 将有意保持简洁，
+只负责说明项目性质和首次接入所需信息。
 
 ## 构建与贡献
 

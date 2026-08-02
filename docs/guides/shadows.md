@@ -121,7 +121,7 @@ Samsung SM-G991B / Android 13 的首轮发布态配对基准没有证明 RenderN
 5. 后端结论只接受同设备、同构建、同工作负载的多轮数据，并使用 Compose 控制组归一化。
 
 基准与首轮数据见 [performance.md](../tooling/performance.md) 和
-[高级阴影执行记录](../archive/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)。
+[高级阴影执行记录](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)。
 
 ## 7. 诊断与验证
 

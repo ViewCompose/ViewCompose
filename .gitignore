@@ -27,3 +27,10 @@ local.properties
 /gradle/viewcompose-publishing-secrets.properties
 /.env
 /.env.*
+
+# Hosted documentation build output and generated metadata.
+/website/node_modules/
+/website/build/
+/website/.docusaurus/
+/website/generated/
+/website/src/generated/

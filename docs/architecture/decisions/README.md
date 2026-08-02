@@ -1,0 +1,16 @@
+# Architecture Decisions
+
+Architecture decision records preserve decisions that are expensive to reverse, affect multiple
+modules, or establish public contracts. They explain why a design was selected while the current
+architecture pages describe how the system works now.
+
+## Accepted decisions
+
+- [ADR-0001: Hosted documentation platform](./0001-hosted-documentation-platform.md)
+
+## Rules
+
+1. Use the next four-digit number and a lowercase kebab-case title.
+2. Accepted records are not rewritten to hide historical trade-offs.
+3. A changed decision receives a new ADR that explicitly supersedes the previous one.
+4. Update current architecture and module documentation when a decision changes implementation.

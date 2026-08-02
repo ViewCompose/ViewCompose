@@ -11,7 +11,7 @@
 
 历史长版见：
 
-- [THEMING_FULL_2026-03-06.md](../archive/THEMING_FULL_2026-03-06.md)
+- [THEMING_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/THEMING_FULL_2026-03-06.md)
 
 ## 2. 当前主题模型
 

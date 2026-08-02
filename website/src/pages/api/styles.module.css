@@ -1,0 +1,95 @@
+.page {
+  width: min(76rem, calc(100% - 3rem));
+  margin: 0 auto;
+  padding: 4.5rem 0 6rem;
+}
+
+.header {
+  max-width: 52rem;
+  margin-bottom: 4rem;
+}
+
+.header > p {
+  margin-bottom: 0.6rem;
+  color: var(--ifm-color-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  letter-spacing: -0.06em;
+}
+
+.header span {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+.groups {
+  display: grid;
+  gap: 3.5rem;
+}
+
+.groups section > h2 {
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.moduleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.moduleCard {
+  display: flex;
+  min-height: 12rem;
+  flex-direction: column;
+  padding: 1.25rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 1rem;
+  background: var(--ifm-card-background-color);
+}
+
+.moduleCard > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.moduleCard h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.moduleCard code {
+  white-space: nowrap;
+  font-size: 0.75rem;
+}
+
+.moduleCard p {
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.55;
+}
+
+.moduleCard a {
+  margin-top: auto;
+  font-weight: 650;
+}
+
+@media (max-width: 720px) {
+  .page {
+    width: min(100% - 2rem, 76rem);
+    padding-top: 3rem;
+  }
+
+  .moduleGrid {
+    grid-template-columns: 1fr;
+  }
+}
