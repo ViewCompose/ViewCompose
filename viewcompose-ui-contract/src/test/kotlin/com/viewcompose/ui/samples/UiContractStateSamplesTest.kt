@@ -10,5 +10,7 @@ class UiContractStateSamplesTest {
         focusRequesterSample()
         lazyListStateSample()
         pagerStateSample()
+        vNodeModelSample()
+        remoteImageLoaderSample()
     }
 }

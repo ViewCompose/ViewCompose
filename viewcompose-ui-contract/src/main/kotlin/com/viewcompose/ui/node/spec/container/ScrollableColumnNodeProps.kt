@@ -1,12 +1,17 @@
 package com.viewcompose.ui.node.spec
+
 import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 
 /**
- * ScrollableColumn 节点的间距、内边距和滚动状态属性。
- * Spacing, padding, and scroll-state properties for a ScrollableColumn node.
+ * Immutable renderer properties for an eagerly composed vertical scrolling container.
+ *
+ * @property spacing fixed spacing between adjacent children
+ * @property arrangement main-axis placement when content is smaller than the viewport
+ * @property horizontalAlignment default cross-axis child alignment
+ * @property focusFollowKeyboard whether focus navigation may scroll focused content into view
  */
 data class ScrollableColumnNodeProps(
     val spacing: UiDp,

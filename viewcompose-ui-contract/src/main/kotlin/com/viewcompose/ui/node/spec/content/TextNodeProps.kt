@@ -7,8 +7,25 @@ import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.unit.UiSp
 
 /**
- * Text/RichText 节点的文本内容、排版和字体属性。
- * Text content, typography, and font properties for Text/RichText nodes.
+ * Immutable renderer properties shared by plain-text and rich-text nodes.
+ *
+ * [document] is authoritative for rich rendering. [text] remains the plain compatibility value and
+ * initializes [document] by default; callers supplying both should keep their visible content
+ * aligned.
+ *
+ * @property text plain text value, or `null` for empty text
+ * @property maxLines maximum laid-out line count
+ * @property overflow behavior when content exceeds [maxLines] or the available bounds
+ * @property textAlign logical horizontal alignment
+ * @property textColor default text color
+ * @property textSizeSp default text size
+ * @property fontWeight optional platform font weight override
+ * @property fontFamily optional renderer-compatible font family
+ * @property letterSpacingEm optional letter spacing in em units
+ * @property lineHeightSp optional line height
+ * @property includeFontPadding whether platform font top and bottom padding is included
+ * @property textDecoration default text decoration
+ * @property document structured text, paragraph, span, and inline-content model
  */
 data class TextNodeProps(
     val text: CharSequence?,
@@ -26,16 +43,26 @@ data class TextNodeProps(
     val document: TextDocument = TextDocument.plain(text?.toString().orEmpty()),
 ) : NodeSpec
 
+/** Platform-neutral marker for a renderer-compatible font-family value. */
 interface UiFontFamily
 
+/** Font family that exposes an opaque platform font object to a platform renderer. */
 interface PlatformUiFontFamily : UiFontFamily {
+    /** Opaque platform font object. */
     val font: Any
 }
 
+/** Default immutable wrapper for an opaque platform [font]. */
 class GenericUiFontFamily(
     override val font: Any,
 ) : PlatformUiFontFamily
 
+/**
+ * Wraps a platform font object as a [UiFontFamily].
+ *
+ * @param font opaque platform font object, or `null`
+ * @return a new font-family wrapper, or `null` when [font] is `null`
+ */
 fun uiFontFamily(font: Any?): UiFontFamily? {
     return if (font == null) {
         null

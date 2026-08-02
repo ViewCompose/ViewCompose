@@ -6,11 +6,19 @@ import com.viewcompose.ui.node.spec.NodeSpec
 import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 
 /**
- * 声明式 UI 树中的不可变虚拟节点。
- * Immutable virtual node in the declarative UI tree.
+ * Stores one immutable semantic node in the declarative UI tree.
  *
- * renderer 只依赖 type/spec/modifier/children 这组平台中立数据，不依赖 widget DSL。
- * Renderers depend only on this platform-neutral type/spec/modifier/children data, not on widget DSLs.
+ * Renderers consume this platform-neutral model without depending on widget DSL modules. [type] and
+ * [spec] must be a supported pair; construction does not validate that registry-level invariant.
+ * The [children] list is immutable by contract and must not be mutated after construction.
+ *
+ * @sample com.viewcompose.ui.samples.vNodeModelSample
+ * @property type renderer dispatch key for the platform node family
+ * @property key optional semantic identity used for sibling reconciliation
+ * @property spec immutable properties whose concrete type must match [type]
+ * @property modifier ordered behavior and parent-data chain
+ * @property children declarative child nodes in placement order
+ * @property environment captured density, locale, and layout direction for this subtree
  */
 data class VNode(
     val type: NodeType,

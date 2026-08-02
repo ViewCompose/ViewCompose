@@ -3,8 +3,14 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * ProgressIndicator 节点的进度、模式和颜色属性。
- * Progress, mode, and color properties for a ProgressIndicator node.
+ * Immutable renderer properties for linear or circular progress indicators.
+ *
+ * @property enabled whether progress animation and enabled semantics are active
+ * @property progress determinate progress value, or `null` for indeterminate mode
+ * @property indicatorColor active indicator color
+ * @property trackColor inactive track color
+ * @property trackThickness requested track thickness
+ * @property indicatorSize requested circular indicator width and height
  */
 data class ProgressIndicatorNodeProps(
     val enabled: Boolean,

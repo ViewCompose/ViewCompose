@@ -6,8 +6,17 @@ import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.state.PagerState
 
 /**
- * VerticalPager 节点的页面、状态和内容工厂属性。
- * Page, state, and content-factory properties for a VerticalPager node.
+ * Immutable renderer properties for a vertical pager.
+ *
+ * @property pages ordered keyed page models
+ * @property currentPage externally selected page index
+ * @property onPageChanged callback for a settled user- or renderer-driven page change
+ * @property offscreenPageLimit number of adjacent pages the renderer should retain
+ * @property pagerState optional command and observation state attached to the native pager
+ * @property userScrollEnabled whether direct user paging gestures are accepted
+ * @property reusePolicy native page-view reuse policy
+ * @property motionPolicy native page change and collection mutation animation policy
+ * @property focusFollowKeyboard whether focus navigation may scroll the pager to the focused page
  */
 data class VerticalPagerNodeProps(
     val pages: List<LazyListItem>,

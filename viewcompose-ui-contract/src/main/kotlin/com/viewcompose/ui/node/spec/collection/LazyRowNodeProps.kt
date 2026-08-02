@@ -9,8 +9,17 @@ import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * LazyRow 节点的 item、复用、内边距和滚动状态属性。
- * Item, reuse, padding, and scroll-state properties for a LazyRow node.
+ * Immutable renderer properties for a horizontally scrolling lazy list.
+ *
+ * @property contentPadding logical padding inside the scrollable content
+ * @property spacing main-axis spacing between adjacent items
+ * @property items ordered keyed item models
+ * @property state optional command and observation state attached to the native list
+ * @property reverseLayout whether item placement and scroll direction start from the opposite edge
+ * @property userScrollEnabled whether direct user scrolling is accepted
+ * @property prefetchPolicy eager preparation and native view-cache hints
+ * @property reusePolicy native item-view pool policy
+ * @property motionPolicy native item mutation animation policy
  */
 data class LazyRowNodeProps(
     val contentPadding: LazyContentPadding,

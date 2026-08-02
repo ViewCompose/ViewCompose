@@ -1,8 +1,10 @@
 package com.viewcompose.ui.node
 
 /**
- * SegmentedControl 的单个选项描述。
- * Descriptor for one SegmentedControl option.
+ * Describes one stable option in a segmented control.
+ *
+ * @property label user-visible localized option label
+ * @property key semantic selection identity; defaults to [label]
  */
 data class SegmentedControlItem(
     val label: String,

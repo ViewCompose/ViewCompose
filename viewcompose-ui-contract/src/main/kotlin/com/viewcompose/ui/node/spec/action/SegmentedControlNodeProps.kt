@@ -6,8 +6,26 @@ import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
 
 /**
- * SegmentedControl 节点传给 renderer 的完整属性快照。
- * Complete property snapshot passed to the renderer for a SegmentedControl node.
+ * Immutable renderer properties for a single-selection segmented control.
+ *
+ * @property items ordered segment models
+ * @property selectedIndex selected item index, interpreted by the renderer against [items]
+ * @property onSelectionChange callback receiving an accepted item index
+ * @property enabled whether the control and its items accept input
+ * @property backgroundColor unselected track color
+ * @property indicatorColor selected-segment indicator color
+ * @property shape outline shared by track and indicator
+ * @property textColor unselected label color
+ * @property selectedTextColor selected label color
+ * @property rippleColor pressed-state ripple color
+ * @property textSizeSp label size in scale-independent pixels
+ * @property fontWeight optional platform font weight override
+ * @property fontFamily optional renderer-compatible font family
+ * @property letterSpacingEm optional label letter spacing in em units
+ * @property lineHeightSp optional label line height
+ * @property includeFontPadding whether platform font top and bottom padding is included
+ * @property paddingHorizontal horizontal padding inside each segment
+ * @property paddingVertical vertical padding inside each segment
  */
 data class SegmentedControlNodeProps(
     val items: List<SegmentedControlItem>,

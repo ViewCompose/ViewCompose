@@ -3,8 +3,12 @@ package com.viewcompose.ui.node.spec
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Divider 节点的方向、厚度和颜色属性。
- * Orientation, thickness, and color properties for a Divider node.
+ * Immutable renderer properties for a divider.
+ *
+ * Orientation is selected by the node type rather than this spec.
+ *
+ * @property color divider color
+ * @property thickness requested cross-axis thickness
  */
 data class DividerNodeProps(
     val color: Int,

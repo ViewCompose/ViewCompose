@@ -1,8 +1,15 @@
 package com.viewcompose.ui.node.spec
 
 /**
- * Slider 节点的数值范围、步进和回调属性。
- * Value range, steps, and callback properties for a Slider node.
+ * Immutable renderer properties for an integer slider.
+ *
+ * @property min inclusive lower bound
+ * @property max inclusive upper bound
+ * @property value externally controlled current value
+ * @property enabled whether the slider accepts input
+ * @property thumbColor draggable thumb color
+ * @property trackColor slider track color
+ * @property onValueChange callback receiving an accepted value
  */
 data class SliderNodeProps(
     val min: Int,
