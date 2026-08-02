@@ -336,6 +336,12 @@ private class ViewComposeLibraryPublishingPlugin : Plugin<Project> {
                 )
                 skipDeprecated.set(false)
                 suppressGeneratedFiles.set(true)
+            }
+            // Android Dokka exposes androidJvm as the owning source set and derives release from it.
+            // Configuring release directly makes one sample root appear in both source sets.
+            dokkaSourceSets.matching { sourceSet ->
+                sourceSet.name == "main" || sourceSet.name == "androidJvm"
+            }.configureEach {
                 samples.from(project.layout.projectDirectory.dir("src/test/samples"))
             }
         }
