@@ -11,7 +11,7 @@ import com.viewcompose.renderer.view.roundToPx
 import kotlin.math.roundToInt
 
 /**
- * 绑定进度反馈节点，统一处理确定/不确定进度值、颜色和可见性状态。
+ * Binds progress-feedback nodes and centralizes determinate state, indeterminate state, colors, and visibility.
  * Binds progress feedback nodes and normalizes determinate/indeterminate progress, color, and
  * visibility state.
  */

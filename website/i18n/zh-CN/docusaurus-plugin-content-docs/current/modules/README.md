@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 41369f067766048a26ee205160997454b6212ada0118d0fd8a69f57c0ce69678
+translation_source_hash: 67b83feb06980190fb9cc5ee35e749abbd7c4b54f79b5d77fe9b394005cab921
 translation_status: current
 ---
 
@@ -21,7 +21,7 @@ translation_status: current
 | `viewcompose-ui-contract` | 基础 | 平台无关的 UI 契约与节点规范 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract) |
 | `viewcompose-navigation-core` | 导航 | 平台无关的导航状态与事务 | 规划中 |
 | `viewcompose-navigation` | 导航 | Android 导航宿主集成 | 规划中 |
-| `viewcompose-renderer` | 渲染 | Android View 渲染与协调引擎 | 规划中 |
+| `viewcompose-renderer` | 渲染 | Android View 渲染与协调引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer) |
 | `viewcompose-widget-core` | UI | 核心 DSL、组件、主题与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-widget-core) |
 | `viewcompose-host-android` | Android 宿主 | Activity、Fragment 与 View 宿主集成 | 规划中 |
 | `viewcompose-overlay-android` | Android 宿主 | Android 浮层呈现后端 | 规划中 |

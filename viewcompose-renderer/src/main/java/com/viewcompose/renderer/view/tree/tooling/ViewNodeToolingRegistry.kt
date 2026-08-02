@@ -30,6 +30,15 @@ object ViewNodeToolingRegistry {
         }
     }
 
+    /**
+     * Returns the source metadata captured for [view], if tooling was active during node creation.
+     *
+     * The result is a snapshot and the weak association can disappear after the View is released.
+     * This query does not create metadata or extend the View lifecycle.
+     *
+     * @param view mounted View to inspect
+     * @return captured declarative source metadata, or `null` when unavailable
+     */
     fun metadataOf(view: View): UiNodeToolingMetadata? = metadataByView[view]
 
     internal fun clear(view: View) {

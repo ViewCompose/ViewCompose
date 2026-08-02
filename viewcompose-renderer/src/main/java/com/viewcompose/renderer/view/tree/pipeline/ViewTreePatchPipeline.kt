@@ -22,17 +22,17 @@ import com.viewcompose.renderer.view.container.ChildHostViewGroup
 import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
 
 /**
- * 将 reconcile patch 应用到 Android View 树的事务管线。
+ * Transactional pipeline that applies reconciliation patches to an Android View tree.
  * Transactional pipeline that applies reconcile patches to the Android View tree.
  *
- * preflight 阶段先解析 modifier、binding plan 和 layout params；apply 阶段才实际变更 View 树。
+ * Preflight resolves modifiers, binding plans, and LayoutParams before apply mutates the View tree.
  * The preflight phase resolves modifiers, binding plans, and layout params before the apply phase mutates the View tree.
  */
 internal object ViewTreePatchPipeline {
     private val emptyStats = RenderStats()
 
     /**
-     * 单个 container 执行 patch 后的 mounted node 与统计。
+     * Mounted nodes and statistics after patching one container.
      * Mounted nodes and statistics after applying patches for one container.
      */
     data class ExecutionResult(
@@ -54,7 +54,7 @@ internal object ViewTreePatchPipeline {
     )
 
     /**
-     * 一次 render transaction 中需要回滚或延迟提交的状态。
+     * State that one render transaction must roll back or commit later.
      * State that must be rolled back or deferred during one render transaction.
      */
     internal class RenderTransaction internal constructor() {
@@ -67,7 +67,7 @@ internal object ViewTreePatchPipeline {
     }
 
     /**
-     * mounted node 的回滚检查点。
+     * Rollback checkpoint for one mounted node.
      * Rollback checkpoint for a mounted node.
      */
     internal data class MountedCheckpoint(
@@ -79,7 +79,7 @@ internal object ViewTreePatchPipeline {
     )
 
     /**
-     * container child 顺序的回滚检查点。
+     * Rollback checkpoint for a container's child order.
      * Rollback checkpoint for a container's child order.
      */
     internal data class ContainerCheckpoint(
@@ -88,13 +88,13 @@ internal object ViewTreePatchPipeline {
     )
 
     /**
-     * 开始一次新的 View 树事务。
+     * Starts a new View-tree transaction.
      * Starts a new View tree transaction.
      */
     internal fun beginTransaction(): RenderTransaction = RenderTransaction()
 
     /**
-     * 提交事务的延迟释放阶段。
+     * Commits the transaction's deferred disposal phase.
      * Commits the transaction's deferred release phase.
      */
     internal fun commitTransaction(
@@ -122,7 +122,7 @@ internal object ViewTreePatchPipeline {
     }
 
     /**
-     * 按检查点回滚失败的 View 树变更。
+     * Rolls back failed View-tree changes using recorded checkpoints.
      * Rolls back failed View tree mutations from checkpoints.
      */
     internal fun rollbackTransaction(
@@ -138,7 +138,7 @@ internal object ViewTreePatchPipeline {
             }
         }
 
-        // 新插入 View 先从父容器移除，再恢复旧 mounted node 与 container 顺序。
+        // Remove newly inserted Views first, then restore mounted-node state and container order.
         // Newly inserted Views are removed first, then previous mounted-node and container state is restored.
         transaction.insertedNodes.toList().asReversed().forEach { mountedNode ->
             bestEffort {
@@ -218,7 +218,7 @@ internal object ViewTreePatchPipeline {
         renderChildren: (ViewGroup, List<MountedNode>, List<VNode>, Any?) -> RenderTreeResult,
     ): ExecutionResult {
         val mountContainer = resolveChildHost(container)
-        // preflight 在任何结构变更前完成可能抛错的解析，降低回滚复杂度。
+        // Preflight completes all potentially throwing resolution before structural mutation, reducing rollback complexity.
         // preflight completes potentially throwing resolution before structural mutations, reducing rollback complexity.
         val preparedPatches = preflight(
             container = mountContainer,
@@ -244,7 +244,7 @@ internal object ViewTreePatchPipeline {
             nextMounted += patchResult.mountedNode
         }
         reconcileResult.removals.forEach { removal ->
-            // remove 先从父容器摘除，但释放延迟到 commit，方便 rollback 恢复旧树。
+            // Detach removals immediately but defer disposal until commit so rollback can restore the old tree.
             // remove detaches from the parent immediately but defers disposal until commit so rollback can restore the old tree.
             applyRemoval(
                 container = mountContainer,
@@ -304,7 +304,7 @@ internal object ViewTreePatchPipeline {
                     transaction = transaction,
                     target = container,
                 )
-                // 插入前记录 container 顺序，失败时可恢复到原 child 列表。
+                // Record container order before insertion so failure can restore the original child list.
                 // Capture container order before insertion so failures can restore the original child list.
                 container.addView(
                     mountedNode.view,
@@ -325,7 +325,7 @@ internal object ViewTreePatchPipeline {
                     mountedNode.vnode === patch.nextVNode
                 val needsMove = container.indexOfChild(mountedNode.view) != patch.targetIndex
                 if (reusesExactVNode && !needsMove) {
-                    // 完全相同 VNode 且无需移动时，整个子树可跳过绑定和 child reconcile。
+                    // An identical, unmoved VNode can skip both binding and child reconciliation for its full subtree.
                     // When the exact VNode is reused and no move is needed, binding and child reconciliation can be skipped.
                     if (collectStats) {
                         transaction.recordPatch(RenderPatchRecord(
@@ -358,7 +358,7 @@ internal object ViewTreePatchPipeline {
                 if (patch.nextVNode.type == NodeType.AndroidView &&
                     mountedNode.vnode.spec != patch.nextVNode.spec
                 ) {
-                    // AndroidView spec 变化先触发 Reset，再进入 rebind/patch 和 commit effect。
+                    // AndroidView spec changes trigger Reset before rebind or patch and the later commit effect.
                     // AndroidView spec changes trigger Reset before rebind/patch and the later commit effect.
                     patch.nextVNode.runAndroidViewOperation(AndroidViewOperation.Reset) {
                         patch.nextVNode
@@ -407,7 +407,7 @@ internal object ViewTreePatchPipeline {
                     }
                 }
                 if (preparedPatch.updatesLayoutParams) {
-                    // layout modifier 变化会重建 LayoutParams，并通知 ConstraintLayout 重新生成约束。
+                    // Layout-modifier changes rebuild LayoutParams and ask ConstraintLayout to regenerate constraints.
                     // Layout modifier changes rebuild LayoutParams and ask ConstraintLayout to rebuild constraints.
                     mountedNode.view.layoutParams = checkNotNull(preparedPatch.layoutParams)
                     (container as? DeclarativeConstraintLayout)?.requestConstraintRebuild()
@@ -629,7 +629,7 @@ internal object ViewTreePatchPipeline {
 
                         else -> null
                     }
-                    // 只有 rebind 或 modifier patch 需要重新解析 modifier；纯 spec patch 可跳过。
+                    // Only rebinds and modifier patches re-resolve modifiers; spec-only patches skip that work.
                     // Only rebind or modifier patches need modifier resolution; spec-only patches can skip it.
                     val updatesLayoutParams = when {
                         bindingPlan == NodeBindingPlan.Rebind -> true
@@ -685,7 +685,7 @@ internal object ViewTreePatchPipeline {
     ) {
         if (node.type != NodeType.AndroidView) return
         val onCommit = node.requireSpec<AndroidViewNodeProps>().onCommit ?: return
-        // onCommit 延迟到事务成功后执行，避免失败回滚后业务收到提交信号。
+        // Defer onCommit until success so application code never receives a commit signal for rolled-back work.
         // onCommit is deferred until transaction success so business code is not notified after a rolled-back render.
         transaction.commitEffects += RenderTreeCommitEffect(
             operation = AndroidViewOperation.Commit,
@@ -702,7 +702,7 @@ internal object ViewTreePatchPipeline {
         transaction: RenderTransaction,
         mountedNode: MountedNode,
     ) {
-        // 同一个 node 在事务中只捕获第一次状态，确保 rollback 回到事务开始前。
+        // Capture each node only once so rollback always returns to its transaction-start state.
         // Capture each node only once per transaction so rollback returns to the transaction start state.
         transaction.mountedCheckpoints.getOrPut(mountedNode) {
             MountedCheckpoint(
@@ -720,7 +720,7 @@ internal object ViewTreePatchPipeline {
         target: ViewGroup,
     ) {
         val container = resolveChildHost(target)
-        // ChildHostViewGroup 的真实 child host 需要单独捕获，否则恢复顺序会落在外层壳上。
+        // Capture a ChildHostViewGroup's actual child host separately or restoration targets the outer wrapper.
         // ChildHostViewGroup's actual child host must be captured or order restoration would target the shell.
         transaction.containerCheckpoints.getOrPut(container) {
             ContainerCheckpoint(

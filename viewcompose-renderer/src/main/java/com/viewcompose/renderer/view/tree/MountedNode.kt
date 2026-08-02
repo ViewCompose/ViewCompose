@@ -4,20 +4,20 @@ import android.view.View
 import com.viewcompose.ui.node.VNode
 
 /**
- * 已挂载到 Android View 树中的节点记录。
- * Node record mounted into the Android View tree.
+ * Mutable renderer-owned association between a committed VNode and its Android View.
  *
- * vnode 表示最近一次成功绑定的声明节点，children 对应 renderer 管理的直接子 mounted nodes。
- * vnode is the latest successfully bound declarative node; children are direct mounted nodes owned by the renderer.
+ * Instances belong to one `ViewTreeRenderer` tree and must not be moved between hosts. The renderer
+ * replaces [vnode] and [children] only after their corresponding platform bindings succeed.
+ *
+ * @property vnode latest successfully committed declaration for [view]
+ * @property view platform View owned by this mounted node until disposal
+ * @property children direct mounted descendants managed inside [view]'s child host
  */
 class MountedNode(
     var vnode: VNode,
     val view: View,
     var children: List<MountedNode> = emptyList(),
 ) {
-    /**
-     * 防止 dispose 递归过程中重复释放同一个平台 View。
-     * Prevents the same platform View from being released twice during recursive dispose.
-     */
+    /** Prevents the same platform View from being released twice during recursive disposal. */
     internal var disposed: Boolean = false
 }

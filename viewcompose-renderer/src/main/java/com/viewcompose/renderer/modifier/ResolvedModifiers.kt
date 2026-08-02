@@ -3,7 +3,7 @@ package com.viewcompose.renderer.modifier
 import com.viewcompose.ui.modifier.*
 
 /**
- * 保存一次 modifier 链解析后的所有可渲染结果，供 patch 阶段按职责分发到 View、LayoutParams 与绘制层。
+ * Stores all renderable results of one modifier-chain resolution for patch dispatch to Views, LayoutParams, and drawing layers.
  * Stores all renderable results from one modifier-chain resolution so patching can fan them out to
  * View state, LayoutParams, and drawing layers by responsibility.
  */
@@ -66,7 +66,7 @@ internal class ResolvedModifiers(
 )
 
 /**
- * 将声明式 modifier 链折叠成 renderer 可直接应用的稳定结构。
+ * Folds a declarative modifier chain into a stable structure that the renderer can apply directly.
  * Folds the declarative modifier chain into a stable structure that the renderer can apply directly.
  */
 internal fun Modifier.resolve(): ResolvedModifiers {
@@ -156,7 +156,7 @@ internal fun Modifier.resolve(): ResolvedModifiers {
 }
 
 /**
- * 判断哪些 modifier 变化必须触发布局参数重算，而不是只更新 View 的外观状态。
+ * Identifies modifier changes that require LayoutParams recalculation instead of a visual-only View update.
  * Detects modifier changes that require LayoutParams recomputation instead of a View-only visual update.
  */
 internal fun layoutModifiersChanged(previous: ResolvedModifiers, next: ResolvedModifiers): Boolean {

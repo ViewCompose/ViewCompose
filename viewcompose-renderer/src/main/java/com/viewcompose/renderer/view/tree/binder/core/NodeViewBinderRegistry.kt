@@ -7,7 +7,7 @@ import com.viewcompose.ui.node.spec.NodeSpec
 import kotlin.reflect.KClass
 
 /**
- * renderer 内部使用的 View binder/patch applier 注册表。
+ * Registry of View binders and patch appliers used by the renderer.
  * Internal View binder/patch applier registry used by the renderer.
  */
 internal object NodeViewBinderRegistry {
@@ -19,7 +19,7 @@ internal object NodeViewBinderRegistry {
     }
 
     /**
-     * 对新建或需要重绑的 View 执行完整绑定。
+     * Performs complete binding for a new or rebound View.
      * Performs a full bind for newly created or rebound Views.
      */
     fun bind(
@@ -30,7 +30,7 @@ internal object NodeViewBinderRegistry {
     }
 
     /**
-     * 对已复用 View 执行细粒度 patch。
+     * Applies a targeted patch to a reused View.
      * Applies a fine-grained patch to a reused View.
      */
     fun applyPatch(

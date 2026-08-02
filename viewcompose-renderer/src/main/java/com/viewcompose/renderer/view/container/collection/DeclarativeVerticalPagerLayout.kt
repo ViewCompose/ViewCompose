@@ -18,10 +18,10 @@ import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
- * 纵向 Pager 的 Android ViewPager2 宿主。
+ * Android ViewPager2 host for a vertical pager.
  * Android ViewPager2 host for vertical Pager.
  *
- * 除页面状态同步外，还在底层 RecyclerView 上应用输入法焦点跟随策略。
+ * Synchronizes page state and applies keyboard focus-follow behavior to the underlying RecyclerView.
  * Besides page state synchronization, it applies keyboard focus-follow policy to the backing RecyclerView.
  */
 internal class DeclarativeVerticalPagerLayout(
@@ -31,7 +31,7 @@ internal class DeclarativeVerticalPagerLayout(
     private val adapter = VerticalPagerAdapter()
     private var onPageChanged: ((Int) -> Unit)? = null
     private var pagerState: PagerState? = null
-    // 程序化切页时暂时禁止 onPageChanged，避免 bind -> ViewPager2 -> state 的重复通知。
+    // Suppress onPageChanged during programmatic selection to avoid bind-to-ViewPager2-to-state feedback.
     // Temporarily block onPageChanged during programmatic paging to avoid duplicate bind -> ViewPager2 -> state notifications.
     private var suppressCallback: Boolean = false
     private var focusFollowKeyboardEnabled: Boolean = false
@@ -171,7 +171,7 @@ internal class DeclarativeVerticalPagerLayout(
 }
 
 /**
- * 纵向 Pager 的页面 adapter，负责在页面复用时保持 session 生命周期正确。
+ * Vertical-pager adapter that preserves session lifecycle during page reuse.
  * Page adapter for vertical Pager, keeping session lifetimes correct across page reuse.
  */
 internal class VerticalPagerAdapter : RecyclerView.Adapter<VerticalPagerViewHolder>() {
@@ -276,7 +276,7 @@ internal class VerticalPagerAdapter : RecyclerView.Adapter<VerticalPagerViewHold
 }
 
 /**
- * 单个纵向 Pager 页面 holder，将声明式页面绑定到 Android 容器。
+ * Holder that binds one declarative vertical-pager page to an Android container.
  * Holder for one vertical Pager page, binding declarative page content to an Android container.
  */
 internal class VerticalPagerViewHolder(

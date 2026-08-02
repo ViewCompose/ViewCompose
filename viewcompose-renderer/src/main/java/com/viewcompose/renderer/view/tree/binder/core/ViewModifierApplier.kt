@@ -17,7 +17,7 @@ import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.roundToPx
 
 /**
- * 将已解析 modifier 增量应用到 Android View，集中维护可复用 View 的原始状态缓存与回滚规则。
+ * Applies resolved modifiers incrementally to Android Views and owns reusable-View baseline state and rollback rules.
  * Applies resolved modifiers incrementally to Android Views and centralizes original-state caching
  * plus rollback rules for reused views.
  */
@@ -311,7 +311,7 @@ internal object ViewModifierApplier {
 }
 
 /**
- * 记录上一轮已应用的 modifier 快照，用于避免重复设置和恢复被移除的视觉状态。
+ * Records the previously applied modifier snapshot to skip duplicate writes and restore removed visual state.
  * Records the previously applied modifier snapshot so unchanged values are skipped and removed
  * visual state can be restored.
  */

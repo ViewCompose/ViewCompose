@@ -16,7 +16,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-ui-contract` | Foundation | Platform-neutral UI contracts and node specifications | [Available](./viewcompose-ui-contract/README.md) |
 | `viewcompose-navigation-core` | Navigation | Platform-neutral navigation state and transactions | Planned |
 | `viewcompose-navigation` | Navigation | Android navigation host integration | Planned |
-| `viewcompose-renderer` | Rendering | Android View renderer and reconciliation engine | Planned |
+| `viewcompose-renderer` | Rendering | Android View renderer and reconciliation engine | [Available](./viewcompose-renderer/README.md) |
 | `viewcompose-widget-core` | UI | Core DSL, components, theme, and local values | [Available](./viewcompose-widget-core/README.md) |
 | `viewcompose-host-android` | Android host | Activity, Fragment, and View host integration | Planned |
 | `viewcompose-overlay-android` | Android host | Android overlay presentation backend | Planned |

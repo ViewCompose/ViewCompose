@@ -19,10 +19,10 @@ import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import kotlin.math.max
 
 /**
- * Row/Column 使用的线性容器。
+ * Linear container used by Row and Column.
  * Linear container used by Row/Column.
  *
- * 在原生 LinearLayout 测量基础上重写 layout，支持声明式 arrangement、spacing 和交叉轴对齐。
+ * Reuses LinearLayout measurement while overriding placement for declarative arrangement, spacing, and cross-axis alignment.
  * It keeps native LinearLayout measurement and overrides layout to support declarative arrangement, spacing, and cross-axis alignment.
  */
 internal class DeclarativeLinearLayout @JvmOverloads constructor(

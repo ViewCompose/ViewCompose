@@ -8,15 +8,15 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * 解析焦点跟随可用视口的工具。
+ * Resolves the usable viewport for keyboard focus following.
  * Resolver for the usable viewport used by focus-follow scrolling.
  *
- * 它合并 View 可见区域、窗口可见帧和 IME inset，避免把输入框滚到键盘遮挡区域。
+ * Intersects View visibility, window visibility, and IME insets so inputs are not scrolled behind the keyboard.
  * It merges View visible bounds, the window visible frame, and IME insets so text fields are not scrolled behind the keyboard.
  */
 internal object FocusFollowViewportResolver {
     /**
-     * 返回 view 坐标系内的可滚动可见区域，解析失败时回退到调用方提供的区域。
+     * Returns the scrollable visible region in View coordinates, falling back to the caller's bounds when resolution fails.
      * Returns the visible scroll viewport in view coordinates, falling back to caller-provided bounds when resolution fails.
      */
     fun resolve(
@@ -64,7 +64,7 @@ internal object FocusFollowViewportResolver {
             if (imeBottomInset > 0) {
                 val rootHeight = view.rootView?.height ?: 0
                 if (rootHeight > 0) {
-                    // IME inset 属于窗口坐标，需转换到当前 view 坐标后再收窄 viewport。
+                    // IME insets use window coordinates and must be converted before narrowing the View-local viewport.
                     // IME inset is in window coordinates, so convert it to this view before narrowing the viewport.
                     val imeTopInWindow = rootHeight - imeBottomInset
                     val imeTopInView = imeTopInWindow - location[1]
@@ -87,7 +87,7 @@ internal object FocusFollowViewportResolver {
         candidate: Rect,
         fallback: Rect,
     ): Rect {
-        // candidate 先被限制在 fallback 内，再与当前 viewport 求交，避免异常窗口值扩大可见区域。
+        // Constrain the candidate to fallback bounds before intersection so malformed window values cannot enlarge visibility.
         // Bound candidates within fallback before intersecting so abnormal window values cannot enlarge the visible area.
         val bounded = Rect(
             candidate.left.coerceIn(fallback.left, fallback.right),

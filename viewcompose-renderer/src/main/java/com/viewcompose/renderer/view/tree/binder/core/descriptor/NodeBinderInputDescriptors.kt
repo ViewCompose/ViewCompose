@@ -7,7 +7,7 @@ import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.renderer.view.tree.patch.InputNodePatchApplier
 
 /**
- * 注册文本输入、toggle 和 slider 节点的 binder/patch 描述。
+ * Registers binder and patch descriptors for text input, toggle, and slider nodes.
  * Registers binder/patch descriptors for text input, toggle, and slider nodes.
  */
 internal fun MutableList<NodeBinderDescriptor>.addInputNodeBinderDescriptors() {

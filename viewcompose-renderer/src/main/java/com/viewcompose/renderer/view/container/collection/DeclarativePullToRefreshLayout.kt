@@ -7,7 +7,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 
 /**
- * 支持 child Decoration Layer 的下拉刷新宿主。
+ * Pull-to-refresh host that supports child decoration drawing planes.
  * Pull-to-refresh host participating in the child Decoration Layer protocol.
  */
 internal class DeclarativePullToRefreshLayout(

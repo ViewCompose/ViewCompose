@@ -18,12 +18,12 @@ import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 
 /**
- * 将 modifier 与 NodeSpec 中的视觉字段合并为 renderer 样式模型。
+ * Merges modifiers and NodeSpec visual fields into renderer style models.
  * Merges modifier values and visual fields from NodeSpec into renderer style models.
  */
 internal object ModifierNodeStyleResolver {
     /**
-     * 解析直接应用到节点 View 的样式。
+     * Resolves style applied directly to the node View.
      * Resolves style applied directly to the node View.
      */
     fun resolveNodeStyle(
@@ -61,7 +61,7 @@ internal object ModifierNodeStyleResolver {
     }
 
     /**
-     * 解析 host 层需要保留的 padding/min size。
+     * Resolves padding and minimum size that the host layer must retain.
      * Resolves padding/min-size that must be retained by the host layer.
      */
     fun resolveHostStyle(
@@ -215,7 +215,7 @@ internal object ModifierNodeStyleResolver {
 }
 
 /**
- * 节点 View 的完整视觉样式快照。
+ * Complete visual-style snapshot for a node View.
  * Complete visual style snapshot for a node View.
  */
 internal data class NodeStyle(
@@ -240,7 +240,7 @@ internal data class NodeStyle(
 )
 
 /**
- * 外层 host 需要参与布局和 inset 处理的样式。
+ * Style that an outer host must apply during layout and inset handling.
  * Style used by the outer host for layout and inset handling.
  */
 internal data class HostStyle(

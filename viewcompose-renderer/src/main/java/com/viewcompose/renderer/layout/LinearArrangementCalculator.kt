@@ -3,12 +3,12 @@ package com.viewcompose.renderer.layout
 import com.viewcompose.ui.layout.MainAxisArrangement
 
 /**
- * 计算线性布局主轴的起始空白和 item 间距。
+ * Calculates leading free space and item gaps along a linear layout's main axis.
  * Calculates leading space and item gap for a linear layout main axis.
  */
 internal object LinearArrangementCalculator {
     /**
-     * 根据剩余空间、排列方式和 weight 情况生成排列参数。
+     * Resolves arrangement parameters from remaining space, policy, and weight usage.
      * Builds arrangement metrics from extra space, arrangement mode, and weighted-child state.
      */
     fun calculate(
@@ -35,7 +35,7 @@ internal object LinearArrangementCalculator {
         }
 
         if (hasWeightedChildren) {
-            // 有 weight 时额外空间已被权重消费，Space* 策略退化为固定 spacing。
+            // Weighted children consume extra space, so Space* policies fall back to fixed spacing.
             // With weighted children, extra space is consumed by weights, so Space* modes fall back to fixed spacing.
             return when (arrangement) {
                 MainAxisArrangement.Start,
@@ -95,7 +95,7 @@ internal object LinearArrangementCalculator {
 }
 
 /**
- * 主轴排列计算结果。
+ * Result of main-axis arrangement calculation.
  * Result of main-axis arrangement calculation.
  */
 internal data class ArrangementMetrics(

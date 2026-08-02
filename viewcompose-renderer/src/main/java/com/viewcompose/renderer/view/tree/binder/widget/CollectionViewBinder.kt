@@ -28,7 +28,7 @@ import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 
 /**
- * 绑定懒列表、网格和导航栏节点，把声明式集合规格转换为 RecyclerView/容器的稳定更新。
+ * Binds lazy lists, grids, and navigation bars by converting declarative collection specs into stable container updates.
  * Binds lazy lists, grids, and navigation bars by translating declarative collection specs into
  * stable RecyclerView/container updates.
  */

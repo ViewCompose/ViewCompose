@@ -12,10 +12,10 @@ import com.viewcompose.renderer.decoration.DecorationDrawingOrderContainer
 import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 
 /**
- * Box/Surface 使用的 FrameLayout 容器。
+ * FrameLayout container used by Box and Surface.
  * FrameLayout container used by Box/Surface.
  *
- * 它在 child 未设置 gravity 时注入 contentGravity，并保留阴影/溢出绘制。
+ * Applies contentGravity when a child has no gravity and preserves shadow and overflow drawing.
  * It injects contentGravity for children without gravity and keeps shadows/overflow drawing visible.
  */
 internal class DeclarativeBoxLayout @JvmOverloads constructor(
@@ -36,7 +36,7 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         }
 
     init {
-        // 保留阴影和溢出绘制，接近 Compose 容器默认行为。
+        // Preserve shadows and overflow drawing to match declarative container behavior.
         // Keep elevation shadows and overflow visuals visible, similar to Compose container defaults.
         clipChildren = false
         clipToPadding = false

@@ -9,10 +9,7 @@ import com.viewcompose.renderer.view.tree.RenderStats
 import com.viewcompose.renderer.view.tree.RenderStructureStats
 import com.viewcompose.renderer.view.tree.RenderTreeResult
 
-/**
- * 将 VNode 列表格式化为调试树。
- * Formats a VNode list as a debug tree.
- */
+/** Formats this VNode list as a deterministic, indentation-based debug tree. */
 fun List<VNode>.debugTree(): String {
     if (isEmpty()) {
         return "<empty>"
@@ -22,10 +19,7 @@ fun List<VNode>.debugTree(): String {
     }
 }
 
-/**
- * 将 reconcile 结果格式化为摘要。
- * Formats a reconcile result as a summary.
- */
+/** Formats this reconciliation result as one ordered operation per line. */
 fun <T> ReconcileResult<T>.debugSummary(): String {
     val parts = mutableListOf<String>()
     patches.forEach { patch ->
@@ -45,10 +39,7 @@ fun <T> ReconcileResult<T>.debugSummary(): String {
     }
 }
 
-/**
- * 将 render 结果格式化为摘要。
- * Formats a render result as a summary.
- */
+/** Formats this render result as reconciliation, binding, structure, and warning sections. */
 fun RenderTreeResult.debugSummary(): String {
     val reconcile = reconcileResult.debugSummary()
     val stats = stats.debugSummary()
@@ -66,14 +57,12 @@ fun RenderTreeResult.debugSummary(): String {
     }
 }
 
-/**
- * 将 render 操作统计格式化为摘要。
- * Formats render operation statistics as a summary.
- */
+/** Formats aggregate renderer counters as one compact line. */
 fun RenderStats.debugSummary(): String {
     return "inserts=$inserts reuses=$reuses removals=$removals rebound=$reboundNodes patched=$patchedNodes skipped=$skippedBindings subtreeSkipped=$skippedSubtrees"
 }
 
+/** Formats per-node-type binding counters in descending work order. */
 fun RenderStats.debugBindingsByType(): String {
     if (bindingsByType.isEmpty()) {
         return "<no per-type data>"
@@ -86,6 +75,7 @@ fun RenderStats.debugBindingsByType(): String {
         }
 }
 
+/** Formats declarative and mounted tree size and depth as one compact line. */
 fun RenderStructureStats.debugSummary(): String {
     return "vnodeCount=$vnodeCount mountedCount=$mountedNodeCount vnodeDepth=$maxVNodeDepth mountedDepth=$maxMountedDepth"
 }

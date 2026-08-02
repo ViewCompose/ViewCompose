@@ -5,12 +5,12 @@ import com.viewcompose.ui.layout.VerticalAlignment
 import kotlin.math.max
 
 /**
- * 计算 child 在交叉轴上的起始坐标。
+ * Calculates a child's leading coordinate on the cross axis.
  * Calculates the child's leading coordinate on the cross axis.
  */
 internal object CrossAxisPlacementCalculator {
     /**
-     * 计算水平交叉轴位置。
+     * Calculates a horizontal cross-axis position.
      * Calculates horizontal cross-axis placement.
      */
     fun calculateHorizontal(
@@ -31,7 +31,7 @@ internal object CrossAxisPlacementCalculator {
     }
 
     /**
-     * 计算垂直交叉轴位置。
+     * Calculates a vertical cross-axis position.
      * Calculates vertical cross-axis placement.
      */
     fun calculateVertical(

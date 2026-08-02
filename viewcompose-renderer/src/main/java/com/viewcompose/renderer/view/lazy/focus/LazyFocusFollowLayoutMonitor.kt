@@ -8,10 +8,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
 
 /**
- * RecyclerView lazy 容器的键盘焦点跟随监听器管理器。
+ * Keyboard focus-follow listener manager for RecyclerView lazy containers.
  * Listener manager for keyboard focus-follow behavior in RecyclerView-backed lazy containers.
  *
- * 它在布局、全局焦点和全局布局变化后检查当前文本输入框是否仍在可见视口内。
+ * Checks whether the focused text input remains in the visible viewport after layout, focus, and global-layout changes.
  * It checks after layout, global focus, and global layout changes whether the focused text editor remains inside the visible viewport.
  */
 internal object LazyFocusFollowLayoutMonitor {
@@ -32,7 +32,7 @@ internal object LazyFocusFollowLayoutMonitor {
         val existingGlobalLayoutListener = recyclerView.getTag(R.id.viewcompose_focus_follow_global_layout_listener)
             as? ViewTreeObserver.OnGlobalLayoutListener
         if (!enabled) {
-            // 关闭时逐项解绑 tag 中的 listener，避免 ViewTreeObserver 失效后遗留引用。
+            // Unbind every tag-backed listener when disabled so invalid ViewTreeObservers retain nothing.
             // On disable, remove each listener stored in tags to avoid stale references after ViewTreeObserver changes.
             if (existingLayoutListener != null) {
                 recyclerView.removeOnLayoutChangeListener(existingLayoutListener)
@@ -59,7 +59,7 @@ internal object LazyFocusFollowLayoutMonitor {
             return
         }
         if (existingLayoutListener == null) {
-            // layoutChange 处理同一帧内 item 重排导致的焦点遮挡。
+            // Layout changes cover focus occlusion caused by same-frame item reordering.
             // layoutChange handles focus occlusion caused by item relayout within the same frame.
             val listener = View.OnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
                 val target = view as? RecyclerView ?: return@OnLayoutChangeListener
@@ -69,7 +69,7 @@ internal object LazyFocusFollowLayoutMonitor {
             recyclerView.setTag(R.id.viewcompose_focus_follow_layout_listener, listener)
         }
         if (existingGlobalFocusListener == null) {
-            // globalFocus 覆盖焦点在 nested child 间跳转但 RecyclerView 自身未重排的场景。
+            // Global focus covers movement between nested children when RecyclerView itself did not relayout.
             // globalFocus covers focus moving between nested children without RecyclerView relayout.
             val globalFocusListener = ViewTreeObserver.OnGlobalFocusChangeListener { _, _ ->
                 ensureFocusedChildVisible(recyclerView, trigger = "globalFocus")
@@ -78,7 +78,7 @@ internal object LazyFocusFollowLayoutMonitor {
             recyclerView.setTag(R.id.viewcompose_focus_follow_global_focus_listener, globalFocusListener)
         }
         if (existingGlobalLayoutListener == null) {
-            // globalLayout 捕获 IME/窗口 inset 变化后可见视口缩小的场景。
+            // Global layout captures viewport shrinkage after IME or window-inset changes.
             // globalLayout captures visible viewport changes after IME/window inset updates.
             val globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
                 ensureFocusedChildVisible(recyclerView, trigger = "globalLayout")
@@ -129,7 +129,7 @@ internal object LazyFocusFollowLayoutMonitor {
                 else -> 0
             }
             if (dy > 0 && !recyclerView.canScrollVertically(1)) {
-                // 边界已到时不强行滚动，避免产生无效 scrollBy 和日志噪音。
+                // Do not force scrolling at an edge; it would produce ineffective scrollBy calls and log noise.
                 // Do not force scroll at list boundaries, avoiding no-op scrollBy calls and log noise.
                 debugLog {
                     "skip vertical scroll (end reached) trigger=$trigger rv=${recyclerView.hashCode()} " +

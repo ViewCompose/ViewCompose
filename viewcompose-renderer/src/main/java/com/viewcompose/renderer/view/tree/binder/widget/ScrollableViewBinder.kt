@@ -11,7 +11,7 @@ import com.viewcompose.renderer.view.roundToPx
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
 /**
- * 绑定普通滚动容器和下拉刷新节点，复用容器 binder 并接入键盘跟随滚动策略。
+ * Binds ordinary scrolling and pull-to-refresh nodes while reusing container binding and keyboard focus-follow policy.
  * Binds scroll containers and pull-to-refresh nodes by reusing container binders and wiring
  * keyboard-follow scrolling policy.
  */

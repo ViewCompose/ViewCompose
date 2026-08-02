@@ -24,7 +24,7 @@ import com.viewcompose.text.TextRange
 import com.viewcompose.ui.node.TextFieldImeAction
 
 /**
- * ViewCompose 文本输入的 Android EditText 宿主，拦截选择、IME、只读和接收内容事件。
+ * Android EditText host for ViewCompose text input that observes selection, IME, read-only, and receive-content events.
  * Android EditText host for ViewCompose text input, intercepting selection, IME, read-only, and
  * receive-content events.
  */
@@ -115,7 +115,7 @@ internal class ViewComposeEditText @JvmOverloads constructor(
 }
 
 /**
- * 协调 TextFieldState 与 EditText 的双向同步，并隔离框架回调造成的递归更新。
+ * Coordinates bidirectional TextFieldState and EditText synchronization while isolating callback-driven recursion.
  * Coordinates bidirectional synchronization between TextFieldState and EditText while isolating
  * recursive updates caused by framework callbacks.
  */

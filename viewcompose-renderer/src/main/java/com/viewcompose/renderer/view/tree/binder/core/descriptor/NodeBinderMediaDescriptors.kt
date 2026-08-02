@@ -6,7 +6,7 @@ import com.viewcompose.ui.node.spec.ImageNodeProps
 import com.viewcompose.renderer.view.tree.patch.MediaNodePatchApplier
 
 /**
- * 注册图片和图标按钮节点的 binder/patch 描述。
+ * Registers binder and patch descriptors for image and icon-button nodes.
  * Registers binder/patch descriptors for image and icon button nodes.
  */
 internal fun MutableList<NodeBinderDescriptor>.addMediaNodeBinderDescriptors() {

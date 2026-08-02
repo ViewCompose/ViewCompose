@@ -17,10 +17,10 @@ import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
- * 横向 Pager 的 Android ViewPager2 宿主。
+ * Android ViewPager2 host for a horizontal pager.
  * Android ViewPager2 host for horizontal Pager.
  *
- * 它把声明式页面列表绑定到 ViewPager2 adapter，并同步 PagerState 与回调。
+ * Binds declarative pages to the ViewPager2 adapter and synchronizes PagerState and callbacks.
  * It binds declarative page items to the ViewPager2 adapter and synchronizes PagerState with callbacks.
  */
 internal class DeclarativeHorizontalPagerLayout(
@@ -30,7 +30,7 @@ internal class DeclarativeHorizontalPagerLayout(
     private val adapter = HorizontalPagerAdapter()
     private var onPageChanged: ((Int) -> Unit)? = null
     private var pagerState: PagerState? = null
-    // 程序化设置当前页时抑制外部回调，避免状态回写形成循环。
+    // Suppress external callbacks during programmatic selection to avoid a state write-back loop.
     // Suppress external callbacks during programmatic page changes to avoid feedback loops.
     private var suppressCallback: Boolean = false
     private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
@@ -151,7 +151,7 @@ internal class DeclarativeHorizontalPagerLayout(
 }
 
 /**
- * Pager 页面 adapter，复用 LazyListItem 的 session 创建和 diff 逻辑。
+ * Pager adapter that reuses LazyListItem session creation and diffing.
  * Pager page adapter reusing LazyListItem session creation and diff logic.
  */
 internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerViewHolder>() {
@@ -256,7 +256,7 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
 }
 
 /**
- * 单个横向 Pager 页面 holder，将页面内容渲染到独立 FrameLayout。
+ * Holder that renders one horizontal-pager page into an isolated FrameLayout.
  * Holder for one horizontal Pager page, rendering page content into an isolated FrameLayout.
  */
 internal class HorizontalPagerViewHolder(

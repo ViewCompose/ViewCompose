@@ -12,7 +12,7 @@ import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import kotlin.math.max
 
 /**
- * FlowColumn 使用的自定义换列容器。
+ * Custom column-wrapping container used by FlowColumn.
  * Custom wrapping container used by FlowColumn.
  */
 internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
@@ -149,7 +149,7 @@ internal class DeclarativeFlowColumnLayout @JvmOverloads constructor(
             maxColumnHeight = max(maxColumnHeight, currentColumnHeight)
             totalWidth += currentColumnWidth
         } else if (totalWidth > 0) {
-            // 最后一列可能由 maxItemsInEachColumn 截止，此时不应留下尾部间距。
+            // A maxItemsInEachColumn boundary may end the final column, which must not retain a trailing gap.
             // The last column can close via maxItemsInEachColumn and should not leave trailing spacing.
             totalWidth = (totalWidth - horizontalSpacing).coerceAtLeast(0)
         }

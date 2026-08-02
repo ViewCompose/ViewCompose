@@ -1,8 +1,12 @@
 package com.viewcompose.renderer.view.tree
 
 /**
- * VNode 树与 mounted View 树的结构统计。
- * Structural statistics for the VNode tree and mounted View tree.
+ * Structural size snapshot for declarative and mounted renderer trees.
+ *
+ * @property vnodeCount total declarative nodes across all roots
+ * @property mountedNodeCount total mounted renderer nodes across all roots
+ * @property maxVNodeDepth deepest declarative node, where a root has depth one
+ * @property maxMountedDepth deepest mounted node, where a root has depth one
  */
 data class RenderStructureStats(
     val vnodeCount: Int = 0,
@@ -10,10 +14,14 @@ data class RenderStructureStats(
     val maxVNodeDepth: Int = 0,
     val maxMountedDepth: Int = 0,
 ) {
+    /** Computes aggregate structure statistics from matching declarative and mounted roots. */
     companion object {
         /**
-         * 从声明节点和已挂载节点计算结构规模。
          * Computes structural size from declarative nodes and mounted nodes.
+         *
+         * @param nodes immutable declarative roots for the committed frame
+         * @param mountedNodes mounted roots produced for the same frame
+         * @return aggregate node counts and maximum depths; empty lists produce zeroes
          */
         fun from(
             nodes: List<com.viewcompose.ui.node.VNode>,

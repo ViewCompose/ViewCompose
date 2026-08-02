@@ -6,7 +6,7 @@ import android.widget.LinearLayout
 import androidx.core.widget.NestedScrollView
 
 /**
- * ScrollableColumn 使用的 NestedScrollView 宿主。
+ * NestedScrollView host used by ScrollableColumn.
  * NestedScrollView host used by ScrollableColumn.
  */
 internal class DeclarativeScrollableColumnLayout(

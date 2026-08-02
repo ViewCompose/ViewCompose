@@ -19,15 +19,15 @@ import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import com.viewcompose.ui.tooling.UiNodeTooling
 
 /**
- * 将 nestedScroll modifier 提升为显式 NestedScrollHost 节点。
+ * Lifts nestedScroll modifiers into explicit NestedScrollHost nodes.
  * Promotes nestedScroll modifiers into explicit NestedScrollHost nodes.
  *
- * 多个 nestedScroll modifier 会生成嵌套 host，保持 modifier 顺序与事件分发链一致。
+ * Multiple nestedScroll modifiers create nested hosts, preserving modifier order and event-dispatch order.
  * Multiple nestedScroll modifiers generate nested hosts, preserving modifier order and event dispatch chain.
  */
 internal object NestedScrollNodeWrapper {
     /**
-     * 包装整棵 VNode 子树；无变化时返回原列表以减少后续 diff 成本。
+     * Wraps a complete VNode subtree and returns the original list when unchanged to reduce later diff work.
      * Wraps a VNode subtree and returns the original list when unchanged to reduce later diff cost.
      */
     fun wrapTree(nodes: List<VNode>): List<VNode> {
@@ -74,7 +74,7 @@ internal object NestedScrollNodeWrapper {
         val withoutNested = node.modifier.elements
             .filterNot { element -> element is NestedScrollModifierElement }
         val (hostLayoutElements, childElements) = splitHostAndChildElements(withoutNested)
-        // 外层 host 继承影响父布局的 modifier，内层原节点保留绘制/交互类 modifier。
+        // The outer host receives parent-layout modifiers while the original inner node retains drawing and interaction modifiers.
         // The outer host inherits parent-layout modifiers, while the inner original node keeps drawing/interaction modifiers.
         var wrapped = UiNodeTooling.inheritCopy(
             target = node.copy(
@@ -149,7 +149,7 @@ internal object NestedScrollNodeWrapper {
     }
 
     /**
-     * 派生 host key，支持同一个 child 上多个 nestedScroll modifier 的稳定复用。
+     * Derives a host key that keeps multiple nestedScroll modifiers on one child independently reusable.
      * Derived host key supporting stable reuse for multiple nestedScroll modifiers on one child.
      */
     private data class NestedScrollHostKey(

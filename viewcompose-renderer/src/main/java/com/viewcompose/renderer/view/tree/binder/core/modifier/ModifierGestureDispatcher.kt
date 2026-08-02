@@ -34,12 +34,12 @@ private const val GESTURE_LOG_TAG: String = "ViewComposeGesture"
 private const val INVALID_POINTER_ID: Int = -1
 
 /**
- * 应用 pointer/combinedClick/draggable/transformable 等手势 modifier。
+ * Applies pointer, combined-click, draggable, transformable, and related gesture modifiers.
  * Applies gesture modifiers such as pointer, combinedClick, draggable, and transformable.
  */
 internal object ModifierGestureApplier {
     /**
-     * 根据当前 modifier 安装、更新或移除 ViewGestureDispatcher。
+     * Installs, updates, or removes ViewGestureDispatcher from the current modifier set.
      * Installs, updates, or removes ViewGestureDispatcher from current modifiers.
      */
     fun applyGestureState(
@@ -52,7 +52,7 @@ internal object ModifierGestureApplier {
             resolved.anchoredDraggable != null ||
             resolved.transformable != null
         if (!hasGesture) {
-            // 没有手势 modifier 时必须卸载 touch listener，恢复原生 View 行为。
+            // Remove the touch listener when no gesture modifiers remain so native View behavior is restored.
             // When no gesture modifier remains, uninstall the touch listener to restore native View behavior.
             val existing = view.getTag(R.id.viewcompose_gesture_dispatcher) as? ViewGestureDispatcher
                 ?: return
@@ -71,10 +71,10 @@ internal object ModifierGestureApplier {
 }
 
 /**
- * 单个 View 的手势事件分发器。
+ * Gesture event dispatcher for one View.
  * Gesture event dispatcher for one View.
  *
- * 负责把 Android MotionEvent 转换为框架 pointer/drag/transform 事件，并处理手势互斥。
+ * Converts Android MotionEvents to framework pointer, drag, and transform events and arbitrates gesture exclusivity.
  * Converts Android MotionEvent into framework pointer/drag/transform events and handles gesture arbitration.
  */
 private class ViewGestureDispatcher(

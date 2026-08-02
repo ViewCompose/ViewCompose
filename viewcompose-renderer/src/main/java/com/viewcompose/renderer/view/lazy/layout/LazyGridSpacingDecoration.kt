@@ -5,10 +5,10 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
 /**
- * LazyVerticalGrid 的等比分摊间距装饰。
+ * Proportional spacing decoration for LazyVerticalGrid.
  * Proportional spacing decoration for LazyVerticalGrid.
  *
- * 横向间距按列号分配到左右 offset，保证每列可用宽度一致。
+ * Distributes horizontal spacing between left and right offsets by column so each column keeps equal usable width.
  * Horizontal spacing is split by column index so every column keeps the same usable width.
  */
 internal class LazyGridSpacingDecoration(
