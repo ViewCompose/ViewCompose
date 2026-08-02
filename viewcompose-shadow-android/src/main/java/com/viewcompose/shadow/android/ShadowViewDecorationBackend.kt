@@ -7,8 +7,20 @@ import com.viewcompose.renderer.decoration.AndroidViewDecorationBackend
 import com.viewcompose.renderer.decoration.AndroidViewDecorationPresence
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRequest
 
-/** Optional renderer backend that resolves and draws ViewCompose multi-layer shadows. */
+/**
+ * Resolves ViewCompose shadow requests and renders them through parent View drawing planes.
+ *
+ * Instances retain no per-View object map: resolved specs live in resource-keyed View tags, while
+ * raster caches are owned process-wide by [ShadowDecorationLayer]. The backend is UI-thread confined.
+ */
 class ShadowViewDecorationBackend : AndroidViewDecorationBackend {
+    /**
+     * Resolves and completely replaces the View's outer and inner shadow state.
+     *
+     * @param view mounted View receiving resource-keyed shadow tags
+     * @param request complete current modifier-derived decoration request
+     * @return parent drawing planes needed by the resolved non-empty specifications
+     */
     override fun update(
         view: View,
         request: AndroidViewDecorationRequest,
@@ -31,15 +43,18 @@ class ShadowViewDecorationBackend : AndroidViewDecorationBackend {
         )
     }
 
+    /** Removes both shadow tags from [view] and invalidates changed drawing state. */
     override fun clear(view: View) {
         ShadowDecorationLayer.update(view, ResolvedShadowSpec.Empty)
         ShadowDecorationLayer.updateInner(view, ResolvedInnerShadowSpec.Empty)
     }
 
+    /** Delegates the parent's behind-child drawing plane to [ShadowDecorationLayer]. */
     override fun drawBehindChild(canvas: Canvas, parent: ViewGroup, child: View) {
         ShadowDecorationLayer.drawBehindChild(canvas, parent, child)
     }
 
+    /** Delegates the parent's over-child drawing plane to [ShadowDecorationLayer]. */
     override fun drawOverChild(canvas: Canvas, parent: ViewGroup, child: View) {
         ShadowDecorationLayer.drawOverChild(canvas, parent, child)
     }

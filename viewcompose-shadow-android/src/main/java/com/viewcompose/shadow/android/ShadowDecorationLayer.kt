@@ -13,14 +13,12 @@ import java.util.EnumMap
 import kotlin.math.roundToInt
 
 /**
- * 将节点阴影规格连接到父 ViewGroup 绘制顺序的轻量 Decoration Layer。
- * Lightweight decoration layer connecting node shadow specs to the parent ViewGroup draw order.
+ * Connects per-View shadow specifications to the renderer's parent drawing planes.
  *
- * 节点本身不增加 wrapper View；支持该协议的父容器应分别在 super.drawChild 前后调用
- * [drawBehindChild] 与 [drawOverChild]。这样外阴影、节点内容和内阴影使用同一 sibling/z 排序。
- * The node does not gain a wrapper View. Participating parents call [drawBehindChild] before and
- * [drawOverChild] after super.drawChild, preserving one sibling/z order across outer shadow,
- * child content, and inner shadow.
+ * Installing this backend does not add wrapper Views. A participating renderer parent invokes
+ * [drawBehindChild] before and [drawOverChild] after `super.drawChild`, preserving the child's
+ * sibling/z ordering. Mutable state and caches are process-wide and UI-thread confined unless a
+ * member explicitly states otherwise.
  */
 object ShadowDecorationLayer {
     private val rendererBackend: ShadowViewDecorationBackend by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
@@ -41,16 +39,25 @@ object ShadowDecorationLayer {
     )
     private var lastDecision: ShadowRenderBackendDecision? = null
 
-    /** Installs this optional module as the renderer's process-wide View decoration backend. */
+    /**
+     * Installs this optional module as the renderer's process-wide View decoration backend.
+     *
+     * Installation replaces a previously installed backend for future updates. Call it during
+     * application initialization before rendering decorated content. Packaging this artifact also
+     * enables one-shot ServiceLoader discovery, so explicit installation is optional.
+     */
     fun install() {
         AndroidViewDecorationRuntime.install(rendererBackend)
     }
 
     /**
-     * 设置后续阴影绘制策略。默认 Auto 在基准结论落地前仍使用精确 Bitmap。
-     * Sets the policy for subsequent shadow draws. Auto remains exact-bitmap until benchmarked.
+     * Sets the process-wide replay policy for subsequent shadow draws.
      *
-     * @return true when the policy changed.
+     * Existing rasters remain cached. The volatile policy can be selected from any thread, but callers
+     * should normally configure it during application initialization.
+     *
+     * @param policy replay policy to publish
+     * @return `true` when the effective policy changed
      */
     fun setRenderPolicy(policy: ShadowRenderPolicy): Boolean {
         if (renderPolicy == policy) return false
@@ -58,13 +65,18 @@ object ShadowDecorationLayer {
         return true
     }
 
+    /** Returns the current process-wide replay policy as a live volatile value. */
     fun renderPolicy(): ShadowRenderPolicy = renderPolicy
 
     /**
-     * 更新节点的不可变阴影规格。空规格会移除旧阴影。
-     * Updates the node's immutable shadow spec. An empty spec removes the previous shadow.
+     * Replaces the drop-shadow specification stored on [view].
      *
-     * @return true when the effective spec changed.
+     * An empty specification removes the tag. A changed value invalidates the View and its current
+     * parent; equality-identical updates do nothing. Call on the UI thread.
+     *
+     * @param view mounted View receiving backend-owned tag state
+     * @param spec complete replacement drop-shadow specification
+     * @return `true` when stored state changed
      */
     fun update(
         view: View,
@@ -80,16 +92,24 @@ object ShadowDecorationLayer {
     }
 
     /**
-     * 返回节点当前安装的阴影规格，供诊断和宿主集成使用。
-     * Returns the shadow spec currently installed on a node for diagnostics and host integration.
+     * Returns the drop-shadow specification currently tagged on [view].
+     *
+     * @param view View to inspect
+     * @return stored immutable specification, or `null` when none is installed
      */
     fun specOrNull(view: View): ResolvedShadowSpec? {
         return view.getTag(R.id.viewcompose_shadow_spec) as? ResolvedShadowSpec
     }
 
     /**
-     * 更新节点的不可变前景内阴影规格。空规格会移除旧内阴影。
-     * Updates the node's immutable foreground inner-shadow spec. An empty spec removes it.
+     * Replaces the foreground inner-shadow specification stored on [view].
+     *
+     * An empty specification removes the tag. A changed value invalidates the View and its current
+     * parent; equality-identical updates do nothing. Call on the UI thread.
+     *
+     * @param view mounted View receiving backend-owned tag state
+     * @param spec complete replacement inner-shadow specification
+     * @return `true` when stored state changed
      */
     fun updateInner(
         view: View,
@@ -105,21 +125,25 @@ object ShadowDecorationLayer {
     }
 
     /**
-     * 返回节点当前安装的内阴影规格。
-     * Returns the inner-shadow spec currently installed on a node.
+     * Returns the inner-shadow specification currently tagged on [view].
+     *
+     * @param view View to inspect
+     * @return stored immutable specification, or `null` when none is installed
      */
     fun innerSpecOrNull(view: View): ResolvedInnerShadowSpec? {
         return view.getTag(R.id.viewcompose_inner_shadow_spec) as? ResolvedInnerShadowSpec
     }
 
     /**
-     * 在 child 内容之前绘制其缓存阴影。
-     * Draws the child's cached shadow before the child content.
+     * Draws [child]'s cached drop shadow immediately before its normal content.
      *
-     * child.matrix 已包含 translation/scale/rotation/pivot，因此阴影可直接跟随属性动画，
-     * 而无需重建缓存。
-     * child.matrix already contains translation/scale/rotation/pivot, so property animations move
-     * the shadow without rebuilding its cached bitmap.
+     * The child matrix supplies translation, scale, rotation, and pivot transforms without rerasterizing.
+     * Missing specs, non-positive bounds, transparent children, and rejected rasters produce no draw.
+     * Call only from the direct parent's UI-thread drawing pass.
+     *
+     * @param canvas active canvas in [parent] coordinates
+     * @param parent direct parent dispatching child drawing
+     * @param child direct decorated child
      */
     fun drawBehindChild(
         canvas: Canvas,
@@ -156,9 +180,15 @@ object ShadowDecorationLayer {
     }
 
     /**
-     * 在 child 完成自身背景、内容、子树和 foreground 后绘制缓存内阴影。
-     * Draws the cached inner shadow after the child has drawn its background, content, subtree, and
-     * foreground. This is a visual-only foreground plane and does not affect input dispatch.
+     * Draws [child]'s cached inner shadow after its background, content, subtree, and foreground.
+     *
+     * The visual-only plane follows the child matrix and does not affect layout or input dispatch.
+     * Missing specs, non-positive bounds, transparent children, and rejected rasters produce no draw.
+     * Call only from the direct parent's UI-thread drawing pass.
+     *
+     * @param canvas active canvas in [parent] coordinates
+     * @param parent direct parent dispatching child drawing
+     * @param child direct decorated child
      */
     fun drawOverChild(
         canvas: Canvas,
@@ -190,16 +220,13 @@ object ShadowDecorationLayer {
         canvas.restoreToCount(saveCount)
     }
 
-    /**
-     * 返回进程内有界阴影缓存诊断。
-     * Returns diagnostics for the process-wide bounded shadow cache.
-     */
+    /** Returns current process-wide drop-shadow raster-cache diagnostics. */
     fun cacheStats(): ShadowRasterCacheStats = rasterizer.stats()
 
-    /** Returns diagnostics for the process-wide bounded inner-shadow cache. */
+    /** Returns current process-wide inner-shadow raster-cache diagnostics. */
     fun innerCacheStats(): ShadowRasterCacheStats = innerRasterizer.stats()
 
-    /** 返回当前后端策略、实际绘制次数和 display-list 缓存统计。 */
+    /** Returns a snapshot of current replay policy, draw counts, decisions, and display-list cache. */
     fun backendStats(): ShadowRenderBackendStats {
         val renderNodeStats = renderNodeRenderer?.stats()
         return ShadowRenderBackendStats(
@@ -215,7 +242,7 @@ object ShadowDecorationLayer {
         )
     }
 
-    /** 清空后端计数但保留当前策略和缓存。 / Clears backend counters while retaining policy/cache. */
+    /** Clears replay counters and the last decision while retaining policy and all cached rasters. */
     fun resetBackendDiagnostics() {
         bitmapDraws = 0
         renderNodeDraws = 0
@@ -225,8 +252,10 @@ object ShadowDecorationLayer {
     }
 
     /**
-     * 清空静态阴影缓存；主要供内存压力处理与测试使用。
-     * Clears static shadow rasters, primarily for memory pressure handling and tests.
+     * Evicts drop-shadow, inner-shadow, and display-list caches.
+     *
+     * Use this UI-thread operation for explicit memory-pressure handling or tests. Cumulative raster
+     * diagnostics are retained; replay diagnostics are also unchanged.
      */
     fun clearCache() {
         rasterizer.clear()

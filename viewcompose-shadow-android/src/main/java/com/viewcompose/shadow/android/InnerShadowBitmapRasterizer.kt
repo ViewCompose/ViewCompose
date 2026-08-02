@@ -13,21 +13,27 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * 已栅格化的前景内阴影。Bitmap 与节点内容尺寸完全一致，不参与布局或溢出计算。
- * Rasterized foreground inner shadow. The bitmap exactly matches content bounds and never affects
- * layout or overflow.
+ * Owns a foreground inner-shadow bitmap whose dimensions match decorated content bounds.
+ *
+ * Ownership remains with the rasterizer cache; consumers must not mutate or recycle [bitmap].
+ *
+ * @property bitmap transparent ARGB bitmap containing declaration-ordered inner-shadow layers
  */
 data class RasterizedInnerShadow(
     val bitmap: Bitmap,
 )
 
 /**
- * 将单层/多层内阴影栅格化到有界缓存。
- * Rasterizes single- and multi-layer inner shadows into a bounded cache.
+ * Rasterizes inner shadows into byte-bounded reusable Android bitmaps.
  *
- * 实现先构造“无限外部区域减去偏移后内部 shape”的反向 mask，再把结果裁到原始 shape。
- * This builds an inverse mask (outer region minus the shifted inner shape) and clips the result to
- * the original shape, producing a true inset shadow without wrapper Views or offscreen child layers.
+ * The algorithm draws an inverse offset-shape mask clipped to the original outline, so no wrapper
+ * `View` or child offscreen layer is required. Cache identity includes content size, layout direction,
+ * and the complete resolved specification. The instance is unsynchronized and intended for UI-thread
+ * use; cached bitmaps are owned by this object and are not explicitly recycled.
+ *
+ * @param maxCacheBytes positive LRU allocation-byte budget shared by retained raster entries
+ * @param maxRasterBytes positive upper bound for one attempted bitmap allocation
+ * @throws IllegalArgumentException if either byte budget is not positive
  */
 class InnerShadowBitmapRasterizer(
     maxCacheBytes: Int = DefaultMaxCacheBytes,
@@ -63,6 +69,20 @@ class InnerShadowBitmapRasterizer(
         }
     }
 
+    /**
+     * Returns a cached inner-shadow raster or creates one synchronously on the calling thread.
+     *
+     * The method returns `null` without allocating for non-positive content bounds, an empty spec,
+     * dimensions above 8192 pixels, or an allocation above the per-raster budget. A valid raster
+     * larger than the configured cache budget is returned but not cached. Bitmap allocation failures
+     * propagate.
+     *
+     * @param widthPx decorated content width in physical pixels
+     * @param heightPx decorated content height in physical pixels
+     * @param layoutDirection Android `View.LAYOUT_DIRECTION_*` used for start/end corners
+     * @param spec immutable resolved inner-shadow specification used as part of the cache key
+     * @return an owned cached/new raster, or `null` when drawing should be skipped
+     */
     fun rasterize(
         widthPx: Int,
         heightPx: Int,
@@ -102,10 +122,12 @@ class InnerShadowBitmapRasterizer(
         return rasterized
     }
 
+    /** Evicts all retained inner-shadow bitmaps without resetting cumulative diagnostics. */
     fun clear() {
         cache.evictAll()
     }
 
+    /** Returns a snapshot of cumulative counters and current retained bytes. */
     fun stats(): ShadowRasterCacheStats {
         return ShadowRasterCacheStats(
             hits = hits,
@@ -220,8 +242,11 @@ class InnerShadowBitmapRasterizer(
         val spec: ResolvedInnerShadowSpec,
     )
 
+    /** Defines default memory budgets for inner-shadow rasterization. */
     companion object {
+        /** Default process-instance LRU budget: 8 MiB of bitmap allocation bytes. */
         const val DefaultMaxCacheBytes: Int = 8 * 1024 * 1024
+        /** Default upper bound for one raster allocation: 32 MiB. */
         const val DefaultMaxRasterBytes: Int = 32 * 1024 * 1024
         private const val BytesPerPixel: Long = 4L
         private const val MaxBitmapDimension: Int = 8192

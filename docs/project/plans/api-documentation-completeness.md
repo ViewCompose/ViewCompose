@@ -78,6 +78,9 @@ overviews, and staged enforcement.
 - `viewcompose-graphics` has a reviewed Q2/Q3 baseline covering draw-pass execution, Canvas sizing,
   content ordering, semantic cache keys, Android replay fidelity, compiled samples, and an always-on
   strict Dokka warning gate;
+- `viewcompose-shadow-android` has a reviewed Q2/Q3 baseline covering optional backend discovery,
+  wrapper-free drawing planes, pixel resolution, raster ownership and budgets, replay fallbacks,
+  diagnostics, compiled samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -134,12 +137,13 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-graphics` was repaired from 7 initially undocumented declarations to a
-zero-warning strict baseline. Draw-pass execution, Canvas sizing, content ordering, modifier and
-semantic cache keys, Android Canvas replay and API-level fallbacks were reviewed; compiled samples
-and a bilingual module manual were added.
+2026-08-02: `viewcompose-shadow-android` was repaired from 62 initially undocumented declarations to
+a zero-warning strict baseline. Optional ServiceLoader discovery, wrapper-free parent drawing,
+pixel-space resolution, raster ownership and byte budgets, exact-bitmap and RenderNode replay,
+capability fallbacks and diagnostics were reviewed; compiled samples and a bilingual module manual
+were added.
 
 ## Next action
 
-Audit and repair `viewcompose-shadow-android`, add its module manual and focused samples, then enable
-its module-level strict warning gate without changing API behavior.
+Audit and repair `viewcompose-widget-constraintlayout`, add its module manual and focused samples,
+then enable its module-level strict warning gate without changing API behavior.

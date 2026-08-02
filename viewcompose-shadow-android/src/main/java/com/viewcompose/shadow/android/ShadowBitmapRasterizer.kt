@@ -18,8 +18,14 @@ import kotlin.math.ceil
 import kotlin.math.max
 
 /**
- * 一组已栅格化的多层外阴影，以及相对节点左上角的绘制偏移。
- * Rasterized multi-layer drop shadows plus their draw offset from the node's top-left corner.
+ * Owns a rasterized drop-shadow bitmap and its position relative to the decorated node.
+ *
+ * The bitmap may extend beyond node bounds. Ownership remains with the rasterizer cache; consumers
+ * must not mutate or recycle it.
+ *
+ * @property bitmap ARGB bitmap containing transparent padding and all shadow layers
+ * @property drawOffsetXPx horizontal bitmap origin relative to the node in physical pixels
+ * @property drawOffsetYPx vertical bitmap origin relative to the node in physical pixels
  */
 data class RasterizedShadow(
     val bitmap: Bitmap,
@@ -28,8 +34,15 @@ data class RasterizedShadow(
 )
 
 /**
- * 静态阴影缓存诊断快照。
- * Diagnostic snapshot for the static shadow cache.
+ * Captures cumulative raster-cache diagnostics at one instant.
+ *
+ * Counters are not reset by cache eviction or [ShadowBitmapRasterizer.clear].
+ *
+ * @property hits successful equality-key cache lookups
+ * @property misses lookups that required a rasterization attempt
+ * @property evictions entries removed by the LRU byte budget
+ * @property oversizedSkips attempts rejected by dimension or per-raster byte limits
+ * @property cachedBytes current `Bitmap.allocationByteCount` total retained by the cache
  */
 data class ShadowRasterCacheStats(
     val hits: Long,
@@ -40,12 +53,15 @@ data class ShadowRasterCacheStats(
 )
 
 /**
- * 将精确多层阴影栅格化到可复用 Bitmap。
- * Rasterizes exact multi-layer shadows into reusable bitmaps.
+ * Rasterizes multi-layer drop shadows into byte-bounded reusable Android bitmaps.
  *
- * 该类只在规格、shape 或尺寸变化时生成 Bitmap；节点平移和普通重绘必须复用结果。
- * This class creates a bitmap only when the spec, shape, or size changes. Translation and ordinary
- * redraws must reuse the cached result.
+ * Cache identity includes content size, layout direction, and the complete resolved specification;
+ * translation and ordinary redraw do not rebuild the bitmap. The instance is unsynchronized and is
+ * intended for UI-thread use. Cached bitmaps are owned by this object and are not explicitly recycled.
+ *
+ * @param maxCacheBytes positive LRU allocation-byte budget shared by retained raster entries
+ * @param maxRasterBytes positive upper bound for one attempted bitmap allocation
+ * @throws IllegalArgumentException if either byte budget is not positive
  */
 class ShadowBitmapRasterizer(
     maxCacheBytes: Int = DefaultMaxCacheBytes,
@@ -80,9 +96,19 @@ class ShadowBitmapRasterizer(
     }
 
     /**
-     * 解析或创建一个静态多层阴影。无尺寸、无阴影或超过单次栅格预算时返回 null。
-     * Resolves or creates one static multi-layer shadow. Returns null for empty bounds/specs or when
-     * the raster would exceed the per-entry budget.
+     * Returns a cached drop-shadow raster or creates one synchronously on the calling thread.
+     *
+     * The method returns `null` without allocating for non-positive content bounds, an empty spec,
+     * dimensions above 8192 pixels, or an allocation above the per-raster budget. A valid raster
+     * larger than the configured cache budget is returned but not cached. Bitmap allocation failures
+     * propagate.
+     *
+     * @sample com.viewcompose.shadow.android.samples.rasterizeShadowSample
+     * @param widthPx decorated content width in physical pixels
+     * @param heightPx decorated content height in physical pixels
+     * @param layoutDirection Android `View.LAYOUT_DIRECTION_*` used for start/end corners
+     * @param spec immutable resolved shadow specification used as part of the cache key
+     * @return an owned cached/new raster, or `null` when drawing should be skipped
      */
     fun rasterize(
         widthPx: Int,
@@ -131,10 +157,12 @@ class ShadowBitmapRasterizer(
         return rasterized
     }
 
+    /** Evicts all retained drop-shadow bitmaps without resetting cumulative diagnostics. */
     fun clear() {
         cache.evictAll()
     }
 
+    /** Returns a snapshot of cumulative counters and current retained bytes. */
     fun stats(): ShadowRasterCacheStats {
         return ShadowRasterCacheStats(
             hits = hits,
@@ -239,8 +267,11 @@ class ShadowBitmapRasterizer(
         val bottom: Int,
     )
 
+    /** Defines default memory budgets for drop-shadow rasterization. */
     companion object {
+        /** Default process-instance LRU budget: 8 MiB of bitmap allocation bytes. */
         const val DefaultMaxCacheBytes: Int = 8 * 1024 * 1024
+        /** Default upper bound for one raster allocation: 32 MiB. */
         const val DefaultMaxRasterBytes: Int = 32 * 1024 * 1024
         private const val BytesPerPixel: Long = 4L
         private const val MaxBitmapDimension: Long = 8192L
