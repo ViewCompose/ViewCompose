@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 179f049713dac5c07ba816f88aa5f5fb4fac96203ef7172fbd7533915cf13448
+translation_source_hash: c0d5306854a8d9bb0f8d4640c3d93178f32358ef2999c4a72134e38116c16f0a
 translation_status: current
 ---
 
@@ -27,7 +27,7 @@ translation_status: current
 | `viewcompose-overlay-android` | Android 宿主 | Android 浮层呈现后端 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-android) |
 | `viewcompose-image-coil` | 集成 | 基于 Coil 的远程图片加载 | 规划中 |
 | `viewcompose-lifecycle` | 集成 | 感知生命周期的状态收集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-lifecycle) |
-| `viewcompose-viewmodel` | 集成 | ViewModel 与 SavedStateHandle 集成 | 规划中 |
+| `viewcompose-viewmodel` | 集成 | ViewModel 与 SavedStateHandle 集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-viewmodel) |
 | `viewcompose-preview-core` | 预览工具 | 预览注解与工具协议 | 规划中 |
 | `viewcompose-preview-gradle-plugin` | 预览工具 | 预览发现与 Gradle 任务 | 规划中 |
 | `viewcompose-preview-runner` | 预览工具 | Layoutlib 预览渲染运行时 | 规划中 |

@@ -6,11 +6,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 
 /**
- * 返回作用域绑定到当前 ViewModelStoreOwner 的 [SavedStateHandle]。
- * Returns a [SavedStateHandle] scoped to the current [ViewModelStoreOwner].
+ * Returns a [SavedStateHandle] scoped to [owner] or the nearest [LocalViewModelStoreOwner].
  *
- * 该 handle 由内部 ViewModel 条目持有，因此能跨配置变更保留。
- * The handle is backed by an internal ViewModel entry and survives configuration changes.
+ * The handle is owned by an internal [SavedStateHandleHolderViewModel], so repeated calls with the
+ * same owner and [key] return the same handle and survive configuration change. Process-death
+ * persistence requires an owner whose default factory and creation extras support SavedStateHandle,
+ * such as a standard Android host, navigation destination, or navigation graph owner.
+ *
+ * Use a distinct stable key for independent handles in the same store. The default key is reserved
+ * for one general-purpose handle per owner. This function follows [viewModel] ownership and must run
+ * on the Android main thread during composition.
+ *
+ * @sample com.viewcompose.viewmodel.samples.savedStateHandleSample
+ * @param key ViewModel-store identity of the internal handle owner
+ * @param owner explicit owner, or `null` to use [LocalViewModelStoreOwner.current]
+ * @return the existing or newly created handle for [owner] and [key]
+ * @throws IllegalArgumentException if no owner is available
+ * @throws RuntimeException if the resolved factory or extras cannot construct a SavedStateHandle
  */
 @MainThread
 fun savedStateHandle(
@@ -26,9 +38,14 @@ fun savedStateHandle(
 }
 
 /**
- * 持有 SavedStateHandle 的内部 ViewModel。
- * Internal ViewModel that owns a SavedStateHandle.
+ * ViewModel used internally to retain one [SavedStateHandle] in a `ViewModelStore`.
+ *
+ * This type is public so AndroidX factories can construct it. Application code should call
+ * [savedStateHandle] instead of requesting or instantiating the holder directly.
+ *
+ * @property handle handle created and restored by the owner's ViewModel factory
  */
 class SavedStateHandleHolderViewModel(
+    /** Handle retained for the lifetime of this ViewModel entry. */
     val handle: SavedStateHandle,
 ) : ViewModel()

@@ -11,8 +11,26 @@ import com.viewcompose.widget.core.remember
 import kotlin.reflect.KClass
 
 /**
- * 从当前或显式 ViewModelStoreOwner 获取指定类型的 ViewModel。
- * Retrieves a ViewModel of the requested type from the current or explicit ViewModelStoreOwner.
+ * Returns a [VM] scoped to [owner] or the nearest [LocalViewModelStoreOwner].
+ *
+ * The resolved owner and [key] define persistent identity in its `ViewModelStore`. Recomposition and
+ * repeated calls return the same instance until that owner clears its store. A `null` or blank key
+ * uses AndroidX's default class-derived key. [factory] and [extras] affect creation only when no
+ * matching instance already exists.
+ *
+ * This function must be called from a ViewCompose composition on the Android main thread. Standard
+ * Activity, Fragment, navigation destination, and navigation graph hosts provide an owner. Pass one
+ * explicitly or use [ProvideViewModelStoreOwner] for a custom boundary.
+ *
+ * @sample com.viewcompose.viewmodel.samples.viewModelSample
+ * @param VM ViewModel type to resolve
+ * @param key optional identity allowing multiple [VM] instances in one store
+ * @param owner explicit owner, or `null` to use [LocalViewModelStoreOwner.current]
+ * @param factory creation factory override; the owner's default is used when absent
+ * @param extras creation extras override; a copy of the owner's defaults is used when absent
+ * @return the existing or newly created [VM] for the resolved owner and key
+ * @throws IllegalArgumentException if no owner is available
+ * @throws RuntimeException if AndroidX cannot create the requested ViewModel
  */
 @MainThread
 inline fun <reified VM : ViewModel> viewModel(
@@ -31,11 +49,28 @@ inline fun <reified VM : ViewModel> viewModel(
 }
 
 /**
- * 从当前或显式 ViewModelStoreOwner 获取指定 KClass 的 ViewModel。
- * Retrieves a ViewModel for the given KClass from the current or explicit ViewModelStoreOwner.
+ * Returns [modelClass] scoped to [owner] or the nearest [LocalViewModelStoreOwner].
  *
- * 实例由 remember 缓存，只有 owner/key/factory/extras/modelClass 变化时才重新解析 provider。
- * The instance is cached by remember and resolves the provider again only when owner/key/factory/extras/modelClass changes.
+ * Owner, [key], [factory], [extras], and [modelClass] form the composition lookup identity. Changing
+ * one rebuilds the provider lookup, but AndroidX's `ViewModelStore` remains authoritative: a matching
+ * owner/key entry is reused even when a different factory or extras object is supplied later.
+ * `null` and blank keys both select AndroidX's default class-derived key.
+ *
+ * Factory resolution prefers [factory], then
+ * [HasDefaultViewModelProviderFactory.defaultViewModelProviderFactory], then
+ * [ViewModelProvider.NewInstanceFactory]. Extras resolution similarly prefers [extras], otherwise it
+ * copies the owner's defaults so this function never mutates a shared extras object.
+ *
+ * @sample com.viewcompose.viewmodel.samples.keyedViewModelSample
+ * @param VM ViewModel type to resolve
+ * @param modelClass runtime class used by [ViewModelProvider]
+ * @param key optional identity allowing multiple instances of [modelClass] in one store
+ * @param owner explicit owner, or `null` to use [LocalViewModelStoreOwner.current]
+ * @param factory creation factory override
+ * @param extras creation extras override
+ * @return the existing or newly created ViewModel for the resolved owner and key
+ * @throws IllegalArgumentException if no owner is available
+ * @throws RuntimeException if AndroidX cannot create [modelClass]
  */
 @MainThread
 fun <VM : ViewModel> viewModel(
@@ -50,8 +85,7 @@ fun <VM : ViewModel> viewModel(
         "No ViewModelStoreOwner found. Use ComponentActivity/Fragment.setUiContent " +
             "or wrap with ProvideViewModelStoreOwner."
     }
-    // owner/factory/extras 都参与 remember key，保持 ViewModelProvider 解析与调用方输入一致。
-    // owner/factory/extras all participate in the remember key so ViewModelProvider resolution matches caller inputs.
+    // Provider inputs form the composition lookup identity; the owner's store remains authoritative.
     return remember(
         resolvedOwner,
         key,
@@ -89,10 +123,7 @@ private fun resolveFactory(
         ?: ViewModelProvider.NewInstanceFactory()
 }
 
-/**
- * 解析 CreationExtras，并复制 owner 默认 extras，避免后续调用方修改共享实例。
- * Resolves CreationExtras and copies owner defaults so later callers do not mutate a shared instance.
- */
+/** Resolves explicit extras or copies owner defaults to avoid exposing a shared mutable instance. */
 private fun resolveCreationExtras(
     owner: ViewModelStoreOwner,
     override: CreationExtras?,

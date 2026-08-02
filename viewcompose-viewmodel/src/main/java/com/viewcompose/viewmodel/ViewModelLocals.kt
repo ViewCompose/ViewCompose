@@ -12,21 +12,28 @@ private val LocalViewModelStoreOwnerValue = uiLocalOf<ViewModelStoreOwner?>(
 ) { null }
 
 /**
- * 当前 UI 子树关联的 Android ViewModelStoreOwner。
- * Android ViewModelStoreOwner associated with the current UI subtree.
+ * Reads the Android [ViewModelStoreOwner] associated with the current ViewCompose subtree.
+ *
+ * Android hosts install their nearest owner automatically. Navigation destinations and graph-owner
+ * scopes override it so ViewModels follow entry or graph lifetime rather than Activity lifetime.
+ * Delayed child sessions capture and restore the local with the rest of their declaration context.
  */
 object LocalViewModelStoreOwner {
-    /**
-     * 当前上下文中的 ViewModelStoreOwner；未由 host 或 Provider 注入时为 null。
-     * ViewModelStoreOwner in the current context, or null when no host or Provider has injected one.
-     */
+    /** Returns the nearest provided owner, or `null` when no host or provider installed one. */
     val current: ViewModelStoreOwner?
         get() = UiLocals.current(LocalViewModelStoreOwnerValue)
 }
 
 /**
- * 在当前 UI 子树中提供 ViewModelStoreOwner。
- * Provides a ViewModelStoreOwner to the current UI subtree.
+ * Associates [owner] with [content] and any nested composition-scoped lookup.
+ *
+ * The previous owner is restored after [content] returns, including when declaration throws. The
+ * provider does not clear [owner]'s store; the host that created the owner remains responsible for
+ * clearing it at the intended lifecycle boundary.
+ *
+ * @sample com.viewcompose.viewmodel.samples.provideViewModelStoreOwnerSample
+ * @param owner store owner exposed to the subtree
+ * @param content declarative subtree evaluated with [owner] as [LocalViewModelStoreOwner.current]
  */
 fun UiTreeBuilder.ProvideViewModelStoreOwner(
     owner: ViewModelStoreOwner,

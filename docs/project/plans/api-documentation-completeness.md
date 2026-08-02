@@ -57,6 +57,9 @@ overviews, and staged enforcement.
 - `viewcompose-lifecycle` has a reviewed Q2/Q3 baseline covering owner propagation, commit-aware Flow
   collection, structured coroutine ownership, repeat-on-lifecycle restart, compiled samples, and an
   always-on strict Dokka warning gate;
+- `viewcompose-viewmodel` has a reviewed Q2/Q3 baseline covering owner propagation, keyed store
+  identity, factory and CreationExtras precedence, SavedStateHandle persistence, navigation scope,
+  compiled samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -93,8 +96,8 @@ Q2 or Q3 manual review.
    - `viewcompose-host-android` baseline and strict gate are complete;
    - add module/package overviews and cross-links.
 4. **Remaining families**
-   - text, both navigation layers, the Android overlay backend, and lifecycle are complete;
-   - ViewModel, animation, gesture, graphics, shadows,
+   - text, both navigation layers, the Android overlay backend, lifecycle, and ViewModel are complete;
+   - animation, gesture, graphics, shadows,
      constraint layout, image loading, and preview tooling;
    - enable strict checking after each module baseline is clean.
 5. **Immutable source and release integration**
@@ -113,12 +116,12 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-lifecycle` had no missing-comment Dokka warnings but was upgraded from terse
-bilingual summaries to a reviewed zero-warning strict baseline. Owner propagation, commit-aware
-collection, structured cancellation, inactive retention, and serialized lifecycle restart were
-documented; compiled samples and a bilingual module manual were added.
+2026-08-02: `viewcompose-viewmodel` was repaired from 1 initially undocumented declaration to a
+zero-warning strict baseline. Store-owner propagation, lookup identity, factory and CreationExtras
+precedence, holder visibility, process-death requirements, and navigation scope were reviewed;
+compiled samples and a bilingual module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-viewmodel`, add its module manual and focused samples, then enable its
+Audit and repair `viewcompose-animation-core`, add its module manual and focused samples, then enable its
 module-level strict warning gate without changing API behavior.
