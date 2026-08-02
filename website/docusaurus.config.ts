@@ -1,6 +1,17 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type {Options, ThemeConfig} from '@docusaurus/preset-classic';
+import {createLocalizedMarkdownLinkResolver} from './src/config/localizedMarkdownLinks';
+
+const siteDir = __dirname;
+const docsDir = `${siteDir}/../docs`;
+const locales = ['en', 'zh-CN'];
+const resolveLocalizedMarkdownLink = createLocalizedMarkdownLinkResolver({
+  siteDir,
+  docsDir,
+  locales,
+  defaultLocale: 'en',
+});
 
 const config: Config = {
   title: 'ViewCompose',
@@ -16,10 +27,23 @@ const config: Config = {
   },
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales,
+    localeConfigs: {
+      en: {
+        label: 'English',
+        htmlLang: 'en',
+      },
+      'zh-CN': {
+        label: '简体中文',
+        htmlLang: 'zh-CN',
+      },
+    },
   },
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: resolveLocalizedMarkdownLink,
+    },
   },
   staticDirectories: ['static', 'generated'],
   presets: [
@@ -33,6 +57,7 @@ const config: Config = {
           exclude: ['archive/**'],
           editUrl: ({docPath}) =>
             `https://github.com/ViewCompose/ViewCompose/edit/main/docs/${docPath}`,
+          editLocalizedFiles: true,
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
         },
@@ -66,6 +91,10 @@ const config: Config = {
           to: '/api',
           label: 'API Reference',
           position: 'left',
+        },
+        {
+          type: 'localeDropdown',
+          position: 'right',
         },
         {
           href: 'https://github.com/ViewCompose/ViewCompose',

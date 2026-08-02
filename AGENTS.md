@@ -18,7 +18,11 @@ These rules apply to AI-assisted work in this repository:
 8. Keep framework concepts separate from module-specific dependency, compatibility, and API
    contracts. New published modules must enter the module catalog and documentation tree.
 9. Use repository-relative links and never commit local absolute paths.
-10. Run `./gradlew verifyDocumentationStructure`; it is also part of `qaQuick`.
+10. Treat English as the canonical documentation source. When canonical public documentation
+    changes, update the Chinese mirror, explicitly mark an existing tracked mirror stale, or record
+    why the page is not translated according to the language policy. Never update only a stored
+    translation fingerprint.
+11. Run `./gradlew verifyDocumentationStructure`; it is also part of `qaQuick`.
 
 If an active document conflicts with code or tests, verify the implementation and correct the
 document rather than creating a parallel explanation.

@@ -1,0 +1,22 @@
+{
+  "title": {
+    "message": "ViewCompose",
+    "description": "The title in the navbar"
+  },
+  "item.label.Architecture": {
+    "message": "架构",
+    "description": "Navbar item with label Architecture"
+  },
+  "item.label.Modules": {
+    "message": "模块",
+    "description": "Navbar item with label Modules"
+  },
+  "item.label.API Reference": {
+    "message": "API 参考",
+    "description": "Navbar item with label API Reference"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "version.label": {
+    "message": "当前版本",
+    "description": "The label for version current"
+  },
+  "sidebar.documentation.category.architecture": {
+    "message": "架构",
+    "description": "The label for category 'architecture' in sidebar 'documentation'"
+  },
+  "sidebar.documentation.category.Architecture Decisions": {
+    "message": "架构决策",
+    "description": "The label for category 'Architecture Decisions' in sidebar 'documentation'"
+  },
+  "sidebar.documentation.category.guides": {
+    "message": "指南",
+    "description": "The label for category 'guides' in sidebar 'documentation'"
+  },
+  "sidebar.documentation.category.project": {
+    "message": "项目",
+    "description": "The label for category 'project' in sidebar 'documentation'"
+  },
+  "sidebar.documentation.category.Active Execution Plans": {
+    "message": "有效执行计划",
+    "description": "The label for category 'Active Execution Plans' in sidebar 'documentation'"
+  },
+  "sidebar.documentation.category.tooling": {
+    "message": "工具",
+    "description": "The label for category 'tooling' in sidebar 'documentation'"
+  }
+}
