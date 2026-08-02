@@ -26,9 +26,24 @@ import kotlin.math.roundToInt
 import kotlinx.serialization.json.jsonObject
 
 /**
- * Standalone JVM entry point that owns one Layoutlib lifecycle and one render request.
+ * Standalone JVM boundary that owns Layoutlib and isolates reloadable preview bytecode.
+ *
+ * Each command validates its manifest/request identity, installs a fresh child class loader for
+ * reloadable project classes, prepares and tears down one Paparazzi/Layoutlib SDK, writes one atomic
+ * response, restores the thread context loader, and closes the child loader. Non-fatal render
+ * failures become structured responses; fatal VM errors continue to escape.
  */
 object PreviewWorkerHost {
+    /**
+     * Runs one-shot command/batch mode or the bounded loopback server.
+     *
+     * One-shot mode accepts exactly one command JSON path and distinguishes a batch by its top-level
+     * `commands` field. Server mode accepts `--server`, an endpoint path, and a compatibility
+     * fingerprint. Malformed protocol files or invalid argument counts fail the process; render
+     * failures that reach request decoding are written as response data.
+     *
+     * @param args command-line arguments supplied by the Gradle bridge
+     */
     @JvmStatic
     fun main(args: Array<String>) {
         if (args.firstOrNull() == WORKER_SERVER_ARGUMENT) {
@@ -53,6 +68,18 @@ object PreviewWorkerHost {
         }
     }
 
+    /**
+     * Executes one worker command from [commandFile] and returns the response also written to the
+     * command's response path.
+     *
+     * The request, manifest, build fingerprint, module, variant, Layoutlib roots, and every exported
+     * input are validated before rendering. Non-fatal failures after request decoding produce a
+     * `RenderFailure` response with source-aware diagnostics. Response publication is atomic.
+     *
+     * @sample com.viewcompose.preview.worker.samples.executeWorkerCommandSample
+     * @throws IllegalArgumentException for malformed/unsupported command or request JSON
+     * @throws java.io.IOException when required protocol files cannot be read or the response cannot be published
+     */
     fun execute(commandFile: File): PreviewRenderResponse {
         return execute(commandFile.readText())
     }
