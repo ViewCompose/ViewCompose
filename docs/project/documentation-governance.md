@@ -158,11 +158,14 @@ applicable:
 - `@throws`, replacement, and deprecation guidance where relevant.
 
 Documentation must not promise behavior that tests do not protect. Public API additions without
-adequate KDoc/Javadoc are incomplete even when compilation succeeds.
+adequate KDoc/Javadoc are incomplete even when compilation succeeds. New and changed public API
+documentation, compiled samples, and affected module documentation must land in the same pull
+request as the implementation; existing debt does not permit new debt.
 
-The normative quality levels, contract matrix, authoring form, audit commands, and staged
-enforcement policy are defined in the
-[API Documentation Quality Standard](api-documentation-quality.md).
+The normative source-comment language, KDoc/Javadoc structure, declaration templates,
+ViewCompose-specific contracts, quality levels, audit commands, and staged enforcement policy are
+defined in the
+[Source Documentation and API Comment Standard](api-documentation-quality.md).
 
 ## Architecture and design decisions
 

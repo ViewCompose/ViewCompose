@@ -1,15 +1,44 @@
-# API Documentation Quality Standard
+# Source Documentation and API Comment Standard
 
 ## Purpose
 
-This document defines what counts as acceptable KDoc or Javadoc for ViewCompose published APIs.
-It converts the general API documentation contract in
+This document defines the normative source-documentation style for ViewCompose. It covers public
+KDoc/Javadoc, protected extension points, and durable implementation comments. It converts the
+general API documentation contract in
 [Documentation Governance](documentation-governance.md#kdoc-and-javadoc-contract) into a
 repeatable authoring, review, and automation standard.
 
 The goal is not to maximize comment volume. The goal is to let a consumer use an API correctly
 without reading its implementation, guessing its lifecycle, or discovering failure behavior in
 production.
+
+## Normative basis and precedence
+
+ViewCompose follows the documentation practices used by Kotlin libraries, AndroidX, Jetpack
+Compose, and Android framework APIs, with project-specific rules for stateful declarative UI:
+
+- [Kotlin KDoc syntax](https://kotlinlang.org/docs/kotlin-doc.html) defines supported syntax and
+  tags.
+- [Kotlin coding conventions](https://kotlinlang.org/docs/coding-conventions.html#documentation-comments)
+  define general library documentation style.
+- [AndroidX KDoc guidelines](https://android.googlesource.com/platform/frameworks/support/+/androidx-main/docs/kdoc_guidelines.md)
+  define Kotlin-library expectations such as documenting every public parameter/property and
+  using compiled `@sample` functions.
+- [Compose component API guidelines](https://android.googlesource.com/platform/frameworks/support/+/androidx-main/compose/docs/compose-component-api-guidelines.md#documentation-for-the-component)
+  define the summary, behavioral detail, sample, and parameter ordering expected for declarative
+  UI components.
+- [Android API guidelines](https://android.googlesource.com/platform/developers/docs/+/master/api-guidelines/index.md)
+  require implemented, tested, and documented APIs and consumer-visible parameter, result, and
+  failure contracts.
+
+When these sources differ, this document wins for ViewCompose. In particular, the general Kotlin
+convention allows concise prose without `@param`/`@return`, while AndroidX optimizes published
+reference pages for complete parameter/property tables. ViewCompose adopts the AndroidX library
+rule: every public API element is documented explicitly, without repeating information that the
+signature already expresses.
+
+The requirement terms **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** are normative.
+This baseline was last reviewed against the upstream documents on 2026-08-02.
 
 ## Scope
 
@@ -28,12 +57,33 @@ whose inherited contract is complete and unchanged.
 An undocumented protected member is not solved by hiding it from Dokka. Either document it as a
 supported extension point or reduce its visibility.
 
+Private and internal declarations do not need coverage comments. They do follow the
+[implementation comment rules](#implementation-comments) when a non-obvious invariant,
+workaround, algorithm, concurrency rule, or performance decision would otherwise be lost.
+
+## Documentation definition of done
+
+Documentation is part of implementation, not follow-up cleanup. A change is incomplete unless the
+same pull request:
+
+1. documents every new published declaration and every changed public/protected contract;
+2. updates comments affected by renamed parameters, changed defaults, state ownership, lifecycle,
+   threading, failure behavior, performance, or Android interoperability;
+3. adds or updates a compiled sample for Q3 APIs;
+4. updates the owning module manual and migration/release material required by the
+   [change impact matrix](documentation-governance.md#change-impact-matrix);
+5. runs the owning module's documentation audit and relevant behavioral tests.
+
+Existing untouched documentation debt may be repaired incrementally according to the active plan.
+It is never a reason to merge new debt. Placeholder KDoc, `TODO` documentation, copied signature
+text, or “document later” follow-ups do not satisfy this definition.
+
 ## Canonical language
 
-Public API comments use English as their canonical language. Do not maintain complete English and
-Chinese copies in the same KDoc block. Existing bilingual blocks may be migrated when their owning
-API family is reviewed, but a touched public comment must move toward the canonical form rather
-than adding another parallel paragraph.
+Public API comments and durable implementation comments use English as their canonical language.
+Do not maintain complete English and Chinese copies in the same KDoc block. Existing bilingual
+blocks MUST be converted to one accurate English contract whenever their declaration is changed or
+its API family is reviewed; do not add another parallel paragraph.
 
 Chinese tutorials and module manuals may explain the API in Chinese and link to the canonical
 generated reference. Identifiers, code, units, and platform terms remain unchanged.
@@ -80,23 +130,50 @@ material performance trade-offs.
 
 ### Types and constructors
 
-- Explain the abstraction's role, owner, lifetime, and non-goals.
-- Document every public constructor parameter with `@param`, or every promoted primary-constructor
-  property with `@property`.
-- State whether callers should construct the type directly or use a factory or `remember` API.
-- Interfaces and abstract classes define implementation obligations, callback ordering, and
-  threading expectations.
+- The first sentence MUST define the abstraction in consumer terms, not say only “Represents” or
+  restate the type name.
+- Explain the abstraction's role, owner, lifetime, and important non-goals.
+- Document every type parameter with `@param`, every promoted primary-constructor property with
+  `@property`, and every other public constructor parameter with `@param`, in declaration order.
+- Use `@constructor` only when construction has behavior, validation, ownership, or side effects
+  not already explained by the type and parameter contracts.
+- State whether callers construct the type directly or use a factory, builder, or `remember` API.
+- Interfaces and abstract classes MUST define implementation obligations, callback ordering,
+  lifecycle, threading, and allowed default behavior.
+- Sealed hierarchies MUST explain whether consumers should exhaustively handle known subtypes and
+  whether new subtypes may appear in compatible releases.
 
 ### Functions and properties
 
-- Use an imperative summary for an action and a noun phrase or “Returns…” summary for a query.
-- Document all parameters whose meaning is not completely expressed by their name and type. For a
-  uniform public contract, prefer documenting every public parameter.
-- Use `@return` when ownership, identity, caching, sentinel values, or failure cannot be inferred
-  from the return type.
-- Mutable properties state who may write them, how changes are observed, and any thread or
-  lifecycle restriction.
-- Boolean properties describe what `true` means; avoid summaries that only repeat `is...`.
+- Start action functions with an active present-tense verb such as “Creates”, “Updates”, “Applies”,
+  “Registers”, or “Disposes”. Start queries with “Returns”. Do not begin with “This function”.
+- Document every type parameter, extension receiver, and value parameter. Parameter descriptions
+  MUST explain semantic meaning, units, coordinate space, range, defaults or sentinel values when
+  applicable; they MUST NOT merely repeat the type or parameter name.
+- Every non-`Unit` function MUST document its result with `@return`, except a self-evident property
+  accessor that is not independently documented by Dokka. Describe ownership, identity, mutability,
+  caching, snapshot/live behavior, null/sentinel meaning, and failure where applicable.
+- Mutable properties MUST state who may write them, how changes are observed, and any thread or
+  lifecycle restriction. Read-only properties MUST still state whether their value is live,
+  snapshotted, cached, or derived when that distinction matters.
+- Boolean properties describe what `true` enables or indicates; avoid summaries that only repeat
+  the `is...` name.
+- Overloads MUST document their semantic difference. Do not copy identical prose if default
+  arguments, coercion, allocation, or failure behavior differs.
+
+### Constants, enum entries, annotations, and type aliases
+
+- Constants MUST define units, format, valid use, and special/sentinel meaning. Do not repeat only
+  the constant name or literal value.
+- Every public enum entry or sealed subtype MUST have an unambiguous semantic meaning. The owning
+  type MAY document entries as one mapping when each name is self-evident and Dokka renders the
+  mapping next to the entries.
+- Annotations MUST explain their behavioral effect, valid targets, retention implications, whether
+  tooling or runtime consumes them, and what happens when they are absent.
+- Type aliases MUST state that they are source-level aliases rather than distinct runtime types and
+  explain the consumer-facing naming or migration purpose.
+- Default values MUST be documented by meaning when they select policy or behavior; do not merely
+  copy the literal already visible in the signature.
 
 ### Suspend functions, flows, and callbacks
 
@@ -105,6 +182,17 @@ material performance trade-offs.
 - For `Flow`, state cold/hot behavior, replay, completion, error propagation, and collection
   lifecycle where applicable.
 - For callbacks, state invocation timing, ordering, multiplicity, thread, and reentrancy.
+
+### Overrides and inherited documentation
+
+- An override with an unchanged inherited contract SHOULD omit duplicate KDoc.
+- An override that narrows behavior, changes scheduling, adds side effects, changes failure
+  handling, or defines Android-specific behavior MUST document that delta and link to the base
+  contract.
+- Never copy inherited prose and silently change one sentence; describe only the supported delta
+  unless the generated reference cannot expose the inherited contract correctly.
+- A protected override point MUST document what subclasses may call, when `super` is required, and
+  which invariants implementations must preserve.
 
 ### Deprecated and experimental APIs
 
@@ -115,16 +203,74 @@ material performance trade-offs.
 
 ## KDoc and Javadoc form
 
-- Put the summary in the first paragraph; Dokka uses it in indexes and search results.
-- Use paragraphs and short lists for contracts. Do not encode structure through manual spacing.
-- Link symbols with KDoc links such as `[RenderSession]`; use backticks for literals, Gradle
-  coordinates, and values such as `null` or `0`.
-- Use `@param`, `@property`, `@return`, `@throws`, `@sample`, `@see`, and `@since` consistently.
-- Every `@param` or `@property` name must resolve to the declaration.
-- `@throws` documents observable contract failures, not impossible implementation details.
-- Avoid implementation narration unless the implementation technique is itself a supported
-  performance or interoperability contract.
-- Avoid marketing claims, unsupported parity claims, and statements that tests do not protect.
+### Structure and voice
+
+- Put a concise, standalone summary in the first paragraph; Dokka uses it in indexes and search.
+  Prefer one sentence.
+- Write from the API consumer's perspective in active present tense. Describe observable behavior,
+  not the implementation sequence.
+- Use a blank line between the summary, detailed paragraphs, examples, and block tags.
+- Use paragraphs and short Markdown lists for KDoc. Do not encode structure with manual spacing,
+  decorative separators, or ASCII tables.
+- Keep one source of truth: link to shared contracts instead of copying long text between overloads
+  or related types.
+- Use canonical Android/Kotlin terminology and preserve exact casing for `View`, `ViewGroup`,
+  `VNode`, `NodeSpec`, `Modifier`, `Flow`, lifecycle names, and API identifiers.
+
+### KDoc tags and ordering
+
+Use supported KDoc tags in this order when they apply:
+
+1. `@sample` for compiled examples after the behavioral prose;
+2. `@param T` for type parameters in declaration order;
+3. `@receiver` for an extension receiver;
+4. `@property` and `@param` for constructor elements, or `@param` for function parameters, in
+   declaration order;
+5. `@return`;
+6. `@throws` ordered by the point at which the caller can encounter each failure;
+7. `@see` with a class-qualified symbol;
+8. `@since` only when the first released artifact version is known; never use `Unreleased`, a Git
+   branch, or an aggregate repository version.
+
+Every tag name MUST resolve to the declaration. KDoc type parameters use `@param T`, never
+Javadoc-style `@param <T>`. Do not use Javadoc-only `@deprecated`; use Kotlin's `@Deprecated` with a
+useful message and `ReplaceWith` where replacement can be expressed safely. `@suppress` MUST NOT be
+used to hide an accidental public API from the generated reference; fix the visibility or API
+boundary.
+
+One-line tag descriptions may be sentence fragments without a period. Multi-sentence descriptions
+use normal sentence punctuation. All descriptions within one declaration SHOULD use the same
+style.
+
+### Links, literals, and examples
+
+- Link related symbols with KDoc links such as `[RenderSession]`; never create a self-link.
+- Use `[label][Qualified.symbol]` when a qualified target improves resolution. A standalone `@see`
+  target includes its class name.
+- Do not put a Markdown link inside `@see`; use prose with a Markdown link or a plain symbol target.
+- Use backticks for literals, Gradle coordinates, parameter names in prose when a link is not
+  useful, and values such as `null`, `true`, or `0`.
+- External links MUST target authoritative, stable documentation. Released behavior MUST NOT rely
+  on a mutable source-code link to `main`.
+- Avoid inline examples that can drift. Non-trivial usage belongs in a compiled `@sample`.
+
+### Javadoc-specific form
+
+Java public APIs follow the same contract content but use Javadoc syntax. Use `{@link Type}` and
+`{@code value}`; use `<p>`, `<ul>`, `<ol>`, and `<pre>{@code ...}</pre>` for rendered structure.
+Do not copy KDoc Markdown syntax into Javadoc or HTML formatting into KDoc.
+
+### Prohibited content
+
+- comments that only say “Represents”, “Handles”, “Gets”, “Sets”, or “Callback for” without a
+  consumer-visible contract;
+- bilingual duplicate paragraphs, author biographies, change logs, issue history, or marketing;
+- implementation narration unless the technique is a supported performance/interoperability
+  contract;
+- undocumented abbreviations, ambiguous pronouns, or phrases such as “normally”, “etc.”, “safe”,
+  and “thread-safe” without defining the exact boundary;
+- promises that tests and implementation do not protect;
+- commented-out code, stale debug notes, and documentation placeholders.
 
 The following comment is intentionally contract-focused:
 
@@ -141,6 +287,124 @@ The following comment is intentionally contract-focused:
  */
 fun <T> composeRoot(block: () -> T): T
 ```
+
+## ViewCompose-specific contracts
+
+### DSL components and layout containers
+
+Public `UiTreeBuilder` DSL functions follow the Compose component documentation order:
+
+1. one-sentence purpose and the native UI role;
+2. capabilities and observable behavior;
+3. controlled/uncontrolled state ownership and event ordering;
+4. measurement, placement, clipping, scrolling, and child/content-slot expectations;
+5. how `Modifier`, `Environment`, theme tokens, density, layout direction, and accessibility are
+   consumed or propagated;
+6. Android `View` mapping only when it is a stable interoperability contract;
+7. at least one compiled sample for a standalone component or non-trivial state;
+8. every parameter and content receiver.
+
+Do not claim Compose parity merely because an API has a similar name. Document semantic
+differences or link to the maintained comparison/migration page.
+
+### Modifiers and parent data
+
+Modifier documentation MUST state:
+
+- which phase it affects: construction, measurement, layout, drawing, input, semantics, or
+  platform binding;
+- whether order in the chain changes behavior;
+- the coordinate space and units of numeric values;
+- no-op, coercion, conflict, and parent-scope conditions;
+- state, allocation, invalidation, and performance consequences that affect API choice.
+
+Scope-specific parent data MUST identify the consuming parent and behavior outside that scope.
+
+### State, environment, and effects
+
+State-related APIs MUST identify the owner, observation boundary, equality policy, invalidation
+behavior, retention, restoration, and disposal. `remember`-style APIs also document key comparison
+and when values are recreated. Environment/local APIs document default resolution, nesting,
+snapshot behavior, and which descendants observe changes.
+
+Effects and asynchronous APIs document start/commit/dispose order, cancellation, rollback or
+partial effects, callback thread, and behavior when composition or the Android host is destroyed.
+
+### Android interop and native resources
+
+Interop APIs MUST document main-thread requirements, native `View` ownership/reuse, attach/detach
+behavior, lifecycle/SavedState owners, configuration changes, theme/resource lookup, minimum API
+level, and fallback behavior where applicable. A mapping to a specific native class is documented
+only if consumers may rely on that mapping as a compatibility contract.
+
+## Authoring templates
+
+Use the smallest template that fully describes the contract. Remove non-applicable paragraphs;
+never leave placeholder headings.
+
+### Stateful DSL component
+
+```kotlin
+/**
+ * Displays one selectable destination and reports user requests through [onSelected].
+ *
+ * Selection is controlled by [selected]. The component does not mutate caller state; invoke a
+ * state update from [onSelected] to reflect the new selection. The callback runs on the Android
+ * main thread after the click is accepted and before the next render pass.
+ *
+ * [modifier] is applied to the component's root node. The component resolves colors and shape
+ * tokens from the current [Environment] during rendering.
+ *
+ * @sample com.viewcompose.samples.navigationDestination
+ * @param selected whether this destination is rendered as selected
+ * @param onSelected callback invoked for an accepted user selection request
+ * @param modifier modifiers applied to the root node in chain order
+ * @param content content rendered inside the destination
+ */
+fun UiTreeBuilder.NavigationDestination(
+    selected: Boolean,
+    onSelected: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: UiTreeBuilder.() -> Unit,
+)
+```
+
+### Stateful resource owner
+
+```kotlin
+/**
+ * Creates a render session that owns the native view tree until [RenderSession.dispose].
+ *
+ * Calls are confined to the Android main thread. Disposing the session detaches observations and
+ * releases host references; subsequent render attempts throw [IllegalStateException].
+ *
+ * @param host Android host that owns the rendered view hierarchy
+ * @return a new session with no rendered root
+ * @throws IllegalStateException if [host] is already bound to an active session
+ */
+fun createRenderSession(host: RenderHost): RenderSession
+```
+
+Templates demonstrate form, not contracts to copy. Replace every statement with verified behavior
+from the owning implementation and tests.
+
+## Implementation comments
+
+Implementation comments preserve reasoning that code cannot express. They SHOULD explain:
+
+- why an Android platform workaround or unusual ordering is required;
+- invariants spanning multiple functions or modules;
+- concurrency, ownership, rollback, and lifecycle assumptions;
+- algorithmic or allocation trade-offs and the threshold behind them;
+- why an apparently simpler implementation is incorrect.
+
+Use `//` for a local reason and a short block comment for an algorithm or invariant applying to the
+following region. Do not narrate statements line by line. Prefer a named function/type and a test
+over a comment when the concept can be expressed structurally.
+
+A `TODO` MUST include a tracked issue URL or number, the concrete missing outcome, and the condition
+for removal. It MUST NOT be used as public API documentation. Delete obsolete comments in the same
+change that makes them false.
 
 ## Samples
 
@@ -204,13 +468,15 @@ matrix, verify samples, and reject comments that only restate names or signature
 
 The quality gate advances without hiding current debt:
 
-1. **Inventory:** `auditViewComposeApiDocs` is non-blocking and establishes the per-module backlog.
-2. **Core baseline:** repair `viewcompose-runtime`, `viewcompose-ui-contract`,
+1. **Immediate no-regression:** every new or changed public/protected declaration follows this
+   standard in the same pull request, even before its module baseline is clean.
+2. **Inventory:** `auditViewComposeApiDocs` is non-blocking and establishes the per-module backlog.
+3. **Core baseline:** repair `viewcompose-runtime`, `viewcompose-ui-contract`,
    `viewcompose-widget-core`, `viewcompose-renderer`, and `viewcompose-host-android` in dependency
    order.
-3. **No regression:** after a module reaches its baseline, strict Dokka checking becomes required
-   for that module and every new public API must be at least Q2.
-4. **Published catalog:** expand strict checking family by family until all published artifacts are
+4. **Strict module gate:** after a module reaches its baseline, strict Dokka checking becomes
+   required for that module.
+5. **Published catalog:** expand strict checking family by family until all published artifacts are
    covered.
 
 Do not enable repository-wide `failOnWarning` before existing warnings are classified and repaired.
@@ -219,12 +485,17 @@ owner, reason, and removal milestone in the active API documentation plan.
 
 ## Review checklist
 
+- Documentation was authored with the API change, not deferred to a cleanup task.
 - The declaration has the correct Q level for its risk.
 - The first paragraph explains purpose or observable result.
 - All applicable contract fields are present and match tests or implementation.
-- Parameter, property, return, exception, and deprecation tags resolve and add useful information.
+- Every public type parameter, receiver, property, parameter, and non-`Unit` result is documented in
+  the required order; exception and deprecation guidance is complete.
 - Stateful, asynchronous, callback, Android, and resource-owning behavior is explicit.
+- DSL components document state ownership, layout/content behavior, Modifier/environment usage,
+  accessibility, and stable native mapping where applicable.
 - Q3 samples compile and demonstrate public usage.
 - Links resolve and do not point to a mutable implementation branch for released behavior.
 - The comment is canonical English and does not duplicate a complete translation.
+- Implementation comments explain reasons or invariants and contain no stale narration/TODOs.
 - The generated page was inspected when formatting or symbol relationships changed.

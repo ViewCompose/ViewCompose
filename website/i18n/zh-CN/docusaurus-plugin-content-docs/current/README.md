@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 82b25c3dc865b42e9c01362c9043c889d0fd66fc7eb54ee092be12eafbd27936
+translation_source_hash: 1d5ab723c65995640623be4c3ccb87c7b7368867e8a0949368d8161d89d45b1b
 translation_status: current
 ---
 
@@ -71,7 +71,7 @@ translation_status: current
 - [开发流程](https://docs.viewcompose.com/project/workflow)
 - [文档治理规范](https://docs.viewcompose.com/project/documentation-governance)
 - [本地化工作流](./project/localization.md)
-- [API 文档质量规范](https://docs.viewcompose.com/project/api-documentation-quality)
+- [源码文档与 API 注释规范](https://docs.viewcompose.com/project/api-documentation-quality)
 - [文档站点运维](https://docs.viewcompose.com/project/documentation-site)
 - [发布流程](https://docs.viewcompose.com/project/publishing)
 - [路线图](https://docs.viewcompose.com/project/roadmap)

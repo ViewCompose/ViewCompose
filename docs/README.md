@@ -72,7 +72,7 @@ Current process, release, and planning information:
 - [Development workflow](./project/workflow.md)
 - [Documentation governance](./project/documentation-governance.md)
 - [Localization workflow](./project/localization.md)
-- [API documentation quality](./project/api-documentation-quality.md)
+- [Source documentation and API comments](./project/api-documentation-quality.md)
 - [Documentation site operations](./project/documentation-site.md)
 - [Publishing](./project/publishing.md)
 - [Roadmap](./project/roadmap.md)
