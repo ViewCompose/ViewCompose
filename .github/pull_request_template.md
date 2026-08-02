@@ -16,7 +16,7 @@ List the commands run and any validation that could not run.
 Select the applicable impact and explain it below. `No documentation impact` requires a concrete
 rationale.
 
-- [ ] Public KDoc/Javadoc changed
+- [ ] Public API or KDoc/Javadoc changed; required Q2/Q3 contract and audit were reviewed
 - [ ] Owning module documentation or module catalog changed
 - [ ] Guide, tutorial, architecture, migration, or tooling documentation changed
 - [ ] ADR added or superseded

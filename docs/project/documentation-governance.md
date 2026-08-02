@@ -160,6 +160,10 @@ applicable:
 Documentation must not promise behavior that tests do not protect. Public API additions without
 adequate KDoc/Javadoc are incomplete even when compilation succeeds.
 
+The normative quality levels, contract matrix, authoring form, audit commands, and staged
+enforcement policy are defined in the
+[API Documentation Quality Standard](api-documentation-quality.md).
+
 ## Architecture and design decisions
 
 Current-state architecture pages describe how the system works now. Update them in the same pull

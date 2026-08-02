@@ -38,15 +38,16 @@ custom domain, and independently versioned module documentation.
 
 ## Ordered work
 
-1. **Foundation — implemented locally; activation pending**
+1. **Foundation — completed**
    - record the platform ADR;
    - add Docusaurus site source and local build;
    - derive the module catalog from publishing metadata;
    - add selected-module Dokka assembly;
    - add PR verification and guarded Pages deployment.
-2. **API completeness — pending**
-   - generate every published artifact;
-   - improve KDoc coverage and source links;
+2. **API completeness — in progress**
+   - generate every published artifact — completed;
+   - establish the API documentation quality standard and audit path — completed;
+   - improve KDoc coverage and immutable source links — in progress;
    - connect Maven release versions and stable aliases.
 3. **Module manuals — pending**
    - establish the module page template;
@@ -56,10 +57,10 @@ custom domain, and independently versioned module documentation.
    - add getting started and first application tutorials;
    - add Compose concept comparison and migration paths;
    - compile all non-trivial samples.
-5. **Production hardening — pending**
-   - add Chinese locale structure;
-   - add search, redirects, accessibility checks, and size budgets;
-   - deploy and verify the custom domain.
+5. **Production hardening — in progress**
+   - add Chinese locale structure — completed;
+   - deploy and verify the custom domain — completed;
+   - add search, redirects, accessibility checks, and size budgets — pending.
 
 ## Validation
 
@@ -75,5 +76,6 @@ custom domain, and independently versioned module documentation.
 
 ## Next action
 
-Merge the foundation, let the documentation workflow complete on `main`, enable GitHub Pages with
-GitHub Actions as its source, and verify `docs.viewcompose.com` before starting API completeness.
+Follow the [API documentation completeness plan](./api-documentation-completeness.md): repair the
+`viewcompose-runtime` baseline first, then advance through the core UI dependency chain while source
+links and strict per-module gates are added.
