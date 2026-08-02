@@ -8,20 +8,35 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.CanvasNodeProps
 import com.viewcompose.widget.core.UiTreeBuilder
 
-/**
- * 绘制节点或 modifier 使用的基础绘制回调。
- * Basic draw callback used by drawing nodes or modifiers.
- */
+/** Source-level alias for a command recorder invoked with the current draw context. */
 typealias DrawBlock = com.viewcompose.ui.graphics.DrawBlock
+
+/** Source-level alias for a draw callback that decides when wrapped content is rendered. */
 typealias DrawContentBlock = com.viewcompose.ui.graphics.DrawContentBlock
+
+/** Source-level alias for a cache builder that returns renderer-replayable commands. */
 typealias DrawCacheBuildBlock = com.viewcompose.ui.graphics.DrawCacheBuildBlock
+
+/** Source-level alias for physical-pixel draw bounds and density. */
 typealias DrawContext = com.viewcompose.ui.graphics.DrawContext
+
+/** Source-level alias for the scope exposing `drawContent()`. */
 typealias DrawContentScope = com.viewcompose.ui.graphics.DrawContentScope
+
+/** Source-level alias for the scope exposing renderer-owned command caching. */
 typealias DrawCacheScope = com.viewcompose.ui.graphics.DrawCacheScope
 
 /**
- * 发射一个只负责自定义绘制的 Canvas 节点。
- * Emits a Canvas node dedicated to custom drawing.
+ * Emits a node whose visual content is entirely defined by [onDraw].
+ *
+ * The callback records commands during each renderer draw pass on the UI thread. [DrawContext] `size`
+ * uses the node's measured physical-pixel bounds; no intrinsic size is derived from commands, so a
+ * layout modifier or parent constraint must provide usable bounds.
+ *
+ * @param key optional sibling identity used during reconciliation
+ * @param modifier layout, semantics, input, and additional draw behavior
+ * @param onDraw command-recording callback for each draw pass
+ * @sample com.viewcompose.graphics.samples.canvasSample
  */
 fun UiTreeBuilder.Canvas(
     key: Any? = null,
@@ -39,8 +54,12 @@ fun UiTreeBuilder.Canvas(
 }
 
 /**
- * 在内容之后、但视觉上位于内容背后执行绘制。
- * Draws behind the node content.
+ * Appends a callback that records commands before wrapped node content is drawn.
+ *
+ * [key] identifies the modifier element for reconciliation; it is not a draw-cache key. The callback
+ * runs on every draw pass and should avoid expensive allocation.
+ *
+ * @sample com.viewcompose.graphics.samples.drawBehindSample
  */
 fun Modifier.drawBehind(
     key: Any = Unit,
@@ -55,8 +74,12 @@ fun Modifier.drawBehind(
 }
 
 /**
- * 允许绘制逻辑显式决定何时绘制原始内容。
- * Lets draw logic explicitly decide when to draw the original content.
+ * Appends a callback that controls when or whether wrapped content is drawn.
+ *
+ * Invoke `drawContent()` exactly where downstream content should appear. Omitting it suppresses
+ * content; commands recorded before and after it create background and foreground layers.
+ *
+ * @sample com.viewcompose.graphics.samples.drawWithContentSample
  */
 fun Modifier.drawWithContent(
     key: Any = Unit,
@@ -71,8 +94,13 @@ fun Modifier.drawWithContent(
 }
 
 /**
- * 构建可复用绘制缓存，适合昂贵 path/brush 计算。
- * Builds reusable drawing cache for expensive path or brush calculations.
+ * Appends a cache-aware command builder for expensive path, brush, or scene preparation.
+ *
+ * [key] identifies the modifier element only. Inside [onBuildDrawCache], use the cache scope's
+ * `cache` function with a semantic key containing every size, density, theme, and resource input.
+ * The renderer owns a single-entry cache for the mounted element and clears it on disposal.
+ *
+ * @sample com.viewcompose.graphics.samples.drawWithCacheSample
  */
 fun Modifier.drawWithCache(
     key: Any = Unit,
@@ -86,6 +114,7 @@ fun Modifier.drawWithCache(
     )
 }
 
+/** Concise source-compatible alias for [drawBehind]. */
 fun Modifier.draw(
     key: Any = Unit,
     onDraw: DrawBlock,
@@ -96,6 +125,7 @@ fun Modifier.draw(
     )
 }
 
+/** Concise source-compatible alias for [drawWithCache]. */
 fun Modifier.drawCache(
     key: Any = Unit,
     onBuildDrawCache: DrawCacheBuildBlock,
