@@ -11,7 +11,7 @@
 3. demo 页面结构调整后，关键 viewcompose-benchmark 入口跑偏
 4. 组件在真实 Activity/View 树里的测量与视觉表现和预期不一致
 
-外挂组件专项规划见 [OVERLAY_COMPONENTS_ROADMAP.md](/Users/gzq/AndroidStudioProjects/UIFramework/OVERLAY_COMPONENTS_ROADMAP.md)。
+外挂组件专项规划见 [OVERLAY_COMPONENTS_ROADMAP.md](../../OVERLAY_COMPONENTS_ROADMAP.md)。
 
 因此，后续 UI 测试的目标不是替代单元测试，而是补上“真实 Activity + 真实 View 树 + 真实主题切换”的回归校验。
 
@@ -148,7 +148,7 @@
 1. `结构稳定 + 外层状态变化`
 2. `当前可见内容立即刷新`
 
-专项清单见 [SESSION_CONTAINER_CHECKLIST.md](/Users/gzq/AndroidStudioProjects/UIFramework/SESSION_CONTAINER_CHECKLIST.md)。
+专项清单见 [SESSION_CONTAINER_CHECKLIST.md](../architecture/session-containers.md)。
 
 ## 7. 结论
 

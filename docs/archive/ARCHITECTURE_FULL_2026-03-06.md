@@ -560,9 +560,9 @@ Compose 的优势在于：
 - `Props` 保留为底层兼容层
 - 基于 `NodeSpec` 的字段级 diff + patch 已落地，样式变化（包括主题切换引发的颜色变化）可走 Patch 而非 Rebind
 
-详细方案见 [NODE_PROPS.md](/Users/gzq/AndroidStudioProjects/UIFramework/NODE_PROPS.md)。
-性能主线见 [PERFORMANCE.md](/Users/gzq/AndroidStudioProjects/UIFramework/PERFORMANCE.md)。
-延迟 session 容器专项检查见 [SESSION_CONTAINER_CHECKLIST.md](/Users/gzq/AndroidStudioProjects/UIFramework/SESSION_CONTAINER_CHECKLIST.md)。
+详细方案见 [NODE_PROPS.md](../architecture/node-spec.md)。
+性能主线见 [PERFORMANCE.md](../tooling/performance.md)。
+延迟 session 容器专项检查见 [SESSION_CONTAINER_CHECKLIST.md](../architecture/session-containers.md)。
 
 ### 7.5 通用页面节点更新粒度仍偏粗
 

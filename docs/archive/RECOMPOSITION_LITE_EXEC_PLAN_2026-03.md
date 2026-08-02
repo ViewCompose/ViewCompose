@@ -60,4 +60,4 @@
   - 处理：在 `ROADMAP.md` 保留该项 UI 风险状态，后续以输入焦点/IME 策略专项处理。
 - `2026-03-09` 阻塞已解除：
   - 复跑用例 `DemoVisualUiTest.inputSearch_focusSearchBar_doesNotAutoScrollList` 已通过（`1/1`）。
-  - 阻塞上下文归档见 [RECOMPOSITION_LITE_BLOCKER_CONTEXT_2026-03.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/RECOMPOSITION_LITE_BLOCKER_CONTEXT_2026-03.md)。
+  - 阻塞上下文归档见 [RECOMPOSITION_LITE_BLOCKER_CONTEXT_2026-03.md](RECOMPOSITION_LITE_BLOCKER_CONTEXT_2026-03.md)。

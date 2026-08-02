@@ -18,11 +18,11 @@
 </p>
 
 <p align="center">
-  <a href="./CONTEXT.md">文档</a> ·
+  <a href="./docs/README.md">文档</a> ·
   <a href="https://central.sonatype.com/artifact/com.viewcompose/viewcompose-host-android">Maven Central</a> ·
   <a href="https://plugins.jetbrains.com/plugin/33290-viewcompose-preview">Android Studio 插件</a> ·
   <a href="./CONTRIBUTING.md">参与贡献</a> ·
-  <a href="./ROADMAP.md">路线图</a>
+  <a href="./docs/project/roadmap.md">路线图</a>
 </p>
 
 ViewCompose 为使用 Android View 渲染引擎的应用提供受 Compose 启发、由状态驱动的 Kotlin
@@ -120,7 +120,7 @@ implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
 ```
 
 所有公开产物都包含源码包，可以在 IDE 中直接进入框架实现。完整的产物和版本约定见
-[发布说明](./PUBLISHING.md)。
+[发布说明](docs/project/publishing.md)。
 
 ## 模块概览
 
@@ -153,7 +153,7 @@ Android Studio 静态预览插件，提供：
 ## 文档
 
 GitHub 托管的文档网站是项目的下一个阶段。在网站上线前，
-[`CONTEXT.md`](./CONTEXT.md) 是稳定的文档入口，汇总架构、API、使用指南、性能、工具链和路线图。
+[`docs/README.md`](docs/README.md) 是稳定的文档入口，汇总架构、API、使用指南、性能、工具链和路线图。
 README 将有意保持简洁，只负责说明项目性质和首次接入所需信息。
 
 ## 构建与贡献
@@ -165,7 +165,7 @@ cd ViewCompose
 ```
 
 欢迎提交 Issue 和 Pull Request。进行较大改动前，请阅读[贡献指南](./CONTRIBUTING.md)、
-[架构边界](./ARCHITECTURE.md)和[开发流程](./WORKFLOW.md)。
+[架构边界](docs/architecture/overview.md)和[开发流程](docs/project/workflow.md)。
 
 ## 开源协议
 

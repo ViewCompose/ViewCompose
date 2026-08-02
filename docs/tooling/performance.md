@@ -11,7 +11,7 @@
 
 历史长版分析见：
 
-- [PERFORMANCE_FULL_2026-03-06.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/PERFORMANCE_FULL_2026-03-06.md)
+- [PERFORMANCE_FULL_2026-03-06.md](../archive/PERFORMANCE_FULL_2026-03-06.md)
 
 ## 2. 当前性能基线（2026-07）
 
@@ -125,7 +125,7 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
   -Pandroid.testInstrumentationRunnerArguments.shadowRenderPolicy=render_node
 ```
 
-完整数据与决策见 [ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)。
+完整数据与决策见[高级阴影执行记录](../archive/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)。
 
 自动报告与回归规则：
 
@@ -234,12 +234,12 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 
 协作规则见：
 
-- [WORKFLOW.md](/Users/gzq/AndroidStudioProjects/UIFramework/WORKFLOW.md)
+- [workflow.md](../project/workflow.md)
 
 ## 8. 关联文档
 
-1. 架构规范：[ARCHITECTURE.md](/Users/gzq/AndroidStudioProjects/UIFramework/ARCHITECTURE.md)
-2. 容器专项清单：[SESSION_CONTAINER_CHECKLIST.md](/Users/gzq/AndroidStudioProjects/UIFramework/SESSION_CONTAINER_CHECKLIST.md)
-3. 统一路线图：[ROADMAP.md](/Users/gzq/AndroidStudioProjects/UIFramework/ROADMAP.md)
-4. 文档入口：[CONTEXT.md](/Users/gzq/AndroidStudioProjects/UIFramework/CONTEXT.md)
-5. 状态快照规范：[STATE_SNAPSHOT.md](/Users/gzq/AndroidStudioProjects/UIFramework/STATE_SNAPSHOT.md)
+1. 架构规范：[overview.md](../architecture/overview.md)
+2. 容器专项清单：[session-containers.md](../architecture/session-containers.md)
+3. 统一路线图：[roadmap.md](../project/roadmap.md)
+4. 文档入口：[docs/README.md](../README.md)
+5. 状态快照规范：[state-snapshots.md](../architecture/state-snapshots.md)

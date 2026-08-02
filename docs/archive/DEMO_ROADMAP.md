@@ -20,7 +20,7 @@
 - 该仓库 README 当前明确强调了 `Jetpack Compose Tutorials`、`Layouts`、`State`、`Widgets`、`Navigation`、`Gestures`、`Animation`、`Canvas` 等方向  
   参考页：<https://github.com/SmartToolFactory/Jetpack-Compose-Tutorials>
 
-外挂组件 demo 规划见 [OVERLAY_COMPONENTS_ROADMAP.md](/Users/gzq/AndroidStudioProjects/UIFramework/OVERLAY_COMPONENTS_ROADMAP.md)。
+外挂组件 demo 规划见 [OVERLAY_COMPONENTS_ROADMAP.md](../../OVERLAY_COMPONENTS_ROADMAP.md)。
 
 ## 2. 当前问题
 

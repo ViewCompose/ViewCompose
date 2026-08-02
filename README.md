@@ -18,11 +18,11 @@
 </p>
 
 <p align="center">
-  <a href="./CONTEXT.md">Documentation</a> ·
+  <a href="./docs/README.md">Documentation</a> ·
   <a href="https://central.sonatype.com/artifact/com.viewcompose/viewcompose-host-android">Maven Central</a> ·
   <a href="https://plugins.jetbrains.com/plugin/33290-viewcompose-preview">Android Studio plugin</a> ·
   <a href="./CONTRIBUTING.md">Contributing</a> ·
-  <a href="./ROADMAP.md">Roadmap</a>
+  <a href="./docs/project/roadmap.md">Roadmap</a>
 </p>
 
 ViewCompose brings a Compose-inspired, state-driven Kotlin DSL to applications that use the
@@ -126,7 +126,7 @@ implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
 ```
 
 Every published artifact includes sources so IDE navigation can open the framework implementation.
-See [Publishing](./PUBLISHING.md) for the complete artifact and versioning contract.
+See [Publishing](docs/project/publishing.md) for the complete artifact and versioning contract.
 
 ## Modules at a glance
 
@@ -159,7 +159,7 @@ under [`tools/viewcompose-studio-plugin`](./tools/viewcompose-studio-plugin).
 ## Documentation
 
 The hosted documentation site is the next project milestone. Until it is available,
-[`CONTEXT.md`](./CONTEXT.md) is the stable documentation entrance for architecture, APIs, guides,
+[`docs/README.md`](docs/README.md) is the stable documentation entrance for architecture, APIs, guides,
 performance, tooling, and roadmap material. The README intentionally stays focused on project
 identity and first-time adoption.
 
@@ -172,7 +172,7 @@ cd ViewCompose
 ```
 
 Issues and pull requests are welcome. Please read the [contribution guide](./CONTRIBUTING.md),
-[architecture boundaries](./ARCHITECTURE.md), and [development workflow](./WORKFLOW.md) before a
+[architecture boundaries](docs/architecture/overview.md), and [development workflow](docs/project/workflow.md) before a
 substantial change.
 
 ## License

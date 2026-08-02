@@ -13,8 +13,8 @@
 
 补充专题：
 
-- 统一路线图见 [ROADMAP.md](/Users/gzq/AndroidStudioProjects/UIFramework/ROADMAP.md)
-- 主题相关历史审计和拆分记录见 [docs/archive/README.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/README.md)
+- 统一路线图见 [ROADMAP.md](../project/roadmap.md)
+- 主题相关历史审计和拆分记录见 [docs/archive/README.md](README.md)
 
 ## 2. 结论
 

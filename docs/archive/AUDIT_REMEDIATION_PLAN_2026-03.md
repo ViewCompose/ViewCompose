@@ -13,7 +13,7 @@
 
 审计来源：
 
-- [PROJECT_AUDIT_2026-03-05.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/PROJECT_AUDIT_2026-03-05.md)
+- [PROJECT_AUDIT_2026-03-05.md](PROJECT_AUDIT_2026-03-05.md)
 
 ## 2. 当前基线（2026-03-06）
 

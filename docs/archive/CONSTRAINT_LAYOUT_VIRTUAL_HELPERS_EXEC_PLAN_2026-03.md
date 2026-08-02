@@ -43,5 +43,5 @@
 7. `docs: close and archive constraintlayout virtual helpers execution plan`
 
 ## 阻塞记录
-- 2026-03-11（Step 6）：`ANDROID_SERIAL=98101FFBA003AE ./gradlew qaFull` 触发 instrumentation 进程崩溃，失败模式为 `Activity never becomes requested state "[RESUMED]"` + `Instrumentation run failed due to Process crashed`。已记录到 [CONSTRAINT_LAYOUT_BLOCKER_CONTEXT_2026-03.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/CONSTRAINT_LAYOUT_BLOCKER_CONTEXT_2026-03.md)。
+- 2026-03-11（Step 6）：`ANDROID_SERIAL=98101FFBA003AE ./gradlew qaFull` 触发 instrumentation 进程崩溃，失败模式为 `Activity never becomes requested state "[RESUMED]"` + `Instrumentation run failed due to Process crashed`。已记录到 [CONSTRAINT_LAYOUT_BLOCKER_CONTEXT_2026-03.md](CONSTRAINT_LAYOUT_BLOCKER_CONTEXT_2026-03.md)。
 - 2026-03-11（阻塞解除）：同设备复跑 `ComponentFamilySmokeUiTest#keyComponentFamilies_haveVisibleSmokeAnchors` 与 `qaFull` 通过，阻塞关闭并归档。

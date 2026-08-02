@@ -691,12 +691,158 @@ tasks.register("verifyNavigationCorePurity") {
     }
 }
 
+tasks.register("verifyDocumentationStructure") {
+    group = "verification"
+    description = "Verifies documentation placement, index coverage, and repository-relative links."
+
+    val allowedRootMarkdown =
+        setOf(
+            "AGENTS.md",
+            "CODE_OF_CONDUCT.md",
+            "CONTRIBUTING.md",
+            "README.md",
+            "README.zh-CN.md",
+            "THIRD_PARTY_NOTICES.md",
+        )
+    val allowedDocsDirectories = setOf("architecture", "archive", "guides", "project", "tooling")
+    val activeDocumentName = Regex("[a-z0-9]+(?:-[a-z0-9]+)*\\.md")
+    val markdownLink = Regex("""\]\(([^)]+)\)""")
+    val htmlLink = Regex("""href=["']([^"']+)["']""")
+    val windowsAbsolutePath = Regex("^[A-Za-z]:[/\\\\]")
+
+    doLast {
+        val violations = mutableListOf<String>()
+        val documentationRoot = rootDir.resolve("docs")
+        val documentationIndex = documentationRoot.resolve("README.md")
+
+        val rootMarkdown =
+            rootDir.listFiles()
+                .orEmpty()
+                .filter { file -> file.isFile && file.extension.equals("md", ignoreCase = true) }
+                .map { file -> file.name }
+                .toSet()
+        (rootMarkdown - allowedRootMarkdown).sorted().forEach { fileName ->
+            violations += "$fileName -> Markdown is not allowed at the repository root"
+        }
+
+        documentationRoot.listFiles()
+            .orEmpty()
+            .filter(File::isDirectory)
+            .map(File::getName)
+            .filterNot(allowedDocsDirectories::contains)
+            .sorted()
+            .forEach { directory ->
+                violations += "docs/$directory -> undocumented top-level documentation category"
+            }
+
+        val activeDocuments =
+            documentationRoot.walkTopDown()
+                .filter(File::isFile)
+                .filter { file -> file.extension.equals("md", ignoreCase = true) }
+                .filterNot { file ->
+                    file.relativeTo(documentationRoot).invariantSeparatorsPath.startsWith("archive/")
+                }
+                .toList()
+
+        activeDocuments.forEach { file ->
+            if (file.name != "README.md" && !activeDocumentName.matches(file.name)) {
+                violations +=
+                    "${file.relativeTo(rootDir).invariantSeparatorsPath} -> " +
+                        "active document names must use lowercase kebab-case"
+            }
+        }
+
+        if (!documentationIndex.isFile) {
+            violations += "docs/README.md -> canonical documentation index is missing"
+        } else {
+            val indexedDocuments =
+                markdownLink.findAll(documentationIndex.readText())
+                    .map { match -> match.groupValues[1].substringBefore('#').trim() }
+                    .filter(String::isNotEmpty)
+                    .filterNot { target -> target.contains("://") || target.startsWith("mailto:") }
+                    .map { target -> documentationIndex.parentFile.resolve(target).normalize() }
+                    .filter(File::isFile)
+                    .map(File::getCanonicalFile)
+                    .toSet()
+            activeDocuments
+                .filterNot { file -> file.canonicalFile == documentationIndex.canonicalFile }
+                .filterNot { file -> file.canonicalFile in indexedDocuments }
+                .sortedBy { file -> file.path }
+                .forEach { file ->
+                    violations +=
+                        "${file.relativeTo(rootDir).invariantSeparatorsPath} -> " +
+                            "active document is missing from docs/README.md"
+                }
+        }
+
+        val checkedMarkdown =
+            rootDir.walkTopDown()
+                .onEnter { directory ->
+                    directory == rootDir ||
+                        directory.name !in setOf(".git", ".gradle", "build")
+                }
+                .filter(File::isFile)
+                .filter { file -> file.extension.equals("md", ignoreCase = true) }
+                .filterNot { file ->
+                    file.toPath().startsWith(documentationRoot.resolve("archive").toPath())
+                }
+                .toList()
+
+        checkedMarkdown.forEach { file ->
+            val content = file.readText()
+            val targets =
+                buildList {
+                    markdownLink.findAll(content).forEach { match -> add(match.groupValues[1]) }
+                    htmlLink.findAll(content).forEach { match -> add(match.groupValues[1]) }
+                }
+            targets.forEach targetLoop@{ rawTarget ->
+                val target = rawTarget.trim().removePrefix("<").removeSuffix(">")
+                if (target.isEmpty() || target.startsWith("#") || target.startsWith("mailto:")) {
+                    return@targetLoop
+                }
+                if (target.contains("://")) {
+                    if (target.startsWith("file://")) {
+                        violations +=
+                            "${file.relativeTo(rootDir).invariantSeparatorsPath} -> " +
+                                "local file link is forbidden: $target"
+                    }
+                    return@targetLoop
+                }
+                if (target.startsWith("/") || windowsAbsolutePath.containsMatchIn(target)) {
+                    violations +=
+                        "${file.relativeTo(rootDir).invariantSeparatorsPath} -> " +
+                            "absolute link is forbidden: $target"
+                    return@targetLoop
+                }
+                val path = target.substringBefore('#').substringBefore('?')
+                if (path.isNotEmpty() && !file.parentFile.resolve(path).normalize().exists()) {
+                    violations +=
+                        "${file.relativeTo(rootDir).invariantSeparatorsPath} -> " +
+                            "broken relative link: $target"
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Documentation structure verification failed:")
+                    violations.distinct().sorted().forEach { violation ->
+                        appendLine("- $violation")
+                    }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("qaQuick") {
     group = "verification"
     description = "Run compile + unit-test quality gate for all core modules."
     dependsOn("verifyModulePackageRoots")
     dependsOn("verifyAndroidModuleNamespaces")
     dependsOn("verifyModuleDependencyBoundaries")
+    dependsOn("verifyDocumentationStructure")
     dependsOn("verifyViewComposePublishingConfiguration")
     dependsOn("verifyRuntimePurity")
     dependsOn("verifyNavigationCorePurity")
