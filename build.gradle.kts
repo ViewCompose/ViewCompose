@@ -693,7 +693,8 @@ tasks.register("verifyNavigationCorePurity") {
 
 tasks.register("verifyDocumentationStructure") {
     group = "verification"
-    description = "Verifies documentation placement, index coverage, and repository-relative links."
+    description =
+        "Verifies documentation placement, link-graph coverage, module catalog, and relative links."
 
     val allowedRootMarkdown =
         setOf(
@@ -704,7 +705,18 @@ tasks.register("verifyDocumentationStructure") {
             "README.zh-CN.md",
             "THIRD_PARTY_NOTICES.md",
         )
-    val allowedDocsDirectories = setOf("architecture", "archive", "guides", "project", "tooling")
+    val allowedDocsDirectories =
+        setOf(
+            "architecture",
+            "archive",
+            "getting-started",
+            "guides",
+            "migration",
+            "modules",
+            "project",
+            "tooling",
+            "tutorials",
+        )
     val activeDocumentName = Regex("[a-z0-9]+(?:-[a-z0-9]+)*\\.md")
     val markdownLink = Regex("""\]\(([^)]+)\)""")
     val htmlLink = Regex("""href=["']([^"']+)["']""")
@@ -755,24 +767,103 @@ tasks.register("verifyDocumentationStructure") {
         if (!documentationIndex.isFile) {
             violations += "docs/README.md -> canonical documentation index is missing"
         } else {
-            val indexedDocuments =
-                markdownLink.findAll(documentationIndex.readText())
-                    .map { match -> match.groupValues[1].substringBefore('#').trim() }
-                    .filter(String::isNotEmpty)
-                    .filterNot { target -> target.contains("://") || target.startsWith("mailto:") }
-                    .map { target -> documentationIndex.parentFile.resolve(target).normalize() }
-                    .filter(File::isFile)
-                    .map(File::getCanonicalFile)
-                    .toSet()
+            val activeDocumentFiles = activeDocuments.map(File::getCanonicalFile).toSet()
+            val reachableDocuments = mutableSetOf<File>()
+            val pendingDocuments = java.util.ArrayDeque<File>()
+            pendingDocuments.add(documentationIndex.canonicalFile)
+
+            while (pendingDocuments.isNotEmpty()) {
+                val currentDocument = pendingDocuments.removeFirst()
+                if (!reachableDocuments.add(currentDocument)) continue
+
+                val targets =
+                    buildList {
+                        val content = currentDocument.readText()
+                        markdownLink.findAll(content).forEach { match -> add(match.groupValues[1]) }
+                        htmlLink.findAll(content).forEach { match -> add(match.groupValues[1]) }
+                    }
+                targets.forEach targetLoop@{ rawTarget ->
+                    val target = rawTarget.trim().removePrefix("<").removeSuffix(">")
+                    if (
+                        target.isEmpty() ||
+                        target.startsWith("#") ||
+                        target.startsWith("mailto:") ||
+                        target.contains("://") ||
+                        target.startsWith("/") ||
+                        windowsAbsolutePath.containsMatchIn(target)
+                    ) {
+                        return@targetLoop
+                    }
+                    val path = target.substringBefore('#').substringBefore('?')
+                    if (path.isEmpty()) return@targetLoop
+                    val linkedDocument = currentDocument.parentFile.resolve(path).normalize()
+                    if (linkedDocument.isFile) {
+                        val canonicalDocument = linkedDocument.canonicalFile
+                        if (
+                            canonicalDocument in activeDocumentFiles &&
+                            canonicalDocument !in reachableDocuments
+                        ) {
+                            pendingDocuments.add(canonicalDocument)
+                        }
+                    }
+                }
+            }
+
             activeDocuments
                 .filterNot { file -> file.canonicalFile == documentationIndex.canonicalFile }
-                .filterNot { file -> file.canonicalFile in indexedDocuments }
+                .filterNot { file -> file.canonicalFile in reachableDocuments }
                 .sortedBy { file -> file.path }
                 .forEach { file ->
                     violations +=
                         "${file.relativeTo(rootDir).invariantSeparatorsPath} -> " +
-                            "active document is missing from docs/README.md"
+                            "active document is not reachable from docs/README.md"
                 }
+        }
+
+        val publishingPropertiesFile = rootDir.resolve("gradle/viewcompose-publishing.properties")
+        val moduleCatalog = documentationRoot.resolve("modules/README.md")
+        if (!publishingPropertiesFile.isFile) {
+            violations +=
+                "gradle/viewcompose-publishing.properties -> publishing metadata is missing"
+        } else if (!moduleCatalog.isFile) {
+            violations += "docs/modules/README.md -> published module catalog is missing"
+        } else {
+            val publishingProperties = java.util.Properties()
+            publishingPropertiesFile.inputStream().use(publishingProperties::load)
+            val publishedModules =
+                publishingProperties.stringPropertyNames()
+                    .filter { property ->
+                        property.startsWith("module.") && property.endsWith(".version")
+                    }
+                    .map { property ->
+                        property.removePrefix("module.").removeSuffix(".version")
+                    }
+                    .toSet()
+            val moduleRow =
+                Regex(
+                    pattern = """^\|\s*`(viewcompose-[a-z0-9-]+)`\s*\|""",
+                    option = RegexOption.MULTILINE,
+                )
+            val catalogModules =
+                moduleRow.findAll(moduleCatalog.readText())
+                    .map { match -> match.groupValues[1] }
+                    .toList()
+            catalogModules.groupingBy { module -> module }.eachCount()
+                .filterValues { count -> count > 1 }
+                .keys
+                .sorted()
+                .forEach { module ->
+                    violations +=
+                        "docs/modules/README.md -> duplicate published module row: $module"
+                }
+            (publishedModules - catalogModules.toSet()).sorted().forEach { module ->
+                violations +=
+                    "docs/modules/README.md -> published module is missing from catalog: $module"
+            }
+            (catalogModules.toSet() - publishedModules).sorted().forEach { module ->
+                violations +=
+                    "docs/modules/README.md -> catalog artifact has no publishing version: $module"
+            }
         }
 
         val checkedMarkdown =

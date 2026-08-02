@@ -12,6 +12,7 @@ The repository state and active documents below are authoritative. Files under
 | Goal | Start here |
 | --- | --- |
 | Understand the framework | [Architecture overview](./architecture/overview.md) → [Modifier model](./architecture/modifier.md) → [NodeSpec model](./architecture/node-spec.md) |
+| Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual when available |
 | Build with a feature | Select the relevant document under [Guides](#guides) |
 | Work on previews or performance | [Preview](./tooling/preview.md) → [Diagnostics](./tooling/diagnostics.md) → [Performance](./tooling/performance.md) |
 | Contribute a change | [Development workflow](./project/workflow.md) → [Documentation governance](./project/documentation-governance.md) |
@@ -43,6 +44,12 @@ Feature behavior and platform integration:
 - [Overlays](./guides/overlays.md)
 - [Shadows](./guides/shadows.md)
 
+## Published modules
+
+The [published module catalog](./modules/README.md) is kept in lockstep with Maven publication
+metadata. Dedicated module manuals will live below `docs/modules/<artifact-id>/` and will be able to
+evolve with each artifact independently.
+
 ## Tooling
 
 Development-time tooling, inspection, and performance:
@@ -65,13 +72,17 @@ Current process, release, and planning information:
 ## Documentation rules
 
 1. Keep the repository root limited to landing pages and community governance files.
-2. Update an existing active document instead of creating a parallel source of truth.
-3. Put cross-session execution plans under `docs/project/plans/`; move completed plans to
+2. Separate cross-module concepts from artifact-specific installation, compatibility, and API
+   contracts.
+3. Update KDoc/Javadoc and the owning module manual with public API changes.
+4. Apply the documentation change impact matrix in every code pull request; `No documentation
+   impact` requires a rationale.
+5. Put cross-session execution plans under `docs/project/plans/`; move completed plans to
    `docs/archive/`.
-4. Use repository-relative links. Never commit a local absolute path.
-5. Add every active document to this index in the same change that creates it.
-6. Do not use archived documents as current requirements.
-7. Run `./gradlew verifyDocumentationStructure` before committing documentation changes. The same
+6. Use repository-relative links. Never commit a local absolute path.
+7. Make every active document reachable from this index through a section index.
+8. Do not use archived documents as current requirements.
+9. Run `./gradlew verifyDocumentationStructure` before committing documentation changes. The same
    check is included in `qaQuick`.
 
 The complete contract, naming rules, lifecycle, and review checklist are defined in
