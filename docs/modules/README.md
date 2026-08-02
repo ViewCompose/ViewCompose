@@ -25,7 +25,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-viewmodel` | Integration | ViewModel and SavedStateHandle integration | [Available](./viewcompose-viewmodel/README.md) |
 | `viewcompose-preview-core` | Preview tooling | Preview annotations and tooling protocol | [Available](./viewcompose-preview-core/README.md) |
 | `viewcompose-preview-gradle-plugin` | Preview tooling | Preview discovery and Gradle tasks | [Available](./viewcompose-preview-gradle-plugin/README.md) |
-| `viewcompose-preview-runner` | Preview tooling | Layoutlib preview rendering runtime | Planned |
+| `viewcompose-preview-runner` | Preview tooling | Layoutlib preview rendering runtime | [Available](./viewcompose-preview-runner/README.md) |
 | `viewcompose-preview-worker-host` | Preview tooling | Isolated preview worker host | [Available](./viewcompose-preview-worker-host/README.md) |
 | `viewcompose-preview` | Preview tooling | Development preview and snapshot integration | Planned |
 | `viewcompose-animation-core` | Animation | Platform-neutral animation engine contracts | [Available](./viewcompose-animation-core/README.md) |
