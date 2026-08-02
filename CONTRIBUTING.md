@@ -34,8 +34,11 @@ process-death restoration and platform Predictive Back. Run the merge gate docum
    [documentation governance](docs/project/documentation-governance.md) relevant to the change.
 2. Add/update tests for behavioral changes.
 3. Apply the documentation change impact matrix before implementation and review.
-4. Keep source KDoc/Javadoc, the owning [module documentation](docs/modules/README.md), and
-   cross-module guides in sync with the contracts they describe.
+4. Treat documentation as implementation. New or changed public/protected APIs must include
+   complete KDoc/Javadoc, required compiled samples, the owning
+   [module documentation](docs/modules/README.md), and affected cross-module guides in the same PR.
+   Follow the
+   [Source Documentation and API Comment Standard](docs/project/api-documentation-quality.md).
 5. If a change has no documentation impact, explain why in the pull request rather than silently
    omitting documentation.
 

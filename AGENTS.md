@@ -7,10 +7,12 @@ These rules apply to AI-assisted work in this repository:
    when creating, moving, or updating documentation.
 3. Read the owning entry in [`docs/modules/README.md`](docs/modules/README.md) before changing a
    published module, and update its module manual once available.
-4. Apply the documentation change impact matrix to code changes. Public API changes require source
-   KDoc/Javadoc that follows the
-   [`API Documentation Quality Standard`](docs/project/api-documentation-quality.md) and the owning
-   module documentation; a `No documentation impact` conclusion needs a written rationale.
+4. Before implementing a new or changed public/protected API, assign its Q level and identify every
+   applicable contract field. The same change must include canonical-English KDoc/Javadoc,
+   compiled Q3 samples, and owning-module documentation required by the
+   [`Source Documentation and API Comment Standard`](docs/project/api-documentation-quality.md).
+   Never add placeholder comments or defer documentation to a cleanup task; a `No documentation
+   impact` conclusion needs a written rationale.
 5. Do not add Markdown files to the repository root unless the documented root allowlist and its
    automated guard are intentionally changed together.
 6. Treat `docs/archive/` as historical evidence, not current requirements.
@@ -24,6 +26,8 @@ These rules apply to AI-assisted work in this repository:
     why the page is not translated according to the language policy. Never update only a stored
     translation fingerprint.
 11. Run `./gradlew verifyDocumentationStructure`; it is also part of `qaQuick`.
+12. Durable implementation comments explain reasons, invariants, lifecycle/concurrency constraints,
+    or platform workarounds. Do not add bilingual duplicate comments or narrate code line by line.
 
 If an active document conflicts with code or tests, verify the implementation and correct the
 document rather than creating a parallel explanation.
