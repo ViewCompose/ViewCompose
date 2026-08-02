@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 69068ad87c62862a4add4cc0c4cc1a4cfa4023c122b2ce14be2e9bb5d904bc4e
+translation_source_hash: ff35cf013a7b13fff62dc3a0d9b6bd4d2e89247a80f1c7df39f803caa7388886
 translation_status: current
 ---
 
@@ -18,7 +18,7 @@ translation_status: current
 | --- | --- | --- | --- |
 | `viewcompose-runtime` | 基础 | 平台无关的状态与观察运行时 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-runtime) |
 | `viewcompose-text-core` | 基础 | 平台无关的文本编辑模型 | 规划中 |
-| `viewcompose-ui-contract` | 基础 | 平台无关的 UI 契约与节点规范 | 规划中 |
+| `viewcompose-ui-contract` | 基础 | 平台无关的 UI 契约与节点规范 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract) |
 | `viewcompose-navigation-core` | 导航 | 平台无关的导航状态与事务 | 规划中 |
 | `viewcompose-navigation` | 导航 | Android 导航宿主集成 | 规划中 |
 | `viewcompose-renderer` | 渲染 | Android View 渲染与协调引擎 | 规划中 |
