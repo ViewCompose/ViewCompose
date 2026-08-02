@@ -16,11 +16,13 @@ import com.viewcompose.widget.core.ToastOverlaySpec
 import com.viewcompose.widget.core.TransientFeedbackDismissReason
 
 /**
- * 使用 Material Snackbar 展示 declarative snackbar 请求。
- * Presents declarative snackbar requests with Material Snackbar.
+ * Presents declarative transient-feedback requests as Material [Snackbar] instances.
  *
- * presenter 按 OverlayEntryId 记录当前平台 snackbar，dismiss 时把平台事件映射回框架 dismiss reason。
- * The presenter tracks platform snackbars by OverlayEntryId and maps platform dismissal events back to framework reasons.
+ * Active bars are keyed by [OverlayEntryId], allowing the core queue to dismiss exactly one
+ * session-owned request. Material dismissal events are translated to framework reasons; an explicit
+ * queue dismissal reason takes precedence over the callback's platform event.
+ *
+ * @param anchorView attached view used by Material to find a suitable snackbar parent
  */
 class AndroidSnackbarOverlayPresenter(
     private val anchorView: View,
@@ -28,8 +30,10 @@ class AndroidSnackbarOverlayPresenter(
     private val activeSnackbars = mutableMapOf<OverlayEntryId, ActiveSnackbar>()
 
     /**
-     * 创建并展示一个平台 Snackbar。
-     * Creates and shows one platform Snackbar.
+     * Creates and shows one snackbar, reporting its terminal dismissal exactly once.
+     *
+     * The action callback invokes [SnackbarOverlaySpec.onAction]. Completion is reported separately
+     * through [onDismissed], after Material supplies the final dismissal event.
      */
     override fun show(
         entryId: OverlayEntryId,
@@ -43,8 +47,7 @@ class AndroidSnackbarOverlayPresenter(
         ).apply {
             if (!spec.actionLabel.isNullOrBlank()) {
                 setAction(spec.actionLabel) {
-                    // action 回调只通知业务，真正的 dismiss reason 由 Snackbar callback 给出。
-                    // The action callback only notifies business code; the Snackbar callback supplies the dismiss reason.
+                    // Material's dismissal callback remains the single terminal queue signal.
                     spec.onAction?.invoke()
                 }
             }
@@ -72,10 +75,7 @@ class AndroidSnackbarOverlayPresenter(
         snackbar.show()
     }
 
-    /**
-     * 主动关闭指定 snackbar，并保留框架侧传入的关闭原因。
-     * Proactively dismisses the snackbar and preserves the framework-supplied reason.
-     */
+    /** Dismisses [entryId] and preserves [reason] for the eventual Material callback. */
     override fun dismiss(
         entryId: OverlayEntryId,
         reason: TransientFeedbackDismissReason,
@@ -86,10 +86,7 @@ class AndroidSnackbarOverlayPresenter(
         }
     }
 
-    /**
-     * 当前展示的 Snackbar 及其完成回调。
-     * Currently visible Snackbar and its completion callback.
-     */
+    /** Platform bar plus the queue callback and any explicit dismissal reason. */
     private data class ActiveSnackbar(
         val snackbar: Snackbar,
         val onDismissed: (TransientFeedbackDismissReason) -> Unit,
@@ -98,11 +95,13 @@ class AndroidSnackbarOverlayPresenter(
 }
 
 /**
- * 使用 Android Toast 展示 declarative toast 请求。
- * Presents declarative toast requests with Android Toast.
+ * Presents declarative transient-feedback requests as Android [Toast] instances.
  *
- * Android Toast 没有可靠的完成回调，因此用主线程定时器模拟展示完成。
- * Android Toast has no reliable completion callback, so a main-thread timer simulates display completion.
+ * Android exposes no reliable toast-completion callback. The presenter therefore schedules an
+ * approximate completion on the main looper so the framework queue can advance. It holds only an
+ * application [Context], preventing an outstanding timeout from retaining an Activity.
+ *
+ * @param appContext application context used to create platform toasts
  */
 class AndroidToastOverlayPresenter(
     private val appContext: Context,
@@ -111,8 +110,10 @@ class AndroidToastOverlayPresenter(
     private val activeToasts = mutableMapOf<OverlayEntryId, ActiveToast>()
 
     /**
-     * 创建并展示一个平台 Toast。
-     * Creates and shows one platform Toast.
+     * Creates and shows one toast and schedules an approximate timeout completion.
+     *
+     * Reusing [entryId] before completion replaces the presenter's tracked platform handle. The
+     * queue contract ensures a prior active entry is dismissed before replacement.
      */
     override fun show(
         entryId: OverlayEntryId,
@@ -124,8 +125,7 @@ class AndroidToastOverlayPresenter(
             spec.message,
             spec.duration.toPlatformDuration(),
         )
-        // Toast 没有 onDismissed callback，使用平台时长近似完成时间并通知队列继续 drain。
-        // Toast has no onDismissed callback; approximate its duration so the queue can keep draining.
+        // Approximate platform duration because Toast exposes no terminal callback.
         val timeout = Runnable {
             complete(
                 entryId = entryId,
@@ -142,10 +142,7 @@ class AndroidToastOverlayPresenter(
         handler.postDelayed(timeout, spec.duration.toDisplayMillis())
     }
 
-    /**
-     * 主动关闭 toast，并立即完成对应队列项。
-     * Proactively cancels the toast and completes the matching queue item immediately.
-     */
+    /** Cancels [entryId] and completes its queue entry immediately with [reason]. */
     override fun dismiss(
         entryId: OverlayEntryId,
         reason: TransientFeedbackDismissReason,
@@ -157,10 +154,7 @@ class AndroidToastOverlayPresenter(
         )
     }
 
-    /**
-     * 完成 toast 展示并清理定时器。
-     * Completes toast display and clears the timeout callback.
-     */
+    /** Completes a toast once and removes its pending timeout callback. */
     private fun complete(
         entryId: OverlayEntryId,
         reason: TransientFeedbackDismissReason,
@@ -174,10 +168,7 @@ class AndroidToastOverlayPresenter(
         active.onDismissed(reason)
     }
 
-    /**
-     * 当前展示的 Toast、模拟完成定时器和完成回调。
-     * Currently visible Toast, simulated completion timer, and completion callback.
-     */
+    /** Platform toast plus its simulated completion and queue callback. */
     private data class ActiveToast(
         val toast: Toast,
         val timeout: Runnable,
@@ -185,10 +176,7 @@ class AndroidToastOverlayPresenter(
     )
 }
 
-/**
- * 转换框架 snackbar duration 到 Material Snackbar duration。
- * Converts framework snackbar duration to Material Snackbar duration.
- */
+/** Converts framework snackbar duration to the Material integer contract. */
 private fun SnackbarDuration.toPlatformDuration(): Int {
     return when (this) {
         SnackbarDuration.Short -> Snackbar.LENGTH_SHORT
@@ -197,10 +185,7 @@ private fun SnackbarDuration.toPlatformDuration(): Int {
     }
 }
 
-/**
- * 转换框架 toast duration 到 Android Toast duration。
- * Converts framework toast duration to Android Toast duration.
- */
+/** Converts framework toast duration to the Android integer contract. */
 private fun ToastDuration.toPlatformDuration(): Int {
     return when (this) {
         ToastDuration.Short -> Toast.LENGTH_SHORT
@@ -208,10 +193,7 @@ private fun ToastDuration.toPlatformDuration(): Int {
     }
 }
 
-/**
- * 估算 Android Toast 的展示时长，用于补足缺失的完成回调。
- * Estimates Android Toast display duration to compensate for the missing completion callback.
- */
+/** Estimates toast visibility because the platform provides no completion callback. */
 private fun ToastDuration.toDisplayMillis(): Long {
     return when (this) {
         ToastDuration.Short -> 2_000L
@@ -219,10 +201,7 @@ private fun ToastDuration.toDisplayMillis(): Long {
     }
 }
 
-/**
- * 将 Material Snackbar dismiss 事件映射为框架 dismiss reason。
- * Maps Material Snackbar dismiss events to framework dismiss reasons.
- */
+/** Maps Material dismissal events to stable framework reasons. */
 private fun Int.toDismissReason(): TransientFeedbackDismissReason {
     return when (this) {
         Snackbar.Callback.DISMISS_EVENT_TIMEOUT -> TransientFeedbackDismissReason.Timeout

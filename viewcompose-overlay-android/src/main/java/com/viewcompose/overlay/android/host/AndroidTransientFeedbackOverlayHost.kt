@@ -7,11 +7,13 @@ import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.TransientFeedbackOverlayHost
 
 /**
- * Android 瞬时反馈 host，绑定 snackbar 与 toast 的平台 presenter。
- * Android transient feedback host binding snackbar and toast platform presenters.
+ * Presents queued snackbar and toast requests for one Android render root.
  *
- * snackbar 锚定到 root/anchor view，toast 使用 application context 避免泄漏界面 Context。
- * Snackbar is anchored to the root/anchor view, while Toast uses application context to avoid leaking UI Context.
+ * Snackbars use [anchorView] for placement. Toasts deliberately use its application context so a
+ * queued timeout cannot retain an Activity after the render root is destroyed. Queue ordering,
+ * replacement, and dismissal reasons are implemented by the platform-independent transient host.
+ *
+ * @param anchorView attached view used to place Material snackbars and obtain application context
  */
 class AndroidTransientFeedbackOverlayHost(
     anchorView: View,

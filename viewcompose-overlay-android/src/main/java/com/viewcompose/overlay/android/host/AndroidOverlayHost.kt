@@ -12,11 +12,16 @@ import com.viewcompose.widget.core.OverlaySessionId
 import com.viewcompose.widget.core.PopupOverlayHost
 
 /**
- * Android 平台 overlay host 聚合入口。
- * Android platform overlay host aggregation entry point.
+ * Presents every ViewCompose overlay type in the Android window that owns [rootView].
  *
- * 一个 rootView 同时承载 dialog、popup、bottom sheet 和 transient feedback 的平台 presenter。
- * A single rootView owns platform presenters for dialogs, popups, bottom sheets, and transient feedback.
+ * One host fans each session-scoped request set out to dedicated dialog, popup, modal bottom-sheet,
+ * snackbar, and toast presenters. The host does not own [rootView] and must not outlive its window;
+ * render-session teardown calls [clear] to dismiss only the overlays owned by that session.
+ *
+ * All operations and platform callbacks must run on the Android main thread.
+ *
+ * @param rootView attached render root used for window context, popup anchors, and snackbar placement
+ * @sample com.viewcompose.overlay.android.samples.androidOverlayHostSample
  */
 class AndroidOverlayHost(
     rootView: View,
@@ -29,8 +34,10 @@ class AndroidOverlayHost(
     )
 
     /**
-     * 将同一 render session 的 overlay 请求广播给所有子 host。
-     * Broadcasts overlay requests from one render session to all child hosts.
+     * Reconciles [requests] as the complete desired overlay set for [sessionId].
+     *
+     * Requests are broadcast to type-specific hosts; each host ignores unsupported types. Repeating
+     * an unchanged request is idempotent, while omitting a previously committed request dismisses it.
      */
     override fun commit(
         sessionId: OverlaySessionId,
@@ -39,19 +46,13 @@ class AndroidOverlayHost(
         delegate.commit(sessionId, requests)
     }
 
-    /**
-     * 清理指定 render session 创建的全部 overlay。
-     * Clears all overlays created by the given render session.
-     */
+    /** Dismisses every surface and transient-feedback request owned by [sessionId]. */
     override fun clear(sessionId: OverlaySessionId) {
         delegate.clear(sessionId)
     }
 }
 
-/**
- * 简单的 OverlayHost fan-out，用于按 overlay type 分发到多个专职 host。
- * Simple OverlayHost fan-out used to route overlay types to dedicated hosts.
- */
+/** Fans one desired request set out to type-specific hosts. */
 private class CompositeOverlayHost(
     private vararg val delegates: OverlayHost,
 ) : OverlayHost {

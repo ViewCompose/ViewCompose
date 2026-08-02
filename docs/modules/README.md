@@ -19,7 +19,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-renderer` | Rendering | Android View renderer and reconciliation engine | [Available](./viewcompose-renderer/README.md) |
 | `viewcompose-widget-core` | UI | Core DSL, components, theme, and local values | [Available](./viewcompose-widget-core/README.md) |
 | `viewcompose-host-android` | Android host | Activity, Fragment, and View host integration | [Available](./viewcompose-host-android/README.md) |
-| `viewcompose-overlay-android` | Android host | Android overlay presentation backend | Planned |
+| `viewcompose-overlay-android` | Android host | Android overlay presentation backend | [Available](./viewcompose-overlay-android/README.md) |
 | `viewcompose-image-coil` | Integration | Coil-backed remote image loading | Planned |
 | `viewcompose-lifecycle` | Integration | Lifecycle-aware state collection | Planned |
 | `viewcompose-viewmodel` | Integration | ViewModel and SavedStateHandle integration | Planned |
