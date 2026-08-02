@@ -14,12 +14,12 @@ import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.toPx
 
 /**
- * 应用可见性、transform、anchor、testTag、点击和焦点等通用交互 modifier。
+ * Applies common interaction modifiers including visibility, transforms, anchors, test tags, clicks, and focus.
  * Applies common interaction modifiers such as visibility, transform, anchor, testTag, click, and focus.
  */
 internal object ModifierInteractionApplier {
     /**
-     * 应用不依赖节点语义的通用宿主属性。
+     * Applies common host properties that do not depend on node semantics.
      * Applies common host properties that do not depend on node semantics.
      */
     fun applyCommonHostProperties(
@@ -30,7 +30,7 @@ internal object ModifierInteractionApplier {
     ) {
         val layer = resolved.graphicsLayer
         val environment = view.requireUiEnvironment()
-        // anchor 元数据只来自显式 modifier，避免 NodeSpec 默认值误注册 overlay 锚点。
+        // Anchor metadata comes only from explicit modifiers so NodeSpec defaults cannot register overlay anchors accidentally.
         // Anchor metadata is sourced only from resolved modifier elements.
         applyAnchorId(view, resolved.overlayAnchor?.anchorId)
         applyTestTag(view, resolved.testTag?.tag)
@@ -42,7 +42,7 @@ internal object ModifierInteractionApplier {
         }
         view.translationX = layer?.translationX ?: resolved.offset?.x?.let(environment::toPx) ?: 0f
         view.translationY = layer?.translationY ?: resolved.offset?.y?.let(environment::toPx) ?: 0f
-        // zIndex 由父级稳定绘制顺序处理，不能写入 translationZ，否则会改变平台阴影。
+        // Parent drawing order owns zIndex; writing translationZ would incorrectly alter platform shadows.
         // Parent-side stable drawing order owns zIndex; translationZ would alter platform shadows.
         view.translationZ = 0f
         view.elevation = resolved.elevation?.elevation?.let(environment::toPx) ?: 0f
@@ -65,7 +65,7 @@ internal object ModifierInteractionApplier {
     }
 
     /**
-     * 应用点击、手势和焦点状态。
+     * Applies click, gesture, and focus state.
      * Applies click, gesture, and focus state.
      */
     fun applyClickAndFocusState(
@@ -74,7 +74,7 @@ internal object ModifierInteractionApplier {
         resolved: ResolvedModifiers,
     ) {
         if (node.type == NodeType.TextField) {
-            // EditText 需要保留原生 focus/click 语义，避免覆盖文本选择和键盘行为。
+            // EditText keeps native focus and click semantics so text selection and keyboard behavior are not replaced.
             // EditText should keep its intrinsic focus/click semantics.
             view.setTag(R.id.viewcompose_modifier_click_listener, null)
             view.setOnClickListener(null)
@@ -118,7 +118,7 @@ internal object ModifierInteractionApplier {
     }
 
     /**
-     * 当目标 View 是 TextView 时应用文本外观。
+     * Applies text appearance when the target is a TextView.
      * Applies text appearance when the target View is a TextView.
      */
     fun applyTextAppearanceIfTextView(

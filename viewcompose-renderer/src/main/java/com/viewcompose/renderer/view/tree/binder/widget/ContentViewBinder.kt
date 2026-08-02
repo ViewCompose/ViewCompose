@@ -26,7 +26,7 @@ import com.viewcompose.ui.graphics.DrawBlock
 import com.viewcompose.renderer.view.roundToPx
 
 /**
- * 绑定文本、按钮和画布等内容节点，集中处理 Android TextView/Button 的样式还原与事件桥接。
+ * Binds text, button, canvas, and related content nodes while centralizing native style restoration and event bridging.
  * Binds text, button, and canvas content nodes while centralizing Android TextView/Button style
  * restoration and event bridging.
  */

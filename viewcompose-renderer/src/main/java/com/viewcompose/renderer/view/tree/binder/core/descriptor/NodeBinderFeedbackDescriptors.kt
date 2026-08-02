@@ -7,7 +7,7 @@ import com.viewcompose.ui.node.spec.ProgressIndicatorNodeProps
 import com.viewcompose.renderer.view.tree.patch.FeedbackNodePatchApplier
 
 /**
- * 注册进度指示器节点的 binder/patch 描述。
+ * Registers binder and patch descriptors for progress indicators.
  * Registers binder/patch descriptors for progress indicator nodes.
  */
 internal fun MutableList<NodeBinderDescriptor>.addFeedbackNodeBinderDescriptors() {

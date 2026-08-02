@@ -19,15 +19,15 @@ import com.viewcompose.ui.node.spec.AnimatedSizeHostNodeProps
 import com.viewcompose.ui.tooling.UiNodeTooling
 
 /**
- * 将 animateContentSize modifier 提升为显式 AnimatedSizeHost 节点。
+ * Lifts an animateContentSize modifier into an explicit AnimatedSizeHost node.
  * Promotes animateContentSize modifiers into explicit AnimatedSizeHost nodes.
  *
- * 这样 renderer 可以用普通容器测量/布局流程承载尺寸动画，而业务 VNode 仍保持原 DSL 语义。
+ * This lets ordinary container measurement and layout drive size animation while preserving the original DSL VNode semantics.
  * This lets the renderer host size animation through normal container measure/layout while preserving the original DSL semantics.
  */
 internal object AnimatedSizeNodeWrapper {
     /**
-     * 包装整棵 VNode 子树；无变化时返回原列表以保留引用相等优化。
+     * Wraps a complete VNode subtree and returns the original list when unchanged to preserve referential-equality optimization.
      * Wraps a VNode subtree and returns the original list when unchanged to preserve referential optimizations.
      */
     fun wrapTree(nodes: List<VNode>): List<VNode> {
@@ -72,7 +72,7 @@ internal object AnimatedSizeNodeWrapper {
             }
         val withoutAnimate = node.modifier.elements.filterNot { it is AnimateContentSizeModifierElement }
         val (hostElements, childElements) = splitHostAndChildElements(withoutAnimate)
-        // 尺寸、margin、parent-data 等布局 modifier 必须留在外层 host，内容 modifier 留给原节点。
+        // Size, margin, and parent-data modifiers stay on the outer host; content modifiers stay on the original node.
         // Layout modifiers such as size, margin, and parent data must stay on the outer host; content modifiers stay on the original node.
         val wrappedChild = UiNodeTooling.inheritCopy(
             target = node.copy(
@@ -131,7 +131,7 @@ internal object AnimatedSizeNodeWrapper {
     }
 
     /**
-     * 派生 host key，避免外层包装节点与被包装 child 共用同一个 key。
+     * Derives a host key so the wrapper and wrapped child never share identity.
      * Derived host key preventing the wrapper node from sharing the same key as the wrapped child.
      */
     private data class AnimatedSizeHostKey(

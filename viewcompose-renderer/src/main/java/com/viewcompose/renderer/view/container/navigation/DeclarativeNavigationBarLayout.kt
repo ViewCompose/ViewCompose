@@ -21,17 +21,17 @@ import com.viewcompose.renderer.view.tree.ContentViewBinder
 import com.viewcompose.renderer.view.dpToPx
 
 /**
- * NavigationBar 的 Android LinearLayout 实现。
+ * Android LinearLayout implementation of NavigationBar.
  * Android LinearLayout implementation for NavigationBar.
  *
- * 它缓存每个 item 的子 View 引用，区分结构、样式、选中态更新，减少整栏重建。
+ * Caches each item's child Views and separates structural, style, and selection updates to avoid rebuilding the full bar.
  * It caches per-item child view references and separates structural, style, and selection updates to avoid full rebuilds.
  */
 internal class DeclarativeNavigationBarLayout(
     context: Context,
 ) : LinearLayout(context) {
     /**
-     * 单个导航项的子 View 引用和最近一次应用的视觉状态。
+     * Child View references and last applied visual state for one navigation item.
      * Child view references and last applied visual state for one navigation item.
      */
     private data class ItemViewRefs(
@@ -250,7 +250,7 @@ internal class DeclarativeNavigationBarLayout(
             }
         }
 
-        // 图标层容器，用于叠放 pill indicator、icon 和 badge。
+        // Icon-layer container stacking the pill indicator, icon, and badge.
         // Icon layer container for overlaying the pill indicator, icon, and badge.
         val iconContainer = FrameLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -261,7 +261,7 @@ internal class DeclarativeNavigationBarLayout(
             }
         }
 
-        // 位于 icon 后方的胶囊形选中指示器。
+        // Pill-shaped selection indicator drawn behind the icon.
         // Pill-shaped selected indicator behind the icon.
         val indicatorDrawable = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -277,7 +277,7 @@ internal class DeclarativeNavigationBarLayout(
         }
         iconContainer.addView(indicator)
 
-        // 导航图标，后续只在资源或 tint 变化时增量更新。
+        // Navigation icon updated incrementally only when its resource or tint changes.
         // Navigation icon, updated incrementally only when resource or tint changes.
         val iconView = ImageView(context).apply {
             layoutParams = FrameLayout.LayoutParams(
@@ -291,7 +291,7 @@ internal class DeclarativeNavigationBarLayout(
         }
         iconContainer.addView(iconView)
 
-        // 可选 badge，定位在图标容器右上角并兼容圆点/数字两种形态。
+        // Optional dot or numeric badge positioned at the icon container's top-right corner.
         // Optional badge positioned at the top-right of the icon container, supporting dot and numeric modes.
         val badgeDrawable = GradientDrawable()
         val badgeView = TextView(context).apply {
@@ -311,7 +311,7 @@ internal class DeclarativeNavigationBarLayout(
 
         itemLayout.addView(iconContainer)
 
-        // 文本标签，完整字体样式只在需要时重新应用。
+        // Text label whose complete typography is reapplied only when needed.
         // Text label whose full text appearance is reapplied only when needed.
         val label = TextView(context).apply {
             layoutParams = LinearLayout.LayoutParams(

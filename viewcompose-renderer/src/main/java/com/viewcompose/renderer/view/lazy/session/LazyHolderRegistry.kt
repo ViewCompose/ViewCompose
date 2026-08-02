@@ -1,7 +1,7 @@
 package com.viewcompose.renderer.view.lazy.session
 
 /**
- * 跟踪 RecyclerView holder 的绑定、附着和回收状态。
+ * Tracks RecyclerView holder binding, attachment, and recycling state.
  * Tracks RecyclerView holder bound, attached, and recycled state.
  */
 internal class LazyHolderRegistry<T : Any>(

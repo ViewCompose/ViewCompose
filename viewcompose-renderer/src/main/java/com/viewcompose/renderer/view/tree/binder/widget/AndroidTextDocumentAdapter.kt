@@ -51,7 +51,7 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
- * 在 ViewCompose 的 TextDocument 与 Android Spannable/Editable 之间转换富文本、段落和接收内容。
+ * Converts rich text, paragraphs, and received content between ViewCompose TextDocument and Android Spannable or Editable.
  * Converts rich text, paragraphs, and received content between ViewCompose TextDocument and Android
  * Spannable/Editable representations.
  */
@@ -378,7 +378,7 @@ internal object AndroidTextDocumentAdapter {
 }
 
 /**
- * 表示平台接收内容转换后的可插入文档片段与未消费内容。
+ * Carries an insertable document fragment and unconsumed platform content after receive-content conversion.
  * Represents converted platform receive-content data as insertable document fragments plus leftovers.
  */
 internal data class ConvertedPlatformContent(

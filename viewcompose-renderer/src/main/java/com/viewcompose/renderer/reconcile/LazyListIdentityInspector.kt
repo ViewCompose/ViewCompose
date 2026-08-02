@@ -3,23 +3,24 @@ package com.viewcompose.renderer.reconcile
 import com.viewcompose.ui.node.LazyListItem
 
 /**
- * lazy item identity 的静态分析结果。
- * Static analysis result for lazy item identity.
+ * Static identity analysis for one immutable lazy-item snapshot.
+ *
+ * @property missingKeyIndexes zero-based item indexes whose key is `null`
+ * @property duplicateKeys distinct non-null keys that occur more than once, in encounter order
  */
 data class LazyListIdentityAnalysis(
     val missingKeyIndexes: List<Int>,
     val duplicateKeys: List<Any>,
 ) {
-    /**
-     * 只有所有 item 都有唯一 key 时，RecyclerView 才能使用精确 keyed diff。
-     * RecyclerView can use precise keyed diff only when every item has a unique key.
-     */
+    /** Returns whether every item has a non-null key that is unique within the snapshot. */
     val supportsKeyedDiff: Boolean
         get() = missingKeyIndexes.isEmpty() && duplicateKeys.isEmpty()
 
     /**
-     * 返回面向日志/诊断的身份问题摘要。
-     * Returns a diagnostics/logging summary of identity problems.
+     * Returns a diagnostic summary of missing and duplicate identities.
+     *
+     * @param listName human-readable collection name included in the message
+     * @return `null` when keyed diff is supported, otherwise a stable English warning
      */
     fun warningMessage(listName: String): String? {
         if (supportsKeyedDiff) {
@@ -37,14 +38,14 @@ data class LazyListIdentityAnalysis(
     }
 }
 
-/**
- * 检查 lazy item 是否具备稳定 diff 身份。
- * Checks whether lazy items have stable diff identity.
- */
+/** Checks lazy items for the stable, unique identities required by keyed diffing. */
 object LazyListIdentityInspector {
     /**
-     * 收集缺失 key 的 index 和重复 key。
      * Collects missing-key indexes and duplicate keys.
+     *
+     * @sample com.viewcompose.renderer.samples.lazyListIdentitySample
+     * @param items immutable item snapshot to inspect without invoking item content
+     * @return identity analysis preserving source index and key encounter order
      */
     fun analyze(items: List<LazyListItem>): LazyListIdentityAnalysis {
         val missingKeyIndexes = items.mapIndexedNotNull { index, item ->

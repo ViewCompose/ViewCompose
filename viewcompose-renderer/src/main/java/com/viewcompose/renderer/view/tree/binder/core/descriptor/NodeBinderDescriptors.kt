@@ -5,18 +5,18 @@ import com.viewcompose.ui.node.spec.NodeSpec
 import kotlin.reflect.KClass
 
 /**
- * NodeType binder 和 NodeSpec patch 描述的集中注册表。
+ * Central registry of NodeType binders and NodeSpec patch descriptors.
  * Central registry of NodeType binders and NodeSpec patch descriptors.
  */
 internal object NodeBinderDescriptors {
     /**
-     * 全量 descriptor 列表，按功能域分文件构建。
+     * Complete descriptor list assembled from feature-specific files.
      * Complete descriptor list built by feature-domain files.
      */
     val all: List<NodeBinderDescriptor> by lazy { buildDescriptors() }
 
     /**
-     * 构建 NodeType -> bind 函数映射，并校验 NodeType 不重复。
+     * Builds the NodeType-to-bind-function map and rejects duplicate NodeTypes.
      * Builds NodeType -> bind mapping and validates uniqueness.
      */
     fun bindersByType(): Map<NodeType, BindBlock> = all.associateByUnique(
@@ -26,7 +26,7 @@ internal object NodeBinderDescriptors {
     )
 
     /**
-     * 构建 NodeViewPatch class -> apply 函数映射。
+     * Builds the NodeViewPatch-class-to-apply-function map.
      * Builds NodeViewPatch class -> apply function mapping.
      */
     fun patchAppliersByType(): Map<KClass<out NodeViewPatch>, PatchApplyBlock> = all
@@ -43,7 +43,7 @@ internal object NodeBinderDescriptors {
         )
 
     /**
-     * 构建 NodeSpec class -> patch factory 映射，供 NodeBindingDiffer 使用。
+     * Builds the NodeSpec-class-to-patch-factory map used by NodeBindingDiffer.
      * Builds NodeSpec class -> patch factory mapping for NodeBindingDiffer.
      */
     fun patchFactoriesBySpec(): Map<KClass<out NodeSpec>, PatchFactory> = all
@@ -62,7 +62,7 @@ internal object NodeBinderDescriptors {
         valueSelector: (T) -> V,
         duplicateMessage: (K) -> String,
     ): Map<K, V> {
-        // descriptor 冲突在启动期暴露，避免 render 中途遇到不可解释的绑定覆盖。
+        // Expose descriptor conflicts during startup instead of allowing unexplained binding replacement during render.
         // Descriptor conflicts fail during startup to avoid unexplained binding overrides mid-render.
         val result = LinkedHashMap<K, V>(size)
         for (item in this) {
@@ -77,7 +77,7 @@ internal object NodeBinderDescriptors {
         keySelector: (NodePatchDescriptor) -> K,
         duplicateMessage: (K) -> String,
     ): List<NodePatchDescriptor> {
-        // 多个 NodeType 可共享同一个 patch descriptor，但同一个 spec/patch class 不允许冲突实现。
+        // Multiple NodeTypes may share a descriptor, but one spec or patch class cannot have conflicting implementations.
         // Multiple NodeTypes may share one patch descriptor, but a spec/patch class cannot have conflicting implementations.
         val result = LinkedHashMap<K, NodePatchDescriptor>()
         for (descriptor in this) {

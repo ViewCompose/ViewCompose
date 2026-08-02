@@ -1,7 +1,7 @@
 package com.viewcompose.renderer.layout
 
 /**
- * renderer 内部使用的水平对齐。
+ * Horizontal alignment used internally by the renderer.
  * Internal horizontal alignment used by the renderer.
  */
 enum class HorizontalAlignment {
@@ -11,7 +11,7 @@ enum class HorizontalAlignment {
 }
 
 /**
- * renderer 内部使用的垂直对齐。
+ * Vertical alignment used internally by the renderer.
  * Internal vertical alignment used by the renderer.
  */
 enum class VerticalAlignment {

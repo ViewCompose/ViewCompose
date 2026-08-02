@@ -7,25 +7,25 @@ import com.viewcompose.ui.node.spec.NodeSpec
 import kotlin.reflect.KClass
 
 /**
- * 将 VNode 绑定到 Android View 的函数。
+ * Function that binds a VNode to an Android View.
  * Function that binds a VNode to an Android View.
  */
 internal typealias BindBlock = (View, VNode) -> Unit
 
 /**
- * 将细粒度 NodeViewPatch 应用到 Android View 的函数。
+ * Function that applies a targeted NodeViewPatch to an Android View.
  * Function that applies a fine-grained NodeViewPatch to an Android View.
  */
 internal typealias PatchApplyBlock = (View, NodeViewPatch) -> Unit
 
 /**
- * 由 previous/next NodeSpec 创建细粒度 patch 的工厂。
+ * Factory that creates a targeted patch from previous and next NodeSpecs.
  * Factory that creates a fine-grained patch from previous/next NodeSpec values.
  */
 internal typealias PatchFactory = (NodeSpec, NodeSpec) -> NodeViewPatch
 
 /**
- * 单个 NodeType 的 binder 描述。
+ * Binder descriptor for one NodeType.
  * Binder descriptor for one NodeType.
  */
 internal data class NodeBinderDescriptor(
@@ -35,7 +35,7 @@ internal data class NodeBinderDescriptor(
 )
 
 /**
- * 单个 NodeSpec/NodeViewPatch 组合的 patch 描述。
+ * Patch descriptor for one NodeSpec and NodeViewPatch pair.
  * Patch descriptor for one NodeSpec/NodeViewPatch pair.
  */
 internal data class NodePatchDescriptor(
@@ -46,7 +46,7 @@ internal data class NodePatchDescriptor(
 )
 
 /**
- * 构建一个 NodeType binder 描述。
+ * Builds a binder descriptor for one NodeType.
  * Builds one NodeType binder descriptor.
  */
 internal fun descriptor(
@@ -60,7 +60,7 @@ internal fun descriptor(
 )
 
 /**
- * 构建类型安全的 patch 描述，并在注册表边界做必要的擦除类型转换。
+ * Builds a type-safe patch descriptor and performs required erased casts at the registry boundary.
  * Builds a type-safe patch descriptor and performs required erased casts at the registry boundary.
  */
 internal inline fun <reified S : NodeSpec, reified P : NodeViewPatch> patchDescriptor(

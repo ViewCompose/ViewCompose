@@ -17,10 +17,10 @@ import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
- * LazyColumn/LazyRow/Grid 共享的 RecyclerView adapter。
+ * RecyclerView adapter shared by LazyColumn, LazyRow, and lazy grids.
  * Shared RecyclerView adapter for LazyColumn, LazyRow, and Grid.
  *
- * 它负责 item diff、稳定 id/viewType、holder session 生命周期和 sticky header 的 detached holder 支持。
+ * Owns item diffing, stable IDs and view types, holder sessions, and detached holders for sticky headers.
  * It handles item diffing, stable ids/view types, holder session lifetime, and detached holder support for sticky headers.
  */
 internal class LazyListAdapter(
@@ -36,7 +36,7 @@ internal class LazyListAdapter(
     )
 
     private var items: List<LazyListItem> = emptyList()
-    // holder 生命周期由 registry 统一跟踪，支持 attach/detach/recycle/dispose 四类入口。
+    // The registry tracks holder lifecycle across attach, detach, recycle, and dispose entry points.
     // Holder lifetimes are tracked centrally by the registry across attach, detach, recycle, and dispose paths.
     private val holderRegistry = LazyHolderRegistry<LazyListViewHolder> { holder ->
         holder.recycle()
@@ -193,7 +193,7 @@ internal class LazyListAdapter(
             previous = this.items,
             next = items,
         )
-        // 无法增量 diff 时保留首个可见 item 锚点，降低 notifyDataSetChanged 后的跳动。
+        // Preserve the first visible-item anchor when diffing falls back, reducing jumps after notifyDataSetChanged.
         // When incremental diff is unavailable, preserve the first visible item anchor to reduce jump after notifyDataSetChanged.
         val reloadAnchor = if (result.diffResult == null) {
             captureScrollAnchor()
@@ -209,7 +209,7 @@ internal class LazyListAdapter(
             restoreScrollAnchor(reloadAnchor)
         }
         if (result.updates.isEmpty()) {
-            // 列表结构未变时仍重绑可见 holder，让外部状态变化刷新到 item 内容。
+            // Rebind visible holders even when structure is stable so external state reaches item content.
             // When structure is unchanged, still rebind visible holders so external state changes reach item content.
             holderRegistry.forEachBound { holder ->
                 val position = holder.bindingAdapterPosition
@@ -337,10 +337,10 @@ internal class LazyListAdapter(
 }
 
 /**
- * LazyColumn/LazyRow 的线性间距装饰。
+ * Linear item-spacing decoration for LazyColumn and LazyRow.
  * Linear spacing decoration for LazyColumn/LazyRow.
  *
- * 间距只加在非首项之前，避免额外改变列表首尾 padding 语义。
+ * Adds spacing only before non-first items so list-edge padding semantics remain unchanged.
  * Spacing is added only before non-first items so list edge padding semantics stay unchanged.
  */
 internal class LazyListSpacingDecoration(
@@ -387,7 +387,7 @@ internal class LazyListSpacingDecoration(
 }
 
 /**
- * Lazy item 的 ViewHolder，把每个 item 绑定到独立的 render session。
+ * ViewHolder that binds each lazy item to an isolated render session.
  * ViewHolder for lazy items, binding each item to an isolated render session.
  */
 internal class LazyListViewHolder(

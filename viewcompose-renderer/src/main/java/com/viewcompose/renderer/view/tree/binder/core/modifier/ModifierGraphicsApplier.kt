@@ -5,12 +5,12 @@ import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.container.DeclarativeCanvasLayout
 
 /**
- * 应用绘制类 modifier。
+ * Applies drawing modifiers.
  * Applies drawing-related modifiers.
  */
 internal object ModifierGraphicsApplier {
     /**
-     * 将 draw modifier 传递给 DeclarativeCanvasLayout。
+     * Passes draw modifiers to DeclarativeCanvasLayout.
      * Passes draw modifiers to DeclarativeCanvasLayout.
      */
     fun applyGraphicsModifiers(

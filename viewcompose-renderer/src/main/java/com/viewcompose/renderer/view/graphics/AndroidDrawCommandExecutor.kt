@@ -37,12 +37,12 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 /**
- * 在 Android Canvas 上执行框架 draw command。
+ * Executes framework draw commands on an Android Canvas.
  * Executes framework draw commands on an Android Canvas.
  */
 internal object AndroidDrawCommandExecutor {
     /**
-     * 按顺序执行一组绘制命令。
+     * Executes a sequence of draw commands in declaration order.
      * Executes a list of draw commands in order.
      */
     fun execute(

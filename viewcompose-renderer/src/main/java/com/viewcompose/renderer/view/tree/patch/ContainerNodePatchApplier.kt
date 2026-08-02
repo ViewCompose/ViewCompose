@@ -54,12 +54,12 @@ import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 
 /**
- * 容器、集合和导航节点的细粒度 patch 应用器。
+ * Targeted patch applier for container, collection, and navigation nodes.
  * Fine-grained patch applier for container, collection, and navigation nodes.
  */
 internal object ContainerNodePatchApplier {
     /**
-     * 更新 Row 的 spacing、主轴排列和交叉轴对齐。
+     * Updates Row spacing, main-axis arrangement, and cross-axis alignment.
      * Updates Row spacing, main-axis arrangement, and cross-axis alignment.
      */
     fun applyRowPatch(
@@ -155,7 +155,7 @@ internal object ContainerNodePatchApplier {
     }
 
     /**
-     * 更新 lazy column 的 RecyclerView 策略、padding、spacing、items 和 state 连接。
+     * Updates lazy-column RecyclerView policy, padding, spacing, items, and state connection.
      * Updates lazy column RecyclerView policies, padding, spacing, items, and state connection.
      */
     fun applyLazyColumnPatch(
@@ -205,7 +205,7 @@ internal object ContainerNodePatchApplier {
             )
         }
         if (previous.items != next.items || previous.items.hasSessionIdentityChange(next.items)) {
-            // item equals 相同但 session factory/updater 引用变化时也要提交，保证闭包刷新。
+            // Commit equal items when factory or updater references change so captured closures refresh.
             // Submit even when item equality matches but session factory/updater references changed, preserving refreshed closures.
             val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
                 view.adapter = it
@@ -214,7 +214,7 @@ internal object ContainerNodePatchApplier {
             LazyStickyHeaderDecoration.update(view, adapter)
         }
         if (previous.state !== next.state) {
-            // 状态对象替换时先断开旧 connector，避免旧 state 继续驱动当前 RecyclerView。
+            // Disconnect the old connector before replacing state so it cannot keep driving this RecyclerView.
             // Detach the old connector when state object changes so stale state cannot drive the current RecyclerView.
             previous.state?.attach(null)
         }
@@ -542,7 +542,7 @@ internal object ContainerNodePatchApplier {
     }
 
     private fun List<LazyListItem>.hasSessionIdentityChange(next: List<LazyListItem>): Boolean {
-        // Lazy item content 由 session factory/updater 驱动，引用变化即代表可见内容可能变化。
+        // Lazy item content is driven by session factories and updaters, so reference changes may alter visible output.
         // Lazy item content is driven by session factories/updaters; reference changes mean visible content may change.
         if (size != next.size) return true
         for (index in indices) {

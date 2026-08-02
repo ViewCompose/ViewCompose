@@ -5,12 +5,12 @@ import android.widget.LinearLayout
 import com.viewcompose.ui.node.NodeType
 
 /**
- * 为没有显式尺寸 modifier 的节点选择默认 LayoutParams 尺寸。
+ * Selects default LayoutParams dimensions for nodes without explicit size modifiers.
  * Chooses default LayoutParams sizes for nodes without explicit size modifiers.
  */
 internal object LayoutParamDefaultsResolver {
     /**
-     * 解析默认宽度。
+     * Resolves the default width.
      * Resolves default width.
      */
     fun defaultWidth(
@@ -51,7 +51,7 @@ internal object LayoutParamDefaultsResolver {
     }
 
     /**
-     * 解析默认高度。
+     * Resolves the default height.
      * Resolves default height.
      */
     fun defaultHeight(

@@ -12,7 +12,7 @@ import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import kotlin.math.max
 
 /**
- * FlowRow 使用的自定义换行容器。
+ * Custom wrapping container used by FlowRow.
  * Custom wrapping container used by FlowRow.
  */
 internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
@@ -149,7 +149,7 @@ internal class DeclarativeFlowRowLayout @JvmOverloads constructor(
             maxRowWidth = max(maxRowWidth, currentRowWidth)
             totalHeight += currentRowHeight
         } else if (totalHeight > 0) {
-            // 最后一行可能由 maxItemsInEachRow 截止，此时不应留下尾部间距。
+            // A maxItemsInEachRow boundary may end the final line, which must not retain a trailing gap.
             // The last row can close via maxItemsInEachRow and should not leave trailing spacing.
             totalHeight = (totalHeight - verticalSpacing).coerceAtLeast(0)
         }

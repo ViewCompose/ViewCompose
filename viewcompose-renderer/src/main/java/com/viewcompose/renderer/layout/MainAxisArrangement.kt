@@ -1,7 +1,7 @@
 package com.viewcompose.renderer.layout
 
 /**
- * renderer 内部使用的主轴排列策略。
+ * Main-axis arrangement policy used internally by the renderer.
  * Internal main-axis arrangement strategy used by the renderer.
  */
 enum class MainAxisArrangement {

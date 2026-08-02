@@ -4,37 +4,60 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import com.viewcompose.ui.node.LazyListItem
 
-/**
- * lazy 列表 adapter 可消费的增量更新。
- * Incremental updates consumed by lazy list adapters.
- */
+/** Incremental update consumed in order by a lazy-list adapter. */
 sealed interface LazyListUpdate {
+    /**
+     * Inserts one item at [index].
+     *
+     * @property index zero-based insertion index in the list state at this point in the sequence
+     */
     data class Insert(
         val index: Int,
     ) : LazyListUpdate
 
+    /**
+     * Removes one item at [index].
+     *
+     * @property index zero-based removal index in the list state at this point in the sequence
+     */
     data class Remove(
         val index: Int,
     ) : LazyListUpdate
 
+    /**
+     * Moves one existing item without recreating its holder.
+     *
+     * @property fromIndex zero-based source index before this operation
+     * @property toIndex zero-based destination index after this operation
+     */
     data class Move(
         val fromIndex: Int,
         val toIndex: Int,
     ) : LazyListUpdate
 
+    /**
+     * Rebinds one existing item in place.
+     *
+     * @property index zero-based item index at this point in the sequence
+     * @property payload optional targeted-change description; `null` requests a full item bind
+     */
     data class Change(
         val index: Int,
         val payload: Any? = null,
     ) : LazyListUpdate
 
+    /** Replaces all adapter items because stable keyed diffing is not possible. */
     data object ReloadAll : LazyListUpdate
 }
 
-/**
- * lazy item 内容变化时传递给 adapter 的 payload。
- * Payload delivered to adapters when lazy item content changes.
- */
+/** Targeted payload delivered when lazy-item identity is stable but its content token changes. */
 sealed interface LazyListChangePayload {
+    /**
+     * Carries the old and new opaque content tokens for an item with unchanged identity.
+     *
+     * @property previous token from the previous item snapshot
+     * @property next token from the next item snapshot
+     */
     data class ContentTokenChanged(
         val previous: Any?,
         val next: Any?,
@@ -42,8 +65,11 @@ sealed interface LazyListChangePayload {
 }
 
 /**
- * lazy diff 的完整结果。
- * Complete result of lazy list diffing.
+ * Complete result of reconciling two lazy-item snapshots.
+ *
+ * @property updates ordered adapter operations, or a single [LazyListUpdate.ReloadAll]
+ * @property items exact next item instances that the adapter must retain
+ * @property diffResult AndroidX result when keyed diffing succeeded, otherwise `null`
  */
 data class LazyListDiffResult(
     val updates: List<LazyListUpdate>,
@@ -52,16 +78,24 @@ data class LazyListDiffResult(
 )
 
 /**
- * 基于稳定 key 计算 lazy 列表增量更新。
- * Calculates lazy list incremental updates from stable keys.
+ * Calculates lazy-list adapter updates from stable item keys.
  *
- * key 缺失或重复时回退 ReloadAll，避免 DiffUtil 把不稳定身份误判为可复用 item。
- * Missing or duplicate keys fall back to ReloadAll to keep DiffUtil from reusing unstable identities.
+ * A missing or duplicate key falls back to [LazyListUpdate.ReloadAll], preventing `DiffUtil` from
+ * assigning platform holder state to an ambiguous identity. Content equality includes the complete
+ * [LazyListItem]; a changed item receives [LazyListChangePayload.ContentTokenChanged].
  */
 object LazyListDiff {
     /**
-     * 计算 previous -> next 的 lazy item 更新序列。
      * Calculates the lazy item update sequence from previous to next.
+     *
+     * This method performs synchronous CPU work and must not be called concurrently with mutation
+     * of either list. Returned [LazyListDiffResult.items] always uses the exact [next] instances so
+     * refreshed closures and session updaters are not lost.
+     *
+     * @sample com.viewcompose.renderer.samples.lazyListDiffSample
+     * @param previous last adapter item snapshot in committed order
+     * @param next next immutable item snapshot in target order
+     * @return ordered update plan plus the exact next snapshot
      */
     fun calculate(
         previous: List<LazyListItem>,
@@ -117,7 +151,6 @@ object LazyListDiff {
 
         return LazyListDiffResult(
             updates = updates,
-            // 始终使用最新 item 实例，保留刷新的闭包和 session updater。
             // Always use latest item instances to preserve refreshed closures/session updaters.
             items = next,
             diffResult = diffResult,

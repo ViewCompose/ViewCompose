@@ -18,10 +18,10 @@ import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
- * TabRow 的可滚动 Android 宿主。
+ * Scrollable Android host for TabRow.
  * Scrollable Android host for TabRow.
  *
- * Tab 内容通过 LazyItemSessionController 渲染，indicator 由内部容器按 PagerState 偏移插值绘制。
+ * Renders tab content through LazyItemSessionController and interpolates the indicator from PagerState offsets.
  * Tab content is rendered through LazyItemSessionController, while the inner container interpolates the indicator from PagerState offsets.
  */
 internal class DeclarativeTabRowLayout(
@@ -35,7 +35,7 @@ internal class DeclarativeTabRowLayout(
     private var pagerState: PagerState? = null
     private var pagerStateListener: ((Int, Float) -> Unit)? = null
 
-    // 指示器属性。
+    // Indicator properties.
     // Indicator props.
     private var indicatorColor: Int = 0
     private var indicatorHeightPx: Int = 0
@@ -44,7 +44,7 @@ internal class DeclarativeTabRowLayout(
     private var indicatorWidthMode: TabIndicatorWidthMode = TabIndicatorWidthMode.MatchItem
     private var indicatorFixedWidthPx: Int = 0
 
-    // 子项布局和交互属性。
+    // Item layout and interaction properties.
     // Item layout and interaction props.
     private var rippleColor: Int = 0
     private var itemSpacingPx: Int = 0
@@ -194,7 +194,7 @@ internal class DeclarativeTabRowLayout(
         if (needsRebuild) {
             rebuildTabs(newTabs)
         } else {
-            // 复用已有 tab 容器，只重新绑定可能变化的选中态/内容 payload。
+            // Reuse the existing tab container and rebind only selection and content payloads that may have changed.
             // Reuse existing tab containers and only rebind potentially changed selection/content payloads.
             newTabs.forEachIndexed { index, tab ->
                 controllers.getOrNull(index)?.bind(tab.item)
@@ -204,7 +204,7 @@ internal class DeclarativeTabRowLayout(
     }
 
     private fun rebuildTabs(newTabs: List<TabRowTab>) {
-        // 重建结构前先释放旧 session，避免旧 View 继续接收更新。
+        // Dispose old sessions before rebuilding structure so old Views stop receiving updates.
         // Dispose old sessions before rebuilding structure so stale views stop receiving updates.
         controllers.forEach { it.recycle() }
         controllers.clear()
@@ -295,7 +295,7 @@ internal class DeclarativeTabRowLayout(
 }
 
 /**
- * 横向承载 tab item 并绘制 indicator 的内部容器。
+ * Internal horizontal container that hosts tab items and draws the indicator.
  * Inner container that hosts tab items horizontally and draws the indicator.
  */
 internal class TabRowContainer(context: Context) : ViewGroup(context) {
@@ -443,7 +443,7 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
                 )
                 maxHeight = maxOf(maxHeight, child.measuredHeight)
             }
-            // 再次测量统一高度，避免 indicator 和点击区域因内容高度不同而错位。
+            // Remeasure to a uniform height so differing content heights do not misalign indicators or hit areas.
             // Re-measure with a uniform height so the indicator and hit targets do not drift across varied content.
             for (i in 0 until count) {
                 val child = getChildAt(i)
@@ -471,7 +471,7 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
                 totalWidth += childWidth
                 maxHeight = maxOf(maxHeight, child.measuredHeight)
             }
-            // 文本宽度自由时也统一高度，保证滚动 TabRow 的行高稳定。
+            // Keep a uniform height even with unconstrained label widths so scrollable TabRow height remains stable.
             // Even with free text widths, keep a uniform height for stable scrollable TabRow rows.
             for (i in 0 until count) {
                 val child = getChildAt(i)
@@ -492,7 +492,7 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
             left += child.measuredWidth + itemSpacingPx
         }
         if (childCount > 0) {
-            // 使用最终 child 边界重算 indicator，避免首帧指示器为空。
+            // Recalculate from final child bounds so the first frame has a valid indicator.
             // Recompute the indicator with final child bounds to avoid a blank first-frame indicator.
             updateIndicatorPosition(indicatorCurrentIndex, indicatorCurrentOffset)
         }

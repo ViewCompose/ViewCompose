@@ -41,15 +41,15 @@ import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 
 /**
- * 根据 NodeType 创建对应的 Android View 实例。
+ * Creates the Android View associated with a NodeType.
  * Creates the Android View instance for each NodeType.
  *
- * 这里只负责实例化和基础平台默认值；具体属性绑定由 NodeViewBinderRegistry 完成。
+ * Owns only instantiation and platform defaults; NodeViewBinderRegistry applies semantic properties.
  * This only handles instantiation and basic platform defaults; concrete property binding is handled by NodeViewBinderRegistry.
  */
 internal object ViewNodeFactory {
     /**
-     * 创建一个新 View。AndroidView 节点必须通过 createAndroidView 调用业务 factory。
+     * Creates a new View; AndroidView nodes must invoke the application factory through createAndroidView.
      * Creates a new View. AndroidView nodes must invoke the business factory through createAndroidView.
      */
     fun createView(
@@ -89,7 +89,7 @@ internal object ViewNodeFactory {
                     "AndroidView node requires a factory."
                 }
                 val created = factory(context)
-                // AndroidView 是唯一允许业务返回平台 View 的节点，必须在边界做类型校验。
+                // AndroidView is the only node whose platform View comes from application code, so validate it at the boundary.
                 // AndroidView is the only node where business code returns a platform View, so validate it at the boundary.
                 require(created is View) {
                     "AndroidView factory must return android.view.View, but returned ${created::class.java.name}."
@@ -99,7 +99,7 @@ internal object ViewNodeFactory {
             NodeType.LazyColumn -> DeclarativeLazyListView(context).apply {
                 layoutManager = LazyLinearLayoutManager(context)
                 adapter = LazyListAdapter()
-                // RecyclerView 默认项动画/复用池策略由框架统一配置，避免各 binder 重复设置。
+                // Framework defaults centralize RecyclerView item animation and pooling instead of repeating them in binders.
                 // RecyclerView default animation/reuse-pool policy is centralized here to avoid repeated binder setup.
                 FrameworkRecyclerViewDefaults.applyLazyColumnDefaults(this)
             }

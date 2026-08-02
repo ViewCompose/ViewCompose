@@ -3,7 +3,7 @@ package com.viewcompose.renderer.view.tree
 import com.viewcompose.ui.node.VNode
 
 /**
- * 根据渲染结构和复用统计生成诊断 warning。
+ * Produces diagnostic warnings from render structure and reuse statistics.
  * Generates diagnostic warnings from render structure and reuse statistics.
  */
 internal object RenderWarningCollector {
@@ -53,7 +53,7 @@ internal object RenderWarningCollector {
         if (siblings.isEmpty()) {
             return
         }
-        // sibling key 只要求同一父节点内唯一；不同父节点可复用相同 key。
+        // Sibling keys need to be unique only under the same parent; different parents may reuse a key.
         // Sibling keys only need to be unique under the same parent; different parents may reuse keys.
         val duplicateKeys = siblings
             .mapNotNull { it.key }
@@ -89,7 +89,7 @@ internal object RenderWarningCollector {
         stats: RenderStats,
     ): List<String> {
         val warnings = mutableListOf<String>()
-        // 高 rebind 说明节点身份或 patch 能力可能不足，优先提示给诊断 UI。
+        // A high rebind rate suggests weak identity or patch coverage and is prioritized for diagnostics.
         // High rebind count suggests weak identity or patch coverage, so surface it to diagnostics first.
         if (stats.reboundNodes >= LARGE_REBIND_WARNING_COUNT && stats.patchedNodes <= stats.reboundNodes / 2) {
             warnings += "High rebind churn detected: rebound=${stats.reboundNodes}, patched=${stats.patchedNodes}, skipped=${stats.skippedBindings}, subtreeSkipped=${stats.skippedSubtrees}."

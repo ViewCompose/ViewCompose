@@ -1,0 +1,131 @@
+# Renderer
+
+`viewcompose-renderer` is ViewCompose's Android View rendering engine. It reconciles immutable
+VNode snapshots with an owned mounted tree, creates and binds native Views, applies targeted
+patches, drives lazy collections and pager state, bridges shapes and drawing commands, and exposes
+diagnostics for render work, tree structure, layout passes, and source tooling.
+
+Applications normally receive this module through `viewcompose-host-android`. Depend on it directly
+when implementing a custom Android host, renderer diagnostics, a platform decoration backend, or
+tests that exercise reconciliation independently from the widget DSL.
+
+This module does not own composition, application lifecycle, saved state, navigation, overlay
+windows, image loading, or concrete advanced-shadow rasterization. Those responsibilities remain in
+`viewcompose-runtime`, `viewcompose-widget-core`, `viewcompose-host-android`, and optional feature
+modules.
+
+## Artifact and stability
+
+```kotlin
+dependencies {
+    implementation("com.viewcompose:viewcompose-renderer:0.1.0-alpha01")
+}
+```
+
+- Stability: **Alpha**. Renderer extension contracts and diagnostics may change between alpha
+  releases.
+- Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
+- Direct ViewCompose dependencies: runtime, text core, UI contract, graphics core, and gesture core.
+- Android runtime dependencies: AndroidX Core, AppCompat, RecyclerView, ViewPager2,
+  ConstraintLayout, SwipeRefreshLayout, and Material Components.
+- Build baseline for this release: Kotlin 2.0.21 and Android Gradle Plugin 8.7.3.
+
+## Rendering model
+
+```kotlin
+var mounted = ViewTreeRenderer.renderInto(
+    container = container,
+    previous = emptyList(),
+    nodes = firstFrame,
+).mountedNodes
+
+mounted = ViewTreeRenderer.renderInto(
+    container = container,
+    previous = mounted,
+    nodes = nextFrame,
+).mountedNodes
+
+ViewTreeRenderer.disposeMounted(container, mounted)
+```
+
+The mounted-node list is an ownership token, not an optional cache. A host must pass the exact roots
+from its previous successful frame back to the same container and renderer. Stable keyed siblings
+can retain their native View across reordering; unkeyed siblings reuse only at the same index and
+type so platform state cannot silently move between visually similar items.
+
+Rendering is transactional through structural mutation. If reconciliation, View creation, or
+binding fails, the pipeline restores the previous View structure and rethrows the error. Android
+View lifecycle callbacks and deferred disposal run after structural commit; their failures are
+isolated in `RenderTreeResult.commitFailures` because the new visible tree can no longer be rolled
+back safely.
+
+## Principal APIs
+
+- [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
+  owns the transactional VNode-to-View render and disposal boundary.
+- [`ChildReconciler`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.reconcile/-child-reconciler/)
+  produces insert, reuse, and removal plans without mutating platform state.
+- [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
+  converts stable lazy-item keys into ordered RecyclerView updates and deliberately falls back to a
+  full reload when identity is missing or ambiguous.
+- `RenderTreeResult`, `RenderStats`, `RenderStructureStats`, patch records, and layout-pass sampling
+  provide immutable diagnostics used by the demo, preview tooling, and performance tests.
+- [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
+  is the optional SPI for effects such as advanced shadows. Without a backend, decoration requests
+  stay on a no-op path and no shadow implementation is loaded.
+- `ViewDecorationHostLayout` and `DecorationChildDrawingOrder` support custom drawing planes and
+  declarative `zIndex` without wrapping every child in another View.
+- `ViewNodeToolingRegistry` weakly associates mounted Views with source metadata only when tooling
+  metadata exists; ordinary rendering retains no extra source objects.
+
+The complete generated reference is available under the
+[`viewcompose-renderer` API tree](https://docs.viewcompose.com/api/viewcompose-renderer/current/).
+Because the current line is alpha, the documentation site intentionally does not expose a stable
+`latest` alias.
+
+## Identity and patch rules
+
+- A keyed child reuses a previous payload only when key and `NodeType` both match. Keys must be
+  stable and unique among siblings.
+- An unkeyed child reuses only the previous payload at the same index and type. Reordering unkeyed
+  stateful content is therefore a semantic replacement, not a move.
+- Lazy-list precision additionally requires every item to have a unique non-null key. Missing or
+  duplicate keys produce `ReloadAll` to protect RecyclerView holder state.
+- A lazy item's `contentToken` must change whenever captured values that affect output change.
+  Session callbacks are refreshed from the exact next item instance even when the semantic item is
+  otherwise unchanged.
+- Targeted patching and subtree skipping are optimizations. Custom host behavior must not infer
+  business state from patch records or diagnostic counters.
+
+## Android host and threading rules
+
+- Render, disposal, View binding, pager updates, and decoration callbacks are UI-thread confined.
+- One container has one mounted-tree owner. Do not share mounted nodes between containers or render
+  sessions.
+- `collectDiagnostics = false` omits structure, patch, warning, and detailed binding snapshots; use
+  it on performance-sensitive paths that do not consume diagnostics.
+- `LayoutPassTracker` is process-local and opt-in. It adds monotonic clock reads and synchronized
+  aggregation to instrumented passes, so use it for bounded diagnostics rather than continuous
+  production telemetry.
+- `AndroidViewDecorationRuntime.install` is process-wide. Install a backend during application
+  initialization; existing Views switch only when their decoration request is rebound.
+- Decoration hosts add no per-child wrapper. The common no-decoration path delegates directly to
+  normal View drawing after one branch; decorated children incur indexed backend dispatch only for
+  the drawing planes they request.
+
+## Related documentation
+
+- [Current architecture and module boundaries](../../architecture/overview.md)
+- [VNode and renderer registration](../../architecture/node-spec.md)
+- [Render failure and commit semantics](../../architecture/render-failures.md)
+- [Lazy collection guide](../../guides/lazy-collections.md)
+- [Shadow and decoration guide](../../guides/shadows.md)
+- [Source documentation and API comment standard](../../project/api-documentation-quality.md)
+
+## Compatibility notes
+
+The `0.1.0-alpha01` line establishes the first published reconciliation, native binding,
+diagnostics, tooling association, and decoration-backend contracts. Do not persist mounted nodes,
+patch records, diagnostic tree objects, opaque lazy content tokens, or View tags as external data.
+Custom hosts and decoration backends must be upgraded with renderer contract changes even when an
+application's DSL source still compiles.

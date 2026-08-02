@@ -15,7 +15,7 @@ import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.renderer.interop.asRemoteImageTarget
 
 /**
- * 绑定图片与图标按钮节点，负责图片来源、缩放模式、色彩滤镜和点击语义的 Android 映射。
+ * Binds image and icon-button nodes and maps sources, scaling, tint, and click semantics to Android.
  * Binds image and icon-button nodes, mapping image sources, scale types, color filters, and click
  * semantics to Android widgets.
  */

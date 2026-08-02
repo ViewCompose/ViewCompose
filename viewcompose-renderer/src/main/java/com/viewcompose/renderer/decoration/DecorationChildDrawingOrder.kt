@@ -5,8 +5,21 @@ import android.view.ViewGroup
 import com.viewcompose.renderer.R
 import java.util.IdentityHashMap
 
-/** Stable declarative sibling order, independent from platform elevation and shadow backends. */
+/**
+ * Maintains stable declarative sibling drawing order independently of platform elevation.
+ *
+ * Values are stored on child Views and the parent order is rebuilt lazily. Equal `zIndex` values
+ * retain platform child order, so updating this metadata does not change measurement or layout.
+ */
 object DecorationChildDrawingOrder {
+    /**
+     * Replaces the declarative drawing depth associated with [view].
+     *
+     * @param view mounted child whose drawing metadata is updated
+     * @param zIndex finite drawing depth; larger values draw later, and `0f` removes stored metadata
+     * @return `true` when the effective value changed and the parent order was invalidated
+     * @throws IllegalArgumentException if [zIndex] is not finite
+     */
     fun update(
         view: View,
         zIndex: Float,
@@ -26,15 +39,18 @@ object DecorationChildDrawingOrder {
         return true
     }
 
+    /** Registers previously stored child metadata after [child] is attached to [parent]. */
     fun onViewAdded(parent: ViewGroup, child: View) {
         val zIndex = zIndexOrNull(child) ?: return
         state(parent).update(parent, child, zIndex)
     }
 
+    /** Removes [child] from the cached drawing order before or after detachment from [parent]. */
     fun onViewRemoved(parent: ViewGroup, child: View) {
         stateOrNull(parent)?.remove(parent, child)
     }
 
+    /** Marks [parent]'s cached child order dirty after structural order changes. */
     fun invalidate(parent: ViewGroup) {
         stateOrNull(parent)?.let { state ->
             state.dirty = true
@@ -42,6 +58,14 @@ object DecorationChildDrawingOrder {
         }
     }
 
+    /**
+     * Returns the platform child index to draw at [drawingPosition].
+     *
+     * @param parent parent whose direct children are being drawn
+     * @param childCount current direct-child count supplied by [ViewGroup]
+     * @param drawingPosition zero-based position in the drawing sequence
+     * @return platform child index ordered by ascending declarative `zIndex`, then child order
+     */
     fun getChildDrawingOrder(
         parent: ViewGroup,
         childCount: Int,
@@ -55,6 +79,7 @@ object DecorationChildDrawingOrder {
         return state.indices.getOrElse(drawingPosition) { drawingPosition }
     }
 
+    /** Returns the stored declarative drawing depth for [view], or `0f` when none is stored. */
     fun zIndex(view: View): Float {
         return zIndexOrNull(view) ?: 0f
     }

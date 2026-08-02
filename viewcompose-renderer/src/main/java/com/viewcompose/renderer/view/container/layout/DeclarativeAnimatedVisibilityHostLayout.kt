@@ -12,7 +12,7 @@ import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import kotlin.math.roundToInt
 
 /**
- * AnimatedVisibility modifier 提升后的平台 host。
+ * Platform host created by lifting an AnimatedVisibility modifier.
  * Platform host created from promoted AnimatedVisibility modifiers.
  */
 internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor(
@@ -123,7 +123,7 @@ internal class DeclarativeAnimatedVisibilityHostLayout @JvmOverloads constructor
             MeasureSpec.UNSPECIFIED -> animatedSize
             MeasureSpec.AT_MOST -> animatedSize.coerceAtMost(specSize)
             MeasureSpec.EXACTLY -> {
-                // 可见性收缩动画在 EXACTLY 约束下也需要回传更小尺寸，否则 shrink 会退化成仅透明度变化。
+                // A shrinking visibility animation must report a smaller size even under EXACTLY constraints or it degrades to alpha-only.
                 // Visibility shrink must report a smaller size even under EXACT constraints, otherwise it degrades into alpha-only animation.
                 animatedSize.coerceAtMost(specSize)
             }

@@ -7,7 +7,12 @@ import android.view.View
 import android.widget.FrameLayout
 
 /**
- * Generic RenderSession/collection host. It does not depend on or load a concrete decoration backend.
+ * Hosts renderer children that may use custom drawing planes or declarative sibling depth.
+ *
+ * The layout stays independent from any concrete decoration backend. Its no-decoration path adds
+ * one branch per child and delegates directly to [FrameLayout.drawChild]; backend callbacks and
+ * child lookups are performed only while at least one direct child is decorated. Children are not
+ * wrapped in additional Views.
  */
 open class ViewDecorationHostLayout @JvmOverloads constructor(
     context: Context,
@@ -20,12 +25,14 @@ open class ViewDecorationHostLayout @JvmOverloads constructor(
         clipToPadding = false
     }
 
+    /** Registers drawing metadata after the platform has attached [child]. */
     override fun onViewAdded(child: View) {
         super.onViewAdded(child)
         DecorationChildDrawingOrder.onViewAdded(this, child)
         decorationDrawing.onViewAdded(child)
     }
 
+    /** Releases cached drawing metadata when the platform removes [child]. */
     override fun onViewRemoved(child: View) {
         decorationDrawing.onViewRemoved(child)
         super.onViewRemoved(child)

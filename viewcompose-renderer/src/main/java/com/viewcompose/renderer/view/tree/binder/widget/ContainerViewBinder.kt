@@ -20,7 +20,7 @@ import com.viewcompose.renderer.view.lazy.adapter.LazyListSpacingDecoration
 import com.viewcompose.renderer.view.PaddingPx
 
 /**
- * 绑定基础容器节点，负责布局方向、对齐、间距、约束与动画宿主的 View 层映射。
+ * Binds base container nodes and maps direction, alignment, spacing, constraints, and animation hosts to Views.
  * Binds primitive container nodes and maps orientation, alignment, spacing, constraints, and
  * animation-host state onto Android Views.
  */

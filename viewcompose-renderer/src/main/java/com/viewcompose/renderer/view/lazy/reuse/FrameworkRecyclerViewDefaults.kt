@@ -5,10 +5,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.R
 
 /**
- * Lazy 容器和 Pager 的 RecyclerView 默认策略集合。
+ * Shared RecyclerView defaults for lazy containers and pagers.
  * Default RecyclerView policies for lazy containers and pagers.
  *
- * 它集中配置 item animator 和可选共享复用池，避免每个容器重复处理 RecyclerView 细节。
+ * Centralizes item animation and optional shared-pool configuration instead of duplicating RecyclerView policy in every container.
  * It centralizes item animator and optional shared pool configuration so each container does not duplicate RecyclerView details.
  */
 internal object FrameworkRecyclerViewDefaults {
@@ -133,8 +133,8 @@ internal object FrameworkRecyclerViewDefaults {
         animateMove: Boolean,
         animateChange: Boolean,
     ) {
-        // item 内部的 Decoration Host 需要越过 holder 边界绘制阴影；具体 Lazy 容器仍负责
-        // 把最终输出裁剪到自己的 viewport。
+        // Item Decoration Hosts draw shadows beyond holder bounds; each lazy container still clips
+        // the final output to its own viewport.
         // Item Decoration Hosts must draw past holder bounds; each concrete lazy container still
         // clips the final output to its own viewport.
         recyclerView.clipChildren = false
@@ -154,7 +154,7 @@ internal object FrameworkRecyclerViewDefaults {
         if (sharePool) {
             recyclerView.setRecycledViewPool(sharedPool)
         } else {
-            // 本地 pool 挂在 tag 上，重复 bind defaults 时不会丢失已缓存 holder。
+            // Store the local pool in a tag so rebinding defaults preserves cached holders.
             // The local pool is kept on a tag so repeated default binding does not discard cached holders.
             recyclerView.setRecycledViewPool(resolveLocalPool(recyclerView))
         }
@@ -173,7 +173,7 @@ internal object FrameworkRecyclerViewDefaults {
 }
 
 /**
- * 可按声明式 motion policy 逐项关闭动画的默认 ItemAnimator。
+ * Default ItemAnimator that can disable individual animations through declarative motion policy.
  * Default ItemAnimator whose animation types can be disabled by declarative motion policy.
  */
 private class FrameworkItemAnimator : DefaultItemAnimator() {

@@ -5,12 +5,12 @@ import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.container.DeclarativeNestedScrollHostLayout
 
 /**
- * 将 nested scroll modifier 绑定到显式 NestedScrollHost View。
+ * Binds nested-scroll modifiers to an explicit NestedScrollHost View.
  * Binds nested scroll modifiers to explicit NestedScrollHost Views.
  */
 internal object ModifierNestedScrollApplier {
     /**
-     * 更新 nested scroll connection 与 dispatcher。
+     * Updates the nested-scroll connection and dispatcher.
      * Updates nested scroll connection and dispatcher.
      */
     fun apply(
@@ -28,7 +28,7 @@ internal object ModifierNestedScrollApplier {
     }
 
     /**
-     * 释放 nested scroll host 内部持有的 dispatcher 绑定。
+     * Releases the dispatcher binding retained by a nested-scroll host.
      * Releases dispatcher bindings held by the nested scroll host.
      */
     fun dispose(view: View) {

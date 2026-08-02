@@ -26,15 +26,15 @@ import com.viewcompose.renderer.view.resolveLayoutDimension
 import com.viewcompose.renderer.view.roundToPx
 
 /**
- * 将 VNode modifier/spec 转换为父容器可接受的 Android LayoutParams。
+ * Converts VNode modifiers and specs into Android LayoutParams accepted by the parent.
  * Converts VNode modifier/spec data into Android LayoutParams accepted by the parent container.
  *
- * 不同父容器的默认宽高和 parent-data 语义不同，因此转换必须以 parent 类型为上下文。
+ * Parent containers define different default dimensions and parent-data semantics, so conversion is parent-aware.
  * Default size and parent-data semantics differ by parent container, so conversion must use the parent type as context.
  */
 internal object ViewLayoutParamsFactory {
     /**
-     * 为 node 创建当前 parent 下的 LayoutParams。
+     * Creates LayoutParams for a node under the current parent.
      * Creates LayoutParams for the node under the current parent.
      */
     fun createLayoutParams(
@@ -59,7 +59,7 @@ internal object ViewLayoutParamsFactory {
         val horizontalAlign = resolved.horizontalAlign
         val verticalAlign = resolved.verticalAlign
         val constraintSpec = resolved.constraint?.constraint
-        // FlowRow/FlowColumn 复用 LinearLayout 风格默认值，但 orientation 由容器类型推导。
+        // FlowRow and FlowColumn reuse LinearLayout-style defaults, with orientation inferred from the container.
         // FlowRow/FlowColumn reuse LinearLayout-style defaults, with orientation inferred from container type.
         val useLinearLikeDefaults = parent is DeclarativeLinearLayout ||
             parent is DeclarativeFlowRowLayout ||
@@ -98,7 +98,7 @@ internal object ViewLayoutParamsFactory {
             ?: defaultHeight
         return when (parent) {
             is DeclarativeLinearLayout -> {
-                // LinearLayout 中带 weight 的主轴尺寸默认为 0，符合 Android 权重分配预期。
+                // A weighted LinearLayout child defaults to zero on its main axis, matching Android weight allocation.
                 // In LinearLayout, weighted main-axis size defaults to 0 to match Android weight allocation.
                 val resolvedWidth = if (
                     weight != null &&
@@ -155,7 +155,7 @@ internal object ViewLayoutParamsFactory {
         warningTag: String,
         emittedModifierWarnings: MutableSet<String>,
     ) {
-        // parent-data modifier 只在特定父容器下有效；重复 warning 通过调用方 set 做去重。
+        // Parent-data modifiers are valid only under compatible parents; the caller's set de-duplicates warnings.
         // Parent-data modifiers are valid only under specific parents; the caller-provided set deduplicates warnings.
         ModifierParentDataValidator.validate(parent, node).forEach { warning ->
             val key = "${parent::class.java.name}|${node.type}|$warning"
@@ -194,7 +194,7 @@ internal object ViewLayoutParamsFactory {
 
     private fun defaultDividerWidth(parent: ViewGroup, node: VNode): Int {
         val thickness = ContainerViewBinder.readDividerSpec(node).thickness
-        // 横向 LinearLayout 中 divider 表示竖线，否则默认填满父宽度。
+        // A divider in horizontal LinearLayout is vertical; otherwise it fills the parent width by default.
         // In horizontal LinearLayout a divider is vertical; otherwise it fills parent width.
         return if ((parent as? LinearLayout)?.orientation == LinearLayout.HORIZONTAL) {
             thickness
@@ -205,7 +205,7 @@ internal object ViewLayoutParamsFactory {
 
     private fun defaultDividerHeight(parent: ViewGroup, node: VNode): Int {
         val thickness = ContainerViewBinder.readDividerSpec(node).thickness
-        // 横向 LinearLayout 中 divider 高度填满父容器，否则厚度就是高度。
+        // In horizontal LinearLayout a divider fills parent height; otherwise its thickness is its height.
         // In horizontal LinearLayout divider height fills the parent; otherwise thickness becomes height.
         return if ((parent as? LinearLayout)?.orientation == LinearLayout.HORIZONTAL) {
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -245,7 +245,7 @@ internal object ViewLayoutParamsFactory {
     }
 
     private fun ConstraintDimension.toLayoutParamValue(node: VNode): Int {
-        // ConstraintLayout 的 match-constraints 在 Android LayoutParams 中用 0 表达。
+        // Android LayoutParams represent ConstraintLayout match-constraints with zero.
         // ConstraintLayout expresses match-constraints as 0 in Android LayoutParams.
         return when (this) {
             ConstraintDimension.WrapContent -> ViewGroup.LayoutParams.WRAP_CONTENT

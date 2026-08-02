@@ -7,7 +7,7 @@ import android.view.MotionEvent
 import androidx.recyclerview.widget.RecyclerView
 
 /**
- * LazyColumn/LazyRow 使用的 RecyclerView 基类。
+ * RecyclerView base class used by LazyColumn and LazyRow.
  * RecyclerView base used by LazyColumn/LazyRow.
  */
 internal class DeclarativeLazyListView @JvmOverloads constructor(
@@ -15,7 +15,7 @@ internal class DeclarativeLazyListView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
 ) : RecyclerView(context, attrs) {
     /**
-     * 是否允许用户触摸滚动，程序化滚动和布局仍由 RecyclerView 正常处理。
+     * Whether touch-driven scrolling is enabled; programmatic scrolling and layout remain available.
      * Whether user touch scrolling is enabled while programmatic scroll and layout keep working.
      */
     var userScrollEnabled: Boolean = true

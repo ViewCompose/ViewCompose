@@ -23,7 +23,7 @@ import com.viewcompose.renderer.view.roundToPx
 import com.viewcompose.renderer.view.toPx
 
 /**
- * 绑定分页、分段控件和标签栏节点，保持 PagerState 与 Android 容器滚动状态一致。
+ * Binds pager, segmented-control, and tab-row nodes while synchronizing PagerState with Android scrolling state.
  * Binds pagers, segmented controls, and tab rows while keeping PagerState aligned with Android
  * container scroll state.
  */

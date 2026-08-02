@@ -5,7 +5,7 @@ import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.renderer.reconcile.LazyListChangePayload
 
 /**
- * 管理单个 lazy item 内部 render session 的生命周期。
+ * Manages the child render-session lifecycle for one lazy item.
  * Manages the lifecycle of the inner render session for one lazy item.
  */
 internal class LazyItemSessionController(
@@ -22,7 +22,7 @@ internal class LazyItemSessionController(
     ) {
         val shouldRender = when {
             session == null || currentKey != item.key -> {
-                // key 变化代表复用到了不同 item，必须释放旧 session 并清空容器。
+                // A key change means the holder now represents another item; dispose its old session and clear the container.
                 // A key change means the holder now represents a different item, so release the old session and clear the container.
                 session?.dispose()
                 clearContainer()
@@ -35,7 +35,7 @@ internal class LazyItemSessionController(
             }
 
             payload is LazyListChangePayload.ContentTokenChanged -> {
-                // DiffUtil payload 只说明内容 token 变了，session 可以复用但需要 updater 刷新。
+                // A DiffUtil payload changes content but not identity, so retain the session and refresh it through the updater.
                 // DiffUtil payload only means content token changed; reuse the session but refresh it through updater.
                 applyContentTokenUpdate(item)
                 true
@@ -59,7 +59,7 @@ internal class LazyItemSessionController(
     }
 
     fun recycle() {
-        // holder 回收时释放 session，避免离屏 item 继续持有 View/closure。
+        // Dispose on holder recycling so off-screen items cannot retain Views or captured closures.
         // Release the session when the holder is recycled so off-screen items do not retain Views or closures.
         session?.dispose()
         session = null

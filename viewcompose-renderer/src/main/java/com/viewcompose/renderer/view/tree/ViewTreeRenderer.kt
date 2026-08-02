@@ -9,11 +9,11 @@ import com.viewcompose.renderer.reconcile.ChildReconciler
 import com.viewcompose.renderer.reconcile.ReconcileNode
 
 /**
- * Android View 树 renderer 的核心入口。
- * Core entry point for rendering into the Android View tree.
+ * Transactional renderer that reconciles immutable VNodes into one Android ViewGroup.
  *
- * renderer 将 VNode 列表包装为平台需要的 host 节点，执行 reconcile/patch 事务，并返回诊断结果。
- * The renderer wraps VNodes into platform host nodes, executes reconcile/patch transactions, and returns diagnostics.
+ * Calls are UI-thread confined. The caller owns the host and must pass the exact mounted-node list
+ * returned by its previous successful render. Structural and binding mutations are rolled back when
+ * preparation fails; deferred lifecycle callbacks run only after the new View tree commits.
  */
 object ViewTreeRenderer {
     private const val DEFAULT_RIPPLE_COLOR: Int = 0x22000000
@@ -23,14 +23,21 @@ object ViewTreeRenderer {
     private val emittedStructureWarnings = mutableSetOf<String>()
 
     @VisibleForTesting
+    /** Clears process-local warning de-duplication state used by renderer tests. */
     fun resetWarnings() {
         emittedModifierWarnings.clear()
         emittedStructureWarnings.clear()
     }
 
     /**
-     * 释放已挂载节点并从 container 移除对应 View。
-     * Disposes mounted nodes and removes their Views from the container.
+     * Disposes mounted subtrees and removes their root Views from [container].
+     *
+     * Every root is attempted even when an earlier lifecycle callback fails. Failures are returned
+     * after the corresponding root View has been removed, so disposal is not transactional.
+     *
+     * @param container direct parent that owns every root in [mountedNodes]
+     * @param mountedNodes exact committed roots to release; already disposed nodes are ignored
+     * @return lifecycle and cleanup failures in encounter order
      */
     fun disposeMounted(
         container: ViewGroup,
@@ -57,11 +64,21 @@ object ViewTreeRenderer {
     }
 
     /**
-     * 将 VNode 列表渲染进 container。
-     * Renders a VNode list into the container.
+     * Reconciles [nodes] into [container] and commits one new mounted-tree snapshot.
      *
-     * 所有 View 结构改动都先进入事务；失败时 rollback，成功后再 commit deferred removal。
-     * All View structure changes go through a transaction; failures roll back, success commits deferred removals.
+     * View structure changes enter a transaction first. A preparation failure restores the previous
+     * structure and is rethrown. After structural commit, deferred lifecycle callbacks are isolated:
+     * their errors are reported in [RenderTreeResult.commitFailures] and do not roll back the visible
+     * tree. [onReconcile] runs last with the committed result and may re-enter application code.
+     *
+     * @sample com.viewcompose.renderer.samples.renderIntoViewGroupSample
+     * @param container exclusive ViewGroup host for this mounted tree
+     * @param previous exact roots returned by the previous successful call, or an empty list initially
+     * @param nodes next immutable declarative root snapshot
+     * @param collectDiagnostics whether to collect statistics, structure, patch, and warning snapshots
+     * @param onReconcile optional callback invoked on the UI thread after commit and cleanup
+     * @return committed mounted roots, reconciliation plan, diagnostics, effects, and isolated failures
+     * @throws Throwable when reconciliation or platform mutation fails before structural commit
      */
     fun renderInto(
         container: ViewGroup,
@@ -70,7 +87,6 @@ object ViewTreeRenderer {
         collectDiagnostics: Boolean = true,
         onReconcile: ((RenderTreeResult) -> Unit)? = null,
     ): RenderTreeResult {
-        // wrapper 在 reconcile 前插入平台 host 节点，使 modifier 语义变成普通树结构。
         // Wrappers insert platform host nodes before reconciliation, turning modifier semantics into normal tree structure.
         val renderNodes = AnimatedSizeNodeWrapper.wrapTree(
             NestedScrollNodeWrapper.wrapTree(nodes),
@@ -96,7 +112,6 @@ object ViewTreeRenderer {
             throw error
         }
         val commitEffects = transaction.commitEffects.toList()
-        // 删除节点延迟到 commit 后释放，避免中途失败时无法恢复旧树。
         // Removed nodes are disposed after commit so the old tree can still be restored if patching fails.
         val commitFailures = ViewTreePatchPipeline.commitTransaction(
             transaction = transaction,

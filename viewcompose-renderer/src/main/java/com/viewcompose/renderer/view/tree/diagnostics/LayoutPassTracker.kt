@@ -1,8 +1,13 @@
 package com.viewcompose.renderer.view.tree
 
 /**
- * 单个 View 类型的 measure/layout 统计条目。
- * Measure/layout statistics entry for one View type.
+ * Aggregated measure and layout timings for one Android View class name.
+ *
+ * @property viewName simple View class name used as the aggregation key
+ * @property measureCount number of recorded measure calls
+ * @property layoutCount number of recorded layout calls
+ * @property totalMeasureNs cumulative measure time in nanoseconds
+ * @property totalLayoutNs cumulative layout time in nanoseconds
  */
 data class LayoutPassEntry(
     val viewName: String,
@@ -13,8 +18,13 @@ data class LayoutPassEntry(
 )
 
 /**
- * layout pass 采样快照。
- * Snapshot of sampled layout passes.
+ * Immutable process-local snapshot of sampled View layout work.
+ *
+ * @property totalMeasureCount measure calls across all entries
+ * @property totalLayoutCount layout calls across all entries
+ * @property totalMeasureNs cumulative measure time in nanoseconds
+ * @property totalLayoutNs cumulative layout time in nanoseconds
+ * @property entries per-class entries ordered by descending total time, call count, then name
  */
 data class LayoutPassSnapshot(
     val totalMeasureCount: Int = 0,
@@ -25,22 +35,25 @@ data class LayoutPassSnapshot(
 )
 
 /**
- * 轻量级 layout pass 采样器。
- * Lightweight layout pass sampler.
+ * Opt-in process-local sampler for Android View measure and layout calls.
  *
- * 默认关闭，仅在诊断页面或测试显式启用时记录 measure/layout 耗时。
- * Disabled by default; records measure/layout timing only when diagnostics pages or tests enable it.
+ * Sampling is disabled by default. Recording methods are safe to call from multiple threads, but
+ * typical renderer use is UI-thread confined. Enabling adds a `nanoTime` call and synchronized
+ * aggregation to every instrumented pass, so it is intended for diagnostics rather than production
+ * telemetry. Snapshots retain no View instances.
  */
 object LayoutPassTracker {
     private val counters = linkedMapOf<String, MutableLayoutPassCounter>()
 
     @Volatile
+    /** Returns whether new timing samples are currently accepted. */
     var isEnabled: Boolean = false
         private set
 
     /**
-     * 启用采样，可选择是否清空历史计数。
-     * Enables sampling and optionally clears historical counters.
+     * Enables timing collection and optionally clears accumulated counters atomically.
+     *
+     * @param resetCounters whether to discard samples collected by an earlier session
      */
     @Synchronized
     fun start(resetCounters: Boolean = true) {
@@ -50,20 +63,24 @@ object LayoutPassTracker {
         isEnabled = true
     }
 
-    /**
-     * 关闭采样但保留当前计数，便于随后读取 snapshot。
-     * Stops sampling while preserving current counters for later snapshot reads.
-     */
+    /** Stops accepting new samples while preserving counters for [snapshot]. */
     fun stop() {
         isEnabled = false
     }
 
     /**
-     * 返回采样起点；未启用时返回哨兵值避免额外 nanoTime 成本。
-     * Returns a timing start point, or a sentinel when disabled to avoid extra nanoTime cost.
+     * Returns a monotonic timing origin, or an internal sentinel while sampling is disabled.
+     *
+     * @return value to pass unchanged to [recordMeasureSince] or [recordLayoutSince]
      */
     fun beginTiming(): Long = if (isEnabled) System.nanoTime() else TIMING_DISABLED
 
+    /**
+     * Records elapsed measure time since [startNs] for [viewClass].
+     *
+     * @param viewClass concrete View class used as the aggregation key
+     * @param startNs value returned by [beginTiming]; the disabled sentinel is ignored
+     */
     fun recordMeasureSince(
         viewClass: Class<*>,
         startNs: Long,
@@ -75,6 +92,12 @@ object LayoutPassTracker {
         )
     }
 
+    /**
+     * Records elapsed layout time since [startNs] for [viewClass].
+     *
+     * @param viewClass concrete View class used as the aggregation key
+     * @param startNs value returned by [beginTiming]; the disabled sentinel is ignored
+     */
     fun recordLayoutSince(
         viewClass: Class<*>,
         startNs: Long,
@@ -86,6 +109,12 @@ object LayoutPassTracker {
         )
     }
 
+    /**
+     * Adds one explicit measure duration to [viewName]'s aggregate.
+     *
+     * @param viewName stable human-readable View type name
+     * @param durationNs elapsed measure time in nanoseconds
+     */
     @Synchronized
     fun recordMeasure(
         viewName: String,
@@ -98,6 +127,12 @@ object LayoutPassTracker {
         counter.totalMeasureNs += durationNs
     }
 
+    /**
+     * Adds one explicit layout duration to [viewName]'s aggregate.
+     *
+     * @param viewName stable human-readable View type name
+     * @param durationNs elapsed layout time in nanoseconds
+     */
     @Synchronized
     fun recordLayout(
         viewName: String,
@@ -110,6 +145,11 @@ object LayoutPassTracker {
         counter.totalLayoutNs += durationNs
     }
 
+    /**
+     * Returns an immutable, deterministically ordered copy of all current counters.
+     *
+     * @return snapshot that remains valid after sampling resumes or counters are reset
+     */
     @Synchronized
     fun snapshot(): LayoutPassSnapshot {
         val entries = counters.values
@@ -136,6 +176,7 @@ object LayoutPassTracker {
         )
     }
 
+    /** Clears all accumulated counters without changing [isEnabled]. */
     @Synchronized
     fun reset() {
         counters.clear()

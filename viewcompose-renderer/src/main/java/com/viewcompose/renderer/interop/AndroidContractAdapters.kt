@@ -7,7 +7,7 @@ import com.viewcompose.ui.node.spec.PlatformUiFontFamily
 import com.viewcompose.ui.node.spec.UiFontFamily
 
 /**
- * Android 平台渲染容器句柄。
+ * Android platform render-container handle.
  * Android platform render container handle.
  */
 internal data class AndroidRenderContainerHandle(
@@ -15,7 +15,7 @@ internal data class AndroidRenderContainerHandle(
 ) : PlatformRenderContainerHandle
 
 /**
- * Android 远程图片加载目标。
+ * Android target for remote image loading.
  * Android remote image loading target.
  */
 internal data class AndroidRemoteImageTarget(
@@ -23,7 +23,7 @@ internal data class AndroidRemoteImageTarget(
 ) : PlatformRemoteImageTarget
 
 /**
- * 将 renderer 内部对象转换为跨模块平台容器句柄。
+ * Wraps a renderer-owned object as a cross-module platform container handle.
  * Converts a renderer object into a cross-module platform container handle.
  */
 internal fun Any.asRenderContainerHandle(): PlatformRenderContainerHandle {
@@ -31,7 +31,7 @@ internal fun Any.asRenderContainerHandle(): PlatformRenderContainerHandle {
 }
 
 /**
- * 将 ImageView 包装为远程图片加载目标。
+ * Wraps an ImageView as a remote image-loading target.
  * Wraps an ImageView as a remote image loading target.
  */
 internal fun Any.asRemoteImageTarget(): PlatformRemoteImageTarget {
@@ -39,7 +39,7 @@ internal fun Any.asRemoteImageTarget(): PlatformRemoteImageTarget {
 }
 
 /**
- * 将声明式字体族转换为 Android Typeface。
+ * Converts a declarative font family to an Android Typeface.
  * Converts declarative font family to Android Typeface.
  */
 internal fun UiFontFamily?.toTypefaceOrNull(): Typeface? {

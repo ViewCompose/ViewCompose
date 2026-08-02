@@ -36,6 +36,9 @@ overviews, and staged enforcement.
 - `viewcompose-widget-core` has a reviewed Q2/Q3 baseline covering the component DSL, theme and
   locals, composition effects, saveable state, overlays, render-session recovery, compiled samples,
   and an always-on strict Dokka warning gate;
+- `viewcompose-renderer` has a reviewed Q2/Q3 baseline covering reconciliation, native View
+  ownership, lazy-list identity, decoration SPI, render diagnostics, layout sampling, compiled
+  samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -68,7 +71,8 @@ Q2 or Q3 manual review.
 3. **Core UI chain — active**
    - `viewcompose-ui-contract` baseline and strict gate are complete;
    - `viewcompose-widget-core` baseline and strict gate are complete;
-   - repair `viewcompose-renderer` and `viewcompose-host-android` in dependency order;
+   - `viewcompose-renderer` baseline and strict gate are complete;
+   - repair `viewcompose-host-android` next;
    - add module/package overviews and cross-links.
 4. **Remaining families**
    - text, navigation, lifecycle, ViewModel, overlay, animation, gesture, graphics, shadows,
@@ -90,12 +94,12 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-widget-core` was repaired from 657 initially undocumented declarations to
-a zero-warning strict baseline. Theme and environment, component defaults and DSL entry points,
-composition effects, saveable state, overlays, render-session diagnostics and failure recovery were
-reviewed; compiled Q3 samples and a bilingual module manual were added.
+2026-08-02: `viewcompose-renderer` was repaired from 128 initially undocumented declarations to a
+zero-warning strict baseline. Reconciliation, native-tree ownership, lazy-list identity, optional
+decoration backends, render diagnostics, and layout sampling were reviewed; compiled Q3 samples and
+a bilingual module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-renderer`, add its module manual and focused samples, then enable its
-module-level strict warning gate without changing API behavior.
+Audit and repair `viewcompose-host-android`, add its module manual and focused samples, then enable
+its module-level strict warning gate without changing API behavior.
