@@ -17,6 +17,20 @@ import kotlin.math.roundToInt
  * configuration.
  */
 object PreviewAndroidContextFactory {
+    /**
+     * Derives a resource-qualified context for [preview] from [base].
+     *
+     * Density, font scale, viewport dimensions, locales, layout direction, and night mode are
+     * applied to a copied [Configuration]. The returned context is used for native Views and
+     * resource lookup; the renderer separately installs the same values in `UiEnvironment` for
+     * ViewCompose DSL code.
+     *
+     * Layoutlib bridges that do not support [Context.createConfigurationContext] may return the
+     * original [base]. In that case the worker host is responsible for configuring Layoutlib with
+     * the same preview values before mounting the frame.
+     *
+     * @return a configuration context when the host supports it, otherwise [base]
+     */
     fun create(
         base: Context,
         preview: PreviewConfiguration,

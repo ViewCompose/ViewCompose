@@ -17,6 +17,17 @@ import java.io.File
 class StaticPreviewWorker(
     private val captureBackend: StaticPreviewCaptureBackend = AndroidBitmapCaptureBackend,
 ) {
+    /**
+     * Resolves and renders [request] using application bytecode from [classLoader].
+     *
+     * The loader is borrowed: this method neither changes the thread context loader nor closes it.
+     * Entry resolution, mounting, PNG capture, and snapshot export are reported as phase timings.
+     * Expected failures become `RenderFailure` responses; thread death and out-of-memory errors
+     * escape. Successful artifacts are atomically published beneath the request output directory.
+     *
+     * @return a protocol response containing immutable artifact paths or one failure diagnostic
+     * @sample com.viewcompose.preview.runner.samples.renderCompiledPreviewSample
+     */
     fun render(
         context: Context,
         request: PreviewRenderRequest,
@@ -50,6 +61,16 @@ class StaticPreviewWorker(
         }
     }
 
+    /**
+     * Renders an already resolved [entry] for [request].
+     *
+     * This overload is useful for tests and embedded hosts that own entry discovery. The entry
+     * descriptor must match the request; frame resources are always closed after export. Expected
+     * failures are encoded in the returned response while fatal VM errors escape.
+     *
+     * @return a protocol response containing immutable artifact paths or one failure diagnostic
+     * @sample com.viewcompose.preview.runner.samples.renderResolvedPreviewSample
+     */
     fun render(
         context: Context,
         request: PreviewRenderRequest,

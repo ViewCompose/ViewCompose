@@ -24,6 +24,8 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+    sourceSets["test"].java.srcDir("src/test/samples")
 }
 
 configurations.configureEach {
@@ -35,12 +37,12 @@ configurations.configureEach {
 
 dependencies {
     api(project(":viewcompose-preview-core"))
+    api(project(":viewcompose-preview"))
     implementation(project(":viewcompose-runtime"))
     implementation(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-widget-core"))
     implementation(project(":viewcompose-host-android"))
     implementation(project(":viewcompose-lifecycle"))
-    implementation(project(":viewcompose-preview"))
     implementation(project(":viewcompose-renderer"))
     implementation(project(":viewcompose-viewmodel"))
     implementation(libs.androidx.lifecycle.runtime.ktx)

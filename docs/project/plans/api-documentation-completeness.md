@@ -95,6 +95,10 @@ overviews, and staged enforcement.
   registration, compiled discovery, canonical fingerprints, single and gallery rendering, fast
   refresh, worker isolation/reuse verification, production annotation stripping, compiled samples,
   and an always-on strict Dokka warning gate;
+- `viewcompose-preview-runner` has a reviewed Q2/Q3 baseline covering compiled entry resolution,
+  Android configuration and application theme fidelity, frame-scoped owners, bounded auto-height,
+  atomic image and snapshot export, immutable diagnostics, compiled samples, and an always-on strict
+  Dokka warning gate;
 - `viewcompose-preview-worker-host` has a reviewed Q2/Q3 baseline covering one-shot and loopback
   server modes, validation, Layoutlib ownership, reloadable class-loader isolation, atomic responses,
   bounded retirement, compiled samples, and an always-on strict Dokka warning gate;
@@ -135,8 +139,8 @@ Q2 or Q3 manual review.
    - add module/package overviews and cross-links.
 4. **Remaining families**
    - text, both navigation layers, the Android overlay backend, lifecycle, and ViewModel are complete;
-   - animation, gesture, graphics, shadows,
-     constraint layout, image loading, and preview tooling;
+   - animation, gesture, graphics, shadows, constraint layout, image loading, and all but the final
+     preview integration module are complete;
    - enable strict checking after each module baseline is clean.
 5. **Immutable source and release integration**
    - derive source-link revisions from the published version/tag contract;
@@ -154,13 +158,13 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-preview-worker-host` was repaired from two initially undocumented
-declarations to a zero-warning strict baseline. One-shot and loopback server modes, command
-validation, Layoutlib lifecycle, reloadable class-loader isolation, fatal/non-fatal failure policy,
-atomic responses and bounded retirement were reviewed; a compiled sample and bilingual module
-manual were added.
+2026-08-02: `viewcompose-preview-runner` was repaired from 24 initially undocumented declarations
+to a zero-warning strict baseline. Compiled entry resolution, Android configuration and application
+theme fidelity, frame ownership, auto-height budgets, atomic artifact export, immutable diagnostics,
+fatal/non-fatal failure policy and public dependency exposure were reviewed; compiled samples and a
+bilingual module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-preview-runner`, add its module manual and focused samples, then enable
-its module-level strict warning gate without changing API behavior.
+Audit and repair `viewcompose-preview`, add its module manual and focused samples, then enable its
+module-level strict warning gate without changing API behavior.

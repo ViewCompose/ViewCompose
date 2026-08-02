@@ -13,6 +13,17 @@ import java.lang.reflect.Modifier
  * Resolves the stable protocol entry-point description against an isolated worker class loader.
  */
 object PreviewJvmEntryPointResolver {
+    /**
+     * Resolves [descriptor] against application bytecode visible to [classLoader].
+     *
+     * The entry point must be one unambiguous public static JVM method that accepts exactly one
+     * `UiTreeBuilder` receiver and returns `Unit`. When configured, the application theme provider
+     * must implement `PreviewThemeProvider` and expose either Kotlin's `INSTANCE` field or a public
+     * no-argument constructor. User-code and reflection failures are converted to source-aware
+     * diagnostics; thread death and out-of-memory errors are rethrown.
+     *
+     * @return the executable entry or a diagnostic describing why it could not be loaded
+     */
     fun resolve(
         descriptor: PreviewDescriptor,
         classLoader: ClassLoader,
@@ -183,11 +194,22 @@ private fun Class<*>.jvmTypeDescriptor(): String {
     }
 }
 
+/** Result of resolving a compiled preview descriptor against an isolated class loader. */
 sealed interface PreviewEntryResolutionResult {
+    /**
+     * Indicates that the descriptor resolved to [entry].
+     *
+     * @property entry executable preview entry bound to the resolved JVM method
+     */
     data class Success(
         val entry: StaticPreviewEntry,
     ) : PreviewEntryResolutionResult
 
+    /**
+     * Indicates that entry-point or theme-provider resolution failed.
+     *
+     * @property diagnostic source-aware, user-presentable failure information
+     */
     data class Failure(
         val diagnostic: PreviewDiagnostic,
     ) : PreviewEntryResolutionResult

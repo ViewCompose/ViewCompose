@@ -52,6 +52,21 @@ import kotlin.math.roundToInt
  * the resulting [StaticPreviewFrame] without changing composition behavior.
  */
 object StaticPreviewRenderer {
+    /**
+     * Mounts [entry] using the deterministic environment described by [request].
+     *
+     * The descriptor must exactly match the request. The renderer resolves application or Android
+     * theme tokens, installs frame-scoped lifecycle, ViewModel, saveable-state, environment, and
+     * theme owners, performs one synchronous render, and lays out the native tree. Auto-height
+     * requests expand eligible scrollable roots only up to the runner's density and pixel budgets.
+     *
+     * A successful frame owns a live render session and host owners and therefore must be closed.
+     * Expected entry, environment, theme, render, and layout failures are returned as diagnostics;
+     * thread death and out-of-memory errors escape.
+     *
+     * @return a closeable mounted frame or a source-aware failure
+     * @sample com.viewcompose.preview.runner.samples.mountStaticPreviewSample
+     */
     fun mount(
         context: Context,
         request: PreviewRenderRequest,
@@ -374,22 +389,44 @@ private fun autoHeightLimitPx(
 
 private const val AUTO_HEIGHT_COMPLETION_GUARD_PX = 1
 
+/** Result of mounting and laying out one static preview frame. */
 sealed interface StaticPreviewMountResult {
+    /**
+     * Indicates that [frame] is ready for capture and inspection.
+     *
+     * @property frame mounted frame whose ownership transfers to the caller
+     */
     data class Success(
         val frame: StaticPreviewFrame,
     ) : StaticPreviewMountResult
 
+    /**
+     * Indicates that mounting failed before a frame could be transferred.
+     *
+     * @property diagnostic source-aware description of the failed render phase
+     */
     data class Failure(
         val diagnostic: PreviewDiagnostic,
     ) : StaticPreviewMountResult
 }
 
+/**
+ * A mounted Android View hierarchy and immutable tooling snapshot for one preview request.
+ *
+ * The frame owns its render session plus lifecycle, ViewModel, and saveable-state host. Call
+ * [close] exactly once after capture or inspection. Closing disposes the render session first and
+ * always releases the host owner, even when session disposal fails.
+ *
+ * @property rootView measured and laid-out native root ready for synchronous capture
+ * @property snapshot immutable render, composition, patch, native View, source, and layout data
+ */
 class StaticPreviewFrame internal constructor(
     val rootView: View,
     val snapshot: PreviewRenderSnapshot,
     private val session: RenderSession,
     private val previewOwner: StaticPreviewHostOwner,
 ) : Closeable {
+    /** Releases the render session and all frame-scoped Android owners. */
     override fun close() {
         try {
             session.dispose()
