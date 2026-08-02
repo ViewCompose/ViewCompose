@@ -26,8 +26,29 @@ import com.viewcompose.ui.modifier.ContentSizeTweenSpecModel
 import com.viewcompose.ui.modifier.Modifier
 
 /**
- * 在布局内容尺寸变化时为测量结果添加动画。
- * Adds animation to measured content-size changes.
+ * Animates changes in a node's measured content width and height.
+ *
+ * The renderer promotes the modified node into a synthetic animated-size host. Parent-data, size,
+ * margin, alignment, offset, and z-index elements remain on the outer host; content and drawing
+ * elements remain on the original child. This adds one native layout level and requests layout on
+ * every animation frame, so it should be used for intentional size changes rather than large
+ * continuously changing collections.
+ *
+ * The first measurement is applied without animation. A later size change animates from the
+ * currently displayed size, and another change cancels and retargets from that in-flight size.
+ * Parent constraints still cap the measured result. Detaching the host cancels its animator.
+ *
+ * Known core specifications are serialized to the renderer. Custom [Easing] implementations fall
+ * back to [EasingDefaults.FastOutSlowIn]; [CubicBezierEasing] and built-in presets are preserved.
+ * Infinite repeats keep requesting layout until the view detaches and should be avoided on ordinary
+ * screen content.
+ *
+ * @sample com.viewcompose.animation.samples.animateContentSizeSample
+ *
+ * @receiver modifier chain for the node whose measured size should animate
+ * @param animationSpec size timing policy serialized across the renderer boundary
+ * @return a modifier chain containing the animated-size instruction; if several are present, the
+ * last specification wins
  */
 fun Modifier.animateContentSize(
     animationSpec: AnimationSpec = spring(),
@@ -39,10 +60,7 @@ fun Modifier.animateContentSize(
     )
 }
 
-/**
- * 将 animation-core 规格转换为跨 renderer 传输的 modifier 模型。
- * Converts animation-core specs into modifier models that can cross the renderer boundary.
- */
+/** Converts a public animation specification into the platform-neutral renderer contract. */
 private fun AnimationSpec.toContentSizeSpecModel(): ContentSizeAnimationSpecModel {
     return when (this) {
         is TweenSpec -> ContentSizeTweenSpecModel(
@@ -88,10 +106,7 @@ private fun RepeatMode.toContentSizeRepeatMode(): ContentSizeRepeatModeModel {
     }
 }
 
-/**
- * 只保留 renderer 可识别的 easing；未知实现降级为默认曲线。
- * Keeps only renderer-known easing values; unknown implementations fall back to the default curve.
- */
+/** Preserves renderer-supported curves and applies the documented custom-easing fallback. */
 private fun Easing.toContentSizeEasingModel(): ContentSizeEasingModel {
     return when (this) {
         EasingDefaults.Linear -> ContentSizeEasingModel.Linear

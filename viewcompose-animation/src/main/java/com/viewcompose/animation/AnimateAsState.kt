@@ -16,9 +16,26 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 
 /**
- * 将目标值动画为可观察 [State]，目标变化时从当前值启动新动画。
- * Animates a target value into observable [State], starting a new animation from the current value
- * when the target changes.
+ * Returns composition-owned [State] that animates toward [targetValue].
+ *
+ * The first composition exposes [targetValue] immediately. A later change to the target,
+ * [animationSpec], [converter], frame clock, or animation coroutine context cancels the previous
+ * launched effect and starts from the last published value. Leaving the composition cancels the
+ * animation and retains no independent scope.
+ *
+ * The current [LocalAnimationCoroutineContext] must not contain a [Job]; the composition-owned job
+ * remains the cancellation parent while the supplied context may select a dispatcher or other
+ * context elements. Samples are published on that context and invalidate readers of the returned
+ * state.
+ *
+ * @sample com.viewcompose.animation.samples.animateValueAsStateSample
+ *
+ * @param T domain value represented by [converter]
+ * @param targetValue value exposed immediately on first composition and animated toward thereafter
+ * @param converter stable per-dimension converter used for every sample
+ * @param animationSpec timing policy for the current target change
+ * @return stable observable state owned by this composition call position
+ * @throws IllegalArgumentException if [LocalAnimationCoroutineContext] contains a [Job]
  */
 fun <T> animateValueAsState(
     targetValue: T,
@@ -49,6 +66,15 @@ fun <T> animateValueAsState(
     return state
 }
 
+/**
+ * Returns composition-owned state that animates a [Float] target.
+ *
+ * @sample com.viewcompose.animation.samples.animateAsStateSample
+ *
+ * @param targetValue float value requested by the current composition
+ * @param animationSpec timing policy used after the first target changes
+ * @return stable state containing the latest interpolated value
+ */
 fun animateFloatAsState(
     targetValue: Float,
     animationSpec: AnimationSpec = tween(),
@@ -60,6 +86,13 @@ fun animateFloatAsState(
     )
 }
 
+/**
+ * Returns composition-owned state that animates an [Int] target with truncating interpolation.
+ *
+ * @param targetValue integer requested by the current composition
+ * @param animationSpec timing policy used after the first target changes
+ * @return stable state containing the latest integer sample
+ */
 fun animateIntAsState(
     targetValue: Int,
     animationSpec: AnimationSpec = tween(),
@@ -71,6 +104,15 @@ fun animateIntAsState(
     )
 }
 
+/**
+ * Returns composition-owned state that animates a packed ARGB color by encoded channel.
+ *
+ * Interpolation is not gamma-correct or color-space aware.
+ *
+ * @param targetValue packed ARGB color requested by the current composition
+ * @param animationSpec timing policy used after the first target changes
+ * @return stable state containing the latest packed ARGB sample
+ */
 fun animateColorAsState(
     targetValue: Int,
     animationSpec: AnimationSpec = tween(),
@@ -82,6 +124,16 @@ fun animateColorAsState(
     )
 }
 
+/**
+ * Returns composition-owned state that animates a density-independent scalar.
+ *
+ * This interpolates the [UiDp.value] number and does not resolve pixels; density changes therefore
+ * do not restart the animation by themselves.
+ *
+ * @param targetValue density-independent value requested by the current composition
+ * @param animationSpec timing policy used after the first target changes
+ * @return stable state containing the latest [UiDp] sample
+ */
 fun animateDpAsState(
     targetValue: UiDp,
     animationSpec: AnimationSpec = tween(),

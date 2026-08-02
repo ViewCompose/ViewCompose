@@ -19,8 +19,17 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
 /**
- * 将一个状态机目标值拆成多个同步动画通道。
- * Splits one state-machine target into multiple synchronized animation channels.
+ * Coordinates multiple animated values against one logical state segment and shared timeline.
+ *
+ * Instances are created by [updateTransition]. Every `animate*` call position owns an observable
+ * channel, freezes its current value and new target when a segment starts, and contributes its
+ * duration. The longest channel determines when [currentState] commits [targetState]; shorter
+ * channels settle at their own terminal values while the segment continues.
+ *
+ * Retargeting preserves each existing channel's latest sampled value as its new start. The object is
+ * composition-owned, is not thread-safe, and does not expose imperative time control.
+ *
+ * @param S logical endpoint state mapped to channel target values
  */
 class Transition<S> internal constructor(
     initialState: S,
@@ -37,12 +46,19 @@ class Transition<S> internal constructor(
     private val segmentInitialStateHolder = mutableStateOf(initialState)
     private val segmentTargetStateHolder = mutableStateOf(initialState)
 
+    /**
+     * Returns the last logical state committed after every registered channel finished.
+     *
+     * It remains at the previous endpoint while [isRunning] is `true`.
+     */
     val currentState: S
         get() = currentStateHolder.value
 
+    /** Returns the latest logical state supplied to [updateTransition]. */
     val targetState: S
         get() = targetStateHolder.value
 
+    /** Returns `true` while the shared segment has not reached its longest channel duration. */
     val isRunning: Boolean
         get() = runningHolder.value
 
@@ -80,10 +96,8 @@ class Transition<S> internal constructor(
         return core.segmentVersion == version && core.isRunning
     }
 
-    // 中文：组合阶段运行在只读快照里，syncFromCore() 写入的 mirror state 在同一轮读取可能仍是旧值。
-    // 因此“是否启动协程/是否注册时长”等控制流必须读取 core 实时值，避免同帧漏启动动画。
-    // English: Composition runs in a read snapshot; mirror-state writes from syncFromCore() may still
-    // read stale in the same pass. Control-flow decisions (launch/register) must use live core values.
+    // Composition reads a snapshot that may not see mirror writes from this pass. Scheduling uses
+    // live core values so a newly started segment cannot miss its frame loop or channel duration.
     internal fun runtimeIsRunning(): Boolean = core.isRunning
 
     internal fun runtimeSegmentVersion(): Long = core.segmentVersion
@@ -125,8 +139,7 @@ class Transition<S> internal constructor(
         val running = core.isRunning
         val version = core.segmentVersion
         if (channelState.segmentVersion != version) {
-            // 每个通道在 segment 切换时冻结自己的起点和终点，随后共享同一 playTime。
-            // Each channel freezes its own endpoints on segment changes, then shares the same playTime.
+            // Freeze channel endpoints once per segment; subsequent samples share the common time.
             val segmentInitialState = core.segmentInitialState
             val segmentTargetState = core.segmentTargetState
             val spec = transitionSpec(segmentInitialState, segmentTargetState)
@@ -149,8 +162,7 @@ class Transition<S> internal constructor(
                 endValue = channelState.endValue,
                 animationSpec = channelState.animationSpec,
                 converter = converter,
-                // 中文：playTime 继续走 mirror state 读取，保证每帧写入能触发观察失效与重组。
-                // English: Keep playTime observed via mirror state so per-frame writes trigger invalidation.
+                // Observe mirror state here so every frame invalidates this composition channel.
                 playTimeNanos = playTimeNanosHolder.value,
             )
         } else {
@@ -159,6 +171,18 @@ class Transition<S> internal constructor(
         return outputState
     }
 
+    /**
+     * Declares a [Float] channel derived from each logical state.
+     *
+     * [animationSpec] is evaluated once for each new segment. On retarget, interpolation starts from
+     * the channel's latest sample and ends at `targetValueByState(targetState)`.
+     *
+     * @sample com.viewcompose.animation.samples.transitionSample
+     *
+     * @param animationSpec factory for the specification used by the next segment
+     * @param targetValueByState maps a logical endpoint to this channel's settled value
+     * @return stable composition-owned state containing the latest channel sample
+     */
     fun animateFloat(
         animationSpec: () -> AnimationSpec = { tween() },
         targetValueByState: (S) -> Float,
@@ -186,6 +210,13 @@ class Transition<S> internal constructor(
         )
     }
 
+    /**
+     * Declares an [Int] channel with truncating interpolation.
+     *
+     * @param animationSpec factory evaluated once for each new segment
+     * @param targetValueByState maps a logical endpoint to the channel's settled integer
+     * @return stable state containing the latest integer sample
+     */
     fun animateInt(
         animationSpec: () -> AnimationSpec = { tween() },
         targetValueByState: (S) -> Int,
@@ -200,6 +231,15 @@ class Transition<S> internal constructor(
         )
     }
 
+    /**
+     * Declares a packed ARGB channel interpolated by encoded color component.
+     *
+     * Interpolation is not gamma-correct or color-space aware.
+     *
+     * @param animationSpec factory evaluated once for each new segment
+     * @param targetValueByState maps a logical endpoint to the channel's packed ARGB value
+     * @return stable state containing the latest packed ARGB sample
+     */
     fun animateColor(
         animationSpec: () -> AnimationSpec = { tween() },
         targetValueByState: (S) -> Int,
@@ -214,6 +254,15 @@ class Transition<S> internal constructor(
         )
     }
 
+    /**
+     * Declares a density-independent scalar channel.
+     *
+     * The numeric [UiDp.value] is interpolated without resolving pixels.
+     *
+     * @param animationSpec factory evaluated once for each new segment
+     * @param targetValueByState maps a logical endpoint to the channel's settled [UiDp]
+     * @return stable state containing the latest density-independent sample
+     */
     fun animateDp(
         animationSpec: () -> AnimationSpec = { tween() },
         targetValueByState: (S) -> UiDp,
@@ -230,9 +279,25 @@ class Transition<S> internal constructor(
 }
 
 /**
- * 记忆并更新一个 [Transition]，同时启动负责推进 segment playTime 的帧循环。
- * Remembers and updates a [Transition], while launching the frame loop that advances segment
- * playTime.
+ * Remembers a [Transition], updates its target, and owns the shared segment frame loop.
+ *
+ * The first composition starts settled at [targetState]. Later unequal targets begin a segment from
+ * the last committed logical state. Channels declared from the returned object register duration
+ * during composition; a launched effect then advances the shared play time with
+ * [LocalMonotonicFrameClock]. Target changes cancel the old effect and start a new segment.
+ *
+ * [label] is captured when the transition is first created and is currently reserved for
+ * diagnostics. [LocalAnimationCoroutineContext] may select a dispatcher or other context elements
+ * but must not contain a [Job], because the composition effect retains cancellation ownership.
+ * Removing this call from composition cancels the frame loop and forgets its channel state.
+ *
+ * @sample com.viewcompose.animation.samples.transitionSample
+ *
+ * @param S logical endpoint state mapped by animation channels
+ * @param targetState state requested by the current composition
+ * @param label optional diagnostic label captured on first creation
+ * @return the stable transition coordinator owned by this composition call position
+ * @throws IllegalArgumentException if [LocalAnimationCoroutineContext] contains a [Job]
  */
 fun <S> updateTransition(
     targetState: S,
