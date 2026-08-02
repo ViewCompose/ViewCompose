@@ -32,16 +32,26 @@ for (const match of catalog.matchAll(rowPattern)) {
   if (!version) {
     throw new Error(`Catalog artifact has no publishing version: ${artifact}`);
   }
+  const manual = match[4].trim();
+  const expectedManual = `[Available](./${artifact}/README.md)`;
+  if (manual !== expectedManual) {
+    throw new Error(
+      `Published module must link its available manual: ${artifact} -> ${manual}`,
+    );
+  }
   entries.push({
     artifact,
     version,
-    family: match[2],
-    role: match[3],
-    manual: match[4],
+    family: match[2].trim(),
+    role: match[3].trim(),
+    manual,
   });
 }
 
 const catalogArtifacts = new Set(entries.map((entry) => entry.artifact));
+if (catalogArtifacts.size !== entries.length) {
+  throw new Error('Published module catalog contains duplicate artifact rows');
+}
 const missing = [...versions.keys()].filter((artifact) => !catalogArtifacts.has(artifact));
 if (missing.length > 0) {
   throw new Error(`Published modules missing from catalog: ${missing.sort().join(', ')}`);

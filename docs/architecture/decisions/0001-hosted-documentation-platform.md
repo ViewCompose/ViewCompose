@@ -20,8 +20,9 @@ The initial project should have no recurring infrastructure cost beyond the exis
 1. Handwritten source remains under the repository's `docs/` tree.
 2. Docusaurus 3 builds the public site from that source and provides navigation, internationalized
    content, version-aware documentation, and extensible UI components.
-3. Dokka 2 generates Kotlin/Java API reference per Maven artifact and version. Dokka HTML is the
-   hosted format; generated output is not checked in.
+3. Dokka 2 generates Kotlin/Java API reference per Maven artifact and version. Each module pins a
+   full immutable source commit beside its version so generated line links never follow `main`.
+   Dokka HTML is the hosted format; generated output is not checked in.
 4. GitHub Actions verifies pull requests and assembles production output. Only `main` can deploy.
 5. GitHub Pages hosts the static result at `docs.viewcompose.com`.
 6. The site source lives under `website/`; generated API output lives under ignored build or
@@ -72,7 +73,8 @@ affected.
 
 1. Build the Docusaurus site locally and on pull requests.
 2. Generate Dokka HTML for a selected artifact set, then for the complete published catalog.
-3. Verify routes, links, module catalog parity, and site size.
+3. Verify immutable version routes, current/stable-latest aliases, source links, complete module
+   catalog parity, and site size.
 4. Enable Pages deployment from `main` only.
 5. Configure and verify `docs.viewcompose.com` after the first successful Pages deployment.
 6. Add per-module release snapshots and API retention after the current documentation site is

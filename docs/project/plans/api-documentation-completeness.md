@@ -2,7 +2,7 @@
 
 ## Status
 
-Active.
+Complete.
 
 ## Scope
 
@@ -27,7 +27,7 @@ overviews, and staged enforcement.
   synthetic members;
 - public and protected declarations are included in the documentable surface;
 - `auditViewComposeApiDocs` exposes missing KDoc/Javadoc without blocking the build;
-- strict `reportUndocumented + failOnWarning` checking is available per selected module;
+- strict `reportUndocumented + failOnWarning` checking is mandatory for all 25 modules;
 - `viewcompose-runtime` has a reviewed Q2/Q3 baseline, compiled Q3 samples, a module manual, and an
   always-on strict Dokka warning gate;
 - `viewcompose-ui-contract` has a reviewed Q2/Q3 baseline covering node specifications, modifier
@@ -105,8 +105,10 @@ overviews, and staged enforcement.
 - `viewcompose-preview` has a reviewed Q2/Q3 baseline covering coherent application theme
   resolution, Compose bridge session ownership, root interop, catalog and Paparazzi coverage,
   compiled samples, and an always-on strict Dokka warning gate;
-- comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
-- generated source links are not yet pinned to release tags.
+- every published module has an available English and current Chinese module manual;
+- generated source links are pinned per module to a full immutable source commit;
+- version, `current`, prerelease `latest` exclusion, manifest, manual catalog, and complete-catalog
+  parity are enforced in build and deployment tasks.
 
 The warning count is an inventory, not a quality score. A declaration with a comment can still fail
 Q2 or Q3 manual review.
@@ -145,7 +147,7 @@ Q2 or Q3 manual review.
    - animation, gesture, graphics, shadows, constraint layout, image loading, and preview tooling are
      complete;
    - enable strict checking after each module baseline is clean.
-5. **Immutable source and release integration**
+5. **Immutable source and release integration — complete**
    - derive source-link revisions from the published version/tag contract;
    - verify `current`, stable `latest`, and immutable version routes;
    - activate the complete-catalog regression gate.
@@ -156,18 +158,17 @@ Q2 or Q3 manual review.
 - strict selected-module Dokka generation
 - compiled sample tasks for the owning module
 - `./gradlew verifyDocumentationStructure`
-- `./gradlew assembleViewComposeApiDocs`
+- `./gradlew verifyCompleteViewComposeApiDocs`
 - Docusaurus type check and production build
 
 ## Last verified
 
-2026-08-02: `viewcompose-preview` was repaired from six initially undocumented declarations to a
-zero-warning strict baseline. Application theme resolution, the Compose bridge's session/root
-ownership and limitations, catalog/Paparazzi coverage and release dependency scope were reviewed;
-compiled samples and a bilingual module manual were added. All 25 published modules now have a
-reviewed strict documentation baseline.
+2026-08-02: all 25 published modules passed repository-wide strict Dokka generation with zero
+warnings. Every module has compiled samples where required, an available English manual, a current
+Chinese mirror, version/current route verification, prerelease latest-alias exclusion, and source
+links pinned to the immutable `fbe1614dd2a278f06517d775c373cb88ce5674a2` source freeze.
 
 ## Next action
 
-Derive immutable source links from the release version/tag contract, verify current/latest/versioned
-routes, activate the complete-catalog regression gate, and run the final repository-wide audit.
+Maintain the gate with every public API or module release. Freeze changed module source first, then
+update its independent version and immutable source revision together before publishing.

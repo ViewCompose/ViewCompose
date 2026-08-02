@@ -438,7 +438,7 @@ Dokka provides two mechanical controls:
 - `failOnWarning` turns Dokka warnings, including missing documentation when reporting is enabled,
   into build failures.
 
-Run a non-blocking inventory for all published modules:
+Run the repository-wide strict audit for all published modules:
 
 ```bash
 ./gradlew auditViewComposeApiDocs
@@ -451,37 +451,30 @@ Limit local iteration to selected artifacts:
   -PviewComposeDocsModules=viewcompose-runtime,viewcompose-ui-contract
 ```
 
-The normal site build does not report all existing omissions. A strict local check is available
-for a module after its baseline has been repaired:
+All published modules are strict. Use the selected verifier for a faster local check while retaining
+undocumented-symbol, warning, route, and immutable-source-link enforcement:
 
 ```bash
-./gradlew assembleViewComposeApiDocs \
-  -PviewComposeDocsModules=viewcompose-runtime \
-  -PviewComposeApiDocsReportUndocumented=true \
-  -PviewComposeApiDocsFailOnWarning=true
+./gradlew verifyAssembledViewComposeApiDocs \
+  -PviewComposeDocsModules=viewcompose-runtime
 ```
 
 Mechanical coverage cannot decide whether a comment is Q1, Q2, or Q3. Reviewers apply the contract
 matrix, verify samples, and reject comments that only restate names or signatures.
 
-## Rollout and enforcement
+## Enforcement
 
-The quality gate advances without hiding current debt:
+The initial rollout is complete. Enforcement is now permanent:
 
-1. **Immediate no-regression:** every new or changed public/protected declaration follows this
-   standard in the same pull request, even before its module baseline is clean.
-2. **Inventory:** `auditViewComposeApiDocs` is non-blocking and establishes the per-module backlog.
-3. **Core baseline:** repair `viewcompose-runtime`, `viewcompose-ui-contract`,
-   `viewcompose-widget-core`, `viewcompose-renderer`, and `viewcompose-host-android` in dependency
-   order.
-4. **Strict module gate:** after a module reaches its baseline, strict Dokka checking becomes
-   required for that module.
-5. **Published catalog:** expand strict checking family by family until all published artifacts are
-   covered.
-
-Do not enable repository-wide `failOnWarning` before existing warnings are classified and repaired.
-Do not maintain a permanent allowlist of undocumented symbols. A temporary exception names an
-owner, reason, and removal milestone in the active API documentation plan.
+1. every new or changed public/protected declaration follows this standard in the same pull request;
+2. every published module remains in `apiDocs.strictModules`; publication verification rejects a
+   module that is absent from the strict set;
+3. `auditViewComposeApiDocs` runs repository-wide with `reportUndocumented` and `failOnWarning`;
+4. selected local generation remains strict and also verifies aliases and immutable source links;
+5. production documentation uses `verifyCompleteViewComposeApiDocs`, which rejects a partial module
+   selection or incomplete catalog;
+6. no permanent undocumented-symbol allowlist is permitted. A temporary exception must name an
+   owner, reason, and removal milestone in an active plan.
 
 ## Review checklist
 

@@ -15,8 +15,9 @@ The production artifact is assembled in five explicit stages:
    repository links.
 2. `verify:translations` validates required Chinese coverage, canonical source fingerprints,
    explicit stale status, and stale-warning markers.
-3. `assembleViewComposeApiDocs` runs Dokka 2 for each published artifact and copies the result to
-   ignored, versioned paths under `website/generated/api/`.
+3. `verifyCompleteViewComposeApiDocs` runs Dokka 2 for each published artifact, copies the result to
+   ignored, versioned paths under `website/generated/api/`, and verifies the complete manifest,
+   immutable version route, aliases, and pinned source links.
 4. the website catalog generator reads publishing metadata and `docs/modules/README.md`; it does
    not maintain a second module registry.
 5. Docusaurus type-checks and builds the handwritten documents, site presentation, and generated
@@ -25,7 +26,7 @@ The production artifact is assembled in five explicit stages:
 Run the complete local verification from the repository root:
 
 ```bash
-./gradlew verifyDocumentationStructure assembleViewComposeApiDocs
+./gradlew verifyDocumentationStructure verifyCompleteViewComposeApiDocs
 cd website
 npm ci
 npm run test:translations
@@ -48,6 +49,17 @@ Immutable API trees use `/api/<artifact>/<version>/`. The mutable `current` alia
 version currently registered by the repository. The `latest` alias is generated only for stable
 versions; alpha, beta, release-candidate, snapshot, preview, development, and EAP versions must not
 silently become `latest`.
+
+Each `module.<artifact>.version` has a matching `module.<artifact>.sourceRevision` containing a full
+40-character Git commit SHA. Dokka maps the module root to that immutable revision, and output
+verification rejects missing or movable source links. Because recording a commit changes the
+metadata commit, release preparation uses two steps: freeze module source in one commit, then update
+its version and source revision in a metadata-only release commit.
+
+`verifyAssembledViewComposeApiDocs` validates an explicit local subset selected with
+`-PviewComposeDocsModules`. Deployment and complete-catalog CI must use
+`verifyCompleteViewComposeApiDocs`, which rejects a partial selection. All current modules are
+prereleases, so no `latest` route is emitted yet.
 
 Generated HTML and catalogs are never committed. Released API snapshots must eventually be restored
 from release artifacts or an immutable documentation archive before repository versions advance.
@@ -83,7 +95,6 @@ identity token.
 
 ## Last verified
 
-2026-08-02: all 25 published artifacts generated successfully; the production site built at about
-104 MB. The English and Simplified Chinese locale builds, translation freshness gate, and custom
-domain deployment are active. One existing unresolved KDoc symbol link in
-`viewcompose-host-android` remains API quality work and does not invalidate the generated tree.
+2026-08-02: all 25 published artifacts pass strict KDoc/Javadoc generation, complete-catalog route
+verification, and immutable source-link verification. The English and Simplified Chinese locale
+builds, translation freshness gate, and custom-domain deployment are active.

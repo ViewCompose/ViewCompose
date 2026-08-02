@@ -81,8 +81,8 @@ jobs:
         working-directory: website
         run: npm run test:translations && npm run verify:translations
 
-      - name: Generate versioned API reference
-        run: ./gradlew assembleViewComposeApiDocs --stacktrace
+      - name: Generate and verify complete versioned API reference
+        run: ./gradlew verifyCompleteViewComposeApiDocs --stacktrace
 
       - name: Type-check website
         working-directory: website

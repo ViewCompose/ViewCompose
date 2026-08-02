@@ -4,10 +4,9 @@ This catalog is the canonical documentation registry for public ViewCompose Mave
 kept in lockstep with `gradle/viewcompose-publishing.properties` and is verified by
 `verifyDocumentationStructure`.
 
-Module-specific manuals will be added under `docs/modules/<artifact-id>/README.md` as the hosted
-documentation system is built. Until then, the architecture and guide links in `docs/README.md`
-remain the current sources of truth. `Planned` means that the dedicated module manual has not yet
-been published; it does not describe implementation or Maven Central availability.
+Every artifact links its available `docs/modules/<artifact-id>/README.md`. Publication and site
+verification reject a missing manual, a catalog-only artifact, or a published artifact omitted from
+this table. Architecture and guide pages remain the source of truth for cross-module concepts.
 
 | Artifact | Family | Runtime role | Manual |
 | --- | --- | --- | --- |

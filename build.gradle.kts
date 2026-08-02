@@ -844,8 +844,9 @@ tasks.register("verifyDocumentationStructure") {
                     pattern = """^\|\s*`(viewcompose-[a-z0-9-]+)`\s*\|""",
                     option = RegexOption.MULTILINE,
                 )
+            val moduleCatalogContent = moduleCatalog.readText()
             val catalogModules =
-                moduleRow.findAll(moduleCatalog.readText())
+                moduleRow.findAll(moduleCatalogContent)
                     .map { match -> match.groupValues[1] }
                     .toList()
             catalogModules.groupingBy { module -> module }.eachCount()
@@ -863,6 +864,21 @@ tasks.register("verifyDocumentationStructure") {
             (catalogModules.toSet() - publishedModules).sorted().forEach { module ->
                 violations +=
                     "docs/modules/README.md -> catalog artifact has no publishing version: $module"
+            }
+            publishedModules.sorted().forEach { module ->
+                val expectedManual = documentationRoot.resolve("modules/$module/README.md")
+                if (!expectedManual.isFile) {
+                    violations +=
+                        "docs/modules/$module/README.md -> published module manual is missing"
+                }
+                val expectedLink = "[Available](./$module/README.md)"
+                val row = moduleCatalogContent.lineSequence().firstOrNull { line ->
+                    line.trimStart().startsWith("| `$module` |")
+                }
+                if (row == null || expectedLink !in row) {
+                    violations +=
+                        "docs/modules/README.md -> $module must link its available module manual"
+                }
             }
         }
 

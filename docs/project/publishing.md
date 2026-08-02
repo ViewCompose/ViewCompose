@@ -12,10 +12,15 @@ The public Maven namespace is:
 com.viewcompose
 ```
 
-Every published module owns its version in
+Every published module owns its version and immutable API source revision in
 [`gradle/viewcompose-publishing.properties`](../../gradle/viewcompose-publishing.properties). Equal
 version values do not form one atomic release train: changing one entry releases only that
 artifact and the artifacts whose dependency metadata must point to the new version.
+
+The matching `module.<artifact>.sourceRevision` is a full 40-character commit SHA. Freeze the
+module's source in one commit, then update the version and source revision together in a second,
+metadata-only release commit. This two-step rule avoids self-referential hashes and guarantees that
+generated Dokka line links resolve to immutable source matching the released module.
 
 Ownership of `viewcompose.com` and the `com.viewcompose` namespace is verified in Central Portal.
 Maven Central releases are immutable, so the namespace and coordinates must be reviewed before the
@@ -115,6 +120,9 @@ editing the file:
 ```
 
 The group can be overridden for namespace validation with `-PviewComposeGroup=...`.
+An exceptional documentation dry run may override the pinned source with
+`-PviewComposeSourceRevision.<artifact>=<full-commit-sha>`; public release metadata must remain
+checked in and must not rely on this override.
 
 Local stable releases use the machine GPG keyring and OS pinentry window. The release key's public
 half must be distributed to a Central-supported keyserver; no private key path or passphrase is
@@ -212,10 +220,13 @@ Use `-PviewComposeMarketplaceChannels=default,eap` to select channels; the defau
 ## First public release checklist
 
 1. Confirm the `com.viewcompose` Central namespace remains verified.
-2. Replace the modules being released from `-SNAPSHOT` to stable semantic versions.
-3. Run `qaQuick`, `verifyViewComposePublishedConsumption`, and the relevant release tests.
-4. Require PGP signing and inspect every generated POM, sources JAR, javadoc JAR, and checksum.
-5. Upload to a Central staging deployment and verify consumption from that staging repository.
-6. Run `prepareMarketplaceRelease`, install the ZIP into the target Android Studio build, and do a
+2. Freeze the selected module source in a reviewed commit.
+3. Update each selected version and its `sourceRevision` to the frozen commit in a metadata-only
+   release commit.
+4. Run `qaQuick`, `verifyCompleteViewComposeApiDocs`, `verifyViewComposePublishedConsumption`, and
+   the relevant release tests.
+5. Require PGP signing and inspect every generated POM, sources JAR, javadoc JAR, and checksum.
+6. Upload to a Central staging deployment and verify consumption from that staging repository.
+7. Run `prepareMarketplaceRelease`, install the ZIP into the target Android Studio build, and do a
    final preview smoke test.
-7. Upload the first plugin release manually; enable token-based automation only after approval.
+8. Upload the first plugin release manually; enable token-based automation only after approval.
