@@ -28,8 +28,8 @@ overviews, and staged enforcement.
 - public and protected declarations are included in the documentable surface;
 - `auditViewComposeApiDocs` exposes missing KDoc/Javadoc without blocking the build;
 - strict `reportUndocumented + failOnWarning` checking is available per selected module;
-- the first `viewcompose-runtime` audit reports 35 undocumented declarations and strict mode fails
-  with those warnings as intended;
+- `viewcompose-runtime` has a reviewed Q2/Q3 baseline, compiled Q3 samples, a module manual, and an
+  always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -54,12 +54,12 @@ Q2 or Q3 manual review.
    - include public and protected APIs;
    - add non-blocking audit and opt-in strict mode;
    - record the initial runtime baseline.
-2. **Runtime foundation — next**
+2. **Runtime foundation — complete**
    - classify all runtime warnings and existing comments;
    - repair `viewcompose-runtime` to Q2/Q3;
    - add focused compiled samples;
    - enable strict checking for the module.
-3. **Core UI chain**
+3. **Core UI chain — next**
    - repair `viewcompose-ui-contract`, `viewcompose-widget-core`, `viewcompose-renderer`, and
      `viewcompose-host-android` in dependency order;
    - add module/package overviews and cross-links.
@@ -83,11 +83,11 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: non-blocking and strict audits were exercised against `viewcompose-runtime`; the
-non-blocking task succeeded and strict mode rejected 35 undocumented declarations.
+2026-08-02: all 35 initially undocumented `viewcompose-runtime` declarations were repaired, all
+existing API families were reviewed against Q2/Q3, compiled samples were added for state,
+observation, snapshots, and composition, and the module's normal Dokka task passed strict mode.
 
 ## Next action
 
-Classify and repair the 35 `viewcompose-runtime` warnings, review its already documented symbols
-against Q2/Q3, add focused samples, and enable module-level strict enforcement without changing API
-behavior.
+Audit and repair `viewcompose-ui-contract`, add its module manual and focused samples, then enable
+its module-level strict warning gate without changing API behavior.

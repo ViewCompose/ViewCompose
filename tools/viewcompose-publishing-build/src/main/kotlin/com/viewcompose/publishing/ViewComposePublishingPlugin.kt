@@ -126,6 +126,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                     "Verifies formal coordinates and independent versions for every published module."
                 mavenGroup.set(metadata.groupId)
                 moduleVersions.set(metadata.moduleVersions)
+                strictApiDocsModules.set(metadata.strictApiDocsModules)
             }
         val publishLocal = project.tasks.register("publishViewComposeToLocalRepository") {
             group = "publishing"
@@ -297,24 +298,27 @@ private class ViewComposeLibraryPublishingPlugin : Plugin<Project> {
         val auditTaskRequested = project.gradle.startParameter.taskNames.any { taskName ->
             taskName.substringAfterLast(':') == "auditViewComposeApiDocs"
         }
+        val strictApiDocs = project.name in metadata.strictApiDocsModules
         val reportUndocumented = project.providers
             .gradleProperty("viewComposeApiDocsReportUndocumented")
             .map { value ->
-                value.toBooleanStrictOrNull()
+                val requested = value.toBooleanStrictOrNull()
                     ?: throw GradleException(
                         "viewComposeApiDocsReportUndocumented must be true or false.",
                     )
+                requested || strictApiDocs
             }
-            .orElse(auditTaskRequested)
+            .orElse(auditTaskRequested || strictApiDocs)
         val failOnWarning = project.providers
             .gradleProperty("viewComposeApiDocsFailOnWarning")
             .map { value ->
-                value.toBooleanStrictOrNull()
+                val requested = value.toBooleanStrictOrNull()
                     ?: throw GradleException(
                         "viewComposeApiDocsFailOnWarning must be true or false.",
                     )
+                requested || strictApiDocs
             }
-            .orElse(false)
+            .orElse(strictApiDocs)
         project.extensions.getByType(DokkaExtension::class.java).apply {
             dokkaPublications.named("html") {
                 this.failOnWarning.set(failOnWarning)
@@ -332,6 +336,7 @@ private class ViewComposeLibraryPublishingPlugin : Plugin<Project> {
                 )
                 skipDeprecated.set(false)
                 suppressGeneratedFiles.set(true)
+                samples.from(project.layout.projectDirectory.dir("src/test/samples"))
             }
         }
 
@@ -449,6 +454,9 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
     @get:Input
     abstract val moduleVersions: MapProperty<String, String>
 
+    @get:Input
+    abstract val strictApiDocsModules: ListProperty<String>
+
     @TaskAction
     fun verifyConfiguration() {
         val group = mavenGroup.get()
@@ -465,6 +473,10 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
             check(VERSION_PATTERN.matches(version)) {
                 "Module '$module' has invalid publication version '$version'."
             }
+        }
+        val unknownStrictModules = strictApiDocsModules.get().toSet() - versions.keys
+        check(unknownStrictModules.isEmpty()) {
+            "Unknown strict API documentation modules: ${unknownStrictModules.sorted().joinToString()}."
         }
     }
 }
@@ -642,6 +654,7 @@ private data class PublishingMetadata(
     val scmConnection: String,
     val scmDeveloperConnection: String,
     val scmUrl: String,
+    val strictApiDocsModules: List<String>,
     val moduleVersions: Map<String, String>,
 ) {
     companion object {
@@ -673,6 +686,12 @@ private data class PublishingMetadata(
                 scmConnection = properties.required("project.scm.connection"),
                 scmDeveloperConnection = properties.required("project.scm.developerConnection"),
                 scmUrl = properties.required("project.scm.url"),
+                strictApiDocsModules = properties.required("apiDocs.strictModules")
+                    .split(',')
+                    .map(String::trim)
+                    .filter(String::isNotEmpty)
+                    .distinct()
+                    .sorted(),
                 moduleVersions = versions,
             )
         }
