@@ -1,30 +1,60 @@
 package com.viewcompose.runtime
 
+import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.runtime.state.DerivedStateImpl
 import com.viewcompose.runtime.state.MutableStateImpl
 
 /**
- * 只读状态接口，读取 value 时会被当前观察上下文记录。
- * Read-only state contract; reading value is recorded by the current observation context.
+ * Exposes a value whose reads participate in snapshot consistency and runtime observation.
+ *
+ * Reading [value] inside [RuntimeObservation.observeReads] subscribes the returned observation to
+ * future invalidations from this state. Reading inside [Snapshot.enter] returns the version visible
+ * to that snapshot.
+ *
+ * @param T type of value exposed by this state
  */
 interface State<T> {
+    /**
+     * Returns the value visible in the current snapshot context.
+     *
+     * The read is registered with the active runtime observation, if one exists.
+     */
     val value: T
 }
 
 /**
- * 可写状态接口，写入 value 会进入当前可变快照或自动创建一次全局提交。
- * Writable state contract; assigning value writes into the current mutable snapshot or an automatic global commit.
+ * Exposes snapshot-managed state that can be read and updated.
+ *
+ * Assigning [value] inside [MutableSnapshot.enter] buffers the update in that snapshot. Assigning
+ * outside a mutable snapshot creates and applies an automatic mutable snapshot. Equivalent values,
+ * as defined by the state's [SnapshotMutationPolicy], do not create a new global version or notify
+ * observations.
+ *
+ * @param T type of value stored by this state
  */
 interface MutableState<T> : State<T> {
+    /**
+     * Returns or updates the value visible in the current snapshot context.
+     *
+     * A write may throw [SnapshotApplyConflictException] when an automatic snapshot encounters an
+     * unmergeable concurrent update. Observation callbacks run on the thread that applies the
+     * successful write.
+     */
     override var value: T
 }
 
 /**
- * 创建受快照系统管理的可变状态。
- * Creates mutable state managed by the snapshot system.
+ * Creates snapshot-managed mutable state initialized with [value].
  *
- * policy 决定相等性判断和并发快照冲突合并策略。
- * policy controls equality checks and concurrent snapshot conflict merging.
+ * [policy] controls whether a write changes the state and whether concurrent snapshot updates can
+ * be merged. The returned state participates in [Snapshot] reads and [RuntimeObservation]
+ * subscriptions.
+ *
+ * @sample com.viewcompose.runtime.samples.mutableStateSample
+ * @param T type of value stored by the state
+ * @param value initial value visible at the current global snapshot
+ * @param policy equivalence and concurrent-merge policy used for every update
+ * @return a new independently owned mutable state
  */
 fun <T> mutableStateOf(
     value: T,
@@ -35,7 +65,16 @@ fun <T> mutableStateOf(
 )
 
 /**
- * 创建按需计算并追踪依赖读取的派生状态。
- * Creates derived state that computes lazily and tracks state reads as dependencies.
+ * Creates read-only state that computes [block] lazily and observes the states read by it.
+ *
+ * The first [State.value] read evaluates [block] and caches its result for the current snapshot read
+ * token. Dependency invalidation marks the derived state dirty and invalidates its observers; the
+ * next read recomputes the value. Equal derived results are not suppressed. The returned state is
+ * intended for thread-confined composition use and does not synchronize concurrent reads.
+ *
+ * @sample com.viewcompose.runtime.samples.derivedStateSample
+ * @param T type of value produced by the calculation
+ * @param block calculation whose snapshot-state reads become dependencies
+ * @return a lazily evaluated read-only state
  */
 fun <T> derivedStateOf(block: () -> T): State<T> = DerivedStateImpl(block)

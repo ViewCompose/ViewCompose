@@ -1,10 +1,13 @@
 package com.viewcompose.runtime.composition
 
-/**
- * 轻量 slot table，持有 composition scope 树的根节点。
- * Lightweight slot table that owns the root of the composition scope tree.
- */
+/** Owns the root of one lightweight composition-scope tree. */
 class SlotTable {
+    /**
+     * Returns the live root scope owned by this table.
+     *
+     * The root is created once and disposed with [dispose]. Its constructor and mutable runtime
+     * state remain internal even though integrations can use the scope as an opaque identity.
+     */
     val root: RecomposeScope = RecomposeScope(
         signature = RootSignature,
         parent = null,
@@ -12,8 +15,10 @@ class SlotTable {
     )
 
     /**
-     * 递归释放整棵 scope 树及其 remember/effect 资源。
-     * Recursively disposes the whole scope tree and its remember/effect resources.
+     * Recursively disposes every scope and its remembered values, observations, and effects.
+     *
+     * Disposal is idempotent. Cleanup continues after callback failures, then propagates the first
+     * failure with subsequent failures attached as suppressed exceptions.
      */
     fun dispose() {
         root.disposeRecursively()

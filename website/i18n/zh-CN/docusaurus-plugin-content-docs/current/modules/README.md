@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 882d97e29ff410a291a0d7b431bf2b4db0cd96df5d00bc37d65465a346035c2f
+translation_source_hash: 69068ad87c62862a4add4cc0c4cc1a4cfa4023c122b2ce14be2e9bb5d904bc4e
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 
 | 产物 | 分类 | 运行时职责 | 手册 |
 | --- | --- | --- | --- |
-| `viewcompose-runtime` | 基础 | 平台无关的状态与观察运行时 | 规划中 |
+| `viewcompose-runtime` | 基础 | 平台无关的状态与观察运行时 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-runtime) |
 | `viewcompose-text-core` | 基础 | 平台无关的文本编辑模型 | 规划中 |
 | `viewcompose-ui-contract` | 基础 | 平台无关的 UI 契约与节点规范 | 规划中 |
 | `viewcompose-navigation-core` | 导航 | 平台无关的导航状态与事务 | 规划中 |

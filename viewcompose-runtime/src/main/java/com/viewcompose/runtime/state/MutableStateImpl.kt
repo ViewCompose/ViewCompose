@@ -8,11 +8,10 @@ import com.viewcompose.runtime.observation.Observation
 import com.viewcompose.runtime.observation.RuntimeObservation
 
 /**
- * MutableState 的快照化实现，使用链表保存历史记录以支持旧 readId 读取。
- * Snapshot-backed MutableState implementation that stores history records in a linked list for old readIds.
+ * Snapshot-backed mutable state whose linked records preserve values for older read IDs.
  *
- * recordLock 保护值历史，observerLock 保护观察者集合，避免提交通知时持有状态锁。
- * recordLock protects value history, while observerLock protects observers so commit notification avoids state locks.
+ * [recordLock] protects value history and [observerLock] protects observers. Keeping the locks
+ * separate lets the runtime copy observers during commit and notify them after releasing state locks.
  */
 internal class MutableStateImpl<T>(
     initialValue: T,
@@ -122,12 +121,9 @@ internal class MutableStateImpl<T>(
             current = current.next
         }
         count
-        }
+    }
 
-    /**
-     * 根据 readId 查找最近且不晚于该版本的记录。
-     * Finds the newest record whose snapshotId is not newer than the readId.
-     */
+    /** Finds the newest record whose snapshot ID is not newer than [readId]. */
     private fun readRecordLocked(readId: Int): StateRecord<T> {
         var current: StateRecord<T>? = head
         while (current != null) {
@@ -145,10 +141,7 @@ internal class MutableStateImpl<T>(
         return oldest
     }
 
-    /**
-     * 单个状态值版本记录，head 始终指向最新提交。
-     * Version record for one state value; head always points to the latest commit.
-     */
+    /** One version in a state-value history whose head always represents the latest commit. */
     private data class StateRecord<T>(
         val snapshotId: Int,
         val value: T,

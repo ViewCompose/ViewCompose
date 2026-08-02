@@ -1,15 +1,20 @@
 package com.viewcompose.runtime.composition
 
 /**
- * 重组失效队列，按插入顺序收集脏 scope 并在 drain 时去重/压缩。
- * Recomposition invalidation queue that collects dirty scopes in insertion order and deduplicates/compacts on drain.
+ * Collects dirty [RecomposeScope] instances and drains them in insertion order.
+ *
+ * Enqueue, inspection, clearing, and draining are synchronized. Duplicate scopes are coalesced, and
+ * compacted draining removes descendants when an invalidated ancestor already covers their work.
  */
 class InvalidationQueue {
     private val pending = LinkedHashSet<RecomposeScope>()
 
     /**
-     * 加入需要重组的 scope；已 dispose 的 scope 会被忽略。
-     * Enqueues a scope for recomposition; disposed scopes are ignored.
+     * Enqueues [scope] for a future recomposition pass.
+     *
+     * Repeated enqueue calls are coalesced and disposed scopes are ignored.
+     *
+     * @param scope dirty scope to enqueue
      */
     @Synchronized
     fun enqueue(scope: RecomposeScope) {
@@ -17,9 +22,11 @@ class InvalidationQueue {
         pending += scope
     }
 
+    /** Returns whether at least one scope is waiting to be drained. */
     @Synchronized
     fun isNotEmpty(): Boolean = pending.isNotEmpty()
 
+    /** Removes every pending scope without disposing or recomposing it. */
     @Synchronized
     fun clear() {
         pending.clear()
@@ -34,8 +41,12 @@ class InvalidationQueue {
     }
 
     /**
-     * 取出并压缩失效项：父 scope 已重组时，子 scope 不再单独返回。
-     * Drains and compacts invalidations: when a parent scope recomposes, child scopes are not returned separately.
+     * Removes and returns the minimal ordered set of scopes needed for recomposition.
+     *
+     * When both an ancestor and its descendant are pending, only the ancestor is returned. The queue
+     * is empty after this call.
+     *
+     * @return compacted scopes in their effective insertion order
      */
     @Synchronized
     fun drainCompacted(): List<RecomposeScope> {
