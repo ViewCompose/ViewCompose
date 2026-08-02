@@ -8,8 +8,9 @@ These rules apply to AI-assisted work in this repository:
 3. Read the owning entry in [`docs/modules/README.md`](docs/modules/README.md) before changing a
    published module, and update its module manual once available.
 4. Apply the documentation change impact matrix to code changes. Public API changes require source
-   KDoc/Javadoc and the owning module documentation; a `No documentation impact` conclusion needs a
-   written rationale.
+   KDoc/Javadoc that follows the
+   [`API Documentation Quality Standard`](docs/project/api-documentation-quality.md) and the owning
+   module documentation; a `No documentation impact` conclusion needs a written rationale.
 5. Do not add Markdown files to the repository root unless the documented root allowlist and its
    automated guard are intentionally changed together.
 6. Treat `docs/archive/` as historical evidence, not current requirements.
