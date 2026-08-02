@@ -31,7 +31,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-animation-core` | Animation | Platform-neutral animation engine contracts | [Available](./viewcompose-animation-core/README.md) |
 | `viewcompose-animation` | Animation | Animation DSL and composition integration | [Available](./viewcompose-animation/README.md) |
 | `viewcompose-gesture-core` | Gesture | Platform-neutral gesture policies | [Available](./viewcompose-gesture-core/README.md) |
-| `viewcompose-gesture` | Gesture | Gesture DSL and state APIs | Planned |
+| `viewcompose-gesture` | Gesture | Gesture DSL and state APIs | [Available](./viewcompose-gesture/README.md) |
 | `viewcompose-graphics-core` | Graphics | Platform-neutral graphics model | Planned |
 | `viewcompose-graphics` | Graphics | Drawing DSL and composition integration | Planned |
 | `viewcompose-shadow-android` | Optional Android backend | Advanced Android shadow rendering | Planned |

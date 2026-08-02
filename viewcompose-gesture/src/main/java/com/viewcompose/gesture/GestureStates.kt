@@ -8,20 +8,30 @@ import com.viewcompose.widget.core.rememberUpdatedState
 import kotlin.math.abs
 
 /**
- * 业务侧持有的 drag 状态，renderer 通过它回传原始位移。
- * App-held drag state; renderers dispatch raw drag deltas through it.
+ * Forwards one-dimensional drag deltas to application state.
+ *
+ * Instances are normally created by [rememberDraggableState]. This object does not accumulate an
+ * offset, clamp values, serialize mutations, or launch work; every delta is delivered synchronously
+ * to the latest callback on the dispatching thread.
  */
 class DraggableState internal constructor(
     private val onDeltaState: State<(Float) -> Unit>,
 ) {
+    /**
+     * Delivers one renderer-local drag delta without conversion or validation.
+     *
+     * @param delta signed incremental movement, normally in physical pixels
+     */
     fun dispatchRawDelta(delta: Float) {
         onDeltaState.value(delta)
     }
 }
 
 /**
- * anchored draggable 的一个离散 anchor。
- * One discrete anchor for anchored draggable.
+ * Associates a semantic value with one physical anchored-drag position.
+ *
+ * @property offsetPx finite renderer-local offset in physical pixels
+ * @property value application value represented by [offsetPx]
  */
 data class DraggableAnchor<T>(
     val offsetPx: Float,
@@ -29,25 +39,49 @@ data class DraggableAnchor<T>(
 )
 
 /**
- * 已按像素位置排序的 anchor 集合。
- * Anchor collection sorted by pixel offset.
+ * Immutable, non-empty collection of anchored-drag positions sorted by pixel offset.
+ *
+ * Create instances with [of], [from], [draggableAnchors], or [draggableAnchorsOf]. Offsets are
+ * finite, unique, and strictly increasing after construction. Semantic values are not required to
+ * be unique; [offsetOf] returns the first matching value.
+ *
+ * @sample com.viewcompose.gesture.samples.anchoredDragState
  */
 class DraggableAnchors<T> private constructor(
     private val sortedAnchors: List<DraggableAnchor<T>>,
 ) {
+    /** Sorted immutable snapshot of all physical-pixel offsets. */
     val offsetsPx: List<Float> = sortedAnchors.map { it.offsetPx }
+
+    /** Smallest physical-pixel offset in this collection. */
     val firstOffsetPx: Float = sortedAnchors.first().offsetPx
+
+    /** Largest physical-pixel offset in this collection. */
     val lastOffsetPx: Float = sortedAnchors.last().offsetPx
+
+    /** Number of anchors in this collection. */
     val size: Int = sortedAnchors.size
 
+    /**
+     * Returns the first offset associated with [value], or `null` when it is absent.
+     *
+     * Equality uses the semantic value's `equals` implementation.
+     */
     fun offsetOf(value: T): Float? {
         return sortedAnchors.firstOrNull { it.value == value }?.offsetPx
     }
 
+    /** Returns the value at exactly [offsetPx], or `null` when no exact floating-point match exists. */
     fun valueAt(offsetPx: Float): T? {
         return sortedAnchors.firstOrNull { it.offsetPx == offsetPx }?.value
     }
 
+    /**
+     * Returns the anchor nearest [offsetPx].
+     *
+     * Equal-distance ties choose the lower offset because anchors are traversed in sorted order.
+     * Non-finite inputs are not rejected and resolve to the first anchor when no comparison wins.
+     */
     fun nearest(offsetPx: Float): DraggableAnchor<T> {
         var nearest = sortedAnchors.first()
         var minDistance = abs(nearest.offsetPx - offsetPx)
@@ -62,11 +96,28 @@ class DraggableAnchors<T> private constructor(
         return nearest
     }
 
+    /** Creates validated anchor collections without the builder DSL. */
     companion object {
+        /**
+         * Creates anchors from `(offsetPx to value)` pairs.
+         *
+         * Input order is irrelevant; offsets are sorted during construction.
+         *
+         * @throws IllegalArgumentException if no pair is supplied, an offset is non-finite, or
+         * duplicate offsets are present
+         */
         fun <T> of(vararg anchors: Pair<Float, T>): DraggableAnchors<T> {
             return from(anchors.toList())
         }
 
+        /**
+         * Creates anchors from a list of `(offsetPx to value)` pairs.
+         *
+         * Input order is irrelevant; offsets are sorted during construction.
+         *
+         * @throws IllegalArgumentException if [anchors] is empty, an offset is non-finite, or
+         * duplicate offsets are present
+         */
         fun <T> from(anchors: List<Pair<Float, T>>): DraggableAnchors<T> {
             require(anchors.isNotEmpty()) { "DraggableAnchors must not be empty." }
             val sorted = anchors
@@ -87,13 +138,15 @@ class DraggableAnchors<T> private constructor(
     }
 }
 
-/**
- * 用 DSL 构建 [DraggableAnchors] 的 builder。
- * Builder used by the DSL to create [DraggableAnchors].
- */
+/** Mutable receiver used by [draggableAnchors] to collect anchored-drag positions. */
 class DraggableAnchorsBuilder<T> {
     private val anchors = mutableListOf<Pair<Float, T>>()
 
+    /**
+     * Adds one semantic [value] at [offsetPx].
+     *
+     * Validation is deferred until the builder finishes so anchors may be declared in any order.
+     */
     fun anchor(
         offsetPx: Float,
         value: T,
@@ -106,6 +159,14 @@ class DraggableAnchorsBuilder<T> {
     }
 }
 
+/**
+ * Builds an immutable [DraggableAnchors] collection with a receiver DSL.
+ *
+ * @param builder block that declares one or more anchors in any order
+ * @throws IllegalArgumentException if the resulting set is empty, contains a non-finite offset,
+ * or contains duplicate offsets
+ * @sample com.viewcompose.gesture.samples.anchoredDragState
+ */
 fun <T> draggableAnchors(
     builder: DraggableAnchorsBuilder<T>.() -> Unit,
 ): DraggableAnchors<T> {
@@ -114,13 +175,25 @@ fun <T> draggableAnchors(
         .build()
 }
 
+/**
+ * Creates immutable anchors from `(offsetPx to value)` pairs.
+ *
+ * @throws IllegalArgumentException if no pair is supplied, an offset is non-finite, or duplicate
+ * offsets are present
+ */
 fun <T> draggableAnchorsOf(vararg anchors: Pair<Float, T>): DraggableAnchors<T> {
     return DraggableAnchors.of(*anchors)
 }
 
 /**
- * anchored draggable 的当前值、目标值和当前 offset 状态。
- * Current value, target value, and current offset state for anchored draggable.
+ * Owns the semantic value and visual offset of an [anchoredDraggable] modifier.
+ *
+ * This alpha implementation updates synchronously and does not animate between anchors. A renderer
+ * sends raw deltas into the visual offset and commits the nearest anchor when settling. Until the
+ * first modifier supplies anchors, [currentOffsetPx] is `null`. The exposed [State] objects are
+ * stable and invalidate readers when their values change.
+ *
+ * @sample com.viewcompose.gesture.samples.anchoredDragState
  */
 class AnchoredDraggableState<T> internal constructor(
     initialValue: T,
@@ -130,15 +203,28 @@ class AnchoredDraggableState<T> internal constructor(
     private val currentOffsetState = mutableStateOf<Float?>(null)
     private var anchors: DraggableAnchors<T>? = null
 
+    /** Semantic value committed at the current anchor. */
     val currentValue: State<T>
         get() = currentState
 
+    /**
+     * Semantic settle target.
+     *
+     * In this release settling is synchronous, so this normally changes with [currentValue].
+     */
     val targetValue: State<T>
         get() = targetState
 
+    /** Current unclamped visual offset in physical pixels, or `null` before anchors are installed. */
     val currentOffsetPx: State<Float?>
         get() = currentOffsetState
 
+    /**
+     * Commits [target] immediately and maps its offset through the current anchors.
+     *
+     * If [target] is absent from the current anchor set, the semantic value is still stored and the
+     * offset becomes `null`; a later anchor update reconciles it to an exact or nearest anchor.
+     */
     fun snapTo(target: T) {
         currentState.value = target
         targetState.value = target
@@ -153,7 +239,6 @@ class AnchoredDraggableState<T> internal constructor(
             targetState.value = currentState.value
             return
         }
-        // 当前值不再存在于新 anchors 时，按现有 offset 贴近最近 anchor，避免状态悬空。
         // If the current value disappears from anchors, snap to the nearest offset to avoid dangling state.
         val nearest = newAnchors.nearest(
             offsetPx = currentOffsetState.value ?: newAnchors.firstOffsetPx,
@@ -181,20 +266,27 @@ class AnchoredDraggableState<T> internal constructor(
 }
 
 /**
- * transformable 手势的业务状态入口。
- * App state entry point for transformable gestures.
+ * Forwards incremental pan, zoom, and rotation deltas to application state.
+ *
+ * Instances are normally created by [rememberTransformableState]. This object does not accumulate
+ * a transform, enforce bounds, serialize mutations, or launch work. Dispatch is synchronous.
  */
 class TransformableState internal constructor(
     private val onTransformState: State<(TransformDelta) -> Unit>,
 ) {
+    /** Delivers one incremental renderer transform to the latest application callback. */
     fun dispatchTransform(delta: TransformDelta) {
         onTransformState.value(delta)
     }
 }
 
 /**
- * 记忆 [DraggableState]，同时让回调始终指向最新 lambda。
- * Remembers [DraggableState] while keeping its callback pointed at the latest lambda.
+ * Remembers a stable [DraggableState] that invokes the latest [onDelta] lambda.
+ *
+ * Recomposition replaces the callback without replacing the state object. The callback executes
+ * synchronously on the renderer's dispatch thread and receives incremental renderer-local movement.
+ *
+ * @sample com.viewcompose.gesture.samples.dragState
  */
 fun rememberDraggableState(
     onDelta: (Float) -> Unit,
@@ -206,8 +298,12 @@ fun rememberDraggableState(
 }
 
 /**
- * 记忆 anchored draggable 状态。
- * Remembers anchored draggable state.
+ * Remembers one [AnchoredDraggableState] in the current composition position.
+ *
+ * [initialValue] is read only when the state is first created; changing it during recomposition does
+ * not reset existing state. Use [AnchoredDraggableState.snapTo] for an explicit reset.
+ *
+ * @sample com.viewcompose.gesture.samples.anchoredDragState
  */
 fun <T> rememberAnchoredDraggableState(
     initialValue: T,
@@ -218,8 +314,13 @@ fun <T> rememberAnchoredDraggableState(
 }
 
 /**
- * 记忆 transformable 状态，并把 renderer 的 [TransformDelta] 展开为业务回调参数。
- * Remembers transformable state and expands renderer [TransformDelta] into app callback arguments.
+ * Remembers a stable [TransformableState] that invokes the latest transform callback.
+ *
+ * Each renderer [TransformDelta] is expanded into multiplicative zoom, incremental pan in physical
+ * pixels, and incremental clockwise rotation in degrees. This function does not accumulate or
+ * constrain those values.
+ *
+ * @sample com.viewcompose.gesture.samples.transformState
  */
 fun rememberTransformableState(
     onTransformation: (
