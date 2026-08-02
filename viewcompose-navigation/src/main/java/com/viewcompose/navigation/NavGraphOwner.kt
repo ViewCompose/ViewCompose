@@ -14,13 +14,12 @@ import java.util.ArrayList
 import java.util.Collections
 
 /**
- * 单个具体导航图实例的 Android ownership 边界。
  * Android ownership boundary for one concrete navigation-graph instance.
  *
- * 同一图实例内的目的地共享此 lifecycle、ViewModel store 和 saved-state registry。之后再次进入
- * 同一个图路由时会获得新的 owner。
  * Destinations in the same graph instance share this lifecycle, ViewModel store, and saved-state
  * registry. A later entry into the same graph route receives a different owner.
+ *
+ * @property entry platform-neutral graph identity and route arguments
  */
 class NavGraphOwner internal constructor(
     val entry: NavGraphEntry,
@@ -29,33 +28,40 @@ class NavGraphOwner internal constructor(
     ViewModelStoreOwner,
     SavedStateRegistryOwner,
     HasDefaultViewModelProviderFactory {
+    /** Lifecycle capped by the host and current descendant visibility. */
     override val lifecycle: Lifecycle
         get() = delegate.lifecycle
 
+    /** Store retained until this concrete graph instance leaves every back stack. */
     override val viewModelStore: ViewModelStore
         get() = delegate.viewModelStore
 
+    /** Registry namespace persisted under [entry]'s stable identity. */
     override val savedStateRegistry: SavedStateRegistry
         get() = delegate.savedStateRegistry
 
+    /** Default factory backed by this graph owner's saved-state registry. */
     override val defaultViewModelProviderFactory: ViewModelProvider.Factory
         get() = delegate.defaultViewModelProviderFactory
 
+    /** Creation extras exposing this owner and its default arguments. */
     override val defaultViewModelCreationExtras: CreationExtras
         get() = delegate.defaultViewModelCreationExtras
 }
 
 /**
- * 当前正在渲染目的地的有序图 owner 层级。
  * Ordered graph-owner hierarchy for the destination currently being rendered.
  *
- * entries 从根图到目的地的直接父图排序。
  * Entries are ordered from the root graph to the destination's direct parent graph.
+ *
+ * @param entries copied platform-neutral graph entries
+ * @param owners Android owners corresponding one-to-one with [entries]
  */
 class NavGraphOwnerScope internal constructor(
     entries: List<NavGraphEntry>,
     owners: List<NavGraphOwner>,
 ) {
+    /** Immutable root-to-leaf graph entries active for the current destination. */
     val entries: List<NavGraphEntry> = Collections.unmodifiableList(
         ArrayList(entries),
     )
@@ -75,15 +81,13 @@ class NavGraphOwnerScope internal constructor(
         )
     }
 
-    /**
-     * 返回当前目的地所属层级中 [route] 对应的图 owner。
-     * Returns the graph owner for [route] in the current destination hierarchy.
-     */
+    /** Returns the graph owner for [route] in the current destination hierarchy. */
     operator fun get(route: String): NavGraphOwner? = ownersByRoute[route]
 
     /**
-     * 返回 [route] 的活跃 owner；若该图不在当前目的地层级中则失败。
-     * Returns the active owner for [route], or fails when that graph is not in this destination.
+     * Returns the active owner for [route].
+     *
+     * @throws IllegalStateException if the graph is not in the current destination hierarchy
      */
     fun requireOwner(route: String): NavGraphOwner {
         return checkNotNull(this[route]) {

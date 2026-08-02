@@ -16,7 +16,6 @@ import com.viewcompose.widget.core.Saver
 import com.viewcompose.widget.core.mapSaver
 
 /**
- * NavHost 可跨重建恢复的最小状态载体。
  * Minimal state carrier that lets NavHost survive host recreation.
  */
 internal data class NavHostRestorableState(
@@ -25,7 +24,6 @@ internal data class NavHostRestorableState(
 )
 
 /**
- * 为单起点控制器创建保存器，恢复失败时回退到初始目的地。
  * Creates a saver for a single-start controller, falling back to the initial destination on failure.
  */
 internal fun navHostControllerSaver(
@@ -37,7 +35,6 @@ internal fun navHostControllerSaver(
 }
 
 /**
- * 为无图多栈控制器创建保存器。
  * Creates a saver for a graphless multi-stack controller.
  */
 internal fun navHostControllerSaver(
@@ -52,7 +49,6 @@ internal fun navHostControllerSaver(
             if (restored == null) {
                 createNavHostController(stackConfiguration)
             } else {
-                // 恢复数据来自外部 Bundle，必须把任何结构不兼容都视为可丢弃状态。
                 // Restored data comes from an external Bundle, so incompatible shape is discardable.
                 runCatching {
                     NavHostController(
@@ -71,7 +67,6 @@ internal fun navHostControllerSaver(
 }
 
 /**
- * 为单图控制器创建保存器，栈恢复后仍通过图校验路由。
  * Creates a saver for a single-graph controller, keeping route validation tied to the graph.
  */
 internal fun navHostControllerSaver(
@@ -84,7 +79,6 @@ internal fun navHostControllerSaver(
 }
 
 /**
- * 为共享图的多栈控制器创建保存器。
  * Creates a saver for a multi-stack controller backed by a shared graph.
  */
 internal fun navHostControllerSaver(
@@ -103,7 +97,6 @@ internal fun navHostControllerSaver(
                     graph = graph,
                 )
             } else {
-                // 图结构可能已随版本升级变化，恢复失败时重建初始栈比保留半损坏状态更安全。
                 // Graph shape may change across versions; rebuilding beats keeping half-restored state.
                 runCatching {
                     NavHostController(
@@ -126,7 +119,6 @@ internal fun navHostControllerSaver(
 }
 
 /**
- * 将栈状态和目的地 Bundle 编码为 saveable registry 可接受的 Map。
  * Encodes stack state and destination Bundle into a Map accepted by the saveable registry.
  */
 internal fun encodeNavHostState(
@@ -147,7 +139,6 @@ internal fun encodeNavHostState(
 }
 
 /**
- * 防御式解码保存状态；任何版本、类型或边界异常都会返回 null。
  * Defensively decodes saved state; any version, type, or bound mismatch returns null.
  */
 internal fun decodeNavHostState(
@@ -159,7 +150,6 @@ internal fun decodeNavHostState(
 }
 
 /**
- * 具体解码实现由外层 [decodeNavHostState] 包裹，保持失败路径简单。
  * Concrete decoder wrapped by [decodeNavHostState] so failure handling stays simple.
  */
 private fun decodeNavHostStateUnsafe(
@@ -175,7 +165,6 @@ private fun decodeNavHostStateUnsafe(
     if (encodedStacks.isEmpty() || encodedStacks.size > MAX_STACK_COUNT) {
         return null
     }
-    // 限制恢复规模，避免异常 Bundle 或兼容性问题导致一次性创建过多 entry owner。
     // Bound restored size to avoid creating too many entry owners from malformed or incompatible data.
     var totalEntryCount = 0
     val stacks = linkedMapOf<NavStackId, NavBackStackSnapshot>()

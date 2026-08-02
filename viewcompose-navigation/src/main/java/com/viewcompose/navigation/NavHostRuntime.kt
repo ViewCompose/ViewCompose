@@ -14,7 +14,6 @@ import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.UiLocalSnapshot
 
 /**
- * 一次 NavHost 组合提交传入运行时的完整配置快照。
  * Full configuration snapshot passed from one NavHost composition commit into the runtime.
  */
 internal data class NavHostRuntimeConfig(
@@ -29,7 +28,6 @@ internal data class NavHostRuntimeConfig(
 )
 
 /**
- * 连接 DSL 层 [NavHost]、纯导航栈控制器和 Android View 会话的运行时对象。
  * Runtime object that bridges the [NavHost] DSL, pure stack controller, and Android View sessions.
  */
 internal class NavHostRuntime private constructor(
@@ -92,7 +90,6 @@ internal class NavHostRuntime private constructor(
     }
 
     /**
-     * 在 AndroidView 的提交阶段应用最新配置，确保 owner、pane 和 back 回调同事务更新。
      * Applies the latest config during AndroidView commit so owners, panes, and back callbacks update
      * in the same transaction.
      */
@@ -139,7 +136,6 @@ internal class NavHostRuntime private constructor(
     }
 
     /**
-     * 宿主宽度变化时重新计算 pane 策略，但不重建已提交目的地。
      * Recalculates pane policy after host-width changes without recreating committed destinations.
      */
     internal fun onHostWidthChanged(widthPixels: Int) {
@@ -187,7 +183,6 @@ internal class NavHostRuntime private constructor(
             return
         }
         backAdapter.destroy()
-        // 先尝试保存 owner 状态，再销毁会话；即使销毁期间失败，也要把可恢复状态交回控制器。
         // Save owner state before destroying sessions; even destroy failures should return retained state.
         val retainedState = runCatching(::saveState)
         destroyed = true
@@ -311,7 +306,6 @@ internal class NavHostRuntime private constructor(
 
     companion object {
         /**
-         * 创建运行时及其所有内部 store/driver，并把它挂回 [NavHostView]。
          * Creates the runtime with its internal stores/drivers and installs it on [NavHostView].
          */
         fun create(
@@ -371,7 +365,6 @@ internal class NavHostRuntime private constructor(
 }
 
 /**
- * 持有最新转场配置，避免重建 driver 即可响应 DSL 参数更新。
  * Holds the latest transition spec so the driver can react to DSL updates without recreation.
  */
 internal class TransitionSpecHolder(
