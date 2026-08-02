@@ -23,6 +23,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskAction
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.kotlin.dsl.create
@@ -45,6 +46,66 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
 
         publishedProjects.forEach { publishedProject ->
             publishedProject.pluginManager.apply(ViewComposeLibraryPublishingPlugin::class.java)
+        }
+
+        val documentationModules = project.providers.gradleProperty("viewComposeDocsModules")
+            .map { value -> value.split(',').map(String::trim).filter(String::isNotEmpty) }
+            .orElse(metadata.moduleVersions.keys.sorted())
+        val verifyDocumentationSelection =
+            project.tasks.register<VerifyPublishingSelectionTask>(
+                "verifyViewComposeDocumentationModules",
+            ) {
+                group = "documentation"
+                description =
+                    "Validates -PviewComposeDocsModules before generating API documentation."
+                modules.set(documentationModules)
+                availableModules.set(metadata.moduleVersions.keys.sorted())
+            }
+        val apiOutputDirectory = project.layout.projectDirectory.dir("website/generated/api")
+        project.tasks.register<Sync>("assembleViewComposeApiDocs") {
+            group = "documentation"
+            description =
+                "Generates versioned Dokka HTML for all published modules or " +
+                    "-PviewComposeDocsModules."
+            dependsOn(verifyDocumentationSelection)
+            val selectedModules = documentationModules.get()
+            selectedModules.forEach { module ->
+                val publishedProject = requireNotNull(project.findProject(":$module"))
+                val version = requireNotNull(metadata.moduleVersions[module])
+                dependsOn("${publishedProject.path}:dokkaGeneratePublicationHtml")
+                from(publishedProject.layout.buildDirectory.dir("dokka/html")) {
+                    into("$module/$version")
+                }
+            }
+            into(apiOutputDirectory)
+            doLast {
+                val outputRoot = apiOutputDirectory.asFile
+                val manifest =
+                    selectedModules.sorted().joinToString(
+                        prefix = "[\n",
+                        postfix = "\n]\n",
+                        separator = ",\n",
+                    ) { module ->
+                        val version = requireNotNull(metadata.moduleVersions[module])
+                        "  {\"artifact\":\"$module\",\"version\":\"$version\"}"
+                    }
+                outputRoot.resolve("manifest.json").writeText(manifest)
+                selectedModules.forEach { module ->
+                    val version = requireNotNull(metadata.moduleVersions[module])
+                    writeApiRedirect(
+                        directory = outputRoot.resolve("$module/current"),
+                        module = module,
+                        version = version,
+                    )
+                    if (version.isStableRelease()) {
+                        writeApiRedirect(
+                            directory = outputRoot.resolve("$module/latest"),
+                            module = module,
+                            version = version,
+                        )
+                    }
+                }
+            }
         }
 
         val localRepository = project.layout.buildDirectory.dir("maven-repository")
@@ -184,6 +245,36 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
     }
 }
 
+private fun writeApiRedirect(
+    directory: File,
+    module: String,
+    version: String,
+) {
+    directory.mkdirs()
+    directory.resolve("index.html").writeText(
+        """
+        <!doctype html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta http-equiv="refresh" content="0; url=../$version/">
+            <link rel="canonical" href="../$version/">
+            <title>ViewCompose $module API</title>
+          </head>
+          <body>
+            <p><a href="../$version/">Open $module $version API reference</a></p>
+          </body>
+        </html>
+        """.trimIndent() + "\n",
+    )
+}
+
+private fun String.isStableRelease(): Boolean {
+    val qualifier = lowercase()
+    return listOf("-alpha", "-beta", "-rc", "-snapshot", "-dev", "-preview", "-eap")
+        .none(qualifier::contains)
+}
+
 private class ViewComposeLibraryPublishingPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val metadata = PublishingMetadata.load(project.rootProject)
@@ -191,6 +282,7 @@ private class ViewComposeLibraryPublishingPlugin : Plugin<Project> {
             ?: throw GradleException("No publication version registered for '${project.name}'.")
         project.group = metadata.groupId
         project.version = moduleVersion
+        project.pluginManager.apply("org.jetbrains.dokka")
         project.pluginManager.apply("com.vanniktech.maven.publish.base")
         project.pluginManager.apply("signing")
 

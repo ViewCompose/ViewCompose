@@ -870,7 +870,16 @@ tasks.register("verifyDocumentationStructure") {
             rootDir.walkTopDown()
                 .onEnter { directory ->
                     directory == rootDir ||
-                        directory.name !in setOf(".git", ".gradle", "build")
+                        directory.name !in
+                        setOf(
+                            ".codegraph",
+                            ".docusaurus",
+                            ".git",
+                            ".gradle",
+                            "build",
+                            "generated",
+                            "node_modules",
+                        )
                 }
                 .filter(File::isFile)
                 .filter { file -> file.extension.equals("md", ignoreCase = true) }
