@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: e1058737b1a451722839d78bfa5803ca3a9e2ab5ebd8cd638606b0ef1012a4ce
+translation_source_hash: 7511d21a76f0b5257f556dbe32a79f2b99f3593afd46302c87bc874e772ffe28
 translation_status: current
 ---
 
@@ -40,7 +40,7 @@ translation_status: current
 | `viewcompose-graphics-core` | 图形 | 平台无关的图形模型 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-graphics-core) |
 | `viewcompose-graphics` | 图形 | 绘制 DSL 与组合集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-graphics) |
 | `viewcompose-shadow-android` | 可选 Android 后端 | 高级 Android 阴影渲染 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-shadow-android) |
-| `viewcompose-widget-constraintlayout` | 可选控件 | ConstraintLayout DSL | 规划中 |
+| `viewcompose-widget-constraintlayout` | 可选控件 | ConstraintLayout DSL | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-widget-constraintlayout) |
 
 ## 目录规则
 
