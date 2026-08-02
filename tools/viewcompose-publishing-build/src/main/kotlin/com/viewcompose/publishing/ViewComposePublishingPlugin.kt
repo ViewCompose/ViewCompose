@@ -30,6 +30,8 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.dokka.gradle.DokkaExtension
+import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 
 class ViewComposePublishingRootPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -62,7 +64,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 availableModules.set(metadata.moduleVersions.keys.sorted())
             }
         val apiOutputDirectory = project.layout.projectDirectory.dir("website/generated/api")
-        project.tasks.register<Sync>("assembleViewComposeApiDocs") {
+        val assembleApiDocs = project.tasks.register<Sync>("assembleViewComposeApiDocs") {
             group = "documentation"
             description =
                 "Generates versioned Dokka HTML for all published modules or " +
@@ -106,6 +108,12 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                     }
                 }
             }
+        }
+        project.tasks.register("auditViewComposeApiDocs") {
+            group = "documentation"
+            description =
+                "Generates selected API docs and reports undocumented public/protected APIs."
+            dependsOn(assembleApiDocs)
         }
 
         val localRepository = project.layout.buildDirectory.dir("maven-repository")
@@ -285,6 +293,47 @@ private class ViewComposeLibraryPublishingPlugin : Plugin<Project> {
         project.pluginManager.apply("org.jetbrains.dokka")
         project.pluginManager.apply("com.vanniktech.maven.publish.base")
         project.pluginManager.apply("signing")
+
+        val auditTaskRequested = project.gradle.startParameter.taskNames.any { taskName ->
+            taskName.substringAfterLast(':') == "auditViewComposeApiDocs"
+        }
+        val reportUndocumented = project.providers
+            .gradleProperty("viewComposeApiDocsReportUndocumented")
+            .map { value ->
+                value.toBooleanStrictOrNull()
+                    ?: throw GradleException(
+                        "viewComposeApiDocsReportUndocumented must be true or false.",
+                    )
+            }
+            .orElse(auditTaskRequested)
+        val failOnWarning = project.providers
+            .gradleProperty("viewComposeApiDocsFailOnWarning")
+            .map { value ->
+                value.toBooleanStrictOrNull()
+                    ?: throw GradleException(
+                        "viewComposeApiDocsFailOnWarning must be true or false.",
+                    )
+            }
+            .orElse(false)
+        project.extensions.getByType(DokkaExtension::class.java).apply {
+            dokkaPublications.named("html") {
+                this.failOnWarning.set(failOnWarning)
+                suppressObviousFunctions.set(true)
+            }
+            dokkaSourceSets.configureEach {
+                documentedVisibilities.set(
+                    setOf(
+                        VisibilityModifier.Public,
+                        VisibilityModifier.Protected,
+                    ),
+                )
+                this.reportUndocumented.set(
+                    reportUndocumented.zip(failOnWarning) { report, strict -> report || strict },
+                )
+                skipDeprecated.set(false)
+                suppressGeneratedFiles.set(true)
+            }
+        }
 
         project.extensions.getByType(MavenPublishBaseExtension::class.java)
             .publishToMavenCentral(automaticRelease = false)
