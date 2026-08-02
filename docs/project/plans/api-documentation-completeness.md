@@ -54,6 +54,9 @@ overviews, and staged enforcement.
 - `viewcompose-overlay-android` has a reviewed Q2/Q3 baseline covering optional provider discovery,
   session-isolated platform surfaces, anchored popup recovery, Material surface policy, transient
   feedback lifetimes, compiled samples, and an always-on strict Dokka warning gate;
+- `viewcompose-lifecycle` has a reviewed Q2/Q3 baseline covering owner propagation, commit-aware Flow
+  collection, structured coroutine ownership, repeat-on-lifecycle restart, compiled samples, and an
+  always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -90,8 +93,8 @@ Q2 or Q3 manual review.
    - `viewcompose-host-android` baseline and strict gate are complete;
    - add module/package overviews and cross-links.
 4. **Remaining families**
-   - text, both navigation layers, and the Android overlay backend are complete;
-   - lifecycle, ViewModel, animation, gesture, graphics, shadows,
+   - text, both navigation layers, the Android overlay backend, and lifecycle are complete;
+   - ViewModel, animation, gesture, graphics, shadows,
      constraint layout, image loading, and preview tooling;
    - enable strict checking after each module baseline is clean.
 5. **Immutable source and release integration**
@@ -110,12 +113,12 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-overlay-android` was repaired from 3 initially undocumented declarations to
-a zero-warning strict baseline. Provider discovery, platform surface ownership, popup anchor
-recovery, Material integration, transient-feedback completion, and resource lifetimes were reviewed;
-compiled samples and a bilingual module manual were added.
+2026-08-02: `viewcompose-lifecycle` had no missing-comment Dokka warnings but was upgraded from terse
+bilingual summaries to a reviewed zero-warning strict baseline. Owner propagation, commit-aware
+collection, structured cancellation, inactive retention, and serialized lifecycle restart were
+documented; compiled samples and a bilingual module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-lifecycle`, add its module manual and focused samples, then enable its
+Audit and repair `viewcompose-viewmodel`, add its module manual and focused samples, then enable its
 module-level strict warning gate without changing API behavior.
