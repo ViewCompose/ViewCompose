@@ -9,11 +9,35 @@ import com.viewcompose.ui.gesture.NestedScrollDispatcherConnector
 import com.viewcompose.ui.gesture.NestedScrollSource
 import com.viewcompose.ui.gesture.ScrollDelta
 import com.viewcompose.ui.gesture.ScrollVelocity
+import com.viewcompose.ui.modifier.BackgroundColorModifierElement
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.PaddingModifierElement
+import com.viewcompose.ui.modifier.SemanticsModifierElement
+import com.viewcompose.ui.modifier.backgroundColor
+import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.semantics
+import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.state.LazyListConnector
 import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.ui.state.LazyListStateSnapshot
 import com.viewcompose.ui.state.PagerConnector
 import com.viewcompose.ui.state.PagerState
+import com.viewcompose.ui.unit.dp
+
+fun modifierChainSample() {
+    val modifier = Modifier
+        .padding(horizontal = 16.dp, vertical = 8.dp)
+        .backgroundColor(0xFF336699.toInt())
+        .semantics {
+            contentDescription = "Account avatar"
+        }
+        .testTag("avatar")
+
+    check(modifier.elements[0] is PaddingModifierElement)
+    check(modifier.elements[1] is BackgroundColorModifierElement)
+    val semantics = modifier.elements[2] as SemanticsModifierElement
+    check(semantics.configuration.contentDescription == "Account avatar")
+}
 
 fun nestedScrollDispatcherSample() {
     val dispatcher = NestedScrollDispatcher()
