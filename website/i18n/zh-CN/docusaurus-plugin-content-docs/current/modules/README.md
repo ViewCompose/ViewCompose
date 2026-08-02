@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 92ced7403428915f99b1e760f0bcfd0b23a9fd5ed78a1253ee2710f28b18c201
+translation_source_hash: ad9288512a32a76045517a388ddfa0bc46d86e4ee755da1cba4cfa53e55b095c
 translation_status: current
 ---
 
@@ -31,7 +31,7 @@ translation_status: current
 | `viewcompose-preview-core` | 预览工具 | 预览注解与工具协议 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-core) |
 | `viewcompose-preview-gradle-plugin` | 预览工具 | 预览发现与 Gradle 任务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-gradle-plugin) |
 | `viewcompose-preview-runner` | 预览工具 | Layoutlib 预览渲染运行时 | 规划中 |
-| `viewcompose-preview-worker-host` | 预览工具 | 隔离的预览 Worker 宿主 | 规划中 |
+| `viewcompose-preview-worker-host` | 预览工具 | 隔离的预览 Worker 宿主 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-worker-host) |
 | `viewcompose-preview` | 预览工具 | 开发预览与快照集成 | 规划中 |
 | `viewcompose-animation-core` | 动画 | 平台无关的动画引擎契约 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation-core) |
 | `viewcompose-animation` | 动画 | 动画 DSL 与组合集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation) |

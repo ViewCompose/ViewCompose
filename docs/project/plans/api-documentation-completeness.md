@@ -95,6 +95,9 @@ overviews, and staged enforcement.
   registration, compiled discovery, canonical fingerprints, single and gallery rendering, fast
   refresh, worker isolation/reuse verification, production annotation stripping, compiled samples,
   and an always-on strict Dokka warning gate;
+- `viewcompose-preview-worker-host` has a reviewed Q2/Q3 baseline covering one-shot and loopback
+  server modes, validation, Layoutlib ownership, reloadable class-loader isolation, atomic responses,
+  bounded retirement, compiled samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -151,13 +154,13 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-preview-gradle-plugin` was repaired from 50 initially undocumented
-declarations to a zero-warning strict baseline. Variant registration, compiled discovery, canonical
-fingerprints, render selection and caching, fast refresh, worker isolation/reuse verification and
-production annotation stripping were reviewed; a compiled sample and bilingual module manual were
-added.
+2026-08-02: `viewcompose-preview-worker-host` was repaired from two initially undocumented
+declarations to a zero-warning strict baseline. One-shot and loopback server modes, command
+validation, Layoutlib lifecycle, reloadable class-loader isolation, fatal/non-fatal failure policy,
+atomic responses and bounded retirement were reviewed; a compiled sample and bilingual module
+manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-preview-worker-host`, add its module manual and focused samples, then
-enable its module-level strict warning gate without changing API behavior.
+Audit and repair `viewcompose-preview-runner`, add its module manual and focused samples, then enable
+its module-level strict warning gate without changing API behavior.

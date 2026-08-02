@@ -5,6 +5,12 @@ plugins {
 
 kotlin {
     jvmToolchain(17)
+
+    sourceSets {
+        test {
+            kotlin.srcDir("src/test/samples")
+        }
+    }
 }
 
 application {
