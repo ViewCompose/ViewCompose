@@ -98,5 +98,5 @@ viewComposeMarketplacePrivateKeyPassword=<private key password>
 
 Run `./gradlew prepareSignedMarketplaceRelease` to create and verify the signed archive. The first
 release is uploaded manually for Marketplace review; `./gradlew publishPlugin` is reserved for
-approved follow-up releases. The complete release contract is documented in the repository root
-`PUBLISHING.md`.
+approved follow-up releases. The complete release contract is documented in
+[`docs/project/publishing.md`](../../docs/project/publishing.md).

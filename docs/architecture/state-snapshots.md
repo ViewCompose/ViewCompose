@@ -55,6 +55,6 @@
 
 ## 6. 关联文档
 
-1. [ARCHITECTURE.md](/Users/gzq/AndroidStudioProjects/UIFramework/ARCHITECTURE.md)
-2. [PERFORMANCE.md](/Users/gzq/AndroidStudioProjects/UIFramework/PERFORMANCE.md)
-3. [WORKFLOW.md](/Users/gzq/AndroidStudioProjects/UIFramework/WORKFLOW.md)
+1. [overview.md](overview.md)
+2. [performance.md](../tooling/performance.md)
+3. [workflow.md](../project/workflow.md)

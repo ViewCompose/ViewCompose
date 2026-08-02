@@ -13,7 +13,7 @@ com.viewcompose
 ```
 
 Every published module owns its version in
-[`gradle/viewcompose-publishing.properties`](gradle/viewcompose-publishing.properties). Equal
+[`gradle/viewcompose-publishing.properties`](../../gradle/viewcompose-publishing.properties). Equal
 version values do not form one atomic release train: changing one entry releases only that
 artifact and the artifacts whose dependency metadata must point to the new version.
 

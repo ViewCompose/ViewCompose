@@ -14,9 +14,9 @@
 
 关联文档：
 
-- 主题分层见 [THEMING.md](/Users/gzq/AndroidStudioProjects/UIFramework/THEMING.md)
-- 局部主题覆盖见 [THEME_OVERRIDES.md](/Users/gzq/AndroidStudioProjects/UIFramework/THEME_OVERRIDES.md)
-- 整体架构见 [ARCHITECTURE.md](/Users/gzq/AndroidStudioProjects/UIFramework/ARCHITECTURE.md)
+- 主题分层见 [THEMING.md](../guides/theming.md)
+- 局部主题覆盖见 [THEME_OVERRIDES.md](../../THEME_OVERRIDES.md)
+- 整体架构见 [ARCHITECTURE.md](../architecture/overview.md)
 
 ## 2. 结论
 
@@ -265,7 +265,7 @@
 
 ### 6.4 结构性反馈组件
 
-专项规划见 [OVERLAY_COMPONENTS_ROADMAP.md](/Users/gzq/AndroidStudioProjects/UIFramework/OVERLAY_COMPONENTS_ROADMAP.md)。
+专项规划见 [OVERLAY_COMPONENTS_ROADMAP.md](../../OVERLAY_COMPONENTS_ROADMAP.md)。
 
 | 控件 | 原生承载 | 核心属性 | 为什么是 P2 |
 | --- | --- | --- | --- |
@@ -511,7 +511,7 @@ v1 应支持：
 ## 11. 推荐执行顺序
 
 1. 先把 `P1` 缺口补齐
-2. 同时按 [THEMING.md](/Users/gzq/AndroidStudioProjects/UIFramework/THEMING.md) 收敛主题默认值分层
+2. 同时按 [THEMING.md](../guides/theming.md) 收敛主题默认值分层
 3. 等基础控件、主题、状态都稳定后，再进入 `P2`
 4. `P3` 保持 `AndroidView` 策略，不主动扩展
 

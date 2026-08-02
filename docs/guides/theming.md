@@ -11,7 +11,7 @@
 
 历史长版见：
 
-- [THEMING_FULL_2026-03-06.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/THEMING_FULL_2026-03-06.md)
+- [THEMING_FULL_2026-03-06.md](../archive/THEMING_FULL_2026-03-06.md)
 
 ## 2. 当前主题模型
 
@@ -206,8 +206,8 @@ themeRefreshController.refresh()
 
 对应规范：
 
-- [MODIFIER.md](/Users/gzq/AndroidStudioProjects/UIFramework/MODIFIER.md)
-- [NODE_PROPS.md](/Users/gzq/AndroidStudioProjects/UIFramework/NODE_PROPS.md)
+- [modifier.md](../architecture/modifier.md)
+- [node-spec.md](../architecture/node-spec.md)
 
 ## 7. 新增主题能力的必经清单
 
@@ -229,4 +229,4 @@ themeRefreshController.refresh()
 
 路线图见：
 
-- [ROADMAP.md](/Users/gzq/AndroidStudioProjects/UIFramework/ROADMAP.md)
+- [roadmap.md](../project/roadmap.md)

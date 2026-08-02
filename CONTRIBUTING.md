@@ -25,11 +25,13 @@ If your change affects UI behavior on device/emulator, also run:
 
 Navigation changes have an additional API 33/API 35 P0 certification matrix covering real
 process-death restoration and platform Predictive Back. Run the merge gate documented in
-[`NAVIGATION.md`](NAVIGATION.md#stage-6-device-validation-and-p0-merge-gate) before opening the PR.
+[`navigation.md`](docs/guides/navigation.md#stage-6-device-validation-and-p0-merge-gate) before opening the PR.
 
 ## Coding Expectations
 
-1. Follow repository docs: `ARCHITECTURE.md` and `WORKFLOW.md`.
+1. Start from the [documentation index](docs/README.md), then follow the
+   [architecture](docs/architecture/overview.md), [workflow](docs/project/workflow.md), and
+   [documentation governance](docs/project/documentation-governance.md) relevant to the change.
 2. Add/update tests for behavioral changes.
 3. Keep docs in sync when behavior or architecture changes.
 
@@ -43,4 +45,3 @@ process-death restoration and platform Predictive Back. Run the merge gate docum
 
 By contributing to this repository, you agree that your contributions are
 licensed under the MIT License in this repository.
-

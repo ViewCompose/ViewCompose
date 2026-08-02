@@ -3,7 +3,7 @@
 > 审计日期：2026-03-04
 > 审计人：Claude Opus 4.6
 > 审计范围：主题定义、传播、消费、patch diff 全链路源码
-> 前置阅读：[THEMING.md](THEMING.md)、[THEME_OVERRIDES.md](THEME_OVERRIDES.md)
+> 前置阅读：[THEMING.md](../guides/theming.md)、[THEME_OVERRIDES.md](THEME_OVERRIDES.md)
 
 ---
 
@@ -685,12 +685,12 @@ REVIEW.md Sprint 3 的 #10（设计 UiComponentOverrides sparse model）→ #11�
 
 | 文档 | 本文档的关系 |
 |------|-------------|
-| [THEMING.md](THEMING.md) | THEMING.md 定义方向，本文补充代码级实证和新发现 |
+| [THEMING.md](../guides/theming.md) | THEMING.md 定义方向，本文补充代码级实证和新发现 |
 | [THEME_OVERRIDES.md](THEME_OVERRIDES.md) | THEME_OVERRIDES.md 定义 override API 方向，本文的步骤 1 是其落地路径 |
 | [REVIEW.md](REVIEW.md) Sprint 3 | 本文建议跳过 Sprint 3 的 #10-#12 中间态，直接到位 |
-| [PERFORMANCE.md](PERFORMANCE.md) Phase 2 | 本文步骤 2（props→spec 统一）直接扩大 Phase 2 patch 覆盖范围 |
-| [NODE_PROPS.md](NODE_PROPS.md) | 本文步骤 2 会改变 NodeSpec 的字段范围，需同步更新 |
-| [MODIFIER.md](MODIFIER.md) | 本文步骤 4（Modifier.nativeView）需同步更新 Modifier 文档 |
+| [PERFORMANCE.md](../tooling/performance.md) Phase 2 | 本文步骤 2（props→spec 统一）直接扩大 Phase 2 patch 覆盖范围 |
+| [NODE_PROPS.md](../architecture/node-spec.md) | 本文步骤 2 会改变 NodeSpec 的字段范围，需同步更新 |
+| [MODIFIER.md](../architecture/modifier.md) | 本文步骤 4（Modifier.nativeView）需同步更新 Modifier 文档 |
 
 ---
 

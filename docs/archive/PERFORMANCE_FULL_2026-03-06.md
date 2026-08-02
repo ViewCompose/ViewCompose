@@ -129,9 +129,9 @@ Compose 官方文档也明确把这类模式视为不理想，因为它会多跑
 
 当前相关代码位置：
 
-1. [viewcompose-benchmark/build.gradle.kts](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-benchmark/build.gradle.kts)
-2. [StartupBenchmark.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/StartupBenchmark.kt)
-3. [DemoInteractionBenchmark.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt)
+1. [viewcompose-benchmark/build.gradle.kts](../../viewcompose-benchmark/build.gradle.kts)
+2. [StartupBenchmark.kt](../../viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/StartupBenchmark.kt)
+3. [DemoInteractionBenchmark.kt](../../viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt)
 
 当前本地已验证：
 
@@ -143,9 +143,9 @@ Compose 官方文档也明确把这类模式视为不理想，因为它会多跑
 
 多 Activity demo 现在已经具备稳定的“launcher extra -> 模块 Activity”转发入口，代码在：
 
-1. [MainActivity.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/main/java/com/viewcompose/MainActivity.kt)
-2. [DemoCatalog.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/main/java/com/viewcompose/DemoCatalog.kt)
-3. [DemoBenchmarkScope.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt)
+1. [MainActivity.kt](../../app/src/main/java/com/viewcompose/MainActivity.kt)
+2. [DemoCatalog.kt](../../app/src/main/java/com/viewcompose/DemoCatalog.kt)
+3. [DemoBenchmarkScope.kt](../../viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt)
 
 这让宏基准后续可以不依赖目录页滚动去打开模块，而是通过 launcher Activity 安全转发到目标模块。
 
@@ -229,7 +229,7 @@ Compose 官方文档也明确把这类模式视为不理想，因为它会多跑
 
 相关产物位置：
 
-1. [benchmarkData.json](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-benchmark/build/outputs/connected_android_test_additional_output/viewcompose-benchmark/connected/Pixel%204%20XL%20-%2013/com.viewcompose.benchmark-benchmarkData.json)
+1. [benchmarkData.json](../../viewcompose-benchmark/build/outputs/connected_android_test_additional_output/viewcompose-benchmark/connected/Pixel%204%20XL%20-%2013/com.viewcompose.benchmark-benchmarkData.json)
 2. `additionaltestoutput.viewcompose-benchmark.message_*`
 3. `*.perfetto-trace`
 
@@ -358,10 +358,10 @@ Compose 官方文档也明确把这类模式视为不理想，因为它会多跑
 
 当前已落地的第一步：
 
-1. [ViewTreeRenderer.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/ViewTreeRenderer.kt) 会输出单次 render 的 `insert/reuse/removal/rebound/skipped` 统计
+1. [ViewTreeRenderer.kt](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/ViewTreeRenderer.kt) 会输出单次 render 的 `insert/reuse/removal/rebound/skipped` 统计
 2. 这些统计现在已经扩展为 `insert/reuse/removal/rebound/patched/skipped`
-3. [RenderSession.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/RenderSession.kt) 的 debug 日志已包含这些统计
-4. [DebugStrings.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-renderer/src/main/java/com/viewcompose/renderer/debug/DebugStrings.kt) 已能格式化 render 统计摘要
+3. [RenderSession.kt](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/RenderSession.kt) 的 debug 日志已包含这些统计
+4. [DebugStrings.kt](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/debug/DebugStrings.kt) 已能格式化 render 统计摘要
 
 ## 5. 架构设计层面的性能约束
 

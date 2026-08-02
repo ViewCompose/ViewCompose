@@ -13,7 +13,7 @@
 
 历史长版快照见：
 
-- [ARCHITECTURE_FULL_2026-03-06.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/ARCHITECTURE_FULL_2026-03-06.md)
+- [ARCHITECTURE_FULL_2026-03-06.md](../archive/ARCHITECTURE_FULL_2026-03-06.md)
 
 ## 2. 当前基线（2026-07）
 
@@ -154,9 +154,9 @@ flowchart TD
 
 对应规范：
 
-- [MODIFIER.md](/Users/gzq/AndroidStudioProjects/UIFramework/MODIFIER.md)
-- [NODE_PROPS.md](/Users/gzq/AndroidStudioProjects/UIFramework/NODE_PROPS.md)
-- [THEMING.md](/Users/gzq/AndroidStudioProjects/UIFramework/THEMING.md)
+- [modifier.md](modifier.md)
+- [node-spec.md](node-spec.md)
+- [theming.md](../guides/theming.md)
 
 ### 4.3 宿主接入边界
 
@@ -179,7 +179,7 @@ flowchart TD
 
 专项清单：
 
-- [SESSION_CONTAINER_CHECKLIST.md](/Users/gzq/AndroidStudioProjects/UIFramework/SESSION_CONTAINER_CHECKLIST.md)
+- [session-containers.md](session-containers.md)
 
 ### 4.5 Environment 边界
 
@@ -321,7 +321,7 @@ flowchart TD
 10. 静态栅格缓存 key 必须覆盖尺寸、density、layout direction、shape 与完整规格；仅平移、缩放、旋转或 alpha 变化不得重建栅格。
 11. `ShadowRenderPolicy.Auto` 的当前默认后端是 `ExactBitmap`。`RenderNodeDisplayList` 只作为 API 29+ 显式实验策略；没有同设备发布态数据证明稳定收益前不得切换默认值。
 12. Lazy 回收、节点移除、事务回滚与 RenderSession dispose 必须同步移除阴影规格；父级索引不得通过全局强引用持有 View，进程级缓存只能保存不可变栅格。
-13. 公开使用规则、限制与验证入口见 [SHADOWS.md](/Users/gzq/AndroidStudioProjects/UIFramework/SHADOWS.md)。
+13. 公开使用规则、限制与验证入口见 [shadows.md](../guides/shadows.md)。
 
 ### 4.16 Semantics 与无障碍边界
 
@@ -346,7 +346,7 @@ flowchart TD
 11. 返回栈提交后的 effect 应用若发生不可恢复异常，协调器必须进入 `Failed` 并拒绝后续命令，禁止在部分提交状态继续运行。
 12. 自适应多窗格只能改变同一已提交返回栈的可见集合与原生 View 布局；禁止建立平行导航状态、重建可见 entry owner，或让窗格策略引用活动栈外 entry。
 
-详细规范见 [NAVIGATION.md](/Users/gzq/AndroidStudioProjects/UIFramework/NAVIGATION.md)。
+详细规范见 [navigation.md](../guides/navigation.md)。
 
 ## 5. 当前热点与风险
 
@@ -367,12 +367,12 @@ flowchart TD
 
 执行流程规则见：
 
-- [WORKFLOW.md](/Users/gzq/AndroidStudioProjects/UIFramework/WORKFLOW.md)
+- [workflow.md](../project/workflow.md)
 
 ## 7. 关联文档
 
-1. 统一能力路线图：[ROADMAP.md](/Users/gzq/AndroidStudioProjects/UIFramework/ROADMAP.md)
-2. 性能主线：[PERFORMANCE.md](/Users/gzq/AndroidStudioProjects/UIFramework/PERFORMANCE.md)
-3. 状态快照规范：[STATE_SNAPSHOT.md](/Users/gzq/AndroidStudioProjects/UIFramework/STATE_SNAPSHOT.md)
-4. 文档入口：[CONTEXT.md](/Users/gzq/AndroidStudioProjects/UIFramework/CONTEXT.md)
-5. 系统导航规范：[NAVIGATION.md](/Users/gzq/AndroidStudioProjects/UIFramework/NAVIGATION.md)
+1. 统一能力路线图：[roadmap.md](../project/roadmap.md)
+2. 性能主线：[performance.md](../tooling/performance.md)
+3. 状态快照规范：[state-snapshots.md](state-snapshots.md)
+4. 文档入口：[docs/README.md](../README.md)
+5. 系统导航规范：[navigation.md](../guides/navigation.md)

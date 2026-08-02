@@ -12,7 +12,7 @@
 
 历史阶段文档见：
 
-- [NODE_PROPS_FULL_2026-03-06.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/NODE_PROPS_FULL_2026-03-06.md)
+- [NODE_PROPS_FULL_2026-03-06.md](../archive/NODE_PROPS_FULL_2026-03-06.md)
 
 ## 2. 当前硬边界
 
@@ -54,6 +54,6 @@
 
 ## 7. 关联文档
 
-1. [ARCHITECTURE.md](/Users/gzq/AndroidStudioProjects/UIFramework/ARCHITECTURE.md)
-2. [WORKFLOW.md](/Users/gzq/AndroidStudioProjects/UIFramework/WORKFLOW.md)
-3. [MODIFIER.md](/Users/gzq/AndroidStudioProjects/UIFramework/MODIFIER.md)
+1. [overview.md](overview.md)
+2. [workflow.md](../project/workflow.md)
+3. [modifier.md](modifier.md)

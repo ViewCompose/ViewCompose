@@ -6,7 +6,7 @@
 
 这些文档用于追溯背景，不作为当前开发规范。
 
-当前规范请从 [CONTEXT.md](/Users/gzq/AndroidStudioProjects/UIFramework/CONTEXT.md) 进入。
+当前规范请从[文档索引](../README.md)进入。
 
 ## 2. 判断规则
 
@@ -26,6 +26,8 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md` | 高级阴影实现与验证已经完成，长期契约已并入当前文档 |
+| `STATIC_PREVIEW_TOOLING_PLAN_2026-07.md` | 静态预览插件 1.0 已完成，长期工具说明已并入当前文档 |
 | `COMPOSE_COMPONENT_GAP.md` | 阶段性对照快照，数据口径易过期 |
 | `ARCHITECTURE_FULL_2026-03-06.md` | 根文档已收敛为规范版，此文件保留完整历史分析 |
 | `PERFORMANCE_FULL_2026-03-06.md` | 根文档已收敛为规范版，此文件保留完整历史分析 |
