@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: f43b09ebb288d86c800ce8c489e69430638f0e976c96f26f3c4929d56ce20111
+translation_source_hash: 8549c6919ea690e5333ac21c55884f31dbffa4b7a10af3f3b7c3bf15dc485fe6
 translation_status: current
 ---
 
@@ -19,7 +19,7 @@ translation_status: current
 | `viewcompose-runtime` | 基础 | 平台无关的状态与观察运行时 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-runtime) |
 | `viewcompose-text-core` | 基础 | 平台无关的文本编辑模型 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-text-core) |
 | `viewcompose-ui-contract` | 基础 | 平台无关的 UI 契约与节点规范 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract) |
-| `viewcompose-navigation-core` | 导航 | 平台无关的导航状态与事务 | 规划中 |
+| `viewcompose-navigation-core` | 导航 | 平台无关的导航状态与事务 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-core) |
 | `viewcompose-navigation` | 导航 | Android 导航宿主集成 | 规划中 |
 | `viewcompose-renderer` | 渲染 | Android View 渲染与协调引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer) |
 | `viewcompose-widget-core` | UI | 核心 DSL、组件、主题与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-widget-core) |

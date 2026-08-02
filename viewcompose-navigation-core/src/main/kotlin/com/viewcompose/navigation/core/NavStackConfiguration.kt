@@ -5,8 +5,12 @@ import java.util.Collections
 import java.util.LinkedHashMap
 
 /**
- * 一个独立保留导航栈的稳定业务身份。
  * Stable application identity for one independently retained navigation stack.
+ *
+ * Use a durable value such as a tab or top-level destination key. The value participates in save
+ * and restore and therefore must not be localized or generated per process.
+ *
+ * @property value non-blank durable stack key
  */
 @JvmInline
 value class NavStackId(
@@ -18,52 +22,46 @@ value class NavStackId(
         }
     }
 
+    /** Returns the durable [value]. */
     override fun toString(): String = value
 
+    /** Internal default identity used by single-stack controllers. */
     companion object {
         internal val Default = NavStackId("default")
     }
 }
 
-/**
- * 应用选择某个 stack 时采用的行为。
- * Behavior applied when an application selects a stack.
- */
+/** Behavior applied when an application selects a retained stack. */
 enum class NavStackSelectionMode {
     /**
-     * 保留被选中 stack 的完整状态。
      * Preserve the selected stack exactly where the user left it.
      */
     Preserve,
 
     /**
-     * 展示前移除被选中 stack 根节点之上的所有 entry。
      * Remove every entry above the selected stack's root before presenting it.
      */
     PopToRoot,
 }
 
-/**
- * 活跃 stack 已位于根节点时的系统 Back 行为。
- * System-Back behavior when the active stack is already at its root.
- */
+/** System-Back behavior when the active stack is already at its root. */
 enum class NavRootBackBehavior {
     /**
-     * 不消费 Back，交给外层 host 或 Android 平台处理。
      * Do not consume Back; delegate it to the enclosing host or the Android platform.
      */
     Delegate,
 
     /**
-     * 返回最近选择过的 stack；没有历史后再委托给外层。
      * Return to the most recently selected stack, then delegate when no history remains.
      */
     PreviousStack,
 }
 
 /**
- * 声明一个独立保留导航栈的初始 route。
- * Declares the initial route of one independently retained navigation stack.
+ * Declares one independently retained stack and its initial route.
+ *
+ * @property id durable application identity for the stack
+ * @property startDestination route used to create the stack's immutable root entry
  */
 data class NavStackSpec(
     val id: NavStackId,
@@ -71,14 +69,22 @@ data class NavStackSpec(
 )
 
 /**
- * 多个独立保留导航栈的不可变配置。
- * Immutable configuration for a set of independently retained navigation stacks.
+ * Immutable configuration for one or more independently retained navigation stacks.
+ *
+ * Stack order is preserved, IDs must be unique, and [initialStackId] must identify one declared
+ * stack. Persisted [NavStackSetSnapshot] values can be restored only against a configuration with
+ * exactly the same stack IDs.
+ *
+ * @property initialStackId stack selected when creating fresh state
+ * @param stacks non-empty stack declarations copied in application order
+ * @property rootBackBehavior behavior after the active stack reaches its root
  */
 class NavStackConfiguration(
     val initialStackId: NavStackId,
     stacks: List<NavStackSpec>,
     val rootBackBehavior: NavRootBackBehavior = NavRootBackBehavior.Delegate,
 ) {
+    /** Immutable application-ordered stack declarations. */
     val stacks: List<NavStackSpec> = Collections.unmodifiableList(
         ArrayList(stacks),
     )
@@ -95,10 +101,12 @@ class NavStackConfiguration(
         }
     }
 
+    /** Returns the declaration for [stackId], or `null` when it is unknown. */
     operator fun get(stackId: NavStackId): NavStackSpec? {
         return stacks.firstOrNull { stack -> stack.id == stackId }
     }
 
+    /** Compares the complete immutable configuration structurally. */
     override fun equals(other: Any?): Boolean {
         return other is NavStackConfiguration &&
             initialStackId == other.initialStackId &&
@@ -106,6 +114,7 @@ class NavStackConfiguration(
             rootBackBehavior == other.rootBackBehavior
     }
 
+    /** Returns the structural configuration hash. */
     override fun hashCode(): Int {
         var result = initialStackId.hashCode()
         result = 31 * result + stacks.hashCode()
@@ -113,6 +122,7 @@ class NavStackConfiguration(
         return result
     }
 
+    /** Returns a diagnostic representation of the complete configuration. */
     override fun toString(): String {
         return "NavStackConfiguration(" +
             "initialStackId=$initialStackId, " +
@@ -121,10 +131,12 @@ class NavStackConfiguration(
             ")"
     }
 
+    /** Convenience configuration factories. */
     companion object {
         /**
-         * 创建单 stack 配置，用于不需要 bottom-nav/tab 独立栈的场景。
          * Creates a single-stack configuration for hosts that do not need independent bottom-nav/tab stacks.
+         *
+         * @param startDestination root route of the sole retained stack
          */
         fun single(startDestination: NavRoute): NavStackConfiguration {
             return NavStackConfiguration(
@@ -141,27 +153,35 @@ class NavStackConfiguration(
 }
 
 /**
- * 所有保留导航栈的完整不可变状态。
  * Complete immutable state of every retained navigation stack.
  *
- * [selectionHistory] 从旧到新排序，且不包含 [activeStackId]。
- * [selectionHistory] is oldest-to-newest and excludes [activeStackId].
+ * [selectionHistory] is oldest-to-newest, contains only declared inactive stacks, and excludes
+ * [activeStackId]. Destination and graph-owner identities are globally unique across stacks so
+ * platform lifecycle and saved-state owners cannot leak between tabs.
+ *
+ * @property activeStackId currently selected stack
+ * @param stacks copied map of every retained stack
+ * @param selectionHistory copied least-recent-to-most-recent stack selection history
  */
 class NavStackSetSnapshot(
     val activeStackId: NavStackId,
     stacks: Map<NavStackId, NavBackStackSnapshot>,
     selectionHistory: List<NavStackId> = emptyList(),
 ) {
+    /** Immutable map of every retained stack. */
     val stacks: Map<NavStackId, NavBackStackSnapshot> = Collections.unmodifiableMap(
         LinkedHashMap(stacks),
     )
+    /** Immutable oldest-to-newest inactive-stack selection history. */
     val selectionHistory: List<NavStackId> = Collections.unmodifiableList(
         ArrayList(selectionHistory),
     )
 
+    /** Snapshot selected by [activeStackId]. */
     val activeStack: NavBackStackSnapshot
         get() = checkNotNull(stacks[activeStackId])
 
+    /** Immutable flattened destination list in stack-map order. */
     val allEntries: List<NavEntry> = Collections.unmodifiableList(
         this.stacks.values.flatMap(NavBackStackSnapshot::entries),
     )
@@ -185,8 +205,10 @@ class NavStackSetSnapshot(
         validateGlobalOwnerIdentities()
     }
 
+    /** Returns the retained snapshot for [stackId], or `null` when it is unknown. */
     operator fun get(stackId: NavStackId): NavBackStackSnapshot? = stacks[stackId]
 
+    /** Compares active selection, stack contents, and selection history structurally. */
     override fun equals(other: Any?): Boolean {
         return other is NavStackSetSnapshot &&
             activeStackId == other.activeStackId &&
@@ -194,6 +216,7 @@ class NavStackSetSnapshot(
             selectionHistory == other.selectionHistory
     }
 
+    /** Returns the structural hash of the complete retained state. */
     override fun hashCode(): Int {
         var result = activeStackId.hashCode()
         result = 31 * result + stacks.hashCode()
@@ -201,6 +224,7 @@ class NavStackSetSnapshot(
         return result
     }
 
+    /** Returns a diagnostic representation of the complete retained state. */
     override fun toString(): String {
         return "NavStackSetSnapshot(" +
             "activeStackId=$activeStackId, " +
@@ -210,7 +234,6 @@ class NavStackSetSnapshot(
     }
 
     private fun validateGlobalOwnerIdentities() {
-        // destination 和 graph owner ID 在所有 stack 间必须全局唯一，避免跨栈状态串联。
         // Destination and graph owner IDs must be globally unique across stacks to avoid cross-stack state sharing.
         val destinationStackById = linkedMapOf<NavEntryId, NavStackId>()
         val graphStackById = linkedMapOf<NavEntryId, NavStackId>()

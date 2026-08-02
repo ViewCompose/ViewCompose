@@ -2,10 +2,7 @@ package com.viewcompose.navigation.core
 
 import java.util.Collections
 
-/**
- * Android host 生命周期的抽象状态。
- * Abstract lifecycle state of the Android host.
- */
+/** Platform-neutral lifecycle state that caps every navigation owner hosted by Android. */
 enum class NavHostLifecycleState {
     Initialized,
     Created,
@@ -14,10 +11,7 @@ enum class NavHostLifecycleState {
     Destroyed,
 }
 
-/**
- * 单个导航 entry 的目标生命周期状态。
- * Target lifecycle state for one navigation entry.
- */
+/** Lifecycle state assigned to one retained navigation entry or graph owner. */
 enum class NavEntryLifecycleState {
     Initialized,
     Created,
@@ -27,8 +21,11 @@ enum class NavEntryLifecycleState {
 }
 
 /**
- * entry 生命周期状态迁移记录。
- * Lifecycle-state transition record for one entry.
+ * Lifecycle-state transition for one owner.
+ *
+ * @property entryId destination or graph-owner identity
+ * @property from state before this planning pass
+ * @property to target state after this planning pass
  */
 data class NavLifecycleTransition(
     val entryId: NavEntryId,
@@ -37,26 +34,49 @@ data class NavLifecycleTransition(
 )
 
 /**
- * 一次生命周期规划的目标状态和有序迁移。
- * Target states and ordered transitions for one lifecycle planning pass.
+ * Immutable result of one lifecycle planning pass.
+ *
+ * [transitions] is already ordered for host application: downward and destroy transitions precede
+ * upward transitions so replacing an interactive entry cannot temporarily leave two owners
+ * resumed. IDs that retain their current state remain in [targetStates] but not [transitions].
+ *
+ * @param targetStates copied final state for every current or retained owner
+ * @param transitions copied ordered state changes
  */
 class NavLifecyclePlan(
     targetStates: Map<NavEntryId, NavEntryLifecycleState>,
     transitions: List<NavLifecycleTransition>,
 ) {
+    /** Immutable final state for every current or retained owner. */
     val targetStates: Map<NavEntryId, NavEntryLifecycleState> = Collections.unmodifiableMap(
         LinkedHashMap(targetStates),
     )
+    /** Immutable host-application order of actual state changes. */
     val transitions: List<NavLifecycleTransition> = Collections.unmodifiableList(
         ArrayList(transitions),
     )
 }
 
 /**
- * 根据 retained/visible/interactive entry 集合计算生命周期迁移。
- * Computes lifecycle transitions from retained, visible, and interactive entry sets.
+ * Computes navigation-owner lifecycle transitions from retention and pane visibility.
+ *
+ * Retained background owners target `Created`, visible non-interactive owners target `Started`, and
+ * interactive owners target `Resumed`; [NavHostLifecycleState] caps all three. Owners absent from
+ * the retained list target `Destroyed` and may not later be retained again.
+ *
+ * @sample com.viewcompose.navigation.core.samples.lifecyclePlanningSample
  */
 object NavLifecyclePlanner {
+    /**
+     * Plans a scene with at most one interactive owner.
+     *
+     * @param currentStates previous host-applied owner states
+     * @param retainedEntryIds unique stable owner order retained by navigation state
+     * @param visibleEntryIds retained owners currently displayed by the pane scene
+     * @param interactiveEntryId optional visible owner receiving input
+     * @param hostState current host lifecycle cap
+     * @throws IllegalArgumentException when set relationships are invalid or a destroyed owner is retained
+     */
     fun plan(
         currentStates: Map<NavEntryId, NavEntryLifecycleState>,
         retainedEntryIds: List<NavEntryId>,
@@ -73,6 +93,16 @@ object NavLifecyclePlanner {
         )
     }
 
+    /**
+     * Plans a scene that may expose multiple interactive pane owners.
+     *
+     * @param currentStates previous host-applied owner states
+     * @param retainedEntryIds unique stable owner order retained by navigation state
+     * @param visibleEntryIds retained owners currently displayed by the pane scene
+     * @param interactiveEntryIds visible owners receiving input
+     * @param hostState current host lifecycle cap
+     * @throws IllegalArgumentException when set relationships are invalid or a destroyed owner is retained
+     */
     fun plan(
         currentStates: Map<NavEntryId, NavEntryLifecycleState>,
         retainedEntryIds: List<NavEntryId>,
@@ -135,7 +165,6 @@ object NavLifecyclePlanner {
             transition.to == NavEntryLifecycleState.Destroyed ||
                 transition.to.activeRank() < transition.from.activeRank()
         }
-        // 先执行降级/销毁，再执行升级，避免两个 entry 同时处于 RESUMED。
         // Run downward/destroy transitions before upward transitions so two entries are not RESUMED at once.
         return NavLifecyclePlan(
             targetStates = targetStates,
