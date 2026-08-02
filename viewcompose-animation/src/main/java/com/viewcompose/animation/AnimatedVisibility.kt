@@ -14,26 +14,46 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
 import kotlin.math.abs
 
-/**
- * 尺寸转场作用的轴向。
- * Axis affected by a size transition.
- */
+/** Selects which measured axes participate in an expand or shrink transition. */
 enum class SizeTransformAxis {
+    /** Scales both measured width and height. */
     Both,
+
+    /** Scales measured width while height remains at its full size. */
     Horizontal,
+
+    /** Scales measured height while width remains at its full size. */
     Vertical,
 }
 
 /**
- * 进入转场的基础元素。
- * Primitive element of an enter transition.
+ * Defines one primitive that can contribute to an [EnterTransition].
+ *
+ * Consumers should use [fadeIn], [expandIn], [expandHorizontally], or [expandVertically] unless they
+ * need to inspect or transform transition element lists.
  */
 sealed interface EnterTransitionElement {
+    /**
+     * Animates host alpha from [initialAlpha] to fully opaque.
+     *
+     * @property animationSpec timing policy for the alpha channel
+     * @property initialAlpha requested alpha at the start of a fully hidden enter; rendered alpha is
+     * clamped to `0f..1f`
+     */
     data class Fade(
         val animationSpec: AnimationSpec = tween(),
         val initialAlpha: Float = 0f,
     ) : EnterTransitionElement
 
+    /**
+     * Animates measured size from [initialScale] to full size on [axis].
+     *
+     * The renderer clips content to the animated bounds. Negative scales render as zero.
+     *
+     * @property animationSpec timing policy shared by each affected size channel
+     * @property initialScale fraction of full measured size at the start of a fully hidden enter
+     * @property axis measured axes affected by the element
+     */
     data class Expand(
         val animationSpec: AnimationSpec = tween(),
         val initialScale: Float = 0f,
@@ -42,15 +62,32 @@ sealed interface EnterTransitionElement {
 }
 
 /**
- * 离开转场的基础元素。
- * Primitive element of an exit transition.
+ * Defines one primitive that can contribute to an [ExitTransition].
+ *
+ * Consumers should use [fadeOut], [shrinkOut], [shrinkHorizontally], or [shrinkVertically] unless
+ * they need to inspect or transform transition element lists.
  */
 sealed interface ExitTransitionElement {
+    /**
+     * Animates host alpha from its current value to [targetAlpha].
+     *
+     * @property animationSpec timing policy for the alpha channel
+     * @property targetAlpha requested hidden alpha; rendered alpha is clamped to `0f..1f`
+     */
     data class Fade(
         val animationSpec: AnimationSpec = tween(),
         val targetAlpha: Float = 0f,
     ) : ExitTransitionElement
 
+    /**
+     * Animates measured size from its current value to [targetScale] on [axis].
+     *
+     * The renderer clips content to the animated bounds. Negative scales render as zero.
+     *
+     * @property animationSpec timing policy shared by each affected size channel
+     * @property targetScale fraction of full measured size at the hidden endpoint
+     * @property axis measured axes affected by the element
+     */
     data class Shrink(
         val animationSpec: AnimationSpec = tween(),
         val targetScale: Float = 0f,
@@ -59,29 +96,62 @@ sealed interface ExitTransitionElement {
 }
 
 /**
- * 可组合的进入转场。
- * Composable enter transition.
+ * Collects enter primitives applied by [AnimatedVisibility].
+ *
+ * Elements are interpreted by channel. If several fade or applicable expand elements are present,
+ * the last one in [elements] wins for that channel.
+ *
+ * @property elements ordered primitives available to the visibility host
  */
 data class EnterTransition(
     val elements: List<EnterTransitionElement>,
 ) {
+    /**
+     * Returns a transition whose ordered elements are this transition followed by [other].
+     *
+     * Because the last applicable element wins, [other] overrides duplicate channels.
+     *
+     * @param other transition appended after this transition
+     * @return a new transition containing both element lists
+     */
     operator fun plus(other: EnterTransition): EnterTransition {
         return EnterTransition(elements + other.elements)
     }
 }
 
 /**
- * 可组合的离开转场。
- * Composable exit transition.
+ * Collects exit primitives applied by [AnimatedVisibility].
+ *
+ * Elements are interpreted by channel. If several fade or applicable shrink elements are present,
+ * the last one in [elements] wins for that channel.
+ *
+ * @property elements ordered primitives available to the visibility host
  */
 data class ExitTransition(
     val elements: List<ExitTransitionElement>,
 ) {
+    /**
+     * Returns a transition whose ordered elements are this transition followed by [other].
+     *
+     * Because the last applicable element wins, [other] overrides duplicate channels.
+     *
+     * @param other transition appended after this transition
+     * @return a new transition containing both element lists
+     */
     operator fun plus(other: ExitTransition): ExitTransition {
         return ExitTransition(elements + other.elements)
     }
 }
 
+/**
+ * Creates an enter transition that fades from [initialAlpha] to fully opaque.
+ *
+ * @sample com.viewcompose.animation.samples.visibilityTransitionsSample
+ *
+ * @param animationSpec timing policy for alpha
+ * @param initialAlpha alpha used when entering from the fully hidden endpoint
+ * @return a one-element enter transition
+ */
 fun fadeIn(
     animationSpec: AnimationSpec = tween(),
     initialAlpha: Float = 0f,
@@ -94,6 +164,15 @@ fun fadeIn(
     ),
 )
 
+/**
+ * Creates an enter transition that expands both measured axes to full size.
+ *
+ * @sample com.viewcompose.animation.samples.visibilityTransitionsSample
+ *
+ * @param animationSpec timing policy for width and height scale
+ * @param initialScale initial fraction of full measured width and height
+ * @return a one-element enter transition
+ */
 fun expandIn(
     animationSpec: AnimationSpec = tween(),
     initialScale: Float = 0f,
@@ -107,6 +186,13 @@ fun expandIn(
     ),
 )
 
+/**
+ * Creates an enter transition that expands measured width to full size.
+ *
+ * @param animationSpec timing policy for width scale
+ * @param initialScale initial fraction of full measured width
+ * @return a one-element horizontal enter transition
+ */
 fun expandHorizontally(
     animationSpec: AnimationSpec = tween(),
     initialScale: Float = 0f,
@@ -120,6 +206,13 @@ fun expandHorizontally(
     ),
 )
 
+/**
+ * Creates an enter transition that expands measured height to full size.
+ *
+ * @param animationSpec timing policy for height scale
+ * @param initialScale initial fraction of full measured height
+ * @return a one-element vertical enter transition
+ */
 fun expandVertically(
     animationSpec: AnimationSpec = tween(),
     initialScale: Float = 0f,
@@ -133,6 +226,15 @@ fun expandVertically(
     ),
 )
 
+/**
+ * Creates an exit transition that fades from the current alpha to [targetAlpha].
+ *
+ * @sample com.viewcompose.animation.samples.visibilityTransitionsSample
+ *
+ * @param animationSpec timing policy for alpha
+ * @param targetAlpha alpha at the hidden endpoint
+ * @return a one-element exit transition
+ */
 fun fadeOut(
     animationSpec: AnimationSpec = tween(),
     targetAlpha: Float = 0f,
@@ -145,6 +247,15 @@ fun fadeOut(
     ),
 )
 
+/**
+ * Creates an exit transition that shrinks both measured axes to [targetScale].
+ *
+ * @sample com.viewcompose.animation.samples.visibilityTransitionsSample
+ *
+ * @param animationSpec timing policy for width and height scale
+ * @param targetScale terminal fraction of full measured width and height
+ * @return a one-element exit transition
+ */
 fun shrinkOut(
     animationSpec: AnimationSpec = tween(),
     targetScale: Float = 0f,
@@ -158,6 +269,13 @@ fun shrinkOut(
     ),
 )
 
+/**
+ * Creates an exit transition that shrinks measured width to [targetScale].
+ *
+ * @param animationSpec timing policy for width scale
+ * @param targetScale terminal fraction of full measured width
+ * @return a one-element horizontal exit transition
+ */
 fun shrinkHorizontally(
     animationSpec: AnimationSpec = tween(),
     targetScale: Float = 0f,
@@ -171,6 +289,13 @@ fun shrinkHorizontally(
     ),
 )
 
+/**
+ * Creates an exit transition that shrinks measured height to [targetScale].
+ *
+ * @param animationSpec timing policy for height scale
+ * @param targetScale terminal fraction of full measured height
+ * @return a one-element vertical exit transition
+ */
 fun shrinkVertically(
     animationSpec: AnimationSpec = tween(),
     targetScale: Float = 0f,
@@ -185,8 +310,24 @@ fun shrinkVertically(
 )
 
 /**
- * 根据 [visible] 控制内容挂载，并在进入/离开时应用 alpha 和尺寸转场。
- * Mounts content according to [visible] and applies alpha/size transitions on enter and exit.
+ * Mounts or removes [content] with alpha and measured-size transitions when [visible] changes.
+ *
+ * The first composition is settled at [visible] and does not play an enter animation. A later
+ * `false` target keeps content mounted through the exit segment and removes it after every channel
+ * finishes. Retargeting resumes each channel from its current sample. Size elements clip content to
+ * animated width and height; [modifier] applies to the animated visibility host.
+ *
+ * The default transition fades and expands or shrinks both axes. Within a composed transition, the
+ * last element applicable to a channel wins.
+ *
+ * @sample com.viewcompose.animation.samples.animatedVisibilitySample
+ *
+ * @receiver tree builder for the current composition
+ * @param visible whether content should be mounted after the transition settles
+ * @param modifier modifier applied to the visibility host
+ * @param enter primitives used for a hidden-to-visible segment
+ * @param exit primitives used for a visible-to-hidden segment
+ * @param content subtree retained until an exit segment completes
  */
 fun UiTreeBuilder.AnimatedVisibility(
     visible: Boolean,
@@ -208,6 +349,27 @@ fun UiTreeBuilder.AnimatedVisibility(
     )
 }
 
+/**
+ * Mounts or removes [content] according to an externally controlled [visibleState].
+ *
+ * Callers update [MutableTransitionState.targetState]; this host mirrors committed state and idle
+ * status back into the same object. Bind one state object to one active host to avoid competing
+ * writers. The first composition is settled at the state's current target, so setting a different
+ * target before the state is first consumed does not play an initial enter animation in this
+ * release. Compose the hidden target once before changing it when an initial enter is required.
+ *
+ * Content remains mounted through exit and interrupted segments. The default transition affects
+ * alpha and both measured axes.
+ *
+ * @sample com.viewcompose.animation.samples.mutableTransitionStateSample
+ *
+ * @receiver tree builder for the current composition
+ * @param visibleState externally retained target and observation state
+ * @param modifier modifier applied to the visibility host
+ * @param enter primitives used for a hidden-to-visible segment
+ * @param exit primitives used for a visible-to-hidden segment
+ * @param content subtree retained until an exit segment completes
+ */
 fun UiTreeBuilder.AnimatedVisibility(
     visibleState: MutableTransitionState<Boolean>,
     modifier: Modifier = Modifier,
@@ -225,6 +387,19 @@ fun UiTreeBuilder.AnimatedVisibility(
     )
 }
 
+/**
+ * Mounts or removes row [content], defaulting size motion to the horizontal axis.
+ *
+ * The first composition is settled at [visible]. Later exits retain content until all alpha and
+ * width channels finish. Retargeting resumes from current samples.
+ *
+ * @receiver row scope that receives the animated visibility host as one child
+ * @param visible whether content should remain after the transition settles
+ * @param modifier modifier applied to the row child visibility host
+ * @param enter primitives used for a hidden-to-visible segment
+ * @param exit primitives used for a visible-to-hidden segment
+ * @param content box-scoped subtree inside the row child
+ */
 fun RowScope.AnimatedVisibility(
     visible: Boolean,
     modifier: Modifier = Modifier,
@@ -245,6 +420,20 @@ fun RowScope.AnimatedVisibility(
     )
 }
 
+/**
+ * Mounts or removes row [content] from an externally controlled [visibleState].
+ *
+ * This overload shares the state ownership and first-consumption behavior of the tree-builder state
+ * overload, while its defaults expand and shrink only measured width. Bind one state object to one
+ * active host.
+ *
+ * @receiver row scope that receives the animated visibility host as one child
+ * @param visibleState externally retained target and observation state
+ * @param modifier modifier applied to the row child visibility host
+ * @param enter primitives used for a hidden-to-visible segment
+ * @param exit primitives used for a visible-to-hidden segment
+ * @param content box-scoped subtree inside the row child
+ */
 fun RowScope.AnimatedVisibility(
     visibleState: MutableTransitionState<Boolean>,
     modifier: Modifier = Modifier,
@@ -262,6 +451,19 @@ fun RowScope.AnimatedVisibility(
     )
 }
 
+/**
+ * Mounts or removes column [content], defaulting size motion to the vertical axis.
+ *
+ * The first composition is settled at [visible]. Later exits retain content until all alpha and
+ * height channels finish. Retargeting resumes from current samples.
+ *
+ * @receiver column scope that receives the animated visibility host as one child
+ * @param visible whether content should remain after the transition settles
+ * @param modifier modifier applied to the column child visibility host
+ * @param enter primitives used for a hidden-to-visible segment
+ * @param exit primitives used for a visible-to-hidden segment
+ * @param content box-scoped subtree inside the column child
+ */
 fun ColumnScope.AnimatedVisibility(
     visible: Boolean,
     modifier: Modifier = Modifier,
@@ -282,6 +484,20 @@ fun ColumnScope.AnimatedVisibility(
     )
 }
 
+/**
+ * Mounts or removes column [content] from an externally controlled [visibleState].
+ *
+ * This overload shares the state ownership and first-consumption behavior of the tree-builder state
+ * overload, while its defaults expand and shrink only measured height. Bind one state object to one
+ * active host.
+ *
+ * @receiver column scope that receives the animated visibility host as one child
+ * @param visibleState externally retained target and observation state
+ * @param modifier modifier applied to the column child visibility host
+ * @param enter primitives used for a hidden-to-visible segment
+ * @param exit primitives used for a visible-to-hidden segment
+ * @param content box-scoped subtree inside the column child
+ */
 fun ColumnScope.AnimatedVisibility(
     visibleState: MutableTransitionState<Boolean>,
     modifier: Modifier = Modifier,
@@ -401,8 +617,7 @@ private fun UiTreeBuilder.animatedVisibilityCore(
             if (settledVisible) 1f else (exitHeightShrink?.targetScale ?: 1f)
         },
     )
-    // 将内部 Transition 的实时状态写回外部 state，使调用方能观察 idle/current/target。
-    // Mirror the internal Transition back to external state so callers can observe idle/current/target.
+    // Mirror the internal segment after sampling so external observers see committed and idle state.
     visibleState.currentState = transition.currentState
     visibleState.targetState = targetVisible
     visibleState.isIdle = !transition.isRunning && transition.currentState == transition.targetState

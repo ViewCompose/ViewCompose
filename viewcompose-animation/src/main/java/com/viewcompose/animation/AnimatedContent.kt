@@ -13,8 +13,31 @@ import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
 
 /**
- * 在旧状态和新状态内容之间执行交叉淡入淡出。
- * Cross-fades between content for the previous state and the target state.
+ * Cross-fades content for the last displayed state into content for [targetState].
+ *
+ * A state change keeps the outgoing subtree mounted while the incoming subtree is rendered above it
+ * in a fill-size [Box]. [content] is therefore invoked twice during a transition and once while
+ * settled. The outgoing state is committed and removed in a [SideEffect] after its alpha reaches the
+ * terminal threshold, so tree mutation does not occur during composition.
+ *
+ * Equality determines whether a transition is needed. If another target arrives mid-transition,
+ * incoming content switches to the latest target at the existing progress rather than restarting
+ * from zero; the last committed state remains the outgoing content. Nullable `T` is supported by the
+ * signature, but a previously displayed `null` is also the internal no-outgoing sentinel and cannot
+ * be rendered as outgoing content.
+ *
+ * This release animates alpha only; it does not provide size transforms, content keys, or per-pair
+ * transition scopes. Descendant state must be keyed by [targetState] when separate state per content
+ * identity is required.
+ *
+ * @sample com.viewcompose.animation.samples.animatedContentSample
+ *
+ * @param T logical state used to produce content
+ * @receiver tree builder for the current composition
+ * @param targetState state whose content should become fully visible
+ * @param modifier modifier applied to the outer stacking container
+ * @param transitionSpec factory for the progress animation specification
+ * @param content content rendered with either the outgoing or incoming state
  */
 fun <T> UiTreeBuilder.AnimatedContent(
     targetState: T,
@@ -38,8 +61,7 @@ fun <T> UiTreeBuilder.AnimatedContent(
     }.coerceIn(0f, 1f)
     val outgoingAlpha = 1f - incomingAlpha
     if (hasPendingTransition && outgoingAlpha <= 0.001f) {
-        // 等离场内容几乎透明后再提交 displayedState，避免旧内容提前从树中移除。
-        // Commit displayedState only after outgoing content is nearly transparent.
+        // Commit after rendering so the outgoing subtree remains mounted through the terminal frame.
         SideEffect {
             displayedState.value = targetState
         }
@@ -67,8 +89,19 @@ fun <T> UiTreeBuilder.AnimatedContent(
 }
 
 /**
- * [AnimatedContent] 的单一动画规格便捷入口。
- * Convenience wrapper around [AnimatedContent] with one animation spec.
+ * Cross-fades state content using one fixed [animationSpec].
+ *
+ * This is a convenience wrapper around [AnimatedContent] and shares its layering, equality,
+ * retargeting, nullable-state, and content-state contracts.
+ *
+ * @sample com.viewcompose.animation.samples.animatedContentSample
+ *
+ * @param T logical state used to produce content
+ * @receiver tree builder for the current composition
+ * @param targetState state whose content should become fully visible
+ * @param modifier modifier applied to the outer stacking container
+ * @param animationSpec fixed specification used for cross-fade progress
+ * @param content content rendered with the outgoing or incoming state
  */
 fun <T> UiTreeBuilder.Crossfade(
     targetState: T,

@@ -3,8 +3,20 @@ package com.viewcompose.animation
 import com.viewcompose.runtime.mutableStateOf
 
 /**
- * 可由外部持有的 transition 状态，暴露当前值、目标值和 idle 状态。
- * Externally held transition state that exposes current value, target value, and idle status.
+ * Exposes an externally controlled target and observable visibility-transition status.
+ *
+ * Callers write [targetState]. [AnimatedVisibility] mirrors its internal transition into
+ * [currentState] and [isIdle] while this object is supplied to the state overload. The object does
+ * not run an animation by itself and is not saveable automatically; remember or otherwise retain it
+ * for the lifetime whose transition status must be observed.
+ *
+ * State is backed by the ViewCompose snapshot system. UI-facing reads and writes should follow the
+ * owning composition's thread policy.
+ *
+ * @sample com.viewcompose.animation.samples.mutableTransitionStateSample
+ *
+ * @param S logical endpoint state type
+ * @param initialState current and target state exposed before a transition host consumes the object
  */
 class MutableTransitionState<S>(
     initialState: S,
@@ -13,18 +25,34 @@ class MutableTransitionState<S>(
     private val targetStateHolder = mutableStateOf(initialState)
     private val idleHolder = mutableStateOf(true)
 
+    /**
+     * Returns the last state committed by the consuming transition.
+     *
+     * Only the animation runtime updates this property; it can differ from [targetState] while an
+     * enter or exit segment is running.
+     */
     var currentState: S
         get() = currentStateHolder.value
         internal set(value) {
             currentStateHolder.value = value
         }
 
+    /**
+     * Gets or replaces the state requested from the consuming transition.
+     *
+     * A change is observable and causes the next composition to retarget the transition.
+     */
     var targetState: S
         get() = targetStateHolder.value
         set(value) {
             targetStateHolder.value = value
         }
 
+    /**
+     * Returns `true` when the consuming transition has committed [targetState].
+     *
+     * A newly constructed instance is idle. Only the animation runtime updates this property.
+     */
     var isIdle: Boolean
         get() = idleHolder.value
         internal set(value) {
