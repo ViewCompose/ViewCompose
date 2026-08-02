@@ -4,11 +4,13 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import java.util.Properties
 
 plugins {
     kotlin("jvm") version "2.3.20"
@@ -37,8 +39,42 @@ abstract class VerifyAndroidStudioBuildTask : DefaultTask() {
     }
 }
 
+abstract class VerifyMarketplacePublishingConfigurationTask : DefaultTask() {
+    @get:Input
+    abstract val pluginVersion: Property<String>
+
+    @get:Input
+    abstract val pluginGroup: Property<String>
+
+    @TaskAction
+    fun verifyConfiguration() {
+        val configuredVersion = pluginVersion.get()
+        val configuredGroup = pluginGroup.get()
+        check(configuredVersion.matches(Regex("[0-9]+\\.[0-9]+\\.[0-9]+"))) {
+            "Marketplace releases require a stable semantic version, found '$configuredVersion'."
+        }
+        check(configuredGroup == "com.viewcompose.studio") {
+            "Unexpected Studio plugin group '$configuredGroup'."
+        }
+    }
+}
+
+val publishingPropertiesFile = rootProject.file("../../gradle/viewcompose-publishing.properties")
+val publishingProperties = Properties().apply {
+    check(publishingPropertiesFile.isFile) {
+        "Missing shared publication metadata: ${publishingPropertiesFile.absolutePath}"
+    }
+    publishingPropertiesFile.inputStream().use(::load)
+}
+
 group = "com.viewcompose.studio"
-version = "1.0.0"
+version = providers.gradleProperty("viewComposeStudioPluginVersion")
+    .orElse(
+        checkNotNull(publishingProperties.getProperty("plugin.viewcompose-studio.version")) {
+            "Missing plugin.viewcompose-studio.version in ${publishingPropertiesFile.absolutePath}"
+        },
+    )
+    .get()
 
 val expectedAndroidStudioBuild = "AI-261.25134.95.2612.15914620"
 val configuredAndroidStudioPath = providers
@@ -58,6 +94,27 @@ val androidStudioProductInfo = listOf(
     androidStudioHome.resolve("Resources/product-info.json"),
 ).firstOrNull(File::isFile)
     ?: androidStudioHome.resolve("Contents/Resources/product-info.json")
+val marketplaceToken = providers.environmentVariable("JETBRAINS_MARKETPLACE_TOKEN")
+    .orElse(providers.environmentVariable("PUBLISH_TOKEN"))
+    .orElse(providers.gradleProperty("viewComposeMarketplaceToken"))
+val marketplaceCertificateChain = providers.environmentVariable("JETBRAINS_CERTIFICATE_CHAIN")
+    .orElse(providers.environmentVariable("CERTIFICATE_CHAIN"))
+val marketplacePrivateKey = providers.environmentVariable("JETBRAINS_PRIVATE_KEY")
+    .orElse(providers.environmentVariable("PRIVATE_KEY"))
+val marketplacePrivateKeyPassword =
+    providers.environmentVariable("JETBRAINS_PRIVATE_KEY_PASSWORD")
+        .orElse(providers.environmentVariable("PRIVATE_KEY_PASSWORD"))
+        .orElse(providers.gradleProperty("viewComposeMarketplacePrivateKeyPassword"))
+val defaultMarketplaceSigningDirectory =
+    file("${System.getProperty("user.home")}/.config/viewcompose/marketplace-signing")
+val marketplaceCertificateChainFile = providers
+    .gradleProperty("viewComposeMarketplaceCertificateChainFile")
+    .map { path -> file(path) }
+    .orElse(defaultMarketplaceSigningDirectory.resolve("chain.crt"))
+val marketplacePrivateKeyFile = providers
+    .gradleProperty("viewComposeMarketplacePrivateKeyFile")
+    .map { path -> file(path) }
+    .orElse(defaultMarketplaceSigningDirectory.resolve("private.pem"))
 
 repositories {
     mavenCentral()
@@ -97,15 +154,60 @@ intellijPlatform {
         name = "ViewCompose Preview"
         version = project.version.toString()
         description = """
-            Static Android View previews for ViewCompose projects.
-            Rendering runs in an isolated process and never loads application code into Android Studio.
+            <p>ViewCompose Preview adds static Android View previews for ViewCompose projects in
+            Android Studio.</p>
+            <ul>
+              <li>Navigate between Kotlin DSL source and rendered View nodes.</li>
+              <li>Preview light and dark themes, locales, layout directions, densities, font
+              scales, and device sizes.</li>
+              <li>Inspect native Views, layout diagnostics, VNode structure, composition data,
+              and patch activity.</li>
+              <li>Use incremental source-save refresh, full rebuilds, bounded disk caching,
+              zoom, pan, and an all-previews catalog.</li>
+            </ul>
+            <p>Rendering runs in isolated worker processes and does not load application code into
+            Android Studio. The plugin does not collect telemetry or transmit project source
+            code.</p>
+        """.trimIndent()
+        changeNotes = """
+            <p>Initial public release.</p>
+            <ul>
+              <li>Static Layoutlib previews with source-aware selection and navigation.</li>
+              <li>Theme, locale, layout direction, density, font scale, and device configuration.</li>
+              <li>Native View, layout, VNode, composition, and patch diagnostics.</li>
+              <li>Incremental refresh, full rebuild, all-previews catalog, and bounded caches.</li>
+            </ul>
         """.trimIndent()
         ideaVersion {
             sinceBuild = "261.25134"
+            untilBuild = "261.*"
         }
         vendor {
             name = "ViewCompose"
+            url = "https://github.com/ViewCompose"
         }
+    }
+    publishing {
+        token.set(marketplaceToken)
+        channels.set(
+            providers.gradleProperty("viewComposeMarketplaceChannels")
+                .map { value -> value.split(',').map(String::trim).filter(String::isNotEmpty) }
+                .orElse(listOf("default")),
+        )
+    }
+    signing {
+        certificateChain.set(marketplaceCertificateChain)
+        privateKey.set(marketplacePrivateKey)
+        password.set(marketplacePrivateKeyPassword)
+        certificateChainFile.set(layout.file(marketplaceCertificateChainFile))
+        privateKeyFile.set(layout.file(marketplacePrivateKeyFile))
+    }
+}
+
+tasks.named<Jar>("jar") {
+    from(rootProject.file("../../LICENSE")) {
+        into("META-INF")
+        rename { "LICENSE" }
     }
 }
 
@@ -126,6 +228,49 @@ tasks.matching { task ->
         task.name == "verifyPluginProjectConfiguration"
 }.configureEach {
     dependsOn(verifyTargetStudio)
+}
+
+val verifyMarketplacePublishingConfiguration =
+    tasks.register<VerifyMarketplacePublishingConfigurationTask>(
+        "verifyMarketplacePublishingConfiguration",
+    ) {
+        group = "verification"
+        description = "Verifies the stable plugin identity and Marketplace release version."
+        pluginVersion.set(project.version.toString())
+        pluginGroup.set(project.group.toString())
+    }
+
+tasks.register("prepareMarketplaceRelease") {
+    group = "publishing"
+    description = "Tests, verifies, and packages the plugin ZIP without uploading it."
+    dependsOn(
+        verifyMarketplacePublishingConfiguration,
+        "check",
+        "verifyPlugin",
+        "verifyPluginStructure",
+        "buildPlugin",
+    )
+}
+
+tasks.register("prepareSignedMarketplaceRelease") {
+    group = "publishing"
+    description = "Prepares the Marketplace ZIP, signs it, and verifies the author signature."
+    dependsOn(
+        "prepareMarketplaceRelease",
+        "signPlugin",
+        "verifyPluginSignature",
+    )
+}
+
+tasks.named("verifyPluginSignature") {
+    dependsOn("signPlugin")
+}
+
+tasks.named("publishPlugin") {
+    dependsOn(
+        verifyMarketplacePublishingConfiguration,
+        "verifyPluginSignature",
+    )
 }
 
 tasks.wrapper {
