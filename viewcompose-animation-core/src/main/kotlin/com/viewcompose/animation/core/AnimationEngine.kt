@@ -9,18 +9,42 @@ internal suspend fun MonotonicFrameClock.awaitFrameNanos(): Long {
     return withFrameNanos { it }
 }
 
-/**
- * 协程动画循环的结束原因。
- * Terminal reason for a coroutine animation loop.
- */
+/** Identifies the terminal state observed by an animation loop that returns normally. */
 enum class AnimationRunResult {
+    /** The finite specification reached its duration and published its terminal sample. */
     Completed,
+
+    /** The coroutine became inactive before a finite animation completed. */
     Cancelled,
 }
 
 /**
- * 按 [animationSpec] 驱动一段动画，并在每帧通过 [onValue] 发布采样值。
- * Drives one animation described by [animationSpec] and publishes sampled values through [onValue].
+ * Drives [animationSpec] with [frameClock] and publishes sampled values through [onValue].
+ *
+ * The function starts by awaiting a frame timestamp, then awaits each frame that produces a sample.
+ * A completed finite animation publishes an exact terminal sample after the loop, so [onValue] may
+ * observe the terminal value twice. An [InfiniteRepeatableSpec] runs until cancellation.
+ *
+ * The callback runs in the caller's coroutine on the frame-clock execution context and must not
+ * block frame delivery. If cancellation is observed between callbacks, this function returns
+ * [AnimationRunResult.Cancelled]. A suspending frame clock commonly throws the coroutine's
+ * cancellation exception instead; frame-clock and callback exceptions always propagate. No
+ * terminal value is forced after cancellation or failure.
+ *
+ * Endpoint conversion allocates vectors through [converter] for each sample. Use stable,
+ * allocation-conscious converters on frame-sensitive paths.
+ *
+ * @sample com.viewcompose.animation.core.samples.runAnimationSample
+ *
+ * @param T domain value interpolated by the animation
+ * @param frameClock monotonic frame source that paces the loop
+ * @param startValue value used before progress begins and as the interpolation origin
+ * @param endValue value reached on successful finite completion
+ * @param animationSpec timing, easing, and repetition policy
+ * @param converter converter whose stable vector dimensions are interpolated independently
+ * @param onValue callback invoked for each sampled value on the animation coroutine
+ * @return [AnimationRunResult.Completed] after finite completion or
+ * [AnimationRunResult.Cancelled] when inactivity is observed without a thrown cancellation
  */
 suspend fun <T> runAnimation(
     frameClock: MonotonicFrameClock,
@@ -92,8 +116,7 @@ private suspend fun <T> runFiniteAnimation(
         }
     }
     if (completed) {
-        // 循环结束后再发布一次精确终点，避免最后一帧略小于总时长造成残留误差。
-        // Publish the exact terminal value after completion to avoid residual last-frame error.
+        // Publish from the exact duration to eliminate residual error from a late or rounded frame.
         onValue(
             sampleAnimationValue(
                 startValue = startValue,
@@ -139,8 +162,14 @@ private data class AnimationTimingNanos(
 )
 
 /**
- * 计算规格的总时长；无限重复使用 [Long.MAX_VALUE] 作为哨兵值。
- * Calculates total duration; infinite repeats use [Long.MAX_VALUE] as a sentinel.
+ * Returns the normalized total duration of [spec] in nanoseconds.
+ *
+ * Tween delays are included. Non-positive finite durations normalize to one millisecond, except a
+ * zero-iteration [RepeatableSpec], which reports zero. Repeat multiplication saturates instead of
+ * overflowing. [InfiniteRepeatableSpec] returns [Long.MAX_VALUE] as an infinity sentinel.
+ *
+ * @param spec specification whose full duration is required
+ * @return normalized duration in nanoseconds or [Long.MAX_VALUE] for an infinite repeat
  */
 fun animationDurationNanos(
     spec: AnimationSpec,
@@ -159,8 +188,25 @@ fun animationDurationNanos(
 }
 
 /**
- * 在给定播放时间采样动画值。
- * Samples an animated value at the supplied play time.
+ * Returns the value of [animationSpec] at [playTimeNanos] without owning a clock or mutable state.
+ *
+ * Negative play time is treated as zero by finite and repeated samplers. Progress is clamped to the
+ * specification interval. Interpolation uses the dimension count returned for [startValue]; missing
+ * end dimensions retain their corresponding start dimension and extra end dimensions are ignored.
+ * The supplied values and vectors are not retained by the engine.
+ *
+ * This function is deterministic for deterministic converters and is suitable for tests, seeking,
+ * transition channels, and preview tooling. It allocates endpoint and result vectors per call.
+ *
+ * @sample com.viewcompose.animation.core.samples.sampleAnimationValueSample
+ *
+ * @param T domain value interpolated by the animation
+ * @param startValue interpolation origin and pre-delay result
+ * @param endValue terminal value for a non-reversed finite animation
+ * @param animationSpec timing, easing, and repetition policy
+ * @param converter converter that defines independently interpolated dimensions
+ * @param playTimeNanos elapsed play time relative to the animation start, in nanoseconds
+ * @return the reconstructed domain value at the normalized play time
  */
 fun <T> sampleAnimationValue(
     startValue: T,
@@ -212,8 +258,14 @@ fun <T> sampleAnimationValue(
 }
 
 /**
- * 判断有限动画在 [playTimeNanos] 是否已经结束。
- * Returns whether a finite animation has finished at [playTimeNanos].
+ * Returns whether [playTimeNanos] has reached the normalized finite duration of [spec].
+ *
+ * Infinite repeats always return `false`. Negative play time is compared as supplied; it does not
+ * finish a positive-duration animation. A zero-iteration repeat is finished at time zero.
+ *
+ * @param spec specification whose completion state is queried
+ * @param playTimeNanos elapsed play time in nanoseconds
+ * @return `true` when a finite specification has reached its terminal time
  */
 fun isAnimationFinished(
     spec: AnimationSpec,
@@ -341,8 +393,7 @@ private fun <T> repeatTerminalValue(
     repeatMode: RepeatMode,
     iterations: Int,
 ): T {
-    // Reverse 模式偶数轮结束时回到起点，奇数轮结束时落到终点。
-    // Reverse mode ends at start after even cycles and at end after odd cycles.
+    // Alternating direction returns to the origin after every even-numbered cycle.
     return if (repeatMode == RepeatMode.Reverse && iterations % 2 == 0) {
         startValue
     } else {
