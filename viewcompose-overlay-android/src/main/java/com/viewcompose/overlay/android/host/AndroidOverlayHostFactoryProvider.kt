@@ -5,14 +5,16 @@ import com.viewcompose.widget.core.OverlayHost
 import com.viewcompose.widget.core.OverlayHostFactoryProvider
 
 /**
- * 通过 ServiceLoader 暴露给 widget-core 的 Android overlay host provider。
- * Android overlay host provider exposed to widget-core through ServiceLoader.
+ * Service-provider entry that lets `viewcompose-widget-core` discover this Android backend.
+ *
+ * Applications normally do not instantiate this class. Adding the artifact to the runtime
+ * classpath exposes it through `ServiceLoader`; the renderer then creates one [AndroidOverlayHost]
+ * for each render root. Direct construction remains useful for custom hosts and tests.
+ *
+ * @sample com.viewcompose.overlay.android.samples.discoveredAndroidOverlayHostSample
  */
 class AndroidOverlayHostFactoryProvider : OverlayHostFactoryProvider {
-    /**
-     * 为当前渲染根 View 创建平台 overlay host。
-     * Creates a platform overlay host for the current render root View.
-     */
+    /** Creates a host attached to the Android window that owns [rootView]. */
     override fun create(rootView: View): OverlayHost {
         return AndroidOverlayHost(rootView)
     }
