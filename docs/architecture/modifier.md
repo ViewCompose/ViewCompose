@@ -158,7 +158,7 @@ Surface(
 2. 需要稳定轮廓时推荐同时为内容和阴影传入同一个 `UiShape`；未显式传入时使用节点 `shape/cornerRadius`，再回退矩形。
 3. 阴影不扩张布局 bounds。外阴影需要调用侧保留视觉空间，并避免在非 viewport 祖先上启用不必要裁切。
 4. 高频动画优先变换节点的 translation/scale/rotation/alpha；逐帧动画 blur、spread、shape 或尺寸会产生新的栅格 key。
-5. 完整后端、缓存和诊断规则见 [SHADOWS.md](/Users/gzq/AndroidStudioProjects/UIFramework/SHADOWS.md)。
+5. 完整后端、缓存和诊断规则见 [shadows.md](../guides/shadows.md)。
 
 ### 3.5 一致性校验（扫描对照）
 
@@ -251,12 +251,12 @@ Surface(
 2. 对应 `NodeSpec/renderer` 路径回归
 3. demo 验证与必要 UI 测试
 
-流程规则见 [WORKFLOW.md](/Users/gzq/AndroidStudioProjects/UIFramework/WORKFLOW.md)。
+流程规则见 [workflow.md](../project/workflow.md)。
 
 ## 9. 关联文档
 
-1. [NODE_PROPS.md](/Users/gzq/AndroidStudioProjects/UIFramework/NODE_PROPS.md)
-2. [THEMING.md](/Users/gzq/AndroidStudioProjects/UIFramework/THEMING.md)
-3. [ARCHITECTURE.md](/Users/gzq/AndroidStudioProjects/UIFramework/ARCHITECTURE.md)
-4. [FOCUS_INPUT.md](/Users/gzq/AndroidStudioProjects/UIFramework/FOCUS_INPUT.md)
-5. [NESTED_SCROLL.md](/Users/gzq/AndroidStudioProjects/UIFramework/NESTED_SCROLL.md)
+1. [node-spec.md](node-spec.md)
+2. [theming.md](../guides/theming.md)
+3. [overview.md](overview.md)
+4. [focus-and-input.md](../guides/focus-and-input.md)
+5. [nested-scroll.md](../guides/nested-scroll.md)

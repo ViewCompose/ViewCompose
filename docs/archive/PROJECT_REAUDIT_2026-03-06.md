@@ -33,8 +33,8 @@
 
 现状证据：
 
-1. [AndroidHostBridge.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidHostBridge.kt:60) 的 `Fragment.createUiContent(...)` 返回 `UiContentHost(root + session)`
-2. [AndroidHostBridge.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidHostBridge.kt:96) 仅对 `ComponentActivity` 做自动 `dispose` 绑定
+1. [AndroidHostBridge.kt](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidHostBridge.kt:60) 的 `Fragment.createUiContent(...)` 返回 `UiContentHost(root + session)`
+2. [AndroidHostBridge.kt](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidHostBridge.kt:96) 仅对 `ComponentActivity` 做自动 `dispose` 绑定
 
 影响：
 
@@ -50,8 +50,8 @@
 
 现状证据：
 
-1. 通用单测集中在 [LazyListDiffTest.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt) 与 [LazyItemSessionControllerTest.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
-2. UI 侧主要覆盖 [DemoVisualUiTest.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt:248) 的 collections stress 与 [DemoVisualUiTest.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt:273) 的 tab content
+1. 通用单测集中在 [LazyListDiffTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt) 与 [LazyItemSessionControllerTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+2. UI 侧主要覆盖 [DemoVisualUiTest.kt](../../app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt:248) 的 collections stress 与 [DemoVisualUiTest.kt](../../app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt:273) 的 tab content
 3. `LazyVerticalGrid` 与 `VerticalPager` 缺容器级专门回归
 
 影响：
@@ -67,9 +67,9 @@
 
 现状证据：
 
-1. demo 已有 bottom sheet 场景：[DemoFeedbackPage.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/main/java/com/viewcompose/demo/DemoFeedbackPage.kt:259)
-2. 当前 UI 用例仅触发 snackbar/toast/dialog/popup：[DemoVisualUiTest.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt:97)
-3. bottom sheet 缺对应 testTag 常量：[DemoTestTags.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/main/java/com/viewcompose/demo/DemoTestTags.kt:47)
+1. demo 已有 bottom sheet 场景：[DemoFeedbackPage.kt](../../app/src/main/java/com/viewcompose/demo/DemoFeedbackPage.kt:259)
+2. 当前 UI 用例仅触发 snackbar/toast/dialog/popup：[DemoVisualUiTest.kt](../../app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt:97)
+3. bottom sheet 缺对应 testTag 常量：[DemoTestTags.kt](../../app/src/main/java/com/viewcompose/demo/DemoTestTags.kt:47)
 
 影响：
 
@@ -84,9 +84,9 @@
 
 现状证据：
 
-1. [AndroidHostBridge.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidHostBridge.kt)
-2. [AndroidThemeBridge.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidThemeBridge.kt)
-3. [AndroidEnvironmentBridge.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidEnvironmentBridge.kt)
+1. [AndroidHostBridge.kt](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidHostBridge.kt)
+2. [AndroidThemeBridge.kt](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidThemeBridge.kt)
+3. [AndroidEnvironmentBridge.kt](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidEnvironmentBridge.kt)
 
 影响：
 
@@ -102,9 +102,9 @@
 
 现状证据：
 
-1. [DemoWidgetShowcaseDetails.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/main/java/com/viewcompose/demo/DemoWidgetShowcaseDetails.kt) 1310 行
-2. [DemoFeedbackPage.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/main/java/com/viewcompose/demo/DemoFeedbackPage.kt) 579 行
-3. [DemoModifiersPage.kt](/Users/gzq/AndroidStudioProjects/UIFramework/app/src/main/java/com/viewcompose/demo/DemoModifiersPage.kt) 607 行
+1. [DemoWidgetShowcaseDetails.kt](../../app/src/main/java/com/viewcompose/demo/DemoWidgetShowcaseDetails.kt) 1310 行
+2. [DemoFeedbackPage.kt](../../app/src/main/java/com/viewcompose/demo/DemoFeedbackPage.kt) 579 行
+3. [DemoModifiersPage.kt](../../app/src/main/java/com/viewcompose/demo/DemoModifiersPage.kt) 607 行
 
 影响：
 

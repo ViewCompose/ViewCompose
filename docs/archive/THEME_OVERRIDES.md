@@ -11,7 +11,7 @@
 3. 正确的 override 应该覆盖什么，而不应该覆盖什么
 4. 后续应该如何把 override 做成真正可扩展的能力
 
-主文档见 [THEMING.md](/Users/gzq/AndroidStudioProjects/UIFramework/THEMING.md)。
+主文档见 [THEMING.md](../guides/theming.md)。
 
 ## 2. 结论
 
@@ -289,7 +289,7 @@ override 设计必须和控件规划联动。
 - `P2` 控件可以先只依赖语义主题，不急着补完整 component override
 - `P3` 控件直接走 `AndroidView`，不强行纳入主题系统
 
-更具体的控件分级见 [WIDGET_ROADMAP.md](/Users/gzq/AndroidStudioProjects/UIFramework/WIDGET_ROADMAP.md)。
+更具体的控件分级见 [WIDGET_ROADMAP.md](../../WIDGET_ROADMAP.md)。
 
 ## 11. 迁移完成记录
 

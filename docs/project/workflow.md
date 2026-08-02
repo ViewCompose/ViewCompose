@@ -46,13 +46,13 @@
 5. 新宿主/容器语义
 6. 文档里已经登记过的技术债、架构点、roadmap 项被修复或优化
 
-优先更新根目录文档，例如：
+优先更新对应分类中的当前有效文档，例如：
 
-1. `ARCHITECTURE.md`
-2. `ROADMAP.md`
-3. `THEMING.md`
-4. `MODIFIER.md`
-5. `NODE_PROPS.md`
+1. [架构总览](../architecture/overview.md)
+2. [统一路线图](./roadmap.md)
+3. [主题系统](../guides/theming.md)
+4. [Modifier 模型](../architecture/modifier.md)
+5. [NodeSpec 模型](../architecture/node-spec.md)
 
 补充要求：
 
@@ -115,7 +115,7 @@
 
 1. 同一目录源码文件建议上限：`12`，超过后必须按职责拆分子目录。
 2. 命中上限时优先按“领域/控件族群”拆分，不按人名或临时阶段拆分。
-3. 目录重排必须与文档更新同一步完成（至少更新 `ARCHITECTURE.md` 的目录基线）。
+3. 目录重排必须与文档更新同一步完成（至少更新[架构总览](../architecture/overview.md)的目录基线）。
 4. 目录重排默认不改公开 API；若必须改包名或 API，需单独提交并给出迁移说明。
 
 ## 5.2 环境来源一致性
@@ -162,7 +162,7 @@
 2. 禁止新增或回引 `Props/TypedPropKeys/PropKeys/node.props`。
 3. renderer binder 读取节点语义时，必须使用显式 spec 读取（不可静默 fallback 到默认 spec）。
 4. 若确需新增元数据（如锚点），必须通过 modifier 元素或明确的 spec 字段传递，不得用隐式 map 透传。
-5. 相关变更必须同步更新 [NODE_PROPS.md](/Users/gzq/AndroidStudioProjects/UIFramework/NODE_PROPS.md) 与对应守卫测试。
+5. 相关变更必须同步更新 [node-spec.md](../architecture/node-spec.md) 与对应守卫测试。
 
 ## 5.6 节点组重组稳定性约束
 
@@ -182,7 +182,7 @@
 2. mutation 去抖与并发冲突语义统一通过 `SnapshotMutationPolicy` 实现，不允许在调用侧散落自定义判等逻辑。
 3. 并发冲突场景必须覆盖三类测试：无冲突、merge 成功、merge 失败。
 4. compose 一轮内的读取一致性必须有单测约束，防止“同一轮读值漂移”回归。
-5. 调整 snapshot 语义时，必须同步更新 [STATE_SNAPSHOT.md](/Users/gzq/AndroidStudioProjects/UIFramework/STATE_SNAPSHOT.md)。
+5. 调整 snapshot 语义时，必须同步更新 [state-snapshots.md](../architecture/state-snapshots.md)。
 6. 在组合阶段发生“先写 mirror state 再读回”时，禁止把该回读值用于控制流（协程启动、任务调度、版本选择）；这类判定必须读取实时内核字段，并补对应回归用例。
 
 ## 5.8 组合事务与结构化协程约束
@@ -378,15 +378,17 @@
 
 ## 9. 文档分层约定
 
-为避免文档继续膨胀，后续统一按下面分层维护：
+文档的完整目录、命名、链接和生命周期规则统一由
+[文档治理规范](./documentation-governance.md)定义。
 
-1. 当前有效规范：根目录文档（入口见 `CONTEXT.md`）
-2. 历史审计/快照：`docs/archive/`
+基本分层：
 
-执行规则：
+1. 当前入口：[`docs/README.md`](../README.md)
+2. 长期规范：`docs/architecture/`、`docs/guides/`、`docs/tooling/`、`docs/project/`
+3. 跨会话执行计划：`docs/project/plans/`
+4. 历史审计/快照：`docs/archive/`
 
-1. 新规划优先并入现有主文档，避免新增平行 roadmap
-2. 阶段性文档完成后应迁入归档，不留在根目录长期并列
+根目录只保留项目入口和社区治理文件，不再承载功能、架构或计划文档。
 
 ## 10. 执行计划防丢失约定
 
@@ -394,8 +396,8 @@
 
 执行规则：
 
-1. 计划文档放在根目录，命名建议：`<TOPIC>_PLAN_YYYY-MM.md`
+1. 计划文档放在 `docs/project/plans/`，使用小写 kebab-case 名称
 2. 每完成一小步（且完成一次提交）后，立即更新计划文档中的 checklist 与执行日志
 3. 计划文档必须记录：当前基线、完成标准、未完成项、下一步
-4. 全部完成后，将计划文档迁入 `docs/archive/`，并在归档索引登记
-5. 同步检查根目录主文档中的“进行中/未完成/Next/待推进”标记，避免状态漂移
+4. 全部完成后，将长期结论回填到对应有效文档，再把计划迁入 `docs/archive/`
+5. 同步检查路线图和相关有效文档中的“进行中/未完成/Next/待推进”标记，避免状态漂移

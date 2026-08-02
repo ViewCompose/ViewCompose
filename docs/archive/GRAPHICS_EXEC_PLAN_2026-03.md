@@ -60,4 +60,4 @@
 11. `docs: close and archive graphics execution plan`
 
 ## 阻塞记录
-- 见 [GRAPHICS_BLOCKER_CONTEXT_2026-03.md](/Users/gzq/AndroidStudioProjects/UIFramework/GRAPHICS_BLOCKER_CONTEXT_2026-03.md)
+- 见 [GRAPHICS_BLOCKER_CONTEXT_2026-03.md](../../GRAPHICS_BLOCKER_CONTEXT_2026-03.md)

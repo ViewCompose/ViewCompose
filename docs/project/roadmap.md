@@ -15,7 +15,7 @@
 2. 避免多份 roadmap 状态漂移
 3. 让 AI 上下文聚焦在当前有效计划，而不是历史阶段文档
 
-性能专项仍保留独立深度文档见 [PERFORMANCE.md](/Users/gzq/AndroidStudioProjects/UIFramework/PERFORMANCE.md)。
+性能专项仍保留独立深度文档见 [performance.md](../tooling/performance.md)。
 
 ## 2. 当前基线（2026-07）
 
@@ -154,7 +154,7 @@
 交付：
 
 1. `LazyRow`、`LazyVerticalGrid`、`HorizontalPager/VerticalPager` 最小可用实现
-2. 新增容器纳入 [SESSION_CONTAINER_CHECKLIST.md](/Users/gzq/AndroidStudioProjects/UIFramework/SESSION_CONTAINER_CHECKLIST.md)
+2. 新增容器纳入 [session-containers.md](../architecture/session-containers.md)
 3. 结构稳定 + 闭包变化刷新路径专项测试
 4. `LazyListState` 完整布局快照、边界状态和滚动控制
 5. 结构化 item DSL、sticky header、contentType、Grid span 与预取策略
@@ -245,4 +245,4 @@
 | `OVERLAY_COMPONENTS_ROADMAP.md` | 本文档 + 归档保留 |
 | `UI_TESTING.md` | 本文档 + 归档保留 |
 
-归档目录见 [docs/archive/README.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/README.md)。
+归档目录见 [docs/archive/README.md](../archive/README.md)。

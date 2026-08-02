@@ -50,9 +50,9 @@
 
 基础单测（通用机制）：
 
-1. [LazyListDiffTest.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
-2. [LazyHolderRegistryTest.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
-3. [LazyItemSessionControllerTest.kt](/Users/gzq/AndroidStudioProjects/UIFramework/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+1. [LazyListDiffTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
+2. [LazyHolderRegistryTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
+3. [LazyItemSessionControllerTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
 
 当前已覆盖专项：
 
@@ -83,7 +83,7 @@
 
 新增延迟 session 容器时，必须同步完成：
 
-1. 架构登记：在 [ARCHITECTURE.md](/Users/gzq/AndroidStudioProjects/UIFramework/ARCHITECTURE.md) 标记该容器
+1. 架构登记：在 [overview.md](overview.md) 标记该容器
 2. 清单登记：加入本文档并补测试映射
 3. 单测：至少覆盖“diff empty but closure changed”
 4. instrumentation：补真实 Activity 交互回归

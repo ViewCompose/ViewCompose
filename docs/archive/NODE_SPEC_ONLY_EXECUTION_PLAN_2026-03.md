@@ -84,5 +84,5 @@ Use this format for blockers:
 Final `qaFull` status:
 
 1. `2026-03-08` 执行 `./gradlew qaFull` 时失败于 `:app:connectedDebugAndroidTest`，原因：`No online devices found`（设备处于 `OFFLINE`）。
-2. 阻塞上下文已记录到 [NODE_SPEC_ONLY_BLOCKER_CONTEXT_2026-03.md](/Users/gzq/AndroidStudioProjects/UIFramework/docs/archive/NODE_SPEC_ONLY_BLOCKER_CONTEXT_2026-03.md)。
+2. 阻塞上下文已记录到 [NODE_SPEC_ONLY_BLOCKER_CONTEXT_2026-03.md](NODE_SPEC_ONLY_BLOCKER_CONTEXT_2026-03.md)。
 3. `2026-03-09` 设备恢复后复跑 `./gradlew qaFull` 通过（connected tests `32/32`），该阻塞已解除。
