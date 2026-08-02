@@ -26,6 +26,9 @@ enum class PreviewBuildInputKind {
 
 /**
  * One deterministic, non-empty group of build inputs.
+ *
+ * @property kind semantic role shared by every path in the group
+ * @property paths unique, lexicographically sorted, non-blank filesystem paths
  */
 @Serializable
 data class PreviewBuildInput(
@@ -45,6 +48,25 @@ data class PreviewBuildInput(
 
 /**
  * Fully resolved Android build target consumed by discovery, rendering, and IDE tooling.
+ *
+ * The Gradle bridge canonicalizes ordered collections and fingerprints before export. Consumers
+ * must treat paths as opaque host paths and reject unsupported [protocolVersion] values.
+ *
+ * @property protocolVersion wire-format version
+ * @property modulePath Gradle project path such as `:app`
+ * @property buildVariant Android variant name used to produce the inputs
+ * @property namespace Android namespace owning generated resources
+ * @property androidGradlePluginVersion producing Android Gradle Plugin version
+ * @property minSdk minimum Android API supported by the variant
+ * @property targetSdk target Android API declared by the variant
+ * @property compileSdk Android API used to compile the variant
+ * @property sdkDirectory absolute Android SDK directory
+ * @property mergedManifestPath merged manifest consumed by Layoutlib
+ * @property artifactRootDirectory root for generated preview protocol artifacts
+ * @property resourcePackageNames unique sorted packages visible to resource resolution; includes [namespace]
+ * @property inputs unique build-input groups sorted by [PreviewBuildInputKind] ordinal
+ * @property inputFingerprint lowercase SHA-256 of all render-affecting inputs
+ * @property layoutlibCompatibilityFingerprint lowercase SHA-256 of inputs retained by a warm Layoutlib process
  */
 @Serializable
 data class PreviewBuildManifest(
@@ -111,6 +133,13 @@ data class PreviewBuildManifest(
 
 /**
  * Machine-readable discovery result written even when individual preview functions are invalid.
+ *
+ * @property protocolVersion wire-format version
+ * @property modulePath owning Gradle project path
+ * @property buildVariant scanned Android variant
+ * @property buildFingerprint lowercase SHA-256 matching the build manifest
+ * @property descriptors valid descriptors sorted by unique stable ID
+ * @property diagnostics structured discovery failures retained beside valid descriptors
  */
 @Serializable
 data class PreviewDescriptorCatalog(
@@ -137,6 +166,14 @@ data class PreviewDescriptorCatalog(
 
 /**
  * One self-contained command consumed by the isolated Layoutlib host.
+ *
+ * @property protocolVersion wire-format version
+ * @property buildManifestPath path to the canonical build manifest JSON
+ * @property renderRequestPath path to one render request JSON
+ * @property renderResponsePath unique destination for the response JSON
+ * @property layoutlibRuntimeRoot root containing Layoutlib runtime dependencies
+ * @property layoutlibResourcesRoot root containing Android framework render resources
+ * @property renderClasspath unique reloadable project/runtime bytecode paths kept out of the host classpath
  */
 @Serializable
 data class PreviewWorkerCommand(
@@ -180,8 +217,13 @@ data class PreviewWorkerCommand(
 
 /**
  * Bounded collection of isolated render commands executed sequentially by one short-lived host.
+ *
  * The host process still exits after the batch, preventing Layoutlib state from leaking into Gradle
  * or Android Studio while avoiding one JVM startup per gallery tile.
+ *
+ * @property protocolVersion wire-format version
+ * @property commands non-empty command list with unique response paths, limited by
+ * [MAX_PREVIEW_WORKER_BATCH_SIZE]
  */
 @Serializable
 data class PreviewWorkerBatchCommand(
@@ -200,6 +242,7 @@ data class PreviewWorkerBatchCommand(
     }
 }
 
+/** Maximum render commands accepted by one short-lived worker batch. */
 const val MAX_PREVIEW_WORKER_BATCH_SIZE: Int = 8
 
 private val SHA_256_PATTERN = Regex("[a-f0-9]{64}")

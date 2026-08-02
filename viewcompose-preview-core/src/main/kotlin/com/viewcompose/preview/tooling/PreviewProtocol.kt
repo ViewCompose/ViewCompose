@@ -2,12 +2,19 @@ package com.viewcompose.preview.tooling
 
 import kotlinx.serialization.Serializable
 
-/**
- * Versioned boundary between Gradle/IDE clients and an isolated preview render worker.
- */
+/** Versioned boundary between Gradle/IDE clients and an isolated preview render worker. */
 object ViewComposePreviewProtocol {
+    /** Current wire version; clients and workers require exact equality. */
     const val CURRENT_VERSION: Int = 1
 
+    /**
+     * Validates that [version] exactly matches [CURRENT_VERSION].
+     *
+     * No forward- or backward-compatible fallback is attempted because protocol models affect
+     * class loading, filesystem writes, and render interpretation.
+     *
+     * @throws IllegalArgumentException when versions differ
+     */
     fun requireSupported(version: Int) {
         require(version == CURRENT_VERSION) {
             "Unsupported ViewCompose preview protocol version $version; " +
@@ -18,6 +25,11 @@ object ViewComposePreviewProtocol {
 
 /**
  * Source location used for diagnostics and IDE navigation.
+ *
+ * @property filePath non-blank source path exported by discovery
+ * @property line one-based source line
+ * @property column one-based source column
+ * @property symbolName optional source symbol for fallback navigation
  */
 @Serializable
 data class PreviewSourceLocation(
@@ -35,6 +47,10 @@ data class PreviewSourceLocation(
 
 /**
  * Compiled JVM function that a render worker invokes for a preview.
+ *
+ * @property ownerClassName binary JVM owner name
+ * @property methodName compiled static method name
+ * @property methodDescriptor optional JVM descriptor used to disambiguate overloads
  */
 @Serializable
 data class PreviewJvmEntryPoint(
@@ -52,6 +68,15 @@ data class PreviewJvmEntryPoint(
 
 /**
  * IDE- and renderer-independent description of one preview function.
+ *
+ * @sample com.viewcompose.preview.tooling.samples.previewProtocolRoundTripSample
+ * @property id path-safe stable identity for caching and artifact layout
+ * @property displayName non-blank human-readable function label
+ * @property group optional IDE grouping label
+ * @property entryPoint compiled function invoked by the worker
+ * @property variants non-empty configurations with IDs unique within this descriptor
+ * @property sourceLocation optional declaration location for diagnostics and navigation
+ * @property themeProviderClassName optional application theme-provider binary class name
  */
 @Serializable
 data class PreviewDescriptor(
@@ -86,6 +111,11 @@ data class PreviewDescriptor(
  * Canonical artifact directory layout. IDs are path-safe by protocol validation.
  */
 object PreviewArtifactLayout {
+    /**
+     * Returns the path-safe relative artifact directory for one preview variant.
+     *
+     * @throws IllegalArgumentException when either ID violates the stable-ID grammar
+     */
     fun relativeDirectory(
         previewId: String,
         variantId: String,
@@ -101,6 +131,15 @@ object PreviewArtifactLayout {
  *
  * Paths remain strings at this process boundary so the model can be consumed by Gradle, the IDE,
  * and workers using different filesystem abstractions.
+ *
+ * @property protocolVersion wire-format version
+ * @property requestId non-blank correlation ID copied into the response
+ * @property descriptor preview and available variants
+ * @property variantId selected ID declared by [descriptor]
+ * @property modulePath owning Gradle project path
+ * @property buildVariant Android variant used for rendering
+ * @property buildFingerprint lowercase SHA-256 of render-affecting build inputs
+ * @property outputDirectory directory reserved for this request's artifacts
  */
 @Serializable
 data class PreviewRenderRequest(
@@ -128,6 +167,7 @@ data class PreviewRenderRequest(
         }
     }
 
+    /** Resolved configuration for [variantId]. */
     val configuration: PreviewConfiguration
         get() = descriptor.variants.first { variant -> variant.id == variantId }.configuration
 }
@@ -145,6 +185,7 @@ enum class PreviewRenderStatus {
     ProtocolMismatch,
 }
 
+/** Portable diagnostic importance interpreted by Gradle and IDE clients. */
 @Serializable
 enum class PreviewDiagnosticSeverity {
     Info,
@@ -154,6 +195,12 @@ enum class PreviewDiagnosticSeverity {
 
 /**
  * One structured compile, discovery, render, or export diagnostic.
+ *
+ * @property severity presentation and failure importance
+ * @property message non-blank user-facing summary
+ * @property phase non-blank pipeline phase identifier
+ * @property sourceLocation optional navigable source location
+ * @property details optional extended diagnostic text such as a stack trace
  */
 @Serializable
 data class PreviewDiagnostic(
@@ -171,6 +218,12 @@ data class PreviewDiagnostic(
 
 /**
  * Files emitted by a successful or partially successful render.
+ *
+ * At least one path must be non-blank. Paths are host filesystem strings and may be absolute.
+ *
+ * @property imagePath rendered image path when image export succeeded
+ * @property renderTreePath structured render snapshot path when diagnostics export succeeded
+ * @property diagnosticsPath optional additional diagnostic artifact path
  */
 @Serializable
 data class PreviewArtifacts(
@@ -187,7 +240,12 @@ data class PreviewArtifacts(
     }
 }
 
-/** One deterministic phase measurement emitted by the isolated render pipeline. */
+/**
+ * One deterministic phase measurement emitted by the isolated render pipeline.
+ *
+ * @property phase unique non-blank phase name within one response
+ * @property durationMillis non-negative elapsed wall time
+ */
 @Serializable
 data class PreviewPhaseTiming(
     val phase: String,
@@ -201,6 +259,19 @@ data class PreviewPhaseTiming(
 
 /**
  * Response returned by an isolated preview worker.
+ *
+ * Success requires an image artifact. Every non-success status requires at least one diagnostic;
+ * process-boundary failures are represented as data rather than thrown to clients.
+ *
+ * @property protocolVersion wire-format version
+ * @property requestId correlation ID from the request
+ * @property previewId stable descriptor ID
+ * @property variantId selected variant ID
+ * @property status stable worker outcome
+ * @property artifacts exported files, required to contain an image on success
+ * @property diagnostics structured warnings and failures
+ * @property durationMillis optional non-negative end-to-end duration
+ * @property phaseTimings unique per-phase durations
  */
 @Serializable
 data class PreviewRenderResponse(

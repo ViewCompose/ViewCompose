@@ -23,7 +23,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-image-coil` | Integration | Coil-backed remote image loading | [Available](./viewcompose-image-coil/README.md) |
 | `viewcompose-lifecycle` | Integration | Lifecycle-aware state collection | [Available](./viewcompose-lifecycle/README.md) |
 | `viewcompose-viewmodel` | Integration | ViewModel and SavedStateHandle integration | [Available](./viewcompose-viewmodel/README.md) |
-| `viewcompose-preview-core` | Preview tooling | Preview annotations and tooling protocol | Planned |
+| `viewcompose-preview-core` | Preview tooling | Preview annotations and tooling protocol | [Available](./viewcompose-preview-core/README.md) |
 | `viewcompose-preview-gradle-plugin` | Preview tooling | Preview discovery and Gradle tasks | Planned |
 | `viewcompose-preview-runner` | Preview tooling | Layoutlib preview rendering runtime | Planned |
 | `viewcompose-preview-worker-host` | Preview tooling | Isolated preview worker host | Planned |

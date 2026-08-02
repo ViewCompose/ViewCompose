@@ -13,6 +13,21 @@ import kotlin.jvm.JvmRepeatable
  * [heightDp] defaults to [PreviewDefaults.AUTO_HEIGHT_DP]. Auto-height previews start from a
  * standard device viewport and grow to capture vertically scrollable root content. Pass a positive
  * height to keep a fixed viewport when the scroll boundary itself is what the preview validates.
+ *
+ * The supported JVM entry point is a public static function with exactly one `UiTreeBuilder`
+ * receiver/parameter, no additional parameters, and a `Unit` return. Kotlin default arguments do
+ * not make extra parameters invokable by the worker.
+ *
+ * @property name optional display label; discovery derives one from the function when blank
+ * @property group optional IDE gallery group
+ * @property widthDp positive logical canvas width
+ * @property heightDp positive fixed height or [PreviewDefaults.AUTO_HEIGHT_DP]
+ * @property density positive finite physical-pixels-per-dp scale
+ * @property fontScale positive finite typography scale
+ * @property localeTag non-blank BCP-47 locale tag
+ * @property layoutDirection explicit preview direction
+ * @property theme light/dark application-resource mode
+ * @property apiLevel positive Android API, or [PreviewDefaults.UNSPECIFIED_API_LEVEL]
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -33,6 +48,8 @@ annotation class ViewComposePreview(
 
 /**
  * JVM container used for repeatable [ViewComposePreview] declarations.
+ *
+ * @property value preview annotations applied to the same function or annotation class
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -42,7 +59,12 @@ annotation class ViewComposePreviews(
 )
 
 /**
- * Converts annotation values into the resolved, host-independent preview configuration.
+ * Converts annotation values into a validated host-independent configuration.
+ *
+ * The single locale tag becomes a one-element preference list and the unspecified API sentinel
+ * becomes `null`.
+ *
+ * @throws IllegalArgumentException when annotation values violate [PreviewConfiguration] invariants
  */
 fun ViewComposePreview.toPreviewConfiguration(): PreviewConfiguration {
     return PreviewConfiguration(
