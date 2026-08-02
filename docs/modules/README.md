@@ -21,7 +21,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-host-android` | Android host | Activity, Fragment, and View host integration | [Available](./viewcompose-host-android/README.md) |
 | `viewcompose-overlay-android` | Android host | Android overlay presentation backend | [Available](./viewcompose-overlay-android/README.md) |
 | `viewcompose-image-coil` | Integration | Coil-backed remote image loading | Planned |
-| `viewcompose-lifecycle` | Integration | Lifecycle-aware state collection | Planned |
+| `viewcompose-lifecycle` | Integration | Lifecycle-aware state collection | [Available](./viewcompose-lifecycle/README.md) |
 | `viewcompose-viewmodel` | Integration | ViewModel and SavedStateHandle integration | Planned |
 | `viewcompose-preview-core` | Preview tooling | Preview annotations and tooling protocol | Planned |
 | `viewcompose-preview-gradle-plugin` | Preview tooling | Preview discovery and Gradle tasks | Planned |

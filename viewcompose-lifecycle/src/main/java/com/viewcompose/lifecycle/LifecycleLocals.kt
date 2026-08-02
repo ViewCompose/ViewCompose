@@ -12,21 +12,28 @@ private val LocalLifecycleOwnerValue = uiLocalOf<LifecycleOwner?>(
 ) { null }
 
 /**
- * 当前 UI 子树关联的 Android LifecycleOwner。
- * Android LifecycleOwner associated with the current UI subtree.
+ * Reads the Android [LifecycleOwner] associated with the current ViewCompose subtree.
+ *
+ * Standard Activity, Fragment, and Android View hosts install this local automatically. Nested
+ * session containers capture and restore it with other ViewCompose locals. Custom render hosts can
+ * establish an explicit boundary with [ProvideLifecycleOwner].
  */
 object LocalLifecycleOwner {
-    /**
-     * 当前上下文中的 LifecycleOwner；未由 host 或 Provider 注入时为 null。
-     * LifecycleOwner in the current context, or null when no host or Provider has injected one.
-     */
+    /** Returns the nearest provided owner, or `null` when no host or provider installed one. */
     val current: LifecycleOwner?
         get() = UiLocals.current(LocalLifecycleOwnerValue)
 }
 
 /**
- * 在当前 UI 子树中提供 Android LifecycleOwner。
- * Provides an Android LifecycleOwner to the current UI subtree.
+ * Associates [owner] with [content] and any nested composition-scoped work.
+ *
+ * The previous owner is restored after [content] returns, including when declaration throws. Use
+ * this at custom host or explicit nested-lifecycle boundaries; ordinary Activity and Fragment hosts
+ * already provide their owner.
+ *
+ * @sample com.viewcompose.lifecycle.samples.provideLifecycleOwnerSample
+ * @param owner lifecycle owner exposed to the subtree
+ * @param content declarative subtree evaluated with [owner] as [LocalLifecycleOwner.current]
  */
 fun UiTreeBuilder.ProvideLifecycleOwner(
     owner: LifecycleOwner,

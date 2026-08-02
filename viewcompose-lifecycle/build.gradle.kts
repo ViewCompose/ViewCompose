@@ -7,6 +7,8 @@ android {
     namespace = "com.viewcompose.lifecycle"
     compileSdk = 36
 
+    sourceSets["test"].java.srcDir("src/test/samples")
+
     defaultConfig {
         minSdk = 24
     }
