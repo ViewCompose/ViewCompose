@@ -18,7 +18,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-navigation` | Navigation | Android navigation host integration | Planned |
 | `viewcompose-renderer` | Rendering | Android View renderer and reconciliation engine | [Available](./viewcompose-renderer/README.md) |
 | `viewcompose-widget-core` | UI | Core DSL, components, theme, and local values | [Available](./viewcompose-widget-core/README.md) |
-| `viewcompose-host-android` | Android host | Activity, Fragment, and View host integration | Planned |
+| `viewcompose-host-android` | Android host | Activity, Fragment, and View host integration | [Available](./viewcompose-host-android/README.md) |
 | `viewcompose-overlay-android` | Android host | Android overlay presentation backend | Planned |
 | `viewcompose-image-coil` | Integration | Coil-backed remote image loading | Planned |
 | `viewcompose-lifecycle` | Integration | Lifecycle-aware state collection | Planned |

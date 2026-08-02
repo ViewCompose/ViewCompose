@@ -13,16 +13,18 @@ import com.viewcompose.host.android.nativeView
 import com.viewcompose.ui.modifier.Modifier
 
 /**
- * Android 专属图形互操作工具，供业务代码显式接入原生 View 行为。
- * Android-specific graphics interop for business code that explicitly opts into native View behavior.
+ * Provides opt-in Android graphics operations without leaking platform types into graphics-core.
  *
- * 该 API 放在 host-android 中，确保 graphics 主线 API 保持平台中立。
- * This API is intentionally hosted in `host-android` to keep graphics mainline APIs platform-neutral.
+ * API-level-dependent factories return `null` or `false` when unavailable so callers can install a
+ * deterministic fallback. Returned bitmaps, shaders, effects, and paints are owned by the caller.
  */
 object AndroidGraphicsInterop {
     /**
-     * 在支持的 Android 版本上给 View 应用 RenderEffect。
-     * Applies a RenderEffect to a View on supported Android versions.
+     * Applies [effect] to [target] on Android 12 and later.
+     *
+     * @param target View whose render effect is replaced
+     * @param effect new effect, or `null` to clear the current effect
+     * @return `true` when the platform supports View render effects
      */
     fun applyRenderEffect(
         target: View,
@@ -35,10 +37,7 @@ object AndroidGraphicsInterop {
         return true
     }
 
-    /**
-     * 清除 View 上的 RenderEffect。
-     * Clears the RenderEffect applied to a View.
-     */
+    /** Clears [target]'s render effect when supported by the platform. */
     fun clearRenderEffect(target: View): Boolean {
         return applyRenderEffect(
             target = target,
@@ -46,6 +45,14 @@ object AndroidGraphicsInterop {
         )
     }
 
+    /**
+     * Creates a platform blur effect on Android 12 and later.
+     *
+     * @param radiusX horizontal blur radius in pixels
+     * @param radiusY vertical blur radius in pixels
+     * @param tileMode sampling behavior outside the input bounds
+     * @return the effect, or `null` on unsupported Android versions
+     */
     fun createBlurEffect(
         radiusX: Float,
         radiusY: Float,
@@ -57,6 +64,11 @@ object AndroidGraphicsInterop {
         return RenderEffect.createBlurEffect(radiusX, radiusY, tileMode)
     }
 
+    /**
+     * Creates an effect that applies [inner] first and [outer] second.
+     *
+     * @return the chained effect, or `null` before Android 12
+     */
     fun chainRenderEffects(
         outer: RenderEffect,
         inner: RenderEffect,
@@ -67,6 +79,13 @@ object AndroidGraphicsInterop {
         return RenderEffect.createChainEffect(outer, inner)
     }
 
+    /**
+     * Creates a render effect backed by [colorFilter] on Android 12 and later.
+     *
+     * @param colorFilter filter applied to the input
+     * @param input optional effect whose output feeds the filter
+     * @return the color-filter effect, or `null` on unsupported Android versions
+     */
     fun createColorFilterEffect(
         colorFilter: ColorFilter,
         input: RenderEffect? = null,
@@ -81,6 +100,13 @@ object AndroidGraphicsInterop {
         }
     }
 
+    /**
+     * Compiles AGSL [shaderSource] into a [RuntimeShader] on Android 13 and later.
+     *
+     * Platform shader compilation errors propagate to the caller.
+     *
+     * @return the compiled shader, or `null` on unsupported Android versions
+     */
     fun createRuntimeShader(shaderSource: String): RuntimeShader? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return null
@@ -88,6 +114,13 @@ object AndroidGraphicsInterop {
         return RuntimeShader(shaderSource)
     }
 
+    /**
+     * Wraps [shader] in a render effect on Android 13 and later.
+     *
+     * @param shader compiled AGSL runtime shader
+     * @param inputShaderName uniform name that receives the source image shader
+     * @return the effect, or `null` on unsupported Android versions
+     */
     fun createRuntimeShaderEffect(
         shader: RuntimeShader,
         inputShaderName: String,
@@ -98,6 +131,18 @@ object AndroidGraphicsInterop {
         return RenderEffect.createRuntimeShaderEffect(shader, inputShaderName)
     }
 
+    /**
+     * Allocates a bitmap and executes [draw] against a Canvas backed by it.
+     *
+     * The callback runs synchronously. The returned bitmap is mutable and owned by the caller.
+     *
+     * @param width bitmap width in pixels; must be positive
+     * @param height bitmap height in pixels; must be positive
+     * @param config pixel storage configuration
+     * @param draw drawing commands executed against the new bitmap
+     * @return the rendered mutable bitmap
+     * @throws IllegalArgumentException when either dimension is not positive
+     */
     fun renderToBitmap(
         width: Int,
         height: Int,
@@ -106,13 +151,23 @@ object AndroidGraphicsInterop {
     ): Bitmap {
         require(width > 0) { "width must be > 0" }
         require(height > 0) { "height must be > 0" }
-        // 由调用方提供 Canvas DSL 绘制内容，这里只负责创建位图和绑定 Canvas。
-        // The caller supplies Canvas DSL drawing; this helper only creates the bitmap and binds the Canvas.
+        // The caller supplies Canvas drawing; this helper owns only allocation and Canvas binding.
         return Bitmap.createBitmap(width, height, config).apply {
             Canvas(this).draw()
         }
     }
 
+    /**
+     * Draws [drawable] into a newly allocated bitmap of the requested size.
+     *
+     * This replaces the drawable's bounds and does not restore them.
+     *
+     * @param drawable drawable rendered synchronously
+     * @param width bitmap width in pixels; must be positive
+     * @param height bitmap height in pixels; must be positive
+     * @param config pixel storage configuration
+     * @return the rendered mutable bitmap
+     */
     fun drawDrawableToBitmap(
         drawable: android.graphics.drawable.Drawable,
         width: Int,
@@ -129,6 +184,14 @@ object AndroidGraphicsInterop {
         }
     }
 
+    /**
+     * Enables a hardware layer on [target] using a newly configured [Paint].
+     *
+     * The layer remains enabled until the caller changes the View layer type.
+     *
+     * @param target View whose layer paint is replaced
+     * @param configure synchronous paint configuration
+     */
     fun setLayerPaint(
         target: View,
         configure: Paint.() -> Unit,
@@ -141,8 +204,14 @@ object AndroidGraphicsInterop {
 }
 
 /**
- * 将 Android 图形配置作为 nativeView modifier 接入声明式树。
- * Attaches Android graphics configuration to the declarative tree as a nativeView modifier.
+ * Adds replay-safe Android graphics configuration to a mounted native View.
+ *
+ * [configure] may run during patching and rollback; it must configure only durable View state and
+ * must not perform external one-shot effects.
+ *
+ * @param key stable identity for this modifier operation
+ * @param configure replay-safe native View configuration
+ * @return this modifier followed by the native View operation
  */
 fun Modifier.androidGraphics(
     key: Any = Unit,

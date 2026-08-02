@@ -37,11 +37,25 @@ private val defaultMonotonicFrameClock = AndroidMonotonicFrameClock()
 private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Main.immediate
 
 /**
- * 创建并返回 Fragment 内容根节点，并将内部 RenderSession 绑定到 Fragment view lifecycle。
- * Creates and returns a Fragment content root and binds the internal RenderSession to the Fragment view lifecycle.
+ * Creates a Fragment ViewCompose root and binds its render session to the view lifecycle.
  *
- * 当 view lifecycle 销毁或 Fragment 销毁时，会自动释放 session。
- * The session is disposed automatically when either the view lifecycle or Fragment lifecycle is destroyed.
+ * The returned root should be returned from `onCreateView`. Its session is disposed when either the
+ * current view lifecycle or the Fragment lifecycle is destroyed. A repeated call first disposes the
+ * previous session. Lifecycle, ViewModel, saved state, Android environment, theme, frame clock, and
+ * overlay services are provided to [content].
+ *
+ * @sample com.viewcompose.host.android.samples.fragmentHostSample
+ * @param debug enables render diagnostics and logging
+ * @param debugTag log tag used by debug rendering
+ * @param dynamicColorPolicy policy used while resolving Android theme tokens
+ * @param themeRefreshController optional controller that invalidates the theme after configuration changes
+ * @param overlayHostFactory creates the overlay host for the new root
+ * @param onRenderStats optional callback after every attempted frame
+ * @param onRenderResult optional callback for collected render diagnostics
+ * @param onRenderFailure optional callback when a frame fails
+ * @param content declarative content; its ViewGroup argument is the returned root
+ * @return the newly created full-size Fragment root
+ * @throws IllegalStateException when the Fragment lifecycle is already destroyed
  */
 fun Fragment.setUiContent(
     debug: Boolean = false,
@@ -95,11 +109,24 @@ fun Fragment.setUiContent(
 }
 
 /**
- * 为 ComponentActivity 创建根容器、调用 setContentView，并启动 ViewCompose 渲染会话。
- * Creates the root container for ComponentActivity, calls setContentView, and starts a ViewCompose render session.
+ * Installs a ViewCompose root as this Activity's content and starts its render session.
  *
- * 重复调用会先释放之前绑定到该 Activity 的 session。
- * Repeated calls dispose the previous session bound to the Activity before rendering new content.
+ * A repeated call disposes the previous session before replacing the Activity content View. The
+ * host provides lifecycle, ViewModel, saved state, Android environment, theme, frame clock, and
+ * overlay services to [content].
+ *
+ * @sample com.viewcompose.host.android.samples.activityHostSample
+ * @param debug enables render diagnostics and logging
+ * @param debugTag log tag used by debug rendering
+ * @param dynamicColorPolicy policy used while resolving Android theme tokens
+ * @param themeRefreshController optional controller that invalidates the theme after configuration changes
+ * @param overlayHostFactory creates the overlay host for the new root
+ * @param onRenderStats optional callback after every attempted frame
+ * @param onRenderResult optional callback for collected render diagnostics
+ * @param onRenderFailure optional callback when a frame fails
+ * @param content declarative content; its ViewGroup argument is the installed root
+ * @return the newly installed full-size Activity root
+ * @throws IllegalStateException when the Activity lifecycle is already destroyed
  */
 fun ComponentActivity.setUiContent(
     debug: Boolean = false,
@@ -164,10 +191,7 @@ private fun buildUiContentRoot(
     }
 }
 
-/**
- * 向 DSL 子树注入 Android host 层提供的生命周期、状态、主题和动画上下文。
- * Injects lifecycle, state, theme, and animation context provided by the Android host into a DSL subtree.
- */
+/** Provides the Android host's lifecycle, state, theme, and animation context to one DSL subtree. */
 private fun UiTreeBuilder.withHostEnvironment(
     root: ViewGroup,
     lifecycleOwner: LifecycleOwner,
@@ -200,10 +224,7 @@ private fun UiTreeBuilder.withHostEnvironment(
     }
 }
 
-/**
- * Activity 与 RenderSession 的弱引用注册表。
- * Weak registry that binds ComponentActivity instances to RenderSession objects.
- */
+/** Weak registry that binds Activity instances to render sessions without extending their lifetime. */
 private object ActivityRenderSessionRegistry {
     private val sessions = WeakHashMap<ComponentActivity, RenderSession>()
     private val observers = WeakHashMap<ComponentActivity, DefaultLifecycleObserver>()
@@ -219,8 +240,7 @@ private object ActivityRenderSessionRegistry {
     ) {
         clear(activity)
 
-        // Activity 销毁时释放 session，并移除 observer 避免重复回调。
-        // Dispose the session when the Activity is destroyed and remove the observer to avoid repeated callbacks.
+        // Dispose once at destruction and detach the observer to prevent duplicate callbacks.
         val observer = object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 sessions.remove(activity)?.dispose()
@@ -235,11 +255,7 @@ private object ActivityRenderSessionRegistry {
 }
 
 /**
- * Fragment 与 RenderSession 的弱引用注册表。
- * Weak registry that binds Fragment instances to RenderSession objects.
- *
- * 它同时观察 Fragment lifecycle 和 viewLifecycleOwnerLiveData，确保 view 重建时 session 跟随正确释放。
- * It observes both Fragment lifecycle and viewLifecycleOwnerLiveData so sessions are disposed correctly across view recreation.
+ * Weak registry that follows both Fragment and view lifecycles across View recreation.
  */
 private object FragmentRenderSessionRegistry {
     private class Binding(
