@@ -16,11 +16,7 @@ import java.io.Serializable
 import java.util.IdentityHashMap
 
 /**
- * SavedStateRegistryOwner 到 ViewCompose SaveableStateRegistry 的进程内缓存。
- * In-process cache from SavedStateRegistryOwner to ViewCompose SaveableStateRegistry.
- *
- * 使用 owner 身份而不是 equals 语义，避免不同 Android host 意外共享保存状态。
- * Uses owner identity instead of equals semantics so distinct Android hosts do not accidentally share saved state.
+ * Process-local owner-to-registry bindings using identity rather than equality semantics.
  */
 internal object AndroidSaveableStateRegistryStore {
     private const val PROVIDER_KEY = "com.viewcompose.host.android.SaveableStateRegistry"
@@ -42,8 +38,7 @@ internal object AndroidSaveableStateRegistryStore {
             restoredValues = restored,
             canBeSaved = ::canBeSavedToBundle,
         )
-        // provider 每次保存时从 registry 拉取最新快照，保持 rememberSaveable 的事务语义。
-        // The provider pulls the latest snapshot from the registry on each save, preserving rememberSaveable transaction semantics.
+        // Pull the latest committed snapshot at save time to preserve rememberSaveable transactions.
         owner.savedStateRegistry.registerSavedStateProvider(PROVIDER_KEY) {
             encodeRegistryState(registry.performSave())
         }
@@ -76,16 +71,18 @@ internal object AndroidSaveableStateRegistryStore {
 }
 
 /**
- * 创建或返回绑定到 Android [SavedStateRegistryOwner] 的 ViewCompose saveable-state registry。
- * Creates or returns the ViewCompose saveable-state registry bound to an Android
- * [SavedStateRegistryOwner].
+ * Returns the ViewCompose saveable-state registry bound to [owner].
  *
- * 自定义框架 host（例如导航目的地）通过该桥接与 Activity/Fragment 根节点共享一致的 rememberSaveable 持久化语义。
- * Custom framework-owned hosts, such as navigation destinations, use this bridge to share the
- * same transactional `rememberSaveable` persistence semantics as Activity and Fragment roots.
+ * One registry is retained per owner identity. Restored values are consumed the first time this is
+ * called, and the latest committed ViewCompose snapshot is supplied to Android whenever the owner
+ * saves state. The binding and provider are removed when the owner lifecycle is destroyed.
  *
- * 当 [SavedStateRegistryOwner.getLifecycle] 销毁时，绑定会自动移除。
- * The binding is removed automatically when [SavedStateRegistryOwner.getLifecycle] is destroyed.
+ * Custom hosts such as navigation destinations can use this bridge to share the same transactional
+ * `rememberSaveable` persistence behavior as Activity and Fragment roots.
+ *
+ * @param owner initialized Android saved-state owner that controls the binding lifecycle
+ * @return the stable registry associated with that owner
+ * @throws IllegalStateException if the owner is destroyed or its provider key is already registered
  */
 fun viewComposeSaveableStateRegistry(
     owner: SavedStateRegistryOwner,
@@ -134,8 +131,7 @@ internal fun decodeRegistryState(
     return buildMap {
         entries.keySet().forEach { key ->
             val encoded = entries.getBundle(key) ?: return@forEach
-            // 单个 key 解码失败时忽略该值，避免损坏状态拖垮整个 host 恢复。
-            // Ignore one key when decoding fails so corrupted state does not break the whole host restore.
+            // Ignore a corrupt entry so one key cannot prevent the rest of the host from restoring.
             runCatching {
                 decodeValue(
                     bundle = encoded,
@@ -170,8 +166,7 @@ private fun encodeValue(value: Any?): Bundle {
             }
         }
         else -> Bundle().apply {
-            // 平台值统一放在子 Bundle 中，便于递归集合结构与普通 Android parcelable 共用格式。
-            // Platform values are stored in child Bundles so recursive collections and ordinary Android values share one format.
+            // A child Bundle gives recursive collections and platform values one versioned format.
             putInt(KEY_VALUE_TYPE, ValueType.PlatformValue.id)
             putPlatformValue(KEY_PLATFORM_VALUE, value)
         }

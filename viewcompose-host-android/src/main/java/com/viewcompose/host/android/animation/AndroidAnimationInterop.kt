@@ -20,21 +20,19 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.widget.core.UiTreeBuilder
 
 /**
- * Android 专属动画桥接，用于业务代码显式接入 View 互操作。
- * Android-specific animation bridge for cases where business code explicitly opts into View interop.
+ * Starts Android platform animations for Views mounted in a ViewCompose tree.
  *
- * 常见用法：
- * Typical usage:
- *
- * - 使用 [UiTreeBuilder.MotionLayoutView] 承载 MotionLayout transition。
- * - Use [UiTreeBuilder.MotionLayoutView] for MotionLayout-driven transitions.
- * - 使用 [Modifier.androidAnimation] 配置 host View，并在回调中调用 [AndroidAnimationInterop]。
- * - Use [Modifier.androidAnimation] to configure a host view and call [AndroidAnimationInterop].
+ * Every start function begins the returned animation before returning it. The caller owns that
+ * animation and may cancel it or add listeners. These helpers do not participate in ViewCompose
+ * state or render transactions; use them only for deliberately platform-specific effects.
  */
 object AndroidAnimationInterop {
     /**
-     * 对目标 View 或其父级 ViewGroup 开始 delayed transition。
-     * Begins a delayed transition on the target View or its parent ViewGroup.
+     * Begins a delayed platform transition on [targetView] or its nearest parent container.
+     *
+     * @param targetView container to transition, or a child whose direct parent is transitioned
+     * @param transition optional platform transition; `null` selects the platform default
+     * @return `true` when a scene root was found and the transition was scheduled
      */
     fun beginDelayedTransition(
         targetView: View,
@@ -53,8 +51,20 @@ object AndroidAnimationInterop {
     }
 
     /**
-     * 启动 ObjectAnimator 并返回原生 animator，调用方可继续取消或监听。
-     * Starts an ObjectAnimator and returns the native animator for further cancellation or observation.
+     * Creates and immediately starts an [ObjectAnimator] for a float View property.
+     *
+     * [onEnd] runs for both normal completion and cancellation, following platform animator
+     * semantics. The caller remains responsible for cancelling the returned animator when its
+     * owning lifecycle ends.
+     *
+     * @param target View whose property is animated
+     * @param propertyName platform property name understood by [ObjectAnimator]
+     * @param values ordered property values; platform validation applies
+     * @param durationMillis animation duration in milliseconds
+     * @param startDelayMillis delay before the animation starts
+     * @param interpolator optional platform timing interpolator
+     * @param onEnd optional callback invoked when the animator ends
+     * @return the already-started platform animator
      */
     fun startObjectAnimator(
         target: View,
@@ -76,6 +86,21 @@ object AndroidAnimationInterop {
         }
     }
 
+    /**
+     * Creates and immediately starts a float [ValueAnimator].
+     *
+     * Updates and completion are delivered on the thread that owns the animator, normally the main
+     * thread. The caller must cancel the returned animator when its lifecycle ends.
+     *
+     * @param from initial animated value
+     * @param to final animated value
+     * @param durationMillis animation duration in milliseconds
+     * @param startDelayMillis delay before the animation starts
+     * @param interpolator optional platform timing interpolator
+     * @param onUpdate callback for every platform animation update
+     * @param onEnd optional callback invoked when the animator ends
+     * @return the already-started platform animator
+     */
     fun startValueAnimator(
         from: Float,
         to: Float,
@@ -99,6 +124,20 @@ object AndroidAnimationInterop {
         }
     }
 
+    /**
+     * Configures and immediately starts [target]'s reusable [ViewPropertyAnimator].
+     *
+     * Invoking this while another property animation is active follows Android's ordinary
+     * replacement rules. [configure] runs synchronously before the animation starts.
+     *
+     * @param target View whose properties are animated
+     * @param durationMillis animation duration in milliseconds
+     * @param startDelayMillis delay before the animation starts
+     * @param interpolator optional platform timing interpolator
+     * @param configure receiver block that selects target properties and values
+     * @param onEnd optional action invoked by the platform end action
+     * @return the target's already-started property animator
+     */
     fun startViewPropertyAnimator(
         target: View,
         durationMillis: Long = 300L,
@@ -119,6 +158,21 @@ object AndroidAnimationInterop {
         }
     }
 
+    /**
+     * Creates and immediately starts a spring animation for one View property.
+     *
+     * [stiffness] must be positive and [dampingRatio] non-negative as required by [SpringForce].
+     * The returned animation is independent of ViewCompose animation state.
+     *
+     * @param target View whose property is animated
+     * @param property dynamic-animation property to update
+     * @param finalPosition spring equilibrium value
+     * @param startVelocity initial velocity in property units per second
+     * @param stiffness spring stiffness passed to [SpringForce]
+     * @param dampingRatio spring damping ratio passed to [SpringForce]
+     * @param onEnd optional callback invoked when the animation ends or is cancelled
+     * @return the already-started spring animation
+     */
     fun startSpringAnimation(
         target: View,
         property: DynamicAnimation.ViewProperty,
@@ -143,6 +197,18 @@ object AndroidAnimationInterop {
         }
     }
 
+    /**
+     * Creates and immediately starts a bounded fling animation for one View property.
+     *
+     * @param target View whose property is animated
+     * @param property dynamic-animation property to update
+     * @param startVelocity initial velocity in property units per second
+     * @param friction positive platform friction scalar
+     * @param minValue inclusive lower bound for the animated property
+     * @param maxValue inclusive upper bound for the animated property
+     * @param onEnd optional callback invoked when the animation ends or is cancelled
+     * @return the already-started fling animation
+     */
     fun startFlingAnimation(
         target: View,
         property: DynamicAnimation.ViewProperty,
@@ -166,6 +232,13 @@ object AndroidAnimationInterop {
         }
     }
 
+    /**
+     * Requests [motionLayout] to transition to [endState].
+     *
+     * @param motionLayout target MotionLayout
+     * @param endState destination constraint-set resource ID
+     * @param durationMillis optional transition duration override in milliseconds
+     */
     fun animateToState(
         motionLayout: MotionLayout,
         endState: Int,
@@ -175,6 +248,12 @@ object AndroidAnimationInterop {
         motionLayout.transitionToState(endState)
     }
 
+    /**
+     * Requests [motionLayout] to transition to its current transition's start state.
+     *
+     * @param motionLayout target MotionLayout
+     * @param durationMillis optional transition duration override in milliseconds
+     */
     fun animateToStart(
         motionLayout: MotionLayout,
         durationMillis: Int? = null,
@@ -183,6 +262,12 @@ object AndroidAnimationInterop {
         motionLayout.transitionToStart()
     }
 
+    /**
+     * Requests [motionLayout] to transition to its current transition's end state.
+     *
+     * @param motionLayout target MotionLayout
+     * @param durationMillis optional transition duration override in milliseconds
+     */
     fun animateToEnd(
         motionLayout: MotionLayout,
         durationMillis: Int? = null,
@@ -193,8 +278,14 @@ object AndroidAnimationInterop {
 }
 
 /**
- * 将 Android 动画配置作为 nativeView modifier 接入声明式树。
- * Attaches Android animation configuration to the declarative tree as a nativeView modifier.
+ * Adds replay-safe Android animation configuration to a mounted native View.
+ *
+ * [configure] can run again during patching or rollback. It should configure durable View state and
+ * must not start one-shot animations or mutate external state.
+ *
+ * @param key stable identity for this modifier operation
+ * @param configure replay-safe View configuration
+ * @return this modifier followed by the native View operation
  */
 fun Modifier.androidAnimation(
     key: Any = Unit,
@@ -207,8 +298,15 @@ fun Modifier.androidAnimation(
 }
 
 /**
- * 挂载 MotionLayout，供 Android 原生 motion 场景与 UIFramework 树协作。
- * Mounts a MotionLayout so native Android motion scenes can cooperate with the UIFramework tree.
+ * Mounts a platform [MotionLayout] inside the declarative tree.
+ *
+ * [factory] runs only when a new native node is required. [update] is replay-safe and may run during
+ * patching or rollback. Use [key] to preserve the MotionLayout across sibling reordering.
+ *
+ * @param factory creates the MotionLayout for the Android context
+ * @param update applies replay-safe state to the mounted MotionLayout
+ * @param key optional declarative identity
+ * @param modifier modifiers applied to the native node
  */
 fun UiTreeBuilder.MotionLayoutView(
     factory: (Context) -> MotionLayout,

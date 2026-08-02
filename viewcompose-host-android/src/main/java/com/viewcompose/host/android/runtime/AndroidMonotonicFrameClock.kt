@@ -7,12 +7,23 @@ import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
- * 将 Choreographer 暴露为 runtime 使用的 MonotonicFrameClock。
- * Exposes Choreographer as the MonotonicFrameClock used by the runtime.
+ * Exposes Android [Choreographer] frames through the runtime monotonic-frame-clock contract.
+ *
+ * The clock is main-thread confined because [Choreographer] is thread-local. Cancelling a suspended
+ * caller removes its pending callback. Exceptions thrown by a frame callback resume the caller with
+ * that exception rather than escaping through Choreographer.
+ *
+ * @param choreographer frame source owned by the current thread
  */
 class AndroidMonotonicFrameClock(
     private val choreographer: Choreographer = Choreographer.getInstance(),
 ) : MonotonicFrameClock {
+    /**
+     * Suspends until the next frame and evaluates [onFrame] with its monotonic timestamp.
+     *
+     * @param onFrame callback evaluated once on the Choreographer thread
+     * @return the callback result
+     */
     override suspend fun <R> withFrameNanos(
         onFrame: (frameTimeNanos: Long) -> R,
     ): R {
@@ -21,8 +32,7 @@ class AndroidMonotonicFrameClock(
                 if (!continuation.isActive) {
                     return@FrameCallback
                 }
-                // onFrame 由调用方提供，异常要回传给挂起协程而不是吞掉。
-                // onFrame is caller-provided, so exceptions must resume the suspended coroutine instead of being swallowed.
+                // Propagate caller exceptions through the suspended coroutine.
                 try {
                     continuation.resume(onFrame(frameTimeNanos))
                 } catch (throwable: Throwable) {
@@ -30,8 +40,7 @@ class AndroidMonotonicFrameClock(
                 }
             }
             continuation.invokeOnCancellation {
-                // 协程取消时移除未执行 callback，避免无意义唤醒主线程。
-                // Remove an unexecuted callback on coroutine cancellation to avoid unnecessary main-thread wakeups.
+                // Remove unexecuted callbacks so cancelled work cannot wake the main thread.
                 choreographer.removeFrameCallback(callback)
             }
             choreographer.postFrameCallback(callback)

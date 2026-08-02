@@ -9,17 +9,21 @@ import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.widget.core.UiTreeBuilder
 
 /**
- * 挂载一个 Android [View] 到声明式树中。
- * Mounts an Android [View].
+ * Mounts an Android [View] as a transaction-aware declarative node.
  *
- * [update] 与 [onReset] 必须可重放且只配置传入 View，因为失败渲染会在回滚期间重新绑定旧节点。
- * [update] and [onReset] must be replay-safe and limited to configuring the supplied View because a failed render can rebind the previous node during rollback.
+ * [factory] runs only when reconciliation cannot reuse an existing node. [update] and [onReset] must
+ * be replay-safe because a failed frame can restore and rebind the previously committed node.
+ * Non-replayable external work belongs in [onCommit], which runs only after the complete View-tree
+ * transaction succeeds. [onRelease] is one-shot cleanup after committed removal or session disposal.
  *
- * 不可重放的外部动作应放在 [onCommit]，它只会在完整 View-tree 事务成功后执行。
- * Non-replayable external actions belong in [onCommit], which runs only after the complete View-tree transaction succeeds.
- *
- * [onRelease] 是已提交移除或 session 释放后的单次资源清理。
- * [onRelease] is one-shot resource cleanup after committed removal or session disposal.
+ * @sample com.viewcompose.host.android.samples.androidViewInteropSample
+ * @param factory creates a native View for a newly inserted node
+ * @param update applies replay-safe state during insertion, patching, or rollback
+ * @param key optional stable identity used for keyed reconciliation
+ * @param modifier declarative layout, input, semantics, and native configuration
+ * @param onReset optional replay-safe reset before a retained View is rebound
+ * @param onRelease optional one-shot cleanup after permanent removal
+ * @param onCommit optional one-shot effect after the containing frame commits
  */
 fun UiTreeBuilder.AndroidView(
     factory: (Context) -> View,
@@ -55,11 +59,14 @@ fun UiTreeBuilder.AndroidView(
 }
 
 /**
- * 对已挂载的 Android [View] 直接应用可重放配置。
- * Applies replay-safe configuration directly to the mounted Android [View].
+ * Applies replay-safe configuration directly to a mounted Android [View].
  *
- * 该回调参与 renderer apply/rollback 流程，不能执行外部副作用。
- * This callback participates in renderer apply/rollback and must not perform external side effects.
+ * [configure] participates in renderer apply and rollback, so it may run more than once and must not
+ * perform external side effects. Changing [key] replaces the modifier operation's identity.
+ *
+ * @param key stable identity for this native operation
+ * @param configure replay-safe View configuration
+ * @return this modifier followed by the native operation
  */
 fun Modifier.nativeView(
     key: Any = Unit,

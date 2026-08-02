@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 67b83feb06980190fb9cc5ee35e749abbd7c4b54f79b5d77fe9b394005cab921
+translation_source_hash: 525383b836798fb36a416facebe057705f573f60c4c4ddfc94acbd3efbb31e63
 translation_status: current
 ---
 
@@ -23,7 +23,7 @@ translation_status: current
 | `viewcompose-navigation` | 导航 | Android 导航宿主集成 | 规划中 |
 | `viewcompose-renderer` | 渲染 | Android View 渲染与协调引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer) |
 | `viewcompose-widget-core` | UI | 核心 DSL、组件、主题与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-widget-core) |
-| `viewcompose-host-android` | Android 宿主 | Activity、Fragment 与 View 宿主集成 | 规划中 |
+| `viewcompose-host-android` | Android 宿主 | Activity、Fragment 与 View 宿主集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-host-android) |
 | `viewcompose-overlay-android` | Android 宿主 | Android 浮层呈现后端 | 规划中 |
 | `viewcompose-image-coil` | 集成 | 基于 Coil 的远程图片加载 | 规划中 |
 | `viewcompose-lifecycle` | 集成 | 感知生命周期的状态收集 | 规划中 |

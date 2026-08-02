@@ -11,60 +11,62 @@ import com.viewcompose.widget.core.RenderFrameReport
 import com.viewcompose.widget.core.UiTreeBuilder
 
 /**
- * Android 层公开的渲染会话包装器。
- * Public Android-side wrapper around the core render session.
+ * Owns a retained ViewCompose render session and its mounted Android View tree.
  *
- * 它只暴露宿主需要的生命周期和诊断入口，隐藏 widget-core 的内部实现类型。
- * It exposes only the lifecycle and diagnostics surface needed by hosts while hiding widget-core internals.
+ * The session is main-thread confined. Call [dispose] when a custom host ends; Activity and Fragment
+ * [setUiContent] integrations do this automatically. Operations after disposal follow the core
+ * session's fail-fast lifecycle contract.
  */
 class RenderSession internal constructor(
     private val delegate: com.viewcompose.widget.core.RenderSession,
 ) {
-    /**
-     * 最近一次渲染失败，成功帧不会清除历史失败对象。
-     * Last render failure; successful frames do not clear the historical failure object.
-     */
+    /** Last render failure; later successful frames do not erase this historical failure. */
     val lastRenderFailure: RenderFailure?
         get() = delegate.lastRenderFailure
 
-    /**
-     * 最近一次帧报告，包含提交状态、统计和失败信息。
-     * Last frame report containing commit status, stats, and failure details.
-     */
+    /** Last attempted frame report, including commit status, statistics, and failures. */
     val lastFrameReport: RenderFrameReport?
         get() = delegate.lastFrameReport
 
-    /**
-     * 立即同步渲染当前 content。
-     * Immediately renders the current content synchronously.
-     */
+    /** Immediately evaluates and synchronously renders the current content. */
     fun render() {
         delegate.render()
     }
 
     /**
-     * 控制保留会话是否响应异步渲染请求。
-     * Controls whether a retained session responds to asynchronous render requests.
+     * Enables or suspends frame-scheduled invalidation rendering.
+     *
+     * Explicit [render] calls still run while inactive. Invalidations received while inactive are
+     * retained and coalesced into a frame after rendering becomes active again.
      */
     fun setRenderingActive(active: Boolean) {
         delegate.setRenderingActive(active)
     }
 
-    /**
-     * 释放渲染会话及其已挂载的 Android View 树。
-     * Disposes the render session and its mounted Android View tree.
-     */
+    /** Permanently disposes the session and releases its mounted Android View tree. */
     fun dispose() {
         delegate.dispose()
     }
 }
 
 /**
- * 将 UIFramework DSL 内容渲染到指定 Android ViewGroup。
- * Renders UIFramework DSL content into the given Android ViewGroup.
+ * Creates a retained session that renders [content] into [container].
  *
- * 该入口会按需安装 Android 渲染平台，并立即提交第一帧。
- * This entry installs the Android render platform on demand and commits the first frame immediately.
+ * The Android render platform is installed on demand and the first frame is rendered synchronously
+ * before this function returns. This low-level entry does not provide lifecycle, ViewModel, saved
+ * state, environment, theme, or frame-clock locals; custom hosts must provide and dispose those
+ * services themselves, or use an Activity/Fragment [setUiContent] integration.
+ *
+ * @sample com.viewcompose.host.android.samples.renderIntoSample
+ * @param container Android parent that owns all Views mounted by the returned session
+ * @param debug enables render logging and full render-result collection
+ * @param debugTag log tag used by debug rendering
+ * @param overlayHost overlay implementation available to emitted overlay nodes
+ * @param onRenderStats optional callback after every attempted frame
+ * @param onRenderResult optional callback for collected diagnostics
+ * @param onRenderFailure optional callback when a frame fails
+ * @param content retained declarative content evaluated for each render
+ * @return the active session after its first synchronous frame
  */
 fun renderInto(
     container: ViewGroup,

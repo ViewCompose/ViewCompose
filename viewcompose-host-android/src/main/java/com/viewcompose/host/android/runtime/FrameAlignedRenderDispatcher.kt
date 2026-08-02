@@ -5,11 +5,10 @@ import android.os.Looper
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 将渲染请求合并到主线程下一帧的轻量调度器。
- * Lightweight dispatcher that coalesces render requests onto the next main-thread frame.
+ * Coalesces render requests onto the next main-thread frame.
  *
- * AtomicBoolean 让跨线程 request/cancel 保持幂等，真正的 frameClock 访问仍在主线程执行。
- * AtomicBoolean keeps cross-thread request/cancel idempotent while actual frameClock access still happens on the main thread.
+ * Atomic state makes cross-thread requests and cancellation idempotent while every frame-clock
+ * operation remains confined to the main thread.
  */
 internal class FrameAlignedRenderDispatcher(
     private val frameClock: RenderFrameClock,
@@ -27,8 +26,7 @@ internal class FrameAlignedRenderDispatcher(
             frameRequested.set(false)
             return@RenderFrameCallback
         }
-        // callback 开始时先清除 pending 标记，允许渲染过程中的再次 invalidation 排到下一帧。
-        // Clear the pending flag before rendering so reentrant invalidation can schedule the following frame.
+        // Clear first so reentrant invalidation can schedule the following frame.
         frameRequested.set(false)
         onFrameRender()
     }

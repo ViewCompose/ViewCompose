@@ -25,13 +25,29 @@ import com.viewcompose.widget.core.RenderPatchOperation
 import com.viewcompose.widget.core.RenderFailureOperation
 
 /**
- * widget-core 与 renderer 模块之间的 Android 渲染引擎适配器。
- * Android render-engine adapter between widget-core and the renderer module.
+ * Adapts the platform-neutral core render contract to the Android View renderer.
  *
- * widget-core 只依赖 CoreRenderEngine 契约，具体 MountedNode 和诊断类型在这里转换。
- * widget-core depends only on CoreRenderEngine, while concrete MountedNode and diagnostic types are translated here.
+ * Mounted-node and diagnostic implementation types are translated at this boundary so widget-core
+ * does not depend on renderer internals. The engine also installs a root decoration host only when
+ * root-level z-order or an installed shadow backend requires one; changing that requirement may
+ * remount the current root nodes.
+ *
+ * Calls must run on the Android main thread through a host-managed render session.
  */
 class AndroidCoreRenderEngine : CoreRenderEngine {
+    /**
+     * Reconciles [nodes] into [container] and returns a core-owned frame snapshot.
+     *
+     * [previousMountedNodes] may contain opaque values from another engine; values that are not
+     * renderer [MountedNode] instances are ignored. Commit effects are returned for the render
+     * session to execute only after the complete frame succeeds.
+     *
+     * @param container Android parent that owns the rendered tree
+     * @param previousMountedNodes opaque nodes returned by the preceding successful frame
+     * @param nodes immutable VNode roots for the next frame
+     * @param collectDiagnostics whether to materialize tree and patch diagnostics
+     * @return mounted nodes, statistics, diagnostics, and deferred commit work for the frame
+     */
     override fun renderInto(
         container: ViewGroup,
         previousMountedNodes: List<Any>,
@@ -71,6 +87,16 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
         )
     }
 
+    /**
+     * Releases [mountedNodes] and removes an empty synthetic decoration host.
+     *
+     * Cleanup continues after individual native release failures; all failures are returned to the
+     * render session for reporting.
+     *
+     * @param container Android parent that owns the mounted tree
+     * @param mountedNodes opaque nodes returned by a previous frame
+     * @return native release failures collected while disposing the tree
+     */
     override fun disposeMounted(
         container: ViewGroup,
         mountedNodes: List<Any>,
@@ -214,8 +240,7 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
     }
 
     private fun com.viewcompose.renderer.view.tree.RenderTreeResult.toCoreResult(): RenderTreeResult {
-        // 诊断结构复制为 core 类型，避免把 renderer 内部类型泄漏给 widget-core 调用方。
-        // Diagnostics are copied into core types so renderer internals do not leak to widget-core callers.
+        // Copy diagnostics into core-owned models so renderer internals cannot cross the boundary.
         return RenderTreeResult(
             stats = stats.toCoreStats(),
             structure = RenderStructureStats(
