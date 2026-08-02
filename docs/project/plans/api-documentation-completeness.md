@@ -72,6 +72,9 @@ overviews, and staged enforcement.
 - `viewcompose-gesture` has a reviewed Q2/Q3 baseline covering renderer-owned recognition, raw
   pointer and click modifiers, latest-callback state, anchored reconciliation, transform lifecycle,
   priority, nested scroll, compiled samples, and an always-on strict Dokka warning gate;
+- `viewcompose-graphics-core` has a reviewed Q2/Q3 baseline covering coordinate and color
+  conventions, geometry mutability, paths, paint and filter capability, command ordering, validated
+  scenes, recorder lifetime, caching, compiled samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -128,13 +131,13 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-gesture` was repaired from 21 initially undocumented declarations to a
-zero-warning strict baseline. Renderer recognition ownership, callback thread and cancellation,
-initial-value lifetime, synchronous anchor reconciliation, immediate settling, transform delivery,
-priority, and nested-scroll attachment were reviewed; compiled samples and a bilingual module manual
-were added.
+2026-08-02: `viewcompose-graphics-core` was repaired from 162 initially undocumented declarations to
+a zero-warning strict baseline. Coordinate, color and angle conventions, shallow mutability, array
+equality, path and paint validation boundaries, command ordering, save/restore validation, recorder
+snapshot lifetime, and single-entry cache behavior were reviewed; compiled samples and a bilingual
+module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-graphics-core`, add its module manual and focused samples, then enable its
+Audit and repair `viewcompose-graphics`, add its module manual and focused samples, then enable its
 module-level strict warning gate without changing API behavior.

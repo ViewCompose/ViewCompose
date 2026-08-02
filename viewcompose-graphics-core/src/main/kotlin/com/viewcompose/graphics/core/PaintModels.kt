@@ -1,36 +1,39 @@
 package com.viewcompose.graphics.core
 
-/**
- * ARGB 颜色整数，格式与 Android 的 0xAARRGGBB 约定保持一致。
- * ARGB color integer aligned with Android's 0xAARRGGBB convention.
- */
+/** Source-level alias for a packed, non-premultiplied `0xAARRGGBB` color integer. */
 typealias UiColor = Int
 
 /**
- * 渐变色标，offset 通常位于 0f..1f 区间。
- * Gradient color stop whose offset is normally in the 0f..1f range.
+ * Associates a packed color with one normalized gradient position.
+ *
+ * The model does not validate or sort stops. Renderers may reject, clamp, or platform-normalize
+ * offsets outside `0f..1f`, non-finite values, duplicate positions, or unsorted lists.
+ *
+ * @property offset normalized gradient position, conventionally in `0f..1f`
+ * @property color packed `0xAARRGGBB` color
  */
 data class ColorStop(
     val offset: Float,
     val color: UiColor,
 )
 
-/**
- * 绘制填充源，保持平台中立，由渲染器转换为原生 shader/paint。
- * Paint fill source kept platform-neutral and converted to native shaders/paints by renderers.
- */
+/** Defines a platform-neutral color or shader source for fills and strokes. */
 sealed interface Brush {
     /**
-     * 单色画刷，适用于纯色填充和描边。
-     * Solid-color brush for plain fills and strokes.
+     * Uses one packed color for every covered pixel.
+     *
+     * @property color packed `0xAARRGGBB` color
      */
     data class SolidColor(
         val color: UiColor,
     ) : Brush
 
     /**
-     * 线性渐变，from/to 采用当前绘制坐标系。
-     * Linear gradient whose from/to points use the current drawing coordinate space.
+     * Interpolates color along the line from [from] to [to].
+     *
+     * @property from gradient start in the current drawing coordinate space
+     * @property to gradient end in the current drawing coordinate space
+     * @property colorStops caller-ordered color stops; no validation or defensive copy is applied
      */
     data class LinearGradient(
         val from: Offset,
@@ -39,8 +42,11 @@ sealed interface Brush {
     ) : Brush
 
     /**
-     * 径向渐变，center/radius 采用当前绘制坐标系。
-     * Radial gradient whose center/radius use the current drawing coordinate space.
+     * Interpolates color outward from [center] to [radius].
+     *
+     * @property center gradient center in the current drawing coordinate space
+     * @property radius radial extent in drawing-coordinate units
+     * @property colorStops caller-ordered color stops; no validation or defensive copy is applied
      */
     data class RadialGradient(
         val center: Offset,
@@ -49,8 +55,10 @@ sealed interface Brush {
     ) : Brush
 
     /**
-     * 扫描渐变，围绕 center 按角度插值颜色。
-     * Sweep gradient that interpolates colors around the center by angle.
+     * Interpolates color by angle around [center].
+     *
+     * @property center sweep origin in the current drawing coordinate space
+     * @property colorStops caller-ordered color stops; no validation or defensive copy is applied
      */
     data class SweepGradient(
         val center: Offset,
@@ -58,20 +66,21 @@ sealed interface Brush {
     ) : Brush
 }
 
-/**
- * 几何图形绘制方式，决定形状填充还是描边。
- * Geometry draw style deciding whether shapes are filled or stroked.
- */
+/** Selects interior filling or outline stroking for geometry commands. */
 sealed interface DrawStyle {
-    /**
-     * 填充形状内部区域。
-     * Fills the interior of a shape.
-     */
+    /** Fills the interior selected by the geometry's fill rule. */
     data object Fill : DrawStyle
 
     /**
-     * 沿形状轮廓描边，width 使用绘制坐标系单位。
-     * Strokes the shape outline; width uses drawing-coordinate units.
+     * Strokes the geometry outline.
+     *
+     * Values are not validated; platform renderers decide how to handle non-positive or non-finite
+     * widths and miter limits.
+     *
+     * @property width stroke width in the current drawing coordinate space
+     * @property cap treatment applied to open segment endpoints
+     * @property join treatment applied where segments meet
+     * @property miterLimit maximum miter ratio before a renderer falls back to bevel behavior
      */
     data class Stroke(
         val width: Float = 1f,
@@ -81,20 +90,14 @@ sealed interface DrawStyle {
     ) : DrawStyle
 }
 
-/**
- * 线段端点样式，对齐常见 Canvas/Paint stroke cap 语义。
- * Stroke-end style aligned with common Canvas/Paint stroke cap semantics.
- */
+/** Selects the platform-neutral treatment of open stroke endpoints. */
 enum class StrokeCap {
     Butt,
     Round,
     Square,
 }
 
-/**
- * 折线连接点样式，对齐常见 Canvas/Paint stroke join 语义。
- * Stroke-corner style aligned with common Canvas/Paint stroke join semantics.
- */
+/** Selects the platform-neutral treatment of corners where stroked segments meet. */
 enum class StrokeJoin {
     Miter,
     Round,
@@ -102,8 +105,10 @@ enum class StrokeJoin {
 }
 
 /**
- * 图层混合模式的跨平台枚举，渲染器负责映射到平台能力。
- * Cross-platform blend-mode enum; renderers map it to platform capabilities.
+ * Selects a platform-neutral source/destination blend operation.
+ *
+ * Renderer support can vary by Android API level and backing surface. A renderer may approximate or
+ * fall back when the platform cannot represent a mode exactly.
  */
 enum class BlendMode {
     SrcOver,
@@ -122,14 +127,13 @@ enum class BlendMode {
     Plus,
 }
 
-/**
- * 颜色过滤模型，用于在不改变原始图像或画刷的情况下调整输出颜色。
- * Color-filter model used to adjust output colors without mutating source images or brushes.
- */
+/** Describes color post-processing without mutating the source image or brush. */
 sealed interface ColorFilterModel {
     /**
-     * 使用指定颜色和混合模式对输出着色。
-     * Tints output with the given color and blend mode.
+     * Blends [color] over the source output with [blendMode].
+     *
+     * @property color packed tint color
+     * @property blendMode source/destination operation used for tinting
      */
     data class Tint(
         val color: UiColor,
@@ -137,8 +141,14 @@ sealed interface ColorFilterModel {
     ) : ColorFilterModel
 
     /**
-     * 4x5 颜色矩阵过滤器，数组必须包含 20 个值。
-     * 4x5 color-matrix filter; the backing array must contain exactly 20 values.
+     * Applies a row-major 4-by-5 color matrix.
+     *
+     * The array is retained rather than copied, and Kotlin data-class equality compares it by array
+     * identity. Do not mutate it after recording a command or use independently allocated equal
+     * arrays when stable structural cache equality is required.
+     *
+     * @property values exactly 20 row-major coefficients
+     * @throws IllegalArgumentException if [values] does not contain 20 elements
      */
     data class ColorMatrix(
         val values: FloatArray,
@@ -149,14 +159,13 @@ sealed interface ColorFilterModel {
     }
 }
 
-/**
- * 图像过滤模型，用于描述模糊、链式过滤等后处理效果。
- * Image-filter model describing post-processing effects such as blur and filter chains.
- */
+/** Describes platform-neutral image post-processing applied by a renderer. */
 sealed interface ImageFilterModel {
     /**
-     * 高斯模糊半径，x/y 方向可以独立设置。
-     * Gaussian blur radius with independently configurable x/y directions.
+     * Requests independent horizontal and vertical blur radii.
+     *
+     * @property radiusX horizontal blur radius in drawing-coordinate units
+     * @property radiusY vertical blur radius in drawing-coordinate units
      */
     data class Blur(
         val radiusX: Float,
@@ -164,8 +173,10 @@ sealed interface ImageFilterModel {
     ) : ImageFilterModel
 
     /**
-     * 过滤器链，inner 先执行，outer 后执行。
-     * Filter chain where inner runs first and outer runs afterward.
+     * Applies [inner] first and then [outer].
+     *
+     * @property outer filter applied to the intermediate result
+     * @property inner filter applied to the source first
      */
     data class Chain(
         val outer: ImageFilterModel,
@@ -174,11 +185,19 @@ sealed interface ImageFilterModel {
 }
 
 /**
- * 单次绘制操作的完整画笔状态。
- * Complete paint state for one draw operation.
+ * Captures the complete platform-neutral paint request for one draw operation.
  *
- * 该对象保持不可变，便于绘制命令缓存、比较和跨渲染器传递。
- * This object stays immutable to support command caching, equality checks, and renderer handoff.
+ * The object itself is immutable, but nested lists and arrays are not defensively copied. [alpha]
+ * and numeric filter/style inputs are stored without validation; renderers may clamp or reject
+ * unsupported values. Platform capability determines the exact blend and image-filter result.
+ *
+ * @property brush color or shader source
+ * @property style interior fill or outline stroke policy
+ * @property alpha additional opacity multiplier, conventionally in `0f..1f`
+ * @property blendMode source/destination blend operation
+ * @property colorFilter optional color post-processing
+ * @property imageFilter optional image post-processing
+ * @property antiAlias whether the renderer should request edge anti-aliasing
  */
 data class DrawPaint(
     val brush: Brush = Brush.SolidColor(0xFF000000.toInt()),

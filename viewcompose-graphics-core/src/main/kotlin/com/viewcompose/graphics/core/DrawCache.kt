@@ -1,28 +1,35 @@
 package com.viewcompose.graphics.core
 
 /**
- * 单键绘制缓存，用于缓存 `drawWithCache` 这类依赖显式 key 的构建结果。
- * Single-key draw cache for build results that depend on an explicit key, such as `drawWithCache`.
+ * Retains one non-null build result under one equality-based key.
  *
- * 该缓存不做线程同步，调用方应在渲染线程或受控构建流程中使用。
- * This cache is not synchronized; callers should use it from the render thread or a controlled build flow.
+ * A new key replaces the previous entry. `null` is a valid key, but a `null` result is treated as
+ * uncached because the implementation uses a nullable value as its occupancy marker. The cache is
+ * not synchronized and should remain confined to one render thread or externally synchronized
+ * build flow. It does not observe state or invalidate itself when captured values change.
+ *
+ * @sample com.viewcompose.graphics.core.samples.drawCacheSample
  */
 class DrawCache<T> {
     private var cachedKey: Any? = null
     private var cachedValue: T? = null
 
-    /**
-     * 清空当前缓存值，下一次读取会重新构建。
-     * Clears the current cached value so the next read rebuilds it.
-     */
+    /** Removes the current key and value so the next [getOrBuild] call invokes its builder. */
     fun clear() {
         cachedKey = null
         cachedValue = null
     }
 
     /**
-     * 当 key 未变化且已有缓存值时复用结果，否则调用 builder 重建。
-     * Reuses the cached value when the key is unchanged; otherwise invokes builder and stores the result.
+     * Returns the cached value for an equal [key], or builds and replaces the single entry.
+     *
+     * [builder] executes synchronously on the caller's thread. If it throws, the previous cache entry
+     * remains unchanged and the exception propagates. A builder result of `null` is returned but will
+     * be rebuilt on the next call.
+     *
+     * @param key equality-based semantic input for the build result
+     * @param builder value producer invoked on a miss
+     * @return cached or newly built value
      */
     fun getOrBuild(
         key: Any?,
