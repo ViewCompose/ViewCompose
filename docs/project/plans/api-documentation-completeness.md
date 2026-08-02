@@ -66,6 +66,9 @@ overviews, and staged enforcement.
 - `viewcompose-animation` has a reviewed Q2/Q3 baseline covering composition frame ownership,
   state retargeting, last-mutation cancellation, shared transitions, infinite channels, content
   retention, measured-size renderer cost, compiled samples, and an always-on strict Dokka warning gate;
+- `viewcompose-gesture-core` has a reviewed Q2/Q3 baseline covering axis locking, transform
+  activation, swipe arbitration, anchor validation and replacement, anchored settle thresholds,
+  compiled samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -122,12 +125,12 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-animation` was repaired from 55 initially undocumented declarations to a
-zero-warning strict baseline. Composition cancellation, last-mutation arbitration, shared channel
-timing, infinite restart behavior, visibility/content lifetime, and native size-animation cost were
-reviewed; compiled samples and a bilingual module manual were added.
+2026-08-02: `viewcompose-gesture-core` was repaired from 10 initially undocumented declarations to a
+zero-warning strict baseline. Pixel-unit boundaries, axis-lock ties, transform threshold equality,
+velocity-before-distance arbitration, anchor validation and replacement, and adjacent-anchor settle
+behavior were reviewed; compiled samples and a bilingual module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-gesture-core`, add its module manual and focused samples, then enable its
+Audit and repair `viewcompose-gesture`, add its module manual and focused samples, then enable its
 module-level strict warning gate without changing API behavior.

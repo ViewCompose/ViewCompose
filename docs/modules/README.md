@@ -30,7 +30,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-preview` | Preview tooling | Development preview and snapshot integration | Planned |
 | `viewcompose-animation-core` | Animation | Platform-neutral animation engine contracts | [Available](./viewcompose-animation-core/README.md) |
 | `viewcompose-animation` | Animation | Animation DSL and composition integration | [Available](./viewcompose-animation/README.md) |
-| `viewcompose-gesture-core` | Gesture | Platform-neutral gesture policies | Planned |
+| `viewcompose-gesture-core` | Gesture | Platform-neutral gesture policies | [Available](./viewcompose-gesture-core/README.md) |
 | `viewcompose-gesture` | Gesture | Gesture DSL and state APIs | Planned |
 | `viewcompose-graphics-core` | Graphics | Platform-neutral graphics model | Planned |
 | `viewcompose-graphics` | Graphics | Drawing DSL and composition integration | Planned |

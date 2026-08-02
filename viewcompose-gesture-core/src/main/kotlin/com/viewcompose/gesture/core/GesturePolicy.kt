@@ -6,58 +6,88 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sign
 
-/**
- * 指针移动超过 slop 后锁定的主轴。
- * Primary axis locked after pointer movement crosses touch slop.
- */
+/** Identifies the dominant axis selected after pointer movement crosses touch slop. */
 enum class LockedAxis {
+    /** The gesture is locked to horizontal movement. */
     Horizontal,
+
+    /** The gesture is locked to vertical movement. */
     Vertical,
 }
 
-/**
- * swipe 判定时使用的轴向。
- * Axis used when resolving a swipe decision.
- */
+/** Selects the physical axis used to translate a drag into a logical swipe direction. */
 enum class SwipeDecisionAxis {
+    /** Positive motion maps to [SwipeDirection.StartToEnd]. */
     Horizontal,
+
+    /** Positive motion maps to [SwipeDirection.TopToBottom]. */
     Vertical,
 }
 
 /**
- * 拖拽结束后 renderer 应执行的 swipe/settle 决策。
- * Swipe or settle decision a renderer should perform after drag end.
+ * Describes the action a renderer should take when a drag ends.
+ *
+ * A decision either emits a directional swipe, settles an anchored value, or performs no action.
+ * Use [resolveSwipeDecision] to derive this result from distance and velocity.
  */
 sealed interface SwipeDecision {
-    data class Swipe(val direction: SwipeDirection) : SwipeDecision
+    /**
+     * Requests a directional swipe callback.
+     *
+     * @property direction logical horizontal or physical vertical direction of the swipe
+     */
+    data class Swipe(
+        val direction: SwipeDirection,
+    ) : SwipeDecision
 
-    data class Settle(val target: SwipeSettleTarget) : SwipeDecision
+    /**
+     * Requests convergence to one of the two supplied anchors.
+     *
+     * @property target endpoint closest to the projected drag position
+     */
+    data class Settle(
+        val target: SwipeSettleTarget,
+    ) : SwipeDecision
 
+    /** Indicates that neither a swipe nor an anchored settle operation is available. */
     data object None : SwipeDecision
 }
 
-/**
- * 未形成 swipe 时应收敛到的端点。
- * Endpoint to settle to when the drag does not become a swipe.
- */
+/** Selects the lower or upper endpoint used when a drag does not become a swipe. */
 enum class SwipeSettleTarget {
+    /** Settle to the supplied minimum anchor. */
     Min,
+
+    /** Settle to the supplied maximum anchor. */
     Max,
 }
 
-/**
- * anchored draggable 选择目标 anchor 的原因。
- * Reason why anchored draggable selected a target anchor.
- */
+/** Identifies the rule that selected an anchored drag's final offset. */
 enum class AnchoredSettleReason {
+    /** Fling velocity crossed the configured minimum. */
     Velocity,
+
+    /** Drag distance crossed the configured segment threshold. */
     Distance,
+
+    /** Neither threshold was crossed, so the closest anchor was selected. */
     Nearest,
 }
 
 /**
- * anchored draggable 的距离和速度阈值策略。
- * Distance and velocity threshold policy for anchored draggable.
+ * Configures the distance and velocity thresholds used to settle an anchored drag.
+ *
+ * The distance threshold is the greater of `touchSlopPx * slopMultiplier` and the adjacent
+ * segment length multiplied by [segmentFraction]. A velocity at or above the effective fling
+ * threshold takes precedence over distance. This value is immutable and platform-neutral; all
+ * velocity and distance inputs remain the renderer's responsibility.
+ *
+ * @property slopMultiplier positive multiplier applied to the renderer's touch slop
+ * @property segmentFraction fraction in `(0, 1]` applied to the adjacent anchor segment
+ * @property minFlingVelocityOverridePxPerSecond optional non-negative velocity threshold that
+ * replaces the renderer-provided minimum
+ * @throws IllegalArgumentException if a multiplier is non-finite or outside its accepted range,
+ * or if the velocity override is negative
  */
 data class AnchoredThresholdPolicy(
     val slopMultiplier: Float = 2f,
@@ -78,8 +108,10 @@ data class AnchoredThresholdPolicy(
 }
 
 /**
- * anchored draggable 结束时解析出的目标位置。
- * Target position resolved when anchored draggable settles.
+ * Reports the anchor selected when an anchored drag settles.
+ *
+ * @property targetOffsetPx exact pixel offset from the validated anchor list
+ * @property reason rule that selected [targetOffsetPx]
  */
 data class AnchoredSettleResult(
     val targetOffsetPx: Float,
@@ -87,8 +119,11 @@ data class AnchoredSettleResult(
 )
 
 /**
- * 校验 anchor 像素列表必须非空、有限且严格递增。
- * Validates that anchor pixel offsets are non-empty, finite, and strictly increasing.
+ * Validates the canonical ordering required by anchored gesture policies.
+ *
+ * @param anchorsPx anchor offsets in physical pixels, ordered from minimum to maximum
+ * @throws IllegalArgumentException if the list is empty, contains a non-finite value, or is not
+ * strictly increasing
  */
 fun requireValidAnchorsPx(anchorsPx: List<Float>) {
     require(anchorsPx.isNotEmpty()) { "Anchors must not be empty." }
@@ -103,8 +138,18 @@ fun requireValidAnchorsPx(anchorsPx: List<Float>) {
 }
 
 /**
- * anchor 集合变化时，选择应保留的当前 offset。
- * Chooses the current offset to preserve after the anchor set changes.
+ * Chooses the offset to preserve after an anchored gesture receives a new anchor list.
+ *
+ * An exact [currentValueOffsetPx] match wins so a semantic value remains stable. Otherwise the
+ * nearest anchor to a finite [currentOffsetPx] is used. When neither input can be preserved, the
+ * first anchor becomes the initial offset. Equal-distance ties resolve to the lower list index.
+ *
+ * @param anchorsPx non-empty, finite, strictly increasing offsets in physical pixels
+ * @param currentValueOffsetPx offset associated with the current semantic value, or `null`
+ * @param currentOffsetPx current visual offset in physical pixels, or `null`
+ * @return one of the exact values in [anchorsPx]
+ * @throws IllegalArgumentException if [anchorsPx] fails [requireValidAnchorsPx]
+ * @sample com.viewcompose.gesture.core.samples.updateAnchorsWithoutLosingPosition
  */
 fun resolveAnchoredOffsetOnAnchorUpdate(
     anchorsPx: List<Float>,
@@ -128,8 +173,25 @@ fun resolveAnchoredOffsetOnAnchorUpdate(
 }
 
 /**
- * 根据起点、当前位置和速度解析 anchored draggable 的最终 anchor。
- * Resolves the final anchor from the start offset, current offset, and velocity.
+ * Resolves the target anchor for a completed anchored drag.
+ *
+ * The anchor nearest [startOffsetPx] defines the starting segment. Absolute velocity at or above
+ * the effective fling threshold moves exactly one anchor in the velocity direction and wins over
+ * distance. Otherwise a drag crossing the configured distance threshold moves one anchor in the
+ * drag direction. The closest anchor to [currentOffsetPx] is used when neither threshold wins.
+ * Movement is clamped at the first and last anchors.
+ *
+ * @param anchorsPx non-empty, finite, strictly increasing offsets in physical pixels
+ * @param startOffsetPx visual offset at gesture start; non-finite values are not rejected and will
+ * resolve to the first anchor through nearest-anchor comparison
+ * @param currentOffsetPx visual offset when the gesture ends, in physical pixels
+ * @param velocityPxPerSecond signed terminal velocity; positive values move toward larger anchors
+ * @param touchSlopPx non-negative finite platform touch slop in physical pixels
+ * @param minFlingVelocityPxPerSecond non-negative finite platform fling threshold
+ * @param thresholdPolicy threshold overrides and distance multipliers
+ * @return the exact target anchor and the rule that selected it
+ * @throws IllegalArgumentException if anchors, touch slop, or platform fling threshold are invalid
+ * @sample com.viewcompose.gesture.core.samples.resolveAnchoredDrag
  */
 fun resolveAnchoredSettleTarget(
     anchorsPx: List<Float>,
@@ -154,7 +216,6 @@ fun resolveAnchoredSettleTarget(
     val minFlingVelocity = thresholdPolicy.minFlingVelocityOverridePxPerSecond
         ?: minFlingVelocityPxPerSecond
     if (abs(velocityPxPerSecond) >= minFlingVelocity) {
-        // 速度优先于距离阈值，匹配用户快速 fling 时的预期。
         // Velocity wins over distance thresholds to match fast-fling expectations.
         val direction = velocityPxPerSecond.sign.toInt()
         val targetIndex = when {
@@ -222,8 +283,21 @@ private fun nearestAnchorIndex(
 }
 
 /**
- * 根据累计移动和方向策略决定是否锁定手势轴。
- * Resolves whether accumulated movement should lock the gesture axis.
+ * Resolves an axis lock from accumulated pointer movement.
+ *
+ * A fixed horizontal or vertical orientation locks only when its own absolute displacement reaches
+ * [touchSlop] and is at least as large as the perpendicular displacement. Free orientation chooses
+ * the dominant axis after either displacement reaches slop; an exact tie selects horizontal.
+ *
+ * Inputs are normally physical pixels. This function intentionally does not validate negative or
+ * non-finite slop, so callers should pass a platform-derived non-negative finite value.
+ *
+ * @param dx accumulated horizontal movement in renderer-local units
+ * @param dy accumulated vertical movement in renderer-local units
+ * @param orientation allowed gesture orientation
+ * @param touchSlop minimum absolute movement required to lock
+ * @return the locked axis, or `null` while the recognizer should continue waiting
+ * @sample com.viewcompose.gesture.core.samples.lockDragAxis
  */
 fun resolveLockAxis(
     dx: Float,
@@ -255,8 +329,18 @@ fun resolveLockAxis(
 }
 
 /**
- * 判断 transform 手势是否已越过任一激活阈值。
- * Returns whether a transform gesture crossed any activation threshold.
+ * Returns whether accumulated transform motion has crossed an activation threshold.
+ *
+ * Activation uses a strict greater-than comparison. Values exactly equal to [touchSlop] remain
+ * inactive. The caller is responsible for converting pan, zoom, and rotation into comparable
+ * non-negative motion magnitudes; raw zoom factors and degrees are not inherently comparable to
+ * pixel pan distance.
+ *
+ * @param panMotion normalized accumulated pan motion
+ * @param zoomMotion normalized accumulated zoom motion
+ * @param rotationMotion normalized accumulated rotation motion
+ * @param touchSlop activation threshold in the same normalized units
+ * @return `true` when any motion value is strictly greater than [touchSlop]
  */
 fun shouldActivateTransform(
     panMotion: Float,
@@ -268,8 +352,27 @@ fun shouldActivateTransform(
 }
 
 /**
- * 根据拖拽距离、速度和可用 anchor 解析 swipe 决策。
- * Resolves a swipe decision from drag distance, velocity, and available anchors.
+ * Resolves a directional swipe or two-anchor settle decision when a drag ends.
+ *
+ * Absolute [velocity] at or above [minFlingVelocity] takes precedence. Otherwise distance must
+ * reach the greater of twice [touchSlop] and 35 percent of the supplied anchor span. Positive
+ * motion maps to start-to-end or top-to-bottom. Below both thresholds, two non-null anchors settle
+ * to the endpoint nearest `startAnchor + total`; an exact tie selects [SwipeSettleTarget.Min]. If
+ * the anchor pair is incomplete, [SwipeDecision.None] is returned.
+ *
+ * This low-level policy does not validate anchor ordering, finite inputs, or layout-direction
+ * resolution. Horizontal directions remain logical and must be resolved by the renderer.
+ *
+ * @param axis axis used to translate motion into [SwipeDirection]
+ * @param total signed accumulated drag distance in renderer-local units, normally physical pixels
+ * @param velocity signed terminal velocity in units per second, normally physical pixels per second
+ * @param minAnchor optional minimum endpoint used for span and settle calculations
+ * @param maxAnchor optional maximum endpoint used for span and settle calculations
+ * @param startAnchor endpoint-relative position at gesture start
+ * @param touchSlop platform touch slop in the same units as [total]
+ * @param minFlingVelocity absolute velocity threshold in the same units per second as [velocity]
+ * @return a directional swipe, anchored settle target, or no action
+ * @sample com.viewcompose.gesture.core.samples.resolveDragCompletion
  */
 fun resolveSwipeDecision(
     axis: SwipeDecisionAxis,
