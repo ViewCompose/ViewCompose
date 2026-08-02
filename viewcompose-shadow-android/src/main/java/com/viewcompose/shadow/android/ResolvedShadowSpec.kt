@@ -7,8 +7,16 @@ import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * Android 阴影后端消费的一层像素级阴影参数。
- * Pixel-resolved parameters for one shadow layer consumed by Android backends.
+ * Stores one shadow layer after logical dimensions have been resolved to physical pixels.
+ *
+ * Values are retained without additional validation. Layers remain ordered inside their group and
+ * are painted in declaration order by the Android rasterizer.
+ *
+ * @property color packed Android ARGB color
+ * @property blurRadiusPx mask-filter blur radius in physical pixels
+ * @property spreadRadiusPx signed expansion of the shape bounds in physical pixels
+ * @property offsetXPx horizontal offset in physical pixels; positive values move right
+ * @property offsetYPx vertical offset in physical pixels; positive values move down
  */
 data class ResolvedShadowLayer(
     val color: Int,
@@ -19,8 +27,12 @@ data class ResolvedShadowLayer(
 )
 
 /**
- * 一组共享 shape 且保持声明顺序的阴影。
- * A declaration-ordered shadow group sharing one shape.
+ * Groups declaration-ordered shadow layers that share one outline.
+ *
+ * The [shadows] list is retained as supplied; callers should treat it as immutable after creation.
+ *
+ * @property shape logical outline resolved against bounds, density, and layout direction at raster time
+ * @property shadows ordered layers painted from first to last
  */
 data class ResolvedShadowGroup(
     val shape: UiShape,
@@ -28,17 +40,25 @@ data class ResolvedShadowGroup(
 )
 
 /**
- * 一个节点提交给 Android 阴影后端的完整不可变规格。
- * Complete immutable shadow specification submitted to the Android backend for one node.
+ * Describes all resolved drop shadows for one Android `View`.
+ *
+ * The lists are retained rather than defensively copied. Treat the object graph as immutable so
+ * equality remains a valid raster-cache key.
+ *
+ * @property density density used to resolve corner sizes during rasterization
+ * @property groups declaration-ordered shape and shadow groups
  */
 data class ResolvedShadowSpec(
     val density: UiDensity,
     val groups: List<ResolvedShadowGroup>,
 ) {
+    /** Returns the current total number of layers across [groups]. */
     val layerCount: Int
         get() = groups.sumOf { it.shadows.size }
 
+    /** Provides reusable shadow specifications. */
     companion object {
+        /** Stable empty specification used when no drop-shadow modifier is present. */
         val Empty = ResolvedShadowSpec(
             density = UiDensity.Default,
             groups = emptyList(),
@@ -47,17 +67,25 @@ data class ResolvedShadowSpec(
 }
 
 /**
- * 一个节点提交给前景装饰层的完整不可变内阴影规格。
- * Complete immutable inner-shadow specification submitted to the foreground decoration plane.
+ * Describes all resolved inner shadows for one Android `View` foreground plane.
+ *
+ * The lists are retained rather than defensively copied. Treat the object graph as immutable so
+ * equality remains a valid raster-cache key.
+ *
+ * @property density density used to resolve corner sizes during rasterization
+ * @property groups declaration-ordered shape and shadow groups
  */
 data class ResolvedInnerShadowSpec(
     val density: UiDensity,
     val groups: List<ResolvedShadowGroup>,
 ) {
+    /** Returns the current total number of layers across [groups]. */
     val layerCount: Int
         get() = groups.sumOf { it.shadows.size }
 
+    /** Provides reusable inner-shadow specifications. */
     companion object {
+        /** Stable empty specification used when no inner-shadow modifier is present. */
         val Empty = ResolvedInnerShadowSpec(
             density = UiDensity.Default,
             groups = emptyList(),
@@ -65,13 +93,22 @@ data class ResolvedInnerShadowSpec(
     }
 }
 
-/**
- * 在 Android 渲染边界统一解析 density 和默认 shape。
- * Resolves density and the node's default shape once at the Android rendering boundary.
- */
+/** Resolves declarative drop-shadow elements into Android pixel-space specifications. */
 object ShadowSpecResolver {
     private val Rectangle = UiShape.rounded(UiDp.Zero)
 
+    /**
+     * Converts every layer to physical pixels while preserving element and layer order.
+     *
+     * An element shape wins over [defaultShape]; a zero-corner rectangle is the final fallback. An
+     * empty [elements] list returns [ResolvedShadowSpec.Empty] and intentionally discards [density].
+     *
+     * @sample com.viewcompose.shadow.android.samples.resolveShadowSpecSample
+     * @param elements ordered drop-shadow modifier elements from one node
+     * @param defaultShape node outline used when an element has no explicit shape
+     * @param density logical-to-physical conversion used for every layer
+     * @return a pixel-resolved specification, or the stable empty instance
+     */
     fun resolve(
         elements: List<DropShadowModifierElement>,
         defaultShape: UiShape?,
@@ -98,13 +135,23 @@ object ShadowSpecResolver {
     }
 }
 
-/**
- * 在 Android 渲染边界统一解析内阴影的 density 和默认 shape。
- * Resolves inner-shadow density and default shape at the Android rendering boundary.
- */
+/** Resolves declarative inner-shadow elements into Android pixel-space specifications. */
 object InnerShadowSpecResolver {
     private val Rectangle = UiShape.rounded(UiDp.Zero)
 
+    /**
+     * Converts every layer to physical pixels while preserving element and layer order.
+     *
+     * An element shape wins over [defaultShape]; a zero-corner rectangle is the final fallback. An
+     * empty [elements] list returns [ResolvedInnerShadowSpec.Empty] and intentionally discards
+     * [density].
+     *
+     * @sample com.viewcompose.shadow.android.samples.resolveInnerShadowSpecSample
+     * @param elements ordered inner-shadow modifier elements from one node
+     * @param defaultShape node outline used when an element has no explicit shape
+     * @param density logical-to-physical conversion used for every layer
+     * @return a pixel-resolved specification, or the stable empty instance
+     */
     fun resolve(
         elements: List<InnerShadowModifierElement>,
         defaultShape: UiShape?,

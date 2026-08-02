@@ -9,52 +9,90 @@ import android.os.Build
 import android.util.LruCache
 
 /**
- * 高级阴影绘制后端策略。
- * Rendering policy for advanced shadows.
+ * Selects how a previously rasterized shadow bitmap is replayed during a `ViewGroup` draw.
  *
- * [Auto] 在真机基准得出稳定结论前保持精确 Bitmap 路径；试验只能显式选择
- * [RenderNodeDisplayList]，避免未经验证的设备差异进入默认行为。
- * [Auto] remains on the exact bitmap path until device benchmarks provide stable evidence.
- * Experiments must explicitly select [RenderNodeDisplayList].
+ * [Auto] and [ExactBitmap] currently use direct bitmap drawing. [RenderNodeDisplayList] requests an
+ * Android 10+ hardware-accelerated display-list cache and falls back when unavailable. This policy
+ * does not change how the shadow bitmap itself is rasterized.
+ *
+ * @property wireValue stable configuration value accepted by [fromWireValue]
  */
 enum class ShadowRenderPolicy(
     val wireValue: String,
 ) {
+    /** Chooses the evidence-backed default, currently direct exact-bitmap replay. */
     Auto("auto"),
+    /** Always replays the raster directly with `Canvas.drawBitmap`. */
     ExactBitmap("exact_bitmap"),
+    /** Requests a cached `RenderNode` display list when API and canvas capabilities allow it. */
     RenderNodeDisplayList("render_node"),
     ;
 
+    /** Converts persisted configuration values into policies. */
     companion object {
+        /**
+         * Returns the policy matching [value], falling back to [Auto] for `null` or unknown values.
+         *
+         * @param value serialized [wireValue]
+         * @return the matching policy or [Auto]
+         */
         fun fromWireValue(value: String?): ShadowRenderPolicy {
             return entries.firstOrNull { it.wireValue == value } ?: Auto
         }
     }
 }
 
-/** 实际执行一次阴影绘制的后端。 / Backend used for one shadow draw. */
+/** Identifies the backend that replays one already-rasterized shadow. */
 enum class ShadowRenderBackend {
+    /** Direct `Canvas.drawBitmap` replay on hardware or software canvases. */
     Bitmap,
+    /** Android 10+ hardware `RenderNode` display-list replay. */
     RenderNodeDisplayList,
 }
 
-/** 后端选择原因，供性能报告和 Demo 诊断展示。 / Backend selection reason for diagnostics. */
+/** Explains why [ShadowRenderBackendSelector] chose a replay backend. */
 enum class ShadowRenderDecisionReason {
+    /** [ShadowRenderPolicy.ExactBitmap] explicitly selected direct replay. */
     ExplicitExactBitmap,
+    /** [ShadowRenderPolicy.Auto] retained the current evidence-backed bitmap default. */
     AutoExactPendingEvidence,
+    /** Explicit RenderNode policy met API and hardware-canvas requirements. */
     ExplicitRenderNode,
+    /** RenderNode was requested below Android 10. */
     RenderNodeApiUnavailable,
+    /** RenderNode was requested while drawing to a software canvas. */
     SoftwareCanvas,
+    /** RenderNode replay threw and the draw fell back to direct bitmap replay. */
     RenderNodeFailure,
 }
 
-/** 一次后端选择结果。 / One backend selection decision. */
+/**
+ * Records the backend and reason selected for one shadow replay.
+ *
+ * @property backend replay implementation to use
+ * @property reason capability or policy branch that selected [backend]
+ */
 data class ShadowRenderBackendDecision(
     val backend: ShadowRenderBackend,
     val reason: ShadowRenderDecisionReason,
 )
 
-/** 阴影后端的进程内诊断快照。 / Process-wide shadow backend diagnostics. */
+/**
+ * Captures process-wide replay diagnostics at one instant.
+ *
+ * Counts accumulate until [ShadowDecorationLayer.resetBackendDiagnostics] and are confined to the
+ * renderer/UI thread except for the volatile policy read.
+ *
+ * @property policy policy active when the snapshot was created
+ * @property bitmapDraws number of direct bitmap replays
+ * @property renderNodeDraws number of successful RenderNode replays
+ * @property renderNodeRecordings number of display lists recorded
+ * @property renderNodeCacheHits successful bitmap-identity display-list lookups
+ * @property renderNodeCacheEvictions display lists removed by the LRU byte budget
+ * @property renderNodeCachedBytes current bitmap allocation bytes represented by cached display lists
+ * @property decisionsByReason cumulative replay decisions grouped by reason
+ * @property lastDecision most recent decision, or `null` before the first replay/reset
+ */
 data class ShadowRenderBackendStats(
     val policy: ShadowRenderPolicy,
     val bitmapDraws: Long,
@@ -67,11 +105,20 @@ data class ShadowRenderBackendStats(
     val lastDecision: ShadowRenderBackendDecision?,
 )
 
-/**
- * 纯后端选择器；把 API 和硬件 Canvas 条件显式化，便于稳定测试。
- * Pure backend selector with explicit API and hardware-canvas inputs.
- */
+/** Selects a deterministic shadow replay backend from policy and platform capabilities. */
 object ShadowRenderBackendSelector {
+    /**
+     * Returns the backend decision without reading global Android state.
+     *
+     * [ShadowRenderPolicy.Auto] and [ShadowRenderPolicy.ExactBitmap] always select bitmap replay.
+     * Explicit RenderNode replay requires API 29 or newer and a hardware-accelerated canvas.
+     *
+     * @sample com.viewcompose.shadow.android.samples.selectShadowBackendSample
+     * @param policy requested replay policy
+     * @param sdkInt Android SDK level to evaluate
+     * @param hardwareAccelerated whether the destination canvas is hardware accelerated
+     * @return deterministic backend and selection reason
+     */
     fun select(
         policy: ShadowRenderPolicy,
         sdkInt: Int,
@@ -130,11 +177,8 @@ internal interface ShadowDisplayListRenderer {
 }
 
 /**
- * 把稳定阴影 Bitmap 录制为 RenderNode display list。
  * Records stable shadow bitmaps into RenderNode display lists.
  *
- * 缓存按 Bitmap 实例和实际字节数限制；节点位移、缩放、旋转与透明度仍由外层 Canvas/
- * RenderNode 属性更新，不会重新录制 display list。
  * The cache is bounded by bitmap identity and allocated bytes. Position, transforms, and alpha are
  * applied outside the recording and therefore do not rebuild the display list.
  */
