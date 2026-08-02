@@ -167,6 +167,10 @@ cd tools/viewcompose-studio-plugin
 ./gradlew prepareMarketplaceRelease
 ```
 
+The first release targets Android Studio build family `261` only. Both the lower compatibility
+boundary and `untilBuild = 261.*` are explicit, so an untested future Android Studio platform is not
+advertised as compatible by accident.
+
 The artifact is written to `build/distributions/`. Marketplace publishing and signing read only
 environment variables:
 
@@ -175,6 +179,25 @@ JETBRAINS_MARKETPLACE_TOKEN
 JETBRAINS_CERTIFICATE_CHAIN
 JETBRAINS_PRIVATE_KEY
 JETBRAINS_PRIVATE_KEY_PASSWORD
+```
+
+The standard JetBrains environment names `CERTIFICATE_CHAIN`, `PRIVATE_KEY`,
+`PRIVATE_KEY_PASSWORD`, and `PUBLISH_TOKEN` are supported as aliases. Local releases may instead
+keep `chain.crt` and `private.pem` under the default private directory
+`~/.config/viewcompose/marketplace-signing/`. Custom locations can be configured by putting only
+their absolute paths in user-level `~/.gradle/gradle.properties`:
+
+```text
+viewComposeMarketplaceCertificateChainFile=/absolute/private/path/chain.crt
+viewComposeMarketplacePrivateKeyFile=/absolute/private/path/private.pem
+viewComposeMarketplacePrivateKeyPassword=<private key password, only when encrypted>
+```
+
+Build, sign, and verify the author signature before a manual upload:
+
+```bash
+cd tools/viewcompose-studio-plugin
+./gradlew prepareSignedMarketplaceRelease
 ```
 
 The first Marketplace release must be uploaded through JetBrains Marketplace for initial review.

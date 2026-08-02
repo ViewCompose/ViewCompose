@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin url="https://github.com/ViewCompose/ViewCompose">
     <id>com.viewcompose.studio.preview</id>
     <name>ViewCompose Preview</name>
     <vendor>ViewCompose</vendor>

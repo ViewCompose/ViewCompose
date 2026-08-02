@@ -72,3 +72,31 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 The stable 1.0 release deterministically prefers the `debug` descriptor catalog. Initial rendering
 uses the first declared configuration; the selected configuration is then retained across
 source-save refreshes when it still exists.
+
+## Marketplace release preparation
+
+The plugin version is read from the repository-wide
+`gradle/viewcompose-publishing.properties` file and remains independent from every Maven module.
+Build, test, verify, and package the Marketplace artifact without uploading it:
+
+```text
+./gradlew prepareMarketplaceRelease
+```
+
+Signing and publishing can use `JETBRAINS_CERTIFICATE_CHAIN`, `JETBRAINS_PRIVATE_KEY`,
+`JETBRAINS_PRIVATE_KEY_PASSWORD`, and `JETBRAINS_MARKETPLACE_TOKEN`. The standard JetBrains names
+`CERTIFICATE_CHAIN`, `PRIVATE_KEY`, `PRIVATE_KEY_PASSWORD`, and `PUBLISH_TOKEN` are also supported.
+For local releases, the default signing directory is
+`~/.config/viewcompose/marketplace-signing/`. Keep `chain.crt` and `private.pem` there, outside the
+repository. Custom locations can be configured in user-level `~/.gradle/gradle.properties`:
+
+```text
+viewComposeMarketplaceCertificateChainFile=/absolute/private/path/chain.crt
+viewComposeMarketplacePrivateKeyFile=/absolute/private/path/private.pem
+viewComposeMarketplacePrivateKeyPassword=<private key password>
+```
+
+Run `./gradlew prepareSignedMarketplaceRelease` to create and verify the signed archive. The first
+release is uploaded manually for Marketplace review; `./gradlew publishPlugin` is reserved for
+approved follow-up releases. The complete release contract is documented in the repository root
+`PUBLISHING.md`.
