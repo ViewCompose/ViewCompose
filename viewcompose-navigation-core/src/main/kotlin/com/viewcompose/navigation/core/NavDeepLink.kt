@@ -9,10 +9,7 @@ import java.util.ArrayList
 import java.util.Collections
 import java.util.LinkedHashMap
 
-/**
- * deep link 占位参数的目标类型。
- * Target type for a deep-link placeholder argument.
- */
+/** Target type used to decode one deep-link placeholder. */
 enum class NavDeepLinkArgumentType {
     Text,
     Int,
@@ -22,10 +19,7 @@ enum class NavDeepLinkArgumentType {
     Double,
 }
 
-/**
- * deep link 命中后对目标 stack 的打开方式。
- * Launch mode applied to the target stack after a deep link matches.
- */
+/** Mutation applied to the target stack after a deep link matches. */
 enum class NavDeepLinkLaunchMode {
     Push,
     SingleTop,
@@ -34,20 +28,26 @@ enum class NavDeepLinkLaunchMode {
 }
 
 /**
- * 图节点允许匹配的一个 URI pattern。
- * One allowlisted URI pattern for a graph node.
+ * Allowlisted absolute URI pattern registered on one graph node.
  *
- * 占位符必须占据完整 path segment 或 query value，例如 `https://example.com/users/{userId}?source={source}`。
- * Placeholders must occupy a complete path segment or query value, for example `https://example.com/users/{userId}?source={source}`.
+ * Placeholders must occupy a complete path segment or query value, for example
+ * `https://example.com/users/{userId}?source={source}`. Placeholder names are unique and default to
+ * [NavDeepLinkArgumentType.Text]. Schemes and hosts compare case-insensitively; decoded path and
+ * query values compare exactly. Fragments, user info, malformed percent encoding, duplicate query
+ * names, and non-hierarchical URIs are rejected at construction.
  *
- * 占位符默认按 [NavDeepLinkArgumentType.Text] 解析。
- * Placeholder values default to [NavDeepLinkArgumentType.Text].
+ * @sample com.viewcompose.navigation.core.samples.deepLinkResolutionSample
+ * @property uriPattern validated absolute hierarchical URI pattern
+ * @param argumentTypes optional declared-placeholder type overrides
+ * @property targetStackId optional retained stack selected after a match
+ * @throws IllegalArgumentException if the pattern or type declarations are invalid
  */
 class NavDeepLink(
     val uriPattern: String,
     argumentTypes: Map<String, NavDeepLinkArgumentType> = emptyMap(),
     val targetStackId: NavStackId? = null,
 ) {
+    /** Immutable type map for explicitly typed placeholders. */
     val argumentTypes: Map<String, NavDeepLinkArgumentType> = Collections.unmodifiableMap(
         LinkedHashMap(argumentTypes),
     )
@@ -57,6 +57,7 @@ class NavDeepLink(
         argumentTypes = this.argumentTypes,
     )
 
+    /** Compares pattern, argument types, and target stack structurally. */
     override fun equals(other: Any?): Boolean {
         return other is NavDeepLink &&
             uriPattern == other.uriPattern &&
@@ -64,6 +65,7 @@ class NavDeepLink(
             targetStackId == other.targetStackId
     }
 
+    /** Returns the structural hash of the public declaration. */
     override fun hashCode(): Int {
         var result = uriPattern.hashCode()
         result = 31 * result + argumentTypes.hashCode()
@@ -71,6 +73,7 @@ class NavDeepLink(
         return result
     }
 
+    /** Returns a diagnostic representation of the public declaration. */
     override fun toString(): String {
         return "NavDeepLink(" +
             "uriPattern=$uriPattern, " +
@@ -81,18 +84,17 @@ class NavDeepLink(
 }
 
 /**
- * deep link 成功匹配后的 route 输出。
- * Route output produced by a successful deep-link match.
+ * Route produced by a successful deep-link match.
+ *
+ * @property deepLink declaration that won specificity ranking
+ * @property route target graph-node route with decoded placeholder arguments
  */
 data class NavDeepLinkMatch(
     val deepLink: NavDeepLink,
     val route: NavRoute,
 )
 
-/**
- * deep link 被拒绝的可诊断原因。
- * Diagnostic reason why a deep link was rejected.
- */
+/** Diagnostic reason why a deep link was rejected instead of reported as no match. */
 enum class NavDeepLinkRejectionReason {
     MalformedUri,
     InvalidArgument,
@@ -100,18 +102,26 @@ enum class NavDeepLinkRejectionReason {
 }
 
 /**
- * deep link 拒绝详情，包含失败参数或冲突 pattern。
- * Deep-link rejection details, including the failed argument or conflicting patterns.
+ * Diagnostic details for a rejected deep-link input.
+ *
+ * [argumentName] is populated for typed decoding failures. [matchingPatterns] identifies equally
+ * specific candidates for ambiguity, or the most-specific candidates involved in a type failure.
+ *
+ * @property reason rejection category
+ * @property argumentName failed placeholder name, when applicable
+ * @param matchingPatterns copied conflicting or relevant URI patterns
  */
 class NavDeepLinkRejection(
     val reason: NavDeepLinkRejectionReason,
     val argumentName: String? = null,
     matchingPatterns: List<String> = emptyList(),
 ) {
+    /** Immutable relevant pattern list in resolver order. */
     val matchingPatterns: List<String> = Collections.unmodifiableList(
         ArrayList(matchingPatterns),
     )
 
+    /** Compares all diagnostic fields structurally. */
     override fun equals(other: Any?): Boolean {
         return other is NavDeepLinkRejection &&
             reason == other.reason &&
@@ -119,6 +129,7 @@ class NavDeepLinkRejection(
             matchingPatterns == other.matchingPatterns
     }
 
+    /** Returns the structural hash of all diagnostic fields. */
     override fun hashCode(): Int {
         var result = reason.hashCode()
         result = 31 * result + (argumentName?.hashCode() ?: 0)
@@ -126,6 +137,7 @@ class NavDeepLinkRejection(
         return result
     }
 
+    /** Returns a diagnostic representation suitable for logs. */
     override fun toString(): String {
         return "NavDeepLinkRejection(" +
             "reason=$reason, " +
@@ -135,25 +147,30 @@ class NavDeepLinkRejection(
     }
 }
 
-/**
- * deep link 解析结果。
- * Result of resolving a deep link.
- */
+/** Exhaustive result of resolving one input URI. */
 sealed interface NavDeepLinkResolution {
+    /**
+     * One uniquely most-specific pattern matched.
+     *
+     * @property match winning declaration and decoded route
+     */
     data class Matched(
         val match: NavDeepLinkMatch,
     ) : NavDeepLinkResolution
 
+    /** Well-formed input did not match any registered pattern. */
     data object NoMatch : NavDeepLinkResolution
 
+    /**
+     * Input matched the pattern domain but could not be accepted safely.
+     *
+     * @property rejection structured failure details
+     */
     data class Rejected(
         val rejection: NavDeepLinkRejection,
     ) : NavDeepLinkResolution
 
-    /**
-     * controller 创建时没有绑定导航图。
-     * The controller was created without a navigation graph.
-     */
+    /** The controller was created without a navigation graph and cannot resolve deep links. */
     data object Unsupported : NavDeepLinkResolution
 }
 
@@ -199,7 +216,6 @@ internal fun resolveDeepLinkTargets(
         }
     }
     if (matches.isEmpty()) {
-        // 没有成功匹配时，返回最具体的参数失败；完全无匹配才返回 NoMatch。
         // With no successful match, report the most specific argument failure; return NoMatch only when nothing matched.
         val invalid = invalidArguments.maxByOrNull(InvalidDeepLinkArgument::score)
         return if (invalid == null) {
@@ -216,7 +232,6 @@ internal fun resolveDeepLinkTargets(
     val highestScore = matches.maxOf(RankedDeepLinkMatch::score)
     val highestInvalidScore = invalidArguments.maxOfOrNull(InvalidDeepLinkArgument::score)
     if (highestInvalidScore != null && highestInvalidScore >= highestScore) {
-        // 参数解析失败的 pattern 与成功 pattern 同等或更具体时，优先暴露参数错误。
         // If an invalid-argument pattern is as specific as or more specific than a successful match, expose that argument error.
         val invalid = invalidArguments.first { candidate ->
             candidate.score == highestInvalidScore
@@ -233,7 +248,6 @@ internal fun resolveDeepLinkTargets(
     }
     val bestMatches = matches.filter { match -> match.score == highestScore }
     if (bestMatches.size != 1) {
-        // 同分最高命中无法安全选择 route，交给调用方处理歧义。
         // Tied top matches cannot safely choose a route, so surface ambiguity to the caller.
         return NavDeepLinkResolution.Rejected(
             NavDeepLinkRejection(
@@ -247,10 +261,7 @@ internal fun resolveDeepLinkTargets(
     return NavDeepLinkResolution.Matched(bestMatches.single().match)
 }
 
-/**
- * 已编译的 deep-link pattern。
- * Compiled deep-link pattern.
- */
+/** Compiled deep-link pattern used by the internal resolver. */
 internal class CompiledNavDeepLink(
     private val scheme: String,
     private val host: String?,
@@ -322,7 +333,6 @@ internal class CompiledNavDeepLink(
     }
 
     private fun specificityScore(): Int {
-        // 静态 path segment 权重最高，query 次之；参数 segment 仍比完全缺省更具体。
         // Static path segments carry the highest weight, query is next, and argument segments still add specificity.
         val pathScore = path.fold(0) { score, component ->
             when (component) {
@@ -340,10 +350,7 @@ internal class CompiledNavDeepLink(
     }
 }
 
-/**
- * URI path/query component 的匹配模式。
- * Match pattern for one URI path or query component.
- */
+/** Match pattern for one URI path or query component. */
 internal sealed interface ComponentPattern {
     data class Static(
         val value: String,
@@ -529,10 +536,7 @@ private fun componentPattern(
     )
 }
 
-/**
- * 严格解析输入 URI，拒绝 fragment、控制字符和非法 percent encoding。
- * Strictly parses input URIs, rejecting fragments, control characters, and invalid percent encoding.
- */
+/** Strictly parses input URIs, rejecting fragments, control characters, and invalid percent encoding. */
 private fun parseInputUri(uri: String): ParsedInputUri? {
     val parsed = parseUri(uri) ?: return null
     if (parsed.rawFragment != null) {
@@ -607,7 +611,6 @@ private fun rawPathSegments(rawPath: String): List<String> {
 }
 
 private fun strictPercentDecode(rawValue: String): String? {
-    // 先按 percent encoding 组装字节，再用 REPORT 模式校验 UTF-8，避免容错解码吞掉坏输入。
     // Assemble bytes from percent encoding first, then validate UTF-8 with REPORT mode so malformed input is not tolerated.
     val bytes = ByteArrayOutputStream(rawValue.length)
     var index = 0

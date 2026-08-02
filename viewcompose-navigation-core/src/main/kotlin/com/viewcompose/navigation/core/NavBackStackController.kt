@@ -1,46 +1,65 @@
 package com.viewcompose.navigation.core
 
-/**
- * push 命令的入栈模式。
- * Stack insertion mode for push commands.
- */
+/** Stack insertion mode for [NavCommand.Push]. */
 enum class NavLaunchMode {
     Standard,
     SingleTop,
 }
 
-/**
- * 导航控制器支持的状态变更命令。
- * State mutation commands supported by the navigation controller.
- */
+/** Immutable state-mutation command accepted by [NavBackStackController.prepare]. */
 sealed interface NavCommand {
+    /**
+     * Appends a resolved destination to the active stack.
+     *
+     * @property route destination or graph route to resolve
+     * @property launchMode duplicate-top policy
+     */
     data class Push(
         val route: NavRoute,
         val launchMode: NavLaunchMode = NavLaunchMode.Standard,
     ) : NavCommand
 
+    /** Removes the active stack's top entry when it is not the root. */
     data object Pop : NavCommand
 
+    /**
+     * Replaces the active top while retaining entries beneath it.
+     *
+     * @property route destination or graph route to resolve
+     */
     data class ReplaceTop(
         val route: NavRoute,
     ) : NavCommand
 
+    /**
+     * Replaces the complete active stack with one newly allocated root entry.
+     *
+     * @property route destination or graph route to resolve
+     */
     data class Reset(
         val route: NavRoute,
     ) : NavCommand
 
+    /**
+     * Selects an independently retained stack.
+     *
+     * @property stackId declared target stack
+     * @property selectionMode policy applied to its retained entries before selection
+     */
     data class SelectStack(
         val stackId: NavStackId,
         val selectionMode: NavStackSelectionMode = NavStackSelectionMode.Preserve,
     ) : NavCommand
 
     /**
-     * 以一个原子事务变更目标 stack 并选中它。
      * Mutates a destination stack and selects it as one atomic transaction.
      *
-     * 该命令携带已由 graph 解析过的 route；应用通常通过 host deep-link API 间接创建。
      * This command carries a graph-resolved route. Applications normally create it through their
      * host's deep-link API instead of constructing it directly.
+     *
+     * @property route route produced by [NavDeepLinkMatch]
+     * @property targetStackId explicit target or `null` to mutate the active stack
+     * @property launchMode mutation applied inside the target stack
      */
     data class OpenDeepLink(
         val route: NavRoute,
@@ -49,35 +68,38 @@ sealed interface NavCommand {
     ) : NavCommand
 
     /**
-     * 回到 selection history 中最新的 stack，且不把当前 stack 再写回历史。
      * Returns to the newest stack in selection history without adding the current stack back.
      *
-     * 应用通常在 [NavRootBackBehavior.PreviousStack] 配置下通过系统 Back 触达该命令。
      * Applications normally reach this command through system Back when
      * [NavRootBackBehavior.PreviousStack] is configured.
      */
     data object PopStackHistory : NavCommand
 }
 
-/**
- * prepare 没有产生状态变化时的原因。
- * Reason why prepare produced no state change.
- */
+/** Reason why preparing a valid command produced no state mutation. */
 enum class NavNoChangeReason {
     CannotPopRoot,
     AlreadyAtDestination,
     AlreadySelectedStack,
 }
 
-/**
- * 导航命令预执行结果。
- * Result of preparing a navigation command.
- */
+/** Exhaustive result of preparing a navigation command. */
 sealed interface NavPreparation {
+    /**
+     * Command produced a pending transaction that the host must finish.
+     *
+     * @property transaction single pending transaction owned by the controller
+     */
     data class Ready(
         val transaction: NavTransaction,
     ) : NavPreparation
 
+    /**
+     * Command was valid but its requested state was already effective.
+     *
+     * @property reason no-change category
+     * @property snapshot unchanged active-stack snapshot
+     */
     data class NoChange(
         val reason: NavNoChangeReason,
         val snapshot: NavBackStackSnapshot,
@@ -85,8 +107,15 @@ sealed interface NavPreparation {
 }
 
 /**
- * 一个导航事务中新增和移除的 entry 摘要。
- * Summary of entries added and removed by one navigation transaction.
+ * Destination-owner delta produced by one navigation transaction.
+ *
+ * The lists span every retained stack, not only the active one, so a host can create and destroy
+ * platform owners consistently during stack selection and deep-link transactions.
+ *
+ * @property added newly retained destination entries in resulting stack order
+ * @property removed no-longer-retained destination entries in previous stack order
+ * @property previousTop active destination before the transaction
+ * @property nextTop active destination after the transaction
  */
 data class NavStackMutation(
     val added: List<NavEntry>,
@@ -95,10 +124,7 @@ data class NavStackMutation(
     val nextTop: NavEntry,
 )
 
-/**
- * 导航事务状态。
- * Navigation transaction state.
- */
+/** Terminal state of a prepared navigation transaction. */
 enum class NavTransactionStatus {
     Prepared,
     Committed,
@@ -106,11 +132,19 @@ enum class NavTransactionStatus {
 }
 
 /**
- * 可提交或回滚的导航事务。
- * Navigation transaction that can be committed or rolled back.
+ * Single-use navigation transaction that can be committed or rolled back.
  *
- * 事务在 prepare 阶段已经计算好 afterState，只有 commit 才会发布到 controller。
- * The transaction computes afterState during prepare, and only commit publishes it to the controller.
+ * Preparation computes [after] and [mutation] without publishing state. A host should apply its
+ * View/lifecycle transaction first and call [commit] only after success. [rollback] releases the
+ * pending slot without changing state. Closing a still-prepared transaction rolls it back, making
+ * Kotlin `use` a safe failure boundary. Calls are synchronized and a terminal transaction rejects
+ * subsequent completion attempts.
+ *
+ * @sample com.viewcompose.navigation.core.samples.transactionalNavigationSample
+ * @property command command represented by this transaction
+ * @property before active-stack snapshot before publication
+ * @property after prospective active-stack snapshot
+ * @property mutation complete retained-entry delta
  */
 class NavTransaction internal constructor(
     private val owner: NavBackStackController,
@@ -123,10 +157,16 @@ class NavTransaction internal constructor(
     val mutation: NavStackMutation,
 ) : AutoCloseable {
     @Volatile
+    /** Current single-use transaction status. */
     var status: NavTransactionStatus = NavTransactionStatus.Prepared
         private set
 
     @Synchronized
+    /**
+     * Atomically publishes the prepared state and returns the new active stack.
+     *
+     * @throws IllegalStateException if this transaction is terminal, not pending, or state changed
+     */
     fun commit(): NavBackStackSnapshot {
         check(status == NavTransactionStatus.Prepared) {
             "Navigation transaction $transactionId is already $status."
@@ -137,6 +177,11 @@ class NavTransaction internal constructor(
     }
 
     @Synchronized
+    /**
+     * Discards the prepared state and releases the controller for another command.
+     *
+     * @throws IllegalStateException if this transaction is already terminal or is not pending
+     */
     fun rollback() {
         check(status == NavTransactionStatus.Prepared) {
             "Navigation transaction $transactionId is already $status."
@@ -146,6 +191,7 @@ class NavTransaction internal constructor(
     }
 
     @Synchronized
+    /** Rolls back when still prepared; does nothing after commit or explicit rollback. */
     override fun close() {
         if (status == NavTransactionStatus.Prepared) {
             rollback()
@@ -154,11 +200,17 @@ class NavTransaction internal constructor(
 }
 
 /**
- * 纯 Kotlin 导航回退栈控制器。
- * Pure Kotlin navigation back-stack controller.
+ * Thread-safe, platform-neutral controller for transactional single- or multi-stack navigation.
  *
- * 所有状态变更先 prepare 成事务，再由 host 渲染成功后 commit；失败路径调用 rollback。
- * All state changes are prepared as transactions first, then committed by the host after rendering succeeds; failure paths roll back.
+ * Every mutation is first [prepare]d. Only [NavTransaction.commit] publishes its precomputed state;
+ * rendering or lifecycle failures call [NavTransaction.rollback]. At most one transaction may be
+ * pending. Snapshots are immutable and safe to hand to platform save adapters after commit.
+ *
+ * Controllers created with a [NavGraph] validate routes, own graph-scoped identities, and resolve
+ * deep links. Graphless controllers accept direct routes but report [NavDeepLinkResolution.Unsupported].
+ *
+ * @sample com.viewcompose.navigation.core.samples.transactionalNavigationSample
+ * @property rootBackBehavior configured behavior when the active stack is at its root
  */
 class NavBackStackController private constructor(
     initialState: NavStackSetSnapshot,
@@ -178,12 +230,19 @@ class NavBackStackController private constructor(
     private var nextTransactionId = 0L
 
     @Synchronized
+    /** Returns the currently committed active-stack snapshot. */
     fun snapshot(): NavBackStackSnapshot = currentState.activeStack
 
     @Synchronized
+    /** Returns the currently committed complete retained-stack state. */
     fun stackStateSnapshot(): NavStackSetSnapshot = currentState
 
     @Synchronized
+    /**
+     * Returns the committed snapshot for [stackId].
+     *
+     * @throws IllegalArgumentException if the stack is not declared
+     */
     fun stackSnapshot(stackId: NavStackId): NavBackStackSnapshot {
         return requireNotNull(currentState[stackId]) {
             "Navigation stack '$stackId' is not declared."
@@ -191,14 +250,22 @@ class NavBackStackController private constructor(
     }
 
     @Synchronized
+    /** Returns all committed destination entries in configured stack order. */
     fun retainedEntries(): List<NavEntry> = currentState.allEntries
 
     @Synchronized
+    /** Resolves [uri] through the bound graph, or returns `Unsupported` for a graphless controller. */
     fun resolveDeepLink(uri: String): NavDeepLinkResolution {
         return deepLinkResolver?.invoke(uri) ?: NavDeepLinkResolution.Unsupported
     }
 
     @Synchronized
+    /**
+     * Returns the command that should handle system Back, or `null` to delegate to the outer host.
+     *
+     * This method does not mutate state. A non-root stack pops first; root behavior then follows
+     * [rootBackBehavior] and available selection history.
+     */
     fun systemBackCommand(): NavCommand? {
         return when {
             currentState.activeStack.entries.size > 1 -> NavCommand.Pop
@@ -209,6 +276,13 @@ class NavBackStackController private constructor(
     }
 
     @Synchronized
+    /**
+     * Computes [command] against committed state without publishing it.
+     *
+     * @return a single pending transaction, or a structured no-change result
+     * @throws IllegalStateException if another transaction is pending or command preconditions fail
+     * @throws IllegalArgumentException if a route or stack is unknown
+     */
     fun prepare(command: NavCommand): NavPreparation {
         check(pendingTransactionId == null) {
             "A navigation transaction is already prepared. Commit or roll it back first."
@@ -322,7 +396,6 @@ class NavBackStackController private constructor(
         val after = afterState.activeStack
         val transactionId = ++nextTransactionId
         pendingTransactionId = transactionId
-        // mutation 覆盖所有保留 stack，而不只活跃 stack，方便 host 同步 owner/session 生命周期。
         // Mutation spans all retained stacks, not only the active stack, so hosts can sync owner/session lifetimes.
         return NavPreparation.Ready(
             transaction = NavTransaction(
@@ -406,7 +479,6 @@ class NavBackStackController private constructor(
             commonPrefixSize,
             enteredGraphIndex ?: commonPrefixSize,
         )
-        // 只复用共同 graph 前缀；进入新 graph 时从该层开始创建新的 graph owner。
         // Reuse only the common graph prefix; when entering a new graph, create graph owners from that layer onward.
         val retained = previousGraphEntries.take(reusablePrefixSize)
         val created = resolved.graphPath
@@ -525,7 +597,6 @@ class NavBackStackController private constructor(
             targetStackId = targetStackId,
             targetSnapshot = nextSnapshot,
         )
-        // deep link 同时变更目标 stack 内容与 activeStackId，保证切栈和入栈不可分割。
         // A deep link changes the target stack and activeStackId together so stack selection and mutation are indivisible.
         return afterState.takeUnless { state -> state == beforeState }
     }
@@ -593,7 +664,14 @@ class NavBackStackController private constructor(
         )
     }
 
+    /** Creation and restoration entry points. */
     companion object {
+        /**
+         * Creates a graphless single-stack controller at [startDestination].
+         *
+         * @param startDestination immutable root route
+         * @param entryIdFactory identity source retained for future entries
+         */
         fun create(
             startDestination: NavRoute,
             entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
@@ -604,6 +682,12 @@ class NavBackStackController private constructor(
             )
         }
 
+        /**
+         * Creates a graph-aware single-stack controller at [NavGraph.startDestination].
+         *
+         * @param graph immutable route and deep-link registry
+         * @param entryIdFactory identity source retained for future entries
+         */
         fun create(
             graph: NavGraph,
             entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
@@ -615,6 +699,14 @@ class NavBackStackController private constructor(
             )
         }
 
+        /**
+         * Creates a graphless controller from a single- or multi-stack [configuration].
+         *
+         * Initial routes are accepted directly and deep-link resolution is unsupported.
+         *
+         * @param configuration retained stack declarations and root-Back policy
+         * @param entryIdFactory identity source retained for future entries
+         */
         fun create(
             configuration: NavStackConfiguration,
             entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
@@ -633,6 +725,17 @@ class NavBackStackController private constructor(
             )
         }
 
+        /**
+         * Creates a graph-aware controller from [configuration].
+         *
+         * Every stack start route is resolved through [graph] and receives independent graph-owner
+         * identities even when multiple stacks begin inside the same graph.
+         *
+         * @param configuration retained stack declarations and root-Back policy
+         * @param graph immutable route and deep-link registry
+         * @param entryIdFactory identity source retained for future entries
+         * @throws IllegalArgumentException if a configured start route is not registered
+         */
         fun create(
             configuration: NavStackConfiguration,
             graph: NavGraph,
@@ -651,6 +754,11 @@ class NavBackStackController private constructor(
             )
         }
 
+        /**
+         * Restores a graphless single-stack controller from [snapshot].
+         *
+         * @throws IllegalArgumentException if the snapshot contains graph-owner entries
+         */
         fun restore(
             snapshot: NavBackStackSnapshot,
             entryIdFactory: NavEntryIdFactory = NavEntryIdFactory.random(),
@@ -669,6 +777,11 @@ class NavBackStackController private constructor(
             )
         }
 
+        /**
+         * Restores a graph-aware single-stack controller and validates every saved route hierarchy.
+         *
+         * @throws IllegalArgumentException if a saved route is missing, changed destination, or moved graphs
+         */
         fun restore(
             snapshot: NavBackStackSnapshot,
             graph: NavGraph,
@@ -685,6 +798,11 @@ class NavBackStackController private constructor(
             )
         }
 
+        /**
+         * Restores graphless multi-stack [state] against the current [configuration].
+         *
+         * @throws IllegalArgumentException if stack IDs differ or state contains graph owners
+         */
         fun restore(
             state: NavStackSetSnapshot,
             configuration: NavStackConfiguration,
@@ -704,6 +822,11 @@ class NavBackStackController private constructor(
             )
         }
 
+        /**
+         * Restores graph-aware multi-stack [state] and validates configuration and graph compatibility.
+         *
+         * @throws IllegalArgumentException if stack IDs differ or any saved route hierarchy changed
+         */
         fun restore(
             state: NavStackSetSnapshot,
             configuration: NavStackConfiguration,
@@ -730,7 +853,6 @@ class NavBackStackController private constructor(
             configuration.stacks.forEach { stack ->
                 val rootId = entryIdFactory.nextId()
                 val resolvedStart = routeResolver(stack.startDestination)
-                // 每个 stack 都独立创建根 destination 和 graph owner，避免多栈间共享生命周期状态。
                 // Each stack creates independent root destination and graph owners to avoid sharing lifecycle state across stacks.
                 stacks[stack.id] = NavBackStackSnapshot(
                     entries = listOf(
@@ -782,7 +904,6 @@ class NavBackStackController private constructor(
             state: NavStackSetSnapshot,
             graph: NavGraph,
         ) {
-            // 恢复的 route 必须仍解析到同一 destination 和 graph hierarchy，否则旧 owner 状态已不可安全复用。
             // Restored routes must still resolve to the same destination and graph hierarchy, otherwise old owner state is unsafe to reuse.
             state.allEntries.forEach { entry ->
                 val resolved = graph.resolve(entry.route)

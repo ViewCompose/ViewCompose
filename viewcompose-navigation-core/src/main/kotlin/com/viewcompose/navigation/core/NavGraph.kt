@@ -4,30 +4,29 @@ import java.util.ArrayList
 import java.util.Collections
 import java.util.LinkedHashMap
 
-/**
- * 限制导航图 DSL 的接收者作用域。
- * Restricts receiver scope for the navigation graph DSL.
- */
+/** Restricts implicit receivers while declaring a navigation graph. */
 @DslMarker
 annotation class NavGraphDsl
 
-/**
- * 导航图中的节点契约，可能是 destination 或嵌套 graph。
- * Node contract inside a navigation graph, either a destination or a nested graph.
- */
+/** Node inside an immutable navigation graph, either a leaf destination or a nested graph. */
 sealed interface NavGraphNode {
+    /** Non-blank route name, unique across the complete root graph. */
     val route: String
+    /** Immutable deep-link patterns registered directly on this node. */
     val deepLinks: List<NavDeepLink>
 }
 
 /**
- * 导航图中的叶子目的地。
  * Leaf destination inside a navigation graph.
+ *
+ * @property route non-blank route name
+ * @param deepLinks deep-link patterns copied in declaration order
  */
 class NavDestination internal constructor(
     override val route: String,
     deepLinks: List<NavDeepLink>,
 ) : NavGraphNode {
+    /** Immutable deep-link patterns registered for this destination. */
     override val deepLinks: List<NavDeepLink> = Collections.unmodifiableList(
         ArrayList(deepLinks),
     )
@@ -38,26 +37,38 @@ class NavDestination internal constructor(
         }
     }
 
+    /** Compares route and deep-link declarations structurally. */
     override fun equals(other: Any?): Boolean {
         return other is NavDestination &&
             route == other.route &&
             deepLinks == other.deepLinks
     }
 
+    /** Returns the structural hash of route and deep links. */
     override fun hashCode(): Int {
         var result = route.hashCode()
         result = 31 * result + deepLinks.hashCode()
         return result
     }
 
+    /** Returns a diagnostic representation of this destination declaration. */
     override fun toString(): String {
         return "NavDestination(route=$route, deepLinks=$deepLinks)"
     }
 }
 
 /**
- * 不可变导航图，提供 route 解析、startDestination 展开和 deep-link 匹配。
- * Immutable navigation graph that resolves routes, expands start destinations, and matches deep links.
+ * Immutable navigation graph that resolves routes, expands nested starts, and matches deep links.
+ *
+ * Route names and deep-link URI patterns must be unique across the complete graph. A nested graph's
+ * start destination must be its direct child. Resolving a graph route recursively enters start
+ * destinations while preserving graph-owner paths and inherited arguments.
+ *
+ * @sample com.viewcompose.navigation.core.samples.navigationGraphSample
+ * @property route non-blank route name of this graph node
+ * @property startDestination direct child entered when this graph route is requested
+ * @param children non-empty child declarations copied in order
+ * @param deepLinks deep-link patterns registered directly on this graph route
  */
 class NavGraph internal constructor(
     override val route: String,
@@ -65,9 +76,11 @@ class NavGraph internal constructor(
     children: List<NavGraphNode>,
     deepLinks: List<NavDeepLink>,
 ) : NavGraphNode {
+    /** Immutable deep-link patterns registered directly on this graph route. */
     override val deepLinks: List<NavDeepLink> = Collections.unmodifiableList(
         ArrayList(deepLinks),
     )
+    /** Immutable direct children in declaration order. */
     val children: List<NavGraphNode> = Collections.unmodifiableList(
         ArrayList(children),
     )
@@ -83,7 +96,6 @@ class NavGraph internal constructor(
             "Navigation graph '$route' must contain at least one destination."
         }
         validateStartDestination()
-        // routeIndex 包含当前图及所有后代节点，用于 O(1) route 名称查找和重复 route 校验。
         // routeIndex includes this graph and all descendants for O(1) route lookup and duplicate-route validation.
         val mutableIndex = LinkedHashMap<String, IndexedNode>()
         indexInto(
@@ -109,8 +121,12 @@ class NavGraph internal constructor(
     }
 
     /**
-     * 将 route 解析为最终叶子目的地及其 graph 层级。
-     * Resolves a route to the final leaf destination plus its graph hierarchy.
+     * Resolves [route] to a leaf destination and its root-to-leaf graph-owner path.
+     *
+     * Requesting a graph route enters that graph's start chain. Arguments on the requested graph
+     * override start-destination defaults and propagate through nested starts.
+     *
+     * @throws IllegalArgumentException if [route] is not registered
      */
     fun resolve(route: NavRoute): NavGraphResolution {
         val indexed = requireNotNull(routeIndex[route.name]) {
@@ -135,8 +151,15 @@ class NavGraph internal constructor(
         }
     }
 
+    /** Returns whether [routeName] identifies this graph or any descendant node. */
     fun contains(routeName: String): Boolean = routeName in routeIndex
 
+    /**
+     * Resolves [uri] against all deep links registered in this graph.
+     *
+     * The result distinguishes no match from malformed input, typed-argument failures, and equally
+     * specific ambiguous patterns.
+     */
     fun resolveDeepLink(uri: String): NavDeepLinkResolution {
         return resolveDeepLinkTargets(
             uri = uri,
@@ -155,7 +178,6 @@ class NavGraph internal constructor(
         val mergedArguments = LinkedHashMap(startDestination.arguments).apply {
             putAll(inheritedArguments)
         }
-        // 嵌套 graph route 的参数会传递给其 startDestination，让 deep link/graph entry 参数保持一致。
         // Arguments on a nested graph route flow into its startDestination so deep links and graph entries stay aligned.
         return when (child) {
             is NavDestination -> {
@@ -230,6 +252,7 @@ class NavGraph internal constructor(
         }
     }
 
+    /** Compares the complete immutable graph declaration structurally. */
     override fun equals(other: Any?): Boolean {
         return other is NavGraph &&
             route == other.route &&
@@ -238,6 +261,7 @@ class NavGraph internal constructor(
             deepLinks == other.deepLinks
     }
 
+    /** Returns the structural hash of the complete graph declaration. */
     override fun hashCode(): Int {
         var result = route.hashCode()
         result = 31 * result + startDestination.hashCode()
@@ -246,6 +270,7 @@ class NavGraph internal constructor(
         return result
     }
 
+    /** Returns a diagnostic representation of this graph and its direct children. */
     override fun toString(): String {
         return "NavGraph(" +
             "route=$route, " +
@@ -262,21 +287,31 @@ class NavGraph internal constructor(
 }
 
 /**
- * NavGraph 解析结果，包含实际 destination 和所属 graphPath。
- * NavGraph resolution containing the concrete destination and owning graphPath.
+ * Resolved leaf destination and its graph-owner path.
+ *
+ * [graphPath] is ordered root-to-leaf. [enteredGraphRoute] identifies the graph explicitly entered
+ * by the request, allowing the controller to allocate a new owner at that boundary instead of
+ * incorrectly reusing a previous graph instance.
+ *
+ * @property destination concrete leaf route with merged arguments
+ * @param graphPath copied root-to-leaf graph routes
+ * @property enteredGraphRoute explicitly requested graph route, or `null` for a leaf request
  */
 class NavGraphResolution internal constructor(
     val destination: NavRoute,
     graphPath: List<NavRoute>,
     val enteredGraphRoute: String? = null,
 ) {
+    /** Immutable root-to-leaf graph-owner route path. */
     val graphPath: List<NavRoute> = Collections.unmodifiableList(
         ArrayList(graphPath),
     )
+    /** Immutable route-name projection of [graphPath]. */
     val hierarchy: List<String> = Collections.unmodifiableList(
         this.graphPath.map(NavRoute::name),
     )
 
+    /** Compares destination, graph path, and explicit entry boundary structurally. */
     override fun equals(other: Any?): Boolean {
         return other is NavGraphResolution &&
             destination == other.destination &&
@@ -284,6 +319,7 @@ class NavGraphResolution internal constructor(
             enteredGraphRoute == other.enteredGraphRoute
     }
 
+    /** Returns the structural hash of every resolution field. */
     override fun hashCode(): Int {
         var result = destination.hashCode()
         result = 31 * result + graphPath.hashCode()
@@ -291,6 +327,7 @@ class NavGraphResolution internal constructor(
         return result
     }
 
+    /** Returns a diagnostic representation of the complete resolution. */
     override fun toString(): String {
         return "NavGraphResolution(" +
             "destination=$destination, " +
@@ -300,10 +337,7 @@ class NavGraphResolution internal constructor(
     }
 }
 
-/**
- * navigation DSL 的可变构建器，最终输出不可变 NavGraph。
- * Mutable builder for the navigation DSL that produces an immutable NavGraph.
- */
+/** Mutable DSL receiver that produces an immutable [NavGraph]. */
 @NavGraphDsl
 class NavGraphBuilder internal constructor(
     private val route: String,
@@ -313,8 +347,10 @@ class NavGraphBuilder internal constructor(
     private val children = mutableListOf<NavGraphNode>()
 
     /**
-     * 添加一个叶子目的地。
-     * Adds one leaf destination.
+     * Adds a leaf destination.
+     *
+     * @param route non-blank route name unique within the eventual root graph
+     * @param deepLinks deep-link patterns registered on this destination
      */
     fun destination(
         route: String,
@@ -327,8 +363,12 @@ class NavGraphBuilder internal constructor(
     }
 
     /**
-     * 添加一个嵌套导航图。
-     * Adds one nested navigation graph.
+     * Adds a nested navigation graph.
+     *
+     * @param route non-blank nested graph route unique within the eventual root graph
+     * @param startDestination route of a direct child declared by [builder]
+     * @param deepLinks deep-link patterns that enter the nested graph
+     * @param builder nested graph declarations
      */
     fun navigation(
         route: String,
@@ -354,8 +394,15 @@ class NavGraphBuilder internal constructor(
 }
 
 /**
- * 构建一个不可变导航图。
- * Builds an immutable navigation graph.
+ * Builds and validates an immutable navigation graph.
+ *
+ * @sample com.viewcompose.navigation.core.samples.navigationGraphSample
+ * @param route non-blank root graph route
+ * @param startDestination route of a direct child declared by [builder]
+ * @param deepLinks deep-link patterns that enter the root graph
+ * @param builder graph destination and nested-graph declarations
+ * @throws IllegalArgumentException for invalid route or start declarations
+ * @throws IllegalStateException for duplicate routes or deep-link patterns
  */
 fun navGraph(
     route: String,
