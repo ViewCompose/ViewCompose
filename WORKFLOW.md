@@ -231,7 +231,11 @@
 1. `viewcompose-widget-core` 主源码禁止新增 `com.viewcompose.renderer.*` import。
 2. `viewcompose-ui-contract` 主源码禁止新增 `android.*` / `androidx.*` import。
 3. Android 宿主入口 API（`setUiContent`、`renderInto`、`AndroidView/nativeView`）只放 `viewcompose-host-android`。
-4. 以上约束必须通过模块 guard tests 持续校验，禁止只靠 code review 口头约束。
+4. 基础模块只允许声明 `foundationModuleDependencyRules` 白名单内的 Gradle project 依赖；禁止依赖 navigation、shadow 等可选能力或 preview/benchmark 工具模块。
+5. 可选能力模块禁止依赖工具模块；任意 `viewcompose-*` 模块禁止依赖 `app`。
+6. 新增模块必须在 `foundationModuleDependencyRules`、`optionalCapabilityModules`、`toolingModules` 中且仅在一处登记；基础模块还必须显式登记允许的下游依赖。
+7. `qaQuick` 中的 `verifyModuleDependencyBoundaries` 是硬门禁。未分类模块、依赖反向、基础白名单外依赖不得豁免合并。
+8. 以上约束必须通过模块 guard tests 持续校验，禁止只靠 code review 口头约束。
 
 ## 5.11 模块单包根约束
 
