@@ -22,3 +22,8 @@ __pycache__/
 local.properties
 .idea
 /.idea/
+
+# Publishing secrets belong in ~/.gradle/gradle.properties or CI secrets only.
+/gradle/viewcompose-publishing-secrets.properties
+/.env
+/.env.*
