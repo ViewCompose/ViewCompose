@@ -102,6 +102,9 @@ overviews, and staged enforcement.
 - `viewcompose-preview-worker-host` has a reviewed Q2/Q3 baseline covering one-shot and loopback
   server modes, validation, Layoutlib ownership, reloadable class-loader isolation, atomic responses,
   bounded retirement, compiled samples, and an always-on strict Dokka warning gate;
+- `viewcompose-preview` has a reviewed Q2/Q3 baseline covering coherent application theme
+  resolution, Compose bridge session ownership, root interop, catalog and Paparazzi coverage,
+  compiled samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -137,10 +140,10 @@ Q2 or Q3 manual review.
    - `viewcompose-renderer` baseline and strict gate are complete;
    - `viewcompose-host-android` baseline and strict gate are complete;
    - add module/package overviews and cross-links.
-4. **Remaining families**
+4. **Remaining families — complete**
    - text, both navigation layers, the Android overlay backend, lifecycle, and ViewModel are complete;
-   - animation, gesture, graphics, shadows, constraint layout, image loading, and all but the final
-     preview integration module are complete;
+   - animation, gesture, graphics, shadows, constraint layout, image loading, and preview tooling are
+     complete;
    - enable strict checking after each module baseline is clean.
 5. **Immutable source and release integration**
    - derive source-link revisions from the published version/tag contract;
@@ -158,13 +161,13 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-preview-runner` was repaired from 24 initially undocumented declarations
-to a zero-warning strict baseline. Compiled entry resolution, Android configuration and application
-theme fidelity, frame ownership, auto-height budgets, atomic artifact export, immutable diagnostics,
-fatal/non-fatal failure policy and public dependency exposure were reviewed; compiled samples and a
-bilingual module manual were added.
+2026-08-02: `viewcompose-preview` was repaired from six initially undocumented declarations to a
+zero-warning strict baseline. Application theme resolution, the Compose bridge's session/root
+ownership and limitations, catalog/Paparazzi coverage and release dependency scope were reviewed;
+compiled samples and a bilingual module manual were added. All 25 published modules now have a
+reviewed strict documentation baseline.
 
 ## Next action
 
-Audit and repair `viewcompose-preview`, add its module manual and focused samples, then enable its
-module-level strict warning gate without changing API behavior.
+Derive immutable source links from the release version/tag contract, verify current/latest/versioned
+routes, activate the complete-catalog regression gate, and run the final repository-wide audit.
