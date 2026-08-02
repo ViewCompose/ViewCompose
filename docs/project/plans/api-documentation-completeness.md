@@ -84,6 +84,9 @@ overviews, and staged enforcement.
 - `viewcompose-widget-constraintlayout` has a reviewed Q2/Q3 baseline covering references, anchors,
   dimensions, inline and reusable sets, virtual helpers, native merging and failure recovery,
   compiled samples, and an always-on strict Dokka warning gate;
+- `viewcompose-image-coil` has a reviewed Q2/Q3 baseline covering Android target acceptance,
+  asynchronous replacement, Coil-owned cancellation and caching, loader ownership, compiled
+  samples, and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -140,12 +143,12 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-widget-constraintlayout` was repaired from 71 initially undocumented
-declarations to a zero-warning strict baseline. String references, anchor replacement, dimensions,
-inline-over-external merging, virtual helpers, native coalescing, missing-reference recovery and
-apply failures were reviewed; compiled samples and a bilingual module manual were added.
+2026-08-02: `viewcompose-image-coil` was repaired from one initially undocumented declaration to a
+zero-warning strict baseline. Target acceptance, asynchronous enqueueing, target-aware replacement,
+Coil-owned caching and caller-owned loader lifecycle were reviewed; a compiled sample and bilingual
+module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-image-coil`, add its module manual and focused samples, then enable its
-module-level strict warning gate without changing API behavior.
+Audit and repair `viewcompose-preview-core`, add its module manual and focused samples, then enable
+its module-level strict warning gate without changing API behavior.

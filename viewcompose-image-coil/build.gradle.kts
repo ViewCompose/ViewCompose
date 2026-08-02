@@ -19,6 +19,8 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    sourceSets["test"].java.srcDir("src/test/samples")
 }
 
 dependencies {
