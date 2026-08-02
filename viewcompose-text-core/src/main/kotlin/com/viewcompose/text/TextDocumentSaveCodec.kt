@@ -1,13 +1,17 @@
 package com.viewcompose.text
 
 /**
- * [TextDocument] 的 saveable 编解码器。
- * Saveable encoder/decoder for [TextDocument].
+ * Versioned, platform-neutral save codec for complete [TextDocument] values.
+ *
+ * Encoded values contain only strings, numbers, booleans, lists, and string-keyed maps so Android
+ * and other hosts can persist them through their ordinary saveable-state boundary.
  */
 object TextDocumentSaveCodec {
     /**
-     * 将文档编码为只包含基础类型、List 和 Map 的结构。
-     * Encodes a document into a structure made of primitives, Lists, and Maps only.
+     * Encodes [document] into an immutable saveable structure.
+     *
+     * @sample com.viewcompose.text.samples.textDocumentSaveCodecSample
+     * @return a versioned string-keyed map containing text and every annotation
      */
     fun encode(document: TextDocument): Map<String, Any?> {
         return mapOf(
@@ -20,8 +24,15 @@ object TextDocumentSaveCodec {
     }
 
     /**
-     * 从保存结构恢复文档；格式不兼容时抛出明确错误。
-     * Restores a document from saved structure and fails clearly on incompatible format.
+     * Restores a document from a value previously produced by [encode].
+     *
+     * Decoding validates map keys, version, value types, enum names, document ranges, and attachment
+     * invariants. Unknown or corrupt input fails rather than silently dropping rich-text data.
+     *
+     * @param saved platform-restored value
+     * @return the validated immutable document
+     * @throws IllegalArgumentException when a structural invariant or format version is invalid
+     * @throws IllegalStateException when a required saved value has an incompatible type
      */
     fun decode(saved: Any?): TextDocument {
         val root = saved.stringKeyMap("TextDocument")
@@ -201,10 +212,7 @@ object TextDocumentSaveCodec {
             ?: error("Saved TextDocument $label must be a Number.")
     }
 
-    /**
-     * 将平台恢复出的 Map 校验为 String key Map，避免后续解码出现模糊 ClassCastException。
-     * Validates a platform-restored Map as a String-key Map to avoid vague ClassCastExceptions later.
-     */
+    /** Validates a restored value as a string-keyed map before field decoding. */
     private fun Any?.stringKeyMap(label: String): Map<String, Any?> {
         val map = this as? Map<*, *>
             ?: error("$label must be a Map.")

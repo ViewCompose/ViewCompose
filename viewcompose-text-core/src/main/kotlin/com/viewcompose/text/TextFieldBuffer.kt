@@ -1,34 +1,50 @@
 package com.viewcompose.text
 
 /**
- * 暴露给程序化编辑和输入转换的可变编辑缓冲区。
- * Mutable editing buffer presented to programmatic edits and input transformations.
+ * Mutable transaction buffer used by programmatic edits and input transformations.
+ *
+ * Mutations are isolated until the owning [TextFieldState] accepts the buffer. Replacements preserve
+ * unaffected document annotations and map selection/composition offsets across the edited range.
  */
 class TextFieldBuffer internal constructor(
+    /** Last committed value from which this transaction began. */
     val originalValue: TextFieldValue,
     proposedValue: TextFieldValue,
 ) {
     private var content = proposedValue.document
 
+    /** Directional selection, automatically clamped to the current document length. */
     var selection: TextRange = proposedValue.selection
         set(value) {
             field = value.coerceIn(content.text.length)
         }
 
+    /** Optional IME composition range, automatically clamped to the current document length. */
     var composition: TextRange? = proposedValue.composition
         set(value) {
             field = value?.coerceIn(content.text.length)
         }
 
+    /** Current plain-text projection. */
     val text: String
         get() = content.text
 
+    /** Current immutable rich-text document snapshot. */
     val document: TextDocument
         get() = content
 
+    /** Current plain-text length in UTF-16 code units. */
     val length: Int
         get() = content.text.length
 
+    /**
+     * Replaces UTF-16 range `[start, end)` with plain [replacement].
+     *
+     * Existing annotations outside the range are preserved and moved as required. Selection and
+     * composition are mapped to equivalent logical positions.
+     *
+     * @throws IllegalArgumentException when the ordered range is outside the current text
+     */
     fun replace(
         start: Int,
         end: Int,
@@ -41,8 +57,7 @@ class TextFieldBuffer internal constructor(
             range = TextRange(start, end),
             replacement = replacement,
         )
-        // 文本替换后同步迁移 selection/composition，保持它们仍指向等价逻辑位置。
-        // After replacement, migrate selection/composition so they keep pointing at equivalent logical positions.
+        // Keep selection and composition attached to equivalent logical positions.
         selection = selection.mapAcrossReplacement(
             start = start,
             end = end,
@@ -55,6 +70,11 @@ class TextFieldBuffer internal constructor(
         )
     }
 
+    /**
+     * Replaces UTF-16 range `[start, end)` with rich-text [replacement].
+     *
+     * @throws IllegalArgumentException when the ordered range is outside the current text
+     */
     fun replace(
         start: Int,
         end: Int,
@@ -79,24 +99,29 @@ class TextFieldBuffer internal constructor(
         )
     }
 
+    /** Replaces the complete document with plain [text] and places the cursor at its end. */
     fun replaceAll(text: CharSequence) {
         replaceAll(TextDocument.plain(text.toString()))
     }
 
+    /** Replaces the complete document and places the cursor at its end. */
     fun replaceAll(document: TextDocument) {
         content = document
         selection = TextRange(content.text.length)
         composition = null
     }
 
+    /** Collapses the selection at the current document end. */
     fun placeCursorAtEnd() {
         selection = TextRange(content.text.length)
     }
 
+    /** Selects the complete current document in forward direction. */
     fun selectAll() {
         selection = TextRange(0, content.text.length)
     }
 
+    /** Restores document, selection, and composition from [originalValue]. */
     fun revertAllChanges() {
         content = originalValue.document
         selection = originalValue.selection
@@ -112,10 +137,7 @@ class TextFieldBuffer internal constructor(
     }
 }
 
-/**
- * 将范围限制在当前文本长度内。
- * Clamps a range into the current text length.
- */
+/** Clamps both directional offsets into the current text length. */
 internal fun TextRange.coerceIn(textLength: Int): TextRange {
     return TextRange(
         start = start.coerceIn(0, textLength),

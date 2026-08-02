@@ -1,9 +1,6 @@
 package com.viewcompose.text
 
-/**
- * 文本字段接收外部内容的来源。
- * Source from which a text field received external content.
- */
+/** Source category assigned to content entering a text field from outside ordinary typing. */
 enum class ReceiveContentSource {
     Clipboard,
     DragAndDrop,
@@ -14,8 +11,12 @@ enum class ReceiveContentSource {
 }
 
 /**
- * 平台 receive-content payload 归一化后的框架模型。
- * Framework model normalized from a platform receive-content payload.
+ * Immutable, platform-neutral content normalized from one external receive-content payload.
+ *
+ * @property document text, styles, paragraphs, and inline attachments proposed for insertion
+ * @property source channel through which the content entered the application
+ * @property mimeTypes MIME types represented by the normalized payload
+ * @property platformItemCount number of original platform items; always greater than zero
  */
 data class ReceivedContent(
     val document: TextDocument,
@@ -28,22 +29,29 @@ data class ReceivedContent(
     }
 }
 
+/** Decides whether and how normalized external content is inserted into a text field. */
 fun interface ReceiveContentTransformation {
     /**
-     * 返回要插入的文档；返回 `null` 表示拒绝整个 payload。
-     * Returns the document to insert, or `null` to reject the entire received payload.
+     * Returns the document to insert, or `null` to reject the complete payload.
+     *
+     * The transformation runs synchronously and should not retain [content].
      */
     fun transform(content: ReceivedContent): TextDocument?
 }
 
 /**
- * 文本字段 receive-content 的 MIME 白名单和可选转换器。
- * MIME allowlist and optional transformer for text-field receive-content.
+ * Defines the accepted MIME patterns and optional conversion policy for receive-content.
+ *
+ * MIME values are copied on construction and compared structurally. The transformation is compared
+ * by identity because lambdas do not have stable value equality.
+ *
+ * @property transformation optional policy applied after platform normalization
  */
 class ReceiveContentConfiguration(
     mimeTypes: Set<String> = DefaultMimeTypes,
     val transformation: ReceiveContentTransformation? = null,
 ) {
+    /** Immutable, non-empty set of accepted MIME types or wildcard patterns. */
     val mimeTypes: Set<String> = mimeTypes.toSet()
 
     init {
@@ -55,6 +63,7 @@ class ReceiveContentConfiguration(
         }
     }
 
+    /** Uses structural MIME equality and transformation identity. */
     override fun equals(other: Any?): Boolean {
         return this === other || (
             other is ReceiveContentConfiguration &&
@@ -63,16 +72,20 @@ class ReceiveContentConfiguration(
             )
     }
 
+    /** Combines structural MIME hashing with transformation identity. */
     override fun hashCode(): Int {
         return 31 * mimeTypes.hashCode() + System.identityHashCode(transformation)
     }
 
+    /** Default receive-content policy values. */
     companion object {
+        /** Default allowlist accepting text and image payloads. */
         val DefaultMimeTypes: Set<String> = linkedSetOf(
             "text/*",
             "image/*",
         )
 
+        /** Default configuration with [DefaultMimeTypes] and no transformation. */
         val Default: ReceiveContentConfiguration = ReceiveContentConfiguration()
     }
 }

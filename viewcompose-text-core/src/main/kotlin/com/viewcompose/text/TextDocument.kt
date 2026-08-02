@@ -1,24 +1,15 @@
 package com.viewcompose.text
 
-/**
- * 富文本 inline attachment 在纯文本中的占位字符。
- * Placeholder character used by rich-text inline attachments inside plain text.
- */
+/** Unicode object-replacement character reserved for inline attachment positions. */
 const val INLINE_ATTACHMENT_CHARACTER: Char = '\uFFFC'
 
-/**
- * 文本字体样式。
- * Text font style.
- */
+/** Requested font posture for a text span. */
 enum class TextFontStyle {
     Normal,
     Italic,
 }
 
-/**
- * span 相对于文字基线的垂直对齐。
- * Span vertical alignment relative to the text baseline.
- */
+/** Vertical placement of a span relative to the surrounding text baseline. */
 enum class TextVerticalAlignment {
     Normal,
     Superscript,
@@ -26,8 +17,20 @@ enum class TextVerticalAlignment {
 }
 
 /**
- * 字符级富文本样式。
- * Character-level rich text style.
+ * Immutable character-level rich-text style.
+ *
+ * Nullable values inherit from the surrounding text style. Colors are packed ARGB integers and
+ * pixel values are physical rendering hints interpreted by the platform adapter.
+ *
+ * @property color optional foreground ARGB color
+ * @property backgroundColor optional background ARGB color
+ * @property fontWeight optional OpenType-style weight in `1..1000`
+ * @property fontStyle optional font posture
+ * @property relativeSize optional positive multiplier relative to surrounding text
+ * @property underline whether to draw an underline
+ * @property lineThrough whether to draw a strike-through line
+ * @property verticalAlignment baseline-relative placement
+ * @property link optional application-defined link target
  */
 data class TextSpanStyle(
     val color: Int? = null,
@@ -52,10 +55,7 @@ data class TextSpanStyle(
     }
 }
 
-/**
- * 段落文本对齐方式。
- * Paragraph text alignment.
- */
+/** Logical horizontal alignment for a paragraph. */
 enum class ParagraphTextAlignment {
     Start,
     Center,
@@ -64,8 +64,11 @@ enum class ParagraphTextAlignment {
 }
 
 /**
- * 段落项目符号配置。
- * Paragraph bullet configuration.
+ * Immutable paragraph bullet geometry.
+ *
+ * @property radiusPx non-negative bullet radius in physical pixels
+ * @property gapWidthPx non-negative gap between bullet and paragraph in physical pixels
+ * @property color optional packed ARGB color; `null` inherits paragraph text color
  */
 data class TextBullet(
     val radiusPx: Float = 3f,
@@ -83,8 +86,13 @@ data class TextBullet(
 }
 
 /**
- * 段落级富文本样式。
- * Paragraph-level rich text style.
+ * Immutable paragraph-level rich-text style.
+ *
+ * @property alignment optional logical alignment
+ * @property lineHeightPx optional positive line height in physical pixels
+ * @property firstLineIndentPx non-negative first-line indentation in physical pixels
+ * @property restLineIndentPx non-negative indentation for remaining lines in physical pixels
+ * @property bullet optional bullet geometry
  */
 data class ParagraphStyle(
     val alignment: ParagraphTextAlignment? = null,
@@ -108,19 +116,34 @@ data class ParagraphStyle(
     }
 }
 
+/** Associates [style] with an ordered, document-bounded UTF-16 [range]. */
 data class TextSpanRange(
+    /** Ordered range to which [style] applies. */
     val range: TextRange,
+    /** Character style applied inside [range]. */
     val style: TextSpanStyle,
 )
 
+/** Associates paragraph [style] with an ordered, document-bounded UTF-16 [range]. */
 data class ParagraphStyleRange(
+    /** Ordered range intersecting the paragraphs to style. */
     val range: TextRange,
+    /** Paragraph style applied inside [range]. */
     val style: ParagraphStyle,
 )
 
 /**
- * 内联非文本内容的元数据。
- * Metadata for non-text inline content.
+ * Immutable metadata for one non-text inline attachment.
+ *
+ * The attachment has value equality across every field. URI resolution, loading, rendering, and
+ * accessibility behavior belong to the platform adapter.
+ *
+ * @property id non-blank stable document-local identity
+ * @property mimeType non-blank MIME type
+ * @property uri optional external content location
+ * @property contentDescription optional accessibility description
+ * @property widthPx optional positive intrinsic width in physical pixels
+ * @property heightPx optional positive intrinsic height in physical pixels
  */
 class InlineTextAttachment(
     val id: String,
@@ -131,6 +154,7 @@ class InlineTextAttachment(
     val heightPx: Int? = null,
     metadata: Map<String, String> = emptyMap(),
 ) {
+    /** Immutable application metadata snapshot. */
     val metadata: Map<String, String> = metadata.toMap()
 
     init {
@@ -140,6 +164,7 @@ class InlineTextAttachment(
         heightPx?.let { require(it > 0) { "Attachment height must be greater than zero." } }
     }
 
+    /** Compares every attachment field structurally. */
     override fun equals(other: Any?): Boolean {
         return this === other || (
             other is InlineTextAttachment &&
@@ -153,6 +178,7 @@ class InlineTextAttachment(
             )
     }
 
+    /** Returns the structural hash of every attachment field. */
     override fun hashCode(): Int {
         var result = id.hashCode()
         result = 31 * result + mimeType.hashCode()
@@ -164,20 +190,30 @@ class InlineTextAttachment(
         return result
     }
 
+    /** Returns a concise identity and location description without dumping metadata. */
     override fun toString(): String {
         return "InlineTextAttachment(id=$id, mimeType=$mimeType, uri=$uri)"
     }
 }
 
+/** Binds one [attachment] to an object-replacement character at [offset]. */
 data class InlineAttachmentRange(
+    /** UTF-16 offset of [INLINE_ATTACHMENT_CHARACTER] in the owning document. */
     val offset: Int,
+    /** Metadata for the content represented at [offset]. */
     val attachment: InlineTextAttachment,
 )
 
 /**
- * 不可变富文本文档，包含纯文本、span、段落样式和内联附件。
- * Immutable rich-text document containing plain text, spans, paragraph styles, and inline
- * attachments.
+ * Immutable rich-text document containing text, span styles, paragraph styles, and attachments.
+ *
+ * Offsets and ranges use UTF-16 code units. Style ranges must be ordered and bounded by [text]. Each
+ * inline attachment must point to a unique [INLINE_ATTACHMENT_CHARACTER]. Constructor collections
+ * are copied and exposed in their supplied order; overlapping style ranges are allowed and resolved
+ * by the platform adapter.
+ *
+ * @sample com.viewcompose.text.samples.richTextDocumentSample
+ * @property text plain-text storage, including attachment placeholder characters
  */
 class TextDocument(
     val text: String,
@@ -185,10 +221,14 @@ class TextDocument(
     paragraphStyles: List<ParagraphStyleRange> = emptyList(),
     inlineAttachments: List<InlineAttachmentRange> = emptyList(),
 ) {
+    /** Immutable character-style ranges in caller-supplied order. */
     val spanStyles: List<TextSpanRange> = spanStyles.toList()
+    /** Immutable paragraph-style ranges in caller-supplied order. */
     val paragraphStyles: List<ParagraphStyleRange> = paragraphStyles.toList()
+    /** Immutable attachment positions in caller-supplied order. */
     val inlineAttachments: List<InlineAttachmentRange> = inlineAttachments.toList()
 
+    /** Whether the document contains no styles or attachments. */
     val isPlainText: Boolean
         get() = spanStyles.isEmpty() &&
             paragraphStyles.isEmpty() &&
@@ -216,6 +256,16 @@ class TextDocument(
         }
     }
 
+    /**
+     * Replaces ordered [range] with [replacement] while preserving unaffected annotations.
+     *
+     * Ranges before the replacement remain unchanged, ranges after it shift by the length delta,
+     * overlapping ranges retain only uncovered fragments, and replacement annotations shift to the
+     * insertion point. Attachments inside the removed range are dropped.
+     *
+     * @return a new validated document
+     * @throws IllegalArgumentException when [range] exceeds this document
+     */
     fun replace(
         range: TextRange,
         replacement: TextDocument,
@@ -232,8 +282,7 @@ class TextDocument(
             append(replacement.text)
             append(text, end, text.length)
         }
-        // 替换时保留未被覆盖的样式范围，并把插入文档的样式平移到目标位置。
-        // Preserve uncovered style ranges and shift inserted document styles into the target position.
+        // Preserve uncovered styles and shift replacement annotations to their inserted offsets.
         val nextSpans = spanStyles.flatMap { span ->
             preserveRangeAroundReplacement(
                 range = span.range,
@@ -275,6 +324,7 @@ class TextDocument(
         )
     }
 
+    /** Replaces [range] with unstyled plain [replacement]. */
     fun replace(
         range: TextRange,
         replacement: CharSequence,
@@ -285,6 +335,7 @@ class TextDocument(
         )
     }
 
+    /** Appends [other], shifting all of its annotations by this document's length. */
     fun append(other: TextDocument): TextDocument {
         return replace(
             range = TextRange(text.length),
@@ -292,6 +343,7 @@ class TextDocument(
         )
     }
 
+    /** Compares text and every annotation collection structurally. */
     override fun equals(other: Any?): Boolean {
         return this === other || (
             other is TextDocument &&
@@ -302,6 +354,7 @@ class TextDocument(
             )
     }
 
+    /** Returns the structural hash of text and annotation collections. */
     override fun hashCode(): Int {
         var result = text.hashCode()
         result = 31 * result + spanStyles.hashCode()
@@ -310,6 +363,7 @@ class TextDocument(
         return result
     }
 
+    /** Returns text plus annotation counts for diagnostics. */
     override fun toString(): String {
         return "TextDocument(text=$text, spans=${spanStyles.size}, " +
             "paragraphs=${paragraphStyles.size}, attachments=${inlineAttachments.size})"
@@ -327,9 +381,12 @@ class TextDocument(
         }
     }
 
+    /** Plain-text constructors and shared constants. */
     companion object {
+        /** Shared empty document. */
         val Empty: TextDocument = TextDocument("")
 
+        /** Returns an unstyled document, reusing [Empty] when [text] is empty. */
         fun plain(text: String): TextDocument {
             return if (text.isEmpty()) Empty else TextDocument(text)
         }
@@ -337,8 +394,10 @@ class TextDocument(
 }
 
 /**
- * 增量构建 [TextDocument] 的 builder。
- * Builder for incrementally creating [TextDocument].
+ * Mutable builder for incrementally creating one validated [TextDocument].
+ *
+ * Appended documents retain their annotations after offset translation. Validation occurs when
+ * [build] constructs the immutable document.
  */
 class TextDocumentBuilder {
     private val text = StringBuilder()
@@ -346,13 +405,16 @@ class TextDocumentBuilder {
     private val paragraphStyles = mutableListOf<ParagraphStyleRange>()
     private val inlineAttachments = mutableListOf<InlineAttachmentRange>()
 
+    /** Current text length in UTF-16 code units. */
     val length: Int
         get() = text.length
 
+    /** Appends unstyled [value]. */
     fun append(value: CharSequence): TextDocumentBuilder = apply {
         text.append(value)
     }
 
+    /** Appends [value] and records [style] over its non-empty range. */
     fun append(
         value: CharSequence,
         style: TextSpanStyle,
@@ -367,6 +429,7 @@ class TextDocumentBuilder {
         }
     }
 
+    /** Appends [document], translating all annotation offsets. */
     fun append(document: TextDocument): TextDocumentBuilder = apply {
         val offset = text.length
         text.append(document.text)
@@ -381,6 +444,7 @@ class TextDocumentBuilder {
         }
     }
 
+    /** Appends an object-replacement character bound to [attachment]. */
     fun appendAttachment(
         attachment: InlineTextAttachment,
     ): TextDocumentBuilder = apply {
@@ -392,6 +456,7 @@ class TextDocumentBuilder {
         )
     }
 
+    /** Records character [style] for [range]; bounds are validated by [build]. */
     fun addSpan(
         range: TextRange,
         style: TextSpanStyle,
@@ -399,6 +464,7 @@ class TextDocumentBuilder {
         spanStyles += TextSpanRange(range, style)
     }
 
+    /** Records paragraph [style] for [range]; bounds are validated by [build]. */
     fun addParagraphStyle(
         range: TextRange,
         style: ParagraphStyle,
@@ -406,6 +472,7 @@ class TextDocumentBuilder {
         paragraphStyles += ParagraphStyleRange(range, style)
     }
 
+    /** Returns a validated immutable snapshot of the current builder content. */
     fun build(): TextDocument {
         return TextDocument(
             text = text.toString(),
@@ -417,8 +484,9 @@ class TextDocumentBuilder {
 }
 
 /**
- * 使用 DSL 构建富文本文档。
- * Builds a rich-text document with a DSL block.
+ * Builds a validated rich-text document with [block].
+ *
+ * @sample com.viewcompose.text.samples.richTextDocumentSample
  */
 fun textDocument(
     block: TextDocumentBuilder.() -> Unit,
@@ -435,10 +503,7 @@ private fun TextRange.shift(offset: Int): TextRange {
     )
 }
 
-/**
- * 计算一次替换后原有样式范围应保留的片段。
- * Calculates preserved fragments of an existing style range after one replacement.
- */
+/** Calculates preserved fragments of an existing style range after one replacement. */
 private fun preserveRangeAroundReplacement(
     range: TextRange,
     start: Int,
