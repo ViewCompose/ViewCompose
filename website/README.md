@@ -9,7 +9,7 @@ into React pages merely to change its presentation.
 From the repository root, generate selected API references when iterating locally:
 
 ```bash
-./gradlew assembleViewComposeApiDocs \
+./gradlew verifyAssembledViewComposeApiDocs \
   -PviewComposeDocsModules=viewcompose-runtime,viewcompose-widget-core
 ```
 
@@ -34,14 +34,16 @@ Use `npm run write-translations` to append missing Docusaurus JSON message keys.
 reviewed Chinese values. Markdown mirrors and their source fingerprints follow the
 [localization workflow](../docs/project/localization.md).
 
-Run `./gradlew assembleViewComposeApiDocs` without the property before verifying the complete
-published catalog. Generated catalog data, Dokka HTML, and site output are intentionally ignored by
-Git.
+Run `./gradlew verifyCompleteViewComposeApiDocs` without a module-selection property before
+verifying or deploying the complete published catalog. It also verifies immutable source links and
+version/current/latest route policy. Generated catalog data, Dokka HTML, and site output are
+intentionally ignored by Git.
 
 ## Ownership boundaries
 
 - `docs/` owns prose, diagrams, governance, and module manuals.
-- `gradle/viewcompose-publishing.properties` owns published artifact versions.
+- `gradle/viewcompose-publishing.properties` owns published artifact versions and immutable source
+  revisions.
 - `website/scripts/` derives site data from canonical repository metadata.
 - `website/i18n/` owns locale messages, reviewed Markdown mirrors, and translation policy.
 - `website/src/` owns presentation components only.

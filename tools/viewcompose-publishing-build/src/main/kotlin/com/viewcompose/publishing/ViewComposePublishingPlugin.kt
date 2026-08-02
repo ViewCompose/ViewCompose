@@ -109,11 +109,40 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 }
             }
         }
+        val verifyApiDocs = project.tasks.register<VerifyApiDocumentationOutputTask>(
+            "verifyAssembledViewComposeApiDocs",
+        ) {
+            group = "documentation"
+            description = "Verifies selected API versions, aliases, catalog entries, and source links."
+            dependsOn(assembleApiDocs)
+            apiDirectory.set(apiOutputDirectory)
+            modules.set(documentationModules)
+            expectedModules.set(metadata.moduleVersions.keys.sorted())
+            moduleVersions.set(metadata.moduleVersions)
+            moduleSourceRevisions.set(metadata.moduleSourceRevisions)
+            scmUrl.set(metadata.scmUrl)
+            requireCompleteCatalog.set(false)
+        }
+        project.tasks.register<VerifyApiDocumentationOutputTask>(
+            "verifyCompleteViewComposeApiDocs",
+        ) {
+            group = "documentation"
+            description =
+                "Generates and verifies the complete published API catalog for deployment."
+            dependsOn(assembleApiDocs)
+            apiDirectory.set(apiOutputDirectory)
+            modules.set(documentationModules)
+            expectedModules.set(metadata.moduleVersions.keys.sorted())
+            moduleVersions.set(metadata.moduleVersions)
+            moduleSourceRevisions.set(metadata.moduleSourceRevisions)
+            scmUrl.set(metadata.scmUrl)
+            requireCompleteCatalog.set(true)
+        }
         project.tasks.register("auditViewComposeApiDocs") {
             group = "documentation"
             description =
                 "Generates selected API docs and reports undocumented public/protected APIs."
-            dependsOn(assembleApiDocs)
+            dependsOn(verifyApiDocs)
         }
 
         val localRepository = project.layout.buildDirectory.dir("maven-repository")
@@ -126,6 +155,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                     "Verifies formal coordinates and independent versions for every published module."
                 mavenGroup.set(metadata.groupId)
                 moduleVersions.set(metadata.moduleVersions)
+                moduleSourceRevisions.set(metadata.moduleSourceRevisions)
                 strictApiDocsModules.set(metadata.strictApiDocsModules)
             }
         val publishLocal = project.tasks.register("publishViewComposeToLocalRepository") {
@@ -299,6 +329,10 @@ private class ViewComposeLibraryPublishingPlugin : Plugin<Project> {
             taskName.substringAfterLast(':') == "auditViewComposeApiDocs"
         }
         val strictApiDocs = project.name in metadata.strictApiDocsModules
+        val sourceRevision = metadata.moduleSourceRevisions[project.name]
+            ?: throw GradleException(
+                "No API documentation source revision registered for '${project.name}'.",
+            )
         val reportUndocumented = project.providers
             .gradleProperty("viewComposeApiDocsReportUndocumented")
             .map { value ->
@@ -336,6 +370,13 @@ private class ViewComposeLibraryPublishingPlugin : Plugin<Project> {
                 )
                 skipDeprecated.set(false)
                 suppressGeneratedFiles.set(true)
+                sourceLink {
+                    localDirectory.set(project.layout.projectDirectory)
+                    remoteUrl(
+                        "${metadata.scmUrl}/blob/$sourceRevision/${project.name}",
+                    )
+                    remoteLineSuffix.set("#L")
+                }
             }
             // Android Dokka exposes androidJvm as the owning source set and derives release from it.
             // Configuring release directly makes one sample root appear in both source sets.
@@ -461,6 +502,9 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
     abstract val moduleVersions: MapProperty<String, String>
 
     @get:Input
+    abstract val moduleSourceRevisions: MapProperty<String, String>
+
+    @get:Input
     abstract val strictApiDocsModules: ListProperty<String>
 
     @TaskAction
@@ -480,9 +524,162 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
                 "Module '$module' has invalid publication version '$version'."
             }
         }
+        val sourceRevisions = moduleSourceRevisions.get()
+        check(sourceRevisions.keys == versions.keys) {
+            val missing = versions.keys - sourceRevisions.keys
+            val unknown = sourceRevisions.keys - versions.keys
+            "API source revisions must match published modules. " +
+                "Missing: ${missing.sorted()}; unknown: ${unknown.sorted()}."
+        }
+        sourceRevisions.forEach { (module, revision) ->
+            check(SOURCE_REVISION_PATTERN.matches(revision)) {
+                "Module '$module' API source revision must be a full lowercase Git commit SHA."
+            }
+        }
+        val strictModules = strictApiDocsModules.get().toSet()
         val unknownStrictModules = strictApiDocsModules.get().toSet() - versions.keys
         check(unknownStrictModules.isEmpty()) {
             "Unknown strict API documentation modules: ${unknownStrictModules.sorted().joinToString()}."
+        }
+        val missingStrictModules = versions.keys - strictModules
+        check(missingStrictModules.isEmpty()) {
+            "Published modules missing the strict API documentation gate: " +
+                "${missingStrictModules.sorted().joinToString()}."
+        }
+    }
+}
+
+abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val apiDirectory: DirectoryProperty
+
+    @get:Input
+    abstract val modules: ListProperty<String>
+
+    @get:Input
+    abstract val expectedModules: ListProperty<String>
+
+    @get:Input
+    abstract val moduleVersions: MapProperty<String, String>
+
+    @get:Input
+    abstract val moduleSourceRevisions: MapProperty<String, String>
+
+    @get:Input
+    abstract val scmUrl: Property<String>
+
+    @get:Input
+    abstract val requireCompleteCatalog: Property<Boolean>
+
+    @TaskAction
+    fun verifyOutput() {
+        val root = apiDirectory.get().asFile
+        val selected = modules.get().toSet()
+        val expected = expectedModules.get().toSet()
+        val versions = moduleVersions.get()
+        val revisions = moduleSourceRevisions.get()
+        val failures = mutableListOf<String>()
+
+        if (requireCompleteCatalog.get() && selected != expected) {
+            failures +=
+                "complete API verification requires every published module; " +
+                    "missing ${(expected - selected).sorted()} and unexpected " +
+                    "${(selected - expected).sorted()}"
+        }
+
+        val manifest = root.resolve("manifest.json")
+        val manifestEntries = if (manifest.isFile) {
+            API_MANIFEST_ENTRY_PATTERN.findAll(manifest.readText())
+                .map { match -> match.groupValues[1] to match.groupValues[2] }
+                .toList()
+        } else {
+            failures += "manifest.json is missing"
+            emptyList()
+        }
+        manifestEntries.groupingBy { (module, _) -> module }.eachCount()
+            .filterValues { count -> count > 1 }
+            .keys
+            .sorted()
+            .forEach { module -> failures += "$module -> duplicate API manifest entry" }
+        val manifestMap = manifestEntries.toMap()
+        if (manifestMap.keys != selected) {
+            failures +=
+                "API manifest modules do not match the generated selection: " +
+                    "missing ${(selected - manifestMap.keys).sorted()}, " +
+                    "unexpected ${(manifestMap.keys - selected).sorted()}"
+        }
+
+        selected.sorted().forEach { module ->
+            val version = versions[module]
+            val revision = revisions[module]
+            if (version == null || revision == null) {
+                failures += "$module -> publishing metadata is incomplete"
+                return@forEach
+            }
+            if (manifestMap[module] != version) {
+                failures += "$module -> manifest version '${manifestMap[module]}' != '$version'"
+            }
+            val moduleRoot = root.resolve(module)
+            val versionRoot = moduleRoot.resolve(version)
+            if (!versionRoot.resolve("index.html").isFile) {
+                failures += "$module -> immutable version route '$version' is missing"
+            }
+            verifyRedirect(
+                file = moduleRoot.resolve("current/index.html"),
+                module = module,
+                alias = "current",
+                version = version,
+                failures = failures,
+            )
+            val latestRedirect = moduleRoot.resolve("latest/index.html")
+            if (version.isStableRelease()) {
+                verifyRedirect(
+                    file = latestRedirect,
+                    module = module,
+                    alias = "latest",
+                    version = version,
+                    failures = failures,
+                )
+            } else if (latestRedirect.exists()) {
+                failures += "$module -> prerelease '$version' must not publish a latest alias"
+            }
+
+            val expectedSourceUrl = "${scmUrl.get()}/blob/$revision/$module/"
+            val sourceLinkFound = versionRoot.walkTopDown()
+                .filter(File::isFile)
+                .filter { file -> file.extension == "html" }
+                .any { file -> expectedSourceUrl in file.readText() }
+            if (!sourceLinkFound) {
+                failures +=
+                    "$module -> generated API does not link to immutable source '$revision'"
+            }
+        }
+
+        if (failures.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("ViewCompose API documentation output verification failed:")
+                    failures.distinct().sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+
+    private fun verifyRedirect(
+        file: File,
+        module: String,
+        alias: String,
+        version: String,
+        failures: MutableList<String>,
+    ) {
+        if (!file.isFile) {
+            failures += "$module -> $alias alias is missing"
+            return
+        }
+        val content = file.readText()
+        if ("../$version/" !in content) {
+            failures += "$module -> $alias alias does not target '$version'"
         }
     }
 }
@@ -662,6 +859,7 @@ private data class PublishingMetadata(
     val scmUrl: String,
     val strictApiDocsModules: List<String>,
     val moduleVersions: Map<String, String>,
+    val moduleSourceRevisions: Map<String, String>,
 ) {
     companion object {
         fun load(project: Project): PublishingMetadata {
@@ -686,6 +884,12 @@ private data class PublishingMetadata(
                     module to version
                 }
                 .toSortedMap()
+            val sourceRevisions = versions.keys.associateWith { module ->
+                project.providers
+                    .gradleProperty("viewComposeSourceRevision.$module")
+                    .orElse(properties.required("module.$module.sourceRevision"))
+                    .get()
+            }.toSortedMap()
             return PublishingMetadata(
                 groupId = groupId,
                 projectUrl = properties.required("project.url"),
@@ -699,6 +903,7 @@ private data class PublishingMetadata(
                     .distinct()
                     .sorted(),
                 moduleVersions = versions,
+                moduleSourceRevisions = sourceRevisions,
             )
         }
     }
@@ -711,6 +916,9 @@ private fun Properties.required(key: String): String =
 private val GROUP_PATTERN = Regex("[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+")
 private val MODULE_PATTERN = Regex("viewcompose-[a-z0-9-]+")
 private val VERSION_PATTERN = Regex("[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?")
+private val SOURCE_REVISION_PATTERN = Regex("[a-f0-9]{40}")
+private val API_MANIFEST_ENTRY_PATTERN =
+    Regex("""\{"artifact":"([^"]+)","version":"([^"]+)"}""")
 private val REQUIRED_POM_ELEMENTS = listOf(
     "<name>",
     "<description>",

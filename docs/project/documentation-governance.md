@@ -107,10 +107,10 @@ have exactly one catalog row. Adding, renaming, publishing, or retiring an artif
 catalog, publishing metadata, dependency documentation, and structure verification to change
 together.
 
-During the initial site rollout, existing artifacts may remain marked `Planned` in the catalog. A
-new artifact must not receive its first public release, and an existing artifact must not be
-documented as stable, until it has `docs/modules/<artifact-id>/README.md`. That page owns the
-following information:
+Every catalog row must link an available `docs/modules/<artifact-id>/README.md`; `Planned` is no
+longer an accepted state for published artifacts. A new artifact must not receive its first public
+release until that manual, its generated API tree, and its strict source-comment gate exist. The
+module page owns the following information:
 
 1. purpose, audience, and non-goals;
 2. Maven coordinate and stability level;
@@ -138,7 +138,7 @@ Source comments are the canonical API reference. The hosted site must provide:
 - one generated API tree per artifact and released version;
 - stable aliases for each artifact's latest stable API;
 - links from every module page to the matching generated API tree;
-- source links that resolve to the released tag, not an arbitrary `main` revision.
+- source links that resolve to the release's immutable commit, never an arbitrary `main` revision.
 
 Generated HTML is build output. Never hand-edit it or commit it under `docs/`. Sources JARs and
 Javadoc JARs published to Maven Central remain release artifacts, while the hosted API tree is the
@@ -251,6 +251,16 @@ The planned URL contract is generator-neutral:
 
 Exact deployment mechanics will be decided with the hosting system, but changing this semantic URL
 shape requires an ADR and redirect plan.
+
+Every published module records `module.<artifact>.sourceRevision` beside its independent version in
+the publication metadata. The value is a full 40-character Git commit SHA whose module source is
+byte-for-byte the source used to generate the reference. Release preparation therefore freezes the
+module source in one commit, then changes version and revision metadata in a second commit. A module
+version must never be advanced without advancing this source revision when its source changed.
+
+Selected-module API generation is an iteration aid only. Production deployment must run the
+complete-catalog verifier, which checks every version route, the mutable `current` redirect, stable
+`latest` policy, manifest parity, and at least one immutable source link per module.
 
 ## Language policy
 

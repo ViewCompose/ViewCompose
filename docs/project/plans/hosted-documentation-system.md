@@ -23,6 +23,8 @@ custom domain, and independently versioned module documentation.
 - `docs/` is governed, link-checked, and consumed directly by Docusaurus.
 - every published Maven artifact is present in the generated site catalog.
 - Dokka 2 generates all 25 versioned API trees through one root Gradle task.
+- all 25 artifacts have strict source documentation, bilingual module manuals, immutable source
+  links, and verified version/current/latest route policy.
 - GitHub Actions verifies pull requests and can deploy the production artifact from `main`.
 - the first measured full build takes about one minute for API generation and produces a 104 MB
   site on the current development machine.
@@ -44,15 +46,16 @@ custom domain, and independently versioned module documentation.
    - derive the module catalog from publishing metadata;
    - add selected-module Dokka assembly;
    - add PR verification and guarded Pages deployment.
-2. **API completeness — in progress**
+2. **API completeness — completed**
    - generate every published artifact — completed;
    - establish the API documentation quality standard and audit path — completed;
-   - improve KDoc coverage and immutable source links — in progress;
-   - connect Maven release versions and stable aliases.
-3. **Module manuals — pending**
-   - establish the module page template;
-   - document foundation modules first, followed by feature and tooling families;
-   - generate navigation and compatibility data.
+   - improve KDoc coverage and immutable source links — completed;
+   - connect Maven release versions and stable aliases — completed; stable aliases remain absent
+     while every registered version is a prerelease.
+3. **Module manuals — completed**
+   - establish the module page template — completed;
+   - document foundation, feature, integration, optional backend, and tooling families — completed;
+   - generate navigation and compatibility data — completed.
 4. **Learning and migration — pending**
    - add getting started and first application tutorials;
    - add Compose concept comparison and migration paths;
@@ -65,7 +68,7 @@ custom domain, and independently versioned module documentation.
 ## Validation
 
 - `./gradlew verifyDocumentationStructure`
-- selected-module and complete-catalog Dokka generation
+- `./gradlew verifyCompleteViewComposeApiDocs`
 - Docusaurus type check and production build
 - pull-request workflow dry run
 - production URL and custom-domain verification
@@ -76,6 +79,6 @@ custom domain, and independently versioned module documentation.
 
 ## Next action
 
-Follow the [API documentation completeness plan](./api-documentation-completeness.md): repair the
-`viewcompose-runtime` baseline first, then advance through the core UI dependency chain while source
-links and strict per-module gates are added.
+Advance the learning and migration layer: publish the minimal first-application tutorial, then the
+Compose comparison and migration paths, using the completed module manuals and API reference as the
+stable foundation.

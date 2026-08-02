@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: ba6e42348bcf59d26667543d9a109fbf7ce33ad80d6a4af2e44e8c1b47faf677
+translation_source_hash: d02e490aef506f131c1a429fdf1f2c3426bb39b8f9bc4328d57df525ab459437
 translation_status: current
 ---
 
@@ -10,9 +10,8 @@ translation_status: current
 `gradle/viewcompose-publishing.properties` 保持同步，并由 `verifyDocumentationStructure`
 自动验证。
 
-模块专属手册会逐步添加到 `docs/modules/<artifact-id>/README.md`。在此之前，
-`docs/README.md` 中的架构和指南仍是当前事实来源。`规划中` 仅表示独立模块手册尚未发布，
-不代表模块尚未实现或未发布到 Maven Central。
+每个产物都链接到已提供的 `docs/modules/<artifact-id>/README.md`。发布与站点校验会拒绝缺失手册、
+只存在于目录中的产物，或未登记到本表的已发布产物。跨模块概念仍以架构与指南页面为事实来源。
 
 | 产物 | 分类 | 运行时职责 | 手册 |
 | --- | --- | --- | --- |
