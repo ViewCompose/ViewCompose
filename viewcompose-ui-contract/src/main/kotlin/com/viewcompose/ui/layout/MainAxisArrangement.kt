@@ -1,8 +1,11 @@
 package com.viewcompose.ui.layout
 
 /**
- * Row/Column 主轴上的子节点分布策略。
- * Child distribution strategy on the Row/Column main axis.
+ * Distributes children on a row or column main axis.
+ *
+ * `Start`, `Center`, and `End` place the packed child group. `SpaceBetween` places space only
+ * between children, `SpaceAround` assigns half-sized edge spaces, and `SpaceEvenly` uses equal
+ * space at every gap and edge. Horizontal start/end placement follows layout direction.
  */
 enum class MainAxisArrangement {
     Start,

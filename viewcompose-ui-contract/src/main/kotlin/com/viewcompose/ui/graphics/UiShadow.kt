@@ -3,11 +3,18 @@ package com.viewcompose.ui.graphics
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * 一层平台无关的精确阴影参数。
- * Platform-independent parameters for one exact shadow layer.
+ * Describes one platform-neutral shadow layer around a node outline.
  *
- * [blurRadius] 不能为负；[spreadRadius] 允许为负，用于向轮廓内部收缩阴影 mask。
- * [blurRadius] must be non-negative. [spreadRadius] may be negative to contract the shadow mask.
+ * All distances remain in dp until a shadow backend renders the layer. [spreadRadius] may be
+ * negative to contract the shadow mask; [blurRadius] may not be negative. This contract describes
+ * geometry and color only and does not require a particular Android shadow implementation.
+ *
+ * @property color packed ARGB shadow color
+ * @property blurRadius finite, non-negative blur radius in dp
+ * @property spreadRadius finite amount added to the outline before blur; negative values contract it
+ * @property offsetX finite horizontal offset in dp, positive toward the physical right
+ * @property offsetY finite vertical offset in dp, positive downward
+ * @throws IllegalArgumentException if a distance is non-finite or [blurRadius] is negative
  */
 data class UiShadow(
     val color: Int = DefaultColor,
@@ -31,7 +38,9 @@ data class UiShadow(
         }
     }
 
+    /** Provides default values shared by shadow-producing APIs. */
     companion object {
+        /** Default 25%-opaque black color encoded as packed ARGB. */
         const val DefaultColor: Int = 0x40000000
     }
 }
