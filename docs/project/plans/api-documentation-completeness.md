@@ -33,6 +33,9 @@ overviews, and staged enforcement.
 - `viewcompose-ui-contract` has a reviewed Q2/Q3 baseline covering node specifications, modifier
   phases, environment, interaction connectors, lazy/pager state, compiled samples, and an always-on
   strict Dokka warning gate;
+- `viewcompose-widget-core` has a reviewed Q2/Q3 baseline covering the component DSL, theme and
+  locals, composition effects, saveable state, overlays, render-session recovery, compiled samples,
+  and an always-on strict Dokka warning gate;
 - comment language, depth, tags, and lifecycle/failure detail remain inconsistent across modules;
 - generated source links are not yet pinned to release tags.
 
@@ -64,8 +67,8 @@ Q2 or Q3 manual review.
    - enable strict checking for the module.
 3. **Core UI chain — active**
    - `viewcompose-ui-contract` baseline and strict gate are complete;
-   - repair `viewcompose-widget-core`, `viewcompose-renderer`, and `viewcompose-host-android` in
-     dependency order;
+   - `viewcompose-widget-core` baseline and strict gate are complete;
+   - repair `viewcompose-renderer` and `viewcompose-host-android` in dependency order;
    - add module/package overviews and cross-links.
 4. **Remaining families**
    - text, navigation, lifecycle, ViewModel, overlay, animation, gesture, graphics, shadows,
@@ -87,12 +90,12 @@ Q2 or Q3 manual review.
 
 ## Last verified
 
-2026-08-02: `viewcompose-ui-contract` was repaired from 1,036 initially undocumented declarations
-to a zero-warning strict baseline. All node specifications, modifiers, renderer-connected state,
-environment, input, graphics, and interaction contracts were reviewed; compiled Q3 samples and a
-bilingual module manual were added.
+2026-08-02: `viewcompose-widget-core` was repaired from 657 initially undocumented declarations to
+a zero-warning strict baseline. Theme and environment, component defaults and DSL entry points,
+composition effects, saveable state, overlays, render-session diagnostics and failure recovery were
+reviewed; compiled Q3 samples and a bilingual module manual were added.
 
 ## Next action
 
-Audit and repair `viewcompose-widget-core`, add its module manual and focused samples, then enable
-its module-level strict warning gate without changing API behavior.
+Audit and repair `viewcompose-renderer`, add its module manual and focused samples, then enable its
+module-level strict warning gate without changing API behavior.
