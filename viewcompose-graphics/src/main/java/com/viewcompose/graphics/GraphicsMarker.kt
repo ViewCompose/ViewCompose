@@ -1,7 +1,4 @@
 package com.viewcompose.graphics
 
-/**
- * graphics DSL 模块的标记类型。
- * Marker type for the graphics DSL module.
- */
+/** Marker used by dependency guards and runtime capability probes for the graphics DSL artifact. */
 object GraphicsMarker

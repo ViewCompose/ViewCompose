@@ -33,7 +33,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-gesture-core` | Gesture | Platform-neutral gesture policies | [Available](./viewcompose-gesture-core/README.md) |
 | `viewcompose-gesture` | Gesture | Gesture DSL and state APIs | [Available](./viewcompose-gesture/README.md) |
 | `viewcompose-graphics-core` | Graphics | Platform-neutral graphics model | [Available](./viewcompose-graphics-core/README.md) |
-| `viewcompose-graphics` | Graphics | Drawing DSL and composition integration | Planned |
+| `viewcompose-graphics` | Graphics | Drawing DSL and composition integration | [Available](./viewcompose-graphics/README.md) |
 | `viewcompose-shadow-android` | Optional Android backend | Advanced Android shadow rendering | Planned |
 | `viewcompose-widget-constraintlayout` | Optional widget | ConstraintLayout DSL | Planned |
 
