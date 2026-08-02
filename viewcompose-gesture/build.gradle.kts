@@ -22,6 +22,7 @@ android {
 }
 
 dependencies {
+    api(project(":viewcompose-gesture-core"))
     implementation(project(":viewcompose-runtime"))
     implementation(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-widget-core"))

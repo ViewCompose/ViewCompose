@@ -1,5 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
+    id("com.viewcompose.publishing.root")
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.android) apply false
@@ -12,6 +13,7 @@ plugins {
 val modulePackageRoots = mapOf(
     "app" to "com.viewcompose",
     "viewcompose-runtime" to "com.viewcompose.runtime",
+    "viewcompose-text-core" to "com.viewcompose.text",
     "viewcompose-navigation-core" to "com.viewcompose.navigation.core",
     "viewcompose-navigation" to "com.viewcompose.navigation",
     "viewcompose-ui-contract" to "com.viewcompose.ui",
@@ -41,6 +43,7 @@ val modulePackageRoots = mapOf(
 val kotlinJvmModules = setOf(
     "viewcompose-ui-contract",
     "viewcompose-runtime",
+    "viewcompose-text-core",
     "viewcompose-navigation-core",
     "viewcompose-preview-core",
     "viewcompose-preview-gradle-plugin",
@@ -48,6 +51,81 @@ val kotlinJvmModules = setOf(
     "viewcompose-animation-core",
     "viewcompose-gesture-core",
     "viewcompose-graphics-core",
+)
+
+// Foundation modules sit on the runtime path and therefore use an explicit project-dependency
+// allowlist. Adding an edge here is an architecture decision, not a convenient implementation
+// shortcut: optional capabilities must never become prerequisites of the core render pipeline.
+val foundationModuleDependencyRules = mapOf(
+    "viewcompose-runtime" to emptySet(),
+    "viewcompose-text-core" to setOf("viewcompose-runtime"),
+    "viewcompose-navigation-core" to emptySet(),
+    "viewcompose-animation-core" to setOf("viewcompose-runtime"),
+    "viewcompose-graphics-core" to emptySet(),
+    "viewcompose-ui-contract" to
+        setOf(
+            "viewcompose-runtime",
+            "viewcompose-text-core",
+            "viewcompose-graphics-core",
+        ),
+    "viewcompose-gesture-core" to setOf("viewcompose-ui-contract"),
+    "viewcompose-widget-core" to
+        setOf(
+            "viewcompose-runtime",
+            "viewcompose-text-core",
+            "viewcompose-ui-contract",
+        ),
+    "viewcompose-renderer" to
+        setOf(
+            "viewcompose-runtime",
+            "viewcompose-text-core",
+            "viewcompose-ui-contract",
+            "viewcompose-graphics-core",
+            "viewcompose-gesture-core",
+        ),
+    "viewcompose-lifecycle" to
+        setOf(
+            "viewcompose-runtime",
+            "viewcompose-widget-core",
+        ),
+    "viewcompose-viewmodel" to
+        setOf(
+            "viewcompose-runtime",
+            "viewcompose-widget-core",
+        ),
+    "viewcompose-host-android" to
+        setOf(
+            "viewcompose-runtime",
+            "viewcompose-ui-contract",
+            "viewcompose-widget-core",
+            "viewcompose-lifecycle",
+            "viewcompose-viewmodel",
+            "viewcompose-renderer",
+        ),
+)
+
+// Optional capabilities may consume foundation modules, but no foundation module may depend on
+// them. A capability also cannot depend on preview/build tooling.
+val optionalCapabilityModules = setOf(
+    "viewcompose-navigation",
+    "viewcompose-animation",
+    "viewcompose-gesture",
+    "viewcompose-graphics",
+    "viewcompose-shadow-android",
+    "viewcompose-widget-constraintlayout",
+    "viewcompose-overlay-android",
+    "viewcompose-image-coil",
+)
+
+// Tooling is downstream of both foundation and optional capabilities and never participates in
+// the application runtime dependency direction.
+val toolingModules = setOf(
+    "viewcompose-preview-core",
+    "viewcompose-preview-gradle-plugin",
+    "viewcompose-preview-runner",
+    "viewcompose-preview-worker-host",
+    "viewcompose-preview",
+    "viewcompose-benchmark",
 )
 
 val qaQuickTasks = listOf(
@@ -173,6 +251,114 @@ tasks.register("verifyAndroidModuleNamespaces") {
             error(
                 buildString {
                     appendLine("Android namespace verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyModuleDependencyBoundaries") {
+    group = "verification"
+    description =
+        "Verify framework modules are classified and project dependencies point in the allowed direction."
+    doLast {
+        val violations = mutableListOf<String>()
+        val moduleReferenceRegex = Regex("""\":(viewcompose-[^\"]+)\"""")
+        val projectDependencyRegex =
+            Regex("""project\(\s*(?:path\s*=\s*)?\"(:[^\"]+)\"""")
+        val declaredModules =
+            moduleReferenceRegex.findAll(rootDir.resolve("settings.gradle.kts").readText())
+                .map { match -> match.groupValues[1] }
+                .toSet()
+        val classifiedModules =
+            foundationModuleDependencyRules.keys + optionalCapabilityModules + toolingModules
+
+        classifiedModules.sorted().forEach { module ->
+            val memberships =
+                listOf(
+                    module in foundationModuleDependencyRules,
+                    module in optionalCapabilityModules,
+                    module in toolingModules,
+                ).count { membership -> membership }
+            if (memberships != 1) {
+                violations += "$module -> module must belong to exactly one dependency-boundary group"
+            }
+        }
+
+        (declaredModules - classifiedModules).sorted().forEach { module ->
+            violations +=
+                "$module -> unclassified module; register it as foundation, optional capability, or tooling"
+        }
+        (classifiedModules - declaredModules).sorted().forEach { module ->
+            violations += "$module -> boundary classification has no matching module in settings.gradle.kts"
+        }
+        (declaredModules - modulePackageRoots.keys).sorted().forEach { module ->
+            violations += "$module -> missing canonical package-root registration"
+        }
+
+        foundationModuleDependencyRules.forEach { (module, allowedDependencies) ->
+            allowedDependencies
+                .filter { dependency -> dependency !in foundationModuleDependencyRules }
+                .sorted()
+                .forEach { dependency ->
+                    violations +=
+                        "$module -> invalid foundation allowlist target '$dependency'; " +
+                            "foundation modules may only depend on other foundation modules"
+                }
+        }
+
+        val dependenciesByModule =
+            declaredModules.associateWith { module ->
+                val buildFile = rootDir.resolve(module).resolve("build.gradle.kts")
+                if (!buildFile.exists()) {
+                    violations += "$module -> missing build.gradle.kts"
+                    emptySet()
+                } else {
+                    projectDependencyRegex.findAll(buildFile.readText())
+                        .map { match -> match.groupValues[1].removePrefix(":") }
+                        .toSet()
+                }
+            }
+
+        foundationModuleDependencyRules.forEach { (module, allowedDependencies) ->
+            val actualDependencies = dependenciesByModule[module].orEmpty()
+            (actualDependencies - allowedDependencies).sorted().forEach { dependency ->
+                violations +=
+                    "$module -> forbidden foundation dependency '$dependency'; " +
+                        "foundation dependencies must be explicitly allowlisted"
+            }
+        }
+
+        optionalCapabilityModules.forEach { module ->
+            dependenciesByModule[module].orEmpty()
+                .filter { dependency -> dependency in toolingModules }
+                .sorted()
+                .forEach { dependency ->
+                    violations +=
+                        "$module -> forbidden tooling dependency '$dependency'; " +
+                            "runtime capabilities must stay tooling-independent"
+                }
+        }
+
+        dependenciesByModule.forEach { (module, dependencies) ->
+            if ("app" in dependencies) {
+                violations += "$module -> framework modules must not depend on the demo app"
+            }
+            dependencies
+                .filter { dependency ->
+                    dependency.startsWith("viewcompose-") && dependency !in declaredModules
+                }
+                .sorted()
+                .forEach { dependency ->
+                    violations += "$module -> dependency '$dependency' is not declared in settings.gradle.kts"
+                }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Module dependency-boundary verification failed:")
                     violations.sorted().forEach { appendLine("- $it") }
                 },
             )
@@ -510,6 +696,8 @@ tasks.register("qaQuick") {
     description = "Run compile + unit-test quality gate for all core modules."
     dependsOn("verifyModulePackageRoots")
     dependsOn("verifyAndroidModuleNamespaces")
+    dependsOn("verifyModuleDependencyBoundaries")
+    dependsOn("verifyViewComposePublishingConfiguration")
     dependsOn("verifyRuntimePurity")
     dependsOn("verifyNavigationCorePurity")
     dependsOn("verifyGestureCorePurity")

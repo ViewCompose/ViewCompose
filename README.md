@@ -79,6 +79,15 @@
 
 ## 快速开始 | Quick Start
 
+发布坐标、逐模块版本、源码包与本地发布/消费者校验流程见
+[PUBLISHING.md](PUBLISHING.md)。`com.viewcompose` Maven Central namespace 已完成验证，
+但首个公开版本尚未发布，请勿把示例版本视为已经上线。
+
+See [PUBLISHING.md](PUBLISHING.md) for formal coordinates, per-module versions, source artifacts,
+and the local publication/consumer verification workflow. The `com.viewcompose` Maven Central
+namespace is verified, but the first public release has not been published; the example versions
+are not available yet.
+
 ### 环境要求 | Requirements
 
 - JDK 17
@@ -90,7 +99,7 @@
 ### 拉取与构建 | Clone & Build
 
 ```bash
-git clone https://github.com/guozhiqiang123/ViewCompose.git
+git clone https://github.com/ViewCompose/ViewCompose.git
 
 cd ViewCompose
 ./gradlew qaQuick

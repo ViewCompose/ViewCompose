@@ -1,0 +1,198 @@
+# ViewCompose Publishing
+
+This document defines the local release contract for ViewCompose Maven artifacts and the Android
+Studio plugin. Remote Maven Central and JetBrains Marketplace uploads are deliberately separate
+from local preparation so a release can be inspected before any irreversible publication.
+
+## Maven identity and version model
+
+The public Maven namespace is:
+
+```text
+com.viewcompose
+```
+
+Every published module owns its version in
+[`gradle/viewcompose-publishing.properties`](gradle/viewcompose-publishing.properties). Equal
+version values do not form one atomic release train: changing one entry releases only that
+artifact and the artifacts whose dependency metadata must point to the new version.
+
+Ownership of `viewcompose.com` and the `com.viewcompose` namespace is verified in Central Portal.
+Maven Central releases are immutable, so the namespace and coordinates must be reviewed before the
+first upload and must not be treated as provisional afterward.
+
+## Dependency shape
+
+Feature artifacts expose their platform-neutral core artifact transitively:
+
+```kotlin
+dependencies {
+    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha01")
+}
+```
+
+Core artifacts are also independently consumable from Kotlin/JVM modules:
+
+```kotlin
+dependencies {
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha01")
+}
+```
+
+Gradle Module Metadata preserves `api`/`implementation` variant semantics. Maven POMs are also
+generated for other build tools. Every artifact publishes a sources JAR for IDE source navigation
+and a javadoc JAR for repository requirements.
+
+## Local Maven workflow
+
+Fast metadata validation, without compiling artifacts:
+
+```bash
+./gradlew verifyViewComposePublishingConfiguration
+```
+
+Publish all registered modules to `build/maven-repository`:
+
+```bash
+./gradlew cleanViewComposeLocalRepository publishViewComposeToLocalRepository
+```
+
+Publish only the artifacts that are independently evolving in the current release:
+
+```bash
+./gradlew publishSelectedViewComposeToLocalRepository \
+  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation
+```
+
+Selective publication never deletes the repository, so it can resolve already staged independent
+versions. The all-module task is intended for snapshot QA; public stable releases must use an
+explicit module selection so unchanged immutable versions are never uploaded again.
+
+Publish and validate only that independent release set:
+
+```bash
+./gradlew verifySelectedViewComposeLocalRepository \
+  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation
+```
+
+Inspect an already generated repository without publishing again:
+
+```bash
+./gradlew inspectViewComposeLocalRepository
+```
+
+Publish and validate primary artifacts, sources, docs, POM metadata, SHA-256/SHA-512 checksums,
+stable-version signatures, and feature-to-core dependencies:
+
+```bash
+./gradlew verifyViewComposeLocalRepository
+```
+
+Build two isolated consumers that know nothing about project modules—one Android feature consumer
+and one pure JVM core consumer:
+
+```bash
+./gradlew verifyViewComposePublishedConsumption
+```
+
+The full publication tasks are intentionally not part of `qaQuick`; only the cheap coordinate and
+version validation runs during normal project QA.
+
+## Version overrides and signing
+
+The checked-in versions are the source of truth. A CI dry run may override one module without
+editing the file:
+
+```bash
+./gradlew publishViewComposeToLocalRepository \
+  -PviewComposeVersion.viewcompose-navigation=0.2.0-SNAPSHOT
+```
+
+The group can be overridden for namespace validation with `-PviewComposeGroup=...`.
+
+Local stable releases use the machine GPG keyring and OS pinentry window. The release key's public
+half must be distributed to a Central-supported keyserver; no private key path or passphrase is
+stored in the project.
+
+CI releases use in-memory PGP signing:
+
+```text
+VIEWCOMPOSE_SIGNING_KEY
+VIEWCOMPOSE_SIGNING_PASSWORD
+```
+
+Stable versions always require signatures; `-SNAPSHOT` versions may remain unsigned for local QA.
+Secrets must remain outside the repository.
+
+The Central Portal uploader reads its generated user token from standard private Gradle
+properties. Put these only in the user-level `~/.gradle/gradle.properties`, or inject them through
+CI secret environment variables:
+
+```text
+mavenCentralUsername=<generated token username>
+mavenCentralPassword=<generated token password>
+```
+
+For CI, use `ORG_GRADLE_PROJECT_mavenCentralUsername` and
+`ORG_GRADLE_PROJECT_mavenCentralPassword`. Never add either value to this repository.
+
+After changing the selected module versions to stable values and completing the local release
+checks, create a manual Central Portal deployment with:
+
+```bash
+./gradlew publishSelectedViewComposeToMavenCentral \
+  -PviewComposePublishModules=viewcompose-runtime,viewcompose-navigation-core
+```
+
+The task deliberately has no all-module default, rejects `-SNAPSHOT` versions, and uploads as a
+user-managed deployment. Inspect Central validation results before clicking Publish in the Portal.
+Public release is therefore kept separate from the Gradle upload command.
+
+## Android Studio plugin
+
+The Marketplace plugin version is independently managed by
+`plugin.viewcompose-studio.version` in the shared publication properties file. It can be overridden
+with `-PviewComposeStudioPluginVersion=...`.
+
+Prepare and verify an installable ZIP without uploading:
+
+```bash
+cd tools/viewcompose-studio-plugin
+./gradlew prepareMarketplaceRelease
+```
+
+The artifact is written to `build/distributions/`. Marketplace publishing and signing read only
+environment variables:
+
+```text
+JETBRAINS_MARKETPLACE_TOKEN
+JETBRAINS_CERTIFICATE_CHAIN
+JETBRAINS_PRIVATE_KEY
+JETBRAINS_PRIVATE_KEY_PASSWORD
+```
+
+The first Marketplace release must be uploaded through JetBrains Marketplace for initial review.
+After the plugin is approved, later releases can use:
+
+```bash
+./gradlew publishPlugin
+```
+
+Use `-PviewComposeMarketplaceChannels=default,eap` to select channels; the default is `default`.
+
+## First public release checklist
+
+1. Confirm the `com.viewcompose` Central namespace remains verified.
+2. Replace the modules being released from `-SNAPSHOT` to stable semantic versions.
+3. Run `qaQuick`, `verifyViewComposePublishedConsumption`, and the relevant release tests.
+4. Require PGP signing and inspect every generated POM, sources JAR, javadoc JAR, and checksum.
+5. Upload to a Central staging deployment and verify consumption from that staging repository.
+6. Run `prepareMarketplaceRelease`, install the ZIP into the target Android Studio build, and do a
+   final preview smoke test.
+7. Upload the first plugin release manually; enable token-based automation only after approval.

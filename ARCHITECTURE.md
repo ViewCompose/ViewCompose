@@ -51,6 +51,16 @@
 | `viewcompose-benchmark` | 宏基准入口与性能回归数据采集 | 不承载业务 demo 与框架语义逻辑 |
 | `app` | demo、manual verification、ui tests 入口 | 不承载框架核心实现 |
 
+### 2.1.1 模块依赖方向硬边界
+
+模块依赖固定为“基础层 -> 可选能力层 -> 工具层 -> Demo 应用”的单向消费关系；箭头表示后者可以消费前者，禁止基础层为了复用某个可选实现而产生反向依赖。
+
+1. 基础层包括 runtime、纯 Kotlin 内核、UI contract、widget-core、renderer、lifecycle/viewmodel 与 host-android。每个基础模块的 Gradle project 依赖使用显式白名单；新增依赖必须先证明属于稳定基础契约。
+2. navigation、animation、gesture、graphics、shadow、constraintlayout、overlay 与 image-coil 属于可选能力。它们可以依赖基础层，但基础层禁止依赖这些模块；未引入任一可选能力时，核心渲染链仍必须可独立编译运行。
+3. preview、preview worker/runner/Gradle plugin 与 benchmark 属于工具层。运行时基础模块和可选能力模块均禁止依赖工具层；所有框架模块禁止依赖 `app`。
+4. 新增 `viewcompose-*` 模块时，必须在同一提交中登记为“基础 / 可选能力 / 工具”之一。未分类模块、基础模块白名单外依赖、可选能力到工具层的依赖都会由 `verifyModuleDependencyBoundaries` 阻断。
+5. `qaQuick` 固定执行该边界测试。不能以 Demo 可以编译、依赖当前恰好存在或 code review 已确认作为跳过理由。
+
 ### 2.2 当前架构判断
 
 当前架构是可维护的 View-based 声明式 v1：
