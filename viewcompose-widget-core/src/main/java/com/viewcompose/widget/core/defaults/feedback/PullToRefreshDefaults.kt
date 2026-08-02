@@ -1,9 +1,7 @@
 package com.viewcompose.widget.core
 
-/**
- * PullToRefresh DSL 的默认指示器 token。
- * Default indicator token for the PullToRefresh DSL.
- */
+/** Default visual tokens for pull-to-refresh components. */
 object PullToRefreshDefaults {
+    /** Returns the active refresh-indicator color. */
     fun indicatorColor(): Int = Theme.colors.primary
 }

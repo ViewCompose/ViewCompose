@@ -1,8 +1,10 @@
 package com.viewcompose.widget.core
 
 /**
- * 唯一标识一次 overlay 请求在某个 session 内的运行时条目。
- * Uniquely identifies the runtime entry for one overlay request inside a session.
+ * Uniquely identifies one overlay request within a render session.
+ *
+ * @property sessionId owner used for lifecycle isolation
+ * @property requestKey stable request identity inside that session
  */
 data class OverlayEntryId(
     val sessionId: OverlaySessionId,
@@ -10,16 +12,17 @@ data class OverlayEntryId(
 )
 
 /**
- * 由平台实现的 snackbar 展示与关闭入口。
  * Platform-provided entry point for showing and dismissing snackbars.
  */
 interface SnackbarOverlayPresenter {
+    /** Shows [spec] for [entryId] and reports the final result through [onDismissed] exactly once. */
     fun show(
         entryId: OverlayEntryId,
         spec: SnackbarOverlaySpec,
         onDismissed: (TransientFeedbackDismissReason) -> Unit,
     )
 
+    /** Requests dismissal of [entryId] for [reason]. */
     fun dismiss(
         entryId: OverlayEntryId,
         reason: TransientFeedbackDismissReason,
@@ -27,16 +30,17 @@ interface SnackbarOverlayPresenter {
 }
 
 /**
- * 由平台实现的 toast 展示与关闭入口。
  * Platform-provided entry point for showing and dismissing toasts.
  */
 interface ToastOverlayPresenter {
+    /** Shows [spec] for [entryId] and reports the final result through [onDismissed] exactly once. */
     fun show(
         entryId: OverlayEntryId,
         spec: ToastOverlaySpec,
         onDismissed: (TransientFeedbackDismissReason) -> Unit,
     )
 
+    /** Requests dismissal of [entryId] for [reason]. */
     fun dismiss(
         entryId: OverlayEntryId,
         reason: TransientFeedbackDismissReason,
@@ -44,8 +48,11 @@ interface ToastOverlayPresenter {
 }
 
 /**
- * 暴露当前临时反馈队列状态，主要用于测试和诊断。
- * Exposes current transient-feedback queue state, primarily for tests and diagnostics.
+ * Immutable diagnostic snapshot of a transient-feedback queue.
+ *
+ * @property active entry currently delegated to a presenter, if any
+ * @property pending entries waiting in presentation order
+ * @property consumed entries already completed or dropped while still declaratively requested
  */
 data class TransientFeedbackQueueSnapshot(
     val active: OverlayEntryId?,
@@ -54,7 +61,6 @@ data class TransientFeedbackQueueSnapshot(
 )
 
 /**
- * 管理 snackbar/toast 的排队、替换和清理，并把最终展示动作委托给平台 presenter。
  * Manages snackbar/toast queueing, replacement, and clearing while delegating final presentation to platform presenters.
  */
 class TransientFeedbackOverlayHost(
@@ -68,6 +74,7 @@ class TransientFeedbackOverlayHost(
     private var nextActivationToken = 0L
     private var reconciliationDepth = 0
 
+    /** Reconciles snackbar and toast requests owned by [sessionId] against the current queue. */
     override fun commit(
         sessionId: OverlaySessionId,
         requests: List<OverlayRequest>,
@@ -107,6 +114,7 @@ class TransientFeedbackOverlayHost(
         }
     }
 
+    /** Removes active, pending, and consumed requests owned by [sessionId]. */
     override fun clear(sessionId: OverlaySessionId) {
         reconcile {
             desiredRequests.keys
@@ -120,6 +128,7 @@ class TransientFeedbackOverlayHost(
         }
     }
 
+    /** Returns an immutable diagnostic view of the current queue without changing it. */
     fun snapshot(): TransientFeedbackQueueSnapshot {
         return TransientFeedbackQueueSnapshot(
             active = activeRequest?.entry?.entryId,

@@ -1,44 +1,59 @@
 package com.viewcompose.widget.core
 
-/**
- * 定义 snackbar 在 presenter 中展示的生命周期策略。
- * Defines the snackbar lifetime policy used by presenters.
- */
+/** Defines how long a snackbar presenter keeps an entry visible. */
 enum class SnackbarDuration {
+    /** Uses the platform's short snackbar duration. */
     Short,
+    /** Uses the platform's long snackbar duration. */
     Long,
+    /** Keeps the snackbar visible until an action, gesture, or declarative removal dismisses it. */
     Indefinite,
 }
 
-/**
- * 控制临时反馈进入队列时与现有条目的关系。
- * Controls how transient feedback entries interact with existing queued entries.
- */
+/** Controls how a transient-feedback request interacts with active and pending entries. */
 enum class TransientFeedbackQueuePolicy {
+    /** Appends the request after existing pending entries. */
     Enqueue,
+    /** Dismisses the active entry and presents this request next. */
     ReplaceCurrent,
+    /** Replaces the request with the same session-scoped key while preserving queue order otherwise. */
     ReplaceSameKey,
+    /** Drops the request when another entry is active or pending. */
     DropIfBusy,
 }
 
-/**
- * 标识临时反馈消失原因，便于业务区分超时、动作点击和主动清理。
- * Identifies why transient feedback disappeared so business code can distinguish timeout, action, and clear events.
- */
+/** Identifies why a transient-feedback entry stopped being visible or was never shown. */
 enum class TransientFeedbackDismissReason {
+    /** The platform display duration elapsed. */
     Timeout,
+    /** The user activated the snackbar action. */
     Action,
+    /** A user gesture dismissed the entry. */
     Gesture,
+    /** Another request replaced the entry. */
     Replaced,
+    /** The declaration was removed from a later render frame. */
     Removed,
+    /** The owning render session was cleared. */
     SessionCleared,
+    /** Queue policy rejected the entry while the host was busy. */
     Dropped,
+    /** The platform presenter ended the entry for another reason. */
     Platform,
 }
 
 /**
- * 描述 snackbar 的内容、动作和队列策略，保持与平台展示层解耦。
- * Describes snackbar text, action, and queue policy while staying decoupled from platform presentation.
+ * Describes snackbar content, duration, callbacks, and queue behavior.
+ *
+ * Callback identity does not participate in equality. A host can therefore reconcile callback
+ * capture changes without restarting an otherwise unchanged snackbar.
+ *
+ * @property message text presented to the user
+ * @property actionLabel optional action text; `null` omits the action
+ * @property duration requested presenter lifetime
+ * @property queuePolicy behavior when other transient feedback is active or pending
+ * @property onAction invoked when the snackbar action is activated
+ * @property onDismiss invoked once with the final dismissal reason
  */
 class SnackbarOverlaySpec(
     val message: String,
@@ -48,6 +63,7 @@ class SnackbarOverlaySpec(
     val onAction: (() -> Unit)? = null,
     val onDismiss: ((TransientFeedbackDismissReason) -> Unit)? = null,
 ) {
+    /** Compares visible content and queue policy while intentionally ignoring callback identity. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is SnackbarOverlaySpec) return false
@@ -58,6 +74,7 @@ class SnackbarOverlaySpec(
             queuePolicy == other.queuePolicy
     }
 
+    /** Returns a hash of visible content and queue policy. */
     override fun hashCode(): Int {
         var result = message.hashCode()
         result = 31 * result + (actionLabel?.hashCode() ?: 0)
@@ -67,18 +84,24 @@ class SnackbarOverlaySpec(
     }
 }
 
-/**
- * 定义 toast 的短/长展示时长。
- * Defines short and long toast display durations.
- */
+/** Defines how long a toast presenter keeps an entry visible. */
 enum class ToastDuration {
+    /** Uses the platform's short toast duration. */
     Short,
+    /** Uses the platform's long toast duration. */
     Long,
 }
 
 /**
- * 描述 toast 临时反馈的文本和展示时长。
- * Describes toast transient-feedback text and duration.
+ * Describes toast content, duration, callback, and queue behavior.
+ *
+ * Callback identity does not participate in equality. A host can therefore reconcile callback
+ * capture changes without restarting an otherwise unchanged toast.
+ *
+ * @property message text presented to the user
+ * @property duration requested presenter lifetime
+ * @property queuePolicy behavior when other transient feedback is active or pending
+ * @property onDismiss invoked once with the final dismissal reason
  */
 class ToastOverlaySpec(
     val message: String,
@@ -86,6 +109,7 @@ class ToastOverlaySpec(
     val queuePolicy: TransientFeedbackQueuePolicy = TransientFeedbackQueuePolicy.Enqueue,
     val onDismiss: ((TransientFeedbackDismissReason) -> Unit)? = null,
 ) {
+    /** Compares visible content and queue policy while intentionally ignoring callback identity. */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ToastOverlaySpec) return false
@@ -95,6 +119,7 @@ class ToastOverlaySpec(
             queuePolicy == other.queuePolicy
     }
 
+    /** Returns a hash of visible content and queue policy. */
     override fun hashCode(): Int {
         var result = message.hashCode()
         result = 31 * result + duration.hashCode()

@@ -4,19 +4,14 @@ import com.viewcompose.ui.node.RemoteImageLoader
 
 private val LocalRemoteImageLoader = uiLocalOf<RemoteImageLoader?> { null }
 
-/**
- * 当前 composition 的远程图片加载器。
- * Remote image loader for the current composition.
- */
+/** Exposes the remote image loader installed for the current composition scope. */
 object ImageLoading {
+    /** Current loader, or `null` when remote image loading is not configured. */
     val current: RemoteImageLoader?
         get() = UiLocals.current(LocalRemoteImageLoader)
 }
 
-/**
- * 在 content 范围内提供远程图片加载器。
- * Provides a remote image loader within the content scope.
- */
+/** Provides [loader] to image components built inside [content]. */
 fun UiTreeBuilder.ProvideRemoteImageLoader(
     loader: RemoteImageLoader?,
     content: UiTreeBuilder.() -> Unit,

@@ -4,15 +4,13 @@ import android.view.ViewGroup
 import com.viewcompose.ui.node.VNode
 
 /**
- * host-android 在运行时注册的 Android 渲染引擎契约。
- * Android rendering engine contract registered by host-android at runtime.
+ * Narrow Android render-engine contract installed by a host module.
  *
- * widget-core 保留该窄接口，以避免直接依赖 renderer 模块。
- * widget-core keeps this narrow contract to avoid a direct renderer dependency.
+ * Widget core depends on this protocol instead of a concrete renderer, preserving the module
+ * boundary and allowing a host to choose its renderer/runtime stack once per process.
  */
 interface CoreRenderEngine {
     /**
-     * 将 VNode 树渲染到容器，并返回新的 mounted 节点和可选诊断/提交工作。
      * Renders the VNode tree into the container and returns new mounted nodes plus optional diagnostics/commit work.
      */
     fun renderInto(
@@ -23,7 +21,6 @@ interface CoreRenderEngine {
     ): CoreRenderFrame
 
     /**
-     * 释放已经挂载的 renderer 节点。
      * Disposes renderer nodes that are already mounted.
      */
     fun disposeMounted(
@@ -33,8 +30,16 @@ interface CoreRenderEngine {
 }
 
 /**
- * 一帧 renderer 输出，native commit effect 会在 composition commit 后执行。
- * Renderer output for one frame; native commit effects run after composition commit.
+ * Output prepared by a renderer for one frame.
+ *
+ * [commitEffects] run only after composition commit. [commitFailures] contains failures already
+ * encountered while establishing [mountedNodes]; that native tree cannot be rolled back by core.
+ *
+ * @property mountedNodes opaque renderer nodes that become the previous tree for the next frame
+ * @property renderStats aggregate binding statistics
+ * @property renderResult optional detailed diagnostics when collection was requested
+ * @property commitEffects native mutations deferred until composition commit
+ * @property commitFailures native failures captured while rendering the tree
  */
 data class CoreRenderFrame(
     val mountedNodes: List<Any>,
@@ -45,8 +50,11 @@ data class CoreRenderFrame(
 )
 
 /**
- * renderer 延迟到 session commit 阶段执行的 native 操作。
- * Native operation delayed by the renderer until the session commit phase.
+ * Native mutation deferred by the renderer until the session commit phase.
+ *
+ * @property operation native interoperability operation represented by this effect
+ * @property nodeKey declarative node identity used for diagnostics, if available
+ * @property commit operation invoked once after composition commit
  */
 data class CoreRenderCommitEffect(
     val operation: RenderFailureOperation,
@@ -55,8 +63,11 @@ data class CoreRenderCommitEffect(
 )
 
 /**
- * renderer 在渲染或释放过程中捕获的 native commit 失败。
- * Native commit failure captured by the renderer while rendering or disposing.
+ * Native failure captured by the renderer while rendering or disposing mounted nodes.
+ *
+ * @property operation related native interoperability operation, if known
+ * @property nodeKey declarative node identity used for diagnostics, if available
+ * @property cause original platform failure
  */
 data class CoreRenderCommitFailure(
     val operation: RenderFailureOperation?,

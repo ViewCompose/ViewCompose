@@ -5,38 +5,41 @@ import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.shape.UiShape
 
 /**
- * IconButton DSL 的默认 token 入口。
- * Default token entry point for the IconButton DSL.
- *
- * IconButton 复用 Button 的颜色层级，仅将内容区尺寸压缩为正方形触控目标。
- * IconButton reuses Button color hierarchy and compresses the content area into a square touch target.
+ * Resolves IconButton defaults by reusing Button hierarchy with a square touch target.
  */
 object IconButtonDefaults {
+    /** Delegates container color resolution to [ButtonDefaults]. */
     fun containerColor(
         variant: ButtonVariant = ButtonVariant.Primary,
         enabled: Boolean = true,
     ): Int = ButtonDefaults.containerColor(variant, enabled)
 
+    /** Delegates icon color resolution to [ButtonDefaults]. */
     fun contentColor(
         variant: ButtonVariant = ButtonVariant.Primary,
         enabled: Boolean = true,
     ): Int = ButtonDefaults.contentColor(variant, enabled)
 
+    /** Delegates border color resolution to [ButtonDefaults]. */
     fun borderColor(
         variant: ButtonVariant = ButtonVariant.Primary,
         enabled: Boolean = true,
     ): Int = ButtonDefaults.borderColor(variant, enabled)
 
+    /** Delegates border width resolution to [ButtonDefaults]. */
     fun borderWidth(
         variant: ButtonVariant = ButtonVariant.Primary,
     ): UiDp = ButtonDefaults.borderWidth(variant)
 
+    /** Returns the Button default shape. */
     fun shape(): UiShape = ButtonDefaults.shape()
 
+    /** Uses the corresponding Button height as square IconButton bounds. */
     fun size(
         size: ButtonSize = ButtonSize.Medium,
     ): UiDp = ButtonDefaults.height(size)
 
+    /** Resolves uniform icon padding for [size]. */
     fun contentPadding(
         size: ButtonSize = ButtonSize.Medium,
     ): UiDp {
@@ -47,5 +50,6 @@ object IconButtonDefaults {
         }
     }
 
+    /** Returns the Button pressed-state highlight. */
     fun pressedColor(): Int = ButtonDefaults.pressedColor()
 }

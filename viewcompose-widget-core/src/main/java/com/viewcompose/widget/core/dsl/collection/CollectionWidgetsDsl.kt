@@ -22,7 +22,6 @@ import com.viewcompose.ui.state.PagerState
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * 基于列表数据发射 LazyColumn。
  * Emits a LazyColumn from list data.
  */
 fun <T> UiTreeBuilder.LazyColumn(
@@ -63,7 +62,6 @@ fun <T> UiTreeBuilder.LazyColumn(
 }
 
 /**
- * 基于 LazyListScope DSL 发射 LazyColumn，并捕获当前 locals 供 item session 使用。
  * Emits a LazyColumn from LazyListScope DSL and captures current locals for item sessions.
  */
 fun UiTreeBuilder.LazyColumn(
@@ -103,7 +101,6 @@ fun UiTreeBuilder.LazyColumn(
 }
 
 /**
- * 基于列表数据发射 LazyRow。
  * Emits a LazyRow from list data.
  */
 fun <T> UiTreeBuilder.LazyRow(
@@ -142,7 +139,6 @@ fun <T> UiTreeBuilder.LazyRow(
 }
 
 /**
- * 基于 LazyListScope DSL 发射 LazyRow；LazyRow 不支持 sticky header。
  * Emits a LazyRow from LazyListScope DSL; LazyRow does not support sticky headers.
  */
 fun UiTreeBuilder.LazyRow(
@@ -180,7 +176,6 @@ fun UiTreeBuilder.LazyRow(
 }
 
 /**
- * 基于列表数据发射 LazyVerticalGrid。
  * Emits a LazyVerticalGrid from list data.
  */
 fun <T> UiTreeBuilder.LazyVerticalGrid(
@@ -227,7 +222,6 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
 }
 
 /**
- * 基于 LazyGridScope DSL 发射 LazyVerticalGrid。
  * Emits a LazyVerticalGrid from LazyGridScope DSL.
  */
 fun UiTreeBuilder.LazyVerticalGrid(
@@ -271,7 +265,6 @@ fun UiTreeBuilder.LazyVerticalGrid(
 // HorizontalPager.
 
 /**
- * HorizontalPager 的页面收集 scope。
  * Page collection scope for HorizontalPager.
  */
 @UiDslMarker
@@ -279,7 +272,6 @@ class HorizontalPagerScope internal constructor() {
     private val pages = mutableListOf<HorizontalPagerPage>()
 
     /**
-     * 添加一个 pager 页面。
      * Adds one pager page.
      */
     fun Page(
@@ -298,7 +290,6 @@ class HorizontalPagerScope internal constructor() {
 }
 
 /**
- * 发射 HorizontalPager，并为每个页面创建独立 lazy item session。
  * Emits a HorizontalPager and creates an independent lazy item session for each page.
  */
 fun UiTreeBuilder.HorizontalPager(
@@ -355,7 +346,6 @@ fun UiTreeBuilder.HorizontalPager(
 }
 
 /**
- * pager 页面声明快照。
  * Snapshot of one pager page declaration.
  */
 internal data class HorizontalPagerPage(
@@ -367,7 +357,6 @@ internal data class HorizontalPagerPage(
 // VerticalPager.
 
 /**
- * 发射 VerticalPager，并为每个页面创建独立 lazy item session。
  * Emits a VerticalPager and creates an independent lazy item session for each page.
  */
 fun UiTreeBuilder.VerticalPager(
@@ -428,7 +417,6 @@ fun UiTreeBuilder.VerticalPager(
 // TabRow.
 
 /**
- * TabRow 的 tab 收集 scope。
  * Tab collection scope for TabRow.
  */
 @UiDslMarker
@@ -436,7 +424,6 @@ class TabRowScope internal constructor() {
     private val tabs = mutableListOf<TabRowTabEntry>()
 
     /**
-     * 添加一个 tab 内容声明。
      * Adds one tab content declaration.
      */
     fun Tab(
@@ -453,7 +440,6 @@ class TabRowScope internal constructor() {
 }
 
 /**
- * 发射 TabRow，并为每个 tab 创建可按 selected 状态更新的子 session。
  * Emits a TabRow and creates child sessions that update with selected state.
  */
 fun UiTreeBuilder.TabRow(
@@ -533,7 +519,6 @@ fun UiTreeBuilder.TabRow(
 }
 
 /**
- * tab 内容声明快照。
  * Snapshot of one tab content declaration.
  */
 internal data class TabRowTabEntry(

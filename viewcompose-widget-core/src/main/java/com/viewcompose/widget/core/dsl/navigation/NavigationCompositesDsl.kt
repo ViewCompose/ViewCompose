@@ -16,7 +16,6 @@ import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
 
 /**
- * 顶部应用栏组合组件。
  * Top app bar composite.
  */
 fun UiTreeBuilder.TopAppBar(
@@ -62,7 +61,6 @@ fun UiTreeBuilder.TopAppBar(
 }
 
 /**
- * 底部应用栏组合组件。
  * Bottom app bar composite.
  */
 fun UiTreeBuilder.BottomAppBar(
@@ -87,7 +85,6 @@ fun UiTreeBuilder.BottomAppBar(
 }
 
 /**
- * NavigationBar item 收集 scope。
  * Item collection scope for NavigationBar.
  */
 @UiDslMarker
@@ -95,7 +92,6 @@ class NavigationBarScope internal constructor() {
     private val items = mutableListOf<NavigationBarItem>()
 
     /**
-     * 添加一个 navigation item。
      * Adds one navigation item.
      */
     fun Item(
@@ -116,7 +112,6 @@ class NavigationBarScope internal constructor() {
 }
 
 /**
- * 发射底部 NavigationBar 节点。
  * Emits a bottom NavigationBar node.
  */
 fun UiTreeBuilder.NavigationBar(

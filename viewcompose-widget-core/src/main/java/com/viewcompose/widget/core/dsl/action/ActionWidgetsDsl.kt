@@ -14,7 +14,6 @@ import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 
 /**
- * 发射 Button 节点，并根据主题 defaults 解析颜色、尺寸、形状和文字样式。
  * Emits a Button node and resolves colors, sizing, shape, and text style from theme defaults.
  */
 fun UiTreeBuilder.Button(
@@ -66,7 +65,6 @@ fun UiTreeBuilder.Button(
 }
 
 /**
- * 发射 IconButton 节点，并把点击语义作为 Modifier 追加到外层。
  * Emits an IconButton node and appends click semantics through Modifier.
  */
 fun UiTreeBuilder.IconButton(
@@ -120,7 +118,6 @@ fun UiTreeBuilder.IconButton(
 }
 
 /**
- * Button 的文本样式便捷变体。
  * Text-style convenience variant of Button.
  */
 fun UiTreeBuilder.TextButton(
@@ -145,7 +142,6 @@ fun UiTreeBuilder.TextButton(
 }
 
 /**
- * 发射 SegmentedControl 节点。
  * Emits a SegmentedControl node.
  */
 fun UiTreeBuilder.SegmentedControl(

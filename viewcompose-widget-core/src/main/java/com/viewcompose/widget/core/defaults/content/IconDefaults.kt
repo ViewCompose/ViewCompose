@@ -2,15 +2,11 @@ package com.viewcompose.widget.core
 
 import com.viewcompose.ui.unit.UiDp
 
-/**
- * Icon DSL 的默认尺寸和 tint。
- * Default size and tint for the Icon DSL.
- *
- * tint 默认继承 ContentColor，使图标能跟随 Surface/Text 的内容色上下文。
- * tint inherits ContentColor by default so icons follow Surface/Text content color context.
- */
+/** Default size and tint tokens for icon components. */
 object IconDefaults {
+    /** Returns the default square icon size. */
     fun size(): UiDp = 24.dp
 
+    /** Returns the tint inherited from the nearest content-color provider. */
     fun tint(): Int = ContentColor.current
 }

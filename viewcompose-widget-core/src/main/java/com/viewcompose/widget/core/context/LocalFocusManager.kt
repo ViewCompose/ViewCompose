@@ -5,17 +5,18 @@ import android.view.ViewGroup
 import com.viewcompose.ui.focus.FocusDirection
 import com.viewcompose.ui.focus.FocusManager
 
-/**
- * 当前正在 composition 的 render session 的焦点所有者。
- * Focus owner for the currently composing render session.
- */
+/** Exposes the focus owner for the render session currently being composed. */
 object LocalFocusManager {
+    /**
+     * Current focus manager.
+     *
+     * @throws IllegalStateException outside composition of a mounted render session
+     */
     val current: FocusManager
         get() = FocusManagerContext.requireCurrent()
 }
 
 /**
- * 焦点管理器的线程局部上下文。
  * Thread-local context for the focus manager.
  */
 internal object FocusManagerContext {
@@ -42,7 +43,6 @@ internal object FocusManagerContext {
 }
 
 /**
- * 基于 Android ViewGroup 的 session 焦点管理器。
  * Session focus manager backed by an Android ViewGroup.
  */
 internal class SessionFocusManager(

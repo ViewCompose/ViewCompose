@@ -5,19 +5,14 @@ import com.viewcompose.runtime.frame.MonotonicFrameClock
 
 private val LocalMonotonicFrameClockValue = uiLocalOf<MonotonicFrameClock> { FallbackMonotonicFrameClock }
 
-/**
- * 当前 composition 使用的单调帧时钟。
- * Monotonic frame clock used by the current composition.
- */
+/** Exposes the monotonic frame clock used by the current composition scope. */
 object LocalMonotonicFrameClock {
+    /** Current clock, falling back to [FallbackMonotonicFrameClock] when no host provides one. */
     val current: MonotonicFrameClock
         get() = UiLocals.current(LocalMonotonicFrameClockValue)
 }
 
-/**
- * 在 content 范围内提供帧时钟。
- * Provides a frame clock within the content scope.
- */
+/** Provides [clock] to frame-aware APIs invoked while building [content]. */
 fun UiTreeBuilder.ProvideMonotonicFrameClock(
     clock: MonotonicFrameClock,
     content: UiTreeBuilder.() -> Unit,

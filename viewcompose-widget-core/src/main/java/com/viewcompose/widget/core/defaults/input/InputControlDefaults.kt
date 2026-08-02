@@ -1,15 +1,16 @@
 package com.viewcompose.widget.core
 
 /**
- * Checkbox、Switch、RadioButton 与 Slider 的默认输入控件 token。
- * Default input-control tokens for Checkbox, Switch, RadioButton, and Slider.
+ * Resolves Checkbox, Switch, RadioButton, and Slider colors from theme and scoped overrides.
  *
- * 各控件拥有独立 local override，避免一个控件的定制意外影响其他输入控件。
- * Each control has its own local override to prevent one control customization from leaking into other input controls.
+ * Each control family has an independent local override, preventing one customization from leaking
+ * into other input controls.
  */
 object InputControlDefaults {
+    /** Returns the shared body typography used by labeled controls. */
     fun labelStyle(): UiTextStyle = TextDefaults.bodyStyle()
 
+    /** Resolves Checkbox label color for [enabled] state. */
     fun checkboxLabelColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalCheckboxColors)
         return if (enabled) {
@@ -19,6 +20,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves the primary Checkbox control color for [enabled] state. */
     fun checkboxControlColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalCheckboxColors)
         return if (enabled) {
@@ -28,6 +30,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves checked Checkbox color for [enabled] state. */
     fun checkboxCheckedColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalCheckboxColors)
         return if (enabled) {
@@ -37,6 +40,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves unchecked Checkbox color for [enabled] state. */
     fun checkboxUncheckedColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalCheckboxColors)
         return if (enabled) {
@@ -46,6 +50,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves Switch label color for [enabled] state. */
     fun switchLabelColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return if (enabled) {
@@ -55,6 +60,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves the primary Switch control color for [enabled] state. */
     fun switchControlColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return if (enabled) {
@@ -64,6 +70,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves Switch thumb color for [checked] and [enabled] state. */
     fun switchThumbColor(checked: Boolean = true, enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return when {
@@ -73,6 +80,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves Switch track color, applying a translucent activated tone while checked. */
     fun switchTrackColor(checked: Boolean = true, enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return when {
@@ -85,6 +93,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves RadioButton label color for [enabled] state. */
     fun radioButtonLabelColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalRadioButtonColors)
         return if (enabled) {
@@ -94,6 +103,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves the primary RadioButton control color for [enabled] state. */
     fun radioButtonControlColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalRadioButtonColors)
         return if (enabled) {
@@ -103,6 +113,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves checked RadioButton color for [enabled] state. */
     fun radioButtonCheckedColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalRadioButtonColors)
         return if (enabled) {
@@ -112,6 +123,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves unchecked RadioButton color for [enabled] state. */
     fun radioButtonUncheckedColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalRadioButtonColors)
         return if (enabled) {
@@ -121,6 +133,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves the primary Slider control color for [enabled] state. */
     fun sliderControlColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSliderColors)
         return if (enabled) {
@@ -130,6 +143,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves Slider thumb color for [enabled] state. */
     fun sliderThumbColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSliderColors)
         return if (enabled) {
@@ -139,6 +153,7 @@ object InputControlDefaults {
         }
     }
 
+    /** Resolves Slider track color, applying a translucent activated tone while enabled. */
     fun sliderTrackColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSliderColors)
         return if (enabled) {
@@ -149,5 +164,6 @@ object InputControlDefaults {
         }
     }
 
+    /** Returns the current pressed-state control highlight. */
     fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
 }

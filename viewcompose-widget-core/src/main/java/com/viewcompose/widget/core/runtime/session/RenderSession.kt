@@ -11,13 +11,24 @@ import com.viewcompose.ui.tooling.UiNodeTooling
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * 一个绑定到 ViewGroup 的 ViewCompose 渲染会话。
- * ViewCompose render session bound to one ViewGroup.
+ * Owns composition, rendering, effects, overlays, and cleanup for one [ViewGroup].
  *
- * session 负责组合 VNode、交给 renderer 更新 mounted tree、提交 composition/effect/overlay，
- * 并在每个阶段记录可恢复 failure。
- * The session composes VNodes, asks the renderer to update the mounted tree, commits
- * composition/effects/overlays, and reports recoverable failures for each phase.
+ * A render attempt first prepares composition and a candidate native tree. Failure in either step
+ * aborts the attempt and preserves the previous frame. Once the renderer returns a mounted tree,
+ * later composition, native-effect, overlay, or diagnostics failures are reported but cannot roll
+ * back that native frame. The installed render-session platform determines scheduling and the
+ * concrete renderer.
+ *
+ * Call [dispose] when the container leaves its host lifecycle. A disposed session is terminal.
+ *
+ * @param container exclusive native root owned by this session
+ * @param content declarative root rebuilt for render attempts
+ * @param debug enables detailed renderer diagnostics and logging
+ * @param debugTag Android log tag used by this session
+ * @param overlayHost host that reconciles overlays declared by [content]
+ * @param onRenderStats invoked after a committed frame with aggregate renderer counters
+ * @param onRenderResult invoked after a committed frame with detailed diagnostics
+ * @param onRenderFailure invoked for synchronous, asynchronous, and disposal failures
  */
 class RenderSession(
     private val container: ViewGroup,
@@ -40,16 +51,17 @@ class RenderSession(
     @Volatile
     private var committedFrameId: Long? = null
 
+    /** Most recently reported failure, including asynchronous and disposal failures. */
     @Volatile
     var lastRenderFailure: RenderFailure? = null
         private set
 
+    /** Most recently completed synchronous frame report, or `null` before the first render. */
     @Volatile
     var lastFrameReport: RenderFrameReport? = null
         private set
 
     /**
-     * composition effect 共享的协程作用域，生命周期跟随 RenderSession。
      * Coroutine scope shared by composition effects, scoped to the RenderSession lifecycle.
      */
     private val compositionCoroutineScope = CompositionCoroutineScopeOwner(
@@ -87,31 +99,35 @@ class RenderSession(
         }
 
     /**
-     * 按 runtime 策略请求渲染。
-     * Requests rendering according to the runtime policy.
+     * Requests rendering according to the installed runtime policy.
+     *
+     * The runtime may render synchronously or coalesce the request with a scheduled frame.
      */
     fun render() {
         runtime.render()
     }
 
     /**
-     * 控制帧驱动渲染是否激活。
-     * Controls whether frame-driven rendering is active.
+     * Enables or suspends frame-driven rendering for a retained surface.
+     *
+     * Pending invalidations are retained while inactive and coalesced when reactivated. Explicit
+     * [render] calls remain subject to the runtime's documented behavior.
      */
     fun setRenderingActive(active: Boolean) {
         runtime.setRenderingActive(active)
     }
 
     /**
-     * 释放 session 及其 mounted tree、overlay、composer 和 effect scope。
-     * Disposes the session, mounted tree, overlays, composer, and effect scope.
+     * Disposes the mounted tree, overlays, composition, coroutine effects, and scheduling runtime.
+     *
+     * Cleanup is idempotent. Failures are reported individually and do not prevent later cleanup
+     * steps from running.
      */
     fun dispose() {
         runtime.dispose()
     }
 
     /**
-     * 同步渲染一帧；任何阶段失败都会尽量回滚 composition attempt 并记录恢复状态。
      * Renders one synchronous frame; failures attempt to roll back the composition attempt and record recovery state.
      */
     private fun renderNow() {
@@ -125,7 +141,6 @@ class RenderSession(
         val collectDiagnostics = debug || onRenderStats != null || onRenderResult != null
         val frame = try {
             if (!composer.hasPendingInvalidations()) {
-                // 外部渲染请求（如 lazy/pager sessionUpdater）即使没有 runtime state invalidation，也必须重组根节点。
                 // External render requests (e.g. lazy/pager sessionUpdater) must recompose root even without runtime state invalidation signals.
                 composer.requestRootRecompose()
             }
@@ -178,7 +193,6 @@ class RenderSession(
             return
         }
 
-        // renderer 已经产生 mounted tree 后，后续失败只能报告 FrameCommitted，不能回滚 native tree。
         // Once the renderer has produced the mounted tree, later failures report FrameCommitted and do not roll back the native tree.
         mountedNodes = frame.mountedNodes
         frame.commitFailures.forEach { failure ->
@@ -273,7 +287,6 @@ class RenderSession(
     }
 
     /**
-     * 同步释放 session，尽量执行所有清理步骤并分别报告失败。
      * Disposes the session synchronously, attempting every cleanup step and reporting failures independently.
      */
     private fun disposeNow() {
@@ -317,7 +330,6 @@ class RenderSession(
     }
 
     /**
-     * 调用诊断回调并把回调自身失败纳入当前帧报告。
      * Invokes a diagnostics callback and folds callback failures into the current frame report.
      */
     private inline fun invokeDiagnosticsCallback(
@@ -339,7 +351,6 @@ class RenderSession(
     }
 
     /**
-     * 执行单个 dispose 操作，失败不会阻断其它清理步骤。
      * Runs one dispose operation; failure does not stop remaining cleanup steps.
      */
     private inline fun disposeOperation(block: () -> Unit) {
@@ -356,7 +367,6 @@ class RenderSession(
     }
 
     /**
-     * 统一记录 failure、更新最近失败状态并通知监听者。
      * Records a failure, updates the latest failure state, and notifies the listener.
      */
     private fun reportFailure(

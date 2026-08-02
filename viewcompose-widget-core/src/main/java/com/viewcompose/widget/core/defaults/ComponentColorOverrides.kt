@@ -3,11 +3,26 @@ package com.viewcompose.widget.core
 // --- Button ---
 
 /**
- * Button 族组件的局部颜色覆盖。
- * Scoped color overrides for Button-family components.
+ * Overrides selected Button-family color slots inside a local provider scope.
  *
- * null 表示保留 Theme 派生默认值，只覆盖调用方明确传入的颜色槽位。
- * null keeps the Theme-derived default, overriding only color slots explicitly supplied by the caller.
+ * Every `null` property preserves the value derived by `ButtonDefaults` from the current theme.
+ *
+ * @property primaryContainer enabled primary button container
+ * @property primaryContent enabled primary button content
+ * @property primaryDisabledContainer disabled primary button container
+ * @property primaryDisabledContent disabled primary button content
+ * @property secondaryContainer enabled secondary button container
+ * @property secondaryContent enabled secondary button content
+ * @property secondaryDisabledContainer disabled secondary button container
+ * @property secondaryDisabledContent disabled secondary button content
+ * @property tonalContainer enabled tonal button container
+ * @property tonalContent enabled tonal button content
+ * @property tonalDisabledContainer disabled tonal button container
+ * @property tonalDisabledContent disabled tonal button content
+ * @property outlinedContent enabled outlined button content
+ * @property outlinedBorder enabled outlined button border
+ * @property outlinedDisabledContent disabled outlined button content
+ * @property outlinedDisabledBorder disabled outlined button border
  */
 data class ButtonColorOverride(
     val primaryContainer: Int? = null,
@@ -30,10 +45,7 @@ data class ButtonColorOverride(
 
 internal val LocalButtonColors = uiLocalOf<ButtonColorOverride?> { null }
 
-/**
- * 在 content 范围内覆盖 Button/IconButton 的颜色默认值。
- * Overrides Button/IconButton color defaults within the content scope.
- */
+/** Provides [override] to Button and IconButton defaults while building [content]. */
 fun UiTreeBuilder.ProvideButtonColors(
     override: ButtonColorOverride,
     content: UiTreeBuilder.() -> Unit,
@@ -44,8 +56,19 @@ fun UiTreeBuilder.ProvideButtonColors(
 // --- TextField ---
 
 /**
- * TextField 容器和边框颜色的局部覆盖。
- * Scoped overrides for TextField container and border colors.
+ * Overrides selected TextField container and border slots inside a local provider scope.
+ *
+ * Every `null` property preserves the value derived by `TextFieldDefaults` from the current theme.
+ *
+ * @property filledContainer enabled filled-field container
+ * @property filledDisabledContainer disabled filled-field container
+ * @property filledErrorContainer error filled-field container
+ * @property tonalContainer enabled tonal-field container
+ * @property tonalDisabledContainer disabled tonal-field container
+ * @property tonalErrorContainer error tonal-field container
+ * @property outlinedBorder enabled outlined-field border
+ * @property outlinedDisabledBorder disabled outlined-field border
+ * @property outlinedErrorBorder error outlined-field border
  */
 data class TextFieldColorOverride(
     val filledContainer: Int? = null,
@@ -61,10 +84,7 @@ data class TextFieldColorOverride(
 
 internal val LocalTextFieldColors = uiLocalOf<TextFieldColorOverride?> { null }
 
-/**
- * 在 content 范围内覆盖 TextField 的容器和边框默认值。
- * Overrides TextField container and border defaults within the content scope.
- */
+/** Provides [override] to TextField defaults while building [content]. */
 fun UiTreeBuilder.ProvideTextFieldColors(
     override: TextFieldColorOverride,
     content: UiTreeBuilder.() -> Unit,
@@ -75,8 +95,19 @@ fun UiTreeBuilder.ProvideTextFieldColors(
 // --- SegmentedControl ---
 
 /**
- * SegmentedControl 背景、指示器和文本颜色的局部覆盖。
- * Scoped overrides for SegmentedControl background, indicator, and text colors.
+ * Overrides selected segmented-control colors inside a local provider scope.
+ *
+ * Every `null` property preserves the value derived by `SegmentedControlDefaults` from the current
+ * theme.
+ *
+ * @property background enabled track background
+ * @property backgroundDisabled disabled track background
+ * @property indicator enabled selected-segment indicator
+ * @property indicatorDisabled disabled selected-segment indicator
+ * @property text enabled unselected label
+ * @property textDisabled disabled unselected label
+ * @property selectedText enabled selected label
+ * @property selectedTextDisabled disabled selected label
  */
 data class SegmentedControlColorOverride(
     val background: Int? = null,
@@ -91,10 +122,7 @@ data class SegmentedControlColorOverride(
 
 internal val LocalSegmentedControlColors = uiLocalOf<SegmentedControlColorOverride?> { null }
 
-/**
- * 在 content 范围内覆盖 SegmentedControl 的颜色默认值。
- * Overrides SegmentedControl color defaults within the content scope.
- */
+/** Provides [override] to SegmentedControl defaults while building [content]. */
 fun UiTreeBuilder.ProvideSegmentedControlColors(
     override: SegmentedControlColorOverride,
     content: UiTreeBuilder.() -> Unit,
@@ -105,8 +133,15 @@ fun UiTreeBuilder.ProvideSegmentedControlColors(
 // --- InputControl (checkbox, switch, radio, slider) ---
 
 /**
- * 输入控件标签和控件本体颜色的局部覆盖。
- * Scoped overrides for input-control label and control colors.
+ * Overrides label and native-control colors for one input-control family.
+ *
+ * Each provider installs this model into a family-specific local, preventing Checkbox, Switch,
+ * RadioButton, and Slider customization from leaking into one another.
+ *
+ * @property label enabled label color
+ * @property labelDisabled disabled label color
+ * @property control enabled control color
+ * @property controlDisabled disabled control color
  */
 data class InputControlColorOverride(
     val label: Int? = null,
@@ -120,10 +155,7 @@ internal val LocalSwitchColors = uiLocalOf<InputControlColorOverride?> { null }
 internal val LocalRadioButtonColors = uiLocalOf<InputControlColorOverride?> { null }
 internal val LocalSliderColors = uiLocalOf<InputControlColorOverride?> { null }
 
-/**
- * 在 content 范围内覆盖 Checkbox 的颜色默认值。
- * Overrides Checkbox color defaults within the content scope.
- */
+/** Provides [override] to Checkbox defaults while building [content]. */
 fun UiTreeBuilder.ProvideCheckboxColors(
     override: InputControlColorOverride,
     content: UiTreeBuilder.() -> Unit,
@@ -131,10 +163,7 @@ fun UiTreeBuilder.ProvideCheckboxColors(
     ProvideLocal(LocalCheckboxColors, override) { content() }
 }
 
-/**
- * 在 content 范围内覆盖 Switch 的颜色默认值。
- * Overrides Switch color defaults within the content scope.
- */
+/** Provides [override] to Switch defaults while building [content]. */
 fun UiTreeBuilder.ProvideSwitchColors(
     override: InputControlColorOverride,
     content: UiTreeBuilder.() -> Unit,
@@ -142,10 +171,7 @@ fun UiTreeBuilder.ProvideSwitchColors(
     ProvideLocal(LocalSwitchColors, override) { content() }
 }
 
-/**
- * 在 content 范围内覆盖 RadioButton 的颜色默认值。
- * Overrides RadioButton color defaults within the content scope.
- */
+/** Provides [override] to RadioButton defaults while building [content]. */
 fun UiTreeBuilder.ProvideRadioButtonColors(
     override: InputControlColorOverride,
     content: UiTreeBuilder.() -> Unit,
@@ -153,10 +179,7 @@ fun UiTreeBuilder.ProvideRadioButtonColors(
     ProvideLocal(LocalRadioButtonColors, override) { content() }
 }
 
-/**
- * 在 content 范围内覆盖 Slider 的颜色默认值。
- * Overrides Slider color defaults within the content scope.
- */
+/** Provides [override] to Slider defaults while building [content]. */
 fun UiTreeBuilder.ProvideSliderColors(
     override: InputControlColorOverride,
     content: UiTreeBuilder.() -> Unit,
@@ -167,8 +190,12 @@ fun UiTreeBuilder.ProvideSliderColors(
 // --- ProgressIndicator ---
 
 /**
- * 进度指示器颜色的局部覆盖。
- * Scoped color overrides for progress indicators.
+ * Overrides selected linear and circular progress-indicator colors.
+ *
+ * @property linearIndicator active linear indicator color
+ * @property linearTrack inactive linear track color
+ * @property circularIndicator active circular indicator color
+ * @property circularTrack inactive circular track color
  */
 data class ProgressIndicatorColorOverride(
     val linearIndicator: Int? = null,
@@ -179,10 +206,7 @@ data class ProgressIndicatorColorOverride(
 
 internal val LocalProgressIndicatorColors = uiLocalOf<ProgressIndicatorColorOverride?> { null }
 
-/**
- * 在 content 范围内覆盖线性和圆形进度指示器的颜色默认值。
- * Overrides linear and circular progress indicator color defaults within the content scope.
- */
+/** Provides [override] to linear and circular progress defaults while building [content]. */
 fun UiTreeBuilder.ProvideProgressIndicatorColors(
     override: ProgressIndicatorColorOverride,
     content: UiTreeBuilder.() -> Unit,

@@ -1,8 +1,10 @@
 package com.viewcompose.widget.core
 
 /**
- * 为有真实表面句柄的 overlay 提供通用 diff 逻辑，按 session 隔离 show/update/dismiss。
- * Provides common diffing for overlays with real surface handles, isolating show/update/dismiss by session.
+ * Reconciles platform surface handles by session-scoped declarative identity.
+ *
+ * Subclasses provide type-specific decode, show, update, and dismiss operations. Invalid or
+ * differently typed requests are ignored. An unchanged request reuses its handle without an update.
  */
 abstract class SessionBoundSurfaceOverlayHost<Spec : Any, Content : Any, Handle>(
     private val overlayType: OverlayType,
@@ -10,6 +12,7 @@ abstract class SessionBoundSurfaceOverlayHost<Spec : Any, Content : Any, Handle>
 ) : OverlayHost {
     private val activeEntries = mutableMapOf<OverlayEntryId, ActiveEntry<Handle>>()
 
+    /** Reconciles the complete desired request set for [sessionId]. */
     final override fun commit(
         sessionId: OverlaySessionId,
         requests: List<OverlayRequest>,
@@ -48,6 +51,7 @@ abstract class SessionBoundSurfaceOverlayHost<Spec : Any, Content : Any, Handle>
         }
     }
 
+    /** Dismisses and forgets all surface handles owned by [sessionId]. */
     final override fun clear(sessionId: OverlaySessionId) {
         val keys = activeEntries.keys.filter { it.sessionId == sessionId }
         keys.forEach { entryId ->

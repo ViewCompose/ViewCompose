@@ -5,18 +5,17 @@ import kotlin.coroutines.EmptyCoroutineContext
 
 private val LocalAnimationCoroutineContextValue = uiLocalOf<CoroutineContext> { EmptyCoroutineContext }
 
-/**
- * 当前动画使用的额外 coroutine context。
- * Additional coroutine context used by animations in the current composition.
- */
+/** Exposes the additional coroutine context used by animations in the current composition. */
 object LocalAnimationCoroutineContext {
+    /** Current context, or [EmptyCoroutineContext] when no provider is active. */
     val current: CoroutineContext
         get() = UiLocals.current(LocalAnimationCoroutineContextValue)
 }
 
 /**
- * 在 content 范围内提供动画 coroutine context。
- * Provides an animation coroutine context within the content scope.
+ * Provides [context] to animation APIs invoked while building [content].
+ *
+ * Nested providers restore the previous value after [content] returns, including after failure.
  */
 fun UiTreeBuilder.ProvideAnimationCoroutineContext(
     context: CoroutineContext,

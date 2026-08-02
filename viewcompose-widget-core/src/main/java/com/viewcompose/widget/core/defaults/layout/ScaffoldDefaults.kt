@@ -1,11 +1,10 @@
 package com.viewcompose.widget.core
 
-/**
- * Scaffold 容器的默认背景和内容色。
- * Default background and content color for Scaffold containers.
- */
+/** Default container and content colors for scaffold components. */
 object ScaffoldDefaults {
+    /** Returns the scaffold background color. */
     fun containerColor(): Int = Theme.colors.background
 
+    /** Returns the default content color inside a scaffold. */
     fun contentColor(): Int = Theme.colors.onSurface
 }

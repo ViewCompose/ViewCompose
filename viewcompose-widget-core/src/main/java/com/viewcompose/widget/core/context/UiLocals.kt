@@ -1,18 +1,15 @@
 package com.viewcompose.widget.core
 
-/**
- * 业务可见的 Composition Local 句柄，隐藏内部 LocalValue 存储。
- * App-facing Composition Local handle that hides the internal LocalValue storage.
- */
+/** Application-facing handle for a typed, thread-scoped ViewCompose local value. */
 class UiLocal<T> internal constructor(
     internal val holder: LocalValue<T>,
 ) {
+    /** Stable diagnostic name shown in composition tooling. */
     val debugName: String
         get() = holder.debugName
 }
 
 /**
- * 一条待提供的 local/value 绑定，用于 ProvideLocals 批量安装。
  * One pending local/value binding used by ProvideLocals for batch installation.
  */
 class UiLocalProvider internal constructor(
@@ -21,7 +18,6 @@ class UiLocalProvider internal constructor(
 )
 
 /**
- * 创建带自动诊断名的 UiLocal。
  * Creates a UiLocal with an automatic diagnostic name.
  */
 fun <T> uiLocalOf(
@@ -36,7 +32,6 @@ fun <T> uiLocalOf(
 }
 
 /**
- * 创建带显式诊断名和可选格式化器的 UiLocal。
  * Creates a UiLocal with an explicit diagnostic name and optional formatter.
  */
 fun <T> uiLocalOf(
@@ -54,16 +49,13 @@ fun <T> uiLocalOf(
     )
 }
 
-/**
- * 读取当前 composition 中的 local 值。
- * Reads a local value from the current composition.
- */
+/** Reads typed local values from the current thread-scoped composition context. */
 object UiLocals {
+    /** Returns the nearest provided [local] value, or evaluates its default factory. */
     fun <T> current(local: UiLocal<T>): T = LocalContext.current(local.holder)
 }
 
 /**
- * 构建一条 local/value 绑定。
  * Builds one local/value binding.
  */
 infix fun <T> UiLocal<T>.provides(value: T): UiLocalProvider {
@@ -71,7 +63,6 @@ infix fun <T> UiLocal<T>.provides(value: T): UiLocalProvider {
 }
 
 /**
- * 在 content 范围内提供单个 UiLocal。
  * Provides one UiLocal within the content scope.
  */
 fun <T> UiTreeBuilder.ProvideLocal(
@@ -85,7 +76,6 @@ fun <T> UiTreeBuilder.ProvideLocal(
 }
 
 /**
- * 在 content 范围内按顺序提供多个 UiLocal。
  * Provides multiple UiLocals in order within the content scope.
  */
 fun UiTreeBuilder.ProvideLocals(

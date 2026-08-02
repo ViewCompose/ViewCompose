@@ -5,8 +5,16 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 
 /**
- * renderer 一帧绑定行为的汇总统计。
- * Summary statistics for renderer binding behavior in one frame.
+ * Aggregate renderer binding statistics for one frame.
+ *
+ * @property inserts newly mounted nodes
+ * @property reuses existing mounted nodes retained by identity
+ * @property removals previously mounted nodes removed from the tree
+ * @property reboundNodes nodes whose complete binding ran again
+ * @property patchedNodes nodes updated through a targeted patch
+ * @property skippedBindings nodes whose binding was proven unchanged
+ * @property skippedSubtrees subtrees omitted because their structure and bindings were unchanged
+ * @property bindingsByType binding outcomes grouped by declarative node type
  */
 data class RenderStats(
     val inserts: Int = 0,
@@ -20,8 +28,11 @@ data class RenderStats(
 )
 
 /**
- * 某一节点类型的绑定统计。
  * Binding statistics for one node type.
+ *
+ * @property rebound full bindings executed
+ * @property patched targeted binding patches executed
+ * @property skipped unchanged bindings omitted
  */
 data class NodeTypeBindingStats(
     val rebound: Int = 0,
@@ -30,8 +41,12 @@ data class NodeTypeBindingStats(
 )
 
 /**
- * VNode 树与 mounted tree 的结构规模统计。
- * Structure-size statistics for the VNode tree and mounted tree.
+ * Size and depth statistics for declarative and mounted trees.
+ *
+ * @property vnodeCount total declarative nodes in the frame
+ * @property mountedNodeCount total renderer nodes after reconciliation
+ * @property maxVNodeDepth deepest declarative node, where root depth is one
+ * @property maxMountedDepth deepest mounted node, where root depth is one
  */
 data class RenderStructureStats(
     val vnodeCount: Int = 0,
@@ -41,8 +56,14 @@ data class RenderStructureStats(
 )
 
 /**
- * 一帧完整渲染诊断结果。
- * Complete render diagnostics for one frame.
+ * Complete opt-in diagnostics for one render frame.
+ *
+ * @property stats aggregate reconciliation and binding counters
+ * @property structure declarative and mounted tree size
+ * @property warnings non-fatal renderer diagnostics
+ * @property tree platform-independent snapshot of the rendered tree
+ * @property patches ordered reconciliation operations performed for the frame
+ * @property composition recomposition, invalidation, and skip diagnostics
  */
 data class RenderTreeResult(
     val stats: RenderStats = RenderStats(),
@@ -54,8 +75,12 @@ data class RenderTreeResult(
 )
 
 /**
- * 诊断用渲染树节点，不暴露平台 View 实例。
- * Diagnostic render-tree node that does not expose platform View instances.
+ * Platform-independent node in a diagnostic render-tree snapshot.
+ *
+ * @property type declarative node type
+ * @property key stable declarative identity, if supplied
+ * @property toolingMetadata source mapping captured while the node was built
+ * @property children diagnostic child nodes in render order
  */
 data class RenderTreeNode(
     val type: NodeType,
@@ -65,8 +90,16 @@ data class RenderTreeNode(
 )
 
 /**
- * renderer 对 mounted tree 执行的一条 patch 记录。
- * One patch record applied by the renderer to the mounted tree.
+ * One ordered reconciliation operation applied to the mounted tree.
+ *
+ * @property operation performed reconciliation action
+ * @property type affected declarative node type
+ * @property key affected node identity, if supplied
+ * @property parentKey parent identity after the operation, if supplied
+ * @property index child index after the operation
+ * @property moved whether a reused node changed sibling position
+ * @property detail optional renderer-specific diagnostic detail
+ * @property toolingMetadata source mapping for the affected node
  */
 data class RenderPatchRecord(
     val operation: RenderPatchOperation,
@@ -79,15 +112,18 @@ data class RenderPatchRecord(
     val toolingMetadata: UiNodeToolingMetadata? = null,
 )
 
-/**
- * renderer patch 操作类型。
- * Renderer patch operation type.
- */
+/** Reconciliation operations reported by the renderer. */
 enum class RenderPatchOperation {
+    /** A new mounted node was inserted. */
     Insert,
+    /** A mounted node was removed. */
     Remove,
+    /** All bindings for a reused node ran again. */
     Rebind,
+    /** A targeted subset of bindings changed. */
     Patch,
+    /** The node binding was unchanged while descendants were still considered. */
     SkipSelf,
+    /** The node and its complete subtree were unchanged. */
     SkipSubtree,
 }

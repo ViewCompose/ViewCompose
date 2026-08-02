@@ -1,23 +1,22 @@
 package com.viewcompose.widget.core
 
-/**
- * 表示平台层已展示的 popup 实例，host 通过它执行 update/dismiss。
- * Represents a platform popup instance used by the host for update and dismiss operations.
- */
+/** Represents a platform popup instance that can be updated in place or dismissed. */
 interface PopupOverlayHandle {
+    /** Updates the active popup to [spec] and [content] without changing its entry identity. */
     fun update(
         spec: PopupOverlaySpec,
         content: PopupOverlayContent,
     )
 
+    /** Permanently dismisses this platform popup instance. */
     fun dismiss()
 }
 
 /**
- * 由平台实现的 popup 展示入口，接收已计算好的声明式规格与内容 token。
  * Platform-provided popup presenter that receives declarative specs and content tokens.
  */
 interface PopupOverlayPresenter {
+    /** Creates and shows a platform popup for [entryId]. */
     fun show(
         entryId: OverlayEntryId,
         spec: PopupOverlaySpec,
@@ -26,7 +25,6 @@ interface PopupOverlayPresenter {
 }
 
 /**
- * 将 popup overlay 请求同步到平台 presenter，并过滤非 popup 类型的请求。
  * Synchronizes popup overlay requests to the platform presenter and filters out non-popup requests.
  */
 class PopupOverlayHost(

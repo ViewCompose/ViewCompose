@@ -4,10 +4,7 @@ import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.shape.UiShape
 
-/**
- * SegmentedControl 的尺寸档位。
- * Size tiers for SegmentedControl.
- */
+/** Interaction-density tier used to select segmented-control dimensions and typography. */
 enum class SegmentedControlSize {
     Compact,
     Medium,
@@ -15,13 +12,12 @@ enum class SegmentedControlSize {
 }
 
 /**
- * SegmentedControl DSL 的默认 token。
- * Default tokens for the SegmentedControl DSL.
+ * Resolves segmented-control defaults from the current theme and scoped color overrides.
  *
- * 选中态、禁用态颜色支持局部 override，尺寸始终来自当前 Theme.controls。
- * Selected/disabled colors support scoped overrides, while sizing always comes from current Theme.controls.
+ * Dimensions always come from `Theme.controls`; providers replace only explicit color slots.
  */
 object SegmentedControlDefaults {
+    /** Resolves track background color for [enabled] state. */
     fun backgroundColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
@@ -31,6 +27,7 @@ object SegmentedControlDefaults {
         }
     }
 
+    /** Resolves selected-segment indicator color for [enabled] state. */
     fun indicatorColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
@@ -40,8 +37,10 @@ object SegmentedControlDefaults {
         }
     }
 
+    /** Returns the current small theme shape. */
     fun shape(): UiShape = Theme.shapes.small
 
+    /** Resolves unselected label color for [enabled] state. */
     fun textColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
@@ -51,6 +50,7 @@ object SegmentedControlDefaults {
         }
     }
 
+    /** Resolves selected label color for [enabled] state. */
     fun selectedTextColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
@@ -60,6 +60,7 @@ object SegmentedControlDefaults {
         }
     }
 
+    /** Resolves pressed feedback, or transparency while disabled. */
     fun rippleColor(enabled: Boolean = true): Int {
         return if (enabled) {
             Theme.stateColors.controlHighlight.resolve(pressed = true)
@@ -68,6 +69,7 @@ object SegmentedControlDefaults {
         }
     }
 
+    /** Resolves label typography for [size]. */
     fun textStyle(
         size: SegmentedControlSize = SegmentedControlSize.Medium,
     ): UiTextStyle {
@@ -78,6 +80,7 @@ object SegmentedControlDefaults {
         }
     }
 
+    /** Resolves minimum control height for [size]. */
     fun height(
         size: SegmentedControlSize = SegmentedControlSize.Medium,
     ): UiDp {
@@ -88,6 +91,7 @@ object SegmentedControlDefaults {
         }
     }
 
+    /** Resolves horizontal segment content padding for [size]. */
     fun paddingHorizontal(
         size: SegmentedControlSize = SegmentedControlSize.Medium,
     ): UiDp {
@@ -98,6 +102,7 @@ object SegmentedControlDefaults {
         }
     }
 
+    /** Resolves vertical segment content padding for [size]. */
     fun paddingVertical(
         size: SegmentedControlSize = SegmentedControlSize.Medium,
     ): UiDp {

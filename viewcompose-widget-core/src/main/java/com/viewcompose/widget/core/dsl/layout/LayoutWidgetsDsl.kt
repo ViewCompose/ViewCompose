@@ -23,7 +23,6 @@ import com.viewcompose.ui.node.spec.ScrollableRowNodeProps
 import com.viewcompose.ui.unit.UiDp
 
 /**
- * 发射 Box 容器节点。
  * Emits a Box container node.
  */
 fun UiTreeBuilder.Box(
@@ -46,7 +45,6 @@ fun UiTreeBuilder.Box(
 }
 
 /**
- * 发射 Surface 容器，并在内容范围内提供默认 content color。
  * Emits a Surface container and provides a default content color within its content scope.
  */
 fun UiTreeBuilder.Surface(
@@ -92,7 +90,6 @@ fun UiTreeBuilder.Surface(
 }
 
 /**
- * 发射空占位节点，尺寸通常由 Modifier 决定。
  * Emits an empty spacer node whose size is usually controlled by Modifier.
  */
 fun UiTreeBuilder.Spacer(
@@ -108,7 +105,6 @@ fun UiTreeBuilder.Spacer(
 }
 
 /**
- * 发射分割线节点。
  * Emits a divider node.
  */
 fun UiTreeBuilder.Divider(
@@ -129,7 +125,6 @@ fun UiTreeBuilder.Divider(
 }
 
 /**
- * 发射横向线性布局节点。
  * Emits a horizontal linear layout node.
  */
 fun UiTreeBuilder.Row(
@@ -154,7 +149,6 @@ fun UiTreeBuilder.Row(
 }
 
 /**
- * 发射纵向线性布局节点。
  * Emits a vertical linear layout node.
  */
 fun UiTreeBuilder.Column(
@@ -179,7 +173,6 @@ fun UiTreeBuilder.Column(
 }
 
 /**
- * 发射可垂直滚动的 Column 节点。
  * Emits a vertically scrollable Column node.
  */
 fun UiTreeBuilder.ScrollableColumn(
@@ -206,7 +199,6 @@ fun UiTreeBuilder.ScrollableColumn(
 }
 
 /**
- * 发射可水平滚动的 Row 节点。
  * Emits a horizontally scrollable Row node.
  */
 fun UiTreeBuilder.ScrollableRow(
@@ -231,7 +223,6 @@ fun UiTreeBuilder.ScrollableRow(
 }
 
 /**
- * 发射按行自动换行的布局节点。
  * Emits a row-flow layout node.
  */
 fun UiTreeBuilder.FlowRow(
@@ -256,7 +247,6 @@ fun UiTreeBuilder.FlowRow(
 }
 
 /**
- * 发射按列自动换行的布局节点。
  * Emits a column-flow layout node.
  */
 fun UiTreeBuilder.FlowColumn(
@@ -281,7 +271,6 @@ fun UiTreeBuilder.FlowColumn(
 }
 
 /**
- * 发射下拉刷新容器，content 限定为 ScrollableScope。
  * Emits a pull-to-refresh container whose content is limited to ScrollableScope.
  */
 fun UiTreeBuilder.PullToRefresh(

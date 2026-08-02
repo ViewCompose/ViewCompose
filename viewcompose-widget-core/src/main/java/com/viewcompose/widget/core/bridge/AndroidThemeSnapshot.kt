@@ -15,7 +15,6 @@ import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
 
 /**
- * Android theme 中可读取到的颜色和状态色快照。
  * Snapshot of colors and state colors readable from an Android theme.
  */
 internal data class AndroidThemeColorSnapshot(
@@ -64,7 +63,6 @@ internal data class AndroidThemeColorSnapshot(
 )
 
 /**
- * Android theme 的完整可读快照。
  * Complete readable snapshot of an Android theme.
  */
 internal data class AndroidThemeSnapshot(
@@ -75,7 +73,6 @@ internal data class AndroidThemeSnapshot(
 )
 
 /**
- * Android shapeAppearance 属性解析结果。
  * Parsed result of Android shapeAppearance attributes.
  */
 internal data class AndroidThemeShapeSnapshot(
@@ -85,7 +82,6 @@ internal data class AndroidThemeShapeSnapshot(
 )
 
 /**
- * Android textAppearance 属性解析结果。
  * Parsed result of Android textAppearance attributes.
  */
 internal data class AndroidTextStyleSnapshot(
@@ -98,7 +94,6 @@ internal data class AndroidTextStyleSnapshot(
 )
 
 /**
- * Android typography 相关 textAppearance 快照。
  * Snapshot of Android typography-related textAppearance values.
  */
 internal data class AndroidThemeTypographySnapshot(
@@ -114,12 +109,10 @@ internal data class AndroidThemeTypographySnapshot(
 )
 
 /**
- * Android theme snapshot 读取器。
  * Reader for Android theme snapshots.
  */
 internal object AndroidThemeSnapshotReader {
     /**
-     * 读取颜色、形状、排版和 scrim opacity。
      * Reads colors, shapes, typography, and scrim opacity.
      */
     fun read(context: Context): AndroidThemeSnapshot {

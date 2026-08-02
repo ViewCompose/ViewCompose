@@ -4,10 +4,7 @@ import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.shape.UiShape
 
-/**
- * FloatingActionButton 的尺寸档位。
- * Size tiers for FloatingActionButton.
- */
+/** Size tier used to select FAB bounds, icon size, and shape. */
 enum class FabSize {
     Small,
     Medium,
@@ -15,17 +12,19 @@ enum class FabSize {
 }
 
 /**
- * FAB 与 Extended FAB 的默认 token。
- * Default tokens for FAB and Extended FAB.
+ * Resolves FAB and extended-FAB defaults from the current theme.
  *
- * 普通 FAB 按 size 选择独立形状和图标尺寸，Extended FAB 使用横向文本按钮语义。
- * Regular FAB selects shape and icon size by size tier, while Extended FAB follows horizontal text-button semantics.
+ * Regular FABs select bounds, icon size, and shape by [FabSize]. Extended FABs use a horizontal
+ * icon-and-label treatment.
  */
 object FabDefaults {
+    /** Returns the current primary-container color. */
     fun containerColor(): Int = Theme.colors.primaryContainer
 
+    /** Returns content color suitable for [containerColor]. */
     fun contentColor(): Int = Theme.colors.onPrimaryContainer
 
+    /** Resolves square FAB bounds for [size]. */
     fun size(size: FabSize = FabSize.Medium): UiDp {
         return when (size) {
             FabSize.Small -> Theme.controls.fab.smallSize
@@ -34,6 +33,7 @@ object FabDefaults {
         }
     }
 
+    /** Resolves icon size for [size]. */
     fun iconSize(size: FabSize = FabSize.Medium): UiDp {
         return when (size) {
             FabSize.Small -> Theme.controls.fab.smallIconSize
@@ -42,6 +42,7 @@ object FabDefaults {
         }
     }
 
+    /** Resolves the framework FAB shape for [size]. */
     fun shape(size: FabSize = FabSize.Medium): UiShape {
         return when (size) {
             FabSize.Small -> UiShape.rounded(12.dp)
@@ -50,17 +51,24 @@ object FabDefaults {
         }
     }
 
+    /** Returns resting FAB elevation. */
     fun elevation(): UiDp = Theme.controls.fab.elevation
 
+    /** Returns minimum extended-FAB height. */
     fun extendedHeight(): UiDp = Theme.controls.fab.extendedHeight
 
+    /** Returns the current large theme shape for an extended FAB. */
     fun extendedShape(): UiShape = Theme.shapes.large
 
+    /** Returns horizontal content padding for an extended FAB. */
     fun extendedHorizontalPadding(): UiDp = Theme.controls.fab.extendedHorizontalPadding
 
+    /** Returns spacing between extended-FAB icon and label. */
     fun extendedIconSpacing(): UiDp = Theme.controls.fab.extendedIconSpacing
 
+    /** Returns the large label typography style. */
     fun extendedTextStyle(): UiTextStyle = TextDefaults.labelLargeStyle()
 
+    /** Returns the current ripple color. */
     fun pressedColor(): Int = Theme.colors.ripple
 }

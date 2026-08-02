@@ -4,8 +4,52 @@ import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiSp
 
 /**
- * ViewCompose 主题颜色 token，颜色格式为 ARGB Int。
- * ViewCompose theme color tokens stored as ARGB Int values.
+ * Stores the complete semantic color scheme as packed ARGB integers.
+ *
+ * Container roles are paired with `on*` content roles. Defaults derive missing content colors from
+ * luminance and map newer surface/container roles onto the required base colors, so custom themes
+ * can start with the smaller required constructor surface and override roles incrementally.
+ *
+ * @property background application background color
+ * @property onBackground content color placed on [background]
+ * @property surface default component surface color
+ * @property surfaceVariant alternate component surface color
+ * @property surfaceDim dimmest surface-container role
+ * @property surfaceBright brightest surface-container role
+ * @property surfaceContainerLowest lowest-emphasis surface container
+ * @property surfaceContainerLow low-emphasis surface container
+ * @property surfaceContainer standard surface container
+ * @property surfaceContainerHigh high-emphasis surface container
+ * @property surfaceContainerHighest highest-emphasis surface container
+ * @property onSurface primary content color placed on surface roles
+ * @property onSurfaceVariant secondary content color placed on surface roles
+ * @property primary primary accent and action color
+ * @property onPrimary content color placed on [primary]
+ * @property primaryContainer lower-emphasis primary container color
+ * @property onPrimaryContainer content color placed on [primaryContainer]
+ * @property secondary secondary accent and action color
+ * @property onSecondary content color placed on [secondary]
+ * @property secondaryContainer lower-emphasis secondary container color
+ * @property onSecondaryContainer content color placed on [secondaryContainer]
+ * @property tertiary tertiary accent color
+ * @property onTertiary content color placed on [tertiary]
+ * @property tertiaryContainer lower-emphasis tertiary container color
+ * @property onTertiaryContainer content color placed on [tertiaryContainer]
+ * @property error error accent and action color
+ * @property onError content color placed on [error]
+ * @property errorContainer lower-emphasis error container color
+ * @property onErrorContainer content color placed on [errorContainer]
+ * @property success semantic success color
+ * @property warning semantic warning color
+ * @property info semantic informational color
+ * @property outline high-emphasis outline and divider color
+ * @property outlineVariant low-emphasis outline and divider color
+ * @property surfaceTint tint used to communicate tonal surface elevation
+ * @property inverseSurface high-contrast surface color for inverse regions
+ * @property inverseOnSurface content color placed on [inverseSurface]
+ * @property inversePrimary primary accent suitable for [inverseSurface]
+ * @property scrim color placed behind modal surfaces before opacity is applied
+ * @property ripple default pressed-state ripple color
  */
 data class UiColors(
     val background: Int,
@@ -51,8 +95,18 @@ data class UiColors(
 )
 
 /**
- * 同一语义颜色在不同交互状态下的取值。
- * Values for one semantic color across interaction states.
+ * Stores one semantic color across enabled and interactive states.
+ *
+ * [resolve] uses disabled, pressed, focused, checked, selected, then default precedence. This means
+ * callers should pass the complete simultaneous state instead of preselecting one branch.
+ *
+ * @sample com.viewcompose.widget.core.samples.themeStateColorSample
+ * @property defaultColor color used when no higher-priority state is active
+ * @property disabledColor color used whenever the component is disabled
+ * @property pressedColor color used while an enabled component is pressed
+ * @property focusedColor color used while enabled and focused but not pressed
+ * @property checkedColor color used while enabled and checked without higher-priority state
+ * @property selectedColor color used while enabled and selected without higher-priority state
  */
 data class UiStateColor(
     val defaultColor: Int,
@@ -63,8 +117,9 @@ data class UiStateColor(
     val selectedColor: Int = checkedColor,
 ) {
     /**
-     * 按当前交互状态解析最终颜色。
-     * Resolves the final color for the current interaction state.
+     * Resolves the color for a complete interaction-state snapshot.
+     *
+     * @return the first matching state color in disabled, pressed, focused, checked, selected order
      */
     fun resolve(
         enabled: Boolean = true,
@@ -85,8 +140,13 @@ data class UiStateColor(
 }
 
 /**
- * 组件常用状态色集合。
- * Common state-color set used by components.
+ * Groups state-aware colors commonly consumed by component defaults.
+ *
+ * @property primaryText primary text state colors
+ * @property secondaryText secondary text state colors
+ * @property control normal control state colors
+ * @property controlActivated activated control state colors
+ * @property controlHighlight transient pressed/focused highlight colors
  */
 data class UiStateColors(
     val primaryText: UiStateColor,
@@ -96,11 +156,13 @@ data class UiStateColors(
     val controlHighlight: UiStateColor,
 )
 
-/**
- * 从基础颜色派生默认状态色。
- * Derives default state colors from base colors.
- */
+/** Derives framework state-color roles from a semantic [UiColors] scheme. */
 object UiStateColorDefaults {
+    /**
+     * Creates state colors from [colors] without retaining the source object.
+     *
+     * @return a new immutable state-color snapshot
+     */
     fun from(colors: UiColors): UiStateColors {
         return UiStateColors(
             primaryText = UiStateColor(
@@ -140,8 +202,11 @@ object UiStateColorDefaults {
 }
 
 /**
- * 主题形状 token。
- * Theme shape tokens.
+ * Defines small, medium, and large component shape tiers.
+ *
+ * @property small shape for compact controls and small surfaces
+ * @property medium shape for standard controls and surfaces
+ * @property large shape for prominent or large surfaces
  */
 data class UiShapes(
     val small: UiShape,
@@ -150,8 +215,18 @@ data class UiShapes(
 )
 
 /**
- * 主题文本样式 token。
- * Theme text-style token.
+ * Defines an Android-rendered text style independent from a particular widget.
+ *
+ * Null optional values preserve the renderer or component default. The [fontFamily] is an Android
+ * `Typeface` because this module is the Android widget contract boundary.
+ *
+ * @property fontSizeSp text size in scale-independent pixels
+ * @property fontWeight optional platform font weight
+ * @property fontFamily optional Android typeface
+ * @property letterSpacingEm optional letter spacing in em units
+ * @property lineHeightSp optional line height in scale-independent pixels
+ * @property includeFontPadding whether Android font top and bottom padding is included
+ * @property textDecoration optional underline or line-through decoration
  */
 data class UiTextStyle(
     val fontSizeSp: UiSp,
@@ -164,8 +239,19 @@ data class UiTextStyle(
 )
 
 /**
- * 主题排版 token 集合。
- * Theme typography token set.
+ * Groups title, body, and label typography at large, medium, and small tiers.
+ *
+ * The medium styles are required and serve as defaults for omitted size tiers.
+ *
+ * @property titleMedium standard title style
+ * @property bodyMedium standard body style
+ * @property labelMedium standard label style
+ * @property titleLarge large title style
+ * @property titleSmall small title style
+ * @property bodyLarge large body style
+ * @property bodySmall small body style
+ * @property labelLarge large label style
+ * @property labelSmall small label style
  */
 data class UiTypography(
     val titleMedium: UiTextStyle,
@@ -180,8 +266,15 @@ data class UiTypography(
 )
 
 /**
- * ViewCompose 主题完整 token 快照。
- * Complete ViewCompose theme-token snapshot.
+ * Immutable theme snapshot consumed by component defaults and renderers.
+ *
+ * @property colors semantic color scheme
+ * @property typography component-independent text styles
+ * @property stateColors state-aware colors; derived from [colors] by default
+ * @property shapes component shape tiers
+ * @property controls core component sizing tokens
+ * @property overlays modal overlay tokens
+ * @property metadata origin, brightness, and revision diagnostics
  */
 data class UiThemeTokens(
     val colors: UiColors,
@@ -194,17 +287,15 @@ data class UiThemeTokens(
 )
 
 /**
- * overlay 相关主题 token。
- * Theme tokens for overlays.
+ * Defines visual tokens shared by modal overlays.
+ *
+ * @property scrimOpacity opacity applied to the theme scrim color, conventionally in `0f..1f`
  */
 data class UiOverlays(
     val scrimOpacity: Float,
 )
 
-/**
- * 主题 token 来源，用于诊断和 host 桥接。
- * Theme-token origin used for diagnostics and host bridging.
- */
+/** Identifies the source that produced a theme snapshot for diagnostics and host bridging. */
 enum class UiThemeOrigin {
     Custom,
     FrameworkDefault,
@@ -214,8 +305,11 @@ enum class UiThemeOrigin {
 }
 
 /**
- * 主题诊断元数据。
- * Theme diagnostic metadata.
+ * Carries non-visual theme diagnostics without affecting token resolution.
+ *
+ * @property origin source that produced the current snapshot
+ * @property isDark whether the producer classifies the scheme as dark, or `null` when unspecified
+ * @property revision producer-owned change counter used to expose theme refreshes
  */
 data class UiThemeMetadata(
     val origin: UiThemeOrigin = UiThemeOrigin.Custom,
@@ -224,7 +318,6 @@ data class UiThemeMetadata(
 )
 
 /**
- * 基于内容色生成按压态 overlay 颜色。
  * Builds a pressed-state overlay color from the content color.
  */
 internal fun pressedOverlayColorFor(contentColor: Int): Int {
@@ -233,7 +326,6 @@ internal fun pressedOverlayColorFor(contentColor: Int): Int {
 }
 
 /**
- * 根据背景亮度推导黑/白内容色。
  * Derives black or white content color from background luminance.
  */
 internal fun contentColorFor(backgroundColor: Int): Int {

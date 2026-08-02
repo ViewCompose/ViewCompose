@@ -10,7 +10,6 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
 /**
- * 在 composition commit 后启动协程；keys 变化或离开 composition 时取消旧协程。
  * Launches a coroutine after composition commit; old coroutines are cancelled when keys change or leave composition.
  */
 fun LaunchedEffect(
@@ -32,7 +31,6 @@ fun LaunchedEffect(
 }
 
 /**
- * remember 一个跟随 composition 生命周期取消的 CoroutineScope。
  * Remembers a CoroutineScope that is cancelled with the composition lifecycle.
  */
 fun rememberCoroutineScope(
@@ -54,7 +52,6 @@ fun rememberCoroutineScope(
 }
 
 /**
- * LaunchedEffect 的 RememberObserver 桥接，在 remember 生命周期中启动/取消 job。
  * RememberObserver bridge for LaunchedEffect that starts and cancels the job with remember lifecycle.
  */
 private class LaunchedEffectObserver(
@@ -82,7 +79,6 @@ private class LaunchedEffectObserver(
 }
 
 /**
- * rememberCoroutineScope 返回的 scope，使用 SupervisorJob 隔离子任务失败。
  * Scope returned by rememberCoroutineScope, using SupervisorJob to isolate child task failures.
  */
 private class RememberedCoroutineScope(
