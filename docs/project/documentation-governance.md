@@ -248,15 +248,82 @@ shape requires an ADR and redirect plan.
 ## Language policy
 
 English is the canonical public documentation language so API and design contracts have one source
-of truth. Chinese documentation may mirror the same page paths under a locale namespace. A
-translation must link to its canonical page and record the canonical revision or release it
-matches.
+of truth. Simplified Chinese mirrors the same page paths under the `zh-CN` locale namespace. The
+default English site is published at `/`; the Chinese site is published at `/zh-CN/`. Do not create
+a second independent documentation tree or interleave complete English and Chinese copies within
+one hosted page.
 
-Correctness fixes update English first and should update translations in the same pull request when
-practical. A lagging translation must display that status; it must never silently override newer
-canonical behavior. Do not interleave full English and Chinese copies within one future hosted page.
-Existing mixed-language pages may migrate incrementally when their content is next materially
-updated.
+Generated KDoc/Javadoc remains canonical English API reference. Chinese module manuals, tutorials,
+and guides explain how to use those APIs but do not duplicate the complete generated symbol tree.
+Existing mixed-language source comments and pages may migrate incrementally when their content is
+next materially updated.
+
+### Canonical-first translation workflow
+
+Every translated change follows this order:
+
+1. update and verify the canonical English document;
+2. determine its translation priority before merge;
+3. update the Chinese mirror in the same pull request when the page is release-critical or the
+   change is small enough to review safely;
+4. otherwise mark the existing Chinese mirror as stale in the same pull request and schedule a
+   focused translation follow-up;
+5. run the translation freshness and both-locale site build gates.
+
+Translation work must not be deferred into a repository-wide batch after English documentation is
+"finished". Documentation and modules evolve independently, so translation is a continuous,
+page-level workflow. Large translation-only pull requests remain appropriate for an initial locale
+rollout or a deliberately bounded stable section.
+
+### Translation priority
+
+Pages use the following enforcement tiers:
+
+| Tier | Content | Merge requirement |
+| --- | --- | --- |
+| Required | landing and installation pages, getting-started paths, core tutorials, migration instructions, release actions, and localization governance | Chinese mirror must exist and match the canonical source fingerprint |
+| Tracked | architecture, guides, tooling, and published module manuals | a missing translation is allowed; an existing translation must be current or explicitly marked stale |
+| English-only | generated API reference, temporary plans, historical archives, and internal evidence not published as user guidance | no Chinese mirror is required |
+
+The machine-readable required-page list lives with the website localization tooling. Adding or
+removing a required page changes this policy and must update the list, the translated content, and
+the verification tests together. A breaking release must not rely on an untranslated migration or
+operator action page.
+
+### Freshness contract
+
+Every Chinese Markdown mirror records, in front matter:
+
+- `translation_source`: canonical path relative to `docs/`;
+- `translation_source_hash`: SHA-256 fingerprint of the canonical source reviewed by the
+  translator;
+- `translation_status`: `current` or `stale`.
+
+A `current` translation must match the current canonical fingerprint. If a tracked translation is
+not updated with its source, it must be changed to `stale` and show the standard visible stale
+translation warning. Required pages may never be `stale`. Updating only the recorded hash without
+reviewing the translated meaning is a policy violation.
+
+The verification gate fails for missing or stale required pages, invalid source mappings, dishonest
+status, and current translations whose fingerprint no longer matches. It permits an explicitly
+stale tracked translation while reporting it as follow-up work. A missing tracked translation uses
+the canonical English page until a reviewed mirror is added; it must not be replaced by an
+unreviewed machine translation merely to increase coverage.
+
+### Pull request and review rules
+
+Every pull request that changes canonical public documentation must state one of:
+
+- the Chinese mirror was updated and reviewed;
+- the page is tracked but has no Chinese mirror yet;
+- the existing tracked mirror was explicitly marked stale;
+- the page is English-only under this policy;
+- no user-visible language content changed.
+
+Correctness and security fixes update English first. When the Chinese mirror cannot be updated in
+the same urgent pull request, it is marked stale rather than left silently inaccurate. Translation
+review checks technical meaning, links, code samples, terminology, and locale-specific screenshots;
+it is not only a fluency review.
 
 ## Change impact matrix
 

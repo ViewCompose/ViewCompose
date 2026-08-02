@@ -24,6 +24,14 @@ rationale.
 
 Documentation changes or rationale:
 
+Localization impact:
+
+- [ ] Chinese mirror updated and reviewed
+- [ ] Tracked page has no Chinese mirror yet
+- [ ] Existing tracked mirror explicitly marked stale
+- [ ] Page is English-only under the language policy
+- [ ] No user-visible language content changed
+
 ## Compatibility and migration
 
 - Does this change public behavior, dependencies, compatibility, defaults, or lifecycle semantics?
