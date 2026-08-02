@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 863e00662814c6c41f4e2df55ee4f4ead38bf084c386bfb701703672e4a51905
+translation_source_hash: c44b9341e256243a33b754731dfa4cfb0cfa5b7afc31ba4fadf9a72958e123ff
 translation_status: current
 ---
 
@@ -35,7 +35,7 @@ translation_status: current
 | `viewcompose-preview` | 预览工具 | 开发预览与快照集成 | 规划中 |
 | `viewcompose-animation-core` | 动画 | 平台无关的动画引擎契约 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation-core) |
 | `viewcompose-animation` | 动画 | 动画 DSL 与组合集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation) |
-| `viewcompose-gesture-core` | 手势 | 平台无关的手势策略 | 规划中 |
+| `viewcompose-gesture-core` | 手势 | 平台无关的手势策略 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-gesture-core) |
 | `viewcompose-gesture` | 手势 | 手势 DSL 与状态 API | 规划中 |
 | `viewcompose-graphics-core` | 图形 | 平台无关的图形模型 | 规划中 |
 | `viewcompose-graphics` | 图形 | 绘制 DSL 与组合集成 | 规划中 |
