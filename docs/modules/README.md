@@ -20,7 +20,7 @@ been published; it does not describe implementation or Maven Central availabilit
 | `viewcompose-widget-core` | UI | Core DSL, components, theme, and local values | [Available](./viewcompose-widget-core/README.md) |
 | `viewcompose-host-android` | Android host | Activity, Fragment, and View host integration | [Available](./viewcompose-host-android/README.md) |
 | `viewcompose-overlay-android` | Android host | Android overlay presentation backend | [Available](./viewcompose-overlay-android/README.md) |
-| `viewcompose-image-coil` | Integration | Coil-backed remote image loading | Planned |
+| `viewcompose-image-coil` | Integration | Coil-backed remote image loading | [Available](./viewcompose-image-coil/README.md) |
 | `viewcompose-lifecycle` | Integration | Lifecycle-aware state collection | [Available](./viewcompose-lifecycle/README.md) |
 | `viewcompose-viewmodel` | Integration | ViewModel and SavedStateHandle integration | [Available](./viewcompose-viewmodel/README.md) |
 | `viewcompose-preview-core` | Preview tooling | Preview annotations and tooling protocol | Planned |
