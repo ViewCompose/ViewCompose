@@ -13,8 +13,17 @@ import org.objectweb.asm.Type
 /** Removes preview-only annotations from non-debuggable Android variants before DEX/AAR output. */
 abstract class StripViewComposePreviewAnnotationsVisitorFactory :
     AsmClassVisitorFactory<InstrumentationParameters.None> {
+    /**
+     * Returns `true` for every project class so direct and composed preview annotations can be removed.
+     *
+     * The visitor preserves bytecode and all unrelated annotations.
+     */
     override fun isInstrumentable(classData: ClassData): Boolean = true
 
+    /**
+     * Creates a visitor that removes root preview annotations and recursively classified
+     * meta-annotations from classes and methods.
+     */
     override fun createClassVisitor(
         classContext: ClassContext,
         nextClassVisitor: ClassVisitor,
