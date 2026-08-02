@@ -33,43 +33,38 @@ import com.viewcompose.ui.node.spec.ConstraintSetSpec
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.widget.core.UiTreeBuilder
 
-/**
- * ConstraintLayout content 中可使用的构建 scope。
- * Builder scope available inside ConstraintLayout content.
- */
+/** Source-level alias for the UI-tree builder available inside [ConstraintLayout] content. */
 typealias ConstraintLayoutScope = UiTreeBuilder
 
 /**
- * 业务侧引用一个带 layoutId 的子节点。
- * App-side reference to a child node with a layoutId.
+ * Identifies a child or virtual helper inside one ConstraintLayout specification.
+ *
+ * IDs are matched as strings by the renderer and should be unique within the owning layout. The
+ * constructor does not validate emptiness or uniqueness.
+ *
+ * @property id stable local identifier shared by layoutId, constraints, and helpers
  */
 data class ConstraintReference(
     override val id: String,
 ) : ConstraintReferenceTarget
 
-/**
- * constraint anchor 可连接的目标。
- * Target that a constraint anchor can connect to.
- */
+/** Exposes the optional string identity accepted by constraint-anchor links. */
 sealed interface ConstraintReferenceTarget {
+    /** Child/helper ID, or `null` for the ConstraintLayout parent. */
     val id: String?
 }
 
-/**
- * ConstraintLayout 父容器自身的引用。
- * Reference to the ConstraintLayout parent itself.
- */
+/** Canonical anchor target for the owning ConstraintLayout rather than a child ID. */
 data object ConstraintParentReference : ConstraintReferenceTarget {
+    /** Always `null`, which the renderer interprets as the parent. */
     override val id: String? = null
 }
 
+/** Returns the canonical reference to the current ConstraintLayout parent. */
 val parent: ConstraintReferenceTarget
     get() = ConstraintParentReference
 
-/**
- * 收集 ConstraintLayout helper DSL 生成的 guideline/barrier/chain 等辅助规格。
- * Collects helper specs such as guidelines, barriers, and chains created by the ConstraintLayout DSL.
- */
+/** Collects helper specs created by one ConstraintLayout DSL evaluation. */
 private class MutableConstraintHelpersCollector {
     private var nextAutoId = 0
     val guidelines = mutableListOf<ConstraintGuidelineSpec>()
@@ -103,10 +98,7 @@ private class ConstraintLayoutDslContext(
     val helpers: MutableConstraintHelpersCollector,
 )
 
-/**
- * 跟踪嵌套 ConstraintLayout DSL 调用的线程局部上下文。
- * Thread-local context stack that tracks nested ConstraintLayout DSL calls.
- */
+/** Tracks nested ConstraintLayout DSL evaluations independently on each thread. */
 private object ConstraintLayoutDslContextStack {
     private val threadLocal: ThreadLocal<ArrayDeque<ConstraintLayoutDslContext>> = ThreadLocal.withInitial {
         ArrayDeque<ConstraintLayoutDslContext>()
@@ -146,8 +138,10 @@ private fun ConstraintReferenceTarget.toAnchorTarget(anchor: ConstraintAnchor): 
 }
 
 /**
- * 单个子节点的 constraint 配置 scope。
- * Constraint configuration scope for one child node.
+ * Builds the complete constraint specification for one child ID.
+ *
+ * Repeated calls targeting the same source anchor replace the previous link. Values are encoded
+ * without DSL-level range validation and are interpreted by the Android ConstraintLayout renderer.
  */
 class ConstraintConstrainScope internal constructor() {
     private var start: ConstraintAnchorLink? = null
@@ -157,21 +151,40 @@ class ConstraintConstrainScope internal constructor() {
     private var baseline: ConstraintAnchorTarget? = null
     private var baselineToTop: ConstraintAnchorLink? = null
     private var baselineToBottom: ConstraintAnchorLink? = null
+    /** Width mode, defaulting to native wrap content. */
     var width: ConstraintDimension = ConstraintDimension.WrapContent
+    /** Height mode, defaulting to native wrap content. */
     var height: ConstraintDimension = ConstraintDimension.WrapContent
+    /** Optional minimum width in dp; `null` leaves the native minimum unset. */
     var widthMin: UiDp? = null
+    /** Optional maximum width in dp; `null` leaves the native maximum unset. */
     var widthMax: UiDp? = null
+    /** Optional match-constraint width fraction clamped to `0f..1f` by the renderer. */
     var widthPercent: Float? = null
+    /** Optional minimum height in dp; `null` leaves the native minimum unset. */
     var heightMin: UiDp? = null
+    /** Optional maximum height in dp; `null` leaves the native maximum unset. */
     var heightMax: UiDp? = null
+    /** Optional match-constraint height fraction clamped to `0f..1f` by the renderer. */
     var heightPercent: Float? = null
+    /** Whether wrap-content width may shrink to satisfy constraints. */
     var constrainedWidth: Boolean = false
+    /** Whether wrap-content height may shrink to satisfy constraints. */
     var constrainedHeight: Boolean = false
+    /** Optional horizontal position bias between two connected horizontal anchors. */
     var horizontalBias: Float? = null
+    /** Optional vertical position bias between two connected vertical anchors. */
     var verticalBias: Float? = null
+    /** Optional native ConstraintLayout dimension-ratio expression, such as `16:9` or `W,16:9`. */
     var dimensionRatio: String? = null
     private var circle: ConstraintCircleSpec? = null
 
+    /**
+     * Connects this child's logical start to [target]'s logical start.
+     * @param target parent, child, or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun startToStart(
         target: ConstraintReferenceTarget = parent,
         margin: UiDp = UiDp.Zero,
@@ -184,6 +197,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's logical start to [target]'s logical end.
+     * @param target child or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun startToEnd(
         target: ConstraintReferenceTarget,
         margin: UiDp = UiDp.Zero,
@@ -196,6 +215,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's logical end to [target]'s logical start.
+     * @param target child or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun endToStart(
         target: ConstraintReferenceTarget,
         margin: UiDp = UiDp.Zero,
@@ -208,6 +233,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's logical end to [target]'s logical end.
+     * @param target parent, child, or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun endToEnd(
         target: ConstraintReferenceTarget = parent,
         margin: UiDp = UiDp.Zero,
@@ -220,6 +251,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's top to [target]'s top.
+     * @param target parent, child, or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun topToTop(
         target: ConstraintReferenceTarget = parent,
         margin: UiDp = UiDp.Zero,
@@ -232,6 +269,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's top to [target]'s bottom.
+     * @param target child or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun topToBottom(
         target: ConstraintReferenceTarget,
         margin: UiDp = UiDp.Zero,
@@ -244,6 +287,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's bottom to [target]'s top.
+     * @param target child or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun bottomToTop(
         target: ConstraintReferenceTarget,
         margin: UiDp = UiDp.Zero,
@@ -256,6 +305,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's bottom to [target]'s bottom.
+     * @param target parent, child, or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun bottomToBottom(
         target: ConstraintReferenceTarget = parent,
         margin: UiDp = UiDp.Zero,
@@ -268,6 +323,10 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's text baseline to [target]'s baseline.
+     * @param target child whose native baseline is the destination
+     */
     fun baselineToBaseline(target: ConstraintReference) {
         baseline = ConstraintAnchorTarget.ref(
             id = target.id,
@@ -275,6 +334,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's baseline to [target]'s top.
+     * @param target parent, child, or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun baselineToTop(
         target: ConstraintReferenceTarget,
         margin: UiDp = UiDp.Zero,
@@ -287,6 +352,12 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Connects this child's baseline to [target]'s bottom.
+     * @param target parent, child, or helper anchor target
+     * @param margin normal spacing in dp
+     * @param goneMargin spacing used when the target is gone, or `null` for the native default
+     */
     fun baselineToBottom(
         target: ConstraintReferenceTarget,
         margin: UiDp = UiDp.Zero,
@@ -299,6 +370,13 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Positions this child on a circle around [target].
+     *
+     * @param target child at the circle center
+     * @param radius center-to-center distance in dp
+     * @param angle clockwise Android ConstraintLayout angle in degrees
+     */
     fun circular(
         target: ConstraintReference,
         radius: UiDp,
@@ -311,11 +389,19 @@ class ConstraintConstrainScope internal constructor() {
         )
     }
 
+    /**
+     * Replaces start/end links so this child is horizontally centered on [target].
+     * @param target parent, child, or helper to center against
+     */
     fun centerHorizontallyTo(target: ConstraintReferenceTarget = parent) {
         startToStart(target)
         endToEnd(target)
     }
 
+    /**
+     * Replaces top/bottom links so this child is vertically centered on [target].
+     * @param target parent, child, or helper to center against
+     */
     fun centerVerticallyTo(target: ConstraintReferenceTarget = parent) {
         topToTop(target)
         bottomToBottom(target)
@@ -367,8 +453,15 @@ private fun validateChainWeights(
 }
 
 /**
- * 将 modifier 绑定到 [ref]，并声明该子节点的 constraints。
- * Binds a modifier to [ref] and declares constraints for that child.
+ * Binds this modifier to [ref] and appends the child's complete constraint specification.
+ *
+ * The returned chain contains both a layout ID and a constraint element. Later conflicting modifier
+ * elements follow the renderer's normal modifier-resolution rules.
+ *
+ * @receiver modifier chain to extend
+ * @param ref reference shared with anchors and helpers
+ * @param content constraint builder evaluated immediately
+ * @return a new modifier chain
  */
 fun Modifier.constrainAs(
     ref: ConstraintReference,
@@ -384,6 +477,14 @@ fun Modifier.constrainAs(
         )
 }
 
+/**
+ * Binds this modifier to string [id] and appends the child's complete constraint specification.
+ *
+ * @receiver modifier chain to extend
+ * @param id layout-local child identity
+ * @param content constraint builder evaluated immediately
+ * @return a new modifier chain
+ */
 fun Modifier.constrain(
     id: String,
     content: ConstraintConstrainScope.() -> Unit,
@@ -399,8 +500,17 @@ fun Modifier.constrain(
 }
 
 /**
- * 发射 ConstraintLayout 节点，并收集 content 中声明的 helper。
- * Emits a ConstraintLayout node and collects helpers declared inside [content].
+ * Emits a node backed by AndroidX ConstraintLayout and collects inline virtual helpers.
+ *
+ * Helper calls are valid only while [content] is evaluated. A supplied [constraintSet] provides
+ * reusable constraints; inline child modifiers and helpers are encoded alongside it for renderer
+ * reconciliation. Nested ConstraintLayouts use independent thread-local collector frames.
+ *
+ * @sample com.viewcompose.widget.constraintlayout.samples.constraintLayoutSample
+ * @param key optional sibling identity used during reconciliation
+ * @param constraintSet reusable external constraints, or `null` for inline-only constraints
+ * @param modifier layout, drawing, input, and semantics behavior for the native container
+ * @param content children and inline helper declarations
  */
 fun UiTreeBuilder.ConstraintLayout(
     key: Any? = null,
@@ -429,13 +539,21 @@ fun UiTreeBuilder.ConstraintLayout(
 }
 
 /**
- * 创建一个可用于 constrain/helper API 的引用。
- * Creates a reference usable by constrain and helper APIs.
+ * Creates a reference usable by constraints and virtual-helper APIs in the current layout.
+ * @receiver active ConstraintLayout content scope
+ * @param id layout-local child/helper ID; uniqueness is the caller's responsibility
+ * @return a reference retaining [id]
  */
 fun ConstraintLayoutScope.createRef(id: String): ConstraintReference {
     return ConstraintReference(id = id)
 }
 
+/**
+ * Creates references in the same order as [ids].
+ * @receiver active ConstraintLayout content scope
+ * @param ids layout-local IDs whose uniqueness is the caller's responsibility
+ * @return newly allocated ordered reference array
+ */
 fun ConstraintLayoutScope.createRefs(vararg ids: String): Array<ConstraintReference> {
     return ids.map { id -> createRef(id) }.toTypedArray()
 }
@@ -444,6 +562,14 @@ private fun ConstraintLayoutScope.allocHelperId(prefix: String): String {
     return requireConstraintContext().helpers.allocId(prefix)
 }
 
+/**
+ * Creates a logical-start guideline at a fixed dp [offset] from the parent edge.
+ * @receiver active ConstraintLayout content scope
+ * @param offset distance from logical start in dp
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ */
 fun ConstraintLayoutScope.createGuidelineFromStart(
     offset: UiDp,
     id: String = allocHelperId("guideline-start"),
@@ -457,6 +583,14 @@ fun ConstraintLayoutScope.createGuidelineFromStart(
     return ConstraintReference(id)
 }
 
+/**
+ * Creates a logical-start guideline at parent-width [fraction].
+ * @receiver active ConstraintLayout content scope
+ * @param fraction native ConstraintLayout fraction, normally from `0f` to `1f`
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ */
 fun ConstraintLayoutScope.createGuidelineFromStart(
     fraction: Float,
     id: String = allocHelperId("guideline-start"),
@@ -465,93 +599,138 @@ fun ConstraintLayoutScope.createGuidelineFromStart(
     context.helpers.guidelines += ConstraintGuidelineSpec(
         id = id,
         direction = ConstraintGuidelineDirection.FromStart,
-        position = ConstraintGuidelinePosition.Fraction(fraction),
-    )
-    return ConstraintReference(id)
-}
-
-fun ConstraintLayoutScope.createGuidelineFromEnd(
-    offset: UiDp,
-    id: String = allocHelperId("guideline-end"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
-        id = id,
-        direction = ConstraintGuidelineDirection.FromEnd,
-        position = ConstraintGuidelinePosition.Offset(offset),
-    )
-    return ConstraintReference(id)
-}
-
-fun ConstraintLayoutScope.createGuidelineFromEnd(
-    fraction: Float,
-    id: String = allocHelperId("guideline-end"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
-        id = id,
-        direction = ConstraintGuidelineDirection.FromEnd,
-        position = ConstraintGuidelinePosition.Fraction(fraction),
-    )
-    return ConstraintReference(id)
-}
-
-fun ConstraintLayoutScope.createGuidelineFromTop(
-    offset: UiDp,
-    id: String = allocHelperId("guideline-top"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
-        id = id,
-        direction = ConstraintGuidelineDirection.FromTop,
-        position = ConstraintGuidelinePosition.Offset(offset),
-    )
-    return ConstraintReference(id)
-}
-
-fun ConstraintLayoutScope.createGuidelineFromTop(
-    fraction: Float,
-    id: String = allocHelperId("guideline-top"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
-        id = id,
-        direction = ConstraintGuidelineDirection.FromTop,
-        position = ConstraintGuidelinePosition.Fraction(fraction),
-    )
-    return ConstraintReference(id)
-}
-
-fun ConstraintLayoutScope.createGuidelineFromBottom(
-    offset: UiDp,
-    id: String = allocHelperId("guideline-bottom"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
-        id = id,
-        direction = ConstraintGuidelineDirection.FromBottom,
-        position = ConstraintGuidelinePosition.Offset(offset),
-    )
-    return ConstraintReference(id)
-}
-
-fun ConstraintLayoutScope.createGuidelineFromBottom(
-    fraction: Float,
-    id: String = allocHelperId("guideline-bottom"),
-): ConstraintReference {
-    val context = requireConstraintContext()
-    context.helpers.guidelines += ConstraintGuidelineSpec(
-        id = id,
-        direction = ConstraintGuidelineDirection.FromBottom,
         position = ConstraintGuidelinePosition.Fraction(fraction),
     )
     return ConstraintReference(id)
 }
 
 /**
- * 注册 barrier helper 的共享实现。
- * Shared implementation for registering barrier helpers.
+ * Creates a logical-end guideline at a fixed dp [offset] from the parent edge.
+ * @receiver active ConstraintLayout content scope
+ * @param offset distance from logical end in dp
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException when called outside [ConstraintLayout] content
  */
+fun ConstraintLayoutScope.createGuidelineFromEnd(
+    offset: UiDp,
+    id: String = allocHelperId("guideline-end"),
+): ConstraintReference {
+    val context = requireConstraintContext()
+    context.helpers.guidelines += ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromEnd,
+        position = ConstraintGuidelinePosition.Offset(offset),
+    )
+    return ConstraintReference(id)
+}
+
+/**
+ * Creates a logical-end guideline at parent-width [fraction].
+ * @receiver active ConstraintLayout content scope
+ * @param fraction native ConstraintLayout fraction, normally from `0f` to `1f`
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ */
+fun ConstraintLayoutScope.createGuidelineFromEnd(
+    fraction: Float,
+    id: String = allocHelperId("guideline-end"),
+): ConstraintReference {
+    val context = requireConstraintContext()
+    context.helpers.guidelines += ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromEnd,
+        position = ConstraintGuidelinePosition.Fraction(fraction),
+    )
+    return ConstraintReference(id)
+}
+
+/**
+ * Creates a top guideline at a fixed dp [offset] from the parent edge.
+ * @receiver active ConstraintLayout content scope
+ * @param offset distance from top in dp
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ */
+fun ConstraintLayoutScope.createGuidelineFromTop(
+    offset: UiDp,
+    id: String = allocHelperId("guideline-top"),
+): ConstraintReference {
+    val context = requireConstraintContext()
+    context.helpers.guidelines += ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromTop,
+        position = ConstraintGuidelinePosition.Offset(offset),
+    )
+    return ConstraintReference(id)
+}
+
+/**
+ * Creates a top guideline at parent-height [fraction].
+ * @receiver active ConstraintLayout content scope
+ * @param fraction native ConstraintLayout fraction, normally from `0f` to `1f`
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ */
+fun ConstraintLayoutScope.createGuidelineFromTop(
+    fraction: Float,
+    id: String = allocHelperId("guideline-top"),
+): ConstraintReference {
+    val context = requireConstraintContext()
+    context.helpers.guidelines += ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromTop,
+        position = ConstraintGuidelinePosition.Fraction(fraction),
+    )
+    return ConstraintReference(id)
+}
+
+/**
+ * Creates a bottom guideline at a fixed dp [offset] from the parent edge.
+ * @receiver active ConstraintLayout content scope
+ * @param offset distance from bottom in dp
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ */
+fun ConstraintLayoutScope.createGuidelineFromBottom(
+    offset: UiDp,
+    id: String = allocHelperId("guideline-bottom"),
+): ConstraintReference {
+    val context = requireConstraintContext()
+    context.helpers.guidelines += ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromBottom,
+        position = ConstraintGuidelinePosition.Offset(offset),
+    )
+    return ConstraintReference(id)
+}
+
+/**
+ * Creates a bottom guideline at parent-height [fraction].
+ * @receiver active ConstraintLayout content scope
+ * @param fraction native ConstraintLayout fraction, normally from `0f` to `1f`
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @return reference to the virtual guideline
+ * @throws IllegalArgumentException when called outside [ConstraintLayout] content
+ */
+fun ConstraintLayoutScope.createGuidelineFromBottom(
+    fraction: Float,
+    id: String = allocHelperId("guideline-bottom"),
+): ConstraintReference {
+    val context = requireConstraintContext()
+    context.helpers.guidelines += ConstraintGuidelineSpec(
+        id = id,
+        direction = ConstraintGuidelineDirection.FromBottom,
+        position = ConstraintGuidelinePosition.Fraction(fraction),
+    )
+    return ConstraintReference(id)
+}
+
+/** Registers one inline barrier helper in the active layout context. */
 private fun ConstraintLayoutScope.registerBarrier(
     id: String,
     direction: ConstraintBarrierDirection,
@@ -570,6 +749,14 @@ private fun ConstraintLayoutScope.registerBarrier(
     return ConstraintReference(id)
 }
 
+/**
+ * Creates a logical-start barrier over [refs].
+ * @param refs referenced children/helpers; an empty set is forwarded to the native helper
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param margin additional dp offset from the computed extreme
+ * @param allowsGoneWidgets whether gone referenced children participate
+ * @return reference to the virtual barrier
+ */
 fun ConstraintLayoutScope.createStartBarrier(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("barrier-start"),
@@ -579,6 +766,14 @@ fun ConstraintLayoutScope.createStartBarrier(
     return registerBarrier(id, ConstraintBarrierDirection.Start, refs, margin, allowsGoneWidgets)
 }
 
+/**
+ * Creates a logical-end barrier over [refs].
+ * @param refs referenced children/helpers; an empty set is forwarded to the native helper
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param margin additional dp offset from the computed extreme
+ * @param allowsGoneWidgets whether gone referenced children participate
+ * @return reference to the virtual barrier
+ */
 fun ConstraintLayoutScope.createEndBarrier(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("barrier-end"),
@@ -588,6 +783,14 @@ fun ConstraintLayoutScope.createEndBarrier(
     return registerBarrier(id, ConstraintBarrierDirection.End, refs, margin, allowsGoneWidgets)
 }
 
+/**
+ * Creates a top barrier over [refs].
+ * @param refs referenced children/helpers; an empty set is forwarded to the native helper
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param margin additional dp offset from the computed extreme
+ * @param allowsGoneWidgets whether gone referenced children participate
+ * @return reference to the virtual barrier
+ */
 fun ConstraintLayoutScope.createTopBarrier(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("barrier-top"),
@@ -597,6 +800,14 @@ fun ConstraintLayoutScope.createTopBarrier(
     return registerBarrier(id, ConstraintBarrierDirection.Top, refs, margin, allowsGoneWidgets)
 }
 
+/**
+ * Creates a bottom barrier over [refs].
+ * @param refs referenced children/helpers; an empty set is forwarded to the native helper
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param margin additional dp offset from the computed extreme
+ * @param allowsGoneWidgets whether gone referenced children participate
+ * @return reference to the virtual barrier
+ */
 fun ConstraintLayoutScope.createBottomBarrier(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("barrier-bottom"),
@@ -607,8 +818,40 @@ fun ConstraintLayoutScope.createBottomBarrier(
 }
 
 /**
- * 创建 Flow helper，用于把多个引用按行/列自动换行排布。
- * Creates a Flow helper that lays out multiple references with row/column wrapping.
+ * Creates a virtual Flow that arranges referenced children in rows or columns.
+ *
+ * Style, bias, alignment, wrapping, gaps, and padding map to AndroidX Flow. Numeric values are
+ * forwarded without DSL-level coercion; `maxElementsWrap = -1` keeps the native unlimited default.
+ *
+ * @sample com.viewcompose.widget.constraintlayout.samples.constraintHelpersSample
+ * @param refs ordered referenced children; must not be empty
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param orientation primary placement axis
+ * @param wrapMode row/column wrapping strategy
+ * @param horizontalGap horizontal dp gap between elements
+ * @param verticalGap vertical dp gap between elements
+ * @param horizontalStyle default horizontal chain style
+ * @param verticalStyle default vertical chain style
+ * @param firstHorizontalStyle optional first-row horizontal override
+ * @param firstVerticalStyle optional first-column vertical override
+ * @param lastHorizontalStyle optional last-row horizontal override
+ * @param lastVerticalStyle optional last-column vertical override
+ * @param horizontalBias optional default horizontal chain bias
+ * @param verticalBias optional default vertical chain bias
+ * @param firstHorizontalBias optional first-row horizontal bias
+ * @param firstVerticalBias optional first-column vertical bias
+ * @param lastHorizontalBias optional last-row horizontal bias
+ * @param lastVerticalBias optional last-column vertical bias
+ * @param horizontalAlign cross-axis horizontal alignment
+ * @param verticalAlign cross-axis vertical alignment
+ * @param maxElementsWrap maximum elements per wrap line, or `-1` for unlimited
+ * @param padding common dp padding applied before edge-specific values
+ * @param paddingStart logical-start dp padding
+ * @param paddingEnd logical-end dp padding
+ * @param paddingTop top dp padding
+ * @param paddingBottom bottom dp padding
+ * @return reference to the virtual Flow
+ * @throws IllegalArgumentException if [refs] is empty
  */
 fun ConstraintLayoutScope.createFlow(
     vararg refs: ConstraintReference,
@@ -673,6 +916,15 @@ fun ConstraintLayoutScope.createFlow(
     return ConstraintReference(id)
 }
 
+/**
+ * Creates a virtual Group that applies visibility and elevation to [refs].
+ * @param refs referenced children; must not be empty
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param visibility visibility propagated by the native Group
+ * @param elevation elevation in dp propagated by the native Group
+ * @return reference to the virtual Group
+ * @throws IllegalArgumentException if [refs] is empty
+ */
 fun ConstraintLayoutScope.createGroup(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("group"),
@@ -692,6 +944,22 @@ fun ConstraintLayoutScope.createGroup(
     return ConstraintReference(id)
 }
 
+/**
+ * Creates a virtual Layer that applies a shared transform to [refs].
+ * @param refs referenced children; must not be empty
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param visibility visibility propagated by the native Layer
+ * @param elevation elevation in dp propagated by the native Layer
+ * @param rotation clockwise rotation in degrees
+ * @param scaleX horizontal scale factor
+ * @param scaleY vertical scale factor
+ * @param translationX horizontal translation in dp
+ * @param translationY vertical translation in dp
+ * @param pivotX optional absolute pivot x in dp, or `null` for native computed center
+ * @param pivotY optional absolute pivot y in dp, or `null` for native computed center
+ * @return reference to the virtual Layer
+ * @throws IllegalArgumentException if [refs] is empty
+ */
 fun ConstraintLayoutScope.createLayer(
     vararg refs: ConstraintReference,
     id: String = allocHelperId("layer"),
@@ -725,6 +993,13 @@ fun ConstraintLayoutScope.createLayer(
     return ConstraintReference(id)
 }
 
+/**
+ * Creates a virtual Placeholder that hosts [content] when available.
+ * @param content referenced child to host, or `null` for an empty placeholder
+ * @param id helper identity, auto-generated by declaration order when omitted
+ * @param emptyVisibility visibility used while no content is assigned
+ * @return reference to the virtual Placeholder
+ */
 fun ConstraintLayoutScope.createPlaceholder(
     content: ConstraintReference? = null,
     id: String = allocHelperId("placeholder"),
@@ -757,6 +1032,14 @@ private fun ConstraintLayoutScope.registerChain(
     )
 }
 
+/**
+ * Adds an ordered horizontal chain.
+ * @param refs ordered chain members; empty chains are forwarded to the renderer
+ * @param weights optional member weights whose size must equal [refs]
+ * @param style chain distribution policy
+ * @param bias optional packed-chain bias
+ * @throws IllegalArgumentException if [weights] size differs from [refs] size
+ */
 fun ConstraintLayoutScope.createHorizontalChain(
     vararg refs: ConstraintReference,
     weights: List<Float>? = null,
@@ -772,6 +1055,14 @@ fun ConstraintLayoutScope.createHorizontalChain(
     )
 }
 
+/**
+ * Adds an ordered vertical chain.
+ * @param refs ordered chain members; empty chains are forwarded to the renderer
+ * @param weights optional member weights whose size must equal [refs]
+ * @param style chain distribution policy
+ * @param bias optional packed-chain bias
+ * @throws IllegalArgumentException if [weights] size differs from [refs] size
+ */
 fun ConstraintLayoutScope.createVerticalChain(
     vararg refs: ConstraintReference,
     weights: List<Float>? = null,
@@ -788,21 +1079,38 @@ fun ConstraintLayoutScope.createVerticalChain(
 }
 
 /**
- * 构建可复用 [ConstraintSetSpec] 的 DSL builder。
- * DSL builder for reusable [ConstraintSetSpec].
+ * Builds an immutable reusable [ConstraintSetSpec] without emitting UI nodes.
+ *
+ * Reusing IDs replaces earlier constraint entries; helpers remain declaration ordered. Builder
+ * instances are created by [constraintSet], evaluated synchronously, and not retained afterward.
  */
 class ConstraintSetBuilder internal constructor() {
     private val constraints = linkedMapOf<String, ConstraintItemSpec>()
     private val helpers = MutableConstraintHelpersCollector()
 
+    /**
+     * Creates a reference for a child/helper ID.
+     * @param id set-local identity whose uniqueness is the caller's responsibility
+     * @return a reference retaining [id]
+     */
     fun createRef(id: String): ConstraintReference {
         return ConstraintReference(id = id)
     }
 
+    /**
+     * Creates references in the same order as [ids].
+     * @param ids set-local identities
+     * @return newly allocated ordered reference array
+     */
     fun createRefs(vararg ids: String): Array<ConstraintReference> {
         return ids.map { id -> createRef(id) }.toTypedArray()
     }
 
+    /**
+     * Adds or replaces the complete constraint entry for [id].
+     * @param id child identity used by a ConstraintLayout node
+     * @param content constraint builder evaluated immediately
+     */
     fun constrain(
         id: String,
         content: ConstraintConstrainScope.() -> Unit,
@@ -810,6 +1118,12 @@ class ConstraintSetBuilder internal constructor() {
         constraints[id] = buildConstraintSpec(content)
     }
 
+    /**
+     * Creates a logical-start guideline at fixed dp [offset].
+     * @param offset distance from logical start
+     * @param id helper identity, auto-generated when omitted
+     * @return reference to the virtual guideline
+     */
     fun createGuidelineFromStart(
         offset: UiDp,
         id: String = helpers.allocId("guideline-start"),
@@ -822,6 +1136,12 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a logical-start guideline at parent-width [fraction].
+     * @param fraction native ConstraintLayout fraction, normally `0f..1f`
+     * @param id helper identity, auto-generated when omitted
+     * @return reference to the virtual guideline
+     */
     fun createGuidelineFromStart(
         fraction: Float,
         id: String = helpers.allocId("guideline-start"),
@@ -834,6 +1154,12 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a logical-end guideline at fixed dp [offset].
+     * @param offset distance from logical end
+     * @param id helper identity, auto-generated when omitted
+     * @return reference to the virtual guideline
+     */
     fun createGuidelineFromEnd(
         offset: UiDp,
         id: String = helpers.allocId("guideline-end"),
@@ -846,6 +1172,12 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a logical-end guideline at parent-width [fraction].
+     * @param fraction native ConstraintLayout fraction, normally `0f..1f`
+     * @param id helper identity, auto-generated when omitted
+     * @return reference to the virtual guideline
+     */
     fun createGuidelineFromEnd(
         fraction: Float,
         id: String = helpers.allocId("guideline-end"),
@@ -858,6 +1190,12 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a top guideline at fixed dp [offset].
+     * @param offset distance from the top edge
+     * @param id helper identity, auto-generated when omitted
+     * @return reference to the virtual guideline
+     */
     fun createGuidelineFromTop(
         offset: UiDp,
         id: String = helpers.allocId("guideline-top"),
@@ -870,6 +1208,12 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a top guideline at parent-height [fraction].
+     * @param fraction native ConstraintLayout fraction, normally `0f..1f`
+     * @param id helper identity, auto-generated when omitted
+     * @return reference to the virtual guideline
+     */
     fun createGuidelineFromTop(
         fraction: Float,
         id: String = helpers.allocId("guideline-top"),
@@ -882,6 +1226,12 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a bottom guideline at fixed dp [offset].
+     * @param offset distance from the bottom edge
+     * @param id helper identity, auto-generated when omitted
+     * @return reference to the virtual guideline
+     */
     fun createGuidelineFromBottom(
         offset: UiDp,
         id: String = helpers.allocId("guideline-bottom"),
@@ -894,6 +1244,12 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a bottom guideline at parent-height [fraction].
+     * @param fraction native ConstraintLayout fraction, normally `0f..1f`
+     * @param id helper identity, auto-generated when omitted
+     * @return reference to the virtual guideline
+     */
     fun createGuidelineFromBottom(
         fraction: Float,
         id: String = helpers.allocId("guideline-bottom"),
@@ -906,6 +1262,14 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a logical-start barrier.
+     * @param refs referenced children/helpers
+     * @param id helper identity, auto-generated when omitted
+     * @param margin dp offset from the computed extreme
+     * @param allowsGoneWidgets whether gone references participate
+     * @return reference to the virtual barrier
+     */
     fun createStartBarrier(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("barrier-start"),
@@ -922,6 +1286,14 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a logical-end barrier.
+     * @param refs referenced children/helpers
+     * @param id helper identity, auto-generated when omitted
+     * @param margin dp offset from the computed extreme
+     * @param allowsGoneWidgets whether gone references participate
+     * @return reference to the virtual barrier
+     */
     fun createEndBarrier(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("barrier-end"),
@@ -938,6 +1310,14 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a top barrier.
+     * @param refs referenced children/helpers
+     * @param id helper identity, auto-generated when omitted
+     * @param margin dp offset from the computed extreme
+     * @param allowsGoneWidgets whether gone references participate
+     * @return reference to the virtual barrier
+     */
     fun createTopBarrier(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("barrier-top"),
@@ -954,6 +1334,14 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a bottom barrier.
+     * @param refs referenced children/helpers
+     * @param id helper identity, auto-generated when omitted
+     * @param margin dp offset from the computed extreme
+     * @param allowsGoneWidgets whether gone references participate
+     * @return reference to the virtual barrier
+     */
     fun createBottomBarrier(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("barrier-bottom"),
@@ -970,6 +1358,38 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a reusable virtual Flow specification.
+     *
+     * @param refs ordered referenced children; must not be empty
+     * @param id helper identity, auto-generated when omitted
+     * @param orientation primary placement axis
+     * @param wrapMode row/column wrapping strategy
+     * @param horizontalGap horizontal dp gap
+     * @param verticalGap vertical dp gap
+     * @param horizontalStyle default horizontal chain style
+     * @param verticalStyle default vertical chain style
+     * @param firstHorizontalStyle optional first-row horizontal override
+     * @param firstVerticalStyle optional first-column vertical override
+     * @param lastHorizontalStyle optional last-row horizontal override
+     * @param lastVerticalStyle optional last-column vertical override
+     * @param horizontalBias optional default horizontal bias
+     * @param verticalBias optional default vertical bias
+     * @param firstHorizontalBias optional first-row horizontal bias
+     * @param firstVerticalBias optional first-column vertical bias
+     * @param lastHorizontalBias optional last-row horizontal bias
+     * @param lastVerticalBias optional last-column vertical bias
+     * @param horizontalAlign cross-axis horizontal alignment
+     * @param verticalAlign cross-axis vertical alignment
+     * @param maxElementsWrap maximum elements per line, or `-1` for unlimited
+     * @param padding common dp padding applied before edge-specific values
+     * @param paddingStart logical-start dp padding
+     * @param paddingEnd logical-end dp padding
+     * @param paddingTop top dp padding
+     * @param paddingBottom bottom dp padding
+     * @return reference to the virtual Flow
+     * @throws IllegalArgumentException if [refs] is empty
+     */
     fun createFlow(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("flow"),
@@ -1032,6 +1452,15 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a reusable virtual Group specification.
+     * @param refs referenced children; must not be empty
+     * @param id helper identity, auto-generated when omitted
+     * @param visibility propagated native visibility
+     * @param elevation propagated elevation in dp
+     * @return reference to the virtual Group
+     * @throws IllegalArgumentException if [refs] is empty
+     */
     fun createGroup(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("group"),
@@ -1050,6 +1479,22 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a reusable virtual Layer specification.
+     * @param refs referenced children; must not be empty
+     * @param id helper identity, auto-generated when omitted
+     * @param visibility propagated native visibility
+     * @param elevation propagated elevation in dp
+     * @param rotation clockwise degrees
+     * @param scaleX horizontal scale factor
+     * @param scaleY vertical scale factor
+     * @param translationX horizontal translation in dp
+     * @param translationY vertical translation in dp
+     * @param pivotX absolute pivot x in dp, or `null` for native computed center
+     * @param pivotY absolute pivot y in dp, or `null` for native computed center
+     * @return reference to the virtual Layer
+     * @throws IllegalArgumentException if [refs] is empty
+     */
     fun createLayer(
         vararg refs: ConstraintReference,
         id: String = helpers.allocId("layer"),
@@ -1082,6 +1527,13 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Creates a reusable virtual Placeholder specification.
+     * @param content referenced child to host, or `null` for empty
+     * @param id helper identity, auto-generated when omitted
+     * @param emptyVisibility visibility used while content is absent
+     * @return reference to the virtual Placeholder
+     */
     fun createPlaceholder(
         content: ConstraintReference? = null,
         id: String = helpers.allocId("placeholder"),
@@ -1095,6 +1547,14 @@ class ConstraintSetBuilder internal constructor() {
         return ConstraintReference(id)
     }
 
+    /**
+     * Adds an ordered reusable horizontal chain.
+     * @param refs ordered members
+     * @param weights optional weights whose size must equal [refs]
+     * @param style chain distribution policy
+     * @param bias optional packed-chain bias
+     * @throws IllegalArgumentException if [weights] size differs from [refs] size
+     */
     fun createHorizontalChain(
         vararg refs: ConstraintReference,
         weights: List<Float>? = null,
@@ -1111,6 +1571,14 @@ class ConstraintSetBuilder internal constructor() {
         )
     }
 
+    /**
+     * Adds an ordered reusable vertical chain.
+     * @param refs ordered members
+     * @param weights optional weights whose size must equal [refs]
+     * @param style chain distribution policy
+     * @param bias optional packed-chain bias
+     * @throws IllegalArgumentException if [weights] size differs from [refs] size
+     */
     fun createVerticalChain(
         vararg refs: ConstraintReference,
         weights: List<Float>? = null,
@@ -1136,8 +1604,14 @@ class ConstraintSetBuilder internal constructor() {
 }
 
 /**
- * 构建独立 constraint set，可传给 [ConstraintLayout] 复用。
- * Builds a standalone constraint set that can be reused by [ConstraintLayout].
+ * Builds an immutable standalone constraint set for reuse by [ConstraintLayout].
+ *
+ * [content] executes synchronously and its mutable builder is discarded. The returned maps/lists are
+ * snapshots, so later calls build independent sets.
+ *
+ * @sample com.viewcompose.widget.constraintlayout.samples.constraintSetSample
+ * @param content reusable constraint and helper declarations
+ * @return immutable constraint-set specification
  */
 fun constraintSet(content: ConstraintSetBuilder.() -> Unit): ConstraintSetSpec {
     return ConstraintSetBuilder()
