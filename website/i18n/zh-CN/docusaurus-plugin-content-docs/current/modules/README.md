@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: d02e490aef506f131c1a429fdf1f2c3426bb39b8f9bc4328d57df525ab459437
+translation_source_hash: 002578dbaae8a27a833234e22f22573e90e709c44a1811da5109239ae0406457
 translation_status: current
 ---
 
@@ -47,4 +47,5 @@ translation_status: current
 2. 只有链接的 `README.md` 满足模块文档契约后，模块手册才能标记为“可用”。
 3. 新增、重命名或停用产物时，必须同时更新本目录和发布元数据。
 4. Demo 应用、Benchmark 等内部模块写入架构或工具文档，不作为 Maven 产物加入本表。
-5. 站点生成时从发布元数据读取模块版本，不要手工维护另一份可变版本表。
+5. 站点生成时从发布元数据读取当前模块版本。不可变的已发布版本追加记录到
+   `gradle/viewcompose-documentation-releases.properties`；不要再手工维护任何重复登记表。

@@ -5,6 +5,7 @@ import {performance} from 'node:perf_hooks';
 import {buildDir, websiteRoot} from './site-quality-lib.mjs';
 import {verifyAccessibility} from './verify-accessibility.mjs';
 import {verifySiteBudgets} from './verify-site-budgets.mjs';
+import {verifyVersionedDocumentation} from './verify-versioned-documentation.mjs';
 
 const cli = resolve(websiteRoot, 'node_modules/@docusaurus/core/bin/docusaurus.mjs');
 const startedAt = performance.now();
@@ -28,11 +29,12 @@ if (exitCode !== 0) {
 } else {
   try {
     const buildDurationSeconds = (performance.now() - startedAt) / 1000;
+    const versionedDocumentation = await verifyVersionedDocumentation();
     const accessibility = await verifyAccessibility();
     const budgets = await verifySiteBudgets({buildDurationSeconds});
     await writeFile(
       resolve(buildDir, 'site-quality-report.json'),
-      `${JSON.stringify({accessibility, budgets}, null, 2)}\n`,
+      `${JSON.stringify({versionedDocumentation, accessibility, budgets}, null, 2)}\n`,
       'utf8',
     );
   } catch (error) {

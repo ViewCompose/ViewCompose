@@ -45,5 +45,6 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 3. New, renamed, or retired artifacts update this catalog and publishing metadata together.
 4. Internal modules such as the demo application and benchmark harness are documented in
    architecture or tooling pages, not added as Maven artifacts here.
-5. Module versions are read from publishing metadata during site generation; do not duplicate a
-   mutable current-version table by hand.
+5. Current module versions are read from publishing metadata during site generation. Immutable
+   released versions are appended to `gradle/viewcompose-documentation-releases.properties`; do
+   not duplicate either registry in a hand-maintained table.

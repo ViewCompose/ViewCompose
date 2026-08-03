@@ -2,8 +2,10 @@
 
 This directory contains multi-step work that is currently active and must survive across sessions.
 
-There are no active multi-step execution plans. The completed hosted-documentation plan is retained
-in the [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/HOSTED_DOCUMENTATION_SYSTEM_2026-08.md).
+There are currently no active execution plans.
+
+Completed hosted-documentation and version-retention plans are retained in the
+[archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
 
 Before adding a plan, read [Documentation governance](../documentation-governance.md). A plan must
 have a clear completion condition, be updated during implementation, and move to

@@ -18,12 +18,12 @@ import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.Delete
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.GradleBuild
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskAction
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.kotlin.dsl.create
@@ -39,6 +39,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             "com.viewcompose.publishing.root must be applied to the root project."
         }
         val metadata = PublishingMetadata.load(project)
+        val documentationHistory = DocumentationReleaseHistory.load(project)
         val publishedProjects = metadata.moduleVersions.map { (module, _) ->
             project.findProject(":$module")
                 ?: throw GradleException(
@@ -62,54 +63,46 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                     "Validates -PviewComposeDocsModules before generating API documentation."
                 modules.set(documentationModules)
                 availableModules.set(metadata.moduleVersions.keys.sorted())
-            }
+        }
         val apiOutputDirectory = project.layout.projectDirectory.dir("website/generated/api")
-        val assembleApiDocs = project.tasks.register<Sync>("assembleViewComposeApiDocs") {
+        val assembleApiDocs = project.tasks.register<Exec>("assembleViewComposeApiDocs") {
             group = "documentation"
             description =
-                "Generates versioned Dokka HTML for all published modules or " +
+                "Rebuilds immutable Dokka history for all published modules or " +
                     "-PviewComposeDocsModules."
             dependsOn(verifyDocumentationSelection)
             val selectedModules = documentationModules.get()
-            selectedModules.forEach { module ->
-                val publishedProject = requireNotNull(project.findProject(":$module"))
-                val version = requireNotNull(metadata.moduleVersions[module])
-                dependsOn("${publishedProject.path}:dokkaGeneratePublicationHtml")
-                from(publishedProject.layout.buildDirectory.dir("dokka/html")) {
-                    into("$module/$version")
-                }
-            }
-            into(apiOutputDirectory)
-            doLast {
-                val outputRoot = apiOutputDirectory.asFile
-                val manifest =
-                    selectedModules.sorted().joinToString(
-                        prefix = "[\n",
-                        postfix = "\n]\n",
-                        separator = ",\n",
-                    ) { module ->
-                        val version = requireNotNull(metadata.moduleVersions[module])
-                        "  {\"artifact\":\"$module\",\"version\":\"$version\"}"
-                    }
-                outputRoot.resolve("manifest.json").writeText(manifest)
-                selectedModules.forEach { module ->
-                    val version = requireNotNull(metadata.moduleVersions[module])
-                    writeApiRedirect(
-                        directory = outputRoot.resolve("$module/current"),
-                        module = module,
-                        version = version,
-                    )
-                    if (version.isStableRelease()) {
-                        writeApiRedirect(
-                            directory = outputRoot.resolve("$module/latest"),
-                            module = module,
-                            version = version,
-                        )
-                    }
-                }
-            }
+            inputs.file(project.layout.projectDirectory.file("gradle/viewcompose-publishing.properties"))
+            inputs.file(
+                project.layout.projectDirectory.file(
+                    "gradle/viewcompose-documentation-releases.properties",
+                ),
+            )
+            inputs.files(
+                project.layout.projectDirectory.file(
+                    "website/scripts/assemble-versioned-api-docs.mjs",
+                ),
+                project.layout.projectDirectory.file(
+                    "website/scripts/documentation-releases.mjs",
+                ),
+            )
+            inputs.property(
+                "documentationReleaseEntries",
+                documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
+            )
+            inputs.property("selectedModules", selectedModules)
+            outputs.dir(apiOutputDirectory)
+            workingDir(project.layout.projectDirectory)
+            commandLine(
+                "node",
+                project.layout.projectDirectory
+                    .file("website/scripts/assemble-versioned-api-docs.mjs")
+                    .asFile.absolutePath,
+                "--modules",
+                selectedModules.joinToString(","),
+            )
         }
-        val verifyApiDocs = project.tasks.register<VerifyApiDocumentationOutputTask>(
+        project.tasks.register<VerifyApiDocumentationOutputTask>(
             "verifyAssembledViewComposeApiDocs",
         ) {
             group = "documentation"
@@ -120,6 +113,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             expectedModules.set(metadata.moduleVersions.keys.sorted())
             moduleVersions.set(metadata.moduleVersions)
             moduleSourceRevisions.set(metadata.moduleSourceRevisions)
+            documentationReleaseEntries.set(
+                documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
+            )
             scmUrl.set(metadata.scmUrl)
             requireCompleteCatalog.set(false)
         }
@@ -135,6 +131,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             expectedModules.set(metadata.moduleVersions.keys.sorted())
             moduleVersions.set(metadata.moduleVersions)
             moduleSourceRevisions.set(metadata.moduleSourceRevisions)
+            documentationReleaseEntries.set(
+                documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
+            )
             scmUrl.set(metadata.scmUrl)
             requireCompleteCatalog.set(true)
         }
@@ -142,7 +141,12 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             group = "documentation"
             description =
                 "Generates selected API docs and reports undocumented public/protected APIs."
-            dependsOn(verifyApiDocs)
+            dependsOn(verifyDocumentationSelection)
+            dependsOn(
+                documentationModules.get().map { module ->
+                    ":$module:dokkaGeneratePublicationHtml"
+                },
+            )
         }
 
         val localRepository = project.layout.buildDirectory.dir("maven-repository")
@@ -157,6 +161,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 moduleVersions.set(metadata.moduleVersions)
                 moduleSourceRevisions.set(metadata.moduleSourceRevisions)
                 strictApiDocsModules.set(metadata.strictApiDocsModules)
+                documentationReleaseEntries.set(
+                    documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
+                )
             }
         val publishLocal = project.tasks.register("publishViewComposeToLocalRepository") {
             group = "publishing"
@@ -282,30 +289,6 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             tasks = listOf("clean", "assemble")
         }
     }
-}
-
-private fun writeApiRedirect(
-    directory: File,
-    module: String,
-    version: String,
-) {
-    directory.mkdirs()
-    directory.resolve("index.html").writeText(
-        """
-        <!doctype html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta http-equiv="refresh" content="0; url=../$version/">
-            <link rel="canonical" href="../$version/">
-            <title>ViewCompose $module API</title>
-          </head>
-          <body>
-            <p><a href="../$version/">Open $module $version API reference</a></p>
-          </body>
-        </html>
-        """.trimIndent() + "\n",
-    )
 }
 
 private fun String.isStableRelease(): Boolean {
@@ -507,6 +490,9 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
     @get:Input
     abstract val strictApiDocsModules: ListProperty<String>
 
+    @get:Input
+    abstract val documentationReleaseEntries: ListProperty<String>
+
     @TaskAction
     fun verifyConfiguration() {
         val group = mavenGroup.get()
@@ -546,6 +532,51 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
             "Published modules missing the strict API documentation gate: " +
                 "${missingStrictModules.sorted().joinToString()}."
         }
+
+        val documentationEntries = documentationReleaseEntries.get()
+            .map(DocumentationReleaseEntry::decode)
+        check(documentationEntries.isNotEmpty()) {
+            "No immutable documentation releases are registered."
+        }
+        val duplicateDocumentationVersions = documentationEntries
+            .groupingBy { entry -> entry.module to entry.version }
+            .eachCount()
+            .filterValues { count -> count > 1 }
+            .keys
+        check(duplicateDocumentationVersions.isEmpty()) {
+            "Duplicate immutable documentation releases: " +
+                duplicateDocumentationVersions
+                    .sortedWith(compareBy({ it.first }, { it.second }))
+                    .joinToString { (module, version) -> "$module:$version" }
+        }
+        documentationEntries.forEach { entry ->
+            check(entry.order >= 0) {
+                "Documentation release order must be non-negative: ${entry.encoded()}"
+            }
+            check(MODULE_PATTERN.matches(entry.module)) {
+                "Invalid documentation artifact id '${entry.module}'."
+            }
+            check(VERSION_PATTERN.matches(entry.version)) {
+                "Documentation release '${entry.module}' has invalid version '${entry.version}'."
+            }
+            check(SOURCE_REVISION_PATTERN.matches(entry.sourceRevision)) {
+                "Documentation release '${entry.module}:${entry.version}' must use a full " +
+                    "lowercase Git commit SHA."
+            }
+            check(entry.module in versions) {
+                "Documentation history contains unknown module '${entry.module}'."
+            }
+        }
+        val documentationPairs = documentationEntries
+            .associateBy { entry -> Triple(entry.module, entry.version, entry.sourceRevision) }
+        versions.forEach { (module, version) ->
+            val revision = checkNotNull(sourceRevisions[module])
+            check(Triple(module, version, revision) in documentationPairs) {
+                "Current publication '$module:$version' at '$revision' is missing from " +
+                    "gradle/viewcompose-documentation-releases.properties. Register its " +
+                    "immutable documentation release before advancing publishing metadata."
+            }
+        }
     }
 }
 
@@ -567,6 +598,9 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
     abstract val moduleSourceRevisions: MapProperty<String, String>
 
     @get:Input
+    abstract val documentationReleaseEntries: ListProperty<String>
+
+    @get:Input
     abstract val scmUrl: Property<String>
 
     @get:Input
@@ -579,6 +613,9 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
         val expected = expectedModules.get().toSet()
         val versions = moduleVersions.get()
         val revisions = moduleSourceRevisions.get()
+        val releaseEntries = documentationReleaseEntries.get()
+            .map(DocumentationReleaseEntry::decode)
+            .filter { entry -> entry.module in selected }
         val failures = mutableListOf<String>()
 
         if (requireCompleteCatalog.get() && selected != expected) {
@@ -597,17 +634,24 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
             failures += "manifest.json is missing"
             emptyList()
         }
-        manifestEntries.groupingBy { (module, _) -> module }.eachCount()
+        manifestEntries.groupingBy { entry -> entry }.eachCount()
             .filterValues { count -> count > 1 }
             .keys
-            .sorted()
-            .forEach { module -> failures += "$module -> duplicate API manifest entry" }
-        val manifestMap = manifestEntries.toMap()
-        if (manifestMap.keys != selected) {
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (module, version) ->
+                failures += "$module:$version -> duplicate API manifest entry"
+            }
+        val expectedManifestEntries = releaseEntries
+            .map { entry -> entry.module to entry.version }
+            .toSet()
+        if (manifestEntries.toSet() != expectedManifestEntries) {
+            val missingEntries = (expectedManifestEntries - manifestEntries.toSet())
+                .sortedWith(compareBy({ it.first }, { it.second }))
+            val unexpectedEntries = (manifestEntries.toSet() - expectedManifestEntries)
+                .sortedWith(compareBy({ it.first }, { it.second }))
             failures +=
-                "API manifest modules do not match the generated selection: " +
-                    "missing ${(selected - manifestMap.keys).sorted()}, " +
-                    "unexpected ${(manifestMap.keys - selected).sorted()}"
+                "API manifest versions do not match immutable documentation history: " +
+                    "missing $missingEntries, unexpected $unexpectedEntries"
         }
 
         selected.sorted().forEach { module ->
@@ -617,14 +661,7 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
                 failures += "$module -> publishing metadata is incomplete"
                 return@forEach
             }
-            if (manifestMap[module] != version) {
-                failures += "$module -> manifest version '${manifestMap[module]}' != '$version'"
-            }
             val moduleRoot = root.resolve(module)
-            val versionRoot = moduleRoot.resolve(version)
-            if (!versionRoot.resolve("index.html").isFile) {
-                failures += "$module -> immutable version route '$version' is missing"
-            }
             verifyRedirect(
                 file = moduleRoot.resolve("current/index.html"),
                 module = module,
@@ -633,26 +670,39 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
                 failures = failures,
             )
             val latestRedirect = moduleRoot.resolve("latest/index.html")
-            if (version.isStableRelease()) {
+            val latestStable = releaseEntries
+                .filter { entry -> entry.module == module && entry.version.isStableRelease() }
+                .maxByOrNull(DocumentationReleaseEntry::order)
+            if (latestStable != null) {
                 verifyRedirect(
                     file = latestRedirect,
                     module = module,
                     alias = "latest",
-                    version = version,
+                    version = latestStable.version,
                     failures = failures,
                 )
             } else if (latestRedirect.exists()) {
-                failures += "$module -> prerelease '$version' must not publish a latest alias"
+                failures += "$module -> no stable release exists, but a latest alias was published"
             }
+        }
 
-            val expectedSourceUrl = "${scmUrl.get()}/blob/$revision/$module/"
+        releaseEntries.forEach { entry ->
+            val versionRoot = root.resolve(entry.module).resolve(entry.version)
+            if (!versionRoot.resolve("index.html").isFile) {
+                failures +=
+                    "${entry.module} -> immutable version route '${entry.version}' is missing"
+                return@forEach
+            }
+            val expectedSourceUrl =
+                "${scmUrl.get()}/blob/${entry.sourceRevision}/${entry.module}/"
             val sourceLinkFound = versionRoot.walkTopDown()
                 .filter(File::isFile)
                 .filter { file -> file.extension == "html" }
                 .any { file -> expectedSourceUrl in file.readText() }
             if (!sourceLinkFound) {
                 failures +=
-                    "$module -> generated API does not link to immutable source '$revision'"
+                    "${entry.module}:${entry.version} -> generated API does not link to " +
+                        "immutable source '${entry.sourceRevision}'"
             }
         }
 
@@ -909,6 +959,91 @@ private data class PublishingMetadata(
     }
 }
 
+private data class DocumentationReleaseEntry(
+    val order: Int,
+    val module: String,
+    val version: String,
+    val sourceRevision: String,
+) {
+    fun encoded(): String = "$order|$module|$version|$sourceRevision"
+
+    companion object {
+        fun decode(value: String): DocumentationReleaseEntry {
+            val fields = value.split('|')
+            check(fields.size == 4) {
+                "Invalid documentation release entry '$value'."
+            }
+            return DocumentationReleaseEntry(
+                order = fields[0].toIntOrNull()
+                    ?: throw GradleException(
+                        "Invalid documentation release order '${fields[0]}' in '$value'.",
+                    ),
+                module = fields[1],
+                version = fields[2],
+                sourceRevision = fields[3],
+            )
+        }
+    }
+}
+
+private data class DocumentationReleaseHistory(
+    val entries: List<DocumentationReleaseEntry>,
+) {
+    companion object {
+        fun load(project: Project): DocumentationReleaseHistory {
+            val historyFile = project.rootProject.file(
+                "gradle/viewcompose-documentation-releases.properties",
+            )
+            check(historyFile.isFile) {
+                "Missing immutable documentation history: ${historyFile.absolutePath}"
+            }
+            val properties = Properties().apply {
+                historyFile.inputStream().use(::load)
+            }
+            val schemaVersion = properties.required("schema.version")
+            check(schemaVersion == "1") {
+                "Unsupported documentation release schema '$schemaVersion'."
+            }
+            val releaseCount = properties.required("release.count").toIntOrNull()
+                ?: throw GradleException("Documentation release.count must be an integer.")
+            check(releaseCount > 0) {
+                "Documentation release.count must be positive."
+            }
+            val entries = (0 until releaseCount).flatMap { order ->
+                val prefix = "release.$order"
+                val version = properties.required("$prefix.version")
+                val sourceRevision = properties.required("$prefix.sourceRevision")
+                val modules = properties.required("$prefix.modules")
+                    .split(',')
+                    .map(String::trim)
+                    .filter(String::isNotEmpty)
+                check(modules.isNotEmpty()) {
+                    "$prefix.modules must contain at least one artifact."
+                }
+                check(modules.distinct().size == modules.size) {
+                    "$prefix.modules contains duplicate artifacts."
+                }
+                modules.map { module ->
+                    DocumentationReleaseEntry(
+                        order = order,
+                        module = module,
+                        version = version,
+                        sourceRevision = sourceRevision,
+                    )
+                }
+            }
+            return DocumentationReleaseHistory(
+                entries = entries.sortedWith(
+                    compareBy(
+                        DocumentationReleaseEntry::order,
+                        DocumentationReleaseEntry::module,
+                    ),
+                ),
+            )
+        }
+    }
+}
+
 private fun Properties.required(key: String): String =
     getProperty(key)?.takeIf(String::isNotBlank)
         ?: throw GradleException("Missing publication property '$key'.")
@@ -918,7 +1053,9 @@ private val MODULE_PATTERN = Regex("viewcompose-[a-z0-9-]+")
 private val VERSION_PATTERN = Regex("[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?")
 private val SOURCE_REVISION_PATTERN = Regex("[a-f0-9]{40}")
 private val API_MANIFEST_ENTRY_PATTERN =
-    Regex("""\{"artifact":"([^"]+)","version":"([^"]+)"}""")
+    Regex(
+        """\{\s*"artifact"\s*:\s*"([^"]+)"\s*,\s*"version"\s*:\s*"([^"]+)"""",
+    )
 private val REQUIRED_POM_ELEMENTS = listOf(
     "<name>",
     "<description>",

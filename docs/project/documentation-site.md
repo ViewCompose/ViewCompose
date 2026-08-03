@@ -15,11 +15,13 @@ The production artifact is assembled in six explicit stages:
    repository links.
 2. `verify:translations` validates required Chinese coverage, canonical source fingerprints,
    explicit stale status, and stale-warning markers.
-3. `verifyCompleteViewComposeApiDocs` runs Dokka 2 for each published artifact, copies the result to
-   ignored, versioned paths under `website/generated/api/`, and verifies the complete manifest,
-   immutable version route, aliases, and pinned source links.
-4. the website catalog generator reads publishing metadata and `docs/modules/README.md`; it does
-   not maintain a second module registry.
+3. `verifyCompleteViewComposeApiDocs` groups the immutable release registry by source revision,
+   reconstructs each revision in a temporary workspace, runs the current maintained Dokka tooling,
+   copies every released artifact/version tree to ignored paths under `website/generated/api/`, and
+   verifies the complete manifest, immutable routes, aliases, and pinned source links.
+4. the website generators read publishing metadata, the immutable release registry, and
+   `docs/modules/README.md`. They generate the catalog plus one module-manual snapshot per released
+   artifact/version from the same frozen Git revision; they do not maintain a second registry.
 5. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
    output, localized search indexes, and compatibility redirects for both `en` and `zh-CN` into
    `website/build/`, with broken links and anchors treated as errors.
@@ -33,7 +35,7 @@ Run the complete local verification from the repository root:
 ./gradlew verifyDocumentationStructure verifyCompleteViewComposeApiDocs
 cd website
 npm ci
-npm run test:translations
+npm run test:scripts
 npm run verify:translations
 npm run typecheck
 npm run build
@@ -72,26 +74,44 @@ headers, iframe titles, and duplicate IDs. It deliberately excludes redirect stu
 Dokka-generated implementation pages. Changes to the Dokka template require a separate generated
 API accessibility review rather than weakening this gate.
 
-## API versions and aliases
+## Released versions and aliases
 
 Immutable API trees use `/api/<artifact>/<version>/`. The mutable `current` alias follows the
 version currently registered by the repository. The `latest` alias is generated only for stable
 versions; alpha, beta, release-candidate, snapshot, preview, development, and EAP versions must not
 silently become `latest`.
 
+Immutable module-manual snapshots use `/modules/<artifact>/<version>/`; the unversioned
+`/modules/<artifact>/` page remains the maintained current guide. Historical manuals are generated
+as canonical English snapshots, including at the equivalent `zh-CN` route, so the locale path never
+pretends that an unreviewed historical translation exists.
+
 Each `module.<artifact>.version` has a matching `module.<artifact>.sourceRevision` containing a full
-40-character Git commit SHA. Dokka maps the module root to that immutable revision, and output
+40-character Git commit SHA. The append-only
+`gradle/viewcompose-documentation-releases.properties` registry records every released
+artifact/version/revision triple. Dokka maps the module root to that immutable revision, and output
 verification rejects missing or movable source links. Because recording a commit changes the
-metadata commit, release preparation uses two steps: freeze module source in one commit, then update
-its version and source revision in a metadata-only release commit.
+metadata commit, release preparation uses two steps: freeze module source and manual in one commit,
+then append the history entry and update version/revision metadata in a metadata-only release
+commit. The frozen commit must be pushed and remain reachable from Git history.
 
 `verifyAssembledViewComposeApiDocs` validates an explicit local subset selected with
 `-PviewComposeDocsModules`. Deployment and complete-catalog CI must use
-`verifyCompleteViewComposeApiDocs`, which rejects a partial selection. All current modules are
+`verifyCompleteViewComposeApiDocs`, which rejects a partial selection. The site build additionally
+verifies every recorded API and module-manual route for both locale trees. All current modules are
 prereleases, so no `latest` route is emitted yet.
 
-Generated HTML and catalogs are never committed. Released API snapshots must eventually be restored
-from release artifacts or an immutable documentation archive before repository versions advance.
+Generated HTML, catalogs, and module-manual snapshots are never committed. A clean checkout restores
+the complete released documentation history from the immutable Git revisions in the registry; the
+documentation workflow therefore checks out full history rather than a shallow clone.
+
+For each module release:
+
+1. freeze the releasable source, source comments, compiled samples, and module manual in a commit;
+2. append an immutable registry record and update the module's publishing version and
+   `sourceRevision` in a metadata-only commit;
+3. run the publishing configuration gate, complete API verifier, and production site build before
+   publishing. The configuration gate rejects current metadata without an exact registry match.
 
 ## Continuous integration and deployment
 
@@ -111,6 +131,8 @@ identity token.
 
 - If source verification fails, fix the canonical document or catalog rather than weakening the
   gate.
+- If release-history verification fails, append the missing immutable record or correct unpublished
+  metadata. Never rewrite an already released artifact/version entry.
 - If Dokka fails, reproduce with a selected module and correct its source/API configuration.
 - If Docusaurus reports a broken link or anchor, preserve strict checking; generated static API
   links are the only links explicitly exempted from its route graph.
@@ -128,9 +150,10 @@ identity token.
 
 ## Last verified
 
-2026-08-03: all 25 published artifacts pass strict KDoc/Javadoc generation, complete-catalog route
-verification, and immutable source-link verification. The English and Simplified Chinese builds,
-translation freshness, local search, compatibility redirects, site-page accessibility, and size
-and build-time budgets are active. The measured site output is about 204 MiB; the largest JavaScript
-asset is 650 KiB, and the Docusaurus build takes about ten seconds on the current development
-machine.
+2026-08-03: a clean complete-history build reconstructed all 25 released artifact versions from the
+recorded frozen revision and passed immutable source-link, manifest, `current`, and stable-only
+`latest` verification. The production site verified 25 API routes, 25 English module-manual
+snapshots, 25 `zh-CN` English-fallback snapshot routes, translation freshness, local search,
+compatibility redirects, and 184 site-owned accessibility pages. The measured output was 204.9 MiB,
+the largest JavaScript asset was 650 KiB, and the full site build took 18.2 seconds. `qaQuick` also
+passed.

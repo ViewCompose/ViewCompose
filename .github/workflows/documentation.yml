@@ -14,6 +14,7 @@ on:
       - "**/src/main/**"
       - "build.gradle.kts"
       - "settings.gradle.kts"
+      - "gradle/viewcompose-documentation-releases.properties"
       - "gradle/viewcompose-publishing.properties"
       - "tools/viewcompose-publishing-build/**"
   workflow_dispatch:
@@ -34,6 +35,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -72,7 +75,7 @@ jobs:
 
       - name: Verify documentation translations
         working-directory: website
-        run: npm run test:translations && npm run verify:translations
+        run: npm run test:scripts && npm run verify:translations
 
       - name: Generate and verify complete versioned API reference
         run: ./gradlew verifyCompleteViewComposeApiDocs --stacktrace
