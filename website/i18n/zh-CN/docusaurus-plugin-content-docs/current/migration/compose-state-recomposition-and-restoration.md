@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 22ffdb19f3b55ab4e1978d3179345c158488ffa1494541efd83fd7e3d404fce8
+translation_source_hash: 7412c0a419f05dcd8e458e066491166ceeef27238bae151637b9da9f532aea04
 translation_status: current
 ---
 
@@ -71,6 +71,58 @@ Compose `1.11.3` 与 `1.11.4` 的发布说明没有列出会改变本矩阵的�
 - **不支持（Unsupported）**——此版本没有对应的 ViewCompose 公共能力。
 
 本页不主张任何量化性能等价性。下文的性能指导只讨论执行边界，并非基准测试结果。
+
+## 可编译的成对起点
+
+下面是仓库中最小的状态迁移执行基准。两个片段都来自 `:samples:compose-migration`；
+`qaQuick` 会编译该模块，并在任一片段不再匹配其标记的源码区域时失败。
+
+Compose 源码：
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/state/ComposeStateSample.kt" region="compose-state" */}
+```kotlin
+@Composable
+fun ComposeStateCounter() {
+    var count by remember { mutableIntStateOf(0) }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(24.dp),
+    ) {
+        BasicText("Count: $count")
+        BasicText(
+            text = "Increment",
+            modifier = Modifier.clickable { count += 1 },
+        )
+    }
+}
+```
+{/* paired-sample-end */}
+
+ViewCompose 目标：
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/state/ViewComposeStateSample.kt" region="viewcompose-state" */}
+```kotlin
+fun UiTreeBuilder.ViewComposeStateCounter() {
+    val count = remember { mutableStateOf(0) }
+
+    Column(
+        spacing = 16.dp,
+        modifier = Modifier.padding(24.dp),
+    ) {
+        Text("Count: ${count.value}")
+        Button(
+            text = "Increment",
+            onClick = { count.value += 1 },
+        )
+    }
+}
+```
+{/* paired-sample-end */}
+
+目标代码显式保留状态对象，并在构建 ViewCompose 树时读取 `value`。这里验证的是可编译的语法
+路径，不代表快照事务、编译器重启 Scope、keyed Identity、Effect 或恢复语义等价；这些决策
+仍应遵循下文契约。
 
 ## 迁移前先选择状态 Owner
 

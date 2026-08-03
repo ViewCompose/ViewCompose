@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: 08bf72cdd864ff56c15fbfb9f40d1ffb4102834c07bb917bde3007bc9ae9cabf
+translation_source_hash: 3720d4b58c443f6c341aa28fb05843757931b6cdfc0e4223bc49f11a89d05b2b
 translation_status: current
 ---
 
@@ -40,6 +40,56 @@ translation_status: current
 [生命周期](../modules/viewcompose-lifecycle/README.md)、
 [ViewModel](../modules/viewcompose-viewmodel/README.md) 和
 [渲染器](../modules/viewcompose-renderer/README.md)模块负责。
+
+## 可编译的成对起点
+
+下面的对照先展示最小 Activity 根宿主和原生 View 路径，不包含后续的生命周期与清理策略。
+两个片段都从 `:samples:compose-migration` 提取；`qaQuick` 会编译对应源码并拒绝文档漂移。
+
+Compose 源码：
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ComposeHostSample.kt" region="compose-host" */}
+```kotlin
+fun ComponentActivity.installComposeInteropSample() {
+    setContent {
+        ComposeInteropSample()
+    }
+}
+
+@Composable
+private fun ComposeInteropSample() {
+    AndroidView(
+        factory = { context -> TextView(context) },
+        update = { view -> view.text = "Native TextView" },
+    )
+}
+```
+{/* paired-sample-end */}
+
+ViewCompose 目标：
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ViewComposeHostSample.kt" region="viewcompose-host" */}
+```kotlin
+fun ComponentActivity.installViewComposeInteropSample() {
+    setUiContent {
+        ViewComposeInteropSample()
+    }
+}
+
+private fun UiTreeBuilder.ViewComposeInteropSample() {
+    AndroidView(
+        factory = { context -> TextView(context) },
+        update = { view ->
+            (view as TextView).text = "Native TextView"
+        },
+    )
+}
+```
+{/* paired-sample-end */}
+
+该示例只证明公共安装、factory 与可安全重放的 update 路径。目标代码不会继承 Compose 的释放
+或复用语义；当嵌入的 View 需要这些行为时，应按下文契约选择 owner，并补充 `onReset`、
+`onCommit` 与 `onRelease` 行为。
 
 ## 能力矩阵
 

@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: 54aac95e29def1ab553dd0e9533f72887e4e1eaf634d4b35e7aef7286b5ad500
+translation_source_hash: aeec507075038ebfe7b871818c7d9b163e861e3f6177a326152d7a2d3e4007b2
 translation_status: current
 ---
 
@@ -40,15 +40,78 @@ Navigation 3 的所有权模型不同，因此迁移时必须先确定实际来�
 - [Activity 1.13 发布说明](https://developer.android.com/jetpack/androidx/releases/activity)
 - [NavigationEvent 发布说明](https://developer.android.com/jetpack/androidx/releases/navigationevent)
 
-仓库的 Android 可执行基线是 Compose 1.7.8、Activity 1.12.4、Lifecycle 2.8.7 和 Kotlin
-2.0.21。所引用的 ViewCompose JVM、集成和设备测试确立了本地行为。它们不是针对
-Navigation 2.9.8 或 Navigation3 1.1.4 的可执行对比。因此，只要这些版本发生变化，本文对
-Navigation 2 和 Navigation 3 的陈述都必须根据官方来源重新复核。
+仓库的 Android 可执行基线是 Compose 1.7.8、Navigation 2.9.8、Activity 1.12.4、Lifecycle
+2.8.7 和 Kotlin 2.0.21。下方成对样例会在两侧各编译一个 Navigation 2 controller、host、
+route 和导航动作。所引用的 ViewCompose JVM、集成和设备测试确立了更广的本地行为。这些证据
+不包含针对 Navigation3 1.1.4 的可执行对比，成对样例也不能证明完整 Navigation 2.9.8
+能力面等价。因此，只要这些版本发生变化，Navigation 2 与 Navigation 3 陈述仍必须根据官方
+来源重新复核。
 
 ViewCompose 实现分为平台无关的[导航核心](../modules/viewcompose-navigation-core/README.md)
 和 Android [导航宿主](../modules/viewcompose-navigation/README.md)。面向任务的
 [导航指南](https://docs.viewcompose.com/guides/navigation)是补充证据，但如果指南与可执行行为
 冲突，应以源码和测试为准。
+
+## 可编译的 Navigation 2 起点
+
+下面是 Navigation 2 来源迁移的可执行 route 级起点。两个片段都从
+`:samples:compose-migration` 提取；`qaQuick` 会编译它们，并验证文档与源码完全一致。
+
+Compose Navigation 2 源码：
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/navigation/ComposeNavigationSample.kt" region="compose-navigation" */}
+```kotlin
+@Composable
+fun ComposeNavigationSample() {
+    val controller = rememberNavController()
+
+    NavHost(
+        navController = controller,
+        startDestination = "home",
+    ) {
+        composable("home") {
+            BasicText(
+                text = "Open details",
+                modifier = Modifier.clickable {
+                    controller.navigate("details")
+                },
+            )
+        }
+        composable("details") {
+            BasicText("Details")
+        }
+    }
+}
+```
+{/* paired-sample-end */}
+
+ViewCompose 目标：
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/navigation/ViewComposeNavigationSample.kt" region="viewcompose-navigation" */}
+```kotlin
+fun UiTreeBuilder.ViewComposeNavigationSample() {
+    val controller = rememberNavHostController(
+        startDestination = NavRoute("home"),
+    )
+
+    NavHost(controller = controller) { entry ->
+        when (entry.route.name) {
+            "home" -> Button(
+                text = "Open details",
+                onClick = {
+                    controller.navigate(NavRoute("details"))
+                },
+            )
+            "details" -> Text("Details")
+            else -> error("Unknown route ${entry.route.name}")
+        }
+    }
+}
+```
+{/* paired-sample-end */}
+
+这组对照只证明最小的 controller 所有单栈流程。它不覆盖类型化 route、`NavOptions`、深层链接、
+owner 传播、多返回栈、恢复、Predictive Back，也不覆盖任何 Navigation 3 scene/decorator 行为。
 
 ## 能力矩阵
 

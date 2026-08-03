@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: 653d336b54d1b44267c06d013ec16e5d99623d4d5d274e90d35ee3beb08c9939
+translation_source_hash: 96433929e6368d08609ea7088b8f19313231821ccf642a6d8fe731c4540e5fa6
 translation_status: current
 ---
 
@@ -47,6 +47,58 @@ translation_status: current
    Compose 1.7.8 依赖可用于编译对照，但不能用来否定 Compose 1.11.4 已记录的语义变化。
 
 本文不声明性能等价。本次复核没有为 Compose 布局节点与 Android View 建立可比较的基准测试条件。
+
+## 可编译的成对起点
+
+下面的对照在两侧都保留一个水平布局、一条有序 Modifier 链和一个作用域环境值。代码片段从
+已编译的 `:samples:compose-migration` 模块提取，并由 `qaQuick` 检查是否与源码完全一致。
+
+Compose 源码：
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/layout/ComposeLayoutSample.kt" region="compose-layout" */}
+```kotlin
+private val LocalContentPadding = compositionLocalOf { 8.dp }
+
+@Composable
+fun ComposeProfileRow(name: String) {
+    CompositionLocalProvider(LocalContentPadding provides 16.dp) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(LocalContentPadding.current),
+        ) {
+            BasicText(name)
+        }
+    }
+}
+```
+{/* paired-sample-end */}
+
+ViewCompose 目标：
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/layout/ViewComposeLayoutSample.kt" region="viewcompose-layout" */}
+```kotlin
+private val LocalContentPadding = uiLocalOf { 8.dp }
+
+fun UiTreeBuilder.ViewComposeProfileRow(name: String) {
+    ProvideLocal(LocalContentPadding, 16.dp) {
+        Row(
+            verticalAlignment = VerticalAlignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(UiLocals.current(LocalContentPadding)),
+        ) {
+            Text(name)
+        }
+    }
+}
+```
+{/* paired-sample-end */}
+
+相似的代码结构不表示引擎等价。Compose 测量布局节点并跟踪 `CompositionLocal` 读取；
+ViewCompose 渲染 Android View、按 renderer 规则折叠 Modifier 元素，并把 `UiLocal` 当作作用域
+查询，而不是失效订阅。
 
 ## 能力矩阵
 

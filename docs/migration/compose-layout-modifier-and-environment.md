@@ -48,6 +48,59 @@ The comparison has two evidence layers that must not be conflated:
 No performance equivalence is claimed. This review did not establish comparable benchmark
 conditions for Compose layout nodes and Android Views.
 
+## Compiled side-by-side starting point
+
+This pair keeps one horizontal layout, one ordered Modifier chain, and one scoped environment
+value visible on both sides. The snippets are extracted from the compiled
+`:samples:compose-migration` module and are checked for exact source agreement by `qaQuick`.
+
+Compose source:
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/layout/ComposeLayoutSample.kt" region="compose-layout" */}
+```kotlin
+private val LocalContentPadding = compositionLocalOf { 8.dp }
+
+@Composable
+fun ComposeProfileRow(name: String) {
+    CompositionLocalProvider(LocalContentPadding provides 16.dp) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(LocalContentPadding.current),
+        ) {
+            BasicText(name)
+        }
+    }
+}
+```
+{/* paired-sample-end */}
+
+ViewCompose target:
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/layout/ViewComposeLayoutSample.kt" region="viewcompose-layout" */}
+```kotlin
+private val LocalContentPadding = uiLocalOf { 8.dp }
+
+fun UiTreeBuilder.ViewComposeProfileRow(name: String) {
+    ProvideLocal(LocalContentPadding, 16.dp) {
+        Row(
+            verticalAlignment = VerticalAlignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(UiLocals.current(LocalContentPadding)),
+        ) {
+            Text(name)
+        }
+    }
+}
+```
+{/* paired-sample-end */}
+
+The similar shape does not make the engines equivalent. Compose measures layout nodes and tracks
+`CompositionLocal` reads; ViewCompose renders Android Views, folds Modifier elements by renderer
+rules, and treats `UiLocal` as scoped lookup rather than an invalidation subscription.
+
 ## Capability matrix
 
 | Concept | Compose 1.11.4 behavior | ViewCompose `0.1.0-alpha01` behavior | Status | Required migration action |

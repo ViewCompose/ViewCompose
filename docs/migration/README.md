@@ -126,6 +126,9 @@ evidence. Status terms have one meaning across all pages:
 
 Documentation snippets are not a second source of truth. Use these compiled repository examples:
 
+- the [`:samples:compose-migration` module](../../samples/compose-migration/build.gradle.kts) contains the paired
+  state, layout/environment, host/Android interop, and Navigation 2 excerpts embedded in the four
+  detailed migration pages;
 - the [counter application](../../samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt)
   combines Activity hosting, remembered mutable state, View-backed layout, modifiers, and input;
 - [runtime samples](../../viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt)
@@ -139,9 +142,11 @@ Documentation snippets are not a second source of truth. Use these compiled repo
 - [Android navigation samples](../../viewcompose-navigation/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt)
   cover remembered hosts, controller operations, and motion configuration.
 
-The root `qaQuick` task compiles these sample source sets or the tests that consume them. Device-only
-restoration and Predictive Back evidence remains governed by the procedures linked from the
-[navigation guide](../guides/navigation.md).
+The root `qaQuick` task compiles these sample source sets or the tests that consume them. It also
+runs `verifyMigrationPairedSamples`, which rejects missing, extra, reordered, or stale paired
+snippets in both canonical English pages and required Chinese mirrors. Device-only restoration and
+Predictive Back evidence remains governed by the procedures linked from the [navigation
+guide](../guides/navigation.md).
 
 ## Known contract gaps
 
