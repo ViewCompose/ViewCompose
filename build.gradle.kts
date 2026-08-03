@@ -951,10 +951,30 @@ tasks.register("verifyTutorialSamples") {
     }
 }
 
+val verifyDocumentLanguages by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "Verifies canonical-English and Simplified-Chinese documentation language."
+    workingDir(rootDir.resolve("website"))
+    commandLine("npm", "run", "verify:languages")
+    inputs.files(
+        fileTree(rootDir.resolve("docs")) {
+            include("**/*.md", "**/*.mdx")
+            exclude("archive/**")
+        },
+        fileTree(rootDir.resolve("website/i18n/zh-CN/docusaurus-plugin-content-docs/current")) {
+            include("**/*.md", "**/*.mdx")
+        },
+        rootDir.resolve("website/scripts/verify-document-languages.mjs"),
+        rootDir.resolve("website/scripts/__tests__/verify-document-languages.test.mjs"),
+        rootDir.resolve("website/i18n/translation-policy.json"),
+    )
+}
+
 tasks.register("verifyDocumentationStructure") {
     group = "verification"
     description =
         "Verifies documentation placement, link-graph coverage, module catalog, and relative links."
+    dependsOn(verifyDocumentLanguages)
 
     val allowedRootMarkdown =
         setOf(

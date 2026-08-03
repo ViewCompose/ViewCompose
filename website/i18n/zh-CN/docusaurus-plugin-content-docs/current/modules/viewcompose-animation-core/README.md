@@ -4,7 +4,7 @@ translation_source_hash: fb6f7003e2825b0fd479958434a81a61e9aff4defe2c4971e06d859
 translation_status: current
 ---
 
-# Animation Core
+# Animation Core 模块
 
 `viewcompose-animation-core` 是 ViewCompose 动效的平台无关计时与采样引擎。它定义不可变动画
 规格、Easing 与值转换、确定性时间线采样、协程驱动的帧循环、低层可变动画值，以及共享的

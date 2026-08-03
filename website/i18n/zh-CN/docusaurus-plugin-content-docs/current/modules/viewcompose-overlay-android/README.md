@@ -4,7 +4,7 @@ translation_source_hash: 6c18cc7060394ba5bd964a1c7123842322ec2aa461a1e24d0fc1b35
 translation_status: current
 ---
 
-# Overlay Android
+# Android Overlay 模块
 
 `viewcompose-overlay-android` 是 ViewCompose Dialog、锚定 Popup、模态 Bottom Sheet、Snackbar
 和 Toast 的可选 Android 呈现后端。声明式浮层协议、DSL、队列策略、定位模型及嵌套 Surface

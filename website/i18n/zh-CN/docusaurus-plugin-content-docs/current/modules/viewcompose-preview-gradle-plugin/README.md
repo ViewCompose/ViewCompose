@@ -4,7 +4,7 @@ translation_source_hash: ffd566a9669217900b9cc4171a4b26c64ea8284c5703902ffa58a71
 translation_status: current
 ---
 
-# Preview Gradle Plugin
+# Preview Gradle 插件
 
 `viewcompose-preview-gradle-plugin` 把 Android Gradle Plugin Variant 接入 ViewCompose 静态 Preview
 Protocol。它发现编译后的 Preview Entry，导出确定性 Build Input，规划 Content-addressed Render，启动

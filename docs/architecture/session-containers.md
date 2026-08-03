@@ -1,99 +1,108 @@
 # Delayed Session Container Checklist
 
-## 1. 文档定位
+## 1. Scope
 
-本文档追踪“延迟创建 + holder/session 复用”容器的稳定性风险。
+This document tracks stability risks in containers that combine delayed creation with
+holder/session reuse.
 
-这类容器的共性是：
+These containers share three properties:
 
-1. 内容不会立即挂在父节点下
-2. 内部有 holder/session 复用
-3. 结构 diff 与可见内容刷新可能解耦
+1. Content is not mounted under the parent immediately.
+2. Holders or sessions are reused internally.
+3. Structural diffing can be decoupled from visible-content refresh.
 
-因此，它们是“结构不变但内容过期”问题的高风险区。
+They are therefore high-risk areas for stale content when structure remains unchanged.
 
-## 2. 当前已落地容器
+## 2. Current containers
 
 1. `LazyColumn`
 2. `LazyRow`
 3. `LazyVerticalGrid`
 4. `HorizontalPager`
 5. `VerticalPager`
-6. `TabRow + pager page`（页面内容通过 `LazyListItemSession` 承载）
-7. Navigation destination page（页面内容通过 `NavDestinationSession` 承载）
+6. `TabRow + pager page`, where page content is carried by `LazyListItemSession`
+7. navigation destination pages, where content is carried by `NavDestinationSession`
 
-## 3. 架构硬约束
+## 3. Hard architecture constraints
 
-每个延迟 session 容器都必须满足：
+Every delayed-session container must satisfy these constraints:
 
-1. diff 为空时，不能回退到旧 item/page 实例
-2. 已绑定 holder/session 必须有“无结构变化刷新”路径
-3. `localSnapshot`、主题、环境、父层闭包在 update 路径重新注入
-4. 创建路径和更新路径都能驱动 `RenderSession.render()`
-5. `dispose/recycle` 语义与 holder 生命周期对齐
-6. `Change` 更新优先走 payload 通道，避免无条件全量变更通知
-7. key 不可用回退 `ReloadAll` 时，应尽量保持当前滚动锚点，避免交互后列表跳顶
-8. 输入控件获取焦点时，不应触发列表自动滚动跳位（除非显式滚动请求）
+1. An empty diff must not fall back to an old item or page instance.
+2. A bound holder/session must have a refresh path when structure does not change.
+3. The update path reinjects `localSnapshot`, theme, environment, and the latest parent closure.
+4. Both create and update paths can drive `RenderSession.render()`.
+5. `dispose/recycle` semantics align with holder lifetime.
+6. A `Change` update prefers the payload path instead of an unconditional full-change signal.
+7. When unusable keys force `ReloadAll`, preserve the current scroll anchor where possible instead
+   of jumping the collection to the top after an interaction.
+8. Focusing an input must not cause an automatic list jump unless scrolling was requested
+   explicitly.
 
-## 4. 必测场景
+## 4. Required scenarios
 
-每个容器至少覆盖以下 6 类场景：
+Every container covers at least these six cases:
 
-1. 结构稳定、闭包变化：`key` 不变时可见内容立即更新
-2. 结构稳定、局部上下文变化：主题/local/environment 更新可见
-3. `contentToken` 变化：复用或受控重建语义符合预期
-4. keyed reorder：顺序正确、状态不串位
-5. detach/attach/recycle：不泄漏、不丢状态
-6. 空 diff 刷新：`updates.isEmpty()` 时已绑定 holder 仍刷新
+1. Stable structure, changed closure: visible content updates immediately while `key` is unchanged.
+2. Stable structure, changed local context: theme, Local, or environment changes become visible.
+3. Changed `contentToken`: reuse or controlled recreation follows the documented semantics.
+4. Keyed reorder: ordering is correct and state does not move between items.
+5. Detach/attach/recycle: no leaks and no state loss.
+6. Empty-diff refresh: a bound holder still refreshes when `updates.isEmpty()`.
 
-## 5. 当前测试映射（2026-03）
+## 5. Current test mapping (2026-08)
 
-基础单测（通用机制）：
+Foundation unit tests:
 
 1. [LazyListDiffTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
 2. [LazyHolderRegistryTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
 3. [LazyItemSessionControllerTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
 
-当前已覆盖专项：
+Covered special cases:
 
-1. `LazyColumn`：`collectionsStress_toggleUpdatesVisibleControls`（UI）
-2. `LazyVerticalGrid`：`collectionsGrid_spanToggle_refreshesVisibleItemContent`（UI）
-3. `TabRow + HorizontalPager`：`statePatchStress_refreshesStableTabContent`（UI）
-4. `HorizontalPager`：`statePatchStress_horizontalPagerContentUpdatesAcrossAdvances`（UI）
-5. `VerticalPager`：`statePatchStress_verticalPagerContentUpdatesAcrossAdvances`（UI）
-6. `LazyVerticalGrid/HorizontalPager/VerticalPager`：`NodeBindingDifferTest` 容器 patch 单测（U）
-7. `LazyColumn`：`collectionsStress_rotateOrder_refreshesVisibleIdsAcrossToggles`（UI）
-8. Navigation destination：`NavDestinationSessionStoreTest` 覆盖候选离屏首帧、失败回滚、
-   Local/内容闭包刷新、显隐层级、永久移除和 owner 释放（U）
-9. Transactional navigation host：`TransactionalNavHostCoordinatorTest` 覆盖 attach、
-   push/pop/replace/reset、揭页刷新失败、初始失败重试、重入串行化和生命周期封顶（U）
+1. `LazyColumn`: `collectionsStress_toggleUpdatesVisibleControls` (UI)
+2. `LazyVerticalGrid`: `collectionsGrid_spanToggle_refreshesVisibleItemContent` (UI)
+3. `TabRow + HorizontalPager`: `statePatchStress_refreshesStableTabContent` (UI)
+4. `HorizontalPager`: `statePatchStress_horizontalPagerContentUpdatesAcrossAdvances` (UI)
+5. `VerticalPager`: `statePatchStress_verticalPagerContentUpdatesAcrossAdvances` (UI)
+6. `LazyVerticalGrid/HorizontalPager/VerticalPager`: collection patch cases in
+   `NodeBindingDifferTest` (unit)
+7. `LazyColumn`: `collectionsStress_rotateOrder_refreshesVisibleIdsAcrossToggles` (UI)
+8. Navigation destinations: `NavDestinationSessionStoreTest` covers candidate off-screen first
+   render, failed rollback, Local/content-closure refresh, visibility layers, permanent removal, and
+   owner release (unit).
+9. Transactional navigation host: `TransactionalNavHostCoordinatorTest` covers attach,
+   push/pop/replace/reset, revealed-page refresh failure, initial-failure retry, serialized
+   reentrancy, and lifecycle caps (unit).
+10. Public navigation: the `:samples:task-list` device test covers list/detail navigation and Back
+    through the production `NavHost` (instrumentation).
 
-当前缺口（需补专项回归）：
+Current baseline notes:
 
-1. Navigation destination 的真实 Activity 交互回归将在 Stage 4 公开 transactional `NavHost`
-   后接入；当前 Stage 3 仅暴露内部页面会话协议
-2. 门禁基线：`qaFull`（Pixel 4 XL API 33）21/21 通过
-3. 基线更新（2026-03-07）：`Lazy/Pager` 已统一走 DiffUtil + payload `Change` 路径，保留空 diff 刷新语义。
-4. 导航基线更新（2026-07-26）：候选页面先离屏提交首帧，已提交页面刷新最新
-   `UiLocalSnapshot` 与内容闭包，回滚/移除按 session → owner 顺序释放。
-5. 事务导航更新（2026-07-26）：返回栈只在候选首帧或揭页刷新成功后提交；失败候选产生的
-   重入命令不会泄漏到旧栈。
+1. `qaFull` remains the connected-device gate for application behavior.
+2. Since 2026-03-07, Lazy/Pager uses the unified DiffUtil plus payload `Change` path while
+   preserving empty-diff refresh semantics.
+3. Since 2026-07-26, candidate navigation pages commit their first frame off-screen, committed
+   pages refresh the latest `UiLocalSnapshot` and content closure, and rollback/removal releases
+   session before owner.
+4. Since 2026-07-26, a back-stack commit occurs only after candidate first render or revealed-page
+   refresh succeeds. Reentrant commands created by a failed candidate do not leak into the old
+   stack.
 
-## 6. 新容器接入流程
+## 6. New-container workflow
 
-新增延迟 session 容器时，必须同步完成：
+Adding a delayed-session container requires all of the following:
 
-1. 架构登记：在 [overview.md](overview.md) 标记该容器
-2. 清单登记：加入本文档并补测试映射
-3. 单测：至少覆盖“diff empty but closure changed”
-4. instrumentation：补真实 Activity 交互回归
-5. diagnostics：确认 render/layout 诊断可观测
+1. register the container in [the architecture overview](overview.md);
+2. add it to this checklist with a test mapping;
+3. add a unit case for at least `diff empty but closure changed`;
+4. add real Activity instrumentation;
+5. confirm that render/layout diagnostics expose the behavior.
 
-## 7. 排查优先级
+## 7. Investigation order
 
-遇到“文本没刷新 / 状态错乱 / 页面过期”时，固定按顺序排查：
+For stale text, misplaced state, or an outdated page, investigate in this order:
 
-1. 是否属于延迟 session 容器
-2. diff 是否保留了最新 item/page 实例
-3. 绑定 holder 是否在空 diff 路径下触发刷新
-4. 最后再排查 demo 业务写法
+1. determine whether the content is inside a delayed-session container;
+2. determine whether the diff retained the latest item/page instance;
+3. determine whether the bound holder refreshes on the empty-diff path;
+4. only then inspect the Demo application code.

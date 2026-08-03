@@ -126,8 +126,10 @@ Current process, release, and planning information:
 8. Do not use archived documents as current requirements.
 9. Run `./gradlew verifyDocumentationStructure` before committing documentation changes. The same
    check is included in `qaQuick`.
-10. Follow the canonical-first [localization workflow](./project/localization.md) when changing
-    translated public content; never refresh a translation fingerprint without reviewing meaning.
+10. Keep titles, headings, and narrative English in `docs/`, and Simplified Chinese in the matching
+    `zh-CN` mirror; mark foreign-language UI literals as inline code.
+11. Follow the canonical-first [localization workflow](./project/localization.md) for every public
+    content change; never refresh a translation fingerprint without reviewing meaning.
 
 The complete contract, naming rules, lifecycle, and review checklist are defined in
 [Documentation governance](./project/documentation-governance.md).

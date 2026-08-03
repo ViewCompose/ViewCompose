@@ -28,11 +28,10 @@ Documentation changes or rationale:
 
 Localization impact:
 
-- [ ] Chinese mirror updated and reviewed
-- [ ] Tracked page has no Chinese mirror yet
-- [ ] Existing tracked mirror explicitly marked stale
-- [ ] Page is English-only under the language policy
+- [ ] Required Chinese mirror updated and reviewed; canonical fingerprint is current
+- [ ] Page is deliberately English-only under the language policy
 - [ ] No user-visible language content changed
+- [ ] `npm run verify:languages` and `npm run verify:translations` pass
 
 ## Compatibility and migration
 

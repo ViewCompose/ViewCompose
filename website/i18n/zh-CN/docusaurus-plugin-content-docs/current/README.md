@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: be300aa6dcc144345bb107a645174cedb60568601fad5d52fbf14fb1619ceb8d
+translation_source_hash: 2f72f585e1ee7807adcd15546580663809004d5ee2fe96335900e5ddc5055805
 translation_status: current
 ---
 
@@ -121,8 +121,10 @@ GitHub 托管文档站点的内容边界。
 7. 每份有效文档都必须能从本索引沿链接访问。
 8. 不得把归档文档当作当前需求。
 9. 提交文档前运行 `./gradlew verifyDocumentationStructure`；`qaQuick` 也包含该检查。
-10. 修改已翻译的公开内容时遵循[本地化工作流](./project/localization.md)，不得在未审阅
-    语义的情况下只刷新翻译指纹。
+10. `docs/` 中的标题和叙述使用英文，对应 `zh-CN` 镜像使用简体中文；外语 UI 字面量用行内
+    代码标记。
+11. 每次公共内容变化都遵循[本地化工作流](./project/localization.md)，不得在未审阅语义的情况下
+    只刷新翻译指纹。
 
 完整契约、命名规则、生命周期和审查清单位于
-[文档治理规范](https://docs.viewcompose.com/project/documentation-governance)。
+[文档治理规范](./project/documentation-governance.md)。

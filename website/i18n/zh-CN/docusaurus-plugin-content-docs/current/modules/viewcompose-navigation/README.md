@@ -4,7 +4,7 @@ translation_source_hash: 99952594dc76479194178f521d1530720cde4bb577c663c82e45b08
 translation_status: current
 ---
 
-# Navigation Android
+# Android Navigation 模块
 
 `viewcompose-navigation` 把 `viewcompose-navigation-core` 状态挂载为原生 Android View 页面。
 它负责目的地和图的生命周期边界、ViewModelStore、SavedStateRegistry 命名空间、子渲染会话、

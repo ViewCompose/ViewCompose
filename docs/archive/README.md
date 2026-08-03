@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `DOCUMENT_LANGUAGE_CONSISTENCY_2026-08.md` | 67 篇有效公共手写文档已实现完整中英文镜像，12 篇错位权威源、33 个英文中文页标题和 14 个缺失镜像已收口，并加入语言、覆盖与指纹硬门禁 |
 | `LAYERED_TASK_LIST_TUTORIALS_2026-08.md` | 同一个可运行任务清单应用已经形成六章分层教程，包含可编译双语片段、真机行为测试与 `qaQuick`/`qaFull` 门禁 |
 | `COMPOSE_MIGRATION_PAIRED_SAMPLES_2026-08.md` | 四个 Compose/ViewCompose 迁移域已有可编译成对源码、双语片段与 `qaQuick` 漂移门禁 |
 | `VERSIONED_DOCUMENTATION_RETENTION_2026-08.md` | 25 个发布模块的不可变 API 与手册快照、完整历史重建、版本别名及发版门禁已经闭环 |

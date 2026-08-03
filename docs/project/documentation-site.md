@@ -9,23 +9,25 @@ selection and trade-offs are recorded in
 
 ## Build pipeline
 
-The production artifact is assembled in six explicit stages:
+The production artifact is assembled in seven explicit stages:
 
-1. `verifyDocumentationStructure` validates source placement, catalog parity, reachability, and
+1. `verifyDocumentLanguages` checks that canonical and localized titles and narrative use the
+   language of their directory and that every active public page has a required locale mirror.
+2. `verifyDocumentationStructure` validates source placement, catalog parity, reachability, and
    repository links.
-2. `verify:translations` validates required Chinese coverage, canonical source fingerprints,
+3. `verify:translations` validates required Chinese coverage, canonical source fingerprints,
    explicit stale status, and stale-warning markers.
-3. `verifyCompleteViewComposeApiDocs` groups the immutable release registry by source revision,
+4. `verifyCompleteViewComposeApiDocs` groups the immutable release registry by source revision,
    reconstructs each revision in a temporary workspace, runs the current maintained Dokka tooling,
    copies every released artifact/version tree to ignored paths under `website/generated/api/`, and
    verifies the complete manifest, immutable routes, aliases, and pinned source links.
-4. the website generators read publishing metadata, the immutable release registry, and
+5. the website generators read publishing metadata, the immutable release registry, and
    `docs/modules/README.md`. They generate the catalog plus one module-manual snapshot per released
    artifact/version from the same frozen Git revision; they do not maintain a second registry.
-5. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
+6. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
    output, localized search indexes, and compatibility redirects for both `en` and `zh-CN` into
    `website/build/`, with broken links and anchors treated as errors.
-6. the build wrapper audits Docusaurus-owned HTML accessibility and enforces build-time, total
+7. the build wrapper audits Docusaurus-owned HTML accessibility and enforces build-time, total
    output, JavaScript, CSS, and per-locale search-index budgets. Dokka-generated HTML remains under
    the API generator's independent integrity gate rather than the site-template accessibility gate.
 
@@ -36,6 +38,7 @@ Run the complete local verification from the repository root:
 cd website
 npm ci
 npm run test:scripts
+npm run verify:languages
 npm run verify:translations
 npm run typecheck
 npm run build
@@ -143,6 +146,8 @@ identity token.
 - If translation verification reports source drift, review and update the Chinese meaning before
   recording the new fingerprint. A tracked page may be explicitly marked stale; a required page
   may not.
+- If language verification fails, correct the misplaced narrative or missing required mirror;
+  format a genuine foreign-language UI literal as code instead of weakening the classifier.
 - If deployment fails after a successful build, keep the last Pages deployment live and rerun only
   after checking repository Pages settings and the `github-pages` environment.
 - If the custom domain fails while the Pages artifact is healthy, diagnose DNS and domain
@@ -153,7 +158,7 @@ identity token.
 2026-08-03: a clean complete-history build reconstructed all 25 released artifact versions from the
 recorded frozen revision and passed immutable source-link, manifest, `current`, and stable-only
 `latest` verification. The production site verified 25 API routes, 25 English module-manual
-snapshots, 25 `zh-CN` English-fallback snapshot routes, translation freshness, local search,
-compatibility redirects, and 182 site-owned accessibility pages. The measured output was 204.8 MiB,
-the largest JavaScript asset was 650 KiB, and the full site build took 12.2 seconds. `qaQuick` also
-passed.
+snapshots, 25 `zh-CN` English-fallback snapshot routes, language placement, translation freshness,
+local search, compatibility redirects, and 194 site-owned accessibility pages. The measured output
+was 205.4 MiB, the largest JavaScript asset was 650 KiB, and the full site build took 11.3 seconds.
+`qaQuick` also passed.

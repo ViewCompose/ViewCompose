@@ -1,292 +1,283 @@
 # ViewCompose Unified Roadmap
 
-## 1. 文档定位
+## 1. Scope
 
-本文档是统一路线图，合并以下历史分散文档的“仍有效”部分：
+This is the single current roadmap. It consolidates the still-relevant parts of these historical
+documents:
 
 1. `WIDGET_ROADMAP.md`
 2. `DEMO_ROADMAP.md`
 3. `OVERLAY_COMPONENTS_ROADMAP.md`
 4. `UI_TESTING.md`
 
-目标：
+Its goals are one roadmap entry point, no status drift between parallel roadmaps, and AI context
+focused on current plans rather than historical phase documents.
 
-1. 让路线图只有一个主入口
-2. 避免多份 roadmap 状态漂移
-3. 让 AI 上下文聚焦在当前有效计划，而不是历史阶段文档
+Performance retains a dedicated specification in [Performance](../tooling/performance.md).
 
-性能专项仍保留独立深度文档见 [performance.md](../tooling/performance.md)。
+## 2. Current baseline (2026-08)
 
-## 2. 当前基线（2026-08）
+### 2.1 Framework
 
-### 2.1 框架层
+1. Node semantics have converged on NodeSpec-only: `VNode.spec` is non-null and the parallel
+   `Props` path is gone.
+2. Modifier ownership is general decoration plus scoped parent data.
+3. Overlay is split into session-bound surfaces (`Dialog`, `Popup`, `ModalBottomSheet`) and
+   host-driven feedback (`Snackbar`, `Toast`).
+4. Android host APIs live in `:viewcompose-host-android` (`setUiContent/renderInto/RenderSession`),
+   which owns session lifetime.
+5. System-bar insets use component-side `Modifier.systemBarsInsetsPadding(...)`.
+6. Lifecycle and ViewModel collaboration is split into `:viewcompose-lifecycle` and
+   `:viewcompose-viewmodel` under `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`.
+7. Recomposition uses SlotTable Lite node-group invalidation without a legacy full-rebuild switch.
+8. Dependency ownership is `runtime + ui-contract + widget-core + renderer(android) +
+   host-android`; widget-core has no direct renderer dependency.
+9. `viewcompose-runtime` is pure Kotlin/JVM with policy, snapshot, observation, invalidation, and
+   composer branch coverage.
+10. Public host diagnostics expose core-owned `RenderStats/RenderTreeResult`, not renderer types.
+11. Default overlay assembly uses `OverlayHostFactoryProvider + ServiceLoader` and falls back to a
+    stable no-op without reflection.
+12. `viewcompose-preview` provides the Compose Preview bridge, `PreviewCatalog`, and Paparazzi
+    snapshots through `qaPreview`.
+13. Animation and gesture layers are
+    `viewcompose-animation-core + viewcompose-animation + viewcompose-gesture-core +
+    viewcompose-gesture`, including Compose-like APIs, a policy core, renderer event mapping,
+    Lazy/Pager motion policy, and Android interop.
+14. `viewcompose-widget-constraintlayout` and renderer `DeclarativeConstraintLayout` support
+    anchors, dimensions, bias, baseline extensions, circle, guideline, barrier, weighted chains,
+    Flow/Group/Layer/Placeholder, decoupled `ConstraintSet`, and match-constraint
+    min/max/percent/constrained behavior.
+15. Graphics uses `viewcompose-graphics-core + viewcompose-graphics + renderer draw pipeline +
+    host-android interop`, with Demo, Preview/Paparazzi, and v2 P0 fixes for four-corner RoundRect,
+    Drawable DrawPaint, and ImageFilter Chain.
+16. `ComposerLite.prepareRoot/commit/abort` provides composition transactions for slots,
+    observation, RememberObserver, and Effect. Failed composition retains old dependencies and can
+    recompose later.
+17. `RenderSession` owns the structured parent Job for `LaunchedEffect/rememberCoroutineScope`;
+    `produceState` is suspend-based with `awaitDispose`, and Flow/animation no longer create
+    independent root Jobs.
+18. Renderer apply is transactional: recursive patches share one transaction, removals are released
+    late, and binding/insertion failure attempts to restore the old tree.
+19. Compiler-free recomposition performance includes VNode identity retention, equivalent-result
+    normalization, same-frame invalidation merging, explicit `RecomposeBoundary`, composition/View
+    mutation journals, renderer fast skips, and opt-in diagnostics.
+20. `viewcompose-text-core` supplies `TextDocument`, text/selection/composition, atomic
+    EditingBuffer, input transformation, and undo/redo. A dedicated
+    `AppCompatEditText/InputConnection` controller synchronizes Android, and
+    `rememberTextFieldState` saves the document and selection.
+21. Lazy P1 includes observable `LazyListState` layout snapshots, boundaries, and scrolling;
+    structured item DSL supports stable keys, sticky headers, content types, Grid spans,
+    asymmetric padding, reverse layout, user-scroll control, and prefetch policy.
+22. Composition APIs use only `ComposerLite`. Alternative remember/effect/key contexts are removed,
+    and composition-time APIs fail immediately outside composition.
+23. Platform host capability installs atomically: renderer, frame scheduler, and composition
+    coroutine context register as one immutable snapshot; partial empty-render/immediate-schedule
+    fallbacks are removed.
+24. `Modifier.semantics` covers description, state, role, heading, live region,
+    selected/checked/enabled, error, progress, and subtree policy. The renderer maps native
+    accessibility and restores original semantics when a View is reused.
+25. `RenderFailure/RenderFrameReport` records stage, recovery, frame number, and AndroidView
+    operations. Non-replayable work executes through post-transaction `AndroidView.onCommit`.
+26. Overlay P2 includes a platform-neutral Popup positioner with four-way anchors, RTL,
+    flip/clamp, and scroll following, plus unified Snackbar/Toast queue policy and structured end
+    reasons.
+27. Theming P2 includes Android dynamic-color policy, configuration-driven token lifecycle,
+    source/revision metadata, and independent rounded/cut dimension/fraction corner bridging.
+28. Diagnostics P2 exposes render tree, per-node patch timeline, CompositionLocal snapshots, and
+    structured recomposition reasons through `RenderTreeResult` and the Demo inspector.
+29. Lifecycle/SavedState P2 uses claim/commit/release restoration transactions, serial collector
+    cancellation on rapid restart, corrupt Bundle-entry isolation, and explicit destroyed-host
+    rejection.
+30. Release performance uses R8 and resource shrink for release/benchmark targets, with
+    no-ART-precompilation cold-start/state-patch baselines and `qaRelease`/`benchmarkRelease`.
+31. Animation cancel/retarget follows last-mutation-wins. `animateTo/snapTo/stop` share arbitration,
+    old frames cannot overwrite a new target, and `targetValue/isRunning` are public.
+32. Drag, anchored drag, transform, and pointer input have structured cancellation reasons.
+    Transform takeover cannot resume an old drag, and system cancellation cannot trigger
+    fling/settle.
+33. `DrawScene` supports immutable reuse, nested transforms/clips, isolated Canvas state, and rejects
+    unbalanced save/restore.
+34. Rich text and Receive Content share `TextDocument`: spans, paragraphs, links, inline attachments,
+    clipboard, drag/drop, and IME content use one conversion, transformation, insertion, undo, and
+    save/restore path.
+35. `viewcompose-shadow-android` provides ordered outer layers, foreground inner layers, bounded
+    raster caches, an experimental RenderNode backend, and structured diagnostics. `Auto` remains
+    ExactBitmap based on the first release-mode benchmark.
 
-1. 节点语义已完成 `NodeSpec-only` 收口（`VNode.spec` 非空必填，无 `Props` 双轨）
-2. `Modifier` 边界已收口到“通用修饰 + scoped parent-data”
-3. `Overlay` 已分层为：
-   - session-bound surface：`Dialog`、`Popup`、`ModalBottomSheet`
-   - host-driven feedback：`Snackbar`、`Toast`
-4. Android 宿主入口已统一到 `:viewcompose-host-android`（`setUiContent/renderInto/RenderSession`），并内部管理 session 生命周期
-5. `system bars insets` 已转为组件侧 `Modifier.systemBarsInsetsPadding(...)`
-6. 生命周期与 ViewModel 协作 API 已拆分为 `:viewcompose-lifecycle` 与 `:viewcompose-viewmodel`，并统一到新包 `com.viewcompose.lifecycle` / `com.viewcompose.viewmodel`
-7. 重组模型已硬切到 `SlotTable Lite` 节点组级脏区重组（无旧全量重建开关）
-8. 依赖边界已收口为 `runtime + ui-contract + widget-core + renderer(android) + host-android`，`widget-core` 不再直依赖 `renderer`
-9. `viewcompose-runtime` 已硬切为纯 Kotlin/JVM，并补齐 `policy/snapshot/observation/invalidation/composer` 核心测试分支
-10. 宿主公开诊断回调已收口到 core 自有类型（`RenderStats/RenderTreeResult`），host API 不再泄漏 renderer 实现类型
-11. overlay 默认装配已改为 `OverlayHostFactoryProvider + ServiceLoader`，无实现时稳定回退 no-op（移除反射路径）
-12. 开发预览模块已落地：`viewcompose-preview` 提供 Compose Preview bridge + `PreviewCatalog` + Paparazzi 快照回归（`qaPreview`）
-13. 动画与手势模块已落地：`viewcompose-animation-core` + `viewcompose-animation` + `viewcompose-gesture-core` + `viewcompose-gesture`（Compose-like API + 手势策略内核 + renderer 事件适配 + lazy/pager motion 策略 + Android interop）
-14. 约束布局能力已落地：`viewcompose-widget-constraintlayout` + renderer `DeclarativeConstraintLayout`，支持 anchors/dimension/bias/baseline/baselineToTop/baselineToBottom/circle/guideline/barrier/chain(+weights)/Flow/Group/Layer/Placeholder/decoupled `ConstraintSet`，并补齐 match-constraint `min/max/percent/constrained`
-15. graphics 能力已落地：`viewcompose-graphics-core` + `viewcompose-graphics` + renderer draw pipeline + `host-android` interop；`Graphics` demo 与 preview/Paparazzi 覆盖已接入，并完成 v2 P0 语义收口（RoundRect 四角半径 / Drawable DrawPaint / ImageFilter Chain）
-16. 组合事务已落地：`ComposerLite.prepareRoot/commit/abort` 覆盖 slot、观察订阅、RememberObserver 与 Effect，失败组合保留旧依赖并可继续失效重组。
-17. 结构化协程已落地：`RenderSession` 统一持有组合父 Job，提供 `LaunchedEffect/rememberCoroutineScope`，`produceState` 已硬切 suspend + `awaitDispose`，Flow 与动画已移除独立根 Job。
-18. renderer apply transaction 已落地：递归 patch 共享事务、延迟释放 removal，并对绑定/插入失败执行旧树 best-effort 恢复。
-19. 无编译器重组性能收口已落地：VNode 引用保持、等价结果规范化、同帧失效合并、显式 `RecomposeBoundary`、组合/View mutation journal、renderer 快速跳过与按需诊断。
-20. 完整文档编辑模型已硬切落地：`viewcompose-text-core` 提供 `TextDocument`、text/selection/composition、原子 EditingBuffer、输入变换和撤销/重做；Android renderer 通过专用 `AppCompatEditText/InputConnection` 控制器同步，`rememberTextFieldState` 保存完整文档 + selection。
-21. Lazy 容器 P1 已落地：`LazyListState` 提供完整可观察 layout snapshot、边界与滚动控制；结构化 DSL 支持稳定 key、sticky header、contentType、Grid span、非对称 padding、reverse layout、用户滚动开关和预取策略。
-22. 组合 API 已硬切到 `ComposerLite` 单一路径：移除备用 remember/effect/key 上下文，所有组合外调用立即失败，避免无编译器约束下的静默状态丢失与副作用遗漏。
-23. 宿主平台能力已收口为原子安装：渲染引擎、帧调度 runtime 与组合协程上下文作为同一不可变快照注册，移除空渲染、即时调度和空协程上下文的半安装降级路径。
-24. 结构化无障碍语义已落地：`Modifier.semantics` 覆盖描述、状态、role、heading、live region、选择/勾选/启用、错误、进度与子树策略；renderer 映射原生 Accessibility，并在 View 复用时恢复原始语义。
-25. 结构化渲染失败与原生副作用边界已落地：`RenderFailure/RenderFrameReport` 覆盖阶段、恢复结果、帧号与 AndroidView 操作；不可重放动作通过事务成功后发布的 `AndroidView.onCommit` 执行。
-26. Overlay P2 完整度已增强：Popup 使用平台无关 positioner 支持四向精确锚定、RTL、翻转/夹取和滚动跟随；Snackbar/Toast 使用统一队列策略与结构化结束原因。
-27. Theming P2 完整度已增强：Android 动态色策略、配置变化驱动的 token 生命周期、来源/修订元数据，以及四角独立的 rounded/cut + dimension/fraction shape 桥接已落地。
-28. Diagnostics P2 可视化已落地：公开 `RenderTreeResult` 提供 render tree、逐节点 patch 时间线、CompositionLocal 快照与结构化重组原因，demo 检查器可直接浏览。
-29. Lifecycle/SavedState P2 已收口：恢复值使用 composition claim/commit/release 事务，快速生命周期重启串行取消 collector，损坏 Bundle entry 隔离，destroyed host 明确拒绝。
-30. 发布态性能基准已固定：release/benchmark target 启用 R8 与 resource shrink，新增无 ART 预编译的冷启动/state patch 基线及 `qaRelease`/`benchmarkRelease` 入口。
-31. 动画取消/重定向已收口：`Animatable` 采用最后一次 mutation 生效，`animateTo/snapTo/stop` 统一仲裁，旧帧不能覆盖新目标，并公开 `targetValue/isRunning`。
-32. 手势并发已收口：拖动、锚点拖动、双指变换和 pointer input 具备结构化取消原因；变换接管后不恢复旧拖动，系统取消不再触发 fling/settle。
-33. 复杂图形场景已增强：`DrawScene` 支持不可变复用、嵌套 transform/clip 与 Canvas 状态隔离，并拒绝不平衡 save/restore。
-34. 富文本文档与 Receive Content 已落地：span、段落、链接、行内附件共享 `TextDocument`；clipboard、drag/drop、IME content 统一转换、变换、插入、撤销和保存恢复。
-35. 高级阴影装饰层已落地：`viewcompose-shadow-android` 提供有序多层外阴影、前景内阴影、有界栅格缓存、RenderNode 实验后端和结构化诊断；默认 `Auto` 依据首轮发布态基准保持 ExactBitmap。
+### 2.2 Demo and verification
 
-### 2.2 Demo 与验证层
+1. Demo uses a stable multi-Activity structure.
+2. Implemented chapters use one scenario template.
+3. Instrumentation covers critical smoke paths and delayed-session cases for
+   `LazyVerticalGrid`, `HorizontalPager`, `VerticalPager`, and `ModalBottomSheet`.
+4. Verification status on 2026-08-03: current main passes `qaQuick`. A complete `qaFull` was not rerun
+   in one uniform device environment, so the 2026-03-08 local failure is no longer treated as
+   current fact and the aggregate device gate is not claimed green. A milestone requiring UI
+   evidence uses current targeted device results or stays `In Progress`.
+5. Graphics Demo contains outer-shadow, inner-shadow, and Lazy/diagnostics pages for layers, color,
+   offset, spread, shape, input interop, 1,000 stable-key items, cache hits, and actual backend
+   selection.
+6. The standalone `:samples:counter` avoids Demo internals. `qaQuick` compiles the app, test source,
+   and debug Preview; `qaPreview` verifies compiled Preview discovery; `qaFull` verifies counter
+   clicks on a device.
 
-1. demo 已稳定在多 `Activity` 结构
-2. 已实现章节具备统一 scenario 模板
-3. instrumentation 已覆盖关键 smoke 回归路径，延迟 session 容器专项已覆盖 `LazyVerticalGrid`、`HorizontalPager`、`VerticalPager` 与 `ModalBottomSheet`
-4. 验证状态更新（2026-08-03）：当前主干门禁确认 `qaQuick` 可通过；本轮尚未在统一设备环境重跑完整 `qaFull`，因此不再把 2026-03-08 的单条本地失败当作当前事实，也不声明聚合设备门禁已全绿。需要 UI 证据的里程碑必须以当前定向设备结果为依据，或保持 `In Progress`。
-5. `Graphics` Demo 已新增外阴影、内阴影与 Lazy/诊断 3 个子页，覆盖多层/彩色/offset/spread/shape、输入互操作、1000 项稳定 key、缓存命中和实际后端选择。
-6. 新增独立 `:samples:counter` 最小应用，不依赖大型 Demo 内部脚手架；`qaQuick` 编译应用、测试源码和 debug Preview 入口，`qaPreview` 验证编译后 Preview 发现，`qaFull` 在设备上验证计数点击路径。
+### 2.3 Milestone snapshot (2026-08-03)
 
-## 2.3 里程碑进度快照（2026-08-03）
-
-| Milestone | 状态 | 完成态字段（C/U/D/UI） | 说明 |
+| Milestone | Status | Completion fields (C/U/D/UI) | Notes |
 | --- | --- | --- | --- |
-| A：Overlay 稳定性收口 | Completed | C:✅ U:✅ D:✅ UI:✅ | Overlay host 已统一 reconcile 模板，Dialog/Popup/ModalBottomSheet/反馈流均已回归 |
-| B：Collections 与容器扩展 | Completed | C:✅ U:✅ D:✅ UI:✅ | Lazy/Pager 基线、结构化条目、完整 list state、sticky headers、contentType/span、预取与保存恢复均已落地 |
-| C：Input 与表单态增强 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | `TextFieldState` 硬切、selection/composition、IME batch、撤销历史、输入变换、键盘动作、autofill 与保存恢复已落地；仍需真实设备 IME/无障碍矩阵 |
-| D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 诊断可视化与 R8 release 基准已落地，下一步量化 baseline profile 收益 |
-| E：开发预览与截图回归 | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi 与独立 Android Studio 预览插件 1.0 已落地，覆盖源码联动、全部预览、缓存、增量刷新、缩放平移和诊断；下一步扩展 Dark/Tablet 快照矩阵 |
-| F：动画与手势首轮覆盖 | Completed | C:✅ U:✅ D:✅ UI:✅ | 已完成 `viewcompose-animation-core` + `viewcompose-animation` 分层、`Transition` 共享时钟重构、`AnimatedVisibility` Compose 语义对齐、`animateContentSize` 布局级动画落地、`Animatable` 易用性重构、`InfiniteTransition` typed API、Android interop（MotionLayout/TransitionManager/ObjectAnimator/ViewPropertyAnimator/DynamicAnimation）与 demo+preview+回归测试收口 |
-| G：Graphics 2D 主链能力 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | 已完成 `viewcompose-graphics-core` + `viewcompose-graphics` 分层、Canvas/draw modifiers/drawWithCache、renderer 渲染管线与 `AndroidGraphicsInterop`，并完成 v2 P0 语义收口（RoundRect/Drawable/ImageFilter Chain）；在当前设备矩阵重新取得稳定 UI 证据前不标记 Completed |
-| H：高级阴影装饰层 | Completed | C:✅ U:✅ D:✅ UI:✅ | 多层外阴影、内阴影、shape/spread/offset、Lazy 缓存、后端诊断与 Compose 成对基准已闭环；Samsung SM-G991B 定向设备回归通过，Auto 保持 ExactBitmap |
+| A: Overlay stability | Completed | C:✅ U:✅ D:✅ UI:✅ | Unified overlay reconciliation covers Dialog, Popup, ModalBottomSheet, and feedback flows |
+| B: Collections and containers | Completed | C:✅ U:✅ D:✅ UI:✅ | Lazy/Pager baseline, structured items, complete list state, sticky headers, content types/spans, prefetch, and restoration are implemented |
+| C: Input and forms | In Progress | C:✅ U:✅ D:✅ UI:⚠ | TextFieldState, selection/composition, IME batch, undo, transformations, keyboard actions, autofill, and restoration are implemented; real-device IME/accessibility matrix remains |
+| D: Diagnostics and performance | In Progress | C:✅ U:✅ D:✅ UI:✅ | Diagnostics visualization and R8 release benchmark are implemented; baseline-profile benefit remains to be measured |
+| E: Preview and screenshots | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi and Studio Preview plugin 1.0 cover source linkage, all previews, cache, incremental refresh, zoom/pan, and diagnostics; Dark/Tablet matrix remains |
+| F: Animation and gestures | Completed | C:✅ U:✅ D:✅ UI:✅ | Core/DSL layering, shared Transition clock, Compose-aligned AnimatedVisibility, layout animateContentSize, Animatable, typed InfiniteTransition, Android interop, Demo, Preview, and regression tests are complete |
+| G: Graphics 2D | In Progress | C:✅ U:✅ D:✅ UI:⚠ | Core/DSL layers, Canvas/draw modifiers/cache, renderer pipeline, Android interop, and v2 P0 fixes are implemented; stable current-device UI evidence remains |
+| H: Advanced shadows | Completed | C:✅ U:✅ D:✅ UI:✅ | Outer/inner layers, shape/spread/offset, Lazy cache, backend diagnostics, and paired Compose benchmark are complete; Samsung SM-G991B targeted regression passed and Auto remains ExactBitmap |
 
-## 3. 统一设计原则
+## 3. Unified design principles
 
-1. 组件参数负责语义，`Modifier` 负责通用修饰，`Theme/Defaults` 负责默认值。
-2. 平台实现不回流到 DSL 模块：Android 宿主实现进入 `viewcompose-overlay-android` 或 bridge 层。
-3. 新能力以“最小可验证步”推进：文档、实现、测试、demo 逐步落地并小步提交。
-4. 路线图文档必须和实现同步更新，禁止“代码已变、roadmap 未收口”。
+1. Component parameters own semantics, Modifier owns general decoration, and Theme/Defaults owns
+   defaults.
+2. Platform implementations do not flow back into DSL modules; Android hosting belongs in
+   `viewcompose-overlay-android` or a bridge layer.
+3. Add capability in minimum verifiable steps with documentation, implementation, tests, and Demo.
+4. Roadmap and implementation change together; code cannot advance while the roadmap remains stale.
 
-## 4. 能力状态矩阵
+## 4. Capability matrix
 
-| 方向 | 当前状态 | 下一阶段重点 |
+| Area | Current state | Next focus |
 | --- | --- | --- |
-| Foundations / Input / Layout / State | 已形成 v1 主能力；声明式焦点、方向导航、焦点组和硬件 KeyEvent 分发已落地 | 聚焦真实设备键盘/焦点边界态与复杂组合场景 |
-| Accessibility / Semantics | 结构化 semantics 契约与 Android 原生 Accessibility 映射已落地，支持状态、role、heading、live region、错误和进度等核心语义 | 扩展真实设备 TalkBack、Switch Access 与字体放大回归矩阵 |
-| Text Editing | `TextDocument + TextFieldState + EditingBuffer + InputTransformation + AppCompatEditText/InputConnection bridge` 已落地，支持富文本、段落、行内附件、selection/composition/undo/save 与统一 Receive Content | 真实设备覆盖主流中文/日文 IME、TalkBack、硬件键盘、拖放和第三方内容提供方 |
-| Runtime Effects / Transactions | 组合 prepare/commit/abort、结构化协程、renderer 恢复、`RenderFailure/RenderFrameReport` 与 `AndroidView.onCommit` 副作用边界已落地 | 扩展线上诊断聚合与异常采样策略 |
-| Runtime Recomposition Performance | VNode 子树缓存、mutation journal、失效合并、显式边界和 renderer O(1) identity skip 已落地 | 维护叶子更新规模基准，避免固定成本随整树节点数增长 |
-| Lifecycle / ViewModel Integration | 模块拆分与 API 硬切、串行 lifecycle collection、事务化 SavedState claim、destroyed host 与损坏 Bundle 隔离均已完成 | 扩展多窗口/后台进程回收真实设备矩阵 |
-| Collections | `LazyColumn/LazyRow/LazyVerticalGrid` + Pager；完整 list state、sticky headers、contentType/span 与预取已落地 | Paging 3 适配保持可选集成，不进入核心契约 |
-| Overlay | Popup 精确锚点、滚动跟随、RTL、翻转/夹取，以及 Snackbar/Toast 统一队列与结构化结束原因已落地 | 扩展多窗口、IME 与自由窗真实设备矩阵 |
-| Theming | 已完成 token 收口、Android 动态色策略、完整 shape 桥接与配置变化 token 生命周期，并提供 `Diagnostics -> 主题诊断` 权威人工验证入口 | 扩展多窗口、厂商主题和动态色设备矩阵 |
-| Interop | `AndroidView` 支持 replay-safe update/reset/nativeView、提交期 onCommit 与一次性 release | 强化复杂原生 View、第三方控件与主题协同 |
-| Diagnostics | render/layout 聚合、render tree、逐节点 patch、CompositionLocal 与重组原因均已结构化输出并接入 demo 检查器 | 节点边界高亮、跨 session 关联与逐节点耗时 |
-| UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
-| Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
-| ConstraintLayout | 已新增 `viewcompose-widget-constraintlayout` 与 renderer 映射，核心能力覆盖 anchors/helpers/constraintSet + advanced dimensions/weights/circle/baseline extensions + Virtual Helpers（Flow/Group/Layer/Placeholder） | 下一步推进 MotionLayout interop 专题（保持 host-android 边界） |
-| Animation | `viewcompose-animation-core` + `viewcompose-animation` 已完成内核/DSL 分层；`Transition` 为共享时间线语义，`Animatable` 支持最后一次 mutation 生效的 cancel/retarget/stop；`AnimatedVisibility` 与 `animateContentSize` 已落地 | 发布态性能画像与更多复杂场景样例 |
-| Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
-| Graphics | 2D draw 主链与独立 `viewcompose-shadow-android` 装饰层已落地，支持 Canvas、draw modifiers、不可变 `DrawScene`、有序多层外/内阴影、静态栅格缓存和后端诊断 | 扩展 dark/tablet 快照；在明确预算下研究动态 RenderEffect/转场阴影 |
-| Performance | 已有 R8 release Macrobenchmark 基线，且 `DiffUtil + payload + SlotTable Lite + subtree skip` 主路径已落地；列表/复杂布局已建立同 target Compose 对照、内存指标、自动报告和归一化回归门禁 | 在真实设备持续积累配对基线并量化 baseline profile 收益 |
+| Foundations / Input / Layout / State | v1 core plus declarative focus, directional navigation, focus groups, and hardware KeyEvent dispatch | Real-device keyboard/focus edge cases and complex compositions |
+| Accessibility / Semantics | Structured semantics and native Android mapping for state, role, heading, live region, errors, progress, and more | TalkBack, Switch Access, and font-scale device matrix |
+| Text Editing | TextDocument, TextFieldState, EditingBuffer, InputTransformation, and Android editor bridge support rich text, selection/composition/undo/save, attachments, and Receive Content | Chinese/Japanese IMEs, TalkBack, hardware keyboard, drag/drop, and third-party content providers |
+| Runtime Effects / Transactions | Composition transaction, structured coroutines, renderer recovery, failure reports, and onCommit boundary | Production diagnostic aggregation and exception sampling |
+| Runtime Recomposition Performance | VNode subtree cache, mutation journals, invalidation merging, explicit boundaries, and O(1) identity skip | Maintain leaf-update scale benchmarks and bound whole-tree fixed cost |
+| Lifecycle / ViewModel | Split modules, serial lifecycle collection, transactional SavedState claim, destroyed-host and corrupt-entry handling | Multi-window and background process-recovery matrix |
+| Collections | LazyColumn/Row/Grid plus Pager, complete list state, sticky headers, content types/spans, and prefetch | Optional Paging 3 integration outside the core contract |
+| Overlay | Precise Popup anchoring/following/RTL/flip/clamp and unified feedback queues | Multi-window, IME, and freeform-window device matrix |
+| Theming | Semantic tokens, dynamic-color policy, complete shape bridge, configuration lifecycle, and authoritative Theme diagnostics | Multi-window, vendor-theme, and dynamic-color matrix |
+| Interop | AndroidView replay-safe update/reset/nativeView, commit-time onCommit, and one-time release | Complex native and third-party Views with theme coordination |
+| Diagnostics | Aggregate render/layout, tree, per-node patches, Locals, and recomposition reasons | Node highlighting, cross-session correlation, and per-node timing |
+| UI Testing | Core instrumentation plus P1 focus/keyboard, nested-scroll, and rollback cases | Multi-API, TV, ChromeOS, overlay host, and theme assertions |
+| Developer Preview | Compose Preview, Paparazzi, and Studio plugin with static render, source linkage, diagnostics, bounded cache, and incremental refresh | More domains and Dark/Tablet snapshots |
+| ConstraintLayout | Dedicated module and renderer for anchors, helpers, ConstraintSet, advanced dimensions, weights, circles, baseline, and virtual helpers | MotionLayout interop while preserving host-android boundary |
+| Animation | Core/DSL layers, shared Transition timeline, last-mutation-wins Animatable, AnimatedVisibility, and animateContentSize | Release performance profile and complex examples |
+| Gesture | Policy core, DSL, dispatcher, nested scroll, structured cancellation, and tap/drag/anchored/transform support | Third-party native scrollers and real-device multi-touch |
+| Graphics | 2D drawing and optional shadow decoration with DrawScene, ordered outer/inner layers, bounded cache, and backend diagnostics | Dark/Tablet snapshots and budgeted dynamic RenderEffect research |
+| Performance | R8 Macrobenchmark, DiffUtil/payload/SlotTable/subtree skip, paired Compose list/complex-layout controls, memory metrics, reports, and normalized gates | Accumulate same-device paired baselines and quantify baseline profile |
 
-### 4.1 完成态字段定义（C/U/D/UI）
+### 4.1 Completion fields (C/U/D/UI)
 
-统一字段：
+1. `C` (Compile): compile gate.
+2. `U` (Unit): unit-test gate.
+3. `D` (Demo): Demo scenario and verification instructions.
+4. `UI` (Instrumentation): device UI gate.
 
-1. `C`（Compile）：编译门禁
-2. `U`（Unit）：单元测试门禁
-3. `D`（Demo）：demo 场景与验证说明
-4. `UI`（Instrumentation）：设备 UI 回归门禁
+Values are `✅` passed, `⚠` partial or blocked, and `❌` not passed.
 
-状态值：
+Defaults:
 
-1. `✅` 已通过
-2. `⚠` 部分通过或存在阻塞
-3. `❌` 未通过
+1. C: compilation tasks pass in `qaQuick`.
+2. U: unit tests pass in `qaQuick`.
+3. D: the capability has a Demo page and verification points.
+4. UI: instrumentation passes in `qaFull`, or the roadmap records a scoped exemption and deadline.
 
-默认判定口径：
+## 5. Milestone contracts
 
-1. `C`：`qaQuick` 中编译任务通过
-2. `U`：`qaQuick` 中 unit test 通过
-3. `D`：对应能力已有 demo 页面和验证点说明
-4. `UI`：`qaFull` 中 instrumentation 通过，或在 roadmap 登记豁免范围与补齐时间
+### Milestone A: Overlay stability
 
-## 5. 里程碑计划
+Deliver Dialog position/scrim/dismiss regression, Popup alignment/anchor/window stability,
+documented and tested Snackbar/Toast queues, and ModalBottomSheet host-lifecycle behavior.
 
-### Milestone A：Overlay 稳定性收口
+Completion requires consistent show/hide/update/dismiss unit tests, real-host instrumentation, and
+no leak after Activity finish or configuration change.
 
-交付：
+### Milestone B: Collections and containers
 
-1. `Dialog`：位置、蒙层、dismiss 语义全量回归
-2. `Popup`：对齐策略、锚点刷新、窗口切换稳定性
-3. `Snackbar/Toast`：队列和重复触发策略文档化并测试覆盖
-4. `ModalBottomSheet`：show/update/dismiss 行为与宿主生命周期回归
+Deliver LazyRow/Grid and horizontal/vertical Pager, register them in
+[the session checklist](../architecture/session-containers.md), test stable-structure closure
+refresh, provide complete LazyListState and structured items/sticky headers/content types/Grid
+spans/prefetch.
 
-完成标准：
+Completion requires verifiable empty-diff refresh, stable keyed reorder/local state, a stress Demo,
+and automated sticky-header, stable-ID, view-type, and restoration regression.
 
-1. 单测覆盖 show/hide/update/dismiss 一致性
-2. instrumentation 覆盖真实宿主中的可见性与交互（含 bottom sheet 路径）
-3. `Activity` finish / 配置变化无泄漏
+### Milestone C: Input and forms
 
-### Milestone B：Collections 与容器扩展
+Deliver focus/IME actions, complete text/selection/composition transactions, transformations,
+undo/redo, autofill/restoration, rich text and Receive Content, form validation/read-only/error
+compositions, and theme/state visual regression.
 
-交付：
+Completion requires predictable input without cross-control interference, reproducible clipping and
+height tests, and correct Chinese/Japanese composition, directional selection, external updates, and
+process restoration without cursor jumps or text loss.
 
-1. `LazyRow`、`LazyVerticalGrid`、`HorizontalPager/VerticalPager` 最小可用实现
-2. 新增容器纳入 [session-containers.md](../architecture/session-containers.md)
-3. 结构稳定 + 闭包变化刷新路径专项测试
-4. `LazyListState` 完整布局快照、边界状态和滚动控制
-5. 结构化 item DSL、sticky header、contentType、Grid span 与预取策略
+### Milestone D: Diagnostics and performance
 
-完成标准：
+Deliver enhanced render/patch/layout visualization, maintained benchmark baselines, and release
+optimization such as baseline profiles. Completion requires quantitative evidence and a panel that
+locates high-frequency problems.
 
-1. 容器级空 diff 刷新能力可验证
-2. keyed reorder 与本地状态保持稳定
-3. demo 提供 stress 场景可人工验证
-4. sticky header 推挤、稳定 ID、view type 分区与状态恢复有自动化回归
+### Milestone E: Preview and screenshots
 
-### Milestone C：Input 与表单态增强
+Deliver the Compose bridge, static runner, Studio plugin, shared PreviewCatalog/Paparazzi IDs,
+compiled app previews including CounterScreen, and representative Light/Dark and Phone/Tablet
+configurations.
 
-交付：
+Completion requires `qaPreview` coverage of runner/discovery/snapshots, plugin source linkage and
+refresh/diagnostic regression, and an agreed Dark/Tablet matrix for public components and tutorials.
 
-1. focus/IME action 回调链增强
-2. `TextFieldState` 完整值模型（text/selection/composition）与输入事务
-3. 输入变换、撤销/重做、autofill 与保存恢复
-4. 富文本、段落、链接、行内附件与统一 Receive Content
-5. 表单校验与只读/错误态组合场景
-6. 主题和状态切换下输入控件视觉一致性回归
+### Milestone F: Animation and gestures
 
-完成标准：
+Deliver animation core/DSL APIs, gesture policy/DSL APIs, graphicsLayer patches and Android interop,
+plus the six-tab Animation API index, instrumentation, PreviewCatalog, and Paparazzi.
 
-1. 输入交互路径可预测且无跨控件串扰
-2. 文案裁剪与控件高度问题可通过 UI 测试稳定复现和防回归
-3. 中文/日文组合输入、方向选区、外部状态更新和进程恢复均不跳光标、不丢文本
+Completion requires opt-in behavior, stable consumed-gesture fallback, `qaQuick`/`qaPreview`, and
+`qaFull` when a device is available.
 
-### Milestone D：Diagnostics + Performance 联动
+### Milestone G: Graphics 2D
 
-交付：
+Deliver graphics core/DSL layers, renderer pipeline, Canvas/draw/cache/DrawScene/interop, and
+Preview/Demo/unit/targeted instrumentation.
 
-1. render/patch/layout 指标可视化增强
-2. viewcompose-benchmark 路线固定化并持续更新基线
-3. 发布态优化项（baseline profile 等）推进
+Completion requires purity, compile, unit, and snapshot gates; regression for RoundRect, Drawable,
+and ImageFilter Chain; and stable Graphics instrumentation on the current device environment.
 
-完成标准：
+### Milestone H: Advanced shadows
 
-1. 性能回归具备可量化证据
-2. 诊断面板能直观定位高频问题
+Deliver ordered outer/inner layers, shape/spread/offset, bounded raster cache, experimental
+RenderNode, diagnostics, Lazy/input scenarios, paired Compose benchmarks, and targeted devices.
 
-### Milestone E：开发预览与截图回归
+Completion requires benchmark-selected Auto behavior, related quick/preview/benchmark gates and
+Samsung SM-G991B regression, plus observable cache/backend/fallback diagnostics.
 
-交付：
+## 6. Unified test and Demo gate
 
-1. Compose Preview bridge、原生静态 runner 与 Android Studio 插件链路
-2. `PreviewCatalog` 与 Paparazzi 共用场景和稳定快照 ID
-3. 应用模块可编译、可发现的 Preview 入口；首个应用教程复用真实 `CounterScreen`
-4. Light/Dark、Phone/Tablet 等代表性配置矩阵
+A capability cannot be marked implemented without unit tests, a Demo scenario with verification
+points, and any required Demo UI test.
 
-完成标准：
+Add delayed-session special coverage for RecyclerView/ViewPager2 reuse containers, containers whose
+structure diff can diverge from content refresh, and independent overlay-surface sessions.
 
-1. `qaPreview` 同时覆盖静态 runner、Counter Preview 发现和共享 Paparazzi 快照
-2. Studio 插件的源码联动、增量刷新、诊断与渲染路径有自动化回归
-3. Dark/Tablet 快照矩阵达到公开组件和教程示例的约定覆盖范围
+Before a milestone is `Completed`:
 
-### Milestone F：动画与手势首轮覆盖
+1. `:viewcompose-renderer:compileDebugKotlin` and `:app:compileDebugKotlin` pass;
+2. `:app:connectedDebugAndroidTest` and applicable tutorial connected tests pass, or the roadmap
+   records a scoped exemption and deadline.
 
-交付：
+## 7. Current non-goals
 
-1. `viewcompose-animation-core` + `viewcompose-animation`：`AnimationSpec`、`Animatable`、`animate*AsState`、`Transition`、`AnimatedVisibility/AnimatedContent/Crossfade/animateContentSize`
-2. `viewcompose-gesture-core` + `viewcompose-gesture`：策略内核（axis/slop/anchored settle）+ `pointerInput`、`combinedClickable`、`draggable/anchoredDraggable/transformable` 状态与 DSL 入口
-3. `graphicsLayer` + renderer patch 语义接入，Android 高阶动画 interop（`TransitionManager/MotionLayout/Animator`）
-4. demo 与 preview 覆盖：Animation 页已升级为 6 标签 API 索引（typed/generic/spec/transition/visibility-state/infinite/animatable），并形成 7 条 animation instrumentation 回归；PreviewCatalog 与 Paparazzi 快照已接入
+1. Reproducing the complete Compose Runtime/Compiler model.
+2. A complex global overlay-routing system in v1.
+3. Maintaining duplicate roadmap files merely for documentation completeness.
 
-完成标准：
+## 8. Historical migration
 
-1. 新能力默认 opt-in，不破坏现有组件/容器行为
-2. 手势消费回落策略稳定（`gesture consumed -> no clickable fallback`）
-3. `qaQuick` 与 `qaPreview` 通过，设备可用时 `qaFull` 通过
-
-### Milestone G：Graphics 2D 主链能力
-
-交付：
-
-1. `viewcompose-graphics-core` 与 `viewcompose-graphics` 分层，以及 renderer draw pipeline
-2. Canvas、draw modifiers、`drawWithCache`、不可变 `DrawScene` 与 Android interop
-3. Preview/Paparazzi、demo、单测与定向 instrumentation 覆盖
-
-完成标准：
-
-1. 图形纯度、编译、单测和快照门禁通过
-2. RoundRect、Drawable 与 ImageFilter Chain 等 v2 P0 语义有回归证据
-3. 当前设备环境中的 Graphics instrumentation 稳定通过；满足前保持 `In Progress`
-
-### Milestone H：高级阴影装饰层
-
-交付：
-
-1. 有序多层外阴影、前景内阴影和 shape/spread/offset 契约
-2. 有界静态栅格缓存、实验 RenderNode 后端和结构化诊断
-3. Lazy 场景、输入互操作、Compose 成对基准和定向设备回归
-
-完成标准：
-
-1. 默认 `Auto` 后端由发布态基准决定，不以实验实现替代已验证路径
-2. `qaQuick`、相关 preview/benchmark 门禁和 Samsung SM-G991B 定向回归通过
-3. 缓存命中、后端选择与失败回退可在 demo 诊断中验证
-
-## 6. 测试与 Demo 的统一门禁
-
-每个“进入已实现状态”的能力必须补齐：
-
-1. 单元测试
-2. demo 场景（含验证点）
-3. 必要的 demo UI 测试
-
-新增下列能力时，必须补延迟 session 容器专项：
-
-1. 基于 `RecyclerView/ViewPager2` 的复用型容器
-2. 结构 diff 与可见内容刷新可能解耦的容器
-3. overlay surface 的独立 session 容器
-
-里程碑标记为 `Completed` 之前，必须满足：
-
-1. `:viewcompose-renderer:compileDebugKotlin` 与 `:app:compileDebugKotlin` 通过
-2. `:app:connectedDebugAndroidTest` 与教程示例的 connected test 全绿（或在 roadmap 中登记明确豁免范围与截止时间）
-
-## 7. 非目标（当前阶段）
-
-1. 不追求完整复刻 Compose Runtime/Compiler 模型
-2. 不在 v1 阶段引入复杂全局 overlay 路由系统
-3. 不为了文档“完整性”继续维护重复 roadmap 文件
-
-## 8. 历史文档迁移映射
-
-| 旧文档 | 当前去向 |
+| Old document | Current location |
 | --- | --- |
-| `WIDGET_ROADMAP.md` | 本文档 + 归档保留 |
-| `DEMO_ROADMAP.md` | 本文档 + 归档保留 |
-| `OVERLAY_COMPONENTS_ROADMAP.md` | 本文档 + 归档保留 |
-| `UI_TESTING.md` | 本文档 + 归档保留 |
+| `WIDGET_ROADMAP.md` | This document plus archive |
+| `DEMO_ROADMAP.md` | This document plus archive |
+| `OVERLAY_COMPONENTS_ROADMAP.md` | This document plus archive |
+| `UI_TESTING.md` | This document plus archive |
 
-归档目录见 [docs/archive/README.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md)。
+See the [archive index](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).

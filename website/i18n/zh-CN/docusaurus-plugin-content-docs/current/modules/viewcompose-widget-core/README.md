@@ -4,7 +4,7 @@ translation_source_hash: ac97904361e83f44aa881f6b22ba70786e8f4176e574e509384f8a1
 translation_status: current
 ---
 
-# Widget Core
+# Widget Core 模块
 
 `viewcompose-widget-core` 是 ViewCompose 面向 Android 的声明式 UI 层。它提供
 `UiTreeBuilder` DSL、带主题的组件默认值、Composition Local 与环境传递、组合范围内的 Effect

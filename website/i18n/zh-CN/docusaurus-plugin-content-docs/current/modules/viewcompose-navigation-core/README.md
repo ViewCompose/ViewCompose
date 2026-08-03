@@ -4,7 +4,7 @@ translation_source_hash: 34fb7331283b24a34e65afe9801aed0b011d01c31a2bbc07afc20a6
 translation_status: current
 ---
 
-# Navigation Core
+# Navigation Core 模块
 
 `viewcompose-navigation-core` 是 ViewCompose 的平台无关导航状态机。它负责不可变路由与导航图、
 严格深链解析、单栈和多栈快照、可安全回滚的两阶段事务、页面生命周期规划，以及自适应 pane

@@ -4,7 +4,7 @@ translation_source_hash: b77dd20a08524a85f38eb3264cfd69ca6c1bbec876d5ecc00798665
 translation_status: current
 ---
 
-# Animation
+# Animation 模块
 
 `viewcompose-animation` 把平台无关动画引擎集成到 ViewCompose State、组合 Effect、`Modifier`、
 UI Node 发射与 Android View Renderer。它提供状态驱动值动画、命令式 Last-writer Mutation、

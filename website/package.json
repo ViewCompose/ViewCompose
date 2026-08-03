@@ -7,18 +7,20 @@
     "write-translations": "docusaurus write-translations --locale zh-CN",
     "prestart": "npm run generate:catalog",
     "start": "docusaurus start",
-    "prebuild": "npm run generate:catalog && npm run verify:translations",
+    "prebuild": "npm run generate:catalog && npm run verify:languages && npm run verify:translations",
     "build": "node scripts/build-site.mjs",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
     "test:translations": "node --test scripts/__tests__/verify-translations.test.mjs",
+    "test:languages": "node --test scripts/__tests__/verify-document-languages.test.mjs",
     "test:scripts": "node --test scripts/__tests__/*.test.mjs",
+    "verify:languages": "npm run test:languages && node scripts/verify-document-languages.mjs",
     "verify:translations": "node scripts/verify-translations.mjs",
     "verify:accessibility": "node scripts/verify-accessibility.mjs",
     "verify:budgets": "node scripts/verify-site-budgets.mjs",
     "verify:versions": "node scripts/verify-versioned-documentation.mjs",
     "verify:site": "node scripts/verify-site-quality.mjs",
-    "typecheck": "npm run generate:catalog && npm run verify:translations && tsc"
+    "typecheck": "npm run generate:catalog && npm run verify:languages && npm run verify:translations && tsc"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",

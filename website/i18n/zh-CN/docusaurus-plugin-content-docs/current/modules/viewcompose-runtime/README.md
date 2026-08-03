@@ -4,7 +4,7 @@ translation_source_hash: e9a6278062ea0a606b312654520d66ba99db85ed1f09b86185ee1df
 translation_status: current
 ---
 
-# Runtime
+# Runtime 运行时模块
 
 `viewcompose-runtime` 是 ViewCompose 其他模块共同使用的平台无关状态、快照、观察与轻量组合
 引擎。当自定义集成只需要 ViewCompose 的状态或组合语义，而不需要 Android `View` 宿主时，

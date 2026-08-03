@@ -4,7 +4,7 @@ translation_source_hash: 9e633b984be513996df9e8719dfb9fcf11b149f1cde9eb1eda9474b
 translation_status: current
 ---
 
-# Renderer
+# Renderer 渲染器模块
 
 `viewcompose-renderer` 是 ViewCompose 的 Android View 渲染引擎。它把不可变 VNode 快照与已
 挂载树进行差分，创建并绑定原生 View，应用定向 patch，驱动 Lazy 容器和 Pager 状态，桥接

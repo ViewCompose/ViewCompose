@@ -1,131 +1,144 @@
 # Modifier Architecture
 
-## 1. 文档定位
+## 1. Scope
 
-本文档定义 `Modifier`、组件 `NodeSpec`、`Theme/Defaults` 的当前边界。
+This document defines the current boundaries between `Modifier`, component `NodeSpec`, and
+`Theme/Defaults`. New capabilities must have one unambiguous owner instead of mixing semantics
+across layers.
 
-目标是保证新增能力时落点明确，避免语义混放。
+## 2. Current baseline (2026-08)
 
-## 2. 当前基线（2026-07）
+1. The identity entry is `Modifier`; `Modifier.Empty` has been removed.
+2. Historical text-semantic modifiers such as `textColor/textSize` have been removed.
+3. `weight/align/FlexibleSpacer` are exposed only through `RowScope/ColumnScope/BoxScope`.
+4. System-bar and IME adaptation uses `Modifier.systemBarsInsetsPadding(...)` and
+   `Modifier.imeInsetsPadding(...)`. An Activity using `adjustResize` normally does not add
+   `imeInsetsPadding`, which would move content twice.
+5. Collection policies are container parameters: `reusePolicy` (`sharePool`) and `motionPolicy`
+   (`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`).
+6. Keyboard focus following is the vertical-container parameter `focusFollowKeyboard`, implemented
+   by `LazyColumn`, `LazyVerticalGrid`, `VerticalPager`, and `ScrollableColumn`.
+7. `LazyRow`, `HorizontalPager`, and `ScrollableRow` do not expose `focusFollowKeyboard`; an API that
+   can be called but has no effect is prohibited.
+8. `Modifier.backgroundDrawableRes(resId)` installs a drawable background. It takes precedence over
+   `backgroundColor`, clips automatically with `cornerRadius`, and can still be forced through the
+   general `clip()` switch.
+9. `Modifier.animateContentSize(...)` causes the renderer to insert an `AnimatedSizeHost` before
+   patching. It interpolates measured dimensions and participates in parent layout rather than
+   applying a graphicsLayer scale. Easing, spring, keyframes, repeat, and reverse terminal semantics
+   are preserved.
+10. Constraint parent data uses `Modifier.layoutId(...)`, `Modifier.constrainAs(...)`, and
+    `Modifier.constrain(...)`, and is meaningful only for `ConstraintLayout` children.
+11. Drawing modifiers include `drawBehind`, `drawWithContent`, and `drawWithCache`, plus the `draw`
+    and `drawCache` shorthands. Chain order is stable, `drawWithContent` controls content forwarding,
+    and the executor preserves four-corner `DrawRoundRect` and `Drawable + DrawPaint` semantics.
+12. Declarative focus and hardware-key input uses
+    `focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent`.
+    It maps to native View focus search, while `LocalFocusManager` supplies session-scoped move and
+    clear operations.
+13. `Modifier.nestedScroll(connection, dispatcher)` maps the unified protocol through a transparent
+    AndroidX nested-scrolling parent/child host. It covers pre/post scroll, pre/post fling,
+    Lazy/Pager/ordinary scrolling containers, and custom drag or transform pan.
+14. Advanced `dropShadow(s)` layers draw before node content and `innerShadow(s)` layers draw after
+    complete content. Both support ordered layers, independent shapes, blur, spread, offset, and
+    color, without coupling to `elevation` or `zIndex`.
 
-1. identity 入口统一为 `Modifier`（`Modifier.Empty` 已移除）
-2. 文本语义类历史 modifier（如 `textColor/textSize`）已退场
-3. `weight/align/FlexibleSpacer` 仅通过 `RowScope/ColumnScope/BoxScope` 暴露
-4. 系统栏/键盘 inset 适配走组件侧 `Modifier.systemBarsInsetsPadding(...)` 与 `Modifier.imeInsetsPadding(...)`（若 Activity 使用 `adjustResize`，通常不再叠加 `imeInsetsPadding`，避免双重位移）
-5. 列表容器策略已收口为容器参数：`reusePolicy`（`sharePool`）与 `motionPolicy`（`disableItemAnimator/animateInsert/animateRemove/animateMove/animateChange`）
-6. 键盘焦点跟随已收口为垂直容器参数：`focusFollowKeyboard`；当前覆盖 `LazyColumn`、`LazyVerticalGrid`、`VerticalPager`、`ScrollableColumn`
-7. `LazyRow`、`HorizontalPager`、`ScrollableRow` 不暴露 `focusFollowKeyboard`，避免“可调用但无效”的 API 漂移
-8. 背景资源支持 `Modifier.backgroundDrawableRes(resId)`；与 `backgroundColor` 同时存在时，drawable 优先；当同时存在 `cornerRadius` 时自动裁剪内容，`clip()` 仍可作为通用强制裁剪开关
-9. 内容尺寸动画支持 `Modifier.animateContentSize(...)`；renderer 会在 patch 前自动插入 `AnimatedSizeHost`，以“真实测量尺寸插值”参与父布局重排（非 graphicsLayer 视觉缩放），并保留 `AnimationSpec` 的 easing/spring/keyframes/repeat 语义（含 reverse 终态）
-10. 约束 parent-data 支持 `Modifier.layoutId(...)`、`Modifier.constrainAs(...)`、`Modifier.constrain(...)`；仅对 `ConstraintLayout` 子节点生效
-11. 图形绘制 modifier 已接入：`Modifier.drawBehind`、`Modifier.drawWithContent`、`Modifier.drawWithCache`（以及短写 `draw/drawCache`）；执行顺序按 modifier 链稳定，`drawWithContent` 可显式控制内容透传；底层执行保证 `DrawRoundRect` 四角半径与 `Drawable + DrawPaint` 组合语义不丢失
-12. 声明式焦点与硬件键盘输入已接入：`focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent` 映射原生 View 焦点搜索，并由 `LocalFocusManager` 提供会话级移动与清除能力
-13. 统一嵌套滚动协议已接入：`Modifier.nestedScroll(connection, dispatcher)` 通过透明宿主映射 AndroidX nested-scrolling parent/child 链，覆盖 pre/post scroll、pre/post fling、Lazy/Pager/普通滚动容器与自定义 drag/transform pan
-14. 高级阴影已接入：`dropShadow/dropShadows` 绘制在节点内容之前，`innerShadow/innerShadows` 绘制在完整内容之后；均支持有序多层、独立 shape、blur/spread/offset/color，并与 `elevation/zIndex` 解耦
+## 3. API inventory
 
-## 3. API 清单（全量扫描）
+### 3.1 Scan baseline (`src/main`)
 
-### 3.1 扫描基线（`src/main`）
-
-本节 API 清单来自仓库实时扫描，命令口径固定为：
+The inventory is derived from these repository scans:
 
 ```bash
 rg "^\s*(public\s+)?(internal\s+)?fun\s+(<[^>]+>\s*)?Modifier\.([A-Za-z0-9_]+)\(" --glob "**/src/main/**/*.kt"
 rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|ConstraintLayoutScope)\."
 ```
 
-当前扫描结果（2026-07）：
+Current 2026-08 result:
 
-1. `fun Modifier.*` 声明总数（含重载、含 scoped 内部定义）：`76`
-2. `fun Modifier.*` 唯一 API 名称数：`62`
-3. scoped modifier 声明总数：`5`（`RowScope/ColumnScope/BoxScope`）
-4. renderer internal modifier 扩展：`1`（仅内部解析能力）
+1. `fun Modifier.*` declarations, including overloads and scoped internals: `76`;
+2. unique `fun Modifier.*` API names: `62`;
+3. scoped modifier declarations: `5` across `RowScope/ColumnScope/BoxScope`;
+4. renderer-internal modifier extensions: `1`, used only for resolution.
 
-### 3.2 分组说明（按架构边界）
+### 3.2 Architecture groups
 
-1. `ui-contract 通用修饰`：平台无关的基础 `Modifier` 契约入口。
-2. `gesture 动作输入`：手势 DSL，依赖手势状态对象与策略内核。
-3. `graphics 绘制`：绘制阶段 API（含 `draw*` 短写）。
-4. `graphics 阴影装饰`：平台无关阴影规格，由 Android decoration layer 执行。
-5. `animation 尺寸动画`：`animateContentSize` 布局尺寸过渡入口。
-6. `host-android interop`：Android 平台互操作能力（`nativeView/android*`）。
-7. `renderer internal 解析/策略`：仅 renderer 内部使用，不给业务侧依赖。
+1. `ui-contract general decoration`: platform-neutral `Modifier` contracts.
+2. `gesture input`: gesture DSL backed by gesture state and the policy core.
+3. `graphics drawing`: drawing-stage APIs, including `draw*` shorthands.
+4. `graphics shadow decoration`: platform-neutral shadow specifications executed by the Android
+   decoration layer.
+5. `animation size`: the layout-level `animateContentSize` transition.
+6. `host-android interop`: Android escape hatches such as `nativeView/android*`.
+7. `renderer internal resolution`: framework-only APIs that application code cannot depend on.
 
-### 3.3 Global Modifier APIs（含 internal）
+### 3.3 Global Modifier APIs, including internal entries
 
-| API | 模块/命名空间 | 可见性 | 用途备注 | 生效范围 | 补充说明 |
+| API | Module / namespace | Visibility | Purpose | Scope | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `padding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置内容内边距 | 全局 | 3 个重载（all/horizontal+vertical/四边） |
-| `margin` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置外边距（layout params 侧） | 全局 | 3 个重载 |
-| `size` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 同时设置宽高 | 全局 | 固定像素语义（框架单位） |
-| `width` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置宽度 | 全局 | 与父容器布局规则共同生效 |
-| `height` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置高度 | 全局 | 与父容器布局规则共同生效 |
-| `minWidth` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置最小宽度约束 | 全局 | 作用于 `View.minimumWidth` |
-| `minHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置最小高度约束 | 全局 | 作用于 `View.minimumHeight` |
-| `fillMaxWidth` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 宽度填充父容器 | 全局 | 语义等价 `width(MATCH_PARENT)` |
-| `fillMaxHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 高度填充父容器 | 全局 | 语义等价 `height(MATCH_PARENT)` |
-| `fillMaxSize` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 宽高同时填充父容器 | 全局 | 语义等价 `size(MATCH_PARENT, MATCH_PARENT)` |
-| `offset` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置平移偏移 | 全局 | 映射 `translationX/translationY` |
-| `layoutId` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 标记子项布局 ID | 指定容器 | 主要用于 `ConstraintLayout` 子项匹配 |
-| `systemBarsInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用系统栏 inset 内边距 | 全局（容器感知） | 可按四边开关 |
-| `imeInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 应用软键盘 inset 内边距 | 全局（容器感知） | 默认仅 bottom=true |
-| `backgroundColor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置背景色 | 全局 | 与 `backgroundDrawableRes` 同时存在时优先级较低 |
-| `backgroundDrawableRes` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置 drawable 资源背景 | 全局 | 与 `cornerRadius` 组合时自动裁剪 |
-| `border` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置边框宽度与颜色 | 全局 | 依赖 surface style 管线渲染 |
-| `cornerRadius` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置圆角半径 | 全局 | 3 个重载（统一/上下/四角） |
-| `clip` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 强制裁剪内容到形状边界 | 全局 | 常与圆角/自绘搭配 |
-| `alpha` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置透明度 | 全局 | 与 `graphicsLayer.alpha` 冲突时后者优先 |
-| `elevation` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置阴影高度 | 全局 | 映射 `View.elevation` |
-| `zIndex` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置层级偏移 | 全局 | 当前映射 `translationZ` |
-| `graphicsLayer` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 统一设置缩放/旋转/平移/裁剪等图层属性 | 全局 | 高级视觉变换入口 |
-| `visibility` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置可见性（Visible/Invisible/Gone） | 全局 | 参与布局占位语义 |
-| `clickable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 基础点击回调 | 全局 | 与 gesture 分发链协同 |
-| `focusable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明节点可接收焦点 | 全局 | `focusProperties.canFocus` 可覆盖 |
-| `focusRequester` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 将稳定请求器绑定到节点 | 全局 | 节点复用、回滚和释放时自动换绑 |
-| `focusProperties` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明可聚焦状态与方向目标 | 全局 | 支持 next/previous/四方向 |
-| `focusGroup` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 声明键盘导航焦点组 | 容器 | 映射原生 descendant focus 与 navigation cluster |
-| `onFocusChanged` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 观察自身/后代焦点状态 | 全局 | 回调 `FocusState` |
-| `onPreviewKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 焦点目标前的按键捕获阶段 | 全局 | 从声明式祖先向目标分发 |
-| `onKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 按键冒泡阶段 | 全局 | 从目标向声明式祖先分发 |
-| `contentDescription` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置无障碍描述 | 全局 | 映射 `View.contentDescription` |
-| `testTag` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置测试标记 | 全局 | 供 UI 测试定位 |
-| `overlayAnchor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置 overlay 锚点 ID | 指定能力 | 用于 Popup/Tooltip/Dropdown 锚定 |
-| `drawBehind` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | 在内容前执行自定义绘制 | 全局 | 两处同名入口；业务侧推荐 `com.viewcompose.graphics` |
-| `drawWithContent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | 自定义内容绘制顺序（可调用内容） | 全局 | 适合混合前景/内容绘制 |
-| `drawWithCache` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | 构建并复用绘制缓存 | 全局 | 用于降低高频重绘成本 |
-| `draw` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | `drawBehind` 短写 | 全局 | 语义等价别名 |
-| `drawCache` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier`、`viewcompose-graphics` / `com.viewcompose.graphics` | public | `drawWithCache` 短写 | 全局 | 语义等价别名 |
-| `dropShadow` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加单层精确外阴影 | 全局 | 在节点内容前绘制；与 `elevation` 独立 |
-| `dropShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加有序多层精确外阴影 | 全局 | 同一调用内各层共享显式或节点默认 shape |
-| `innerShadow` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加单层精确内阴影 | 全局 | 在完整内容后绘制，不参与输入分发 |
-| `innerShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 添加有序多层精确内阴影 | 全局 | 裁切在 shape 内，声明靠后的层后绘制 |
-| `pointerInput` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 原始指针事件处理入口 | 全局 | 可返回 `Consumed` 强拦截后续手势 |
-| `combinedClickable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 点击/双击/长按组合入口 | 全局 | 无回调时 no-op，不吞事件 |
-| `draggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 连续拖拽手势 | 全局 | 通过 `DraggableState` 回调位移 |
-| `anchoredDraggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 锚点拖拽/吸附手势 | 全局 | 仅支持 Horizontal/Vertical |
-| `transformable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 多指缩放/旋转/平移 | 全局 | 由 `TransformableState` 消费增量 |
-| `gesturePriority` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 设置手势优先级 | 全局 | 用于嵌套冲突仲裁 |
-| `nestedScroll` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 声明父子滚动与 fling 消费协议 | 全局 | 透明宿主接入 AndroidX nested-scrolling 链 |
-| `animateContentSize` | `viewcompose-animation` / `com.viewcompose.animation` | public | 节点尺寸变化动画 | 全局（布局参与） | 非视觉缩放，真实参与父布局重排 |
-| `constrainAs` | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 按 `ConstraintReference` 声明子项约束 | 指定容器 | 仅 `ConstraintLayout` 子项有效 |
-| `constrain` | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 通过字符串 ID 声明子项约束 | 指定容器 | `constrainAs` 的短写风格入口 |
-| `nativeView` | `viewcompose-host-android` / `com.viewcompose.host.android` | public | 直接配置底层 Android `View` | Android interop | 逃生通道，绕过通用语义层 |
-| `androidAnimation` | `viewcompose-host-android` / `com.viewcompose.host.android.animation` | public | 配置 Android 动画互操作 | Android interop | 基于 `nativeView` 封装别名 |
-| `androidGraphics` | `viewcompose-host-android` / `com.viewcompose.host.android.graphics` | public | 配置 Android 图形互操作 | Android interop | 基于 `nativeView` 封装别名 |
-| `resolve` | `viewcompose-renderer` / `com.viewcompose.renderer.modifier` | internal | 将 modifier 链解析为 `ResolvedModifiers` | renderer internal | 框架内部 API，业务侧不可依赖 |
+| `padding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Content padding | Global | Three overloads: all, horizontal/vertical, four edges |
+| `margin` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Outer layout-param margin | Global | Three overloads |
+| `size` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Width and height | Global | Fixed framework-unit semantics |
+| `width` / `height` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | One dimension | Global | Cooperates with parent layout rules |
+| `minWidth` / `minHeight` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Minimum dimension | Global | Maps to native minimum size |
+| `fillMaxWidth` / `fillMaxHeight` / `fillMaxSize` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Fill parent dimension(s) | Global | Maps to `MATCH_PARENT` semantics |
+| `offset` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Translation offset | Global | Maps to `translationX/translationY` |
+| `layoutId` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Child layout identity | Container-specific | Primarily matches `ConstraintLayout` children |
+| `systemBarsInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | System-bar inset padding | Container-aware | Individual edge switches |
+| `imeInsetsPadding` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | IME inset padding | Container-aware | Bottom only by default |
+| `backgroundColor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Color background | Global | Lower priority than drawable background |
+| `backgroundDrawableRes` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Drawable resource background | Global | Auto-clips with corner radius |
+| `border` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Border width and color | Global | Uses the surface-style pipeline |
+| `cornerRadius` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Rounded corners | Global | Uniform, top/bottom, or four-corner overloads |
+| `clip` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Force content clipping | Global | Common with shapes and custom drawing |
+| `alpha` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Opacity | Global | `graphicsLayer.alpha` wins on conflict |
+| `elevation` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Platform elevation | Global | Maps to `View.elevation` |
+| `zIndex` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Sibling drawing order | Global | Currently maps to `translationZ` |
+| `graphicsLayer` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Unified transform/layer properties | Global | Advanced visual-transform entry |
+| `visibility` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Visible/Invisible/Gone | Global | Participates in layout occupancy |
+| `clickable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Basic click callback | Global | Cooperates with gesture dispatch |
+| `focusable` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Receive focus | Global | Can be overridden by `focusProperties.canFocus` |
+| `focusRequester` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Bind stable focus requester | Global | Rebound during reuse, rollback, and release |
+| `focusProperties` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Focusability and directional targets | Global | next/previous/four directions |
+| `focusGroup` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Keyboard focus group | Container | Native descendant focus/navigation cluster |
+| `onFocusChanged` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Observe self/descendant focus | Global | Receives `FocusState` |
+| `onPreviewKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Key capture before target | Global | Declarative ancestor to target |
+| `onKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Key bubbling after target | Global | Target to declarative ancestor |
+| `contentDescription` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Accessibility description | Global | Maps to native semantics |
+| `testTag` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Test locator | Global | UI-test targeting |
+| `overlayAnchor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Overlay anchor ID | Capability-specific | Popup/Tooltip/Dropdown anchor |
+| `drawBehind` | `ui-contract` and `graphics` | public | Draw before content | Global | Prefer `com.viewcompose.graphics` in applications |
+| `drawWithContent` | `ui-contract` and `graphics` | public | Control content/drawing order | Global | Supports foreground/content composition |
+| `drawWithCache` | `ui-contract` and `graphics` | public | Build reusable drawing cache | Global | Avoids repeated command construction |
+| `draw` / `drawCache` | `ui-contract` and `graphics` | public | Drawing shorthands | Global | Aliases for behind/cache entries |
+| `dropShadow` / `dropShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Exact outer shadow layer(s) | Global | Before content; independent of elevation |
+| `innerShadow` / `innerShadows` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Exact inner shadow layer(s) | Global | After complete content, clipped to shape |
+| `pointerInput` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Raw pointer events | Global | `Consumed` short-circuits later gestures |
+| `combinedClickable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Click/double/long click | Global | No callbacks means no-op |
+| `draggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Continuous drag | Global | Delivers deltas to `DraggableState` |
+| `anchoredDraggable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Anchored drag/settle | Global | Horizontal or Vertical only |
+| `transformable` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Multi-pointer zoom/rotate/pan | Global | Deltas consumed by `TransformableState` |
+| `gesturePriority` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Gesture arbitration priority | Global | Resolves nested competition |
+| `nestedScroll` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Parent/child scroll and fling protocol | Global | AndroidX transparent host |
+| `animateContentSize` | `viewcompose-animation` / `com.viewcompose.animation` | public | Layout size transition | Layout-aware | Real parent re-layout, not visual scaling |
+| `constrainAs` / `constrain` | `viewcompose-widget-constraintlayout` | public | Constraint parent data | Container-specific | `ConstraintLayout` children only |
+| `nativeView` | `viewcompose-host-android` / `com.viewcompose.host.android` | public | Configure native Android View | Android interop | Escape hatch around general semantics |
+| `androidAnimation` | `viewcompose-host-android` / animation namespace | public | Android animation interop | Android interop | Alias over `nativeView` |
+| `androidGraphics` | `viewcompose-host-android` / graphics namespace | public | Android graphics interop | Android interop | Alias over `nativeView` |
+| `resolve` | `viewcompose-renderer` / `com.viewcompose.renderer.modifier` | internal | Resolve to `ResolvedModifiers` | Renderer internal | Not an application dependency |
 
 ### 3.4 Scoped Modifier APIs
 
-| API | 作用域 | 模块/命名空间 | 可见性 | 用途备注 | 生效范围 | 补充说明 |
-| --- | --- | --- | --- | --- | --- | --- |
-| `weight` | `RowScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置横向线性布局权重 | `Row` 子项 | 仅 `RowScope` 可用，要求 `weight > 0` |
-| `align` | `RowScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置交叉轴（垂直）对齐 | `Row` 子项 | 参数 `VerticalAlignment` |
-| `weight` | `ColumnScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置纵向线性布局权重 | `Column` 子项 | 仅 `ColumnScope` 可用，要求 `weight > 0` |
-| `align` | `ColumnScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置交叉轴（水平）对齐 | `Column` 子项 | 参数 `HorizontalAlignment` |
-| `align` | `BoxScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置子项在 Box 内对齐 | `Box` 子项 | 参数 `BoxAlignment` |
-| `constrainAs / constrain` | `ConstraintLayout` 子项上下文 | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 声明子项约束 parent-data | `ConstraintLayout` 子项 | 入口是全局 `Modifier` 扩展，但语义仅在 `ConstraintLayout` 生效 |
+| API | Scope | Module / namespace | Purpose | Constraints |
+| --- | --- | --- | --- | --- |
+| `weight` | `RowScope` | `viewcompose-widget-core` | Horizontal linear weight | `weight > 0` |
+| `align` | `RowScope` | `viewcompose-widget-core` | Cross-axis vertical alignment | `VerticalAlignment` |
+| `weight` | `ColumnScope` | `viewcompose-widget-core` | Vertical linear weight | `weight > 0` |
+| `align` | `ColumnScope` | `viewcompose-widget-core` | Cross-axis horizontal alignment | `HorizontalAlignment` |
+| `align` | `BoxScope` | `viewcompose-widget-core` | Child position in Box | `BoxAlignment` |
+| `constrainAs / constrain` | `ConstraintLayout` child context | `viewcompose-widget-constraintlayout` | Constraint parent data | Global extension, meaningful only under `ConstraintLayout` |
 
-### 3.5 高级阴影示例与约束
+### 3.5 Advanced-shadow example and constraints
 
 ```kotlin
 val cardShape = UiShape.rounded(20.dp)
@@ -154,109 +167,106 @@ Surface(
 }
 ```
 
-1. 要求像素级 blur/spread/offset/color 或多层合成时使用 `dropShadow(s)`；Material 高程语义继续使用 `elevation`。
-2. 需要稳定轮廓时推荐同时为内容和阴影传入同一个 `UiShape`；未显式传入时使用节点 `shape/cornerRadius`，再回退矩形。
-3. 阴影不扩张布局 bounds。外阴影需要调用侧保留视觉空间，并避免在非 viewport 祖先上启用不必要裁切。
-4. 高频动画优先变换节点的 translation/scale/rotation/alpha；逐帧动画 blur、spread、shape 或尺寸会产生新的栅格 key。
-5. 完整后端、缓存和诊断规则见 [shadows.md](../guides/shadows.md)。
+1. Use `dropShadow(s)` for exact blur, spread, offset, color, or multiple layers. Continue using
+   `elevation` for Material elevation semantics.
+2. Pass the same `UiShape` to content and shadow when a stable outline matters. Without an explicit
+   shadow shape, resolution uses node `shape/cornerRadius`, then a rectangle.
+3. Shadows do not expand layout bounds. Reserve visual space and avoid unnecessary clipping on
+   ancestors that are not viewports.
+4. Prefer animating translation, scale, rotation, or alpha. Animating blur, spread, shape, or size
+   creates new raster keys.
+5. See [Advanced shadows](../guides/shadows.md) for backend, cache, and diagnostic rules.
 
-### 3.5 一致性校验（扫描对照）
+### 3.6 Inventory consistency
 
-1. 本文档已覆盖扫描得到的全部 `fun Modifier.*`（含 `internal`）。
-2. scoped 能力与 global 能力已分表，不混用统计口径。
-3. 重复语义入口（`draw*` 在 `ui-contract` 与 `graphics`）已注明推荐命名空间。
+1. This document covers every scanned `fun Modifier.*`, including the internal entry.
+2. Scoped and global capabilities use separate tables and counts.
+3. Duplicate `draw*` entries in `ui-contract` and `graphics` identify the preferred namespace.
 
-## 4. 角色边界
+## 4. Role boundaries
 
-### 4.1 Modifier（通用外层修饰）
+### 4.1 Modifier: general outer decoration
 
-适合放入 `Modifier` 的能力：
+Modifier owns:
 
-1. 尺寸与占位：`size/width/height/minWidth/minHeight/padding/margin`
-2. 外观修饰：`backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`
-3. 可见性与层级：`visibility/offset/zIndex`
-4. 通用交互与可访问性：`clickable/focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent/contentDescription`
-5. 测试定位：`testTag`
-6. 系统栏内边距：`systemBarsInsetsPadding`
-7. 软键盘内边距：`imeInsetsPadding`
-8. 逃生通道：`nativeView(key, configure)`
-9. 列表性能策略：容器参数 `reusePolicy/motionPolicy`
-10. 容器输入跟随策略：垂直容器参数 `focusFollowKeyboard`
-11. 内容尺寸过渡：`animateContentSize(animationSpec)`（对节点尺寸变化做布局级动画，spec 语义透传到执行层）
-12. 图形绘制阶段：`drawBehind/drawWithContent/drawWithCache`（用于自定义绘制与缓存命令）
+1. dimensions and occupancy: `size/width/height/minWidth/minHeight/padding/margin`;
+2. appearance: `backgroundColor/backgroundDrawableRes/border/cornerRadius/alpha/elevation`;
+3. visibility and layering: `visibility/offset/zIndex`;
+4. general interaction, focus, keys, and accessibility;
+5. test identity through `testTag`;
+6. system-bar and IME padding;
+7. the `nativeView` escape hatch;
+8. drawing, gesture, nested-scroll, shadow, and layout-size-animation decoration.
 
-### 4.2 Scoped Modifier（父容器相关 parent-data）
+Collection reuse/motion and vertical focus following remain container parameters rather than
+Modifier entries.
 
-只在特定父容器内成立的能力，通过作用域暴露：
+### 4.2 Scoped Modifier: parent-specific data
 
-1. `RowScope.weight`
-2. `RowScope.align`
-3. `ColumnScope.weight`
-4. `ColumnScope.align`
-5. `BoxScope.align`
-6. `ConstraintLayout` 子项约束 parent-data：`layoutId/constrainAs/constrain`
+Parent-specific layout data is exposed through:
 
-### 4.3 NodeSpec（组件语义）
+1. `RowScope.weight/align`;
+2. `ColumnScope.weight/align`;
+3. `BoxScope.align`;
+4. `ConstraintLayout` child data: `layoutId/constrainAs/constrain`.
 
-组件自身语义进入组件参数与 `NodeSpec`，例如：
+### 4.3 NodeSpec: component semantics
 
-1. `Text`：`color/style/maxLines/overflow/textAlign`
-2. `Image`：`contentScale/tint/placeholder/error/fallback`
-3. `Button`：`variant/size/enabled/leadingIcon/trailingIcon`
-4. `TextField`：`label/placeholder/supportingText/readOnly/imeAction/isError`
+Component semantics belong in parameters and `NodeSpec`, for example:
 
-### 4.4 Theme / Defaults（默认值来源）
+1. `Text`: `color/style/maxLines/overflow/textAlign`;
+2. `Image`: `contentScale/tint/placeholder/error/fallback`;
+3. `Button`: `variant/size/enabled/leadingIcon/trailingIcon`;
+4. `TextField`: `label/placeholder/supportingText/readOnly/imeAction/isError`.
 
-默认值链路固定为：
+### 4.4 Theme / Defaults: default sources
 
-`Theme -> Defaults -> NodeSpec -> Renderer`
+The fixed path is `Theme -> Defaults -> NodeSpec -> Renderer`.
 
-约束：
+Do not encode theme defaults as general modifiers or component business defaults inside the
+renderer.
 
-1. 不把主题默认值直接编码为通用 `Modifier`
-2. 不在 renderer 写组件业务默认值
+## 5. Placement decision
 
-## 5. 新能力落点判断
+When adding a property, decide in this order:
 
-新增一个属性时，按顺序判断：
+1. Is it a stable outer decoration applicable to most nodes?
+2. Is it parent-specific layout data?
+3. Is it semantic state of one component?
+4. Is it a theme/default source?
 
-1. 是否对大多数节点都稳定成立的外层修饰？
-2. 是否父容器相关的布局数据？
-3. 是否某个组件自身语义？
-4. 是否默认值来源（主题/默认样式）？
+Place it in the first matching layer and do not duplicate it across layers.
 
-命中哪一类，就落到对应层，不跨层混放。
+## 6. Anti-patterns
 
-## 6. 反模式清单
+1. Component-specific semantics in general `Modifier`.
+2. Parent-specific capabilities in global `Modifier`.
+3. Returning first-party long-lived semantics to a dynamic map for convenience.
+4. Treating a theme override as a replacement for a component parameter.
 
-1. 在通用 `Modifier` 新增组件专属语义字段
-2. 在全局 `Modifier` 暴露父容器特定能力
-3. 为了快速接入把第一方长期语义回流到动态 map
-4. 把主题覆盖当作组件参数替代方案
+## 7. Compose alignment
 
-## 7. Compose 对齐原则
+ViewCompose does not reproduce the Compose runtime or compiler, but keeps the API layers aligned:
 
-`ViewCompose` 不复刻 Compose runtime/compiler，但在 API 分层上保持对齐：
+1. `Modifier` is the general decoration chain.
+2. Parent data is a scoped API.
+3. Component semantics are parameters and `NodeSpec`.
+4. Theme provides defaults.
 
-1. `Modifier` = 通用修饰链
-2. parent-data = scope API
-3. 组件语义 = 参数/`NodeSpec`
-4. 主题 = 默认值来源
+## 8. Change gate
 
-## 8. 变更门禁
+A Modifier-boundary change includes:
 
-涉及 `Modifier` 边界变化时，至少完成：
+1. an update to this document;
+2. regression coverage for the corresponding `NodeSpec/renderer` path;
+3. a Demo path and any required UI test.
 
-1. 本文档同步
-2. 对应 `NodeSpec/renderer` 路径回归
-3. demo 验证与必要 UI 测试
+See [Development workflow](../project/workflow.md).
 
-流程规则见 [workflow.md](../project/workflow.md)。
+## 9. Related documents
 
-## 9. 关联文档
-
-1. [node-spec.md](node-spec.md)
-2. [theming.md](../guides/theming.md)
-3. [overview.md](overview.md)
-4. [focus-and-input.md](../guides/focus-and-input.md)
-5. [nested-scroll.md](../guides/nested-scroll.md)
+1. [NodeSpec-only specification](node-spec.md)
+2. [Theming](../guides/theming.md)
+3. [Architecture overview](overview.md)
+4. [Focus and input](../guides/focus-and-input.md)
+5. [Nested scrolling](../guides/nested-scroll.md)

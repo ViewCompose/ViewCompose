@@ -4,7 +4,7 @@ translation_source_hash: 84107565e779ccf8d0d86b371da43d9ccedf2b15724d7ccdfb5415e
 translation_status: current
 ---
 
-# Text Core
+# Text Core 文本内核模块
 
 `viewcompose-text-core` 是 ViewCompose 的平台无关文本编辑模型。它定义不可变富文本文档、
 方向性 selection、IME composition 快照、事务编辑缓冲区、带 undo/redo 的可观察文本字段状态、

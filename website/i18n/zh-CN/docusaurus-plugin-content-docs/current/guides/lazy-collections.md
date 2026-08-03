@@ -1,0 +1,112 @@
+---
+translation_source: guides/lazy-collections.md
+translation_source_hash: 0a98a9eef3e93d74a6c15933c3299dc577f580671c1f6e9b8b68efc7d16c6f00
+translation_status: current
+---
+
+# ViewCompose 延迟集合
+
+## 1. 范围
+
+延迟集合继续使用 Android `RecyclerView` 和布局管理器承载滚动、回收、焦点、无障碍、嵌套滚动、
+fling 与边缘效果。ViewCompose 拥有平台无关的 item 模型、可观察状态、保存恢复锚点和渲染映射。
+
+支持 `LazyColumn`、`LazyRow` 和 `LazyVerticalGrid`；Pager 状态仍是独立的页面模型。
+
+## 2. 可观察状态
+
+`LazyListState` 基于 snapshot state。在组合期间读取属性会自动登记重组依赖。
+
+```kotlin
+val state = rememberLazyListState()
+
+Text(
+    "visible=${state.layoutInfo.visibleItemsInfo.map { it.index }} " +
+        "scrolling=${state.isScrollInProgress}",
+)
+
+Button(
+    text = "Go to 20",
+    onClick = { state.animateScrollToItem(20) },
+)
+```
+
+状态提供：
+
+- 首个可见 item 的 index、key 和像素偏移，以及最后可见 item index；
+- 可见 item 的 key、content type、偏移、尺寸和网格 span；
+- viewport、content padding、间距、方向和 reverse layout；
+- item 总数、滚动状态和最近滚动方向；
+- 前后滚动能力、起止边界；
+- 立即滚动、动画滚动和停止滚动命令。
+
+宿主重建时只保存持久的 index 与像素偏移。可见几何、正在滚动状态和方向标记属于当前布局 Session。
+
+## 3. 结构化 item DSL
+
+所有集合 item helper 都要求稳定 key。重复 key 在构树时直接失败，不会静默关闭 keyed diff。
+
+```kotlin
+LazyColumn(
+    state = state,
+    contentPadding = LazyContentPadding.symmetric(
+        horizontal = 16.dp,
+        vertical = 8.dp,
+    ),
+    prefetchPolicy = LazyLayoutPrefetchPolicy(
+        initialPrefetchItemCount = 4,
+        itemViewCacheSize = 4,
+    ),
+) {
+    stickyHeader(
+        key = "contacts-header",
+        contentType = "header",
+    ) {
+        Text("Contacts")
+    }
+
+    items(
+        items = contacts,
+        key = { contact -> contact.id },
+        contentType = { "contact-row" },
+    ) { contact ->
+        ContactRow(contact)
+    }
+}
+```
+
+列表 scope 支持 `item`、`items` 和 `stickyHeader`。网格 scope 还支持逐 item span；网格
+sticky header 占满整行。均质数据便捷重载同样要求稳定 key，并委托给结构化模型。
+
+## 4. 渲染器映射
+
+| 契约 | Android 映射 |
+| --- | --- |
+| 稳定 key | adapter 内无冲突的 stable ID |
+| content type | RecyclerView view type / 回收池分区 |
+| item span | `GridLayoutManager.SpanSizeLookup` |
+| sticky header | 与列表分离、由 Session 承载的 pinned holder，并支持下一 header 推离 |
+| pinned header 指针输入 | 坐标变换后分发给 pinned holder |
+| 非对称 content padding | RecyclerView 相对 padding |
+| reverse layout | `LinearLayoutManager/GridLayoutManager.reverseLayout` |
+| 用户滚动开关 | 触摸拦截门；程序滚动仍可用 |
+| 初始预取数量 | layout manager 初始预取 |
+| item 缓存大小 | RecyclerView item-view cache |
+| 布局状态 | scroll、layout 和 adapter observer 推送给 `LazyListState` |
+
+pinned 副本不登记为第二个无障碍节点，普通列表 header 仍是语义源，避免 TalkBack 重复播报。
+
+## 5. 不变量
+
+1. 容器内 key 非空且唯一，并在重排时持续标识同一逻辑 item。
+2. `contentType` 只能分组布局兼容的 item 结构。
+3. 平台回调发布不可变 snapshot；Android 类型不得进入 ui-contract。
+4. 对同一 RecyclerView connector 的重新绑定不得重置滚动锚点。
+5. 保存恢复只持久化首个可见 index 与偏移。
+6. holder、pinned header 或容器释放时必须销毁对应 item Session。
+
+## 6. 明确不包含的能力
+
+Paging 3 adapter、远程加载/重试策略、自定义 fling 物理和编译器驱动的 item 内组合属于独立集成。
+Paging 库可以驱动不可变列表，并读取 `isAtEnd`、`lastVisibleItemIndex` 和
+`layoutInfo.totalItemsCount`，无需把 Android paging 类型耦合进核心契约。

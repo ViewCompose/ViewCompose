@@ -30,6 +30,12 @@ build, Docusaurus can render an untranslated English fallback page beside transl
 site's Markdown resolver rewrites only those verified cross-boundary links to the target's public
 route. It does not suppress or downgrade unknown broken links.
 
+Canonical titles, headings, and narrative prose are English. Chinese-mirror titles, headings, and
+narrative prose are Simplified Chinese. Code fences, inline identifiers, commands, URLs, and real
+UI literals keep their exact source language. Format a foreign-language UI literal in narrative as
+inline code; do not use an unmarked foreign-language sentence as an example. Historical archives
+and temporary execution plans are excluded from the locale tree.
+
 ## Page front matter
 
 Every Chinese Markdown mirror must declare:
@@ -48,22 +54,22 @@ content that was reviewed. `translation_status` is either `current` or `stale`.
 Do not update the hash as a mechanical response to a failing build. Read the English change,
 update the Chinese meaning, verify links and examples, and only then record the new fingerprint.
 
-## Required and tracked pages
+## Required and English-only pages
 
-`website/i18n/translation-policy.json` contains the machine-readable list of pages whose Chinese
-mirrors are required. Required pages must exist, remain current, and build successfully. Changes to
-that list require the canonical page, Chinese mirror, and policy verification to change together.
+`website/i18n/translation-policy.json` contains the machine-readable list of active handwritten
+public pages. Every listed Chinese mirror must exist, use Chinese narrative, remain current, and
+build successfully. Adding, moving, or removing a public page requires the canonical page, Chinese
+mirror, policy, and verification to change together.
 
-All other active public pages are tracked when a Chinese mirror exists. A missing tracked mirror is
-allowed during incremental rollout. An existing tracked mirror must either be current or explicitly
-stale; silent drift is forbidden.
+Generated API reference, immutable historical module-manual snapshots, archived evidence,
+temporary execution plans, and internal evidence not published as user guidance remain
+English-only. Chinese guides link to generated API reference instead of copying it. Locale fallback
+must not be used to publish a new active handwritten page without a reviewed Chinese mirror.
 
-Generated API reference, archived evidence, and temporary execution plans remain English-only by
-default. Chinese guides link to generated API reference instead of copying it.
+## Recovering a stale translation
 
-## Marking a tracked translation stale
-
-When a tracked Chinese mirror cannot be updated with its canonical source:
+The verifier still understands an explicit `stale` marker for historical recovery, but every active
+public page is required and therefore cannot merge in that state. During repair:
 
 1. set `translation_status: stale`;
 2. keep `translation_source_hash` at the last reviewed canonical fingerprint;
@@ -76,23 +82,23 @@ latest contract.
 :::
 ```
 
-Use the equivalent Chinese warning in the translated page. Required pages cannot use this escape
-hatch.
+Use the equivalent Chinese warning in the translated page. Before merge, update the Chinese
+meaning, set `translation_status: current`, and record the reviewed canonical fingerprint. Do not
+use the marker as an escape hatch for a required page.
 
 ## Change workflow
 
 For every canonical public documentation change:
 
 1. update and verify the English source;
-2. identify whether the page is required, tracked, or English-only;
-3. update and review the Chinese mirror in the same pull request when required;
-4. for a tracked mirror, either update it or mark it stale in the same pull request;
+2. identify whether the page is public or deliberately English-only;
+3. update and review the Chinese mirror in the same pull request for every public page;
+4. verify that narrative uses the directory language while literals remain exact;
 5. state localization impact in the pull request template;
-6. run the translation verifier and build both locales.
+6. run the language classifier, translation verifier, and both-locale build.
 
-Urgent correctness and security fixes still update English first. If a tracked translation cannot
-be corrected in the urgent pull request, mark it stale. Do not leave known inaccurate text presented
-as current.
+Urgent correctness and security fixes still update English first within the change. Do not merge a
+public page while its Chinese mirror is missing, stale, or knowingly inaccurate.
 
 ## Commands
 
@@ -100,15 +106,18 @@ From `website/`:
 
 ```bash
 npm run write-translations
+npm run verify:languages
 npm run verify:translations
 npm run typecheck
 npm run build
 ```
 
 `write-translations` adds missing Docusaurus JSON message entries without replacing reviewed
-translations. `verify:translations` validates source mapping, required coverage, fingerprints,
-status, and stale-warning markers. `build` produces both `en` and `zh-CN` sites and keeps strict
-broken-link checking enabled.
+translations. `verify:languages` rejects Han narrative in canonical pages, English-only titles or
+narrative in Chinese mirrors, and other locale-placement mistakes while ignoring code and marked
+literals. `verify:translations` validates source mapping, required coverage, fingerprints, status,
+and stale-warning markers. `build` produces both `en` and `zh-CN` sites and keeps strict broken-link
+checking enabled.
 
 Repository-level documentation placement and links remain covered by:
 
@@ -124,6 +133,7 @@ Repository-level documentation placement and links remain covered by:
 - Screenshots are localized or explicitly language-neutral.
 - The source fingerprint represents the English content actually reviewed.
 - A stale translation contains the visible warning and is not a required page.
+- Canonical and Chinese titles and narrative match their directory language.
 - Both locales build successfully.
 
 ## AI-assisted translation

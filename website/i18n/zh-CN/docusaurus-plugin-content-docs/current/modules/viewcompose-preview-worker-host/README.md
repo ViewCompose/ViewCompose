@@ -4,7 +4,7 @@ translation_source_hash: 2e22753d733c3d17948f5ab0b749e71fbe053dc1a46e04a920f1a36
 translation_status: current
 ---
 
-# Preview Worker Host
+# Preview Worker Host 模块
 
 `viewcompose-preview-worker-host` 是拥有 ViewCompose 静态 Preview Layoutlib 的独立 JVM Process
 Boundary。它让可变平台渲染状态远离 Gradle 与 Android Studio，验证 Protocol File，隔离可重载应用

@@ -4,7 +4,7 @@ translation_source_hash: c95bdf6adc2dad8ccd6a2e37ec3fe61b2ed80ee259a9180a440e633
 translation_status: current
 ---
 
-# Shadow Android
+# Android 阴影模块
 
 `viewcompose-shadow-android` 是 ViewCompose 外阴影与内阴影的可选 Android Backend。它把声明式
 Shadow Modifier 解析成像素规格，栅格化精确的多层效果，并接入 Renderer 的 Parent Drawing Plane。

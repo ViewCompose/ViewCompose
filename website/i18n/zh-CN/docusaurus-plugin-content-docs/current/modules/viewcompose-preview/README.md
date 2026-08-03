@@ -4,7 +4,7 @@ translation_source_hash: 056798cde593de8ed5d226b102c59982b3b4fa79c1a1b895fa4685f
 translation_status: current
 ---
 
-# Preview Integration
+# Preview 集成模块
 
 `viewcompose-preview` 把 ViewCompose UI 代码接入开发期预览宿主。它提供静态 Layoutlib Runner 使用的
 应用主题 Provider 契约、便捷的 Compose `AndroidView` 桥接，以及第一方预览目录和 Paparazzi 快照
