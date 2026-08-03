@@ -6,7 +6,7 @@ slug: /documentation
 # ViewCompose Documentation
 
 This directory is the canonical documentation entrance for ViewCompose. It is organized for both
-human readers and AI-assisted maintenance, and it is also the content boundary for the future
+human readers and AI-assisted maintenance, and it is also the content boundary for the published
 GitHub-hosted documentation site.
 
 The repository state and active documents below are authoritative. Files under
@@ -20,7 +20,7 @@ historical evidence only.
 | Build the first application | [Build your first application](./tutorials/getting-started.md) |
 | Understand the framework | [Architecture overview](./architecture/overview.md) → [Modifier model](./architecture/modifier.md) → [NodeSpec model](./architecture/node-spec.md) |
 | Migrate from Jetpack Compose | [Compose migration overview](./migration/README.md) → choose the state, layout, host, or navigation path |
-| Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual when available |
+| Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual |
 | Build with a feature | Select the relevant document under [Guides](#guides) |
 | Work on previews or performance | [Preview](./tooling/preview.md) → [Diagnostics](./tooling/diagnostics.md) → [Performance](./tooling/performance.md) |
 | Contribute a change | [Development workflow](./project/workflow.md) → [Documentation governance](./project/documentation-governance.md) |

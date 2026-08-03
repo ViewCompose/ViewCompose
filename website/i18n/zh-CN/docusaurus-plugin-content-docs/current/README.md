@@ -2,14 +2,14 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 0145775db320b49a7803a8c7f015addf83f08ae5ca1429117d1e3b4a6c525e20
+translation_source_hash: 10ea069fad54e17281f795a534ab88f9a278877d4584e237d28d31223d2036f0
 translation_status: current
 ---
 
 # ViewCompose 文档
 
-这里是 ViewCompose 的权威文档入口。文档同时面向人工阅读和 AI 辅助维护，也是 GitHub
-托管文档站点的内容边界。
+这里是 ViewCompose 的权威文档入口。文档同时面向人工阅读和 AI 辅助维护，也是已经发布的
+GitHub 托管文档站点的内容边界。
 
 仓库当前状态和下面列出的有效文档才是权威信息。`archive/` 下的文件仅作为历史记录。
 

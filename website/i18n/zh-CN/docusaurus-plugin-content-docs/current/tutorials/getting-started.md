@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 235461cc3aa60552ccc43d49c26129e1c557d364e623da728f01c2a1d723c99d
+translation_source_hash: 11a46ffc22e026b8056af95c858da0915714f013bf2f45bcb065c632f338047d
 translation_status: current
 ---
 
@@ -12,8 +12,9 @@ translation_status: current
 界面失效，并 patch 已存在的原生 View 树。
 
 完整且参与编译的应用位于
-[`samples/counter`](https://github.com/ViewCompose/ViewCompose/tree/main/samples/counter)。下面的代码复制自该模块，
-`qaQuick` 会编译应用及其设备测试，因此教程不会在公开 API 变化后静默失效。
+[`samples/counter`](https://github.com/ViewCompose/ViewCompose/tree/main/samples/counter)。下面的代码复制自该模块。
+`qaQuick` 会编译应用、设备测试和仅存在于 debug 的 Preview 入口；`qaPreview` 还会验证 Preview
+发现流程始终连接到这个参与编译的函数。
 
 ## 将要构建的内容
 
@@ -23,6 +24,7 @@ translation_status: current
 - 一个 `Increment` 按钮；
 - 驱动文本更新的保留快照状态；
 - 负责生命周期、SavedState、主题与渲染服务的 Android 宿主。
+- 复用 Activity 中同一个 `CounterScreen` 的明暗两种静态 Preview。
 
 预期结果：每次点击都会增加可见计数，且不需要替换 Activity。
 
@@ -39,6 +41,8 @@ JDK 17。仓库示例使用 `compileSdk = 36`、`minSdk = 24` 和 JVM target 11�
 | `viewcompose-ui-contract` | `0.1.0-alpha01` | `Modifier`、布局单位与对齐契约 |
 | `viewcompose-widget-core` | `0.1.0-alpha01` | `Column`、`Text`、`Button`、主题默认值与 `remember` |
 | `viewcompose-host-android` | `0.1.0-alpha01` | Activity 宿主与 Android renderer 安装 |
+| `viewcompose-preview-core` | `0.1.0-alpha01` | 仅用于 debug 的静态 Preview 注解与配置 |
+| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha01` | 编译后 Preview 发现与隔离渲染任务 |
 
 ViewCompose 产物独立演进。混用比本教程更新的版本前，请检查
 [已发布模块目录](../modules/README.md)。
@@ -99,6 +103,7 @@ import com.viewcompose.widget.core.Button
 import com.viewcompose.widget.core.Column
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.TextDefaults
+import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
 
 class MainActivity : ComponentActivity() {
@@ -106,26 +111,30 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setUiContent {
-            val count = remember { mutableStateOf(0) }
-
-            Column(
-                spacing = 16.dp,
-                arrangement = MainAxisArrangement.Center,
-                horizontalAlignment = HorizontalAlignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-            ) {
-                Text(
-                    text = "Count: ${count.value}",
-                    style = TextDefaults.titleLargeStyle(),
-                )
-                Button(
-                    text = "Increment",
-                    onClick = { count.value += 1 },
-                )
-            }
+            CounterScreen()
         }
+    }
+}
+
+internal fun UiTreeBuilder.CounterScreen() {
+    val count = remember { mutableStateOf(0) }
+
+    Column(
+        spacing = 16.dp,
+        arrangement = MainAxisArrangement.Center,
+        horizontalAlignment = HorizontalAlignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+    ) {
+        Text(
+            text = "Count: ${count.value}",
+            style = TextDefaults.titleLargeStyle(),
+        )
+        Button(
+            text = "Increment",
+            onClick = { count.value += 1 },
+        )
     }
 }
 ```
@@ -140,7 +149,68 @@ class MainActivity : ComponentActivity() {
 `remember` 会在当前组合存续期间保留值。如果值还需要跨 Activity 重建或进程恢复，请使用
 `rememberSaveable`，详见[生命周期与 SavedState](https://docs.viewcompose.com/architecture/lifecycle-and-saved-state)。
 
-## 4. 运行与验证
+## 4. 预览参与编译的页面
+
+Preview 工具应只进入 debug 路径。外部应用使用已发布插件和产物；仓库示例使用职责相同的
+project dependency：
+
+```kotlin title="build.gradle.kts"
+plugins {
+    id("com.viewcompose.preview") version "0.1.0-alpha01"
+}
+
+dependencies {
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    add(
+        "viewComposePreviewWorkerHost",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
+    )
+    add(
+        "viewComposePreviewRunner",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+    )
+}
+```
+
+示例的 debug source set 通过公开静态 Preview 入口复用同一个 `CounterScreen`：
+
+```kotlin title="CounterPreview.kt"
+package com.viewcompose.samples.counter
+
+import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.ViewComposePreview
+import com.viewcompose.widget.core.UiTreeBuilder
+
+/**
+ * Renders the initial counter state through the native static-preview toolchain.
+ *
+ * @receiver DSL tree builder supplied by the static preview runner.
+ */
+@ViewComposePreview(
+    name = "Counter · Light",
+    group = "Samples/Getting started",
+)
+@ViewComposePreview(
+    name = "Counter · Dark",
+    group = "Samples/Getting started",
+    theme = PreviewTheme.Dark,
+)
+fun UiTreeBuilder.CounterPreview() {
+    CounterScreen()
+}
+```
+
+使用 ViewCompose Studio 插件打开 `CounterPreview.kt`，即可查看两种变体。原生静态 runner
+直接执行参与编译的 DSL 函数，因此 Activity 与 Preview 不会演变成两套页面实现。可以运行：
+
+```bash
+./gradlew :samples:counter:verifyCounterPreview
+./gradlew qaPreview
+```
+
+验证发现链路。
+
+## 5. 运行与验证
 
 可以从 Android Studio 运行应用，或在仓库根目录构建示例：
 
@@ -161,6 +231,6 @@ class MainActivity : ComponentActivity() {
 
 - 阅读[状态快照](https://docs.viewcompose.com/architecture/state-snapshots)，理解事务与观察规则。
 - 阅读[主题](https://docs.viewcompose.com/guides/theming)，再定义应用 token 或动态色策略。
-- 阅读[预览工具](https://docs.viewcompose.com/tooling/preview)，在 Android Studio 中渲染标注的 DSL 函数。
+- 阅读[预览工具](https://docs.viewcompose.com/tooling/preview)，继续配置主题 provider、诊断与快照策略。
 - 通过[模块目录](../modules/README.md)按需添加导航、文本编辑、图形或其他可选能力，避免把它们
   全部拉入最小应用。

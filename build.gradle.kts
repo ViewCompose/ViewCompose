@@ -1052,6 +1052,7 @@ tasks.register("qaPreview") {
     group = "verification"
     description = "Run static-runner tests and preview snapshot verification."
     dependsOn(
+        ":samples:counter:verifyCounterPreview",
         ":viewcompose-preview-core:test",
         ":viewcompose-preview-runner:testDebugUnitTest",
         ":viewcompose-preview:verifyPaparazziDebug",
