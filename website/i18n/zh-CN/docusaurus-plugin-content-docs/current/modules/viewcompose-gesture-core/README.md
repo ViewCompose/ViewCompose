@@ -4,7 +4,7 @@ translation_source_hash: a97c2ae1bb38da8dc1a5dddc96b9078ea77587ec9396c560aed2a13
 translation_status: current
 ---
 
-# Gesture Core
+# Gesture Core 模块
 
 `viewcompose-gesture-core` 是 ViewCompose 手势识别的平台无关策略层。它把 Renderer 提供的
 指针距离、速度、Touch Slop 与锚点转换成轴锁定、Transform 激活、Swipe 方向和锚点收敛目标。

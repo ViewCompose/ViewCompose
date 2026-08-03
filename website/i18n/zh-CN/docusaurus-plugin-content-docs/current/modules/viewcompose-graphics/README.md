@@ -4,7 +4,7 @@ translation_source_hash: 32dbdfd0dee40392d00c40a76c10cf26494b27d7be283be760b64a7
 translation_status: current
 ---
 
-# Graphics
+# Graphics 模块
 
 `viewcompose-graphics` 把 ViewCompose 自定义绘制暴露给 UI Tree。它提供专用 `Canvas` 节点、
 Draw-behind 与 Content-aware Modifier、感知缓存的命令构建，以及平台无关 Graphics Contract 的

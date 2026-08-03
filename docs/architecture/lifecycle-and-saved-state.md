@@ -1,77 +1,88 @@
-# Lifecycle 与 SavedState
+# Lifecycle and Saved State
 
-## 1. 目标
+## 1. Purpose
 
-本文定义宿主生命周期、生命周期感知 Flow 和 `rememberSaveable` 的提交/恢复边界。
+This document defines the commit and restoration boundaries for host lifecycles, lifecycle-aware
+Flow collection, and `rememberSaveable`.
 
-核心原则：
+Core principles:
 
-1. 未提交的组合不能永久消费恢复值。
-2. 宿主保存发生在组合准备期间，也不能丢失已 claim 的值。
-3. 生命周期快速切换时，同一个 Flow 最多只有一个活跃 collector。
-4. 已销毁宿主不能创建新的渲染会话或 SavedState 绑定。
+1. An uncommitted composition must not permanently consume restored values.
+2. A host save during composition preparation must not lose values that are currently claimed.
+3. A Flow has at most one active collector while the lifecycle changes rapidly.
+4. A destroyed host cannot create a new render session or SavedState binding.
 
-## 2. 宿主生命周期
+## 2. Host lifecycle
 
-`ComponentActivity.setUiContent` 的会话绑定到 Activity 生命周期；
-`Fragment.setUiContent` 的会话绑定到 Fragment view lifecycle，并在 view 销毁时释放。
+A `ComponentActivity.setUiContent` session is bound to the Activity lifecycle. A
+`Fragment.setUiContent` session is bound to the Fragment view lifecycle and is released when the
+view is destroyed.
 
-边界规则：
+Boundary rules:
 
-1. 重复调用 `setUiContent` 会先释放旧会话。
-2. `ON_DESTROY` 释放会话、组合副作用、协程和平台资源。
-3. 对 `DESTROYED` 宿主调用 `setUiContent` 立即失败，不创建半绑定会话。
-4. `LifecycleBoundDisposer` 绑定到已经销毁的 owner 时立即执行释放。
+1. Calling `setUiContent` again releases the previous session first.
+2. `ON_DESTROY` releases the session, composition effects, coroutines, and platform resources.
+3. Calling `setUiContent` on a `DESTROYED` host fails immediately without creating a partially
+   bound session.
+4. A `LifecycleBoundDisposer` releases immediately when it is bound to an already destroyed owner.
 
-## 3. 生命周期感知 Flow
+## 3. Lifecycle-aware Flow collection
 
-`collectAsStateWithLifecycle` 只接受：
+`collectAsStateWithLifecycle` accepts only these active thresholds:
 
 - `CREATED`
 - `STARTED`
 - `RESUMED`
 
-`INITIALIZED` 与 `DESTROYED` 不能作为活跃阈值。
+`INITIALIZED` and `DESTROYED` cannot be active thresholds.
 
-实现使用 `repeatOnLifecycle` 的串行取消/重启语义：前一个 collector 的取消和
-`finally` 清理完成后，下一次 collector 才能进入，避免快速 `STOP -> START` 产生并发收集。
-组合释放会取消整个结构化收集作用域。
+The implementation uses the serial cancel-and-restart semantics of `repeatOnLifecycle`. The
+previous collector must finish cancellation and `finally` cleanup before the next collector starts,
+preventing concurrent collection during a rapid `STOP -> START` sequence. Disposing the
+composition cancels the complete structured collection scope.
 
-## 4. rememberSaveable 恢复事务
+## 4. rememberSaveable restoration transaction
 
-恢复分为四步：
+Restoration has four steps:
 
-1. 组合 prepare 时按稳定 key `claimRestored`。
-2. claim 中的值参与恢复，但仍包含在 `performSave()` 快照中。
-3. 组合 commit 后注册 provider，再提交 claim。
-4. 组合 abort 或新值被 abandoned 时释放 claim，后续重试仍可恢复同一值。
+1. During composition preparation, claim the restored value with a stable key through
+   `claimRestored`.
+2. The claimed value participates in restoration but remains included in the `performSave()`
+   snapshot.
+3. After composition commit, register the provider and then commit the claim.
+4. If composition aborts or the new value is abandoned, release the claim so a later retry can
+   restore the same value.
 
-因此，组合异常、renderer apply 回滚、保存与渲染交错都不会提前丢失恢复值。
+Composition exceptions, renderer apply rollback, and interleaved save/render operations therefore
+cannot discard a restored value early.
 
-`rememberSaveable(inputs...)` 的 input 变化仍表示有意重置：旧 holder 只在提交阶段
-退出，新 holder 同步接管 provider，最终保存替换后的值。
+Changing the inputs to `rememberSaveable(inputs...)` still means an intentional reset. The old
+holder leaves only during commit, the new holder takes over the provider synchronously, and the
+replacement value is what is eventually saved.
 
-## 5. Android Bundle 边界
+## 5. Android Bundle boundary
 
-Android host 保存：
+The Android host saves:
 
-- `null`
-- Bundle 可保存的平台值
-- 递归 `List`
-- String-keyed `Map`
+- `null`;
+- platform values supported by Bundle;
+- recursive `List` values;
+- `Map` values with String keys.
 
-恢复时会安装宿主 class loader。未知格式版本整体忽略；单个损坏 entry 被隔离，
-不会阻止其余有效 entry 恢复。
+The host class loader is installed during restoration. An unknown format version is ignored as a
+whole; one corrupt entry is isolated and does not prevent the remaining valid entries from being
+restored.
 
-瞬时系统会话不属于 SavedState：IME composition、撤销历史、进行中的手势和动画不会恢复。
+Transient system sessions are not SavedState. IME composition, undo history, in-progress gestures,
+and animations are not restored.
 
-## 6. 验证
+## 6. Verification
 
-核心回归覆盖：
+Core regression coverage includes:
 
-1. nullable、嵌套集合和自定义 Saver
-2. composition abort 后重试恢复
-3. in-flight claim 期间宿主保存
-4. 快速生命周期停止/重启的 collector 串行性
-5. destroyed owner
-6. 未知 Bundle 版本和单 entry 损坏隔离
+1. nullable values, nested collections, and custom Savers;
+2. restoration retry after composition abort;
+3. host saving while a claim is in flight;
+4. collector serialization during rapid lifecycle stop/restart;
+5. destroyed owners;
+6. unknown Bundle versions and isolation of one corrupt entry.

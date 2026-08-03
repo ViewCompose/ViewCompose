@@ -4,7 +4,7 @@ translation_source_hash: 810653b803ccd85dfb3cab34ceca132d9aa759f1acfc6217fb65509
 translation_status: current
 ---
 
-# Image Coil
+# Coil 图像加载模块
 
 `viewcompose-image-coil` 是 ViewCompose 远程图片节点的可选 Coil 3 适配器。它把平台无关的加载
 契约转换为 Android `ImageView` 请求，同时避免 Renderer 或 Widget 模块依赖具体网络与图片加载实现。

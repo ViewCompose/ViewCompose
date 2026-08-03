@@ -285,26 +285,35 @@ one hosted page.
 
 Generated KDoc/Javadoc and generated historical module-manual snapshots remain canonical English
 reference. Chinese current module manuals, tutorials, and guides explain how to use those APIs but
-do not duplicate the complete generated symbol tree or immutable snapshot history. Existing
-mixed-language source comments and pages may migrate incrementally when their content is next
-materially updated.
+do not duplicate the complete generated symbol tree or immutable snapshot history.
+
+Every active handwritten page has one language per locale:
+
+- files under `docs/` use English for titles, headings, and narrative prose;
+- files under the `zh-CN` Markdown locale use Simplified Chinese for titles, headings, and
+  narrative prose;
+- code fences, commands, identifiers, URLs, and quoted UI literals preserve their exact source
+  language; a foreign-language literal in prose must be formatted as inline code so it is
+  distinguishable from misplaced narrative;
+- temporary plans, historical archives, generated API pages, and immutable historical
+  module-manual snapshots remain canonical English-only evidence.
+
+Mixed-language narrative is a merge-blocking placement error, not translation debt. The
+Markdown-aware language verifier ignores code and literal spans but checks every active canonical
+page and every locale mirror.
 
 ### Canonical-first translation workflow
 
-Every translated change follows this order:
+Every public documentation change follows this order:
 
 1. update and verify the canonical English document;
-2. determine its translation priority before merge;
-3. update the Chinese mirror in the same pull request when the page is release-critical or the
-   change is small enough to review safely;
-4. otherwise mark the existing Chinese mirror as stale in the same pull request and schedule a
-   focused translation follow-up;
-5. run the translation freshness and both-locale site build gates.
+2. update and review the Chinese mirror in the same pull request;
+3. preserve code, identifiers, commands, URLs, and real UI literals exactly;
+4. record the reviewed canonical fingerprint only after the Chinese meaning is current;
+5. run the language classifier, translation freshness verifier, and both-locale site build gates.
 
-Translation work must not be deferred into a repository-wide batch after English documentation is
-"finished". Documentation and modules evolve independently, so translation is a continuous,
-page-level workflow. Large translation-only pull requests remain appropriate for an initial locale
-rollout or a deliberately bounded stable section.
+Translation work must not be deferred until English documentation is "finished". Documentation and
+modules evolve independently, so translation is a continuous page-level workflow.
 
 ### Translation priority
 
@@ -312,14 +321,12 @@ Pages use the following enforcement tiers:
 
 | Tier | Content | Merge requirement |
 | --- | --- | --- |
-| Required | landing and installation pages, the artifact catalog, getting-started paths, core tutorials, migration instructions, and localization governance | Chinese mirror must exist and match the canonical source fingerprint |
-| Tracked | architecture, guides, tooling, and published module manuals | a missing translation is allowed; an existing translation must be current or explicitly marked stale |
-| English-only | generated API reference, temporary plans, historical archives, and internal evidence not published as user guidance | no Chinese mirror is required |
+| Required | every active handwritten public page, including architecture, guides, migration, module manuals, project operations, tooling, and tutorials | Chinese mirror must exist, use Chinese narrative, and match the canonical source fingerprint |
+| English-only | generated API reference, immutable historical module-manual snapshots, temporary plans, historical archives, and internal evidence not published as user guidance | no Chinese mirror is required and the content must not be presented as reviewed localized prose |
 
-The machine-readable required-page list lives with the website localization tooling. Adding or
-removing a required page changes this policy and must update the list, the translated content, and
-the verification tests together. A breaking release must not rely on an untranslated migration or
-operator action page.
+The machine-readable required-page list lives with the website localization tooling. Adding,
+moving, or removing a public page must update that list, the Chinese mirror, and verification in
+the same pull request. A new page cannot rely on locale fallback as a temporary publishing state.
 
 ### Freshness contract
 
@@ -330,31 +337,27 @@ Every Chinese Markdown mirror records, in front matter:
   translator;
 - `translation_status`: `current` or `stale`.
 
-A `current` translation must match the current canonical fingerprint. If a tracked translation is
-not updated with its source, it must be changed to `stale` and show the standard visible stale
-translation warning. Required pages may never be `stale`. Updating only the recorded hash without
-reviewing the translated meaning is a policy violation.
+A `current` translation must match the current canonical fingerprint. Required pages may never be
+`stale`. Updating only the recorded hash without reviewing the translated meaning is a policy
+violation.
 
-The verification gate fails for missing or stale required pages, invalid source mappings, dishonest
-status, and current translations whose fingerprint no longer matches. It permits an explicitly
-stale tracked translation while reporting it as follow-up work. A missing tracked translation uses
-the canonical English page until a reviewed mirror is added; it must not be replaced by an
-unreviewed machine translation merely to increase coverage.
+The verification gate fails for missing or stale required pages, invalid source mappings,
+wrong-language titles or narrative, dishonest status, and current translations whose fingerprint
+no longer matches. Locale fallback is reserved for deliberately English-only generated or
+historical content, not active handwritten public pages.
 
 ### Pull request and review rules
 
 Every pull request that changes canonical public documentation must state one of:
 
 - the Chinese mirror was updated and reviewed;
-- the page is tracked but has no Chinese mirror yet;
-- the existing tracked mirror was explicitly marked stale;
 - the page is English-only under this policy;
 - no user-visible language content changed.
 
-Correctness and security fixes update English first. When the Chinese mirror cannot be updated in
-the same urgent pull request, it is marked stale rather than left silently inaccurate. Translation
-review checks technical meaning, links, code samples, terminology, and locale-specific screenshots;
-it is not only a fluency review.
+Correctness and security fixes still update English first inside the change, but the reviewed
+Chinese mirror is required before merge for public pages. Translation review checks technical
+meaning, links, code samples, terminology, and locale-specific screenshots; it is not only a
+fluency review.
 
 Commands, front-matter fields, required-page configuration, and recovery steps are defined in the
 [localization workflow](localization.md).
@@ -447,6 +450,7 @@ Every documentation review verifies:
 - links are relative and resolve;
 - completed plans are archived only after durable conclusions move to active docs;
 - localization status is honest;
+- canonical and localized titles and narrative match their directory language;
 - `./gradlew verifyDocumentationStructure` passes.
 
 The structure gate is included in `qaQuick`. The documentation workflow additionally generates the

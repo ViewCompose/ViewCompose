@@ -4,7 +4,7 @@ translation_source_hash: aeef09010a5e735db543c3e4d72fab7455287c6b941dc952266af4c
 translation_status: current
 ---
 
-# Gesture
+# Gesture 模块
 
 `viewcompose-gesture` 是 ViewCompose 面向组合的手势 DSL。它向 `Modifier` 添加原始 Pointer、组合
 点击、拖动、锚点拖动、Transform、优先级与嵌套滚动元素，并为 Renderer 回传提供可记忆的回调和

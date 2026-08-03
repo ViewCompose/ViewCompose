@@ -4,7 +4,7 @@ translation_source_hash: a63887226b0c39c0a6fc996f611dc59267dcd36519df6c839e70a7c
 translation_status: current
 ---
 
-# Preview Runner
+# Preview Runner 模块
 
 `viewcompose-preview-runner` 是 ViewCompose 确定性静态预览的 Android 执行层。它负责解析已编译的
 预览入口、创建符合预览配置的 Android Context、把 DSL 挂载为原生 View 层级、捕获不可变的图片与

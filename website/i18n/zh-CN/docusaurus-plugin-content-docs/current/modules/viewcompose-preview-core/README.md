@@ -4,7 +4,7 @@ translation_source_hash: 5fe089dcbc7ad925ffd2918404354fd987a92fdd6c45c53e987f468
 translation_status: current
 ---
 
-# Preview Core
+# Preview Core 模块
 
 `viewcompose-preview-core` 定义 ViewCompose Gradle Plugin、Layoutlib Worker、Android Studio Plugin、
 测试与 CI 共享的平台无关注解、配置、发现、渲染、Worker 和诊断协议。它不依赖 Android 或 IDE Runtime。

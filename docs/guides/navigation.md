@@ -520,7 +520,7 @@ Recommended manual journey:
 4. Launch the external account URI and verify the Account stack becomes active with `userId=42`.
 5. Rotate after changing the entry and graph counters. Saveable values and owner IDs must survive;
    the ViewModel instance ID may change while its `SavedStateHandle`-backed counter is restored.
-6. Tap “准备三窗格样例”, keep adaptive panes enabled, and rotate to landscape. The newest three
+6. Tap `准备三窗格样例`, keep adaptive panes enabled, and rotate to landscape. The newest three
    native destination Views must appear side-by-side without changing their entry/graph owner IDs.
 
 The device smoke suite for the same journeys is:

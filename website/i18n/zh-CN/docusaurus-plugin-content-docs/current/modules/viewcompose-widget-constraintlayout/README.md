@@ -4,7 +4,7 @@ translation_source_hash: 2301366b4719daee511f722c051776101ae3eb115890b0443af06a0
 translation_status: current
 ---
 
-# Widget ConstraintLayout
+# Widget ConstraintLayout 模块
 
 `viewcompose-widget-constraintlayout` 为 ViewCompose 提供声明式 ConstraintLayout Node、Child
 Constraint Modifier、可复用 Constraint Set 和 AndroidX Virtual Helper。

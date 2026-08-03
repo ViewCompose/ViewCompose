@@ -2,9 +2,10 @@
 
 This directory contains multi-step work that is currently active and must survive across sessions.
 
-There are currently no active execution plans.
+There are no active cross-session execution plans.
 
-Completed tutorial, migration-sample, hosted-documentation, and version-retention plans are retained in the
+Completed tutorial, language-consistency, migration-sample, hosted-documentation, and
+version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
 
 Before adding a plan, read [Documentation governance](../documentation-governance.md). A plan must

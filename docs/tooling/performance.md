@@ -1,81 +1,98 @@
 # ViewCompose Performance
 
-## 1. 文档定位
+## 1. Scope
 
-本文档是性能规范版，定义：
+This is the current performance specification. It defines the established baseline, gate metrics,
+design and implementation constraints, and the next optimization phases.
 
-1. 当前性能基线
-2. 性能门禁指标
-3. 设计与实现层约束
-4. 后续优化路线
+For historical analysis, see
+[PERFORMANCE_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/PERFORMANCE_FULL_2026-03-06.md).
 
-历史长版分析见：
+## 2. Current baseline (2026-08)
 
-- [PERFORMANCE_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/PERFORMANCE_FULL_2026-03-06.md)
+### 2.1 Established capabilities
 
-## 2. 当前性能基线（2026-07）
+1. `viewcompose-benchmark` provides stable benchmark entry points.
+2. The renderer decides whether each node is rebound and reports `rebound/skipped`.
+3. Diagnostics expose baseline render/layout metrics.
+4. Runtime uses SlotTable Lite: `RenderSession` performs initial composition and node-group
+   incremental recomposition, retaining `VNode` references for clean groups.
+5. `InvalidationQueue` merges and deduplicates ancestor invalidations and marks changed
+   `emit(spec/modifier)` inputs dirty.
+6. The patch pipeline supports `SkipSubtree`, reports `skippedSubtrees`, and uses the
+   `previousVNode === nextVNode` identity fast path.
+7. Delayed-session keyed diffing uses DiffUtil with missing/duplicate-key fallback.
+8. Framework RecyclerView containers do not share `RecycledViewPool` by default and retain the
+   platform `itemAnimator`. A container can opt into pool sharing and animator policy through
+   `reusePolicy/motionPolicy`.
+9. Renderer dimension conversion uses `viewcompose-renderer/view/DimensionUtils.kt`; containers do
+   not duplicate density or dp-to-pixel behavior.
+10. State uses `SnapshotMutationPolicy + MVCC + MutableSnapshot` transactions, and recomposition
+    reads from one consistent snapshot.
+11. `RenderSession` invalidations are merged on a Choreographer-aligned frame. Explicit `render()`
+    remains immediate.
+12. Animation uses `MonotonicFrameClock` with the host Choreographer implementation, aligning
+    `animate*AsState/Animatable/Transition` with recomposition scheduling.
+13. `graphicsLayer` participates in resolved modifier and patch semantics, avoiding full rebinds for
+    state-driven transforms.
+14. One per-View gesture dispatcher uses `gesture > clickable fallback` consumption and supports
+    direction lock, slop, and priority arbitration.
+15. List and Pager insert/remove/move/change motion is opt-in and cooperates with DiffUtil and
+    ItemAnimator without changing defaults.
+16. The graphics pipeline implements Canvas nodes and drawing modifiers. `drawWithCache` retains
+    commands between frames until dependencies change.
+17. Graphics v2 preserves four-corner `DrawRoundRect`, applies `DrawPaint` to Drawable rendering,
+    and recursively combines `ImageFilterModel.Chain`.
+18. Release baselines use an R8-optimized, resource-shrunk, non-debuggable benchmark target.
+    `ReleaseBaselineBenchmark` covers cold start and state-patch frames without ART precompilation.
+19. List comparison runs ViewCompose and Compose LazyColumn in the same target with the same 1,000
+    items and interaction script, covering bidirectional fast scroll and keyed reorder plus payload
+    updates.
+20. Complex-layout comparison runs the same 18-card dashboard through ViewCompose
+    `ScrollableColumn` and Compose `Column.verticalScroll`, mounting the complete tree and exercising
+    deep scrolling, all-card updates, and conditional detail subtrees.
+21. Both comparisons collect frame timing and peak heap/RSS. `compare_macrobenchmarks.py` emits
+    paired Markdown/JSON and can gate normalized regression against the same-run Compose control.
+22. Advanced shadows have independent bounded outer/inner raster caches. Translation, scale,
+    rotation, and alpha reuse rasters. `ShadowPerformanceComparisonBenchmark` covers 1,000-item Lazy
+    and complex-layout scrolling/mutation with Compose as the same-run noise control.
 
-### 2.1 已建立能力
+### 2.2 Release benchmark entry points
 
-1. viewcompose-benchmark 模块已接入，具备稳定测试入口。
-2. renderer 已具备节点级“是否重绑”判断能力（`rebound/skipped` 统计）。
-3. diagnostics 已有 render/layout 基础指标可观测能力。
-4. runtime 已切到 `SlotTable Lite`：`RenderSession` 采用“首帧 compose + 节点组级增量 recompose”，未脏组复用 `VNode` 引用。
-5. 组级失效队列支持祖先合并去重（`InvalidationQueue`），并对 `emit(spec/modifier)` 输入变化做脏标记，避免参数变化漏更新。
-6. patch pipeline 已支持 subtree skip（`SkipSubtree`）并新增 `skippedSubtrees` 统计；`previousVNode === nextVNode` 命中同引用快路径。
-7. 延迟 session 容器的 keyed diff 已切到 `DiffUtil` 引擎（保留 key 缺失/重复 fallback）。
-8. framework 托管的 `RecyclerView` 容器默认不共享 `RecycledViewPool` 且保留系统 `itemAnimator`；可按需通过容器参数 `reusePolicy/motionPolicy` 对单个容器启用共享池与动画器策略。
-9. renderer 内部尺寸换算统一走 `viewcompose-renderer/view/DimensionUtils.kt`，避免容器层重复定义 `density/dpToPx` 带来的行为漂移。
-10. runtime 状态系统已升级为 `SnapshotMutationPolicy + MVCC + MutableSnapshot` 事务模型；重组读取运行在一致性快照内。
-11. `RenderSession` 失效重绘调度已升级为 `Choreographer` 帧对齐合并；显式 `render()` 仍保持立即执行语义。
-12. 动画主链已统一到 `MonotonicFrameClock`（host 注入 `Choreographer` 实现），`animate*AsState/Animatable/Transition` 与重组调度对齐。
-13. `graphicsLayer` 已接入 renderer resolved modifier 与 patch 语义，状态驱动变换不再依赖全量重绑。
-14. 手势分发已统一为单 view dispatcher，消费优先级固定为“gesture > clickable fallback”，并支持方向锁/slop/priority 冲突策略。
-15. 列表/分页容器支持 opt-in motion 策略（insert/remove/move/change），与 `DiffUtil + ItemAnimator` 协同且不改变默认容器行为。
-16. graphics 主链已落地 Canvas 节点与 draw modifiers；`drawWithCache` 支持跨帧缓存命中/失效，避免高频绘制场景重复构建命令。
-17. graphics 执行器已收口 v2 基线：`DrawRoundRect` 四角半径语义正确、`Drawable` 绘制支持 `DrawPaint` 组合、`ImageFilterModel.Chain` 可递归合并生效。
-18. 发布态基线使用 R8 + resource shrink 的非 debuggable `benchmark` target；`ReleaseBaselineBenchmark` 固定覆盖无 ART 预编译的冷启动与 state patch 帧耗时。
-19. 列表性能对比使用同一 target、同一份 1000 项数据与完全一致的交互脚本，分别运行 ViewCompose `LazyColumn` 和 Jetpack Compose `LazyColumn`；覆盖双向快速滚动与 keyed reorder + payload 内容更新。
-20. 复杂布局对比使用同一份 18 卡片仪表盘模型，分别运行 ViewCompose `ScrollableColumn` 与 Compose `Column.verticalScroll`；全部子树一次挂载，覆盖深层嵌套滚动、全卡片字段更新和条件详情子树变更。
-21. 两组对照均采集帧耗时与最大 heap/RSS；`compare_macrobenchmarks.py` 自动生成 Markdown/JSON 配对报告，并支持以 Compose 为同次运行控制组的归一化回归门禁。
-22. 高级阴影建立独立有界外/内栅格缓存，平移/缩放/旋转/alpha 重绘复用同一栅格；`ShadowPerformanceComparisonBenchmark` 覆盖 1000 项 Lazy 与复杂布局的滚动/变更，并用 Compose 作为同轮设备波动控制组。
-
-### 2.2 发布态基准入口
-
-构建门禁：
+Build gate:
 
 ```bash
 ./gradlew qaRelease
 ```
 
-该任务同时构建 R8 优化的 `release`、非 debuggable `benchmark` target 和 benchmark
-instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
+It builds the R8 release target, non-debuggable benchmark target, and benchmark instrumentation APK,
+catching shrink, R8, and variant regressions without a device.
 
-设备基准：
+Device benchmark:
 
 ```bash
 ./gradlew benchmarkRelease
 ```
 
-设备基准并生成 Compose 对照报告：
+Device benchmark plus Compose comparison report:
 
 ```bash
 ./gradlew benchmarkCompare
 ```
 
-结果默认写入：
+Default reports:
 
 1. `build/reports/benchmarks/compose-comparison.md`
 2. `build/reports/benchmarks/compose-comparison.json`
 
-对已有结果重新生成报告：
+Regenerate from an existing result:
 
 ```bash
 ./gradlew benchmarkComparisonReport \
   -PbenchmarkResult=/path/to/current-benchmarkData.json
 ```
 
-与同设备历史基线比较并执行回归门禁：
+Compare with a same-device historical baseline and apply the regression gate:
 
 ```bash
 ./gradlew benchmarkComparisonReport \
@@ -83,37 +100,43 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
   -PbenchmarkBaseline=/path/to/baseline-benchmarkData.json
 ```
 
-发布态权威基线是 `ReleaseBaselineBenchmark`：
+`ReleaseBaselineBenchmark` is the release authority:
 
-1. target 为 R8 优化、resource shrink、非 debuggable 的 benchmark variant。
-2. `CompilationMode.None` 隔离 ART 预编译收益，直接暴露交付二进制回归。
-3. 固定场景为冷启动和 state patch。
-4. 结果只在同设备、同系统版本、同温控状态下纵向比较。
+1. The target is R8-optimized, resource-shrunk, and non-debuggable.
+2. `CompilationMode.None` isolates ART precompilation benefit and exposes the delivered binary.
+3. Fixed scenarios are cold start and state patch.
+4. Compare results longitudinally only on the same device, system version, and thermal state.
 
-Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
+`ListPerformanceComparisonBenchmark` is the Compose list control:
 
-1. 两个引擎运行在同一个 R8 target 中，排除应用配置、资源和进程环境差异。
-2. 使用 `CompilationMode.None`，避免 ART 预编译掩盖框架交付成本。
-3. `viewComposeListScroll/composeListScroll` 使用相同手势轨迹。
-4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新。
-5. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
+1. Both engines run in one R8 target, removing application/resource/process differences.
+2. `CompilationMode.None` prevents precompilation from hiding framework delivery cost.
+3. `viewComposeListScroll/composeListScroll` use identical gestures.
+4. `viewComposeListMutation/composeListMutation` use the same 37-item rotation and update every
+   sixteenth item.
+5. Conclusions come from one device run; never divide results from different devices.
 
-复杂布局对照基线是 `ComplexLayoutPerformanceComparisonBenchmark`：
+`ComplexLayoutPerformanceComparisonBenchmark` is the complex-tree control:
 
-1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` 对比非 Lazy 整树滚动。
-2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并切换条件详情子树。
-3. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
-4. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
+1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` compare non-Lazy whole-tree scroll.
+2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` update all 18 cards and toggle the
+   conditional detail subtree.
+3. Cards, metrics, labels, conditional counts, and nesting order are equal.
+4. This scenario measures ViewGroup depth, whole-tree measure/layout, and local patches; it does not
+   evaluate Lazy containers.
 
-高级阴影对照基线是 `ShadowPerformanceComparisonBenchmark`：
+`ShadowPerformanceComparisonBenchmark` is the shadow control:
 
-1. ViewCompose 与 Compose 使用相同的阴影层数、颜色、尺寸、shape、列表数据和复杂布局模型。
-2. 固定覆盖阴影列表滚动/变更、阴影复杂布局滚动/更新，共 8 个成对方法。
-3. `shadowRenderPolicy=exact_bitmap|render_node|auto` 只切换 ViewCompose 后端，不改变工作负载；Compose 结果用于归一化设备温度和后台噪声。
-4. 2026-07-30 在 Samsung SM-G991B / Android 13 上各运行 10 轮，RenderNode 相对 ExactBitmap 的 P50、P95 与 RSS 方向混杂，没有证明稳定收益。
-5. 因此 `Auto` 继续固定为 `ExactBitmap`；`RenderNodeDisplayList` 保留为显式实验策略，不能作为发布默认值。
+1. ViewCompose and Compose use the same layers, colors, sizes, shapes, list data, and complex layout.
+2. Eight paired methods cover shadow-list scroll/mutation and shadow-complex scroll/update.
+3. `shadowRenderPolicy=exact_bitmap|render_node|auto` changes only the ViewCompose backend; the
+   Compose result normalizes thermal and background noise.
+4. Ten runs per backend on Samsung SM-G991B / Android 13 on 2026-07-30 showed mixed P50, P95, and RSS
+   direction for RenderNode versus ExactBitmap, with no stable benefit.
+5. `Auto` therefore remains `ExactBitmap`; `RenderNodeDisplayList` is an explicit experiment, not a
+   release default.
 
-同机后端对比入口：
+Same-device backend commands:
 
 ```bash
 ./gradlew :viewcompose-benchmark:connectedBenchmarkAndroidTest \
@@ -125,121 +148,130 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
   -Pandroid.testInstrumentationRunnerArguments.shadowRenderPolicy=render_node
 ```
 
-完整数据与决策见[高级阴影执行记录](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)。
+See the
+[advanced-shadow execution record](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md)
+for complete data and the decision.
 
-自动报告与回归规则：
+Automated report and regression rules:
 
-1. 对照表固定输出 frame CPU P50/P95、frame overrun P50/P95、heap max 与 RSS anon max。
-2. 每个场景的 ViewCompose 与 Compose 结果必须来自同一份 benchmark JSON。
-3. 历史回归只允许同设备型号、系统 fingerprint、CPU lock 状态和 compilation mode。
-4. 门禁必须同时满足“ViewCompose 原始指标超过阈值”和“ViewCompose/Compose 归一化比值超过阈值”才失败。
-5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
-6. 报告会计算各 iteration P50 的变异系数；超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。
+1. Comparison output always includes frame CPU P50/P95, frame overrun P50/P95, heap max, and RSS anon
+   max.
+2. ViewCompose and Compose for one scenario come from the same benchmark JSON.
+3. A historical comparison requires the same device model, system fingerprint, CPU-lock state, and
+   compilation mode.
+4. The gate fails only when both the raw ViewCompose threshold and normalized ViewCompose/Compose
+   ratio threshold are exceeded.
+5. Defaults live in `tools/performance/benchmark_policy.json`; changes below the absolute noise floor
+   do not fail.
+6. The report computes coefficient of variation across iteration P50 values. A value above `0.15`
+   is unstable and must be rerun rather than interpreted.
 
-### 2.3 当前结论
+### 2.3 Current conclusion
 
-1. 当前阶段优先级不是“追求极限 FPS”，而是先控制回归风险和错误用法。
-2. 最关键收益来自：
-   - 正确复用
-   - 组级脏区重组 + 跳过不必要更新
-   - 容器刷新语义稳定
-3. 基线更新（2026-03-08）：`SlotTable Lite` + 子树级重组已接入主链路，`qaQuick` 通过；`qaFull` 结果按当前设备门禁状态在 roadmap 持续登记。
+The priority is regression control and correct usage, not maximizing headline FPS. The highest
+value comes from correct reuse, group-level invalidation plus skipped work, and stable container
+refresh semantics.
 
-## 3. 性能门禁指标
+SlotTable Lite and subtree recomposition are on the main path and `qaQuick` passes. Current device
+gate status remains recorded in the [roadmap](../project/roadmap.md) rather than inferred from an old
+local `qaFull` run.
 
-每次性能相关改动，至少关注下面 4 类成本：
+## 3. Performance gate metrics
 
-1. 重建成本：状态变化后产树与 reconcile 开销
-2. 绑定成本：View rebind 与 patch 执行开销
-3. 布局成本：measure/layout 次数与深度
-4. 容器成本：延迟 session 容器的刷新与复用稳定性
+Every performance change evaluates at least:
 
-建议固定输出：
+1. rebuild cost: tree production and reconciliation after state changes;
+2. binding cost: View rebind and patch execution;
+3. layout cost: measure/layout count and depth;
+4. container cost: refresh and reuse stability in delayed sessions.
 
-1. viewcompose-benchmark 数据（同机型、同路径）
-2. render stats（含 rebound/skipped）
-3. layout pass 关键计数
+Standard evidence includes same-device/same-path viewcompose-benchmark data, render stats including
+rebound/skipped, and key layout-pass counts.
 
-## 4. 设计约束（必须遵守）
+## 4. Design constraints
 
-1. 新控件必须先定义“高频路径”和“可接受开销”，再扩参数。
-2. 新 modifier/props 不得引入无条件全量 rebind。
-3. 复用型容器必须有“结构稳定仍刷新可见内容”路径。
-4. `AndroidView` 视为性能隔离区；可重放配置放在 `update/onReset/nativeView`，外部提交副作用放在 `onCommit`，资源解绑放在只执行一次的 `onRelease`。
-5. 不为短期优化破坏模块边界和可维护性。
-6. 节点组开发必须保持 group key 稳定；若无法稳定，需显式接受“祖先回退重组 + 告警”成本。
-7. 状态并发写入必须通过 snapshot apply 语义验证，禁止在性能优化中绕过冲突合并与失败路径。
-8. 禁止将重组调度回退到 `container.post`；帧对齐路径是默认实现边界。
-9. 动画实现必须复用 `MonotonicFrameClock`，禁止在动画 API 内新增并行调度器破坏帧对齐收敛。
-10. 手势冲突策略调整必须同步验证滚动容器（Lazy/Scrollable/Pager）场景，避免通过“全量拦截”掩盖性能退化。
-11. 图形绘制链路优化必须优先保证 `drawWithCache` 语义稳定（依赖变化才重建缓存）；禁止把缓存重建放回每帧路径。
-12. 图像绘制优化不得牺牲语义：`Drawable` 路径必须保持 `DrawPaint` 生效，`ImageFilter.Chain` 不得被静默降级为 no-op。
-13. 静态阴影缓存 key 必须覆盖尺寸、density、layout direction、shape 与完整阴影规格；不得缓存 View、Session 或可变业务对象。
-14. 节点仅发生 translation/scale/rotation/alpha 变化时必须复用已有阴影栅格；blur/spread/shape/尺寸变化才允许重建。
-15. 阴影后端默认策略的任何调整都必须提供同设备、同构建、同工作负载的多轮配对数据，并通过 Compose 归一化门禁。
-16. 大尺寸、逐帧 blur/spread 或 RenderEffect 路径必须先定义内存/离屏预算；预算落地前不得进入默认列表或转场路径。
+1. Define the hot path and acceptable cost before expanding a new component API.
+2. A new modifier or spec cannot force unconditional full rebind.
+3. A reuse container must refresh visible content while structure remains stable.
+4. Treat `AndroidView` as a performance isolation boundary: replayable configuration belongs in
+   `update/onReset/nativeView`, external commit effects in `onCommit`, and final resource unbinding in
+   one-time `onRelease`.
+5. Do not trade module boundaries or maintainability for a local optimization.
+6. Keep node-group keys stable or explicitly accept ancestor fallback recomposition plus warning.
+7. Validate concurrent state writes through snapshot apply; optimizations cannot bypass merge and
+   failure paths.
+8. Do not return recomposition scheduling to `container.post`; frame alignment is the default
+   boundary.
+9. Animation reuses `MonotonicFrameClock`; do not add a parallel scheduler inside an animation API.
+10. A gesture-arbitration change validates Lazy, Scrollable, and Pager scenarios and cannot hide a
+    regression through universal interception.
+11. Graphics optimization preserves `drawWithCache` dependency-based rebuild semantics and cannot
+    return cache creation to every frame.
+12. Image optimization preserves semantics: Drawable applies `DrawPaint`, and `ImageFilter.Chain`
+    cannot silently become a no-op.
+13. A static-shadow key includes dimensions, density, layout direction, shape, and every layer. It
+    never caches a View, Session, or mutable application object.
+14. Translation/scale/rotation/alpha reuse existing shadow rasters; only blur/spread/shape/dimensions
+    may rebuild.
+15. A default shadow-backend change requires same-device/build/workload paired runs and the Compose
+    normalized gate.
+16. Large or per-frame blur/spread/RenderEffect paths define memory and off-screen budgets before
+    entering a default list or transition.
 
-## 5. 反模式清单
+## 5. Anti-patterns
 
-1. 用深层嵌套布局代替明确的容器策略。
-2. 无基准数据支撑就引入复杂优化。
-3. 把性能问题都归因于运行时，而忽略页面/容器结构问题。
-4. 在无回归测试情况下改动核心渲染热点。
+1. Deep nesting in place of an explicit container policy.
+2. Complex optimization without benchmark evidence.
+3. Blaming runtime for every cost while ignoring page and container structure.
+4. Modifying a renderer hot path without regression coverage.
 
-## 6. 分阶段路线
+## 6. Phases
 
-### Phase 1：基线与可观测性
+### Phase 1: Baseline and observability
 
-状态：已完成基础落地  
-目标：viewcompose-benchmark 路径稳定、核心指标可读取
+Status: foundation complete. The benchmark path is stable and core metrics are readable.
 
-### Phase 2：跳过更新能力
+### Phase 2: Skip capability
 
-状态：已完成（本轮闭环）  
-目标：扩大节点级 skip 更新覆盖，降低无效 rebind
-阶段备注（2026-03-07）：`Lazy/Pager` keyed diff 引擎已切换至 `DiffUtil`，并已新增 `SkipSubtree + skippedSubtrees` 路径与统计；后续增量在 Phase 3/4 持续推进。
+Status: complete for this cycle. Node-level skip coverage has expanded and unnecessary rebinds are
+reduced. Lazy/Pager keyed diff uses DiffUtil and reports `SkipSubtree + skippedSubtrees`; later work
+continues in Phases 3 and 4.
 
-### Phase 3：诊断增强
+### Phase 3: Diagnostics
 
-状态：核心可视化已完成
-目标：render tree、patch、CompositionLocal 与重组原因已可直接读取；后续补节点高亮、跨 session 关联与逐节点耗时
+Status: core visualization complete. Render tree, patches, CompositionLocal, and recomposition
+reasons are readable; node highlighting, cross-session correlation, and per-node time remain.
 
-### Phase 4：容器与布局收口
+### Phase 4: Containers and layout
 
-状态：列表、复杂布局 Compose 对照、内存指标、自动报告与归一化回归门禁已建立
-目标：收敛高频容器和复杂页面的布局开销
+Status: list and complex-layout Compose controls, memory metrics, automated reports, and normalized
+gates are established. Continue reducing layout cost in hot containers and complex pages.
 
-### Phase 5：发布态优化
+### Phase 5: Release optimization
 
-状态：R8 release 基准已建立，baseline profile 待推进
-目标：在当前无 ART 预编译基线上继续量化 baseline profile 等发布链路收益
+Status: R8 release baseline established; baseline profile remains. Quantify delivery improvements
+against the current no-ART-precompilation baseline.
 
-### Phase 6：高级阴影后端
+### Phase 6: Advanced-shadow backend
 
-状态：静态精确后端、缓存、Compose 对照和首轮设备决策已完成；动态 RenderEffect 仍为研究项
-目标：维持 `Auto = ExactBitmap`，继续积累设备矩阵；只有在明确的内存与帧预算内评估动态 blur/转场阴影
+Status: exact static backend, cache, Compose control, and first device decision complete; dynamic
+RenderEffect remains research. Keep `Auto = ExactBitmap`, grow the device matrix, and evaluate
+dynamic blur/transition shadows only inside explicit memory and frame budgets.
 
-## 7. 评审与提交流程
+## 7. Review and submission
 
-性能相关 PR 至少满足：
+A performance PR states the affected cost class, provides before/after metrics, explains any
+container refresh impact, and updates this or another owning specification.
 
-1. 说明改动针对哪类成本
-2. 提供改动前后关键指标
-3. 说明是否影响容器刷新语义
-4. 同步更新本文件或相关规范文档
+Visible layout, interaction, overlay, or input changes add instrumentation regression or record a
+scoped exemption and deadline.
 
-若改动涉及可见行为（布局、交互、overlay、输入），额外要求：
+See [Development workflow](../project/workflow.md).
 
-1. 至少补一条对应 instrumentation 回归，或登记明确豁免与补齐时间
+## 8. Related documents
 
-协作规则见：
-
-- [workflow.md](../project/workflow.md)
-
-## 8. 关联文档
-
-1. 架构规范：[overview.md](../architecture/overview.md)
-2. 容器专项清单：[session-containers.md](../architecture/session-containers.md)
-3. 统一路线图：[roadmap.md](../project/roadmap.md)
-4. 文档入口：[docs/README.md](../README.md)
-5. 状态快照规范：[state-snapshots.md](../architecture/state-snapshots.md)
+1. [Architecture overview](../architecture/overview.md)
+2. [Delayed-session containers](../architecture/session-containers.md)
+3. [Unified roadmap](../project/roadmap.md)
+4. [Documentation entrance](../README.md)
+5. [State snapshots](../architecture/state-snapshots.md)

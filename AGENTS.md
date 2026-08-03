@@ -21,10 +21,11 @@ These rules apply to AI-assisted work in this repository:
 8. Keep framework concepts separate from module-specific dependency, compatibility, and API
    contracts. New published modules must enter the module catalog and documentation tree.
 9. Use repository-relative links and never commit local absolute paths.
-10. Treat English as the canonical documentation source. When canonical public documentation
-    changes, update the Chinese mirror, explicitly mark an existing tracked mirror stale, or record
-    why the page is not translated according to the language policy. Never update only a stored
-    translation fingerprint.
+10. Keep titles, headings, and narrative prose in English under `docs/` and in Simplified Chinese
+    under the matching `zh-CN` locale path. Preserve code, identifiers, commands, URLs, and real UI
+    literals exactly, formatting a foreign-language prose literal as inline code. Every active
+    handwritten public page requires a current Chinese mirror in the same change. Never update only
+    a stored translation fingerprint.
 11. Run `./gradlew verifyDocumentationStructure`; it is also part of `qaQuick`.
 12. Durable implementation comments explain reasons, invariants, lifecycle/concurrency constraints,
     or platform workarounds. Do not add bilingual duplicate comments or narrate code line by line.

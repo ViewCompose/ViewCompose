@@ -4,7 +4,7 @@ translation_source_hash: a412277bd83a867553cadf42d654e170cd68e1285074dc197282380
 translation_status: current
 ---
 
-# Graphics Core
+# Graphics Core 模块
 
 `viewcompose-graphics-core` 是 ViewCompose 的平台无关即时图形模型。它定义几何、Path、Brush、
 Paint 与 Filter、有序绘制命令、经过验证且可复用的 Scene、可变 Recorder 和单条目 Draw Cache。

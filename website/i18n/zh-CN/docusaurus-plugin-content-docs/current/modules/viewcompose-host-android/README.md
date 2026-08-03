@@ -4,7 +4,7 @@ translation_source_hash: 7274a5c292189a35dca840f73cdaf21410b348a9531ae95c78564b4
 translation_status: current
 ---
 
-# Android Host
+# Android 宿主模块
 
 `viewcompose-host-android` 是 ViewCompose composition 与 Android View 系统之间的标准边界。
 它负责创建 Activity/Fragment 根节点、管理保留式渲染会话、提供 Android 生命周期和状态服务、
