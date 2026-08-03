@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://docs.viewcompose.com/tutorials/getting-started">Get started</a> ·
   <a href="./docs/README.md">Documentation</a> ·
   <a href="https://central.sonatype.com/artifact/com.viewcompose/viewcompose-host-android">Maven Central</a> ·
   <a href="https://plugins.jetbrains.com/plugin/33290-viewcompose-preview">Android Studio plugin</a> ·
@@ -91,27 +92,28 @@ dependencies {
 ```
 
 ```kotlin
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent { _ ->
-            UiTheme {
-                Column(
-                    spacing = 12.dp,
-                    modifier = Modifier.padding(16.dp),
-                ) {
-                    Text(text = "Hello ViewCompose")
-                    Button(
-                        text = "Continue",
-                        onClick = { /* Handle the action. */ },
-                    )
-                }
+        setUiContent {
+            val count = remember { mutableStateOf(0) }
+
+            Column(spacing = 16.dp) {
+                Text(text = "Count: ${count.value}")
+                Button(
+                    text = "Increment",
+                    onClick = { count.value += 1 },
+                )
             }
         }
     }
 }
 ```
+
+Follow [Build your first application](https://docs.viewcompose.com/tutorials/getting-started) for
+the complete setup, imports, theme, explanation, and verification commands. The complete counter is
+kept compilable in [`samples/counter`](./samples/counter).
 
 Feature artifacts bring their platform-neutral core where appropriate and may also be consumed
 separately:

@@ -8,7 +8,7 @@ Complete.
 
 Bring the generated API reference for every published ViewCompose artifact to the quality contract
 defined by the
-[Source Documentation and API Comment Standard](../api-documentation-quality.md). The work covers
+[Source Documentation and API Comment Standard](../project/api-documentation-quality.md). The work covers
 KDoc/Javadoc content, compiled samples, Dokka warnings, immutable source links, package/module
 overviews, and staged enforcement.
 

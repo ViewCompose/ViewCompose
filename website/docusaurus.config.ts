@@ -77,6 +77,12 @@ const config: Config = {
       items: [
         {
           type: 'doc',
+          docId: 'tutorials/getting-started',
+          label: 'Get started',
+          position: 'left',
+        },
+        {
+          type: 'doc',
           docId: 'architecture/overview',
           label: 'Architecture',
           position: 'left',
@@ -109,6 +115,7 @@ const config: Config = {
         {
           title: 'Learn',
           items: [
+            {label: 'Get started', to: '/tutorials/getting-started'},
             {label: 'Architecture', to: '/architecture/overview'},
             {label: 'Guides', to: '/guides/theming'},
             {label: 'Modules', to: '/modules'},

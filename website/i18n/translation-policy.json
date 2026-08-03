@@ -4,7 +4,8 @@
   "required": [
     "README.md",
     "modules/README.md",
-    "project/localization.md"
+    "project/localization.md",
+    "tutorials/getting-started.md"
   ],
   "staleMarker": ":::warning 翻译状态"
 }

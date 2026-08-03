@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://docs.viewcompose.com/zh-CN/tutorials/getting-started">快速开始</a> ·
   <a href="./docs/README.md">文档</a> ·
   <a href="https://central.sonatype.com/artifact/com.viewcompose/viewcompose-host-android">Maven Central</a> ·
   <a href="https://plugins.jetbrains.com/plugin/33290-viewcompose-preview">Android Studio 插件</a> ·
@@ -86,27 +87,28 @@ dependencies {
 ```
 
 ```kotlin
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent { _ ->
-            UiTheme {
-                Column(
-                    spacing = 12.dp,
-                    modifier = Modifier.padding(16.dp),
-                ) {
-                    Text(text = "Hello ViewCompose")
-                    Button(
-                        text = "Continue",
-                        onClick = { /* 处理点击。 */ },
-                    )
-                }
+        setUiContent {
+            val count = remember { mutableStateOf(0) }
+
+            Column(spacing = 16.dp) {
+                Text(text = "Count: ${count.value}")
+                Button(
+                    text = "Increment",
+                    onClick = { count.value += 1 },
+                )
             }
         }
     }
 }
 ```
+
+完整的工程配置、import、主题、原理说明和验证命令见
+[构建第一个应用](https://docs.viewcompose.com/zh-CN/tutorials/getting-started)。完整计数器会在
+[`samples/counter`](./samples/counter) 中持续参与编译。
 
 Feature 模块会在适用时带入对应的平台无关 Core，Core 也可以单独依赖：
 

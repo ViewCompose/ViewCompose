@@ -44,6 +44,9 @@
   "homepage.hero.description": {
     "message": "ViewCompose 为 Android View 系统带来状态驱动、模块化的 UI 构建方式，并提供明确的运行时契约和一等工具支持。"
   },
+  "homepage.hero.getStartedAction": {
+    "message": "构建计数器"
+  },
   "homepage.hero.architectureAction": {
     "message": "了解架构"
   },

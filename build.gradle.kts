@@ -153,6 +153,8 @@ val qaQuickTasks = listOf(
     ":viewcompose-graphics-core:compileKotlin",
     ":viewcompose-shadow-android:compileDebugKotlin",
     ":viewcompose-widget-constraintlayout:compileDebugKotlin",
+    ":samples:counter:assembleDebug",
+    ":samples:counter:compileDebugAndroidTestKotlin",
     ":app:compileDebugKotlin",
     ":viewcompose-runtime:test",
     ":viewcompose-navigation-core:test",
@@ -978,7 +980,11 @@ tasks.register("qaQuick") {
 tasks.register("qaFull") {
     group = "verification"
     description = "Run qaQuick plus connected UI tests on device/emulator."
-    dependsOn("qaQuick", ":app:connectedDebugAndroidTest")
+    dependsOn(
+        "qaQuick",
+        ":app:connectedDebugAndroidTest",
+        ":samples:counter:connectedDebugAndroidTest",
+    )
 }
 
 tasks.register("qaRelease") {
