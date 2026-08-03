@@ -52,4 +52,4 @@ intentionally ignored by Git.
 
 Architecture and rollout decisions are recorded in
 [ADR-0001](../docs/architecture/decisions/0001-hosted-documentation-platform.md) and the
-[active implementation plan](../docs/project/plans/hosted-documentation-system.md).
+[completed implementation plan](../docs/archive/HOSTED_DOCUMENTATION_SYSTEM_2026-08.md).

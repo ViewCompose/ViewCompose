@@ -22,6 +22,7 @@ const config: Config = {
   projectName: 'ViewCompose',
   trailingSlash: false,
   onBrokenLinks: 'throw',
+  onBrokenAnchors: 'throw',
   future: {
     v4: true,
   },
@@ -45,6 +46,27 @@ const config: Config = {
       onBrokenMarkdownLinks: resolveLocalizedMarkdownLink,
     },
   },
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects: [
+          {
+            from: '/docs',
+            to: '/documentation',
+          },
+          {
+            from: '/getting-started',
+            to: '/tutorials/getting-started',
+          },
+          {
+            from: ['/compose-migration', '/migrate-from-compose'],
+            to: '/migration',
+          },
+        ],
+      },
+    ],
+  ],
   staticDirectories: ['static', 'generated'],
   presets: [
     [
@@ -68,7 +90,24 @@ const config: Config = {
       } satisfies Options,
     ],
   ],
-  themes: ['@docusaurus/theme-mermaid'],
+  themes: [
+    '@docusaurus/theme-mermaid',
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        hashed: 'filename',
+        indexDocs: true,
+        indexBlog: false,
+        indexPages: false,
+        docsRouteBasePath: '/',
+        docsDir: '../docs',
+        language: ['en', 'zh'],
+        highlightSearchTermsOnTargetPage: true,
+        explicitSearchResultPath: true,
+        searchResultLimits: 8,
+      },
+    ],
+  ],
   themeConfig: {
     image: 'img/social-card.png',
     navbar: {
