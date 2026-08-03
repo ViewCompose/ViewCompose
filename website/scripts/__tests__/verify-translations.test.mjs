@@ -1,12 +1,15 @@
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, writeFile} from 'node:fs/promises';
+import {mkdtemp, mkdir, readFile, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {resolve} from 'node:path';
+import {dirname, resolve} from 'node:path';
 import test from 'node:test';
+import {fileURLToPath} from 'node:url';
 import {
   canonicalSourceHash,
   verifyTranslationTree,
 } from '../verify-translations.mjs';
+
+const websiteRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 async function createFixture({
   source = '# Canonical\n',
@@ -92,4 +95,20 @@ test('rejects stale content without its visible warning', async () => {
     includeStaleMarker: false,
   });
   await assert.rejects(verifyTranslationTree(fixture), /stale translation warning is missing/u);
+});
+
+test('keeps every public Compose migration page in the required tier', async () => {
+  const policy = JSON.parse(
+    await readFile(resolve(websiteRoot, 'i18n/translation-policy.json'), 'utf8'),
+  );
+  assert.deepEqual(
+    policy.required.filter((path) => path.startsWith('migration/')),
+    [
+      'migration/README.md',
+      'migration/compose-host-lifecycle-and-android-interop.md',
+      'migration/compose-layout-modifier-and-environment.md',
+      'migration/compose-navigation.md',
+      'migration/compose-state-recomposition-and-restoration.md',
+    ],
+  );
 });

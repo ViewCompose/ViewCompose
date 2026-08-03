@@ -1,0 +1,428 @@
+---
+translation_source: migration/compose-state-recomposition-and-restoration.md
+translation_source_hash: 22ffdb19f3b55ab4e1978d3179345c158488ffa1494541efd83fd7e3d404fce8
+translation_status: current
+---
+
+# 迁移 Compose 状态、重组与恢复
+
+本文比较 Jetpack Compose 与 ViewCompose 的状态和组合语义，并给出从 Compose 所有的 UI
+迁移到 ViewCompose 所有的 Android `View` 树的路径。这是一份工程对比，而不是源码兼容承诺：
+API 名称相似，并不表示编译器、失效、Identity 或恢复行为完全相同。
+
+最后验证日期：**2026-08-03**
+
+重新验证负责人：**`viewcompose-runtime`、`viewcompose-widget-core` 和
+`viewcompose-host-android` 的维护者**
+
+## 基线与对比规则
+
+本页支持的对比目标是以下采用独立版本的 ViewCompose 产物集合：
+
+| 产物 | 版本 | 在本页中的职责 |
+| --- | --- | --- |
+| `viewcompose-runtime` | `0.1.0-alpha01` | 可变状态、派生状态、快照、观察及 `ComposerLite` |
+| `viewcompose-widget-core` | `0.1.0-alpha01` | `remember`、`key`、Effect、`Saver` 及 `rememberSaveable` |
+| `viewcompose-host-android` | `0.1.0-alpha01` | Activity/Fragment 宿主及 Android SavedState 集成 |
+| `viewcompose-lifecycle` | `0.1.0-alpha01` | 组合 Scope 与生命周期 Scope 的状态收集 |
+| `viewcompose-viewmodel` | `0.1.0-alpha01` | AndroidX ViewModel 与 `SavedStateHandle` Ownership |
+
+上游稳定语义基线为：
+
+- Compose Runtime、UI 和 Foundation `1.11.4`；
+- Activity `1.13.0`；
+- Lifecycle `2.11.0`；
+- SavedState `1.5.0`。
+
+上述上游版本与发布状态已根据官方的
+[Compose Runtime](https://developer.android.com/jetpack/androidx/releases/compose-runtime)、
+[Compose Foundation](https://developer.android.com/jetpack/androidx/releases/compose-foundation)、
+[Activity](https://developer.android.com/jetpack/androidx/releases/activity)、
+[Lifecycle](https://developer.android.com/jetpack/androidx/releases/lifecycle) 和
+[SavedState](https://developer.android.com/jetpack/androidx/releases/savedstate) 发布说明核对。
+Compose `1.11.3` 与 `1.11.4` 的发布说明没有列出会改变本矩阵的状态、快照、remember、Effect
+或可保存状态变更。Lifecycle `2.11.0` 新增 Compose Scope 的 ViewModel Ownership API；该新增
+能力会影响 Ownership 选择，但不会使两个组合 Runtime 等价。
+
+仓库中的可执行对比 Fixture 有意保留在一组较旧版本上：
+
+| 依赖 | 仓库版本 |
+| --- | --- |
+| Compose Runtime、UI 和 Foundation | `1.7.8` |
+| Activity | `1.12.4` |
+| Lifecycle | `2.8.7` |
+| Kotlin 与 Compose compiler plugin | `2.0.21` |
+
+这些版本记录在固定版本的
+[`gradle/libs.versions.toml`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/libs.versions.toml)
+中。因此，本页使用两类不同证据：
+
+1. **官方语义证据**描述 Compose `1.11.4` 与 AndroidX 基线，并且只链接到 Android 官方文档
+   或 API 参考。
+2. **仓库执行证据**描述当前 ViewCompose 源码、测试与已编译示例。因为本地对比依赖版本为
+   `1.7.8`，这些证据不能证明 Compose `1.11.4` 的行为。
+
+能力状态具有固定含义：
+
+- **支持（Supported）**——ViewCompose 提供迁移所需的行为，并有仓库证据支持。
+- **部分支持（Partially supported）**——主要用例已经存在，但仍有重要的语义或 API 边界差异。
+- **刻意不同（Intentionally different）**——ViewCompose 有意采用不同的 Ownership 或执行模型，
+  调用方必须随之调整。
+- **不支持（Unsupported）**——此版本没有对应的 ViewCompose 公共能力。
+
+本页不主张任何量化性能等价性。下文的性能指导只讨论执行边界，并非基准测试结果。
+
+## 迁移前先选择状态 Owner
+
+不要从替换 API 名称开始。首先确定每个值应由哪种生命周期持有：
+
+| 所需生命周期 | ViewCompose Owner | 迁移指导 |
+| --- | --- | --- |
+| 一个已提交的组合位置 | `remember` | 用于可替换的内存对象与状态持有者 |
+| 组合以及 Activity/Fragment 重建 | 安装了 `SaveableStateRegistry` 的 `rememberSaveable` | 只保存重建页面所需的最小 UI 状态 |
+| 页面或导航目的地的业务状态 | 通过 `viewcompose-viewmodel` 使用 AndroidX `ViewModel` | 生命周期由 `ViewModelStoreOwner` 而非调用位置定义 |
+| 系统发起的进程重建期间保留 ViewModel 状态 | `SavedStateHandle` | 保存少量重建输入，不要保存派生页面模型 |
+| 持久应用数据 | 组合之外的 Repository 或数据库 | `rememberSaveable` 和 `SavedStateHandle` 都不是持久存储 |
+
+Lifecycle `2.11.0` 也提供 Compose 专用的 Scope ViewModel API。它们与源应用的 Ownership
+设计相关，但 ViewCompose 的目的地、导航图、Activity 和 Fragment Owner 通过自身的宿主与导航
+集成安装。迁移 Compose Scope 的 ViewModel 边界之前，请参阅
+[ViewModel 集成手册](../modules/viewcompose-viewmodel/README.md)。
+
+## 可变状态与 Mutation Policy {/* #mutable-state-and-mutation-policies */}
+
+Compose `mutableStateOf` 创建可观察的快照状态。Composable 读取该状态时会订阅当前重组 Scope，
+非等价写入则会调度受影响的工作。上游契约由官方
+[状态指南](https://developer.android.com/develop/ui/compose/state)与
+[`SnapshotMutableState` 参考](https://developer.android.com/reference/kotlin/androidx/compose/runtime/snapshots/SnapshotMutableState)
+定义。
+
+ViewCompose 提供相同的迁移层模型：
+
+- 读取 `MutableState.value` 会参与当前快照和 `RuntimeObservation`；
+- 在显式可变快照之外写入时，会使用自动可变事务；
+- `SnapshotMutationPolicy.equivalent` 会抑制等价写入、全局版本推进和观察失效；
+- 当 `SnapshotMutationPolicy.merge` 能产生非 null 的合并值时，会用它解决并发写入；
+- 观察回调在应用成功写入的线程上执行，宿主则负责串行化组合与 Android 工作。
+
+仓库证据：
+
+- [`State.kt` 第 25–80 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/State.kt#L25-L80)；
+- [`MutableStateImpl.kt` 第 16–114 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/MutableStateImpl.kt#L16-L114)；
+- [`SnapshotMutationPolicy.kt` 第 3–119 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/SnapshotMutationPolicy.kt#L3-L119)；
+- [`RuntimeObservation.kt` 第 9–94 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/observation/RuntimeObservation.kt#L9-L94)；
+- [`SnapshotStateTest.kt` 第 15–177 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotStateTest.kt#L15-L177)；
+- [`RuntimeObservationTest.kt` 第 18–122 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/observation/RuntimeObservationTest.kt#L18-L122)；
+- [`RuntimeSamples.kt` 中的已编译示例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt)。
+
+一次多状态提交可能针对每个发生变化且被观察的状态分别调用一次 `RuntimeObservation` 回调。
+组合失效队列会合并重复的脏 Scope，但应用代码不得依赖其回调次数与 Compose 等价。
+
+## 派生状态与失效差异 {/* #derived-state-and-invalidation-differences */}
+
+Compose `derivedStateOf` 会缓存计算，并追踪计算期间读取的每个快照状态。接收
+`SnapshotMutationPolicy` 的重载控制变化后的计算结果何时更新观察者。Android 官方的
+[`derivedStateOf` 参考](https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary#derivedStateOf(androidx.compose.runtime.SnapshotMutationPolicy,kotlin.Function0))
+与 [Effect 指南](https://developer.android.com/develop/ui/compose/side-effects#derivedstateof)
+描述了常见用例：当输入变化频率高于派生结果时，减少下游重组。
+
+ViewCompose `derivedStateOf` 为**部分支持（Partially supported）**。它采用惰性计算、缓存最近
+结果、观察计算依赖，并在依赖变化时使自己的观察者失效。它没有暴露结果 Mutation Policy
+重载，而且公共契约明确说明不会抑制相等派生结果引发的失效。它还会根据当前快照读取 Token
+重新验证缓存的计算。
+
+仓库证据：
+
+- [`State.kt` 第 67–80 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/State.kt#L67-L80)；
+- [`DerivedStateImpl.kt` 第 9–68 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/DerivedStateImpl.kt#L9-L68)；
+- [`DerivedStateTest.kt` 第 11–40 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/DerivedStateTest.kt#L11-L40)；
+- [`RuntimeSamples.kt` 中的 `derivedStateSample`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt)。
+
+迁移后果：不要在转换 Compose `derivedStateOf` 优化后，承诺相等结果会抑制 ViewCompose
+失效。如果正确性或成本控制依赖这种抑制，应发布一个经过单独比较的 `MutableState` 值，或把
+计算放到显式稳定输入边界之后。在文档声称更强的对等性之前，还需要扩大对嵌套派生状态、依赖
+切换、计算失败与相等结果失效的回归覆盖。
+
+## 快照、原子更新与冲突 {/* #snapshots-atomic-updates-and-conflicts */}
+
+Compose 可变快照会隔离写入，并在 `apply` 时原子发布；释放尚未应用的快照不会发布其中任何
+变更。活跃快照会保留状态历史，因此必须释放。请参阅官方
+[`Snapshot` 参考](https://developer.android.com/reference/kotlin/androidx/compose/runtime/snapshots/Snapshot)与
+[`MutableSnapshot` 参考](https://developer.android.com/reference/kotlin/androidx/compose/runtime/snapshots/MutableSnapshot)。
+
+ViewCompose 支持一致性读取快照、自动可变事务、显式可变快照、把嵌套可变变更应用到父快照、
+原子应用到全局、冲突报告、基于 Policy 的冲突合并，以及在旧 Reader 释放后裁剪历史。
+`withMutableSnapshot` 会释放其临时事务，并在无法合并冲突时抛出
+`SnapshotApplyConflictException`。
+
+这个领域仍为**部分支持（Partially supported）**，而非完全等价：
+
+- ViewCompose 不保证并发进入或修改同一快照实例的安全性；
+- ViewCompose Policy 协议使用 `null` 表示不可合并冲突，因此不能表示“成功合并且结果为
+  `null`”；
+- Compose 不允许在当前只读快照中创建可变快照，而当前 ViewCompose 实现会从当前 Read ID
+  派生根可变快照，并未执行这项拒绝检查；
+- 此版本的 ViewCompose 不提供 Compose `SnapshotStateList`、`SnapshotStateMap`、
+  `SnapshotStateSet` 或 `snapshotFlow` 的等价能力。
+
+仓库证据：
+
+- [`Snapshot.kt` 第 5–197 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/Snapshot.kt#L5-L197)；
+- [`SnapshotRuntime.kt` 第 49–296 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/SnapshotRuntime.kt#L49-L296)；
+- [`MutableStateImpl.kt` 第 98–142 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/MutableStateImpl.kt#L98-L142)；
+- [`SnapshotStateTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotStateTest.kt)；
+- [`SnapshotApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotApiTest.kt)。
+
+只读快照到可变快照的嵌套差异是根据当前实现推断的，并且没有专门的回归测试。应把它视为迁移
+风险，而不是可以依赖的功能。请用存放在 `MutableState` 中的不可变集合替换 Compose 快照集合，
+或者让外部可观察 Owner 持有集合，再通过
+[`viewcompose-lifecycle`](../modules/viewcompose-lifecycle/README.md) 收集。
+
+## 不使用 Compose 编译器的重组 {/* #recomposition-without-the-compose-compiler */}
+
+Compose 编译器转换是上游重组机制的核心。它创建 Restart Group、记录变化的参数、推断稳定性，
+并决定哪些 Composable 可以跳过。Strong skipping 还会改变比较规则与 Lambda Memoization
+规则。官方的[稳定性指南](https://developer.android.com/develop/ui/compose/performance/stability)、
+[Strong skipping 指南](https://developer.android.com/develop/ui/compose/performance/stability/strongskipping)
+和 [Composable 生命周期指南](https://developer.android.com/develop/ui/compose/lifecycle)描述了这些规则。
+
+ViewCompose 在这里是**刻意不同（Intentionally different）**。`ComposerLite` 在没有编译器生成
+Change Flag 的情况下协调位置 Group。Widget 与 Renderer 集成通过
+`runGroup(signature, inputs)` 建立显式 Group。每个执行的 Group 使用 `RuntimeObservation`
+收集状态读取；失效会把该 Scope 及其祖先标记为脏、把 Scope 加入队列，并允许干净的兄弟节点
+复用缓存结果。显式输入使用 Kotlin 相等性比较。ViewCompose 没有稳定/不稳定类型推断、
+`@Stable` 效果、编译器生成的 Lambda Memoization 或自动 Composable 函数 Restart Boundary。
+
+仓库证据：
+
+- [`ComposerLite.kt` 第 6–27、178–318、492–552 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L6-L552)；
+- [`RecomposeScope.kt` 第 39–64、147–180 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/RecomposeScope.kt#L39-L180)；
+- [`InvalidationQueue.kt` 第 3–76 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/InvalidationQueue.kt#L3-L76)；
+- [`ComposerLiteTest.kt` 第 16–169 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt#L16-L169)；
+- [`SubtreeRecompositionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/SubtreeRecompositionTest.kt)；
+- [`ComposerDiagnosticsTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/kotlin/com/viewcompose/runtime/composition/ComposerDiagnosticsTest.kt)。
+
+迁移后果：把频繁变化的读取移动到应该更新的最小 ViewCompose 组件或 Node Group 中。不要把
+`@Stable`、`@Immutable` 或 Compose 编译器报告移植为 ViewCompose 优化控制。请使用
+ViewCompose 诊断信息验证实际重组与跳过的 Group。普通 Kotlin 函数边界不会自动成为 Restart
+Scope。
+
+## Remembered Identity、Key 与重排 {/* #remembered-identity-keys-and-reordering */}
+
+两个 Runtime 都使用组合位置和 Key 保留内存值，但结构匹配并不等价。
+
+ViewCompose `remember` 使用当前 `RecomposeScope` 的下一个位置 Slot。它的 Key 使用结构相等性，
+Key 变化时会创建候选替换值。Prepared Composition 使替换具有事务性：提交时调用 Remember
+生命周期回调；中止时恢复旧 Slot，并放弃新值。
+
+ViewCompose `key` 会扩展 Group Signature、Remember Slot、Effect 与自动 Saveable Key 使用的
+当前 Key Namespace。它防止发生变化的结构分支无意复用不相关 Slot。但当前实现**没有**提供
+Compose 风格的 Keyed Sibling 移动：`runGroup` 首先按兄弟节点索引选择 Child；Signature
+不匹配时，会从该位置起截断它及后续 Child，再创建新 Scope。系统不会搜索并移动位于其他兄弟
+位置的匹配 Keyed Scope。
+
+仓库证据：
+
+- [`Remember.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/composition/Remember.kt)；
+- [`Key.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/composition/Key.kt)；
+- [`ComposerLite.kt` 第 178–318、432–460 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L178-L460)；
+- [`ComposerLiteTest.kt` 第 241–262、368–457、481–517 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt#L241-L517)；
+- [`RememberTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RememberTest.kt)。
+
+请使用稳定 `key` Scope 隔离分支与 Effect Identity，但条目可以重排时，应使用 Lazy Container
+的 Item Key 契约。在专门的重排测试与移动实现确立契约之前，不要承诺普通 Keyed Sibling 在重排
+后仍会保留其 Remembered Object 或 Effect 实例。
+
+## Effect 与已提交帧边界 {/* #effects-and-committed-frame-boundaries */}
+
+Compose Effect 只在组合成功后运行。每次重组成功后，`SideEffect` 会发布当前状态；Key 变化
+或调用离开 Composition 时，`DisposableEffect` 会清理；`LaunchedEffect` 会随 Key 取消并重启
+协程。请参阅 Android 官方的
+[Effect 指南](https://developer.android.com/develop/ui/compose/side-effects)。
+
+ViewCompose 支持这些迁移层生命周期，但提交边界由宿主定义：
+
+- 候选 Effect 在组合期间记录；Prepared Composition 中止时会被丢弃；
+- Renderer 建立新的原生树之后，`RenderSession` 提交 Prepared Runtime Composition；
+- Runtime 提交成功时，`LaunchedEffect` 从其 Remembered Observer 启动；
+- 随后，`DisposableEffect` 替换与 `SideEffect` 操作由 `commitSideEffects` 执行；顺序为注册
+  顺序，并且 Disposable 变更先于一次性 Side Effect；
+- 原生提交回调在 Composition Side Effect 之后运行；
+- 离开组合或释放 Session 会取消协程，并执行已经提交的清理。
+
+仓库证据：
+
+- [`SideEffect.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/effects/SideEffect.kt)；
+- [`DisposableEffect.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/effects/DisposableEffect.kt)；
+- [`CoroutineEffects.kt` 第 12–102 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/effects/CoroutineEffects.kt#L12-L102)；
+- [`ProduceState.kt` 第 49–80 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/composition/ProduceState.kt#L49-L80)；
+- [`ComposerLite.kt` 第 320–430、566–745 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L320-L745)；
+- [`RenderSession.kt` 第 170–245 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/session/RenderSession.kt#L170-L245)；
+- [`SideEffectTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/SideEffectTest.kt)；
+- [`DisposableEffectTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/DisposableEffectTest.kt)；
+- [`CoroutineEffectsTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/CoroutineEffectsTest.kt)；
+- [`RenderSessionFailureTest.kt` 第 100–153 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RenderSessionFailureTest.kt#L100-L153)。
+
+Renderer 建立新原生树之后发生的失败会报告为 Committed-frame Failure，不会回滚该原生树。
+因此 Effect 必须只包含提交后工作，并自行处理失败清理。此版本的 `LaunchedEffect` 还要求至少
+一个 Key；其 Dispatcher 与 Parent Job 来自安装的 ViewCompose Host Context，而不是 Compose
+`Recomposer`。
+
+## 可保存状态与 Saver 迁移 {/* #saveable-state-and-saver-migration */}
+
+Compose `rememberSaveable` 会在重组期间保留值，并利用 Saved Instance State 机制跨 Activity
+或系统发起的进程重建恢复。Input 会重置保留值；`Saver`、`listSaver` 或 `mapSaver` 会把领域
+状态转换为可保存表示。上游行为由 Android 官方的
+[状态指南](https://developer.android.com/develop/ui/compose/state#store-state-with-keys-beyond-recomposition)、
+[状态保存指南](https://developer.android.com/develop/ui/compose/state-saving)与
+[`rememberSaveable` API](https://developer.android.com/reference/kotlin/androidx/compose/runtime/saveable/rememberSaveable.composable)
+定义。
+
+ViewCompose 为**部分支持（Partially supported）**：
+
+- 未安装 Registry 时，`rememberSaveable` 会回退到普通 `remember`；
+- Input 会重置 Holder，但不会存入其 Saved Representation；
+- 自动 Key 由结构 Group Path、位置 Saveable Slot 及活跃显式 Key Hash 组合；
+- 提供 `Saver`、`autoSaver`、`listSaver`、`mapSaver` 和 `mutableStateSaver`；
+- ViewCompose 仍接受用户提供的字符串 Key，而 Compose `1.11.4` 已把自定义
+  `rememberSaveable` Key 标为不支持，改用位置 Scope；
+- 显式 Key 不得为空白，并且在同一 Registry 的活跃 Provider 中必须唯一。
+
+仓库证据：
+
+- [`RememberSaveable.kt` 第 5–160 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/RememberSaveable.kt#L5-L160)；
+- [`Saver.kt` 第 8–90 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/Saver.kt#L8-L90)；
+- [`ComposerLite.kt` 第 379–396 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L379-L396)；
+- [`RememberSaveableTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RememberSaveableTest.kt)；
+- [`WidgetCoreSamples.kt` 中已编译的 Saveable Registry 示例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/samples/com/viewcompose/widget/core/samples/WidgetCoreSamples.kt)。
+
+优先使用自动位置 Key。只有 Ownership 设计确有需要时才使用 ViewCompose 显式 Key，并保持其
+稳定、唯一；不要把这一模式反向带回当前 Compose。绝不能在 Registry 之外持久化自动 Saveable
+Key。Android Saved State Bundle 的大小有限，因此应保存少量重建输入，而非大型列表或完整
+页面模型。
+
+## 恢复事务：Claim、Commit 与 Release
+
+Compose 公共 `SaveableStateRegistry.consumeRestored` 契约会在消费恢复值时将它移除，使同一个
+Key 无法恢复同一值两次。请参阅官方
+[`SaveableStateRegistry` 参考](https://developer.android.com/reference/kotlin/androidx/compose/runtime/saveable/SaveableStateRegistry)。
+
+ViewCompose 在这里**刻意不同（Intentionally different）**，因为渲染帧会在原生树提交前完成
+Prepare。其 Registry 使用 Claim Transaction：
+
+1. `rememberSaveable` 在准备组合时调用 `claimRestored`。
+2. Claimed Value 仍包含在 `performSave` 中，从而保护与进行中帧并发的 Host Save。
+3. 组合提交后，Holder 注册 Provider 并提交恢复 Claim。
+4. 组合中止、恢复失败、Abandon 或 Forget 会释放未提交 Claim，使后续尝试仍可恢复该值。
+
+仓库证据：
+
+- [`SaveableStateRegistry.kt` 第 3–253 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/SaveableStateRegistry.kt#L3-L253)；
+- [`RememberSaveable.kt` 第 76–160 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/RememberSaveable.kt#L76-L160)；
+- [`ComposerLite.kt` 第 616–745 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L616-L745)；
+- [`RememberSaveableTest.kt` 第 39–163 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RememberSaveableTest.kt#L39-L163)。
+
+自定义 ViewCompose Host Registry 必须实现这套 Claim 协议；Compose 风格的立即消费不能作为
+兼容替代。还有一个边界需要补充回归证据：`SaveableHolder.onRemembered` 会在提交 Claim 之前
+注册 Provider。如果 Runtime Transaction 已提交后 Provider 注册抛出异常，目前没有聚焦测试
+证明在 Holder 随后被 Forget 或释放之前，该 Claim 会重新变为可用。
+
+## Activity、Fragment、自定义宿主与进程死亡行为
+
+标准 `ComponentActivity.setUiContent` 与 `Fragment.setUiContent` 会安装 Android 支持的
+ViewCompose Saveable State Registry。每个 `SavedStateRegistryOwner` Identity 绑定一个 Registry。
+Bridge 首次访问时消费 Owner 的 Restored Bundle，注册一个在 Android 保存时拉取最新已提交
+ViewCompose Snapshot 的 Provider，并在 Owner 销毁时移除绑定。
+
+Android Codec 接受 `null`、可递归保存的 List、String Key Map、Object Array，以及 Bundle 支持的
+`Parcelable`、`Serializable`、`IBinder`、`Size` 和 `SizeF` 值。未知外层格式会被忽略；单个损坏
+条目会隔离处理，使其他条目仍可恢复。自定义 `renderInto` Session 不会安装 Lifecycle、ViewModel、
+Saved State、Environment、Theme 或 Frame Clock 服务。其 Owner 必须显式提供并释放这些服务。
+
+仓库证据：
+
+- [`AndroidHostBridge.kt` 第 60–108、131–180、194–224 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidHostBridge.kt#L60-L224)；
+- [`AndroidSaveableStateRegistry.kt` 第 18–254 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidSaveableStateRegistry.kt#L18-L254)；
+- [`RenderInto.kt` 第 52–93 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt#L52-L93)；
+- [`AndroidSaveableStateRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/test/java/com/viewcompose/host/android/AndroidSaveableStateRegistryTest.kt)；
+- [`SaveableStateRestorationUiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/app/src/androidTest/java/com/viewcompose/SaveableStateRestorationUiTest.kt)。
+
+`SaveableStateRestorationUiTest` 验证的是 Activity 重建，而不是真实进程死亡。仓库中的真实进程
+死亡证据是
+[`validate_android_process_death.sh`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/tools/navigation/validate_android_process_death.sh)
+导航认证 Runner。它把 Task 移至后台，只终止应用进程而不 Force Stop Package，再恢复既有 Task，
+要求产生新 PID，并比较完整的导航与状态恢复报告。准确覆盖范围请参阅公开英文站点的
+[导航恢复指南](https://docs.viewcompose.com/guides/navigation#stage-5-restoration-and-platform-back)。
+
+因此，当前证据支持标准宿主恢复，但作为覆盖所有宿主的声明只能定为**部分支持
+（Partially supported）**：`renderInto` 需要手动集成，Activity 重建不等于进程死亡，而真实
+Process-kill 认证仅覆盖导航。与 Compose 相同，ViewCompose 不承诺在用户 Force Stop 或显式从
+Recents 移除应用后恢复 Saved Instance State。
+
+## 能力矩阵
+
+| 概念 | 状态 | 迁移边界 | 主要仓库证据 |
+| --- | --- | --- | --- |
+| `mutableStateOf`、Mutation Policy 与读取观察 | **支持（Supported）** | 回调次数与线程遵循 ViewCompose 契约 | [`State.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/State.kt)；[`SnapshotMutationPolicy.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/SnapshotMutationPolicy.kt)；[`RuntimeObservationTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/observation/RuntimeObservationTest.kt) |
+| 惰性依赖派生状态 | **部分支持（Partially supported）** | 没有结果 Policy；不会抑制相等派生结果的失效 | [`DerivedStateImpl.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/DerivedStateImpl.kt)；[`DerivedStateTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/DerivedStateTest.kt) |
+| 读取与可变快照事务 | **部分支持（Partially supported）** | 嵌套/线程规则不同，并有 Nullable Merge 限制 | [`Snapshot.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/Snapshot.kt)；[`SnapshotRuntime.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/SnapshotRuntime.kt)；[`SnapshotStateTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotStateTest.kt) |
+| 快照集合与 `snapshotFlow` | **不支持（Unsupported）** | 使用不可变集合状态或外部 Flow Ownership | Runtime 公共 API 与模块手册中没有对应 API |
+| 编译器生成的 Restart/Skipping/Stability | **刻意不同（Intentionally different）** | 显式 `runGroup` 与观察到的读取取代 Compose 编译器 Group | [`ComposerLite.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt)；[`ComposerDiagnosticsTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/kotlin/com/viewcompose/runtime/composition/ComposerDiagnosticsTest.kt) |
+| 细粒度失效与干净兄弟节点复用 | **部分支持（Partially supported）** | 依赖显式 Group 边界；没有 Stability 推断 | [`ComposerLiteTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt)；[`SubtreeRecompositionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/SubtreeRecompositionTest.kt) |
+| 位置 `remember` | **支持（Supported）** | 结构 Key 及事务化 Commit/Abort | [`Remember.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/composition/Remember.kt)；[`ComposerLiteTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt) |
+| 普通兄弟节点重排时的 `key` Identity | **部分支持（Partially supported）** | 隔离 Identity，但不会跨兄弟位置移动匹配 Scope | [`Key.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/composition/Key.kt)；[`ComposerLite.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt) Group 匹配 |
+| `SideEffect`、`DisposableEffect`、`LaunchedEffect` 与 `produceState` | **支持（Supported）** | 在 ViewCompose Committed-frame Boundary 执行 | [Effect 源码](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/effects/SideEffect.kt)；[`RenderSession.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/session/RenderSession.kt)；[Effect 测试](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/SideEffectTest.kt) |
+| `rememberSaveable`、Input 与 `Saver` | **部分支持（Partially supported）** | 显式 Key API 和 Registry Fallback 与当前 Compose 不同 | [`RememberSaveable.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/RememberSaveable.kt)；[`Saver.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/Saver.kt)；[`RememberSaveableTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RememberSaveableTest.kt) |
+| Restored Claim/Commit/Release | **刻意不同（Intentionally different）** | 用于安全放弃 Render Preparation | [`SaveableStateRegistry.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/SaveableStateRegistry.kt)；[Abort 与 In-flight-save 测试](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RememberSaveableTest.kt) |
+| 标准 Android 宿主恢复 | **支持（Supported）** | Activity/Fragment 宿主自动安装 Registry | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidHostBridge.kt)；[`AndroidSaveableStateRegistry.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidSaveableStateRegistry.kt) |
+| 自定义宿主恢复 | **部分支持（Partially supported）** | `renderInto` 不安装任何 SavedState 服务 | [`RenderInto.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt) |
+| 通用进程死亡认证 | **部分支持（Partially supported）** | 真实 Process-kill Runner 当前只认证导航宿主状态 | [进程死亡 Runner](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/tools/navigation/validate_android_process_death.sh)；[导航指南](https://docs.viewcompose.com/guides/navigation#stage-5-restoration-and-platform-back) |
+
+## 迁移检查清单与已知风险
+
+替换 Compose 有状态子树之前：
+
+1. 记录源状态 Owner 与所需生命周期：组合、宿主重建、导航 Entry、ViewModel 或持久存储。
+2. 找出每个 Compose Compiler Restart Boundary，并选择拥有对应状态读取的 ViewCompose 组件
+   或 Node Group。
+3. 移除基于 Compose Stability 推断、Strong skipping 或自动 Lambda Memoization 的假设。
+4. 审查每个 `derivedStateOf`；相等结果抑制很重要时，添加显式结果比较。
+5. 替换快照集合与 `snapshotFlow`，不要构造名称相似的 Wrapper。
+6. 保持 `remember` 调用顺序稳定。用 `key` 隔离分支，但不要依赖普通 Keyed Sibling 重排时
+   的移动。
+7. 把全部外部工作移入已提交 Effect。Effect 失败属于无法恢复上一棵原生树的 Committed-frame
+   Failure。
+8. 优先使用自动 `rememberSaveable` Key，保持 Saver 输出精简且与 Bundle 兼容，并验证由 Input
+   驱动的重置行为。
+9. 实现自定义 Registry 时，保留 Claim/Commit/Release 协议。
+10. 尽量使用 Activity/Fragment 宿主。使用 `renderInto` 时，显式安装 Lifecycle、ViewModel、
+    Saveable State、Environment 和 Frame Clock 服务。
+11. 分别测试配置重建与系统风格进程死亡；仅测试 Activity 重建不足以作为证据。
+
+在形成更强文档声明之前，以下已知风险需要新的可执行证据：
+
+- 相等结果及嵌套 `derivedStateOf` 的失效行为；
+- 在只读快照中创建可变快照；
+- 普通 Keyed Sibling 重排时的 Remembered State 与 Effect；
+- 提交期间 Provider 注册失败时的 Restored Claim 恢复；
+- 不依赖导航的 Activity 根级 Process-kill 认证；
+- 直接针对官方 Compose `1.11.4` 基线的语义对比测试，而不是仓库中较旧的 `1.7.8` Fixture。
+
+## 验证基线与重新验证负责人
+
+本页通过阅读当前实现、公共源码契约、既有测试与已编译示例源码完成验证。生成初始语义矩阵时
+没有执行测试；上面列出的路径用于标识既有证据，并不表示本次审查运行了每项测试。
+
+以下任一项变化时，应重新验证本页：
+
+- 列出的 ViewCompose 模块版本或源码 Revision；
+- Compose Runtime/UI/Foundation、Activity、Lifecycle 或 SavedState 稳定基线；
+- `State`、`Snapshot`、`ComposerLite`、Group 匹配、Remember、Effect、`Saver`、Registry 或
+  Host 的公共行为；
+- Renderer Prepare/Commit/Rollback 顺序；
+- Android 进程死亡认证覆盖范围。
+
+Runtime 维护者负责状态、快照、观察、Remember 与重组结论。Widget-core 维护者负责 Effect、
+Saver 与 Claim Transaction 结论。Android Host 维护者负责 Activity、Fragment、Bundle 与进程
+重建结论。只有这些负责人就能力状态达成一致，并且引用的源码/测试证据仍能保护文档声明时，
+对比更新才算完成。

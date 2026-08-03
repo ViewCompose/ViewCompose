@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 569d057c834896e2a77475bc5eb995d977007a16efe82f8276bcdd3b20d3c992
+translation_source_hash: 0145775db320b49a7803a8c7f015addf83f08ae5ca1429117d1e3b4a6c525e20
 translation_status: current
 ---
 
@@ -19,6 +19,7 @@ translation_status: current
 | --- | --- |
 | 构建第一个应用 | [构建第一个应用](./tutorials/getting-started.md) |
 | 理解框架 | [架构总览](https://docs.viewcompose.com/architecture/overview) → [Modifier 模型](https://docs.viewcompose.com/architecture/modifier) → [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec) |
+| 从 Jetpack Compose 迁移 | [Compose 迁移总览](./migration/README.md) → 按状态、布局、宿主或导航选择迁移路径 |
 | 选择或维护已发布产物 | [已发布模块目录](./modules/README.md) → 对应模块手册 |
 | 使用某项能力 | 从下面的[指南](#指南)中选择对应主题 |
 | 使用预览或进行性能工作 | [预览](./tooling/preview.md) → [诊断](https://docs.viewcompose.com/tooling/diagnostics) → [性能](https://docs.viewcompose.com/tooling/performance) |
@@ -58,6 +59,16 @@ translation_status: current
 - [导航](https://docs.viewcompose.com/guides/navigation)
 - [浮层](https://docs.viewcompose.com/guides/overlays)
 - [阴影](https://docs.viewcompose.com/guides/shadows)
+
+## 从 Jetpack Compose 迁移
+
+明确标注源版本和目标版本的语义对比与迁移路径：
+
+- [Compose 迁移总览和统一能力矩阵](./migration/README.md)
+- [状态、重组与保存恢复](./migration/compose-state-recomposition-and-restoration.md)
+- [布局、Modifier 与环境](./migration/compose-layout-modifier-and-environment.md)
+- [宿主、生命周期与 Android 互操作](./migration/compose-host-lifecycle-and-android-interop.md)
+- [Navigation 2 与 Navigation 3](./migration/compose-navigation.md)
 
 ## 已发布模块
 
