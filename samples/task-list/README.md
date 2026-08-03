@@ -5,8 +5,12 @@ public ViewCompose APIs and deliberately keeps each tutorial stage as a compiled
 
 - `TaskListFoundationsScreen` teaches snapshot state, layout, modifiers, and events.
 - `TaskListInputScreen` evolves the same model into text entry and a keyed lazy collection.
-- `MainActivity` runs the latest completed stage.
-- `TaskListAppTest` verifies the latest stage through real Android Views.
+- `TaskListThemeNavigationScreen` adds semantic theme tokens and list-detail navigation.
+- `TaskListCompleteScreen` integrates overlays, a native `TextView`, animation, gestures, explicit
+  collection policies, and sampled host diagnostics.
+- `MainActivity` runs the complete stage with explicit overlay and diagnostic host wiring.
+- `TaskListAppTest` verifies state, navigation, interop, overlay deletion, and diagnostics through
+  real Android Views.
 
 Run the local checks with:
 
@@ -22,5 +26,7 @@ Run the behavior check on a connected device or emulator with:
 ./gradlew :samples:task-list:connectedDebugAndroidTest
 ```
 
-The canonical tutorials begin at
-[`docs/tutorials/task-list-foundations.md`](../../docs/tutorials/task-list-foundations.md).
+The canonical series starts at
+[`docs/tutorials/task-list-foundations.md`](../../docs/tutorials/task-list-foundations.md) and ends
+at
+[`docs/tutorials/task-list-performance-and-diagnostics.md`](../../docs/tutorials/task-list-performance-and-diagnostics.md).

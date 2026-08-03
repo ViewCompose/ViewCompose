@@ -21,14 +21,28 @@ class TaskListAppTest {
 
     @Test
     fun addsAndCompletesATask() {
-        onView(withText("1 of 2 complete")).check(matches(isDisplayed()))
+        onView(withText("Native summary: 1 of 2 complete")).check(matches(isDisplayed()))
+
+        onView(withText("Complete Read the tutorial")).perform(click())
+        onView(withText("Native summary: 2 of 2 complete")).check(matches(isDisplayed()))
+
         onView(withHint("New task"))
             .perform(click(), replaceText("Write a device test"), closeSoftKeyboard())
         onView(withText("Add task")).perform(click())
         onView(withText("Write a device test")).check(matches(isDisplayed()))
-        onView(withText("1 of 3 complete")).check(matches(isDisplayed()))
+        onView(withText("Native summary: 2 of 3 complete")).check(matches(isDisplayed()))
 
-        onView(withText("Read the tutorial")).perform(click())
-        onView(withText("2 of 3 complete")).check(matches(isDisplayed()))
+        onView(withText("Details Read the tutorial")).perform(click())
+        onView(withText("Back to tasks")).check(matches(isDisplayed()))
+        onView(withText("Back to tasks")).perform(click())
+
+        onView(withText("Delete Run the sample")).perform(click())
+        onView(withText("Delete Run the sample?")).check(matches(isDisplayed()))
+        onView(withText("Delete")).perform(click())
+        onView(withText("Native summary: 1 of 2 complete")).check(matches(isDisplayed()))
+
+        onView(withText("Sample render stats")).perform(click())
+        onView(withText(org.hamcrest.Matchers.startsWith("Render stats:")))
+            .check(matches(isDisplayed()))
     }
 }

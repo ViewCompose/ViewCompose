@@ -835,6 +835,26 @@ val tutorialSamplesByPage =
                 "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
                     "task-list-input",
             ),
+        "task-list-theme-and-navigation.md" to
+            listOf(
+                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
+                    "task-list-theme-navigation",
+            ),
+        "task-list-overlays-and-android-views.md" to
+            listOf(
+                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
+                    "task-list-overlay-interop",
+            ),
+        "task-list-animation-and-gestures.md" to
+            listOf(
+                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
+                    "task-list-animation-gestures",
+            ),
+        "task-list-performance-and-diagnostics.md" to
+            listOf(
+                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
+                    "task-list-performance-diagnostics",
+            ),
     )
 
 tasks.register("verifyTutorialSamples") {

@@ -11,8 +11,12 @@
     "modules/README.md",
     "project/localization.md",
     "tutorials/getting-started.md",
+    "tutorials/task-list-animation-and-gestures.md",
     "tutorials/task-list-foundations.md",
-    "tutorials/task-list-input-and-lists.md"
+    "tutorials/task-list-input-and-lists.md",
+    "tutorials/task-list-overlays-and-android-views.md",
+    "tutorials/task-list-performance-and-diagnostics.md",
+    "tutorials/task-list-theme-and-navigation.md"
   ],
   "staleMarker": ":::warning 翻译状态"
 }

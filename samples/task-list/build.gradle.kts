@@ -33,6 +33,11 @@ dependencies {
     implementation(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-widget-core"))
     implementation(project(":viewcompose-host-android"))
+    implementation(project(":viewcompose-animation"))
+    implementation(project(":viewcompose-gesture"))
+    implementation(project(":viewcompose-navigation"))
+    implementation(project(":viewcompose-navigation-core"))
+    implementation(project(":viewcompose-overlay-android"))
 
     implementation(libs.androidx.activity)
     implementation(libs.material)
