@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 — 2026-08-03
+
+### Fixed
+
+- Restrict Marketplace compatibility to Android Studio by declaring
+  `com.intellij.modules.androidstudio` explicitly.
+- Verify the advertised `261.*` window against Quail 2 Patch 1, Quail 3, and the latest Quail 4
+  Canary within that window before packaging a release.
+
 ## 1.0.0 — 2026-08-01
 
 The first stable ViewCompose Preview release, targeting Android Studio

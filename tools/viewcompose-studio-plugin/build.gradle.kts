@@ -1,4 +1,6 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.api.DefaultTask
@@ -77,6 +79,8 @@ version = providers.gradleProperty("viewComposeStudioPluginVersion")
     .get()
 
 val expectedAndroidStudioBuild = "AI-261.25134.95.2612.15914620"
+val marketplaceSinceBuild = "261.25134"
+val marketplaceUntilBuild = "261.*"
 val configuredAndroidStudioPath = providers
     .gradleProperty("viewComposeAndroidStudioPath")
     .orElse(providers.environmentVariable("ANDROID_STUDIO_HOME"))
@@ -147,6 +151,24 @@ intellijPlatform {
     pluginVerification {
         ides {
             local(androidStudioHome)
+            latest {
+                types = listOf(IntelliJPlatformType.AndroidStudio)
+                channels = listOf(
+                    ProductRelease.Channel.RELEASE,
+                    ProductRelease.Channel.PATCH,
+                )
+                sinceBuild = marketplaceSinceBuild
+                untilBuild = marketplaceUntilBuild
+            }
+            latest {
+                types = listOf(IntelliJPlatformType.AndroidStudio)
+                channels = listOf(
+                    ProductRelease.Channel.CANARY,
+                    ProductRelease.Channel.RC,
+                )
+                sinceBuild = marketplaceSinceBuild
+                untilBuild = marketplaceUntilBuild
+            }
         }
     }
     pluginConfiguration {
@@ -170,17 +192,15 @@ intellijPlatform {
             code.</p>
         """.trimIndent()
         changeNotes = """
-            <p>Initial public release.</p>
+            <p>Marketplace compatibility correction.</p>
             <ul>
-              <li>Static Layoutlib previews with source-aware selection and navigation.</li>
-              <li>Theme, locale, layout direction, density, font scale, and device configuration.</li>
-              <li>Native View, layout, VNode, composition, and patch diagnostics.</li>
-              <li>Incremental refresh, full rebuild, all-previews catalog, and bounded caches.</li>
+              <li>Declare the Android Studio platform dependency explicitly.</li>
+              <li>Verify the lower, latest stable, and latest prerelease Android Studio 261 builds.</li>
             </ul>
         """.trimIndent()
         ideaVersion {
-            sinceBuild = "261.25134"
-            untilBuild = "261.*"
+            sinceBuild = marketplaceSinceBuild
+            untilBuild = marketplaceUntilBuild
         }
         vendor {
             name = "ViewCompose"
