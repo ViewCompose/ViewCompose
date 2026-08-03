@@ -150,9 +150,10 @@ identity token.
 
 ## Last verified
 
-2026-08-03: all 25 published artifacts pass strict KDoc/Javadoc generation, complete-catalog route
-verification, and immutable source-link verification. The English and Simplified Chinese builds,
-translation freshness, local search, compatibility redirects, site-page accessibility, and size
-and build-time budgets are active. The measured site output is about 204 MiB; the largest JavaScript
-asset is 650 KiB, and the Docusaurus build takes about ten seconds on the current development
-machine.
+2026-08-03: a clean complete-history build reconstructed all 25 released artifact versions from the
+recorded frozen revision and passed immutable source-link, manifest, `current`, and stable-only
+`latest` verification. The production site verified 25 API routes, 25 English module-manual
+snapshots, 25 `zh-CN` English-fallback snapshot routes, translation freshness, local search,
+compatibility redirects, and 184 site-owned accessibility pages. The measured output was 204.9 MiB,
+the largest JavaScript asset was 650 KiB, and the full site build took 18.2 seconds. `qaQuick` also
+passed.
