@@ -69,6 +69,60 @@ Capability labels have fixed meanings:
 No quantitative performance equivalence is claimed. Performance guidance below concerns execution
 boundaries only and is not a benchmark result.
 
+## Compiled side-by-side starting point
+
+This pair is the smallest executable state migration anchor in the repository. Both snippets come
+from `:samples:compose-migration`; `qaQuick` compiles the module and rejects either snippet if it
+stops matching its marked source region.
+
+Compose source:
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/state/ComposeStateSample.kt" region="compose-state" */}
+```kotlin
+@Composable
+fun ComposeStateCounter() {
+    var count by remember { mutableIntStateOf(0) }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(24.dp),
+    ) {
+        BasicText("Count: $count")
+        BasicText(
+            text = "Increment",
+            modifier = Modifier.clickable { count += 1 },
+        )
+    }
+}
+```
+{/* paired-sample-end */}
+
+ViewCompose target:
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/state/ViewComposeStateSample.kt" region="viewcompose-state" */}
+```kotlin
+fun UiTreeBuilder.ViewComposeStateCounter() {
+    val count = remember { mutableStateOf(0) }
+
+    Column(
+        spacing = 16.dp,
+        modifier = Modifier.padding(24.dp),
+    ) {
+        Text("Count: ${count.value}")
+        Button(
+            text = "Increment",
+            onClick = { count.value += 1 },
+        )
+    }
+}
+```
+{/* paired-sample-end */}
+
+The target keeps the state object explicit and reads `value` while building the ViewCompose tree.
+This verifies a compileable syntax path, not equivalence of snapshot transactions, compiler
+restart scopes, keyed identity, effects, or restoration; use the contracts below for those
+decisions.
+
 ## Choose the state owner before migrating
 
 Do not begin by replacing API names. First decide which lifetime owns each value:

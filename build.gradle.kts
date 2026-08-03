@@ -693,6 +693,132 @@ tasks.register("verifyNavigationCorePurity") {
     }
 }
 
+val migrationPairedSamplesByPage =
+    mapOf(
+        "compose-state-recomposition-and-restoration.md" to
+            listOf(
+                "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/state/ComposeStateSample.kt" to
+                    "compose-state",
+                "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/state/ViewComposeStateSample.kt" to
+                    "viewcompose-state",
+            ),
+        "compose-layout-modifier-and-environment.md" to
+            listOf(
+                "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/layout/ComposeLayoutSample.kt" to
+                    "compose-layout",
+                "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/layout/ViewComposeLayoutSample.kt" to
+                    "viewcompose-layout",
+            ),
+        "compose-host-lifecycle-and-android-interop.md" to
+            listOf(
+                "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ComposeHostSample.kt" to
+                    "compose-host",
+                "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ViewComposeHostSample.kt" to
+                    "viewcompose-host",
+            ),
+        "compose-navigation.md" to
+            listOf(
+                "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/navigation/ComposeNavigationSample.kt" to
+                    "compose-navigation",
+                "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/navigation/ViewComposeNavigationSample.kt" to
+                    "viewcompose-navigation",
+            ),
+    )
+
+tasks.register("verifyMigrationPairedSamples") {
+    group = "verification"
+    description = "Compile migration pairs and verify canonical and translated snippets match them."
+    dependsOn(":samples:compose-migration:compileDebugKotlin")
+
+    val documentationRoots =
+        listOf(
+            rootDir.resolve("docs/migration"),
+            rootDir.resolve(
+                "website/i18n/zh-CN/docusaurus-plugin-content-docs/current/migration",
+            ),
+        )
+    inputs.files(
+        migrationPairedSamplesByPage.values
+            .flatten()
+            .map { (source, _) -> rootDir.resolve(source) },
+    )
+    inputs.files(
+        documentationRoots.flatMap { docsRoot ->
+            migrationPairedSamplesByPage.keys.map { page -> docsRoot.resolve(page) }
+        },
+    )
+
+    doLast {
+        val snippetRegex =
+            Regex(
+                """\{/\* paired-sample source="([^"]+)" region="([^"]+)" \*/\}\s*```kotlin\s*([\s\S]*?)\s*```\s*\{/\* paired-sample-end \*/\}""",
+            )
+        val violations = mutableListOf<String>()
+
+        fun compiledRegion(sourcePath: String, region: String): String? {
+            val sourceFile = rootDir.resolve(sourcePath)
+            if (!sourceFile.isFile) {
+                violations += "$sourcePath -> source file does not exist"
+                return null
+            }
+            val source = sourceFile.readText().replace("\r\n", "\n")
+            val startMarker = "// DOCS_REGION_START($region)"
+            val endMarker = "// DOCS_REGION_END($region)"
+            if (source.windowed(startMarker.length).count { it == startMarker } != 1) {
+                violations += "$sourcePath -> expected exactly one '$startMarker'"
+                return null
+            }
+            if (source.windowed(endMarker.length).count { it == endMarker } != 1) {
+                violations += "$sourcePath -> expected exactly one '$endMarker'"
+                return null
+            }
+            val start = source.indexOf(startMarker) + startMarker.length
+            val end = source.indexOf(endMarker, start)
+            if (end < start) {
+                violations += "$sourcePath -> '$endMarker' must follow '$startMarker'"
+                return null
+            }
+            return source.substring(start, end).trim()
+        }
+
+        documentationRoots.forEach { docsRoot ->
+            migrationPairedSamplesByPage.forEach pageLoop@{ (pageName, expectedPairs) ->
+                val page = docsRoot.resolve(pageName)
+                if (!page.isFile) {
+                    violations += "${page.relativeTo(rootDir)} -> document does not exist"
+                    return@pageLoop
+                }
+                val matches = snippetRegex.findAll(page.readText().replace("\r\n", "\n")).toList()
+                val actualPairs = matches.map { it.groupValues[1] to it.groupValues[2] }
+                if (actualPairs != expectedPairs) {
+                    violations +=
+                        "${page.relativeTo(rootDir)} -> paired samples $actualPairs do not match $expectedPairs"
+                    return@pageLoop
+                }
+                matches.forEach snippetLoop@{ match ->
+                    val sourcePath = match.groupValues[1]
+                    val region = match.groupValues[2]
+                    val expectedSnippet = compiledRegion(sourcePath, region) ?: return@snippetLoop
+                    val documentedSnippet = match.groupValues[3].trim()
+                    if (documentedSnippet != expectedSnippet) {
+                        violations +=
+                            "${page.relativeTo(rootDir)} -> snippet '$region' differs from $sourcePath"
+                    }
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Migration paired-sample verification failed:")
+                    violations.distinct().sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyDocumentationStructure") {
     group = "verification"
     description =
@@ -965,6 +1091,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyAndroidModuleNamespaces")
     dependsOn("verifyModuleDependencyBoundaries")
     dependsOn("verifyDocumentationStructure")
+    dependsOn("verifyMigrationPairedSamples")
     dependsOn("verifyViewComposePublishingConfiguration")
     dependsOn("verifyRuntimePurity")
     dependsOn("verifyNavigationCorePurity")

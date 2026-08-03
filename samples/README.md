@@ -1,16 +1,21 @@
-# Runnable Samples
+# Samples
 
-`samples/` contains small Android applications that back progressive tutorials. These applications
-are not published Maven artifacts and must use only public ViewCompose APIs.
+`samples/` contains small Android applications and compile-only comparison modules that back
+progressive tutorials and migration guides. These modules are not published Maven artifacts and
+must use only public ViewCompose APIs.
 
-| Module | Purpose | Tutorial |
+| Module | Purpose | Documentation |
 | --- | --- | --- |
 | `:samples:counter` | Minimal Activity, state, layout, text, and button path | [Build your first application](../docs/tutorials/getting-started.md) |
+| `:samples:compose-migration` | Compiled Compose/ViewCompose pairs for state, layout and locals, Activity hosting and Android View interop, and Navigation 2 | [Migrate from Jetpack Compose](../docs/migration/README.md) |
 
 Sample rules:
 
-1. keep each application focused on one end-to-end learning outcome;
+1. keep each application or comparison module focused on one learning outcome;
 2. do not depend on the large `:app` demo or its internal scaffolding;
-3. compile the application and its test source from `qaQuick`;
-4. run behavior assertions from `qaFull` on a device or emulator;
-5. update the owning English and Chinese tutorial in the same change that alters visible behavior.
+3. compile every sample from `qaQuick`;
+4. run applicable application behavior assertions from `qaFull` on a device or emulator;
+5. keep migration Markdown snippets identical to their marked source regions through
+   `verifyMigrationPairedSamples`;
+6. update the owning canonical English page and required Chinese mirror in the same change that
+   alters documented behavior.

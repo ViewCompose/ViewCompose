@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: a11ee85f7f3dc798b4ac0cefdaacd098226c583ae8c40ad3d2680eb29c6c4e13
+translation_source_hash: 98d61b406dff63dc2d197e5a21f86b4e58d36274b537cdfa6396c36160ca8740
 translation_status: current
 ---
 
@@ -122,6 +122,8 @@ Kotlin `2.0.21`，声明位置是
 
 文档片段不能成为第二份事实来源。请使用仓库中这些可编译样例：
 
+- `:samples:compose-migration` 模块包含四篇详细迁移文档嵌入的状态、布局/环境、宿主/Android
+  互操作和 Navigation 2 成对片段；
 - [计数器应用](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt)
   组合了 Activity 宿主、remember 可变状态、View 布局、Modifier 和输入；
 - [runtime 样例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt)
@@ -135,8 +137,10 @@ Kotlin `2.0.21`，声明位置是
 - [Android 导航样例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt)
   覆盖 remember 宿主、controller 操作和 motion 配置。
 
-根 `qaQuick` 任务会编译这些样例源码集或使用它们的测试。仅设备可验证的恢复和
-Predictive Back 证据仍由[英文导航指南](https://docs.viewcompose.com/guides/navigation)链接的流程治理。
+根 `qaQuick` 任务会编译这些样例源码集或使用它们的测试。它还会运行
+`verifyMigrationPairedSamples`，拒绝中英文页面中缺失、额外、乱序或过期的成对片段。仅设备
+可验证的恢复和 Predictive Back 证据仍由[英文导航指南](https://docs.viewcompose.com/guides/navigation)
+链接的流程治理。
 
 ## 已知契约缺口
 

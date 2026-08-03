@@ -36,6 +36,57 @@ The ViewCompose contracts in scope are owned by the
 [ViewModel](../modules/viewcompose-viewmodel/README.md), and
 [renderer](../modules/viewcompose-renderer/README.md) modules.
 
+## Compiled side-by-side starting point
+
+This pair shows the narrow Activity-root and native-View path before lifecycle and cleanup policy
+are added. Both snippets are extracted from `:samples:compose-migration`; `qaQuick` compiles their
+source files and rejects documentation drift.
+
+Compose source:
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ComposeHostSample.kt" region="compose-host" */}
+```kotlin
+fun ComponentActivity.installComposeInteropSample() {
+    setContent {
+        ComposeInteropSample()
+    }
+}
+
+@Composable
+private fun ComposeInteropSample() {
+    AndroidView(
+        factory = { context -> TextView(context) },
+        update = { view -> view.text = "Native TextView" },
+    )
+}
+```
+{/* paired-sample-end */}
+
+ViewCompose target:
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ViewComposeHostSample.kt" region="viewcompose-host" */}
+```kotlin
+fun ComponentActivity.installViewComposeInteropSample() {
+    setUiContent {
+        ViewComposeInteropSample()
+    }
+}
+
+private fun UiTreeBuilder.ViewComposeInteropSample() {
+    AndroidView(
+        factory = { context -> TextView(context) },
+        update = { view ->
+            (view as TextView).text = "Native TextView"
+        },
+    )
+}
+```
+{/* paired-sample-end */}
+
+The example proves only the public installation, factory, and replay-safe update path. The target
+does not inherit Compose disposal or reuse semantics; choose owners and add `onReset`, `onCommit`,
+and `onRelease` behavior from the contracts below when the embedded View requires them.
+
 ## Capability matrix
 
 Status values are limited to **Supported**, **Partially supported**, **Intentionally different**,

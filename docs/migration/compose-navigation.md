@@ -32,17 +32,82 @@ The upstream side is a semantic review of official stable documentation and rele
 - [Activity 1.13 release notes](https://developer.android.com/jetpack/androidx/releases/activity)
 - [NavigationEvent release notes](https://developer.android.com/jetpack/androidx/releases/navigationevent)
 
-The repository's executable Android baseline is Compose 1.7.8, Activity 1.12.4, Lifecycle 2.8.7,
-and Kotlin 2.0.21. The cited ViewCompose JVM, integration, and device tests establish local
-behavior. They are not an executable comparison against Navigation 2.9.8 or Navigation3 1.1.4.
-The Navigation 2 and Navigation 3 claims in this page must therefore be re-reviewed from official
-sources whenever those versions change.
+The repository's executable Android baseline is Compose 1.7.8, Navigation 2.9.8, Activity 1.12.4,
+Lifecycle 2.8.7, and Kotlin 2.0.21. The paired sample below compiles one Navigation 2 controller,
+host, route, and navigation action on each side. The cited ViewCompose JVM, integration, and device
+tests establish broader local behavior. None of this is an executable comparison against
+Navigation3 1.1.4, and the paired sample does not prove parity with the complete Navigation 2.9.8
+surface. Navigation 2 and Navigation 3 claims must still be re-reviewed from official sources
+whenever those versions change.
 
 The ViewCompose implementation is split between the platform-neutral
 [navigation core](../modules/viewcompose-navigation-core/README.md) and the Android
 [navigation host](../modules/viewcompose-navigation/README.md). The task-oriented
 [navigation guide](../guides/navigation.md) is supplementary evidence, but source and tests take
 precedence if the guide conflicts with executable behavior.
+
+## Compiled Navigation 2 starting point
+
+This is the executable route-level starting point for a Navigation 2 source migration. Both
+snippets are extracted from `:samples:compose-migration`; `qaQuick` compiles them and verifies exact
+agreement with the documentation.
+
+Compose Navigation 2 source:
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/navigation/ComposeNavigationSample.kt" region="compose-navigation" */}
+```kotlin
+@Composable
+fun ComposeNavigationSample() {
+    val controller = rememberNavController()
+
+    NavHost(
+        navController = controller,
+        startDestination = "home",
+    ) {
+        composable("home") {
+            BasicText(
+                text = "Open details",
+                modifier = Modifier.clickable {
+                    controller.navigate("details")
+                },
+            )
+        }
+        composable("details") {
+            BasicText("Details")
+        }
+    }
+}
+```
+{/* paired-sample-end */}
+
+ViewCompose target:
+
+{/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/navigation/ViewComposeNavigationSample.kt" region="viewcompose-navigation" */}
+```kotlin
+fun UiTreeBuilder.ViewComposeNavigationSample() {
+    val controller = rememberNavHostController(
+        startDestination = NavRoute("home"),
+    )
+
+    NavHost(controller = controller) { entry ->
+        when (entry.route.name) {
+            "home" -> Button(
+                text = "Open details",
+                onClick = {
+                    controller.navigate(NavRoute("details"))
+                },
+            )
+            "details" -> Text("Details")
+            else -> error("Unknown route ${entry.route.name}")
+        }
+    }
+}
+```
+{/* paired-sample-end */}
+
+This pair proves a minimal controller-owned single-stack flow only. It does not cover typed routes,
+`NavOptions`, deep links, owner propagation, multiple stacks, restoration, Predictive Back, or any
+Navigation 3 scene/decorator behavior.
 
 ## Capability matrix
 
