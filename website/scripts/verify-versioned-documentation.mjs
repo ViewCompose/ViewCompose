@@ -23,9 +23,22 @@ async function fileExists(path) {
   }
 }
 
+function hasHref(content, route) {
+  const escaped = route.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+  return new RegExp(`href=(?:"${escaped}"|'${escaped}'|${escaped})(?:[\\s>])`, 'u').test(content);
+}
+
 export async function verifyVersionedDocumentation() {
   const releases = await loadDocumentationReleases(repositoryRoot);
   const failures = [];
+  const apiLandingPath = resolve(buildDir, 'api.html');
+  const localizedApiLandingPath = resolve(buildDir, 'zh-CN', 'api.html');
+  await requireFile(apiLandingPath, failures);
+  await requireFile(localizedApiLandingPath, failures);
+  const [apiLanding, localizedApiLanding] = await Promise.all([
+    readFile(apiLandingPath, 'utf8').catch(() => ''),
+    readFile(localizedApiLandingPath, 'utf8').catch(() => ''),
+  ]);
   for (const entry of releases.entries) {
     await requireFile(
       resolve(buildDir, 'api', entry.artifact, entry.version, 'index.html'),
@@ -39,6 +52,14 @@ export async function verifyVersionedDocumentation() {
       resolve(buildDir, 'zh-CN', 'modules', entry.artifact, `${entry.version}.html`),
       failures,
     );
+    const manualRoute = `/modules/${entry.artifact}/${entry.version}`;
+    if (!hasHref(apiLanding, manualRoute)) {
+      failures.push(`api.html -> missing manual link ${manualRoute}`);
+    }
+    const localizedManualRoute = `/zh-CN${manualRoute}`;
+    if (!hasHref(localizedApiLanding, localizedManualRoute)) {
+      failures.push(`zh-CN/api.html -> missing manual link ${localizedManualRoute}`);
+    }
   }
   for (const [artifact, current] of releases.current) {
     const currentRedirect = resolve(buildDir, 'api', artifact, 'current', 'index.html');

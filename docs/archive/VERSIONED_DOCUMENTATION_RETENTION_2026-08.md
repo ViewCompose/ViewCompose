@@ -77,4 +77,4 @@ npm run build
 
 The complete API build reconstructed and verified all 25 recorded artifact versions from the
 frozen revision. The production site verified 25 API versions, 25 module manuals, 25 `zh-CN`
-English-fallback manual routes, 184 site-owned accessibility pages, and all size/build-time budgets.
+English-fallback manual routes, 182 site-owned accessibility pages, and all size/build-time budgets.

@@ -250,8 +250,8 @@ use this model:
 The public URL contract is:
 
 ```text
-/modules/<artifact-id>/
-/modules/<artifact-id>/<version>/
+/modules/<artifact-id>
+/modules/<artifact-id>/<version>
 /api/<artifact-id>/<version>/
 /migration/...
 /tutorials/...

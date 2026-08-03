@@ -73,7 +73,7 @@ function ApiReference(): ReactNode {
                               data-noBrokenLinkCheck>
                               {translate({id: 'api.module.openApi', message: 'API'})}
                             </Link>
-                            <Link to={`/modules/${module.artifact}/${release.version}/`}>
+                            <Link to={`/modules/${module.artifact}/${release.version}`}>
                               {translate({id: 'api.module.openManual', message: 'Manual'})}
                             </Link>
                           </span>
