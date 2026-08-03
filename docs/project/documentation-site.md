@@ -81,8 +81,8 @@ version currently registered by the repository. The `latest` alias is generated 
 versions; alpha, beta, release-candidate, snapshot, preview, development, and EAP versions must not
 silently become `latest`.
 
-Immutable module-manual snapshots use `/modules/<artifact>/<version>/`; the unversioned
-`/modules/<artifact>/` page remains the maintained current guide. Historical manuals are generated
+Immutable module-manual snapshots use `/modules/<artifact>/<version>`; the unversioned
+`/modules/<artifact>` page remains the maintained current guide. Historical manuals are generated
 as canonical English snapshots, including at the equivalent `zh-CN` route, so the locale path never
 pretends that an unreviewed historical translation exists.
 
@@ -154,6 +154,6 @@ identity token.
 recorded frozen revision and passed immutable source-link, manifest, `current`, and stable-only
 `latest` verification. The production site verified 25 API routes, 25 English module-manual
 snapshots, 25 `zh-CN` English-fallback snapshot routes, translation freshness, local search,
-compatibility redirects, and 184 site-owned accessibility pages. The measured output was 204.9 MiB,
-the largest JavaScript asset was 650 KiB, and the full site build took 18.2 seconds. `qaQuick` also
+compatibility redirects, and 182 site-owned accessibility pages. The measured output was 204.8 MiB,
+the largest JavaScript asset was 650 KiB, and the full site build took 12.2 seconds. `qaQuick` also
 passed.
