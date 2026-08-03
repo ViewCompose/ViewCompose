@@ -39,6 +39,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             "com.viewcompose.publishing.root must be applied to the root project."
         }
         val metadata = PublishingMetadata.load(project)
+        val documentationHistory = DocumentationReleaseHistory.load(project)
         val publishedProjects = metadata.moduleVersions.map { (module, _) ->
             project.findProject(":$module")
                 ?: throw GradleException(
@@ -157,6 +158,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 moduleVersions.set(metadata.moduleVersions)
                 moduleSourceRevisions.set(metadata.moduleSourceRevisions)
                 strictApiDocsModules.set(metadata.strictApiDocsModules)
+                documentationReleaseEntries.set(
+                    documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
+                )
             }
         val publishLocal = project.tasks.register("publishViewComposeToLocalRepository") {
             group = "publishing"
@@ -507,6 +511,9 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
     @get:Input
     abstract val strictApiDocsModules: ListProperty<String>
 
+    @get:Input
+    abstract val documentationReleaseEntries: ListProperty<String>
+
     @TaskAction
     fun verifyConfiguration() {
         val group = mavenGroup.get()
@@ -545,6 +552,51 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
         check(missingStrictModules.isEmpty()) {
             "Published modules missing the strict API documentation gate: " +
                 "${missingStrictModules.sorted().joinToString()}."
+        }
+
+        val documentationEntries = documentationReleaseEntries.get()
+            .map(DocumentationReleaseEntry::decode)
+        check(documentationEntries.isNotEmpty()) {
+            "No immutable documentation releases are registered."
+        }
+        val duplicateDocumentationVersions = documentationEntries
+            .groupingBy { entry -> entry.module to entry.version }
+            .eachCount()
+            .filterValues { count -> count > 1 }
+            .keys
+        check(duplicateDocumentationVersions.isEmpty()) {
+            "Duplicate immutable documentation releases: " +
+                duplicateDocumentationVersions
+                    .sortedWith(compareBy({ it.first }, { it.second }))
+                    .joinToString { (module, version) -> "$module:$version" }
+        }
+        documentationEntries.forEach { entry ->
+            check(entry.order >= 0) {
+                "Documentation release order must be non-negative: ${entry.encoded()}"
+            }
+            check(MODULE_PATTERN.matches(entry.module)) {
+                "Invalid documentation artifact id '${entry.module}'."
+            }
+            check(VERSION_PATTERN.matches(entry.version)) {
+                "Documentation release '${entry.module}' has invalid version '${entry.version}'."
+            }
+            check(SOURCE_REVISION_PATTERN.matches(entry.sourceRevision)) {
+                "Documentation release '${entry.module}:${entry.version}' must use a full " +
+                    "lowercase Git commit SHA."
+            }
+            check(entry.module in versions) {
+                "Documentation history contains unknown module '${entry.module}'."
+            }
+        }
+        val documentationPairs = documentationEntries
+            .associateBy { entry -> Triple(entry.module, entry.version, entry.sourceRevision) }
+        versions.forEach { (module, version) ->
+            val revision = checkNotNull(sourceRevisions[module])
+            check(Triple(module, version, revision) in documentationPairs) {
+                "Current publication '$module:$version' at '$revision' is missing from " +
+                    "gradle/viewcompose-documentation-releases.properties. Register its " +
+                    "immutable documentation release before advancing publishing metadata."
+            }
         }
     }
 }
@@ -904,6 +956,91 @@ private data class PublishingMetadata(
                     .sorted(),
                 moduleVersions = versions,
                 moduleSourceRevisions = sourceRevisions,
+            )
+        }
+    }
+}
+
+private data class DocumentationReleaseEntry(
+    val order: Int,
+    val module: String,
+    val version: String,
+    val sourceRevision: String,
+) {
+    fun encoded(): String = "$order|$module|$version|$sourceRevision"
+
+    companion object {
+        fun decode(value: String): DocumentationReleaseEntry {
+            val fields = value.split('|')
+            check(fields.size == 4) {
+                "Invalid documentation release entry '$value'."
+            }
+            return DocumentationReleaseEntry(
+                order = fields[0].toIntOrNull()
+                    ?: throw GradleException(
+                        "Invalid documentation release order '${fields[0]}' in '$value'.",
+                    ),
+                module = fields[1],
+                version = fields[2],
+                sourceRevision = fields[3],
+            )
+        }
+    }
+}
+
+private data class DocumentationReleaseHistory(
+    val entries: List<DocumentationReleaseEntry>,
+) {
+    companion object {
+        fun load(project: Project): DocumentationReleaseHistory {
+            val historyFile = project.rootProject.file(
+                "gradle/viewcompose-documentation-releases.properties",
+            )
+            check(historyFile.isFile) {
+                "Missing immutable documentation history: ${historyFile.absolutePath}"
+            }
+            val properties = Properties().apply {
+                historyFile.inputStream().use(::load)
+            }
+            val schemaVersion = properties.required("schema.version")
+            check(schemaVersion == "1") {
+                "Unsupported documentation release schema '$schemaVersion'."
+            }
+            val releaseCount = properties.required("release.count").toIntOrNull()
+                ?: throw GradleException("Documentation release.count must be an integer.")
+            check(releaseCount > 0) {
+                "Documentation release.count must be positive."
+            }
+            val entries = (0 until releaseCount).flatMap { order ->
+                val prefix = "release.$order"
+                val version = properties.required("$prefix.version")
+                val sourceRevision = properties.required("$prefix.sourceRevision")
+                val modules = properties.required("$prefix.modules")
+                    .split(',')
+                    .map(String::trim)
+                    .filter(String::isNotEmpty)
+                check(modules.isNotEmpty()) {
+                    "$prefix.modules must contain at least one artifact."
+                }
+                check(modules.distinct().size == modules.size) {
+                    "$prefix.modules contains duplicate artifacts."
+                }
+                modules.map { module ->
+                    DocumentationReleaseEntry(
+                        order = order,
+                        module = module,
+                        version = version,
+                        sourceRevision = sourceRevision,
+                    )
+                }
+            }
+            return DocumentationReleaseHistory(
+                entries = entries.sortedWith(
+                    compareBy(
+                        DocumentationReleaseEntry::order,
+                        DocumentationReleaseEntry::module,
+                    ),
+                ),
             )
         }
     }
