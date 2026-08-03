@@ -14,6 +14,7 @@ on:
       - "**/src/main/**"
       - "build.gradle.kts"
       - "settings.gradle.kts"
+      - "gradle/viewcompose-documentation-releases.properties"
       - "gradle/viewcompose-publishing.properties"
       - "tools/viewcompose-publishing-build/**"
   workflow_dispatch:

@@ -14,6 +14,15 @@ async function requireFile(path, failures) {
   }
 }
 
+async function fileExists(path) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function verifyVersionedDocumentation() {
   const releases = await loadDocumentationReleases(repositoryRoot);
   const failures = [];
@@ -48,6 +57,16 @@ export async function verifyVersionedDocumentation() {
     const latestRedirect = resolve(buildDir, 'api', artifact, 'latest', 'index.html');
     if (latestStable) {
       await requireFile(latestRedirect, failures);
+      try {
+        const redirect = await readFile(latestRedirect, 'utf8');
+        if (!redirect.includes(`../${latestStable.version}/`)) {
+          failures.push(`api/${artifact}/latest -> does not target ${latestStable.version}`);
+        }
+      } catch {
+        // Missing files are already reported above.
+      }
+    } else if (await fileExists(latestRedirect)) {
+      failures.push(`api/${artifact}/latest -> prerelease history must not create latest`);
     }
   }
   if (failures.length > 0) {

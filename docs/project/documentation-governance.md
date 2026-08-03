@@ -107,6 +107,11 @@ have exactly one catalog row. Adding, renaming, publishing, or retiring an artif
 catalog, publishing metadata, dependency documentation, and structure verification to change
 together.
 
+[`gradle/viewcompose-documentation-releases.properties`](../../gradle/viewcompose-documentation-releases.properties)
+is the append-only registry of released artifact/version/source-revision triples. Current
+publishing metadata must resolve to an exact registry entry; a released pair is never rewritten or
+removed.
+
 Every catalog row must link an available `docs/modules/<artifact-id>/README.md`; `Planned` is no
 longer an accepted state for published artifacts. A new artifact must not receive its first public
 release until that manual, its generated API tree, and its strict source-comment gate exist. The
@@ -242,7 +247,7 @@ use this model:
 - renamed or moved public pages receive redirects; public URLs are not silently reused for a
   different subject.
 
-The planned URL contract is generator-neutral:
+The public URL contract is:
 
 ```text
 /modules/<artifact-id>/
@@ -252,18 +257,23 @@ The planned URL contract is generator-neutral:
 /tutorials/...
 ```
 
-Exact deployment mechanics will be decided with the hosting system, but changing this semantic URL
-shape requires an ADR and redirect plan.
+The mutable module-manual route describes the current supported line. Versioned module manuals are
+generated from the recorded release revision and remain English canonical snapshots under both
+locale route trees. Changing this semantic URL shape requires an ADR and redirect plan.
 
 Every published module records `module.<artifact>.sourceRevision` beside its independent version in
 the publication metadata. The value is a full 40-character Git commit SHA whose module source is
 byte-for-byte the source used to generate the reference. Release preparation therefore freezes the
-module source in one commit, then changes version and revision metadata in a second commit. A module
-version must never be advanced without advancing this source revision when its source changed.
+module source and manual in one commit, then appends the immutable history entry and changes version
+and revision metadata in a second, metadata-only commit. The frozen revision must remain reachable
+from Git history. A module version must never be advanced without a matching history entry, or
+without advancing the source revision when its source changed.
 
 Selected-module API generation is an iteration aid only. Production deployment must run the
-complete-catalog verifier, which checks every version route, the mutable `current` redirect, stable
-`latest` policy, manifest parity, and at least one immutable source link per module.
+complete-history API verifier and production site build. Together they reconstruct every recorded
+version from immutable Git sources, check every API and manual route, validate the mutable `current`
+redirect and stable-only `latest` policy, enforce manifest parity, and require immutable API source
+links.
 
 ## Language policy
 
@@ -273,10 +283,11 @@ default English site is published at `/`; the Chinese site is published at `/zh-
 a second independent documentation tree or interleave complete English and Chinese copies within
 one hosted page.
 
-Generated KDoc/Javadoc remains canonical English API reference. Chinese module manuals, tutorials,
-and guides explain how to use those APIs but do not duplicate the complete generated symbol tree.
-Existing mixed-language source comments and pages may migrate incrementally when their content is
-next materially updated.
+Generated KDoc/Javadoc and generated historical module-manual snapshots remain canonical English
+reference. Chinese current module manuals, tutorials, and guides explain how to use those APIs but
+do not duplicate the complete generated symbol tree or immutable snapshot history. Existing
+mixed-language source comments and pages may migrate incrementally when their content is next
+materially updated.
 
 ### Canonical-first translation workflow
 
@@ -439,6 +450,6 @@ Every documentation review verifies:
 - `./gradlew verifyDocumentationStructure` passes.
 
 The structure gate is included in `qaQuick`. The documentation workflow additionally generates the
-complete versioned Dokka catalog, type-checks Docusaurus, enforces production-build link checking,
-and deploys only from `main`. Sample compilation and accessibility automation remain production
-hardening work. Generated output and deployment credentials must remain outside the repository.
+complete versioned Dokka and module-manual catalog, type-checks Docusaurus, enforces
+production-build link and site-owned-page accessibility checks, and deploys only from `main`.
+Generated output and deployment credentials must remain outside the repository.
