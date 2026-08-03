@@ -18,12 +18,12 @@ import org.gradle.api.provider.Property
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.Delete
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.GradleBuild
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskAction
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.kotlin.dsl.create
@@ -63,54 +63,46 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                     "Validates -PviewComposeDocsModules before generating API documentation."
                 modules.set(documentationModules)
                 availableModules.set(metadata.moduleVersions.keys.sorted())
-            }
+        }
         val apiOutputDirectory = project.layout.projectDirectory.dir("website/generated/api")
-        val assembleApiDocs = project.tasks.register<Sync>("assembleViewComposeApiDocs") {
+        val assembleApiDocs = project.tasks.register<Exec>("assembleViewComposeApiDocs") {
             group = "documentation"
             description =
-                "Generates versioned Dokka HTML for all published modules or " +
+                "Rebuilds immutable Dokka history for all published modules or " +
                     "-PviewComposeDocsModules."
             dependsOn(verifyDocumentationSelection)
             val selectedModules = documentationModules.get()
-            selectedModules.forEach { module ->
-                val publishedProject = requireNotNull(project.findProject(":$module"))
-                val version = requireNotNull(metadata.moduleVersions[module])
-                dependsOn("${publishedProject.path}:dokkaGeneratePublicationHtml")
-                from(publishedProject.layout.buildDirectory.dir("dokka/html")) {
-                    into("$module/$version")
-                }
-            }
-            into(apiOutputDirectory)
-            doLast {
-                val outputRoot = apiOutputDirectory.asFile
-                val manifest =
-                    selectedModules.sorted().joinToString(
-                        prefix = "[\n",
-                        postfix = "\n]\n",
-                        separator = ",\n",
-                    ) { module ->
-                        val version = requireNotNull(metadata.moduleVersions[module])
-                        "  {\"artifact\":\"$module\",\"version\":\"$version\"}"
-                    }
-                outputRoot.resolve("manifest.json").writeText(manifest)
-                selectedModules.forEach { module ->
-                    val version = requireNotNull(metadata.moduleVersions[module])
-                    writeApiRedirect(
-                        directory = outputRoot.resolve("$module/current"),
-                        module = module,
-                        version = version,
-                    )
-                    if (version.isStableRelease()) {
-                        writeApiRedirect(
-                            directory = outputRoot.resolve("$module/latest"),
-                            module = module,
-                            version = version,
-                        )
-                    }
-                }
-            }
+            inputs.file(project.layout.projectDirectory.file("gradle/viewcompose-publishing.properties"))
+            inputs.file(
+                project.layout.projectDirectory.file(
+                    "gradle/viewcompose-documentation-releases.properties",
+                ),
+            )
+            inputs.files(
+                project.layout.projectDirectory.file(
+                    "website/scripts/assemble-versioned-api-docs.mjs",
+                ),
+                project.layout.projectDirectory.file(
+                    "website/scripts/documentation-releases.mjs",
+                ),
+            )
+            inputs.property(
+                "documentationReleaseEntries",
+                documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
+            )
+            inputs.property("selectedModules", selectedModules)
+            outputs.dir(apiOutputDirectory)
+            workingDir(project.layout.projectDirectory)
+            commandLine(
+                "node",
+                project.layout.projectDirectory
+                    .file("website/scripts/assemble-versioned-api-docs.mjs")
+                    .asFile.absolutePath,
+                "--modules",
+                selectedModules.joinToString(","),
+            )
         }
-        val verifyApiDocs = project.tasks.register<VerifyApiDocumentationOutputTask>(
+        project.tasks.register<VerifyApiDocumentationOutputTask>(
             "verifyAssembledViewComposeApiDocs",
         ) {
             group = "documentation"
@@ -121,6 +113,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             expectedModules.set(metadata.moduleVersions.keys.sorted())
             moduleVersions.set(metadata.moduleVersions)
             moduleSourceRevisions.set(metadata.moduleSourceRevisions)
+            documentationReleaseEntries.set(
+                documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
+            )
             scmUrl.set(metadata.scmUrl)
             requireCompleteCatalog.set(false)
         }
@@ -136,6 +131,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             expectedModules.set(metadata.moduleVersions.keys.sorted())
             moduleVersions.set(metadata.moduleVersions)
             moduleSourceRevisions.set(metadata.moduleSourceRevisions)
+            documentationReleaseEntries.set(
+                documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
+            )
             scmUrl.set(metadata.scmUrl)
             requireCompleteCatalog.set(true)
         }
@@ -143,7 +141,12 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             group = "documentation"
             description =
                 "Generates selected API docs and reports undocumented public/protected APIs."
-            dependsOn(verifyApiDocs)
+            dependsOn(verifyDocumentationSelection)
+            dependsOn(
+                documentationModules.get().map { module ->
+                    ":$module:dokkaGeneratePublicationHtml"
+                },
+            )
         }
 
         val localRepository = project.layout.buildDirectory.dir("maven-repository")
@@ -286,30 +289,6 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             tasks = listOf("clean", "assemble")
         }
     }
-}
-
-private fun writeApiRedirect(
-    directory: File,
-    module: String,
-    version: String,
-) {
-    directory.mkdirs()
-    directory.resolve("index.html").writeText(
-        """
-        <!doctype html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta http-equiv="refresh" content="0; url=../$version/">
-            <link rel="canonical" href="../$version/">
-            <title>ViewCompose $module API</title>
-          </head>
-          <body>
-            <p><a href="../$version/">Open $module $version API reference</a></p>
-          </body>
-        </html>
-        """.trimIndent() + "\n",
-    )
 }
 
 private fun String.isStableRelease(): Boolean {
@@ -619,6 +598,9 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
     abstract val moduleSourceRevisions: MapProperty<String, String>
 
     @get:Input
+    abstract val documentationReleaseEntries: ListProperty<String>
+
+    @get:Input
     abstract val scmUrl: Property<String>
 
     @get:Input
@@ -631,6 +613,9 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
         val expected = expectedModules.get().toSet()
         val versions = moduleVersions.get()
         val revisions = moduleSourceRevisions.get()
+        val releaseEntries = documentationReleaseEntries.get()
+            .map(DocumentationReleaseEntry::decode)
+            .filter { entry -> entry.module in selected }
         val failures = mutableListOf<String>()
 
         if (requireCompleteCatalog.get() && selected != expected) {
@@ -649,17 +634,24 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
             failures += "manifest.json is missing"
             emptyList()
         }
-        manifestEntries.groupingBy { (module, _) -> module }.eachCount()
+        manifestEntries.groupingBy { entry -> entry }.eachCount()
             .filterValues { count -> count > 1 }
             .keys
-            .sorted()
-            .forEach { module -> failures += "$module -> duplicate API manifest entry" }
-        val manifestMap = manifestEntries.toMap()
-        if (manifestMap.keys != selected) {
+            .sortedWith(compareBy({ it.first }, { it.second }))
+            .forEach { (module, version) ->
+                failures += "$module:$version -> duplicate API manifest entry"
+            }
+        val expectedManifestEntries = releaseEntries
+            .map { entry -> entry.module to entry.version }
+            .toSet()
+        if (manifestEntries.toSet() != expectedManifestEntries) {
+            val missingEntries = (expectedManifestEntries - manifestEntries.toSet())
+                .sortedWith(compareBy({ it.first }, { it.second }))
+            val unexpectedEntries = (manifestEntries.toSet() - expectedManifestEntries)
+                .sortedWith(compareBy({ it.first }, { it.second }))
             failures +=
-                "API manifest modules do not match the generated selection: " +
-                    "missing ${(selected - manifestMap.keys).sorted()}, " +
-                    "unexpected ${(manifestMap.keys - selected).sorted()}"
+                "API manifest versions do not match immutable documentation history: " +
+                    "missing $missingEntries, unexpected $unexpectedEntries"
         }
 
         selected.sorted().forEach { module ->
@@ -669,14 +661,7 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
                 failures += "$module -> publishing metadata is incomplete"
                 return@forEach
             }
-            if (manifestMap[module] != version) {
-                failures += "$module -> manifest version '${manifestMap[module]}' != '$version'"
-            }
             val moduleRoot = root.resolve(module)
-            val versionRoot = moduleRoot.resolve(version)
-            if (!versionRoot.resolve("index.html").isFile) {
-                failures += "$module -> immutable version route '$version' is missing"
-            }
             verifyRedirect(
                 file = moduleRoot.resolve("current/index.html"),
                 module = module,
@@ -685,26 +670,39 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
                 failures = failures,
             )
             val latestRedirect = moduleRoot.resolve("latest/index.html")
-            if (version.isStableRelease()) {
+            val latestStable = releaseEntries
+                .filter { entry -> entry.module == module && entry.version.isStableRelease() }
+                .maxByOrNull(DocumentationReleaseEntry::order)
+            if (latestStable != null) {
                 verifyRedirect(
                     file = latestRedirect,
                     module = module,
                     alias = "latest",
-                    version = version,
+                    version = latestStable.version,
                     failures = failures,
                 )
             } else if (latestRedirect.exists()) {
-                failures += "$module -> prerelease '$version' must not publish a latest alias"
+                failures += "$module -> no stable release exists, but a latest alias was published"
             }
+        }
 
-            val expectedSourceUrl = "${scmUrl.get()}/blob/$revision/$module/"
+        releaseEntries.forEach { entry ->
+            val versionRoot = root.resolve(entry.module).resolve(entry.version)
+            if (!versionRoot.resolve("index.html").isFile) {
+                failures +=
+                    "${entry.module} -> immutable version route '${entry.version}' is missing"
+                return@forEach
+            }
+            val expectedSourceUrl =
+                "${scmUrl.get()}/blob/${entry.sourceRevision}/${entry.module}/"
             val sourceLinkFound = versionRoot.walkTopDown()
                 .filter(File::isFile)
                 .filter { file -> file.extension == "html" }
                 .any { file -> expectedSourceUrl in file.readText() }
             if (!sourceLinkFound) {
                 failures +=
-                    "$module -> generated API does not link to immutable source '$revision'"
+                    "${entry.module}:${entry.version} -> generated API does not link to " +
+                        "immutable source '${entry.sourceRevision}'"
             }
         }
 
@@ -1055,7 +1053,9 @@ private val MODULE_PATTERN = Regex("viewcompose-[a-z0-9-]+")
 private val VERSION_PATTERN = Regex("[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?")
 private val SOURCE_REVISION_PATTERN = Regex("[a-f0-9]{40}")
 private val API_MANIFEST_ENTRY_PATTERN =
-    Regex("""\{"artifact":"([^"]+)","version":"([^"]+)"}""")
+    Regex(
+        """\{\s*"artifact"\s*:\s*"([^"]+)"\s*,\s*"version"\s*:\s*"([^"]+)"""",
+    )
 private val REQUIRED_POM_ELEMENTS = listOf(
     "<name>",
     "<description>",
