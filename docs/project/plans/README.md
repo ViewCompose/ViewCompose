@@ -2,13 +2,9 @@
 
 This directory contains multi-step work that is currently active and must survive across sessions.
 
-Current active plan:
+There are currently no active execution plans.
 
-- [Layered task-list tutorials](./layered-task-list-tutorials-plan.md) — build one compiled sample
-  application into a progressive tutorial series, with required Chinese mirrors and executable
-  verification.
-
-Completed migration-sample, hosted-documentation, and version-retention plans are retained in the
+Completed tutorial, migration-sample, hosted-documentation, and version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
 
 Before adding a plan, read [Documentation governance](../documentation-governance.md). A plan must

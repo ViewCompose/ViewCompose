@@ -7,7 +7,7 @@ must use only public ViewCompose APIs.
 | Module | Purpose | Documentation |
 | --- | --- | --- |
 | `:samples:counter` | Minimal Activity, state, layout, text, and button path | [Build your first application](../docs/tutorials/getting-started.md) |
-| `:samples:task-list` | Progressive task-list application with compiled tutorial stages and device behavior checks | [Build a task list with state and layout](../docs/tutorials/task-list-foundations.md) |
+| `:samples:task-list` | Complete progressive task-list application with six compiled tutorial stages and device behavior checks | [Build a task list with state and layout](../docs/tutorials/task-list-foundations.md) |
 | `:samples:compose-migration` | Compiled Compose/ViewCompose pairs for state, layout and locals, Activity hosting and Android View interop, and Navigation 2 | [Migrate from Jetpack Compose](../docs/migration/README.md) |
 
 Sample rules:

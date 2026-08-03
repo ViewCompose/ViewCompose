@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 31692aebe59333c3ef38e8e119b12ec6115d86a696b6f790507a995912a7c42c
+translation_source_hash: be300aa6dcc144345bb107a645174cedb60568601fad5d52fbf14fb1619ceb8d
 translation_status: current
 ---
 
@@ -18,7 +18,7 @@ GitHub 托管文档站点的内容边界。
 | 目标 | 建议入口 |
 | --- | --- |
 | 构建第一个应用 | [构建第一个应用](./tutorials/getting-started.md) |
-| 逐步构建真实应用 | [任务清单状态与布局](./tutorials/task-list-foundations.md) → [输入与 Lazy 集合](./tutorials/task-list-input-and-lists.md) |
+| 逐步构建真实应用 | [任务清单状态与布局](./tutorials/task-list-foundations.md) → [输入与 Lazy 集合](./tutorials/task-list-input-and-lists.md) → [主题与导航](./tutorials/task-list-theme-and-navigation.md) → [Overlay 与 Android View](./tutorials/task-list-overlays-and-android-views.md) → [动画与手势](./tutorials/task-list-animation-and-gestures.md) → [性能与诊断](./tutorials/task-list-performance-and-diagnostics.md) |
 | 理解框架 | [架构总览](https://docs.viewcompose.com/architecture/overview) → [Modifier 模型](https://docs.viewcompose.com/architecture/modifier) → [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec) |
 | 从 Jetpack Compose 迁移 | [Compose 迁移总览](./migration/README.md) → 按状态、布局、宿主或导航选择迁移路径 |
 | 选择或维护已发布产物 | [已发布模块目录](./modules/README.md) → 对应模块手册 |
@@ -51,6 +51,14 @@ GitHub 托管文档站点的内容边界。
   布局、Modifier 和事件启动渐进式应用。
 - [添加任务输入和带 key 的 Lazy 列表](./tutorials/task-list-input-and-lists.md)——在同一个应用中
   加入可编辑文本、不可变集合更新、稳定 key 和设备测试。
+- [添加语义主题与列表详情导航](./tutorials/task-list-theme-and-navigation.md)——加入宿主解析 token、
+  类型化路由和框架管理的返回栈。
+- [确认删除并托管原生 Android View](./tutorials/task-list-overlays-and-android-views.md)——集成
+  自定义 Dialog Overlay 和由状态驱动的原生 `TextView`。
+- [为完成状态添加动画与有边界的手势](./tutorials/task-list-animation-and-gestures.md)——让动画和
+  任务行手势复用同一组确定性应用操作。
+- [调整集合复用并检查渲染诊断](./tutorials/task-list-performance-and-diagnostics.md)——明确集合
+  性能提示，并在不产生渲染循环的情况下采样不可变宿主计数。
 
 ## 指南
 

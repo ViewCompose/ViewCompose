@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `LAYERED_TASK_LIST_TUTORIALS_2026-08.md` | 同一个可运行任务清单应用已经形成六章分层教程，包含可编译双语片段、真机行为测试与 `qaQuick`/`qaFull` 门禁 |
 | `COMPOSE_MIGRATION_PAIRED_SAMPLES_2026-08.md` | 四个 Compose/ViewCompose 迁移域已有可编译成对源码、双语片段与 `qaQuick` 漂移门禁 |
 | `VERSIONED_DOCUMENTATION_RETENTION_2026-08.md` | 25 个发布模块的不可变 API 与手册快照、完整历史重建、版本别名及发版门禁已经闭环 |
 | `HOSTED_DOCUMENTATION_SYSTEM_2026-08.md` | 托管站点、25 模块 API、双语模块与 Compose 迁移文档、搜索、重定向及质量门禁已经闭环 |
