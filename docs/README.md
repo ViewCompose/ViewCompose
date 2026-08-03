@@ -19,6 +19,7 @@ historical evidence only.
 | --- | --- |
 | Build the first application | [Build your first application](./tutorials/getting-started.md) |
 | Understand the framework | [Architecture overview](./architecture/overview.md) → [Modifier model](./architecture/modifier.md) → [NodeSpec model](./architecture/node-spec.md) |
+| Migrate from Jetpack Compose | [Compose migration overview](./migration/README.md) → choose the state, layout, host, or navigation path |
 | Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual when available |
 | Build with a feature | Select the relevant document under [Guides](#guides) |
 | Work on previews or performance | [Preview](./tooling/preview.md) → [Diagnostics](./tooling/diagnostics.md) → [Performance](./tooling/performance.md) |
@@ -58,6 +59,16 @@ Feature behavior and platform integration:
 - [Navigation](./guides/navigation.md)
 - [Overlays](./guides/overlays.md)
 - [Shadows](./guides/shadows.md)
+
+## Migration from Jetpack Compose
+
+Semantic comparisons and migration paths with explicit source and target versions:
+
+- [Compose migration overview and consolidated capability matrix](./migration/README.md)
+- [State, recomposition, and restoration](./migration/compose-state-recomposition-and-restoration.md)
+- [Layout, Modifier, and environment](./migration/compose-layout-modifier-and-environment.md)
+- [Hosts, lifecycle, and Android interop](./migration/compose-host-lifecycle-and-android-interop.md)
+- [Navigation 2 and Navigation 3](./migration/compose-navigation.md)
 
 ## Published modules
 

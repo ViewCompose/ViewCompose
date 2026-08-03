@@ -3,6 +3,11 @@
   "locale": "zh-CN",
   "required": [
     "README.md",
+    "migration/README.md",
+    "migration/compose-host-lifecycle-and-android-interop.md",
+    "migration/compose-layout-modifier-and-environment.md",
+    "migration/compose-navigation.md",
+    "migration/compose-state-recomposition-and-restoration.md",
     "modules/README.md",
     "project/localization.md",
     "tutorials/getting-started.md"

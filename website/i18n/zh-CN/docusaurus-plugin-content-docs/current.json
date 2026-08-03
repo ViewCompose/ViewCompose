@@ -30,5 +30,13 @@
   "sidebar.documentation.category.tooling": {
     "message": "工具",
     "description": "The label for category 'tooling' in sidebar 'documentation'"
+  },
+  "sidebar.documentation.category.从 Jetpack Compose 迁移": {
+    "message": "从 Jetpack Compose 迁移",
+    "description": "The label for category '从 Jetpack Compose 迁移' in sidebar 'documentation'"
+  },
+  "sidebar.documentation.category.已发布模块目录": {
+    "message": "已发布模块目录",
+    "description": "The label for category '已发布模块目录' in sidebar 'documentation'"
   }
 }
