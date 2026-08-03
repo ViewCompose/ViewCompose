@@ -17,6 +17,7 @@ historical evidence only.
 
 | Goal | Start here |
 | --- | --- |
+| Build the first application | [Build your first application](./tutorials/getting-started.md) |
 | Understand the framework | [Architecture overview](./architecture/overview.md) → [Modifier model](./architecture/modifier.md) → [NodeSpec model](./architecture/node-spec.md) |
 | Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual when available |
 | Build with a feature | Select the relevant document under [Guides](#guides) |
@@ -38,6 +39,13 @@ Long-lived contracts, boundaries, and runtime semantics:
 - [Render failures](./architecture/render-failures.md)
 - [Session containers](./architecture/session-containers.md)
 
+## Tutorials
+
+End-to-end learning paths backed by compiled repository samples:
+
+- [Build your first application](./tutorials/getting-started.md) — install the published modules and
+  create a native-View counter from one Activity.
+
 ## Guides
 
 Feature behavior and platform integration:
@@ -54,8 +62,8 @@ Feature behavior and platform integration:
 ## Published modules
 
 The [published module catalog](./modules/README.md) is kept in lockstep with Maven publication
-metadata. Dedicated module manuals will live below `docs/modules/<artifact-id>/` and will be able to
-evolve with each artifact independently.
+metadata. Every published artifact has a dedicated manual under `docs/modules/<artifact-id>/` and
+can evolve independently.
 
 ## Tooling
 

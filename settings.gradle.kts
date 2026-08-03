@@ -23,6 +23,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "ViewCompose"
 include(":app")
+include(":samples:counter")
 include(":viewcompose-runtime")
 include(":viewcompose-text-core")
 include(":viewcompose-ui-contract")

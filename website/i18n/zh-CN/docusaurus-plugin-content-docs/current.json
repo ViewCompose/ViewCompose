@@ -15,6 +15,10 @@
     "message": "指南",
     "description": "The label for category 'guides' in sidebar 'documentation'"
   },
+  "sidebar.documentation.category.tutorials": {
+    "message": "教程",
+    "description": "The label for category 'tutorials' in sidebar 'documentation'"
+  },
   "sidebar.documentation.category.project": {
     "message": "项目",
     "description": "The label for category 'project' in sidebar 'documentation'"

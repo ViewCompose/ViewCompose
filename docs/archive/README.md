@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `API_DOCUMENTATION_COMPLETENESS_PLAN_2026-08.md` | 25 个发布模块的严格 API 文档、双语手册、不可变源码链接与完整发布门禁已经闭环 |
 | `ADVANCED_SHADOW_EXECUTION_PLAN_2026-07.md` | 高级阴影实现与验证已经完成，长期契约已并入当前文档 |
 | `STATIC_PREVIEW_TOOLING_PLAN_2026-07.md` | 静态预览插件 1.0 已完成，长期工具说明已并入当前文档 |
 | `COMPOSE_COMPONENT_GAP.md` | 阶段性对照快照，数据口径易过期 |

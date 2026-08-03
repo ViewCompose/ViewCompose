@@ -5,7 +5,6 @@ This directory contains multi-step work that is currently active and must surviv
 Active plans:
 
 - [Hosted documentation system](./hosted-documentation-system.md)
-- [API documentation completeness](./api-documentation-completeness.md)
 
 Before adding a plan, read [Documentation governance](../documentation-governance.md). A plan must
 have a clear completion condition, be updated during implementation, and move to

@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 1d5ab723c65995640623be4c3ccb87c7b7368867e8a0949368d8161d89d45b1b
+translation_source_hash: 569d057c834896e2a77475bc5eb995d977007a16efe82f8276bcdd3b20d3c992
 translation_status: current
 ---
 
@@ -17,6 +17,7 @@ translation_status: current
 
 | 目标 | 建议入口 |
 | --- | --- |
+| 构建第一个应用 | [构建第一个应用](./tutorials/getting-started.md) |
 | 理解框架 | [架构总览](https://docs.viewcompose.com/architecture/overview) → [Modifier 模型](https://docs.viewcompose.com/architecture/modifier) → [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec) |
 | 选择或维护已发布产物 | [已发布模块目录](./modules/README.md) → 对应模块手册 |
 | 使用某项能力 | 从下面的[指南](#指南)中选择对应主题 |
@@ -38,6 +39,13 @@ translation_status: current
 - [渲染失败](https://docs.viewcompose.com/architecture/render-failures)
 - [Session 容器](https://docs.viewcompose.com/architecture/session-containers)
 
+## 教程
+
+由仓库内可编译示例支撑的端到端学习路径：
+
+- [构建第一个应用](./tutorials/getting-started.md)——安装已发布模块，并通过一个 Activity
+  构建由原生 View 渲染的计数器。
+
 ## 指南
 
 功能行为和平台集成：
@@ -53,8 +61,8 @@ translation_status: current
 
 ## 已发布模块
 
-[已发布模块目录](./modules/README.md)与 Maven 发布元数据保持同步。独立模块手册将放在
-`docs/modules/<artifact-id>/` 下，并可随对应产物独立演进。
+[已发布模块目录](./modules/README.md)与 Maven 发布元数据保持同步。每个已发布产物都在
+`docs/modules/<artifact-id>/` 下提供独立手册，并可随对应产物独立演进。
 
 ## 工具
 

@@ -89,14 +89,17 @@ function Home(): ReactNode {
               })}
             </p>
             <div className={styles.heroActions}>
-              <Link className="button button--primary button--lg" to="/architecture/overview">
+              <Link className="button button--primary button--lg" to="/tutorials/getting-started">
+                {translate({
+                  id: 'homepage.hero.getStartedAction',
+                  message: 'Build the counter',
+                })}
+              </Link>
+              <Link className="button button--secondary button--lg" to="/architecture/overview">
                 {translate({
                   id: 'homepage.hero.architectureAction',
                   message: 'Explore the architecture',
                 })}
-              </Link>
-              <Link className="button button--secondary button--lg" to="/modules">
-                {translate({id: 'homepage.hero.modulesAction', message: 'Browse modules'})}
               </Link>
             </div>
             <div

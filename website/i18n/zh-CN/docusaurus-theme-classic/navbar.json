@@ -3,6 +3,10 @@
     "message": "ViewCompose",
     "description": "The title in the navbar"
   },
+  "item.label.Get started": {
+    "message": "快速开始",
+    "description": "Navbar item with label Get started"
+  },
   "item.label.Architecture": {
     "message": "架构",
     "description": "Navbar item with label Architecture"

@@ -33,7 +33,7 @@ custom domain, and independently versioned module documentation.
 
 1. `docs.viewcompose.com` serves the production site over HTTPS.
 2. pull requests verify site build, links, and changed-module API generation.
-3. all published modules have an API entry and a module manual or an explicit planned state.
+3. all published modules have an API entry and an available module manual.
 4. module releases can preserve their own manual and API version without versioning the whole site.
 5. English canonical pages and the Chinese locale structure can be built independently.
 6. size, build-time, accessibility, and broken-link gates block regressions.
@@ -56,8 +56,8 @@ custom domain, and independently versioned module documentation.
    - establish the module page template — completed;
    - document foundation, feature, integration, optional backend, and tooling families — completed;
    - generate navigation and compatibility data — completed.
-4. **Learning and migration — pending**
-   - add getting started and first application tutorials;
+4. **Learning and migration — in progress**
+   - add getting started and first application tutorials — completed;
    - add Compose concept comparison and migration paths;
    - compile all non-trivial samples.
 5. **Production hardening — in progress**
@@ -75,10 +75,10 @@ custom domain, and independently versioned module documentation.
 
 ## Last verified
 
-2026-08-02.
+2026-08-03: the first-application path is backed by the compiled `samples:counter` Android module,
+its device click regression, and current English/Chinese tutorials.
 
 ## Next action
 
-Advance the learning and migration layer: publish the minimal first-application tutorial, then the
-Compose comparison and migration paths, using the completed module manuals and API reference as the
-stable foundation.
+Build the Compose comparison and migration paths on the compiled counter baseline, starting with
+state, layout, host lifecycle, and Modifier semantics.

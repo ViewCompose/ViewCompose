@@ -216,6 +216,9 @@ used to verify completion.
 Executable source is the truth for code samples:
 
 - non-trivial samples live in a compiled sample/demo source set and are referenced from docs;
+- standalone first-application samples live under `samples/<name>`, use only public APIs, avoid the
+  large demo's internal scaffolding, compile from `qaQuick`, and run their behavior checks from
+  `qaFull`;
 - short inline snippets must be covered by a compilation test or copied from a compiled sample;
 - snippets must use public APIs and published dependency coordinates;
 - output screenshots identify device configuration, theme, font scale, locale, and relevant module
