@@ -48,6 +48,18 @@ const config: Config = {
   },
   plugins: [
     [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'released-module-manuals',
+        path: 'src/generated/moduleManuals',
+        routeBasePath: 'modules',
+        sidebarPath: false,
+        breadcrumbs: false,
+        showLastUpdateAuthor: false,
+        showLastUpdateTime: false,
+      },
+    ],
+    [
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [

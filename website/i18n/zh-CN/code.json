@@ -95,6 +95,12 @@
   "api.module.openReference": {
     "message": "打开 {version} 参考 →"
   },
+  "api.module.openApi": {
+    "message": "API"
+  },
+  "api.module.openManual": {
+    "message": "模块手册"
+  },
   "theme.ErrorPageContent.title": {
     "message": "页面已崩溃。",
     "description": "The title of the fallback page when the page crashed"

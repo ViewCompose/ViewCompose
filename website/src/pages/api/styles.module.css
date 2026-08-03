@@ -83,6 +83,31 @@
   font-weight: 650;
 }
 
+.versionHistory {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.versionHistory > div,
+.versionHistory span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.versionHistory span {
+  justify-content: flex-end;
+}
+
+.versionHistory a {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
 @media (max-width: 720px) {
   .page {
     width: min(100% - 2rem, 76rem);

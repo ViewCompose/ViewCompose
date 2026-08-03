@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "generate:catalog": "node scripts/generate-module-catalog.mjs",
+    "generate:catalog": "node scripts/generate-module-catalog.mjs && node scripts/generate-versioned-module-manuals.mjs",
     "write-translations": "docusaurus write-translations --locale zh-CN",
     "prestart": "npm run generate:catalog",
     "start": "docusaurus start",
@@ -16,6 +16,7 @@
     "verify:translations": "node scripts/verify-translations.mjs",
     "verify:accessibility": "node scripts/verify-accessibility.mjs",
     "verify:budgets": "node scripts/verify-site-budgets.mjs",
+    "verify:versions": "node scripts/verify-versioned-documentation.mjs",
     "verify:site": "node scripts/verify-site-quality.mjs",
     "typecheck": "npm run generate:catalog && npm run verify:translations && tsc"
   },

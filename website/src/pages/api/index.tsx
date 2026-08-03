@@ -12,6 +12,10 @@ type ModuleEntry = {
   family: string;
   role: string;
   manual: string;
+  versions: Array<{
+    version: string;
+    sourceRevision: string;
+  }>;
 };
 
 const groupedModules = (modules as ModuleEntry[]).reduce<Record<string, ModuleEntry[]>>(
@@ -59,14 +63,23 @@ function ApiReference(): ReactNode {
                       <code>{module.version}</code>
                     </div>
                     <p>{module.role}</p>
-                    <Link
-                      to={`/api/${module.artifact}/${module.version}/`}
-                      data-noBrokenLinkCheck>
-                      {translate(
-                        {id: 'api.module.openReference', message: 'Open {version} reference →'},
-                        {version: module.version},
-                      )}
-                    </Link>
+                    <div className={styles.versionHistory}>
+                      {[...module.versions].reverse().map((release) => (
+                        <div key={release.version}>
+                          <code>{release.version}</code>
+                          <span>
+                            <Link
+                              to={`/api/${module.artifact}/${release.version}/`}
+                              data-noBrokenLinkCheck>
+                              {translate({id: 'api.module.openApi', message: 'API'})}
+                            </Link>
+                            <Link to={`/modules/${module.artifact}/${release.version}/`}>
+                              {translate({id: 'api.module.openManual', message: 'Manual'})}
+                            </Link>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </article>
                 ))}
               </div>
