@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 10ea069fad54e17281f795a534ab88f9a278877d4584e237d28d31223d2036f0
+translation_source_hash: 31692aebe59333c3ef38e8e119b12ec6115d86a696b6f790507a995912a7c42c
 translation_status: current
 ---
 
@@ -18,6 +18,7 @@ GitHub 托管文档站点的内容边界。
 | 目标 | 建议入口 |
 | --- | --- |
 | 构建第一个应用 | [构建第一个应用](./tutorials/getting-started.md) |
+| 逐步构建真实应用 | [任务清单状态与布局](./tutorials/task-list-foundations.md) → [输入与 Lazy 集合](./tutorials/task-list-input-and-lists.md) |
 | 理解框架 | [架构总览](https://docs.viewcompose.com/architecture/overview) → [Modifier 模型](https://docs.viewcompose.com/architecture/modifier) → [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec) |
 | 从 Jetpack Compose 迁移 | [Compose 迁移总览](./migration/README.md) → 按状态、布局、宿主或导航选择迁移路径 |
 | 选择或维护已发布产物 | [已发布模块目录](./modules/README.md) → 对应模块手册 |
@@ -46,6 +47,10 @@ GitHub 托管文档站点的内容边界。
 
 - [构建第一个应用](./tutorials/getting-started.md)——安装已发布模块，并通过一个 Activity
   构建由原生 View 渲染的计数器。
+- [使用状态与布局构建任务清单](./tutorials/task-list-foundations.md)——通过不可变数据、快照状态、
+  布局、Modifier 和事件启动渐进式应用。
+- [添加任务输入和带 key 的 Lazy 列表](./tutorials/task-list-input-and-lists.md)——在同一个应用中
+  加入可编辑文本、不可变集合更新、稳定 key 和设备测试。
 
 ## 指南
 

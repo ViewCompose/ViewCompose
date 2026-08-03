@@ -10,7 +10,9 @@
     "migration/compose-state-recomposition-and-restoration.md",
     "modules/README.md",
     "project/localization.md",
-    "tutorials/getting-started.md"
+    "tutorials/getting-started.md",
+    "tutorials/task-list-foundations.md",
+    "tutorials/task-list-input-and-lists.md"
   ],
   "staleMarker": ":::warning 翻译状态"
 }

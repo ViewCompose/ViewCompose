@@ -155,6 +155,8 @@ val qaQuickTasks = listOf(
     ":viewcompose-widget-constraintlayout:compileDebugKotlin",
     ":samples:counter:assembleDebug",
     ":samples:counter:compileDebugAndroidTestKotlin",
+    ":samples:task-list:assembleDebug",
+    ":samples:task-list:compileDebugAndroidTestKotlin",
     ":app:compileDebugKotlin",
     ":viewcompose-runtime:test",
     ":viewcompose-navigation-core:test",
@@ -819,6 +821,116 @@ tasks.register("verifyMigrationPairedSamples") {
     }
 }
 
+val tutorialSamplesByPage =
+    mapOf(
+        "task-list-foundations.md" to
+            listOf(
+                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
+                    "task-item",
+                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
+                    "task-list-foundations",
+            ),
+        "task-list-input-and-lists.md" to
+            listOf(
+                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
+                    "task-list-input",
+            ),
+    )
+
+tasks.register("verifyTutorialSamples") {
+    group = "verification"
+    description = "Compile task-list tutorial sources and verify both locales copy exact regions."
+    dependsOn(":samples:task-list:compileDebugKotlin")
+
+    val documentationRoots =
+        listOf(
+            rootDir.resolve("docs/tutorials"),
+            rootDir.resolve(
+                "website/i18n/zh-CN/docusaurus-plugin-content-docs/current/tutorials",
+            ),
+        )
+    inputs.files(
+        tutorialSamplesByPage.values
+            .flatten()
+            .map { (source, _) -> rootDir.resolve(source) },
+    )
+    inputs.files(
+        documentationRoots.flatMap { docsRoot ->
+            tutorialSamplesByPage.keys.map { page -> docsRoot.resolve(page) }
+        },
+    )
+
+    doLast {
+        val snippetRegex =
+            Regex(
+                """\{/\* tutorial-sample source="([^"]+)" region="([^"]+)" \*/\}\s*```kotlin\s*([\s\S]*?)\s*```\s*\{/\* tutorial-sample-end \*/\}""",
+            )
+        val violations = mutableListOf<String>()
+
+        fun compiledRegion(sourcePath: String, region: String): String? {
+            val sourceFile = rootDir.resolve(sourcePath)
+            if (!sourceFile.isFile) {
+                violations += "$sourcePath -> source file does not exist"
+                return null
+            }
+            val source = sourceFile.readText().replace("\r\n", "\n")
+            val startMarker = "// DOCS_REGION_START($region)"
+            val endMarker = "// DOCS_REGION_END($region)"
+            if (source.windowed(startMarker.length).count { it == startMarker } != 1) {
+                violations += "$sourcePath -> expected exactly one '$startMarker'"
+                return null
+            }
+            if (source.windowed(endMarker.length).count { it == endMarker } != 1) {
+                violations += "$sourcePath -> expected exactly one '$endMarker'"
+                return null
+            }
+            val start = source.indexOf(startMarker) + startMarker.length
+            val end = source.indexOf(endMarker, start)
+            if (end < start) {
+                violations += "$sourcePath -> '$endMarker' must follow '$startMarker'"
+                return null
+            }
+            return source.substring(start, end).trim()
+        }
+
+        documentationRoots.forEach { docsRoot ->
+            tutorialSamplesByPage.forEach pageLoop@{ (pageName, expectedSamples) ->
+                val page = docsRoot.resolve(pageName)
+                if (!page.isFile) {
+                    violations += "${page.relativeTo(rootDir)} -> document does not exist"
+                    return@pageLoop
+                }
+                val matches = snippetRegex.findAll(page.readText().replace("\r\n", "\n")).toList()
+                val actualSamples = matches.map { it.groupValues[1] to it.groupValues[2] }
+                if (actualSamples != expectedSamples) {
+                    violations +=
+                        "${page.relativeTo(rootDir)} -> tutorial samples $actualSamples do not match $expectedSamples"
+                    return@pageLoop
+                }
+                matches.forEach snippetLoop@{ match ->
+                    val sourcePath = match.groupValues[1]
+                    val region = match.groupValues[2]
+                    val expectedSnippet = compiledRegion(sourcePath, region) ?: return@snippetLoop
+                    val documentedSnippet = match.groupValues[3].trim()
+                    if (documentedSnippet != expectedSnippet) {
+                        violations +=
+                            "${page.relativeTo(rootDir)} -> snippet '$region' differs from $sourcePath"
+                    }
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Tutorial sample verification failed:")
+                    violations.distinct().sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyDocumentationStructure") {
     group = "verification"
     description =
@@ -1092,6 +1204,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyModuleDependencyBoundaries")
     dependsOn("verifyDocumentationStructure")
     dependsOn("verifyMigrationPairedSamples")
+    dependsOn("verifyTutorialSamples")
     dependsOn("verifyViewComposePublishingConfiguration")
     dependsOn("verifyRuntimePurity")
     dependsOn("verifyNavigationCorePurity")
@@ -1111,6 +1224,7 @@ tasks.register("qaFull") {
         "qaQuick",
         ":app:connectedDebugAndroidTest",
         ":samples:counter:connectedDebugAndroidTest",
+        ":samples:task-list:connectedDebugAndroidTest",
     )
 }
 
