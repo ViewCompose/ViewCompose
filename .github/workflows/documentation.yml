@@ -1,16 +1,9 @@
 name: Documentation
 
 on:
+  # This workflow is a required status check. Keep it present for every PR;
+  # path-filtered required workflows otherwise remain pending forever.
   pull_request:
-    paths:
-      - ".github/workflows/documentation.yml"
-      - "docs/**"
-      - "website/**"
-      - "**/src/main/**"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - "gradle/viewcompose-publishing.properties"
-      - "tools/viewcompose-publishing-build/**"
   push:
     branches:
       - main
