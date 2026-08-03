@@ -9,9 +9,9 @@ This tutorial builds a runnable counter backed by Android Views. Pressing the bu
 snapshot state, invalidates the observed UI, and patches the existing native View tree.
 
 The complete compiled application lives in
-[`samples/counter`](https://github.com/ViewCompose/ViewCompose/tree/main/samples/counter). The code below is copied from that module, and
-`qaQuick` compiles both the application and its device test so the tutorial cannot silently drift
-from the public API.
+[`samples/counter`](https://github.com/ViewCompose/ViewCompose/tree/main/samples/counter). The code below is copied from that module.
+`qaQuick` compiles the application, its device test, and the debug-only preview entry; `qaPreview`
+also verifies that preview discovery stays connected to the compiled function.
 
 ## What you will build
 
@@ -21,6 +21,7 @@ The application contains one Activity and one declarative tree:
 - an `Increment` button;
 - retained snapshot state that drives the label;
 - an Android host that owns lifecycle, SavedState, theme, and rendering services.
+- light and dark static previews of the same `CounterScreen` used by the Activity.
 
 Expected result: every press increments the visible count without replacing the Activity.
 
@@ -37,6 +38,8 @@ This tutorial was last verified on 2026-08-03 with these ViewCompose artifacts:
 | `viewcompose-ui-contract` | `0.1.0-alpha01` | `Modifier`, layout units, and alignment contracts |
 | `viewcompose-widget-core` | `0.1.0-alpha01` | `Column`, `Text`, `Button`, theme defaults, and `remember` |
 | `viewcompose-host-android` | `0.1.0-alpha01` | Activity host and Android renderer installation |
+| `viewcompose-preview-core` | `0.1.0-alpha01` | Debug-only static-preview annotation and configuration |
+| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha01` | Compiled preview discovery and isolated rendering tasks |
 
 ViewCompose artifacts evolve independently. Check the
 [published module catalog](../modules/README.md) before mixing versions newer than this verified
@@ -98,6 +101,7 @@ import com.viewcompose.widget.core.Button
 import com.viewcompose.widget.core.Column
 import com.viewcompose.widget.core.Text
 import com.viewcompose.widget.core.TextDefaults
+import com.viewcompose.widget.core.UiTreeBuilder
 import com.viewcompose.widget.core.remember
 
 class MainActivity : ComponentActivity() {
@@ -105,26 +109,30 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setUiContent {
-            val count = remember { mutableStateOf(0) }
-
-            Column(
-                spacing = 16.dp,
-                arrangement = MainAxisArrangement.Center,
-                horizontalAlignment = HorizontalAlignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-            ) {
-                Text(
-                    text = "Count: ${count.value}",
-                    style = TextDefaults.titleLargeStyle(),
-                )
-                Button(
-                    text = "Increment",
-                    onClick = { count.value += 1 },
-                )
-            }
+            CounterScreen()
         }
+    }
+}
+
+internal fun UiTreeBuilder.CounterScreen() {
+    val count = remember { mutableStateOf(0) }
+
+    Column(
+        spacing = 16.dp,
+        arrangement = MainAxisArrangement.Center,
+        horizontalAlignment = HorizontalAlignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+    ) {
+        Text(
+            text = "Count: ${count.value}",
+            style = TextDefaults.titleLargeStyle(),
+        )
+        Button(
+            text = "Increment",
+            onClick = { count.value += 1 },
+        )
     }
 }
 ```
@@ -141,7 +149,68 @@ Four pieces form the complete update path:
 must also survive Activity recreation or process restoration; see
 [Lifecycle and SavedState](../architecture/lifecycle-and-saved-state.md).
 
-## 4. Run and verify
+## 4. Preview the compiled screen
+
+Keep preview tooling on the debug path. An external application uses the published plugin and
+artifacts; the repository sample uses equivalent project dependencies:
+
+```kotlin title="build.gradle.kts"
+plugins {
+    id("com.viewcompose.preview") version "0.1.0-alpha01"
+}
+
+dependencies {
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    add(
+        "viewComposePreviewWorkerHost",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
+    )
+    add(
+        "viewComposePreviewRunner",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+    )
+}
+```
+
+The sample's debug source set exposes the same `CounterScreen` through a public static-preview
+entry point:
+
+```kotlin title="CounterPreview.kt"
+package com.viewcompose.samples.counter
+
+import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.ViewComposePreview
+import com.viewcompose.widget.core.UiTreeBuilder
+
+/**
+ * Renders the initial counter state through the native static-preview toolchain.
+ *
+ * @receiver DSL tree builder supplied by the static preview runner.
+ */
+@ViewComposePreview(
+    name = "Counter · Light",
+    group = "Samples/Getting started",
+)
+@ViewComposePreview(
+    name = "Counter · Dark",
+    group = "Samples/Getting started",
+    theme = PreviewTheme.Dark,
+)
+fun UiTreeBuilder.CounterPreview() {
+    CounterScreen()
+}
+```
+
+Open `CounterPreview.kt` with the ViewCompose Studio plugin to inspect both variants. The native
+static runner uses the compiled DSL function, so the Activity and preview cannot drift into two
+separate screen implementations. Verify discovery locally with:
+
+```bash
+./gradlew :samples:counter:verifyCounterPreview
+./gradlew qaPreview
+```
+
+## 5. Run and verify
 
 Run the application from Android Studio, or build the repository sample from the command line:
 
@@ -163,6 +232,6 @@ Android View hierarchy.
 
 - Read [State snapshots](../architecture/state-snapshots.md) for transaction and observation rules.
 - Read [Theming](../guides/theming.md) before defining application tokens or dynamic color policy.
-- Read [Preview tooling](../tooling/preview.md) to render annotated DSL functions in Android Studio.
+- Read [Preview tooling](../tooling/preview.md) for theme providers, diagnostics, and snapshot policy.
 - Use the [module catalog](../modules/README.md) to add navigation, text editing, graphics, or other
   optional capabilities without pulling them into the minimal application.

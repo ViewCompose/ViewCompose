@@ -64,9 +64,9 @@
 1. demo 已稳定在多 `Activity` 结构
 2. 已实现章节具备统一 scenario 模板
 3. instrumentation 已覆盖关键 smoke 回归路径，延迟 session 容器专项已覆盖 `LazyVerticalGrid`、`HorizontalPager`、`VerticalPager` 与 `ModalBottomSheet`
-4. 基线更新（2026-03-08）：tag-first UI 测试迁移与关键组件族 smoke 已完成；当前 `qaQuick` 可通过，`qaFull` 存在 1 条已知失败（`DemoVisualUiTest.inputSearch_focusSearchBar_doesNotAutoScrollList`，详见 `app/build/reports/androidTests/connected/debug/index.html`）。
+4. 验证状态更新（2026-08-03）：当前主干门禁确认 `qaQuick` 可通过；本轮尚未在统一设备环境重跑完整 `qaFull`，因此不再把 2026-03-08 的单条本地失败当作当前事实，也不声明聚合设备门禁已全绿。需要 UI 证据的里程碑必须以当前定向设备结果为依据，或保持 `In Progress`。
 5. `Graphics` Demo 已新增外阴影、内阴影与 Lazy/诊断 3 个子页，覆盖多层/彩色/offset/spread/shape、输入互操作、1000 项稳定 key、缓存命中和实际后端选择。
-6. 新增独立 `:samples:counter` 最小应用，不依赖大型 Demo 内部脚手架；`qaQuick` 编译应用和测试源码，`qaFull` 在设备上验证计数点击路径。
+6. 新增独立 `:samples:counter` 最小应用，不依赖大型 Demo 内部脚手架；`qaQuick` 编译应用、测试源码和 debug Preview 入口，`qaPreview` 验证编译后 Preview 发现，`qaFull` 在设备上验证计数点击路径。
 
 ## 2.3 里程碑进度快照（2026-08-03）
 
@@ -78,7 +78,7 @@
 | D：Diagnostics + Performance 联动 | In Progress | C:✅ U:✅ D:✅ UI:✅ | 诊断可视化与 R8 release 基准已落地，下一步量化 baseline profile 收益 |
 | E：开发预览与截图回归 | In Progress | C:✅ U:✅ D:✅ UI:✅ | Compose Preview/Paparazzi 与独立 Android Studio 预览插件 1.0 已落地，覆盖源码联动、全部预览、缓存、增量刷新、缩放平移和诊断；下一步扩展 Dark/Tablet 快照矩阵 |
 | F：动画与手势首轮覆盖 | Completed | C:✅ U:✅ D:✅ UI:✅ | 已完成 `viewcompose-animation-core` + `viewcompose-animation` 分层、`Transition` 共享时钟重构、`AnimatedVisibility` Compose 语义对齐、`animateContentSize` 布局级动画落地、`Animatable` 易用性重构、`InfiniteTransition` typed API、Android interop（MotionLayout/TransitionManager/ObjectAnimator/ViewPropertyAnimator/DynamicAnimation）与 demo+preview+回归测试收口 |
-| G：Graphics 2D 主链能力 | Completed | C:✅ U:✅ D:✅ UI:⚠ | 已完成 `viewcompose-graphics-core` + `viewcompose-graphics` 分层、Canvas/draw modifiers/drawWithCache、renderer 渲染管线与 `AndroidGraphicsInterop`，并完成 v2 P0 语义收口（RoundRect/Drawable/ImageFilter Chain）；`qaFull` 当前受 ActivityScenario 生命周期不稳定影响待单独收口 |
+| G：Graphics 2D 主链能力 | In Progress | C:✅ U:✅ D:✅ UI:⚠ | 已完成 `viewcompose-graphics-core` + `viewcompose-graphics` 分层、Canvas/draw modifiers/drawWithCache、renderer 渲染管线与 `AndroidGraphicsInterop`，并完成 v2 P0 语义收口（RoundRect/Drawable/ImageFilter Chain）；在当前设备矩阵重新取得稳定 UI 证据前不标记 Completed |
 | H：高级阴影装饰层 | Completed | C:✅ U:✅ D:✅ UI:✅ | 多层外阴影、内阴影、shape/spread/offset、Lazy 缓存、后端诊断与 Compose 成对基准已闭环；Samsung SM-G991B 定向设备回归通过，Auto 保持 ExactBitmap |
 
 ## 3. 统一设计原则
@@ -197,6 +197,21 @@
 1. 性能回归具备可量化证据
 2. 诊断面板能直观定位高频问题
 
+### Milestone E：开发预览与截图回归
+
+交付：
+
+1. Compose Preview bridge、原生静态 runner 与 Android Studio 插件链路
+2. `PreviewCatalog` 与 Paparazzi 共用场景和稳定快照 ID
+3. 应用模块可编译、可发现的 Preview 入口；首个应用教程复用真实 `CounterScreen`
+4. Light/Dark、Phone/Tablet 等代表性配置矩阵
+
+完成标准：
+
+1. `qaPreview` 同时覆盖静态 runner、Counter Preview 发现和共享 Paparazzi 快照
+2. Studio 插件的源码联动、增量刷新、诊断与渲染路径有自动化回归
+3. Dark/Tablet 快照矩阵达到公开组件和教程示例的约定覆盖范围
+
 ### Milestone F：动画与手势首轮覆盖
 
 交付：
@@ -211,6 +226,34 @@
 1. 新能力默认 opt-in，不破坏现有组件/容器行为
 2. 手势消费回落策略稳定（`gesture consumed -> no clickable fallback`）
 3. `qaQuick` 与 `qaPreview` 通过，设备可用时 `qaFull` 通过
+
+### Milestone G：Graphics 2D 主链能力
+
+交付：
+
+1. `viewcompose-graphics-core` 与 `viewcompose-graphics` 分层，以及 renderer draw pipeline
+2. Canvas、draw modifiers、`drawWithCache`、不可变 `DrawScene` 与 Android interop
+3. Preview/Paparazzi、demo、单测与定向 instrumentation 覆盖
+
+完成标准：
+
+1. 图形纯度、编译、单测和快照门禁通过
+2. RoundRect、Drawable 与 ImageFilter Chain 等 v2 P0 语义有回归证据
+3. 当前设备环境中的 Graphics instrumentation 稳定通过；满足前保持 `In Progress`
+
+### Milestone H：高级阴影装饰层
+
+交付：
+
+1. 有序多层外阴影、前景内阴影和 shape/spread/offset 契约
+2. 有界静态栅格缓存、实验 RenderNode 后端和结构化诊断
+3. Lazy 场景、输入互操作、Compose 成对基准和定向设备回归
+
+完成标准：
+
+1. 默认 `Auto` 后端由发布态基准决定，不以实验实现替代已验证路径
+2. `qaQuick`、相关 preview/benchmark 门禁和 Samsung SM-G991B 定向回归通过
+3. 缓存命中、后端选择与失败回退可在 demo 诊断中验证
 
 ## 6. 测试与 Demo 的统一门禁
 
