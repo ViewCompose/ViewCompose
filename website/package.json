@@ -8,17 +8,22 @@
     "prestart": "npm run generate:catalog",
     "start": "docusaurus start",
     "prebuild": "npm run generate:catalog && npm run verify:translations",
-    "build": "docusaurus build",
+    "build": "node scripts/build-site.mjs",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
     "test:translations": "node --test scripts/__tests__/verify-translations.test.mjs",
     "verify:translations": "node scripts/verify-translations.mjs",
+    "verify:accessibility": "node scripts/verify-accessibility.mjs",
+    "verify:budgets": "node scripts/verify-site-budgets.mjs",
+    "verify:site": "node scripts/verify-site-quality.mjs",
     "typecheck": "npm run generate:catalog && npm run verify:translations && tsc"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
+    "@docusaurus/plugin-client-redirects": "3.10.2",
     "@docusaurus/preset-classic": "3.10.2",
     "@docusaurus/theme-mermaid": "3.10.2",
+    "@easyops-cn/docusaurus-search-local": "0.55.2",
     "@mdx-js/react": "3.1.1",
     "clsx": "2.1.1",
     "prism-react-renderer": "2.4.1",
@@ -30,6 +35,7 @@
     "@docusaurus/module-type-aliases": "3.10.2",
     "@docusaurus/tsconfig": "3.10.2",
     "@docusaurus/types": "3.10.2",
+    "cheerio": "1.2.0",
     "typescript": "5.9.3"
   },
   "overrides": {

@@ -9,7 +9,7 @@ selection and trade-offs are recorded in
 
 ## Build pipeline
 
-The production artifact is assembled in five explicit stages:
+The production artifact is assembled in six explicit stages:
 
 1. `verifyDocumentationStructure` validates source placement, catalog parity, reachability, and
    repository links.
@@ -20,8 +20,12 @@ The production artifact is assembled in five explicit stages:
    immutable version route, aliases, and pinned source links.
 4. the website catalog generator reads publishing metadata and `docs/modules/README.md`; it does
    not maintain a second module registry.
-5. Docusaurus type-checks and builds the handwritten documents, site presentation, and generated
-   API output for both `en` and `zh-CN` into `website/build/`.
+5. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
+   output, localized search indexes, and compatibility redirects for both `en` and `zh-CN` into
+   `website/build/`, with broken links and anchors treated as errors.
+6. the build wrapper audits Docusaurus-owned HTML accessibility and enforces build-time, total
+   output, JavaScript, CSS, and per-locale search-index budgets. Dokka-generated HTML remains under
+   the API generator's independent integrity gate rather than the site-template accessibility gate.
 
 Run the complete local verification from the repository root:
 
@@ -35,6 +39,9 @@ npm run typecheck
 npm run build
 ```
 
+`npm run build` includes the accessibility and budget gates. Run `npm run verify:site` to recheck an
+existing `website/build/` artifact without rebuilding it.
+
 During local iteration, `-PviewComposeDocsModules=artifact-a,artifact-b` limits Dokka assembly to an
 explicit subset. A production build never uses this shortcut.
 
@@ -42,6 +49,28 @@ Run `npm run write-translations` when React, navbar, footer, or sidebar messages
 adds missing JSON messages without overwriting reviewed Chinese translations. Markdown mirror
 layout, source fingerprints, required-page tiers, and stale recovery are defined in the
 [localization workflow](localization.md).
+
+## Search, redirects, and quality budgets
+
+The site builds a local full-text index for English and Simplified Chinese. Search needs no hosted
+service, credentials, analytics, or network request after deployment. Search UI messages are
+reviewed in the standard `zh-CN` message catalog, while the index is generated from the locale's
+rendered documents during every production build.
+
+Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migration`, and
+`/migrate-from-compose`, including their locale-prefixed forms. Add a redirect only for an
+intentional historical or campaign route; canonical document paths remain the source of truth.
+
+The versioned thresholds live in `website/site-budgets.json`. The current ceilings are 120 seconds
+for the Docusaurus build, 260 MiB for the complete output, 8 MiB total and 768 KiB largest-file for
+JavaScript, 128 KiB for CSS, and 4 MiB for each locale's search index. Raise a threshold only with a
+measured explanation of the reader or release value that requires the additional cost.
+
+The accessibility audit covers the site-owned English and localized pages and checks document
+language, title and main landmarks, heading order, accessible names, image alternatives, table
+headers, iframe titles, and duplicate IDs. It deliberately excludes redirect stubs and
+Dokka-generated implementation pages. Changes to the Dokka template require a separate generated
+API accessibility review rather than weakening this gate.
 
 ## API versions and aliases
 
@@ -83,8 +112,12 @@ identity token.
 - If source verification fails, fix the canonical document or catalog rather than weakening the
   gate.
 - If Dokka fails, reproduce with a selected module and correct its source/API configuration.
-- If Docusaurus reports a broken link, preserve strict checking; generated static API links are the
-  only links explicitly exempted from its route graph.
+- If Docusaurus reports a broken link or anchor, preserve strict checking; generated static API
+  links are the only links explicitly exempted from its route graph.
+- If the accessibility gate fails, fix the rendered page or theme component. Do not suppress a
+  rule because a minifier formats otherwise valid HTML differently.
+- If a site budget fails, inspect the reported output class and remove the regression or document
+  and review an intentional threshold change.
 - If translation verification reports source drift, review and update the Chinese meaning before
   recording the new fingerprint. A tracked page may be explicitly marked stale; a required page
   may not.
@@ -95,6 +128,9 @@ identity token.
 
 ## Last verified
 
-2026-08-02: all 25 published artifacts pass strict KDoc/Javadoc generation, complete-catalog route
-verification, and immutable source-link verification. The English and Simplified Chinese locale
-builds, translation freshness gate, and custom-domain deployment are active.
+2026-08-03: all 25 published artifacts pass strict KDoc/Javadoc generation, complete-catalog route
+verification, and immutable source-link verification. The English and Simplified Chinese builds,
+translation freshness, local search, compatibility redirects, site-page accessibility, and size
+and build-time budgets are active. The measured site output is about 204 MiB; the largest JavaScript
+asset is 650 KiB, and the Docusaurus build takes about ten seconds on the current development
+machine.

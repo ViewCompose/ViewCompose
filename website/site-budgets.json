@@ -1,0 +1,22 @@
+{
+  "maxBuildSeconds": 120,
+  "maxOutputMiB": 260,
+  "maxLargestJavaScriptKiB": 768,
+  "maxTotalJavaScriptMiB": 8,
+  "maxTotalCssKiB": 128,
+  "maxSearchIndexMiBPerLocale": 4,
+  "requiredSearchLocales": [
+    "en",
+    "zh-CN"
+  ],
+  "requiredRedirects": {
+    "docs/index.html": "/documentation",
+    "getting-started/index.html": "/tutorials/getting-started",
+    "compose-migration/index.html": "/migration",
+    "migrate-from-compose/index.html": "/migration",
+    "zh-CN/docs/index.html": "/zh-CN/documentation",
+    "zh-CN/getting-started/index.html": "/zh-CN/tutorials/getting-started",
+    "zh-CN/compose-migration/index.html": "/zh-CN/migration",
+    "zh-CN/migrate-from-compose/index.html": "/zh-CN/migration"
+  }
+}
