@@ -2,7 +2,10 @@
 
 This directory contains multi-step work that is currently active and must survive across sessions.
 
-There are currently no active execution plans.
+Current active plan:
+
+- [Compose migration paired samples](./compose-migration-paired-samples.md) — compile and
+  mechanically verify Compose/ViewCompose code pairs for the four current migration domains.
 
 Completed hosted-documentation and version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).
