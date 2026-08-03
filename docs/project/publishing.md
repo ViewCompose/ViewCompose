@@ -175,9 +175,13 @@ cd tools/viewcompose-studio-plugin
 ./gradlew prepareMarketplaceRelease
 ```
 
-The first release targets Android Studio build family `261` only. Both the lower compatibility
-boundary and `untilBuild = 261.*` are explicit, so an untested future Android Studio platform is not
-advertised as compatible by accident.
+The first release targets Android Studio build family `261` only and declares
+`com.intellij.modules.androidstudio`, preventing Marketplace from advertising the plugin for
+IntelliJ IDEA products. Both the lower compatibility boundary and `untilBuild = 261.*` are
+explicit, so an untested future Android Studio platform is not advertised as compatible by
+accident. `prepareMarketplaceRelease` verifies the lower-bound local Quail 2 Patch 1 installation,
+the current Quail 3 release, and the latest Quail 4 Canary within that advertised window. The first
+matrix run downloads the latter two IDE distributions; later runs reuse Gradle's IDE cache.
 
 The artifact is written to `build/distributions/`. Marketplace publishing and signing read only
 environment variables:

@@ -69,6 +69,11 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - bounded PNG loading plus structured render diagnostics and Gradle failure output;
 - an explicit AI-261 minimum build and exact local-build verification.
 
+Marketplace packaging additionally verifies the plugin against the local Quail 2 Patch 1 build,
+the current Quail 3 release, and the latest Quail 4 Canary inside the advertised `261.*` range. The
+plugin declares `com.intellij.modules.androidstudio`, so Marketplace does not offer it to IntelliJ
+IDEA products where its Android project workflow is unavailable.
+
 The stable 1.0 release deterministically prefers the `debug` descriptor catalog. Initial rendering
 uses the first declared configuration; the selected configuration is then retained across
 source-save refreshes when it still exists.
@@ -96,7 +101,9 @@ viewComposeMarketplacePrivateKeyFile=/absolute/private/path/private.pem
 viewComposeMarketplacePrivateKeyPassword=<private key password>
 ```
 
-Run `./gradlew prepareSignedMarketplaceRelease` to create and verify the signed archive. The first
-release is uploaded manually for Marketplace review; `./gradlew publishPlugin` is reserved for
-approved follow-up releases. The complete release contract is documented in
+Run `./gradlew prepareSignedMarketplaceRelease` to create and verify the signed archive. The
+compatibility matrix downloads additional Android Studio distributions on its first run and reuses
+Gradle's IDE cache afterward. The first release is uploaded manually for Marketplace review;
+`./gradlew publishPlugin` is reserved for approved follow-up releases. The complete release contract
+is documented in
 [`docs/project/publishing.md`](../../docs/project/publishing.md).
