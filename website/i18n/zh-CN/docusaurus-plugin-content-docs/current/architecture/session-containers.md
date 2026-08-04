@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: c314afbd2583d87b91584cc8d20c563eff4ef99c67bded4b3eddec940171d2da
+translation_source_hash: 283721f6140f6529e2c579ea6c9b928d63a74e40ca76df2b07a64b281e964719
 translation_status: current
 ---
 
@@ -73,7 +73,7 @@ translation_status: current
    Local/内容闭包刷新、显隐层级、永久移除和 owner 释放（U）
 9. Transactional navigation host：`TransactionalNavHostCoordinatorTest` 覆盖 attach、
    push/pop/replace/reset、揭页刷新失败、初始失败重试、重入串行化和生命周期封顶（U）
-10. 公共导航：`:samples:task-list` 真机测试通过生产 `NavHost` 覆盖 list/detail 导航与 Back
+10. 公共导航：`:samples:tutorials` 真机测试通过生产 `NavHost` 覆盖 push 与 Back
     （instrumentation）
 
 当前门禁基线：

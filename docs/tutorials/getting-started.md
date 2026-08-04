@@ -13,6 +13,44 @@ The complete compiled application lives in
 `qaQuick` compiles the application, its device test, and the debug-only preview entry; `qaPreview`
 also verifies that preview discovery stays connected to the compiled function.
 
+## Required dependencies
+
+Make sure the application resolves Maven Central, then add the complete runtime dependency set:
+
+```kotlin title="build.gradle.kts"
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+```
+
+The counter runs without preview tooling. To follow the optional preview section, also add the
+published plugin and its debug-only artifacts now:
+
+```kotlin title="build.gradle.kts (optional preview)"
+plugins {
+    id("com.viewcompose.preview") version "0.1.0-alpha01"
+}
+
+dependencies {
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    add(
+        "viewComposePreviewWorkerHost",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
+    )
+    add(
+        "viewComposePreviewRunner",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+    )
+}
+```
+
 ## What you will build
 
 The application contains one Activity and one declarative tree:
@@ -45,27 +83,10 @@ ViewCompose artifacts evolve independently. Check the
 [published module catalog](../modules/README.md) before mixing versions newer than this verified
 set.
 
-## 1. Add the dependencies
+The repository sample uses these exact Maven coordinates, so its quality gate verifies the same
+dependency path used by an external application.
 
-Make sure the application resolves Maven Central, then add the four explicit ViewCompose layers to
-the application module:
-
-```kotlin title="build.gradle.kts"
-dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
-
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("com.google.android.material:material:1.13.0")
-}
-```
-
-The repository sample uses project dependencies with the same four boundaries so it always tests
-the current source tree. A consumer uses the Maven coordinates above.
-
-## 2. Use a Material application theme
+## 1. Use a Material application theme
 
 The host resolves ViewCompose tokens from the Android theme. A new View-based Android Studio
 project normally already has a suitable Material theme. The counter sample uses:
@@ -79,7 +100,7 @@ project normally already has a suitable Material theme. The counter sample uses:
 Apply that theme to the application or Activity in `AndroidManifest.xml`. ViewCompose will follow
 the host's light/dark configuration and Android theme bridge; no Compose theme is involved.
 
-## 3. Install the declarative content
+## 2. Install the declarative content
 
 Replace the generated Activity content with the compiled
 [`MainActivity.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt):
@@ -149,28 +170,10 @@ Four pieces form the complete update path:
 must also survive Activity recreation or process restoration; see
 [Lifecycle and SavedState](../architecture/lifecycle-and-saved-state.md).
 
-## 4. Preview the compiled screen
+## 3. Preview the compiled screen
 
-Keep preview tooling on the debug path. An external application uses the published plugin and
-artifacts; the repository sample uses equivalent project dependencies:
-
-```kotlin title="build.gradle.kts"
-plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha01"
-}
-
-dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
-    add(
-        "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
-    )
-    add(
-        "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
-    )
-}
-```
+Keep the optional preview dependencies listed at the top on the debug path. The repository sample
+and an external application both use the published plugin artifacts.
 
 The sample's debug source set exposes the same `CounterScreen` through a public static-preview
 entry point:
@@ -210,7 +213,7 @@ separate screen implementations. Verify discovery locally with:
 ./gradlew qaPreview
 ```
 
-## 5. Run and verify
+## 4. Run and verify
 
 Run the application from Android Studio, or build the repository sample from the command line:
 

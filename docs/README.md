@@ -18,7 +18,7 @@ historical evidence only.
 | Goal | Start here |
 | --- | --- |
 | Build the first application | [Build your first application](./tutorials/getting-started.md) |
-| Grow a realistic application | [Task-list state and layout](./tutorials/task-list-foundations.md) → [input and lazy collections](./tutorials/task-list-input-and-lists.md) → [theme and navigation](./tutorials/task-list-theme-and-navigation.md) → [overlays and Android Views](./tutorials/task-list-overlays-and-android-views.md) → [animation and gestures](./tutorials/task-list-animation-and-gestures.md) → [performance and diagnostics](./tutorials/task-list-performance-and-diagnostics.md) |
+| Learn one capability | [Capability tutorials](./tutorials/README.md) → choose any topic; chapters have no ordering requirement |
 | Understand the framework | [Architecture overview](./architecture/overview.md) → [Modifier model](./architecture/modifier.md) → [NodeSpec model](./architecture/node-spec.md) |
 | Migrate from Jetpack Compose | [Compose migration overview](./migration/README.md) → choose the state, layout, host, or navigation path |
 | Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual |
@@ -43,22 +43,13 @@ Long-lived contracts, boundaries, and runtime semantics:
 
 ## Tutorials
 
-End-to-end learning paths backed by compiled repository samples:
+Independently runnable learning pages backed by one compiled source file per capability:
 
-- [Build your first application](./tutorials/getting-started.md) — install the published modules and
-  create a native-View counter from one Activity.
-- [Build a task list with state and layout](./tutorials/task-list-foundations.md) — start the
-  progressive application with immutable data, snapshot state, layout, modifiers, and events.
-- [Add task input and a keyed lazy list](./tutorials/task-list-input-and-lists.md) — evolve the same
-  application with editable text, immutable collection updates, stable keys, and device tests.
-- [Add semantic theming and list-detail navigation](./tutorials/task-list-theme-and-navigation.md) —
-  add host-resolved tokens, typed routes, and a framework-owned back stack.
-- [Confirm deletion and host a native Android View](./tutorials/task-list-overlays-and-android-views.md)
-  — integrate a custom dialog overlay and a state-driven native `TextView`.
-- [Animate completion and add bounded gestures](./tutorials/task-list-animation-and-gestures.md) —
-  connect animation and row gestures to the same deterministic application actions.
-- [Tune collection reuse and inspect render diagnostics](./tutorials/task-list-performance-and-diagnostics.md)
-  — make collection hints explicit and sample immutable host counters without render loops.
+- [Build your first application](./tutorials/getting-started.md) — create the smallest native-View
+  counter and optional static preview.
+- [Capability tutorial catalog](./tutorials/README.md) — choose state, layout, text input, lazy
+  lists, theming, navigation, overlays, Android View interop, animation, gestures, performance, or
+  diagnostics without completing another chapter first.
 
 ## Guides
 

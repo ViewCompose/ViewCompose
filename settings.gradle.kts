@@ -25,7 +25,7 @@ rootProject.name = "ViewCompose"
 include(":app")
 include(":samples:compose-migration")
 include(":samples:counter")
-include(":samples:task-list")
+include(":samples:tutorials")
 include(":viewcompose-runtime")
 include(":viewcompose-text-core")
 include(":viewcompose-ui-contract")

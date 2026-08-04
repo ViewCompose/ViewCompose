@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 4a22082d9bf4c9ca8134a6450dedb8eab9ffb2eccac30d8bed29dec0dd2ad0fb
+translation_source_hash: e2e6b504b1a352bfc02fe1f50d639ef07d78a5c60bd4fb3feeb283805b809b08
 translation_status: current
 ---
 
@@ -15,7 +15,7 @@ ViewCompose 包含许多独立发布模块，因此文档属于每个模块的�
 同一 PR 更新对应文档时，变更不完整。
 
 文档系统必须长期支持：每个公开制品/版本的 KDoc/Javadoc；当前框架原理、架构和决策；与
-Jetpack Compose 的事实比较和迁移路径；由可执行 sample 支撑的渐进教程和 task-oriented guide；
+Jetpack Compose 的事实比较和迁移路径；由可执行 sample 支撑且可独立进入的能力教程和 task-oriented guide；
 以及可独立演进发布的模块文档。系统还必须可搜索、可链接、版本感知、可访问且可机械验证；站点
 生成器只是实现细节，不能重定义契约。
 
@@ -47,7 +47,8 @@ Jetpack Compose 的事实比较和迁移路径；由可执行 sample 支撑的�
 
 每个公共页面只有一个主要目的，按以下顺序判断：
 
-1. **教程**：读者沿作者路径完成一个可运行结果。
+1. **教程**：教会新手使用一项能力并得到可运行结果；每页可以独立进入，相关教程只是可选链接，
+   不能作为必修前置章节。
 2. **指南**：帮助已有基础的读者完成具体任务，可链接概念与 API Reference。
 3. **架构**：解释当前 invariant、边界与取舍，而非临时实施计划。
 4. **迁移/比较**：映射概念或版本，说明语义差异并提供可验证路径。
@@ -116,17 +117,23 @@ Compose 文档，也不能把名称相似当作语义等价。
 
 ## 教程与 sample 质量
 
-教程从最短成功 setup 逐步走到真实应用结构，声明 prerequisite、结果、模块版本和验证命令。
+每篇教程教会新手使用一项能力，而且从该页直接进入也必须能够运行。页面声明预期结果、已验证
+模块版本和验证动作，但不能要求先完成另一篇教程；得到可运行结果后可以推荐相关页面。
 
 - 非平凡 sample 位于可编译 sample/Demo source set 并由文档引用；
-- 独立第一个应用放在 `samples/<name>`，只用 public API，不依赖大 Demo 内部脚手架，由
-  `qaQuick` 编译并由 `qaFull` 运行行为验证；
+- 每篇教程开头都放置完整 Maven 依赖块，包括 `viewcompose-overlay-android` 等可选能力产物；
+  不能让读者到示例中途才发现缺少依赖；
+- 独立教程示例放在 `samples/<name>`，通过已发布 Maven 坐标解析 ViewCompose，只使用 public API，
+  由 `qaQuick` 编译并由 `qaFull` 运行代表性行为验证；
+- 每项能力优先使用一个自包含源码文件；禁止把渐进式 sample 扩张成学习单项功能前必须先理解的
+  跨功能大应用；
 - 短 inline snippet 有 compilation test 或复制自可编译 sample；
 - sample 使用 public API 与已发布坐标；
 - screenshot 标识设备、theme、font scale、locale 和模块版本；
 - 使 sample 失效的同一变更中修复或删除。
 
-不得维护会静默漂移的大段独立代码块。
+教程门禁会核对精确源码区域、两种语言中的完整依赖声明，并禁止公共教程 sample 使用本地
+`project(...)` 依赖。不得维护会静默漂移的大段独立代码块。
 
 ## 版本与 URL 稳定性
 

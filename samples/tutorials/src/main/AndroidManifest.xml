@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_launcher"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ViewCompose.Tutorials">
+        <activity android:name=".RenderDiagnosticsTutorialActivity" android:exported="true" />
+        <activity android:name=".LazyListPerformanceTutorialActivity" android:exported="true" />
+        <activity android:name=".GesturesTutorialActivity" android:exported="true" />
+        <activity android:name=".AnimationTutorialActivity" android:exported="true" />
+        <activity android:name=".AndroidViewTutorialActivity" android:exported="true" />
+        <activity android:name=".OverlaysTutorialActivity" android:exported="true" />
+        <activity android:name=".NavigationTutorialActivity" android:exported="true" />
+        <activity android:name=".ThemingTutorialActivity" android:exported="true" />
+        <activity android:name=".LazyListsTutorialActivity" android:exported="true" />
+        <activity android:name=".TextInputTutorialActivity" android:exported="true" />
+        <activity android:name=".LayoutsTutorialActivity" android:exported="true" />
+        <activity
+            android:name=".StateTutorialActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

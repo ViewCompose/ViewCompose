@@ -155,8 +155,8 @@ val qaQuickTasks = listOf(
     ":viewcompose-widget-constraintlayout:compileDebugKotlin",
     ":samples:counter:assembleDebug",
     ":samples:counter:compileDebugAndroidTestKotlin",
-    ":samples:task-list:assembleDebug",
-    ":samples:task-list:compileDebugAndroidTestKotlin",
+    ":samples:tutorials:assembleDebug",
+    ":samples:tutorials:compileDebugAndroidTestKotlin",
     ":app:compileDebugKotlin",
     ":viewcompose-runtime:test",
     ":viewcompose-navigation-core:test",
@@ -821,46 +821,94 @@ tasks.register("verifyMigrationPairedSamples") {
     }
 }
 
+data class TutorialSample(
+    val source: String,
+    val region: String,
+    val requiredArtifacts: List<String> = emptyList(),
+)
+
+val tutorialBaseArtifacts =
+    listOf(
+        "viewcompose-runtime",
+        "viewcompose-ui-contract",
+        "viewcompose-widget-core",
+        "viewcompose-host-android",
+    )
+
 val tutorialSamplesByPage =
     mapOf(
-        "task-list-foundations.md" to
-            listOf(
-                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
-                    "task-item",
-                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
-                    "task-list-foundations",
+        "state-and-events.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/StateTutorialActivity.kt",
+                "state",
             ),
-        "task-list-input-and-lists.md" to
-            listOf(
-                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
-                    "task-list-input",
+        "layouts-and-modifiers.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LayoutsTutorialActivity.kt",
+                "layouts",
             ),
-        "task-list-theme-and-navigation.md" to
-            listOf(
-                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
-                    "task-list-theme-navigation",
+        "text-input.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputTutorialActivity.kt",
+                "text-input",
+                listOf("viewcompose-text-core"),
             ),
-        "task-list-overlays-and-android-views.md" to
-            listOf(
-                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
-                    "task-list-overlay-interop",
+        "lazy-lists.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListsTutorialActivity.kt",
+                "lazy-lists",
             ),
-        "task-list-animation-and-gestures.md" to
-            listOf(
-                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
-                    "task-list-animation-gestures",
+        "theming.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/ThemingTutorialActivity.kt",
+                "theming",
             ),
-        "task-list-performance-and-diagnostics.md" to
-            listOf(
-                "samples/task-list/src/main/java/com/viewcompose/samples/tasklist/TaskListScreens.kt" to
-                    "task-list-performance-diagnostics",
+        "navigation.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt",
+                "navigation",
+                listOf("viewcompose-navigation-core", "viewcompose-navigation"),
+            ),
+        "overlays.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlaysTutorialActivity.kt",
+                "overlays",
+                listOf("viewcompose-overlay-android"),
+            ),
+        "android-view.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AndroidViewTutorialActivity.kt",
+                "android-view",
+            ),
+        "animation.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/AnimationTutorialActivity.kt",
+                "animation",
+                listOf("viewcompose-animation"),
+            ),
+        "gestures.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/GesturesTutorialActivity.kt",
+                "gestures",
+                listOf("viewcompose-gesture"),
+            ),
+        "lazy-list-performance.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/LazyListPerformanceTutorialActivity.kt",
+                "lazy-list-performance",
+            ),
+        "render-diagnostics.md" to
+            TutorialSample(
+                "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/RenderDiagnosticsTutorialActivity.kt",
+                "render-diagnostics",
             ),
     )
 
 tasks.register("verifyTutorialSamples") {
     group = "verification"
-    description = "Compile task-list tutorial sources and verify both locales copy exact regions."
-    dependsOn(":samples:task-list:compileDebugKotlin")
+    description =
+        "Compile independent Maven-backed tutorial sources and verify snippets and dependencies."
+    dependsOn(":samples:tutorials:compileDebugKotlin")
 
     val documentationRoots =
         listOf(
@@ -870,9 +918,9 @@ tasks.register("verifyTutorialSamples") {
             ),
         )
     inputs.files(
-        tutorialSamplesByPage.values
-            .flatten()
-            .map { (source, _) -> rootDir.resolve(source) },
+        tutorialSamplesByPage.values.map { sample -> rootDir.resolve(sample.source) },
+        rootDir.resolve("samples/tutorials/build.gradle.kts"),
+        rootDir.resolve("samples/counter/build.gradle.kts"),
     )
     inputs.files(
         documentationRoots.flatMap { docsRoot ->
@@ -886,6 +934,12 @@ tasks.register("verifyTutorialSamples") {
                 """\{/\* tutorial-sample source="([^"]+)" region="([^"]+)" \*/\}\s*```kotlin\s*([\s\S]*?)\s*```\s*\{/\* tutorial-sample-end \*/\}""",
             )
         val violations = mutableListOf<String>()
+        val dependencyBlockRegex =
+            Regex(
+                """```kotlin title="build\.gradle\.kts"\s*([\s\S]*?)```""",
+            )
+        val coordinateRegex =
+            Regex("""implementation\("com\.viewcompose:([^:"]+):0\.1\.0-alpha01"\)""")
 
         fun compiledRegion(sourcePath: String, region: String): String? {
             val sourceFile = rootDir.resolve(sourcePath)
@@ -914,14 +968,16 @@ tasks.register("verifyTutorialSamples") {
         }
 
         documentationRoots.forEach { docsRoot ->
-            tutorialSamplesByPage.forEach pageLoop@{ (pageName, expectedSamples) ->
+            tutorialSamplesByPage.forEach pageLoop@{ (pageName, sample) ->
                 val page = docsRoot.resolve(pageName)
                 if (!page.isFile) {
                     violations += "${page.relativeTo(rootDir)} -> document does not exist"
                     return@pageLoop
                 }
-                val matches = snippetRegex.findAll(page.readText().replace("\r\n", "\n")).toList()
+                val pageText = page.readText().replace("\r\n", "\n")
+                val matches = snippetRegex.findAll(pageText).toList()
                 val actualSamples = matches.map { it.groupValues[1] to it.groupValues[2] }
+                val expectedSamples = listOf(sample.source to sample.region)
                 if (actualSamples != expectedSamples) {
                     violations +=
                         "${page.relativeTo(rootDir)} -> tutorial samples $actualSamples do not match $expectedSamples"
@@ -937,6 +993,80 @@ tasks.register("verifyTutorialSamples") {
                             "${page.relativeTo(rootDir)} -> snippet '$region' differs from $sourcePath"
                     }
                 }
+
+                val dependencyBlock = dependencyBlockRegex.find(pageText)
+                if (dependencyBlock == null || dependencyBlock.range.first > 1_500) {
+                    violations +=
+                        "${page.relativeTo(rootDir)} -> complete Maven dependencies must appear at the top"
+                } else {
+                    val block = dependencyBlock.groupValues[1]
+                    val actualArtifacts =
+                        coordinateRegex.findAll(block).map { match -> match.groupValues[1] }.toList()
+                    val expectedArtifacts = tutorialBaseArtifacts + sample.requiredArtifacts
+                    if (
+                        actualArtifacts.size != expectedArtifacts.size ||
+                        actualArtifacts.toSet() != expectedArtifacts.toSet()
+                    ) {
+                        violations +=
+                            "${page.relativeTo(rootDir)} -> Maven artifacts $actualArtifacts do not match $expectedArtifacts"
+                    }
+                    if ("repositories { mavenCentral() }" !in block) {
+                        violations +=
+                            "${page.relativeTo(rootDir)} -> dependency block must declare Maven Central"
+                    }
+                    if ("project(" in block) {
+                        violations +=
+                            "${page.relativeTo(rootDir)} -> tutorial dependencies must not use project()"
+                    }
+                }
+            }
+
+            val gettingStartedPage = docsRoot.resolve("getting-started.md")
+            if (!gettingStartedPage.isFile) {
+                violations +=
+                    "${gettingStartedPage.relativeTo(rootDir)} -> document does not exist"
+            } else {
+                val pageText = gettingStartedPage.readText().replace("\r\n", "\n")
+                val dependencyBlock = dependencyBlockRegex.find(pageText)
+                val leadingContent = pageText.take(5_000)
+                if (dependencyBlock == null || dependencyBlock.range.first > 1_500) {
+                    violations +=
+                        "${gettingStartedPage.relativeTo(rootDir)} -> complete Maven dependencies must appear at the top"
+                } else {
+                    val actualArtifacts =
+                        coordinateRegex.findAll(dependencyBlock.groupValues[1])
+                            .map { match -> match.groupValues[1] }
+                            .toList()
+                    if (actualArtifacts != tutorialBaseArtifacts) {
+                        violations +=
+                            "${gettingStartedPage.relativeTo(rootDir)} -> Maven artifacts $actualArtifacts do not match $tutorialBaseArtifacts"
+                    }
+                    if ("repositories { mavenCentral() }" !in dependencyBlock.groupValues[1]) {
+                        violations +=
+                            "${gettingStartedPage.relativeTo(rootDir)} -> dependency block must declare Maven Central"
+                    }
+                }
+                listOf(
+                    "id(\"com.viewcompose.preview\") version \"0.1.0-alpha01\"",
+                    "com.viewcompose:viewcompose-preview-core:0.1.0-alpha01",
+                    "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
+                    "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+                ).forEach { requiredPreviewDependency ->
+                    if (requiredPreviewDependency !in leadingContent) {
+                        violations +=
+                            "${gettingStartedPage.relativeTo(rootDir)} -> missing optional preview dependency '$requiredPreviewDependency' at the top"
+                    }
+                }
+            }
+        }
+
+        listOf(
+            rootDir.resolve("samples/tutorials/build.gradle.kts"),
+            rootDir.resolve("samples/counter/build.gradle.kts"),
+        ).forEach { sampleBuild ->
+            if ("project(" in sampleBuild.readText()) {
+                violations +=
+                    "${sampleBuild.relativeTo(rootDir)} -> public tutorial samples must resolve ViewCompose from Maven"
             }
         }
 
@@ -1264,7 +1394,7 @@ tasks.register("qaFull") {
         "qaQuick",
         ":app:connectedDebugAndroidTest",
         ":samples:counter:connectedDebugAndroidTest",
-        ":samples:task-list:connectedDebugAndroidTest",
+        ":samples:tutorials:connectedDebugAndroidTest",
     )
 }
 

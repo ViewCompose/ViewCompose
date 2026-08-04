@@ -73,8 +73,8 @@ Covered special cases:
 9. Transactional navigation host: `TransactionalNavHostCoordinatorTest` covers attach,
    push/pop/replace/reset, revealed-page refresh failure, initial-failure retry, serialized
    reentrancy, and lifecycle caps (unit).
-10. Public navigation: the `:samples:task-list` device test covers list/detail navigation and Back
-    through the production `NavHost` (instrumentation).
+10. Public navigation: the `:samples:tutorials` device test covers push and Back through the
+    production `NavHost` (instrumentation).
 
 Current baseline notes:
 

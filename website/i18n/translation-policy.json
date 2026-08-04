@@ -62,13 +62,20 @@
     "tooling/diagnostics.md",
     "tooling/performance.md",
     "tooling/preview.md",
+    "tutorials/README.md",
+    "tutorials/android-view.md",
+    "tutorials/animation.md",
+    "tutorials/gestures.md",
     "tutorials/getting-started.md",
-    "tutorials/task-list-animation-and-gestures.md",
-    "tutorials/task-list-foundations.md",
-    "tutorials/task-list-input-and-lists.md",
-    "tutorials/task-list-overlays-and-android-views.md",
-    "tutorials/task-list-performance-and-diagnostics.md",
-    "tutorials/task-list-theme-and-navigation.md"
+    "tutorials/layouts-and-modifiers.md",
+    "tutorials/lazy-list-performance.md",
+    "tutorials/lazy-lists.md",
+    "tutorials/navigation.md",
+    "tutorials/overlays.md",
+    "tutorials/render-diagnostics.md",
+    "tutorials/state-and-events.md",
+    "tutorials/text-input.md",
+    "tutorials/theming.md"
   ],
   "staleMarker": ":::warning 翻译状态"
 }
