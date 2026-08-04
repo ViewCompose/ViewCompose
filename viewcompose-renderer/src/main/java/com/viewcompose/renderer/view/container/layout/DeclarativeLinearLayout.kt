@@ -2,9 +2,6 @@ package com.viewcompose.renderer.view.container
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.ColorFilter
-import android.graphics.PixelFormat
-import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.View
 import android.widget.LinearLayout
@@ -17,6 +14,8 @@ import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
 import com.viewcompose.renderer.decoration.DecorationDrawingOrderContainer
 import com.viewcompose.renderer.decoration.ViewDecorationDrawing
 import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Linear container used by Row and Column.
@@ -39,7 +38,6 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
         set(value) {
             if (field == value) return
             field = value
-            updateSpacingDivider()
             requestLayout()
         }
 
@@ -67,7 +65,12 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
         heightMeasureSpec: Int,
     ) {
         val startNs = LayoutPassTracker.beginTiming()
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        val marginOverrides = applyItemSpacingForMeasurement()
+        try {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        } finally {
+            restoreMeasurementMargins(marginOverrides)
+        }
         LayoutPassTracker.recordMeasureSince(javaClass, startNs)
     }
 
@@ -125,6 +128,7 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
     ) {
         val innerWidth = width - paddingLeft - paddingRight
         val innerHeight = height - paddingTop - paddingBottom
+        val gapSpacings = calculateGapSpacings()
         var hasWeightedChildren = false
         var consumedSize = 0
         for (index in 0 until childCount) {
@@ -136,10 +140,10 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
             }
             consumedSize += child.measuredWidth + params.leftMargin + params.rightMargin
         }
-        val baseSpacing = itemSpacing * (visibleChildCount - 1)
+        val baseSpacing = gapSpacings.sum()
         val metrics = LinearArrangementCalculator.calculate(
             arrangement = mainAxisArrangement,
-            itemSpacing = itemSpacing,
+            itemSpacing = 0,
             extraSpace = max(0, innerWidth - consumedSize - baseSpacing),
             childCount = visibleChildCount,
             hasWeightedChildren = hasWeightedChildren,
@@ -163,7 +167,7 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
             currentLeading += child.measuredWidth + params.rightMargin
             visibleIndex += 1
             if (visibleIndex < visibleChildCount) {
-                currentLeading += metrics.gap
+                currentLeading += metrics.gap + gapSpacings[visibleIndex - 1]
             }
         }
     }
@@ -173,6 +177,7 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
     ) {
         val innerWidth = width - paddingLeft - paddingRight
         val innerHeight = height - paddingTop - paddingBottom
+        val gapSpacings = calculateGapSpacings()
         var hasWeightedChildren = false
         var consumedSize = 0
         for (index in 0 until childCount) {
@@ -184,10 +189,10 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
             }
             consumedSize += child.measuredHeight + params.topMargin + params.bottomMargin
         }
-        val baseSpacing = itemSpacing * (visibleChildCount - 1)
+        val baseSpacing = gapSpacings.sum()
         val metrics = LinearArrangementCalculator.calculate(
             arrangement = mainAxisArrangement,
-            itemSpacing = itemSpacing,
+            itemSpacing = 0,
             extraSpace = max(0, innerHeight - consumedSize - baseSpacing),
             childCount = visibleChildCount,
             hasWeightedChildren = hasWeightedChildren,
@@ -211,9 +216,72 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
             currentLeading += child.measuredHeight + params.bottomMargin
             visibleIndex += 1
             if (visibleIndex < visibleChildCount) {
-                currentLeading += metrics.gap
+                currentLeading += metrics.gap + gapSpacings[visibleIndex - 1]
             }
         }
+    }
+
+    private fun applyItemSpacingForMeasurement(): List<MeasurementMarginOverride> {
+        if (itemSpacing == 0) return emptyList()
+        val gapSpacings = calculateGapSpacings()
+        if (gapSpacings.isEmpty()) return emptyList()
+
+        val overrides = ArrayList<MeasurementMarginOverride>(gapSpacings.size)
+        var visibleIndex = 0
+        for (index in 0 until childCount) {
+            val child = getChildAt(index)
+            if (child.visibility == View.GONE) continue
+            if (visibleIndex > 0) {
+                val params = child.layoutParams as MarginLayoutParams
+                val originalMargin = if (orientation == HORIZONTAL) params.leftMargin else params.topMargin
+                overrides += MeasurementMarginOverride(params, originalMargin)
+                if (orientation == HORIZONTAL) {
+                    params.leftMargin = originalMargin + gapSpacings[visibleIndex - 1]
+                } else {
+                    params.topMargin = originalMargin + gapSpacings[visibleIndex - 1]
+                }
+            }
+            visibleIndex += 1
+        }
+        return overrides
+    }
+
+    private fun restoreMeasurementMargins(overrides: List<MeasurementMarginOverride>) {
+        for (override in overrides) {
+            if (orientation == HORIZONTAL) {
+                override.params.leftMargin = override.originalMargin
+            } else {
+                override.params.topMargin = override.originalMargin
+            }
+        }
+    }
+
+    private fun calculateGapSpacings(): IntArray {
+        val participations = ArrayList<Float>(childCount)
+        for (index in 0 until childCount) {
+            val child = getChildAt(index)
+            if (child.visibility != View.GONE) {
+                participations += mainAxisParticipation(child)
+            }
+        }
+        if (participations.size <= 1) return IntArray(0)
+
+        // AnimatedVisibility keeps a zero-sized native host during the transition. Its spacing must
+        // grow with the host, while the preceding maximum preserves the existing gap between stable
+        // siblings when one or more intermediate hosts are fully collapsed.
+        var precedingParticipation = participations.first()
+        return IntArray(participations.size - 1) { gapIndex ->
+            val currentParticipation = participations[gapIndex + 1]
+            val gapParticipation = min(precedingParticipation, currentParticipation)
+            precedingParticipation = max(precedingParticipation, currentParticipation)
+            (itemSpacing * gapParticipation).roundToInt()
+        }
+    }
+
+    private fun mainAxisParticipation(child: View): Float {
+        val animatedHost = child as? DeclarativeAnimatedVisibilityHostLayout ?: return 1f
+        val scale = if (orientation == HORIZONTAL) animatedHost.widthScale else animatedHost.heightScale
+        return scale.coerceIn(0f, 1f)
     }
 
     private fun resolveVerticalGravity(
@@ -265,41 +333,8 @@ internal class DeclarativeLinearLayout @JvmOverloads constructor(
         return result
     }
 
-    private fun updateSpacingDivider() {
-        if (itemSpacing <= 0) {
-            showDividers = SHOW_DIVIDER_NONE
-            dividerDrawable = null
-            return
-        }
-        showDividers = SHOW_DIVIDER_MIDDLE
-        dividerDrawable = if (orientation == HORIZONTAL) {
-            SpacingDrawable(
-                width = itemSpacing,
-                height = 0,
-            )
-        } else {
-            SpacingDrawable(
-                width = 0,
-                height = itemSpacing,
-            )
-        }
-    }
-
-    private class SpacingDrawable(
-        private val width: Int,
-        private val height: Int,
-    ) : Drawable() {
-        override fun draw(canvas: Canvas) = Unit
-
-        override fun setAlpha(alpha: Int) = Unit
-
-        override fun setColorFilter(colorFilter: ColorFilter?) = Unit
-
-        @Suppress("OVERRIDE_DEPRECATION")
-        override fun getOpacity(): Int = PixelFormat.TRANSPARENT
-
-        override fun getIntrinsicWidth(): Int = width
-
-        override fun getIntrinsicHeight(): Int = height
-    }
+    private data class MeasurementMarginOverride(
+        val params: MarginLayoutParams,
+        val originalMargin: Int,
+    )
 }

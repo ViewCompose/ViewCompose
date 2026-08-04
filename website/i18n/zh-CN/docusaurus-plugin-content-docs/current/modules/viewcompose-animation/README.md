@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: b77dd20a08524a85f38eb3264cfd69ca6c1bbec876d5ecc00798665c7306b3db
+translation_source_hash: 9d7d320fee0d7861b1cb9e0fb6b5e90561a658ac32b454ebc2788084b8cdd7dc
 translation_status: current
 ---
 
@@ -145,8 +145,12 @@ AnimatedVisibility(
 }
 ```
 
-首次组合为稳定态，不播放 Enter。后续 Exit 会保留内容到所有 Channel 完成，再将其移除。
-被中断的 Enter/Exit 从当前 Alpha 与尺寸样本 Retarget。尺寸动画会按动态 Bounds 裁剪内容。
+首次组合为稳定态，不播放 Enter。后续 Exit 会保留内容到所有 Channel 完成，再移除内容子树。
+空 Host 会以零尺寸身份锚点继续挂载，因此后续可见性变化不会重建其后的无 Key 原生同级 View，
+也不会截断这些 View 的按压态和焦点状态。被中断的 Enter/Exit 从当前 Alpha 与尺寸样本 Retarget。
+每个新 Segment 都使用实时归零后的 Play Time 采样，不会误用固定组合快照中上一 Segment 的结束
+时间。尺寸动画会按动态 Bounds 裁剪内容。当 Host 是 `Row` 或 `Column` 的直接 Child 时，周围的
+Item 间距会跟随对应的宽度或高度进度，因此生命周期端点不会在单帧内突然插入或移除一整段间距。
 
 Tree-builder 默认影响双轴；`RowScope` 默认影响宽度；`ColumnScope` 默认影响高度。Transition
 的 `+` 会拼接 Element，重复 Channel 由最后一个适用 Fade 或尺寸 Element 决定。

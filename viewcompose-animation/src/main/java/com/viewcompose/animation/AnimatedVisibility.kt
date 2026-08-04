@@ -621,25 +621,29 @@ private fun UiTreeBuilder.animatedVisibilityCore(
     visibleState.currentState = transition.currentState
     visibleState.targetState = targetVisible
     visibleState.isIdle = !transition.isRunning && transition.currentState == transition.targetState
-    val shouldRender = transition.currentState || transition.targetState || transition.isRunning
-    if (!shouldRender) {
-        return
-    }
+    val shouldRenderContent = transition.currentState || transition.targetState || transition.isRunning
     val hasSizeTransform = enterWidthExpand != null ||
         enterHeightExpand != null ||
         exitWidthShrink != null ||
         exitHeightShrink != null
+    // Keep the empty host as a zero-size identity anchor. Removing it would shift unkeyed
+    // siblings during reconciliation and recreate native Views, truncating pressed/focus state.
+    val hostAlpha = if (shouldRenderContent) alphaState.value.coerceIn(0f, 1f) else 0f
+    val hostWidthScale = if (shouldRenderContent) widthScaleState.value.coerceAtLeast(0f) else 0f
+    val hostHeightScale = if (shouldRenderContent) heightScaleState.value.coerceAtLeast(0f) else 0f
     emit(
         type = NodeType.AnimatedVisibilityHost,
         spec = AnimatedVisibilityHostNodeProps(
-            alpha = alphaState.value.coerceIn(0f, 1f),
-            widthScale = widthScaleState.value.coerceAtLeast(0f),
-            heightScale = heightScaleState.value.coerceAtLeast(0f),
+            alpha = hostAlpha,
+            widthScale = hostWidthScale,
+            heightScale = hostHeightScale,
             clipToBounds = hasSizeTransform,
         ),
         modifier = modifier,
     ) {
-        Box(content = content)
+        if (shouldRenderContent) {
+            Box(content = content)
+        }
     }
 }
 

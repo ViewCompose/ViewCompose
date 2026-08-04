@@ -98,6 +98,7 @@ internal fun UiTreeBuilder.AnimationPage(
 ) {
     val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 5)) }
     val visibleState = remember { mutableStateOf(true) }
+    val taskCompletedState = remember { mutableStateOf(false) }
     val contentState = remember { mutableStateOf(false) }
     val crossfadeState = remember { mutableStateOf(false) }
     val pulseState = remember { mutableStateOf(false) }
@@ -239,6 +240,75 @@ internal fun UiTreeBuilder.AnimationPage(
                         .margin(top = 6.dp)
                         .testTag(DemoTestTags.ANIMATION_VISIBILITY_FOOTER),
                 )
+                LazyColumn(
+                    items = listOf(
+                        DemoAnimationTask(
+                            id = 1L,
+                            title = "Read the tutorial",
+                            completed = taskCompletedState.value,
+                        ),
+                    ),
+                    key = DemoAnimationTask::id,
+                    contentType = { "task" },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                ) { task ->
+                    Surface(
+                        variant = SurfaceVariant.Variant,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(
+                            spacing = 8.dp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                        ) {
+                            Text(
+                                text = task.title,
+                                style = TextDefaults.titleMediumStyle(),
+                            )
+                            AnimatedVisibility(
+                                visible = task.completed,
+                                modifier = Modifier.testTag(DemoTestTags.ANIMATION_TASK_STATUS),
+                            ) {
+                                Text(text = "Completed")
+                            }
+                            Button(
+                                text = if (task.completed) {
+                                    "Reopen ${task.title}"
+                                } else {
+                                    "Complete ${task.title}"
+                                },
+                                onClick = {
+                                    taskCompletedState.value = !taskCompletedState.value
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag(DemoTestTags.ANIMATION_TASK_TOGGLE),
+                            )
+                            Row(
+                                spacing = 8.dp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag(DemoTestTags.ANIMATION_TASK_ACTIONS),
+                            ) {
+                                Button(
+                                    text = "Details ${task.title}",
+                                    variant = ButtonVariant.Outlined,
+                                    onClick = {},
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Button(
+                                    text = "Delete ${task.title}",
+                                    variant = ButtonVariant.Outlined,
+                                    onClick = {},
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             "transition" -> ScenarioSection(
@@ -934,6 +1004,12 @@ private enum class AnimatableCommand {
 private data class DemoVector2(
     val x: Float,
     val y: Float,
+)
+
+private data class DemoAnimationTask(
+    val id: Long,
+    val title: String,
+    val completed: Boolean,
 )
 
 private object DemoVector2Converter : AnimationConverter<DemoVector2> {
