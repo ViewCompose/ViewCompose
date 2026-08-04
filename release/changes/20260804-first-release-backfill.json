@@ -27,5 +27,11 @@
     { "artifact": "viewcompose-viewmodel", "impact": "fix" },
     { "artifact": "viewcompose-widget-constraintlayout", "impact": "fix" },
     { "artifact": "viewcompose-widget-core", "impact": "fix" }
+  ],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "This PR only wires release-intent verification and its tests into qaQuick; it does not alter published artifact output."
+    }
   ]
 }

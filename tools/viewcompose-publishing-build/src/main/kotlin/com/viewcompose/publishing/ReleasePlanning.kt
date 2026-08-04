@@ -335,16 +335,7 @@ internal class ViewComposeReleasePlanner(
                 direct[artifact] = impact to declarations.mapTo(linkedSetOf()) { (_, file) -> file }
             }
         }
-        val reverse = buildReverseDependencies(dependencies)
-        val releaseReasons = direct.keys.associateWith { linkedSetOf<String>() }.toMutableMap()
-        val queue = ArrayDeque(direct.keys.sorted())
-        while (queue.isNotEmpty()) {
-            val changed = queue.removeFirst()
-            reverse[changed].orEmpty().sorted().forEach { dependent ->
-                val reasons = releaseReasons.getOrPut(dependent) { linkedSetOf() }
-                if (reasons.add(changed)) queue.addLast(dependent)
-            }
-        }
+        val releaseReasons = propagateReleaseDependencies(direct.keys, dependencies)
         val releases = releaseReasons.keys.sorted().map { artifact ->
             val baseline = baselines.getValue(artifact)
             val directDeclaration = direct[artifact]
@@ -376,6 +367,25 @@ internal class ViewComposeReleasePlanner(
                 }
             }
             return reverse.mapValues { (_, dependents) -> dependents.toSet() }
+        }
+
+        fun propagateReleaseDependencies(
+            directArtifacts: Set<String>,
+            dependencies: Map<String, Set<String>>,
+        ): Map<String, Set<String>> {
+            val reverse = buildReverseDependencies(dependencies)
+            val releaseReasons = directArtifacts
+                .associateWith { linkedSetOf<String>() }
+                .toMutableMap()
+            val queue = ArrayDeque(directArtifacts.sorted())
+            while (queue.isNotEmpty()) {
+                val changed = queue.removeFirst()
+                reverse[changed].orEmpty().sorted().forEach { dependent ->
+                    val reasons = releaseReasons.getOrPut(dependent) { linkedSetOf() }
+                    if (reasons.add(changed)) queue.addLast(dependent)
+                }
+            }
+            return releaseReasons.mapValues { (_, reasons) -> reasons.toSet() }
         }
     }
 }
@@ -437,8 +447,6 @@ internal object ReleaseMetadataPreparer {
                 sourceRevision,
             )
         }
-        publishingFile.writeText(publishing)
-
         var history = historyFile.readText()
         val count = Regex("(?m)^release\\.count=([0-9]+)$")
             .find(history)?.groupValues?.get(1)?.toInt()
@@ -459,6 +467,7 @@ internal object ReleaseMetadataPreparer {
                 )
             }
         }
+        publishingFile.writeText(publishing)
         historyFile.writeText(history)
     }
 

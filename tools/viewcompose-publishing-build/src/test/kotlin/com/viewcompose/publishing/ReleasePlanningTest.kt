@@ -34,15 +34,25 @@ class ReleasePlanningTest {
 
     @Test
     fun `reverse dependencies preserve transitive release propagation`() {
-        val reverse = ViewComposeReleasePlanner.buildReverseDependencies(
-            mapOf(
-                "viewcompose-ui-contract" to setOf("viewcompose-runtime"),
-                "viewcompose-widget-core" to setOf("viewcompose-ui-contract"),
-            ),
+        val dependencies = mapOf(
+            "viewcompose-ui-contract" to setOf("viewcompose-runtime"),
+            "viewcompose-widget-core" to setOf("viewcompose-ui-contract"),
         )
+        val reverse = ViewComposeReleasePlanner.buildReverseDependencies(dependencies)
 
         assertEquals(setOf("viewcompose-ui-contract"), reverse.getValue("viewcompose-runtime"))
         assertEquals(setOf("viewcompose-widget-core"), reverse.getValue("viewcompose-ui-contract"))
+        assertEquals(
+            mapOf(
+                "viewcompose-runtime" to emptySet(),
+                "viewcompose-ui-contract" to setOf("viewcompose-runtime"),
+                "viewcompose-widget-core" to setOf("viewcompose-ui-contract"),
+            ),
+            ViewComposeReleasePlanner.propagateReleaseDependencies(
+                setOf("viewcompose-runtime"),
+                dependencies,
+            ),
+        )
     }
 
     @Test
