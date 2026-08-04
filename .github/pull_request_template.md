@@ -37,3 +37,12 @@ Localization impact:
 
 - Does this change public behavior, dependencies, compatibility, defaults, or lifecycle semantics?
 - If users must act, where is the migration path documented?
+
+## Maven release intent
+
+- [ ] Added one immutable `release/changes/<unique>.json` file for every changed published artifact
+- [ ] Classified detected artifacts as `breaking`, `feature`, `fix`, or explicitly ignored with a reason
+- [ ] Shared build input changes declare affected artifacts or a concrete no-release reason
+- [ ] No Maven-published artifact or release input changed
+
+Changeset files or no-release rationale:

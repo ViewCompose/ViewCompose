@@ -10,6 +10,7 @@ import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.MapProperty
@@ -165,6 +166,59 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                     documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
                 )
             }
+        val releaseArtifacts = metadata.moduleVersions.keys.sorted()
+        val releaseBaseRevision = project.providers
+            .gradleProperty("viewComposeReleaseBaseRevision")
+            .orElse(project.providers.environmentVariable("VIEWCOMPOSE_RELEASE_BASE_REVISION"))
+        project.tasks.register<VerifyViewComposeReleaseIntentTask>(
+            "verifyViewComposeReleaseIntent",
+        ) {
+            group = "verification"
+            description =
+                "Verifies immutable per-PR release intent for changed published artifacts."
+            repositoryDirectory.set(project.layout.projectDirectory)
+            artifacts.set(releaseArtifacts)
+            baseRevision.set(releaseBaseRevision)
+        }
+        val artifactDependencies = project.provider {
+            publishedProjects.associate { publishedProject ->
+                val dependencies = PUBLISHED_DEPENDENCY_CONFIGURATIONS.flatMap { configurationName ->
+                    publishedProject.configurations.findByName(configurationName)
+                        ?.dependencies
+                        ?.withType(ProjectDependency::class.java)
+                        ?.map { dependency -> dependency.path.substringAfterLast(':') }
+                        .orEmpty()
+                }.filter(metadata.moduleVersions::containsKey).distinct().sorted()
+                publishedProject.name to dependencies.joinToString(",")
+            }.toSortedMap()
+        }
+        val releasePlanJson = project.layout.buildDirectory.file("release-plan.json")
+        val releasePlanMarkdown = project.layout.buildDirectory.file("release-plan.md")
+        val planRelease = project.tasks.register<PlanViewComposeReleaseTask>(
+            "planViewComposeRelease",
+        ) {
+            group = "publishing"
+            description =
+                "Plans independently versioned releases from signed tags and immutable changesets."
+            dependsOn(verifyConfiguration)
+            repositoryDirectory.set(project.layout.projectDirectory)
+            artifacts.set(releaseArtifacts)
+            this.artifactDependencies.set(artifactDependencies)
+            jsonOutput.set(releasePlanJson)
+            markdownOutput.set(releasePlanMarkdown)
+            outputs.upToDateWhen { false }
+        }
+        project.tasks.register<PrepareViewComposeReleaseTask>("prepareViewComposeRelease") {
+            group = "publishing"
+            description =
+                "Applies explicitly confirmed release versions to publishing metadata and docs history."
+            dependsOn(planRelease)
+            repositoryDirectory.set(project.layout.projectDirectory)
+            planFile.set(releasePlanJson)
+            confirmedVersions.set(
+                project.providers.gradleProperty("viewComposeReleaseVersions"),
+            )
+        }
         val publishLocal = project.tasks.register("publishViewComposeToLocalRepository") {
             group = "publishing"
             description =
@@ -1070,4 +1124,10 @@ private val FEATURE_CORE_DEPENDENCIES = mapOf(
     "viewcompose-graphics" to "viewcompose-graphics-core",
     "viewcompose-navigation" to "viewcompose-navigation-core",
     "viewcompose-preview" to "viewcompose-preview-core",
+)
+private val PUBLISHED_DEPENDENCY_CONFIGURATIONS = listOf(
+    "api",
+    "implementation",
+    "compileOnly",
+    "runtimeOnly",
 )

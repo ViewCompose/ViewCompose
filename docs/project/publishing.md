@@ -84,6 +84,106 @@ independent artifact provenance identifies one exact release commit, and its ann
 that it was reconstructed. Never silently present a retrospective tag as one created during the
 original publication.
 
+## Per-pull-request release intent
+
+ViewCompose records release intent as one immutable Changeset per pull request rather than a
+shared mutable list of changed modules. A production change to a published artifact is incomplete
+until a new `release/changes/<unique>.json` file classifies it. The machine-readable schema is
+[`release/changes.schema.json`](../../release/changes.schema.json).
+
+```json
+{
+  "schemaVersion": 1,
+  "summary": "Correct saved-state restoration after process recreation.",
+  "changes": [
+    { "artifact": "viewcompose-runtime", "impact": "fix" }
+  ],
+  "ignored": [
+    {
+      "artifact": "viewcompose-widget-core",
+      "reason": "Only a test fixture changed; no published source or metadata changed."
+    }
+  ]
+}
+```
+
+Direct impact is exactly one of `breaking`, `feature`, or `fix`. Contributors never write
+`dependency`: the planner derives it when an independently published dependent must be republished
+against a changed dependency. `ignored` is a reviewed exception for an automatically detected
+artifact and requires a concrete reason. A `shared` entry may classify an ambiguous root build
+input such as `build.gradle.kts` as release-neutral; otherwise the Changeset must declare the
+artifacts affected by that shared input.
+
+Automatic ownership covers each registered artifact's `src/main`, `src/commonMain`,
+`src/androidMain`, `src/jvmMain`, and `src/release` trees, its publication-relevant module build
+files, and `src/test/samples` because compiled API samples affect generated documentation. Ordinary
+unit/instrumentation tests, Demo code, benchmarks, and handwritten documentation do not request a
+Maven release by default. Root build files and the version catalog require explicit intent because
+their effect cannot be inferred safely from a path alone.
+
+Changesets are append-only. Do not modify, rename, delete, or reuse one after merge. Squashed,
+rebased, and fixup commits remain safe because the release unit is the merged pull request, not an
+individual commit. A conservative declaration for an artifact that automatic ownership did not
+detect is allowed; omitting a detected artifact is not.
+
+Verify the current branch against its merge base with `origin/main`:
+
+```bash
+./gradlew verifyViewComposeReleaseIntent
+```
+
+CI passes the pull request base SHA through `VIEWCOMPOSE_RELEASE_BASE_REVISION`. An exceptional
+local comparison can use `-PviewComposeReleaseBaseRevision=<commit>`. The task is part of
+`qaQuick` and also rejects changes to an already-recorded Changeset.
+
+## Deterministic independent release planning
+
+Run the planner only on a clean, fully fetched checkout whose GPG keyring trusts the ViewCompose
+release public key:
+
+```bash
+git fetch origin main --tags
+./gradlew planViewComposeRelease
+```
+
+For every registered artifact, the planner selects the highest semantic version tag matching
+`maven/<artifact-id>/<version>`, cryptographically verifies the signed annotation, and reads its
+`sourceRevision`. That immutable revision—not mutable current publishing metadata—is the artifact's
+comparison boundary. It then:
+
+1. loads Changesets introduced between that revision and `HEAD`;
+2. verifies that every publication-relevant direct path has a matching declaration;
+3. takes the highest direct impact recorded for the artifact;
+4. derives the current project dependency graph from Gradle `api`, `implementation`,
+   `compileOnly`, and `runtimeOnly` project dependencies;
+5. propagates a `dependency` release transitively to every published reverse dependent; and
+6. writes deterministic `build/release-plan.json` and `build/release-plan.md` files that separate
+   direct changes from dependency propagation.
+
+The plan recommends, but does not silently choose, versions. Stable lines use semantic versioning:
+`fix` and `dependency` increment patch, `feature` increments minor, and `breaking` increments major
+after `1.0` or minor on a `0.x` line. A prerelease increments its existing numeric channel, for
+example `0.1.0-alpha01` to `0.1.0-alpha02`, regardless of impact. The release owner reviews and
+confirms every exact version.
+
+After the source commit is reviewed and frozen, apply only the confirmed plan:
+
+```bash
+./gradlew prepareViewComposeRelease \
+  -PviewComposeReleaseVersions=viewcompose-runtime=0.1.0-alpha02,viewcompose-ui-contract=0.1.0-alpha02
+```
+
+The confirmed artifact set must exactly match the plan and every version must advance. The task
+updates only those modules in `gradle/viewcompose-publishing.properties`, pins their
+`sourceRevision` to the clean planning commit, and appends immutable entries to
+`gradle/viewcompose-documentation-releases.properties`. Review and commit that diff as the
+metadata-only release commit. Publication selection must match `build/release-plan.json`; after
+Central reports `Published`, create the signed per-artifact tags described above.
+
+The backfill Changeset dated 2026-08-04 classifies publication-relevant changes made after the
+first Central boundary and before this workflow existed. It is a one-time migration record, not a
+precedent for reconstructing release intent after merge.
+
 ## Dependency shape
 
 Feature artifacts expose their platform-neutral core artifact transitively:

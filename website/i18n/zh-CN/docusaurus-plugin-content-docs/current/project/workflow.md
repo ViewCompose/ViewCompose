@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 7ac67bf26bd31f46446b21ebf85a72babf8518053a89ba1500d856bf6535ee61
+translation_source_hash: 2c7881f67d4e9e6937cb0f0868f5f1bc5e0916dcfa531a04962c553b1886ef49
 translation_status: current
 ---
 
@@ -74,6 +74,21 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 1. 如果这次代码改动直接修掉了文档中提过的一个问题点，不能只改代码不改文档
 2. 这种场景下，文档更新和代码更新必须在同一步内完成，或紧邻提交完成
 3. 文档中的“当前问题 / 剩余问题 / 后续计划”要随实现状态一起收口，不能长期滞后于代码
+
+### 3.1 独立发布模块的发布意图
+
+每个 PR 在合并前都必须判断 Maven 发布影响。自动归属发现会影响发布的源码、模块构建元数据或
+编译 API sample 时，必须为该 PR 新增一份不可变 `release/changes/<unique>.json`。直接制品改动
+填写 `breaking`、`feature` 或 `fix`；只有检测路径不改变公开契约或制品时，才能用 `ignored` 并
+写明具体理由。禁止手写 `dependency`，它由发布规划器根据当前 Gradle project graph 推导反向依赖。
+
+纯测试、Demo、benchmark 和手写文档默认不影响发布。根目录共享构建输入无法只凭路径确定影响，
+必须声明受影响制品，或说明不发布的具体理由。Changeset 合并后只读并永久保留为审计记录。即使
+使用 squash 或 rebase，发布意图也属于 PR，而不是每个中间 commit。
+
+本地运行 `./gradlew verifyViewComposeReleaseIntent`；它已进入 `qaQuick`，CI 会与精确 PR base SHA
+比较。release owner 按[发布流程](./publishing.md#确定性的独立发布规划)使用
+`planViewComposeRelease` 和 `prepareViewComposeRelease`。
 
 ## 4. 测试与 demo 补齐原则
 

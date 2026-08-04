@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "summary": "Backfill release intent for published-module source and API documentation changes after the first Maven Central boundary.",
+  "changes": [
+    { "artifact": "viewcompose-animation", "impact": "fix" },
+    { "artifact": "viewcompose-animation-core", "impact": "fix" },
+    { "artifact": "viewcompose-gesture", "impact": "fix" },
+    { "artifact": "viewcompose-gesture-core", "impact": "fix" },
+    { "artifact": "viewcompose-graphics", "impact": "fix" },
+    { "artifact": "viewcompose-graphics-core", "impact": "fix" },
+    { "artifact": "viewcompose-host-android", "impact": "fix" },
+    { "artifact": "viewcompose-image-coil", "impact": "fix" },
+    { "artifact": "viewcompose-lifecycle", "impact": "fix" },
+    { "artifact": "viewcompose-navigation", "impact": "fix" },
+    { "artifact": "viewcompose-navigation-core", "impact": "fix" },
+    { "artifact": "viewcompose-overlay-android", "impact": "fix" },
+    { "artifact": "viewcompose-preview", "impact": "fix" },
+    { "artifact": "viewcompose-preview-core", "impact": "fix" },
+    { "artifact": "viewcompose-preview-gradle-plugin", "impact": "fix" },
+    { "artifact": "viewcompose-preview-runner", "impact": "fix" },
+    { "artifact": "viewcompose-preview-worker-host", "impact": "fix" },
+    { "artifact": "viewcompose-renderer", "impact": "fix" },
+    { "artifact": "viewcompose-runtime", "impact": "fix" },
+    { "artifact": "viewcompose-shadow-android", "impact": "fix" },
+    { "artifact": "viewcompose-text-core", "impact": "fix" },
+    { "artifact": "viewcompose-ui-contract", "impact": "fix" },
+    { "artifact": "viewcompose-viewmodel", "impact": "fix" },
+    { "artifact": "viewcompose-widget-constraintlayout", "impact": "fix" },
+    { "artifact": "viewcompose-widget-core", "impact": "fix" }
+  ]
+}

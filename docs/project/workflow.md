@@ -46,6 +46,25 @@ Start with the owning current document, such as the
 When code resolves a documented problem, update that document in the same or immediately adjacent
 commit. Current-problem, remaining-work, and next-step sections cannot lag the implementation.
 
+### 3.1 Release intent for independently published modules
+
+Every pull request must classify Maven release impact before merge. When automatic ownership finds
+publication-relevant source, module build metadata, or compiled API sample changes, add one new
+immutable `release/changes/<unique>.json` file for the pull request. Use `breaking`, `feature`, or
+`fix` for a direct artifact change. Use `ignored` only with a concrete reason when the detected
+path does not change the published contract or artifact. Never write `dependency`; the release
+planner derives reverse-dependency propagation from the current Gradle project graph.
+
+Test-only, Demo, benchmark, and handwritten documentation changes are release-neutral by default.
+Shared root build inputs must either declare the affected artifacts or record a concrete no-release
+classification because path ownership alone is insufficient. Changesets are append-only after
+merge and remain in the repository as the audit trail. Squash and rebase workflows do not alter
+this contract: release intent belongs to the pull request, not each intermediate commit.
+
+Run `./gradlew verifyViewComposeReleaseIntent` locally. It is part of `qaQuick`; CI compares the PR
+to its exact base SHA. Release owners use `planViewComposeRelease` and
+`prepareViewComposeRelease` as defined in [Publishing](publishing.md#deterministic-independent-release-planning).
+
 ## 4. Tests and Demo assets
 
 An implemented capability normally includes, in order, unit tests, a Demo scenario, and required

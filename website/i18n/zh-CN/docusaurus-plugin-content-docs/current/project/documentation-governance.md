@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: e2e6b504b1a352bfc02fe1f50d639ef07d78a5c60bd4fb3feeb283805b809b08
+translation_source_hash: 0cf615408a3498b60bba3116a5d07b02050ffae8c52d03f767873cbfa169f932
 translation_status: current
 ---
 
@@ -208,6 +208,7 @@ URL 和真实 UI literal 原样保留；叙述中的外语 literal 用行内代�
 | --- | --- |
 | 新增/改变 public symbol | KDoc/Javadoc、模块页、非平凡 sample |
 | 新发布模块 | publishing metadata、目录、模块 README、API pipeline、dependency guide |
+| 发布制品源码或发布输入变化 | 每 PR 不可变 Changeset；按需更新所属模块/API 文档；验证确定性 release plan |
 | 依赖/兼容变化 | 模块页和跨模块兼容矩阵 |
 | 行为/默认/lifecycle 变化 | 模块页与相关 guide/tutorial；需要用户行动时加 migration |
 | 架构/owner 变化 | 当前架构页；满足条件时 ADR |
@@ -243,7 +244,8 @@ deprecated 公共文档保留到支持 release line EOL，标记 deprecated、�
 AI agent 必须从 `docs/README.md` 开始，阅读所属模块与有效文档；用代码/测试验证行为；编辑前后
 应用影响矩阵；修正错误有效文档而非新建平行说明；通常不从 archive 恢复上下文；不提交临时
 note/生成 HTML；保持模块边界、版本、链接和权威语言；新增/移动/删除内容时更新 index；交付前
-运行文档门禁并报告无法运行项。根 `AGENTS.md` 是最短入口，本文保持权威。
+运行文档门禁并报告无法运行项。影响制品发布时必须新增每 PR 不可变 Changeset，禁止在 release
+planner 外推断或手写反向依赖发布影响。根 `AGENTS.md` 是最短入口，本文保持权威。
 
 ## 审查与自动门禁
 

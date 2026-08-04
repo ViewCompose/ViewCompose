@@ -10,6 +10,7 @@ dependencies {
     implementation("org.jetbrains.dokka:dokka-gradle-plugin:2.2.0")
     // 0.34.x supports this build's Kotlin 2.0 convention plugin toolchain. 0.36+ requires Kotlin 2.2.
     implementation("com.vanniktech:gradle-maven-publish-plugin:0.34.0")
+    testImplementation("junit:junit:4.13.2")
 }
 
 gradlePlugin {
