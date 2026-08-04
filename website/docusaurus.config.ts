@@ -81,6 +81,17 @@ const config: Config = {
             from: ['/compose-migration', '/migrate-from-compose'],
             to: '/migration',
           },
+          {
+            from: [
+              '/tutorials/task-list-foundations',
+              '/tutorials/task-list-input-and-lists',
+              '/tutorials/task-list-theme-and-navigation',
+              '/tutorials/task-list-overlays-and-android-views',
+              '/tutorials/task-list-animation-and-gestures',
+              '/tutorials/task-list-performance-and-diagnostics',
+            ],
+            to: '/tutorials',
+          },
         ],
       },
     ],

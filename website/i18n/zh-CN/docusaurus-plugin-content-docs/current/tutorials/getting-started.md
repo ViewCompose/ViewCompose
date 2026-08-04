@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 11a46ffc22e026b8056af95c858da0915714f013bf2f45bcb065c632f338047d
+translation_source_hash: 8a6b54143eac111a606c2e75f218885dafa7dff99108153f934a817eeede1722
 translation_status: current
 ---
 
@@ -15,6 +15,44 @@ translation_status: current
 [`samples/counter`](https://github.com/ViewCompose/ViewCompose/tree/main/samples/counter)。下面的代码复制自该模块。
 `qaQuick` 会编译应用、设备测试和仅存在于 debug 的 Preview 入口；`qaPreview` 还会验证 Preview
 发现流程始终连接到这个参与编译的函数。
+
+## 必需依赖
+
+确认应用可以解析 Maven Central，然后添加完整的运行时依赖集合：
+
+```kotlin title="build.gradle.kts"
+repositories { mavenCentral() }
+
+dependencies {
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("androidx.activity:activity:1.12.4")
+    implementation("com.google.android.material:material:1.13.0")
+}
+```
+
+计数器不依赖 Preview 工具。如果要继续完成可选 Preview 部分，现在还要添加已发布插件和仅用于
+debug 的产物：
+
+```kotlin title="build.gradle.kts（可选 Preview）"
+plugins {
+    id("com.viewcompose.preview") version "0.1.0-alpha01"
+}
+
+dependencies {
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    add(
+        "viewComposePreviewWorkerHost",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
+    )
+    add(
+        "viewComposePreviewRunner",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+    )
+}
+```
 
 ## 将要构建的内容
 
@@ -47,26 +85,9 @@ JDK 17。仓库示例使用 `compileSdk = 36`、`minSdk = 24` 和 JVM target 11�
 ViewCompose 产物独立演进。混用比本教程更新的版本前，请检查
 [已发布模块目录](../modules/README.md)。
 
-## 1. 添加依赖
+仓库示例也使用这些完全相同的 Maven 坐标，因此质量门禁验证的就是外部应用实际使用的依赖路径。
 
-确认应用可以解析 Maven Central，然后在应用模块中显式添加四层 ViewCompose 依赖：
-
-```kotlin title="build.gradle.kts"
-dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
-
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("com.google.android.material:material:1.13.0")
-}
-```
-
-仓库示例使用职责相同的 project dependency，以便始终验证当前源码；外部使用者则使用上面的
-Maven 坐标。
-
-## 2. 使用 Material 应用主题
+## 1. 使用 Material 应用主题
 
 宿主会从 Android 主题解析 ViewCompose token。Android Studio 新建的 View 应用通常已经提供
 合适的 Material 主题。计数器示例使用：
@@ -80,7 +101,7 @@ Maven 坐标。
 在 `AndroidManifest.xml` 中把该主题应用到 Application 或 Activity。ViewCompose 会跟随宿主的
 明暗配置和 Android 主题桥接；这里不涉及 Compose Theme。
 
-## 3. 安装声明式内容
+## 2. 安装声明式内容
 
 用参与编译的
 [`MainActivity.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/samples/counter/src/main/java/com/viewcompose/samples/counter/MainActivity.kt)
@@ -149,28 +170,9 @@ internal fun UiTreeBuilder.CounterScreen() {
 `remember` 会在当前组合存续期间保留值。如果值还需要跨 Activity 重建或进程恢复，请使用
 `rememberSaveable`，详见[生命周期与 SavedState](https://docs.viewcompose.com/architecture/lifecycle-and-saved-state)。
 
-## 4. 预览参与编译的页面
+## 3. 预览参与编译的页面
 
-Preview 工具应只进入 debug 路径。外部应用使用已发布插件和产物；仓库示例使用职责相同的
-project dependency：
-
-```kotlin title="build.gradle.kts"
-plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha01"
-}
-
-dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
-    add(
-        "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
-    )
-    add(
-        "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
-    )
-}
-```
+开头列出的可选 Preview 依赖应只进入 debug 路径。仓库示例与外部应用都使用已发布的插件产物。
 
 示例的 debug source set 通过公开静态 Preview 入口复用同一个 `CounterScreen`：
 
@@ -210,7 +212,7 @@ fun UiTreeBuilder.CounterPreview() {
 
 验证发现链路。
 
-## 5. 运行与验证
+## 4. 运行与验证
 
 可以从 Android Studio 运行应用，或在仓库根目录构建示例：
 

@@ -16,7 +16,7 @@ The documentation system must support five durable outcomes:
 1. generated KDoc/Javadoc reference for every public artifact and released version;
 2. current framework principles, architecture, and design decisions;
 3. factual comparisons with Jetpack Compose and practical migration paths;
-4. progressive tutorials and task-oriented guides backed by executable samples;
+4. independently accessible capability tutorials and task-oriented guides backed by executable samples;
 5. module-level documentation that can evolve and be released independently.
 
 It must also remain searchable, linkable, version-aware, accessible, and mechanically verifiable.
@@ -63,8 +63,8 @@ Convenience is not sufficient justification for another root document.
 
 Every public page must have one primary purpose. Use this decision order:
 
-1. **Tutorial:** teaches through a complete, ordered learning experience. The reader follows the
-   author-provided path and reaches a working result.
+1. **Tutorial:** teaches a beginner to use one capability and reaches a working result. Each page
+   is independently accessible; related tutorials are optional links, never required chapters.
 2. **Guide:** helps an informed reader accomplish a concrete task. It may link to concepts and API
    reference instead of reteaching them.
 3. **Architecture:** explains why the framework works as it does, its invariants, boundaries, and
@@ -214,23 +214,31 @@ documentation or presenting API name similarity as semantic equivalence.
 
 ## Tutorial and sample quality
 
-Tutorials progress from the shortest successful setup to realistic application structure. Each
-tutorial must state prerequisites, expected outcome, module versions, and the commands or actions
-used to verify completion.
+Every tutorial teaches a beginner to use one capability and must be runnable when entered directly.
+The page states the expected outcome, tested module versions, and verification action, but never
+requires another tutorial to be completed first. Related pages may be suggested after the working
+result.
 
 Executable source is the truth for code samples:
 
 - non-trivial samples live in a compiled sample/demo source set and are referenced from docs;
-- standalone first-application samples live under `samples/<name>`, use only public APIs, avoid the
-  large demo's internal scaffolding, compile from `qaQuick`, and run their behavior checks from
-  `qaFull`;
+- every tutorial starts with one complete Maven dependency block, including any optional feature
+  artifact such as `viewcompose-overlay-android`; a reader must not discover a required dependency
+  only after reaching the sample;
+- standalone tutorial samples live under `samples/<name>`, resolve ViewCompose through published
+  Maven coordinates, use only public APIs, compile from `qaQuick`, and run representative behavior
+  checks from `qaFull`;
+- prefer one self-contained source file per demonstrated capability. Do not grow one progressive
+  sample into a cross-feature application that a reader must understand before using one feature;
 - short inline snippets must be covered by a compilation test or copied from a compiled sample;
 - snippets must use public APIs and published dependency coordinates;
 - output screenshots identify device configuration, theme, font scale, locale, and relevant module
   versions;
 - obsolete samples are fixed or removed in the same change that invalidates them.
 
-Do not maintain large independent code blocks that can silently diverge from the repository.
+The tutorial gate verifies exact source regions, complete dependency declarations in both locales,
+and the absence of local `project(...)` dependencies in public tutorial sample modules. Do not
+maintain large independent code blocks that can silently diverge from the repository.
 
 ## Versioning and URL stability
 
