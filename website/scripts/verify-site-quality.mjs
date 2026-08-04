@@ -1,9 +1,11 @@
 import {verifyAccessibility} from './verify-accessibility.mjs';
 import {verifySiteBudgets} from './verify-site-budgets.mjs';
+import {verifySiteShell} from './verify-site-shell.mjs';
 import {verifyVersionedDocumentation} from './verify-versioned-documentation.mjs';
 
 try {
   await verifyVersionedDocumentation();
+  await verifySiteShell();
   await verifyAccessibility();
   await verifySiteBudgets();
 } catch (error) {

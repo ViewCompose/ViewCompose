@@ -27,9 +27,10 @@ The production artifact is assembled in seven explicit stages:
 6. Docusaurus type-checks and builds the handwritten documents, site presentation, generated API
    output, localized search indexes, and compatibility redirects for both `en` and `zh-CN` into
    `website/build/`, with broken links and anchors treated as errors.
-7. the build wrapper audits Docusaurus-owned HTML accessibility and enforces build-time, total
-   output, JavaScript, CSS, and per-locale search-index budgets. Dokka-generated HTML remains under
-   the API generator's independent integrity gate rather than the site-template accessibility gate.
+7. the build wrapper verifies shared site-shell behavior across locales, audits Docusaurus-owned
+   HTML accessibility, and enforces build-time, total output, JavaScript, CSS, and per-locale
+   search-index budgets. Dokka-generated HTML remains under the API generator's independent
+   integrity gate rather than the site-template accessibility gate.
 
 Run the complete local verification from the repository root:
 
@@ -76,6 +77,10 @@ language, title and main landmarks, heading order, accessible names, image alter
 headers, iframe titles, and duplicate IDs. It deliberately excludes redirect stubs and
 Dokka-generated implementation pages. Changes to the Dokka template require a separate generated
 API accessibility review rather than weakening this gate.
+
+The site-shell verifier requires both locale homepages to use one explicit browser-storage
+namespace, so switching languages preserves the reader's light or dark color-mode choice. It also
+rejects the removed standalone Maven-coordinate banner on either homepage.
 
 ## Released versions and aliases
 

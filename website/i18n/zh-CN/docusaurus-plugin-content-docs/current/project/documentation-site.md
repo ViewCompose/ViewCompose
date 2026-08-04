@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 40645603755aee4f0d4749c751991d4243a93d046d713c0e720aa2a9fc565d4b
+translation_source_hash: 4f94e30fd8db65cc8c55c734482af80a477c7fcce8e5e60c8ffde6638976f164
 translation_status: current
 ---
 
@@ -27,8 +27,9 @@ translation_status: current
    revision 生成目录和每个已发布制品/版本的模块手册快照，不维护第二份注册表。
 6. Docusaurus type-check 并构建手写文档、站点界面、生成 API、本地化搜索索引和兼容重定向，
    同时输出 `en` 与 `zh-CN` 到 `website/build/`；坏链和坏锚点均为错误。
-7. 构建 wrapper 审核 Docusaurus 自有 HTML 无障碍，并限制构建时间、总产物、JavaScript、CSS
-   和各语言搜索索引。Dokka HTML 由 API 生成器独立保证完整性，不混入站点模板无障碍门禁。
+7. 构建 wrapper 验证跨语言站点外壳行为，审核 Docusaurus 自有 HTML 无障碍，并限制构建时间、
+   总产物、JavaScript、CSS 和各语言搜索索引。Dokka HTML 由 API 生成器独立保证完整性，不混入
+   站点模板无障碍门禁。
 
 从仓库根目录运行完整本地验证：
 
@@ -69,6 +70,9 @@ JavaScript 总计 8 MiB/单文件 768 KiB、CSS 128 KiB、各 locale 搜索索�
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、
 accessible name、图片替代文本、表头、iframe title 和重复 ID；重定向 stub 与 Dokka 生成页
 不在范围内。改变 Dokka 模板时单独审查生成 API 无障碍，不得削弱当前门禁。
+
+站点外壳检查要求两种语言的主页使用同一个显式浏览器存储 namespace，确保切换语言时保留读者
+选择的亮色或暗色模式；同时拒绝在任一主页重新出现已删除的独立 Maven 坐标横幅。
 
 ## 发布版本与别名
 
