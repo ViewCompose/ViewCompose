@@ -26,6 +26,12 @@ const config: Config = {
   future: {
     v4: true,
   },
+  storage: {
+    type: 'localStorage',
+    // Locale builds use different base URLs. A fixed namespace keeps one color-mode choice shared
+    // across those builds instead of deriving a different storage key for each locale.
+    namespace: 'viewcompose-docs',
+  },
   i18n: {
     defaultLocale: 'en',
     locales,

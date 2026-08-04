@@ -53,12 +53,6 @@
   "homepage.hero.modulesAction": {
     "message": "浏览模块"
   },
-  "homepage.installation.ariaLabel": {
-    "message": "Maven 坐标示例"
-  },
-  "homepage.installation.label": {
-    "message": "依赖配置"
-  },
   "homepage.pillars.eyebrow": {
     "message": "系统化设计"
   },

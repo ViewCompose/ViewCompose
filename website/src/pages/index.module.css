@@ -70,33 +70,6 @@
   margin-top: 2.2rem;
 }
 
-.installation {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.55rem 1rem;
-  margin-top: 2rem;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--ifm-color-emphasis-300);
-  border-radius: 0.8rem;
-  background: rgba(255, 255, 255, 0.56);
-  box-shadow: 0 1rem 2.5rem rgba(52, 47, 35, 0.08);
-  font-size: 0.88rem;
-}
-
-[data-theme='dark'] .installation {
-  background: rgba(18, 21, 17, 0.68);
-}
-
-.installation span {
-  color: var(--ifm-color-emphasis-600);
-}
-
-.installation code {
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
-
 .pillars {
   width: min(72rem, calc(100% - 3rem));
   margin: 0 auto;

@@ -102,17 +102,6 @@ function Home(): ReactNode {
                 })}
               </Link>
             </div>
-            <div
-              className={styles.installation}
-              aria-label={translate({
-                id: 'homepage.installation.ariaLabel',
-                message: 'Maven coordinate example',
-              })}>
-              <span>
-                {translate({id: 'homepage.installation.label', message: 'implementation'})}
-              </span>
-              <code>"com.viewcompose:viewcompose-widget-core:0.1.0-alpha01"</code>
-            </div>
           </div>
         </section>
 
