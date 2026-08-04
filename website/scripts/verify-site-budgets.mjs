@@ -1,12 +1,11 @@
 import {readFile, stat} from 'node:fs/promises';
-import {resolve} from 'node:path';
+import {relative, resolve} from 'node:path';
 import {
   buildDir,
   collectFiles,
   formatKiB,
   formatMiB,
   readJson,
-  relativeBuildPath,
   totalBytes,
   websiteRoot,
 } from './site-quality-lib.mjs';
@@ -14,14 +13,24 @@ import {
 const MIB = 1024 * 1024;
 const KIB = 1024;
 
-export async function verifySiteBudgets({buildDurationSeconds} = {}) {
-  const budgets = await readJson(resolve(websiteRoot, 'site-budgets.json'));
-  const allFiles = await collectFiles(buildDir);
-  const javascriptFiles = allFiles.filter((path) => relativeBuildPath(path).startsWith('assets/js/'));
-  const cssFiles = allFiles.filter((path) => relativeBuildPath(path).startsWith('assets/css/'));
-  const searchIndexes = allFiles.filter((path) => /(^|\/)search-index-[^/]+\.json$/.test(relativeBuildPath(path)));
+export async function verifySiteBudgets({
+  buildDurationSeconds,
+  buildDirectory = buildDir,
+  budgetsPath = resolve(websiteRoot, 'site-budgets.json'),
+} = {}) {
+  const budgets = await readJson(budgetsPath);
+  const allFiles = await collectFiles(buildDirectory);
+  const relativePath = (path) => relative(buildDirectory, path).replaceAll('\\', '/');
+  const javascriptFiles = allFiles.filter((path) => relativePath(path).startsWith('assets/js/'));
+  const cssFiles = allFiles.filter((path) => relativePath(path).startsWith('assets/css/'));
+  const searchIndexes = allFiles.filter((path) => /(^|\/)search-index-[^/]+\.json$/.test(relativePath(path)));
+  const canonicalApiFiles = allFiles.filter((path) => relativePath(path).startsWith('api/'));
+  const localizedApiCopies = allFiles.filter((path) => relativePath(path).split('/')[1] === 'api');
+  const apiManifest = await readJson(resolve(buildDirectory, 'api', 'manifest.json'));
 
   const outputBytes = await totalBytes(allFiles);
+  const apiBytes = await totalBytes(canonicalApiFiles);
+  const nonApiBytes = outputBytes - apiBytes;
   const javascriptBytes = await totalBytes(javascriptFiles);
   const cssBytes = await totalBytes(cssFiles);
   const javascriptSizes = await Promise.all(
@@ -31,6 +40,18 @@ export async function verifySiteBudgets({buildDurationSeconds} = {}) {
   const searchIndexSizes = await Promise.all(
     searchIndexes.map(async (path) => ({path, bytes: (await stat(path)).size})),
   );
+  const apiVersionSizes = await Promise.all(
+    apiManifest.map(async ({artifact, version}) => {
+      const prefix = `api/${artifact}/${version}/`;
+      const files = canonicalApiFiles.filter((path) => relativePath(path).startsWith(prefix));
+      return {artifact, version, bytes: await totalBytes(files)};
+    }),
+  );
+  const versionedApiBytes = apiVersionSizes.reduce((total, entry) => total + entry.bytes, 0);
+  const apiRoutingOverheadBytes = apiBytes - versionedApiBytes;
+  const averageApiVersionBytes = apiVersionSizes.length === 0
+    ? 0
+    : versionedApiBytes / apiVersionSizes.length;
   const violations = [];
 
   const check = (actual, maximum, description, format) => {
@@ -39,14 +60,42 @@ export async function verifySiteBudgets({buildDurationSeconds} = {}) {
     }
   };
 
-  check(outputBytes, budgets.maxOutputMiB * MIB, 'site output', formatMiB);
+  check(nonApiBytes, budgets.maxNonApiOutputMiB * MIB, 'non-API site output', formatMiB);
+  check(
+    averageApiVersionBytes,
+    budgets.maxAverageApiVersionMiB * MIB,
+    'average immutable API version',
+    formatMiB,
+  );
+  check(
+    apiRoutingOverheadBytes,
+    budgets.maxApiRoutingOverheadMiB * MIB,
+    'API manifest and alias overhead',
+    formatMiB,
+  );
+  for (const entry of apiVersionSizes) {
+    check(
+      entry.bytes,
+      budgets.maxApiVersionMiB * MIB,
+      `API version (${entry.artifact}/${entry.version})`,
+      formatMiB,
+    );
+  }
+  if (apiVersionSizes.length === 0) {
+    violations.push('API manifest contains no immutable artifact versions');
+  }
+  if (localizedApiCopies.length > 0) {
+    violations.push(
+      `localized API output duplicates canonical Dokka files: ${relativePath(localizedApiCopies[0])}`,
+    );
+  }
   check(javascriptBytes, budgets.maxTotalJavaScriptMiB * MIB, 'total JavaScript', formatMiB);
   check(cssBytes, budgets.maxTotalCssKiB * KIB, 'total CSS', formatKiB);
   if (largestJavaScript) {
     check(
       largestJavaScript.bytes,
       budgets.maxLargestJavaScriptKiB * KIB,
-      `largest JavaScript asset (${relativeBuildPath(largestJavaScript.path)})`,
+      `largest JavaScript asset (${relativePath(largestJavaScript.path)})`,
       formatKiB,
     );
   }
@@ -54,7 +103,7 @@ export async function verifySiteBudgets({buildDurationSeconds} = {}) {
     check(
       index.bytes,
       budgets.maxSearchIndexMiBPerLocale * MIB,
-      `search index (${relativeBuildPath(index.path)})`,
+      `search index (${relativePath(index.path)})`,
       formatMiB,
     );
   }
@@ -66,7 +115,7 @@ export async function verifySiteBudgets({buildDurationSeconds} = {}) {
 
   const searchLocales = new Set(
     searchIndexSizes.map(({path}) =>
-      relativeBuildPath(path).startsWith('zh-CN/') ? 'zh-CN' : 'en',
+      relativePath(path).startsWith('zh-CN/') ? 'zh-CN' : 'en',
     ),
   );
   for (const locale of budgets.requiredSearchLocales) {
@@ -76,7 +125,7 @@ export async function verifySiteBudgets({buildDurationSeconds} = {}) {
   }
   for (const [redirect, target] of Object.entries(budgets.requiredRedirects)) {
     try {
-      const html = await readFile(resolve(buildDir, redirect), 'utf8');
+      const html = await readFile(resolve(buildDirectory, redirect), 'utf8');
       if (!html.includes(`href="${target}"`)) {
         violations.push(`redirect ${redirect} does not declare canonical target ${target}`);
       }
@@ -90,10 +139,13 @@ export async function verifySiteBudgets({buildDurationSeconds} = {}) {
   }
 
   const summary = [
-    `output ${formatMiB(outputBytes)}/${budgets.maxOutputMiB} MiB`,
-    `JavaScript ${formatMiB(javascriptBytes)}/${budgets.maxTotalJavaScriptMiB} MiB`,
-    `largest JS ${formatKiB(largestJavaScript?.bytes ?? 0)}/${budgets.maxLargestJavaScriptKiB} KiB`,
-    `CSS ${formatKiB(cssBytes)}/${budgets.maxTotalCssKiB} KiB`,
+    `output ${formatMiB(outputBytes)}`,
+    `non-API ${formatMiB(nonApiBytes)}/${formatMiB(budgets.maxNonApiOutputMiB * MIB)}`,
+    `API ${apiVersionSizes.length} versions averaging ${formatMiB(averageApiVersionBytes)}/${formatMiB(budgets.maxAverageApiVersionMiB * MIB)}`,
+    `API routing overhead ${formatMiB(apiRoutingOverheadBytes)}/${formatMiB(budgets.maxApiRoutingOverheadMiB * MIB)}`,
+    `JavaScript ${formatMiB(javascriptBytes)}/${formatMiB(budgets.maxTotalJavaScriptMiB * MIB)}`,
+    `largest JS ${formatKiB(largestJavaScript?.bytes ?? 0)}/${formatKiB(budgets.maxLargestJavaScriptKiB * KIB)}`,
+    `CSS ${formatKiB(cssBytes)}/${formatKiB(budgets.maxTotalCssKiB * KIB)}`,
     `${searchIndexSizes.length} search indexes`,
   ];
   if (buildDurationSeconds !== undefined) {
@@ -103,11 +155,18 @@ export async function verifySiteBudgets({buildDurationSeconds} = {}) {
   return {
     buildDurationSeconds,
     outputBytes,
+    nonApiBytes,
+    apiBytes,
+    averageApiVersionBytes,
+    apiRoutingOverheadBytes,
+    apiVersionSizes: Object.fromEntries(
+      apiVersionSizes.map(({artifact, version, bytes}) => [`${artifact}/${version}`, bytes]),
+    ),
     javascriptBytes,
     largestJavaScriptBytes: largestJavaScript?.bytes ?? 0,
     cssBytes,
     searchIndexSizes: Object.fromEntries(
-      searchIndexSizes.map(({path, bytes}) => [relativeBuildPath(path), bytes]),
+      searchIndexSizes.map(({path, bytes}) => [relativePath(path), bytes]),
     ),
   };
 }
