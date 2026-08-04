@@ -56,9 +56,9 @@ translation_status: current
 
 基础单测（通用机制）：
 
-1. [LazyListDiffTest.kt](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
-2. [LazyHolderRegistryTest.kt](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
-3. [LazyItemSessionControllerTest.kt](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+1. [`LazyListDiffTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
+2. [`LazyHolderRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
+3. [`LazyItemSessionControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
 
 当前已覆盖专项：
 

@@ -64,7 +64,7 @@ private fun BizRootAwarePreview() {
 }
 ```
 
-## Studio Preview
+## Studio Preview 使用
 
 1. 在 Android Studio 中打开 `viewcompose-preview` 模块中的任一入口：
    - `com.viewcompose.preview.shell.PreviewShellsKt`

@@ -111,7 +111,7 @@ state.updateFromInput(proposedValue, policy)
 链式 policy 共用同一个 buffer，并按声明顺序执行。`maxCodePoints` 按 Unicode code point 而非
 UTF-16 unit 计数，因此不会拆开合法 surrogate pair。`digitsOnly` 使用 Kotlin 字符数字分类。
 
-## Receive Content
+## Receive Content 接收内容
 
 `ReceivedContent` 把剪贴板、拖放、输入法、自动填充或应用 payload 归一化为
 `TextDocument`、来源、MIME 集合和原始平台 item 数量。

@@ -61,6 +61,6 @@ translation_status: current
 
 ## 6. 关联文档
 
-1. [overview.md](overview.md)
-2. [performance.md](../tooling/performance.md)
-3. [workflow.md](../project/workflow.md)
+1. [架构总览](overview.md)
+2. [性能指南](../tooling/performance.md)
+3. [开发流程](../project/workflow.md)

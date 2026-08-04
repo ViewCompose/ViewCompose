@@ -212,8 +212,8 @@ themeRefreshController.refresh()
 
 对应规范：
 
-- [modifier.md](../architecture/modifier.md)
-- [node-spec.md](../architecture/node-spec.md)
+- [Modifier 模型](../architecture/modifier.md)
+- [NodeSpec 模型](../architecture/node-spec.md)
 
 ## 7. 新增主题能力的必经清单
 

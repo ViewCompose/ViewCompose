@@ -160,9 +160,9 @@ flowchart TD
 
 对应规范：
 
-- [modifier.md](modifier.md)
-- [node-spec.md](node-spec.md)
-- [theming.md](../guides/theming.md)
+- [Modifier 模型](modifier.md)
+- [NodeSpec 模型](node-spec.md)
+- [主题指南](../guides/theming.md)
 
 ### 4.3 宿主接入边界
 

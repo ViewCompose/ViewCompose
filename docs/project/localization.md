@@ -113,11 +113,12 @@ npm run build
 ```
 
 `write-translations` adds missing Docusaurus JSON message entries without replacing reviewed
-translations. `verify:languages` rejects Han narrative in canonical pages, English-only titles or
-narrative in Chinese mirrors, and other locale-placement mistakes while ignoring code and marked
-literals. `verify:translations` validates source mapping, required coverage, fingerprints, status,
-and stale-warning markers. `build` produces both `en` and `zh-CN` sites and keeps strict broken-link
-checking enabled.
+translations. `verify:languages` rejects Han narrative in canonical pages and checks every Chinese
+title, heading, and prose block independently; a long translated page cannot hide one misplaced
+English section behind a page-wide language ratio. Code, identifiers, commands, URLs, and marked
+literals remain excluded. `verify:translations` validates source mapping, required coverage,
+fingerprints, status, and stale-warning markers. `build` produces both `en` and `zh-CN` sites and
+keeps strict broken-link checking enabled.
 
 Repository-level documentation placement and links remain covered by:
 
@@ -133,7 +134,7 @@ Repository-level documentation placement and links remain covered by:
 - Screenshots are localized or explicitly language-neutral.
 - The source fingerprint represents the English content actually reviewed.
 - A stale translation contains the visible warning and is not a required page.
-- Canonical and Chinese titles and narrative match their directory language.
+- Canonical and Chinese titles, every heading, and each narrative block match their directory language.
 - Both locales build successfully.
 
 ## AI-assisted translation

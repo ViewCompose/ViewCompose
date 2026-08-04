@@ -120,7 +120,7 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `androidGraphics` | `viewcompose-host-android` / `com.viewcompose.host.android.graphics` | public | 配置 Android 图形互操作 | Android interop | 基于 `nativeView` 封装别名 |
 | `resolve` | `viewcompose-renderer` / `com.viewcompose.renderer.modifier` | internal | 将 modifier 链解析为 `ResolvedModifiers` | renderer internal | 框架内部 API，业务侧不可依赖 |
 
-### 3.4 Scoped Modifier APIs
+### 3.4 作用域限定的 Modifier API
 
 | API | 作用域 | 模块/命名空间 | 可见性 | 用途备注 | 生效范围 | 补充说明 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -261,8 +261,8 @@ Surface(
 
 ## 9. 关联文档
 
-1. [node-spec.md](node-spec.md)
-2. [theming.md](../guides/theming.md)
-3. [overview.md](overview.md)
-4. [focus-and-input.md](../guides/focus-and-input.md)
-5. [nested-scroll.md](../guides/nested-scroll.md)
+1. [NodeSpec 模型](node-spec.md)
+2. [主题指南](../guides/theming.md)
+3. [架构总览](overview.md)
+4. [焦点与输入指南](../guides/focus-and-input.md)
+5. [嵌套滚动指南](../guides/nested-scroll.md)

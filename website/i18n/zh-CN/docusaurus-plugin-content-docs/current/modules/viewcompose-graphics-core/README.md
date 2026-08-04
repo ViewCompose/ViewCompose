@@ -42,7 +42,7 @@ Transform 可以改变该空间。Geometry 值保持轻量，不拒绝负数、�
 `Matrix3` 保存九个 Row-major 系数，按内容比较。构造时复制输入数组，但公开的 `values` 数组仍可
 变。把 Matrix 放入 Command 或 Cache Key 后应视为冻结；修改会改变插入后的相等性和 Hash。
 
-## Path
+## Path 路径模型
 
 `PathModel` 是有序命令列表加 `NonZero` 或 `EvenOdd` Fill Rule。`PathBuilder` 在 `build` 时复制
 命令，之后复用 Builder 不影响旧模型。直接构造 `PathModel` 会保留传入列表，应传不可变 List。

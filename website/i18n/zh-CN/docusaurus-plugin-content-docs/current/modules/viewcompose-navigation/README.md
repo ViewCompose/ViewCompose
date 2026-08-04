@@ -125,7 +125,7 @@ Back dispatcher。活跃栈到根后遵循保留栈历史配置，否则继续�
 View detach、关闭系统返回或销毁宿主时会主动取消未完成 preview，因为 dispatcher 可能不再发送
 终止回调。
 
-## Motion
+## Motion 动效
 
 `NavTransitionSpec` 只是视觉策略，不会改变导航状态或 ownership。它分别配置 push、pop、replace、
 reset、stack selection、deep link 和 predictive Back motion。

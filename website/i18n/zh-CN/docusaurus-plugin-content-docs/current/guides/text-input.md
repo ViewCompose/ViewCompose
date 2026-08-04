@@ -81,7 +81,7 @@ state.edit {
 composition 更新合并成一个 undo 单元；undo/redo 会清除活跃 composing range，因为 IME Session
 无法安全重放。
 
-## 4. Receive Content
+## 4. Receive Content 接收内容
 
 每个可编辑字段登记 `ReceiveContentConfiguration.Default`，接收 `text/*` 和 `image/*`。同一
 listener 处理剪贴板粘贴、拖放、IME `commitContent` 和应用调用的
@@ -106,7 +106,7 @@ TextArea(
 Receive Content 插入经过 `InputTransformation`，形成一个 undo 单元，替换当前 selection，并
 终止活跃 IME composition。
 
-## 5. Android bridge
+## 5. Android 桥接
 
 renderer 创建 `ViewComposeEditText` 与 `AndroidTextFieldController`，并保持：
 

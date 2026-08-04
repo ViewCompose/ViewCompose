@@ -59,7 +59,7 @@ Renderer 会把 Percent Dimension 与 Guideline Fraction 限制到 `0f..1f`。�
 `ConstraintLayout(constraintSet = set)`。随后合并 Inline Constraint/Helper，同 ID 时 Inline 优先。
 同一 Builder 中重复 Constraint ID 会替换旧值；Helper 在 Renderer 按 ID 合并前保持声明顺序。
 
-## Virtual Helper
+## Virtual Helper 虚拟辅助对象
 
 - Guideline 使用固定 dp Offset 或受限 Parent Fraction。
 - Barrier 使用 Margin 与 Gone-widget Policy 跟踪逻辑/物理极值。
