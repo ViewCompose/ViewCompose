@@ -107,7 +107,7 @@ Retarget 会取消旧帧 Effect，并让已有 Channel 从最新样本开始。
 Channel Factory 当前不接收 Segment 对象；它为 Channel 提供一个规格，并把逻辑状态映射为
 `Float`、`Int`、打包 ARGB 或 `UiDp`。Label 为未来诊断保留，不改变 Identity。
 
-## InfiniteTransition
+## InfiniteTransition 无限动画
 
 `rememberInfiniteTransition` 管理由 `animateFloat`、`animateInt`、`animateColor`、`animateDp` 或
 泛型 `animateValue` 声明的持续重复 Channel：
@@ -131,7 +131,7 @@ val scale = pulse.animateFloat(
 无限 Channel 会运行到离开组合。对仍处于组合中的屏外或不可见内容应避免使用；不需要持续动效
 时优先使用有限状态驱动动画。
 
-## AnimatedVisibility
+## AnimatedVisibility 可见性动画
 
 `AnimatedVisibility` 在控制内容生命周期的同时组合 Alpha 与测量尺寸 Channel：
 

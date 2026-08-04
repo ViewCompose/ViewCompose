@@ -60,6 +60,6 @@ translation_status: current
 
 ## 7. 关联文档
 
-1. [overview.md](overview.md)
-2. [workflow.md](../project/workflow.md)
-3. [modifier.md](modifier.md)
+1. [架构总览](overview.md)
+2. [开发流程](../project/workflow.md)
+3. [Modifier 模型](modifier.md)

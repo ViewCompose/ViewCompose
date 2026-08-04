@@ -174,7 +174,7 @@ tag 名必须解析到 declaration。KDoc type parameter 写 `@param T`，不写
 - 外链指向权威稳定文档，已发布行为不得依赖指向 `main` 的可变源码链接。
 - 非平凡用法放入可编译 `@sample`，避免漂移的 inline example。
 
-### Javadoc
+### Javadoc 规范
 
 Java API 使用相同契约内容但采用 Javadoc 语法：`{@link Type}`、`{@code value}` 和 HTML
 结构。不得把 KDoc Markdown 复制进 Javadoc，也不得把 HTML 格式复制进 KDoc。
@@ -292,7 +292,7 @@ owner/rollback/lifecycle 假设、算法/分配取舍及阈值，以及看似简
 function/type 或 test 表达时优先用结构。`TODO` 必须包含 issue URL/编号、具体缺失结果和删除条件，
 且不得作为公共 API 文档；使注释失真的同一变更中删除旧注释。
 
-## Sample
+## Sample 示例
 
 Q3 使用 `@sample`。目标函数必须在维护的 sample/test source set 中编译并只用 public API，一次
 演示一个聚焦契约。短 literal、命令或签名可以 inline；非平凡 standalone snippet 必须来自可编译

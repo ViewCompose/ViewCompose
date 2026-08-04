@@ -42,7 +42,7 @@ Canvas(modifier = Modifier.fillMaxWidth().height(120.dp)) { context ->
 }
 ```
 
-## Draw Modifier
+## Draw Modifier 绘制修饰
 
 `drawBehind` 在节点正常内容前录制命令。`drawWithContent` 显式控制下游内容调用：省略
 `drawContent()` 会隐藏内容，在调用前后录制可形成背景与前景层。Modifier 顺序仍有影响。

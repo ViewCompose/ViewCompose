@@ -133,6 +133,33 @@ function firstHeading(visibleLines) {
   return null;
 }
 
+function markdownHeadings(visibleLines) {
+  return visibleLines.flatMap((entry) => {
+    const match = /^\s*#{1,6}\s+(.*?)\s*#*\s*$/u.exec(entry.text);
+    return match ? [{line: entry.line, text: match[1]}] : [];
+  });
+}
+
+function proseBlocks(visibleLines, {excludedLines = new Set()} = {}) {
+  const blocks = [];
+  let current = [];
+
+  function flush() {
+    if (current.length > 0) blocks.push(current);
+    current = [];
+  }
+
+  for (const entry of visibleLines) {
+    if (excludedLines.has(entry.line) || entry.text.trim() === '') {
+      flush();
+      continue;
+    }
+    current.push(entry);
+  }
+  flush();
+  return blocks;
+}
+
 function countMatches(value, pattern) {
   return [...value.matchAll(pattern)].length;
 }
@@ -162,6 +189,7 @@ export function analyzeChineseDocument(content, relativePath = '<document>') {
   const {frontMatter, visibleLines} = visibleProse(content);
   const violations = [];
   const heading = firstHeading(visibleLines);
+  const headings = markdownHeadings(visibleLines);
   const title = frontMatter.values.get('title') ?? heading?.text;
   const titleLine = frontMatter.values.has('title') ? 2 : heading?.line ?? 1;
 
@@ -172,21 +200,56 @@ export function analyzeChineseDocument(content, relativePath = '<document>') {
   }
   hanPattern.lastIndex = 0;
 
+  const titleUsesFirstHeading = !frontMatter.values.has('title') && heading;
+  for (const currentHeading of headings) {
+    if (titleUsesFirstHeading && currentHeading.line === heading.line) continue;
+    if (!hanPattern.test(currentHeading.text)) {
+      hanPattern.lastIndex = 0;
+      violations.push(
+        `${relativePath}:${currentHeading.line} -> Chinese heading must contain Han text: ` +
+          currentHeading.text,
+      );
+    }
+    hanPattern.lastIndex = 0;
+  }
+
   const body = visibleLines
     .filter((entry) => entry.line !== heading?.line)
     .map((entry) => entry.text)
     .join('\n');
   const hanCount = countMatches(body, hanPattern);
   const latinWordCount = countMatches(body, latinWordPattern);
-  if (hanCount < 20) {
+  const pageBodyIsMissing = hanCount < 20;
+  const pageBodyIsEnglishDominant = latinWordCount > hanCount * 4;
+  if (pageBodyIsMissing) {
     violations.push(
       `${relativePath} -> Chinese prose is missing or too short (${hanCount} Han characters)`,
     );
-  } else if (latinWordCount > hanCount * 4) {
+  } else if (pageBodyIsEnglishDominant) {
     violations.push(
       `${relativePath} -> Chinese prose appears English-dominant ` +
         `(${hanCount} Han characters, ${latinWordCount} Latin words)`,
     );
+  }
+
+  const headingLines = new Set(headings.map((entry) => entry.line));
+  const blocks = pageBodyIsMissing || pageBodyIsEnglishDominant
+    ? []
+    : proseBlocks(visibleLines, {excludedLines: headingLines});
+  for (const block of blocks) {
+    const blockText = block.map((entry) => entry.text).join('\n');
+    const blockHanCount = countMatches(blockText, hanPattern);
+    const blockLatinWordCount = countMatches(blockText, latinWordPattern);
+    const isEnglishOnly = blockHanCount === 0 && blockLatinWordCount >= 4;
+    const isEnglishDominant =
+      blockLatinWordCount >= 12 && blockLatinWordCount > blockHanCount * 4;
+    if (isEnglishOnly || isEnglishDominant) {
+      const excerpt = blockText.trim().replace(/\s+/gu, ' ').slice(0, 120);
+      violations.push(
+        `${relativePath}:${block[0].line} -> Chinese prose block appears English-dominant ` +
+          `(${blockHanCount} Han characters, ${blockLatinWordCount} Latin words): ${excerpt}`,
+      );
+    }
   }
   return violations;
 }

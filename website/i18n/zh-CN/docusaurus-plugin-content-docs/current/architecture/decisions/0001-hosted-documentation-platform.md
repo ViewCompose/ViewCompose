@@ -34,12 +34,12 @@ ViewCompose 需要一套统一的公开文档系统，承载框架原理、教�
 
 ## 评估过的替代方案
 
-### VitePress
+### VitePress 方案
 
 VitePress 构建更轻量，内置本地搜索且国际化体验良好。但独立文档版本需要更大的自定义子系统，
 因此未选择。
 
-### Material for MkDocs
+### Material for MkDocs 方案
 
 Material for MkDocs 写作体验和浏览器搜索都很优秀，但版本化与多语言模型依赖额外项目和工具，
 会增加独立模块版本之间的协调成本。

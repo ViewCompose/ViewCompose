@@ -1,6 +1,6 @@
 ---
 translation_source: project/localization.md
-translation_source_hash: ac87e9242a6289506f136628ca672331cc0eda1cee27a63055651c3ff4a07d73
+translation_source_hash: 1fad2fc2bd66c925a4e1bb87838ae69ddfe43bd23b237f99c268e09957238132
 translation_status: current
 ---
 
@@ -108,8 +108,9 @@ npm run build
 ```
 
 `write-translations` 补充缺失的 Docusaurus JSON 文案，不覆盖已审阅翻译。
-`verify:languages` 检查权威页面中的中文叙述、中文镜像中的英文标题或英文主导正文，以及其他
-语言放置错误，同时忽略代码和显式标记的字面量。
+`verify:languages` 会检查权威页面中的中文叙述，并分别检查中文镜像中的每个标题、各级小节标题
+和叙述段落；即使整页中文占比很高，也不能掩盖其中一个错放的英文小节。代码、标识符、命令、
+URL 和显式标记的字面量仍会被排除。
 `verify:translations` 校验源映射、必需覆盖率、指纹、状态和过期提示。
 `build` 同时生成 `en` 与 `zh-CN` 站点，并继续严格检查损坏链接。
 
@@ -127,7 +128,7 @@ npm run build
 - 截图已经本地化，或明确不依赖语言。
 - 源指纹对应实际审阅过的英文内容。
 - 过期翻译包含可见警告，并且不是必须翻译的页面。
-- 权威页面与中文镜像的标题和叙述符合各自目录语言。
+- 权威页面与中文镜像的标题、每级小节标题和每个叙述段落都符合各自目录语言。
 - 两种语言都能成功构建。
 
 ## AI 辅助翻译

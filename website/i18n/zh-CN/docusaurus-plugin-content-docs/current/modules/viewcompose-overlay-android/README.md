@@ -51,7 +51,7 @@ Dialog、Popup 和 Bottom Sheet 内容由嵌套 `OverlaySurfaceSession` 渲染�
 捕获 ViewCompose Local，并持有自己的 renderer，直到平台 handle 被关闭。宿主主动清理时
 会抑制 `onDismissRequest`；只有用户或平台窗口关闭才会请求应用状态移除声明式请求。
 
-## Dialog
+## Dialog 对话框
 
 Dialog 使用透明 Android `Dialog` 和嵌套 ViewCompose Surface。返回键关闭和点击外部关闭
 会映射到平台 cancelable 配置；逻辑 top、center、bottom 位置映射到 Window gravity，scrim
