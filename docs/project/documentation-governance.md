@@ -378,6 +378,7 @@ Use this matrix before implementation and again during review:
 | --- | --- |
 | New or changed public symbol | KDoc/Javadoc; module page; sample for non-trivial use |
 | New published module | Publishing metadata; module catalog; module `README`; API reference pipeline; dependency guide |
+| Published artifact source or release-input change | Immutable per-PR Changeset; owning module/API documentation as applicable; deterministic release-plan validation |
 | Dependency or compatibility change | Module page and affected cross-module compatibility matrix |
 | Behavior/default/lifecycle change | Owning module page plus relevant guide/tutorial; migration note if users must act |
 | Architecture or ownership change | Current architecture page; ADR when the decision meets ADR criteria |
@@ -439,6 +440,8 @@ AI agents must:
    rule;
 8. update indexes and incoming links when adding, moving, or deleting content;
 9. run the documentation gates before handoff and report any validation that could not run.
+10. add one immutable per-PR Changeset for publication-relevant artifact changes and never infer or
+    hand-write reverse-dependency release impact outside the release planner.
 
 The root `AGENTS.md` contains the shortest machine-discoverable version of these rules and points
 back here. This document remains authoritative.

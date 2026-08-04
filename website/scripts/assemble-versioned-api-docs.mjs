@@ -2,12 +2,39 @@ import {spawn} from 'node:child_process';
 import {chmod, cp, mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {isStableRelease, loadDocumentationReleases} from './documentation-releases.mjs';
 
 const websiteRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repositoryRoot = resolve(websiteRoot, '..');
 const outputRoot = resolve(websiteRoot, 'generated/api');
+
+export const CURRENT_DOCUMENTATION_TOOLING_PATHS = Object.freeze([
+  Object.freeze({
+    relativePath: 'tools/viewcompose-publishing-build/build.gradle.kts',
+    replaceDirectory: false,
+  }),
+  Object.freeze({
+    relativePath: 'tools/viewcompose-publishing-build/settings.gradle.kts',
+    replaceDirectory: false,
+  }),
+  Object.freeze({
+    relativePath: 'tools/viewcompose-publishing-build/src/main',
+    replaceDirectory: true,
+  }),
+  Object.freeze({
+    relativePath: 'gradle/viewcompose-documentation-releases.properties',
+    replaceDirectory: false,
+  }),
+  Object.freeze({
+    relativePath: 'website/scripts/assemble-versioned-api-docs.mjs',
+    replaceDirectory: false,
+  }),
+  Object.freeze({
+    relativePath: 'website/scripts/documentation-releases.mjs',
+    replaceDirectory: false,
+  }),
+]);
 
 function selectedModules(argumentsList, available) {
   const index = argumentsList.indexOf('--modules');
@@ -81,17 +108,17 @@ function setProperty(content, key, value) {
   return `${content.trimEnd()}\n${key}=${value}\n`;
 }
 
-async function installCurrentDocumentationTooling(workspace) {
-  const relativeFiles = [
-    'tools/viewcompose-publishing-build/src/main/kotlin/com/viewcompose/publishing/ViewComposePublishingPlugin.kt',
-    'gradle/viewcompose-documentation-releases.properties',
-    'website/scripts/assemble-versioned-api-docs.mjs',
-    'website/scripts/documentation-releases.mjs',
-  ];
-  for (const relativeFile of relativeFiles) {
-    const destination = resolve(workspace, relativeFile);
+export async function installCurrentDocumentationTooling(
+  workspace,
+  sourceRoot = repositoryRoot,
+  paths = CURRENT_DOCUMENTATION_TOOLING_PATHS,
+) {
+  for (const {relativePath, replaceDirectory} of paths) {
+    const source = resolve(sourceRoot, relativePath);
+    const destination = resolve(workspace, relativePath);
+    if (replaceDirectory) await rm(destination, {recursive: true, force: true});
     await mkdir(dirname(destination), {recursive: true});
-    await cp(resolve(repositoryRoot, relativeFile), destination, {force: true});
+    await cp(source, destination, {recursive: replaceDirectory, force: true});
   }
 }
 
@@ -158,23 +185,29 @@ async function writeAliases(artifact, entries, current) {
   }
 }
 
-const releases = await loadDocumentationReleases(repositoryRoot);
-const modules = selectedModules(process.argv.slice(2), new Set(releases.current.keys()));
-const selected = releases.entries.filter((entry) => modules.includes(entry.artifact));
-await rm(outputRoot, {recursive: true, force: true});
-await mkdir(outputRoot, {recursive: true});
+async function main(argumentsList) {
+  const releases = await loadDocumentationReleases(repositoryRoot);
+  const modules = selectedModules(argumentsList, new Set(releases.current.keys()));
+  const selected = releases.entries.filter((entry) => modules.includes(entry.artifact));
+  await rm(outputRoot, {recursive: true, force: true});
+  await mkdir(outputRoot, {recursive: true});
 
-const byRevision = Map.groupBy(selected, (entry) => entry.sourceRevision);
-for (const [revision, entries] of byRevision) {
-  await generateRevision(revision, entries, releases);
+  const byRevision = Map.groupBy(selected, (entry) => entry.sourceRevision);
+  for (const [revision, entries] of byRevision) {
+    await generateRevision(revision, entries, releases);
+  }
+  for (const artifact of modules) {
+    const entries = selected.filter((entry) => entry.artifact === artifact);
+    await writeAliases(artifact, entries, releases.current.get(artifact));
+  }
+  const manifest = selected.map(({artifact, version, sourceRevision}) => ({
+    artifact,
+    version,
+    sourceRevision,
+  }));
+  await writeFile(resolve(outputRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 }
-for (const artifact of modules) {
-  const entries = selected.filter((entry) => entry.artifact === artifact);
-  await writeAliases(artifact, entries, releases.current.get(artifact));
+
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+  await main(process.argv.slice(2));
 }
-const manifest = selected.map(({artifact, version, sourceRevision}) => ({
-  artifact,
-  version,
-  sourceRevision,
-}));
-await writeFile(resolve(outputRoot, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');

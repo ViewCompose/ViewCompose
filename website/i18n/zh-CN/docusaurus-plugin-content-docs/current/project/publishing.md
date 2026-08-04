@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 367cba28054e3b71c4c26ee011814cd4c1fa3d83bdc68471d137fed3a576b9a2
+translation_source_hash: eb3ba01b6ddaf3b11f8636bec8aa2d749c168cfc0c30fca2b601c9e93626122f
 translation_status: current
 ---
 
@@ -78,6 +78,91 @@ release tag。Central 发布失败时不得创建最终 release tag。
 `navigation-demo-20260727-r2`、`navigation-demo-20260727-r3` 和 `v0.1.0` 仓库 tag；它们都不代表
 Maven Central 发布。仅当独立制品来源证据能定位到唯一 release commit 时，才允许补建历史 release
 tag，且注释必须声明该记录由历史重建。禁止把补建 tag 默认为原始发布时创建的 tag。
+
+## 每个 PR 的发布意图
+
+ViewCompose 为每个 PR 保存一份不可变 Changeset，而不维护一份共享可变的“已改模块”清单。发布
+制品的生产改动必须新增 `release/changes/<unique>.json` 才算完整。机器可读 schema 位于
+`release/changes.schema.json`。
+
+```json
+{
+  "schemaVersion": 1,
+  "summary": "Correct saved-state restoration after process recreation.",
+  "changes": [
+    { "artifact": "viewcompose-runtime", "impact": "fix" }
+  ],
+  "ignored": [
+    {
+      "artifact": "viewcompose-widget-core",
+      "reason": "Only a test fixture changed; no published source or metadata changed."
+    }
+  ]
+}
+```
+
+直接影响只能是 `breaking`、`feature` 或 `fix`。贡献者不得填写 `dependency`；当独立发布的下游
+需要指向依赖的新版本时，由规划器自动推导。`ignored` 是对自动识别制品的审阅例外，必须说明具体
+理由。对于 `build.gradle.kts` 等语义不明确的根构建输入，可以用 `shared` 记录其不影响发布的理由；
+若确有影响，则 Changeset 必须声明受影响制品。
+
+自动归属覆盖每个登记制品的 `src/main`、`src/commonMain`、`src/androidMain`、`src/jvmMain`、
+`src/release`、影响发布的模块构建文件，以及会进入 API 文档的 `src/test/samples`。普通单元/
+instrumentation 测试、Demo、benchmark 和手写文档默认不触发 Maven 发布。根构建文件与 version
+catalog 无法只根据路径安全推导影响，因此必须显式声明意图。
+
+Changeset 只允许追加。合并后禁止修改、重命名、删除或复用。即使 PR 使用 squash、rebase 或
+fixup，发布单元仍是合并后的 PR，而不是中间 commit。允许保守地多声明一个自动归属未识别的制品，
+但不得漏掉已检测制品。
+
+```bash
+./gradlew verifyViewComposeReleaseIntent
+```
+
+该命令默认相对 `origin/main` 的 merge base 校验。CI 通过
+`VIEWCOMPOSE_RELEASE_BASE_REVISION` 传入 PR base SHA，本地特殊比较可使用
+`-PviewComposeReleaseBaseRevision=<commit>`。任务已进入 `qaQuick`，也会拒绝修改已有 Changeset。
+
+## 确定性的独立发布规划
+
+规划必须在已拉取完整 tag、工作区干净，且 GPG keyring 信任 ViewCompose 发布公钥的 checkout 上运行：
+
+```bash
+git fetch origin main --tags
+./gradlew planViewComposeRelease
+```
+
+规划器为每个登记制品选择符合 `maven/<artifact-id>/<version>` 的最高语义版本 tag，验证签名并读取
+注释中的 `sourceRevision`。这个不可变 revision，而不是可变的当前发布元数据，才是该制品的比较
+边界。规划器随后：
+
+1. 读取该 revision 到 `HEAD` 之间新增的 Changeset；
+2. 确认每条影响发布的直接路径都有声明；
+3. 取制品直接影响的最高等级；
+4. 从 Gradle `api`、`implementation`、`compileOnly`、`runtimeOnly` project dependency 推导当前依赖图；
+5. 向所有已发布反向依赖传递 `dependency` 发布；
+6. 生成确定性的 `build/release-plan.json` 和 `build/release-plan.md`，区分直接变化与依赖传播。
+
+规划只推荐版本，不静默决定版本。稳定版本中，`fix` 和 `dependency` 增加 patch，`feature` 增加
+minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发布版本无论影响等级都增加
+当前数字 channel，例如从 `0.1.0-alpha01` 到 `0.1.0-alpha02`。release owner 必须审阅并确认每个
+精确版本。
+
+源码提交审阅并冻结后，只应用已确认计划：
+
+```bash
+./gradlew prepareViewComposeRelease \
+  -PviewComposeReleaseVersions=viewcompose-runtime=0.1.0-alpha02,viewcompose-ui-contract=0.1.0-alpha02
+```
+
+确认的制品集合必须与计划完全一致，且所有版本必须前进。任务只更新选定模块在
+`gradle/viewcompose-publishing.properties` 中的版本，把 `sourceRevision` 固定为干净的规划提交，
+并向 `gradle/viewcompose-documentation-releases.properties` 追加不可变记录。审阅该 diff 后，以仅
+元数据 release commit 提交。发布选择必须与 `build/release-plan.json` 一致；Central 显示
+`Published` 后，再按前文规则创建每制品签名 tag。
+
+2026-08-04 的 backfill Changeset 一次性记录了首个 Central 边界之后、此流程建立之前影响发布的
+改动。它只是迁移记录，不能作为以后在合并后补写发布意图的先例。
 
 ## 依赖形态
 

@@ -48,6 +48,14 @@ process-death restoration and platform Predictive Back. Run the merge gate docum
 2. List validation commands and results.
 3. Declare the documentation impact and list the pages or source comments updated.
 4. Include screenshots/gifs for visual UI changes when helpful.
+5. Add one immutable `release/changes/<unique>.json` file when a published artifact's production
+   source, publication inputs, or compiled API samples change. Use
+   `./gradlew verifyViewComposeReleaseIntent` to verify module coverage before opening the PR.
+
+Test-only, Demo, benchmark, and handwritten documentation changes do not request a Maven release
+by default. If an automatically detected artifact change is intentionally release-neutral, record
+it under `ignored` with a concrete reason. The complete contract is in
+[`publishing.md`](docs/project/publishing.md#per-pull-request-release-intent).
 
 ## License
 

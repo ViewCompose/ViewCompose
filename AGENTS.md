@@ -29,6 +29,10 @@ These rules apply to AI-assisted work in this repository:
 11. Run `./gradlew verifyDocumentationStructure`; it is also part of `qaQuick`.
 12. Durable implementation comments explain reasons, invariants, lifecycle/concurrency constraints,
     or platform workarounds. Do not add bilingual duplicate comments or narrate code line by line.
+13. Every pull request that changes a published artifact's production source, publication inputs,
+    or compiled API samples must add one immutable `release/changes/<unique>.json` file. Classify
+    each detected artifact as `breaking`, `feature`, `fix`, or explicitly ignored with a concrete
+    reason. Never hand-write `dependency`; release planning derives reverse-dependency propagation.
 
 If an active document conflicts with code or tests, verify the implementation and correct the
 document rather than creating a parallel explanation.

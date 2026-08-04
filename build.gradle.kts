@@ -1376,6 +1376,8 @@ tasks.register("qaQuick") {
     dependsOn("verifyMigrationPairedSamples")
     dependsOn("verifyTutorialSamples")
     dependsOn("verifyViewComposePublishingConfiguration")
+    dependsOn("verifyViewComposeReleaseIntent")
+    dependsOn(gradle.includedBuild("viewcompose-publishing-build").task(":test"))
     dependsOn("verifyRuntimePurity")
     dependsOn("verifyNavigationCorePurity")
     dependsOn("verifyGestureCorePurity")

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewcompose.com/schemas/release-changes.schema.json",
+  "title": "ViewCompose release changeset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "summary"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 240
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifact", "impact"],
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "pattern": "^viewcompose-[a-z0-9-]+$"
+          },
+          "impact": {
+            "enum": ["breaking", "feature", "fix"]
+          }
+        }
+      }
+    },
+    "ignored": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["artifact", "reason"],
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "pattern": "^viewcompose-[a-z0-9-]+$"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 320
+          }
+        }
+      }
+    },
+    "shared": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "reason"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 320
+          }
+        }
+      }
+    }
+  },
+  "anyOf": [
+    { "required": ["changes"] },
+    { "required": ["ignored"] },
+    { "required": ["shared"] }
+  ]
+}
