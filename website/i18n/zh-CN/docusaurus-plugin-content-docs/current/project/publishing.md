@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 48b6db629d2c760bf31c73ebed265e317ccadf4a0f2c64c39906e24e5569425a
+translation_source_hash: 23efe2e3c47377474b1e6f0bf463feed3008b6b0bea5d6ec1df1659b8a497f1a
 translation_status: current
 ---
 
@@ -27,6 +27,54 @@ revision。相同版本值不组成原子发布列车：改变一项只发布该
 
 Central Portal 验证 `viewcompose.com` 与 `com.viewcompose` 所有权。Maven Central 发布不可变，
 首次上传前必须审查 namespace 与 coordinate，之后不能视为临时值。
+
+## Maven 发布标签
+
+每次发布到 Maven Central 都必须有不可变 Git tag。由于模块独立演进，ViewCompose 不使用仓库级
+`v<version>` tag 表示 Maven 发布。每个已发布制品使用以下格式单独打 tag：
+
+```text
+maven/<artifact-id>/<version>
+```
+
+例如：
+
+```text
+maven/viewcompose-runtime/0.1.0-alpha02
+maven/viewcompose-navigation-core/0.2.0
+maven/viewcompose-navigation/0.2.0
+```
+
+同一个 Central deployment 的多个 tag 可以指向同一个仅元数据 release commit。tag 必须指向该
+release commit，而不是冻结源码的 commit，因为前者才是包含已发布 version 和 `sourceRevision`
+的精确仓库状态。签名注释必须记录 artifact、version 与冻结 source revision，使两个提交都可审计。
+
+仅在 Central Portal 把 deployment 标记为 `Published` 后创建并推送 signed annotated tag；完成后
+才能开始下一次发布或修改发布元数据：
+
+```bash
+git tag -s "maven/viewcompose-runtime/0.1.0-alpha02" \
+  <release-metadata-commit> \
+  -m "Maven Central: viewcompose-runtime 0.1.0-alpha02; sourceRevision=<frozen-source-commit>"
+git push origin "refs/tags/maven/viewcompose-runtime/0.1.0-alpha02"
+git ls-remote --exit-code origin \
+  "refs/tags/maven/viewcompose-runtime/0.1.0-alpha02"
+```
+
+每个制品 tag 都存在于远端并解析到预期 release commit 后，发布流程才算完成。禁止移动、删除或
+复用已发布 tag；禁止给 dirty worktree、后续文档提交，或入库元数据与已发布制品不一致的提交打
+release tag。Central 发布失败时不得创建最终 release tag。
+
+### 首次 Maven Central 发布记录
+
+首次 Maven Central 发布从提交
+`dc07ff6189eeab89644e3f9f792e1d7316240812`（`build: prepare Maven Central publishing`）发布了
+所有登记制品的 `0.1.0-alpha01`。当时没有创建 Maven 专用 tag，因此这是根据已合并发布分支和
+本地发布时间线重建的历史记录，不是由 tag 保证的记录。
+
+更早的 `v0.1.0` tag 指向 `f6fb8c50c1e8183f4942621ecb9614270f1e1477`，只代表旧的仓库里程碑；
+它不是 Maven `0.1.0-alpha01` 发布，禁止移动或复用该 tag 来表达这一含义。没有独立制品来源证据
+时不补建历史 release tag；此强制 tag 流程适用于后续每一次 Maven 发布。
 
 ## 依赖形态
 
@@ -194,5 +242,7 @@ cd tools/viewcompose-studio-plugin
    `verifyViewComposePublishedConsumption` 和相关 release test。
 5. 强制 PGP 签名并检查每个 POM、sources JAR、javadoc JAR 和 checksum。
 6. 上传 Central staging deployment，并从 staging repository 验证消费。
-7. 运行 `prepareMarketplaceRelease`，在目标 Android Studio 安装 ZIP 并做 Preview smoke test。
-8. 首个插件版本人工上传；批准后再启用 token 自动化。
+7. Central 显示 `Published` 后，为每个已发布制品创建、推送并远端验证一个 signed
+   `maven/<artifact-id>/<version>` tag。
+8. 运行 `prepareMarketplaceRelease`，在目标 Android Studio 安装 ZIP 并做 Preview smoke test。
+9. 首个插件版本人工上传；批准后再启用 token 自动化。
