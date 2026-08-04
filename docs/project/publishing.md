@@ -70,15 +70,19 @@ published artifact. If Central publication fails, do not create the final releas
 
 The first Maven Central release published all registered artifacts as `0.1.0-alpha01` from commit
 `dc07ff6189eeab89644e3f9f792e1d7316240812` (`build: prepare Maven Central publishing`). No
-Maven-specific tag was created at publication time, so this commit is a reconstructed historical
-record based on the merged publishing branch and local release chronology, not a tag-backed
-guarantee.
+Maven-specific tag was created at publication time. On 2026-08-04, after the release checkout was
+reconstructed from the merged publishing branch and local release chronology, signed annotated
+tags were created retrospectively for every registered artifact using
+`maven/<artifact-id>/0.1.0-alpha01`. Every tag points to that commit and records
+`sourceRevision=dc07ff6189eeab89644e3f9f792e1d7316240812` together with
+`provenance=retrospective`.
 
-The older `v0.1.0` tag points to
-`f6fb8c50c1e8183f4942621ecb9614270f1e1477` and represents a legacy repository milestone. It is not
-the `0.1.0-alpha01` Maven release and must never be moved or reused to imply otherwise. Do not create
-retrospective release tags without independent artifact provenance; the mandatory tag workflow
-applies to every future Maven publication.
+The unrelated `navigation-demo-20260727`, `navigation-demo-20260727-r2`,
+`navigation-demo-20260727-r3`, and `v0.1.0` repository tags were removed during that remediation;
+none represented a Maven Central release. A retrospective release tag is allowed only when
+independent artifact provenance identifies one exact release commit, and its annotation must state
+that it was reconstructed. Never silently present a retrospective tag as one created during the
+original publication.
 
 ## Dependency shape
 
