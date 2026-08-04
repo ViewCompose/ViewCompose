@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 23efe2e3c47377474b1e6f0bf463feed3008b6b0bea5d6ec1df1659b8a497f1a
+translation_source_hash: 367cba28054e3b71c4c26ee011814cd4c1fa3d83bdc68471d137fed3a576b9a2
 translation_status: current
 ---
 
@@ -69,12 +69,15 @@ release tag。Central 发布失败时不得创建最终 release tag。
 
 首次 Maven Central 发布从提交
 `dc07ff6189eeab89644e3f9f792e1d7316240812`（`build: prepare Maven Central publishing`）发布了
-所有登记制品的 `0.1.0-alpha01`。当时没有创建 Maven 专用 tag，因此这是根据已合并发布分支和
-本地发布时间线重建的历史记录，不是由 tag 保证的记录。
+所有登记制品的 `0.1.0-alpha01`。当时没有创建 Maven 专用 tag。2026-08-04，根据已合并发布分支
+和本地发布时间线重建出 release checkout 后，为每个登记制品补建了带签名的 annotated tag，格式为
+`maven/<artifact-id>/0.1.0-alpha01`。每个 tag 都指向该提交，并在注释中记录
+`sourceRevision=dc07ff6189eeab89644e3f9f792e1d7316240812` 和 `provenance=retrospective`。
 
-更早的 `v0.1.0` tag 指向 `f6fb8c50c1e8183f4942621ecb9614270f1e1477`，只代表旧的仓库里程碑；
-它不是 Maven `0.1.0-alpha01` 发布，禁止移动或复用该 tag 来表达这一含义。没有独立制品来源证据
-时不补建历史 release tag；此强制 tag 流程适用于后续每一次 Maven 发布。
+本次修正同时删除了与 Maven 发布无关的 `navigation-demo-20260727`、
+`navigation-demo-20260727-r2`、`navigation-demo-20260727-r3` 和 `v0.1.0` 仓库 tag；它们都不代表
+Maven Central 发布。仅当独立制品来源证据能定位到唯一 release commit 时，才允许补建历史 release
+tag，且注释必须声明该记录由历史重建。禁止把补建 tag 默认为原始发布时创建的 tag。
 
 ## 依赖形态
 
