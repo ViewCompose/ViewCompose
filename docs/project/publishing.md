@@ -26,6 +26,60 @@ Ownership of `viewcompose.com` and the `com.viewcompose` namespace is verified i
 Maven Central releases are immutable, so the namespace and coordinates must be reviewed before the
 first upload and must not be treated as provisional afterward.
 
+## Maven release tags
+
+Every Maven Central publication must have an immutable Git tag. Because modules evolve
+independently, ViewCompose does not use a repository-wide `v<version>` tag for Maven releases. Tag
+each published artifact using:
+
+```text
+maven/<artifact-id>/<version>
+```
+
+For example:
+
+```text
+maven/viewcompose-runtime/0.1.0-alpha02
+maven/viewcompose-navigation-core/0.2.0
+maven/viewcompose-navigation/0.2.0
+```
+
+All tags in one Central deployment may point to the same metadata-only release commit. The tag
+target must be that release commit—not the frozen source commit—because it is the exact repository
+state that contains the published version and `sourceRevision`. The signed annotation must record
+the artifact, version, and frozen source revision so both commits remain auditable.
+
+Create and push the signed annotated tag only after Central Portal reports the deployment as
+`Published`. Do this before starting another release or changing publication metadata:
+
+```bash
+git tag -s "maven/viewcompose-runtime/0.1.0-alpha02" \
+  <release-metadata-commit> \
+  -m "Maven Central: viewcompose-runtime 0.1.0-alpha02; sourceRevision=<frozen-source-commit>"
+git push origin "refs/tags/maven/viewcompose-runtime/0.1.0-alpha02"
+git ls-remote --exit-code origin \
+  "refs/tags/maven/viewcompose-runtime/0.1.0-alpha02"
+```
+
+A release is not operationally complete until every artifact tag exists on the remote and resolves
+to the intended release commit. Never move, delete, or reuse a published tag. Never tag a dirty
+worktree, a later documentation commit, or a commit whose checked-in metadata differs from the
+published artifact. If Central publication fails, do not create the final release tag.
+
+### First Maven Central release record
+
+The first Maven Central release published all registered artifacts as `0.1.0-alpha01` from commit
+`dc07ff6189eeab89644e3f9f792e1d7316240812` (`build: prepare Maven Central publishing`). No
+Maven-specific tag was created at publication time, so this commit is a reconstructed historical
+record based on the merged publishing branch and local release chronology, not a tag-backed
+guarantee.
+
+The older `v0.1.0` tag points to
+`f6fb8c50c1e8183f4942621ecb9614270f1e1477` and represents a legacy repository milestone. It is not
+the `0.1.0-alpha01` Maven release and must never be moved or reused to imply otherwise. Do not create
+retrospective release tags without independent artifact provenance; the mandatory tag workflow
+applies to every future Maven publication.
+
 ## Dependency shape
 
 Feature artifacts expose their platform-neutral core artifact transitively:
@@ -231,6 +285,8 @@ Use `-PviewComposeMarketplaceChannels=default,eap` to select channels; the defau
    the relevant release tests.
 5. Require PGP signing and inspect every generated POM, sources JAR, javadoc JAR, and checksum.
 6. Upload to a Central staging deployment and verify consumption from that staging repository.
-7. Run `prepareMarketplaceRelease`, install the ZIP into the target Android Studio build, and do a
+7. After Central reports `Published`, create, push, and remotely verify one signed
+   `maven/<artifact-id>/<version>` tag for every published artifact.
+8. Run `prepareMarketplaceRelease`, install the ZIP into the target Android Studio build, and do a
    final preview smoke test.
-8. Upload the first plugin release manually; enable token-based automation only after approval.
+9. Upload the first plugin release manually; enable token-based automation only after approval.
