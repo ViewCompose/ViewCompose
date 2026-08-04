@@ -9,6 +9,7 @@ import com.viewcompose.ui.unit.dp
 
 import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import com.viewcompose.ui.layout.MainAxisArrangement
 import org.junit.Assert.assertEquals
@@ -21,6 +22,105 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class DeclarativeLayoutInvalidationTest {
+    @Test
+    fun `vertical animated visibility interpolates surrounding item spacing`() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = DeclarativeLinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            itemSpacing = 8
+            mainAxisArrangement = MainAxisArrangement.Start
+        }
+        val title = View(context)
+        val animatedHost = DeclarativeAnimatedVisibilityHostLayout(context).apply {
+            addView(View(context), FrameLayout.LayoutParams(20, 20))
+        }
+        val button = View(context)
+        view.addView(title, LinearLayout.LayoutParams(20, 20))
+        view.addView(animatedHost, LinearLayout.LayoutParams(20, LinearLayout.LayoutParams.WRAP_CONTENT))
+        view.addView(button, LinearLayout.LayoutParams(20, 20))
+
+        fun layoutAt(heightScale: Float): Pair<Int, Int> {
+            animatedHost.heightScale = heightScale
+            val widthSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.EXACTLY)
+            val heightSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.AT_MOST)
+            view.measure(widthSpec, heightSpec)
+            view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            return button.top to view.measuredHeight
+        }
+
+        assertEquals(28 to 48, layoutAt(heightScale = 0f))
+        assertEquals(42 to 62, layoutAt(heightScale = 0.5f))
+        assertEquals(56 to 76, layoutAt(heightScale = 1f))
+
+        val collapsedLayout = layoutAt(heightScale = 0f)
+        view.removeView(animatedHost)
+        val widthSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.EXACTLY)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.AT_MOST)
+        view.measure(widthSpec, heightSpec)
+        view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+        assertEquals(collapsedLayout, button.top to view.measuredHeight)
+    }
+
+    @Test
+    fun `horizontal animated visibility interpolates leading item spacing`() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = DeclarativeLinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            itemSpacing = 8
+            mainAxisArrangement = MainAxisArrangement.Start
+        }
+        val animatedHost = DeclarativeAnimatedVisibilityHostLayout(context).apply {
+            addView(View(context), FrameLayout.LayoutParams(20, 20))
+        }
+        val trailing = View(context)
+        view.addView(animatedHost, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 20))
+        view.addView(trailing, LinearLayout.LayoutParams(20, 20))
+
+        fun layoutAt(widthScale: Float): Pair<Int, Int> {
+            animatedHost.widthScale = widthScale
+            val widthSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.AT_MOST)
+            val heightSpec = View.MeasureSpec.makeMeasureSpec(40, View.MeasureSpec.EXACTLY)
+            view.measure(widthSpec, heightSpec)
+            view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            return trailing.left to view.measuredWidth
+        }
+
+        assertEquals(0 to 20, layoutAt(widthScale = 0f))
+        assertEquals(14 to 34, layoutAt(widthScale = 0.5f))
+        assertEquals(28 to 48, layoutAt(widthScale = 1f))
+    }
+
+    @Test
+    fun `animated spacing participates in weighted child measurement`() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = DeclarativeLinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            itemSpacing = 8
+            mainAxisArrangement = MainAxisArrangement.Start
+        }
+        val title = View(context)
+        val animatedHost = DeclarativeAnimatedVisibilityHostLayout(context).apply {
+            addView(View(context), FrameLayout.LayoutParams(20, 20))
+        }
+        val weighted = View(context)
+        view.addView(title, LinearLayout.LayoutParams(20, 20))
+        view.addView(animatedHost, LinearLayout.LayoutParams(20, LinearLayout.LayoutParams.WRAP_CONTENT))
+        view.addView(weighted, LinearLayout.LayoutParams(20, 0, 1f))
+
+        fun layoutAt(heightScale: Float): Pair<Int, Int> {
+            animatedHost.heightScale = heightScale
+            val widthSpec = View.MeasureSpec.makeMeasureSpec(200, View.MeasureSpec.EXACTLY)
+            val heightSpec = View.MeasureSpec.makeMeasureSpec(100, View.MeasureSpec.EXACTLY)
+            view.measure(widthSpec, heightSpec)
+            view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            return weighted.top to weighted.height
+        }
+
+        assertEquals(28 to 72, layoutAt(heightScale = 0f))
+        assertEquals(42 to 58, layoutAt(heightScale = 0.5f))
+        assertEquals(56 to 44, layoutAt(heightScale = 1f))
+    }
+
     @Test
     fun `linear layout keeps margin and spacing placement without temporary specs`() {
         val context = RuntimeEnvironment.getApplication()

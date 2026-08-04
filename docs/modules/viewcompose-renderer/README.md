@@ -112,6 +112,12 @@ Because the current line is alpha, the documentation site intentionally does not
 - Decoration hosts add no per-child wrapper. The common no-decoration path delegates directly to
   normal View drawing after one branch; decorated children incur indexed backend dispatch only for
   the drawing planes they request.
+- `Row` and `Column` treat a direct animated-visibility host as a progressive spacing participant.
+  Its main-axis item gap expands and collapses with the host's measured-size channel, while stable
+  siblings retain their existing gap across a fully collapsed intermediate host.
+- A settled hidden visibility host stays mounted as an empty, zero-size reconciliation anchor. Its
+  content subtree is absent, but keeping the host stable preserves following unkeyed siblings'
+  native View identity and interaction state across visibility changes.
 
 ## Related documentation
 

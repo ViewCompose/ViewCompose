@@ -157,13 +157,16 @@ class Transition<S> internal constructor(
             registerChannelDuration(
                 durationNanos = animationDurationNanos(channelState.animationSpec),
             )
+            // Keep observing the mirror so frame updates invalidate composition, but sample the
+            // live coordinator. A target can reset its time inside a composition whose pinned
+            // snapshot still exposes the previous segment's terminal play time.
+            playTimeNanosHolder.value
             outputState.value = sampleAnimationValue(
                 startValue = channelState.startValue,
                 endValue = channelState.endValue,
                 animationSpec = channelState.animationSpec,
                 converter = converter,
-                // Observe mirror state here so every frame invalidates this composition channel.
-                playTimeNanos = playTimeNanosHolder.value,
+                playTimeNanos = core.playTimeNanos,
             )
         } else {
             outputState.value = valueForSettledState(core.targetState)

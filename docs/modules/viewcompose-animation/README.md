@@ -154,8 +154,14 @@ AnimatedVisibility(
 ```
 
 The first composition is settled and does not run enter motion. Later exit keeps content mounted
-until every channel finishes, then removes it. An interrupted exit or enter retargets from current
-alpha and size samples. Size motion clips content to animated bounds.
+until every channel finishes, then removes the content subtree. The empty host remains mounted at
+zero size as an identity anchor, so later visibility changes do not recreate following unkeyed
+native sibling Views or truncate their pressed and focus state. An interrupted exit or enter
+retargets from current alpha and size samples. Every new segment samples its live reset play time;
+it never reuses the preceding segment's terminal time from a pinned composition snapshot. Size
+motion clips content to animated bounds. When the host is a direct `Row` or `Column` child,
+surrounding item spacing follows the applicable width or height progress; the lifecycle endpoints
+therefore do not insert or remove a full gap in one frame.
 
 Tree-builder defaults affect both axes. `RowScope` defaults affect width; `ColumnScope` defaults
 affect height. Transition `+` concatenates elements, and the last fade or applicable size element

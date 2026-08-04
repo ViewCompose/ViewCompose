@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer/README.md
-translation_source_hash: 9e633b984be513996df9e8719dfb9fcf11b149f1cde9eb1eda9474bb941015eb
+translation_source_hash: d9a59fd79e7177a437690fbfa82f12a9585f963d1facd38134f4c6f2892a546b
 translation_status: current
 ---
 
@@ -104,6 +104,11 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   只有在下一次绑定装饰请求时才会切换。
 - 装饰 host 不增加 per-child wrapper。无装饰的常见路径只经过一次分支就委托给普通 View
   绘制；有装饰的 child 仅为实际申请的绘制平面执行索引后的后端分发。
+- `Row` 与 `Column` 会把直接子级的 Animated Visibility Host 视为渐进式间距参与者。主轴 Item
+  间距随 Host 的测量尺寸 Channel 一起展开和收起；中间 Host 完全折叠时，稳定同级元素之间原有
+  的间距仍会保留。
+- 可见性进入稳定隐藏态后，空 Host 仍会作为零尺寸的调和身份锚点挂载。其内容子树已经移除，
+  但稳定的 Host 会让后续无 Key 同级元素在可见性切换间保留原生 View 身份与交互状态。
 
 ## 相关文档
 
