@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 4f94e30fd8db65cc8c55c734482af80a477c7fcce8e5e60c8ffde6638976f164
+translation_source_hash: fd61da9feae3ce83037f86979a3ceac50798bb73a55ec411c371af4b7570788c
 translation_status: current
 ---
 
@@ -63,9 +63,16 @@ React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-tr
 `/migrate-from-compose`，包括 locale 前缀形式。只为明确的历史或推广路由增加重定向，权威
 文档路径仍是唯一真相源。
 
-版本化阈值在 `website/site-budgets.json`：Docusaurus 构建 120 秒、完整产物 260 MiB、
-JavaScript 总计 8 MiB/单文件 768 KiB、CSS 128 KiB、各 locale 搜索索引 4 MiB。提高阈值
-必须附有读者或发布价值的测量说明。
+版本化阈值位于 `website/site-budgets.json`。不可变 Dokka 产物只以 `/api/**` 为权威路径；
+Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-CN/api/**` 等带 locale 前缀的
+静态副本。中文页面直接链接权威 API 树，因此这些副本只增加存储，并不提供本地化内容或受支持
+路由。
+
+预算模型把预期的发布历史增长与真正的回归分开：非 API 产物上限为 40 MiB；不可变
+artifact/version 树的平均上限为 4.5 MiB，任一单独树不得超过 24 MiB；manifest 与可变别名
+另有 1 MiB 配额。其他上限为 Docusaurus 构建 120 秒、JavaScript 总计 8 MiB/单文件
+768 KiB、CSS 128 KiB、各 locale 搜索索引 4 MiB。门禁也会拒绝任何带 locale 前缀的 API
+副本。提高阈值必须附有读者或发布价值的测量说明。
 
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、
 accessible name、图片替代文本、表头、iframe title 和重复 ID；重定向 stub 与 Dokka 生成页
@@ -122,7 +129,10 @@ identity token。
 - 发布历史失败时追加缺失的不可变记录或修正未发布元数据，不重写已发布制品/版本。
 - Dokka 失败时用制品子集复现并修复源码/API 配置。
 - Docusaurus 坏链/锚点保持严格；只有生成的静态 API 链接享受明确豁免。
-- 无障碍或预算失败时修复页面/主题/回归，或记录并审查确有必要的阈值变化。
+- 预算失败时区分非 API 产物、API 平均值、单个 API 版本、路由开销和 locale 重复副本；修复
+  回归，或记录并审查确有必要的阈值变化。不得恢复会因合法追加不可变发布记录而失败的固定总
+  产物上限。
+- 无障碍失败时修复页面或主题，不削弱门禁。
 - 语言或翻译验证失败时先审阅和同步中文语义，再更新指纹；必需页面不得过期。
 - 语言放置验证失败时修正文叙述位置或缺失的必需镜像；真实外语 UI 字面量使用代码格式，不得
   削弱分类器。
@@ -131,8 +141,8 @@ identity token。
 
 ## 最近验证
 
-2026-08-03：干净完整历史构建从冻结 revision 重建全部 25 个制品版本，通过不可变源码链接、
+2026-08-04：干净完整历史构建从冻结 revision 重建全部 25 个制品版本，通过不可变源码链接、
 manifest、`current` 和稳定版 `latest` 验证。生产站点验证 25 个 API 路由、25 个英文模块手册
-快照、25 个 `zh-CN` 英文回退快照、语言放置、翻译新鲜度、本地搜索、兼容重定向和 194 个
-站点自有无障碍页面。产物 205.4 MiB，最大 JavaScript 650 KiB，完整站点构建 11.3 秒；
-`qaQuick` 同时通过。
+快照、25 个 `zh-CN` 英文回退快照、语言放置、翻译新鲜度、本地搜索、兼容重定向和 208 个
+站点自有无障碍页面。删除未使用的 locale 前缀 Dokka 副本后，产物降至 115.7 MiB；非 API
+产物 25.1 MiB，25 个 API 版本平均 3.6 MiB，最大 JavaScript 650 KiB，完整站点构建 20.0 秒。

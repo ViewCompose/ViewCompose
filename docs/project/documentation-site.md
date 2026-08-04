@@ -67,10 +67,18 @@ Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migratio
 `/migrate-from-compose`, including their locale-prefixed forms. Add a redirect only for an
 intentional historical or campaign route; canonical document paths remain the source of truth.
 
-The versioned thresholds live in `website/site-budgets.json`. The current ceilings are 120 seconds
-for the Docusaurus build, 260 MiB for the complete output, 8 MiB total and 768 KiB largest-file for
-JavaScript, 128 KiB for CSS, and 4 MiB for each locale's search index. Raise a threshold only with a
-measured explanation of the reader or release value that requires the additional cost.
+The versioned thresholds live in `website/site-budgets.json`. Immutable Dokka output is canonical
+at `/api/**`; after Docusaurus finishes its locale builds, the supported build entry point removes
+locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to the canonical API
+tree, so those copies add storage but no localized content or supported route.
+
+The budget model separates expected release-history growth from regressions. Non-API output is
+limited to 40 MiB. Immutable artifact/version trees may average at most 4.5 MiB and no individual
+tree may exceed 24 MiB; manifests and mutable aliases have a separate 1 MiB allowance. The other
+ceilings are 120 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for
+JavaScript, 128 KiB for CSS, and 4 MiB for each locale's search index. The gate also rejects any
+locale-prefixed API copy. Raise a threshold only with a measured explanation of the reader or
+release value that requires the additional cost.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table
@@ -146,8 +154,10 @@ identity token.
   links are the only links explicitly exempted from its route graph.
 - If the accessibility gate fails, fix the rendered page or theme component. Do not suppress a
   rule because a minifier formats otherwise valid HTML differently.
-- If a site budget fails, inspect the reported output class and remove the regression or document
-  and review an intentional threshold change.
+- If a site budget fails, inspect whether the regression is non-API output, API average, one API
+  version, routing overhead, or a locale-prefixed duplicate. Remove the regression or document and
+  review an intentional threshold change; do not restore a fixed total-output ceiling that fails
+  merely because valid immutable release entries were appended.
 - If translation verification reports source drift, review and update the Chinese meaning before
   recording the new fingerprint. A tracked page may be explicitly marked stale; a required page
   may not.
@@ -160,10 +170,11 @@ identity token.
 
 ## Last verified
 
-2026-08-03: a clean complete-history build reconstructed all 25 released artifact versions from the
+2026-08-04: a clean complete-history build reconstructed all 25 released artifact versions from the
 recorded frozen revision and passed immutable source-link, manifest, `current`, and stable-only
 `latest` verification. The production site verified 25 API routes, 25 English module-manual
 snapshots, 25 `zh-CN` English-fallback snapshot routes, language placement, translation freshness,
-local search, compatibility redirects, and 194 site-owned accessibility pages. The measured output
-was 205.4 MiB, the largest JavaScript asset was 650 KiB, and the full site build took 11.3 seconds.
-`qaQuick` also passed.
+local search, compatibility redirects, and 208 site-owned accessibility pages. Removing the unused
+locale-prefixed Dokka copy reduced the measured output to 115.7 MiB; non-API output was 25.1 MiB,
+the 25 API versions averaged 3.6 MiB, the largest JavaScript asset was 650 KiB, and the full site
+build took 20.0 seconds.

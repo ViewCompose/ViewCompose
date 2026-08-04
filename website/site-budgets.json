@@ -1,6 +1,9 @@
 {
   "maxBuildSeconds": 120,
-  "maxOutputMiB": 260,
+  "maxNonApiOutputMiB": 40,
+  "maxAverageApiVersionMiB": 4.5,
+  "maxApiVersionMiB": 24,
+  "maxApiRoutingOverheadMiB": 1,
   "maxLargestJavaScriptKiB": 768,
   "maxTotalJavaScriptMiB": 8,
   "maxTotalCssKiB": 128,

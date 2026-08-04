@@ -3,6 +3,7 @@ import {writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {performance} from 'node:perf_hooks';
 import {buildDir, websiteRoot} from './site-quality-lib.mjs';
+import {pruneLocalizedApiCopies} from './prune-localized-api-copies.mjs';
 import {verifyAccessibility} from './verify-accessibility.mjs';
 import {verifySiteBudgets} from './verify-site-budgets.mjs';
 import {verifySiteShell} from './verify-site-shell.mjs';
@@ -30,6 +31,7 @@ if (exitCode !== 0) {
 } else {
   try {
     const buildDurationSeconds = (performance.now() - startedAt) / 1000;
+    await pruneLocalizedApiCopies();
     const versionedDocumentation = await verifyVersionedDocumentation();
     const siteShell = await verifySiteShell();
     const accessibility = await verifyAccessibility();
