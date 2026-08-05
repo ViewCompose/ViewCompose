@@ -135,6 +135,14 @@ For each module release:
 to `main`, or a manual run on `main`, produces the complete site and deploys it through the protected
 `github-pages` environment.
 
+The deployment job is not considered successful until a production-domain smoke test fetches both
+module catalogs and every current module manual in English and Simplified Chinese. It also exercises
+the no-trailing-slash form of both catalogs and a representative current manual to protect the
+GitHub Pages compatibility behavior. The test rejects HTTP failures, Docusaurus not-found content
+returned with HTTP 200, pages outside the primary docs plugin, and catalogs missing any current
+module link. It retries briefly for CDN propagation, then fails the protected Pages environment
+rather than reporting a broken publication as successful.
+
 GitHub repository settings must use **GitHub Actions** as the Pages source. The checked-in `CNAME`
 declares `docs.viewcompose.com`; DNS should point the `docs` CNAME to `viewcompose.github.io` and
 HTTPS enforcement is enabled only after GitHub validates the domain.

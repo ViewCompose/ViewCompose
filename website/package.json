@@ -20,6 +20,7 @@
     "verify:budgets": "node scripts/verify-site-budgets.mjs",
     "verify:shell": "node scripts/verify-site-shell.mjs",
     "verify:versions": "node scripts/verify-versioned-documentation.mjs",
+    "verify:deployment": "node scripts/verify-deployed-module-routes.mjs",
     "verify:site": "node scripts/verify-site-quality.mjs",
     "typecheck": "npm run generate:catalog && npm run verify:languages && npm run verify:translations && tsc"
   },
