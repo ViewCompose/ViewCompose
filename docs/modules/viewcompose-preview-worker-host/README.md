@@ -9,7 +9,7 @@ responses atomically.
 
 ```kotlin
 dependencies {
-    runtimeOnly("com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01")
+    runtimeOnly("com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02")
 }
 ```
 
@@ -79,6 +79,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes one-shot and loopback server modes, exact protocol/token checks,
+The `0.1.0-alpha02` line establishes one-shot and loopback server modes, exact protocol/token checks,
 fresh reloadable child class loaders, deterministic Layoutlib teardown, atomic responses, and
 bounded retirement. These process-level limits may be tuned across alpha releases.

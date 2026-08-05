@@ -29,19 +29,16 @@ android {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
 
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
     add(
         "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
     )
 
     implementation("androidx.activity:activity:1.12.4")

@@ -13,7 +13,7 @@ The module contains no Android or AndroidX types. `Activity`, predictive Back, `
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
 }
 ```
 
@@ -176,7 +176,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes immutable snapshots, single-pending two-phase transactions,
+The `0.1.0-alpha02` line establishes immutable snapshots, single-pending two-phase transactions,
 independent retained stacks, strict URI matching, graph-hierarchy validation, lifecycle planning,
 and three logical pane roles. Persist only committed snapshots. Do not persist controllers,
 transactions, strategies, factories, or host lifecycle plans.

@@ -8,7 +8,7 @@ aware and composition-only `collectAsState` adapters.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-lifecycle:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-lifecycle:0.1.0-alpha03")
 }
 ```
 
@@ -119,7 +119,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes nullable owner lookup, scoped owner provision, commit-aware
+The `0.1.0-alpha03` line establishes nullable owner lookup, scoped owner provision, commit-aware
 collector launch, structured cancellation, `repeatOnLifecycle` restart behavior, and retained state
 across inactive periods. Keep flow errors explicit and never pass an independent Job as collection
 context.

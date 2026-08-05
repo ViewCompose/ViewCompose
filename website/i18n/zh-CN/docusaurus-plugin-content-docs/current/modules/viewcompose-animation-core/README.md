@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation-core/README.md
-translation_source_hash: 95fbd222b70aad33871bf9f149cda801cb9286e8f33b9097c47bdf4787d28d26
+translation_source_hash: 2d2cd3b684802e6a857b7b60ab1f5e69b9d08296e8c2fcc0b80f822fba6b2289
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ Transition Segment 协调。它不依赖 Android UI 或组合系统。
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 }
 ```
 
@@ -151,6 +151,6 @@ Channel 时长与 Transition Retarget。
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了有限时间归一化、Restart 与 Reverse Repeat、Frame Clock 驱动取消、逐维
+`0.1.0-alpha03` 建立了有限时间归一化、Restart 与 Reverse Repeat、Frame Clock 驱动取消、逐维
 Converter 和共享 Transition Segment 计时契约。这些契约有意保持平台无关；Android Interop
 属于宿主模块，组合 Ownership 属于 `viewcompose-animation`。

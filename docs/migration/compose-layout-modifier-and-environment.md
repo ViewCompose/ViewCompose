@@ -8,7 +8,7 @@ does not imply equivalent measurement, lifecycle, invalidation, or Android integ
 
 | Baseline | Version | Purpose |
 | --- | --- | --- |
-| ViewCompose published modules | `0.1.0-alpha01` | Target of this migration guide |
+| ViewCompose published modules | runtime `0.1.0-alpha02`; UI contract, renderer, widget, and host `0.1.0-alpha03` | Target of this migration guide |
 | Compose Runtime, UI, and Foundation | `1.11.4` stable | Upstream semantic reference |
 | Repository Compose dependencies | `1.7.8` | Executable comparison baseline in this repository |
 | Repository Kotlin toolchain | `2.0.21` | Compilation baseline for comparison code |
@@ -30,7 +30,7 @@ This page uses exactly four capability states:
   redesigned rather than renamed.
 - **Unsupported**: no public equivalent exists in the verified baseline.
 
-Last verified: **2026-08-03**.
+Last verified: **2026-08-05**.
 
 Re-verification owner: **ViewCompose UI Contract and Renderer maintainers**.
 
@@ -41,7 +41,7 @@ The comparison has two evidence layers that must not be conflated:
 1. **Official semantic review** uses Android Developers API documentation, behavior guides, and
    AndroidX release notes for Compose 1.11.4. Those sources define the upstream behavior described
    here.
-2. **Local executable evidence** uses the ViewCompose `0.1.0-alpha01` source contracts and repository
+2. **Local executable evidence** uses the independently versioned ViewCompose target set above and repository
    tests. The repository's Compose 1.7.8 dependency allows compiled comparisons, but it is not used
    to override a documented Compose 1.11.4 semantic change.
 
@@ -103,7 +103,7 @@ rules, and treats `UiLocal` as scoped lookup rather than an invalidation subscri
 
 ## Capability matrix
 
-| Concept | Compose 1.11.4 behavior | ViewCompose `0.1.0-alpha01` behavior | Status | Required migration action |
+| Concept | Compose 1.11.4 behavior | ViewCompose verified-set behavior | Status | Required migration action |
 | --- | --- | --- | --- | --- |
 | Built-in layout containers | `Row`, `Column`, `Box`, and Foundation layouts measure Compose layout nodes under `Constraints`. | `Row`, `Column`, `Box`, flow layouts, scrolling containers, and ConstraintLayout emit VNodes that become Android `ViewGroup` implementations. | Partially supported | Recheck defaults, overflow, clipping, weight, and intrinsic-size assumptions on the native View implementation. |
 | Custom measurement | `Layout`, `MeasurePolicy`, and layout modifier nodes let application code measure and place Compose children. Ordinary measurement permits each child to be measured once. | No public general-purpose measure policy, measurable/placeable contract, or layout modifier was found. Custom multi-child measurement requires a renderer extension or an Android `ViewGroup` hosted through interop. | Unsupported | Redesign custom Compose layouts around a built-in container or a lifecycle-owned Android View implementation. |

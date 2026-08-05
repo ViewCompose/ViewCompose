@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-text-core/README.md
-translation_source_hash: 84107565e779ccf8d0d86b371da43d9ccedf2b15724d7ccdfb5415e6a1f323e4
+translation_source_hash: 75b576ab1ee0ce52b5f2831904e76d39f71db8b681b443d791970d5cbbb76ca4
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ span adapter 位于 renderer/host 模块，并负责与这些契约相互转换�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha02")
 }
 ```
 
@@ -146,7 +146,7 @@ val restored: TextDocument = TextDocumentSaveCodec.decode(saved)
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了 UTF-16 offset、不可变文档 annotation、编辑 buffer 迁移、IME
+`0.1.0-alpha02` 建立了 UTF-16 offset、不可变文档 annotation、编辑 buffer 迁移、IME
 composition 历史合并、Receive Content 归一化和保存格式 version 1。不要持久化
 `TextFieldState`、`TextFieldBuffer`、活跃 composition range、transformation 实例或平台
 adapter；只持久化兼容 codec 明确编码的值。

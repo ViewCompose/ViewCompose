@@ -9,7 +9,7 @@ ownership rather than always expanding to the Activity.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-viewmodel:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-viewmodel:0.1.0-alpha03")
 }
 ```
 
@@ -145,6 +145,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes nullable owner lookup, nested owner provision, AndroidX store
+The `0.1.0-alpha03` line establishes nullable owner lookup, nested owner provision, AndroidX store
 identity, explicit/default factory and extras precedence, keyed instances, and SavedStateHandle
 holders. Keep the owner—not composition call position—as the authoritative lifetime boundary.

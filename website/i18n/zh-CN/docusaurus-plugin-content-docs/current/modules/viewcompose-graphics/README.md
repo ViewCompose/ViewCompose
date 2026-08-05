@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-graphics/README.md
-translation_source_hash: 32dbdfd0dee40392d00c40a76c10cf26494b27d7be283be760b64a77b787adb7
+translation_source_hash: 37ec99d4576698b559073ad6677d53fdf1b99a251180816b56108cde96c80aa1
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ Draw-behind 与 Content-aware Modifier、感知缓存的命令构建，以及平
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
 }
 ```
 
@@ -109,6 +109,6 @@ Origin 使用 Android `Canvas.drawText`，不增加换行或富文本布局。
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立 UI 线程命令录制、无固有尺寸 Canvas Node、有序 Content Drawing、显式
+`0.1.0-alpha03` 建立 UI 线程命令录制、无固有尺寸 Canvas Node、有序 Content Drawing、显式
 Single-entry Cache Key、Android Canvas 回放与当前 API Level 回退。它是即时录制模型，不是保留式
 Vector Scene Graph。

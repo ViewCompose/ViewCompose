@@ -2,7 +2,7 @@
 title: 使用 Lazy 列表
 sidebar_position: 6
 translation_source: tutorials/lazy-lists.md
-translation_source_hash: 2fbd6bb4c3692b23f49c9daa7b69988af581b462982375c8deefa5e529b3f035
+translation_source_hash: 30727264d2b7a61863f24cd9300d74c8986bae1455963b8c0f33856412c6c64e
 translation_status: current
 ---
 
@@ -16,10 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

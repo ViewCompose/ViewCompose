@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-worker-host/README.md
-translation_source_hash: 2e22753d733c3d17948f5ab0b749e71fbe053dc1a46e04a920f1a36fe4038b7f
+translation_source_hash: d9daf76da3b2f9f87d756daaf3b98005cff091d8c7d7d03017abeb433270b713
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ Class，并原子发布结构化 Response。
 
 ```kotlin
 dependencies {
-    runtimeOnly("com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01")
+    runtimeOnly("com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02")
 }
 ```
 
@@ -80,6 +80,6 @@ File；共享 Process 只摊薄 JVM 与保留 Layoutlib 的启动成本。Batch 
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立 One-shot 与 Loopback Server Mode、严格 Protocol/Token Check、新的可重载 Child
+`0.1.0-alpha02` 建立 One-shot 与 Loopback Server Mode、严格 Protocol/Token Check、新的可重载 Child
 ClassLoader、确定性 Layoutlib Teardown、原子 Response 与受限 Retirement。这些 Process-level Limit
 可能在 Alpha Release 间调整。

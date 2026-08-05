@@ -9,7 +9,7 @@ releases every frame-scoped owner after export.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03")
 }
 ```
 
@@ -95,6 +95,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes exact compiled-entry validation, configuration and theme
+The `0.1.0-alpha03` line establishes exact compiled-entry validation, configuration and theme
 parity, frame-scoped Android owners, bounded auto-height measurement, atomic PNG/snapshot export,
 and immutable diagnostics. Preview protocol compatibility remains owned by preview-core.

@@ -13,7 +13,7 @@ not require an Activity or Fragment. The platform-neutral back stack remains in
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
 }
 ```
 
@@ -189,7 +189,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes one-controller/one-host attachment, main-thread serialized
+The `0.1.0-alpha03` line establishes one-controller/one-host attachment, main-thread serialized
 commands, destination and graph ownership, defensive process-death restore, predictive-Back
 preview, Android-aligned native View motion, and up to three adaptive panes. Persist controller state
 through `rememberNavHostController`; do not retain Android owner or session objects outside the host.

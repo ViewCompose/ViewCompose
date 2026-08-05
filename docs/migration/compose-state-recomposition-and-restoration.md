@@ -5,7 +5,7 @@ defines a migration path from a Compose-owned UI to a ViewCompose-owned Android 
 an engineering comparison, not a source-compatibility promise: similarly named APIs do not imply
 identical compiler, invalidation, identity, or restoration behavior.
 
-Last verified: **2026-08-03**
+Last verified: **2026-08-05**
 
 Re-verification owner: **maintainers of `viewcompose-runtime`, `viewcompose-widget-core`, and
 `viewcompose-host-android`**
@@ -16,11 +16,11 @@ The supported comparison target is the following independently versioned ViewCom
 
 | Artifact | Version | Role in this page |
 | --- | --- | --- |
-| `viewcompose-runtime` | `0.1.0-alpha01` | Mutable state, derived state, snapshots, observation, and `ComposerLite` |
-| `viewcompose-widget-core` | `0.1.0-alpha01` | `remember`, `key`, effects, `Saver`, and `rememberSaveable` |
-| `viewcompose-host-android` | `0.1.0-alpha01` | Activity/Fragment hosting and Android SavedState integration |
-| `viewcompose-lifecycle` | `0.1.0-alpha01` | Composition- and lifecycle-scoped state collection |
-| `viewcompose-viewmodel` | `0.1.0-alpha01` | AndroidX ViewModel and `SavedStateHandle` ownership |
+| `viewcompose-runtime` | `0.1.0-alpha02` | Mutable state, derived state, snapshots, observation, and `ComposerLite` |
+| `viewcompose-widget-core` | `0.1.0-alpha03` | `remember`, `key`, effects, `Saver`, and `rememberSaveable` |
+| `viewcompose-host-android` | `0.1.0-alpha03` | Activity/Fragment hosting and Android SavedState integration |
+| `viewcompose-lifecycle` | `0.1.0-alpha03` | Composition- and lifecycle-scoped state collection |
+| `viewcompose-viewmodel` | `0.1.0-alpha03` | AndroidX ViewModel and `SavedStateHandle` ownership |
 
 The upstream stable semantic baseline is:
 

@@ -2,7 +2,7 @@
 title: 使用文本输入
 sidebar_position: 5
 translation_source: tutorials/text-input.md
-translation_source_hash: 18614a27e92954085b9799f5646f94ac590fb45315428c13d890ae173bf66611
+translation_source_hash: 9204fa8f0e3251dd09a3b0d724cbe74a3c9d0ab43ade9a372c40f7b4e2aacdec
 translation_status: current
 ---
 
@@ -10,17 +10,14 @@ translation_status: current
 
 ## 必需依赖
 
-本页可以独立使用。文本编辑除了基础应用模块，还必须显式引入 `viewcompose-text-core`：
+本页可以独立使用。Android 宿主会传递引入文本编辑与基础应用 API，因此不需要单独依赖
+`viewcompose-text-core`：
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

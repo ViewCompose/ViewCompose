@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-gradle-plugin/README.md
-translation_source_hash: ffd566a9669217900b9cc4171a4b26c64ea8284c5703902ffa58a715cc99ec2a
+translation_source_hash: bbe092f16fad335871f4799844794dbe0630e42e38c3033a1d213ebe974ec25c
 translation_status: current
 ---
 
@@ -14,11 +14,11 @@ Protocol。它发现编译后的 Preview Entry，导出确定性 Build Input，�
 
 ```kotlin
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha01"
+    id("com.viewcompose.preview") version "0.1.0-alpha02"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
 }
 ```
 
@@ -85,6 +85,6 @@ Classpath 外。可选 `--verify-worker-reuse=true` 对比 Warm 与 Cold Render 
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立 Compiled-bytecode Discovery、确定性 Grouped Fingerprint、Fast Source Refresh、
+`0.1.0-alpha02` 建立 Compiled-bytecode Discovery、确定性 Grouped Fingerprint、Fast Source Refresh、
 受限 Gallery Batch、Content-addressed Artifact、隔离 Worker 与 Non-debuggable Annotation Stripping。
 Task 与 Protocol 兼容性在稳定版前仍可能演进。

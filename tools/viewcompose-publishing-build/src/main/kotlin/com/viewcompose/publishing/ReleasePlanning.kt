@@ -279,7 +279,7 @@ internal fun artifactReleaseBaseline(
     return ArtifactReleaseBaseline(
         firstRelease = false,
         currentVersion = published.version,
-        comparisonRevision = published.sourceRevision,
+        comparisonRevision = published.releaseRevision,
         registeredSourceRevision = null,
         publishedTag = published,
     )

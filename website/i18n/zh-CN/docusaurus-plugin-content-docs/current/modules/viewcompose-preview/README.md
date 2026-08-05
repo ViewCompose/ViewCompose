@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: f0a4c0ff16cfb5817af0842563de97082ccb66d89a88d4515cb33ac30d8e0c5c
+translation_source_hash: 4dc63b8914c54d54a4fb97911b703060c7f4092825a6f043e278d6853c3b96fb
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
 }
 ```
 
@@ -96,5 +96,5 @@ ViewCompose 渲染；主题、调试配置、Overlay 后端或容器变化时重
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了原生/DSL 一致主题解析、可保留的 Compose 桥接会话、显式根节点访问重载，以及
+`0.1.0-alpha03` 建立了原生/DSL 一致主题解析、可保留的 Compose 桥接会话、显式根节点访问重载，以及
 共享目录/快照覆盖模型。静态预览协议兼容性仍由 preview-core 统一管理。

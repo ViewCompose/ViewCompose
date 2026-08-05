@@ -9,7 +9,7 @@ artifact maps those contracts to Android and Material platform windows.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha03")
 }
 ```
 
@@ -130,7 +130,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes optional service-provider discovery, session-isolated platform
+The `0.1.0-alpha03` line establishes optional service-provider discovery, session-isolated platform
 handles, nested surface rendering, anchored popup recovery, Material bottom sheets and snackbars, and
 application-context toasts. Treat Android window objects as backend implementation details and keep
 application state authoritative through declarative overlay requests.

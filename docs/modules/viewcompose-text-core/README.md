@@ -12,7 +12,7 @@ and rich-text span adapters live in renderer and host modules and translate to t
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha02")
 }
 ```
 
@@ -149,7 +149,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes UTF-16 offsets, immutable document annotations, edit-buffer
+The `0.1.0-alpha02` line establishes UTF-16 offsets, immutable document annotations, edit-buffer
 mapping, IME composition history coalescing, Receive Content normalization, and save format version
 1. Do not persist `TextFieldState`, `TextFieldBuffer`, active composition ranges, transformation
 instances, or platform adapters. Persist only values explicitly encoded by a compatible codec.

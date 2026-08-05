@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-runner/README.md
-translation_source_hash: a63887226b0c39c0a6fc996f611dc59267dcd36519df6c839e70a7cf913b533c
+translation_source_hash: d6685d5e48b41988b5bc71d4c321031f2b7809f734d23ae468dc0db5211f4711
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03")
 }
 ```
 
@@ -86,5 +86,5 @@ ClassLoader，也不会由 Runner 关闭。
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了精确编译入口校验、配置与主题一致性、帧级 Android 所有者、有界自动高度测量、
+`0.1.0-alpha03` 建立了精确编译入口校验、配置与主题一致性、帧级 Android 所有者、有界自动高度测量、
 原子 PNG/快照导出和不可变诊断。预览协议兼容性仍由 preview-core 统一管理。

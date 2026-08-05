@@ -9,7 +9,7 @@ transition-segment coordination. It contains no Android UI or composition depend
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 }
 ```
 
@@ -163,7 +163,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes normalized finite timing, restart and reverse repetition,
+The `0.1.0-alpha03` line establishes normalized finite timing, restart and reverse repetition,
 frame-clock-driven cancellation, per-dimension converters, and shared transition-segment timing.
 These contracts are intentionally platform-neutral; Android interop belongs to host modules and
 composition ownership belongs to `viewcompose-animation`.

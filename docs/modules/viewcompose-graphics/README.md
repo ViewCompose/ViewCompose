@@ -8,7 +8,7 @@ aliases for the platform-neutral graphics contracts. Android execution is suppli
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
 }
 ```
 
@@ -110,6 +110,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes UI-thread command recording, a no-intrinsic-size Canvas node,
+The `0.1.0-alpha03` line establishes UI-thread command recording, a no-intrinsic-size Canvas node,
 ordered content drawing, explicit single-entry cache keys, Android Canvas replay, and current
 API-level fallbacks. It is an immediate recording model rather than a retained vector scene graph.

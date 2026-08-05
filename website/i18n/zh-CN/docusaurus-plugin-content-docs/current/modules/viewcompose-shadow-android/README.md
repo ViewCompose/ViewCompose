@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-shadow-android/README.md
-translation_source_hash: e9aa5889ebcd2c9f88703c7c95795c16a389ad2cd42d355ae967389edc93b138
+translation_source_hash: c4f29eb91d936f6cdb17edb10a3b7bee33692c1ed59e8233d612a2de605b578c
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ Shadow Modifier 解析成像素规格，栅格化精确的多层效果，并接�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha03")
 }
 ```
 
@@ -86,6 +86,6 @@ API 29 以下、Software Canvas 或 RenderNode 运行时失败都会回退到 Bi
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立可选 ServiceLoader 发现、无 Wrapper Decoration Plane、精确多层栅格、受字节限制
+`0.1.0-alpha03` 建立可选 ServiceLoader 发现、无 Wrapper Decoration Plane、精确多层栅格、受字节限制
 的 Cache，以及带 Capability Fallback 的显式 RenderNode 回放。它不承诺等同 Native Elevation，也不是
 通用 RenderEffect Pipeline。

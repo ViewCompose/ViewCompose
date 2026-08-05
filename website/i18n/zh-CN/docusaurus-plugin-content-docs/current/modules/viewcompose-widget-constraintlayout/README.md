@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-widget-constraintlayout/README.md
-translation_source_hash: a065d5fb7de2e238c79d7df510737088fc43438b1d186496132c6666cda5a6a4
+translation_source_hash: c6b171ac47e652ff18322f06d167908f74db7c0df913a13532740a798e52d718
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ Constraint Modifier、可复用 Constraint Set 和 AndroidX Virtual Helper。
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-widget-constraintlayout:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-widget-constraintlayout:0.1.0-alpha03")
 }
 ```
 
@@ -103,5 +103,5 @@ DSL Child 暴露。
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立 String Reference、Inline-over-external Merge、完整 Anchor/Dimension Mapping、
+`0.1.0-alpha03` 建立 String Reference、Inline-over-external Merge、完整 Anchor/Dimension Mapping、
 Virtual Helper、合并 Native Rebuild，以及错误 Graph 的 Warning 恢复。它不提供平台无关 Constraint Solver。

@@ -18,7 +18,7 @@ modules.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha03")
 }
 ```
 
@@ -50,23 +50,23 @@ by a later renderer or child render session.
 
 ## Principal APIs
 
-- [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-ui-tree-builder/)
+- [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-ui-tree-builder/)
   and its component functions build declarative node trees without creating Android Views.
-- [`Theme` and `UiTheme`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-theme/)
+- [`Theme` and `UiTheme`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-theme/)
   expose immutable color, typography, shape, sizing, and overlay tokens with explicit Android-theme
   resolution and refresh behavior.
-- [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-environment/)
+- [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
   image loading, focus, frame clock, and host capabilities.
 - `Image`, `Icon`, [`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-widget-core/current/com.viewcompose.widget.core/-provide-image-loader.html),
   and `UiImageRequestOptions` expose image semantics without selecting Coil, Glide, or another
   decoder. A subtree may install one `UiImageLoader` or leave it absent for resource-only rendering.
-- [`remember`, `produceState`, and effects](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/)
+- [`remember`, `produceState`, and effects](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/)
   integrate the platform-neutral composition runtime with structured coroutines and committed
   side effects.
-- [`rememberSaveable` and `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-saveable-state-registry/)
+- [`rememberSaveable` and `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-saveable-state-registry/)
   preserve state through composition disposal and host recreation with transactional restoration.
-- [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-render-session/)
+- [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-render-session/)
   coordinates composition, renderer reconciliation, native commit effects, overlays, diagnostics,
   failure recovery, and disposal for one Android `ViewGroup`.
 - Overlay specifications and hosts define platform-neutral dialog, popup, bottom-sheet, snackbar,
@@ -121,7 +121,7 @@ hosts must preserve the same ordering and ownership guarantees.
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes the first public widget, theme, local, saveable-state, overlay,
+The `0.1.0-alpha03` line establishes the first public widget, theme, local, saveable-state, overlay,
 and render-session contracts. Do not persist automatic saveable keys, session identifiers, VNode
 implementation names, callback instances, tooling metadata, or diagnostics shapes as external
 long-lived data. Custom renderers and hosts must be upgraded with contract changes even when an

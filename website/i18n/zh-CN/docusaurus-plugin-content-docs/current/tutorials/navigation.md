@@ -2,7 +2,7 @@
 title: 使用导航
 sidebar_position: 8
 translation_source: tutorials/navigation.md
-translation_source_hash: 42a448e8fb725573dc652cf55994fa2c5c6b12992934b4bc150f747adba4d139
+translation_source_hash: 07a2cec06aaa5e26dee5783d9134e5c3ccbf53bea81ce7c65009d342cdf61255
 translation_status: current
 ---
 
@@ -10,18 +10,14 @@ translation_status: current
 
 ## 必需依赖
 
-本页可以独立使用。导航必须同时引入平台无关的路由模型和 Android 导航宿主：
+本页可以独立使用。添加 Android 导航功能模块即可；它会传递引入平台无关的路由模型：
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

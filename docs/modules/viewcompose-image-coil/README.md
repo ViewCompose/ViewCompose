@@ -8,7 +8,7 @@ the renderer or widget modules depend on a networking or image-loading implement
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha03")
 }
 ```
 
@@ -70,6 +70,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line forwards the portable request directly to Coil 3. It does not expose Coil
+The `0.1.0-alpha03` line forwards the portable request directly to Coil 3. It does not expose Coil
 transformations in the declarative image contract, manage a global loader, or promise cache policy
 independent of the configured Coil version.

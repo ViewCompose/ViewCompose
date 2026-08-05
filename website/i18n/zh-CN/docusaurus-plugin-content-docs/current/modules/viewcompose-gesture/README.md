@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture/README.md
-translation_source_hash: 8610b7b3dbb621d59f7cfe5e7e4c6335e27cb6cf2ade664ba61dc32d78e0ffd0
+translation_source_hash: d8e1e7685e4a9320a16e50749ac5cb4d55e7e89fdd686ddec95d1f19db3b713b
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
 }
 ```
 
@@ -126,6 +126,6 @@ Post 回调在之后。可选 `NestedScrollDispatcher` 支持应用主动派发�
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立同步回调传递、Latest-lambda Remember State、Renderer 所有识别、立即 Anchor
+`0.1.0-alpha03` 建立同步回调传递、Latest-lambda Remember State、Renderer 所有识别、立即 Anchor
 Settle、显式取消和可断开的 Nested Scroll 派发。API 名称类似 Jetpack Compose Gesture Modifier
 不代表具有相同的挂起 Mutation、`MutatorMutex` 或动画行为。

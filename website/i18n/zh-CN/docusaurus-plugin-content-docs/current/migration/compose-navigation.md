@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-navigation.md
-translation_source_hash: aeec507075038ebfe7b871818c7d9b163e861e3f6177a326152d7a2d3e4007b2
+translation_source_hash: 237fc2fdbd76b287f15c201bbdffb27b285c03ba910c23f470197b987db546e1
 translation_status: current
 ---
 
@@ -11,8 +11,9 @@ Navigation 3 的所有权模型不同，因此迁移时必须先确定实际来�
 
 - **来源状态：** Navigation 2.9.8 或 Navigation3 1.1.4，以及 Compose UI/Runtime 1.11.4、
   Activity 1.13.0、Lifecycle 2.11.0 和 SavedState 1.5.0。
-- **目标状态：** ViewCompose 0.1.0-alpha01。
-- **最后核验：** 2026-08-03。
+- **目标状态：** `viewcompose-navigation-core` 0.1.0-alpha02，以及
+  `viewcompose-navigation`、`viewcompose-lifecycle` 和 `viewcompose-viewmodel` 0.1.0-alpha03。
+- **最后核验：** 2026-08-05。
 - **重新核验负责人：** `viewcompose-navigation-core`、`viewcompose-navigation`、
   `viewcompose-lifecycle` 和 `viewcompose-viewmodel` 的维护者。
 

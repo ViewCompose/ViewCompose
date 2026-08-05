@@ -3,7 +3,7 @@ title: 能力教程
 sidebar_position: 2
 slug: /tutorials
 translation_source: tutorials/README.md
-translation_source_hash: 9afd1f9396c0fb2d7b4a933f03a69f9a8c5424c29111a502e66f3cde5acb9d3a
+translation_source_hash: 71e358fd93ececa5a78c7f0cbe38ce43b45abd363545865d51cdfb43e7ad07c7
 translation_status: current
 ---
 
@@ -16,10 +16,10 @@ Activity 文件，而且无需先完成其他章节就能编译运行。
 | --- | --- | --- |
 | 让状态更新界面 | [使用状态与事件](./state-and-events.md) | 无 |
 | 排列界面内容 | [使用布局与 Modifier](./layouts-and-modifiers.md) | 无 |
-| 接收可编辑文本 | [使用文本输入](./text-input.md) | `viewcompose-text-core` |
+| 接收可编辑文本 | [使用文本输入](./text-input.md) | 无 |
 | 显示滚动集合 | [使用 Lazy 列表](./lazy-lists.md) | 无 |
 | 跟随明暗模式和语义颜色 | [使用主题](./theming.md) | 无 |
-| 在页面之间跳转 | [使用导航](./navigation.md) | `viewcompose-navigation-core`、`viewcompose-navigation` |
+| 在页面之间跳转 | [使用导航](./navigation.md) | `viewcompose-navigation` |
 | 显示对话框 | [使用 Overlay](./overlays.md) | `viewcompose-overlay-android` |
 | 嵌入原生 View | [使用 AndroidView](./android-view.md) | 无 |
 | 让内容以动画显示和隐藏 | [使用 AnimatedVisibility](./animation.md) | `viewcompose-animation` |

@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: df7a2cc5644880328613f2583a0c5d3f3fc9eff79a878433f27553786a4d671b
+translation_source_hash: 88315b340019158e9e3ef2b5182d3bb0b78b38b1a43db00a72c510cb44c555ec
 translation_status: current
 ---
 
@@ -149,11 +149,14 @@ git fetch origin main --tags
 ```
 
 对于每个已发布制品，规划器选择符合 `maven/<artifact-id>/<version>` 的最高语义版本 tag，验证
-签名并读取唯一且严格的 `sourceRevision` token。这个不可变 revision，而不是可变的当前发布元数据，
-才是该制品的比较边界。显式首次发布使用已登记的 source revision 和上文的仓库历史规则。规划器随后：
+签名，并读取唯一且严格的 `sourceRevision` token，用于源码和 API 文档来源追溯。tag 指向的不可变
+release commit，而不是可变的当前发布元数据，是统一的变更比较与 Changeset 消费边界，因为它就是
+发布时使用的精确仓库状态。因此，源码冻结后合入、但已包含在该次发布中的 Changeset 或发布输入，
+不会被重复计算为下一次发布。显式首次发布使用已登记的 source revision 和上文的仓库历史规则。
+规划器随后：
 
-1. 读取比较边界到 `HEAD` 之间新增的 Changeset；
-2. 确认每条影响发布的直接路径都有声明；
+1. 读取 release tag 目标到 `HEAD` 之间新增的 Changeset 与影响发布的直接路径；
+2. 确认每条直接变化都有尚未消费的对应声明；
 3. 取制品直接影响的最高等级；
 4. 从 Gradle `api`、`implementation`、`compileOnly`、`runtimeOnly` project dependency 推导当前依赖图；
 5. 向所有已发布反向依赖传递 `dependency` 发布；
@@ -231,10 +234,10 @@ Feature 产物会暴露编译其公开 API 所需的全部 ViewCompose 模块，
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
 }
 ```
 
@@ -242,10 +245,10 @@ core 制品也可由 Kotlin/JVM 模块独立使用：
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```
 

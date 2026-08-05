@@ -9,11 +9,11 @@ artifacts.
 
 ```kotlin
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha01"
+    id("com.viewcompose.preview") version "0.1.0-alpha02"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
 }
 ```
 
@@ -87,6 +87,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes compiled-bytecode discovery, deterministic grouped fingerprints,
+The `0.1.0-alpha02` line establishes compiled-bytecode discovery, deterministic grouped fingerprints,
 fast source refresh, bounded gallery batches, content-addressed artifacts, isolated workers, and
 non-debuggable annotation stripping. Task and protocol compatibility may still evolve before stable.

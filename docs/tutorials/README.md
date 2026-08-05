@@ -14,10 +14,10 @@ without completing another chapter.
 | --- | --- | --- |
 | update UI from state | [Use state and events](./state-and-events.md) | none |
 | arrange content | [Use layouts and modifiers](./layouts-and-modifiers.md) | none |
-| accept editable text | [Use text input](./text-input.md) | `viewcompose-text-core` |
+| accept editable text | [Use text input](./text-input.md) | none |
 | show a scrolling collection | [Use a lazy list](./lazy-lists.md) | none |
 | follow light, dark, and semantic colors | [Use themes](./theming.md) | none |
-| move between screens | [Use navigation](./navigation.md) | `viewcompose-navigation-core`, `viewcompose-navigation` |
+| move between screens | [Use navigation](./navigation.md) | `viewcompose-navigation` |
 | show a dialog | [Use overlays](./overlays.md) | `viewcompose-overlay-android` |
 | embed a native View | [Use AndroidView](./android-view.md) | none |
 | show and hide content with motion | [Use AnimatedVisibility](./animation.md) | `viewcompose-animation` |

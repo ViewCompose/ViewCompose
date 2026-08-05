@@ -9,7 +9,7 @@ stream, Android `MotionEvent`, coroutine, mutable gesture state, or View.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
 }
 ```
 
@@ -123,7 +123,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes velocity-before-distance arbitration, logical horizontal swipe
+The `0.1.0-alpha03` line establishes velocity-before-distance arbitration, logical horizontal swipe
 directions, adjacent-anchor movement, strict anchor ordering, and semantic offset preservation.
 Pointer dispatch, mutable state, composition ownership, and Android event integration belong to
 `viewcompose-gesture` and the renderer.

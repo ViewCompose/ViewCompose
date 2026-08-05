@@ -2,7 +2,7 @@
 title: 使用 AndroidView
 sidebar_position: 10
 translation_source: tutorials/android-view.md
-translation_source_hash: 468d13e27c92a690ab448d4eeeab1a55464ccaaa482f24ea1e65eb08d6a950e8
+translation_source_hash: fa2e7407f3c54d1d9d22b339cbe9bd1807ff275d1cd9e2981536c68092505533
 translation_status: current
 ---
 
@@ -16,10 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

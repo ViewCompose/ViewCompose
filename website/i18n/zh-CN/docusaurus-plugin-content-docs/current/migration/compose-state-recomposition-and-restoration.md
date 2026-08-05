@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 7412c0a419f05dcd8e458e066491166ceeef27238bae151637b9da9f532aea04
+translation_source_hash: b3b23ae76fbbe0d7e8e659839aa8b6f070947247aca5111a441f44f4b1180e05
 translation_status: current
 ---
 
@@ -10,7 +10,7 @@ translation_status: current
 迁移到 ViewCompose 所有的 Android `View` 树的路径。这是一份工程对比，而不是源码兼容承诺：
 API 名称相似，并不表示编译器、失效、Identity 或恢复行为完全相同。
 
-最后验证日期：**2026-08-03**
+最后验证日期：**2026-08-05**
 
 重新验证负责人：**`viewcompose-runtime`、`viewcompose-widget-core` 和
 `viewcompose-host-android` 的维护者**
@@ -21,11 +21,11 @@ API 名称相似，并不表示编译器、失效、Identity 或恢复行为完�
 
 | 产物 | 版本 | 在本页中的职责 |
 | --- | --- | --- |
-| `viewcompose-runtime` | `0.1.0-alpha01` | 可变状态、派生状态、快照、观察及 `ComposerLite` |
-| `viewcompose-widget-core` | `0.1.0-alpha01` | `remember`、`key`、Effect、`Saver` 及 `rememberSaveable` |
-| `viewcompose-host-android` | `0.1.0-alpha01` | Activity/Fragment 宿主及 Android SavedState 集成 |
-| `viewcompose-lifecycle` | `0.1.0-alpha01` | 组合 Scope 与生命周期 Scope 的状态收集 |
-| `viewcompose-viewmodel` | `0.1.0-alpha01` | AndroidX ViewModel 与 `SavedStateHandle` Ownership |
+| `viewcompose-runtime` | `0.1.0-alpha02` | 可变状态、派生状态、快照、观察及 `ComposerLite` |
+| `viewcompose-widget-core` | `0.1.0-alpha03` | `remember`、`key`、Effect、`Saver` 及 `rememberSaveable` |
+| `viewcompose-host-android` | `0.1.0-alpha03` | Activity/Fragment 宿主及 Android SavedState 集成 |
+| `viewcompose-lifecycle` | `0.1.0-alpha03` | 组合 Scope 与生命周期 Scope 的状态收集 |
+| `viewcompose-viewmodel` | `0.1.0-alpha03` | AndroidX ViewModel 与 `SavedStateHandle` Ownership |
 
 上游稳定语义基线为：
 

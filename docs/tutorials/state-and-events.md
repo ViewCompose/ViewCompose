@@ -7,17 +7,14 @@ sidebar_position: 3
 
 ## Required dependencies
 
-This page is standalone. Add Maven Central and these complete application dependencies before
-copying the example:
+This page is standalone. Add Maven Central and the Android host before copying the example. The
+host supplies runtime state and widget APIs transitively:
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

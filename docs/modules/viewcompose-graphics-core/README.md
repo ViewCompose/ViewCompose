@@ -9,7 +9,7 @@ composition dependency.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```
 
@@ -130,7 +130,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes Android-aligned coordinate and color conventions, ordered
+The `0.1.0-alpha02` line establishes Android-aligned coordinate and color conventions, ordered
 command replay, balanced immutable scenes, shallow immutable paint models, lightweight image
 references, and single-entry explicit-key caching. Platform execution belongs to the renderer and
 composition modifiers belong to `viewcompose-graphics`.

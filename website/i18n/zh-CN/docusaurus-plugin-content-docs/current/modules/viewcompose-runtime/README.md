@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: e9a6278062ea0a606b312654520d66ba99db85ed1f09b86185ee1df934ec49b5
+translation_source_hash: 2bb655c1727013912a16609929acda2d8251be1d042b648304bbaebb368a2157
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha02")
 }
 ```
 
@@ -49,15 +49,15 @@ Snapshot.withMutableSnapshot {
 
 ## 主要 API
 
-- [`State`、`MutableState` 与 `derivedStateOf`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime/)
+- [`State`、`MutableState` 与 `derivedStateOf`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/)
   提供支持快照的值，以及基于读取依赖惰性计算的派生状态。
-- [`Snapshot` 与 `MutableSnapshot`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime/-snapshot/)
+- [`Snapshot` 与 `MutableSnapshot`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/-snapshot/)
   提供一致性读取、带冲突报告的原子缓冲写入。
-- [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
+- [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
   将状态读取转化为显式失效订阅。
-- [`ComposerLite`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime.composition/-composer-lite/)
+- [`ComposerLite`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.composition/-composer-lite/)
   在不依赖编译器生成变更标记的前提下，提供事务式位置组合、remember 值、effect 与诊断。
-- [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
+- [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
   是动画集成所消费的平台无关计时契约。
 
 完整生成参考位于
@@ -93,6 +93,6 @@ Android 应用通常通过 `viewcompose-widget-core` 或 `viewcompose-host-andro
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 首次建立快照和轻量组合契约，没有更早的稳定版本迁移路径。不要把内部快照
+`0.1.0-alpha02` 首次建立快照和轻量组合契约，没有更早的稳定版本迁移路径。不要把内部快照
 标识符、组合 saveable key、诊断结构或实现类名持久化为长期外部数据；只有公共 API 参考明确
 描述的行为属于受支持契约。

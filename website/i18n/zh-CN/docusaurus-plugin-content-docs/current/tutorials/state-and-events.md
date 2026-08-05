@@ -2,7 +2,7 @@
 title: 使用状态与事件
 sidebar_position: 3
 translation_source: tutorials/state-and-events.md
-translation_source_hash: 544ddf5478de92f164d2169a7a8d71579706072b18782607ebc7fccd58bccb02
+translation_source_hash: c03513f45a73dd17c375699ae57895cad9bb38886211b52813b114e3d4f3efe6
 translation_status: current
 ---
 
@@ -10,16 +10,14 @@ translation_status: current
 
 ## 必需依赖
 
-本页可以独立使用。复制示例前，先添加 Maven Central 和完整的应用依赖：
+本页可以独立使用。复制示例前，先添加 Maven Central 和 Android 宿主。宿主会传递引入 runtime
+状态与 widget API：
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

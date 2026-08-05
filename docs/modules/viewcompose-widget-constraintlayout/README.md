@@ -7,7 +7,7 @@ modifiers, reusable constraint sets, and AndroidX virtual helpers to ViewCompose
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-widget-constraintlayout:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-widget-constraintlayout:0.1.0-alpha03")
 }
 ```
 
@@ -103,6 +103,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes string references, inline-over-external merging, complete anchor
+The `0.1.0-alpha03` line establishes string references, inline-over-external merging, complete anchor
 and dimension mapping, virtual helpers, coalesced native rebuilds, and warning-based recovery for
 invalid graphs. It does not provide a platform-neutral constraint solver.

@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: c7a12e36cedcaa8655a87ae6e666080e35629302ef574aa8fcef0c8f4944ca88
+translation_source_hash: 658ea5622fc12283e000ec346db3e4ba2d5a499fa0f7fb848a1821ddcf4b6848
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-03**
+最后验证日期：**2026-08-05**
 
 复核责任人：**runtime、UI contract、Android host 和 navigation 模块族的维护者**
 
@@ -22,10 +22,10 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 
 | 模块族 | 产物 | 已验证版本 |
 | --- | --- | --- |
-| 状态与组合 | `viewcompose-runtime`、`viewcompose-widget-core` | `0.1.0-alpha01` |
-| UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer`、`viewcompose-widget-constraintlayout` | `0.1.0-alpha01` |
-| Android 所有权 | `viewcompose-host-android`、`viewcompose-lifecycle`、`viewcompose-viewmodel` | `0.1.0-alpha01` |
-| 导航 | `viewcompose-navigation-core`、`viewcompose-navigation` | `0.1.0-alpha01` |
+| 状态与组合 | `viewcompose-runtime`、`viewcompose-widget-core` | runtime `0.1.0-alpha02`；widget `0.1.0-alpha03` |
+| UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer`、`viewcompose-widget-constraintlayout` | `0.1.0-alpha03` |
+| Android 所有权 | `viewcompose-host-android`、`viewcompose-lifecycle`、`viewcompose-viewmodel` | `0.1.0-alpha03` |
+| 导航 | `viewcompose-navigation-core`、`viewcompose-navigation` | core `0.1.0-alpha02`；Android `0.1.0-alpha03` |
 
 不可变的发布源码 revision 记录在
 [`gradle/viewcompose-publishing.properties`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/viewcompose-publishing.properties)。

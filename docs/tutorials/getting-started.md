@@ -15,38 +15,41 @@ also verifies that preview discovery stays connected to the compiled function.
 
 ## Required dependencies
 
-Make sure the application resolves Maven Central, then add the complete runtime dependency set:
+Make sure the application resolves Maven Central, then add the Android host coordinate:
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
 ```
+
+The host exposes runtime, UI-contract, and widget APIs transitively; widget core in turn exposes
+the text contracts used by its public API. Renderer, lifecycle, and ViewModel integrations arrive
+as host runtime dependencies, but their advanced APIs require a deliberate direct dependency. Add
+a foundation coordinate directly only when building a lower-level integration without the Android
+host.
 
 The counter runs without preview tooling. To follow the optional preview section, also add the
 published plugin and its debug-only artifacts now:
 
 ```kotlin title="build.gradle.kts (optional preview)"
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha01"
+    id("com.viewcompose.preview") version "0.1.0-alpha02"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
     add(
         "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
     )
 }
 ```
@@ -68,20 +71,22 @@ Expected result: every press increments the visible count without replacing the 
 You need an Android application using Kotlin, an Android SDK, and JDK 17 for the Android Gradle
 Plugin. The sample uses `compileSdk = 36`, `minSdk = 24`, and JVM target 11.
 
-This tutorial was last verified on 2026-08-03 with these ViewCompose artifacts:
+This tutorial was last verified from public Maven Central on 2026-08-05 with these ViewCompose
+artifacts:
 
-| Artifact | Version | Why it is explicit |
+| Artifact | Version | How it is supplied |
 | --- | --- | --- |
-| `viewcompose-runtime` | `0.1.0-alpha01` | Snapshot state and observation |
-| `viewcompose-ui-contract` | `0.1.0-alpha01` | `Modifier`, layout units, and alignment contracts |
-| `viewcompose-widget-core` | `0.1.0-alpha01` | `Column`, `Text`, `Button`, theme defaults, and `remember` |
-| `viewcompose-host-android` | `0.1.0-alpha01` | Activity host and Android renderer installation |
-| `viewcompose-preview-core` | `0.1.0-alpha01` | Debug-only static-preview annotation and configuration |
-| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha01` | Compiled preview discovery and isolated rendering tasks |
+| `viewcompose-host-android` | `0.1.0-alpha03` | Explicit application dependency |
+| `viewcompose-runtime` | `0.1.0-alpha02` | Transitive foundation dependency |
+| `viewcompose-ui-contract` | `0.1.0-alpha03` | Transitive foundation dependency |
+| `viewcompose-widget-core` | `0.1.0-alpha03` | Transitive foundation dependency |
+| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha02` | Optional explicit plugin |
+| `viewcompose-preview-core` | `0.1.0-alpha02` | Optional debug dependency |
+| `viewcompose-preview-worker-host` | `0.1.0-alpha02` | Optional preview configuration |
+| `viewcompose-preview-runner` | `0.1.0-alpha03` | Optional preview configuration |
 
 ViewCompose artifacts evolve independently. Check the
-[published module catalog](../modules/README.md) before mixing versions newer than this verified
-set.
+[published module catalog](../modules/README.md) before mixing versions outside this verified set.
 
 The repository sample uses these exact Maven coordinates, so its quality gate verifies the same
 dependency path used by an external application.

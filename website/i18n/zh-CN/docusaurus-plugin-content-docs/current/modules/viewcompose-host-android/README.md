@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 55608a2fcd3e4732296ae76638979b25fbbf91133c7bc76456cea7ae2ab87277
+translation_source_hash: c51b28974180314b446ea0e439d3a05e76cc2a557a9488a55acb30129c3ce19c
 translation_status: current
 ---
 
@@ -18,7 +18,7 @@ Widget Core，而 Renderer、Lifecycle 和 ViewModel 集成保持为 Host 私有
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
 }
 ```
 
@@ -153,7 +153,7 @@ saveable-state 契约拒绝。单个损坏的恢复项会被隔离，不会阻�
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了 Activity、Fragment、自定义容器、状态保存、帧调度和原生 View 事务
+`0.1.0-alpha03` 建立了 Activity、Fragment、自定义容器、状态保存、帧调度和原生 View 事务
 契约。不要持久化 `RenderSession`、Android 根 View、saved-state registry 实例或 renderer
 诊断对象。即使 DSL 源码仍能编译，host、widget-core 或 renderer 契约变化时，自定义 host
 也必须重新审查。

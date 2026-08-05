@@ -74,7 +74,9 @@ Coil image loading, navigation, and ConstraintLayout do not become core requirem
 
 ## Get started
 
-The current public version is `0.1.0-alpha01` and is available from Maven Central.
+The recommended Android host is `0.1.0-alpha03` and is available from Maven Central. ViewCompose
+modules are independently versioned, so optional features and platform-neutral cores may have a
+different current version.
 
 ```kotlin
 repositories {
@@ -82,14 +84,13 @@ repositories {
 }
 
 dependencies {
-    val viewComposeVersion = "0.1.0-alpha01"
-
-    implementation("com.viewcompose:viewcompose-runtime:$viewComposeVersion")
-    implementation("com.viewcompose:viewcompose-ui-contract:$viewComposeVersion")
-    implementation("com.viewcompose:viewcompose-widget-core:$viewComposeVersion")
-    implementation("com.viewcompose:viewcompose-host-android:$viewComposeVersion")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
 }
 ```
+
+The host exposes runtime, UI contract, and widget-core APIs transitively. Add those foundation
+coordinates only when building lower-level integrations or intentionally using them without the
+Android host.
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -119,12 +120,12 @@ Feature artifacts bring their platform-neutral core where appropriate and may al
 separately:
 
 ```kotlin
-implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha01")
-implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha01")
+implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
 
 // Pure Kotlin/JVM policy and state models are available independently.
-implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha01")
-implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
+implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
+implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 ```
 
 Every published artifact includes sources so IDE navigation can open the framework implementation.

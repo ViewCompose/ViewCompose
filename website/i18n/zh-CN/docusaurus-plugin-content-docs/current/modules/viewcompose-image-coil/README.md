@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-coil/README.md
-translation_source_hash: 8454e0187cc1f742000f47dcc160a56853f7fafd7cf298cb055193e545f8a2b5
+translation_source_hash: df5ea2cf0f839b88ce5e37d74bcfea1aa53117c2ce73d0492270efb749340921
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-image-coil:0.1.0-alpha03")
 }
 ```
 
@@ -69,5 +69,5 @@ dependencies {
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 直接把平台无关请求转发给 Coil 3。它不会在声明式图片契约中暴露 Coil
+`0.1.0-alpha03` 直接把平台无关请求转发给 Coil 3。它不会在声明式图片契约中暴露 Coil
 Transformation，不管理全局 Loader，也不承诺独立于所配置 Coil 版本的缓存策略。
