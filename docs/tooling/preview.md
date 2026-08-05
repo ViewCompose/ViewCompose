@@ -76,9 +76,20 @@ Run the module snapshot verification:
 ./gradlew :viewcompose-preview:verifyPaparazziDebug
 ```
 
-Snapshot baselines and difference reports are written to:
+Committed snapshot baselines live in:
 
-`viewcompose-preview/build/reports/paparazzi/`
+`viewcompose-preview/src/test/snapshots/images/`
+
+When an intentional visual change has been reviewed, record its new baseline with:
+
+```bash
+./gradlew :viewcompose-preview:recordPaparazziDebug
+```
+
+Review every changed image before committing it. An unexplained mismatch must be fixed, not
+recorded. Verification reports and difference images are written under
+`viewcompose-preview/build/reports/paparazzi/`, and the repository CI runs `qaPreview` as an
+independent required gate.
 
 ## Overlay preview policy
 

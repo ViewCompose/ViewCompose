@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: eb3ba01b6ddaf3b11f8636bec8aa2d749c168cfc0c30fca2b601c9e93626122f
+translation_source_hash: 0726f3c8058066135cf2d290d85f961bdf162cb4884c45ab669452f1e4babbca
 translation_status: current
 ---
 
@@ -48,6 +48,10 @@ maven/viewcompose-navigation/0.2.0
 同一个 Central deployment 的多个 tag 可以指向同一个仅元数据 release commit。tag 必须指向该
 release commit，而不是冻结源码的 commit，因为前者才是包含已发布 version 和 `sourceRevision`
 的精确仓库状态。签名注释必须记录 artifact、version 与冻结 source revision，使两个提交都可审计。
+
+注释必须恰好包含一个 `sourceRevision=<完整小写 40 位 SHA>` token。token 可以像下方示例一样位于
+说明句中，也可以单独占一行；规划器接受这两种布局，但会拒绝缺失、格式错误、大写或重复 token。
+该语法兼容已经发布的行内注释，同时不会放宽未来 tag 的来源校验。
 
 仅在 Central Portal 把 deployment 标记为 `Published` 后创建并推送 signed annotated tag；完成后
 才能开始下一次发布或修改发布元数据：

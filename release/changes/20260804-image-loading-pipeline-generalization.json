@@ -11,7 +11,7 @@
   "shared": [
     {
       "path": "build.gradle.kts",
-      "reason": "This change registers the optional unpublished Glide module and its verification tasks; it does not alter the output of a published artifact."
+      "reason": "This change registers optional Glide verification and repository-only connected-device readiness tasks; these build checks do not alter the output of a published artifact."
     },
     {
       "path": "settings.gradle.kts",

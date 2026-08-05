@@ -8,6 +8,42 @@ import org.junit.Test
 
 class ReleasePlanningTest {
     @Test
+    fun `release source revision accepts the documented inline annotation`() {
+        listOf(
+            "Maven Central: viewcompose-runtime 0.1.0-alpha02; " +
+                "sourceRevision=963e114e7364a9b1f100d2a918b5b9af9a40d462",
+            "Maven Central: viewcompose-runtime 0.1.0-alpha02\n" +
+                "sourceRevision=963e114e7364a9b1f100d2a918b5b9af9a40d462",
+        ).forEach { annotation ->
+            assertEquals(
+                "963e114e7364a9b1f100d2a918b5b9af9a40d462",
+                releaseTagSourceRevision(
+                    tag = "maven/viewcompose-runtime/0.1.0-alpha02",
+                    annotation = annotation,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `release source revision rejects missing malformed or duplicate tokens`() {
+        listOf(
+            "Maven Central release without provenance",
+            "sourceRevision=abc",
+            "sourceRevision=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "sourceRevision=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa " +
+                "sourceRevision=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        ).forEach { annotation ->
+            assertThrows(IllegalStateException::class.java) {
+                releaseTagSourceRevision(
+                    tag = "maven/viewcompose-runtime/0.1.0-alpha03",
+                    annotation = annotation,
+                )
+            }
+        }
+    }
+
+    @Test
     fun `prerelease recommendation increments its numeric channel`() {
         val current = MavenVersion.parse("0.1.0-alpha01")
 

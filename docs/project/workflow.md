@@ -77,10 +77,17 @@ Demo UI tests. If one cannot be delivered, state what is missing and why in the 
 3. Full gate: `./gradlew qaFull`
 
 `qaQuick` compiles core modules and runs unit tests. `qaPreview` runs
-`:viewcompose-preview:verifyPaparazziDebug`. `qaFull` adds
-`:app:connectedDebugAndroidTest` to `qaQuick`. Before marking a capability complete, `qaFull`
-normally passes; a missing device or temporary exemption is recorded in the roadmap with scope and
-deadline.
+`:viewcompose-preview:verifyPaparazziDebug` and is a separate required CI check. A visual change may
+update committed baselines only after the generated images and differences have been reviewed;
+never record an unexplained mismatch merely to make the gate pass.
+
+`qaFull` adds the application, Counter sample, and tutorial connected tests to `qaQuick`. Every
+repository `connectedDebugAndroidTest` entry first runs `verifyConnectedAndroidDeviceReady`. The
+preflight requires exactly one online device unless `ANDROID_SERIAL` selects one, completed boot,
+an awake display, and no showing keyguard. It deliberately does not bypass a secure lock screen:
+wake and unlock the selected device before retrying. Before marking a capability complete,
+`qaFull` normally passes; a missing device or temporary exemption is recorded in the roadmap with
+scope and deadline.
 
 ## 5. Code ownership and placement
 

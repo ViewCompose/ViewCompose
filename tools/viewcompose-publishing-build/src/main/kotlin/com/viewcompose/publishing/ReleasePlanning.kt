@@ -107,9 +107,10 @@ internal class GitRepository(
             "Release tag '$tag' did not pass local trust verification. Import the ViewCompose " +
                 "release public key before planning.\n${verification.output}"
         }
-        val sourceRevision = Regex("(?m)^sourceRevision=([a-f0-9]{40})$")
-            .find(content)?.groupValues?.get(1)
-            ?: error("Release tag '$tag' does not declare sourceRevision=<full SHA>.")
+        val sourceRevision = releaseTagSourceRevision(
+            tag = tag,
+            annotation = content,
+        )
         val version = tag.substringAfterLast('/')
         val artifact = tag.removePrefix("maven/").substringBeforeLast('/')
         return MavenReleaseTag(
@@ -135,6 +136,16 @@ internal class GitRepository(
         val result = command(*arguments)
         return result.output.takeIf { result.exitCode == 0 }
     }
+}
+
+internal fun releaseTagSourceRevision(tag: String, annotation: String): String {
+    val matches = Regex("(?:^|[;\\s])sourceRevision=([a-f0-9]{40})(?=$|[;\\s])")
+        .findAll(annotation)
+        .toList()
+    check(matches.size == 1) {
+        "Release tag '$tag' must declare exactly one sourceRevision=<full lowercase SHA> token."
+    }
+    return matches.single().groupValues[1]
 }
 
 internal data class MavenVersion(

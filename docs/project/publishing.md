@@ -49,6 +49,11 @@ target must be that release commit—not the frozen source commit—because it i
 state that contains the published version and `sourceRevision`. The signed annotation must record
 the artifact, version, and frozen source revision so both commits remain auditable.
 
+The annotation contains exactly one `sourceRevision=<full-lowercase-40-character-SHA>` token. The
+token may appear in the descriptive sentence shown below or on its own line; the planner accepts
+both layouts but rejects a missing, malformed, uppercase, or duplicate token. This grammar keeps
+already-published inline annotations valid without weakening provenance checks for future tags.
+
 Create and push the signed annotated tag only after Central Portal reports the deployment as
 `Published`. Do this before starting another release or changing publication metadata:
 
@@ -148,8 +153,8 @@ git fetch origin main --tags
 
 For every registered artifact, the planner selects the highest semantic version tag matching
 `maven/<artifact-id>/<version>`, cryptographically verifies the signed annotation, and reads its
-`sourceRevision`. That immutable revision—not mutable current publishing metadata—is the artifact's
-comparison boundary. It then:
+single strict `sourceRevision` token. That immutable revision—not mutable current publishing
+metadata—is the artifact's comparison boundary. It then:
 
 1. loads Changesets introduced between that revision and `HEAD`;
 2. verifies that every publication-relevant direct path has a matching declaration;
