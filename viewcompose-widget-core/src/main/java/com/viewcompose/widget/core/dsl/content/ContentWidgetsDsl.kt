@@ -9,6 +9,7 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextDecoration
 import com.viewcompose.ui.node.TextOverflow
+import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.node.spec.ImageNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
@@ -87,16 +88,36 @@ fun UiTreeBuilder.RichText(
 }
 
 /**
- * Emits an image node and uses the current ImageLoading loader for remote sources.
+ * Emits image content backed by a resource or the current scoped image loader.
+ *
+ * A `null` [source] displays [fallback] immediately without invoking a loader. For a non-null
+ * source, the current [ImageLoading] loader receives every source type, including
+ * [ImageSource.Resource]. Without a loader, resources render directly and other source types use
+ * [error], then [placeholder], then [fallback]. [contentScale] controls final View display while
+ * [requestOptions] controls decoding, caches, transitions, and adapter extensions.
+ *
+ * @sample com.viewcompose.widget.core.samples.imageLoadingSample
+ * @receiver active tree builder that receives the emitted image node
+ * @param source primary image source, or `null` to display [fallback]
+ * @param contentDescription accessibility description, or `null` for decorative content
+ * @param contentScale mapping from decoded image bounds to the rendered target bounds
+ * @param tint optional ARGB tint; `null` preserves source colors
+ * @param placeholder resource displayed when a new loader request starts
+ * @param error resource displayed after loading fails; defaults to [placeholder]
+ * @param fallback resource displayed when [source] is `null`; defaults to [placeholder]
+ * @param requestOptions immutable decode, cache, transition, and adapter-extension policy
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered layout, drawing, input, and semantics configuration
  */
 fun UiTreeBuilder.Image(
-    source: ImageSource,
+    source: ImageSource?,
     contentDescription: String? = null,
     contentScale: ImageContentScale = ImageContentScale.Fit,
     tint: Int? = null,
     placeholder: ImageSource.Resource? = null,
     error: ImageSource.Resource? = placeholder,
     fallback: ImageSource.Resource? = placeholder,
+    requestOptions: UiImageRequestOptions = UiImageRequestOptions(),
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -111,20 +132,36 @@ fun UiTreeBuilder.Image(
             placeholder = placeholder,
             error = error,
             fallback = fallback,
-            remoteImageLoader = ImageLoading.current,
+            imageLoader = ImageLoading.current,
+            requestOptions = requestOptions,
         ),
         modifier = modifier,
     )
 }
 
 /**
- * Icon-oriented convenience wrapper around Image, using ContentColor by default.
+ * Emits fixed-size icon content using the current content color and image loader.
+ *
+ * The icon uses [ImageContentScale.Inside], so content that already fits is not upscaled. A
+ * non-null [source] follows the same loader and direct-resource rules as [Image]; `null` emits an
+ * empty icon target because this convenience API has no fallback resource.
+ *
+ * @sample com.viewcompose.widget.core.samples.imageLoadingSample
+ * @receiver active tree builder that receives the emitted icon node
+ * @param source primary icon source, or `null` for no icon content
+ * @param contentDescription accessibility description, or `null` for decorative content
+ * @param tint ARGB tint applied by the renderer; defaults to the current content color
+ * @param size square logical layout size applied before [modifier]
+ * @param requestOptions immutable decode, cache, transition, and adapter-extension policy
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after the icon's required square size
  */
 fun UiTreeBuilder.Icon(
-    source: ImageSource,
+    source: ImageSource?,
     contentDescription: String? = null,
     tint: Int = IconDefaults.tint(),
     size: UiDp = IconDefaults.size(),
+    requestOptions: UiImageRequestOptions = UiImageRequestOptions(),
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -133,6 +170,7 @@ fun UiTreeBuilder.Icon(
         contentDescription = contentDescription,
         contentScale = ImageContentScale.Inside,
         tint = tint,
+        requestOptions = requestOptions,
         key = key,
         modifier = Modifier
             .size(width = size, height = size)

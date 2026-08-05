@@ -2,24 +2,27 @@ package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.ui.node.RemoteImageLoader
+import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 
 /**
  * Immutable renderer properties for an icon button.
  *
- * Image properties follow [ImageNodeSpec]. When [source] is remote, [remoteImageLoader] owns
- * asynchronous loading and the resource fallbacks are forwarded with the request.
+ * Image properties follow [ImageNodeSpec]. When [imageLoader] is present, it handles every
+ * non-null source and receives placeholder/error resources with the request. A null source keeps
+ * fallback handling in the renderer and does not invoke the loader.
  *
  * @property contentDescription semantic description of the icon, or `null` when decorative
  * @property contentScale scaling policy inside the available content bounds
  * @property tint optional color filter; `null` preserves source colors
  * @property source image source, or `null` for no image
- * @property placeholder resource shown while a remote request is pending
- * @property error resource shown after a remote request fails
- * @property fallback resource used when a remote URL is blank
- * @property remoteImageLoader loader used for remote sources
+ * @property placeholder resource shown while a loader request is pending
+ * @property error resource shown after a loader request fails
+ * @property fallback resource shown when no source is present
+ * @property imageLoader loader used for every non-null source
+ * @property requestOptions common request options
  * @property enabled whether the button accepts input
  * @property backgroundColor button surface color
  * @property borderWidth button border width
@@ -36,7 +39,8 @@ data class IconButtonNodeProps(
     override val placeholder: ImageSource.Resource?,
     override val error: ImageSource.Resource?,
     override val fallback: ImageSource.Resource?,
-    override val remoteImageLoader: RemoteImageLoader?,
+    override val imageLoader: UiImageLoader?,
+    override val requestOptions: UiImageRequestOptions = UiImageRequestOptions(),
     val enabled: Boolean,
     val backgroundColor: Int,
     val borderWidth: UiDp,

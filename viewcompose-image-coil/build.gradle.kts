@@ -20,12 +20,18 @@ android {
         jvmTarget = "11"
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     sourceSets["test"].java.srcDir("src/test/samples")
 }
 
 dependencies {
     implementation(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-renderer"))
-    implementation(libs.coil.core)
+    api(libs.coil.core)
     implementation(libs.coil.network.okhttp)
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer/README.md
-translation_source_hash: d9a59fd79e7177a437690fbfa82f12a9585f963d1facd38134f4c6f2892a546b
+translation_source_hash: 8e75f1a60c4bc7bef947b246c1656b8c6c11c0c5c5682d9eb330b548551a8ed9
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ shape 与绘图命令，并提供渲染工作量、树结构、布局过程和�
 应用通常通过 `viewcompose-host-android` 间接获得本模块。实现自定义 Android host、渲染器
 诊断、平台装饰后端，或在脱离组件 DSL 的情况下测试差分逻辑时，可以直接依赖它。
 
-本模块不负责 composition、应用生命周期、状态保存、导航、浮层窗口、图片加载或高级阴影的
+本模块不负责 composition、应用生命周期、状态保存、导航、浮层窗口、图片解码或高级阴影的
 具体光栅化。这些职责分别属于 `viewcompose-runtime`、`viewcompose-widget-core`、
 `viewcompose-host-android` 和可选功能模块。
 
@@ -75,6 +75,13 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   `zIndex`，无需为每个 child 再包一层 View。
 - `ViewNodeToolingRegistry` 仅在工具元数据存在时，以弱引用方式关联 View 与源码信息；普通
   渲染不会额外持有源码对象。
+- 图片节点在存在 loader 时，会把 `UiImageRequest` 绑定到注入的 `UiImageLoader`。渲染器把可
+  释放句柄存放在挂载的 `ImageView` 上；等价 request 会保留已有句柄和已加载 drawable。Request
+  变化时，渲染器先释放旧工作，再应用 placeholder 并启动替换工作；移除、回滚和 Session 释放
+  时也会清理句柄。Request 会携带节点捕获的密度，使适配器解析固定 `UiDp` 解码边界时与布局
+  保持一致。没有适配器时 Resource source 仍可直接渲染；空 source 直接绑定 fallback。即使支持
+  装饰效果的布局 host 会允许子 View 越界绘制阴影等效果，图片内容仍始终裁剪在 `ImageView`
+  的 padding 边界内。
 
 完整生成参考位于
 [`viewcompose-renderer` API 树](https://docs.viewcompose.com/api/viewcompose-renderer/current/)。
@@ -117,6 +124,7 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - [渲染失败与提交语义](https://docs.viewcompose.com/zh-CN/architecture/render-failures)
 - [Lazy 容器指南](https://docs.viewcompose.com/zh-CN/guides/lazy-collections)
 - [阴影与装饰指南](https://docs.viewcompose.com/zh-CN/guides/shadows)
+- [图片加载指南](https://docs.viewcompose.com/zh-CN/guides/image-loading)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 
 ## 兼容性说明

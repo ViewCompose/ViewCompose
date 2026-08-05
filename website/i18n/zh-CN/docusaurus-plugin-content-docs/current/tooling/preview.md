@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: f69c9f01d1cee6db6ba62348fbae6085022eee8803eb7e4d8bcc8cf71c0c643a
+translation_source_hash: c68e8ca43a49bd898e9a42750a21a3015b3fba3ad921bf71d1b381aff2e712f5
 translation_status: current
 ---
 
@@ -79,9 +79,23 @@ private fun BizRootAwarePreview() {
 ./gradlew :viewcompose-preview:verifyPaparazziDebug
 ```
 
-快照基线和差异报告输出到：
+已提交的快照基准位于：
 
-`viewcompose-preview/build/reports/paparazzi/`
+`viewcompose-preview/src/test/snapshots/images/`
+
+审阅并确认视觉变更符合预期后，使用以下命令录制新基准：
+
+```bash
+./gradlew :viewcompose-preview:recordPaparazziDebug
+```
+
+提交前必须审阅每一张变更图片。原因不明的差异必须修复，不能直接录制。验证报告和差异图片输出到
+`viewcompose-preview/build/reports/paparazzi/`；仓库 CI 会把 `qaPreview` 作为独立的必需门禁运行。
+CI 失败时，Paparazzi 差异图片和测试报告会保存在 `qa-preview-failure-<attempt>` 产物中 7 天。
+
+目录快照测试最多允许 `0.15%` 的整图差异，此容差仅用于吸收受支持的 macOS 与 Linux 主机之间
+已知的 Layoutlib 原生可编辑文本字形栅格化差异。不得为了接受原因不明的布局、颜色或内容变化而
+提高该阈值；应修复回归，或在人工审阅后为有意变更重新录制基准。
 
 ## 浮层预览策略
 

@@ -1,22 +1,39 @@
 package com.viewcompose.widget.core
 
-import com.viewcompose.ui.node.RemoteImageLoader
+import com.viewcompose.ui.node.UiImageLoader
 
-private val LocalRemoteImageLoader = uiLocalOf<RemoteImageLoader?> { null }
+private val LocalImageLoader = uiLocalOf<UiImageLoader?> { null }
 
-/** Exposes the remote image loader installed for the current composition scope. */
+/** Resolves the image loader captured by image nodes in the current tree-building scope. */
 object ImageLoading {
-    /** Current loader, or `null` when remote image loading is not configured. */
-    val current: RemoteImageLoader?
-        get() = UiLocals.current(LocalRemoteImageLoader)
+    /**
+     * Returns the innermost scoped loader, or `null` when image loading is not configured.
+     *
+     * The value is read while a node is emitted and copied into its immutable specification;
+     * changing a provider therefore affects the next emitted/rendered tree rather than mutating an
+     * already-built node.
+     */
+    val current: UiImageLoader?
+        get() = UiLocals.current(LocalImageLoader)
 }
 
-/** Provides [loader] to image components built inside [content]. */
-fun UiTreeBuilder.ProvideRemoteImageLoader(
-    loader: RemoteImageLoader?,
+/**
+ * Provides an image loader to image components emitted by [content].
+ *
+ * Providers nest lexically. Passing `null` intentionally shadows an outer loader so a subtree uses
+ * direct resource rendering only. The caller owns [loader]; leaving this scope neither disposes nor
+ * shuts it down, while the renderer continues to own each per-target load handle.
+ *
+ * @sample com.viewcompose.widget.core.samples.imageLoadingSample
+ * @receiver active tree builder used to execute [content]
+ * @param loader loader captured by descendant image nodes, or `null` to disable inherited loading
+ * @param content tree-building block executed synchronously with [loader] installed
+ */
+fun UiTreeBuilder.ProvideImageLoader(
+    loader: UiImageLoader?,
     content: UiTreeBuilder.() -> Unit,
 ) {
-    ProvideLocal(LocalRemoteImageLoader, loader) {
+    ProvideLocal(LocalImageLoader, loader) {
         content()
     }
 }

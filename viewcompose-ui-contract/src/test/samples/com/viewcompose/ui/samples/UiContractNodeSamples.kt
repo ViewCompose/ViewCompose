@@ -2,12 +2,23 @@ package com.viewcompose.ui.samples
 
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.testTag
+import com.viewcompose.ui.node.ImageContentScale
+import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
-import com.viewcompose.ui.node.RemoteImageLoader
-import com.viewcompose.ui.node.RemoteImageRequest
-import com.viewcompose.ui.node.RemoteImageTarget
+import com.viewcompose.ui.node.UiImageLoadHandle
+import com.viewcompose.ui.node.UiImageCachePolicy
+import com.viewcompose.ui.node.UiImageDecodeSize
+import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiImageRequest
+import com.viewcompose.ui.node.UiImageRequestExtension
+import com.viewcompose.ui.node.UiImageRequestOptions
+import com.viewcompose.ui.node.UiImageTarget
+import com.viewcompose.ui.node.UiImageTransition
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.unit.UiDensity
+import com.viewcompose.ui.unit.dp
+import java.io.File
 
 fun vNodeModelSample() {
     val spacer = VNode(
@@ -22,24 +33,59 @@ fun vNodeModelSample() {
     check(spacer.children.isEmpty())
 }
 
-fun remoteImageLoaderSample() {
-    val target = object : RemoteImageTarget {}
-    var receivedTarget: RemoteImageTarget? = null
-    var receivedRequest: RemoteImageRequest? = null
-    val loader = RemoteImageLoader { nextTarget, request ->
-        receivedTarget = nextTarget
-        receivedRequest = request
+/**
+ * Demonstrates a custom loader retaining the returned handle so the renderer can dispose it.
+ */
+fun uiImageLoaderSample() {
+    val target = object : UiImageTarget {}
+    var disposed = false
+    val loader = UiImageLoader { receivedTarget, request ->
+        check(receivedTarget === target)
+        check(request.source == ImageSource.Resource(1))
+        UiImageLoadHandle { disposed = true }
     }
 
-    loader.load(
+    val handle = loader.load(
         target = target,
-        request = RemoteImageRequest(
-            url = "https://example.com/avatar.png",
-            placeholderResId = 1,
-            errorResId = 2,
+        request = UiImageRequest(source = ImageSource.Resource(1)),
+    )
+    handle.dispose()
+
+    check(disposed)
+}
+
+/**
+ * Demonstrates the source family, stable-key model identity, and common request options.
+ */
+fun uiImageRequestSample() {
+    val localFile = File("/tmp/avatar.png")
+    val sources = listOf<ImageSource>(
+        ImageSource.Resource(1),
+        ImageSource.Url("https://example.com/avatar.png"),
+        ImageSource.Uri("content://com.example/avatar/1"),
+        ImageSource.File(localFile),
+        ImageSource.Model(
+            value = ByteArray(0),
+            stableKey = "avatar-v1",
         ),
     )
+    val request = UiImageRequest(
+        source = sources.last(),
+        options = UiImageRequestOptions(
+            decodeSize = UiImageDecodeSize.Fixed(width = 320.dp, height = 180.dp),
+            memoryCachePolicy = UiImageCachePolicy.Disabled,
+            transition = UiImageTransition.Crossfade(durationMillis = 180),
+            extensions = listOf(SampleImageExtension(stableKey = "decoder-v1")),
+        ),
+        contentScale = ImageContentScale.Crop,
+        density = UiDensity(density = 2f, fontScale = 1f),
+    )
 
-    check(receivedTarget === target)
-    check(receivedRequest?.url == "https://example.com/avatar.png")
+    check(request.source == ImageSource.Model(ByteArray(3), "avatar-v1"))
+    check(request.options.decodeSize == UiImageDecodeSize.Fixed(width = 320.dp, height = 180.dp))
+    check(request.density.roundToPx(320.dp) == 640)
 }
+
+private data class SampleImageExtension(
+    override val stableKey: Any,
+) : UiImageRequestExtension

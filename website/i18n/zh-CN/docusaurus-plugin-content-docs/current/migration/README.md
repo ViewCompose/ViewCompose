@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: 98d61b406dff63dc2d197e5a21f86b4e58d36274b537cdfa6396c36160ca8740
+translation_source_hash: c7a12e36cedcaa8655a87ae6e666080e35629302ef574aa8fcef0c8f4944ca88
 translation_status: current
 ---
 
@@ -58,6 +58,7 @@ Kotlin `2.0.21`，声明位置是
 | 布局、Modifier、density、local、inset 或 Android View 输出 | [布局、Modifier 与环境](compose-layout-modifier-and-environment.md) | 测量引擎、Modifier 折叠、逻辑边、local 失效和 inset 所有者 |
 | Activity、Fragment、现有 View 宿主、生命周期、ViewModel 或 Android 互操作 | [宿主、生命周期与 Android 互操作](compose-host-lifecycle-and-android-interop.md) | 根所有者、销毁边界、已安装 owner、可重放工作和释放清理 |
 | Navigation 2 或 Navigation 3 | [导航](compose-navigation.md) | 源导航模型、路由身份、owner 作用域、隐藏 session 策略和 Back 集成 |
+| 图片加载 | [图片加载](image-loading.md) | source 类型、loader 所有权、request 策略和回收 View 释放 |
 
 一个边界跨越多个关注点时，需要阅读多份页面。例如，导航目的地中的
 `rememberSaveable` 同时受状态/恢复契约和导航所有权契约约束。

@@ -1,8 +1,8 @@
 package com.viewcompose.renderer.interop
 
 import android.graphics.Typeface
-import com.viewcompose.ui.node.PlatformRemoteImageTarget
 import com.viewcompose.ui.node.PlatformRenderContainerHandle
+import com.viewcompose.ui.node.PlatformUiImageTarget
 import com.viewcompose.ui.node.spec.PlatformUiFontFamily
 import com.viewcompose.ui.node.spec.UiFontFamily
 
@@ -14,13 +14,10 @@ internal data class AndroidRenderContainerHandle(
     override val container: Any,
 ) : PlatformRenderContainerHandle
 
-/**
- * Android target for remote image loading.
- * Android remote image loading target.
- */
-internal data class AndroidRemoteImageTarget(
+/** Android target for the general image-loading contract. */
+internal data class AndroidUiImageTarget(
     override val target: Any,
-) : PlatformRemoteImageTarget
+) : PlatformUiImageTarget
 
 /**
  * Wraps a renderer-owned object as a cross-module platform container handle.
@@ -30,12 +27,9 @@ internal fun Any.asRenderContainerHandle(): PlatformRenderContainerHandle {
     return AndroidRenderContainerHandle(this)
 }
 
-/**
- * Wraps an ImageView as a remote image-loading target.
- * Wraps an ImageView as a remote image loading target.
- */
-internal fun Any.asRemoteImageTarget(): PlatformRemoteImageTarget {
-    return AndroidRemoteImageTarget(this)
+/** Wraps an ImageView as a general image-loading target. */
+internal fun Any.asUiImageTarget(): PlatformUiImageTarget {
+    return AndroidUiImageTarget(this)
 }
 
 /**

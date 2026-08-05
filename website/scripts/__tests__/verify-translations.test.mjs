@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, readFile, writeFile} from 'node:fs/promises';
+import {mkdtemp, mkdir, readFile, readdir, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {dirname, resolve} from 'node:path';
 import test from 'node:test';
@@ -97,18 +97,17 @@ test('rejects stale content without its visible warning', async () => {
   await assert.rejects(verifyTranslationTree(fixture), /stale translation warning is missing/u);
 });
 
-test('keeps every public Compose migration page in the required tier', async () => {
+test('keeps every public migration page in the required tier', async () => {
   const policy = JSON.parse(
     await readFile(resolve(websiteRoot, 'i18n/translation-policy.json'), 'utf8'),
   );
+  const migrationPages = (await readdir(resolve(websiteRoot, '../docs/migration')))
+    .filter((path) => path.endsWith('.md'))
+    .map((path) => `migration/${path}`)
+    .sort();
+
   assert.deepEqual(
     policy.required.filter((path) => path.startsWith('migration/')),
-    [
-      'migration/README.md',
-      'migration/compose-host-lifecycle-and-android-interop.md',
-      'migration/compose-layout-modifier-and-environment.md',
-      'migration/compose-navigation.md',
-      'migration/compose-state-recomposition-and-restoration.md',
-    ],
+    migrationPages,
   );
 });

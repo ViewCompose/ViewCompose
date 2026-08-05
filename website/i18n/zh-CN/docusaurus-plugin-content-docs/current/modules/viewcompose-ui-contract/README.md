@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: f945f5caeb2d63857e9d1a92a3eb0b767887d35ba424b98d5991437787d9484d
+translation_source_hash: faf570052f36b8342930437f2d66d23b76a8124229e99a854bca41aa0b52c41e
 translation_status: current
 ---
 
@@ -62,6 +62,10 @@ val gap = VNode(
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。
+- [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/)、
+  [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/)
+  与 [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
+  定义平台无关的图片来源、请求策略、平台目标和可释放加载句柄。
 - Unit、Shape、Graphics、按键输入、手势、Semantics 与 Tooling 包共同组成 ViewCompose 模块
   使用的平台无关词汇体系。
 
@@ -84,6 +88,15 @@ val gap = VNode(
   说明，回调都会同步执行。
 - `AndroidViewNodeProps.update` 与 `onReset` 是可重放的事务回调。一次性外部动作应放在
   `onCommit`，资源清理应放在 `onRelease`。
+- 图片加载是可选能力。`UiImageLoader` 由调用方所有，在所属 UI 线程执行，并为已经启动的工作
+  返回句柄。渲染器负责为挂载的图片 View 替换和释放句柄；loader 在释放后不得继续持有该 View。
+- `ImageSource.Url` 仅接受绝对 HTTP(S) URL；`ImageSource.Uri` 接受使用其他 loader 支持 scheme
+  的绝对 URI。`UiImageDecodeSize.Fixed` 使用正数 `UiDp` 边界。Renderer 会把捕获的
+  `UiDensity` 放入 `UiImageRequest`，适配器据此把逻辑边界转换为平台像素，但不会改变布局尺寸。
+- `ImageSource.Model` 要求调用方提供稳定 key。它的相等判断和诊断文本不能依赖原始 model
+  payload，这样适配器可以接受任意平台 model，同时不把它们泄漏到日志或持久化数据中。
+- `UiImageRequestExtension` 以具体运行时类型和 `stableKey` 共同标识。适配器忽略不归自己所有的
+  扩展类型；加载行为变化时，调用方必须更新 key。
 
 集合预取、原生缓存规模、动效与共享池参数是渲染器优化提示，而不是语义状态。平台可以限制或
 忽略不支持的优化，但不能因此改变声明内容。
@@ -96,6 +109,7 @@ val gap = VNode(
 - [Lazy 容器指南](https://docs.viewcompose.com/zh-CN/guides/lazy-collections)
 - [焦点与输入指南](https://docs.viewcompose.com/zh-CN/guides/focus-and-input)
 - [嵌套滚动指南](https://docs.viewcompose.com/zh-CN/guides/nested-scroll)
+- [图片加载指南](https://docs.viewcompose.com/zh-CN/guides/image-loading)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 
 ## 兼容性说明

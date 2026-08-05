@@ -34,4 +34,5 @@
     <item name="viewcompose_focus_group_original_state" type="id" />
     <item name="viewcompose_key_input_binding" type="id" />
     <item name="viewcompose_key_input_listener" type="id" />
+    <item name="viewcompose_image_request_binding" type="id" />
 </resources>

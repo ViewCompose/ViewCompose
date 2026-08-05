@@ -50,6 +50,9 @@ internal object ViewTreeDisposer {
             ModifierNestedScrollApplier.dispose(mountedNode.view)
         }
         disposeOperation {
+            (mountedNode.view as? android.widget.ImageView)?.let(ImageRequestBindingController::clear)
+        }
+        disposeOperation {
             (mountedNode.view as? DeclarativeHorizontalPagerLayout)?.dispose()
         }
         disposeOperation {

@@ -10,7 +10,7 @@ when implementing a custom Android host, renderer diagnostics, a platform decora
 tests that exercise reconciliation independently from the widget DSL.
 
 This module does not own composition, application lifecycle, saved state, navigation, overlay
-windows, image loading, or concrete advanced-shadow rasterization. Those responsibilities remain in
+windows, image decoding, or concrete advanced-shadow rasterization. Those responsibilities remain in
 `viewcompose-runtime`, `viewcompose-widget-core`, `viewcompose-host-android`, and optional feature
 modules.
 
@@ -77,6 +77,14 @@ back safely.
   declarative `zIndex` without wrapping every child in another View.
 - `ViewNodeToolingRegistry` weakly associates mounted Views with source metadata only when tooling
   metadata exists; ordinary rendering retains no extra source objects.
+- Image nodes bind `UiImageRequest` to an injected `UiImageLoader` when one is present. The renderer
+  stores the disposable handle on the mounted `ImageView`, leaves an equivalent request and its
+  loaded drawable untouched, and disposes a changed request before applying its placeholder and
+  starting replacement work. It also clears handles during removal, rollback, and session disposal.
+  The request carries the node's captured density so adapters can resolve fixed `UiDp` decode
+  bounds consistently with layout. Resource sources still render without an adapter; null sources
+  bind fallback without a request. Image content is always cropped to the `ImageView` padding bounds,
+  even though decoration-aware layout hosts permit child overflow for effects such as shadows.
 
 The complete generated reference is available under the
 [`viewcompose-renderer` API tree](https://docs.viewcompose.com/api/viewcompose-renderer/current/).
@@ -126,6 +134,7 @@ Because the current line is alpha, the documentation site intentionally does not
 - [Render failure and commit semantics](../../architecture/render-failures.md)
 - [Lazy collection guide](../../guides/lazy-collections.md)
 - [Shadow and decoration guide](../../guides/shadows.md)
+- [Image loading guide](../../guides/image-loading.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
 ## Compatibility notes

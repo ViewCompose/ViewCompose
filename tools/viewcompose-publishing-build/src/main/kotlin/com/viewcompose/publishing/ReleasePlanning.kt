@@ -42,6 +42,11 @@ internal class GitRepository(
 
     fun head(): String = revision("HEAD")
 
+    fun rootRevision(): String = execute("rev-list", "--max-parents=0", "HEAD")
+        .lineSequence()
+        .filter(String::isNotBlank)
+        .single()
+
     fun requireClean() {
         val status = execute("status", "--porcelain", "--untracked-files=all")
         check(status.isBlank()) {
@@ -107,9 +112,10 @@ internal class GitRepository(
             "Release tag '$tag' did not pass local trust verification. Import the ViewCompose " +
                 "release public key before planning.\n${verification.output}"
         }
-        val sourceRevision = Regex("(?m)^sourceRevision=([a-f0-9]{40})$")
-            .find(content)?.groupValues?.get(1)
-            ?: error("Release tag '$tag' does not declare sourceRevision=<full SHA>.")
+        val sourceRevision = releaseTagSourceRevision(
+            tag = tag,
+            annotation = content,
+        )
         val version = tag.substringAfterLast('/')
         val artifact = tag.removePrefix("maven/").substringBeforeLast('/')
         return MavenReleaseTag(
@@ -135,6 +141,16 @@ internal class GitRepository(
         val result = command(*arguments)
         return result.output.takeIf { result.exitCode == 0 }
     }
+}
+
+internal fun releaseTagSourceRevision(tag: String, annotation: String): String {
+    val matches = Regex("(?:^|[;\\s])sourceRevision=([a-f0-9]{40})(?=$|[;\\s])")
+        .findAll(annotation)
+        .toList()
+    check(matches.size == 1) {
+        "Release tag '$tag' must declare exactly one sourceRevision=<full lowercase SHA> token."
+    }
+    return matches.single().groupValues[1]
 }
 
 internal data class MavenVersion(
@@ -222,14 +238,63 @@ internal data class MavenReleaseTag(
     val releaseRevision: String,
 )
 
+internal data class ArtifactReleaseBaseline(
+    val firstRelease: Boolean,
+    val currentVersion: MavenVersion,
+    val comparisonRevision: String,
+    val registeredSourceRevision: String?,
+    val publishedTag: MavenReleaseTag?,
+)
+
+internal fun artifactReleaseBaseline(
+    artifact: String,
+    declaredVersion: MavenVersion,
+    declaredSourceRevision: String,
+    unpublished: Boolean,
+    tags: List<MavenReleaseTag>,
+    repositoryRootRevision: String,
+): ArtifactReleaseBaseline {
+    val published = tags.maxByOrNull(MavenReleaseTag::version)
+    if (published == null) {
+        check(unpublished) {
+            "No release tag exists for '$artifact'. Fetch tags, or add the artifact to " +
+                "release.unpublishedModules only when preparing its first publication."
+        }
+        return ArtifactReleaseBaseline(
+            firstRelease = true,
+            currentVersion = declaredVersion,
+            comparisonRevision = repositoryRootRevision,
+            registeredSourceRevision = declaredSourceRevision,
+            publishedTag = null,
+        )
+    }
+    check(!unpublished) {
+        "Artifact '$artifact' has release tag '${published.name}' but is still listed in " +
+            "release.unpublishedModules. Remove the stale first-release marker."
+    }
+    check(declaredVersion == published.version) {
+        "Publishing metadata declares '$artifact:$declaredVersion', but the latest signed release " +
+            "tag is '${published.name}'. Plan before advancing release metadata."
+    }
+    return ArtifactReleaseBaseline(
+        firstRelease = false,
+        currentVersion = published.version,
+        comparisonRevision = published.sourceRevision,
+        registeredSourceRevision = null,
+        publishedTag = published,
+    )
+}
+
 internal data class PlannedArtifactRelease(
     val artifact: String,
+    val firstRelease: Boolean,
     val currentVersion: MavenVersion,
     val recommendedVersion: MavenVersion,
+    val sourceRevision: String,
     val impact: ReleaseImpact,
     val reason: String,
-    val baselineTag: String,
-    val baselineSourceRevision: String,
+    val baselineTag: String?,
+    val baselineSourceRevision: String?,
     val changeSets: List<String>,
     val changedDependencies: List<String>,
 )
@@ -246,12 +311,17 @@ internal data class ViewComposeReleasePlan(
         releases.forEachIndexed { index, release ->
             appendLine("    {")
             appendLine("      \"artifact\": \"${release.artifact}\",")
+            appendLine("      \"firstRelease\": ${release.firstRelease},")
             appendLine("      \"currentVersion\": \"${release.currentVersion}\",")
             appendLine("      \"recommendedVersion\": \"${release.recommendedVersion}\",")
+            appendLine("      \"sourceRevision\": \"${release.sourceRevision}\",")
             appendLine("      \"impact\": \"${release.impact.encoded()}\",")
             appendLine("      \"reason\": \"${release.reason}\",")
-            appendLine("      \"baselineTag\": \"${release.baselineTag}\",")
-            appendLine("      \"baselineSourceRevision\": \"${release.baselineSourceRevision}\",")
+            appendLine("      \"baselineTag\": ${release.baselineTag.toJsonValue()},")
+            appendLine(
+                "      \"baselineSourceRevision\": " +
+                    "${release.baselineSourceRevision.toJsonValue()},",
+            )
             appendLine("      \"changesets\": ${release.changeSets.toJsonArray()},")
             appendLine("      \"changedDependencies\": ${release.changedDependencies.toJsonArray()}")
             append("    }")
@@ -273,8 +343,9 @@ internal data class ViewComposeReleasePlan(
         appendLine("| Artifact | Current | Recommended | Impact | Reason |")
         appendLine("| --- | --- | --- | --- | --- |")
         releases.forEach { release ->
+            val current = if (release.firstRelease) "unreleased" else release.currentVersion.toString()
             appendLine(
-                "| `${release.artifact}` | `${release.currentVersion}` | " +
+                "| `${release.artifact}` | `$current` | " +
                     "`${release.recommendedVersion}` | `${release.impact.encoded()}` | " +
                     "${release.reason} |",
             )
@@ -287,29 +358,49 @@ internal data class ViewComposeReleasePlan(
         joinToString(prefix = "[", postfix = "]") { value ->
             "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
         }
+
+    private fun String?.toJsonValue(): String = this?.let { value ->
+        "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+    } ?: "null"
 }
 
 internal class ViewComposeReleasePlanner(
     private val root: File,
     private val git: GitRepository,
     private val artifacts: Set<String>,
+    private val declaredVersions: Map<String, MavenVersion>,
+    private val declaredSourceRevisions: Map<String, String>,
+    private val unpublishedArtifacts: Set<String>,
     private val dependencies: Map<String, Set<String>>,
 ) {
     fun plan(): ViewComposeReleasePlan {
         git.requireClean()
         val head = git.head()
+        check(declaredVersions.keys == artifacts) {
+            "Declared release versions must match registered artifacts."
+        }
+        check(declaredSourceRevisions.keys == artifacts) {
+            "Declared source revisions must match registered artifacts."
+        }
+        check(unpublishedArtifacts.all(artifacts::contains)) {
+            "Unpublished release markers contain unknown artifacts: " +
+                (unpublishedArtifacts - artifacts).sorted().joinToString()
+        }
+        val repositoryRootRevision = git.rootRevision()
         val baselines = artifacts.associateWith { artifact ->
-            git.tagsFor(artifact)
-                .map(git::annotatedTag)
-                .maxByOrNull(MavenReleaseTag::version)
-                ?: error(
-                    "No release tag exists for '$artifact'. Fetch tags or establish its first " +
-                        "maven/$artifact/<version> release boundary.",
-                )
+            artifactReleaseBaseline(
+                artifact = artifact,
+                declaredVersion = declaredVersions.getValue(artifact),
+                declaredSourceRevision = git.revision(declaredSourceRevisions.getValue(artifact)),
+                unpublished = artifact in unpublishedArtifacts,
+                tags = git.tagsFor(artifact).map(git::annotatedTag),
+                repositoryRootRevision = repositoryRootRevision,
+            )
         }
         val direct = linkedMapOf<String, Pair<ReleaseImpact, MutableSet<String>>>()
         baselines.forEach { (artifact, baseline) ->
-            val changeSetPaths = git.changedPathsBetween(baseline.sourceRevision, head)
+            val changedPaths = git.changedPathsBetween(baseline.comparisonRevision, head)
+            val changeSetPaths = changedPaths
                 .filter { path ->
                     path.startsWith("release/changes/") && path.endsWith(".json")
                 }
@@ -321,14 +412,18 @@ internal class ViewComposeReleasePlanner(
                     .map { change -> change to changeSet.file.name }
             }
             val ownedPaths = ReleaseOwnership.classify(
-                git.changedPathsBetween(baseline.sourceRevision, head),
+                changedPaths,
                 artifacts,
             ).artifactPaths[artifact].orEmpty()
             check(ownedPaths.isEmpty() || declarations.isNotEmpty()) {
                 buildString {
-                    appendLine("Artifact '$artifact' changed after ${baseline.name} without a changeset:")
+                    val boundary = baseline.publishedTag?.name ?: "repository inception"
+                    appendLine("Artifact '$artifact' changed after $boundary without a changeset:")
                     ownedPaths.forEach { appendLine("- $it") }
                 }
+            }
+            check(!baseline.firstRelease || declarations.isNotEmpty()) {
+                "Unpublished artifact '$artifact' has no release changeset in repository history."
             }
             if (declarations.isNotEmpty()) {
                 val impact = declarations.maxBy { (change, _) -> change.impact.rank }.first.impact
@@ -343,12 +438,22 @@ internal class ViewComposeReleasePlanner(
             val impact = directDeclaration?.first ?: ReleaseImpact.Dependency
             PlannedArtifactRelease(
                 artifact = artifact,
-                currentVersion = baseline.version,
-                recommendedVersion = baseline.version.recommend(impact),
+                firstRelease = baseline.firstRelease,
+                currentVersion = baseline.currentVersion,
+                recommendedVersion = if (baseline.firstRelease) {
+                    baseline.currentVersion
+                } else {
+                    baseline.currentVersion.recommend(impact)
+                },
+                sourceRevision = baseline.registeredSourceRevision ?: head,
                 impact = impact,
-                reason = if (directDeclaration != null) "direct changeset" else "dependency propagation",
-                baselineTag = baseline.name,
-                baselineSourceRevision = baseline.sourceRevision,
+                reason = when {
+                    baseline.firstRelease -> "first release changeset"
+                    directDeclaration != null -> "direct changeset"
+                    else -> "dependency propagation"
+                },
+                baselineTag = baseline.publishedTag?.name,
+                baselineSourceRevision = baseline.publishedTag?.sourceRevision,
                 changeSets = directDeclaration?.second?.sorted().orEmpty(),
                 changedDependencies = changedDependencies,
             )
@@ -391,6 +496,12 @@ internal class ViewComposeReleasePlanner(
 }
 
 internal object ReleaseMetadataPreparer {
+    private data class PlannedMetadataRelease(
+        val firstRelease: Boolean,
+        val currentVersion: MavenVersion,
+        val recommendedVersion: MavenVersion,
+    )
+
     fun parseConfirmedVersions(value: String): Map<String, MavenVersion> {
         check(value.isNotBlank()) {
             "Confirm exact versions with " +
@@ -422,10 +533,18 @@ internal object ReleaseMetadataPreparer {
             item as Map<*, *>
         }.orEmpty()
         val planned = releases.associate { release ->
-            (release["artifact"] as? String
-                ?: error("Release plan entry is missing artifact.")) to MavenVersion.parse(
+            val currentVersion = MavenVersion.parse(
                 release["currentVersion"] as? String
                     ?: error("Release plan entry is missing currentVersion."),
+            )
+            val firstRelease = release["firstRelease"] as? Boolean ?: false
+            (release["artifact"] as? String
+                ?: error("Release plan entry is missing artifact.")) to PlannedMetadataRelease(
+                firstRelease = firstRelease,
+                currentVersion = currentVersion,
+                recommendedVersion = (release["recommendedVersion"] as? String)
+                    ?.let(MavenVersion::parse)
+                    ?: currentVersion,
             )
         }
         check(confirmedVersions.keys == planned.keys) {
@@ -433,12 +552,23 @@ internal object ReleaseMetadataPreparer {
                 "${planned.keys.sorted()}; confirmed: ${confirmedVersions.keys.sorted()}."
         }
         confirmedVersions.forEach { (artifact, version) ->
-            check(version > planned.getValue(artifact)) {
-                "Confirmed version '$artifact:$version' must be newer than ${planned.getValue(artifact)}."
+            val release = planned.getValue(artifact)
+            if (release.firstRelease) {
+                check(version == release.recommendedVersion) {
+                    "First release '$artifact' must use its registered version " +
+                        "${release.recommendedVersion}, not $version."
+                }
+            } else {
+                check(version > release.currentVersion) {
+                    "Confirmed version '$artifact:$version' must be newer than " +
+                        "${release.currentVersion}."
+                }
             }
         }
         var publishing = publishingFile.readText()
-        confirmedVersions.toSortedMap().forEach { (artifact, version) ->
+        confirmedVersions.toSortedMap().filterKeys { artifact ->
+            !planned.getValue(artifact).firstRelease
+        }.forEach { (artifact, version) ->
             publishing = publishing.replaceRequiredProperty(
                 "module.$artifact.version",
                 version.toString(),
@@ -451,7 +581,10 @@ internal object ReleaseMetadataPreparer {
         val count = Regex("(?m)^release\\.count=([0-9]+)$")
             .find(history)?.groupValues?.get(1)?.toInt()
             ?: error("Documentation history is missing release.count.")
-        val groups = confirmedVersions.entries.groupBy(Map.Entry<String, MavenVersion>::value)
+        val advancingVersions = confirmedVersions.filterKeys { artifact ->
+            !planned.getValue(artifact).firstRelease
+        }
+        val groups = advancingVersions.entries.groupBy(Map.Entry<String, MavenVersion>::value)
             .toSortedMap()
         history = history.replaceRequiredProperty("release.count", (count + groups.size).toString())
             .trimEnd() + "\n"

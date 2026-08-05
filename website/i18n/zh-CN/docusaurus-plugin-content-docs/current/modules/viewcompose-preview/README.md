@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: 056798cde593de8ed5d226b102c59982b3b4fa79c1a1b895fa4685f1d4062b42
+translation_source_hash: f0a4c0ff16cfb5817af0842563de97082ccb66d89a88d4515cb33ac30d8e0c5c
 translation_status: current
 ---
 
@@ -80,6 +80,8 @@ ViewCompose 渲染；主题、调试配置、Overlay 后端或容器变化时重
 - 不能持有 Provider Context 或 `ViewComposePreviewWithRoot` 提供的根节点。
 - 每个目录 Spec 使用稳定且唯一的 ID；修改 ID 会重命名快照历史。
 - 新视觉领域同时增加覆盖守卫条目和 Paparazzi 快照。
+- 合并前运行 `qaPreview`。只有审阅渲染图片及其差异报告后才能录制变更基准；原因不明的差异属于
+  回归，不能当作基准更新。
 - Renderer 或 Provider 异常应作为预览失败暴露，不能用占位 UI 隐藏。
 
 ## 相关文档

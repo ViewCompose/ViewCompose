@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 2c7881f67d4e9e6937cb0f0868f5f1bc5e0916dcfa531a04962c553b1886ef49
+translation_source_hash: 56d11b4b0035344f2b9b32dc13bbef308508843e932e5925df13d5b5ef27e9d0
 translation_status: current
 ---
 
@@ -110,12 +110,15 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 2. 预览快照门禁：`./gradlew qaPreview`
 3. 全量门禁：`./gradlew qaFull`
 
-说明：
+`qaQuick` 负责编译核心模块并运行单元测试。`qaPreview` 运行
+`:viewcompose-preview:verifyPaparazziDebug`，并作为独立的必需 CI 检查。只有审阅生成图片与差异后，
+视觉变更才能更新已提交基准；禁止仅为通过门禁而录制原因不明的差异。
 
-1. `qaQuick` = 核心模块编译 + unit test
-2. `qaPreview` = `:viewcompose-preview:verifyPaparazziDebug`（开发预览截图回归）
-3. `qaFull` = `qaQuick` + `:app:connectedDebugAndroidTest`
-4. 能力标记为“完成”前，默认要求 `qaFull` 通过；若当前缺设备或存在临时豁免，必须在 roadmap 写明豁免范围和补齐时间
+`qaFull` 在 `qaQuick` 基础上增加应用、Counter sample 和教程的连接设备测试。仓库内每个
+`connectedDebugAndroidTest` 入口会先运行 `verifyConnectedAndroidDeviceReady`。前置检查要求：未通过
+`ANDROID_SERIAL` 指定设备时只能有一台在线设备、系统已完成启动、屏幕处于唤醒状态且 keyguard
+没有显示。该检查不会绕过安全锁屏；重试前必须唤醒并解锁所选设备。能力标记为“完成”前，默认要求
+`qaFull` 通过；若当前缺设备或存在临时豁免，必须在 roadmap 写明豁免范围和补齐时间。
 
 ## 5. 新增代码归类原则
 

@@ -12,8 +12,14 @@ import com.viewcompose.ui.environment.UiLocaleList
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextOverflow
+import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.UiImageLoadHandle
+import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiImageRequest
+import com.viewcompose.ui.node.UiImageTarget
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.BoxNodeProps
+import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.mutableStateOf
@@ -184,6 +190,31 @@ class SubtreeRecompositionTest {
     }
 
     @Test
+    fun `image vnode refreshes when equal loaders have different identities`() {
+        val composer = ComposerLite()
+        var loader: UiImageLoader = EqualLoader("first")
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        ProvideImageLoader(loader) {
+                            Image(source = ImageSource.Resource(1))
+                        }
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        loader = EqualLoader("second")
+        val second = compose()
+
+        assertNotSame(first, second)
+        assertSame(loader, (second.spec as ImageNodeSpec).imageLoader)
+    }
+
+    @Test
     fun `explicit boundary skips stable multi-node component`() {
         val inside = mutableStateOf("inside-0")
         val outside = mutableStateOf("outside-0")
@@ -254,5 +285,20 @@ class SubtreeRecompositionTest {
             textColor = 0xFF000000.toInt(),
             textSizeSp = 14.sp,
         )
+    }
+
+    private class EqualLoader(
+        private val label: String,
+    ) : UiImageLoader {
+        override fun load(
+            target: UiImageTarget,
+            request: UiImageRequest,
+        ): UiImageLoadHandle = UiImageLoadHandle {}
+
+        override fun equals(other: Any?): Boolean = other is EqualLoader
+
+        override fun hashCode(): Int = 0
+
+        override fun toString(): String = "EqualLoader($label)"
     }
 }

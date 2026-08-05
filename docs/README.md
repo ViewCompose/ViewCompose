@@ -63,6 +63,7 @@ Feature behavior and platform integration:
 - [Navigation](./guides/navigation.md)
 - [Overlays](./guides/overlays.md)
 - [Shadows](./guides/shadows.md)
+- [Image loading](./guides/image-loading.md)
 
 ## Migration from Jetpack Compose
 
@@ -73,6 +74,7 @@ Semantic comparisons and migration paths with explicit source and target version
 - [Layout, Modifier, and environment](./migration/compose-layout-modifier-and-environment.md)
 - [Hosts, lifecycle, and Android interop](./migration/compose-host-lifecycle-and-android-interop.md)
 - [Navigation 2 and Navigation 3](./migration/compose-navigation.md)
+- [Image loading](./migration/image-loading.md)
 
 ## Published modules
 

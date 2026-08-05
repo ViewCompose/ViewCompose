@@ -1,11 +1,22 @@
 package com.viewcompose.widget.core.samples
 
 import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.UiImageDecodeSize
+import com.viewcompose.ui.node.UiImageLoadHandle
+import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiImageRequestOptions
+import com.viewcompose.ui.node.spec.ImageNodeSpec
+import com.viewcompose.ui.unit.dp
+import com.viewcompose.widget.core.Icon
+import com.viewcompose.widget.core.IconButton
+import com.viewcompose.widget.core.Image
 import com.viewcompose.widget.core.PopupAlignment
 import com.viewcompose.widget.core.PopupBounds
 import com.viewcompose.widget.core.PopupOverflowPolicy
 import com.viewcompose.widget.core.PopupPositioner
 import com.viewcompose.widget.core.PopupSize
+import com.viewcompose.widget.core.ProvideImageLoader
 import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiStateColor
 import com.viewcompose.widget.core.UiTheme
@@ -70,4 +81,31 @@ fun saveableStateRegistrySample() {
     counter = 5
     check(registry.performSave()["counter"] == 5)
     entry.unregister()
+}
+
+fun imageLoadingSample() {
+    val loader = UiImageLoader { _, _ -> UiImageLoadHandle {} }
+    val nodes = buildVNodeTree {
+        ProvideImageLoader(loader) {
+            Image(
+                source = ImageSource.Resource(1),
+                contentDescription = "Profile photo",
+                requestOptions = UiImageRequestOptions(
+                    decodeSize = UiImageDecodeSize.Fixed(width = 320.dp, height = 180.dp),
+                ),
+            )
+            Icon(
+                source = ImageSource.Url("https://example.com/status.png"),
+                contentDescription = "Online",
+            )
+            IconButton(
+                icon = ImageSource.Resource(2),
+                contentDescription = "Close",
+                onClick = {},
+            )
+        }
+    }
+
+    check(nodes.size == 3)
+    check((nodes.first().spec as ImageNodeSpec).imageLoader === loader)
 }

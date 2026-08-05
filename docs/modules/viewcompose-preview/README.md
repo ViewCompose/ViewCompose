@@ -85,6 +85,8 @@ in the demo and user-facing documentation.
 - Do not retain the provider context or the root supplied by `ViewComposePreviewWithRoot`.
 - Give every catalog specification a stable, unique ID; changing it renames snapshot history.
 - Pair new visual domains with coverage guard entries and Paparazzi snapshots.
+- Run `qaPreview` before merge. Record a changed baseline only after reviewing the rendered image
+  and its difference report; an unexplained mismatch is a regression, not a baseline update.
 - Treat renderer or provider exceptions as preview failures; do not hide them with placeholder UI.
 
 ## Related documentation

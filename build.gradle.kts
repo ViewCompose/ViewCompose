@@ -22,6 +22,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-host-android" to "com.viewcompose.host.android",
     "viewcompose-overlay-android" to "com.viewcompose.overlay.android",
     "viewcompose-image-coil" to "com.viewcompose.image.coil",
+    "viewcompose-image-glide" to "com.viewcompose.image.glide",
     "viewcompose-benchmark" to "com.viewcompose.benchmark",
     "viewcompose-lifecycle" to "com.viewcompose.lifecycle",
     "viewcompose-viewmodel" to "com.viewcompose.viewmodel",
@@ -115,6 +116,7 @@ val optionalCapabilityModules = setOf(
     "viewcompose-widget-constraintlayout",
     "viewcompose-overlay-android",
     "viewcompose-image-coil",
+    "viewcompose-image-glide",
 )
 
 // Tooling is downstream of both foundation and optional capabilities and never participates in
@@ -144,6 +146,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-widget-core:compileDebugKotlin",
     ":viewcompose-overlay-android:compileDebugKotlin",
     ":viewcompose-image-coil:compileDebugKotlin",
+    ":viewcompose-image-glide:compileDebugKotlin",
     ":viewcompose-preview:compileDebugKotlin",
     ":viewcompose-animation:compileDebugKotlin",
     ":viewcompose-animation-core:compileKotlin",
@@ -173,6 +176,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-widget-core:testDebugUnitTest",
     ":viewcompose-overlay-android:testDebugUnitTest",
     ":viewcompose-image-coil:testDebugUnitTest",
+    ":viewcompose-image-glide:testDebugUnitTest",
     ":viewcompose-preview:testDebugUnitTest",
     ":viewcompose-animation:testDebugUnitTest",
     ":viewcompose-animation-core:test",
@@ -1389,9 +1393,127 @@ tasks.register("qaQuick") {
     dependsOn(qaQuickTasks)
 }
 
+val connectedDebugTestProjects = setOf(
+    ":app",
+    ":samples:counter",
+    ":samples:tutorials",
+)
+
+val verifyConnectedAndroidDeviceReady = tasks.register("verifyConnectedAndroidDeviceReady") {
+    group = "verification"
+    description = "Fail early unless one selected Android device is online, booted, awake, and unlocked."
+    outputs.upToDateWhen { false }
+
+    doLast {
+        fun adbExecutable(): String {
+            val executable = if (System.getProperty("os.name").startsWith("Windows")) {
+                "adb.exe"
+            } else {
+                "adb"
+            }
+            val sdkRoot = System.getenv("ANDROID_SDK_ROOT")
+                ?.takeIf(String::isNotBlank)
+                ?: System.getenv("ANDROID_HOME")?.takeIf(String::isNotBlank)
+            return sdkRoot
+                ?.let { File(it).resolve("platform-tools/$executable") }
+                ?.takeIf(File::isFile)
+                ?.absolutePath
+                ?: executable
+        }
+
+        fun runAdb(adb: String, vararg arguments: String): String {
+            val command = listOf(adb) + arguments
+            val process = try {
+                ProcessBuilder(command)
+                    .directory(rootDir)
+                    .redirectErrorStream(true)
+                    .start()
+            } catch (error: Exception) {
+                throw GradleException(
+                    "Android connected-test preflight could not start adb. Install Android SDK " +
+                        "platform-tools or set ANDROID_SDK_ROOT.",
+                    error,
+                )
+            }
+            val output = process.inputStream.bufferedReader().use { it.readText() }.trim()
+            val exitCode = process.waitFor()
+            if (exitCode != 0) {
+                throw GradleException(
+                    "Android connected-test preflight failed: ${command.joinToString(" ")} " +
+                        "exited with $exitCode.\n$output",
+                )
+            }
+            return output
+        }
+
+        val adb = adbExecutable()
+        val deviceRows = runAdb(adb, "devices")
+            .lineSequence()
+            .drop(1)
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .map { row -> row.split(Regex("\\s+"), limit = 3) }
+            .filter { fields -> fields.size >= 2 }
+            .associate { fields -> fields[0] to fields[1] }
+        val requestedSerial = System.getenv("ANDROID_SERIAL")?.trim()?.takeIf(String::isNotEmpty)
+        val onlineSerials = deviceRows.filterValues { state -> state == "device" }.keys.sorted()
+        val serial = when {
+            requestedSerial != null && deviceRows[requestedSerial] == "device" -> requestedSerial
+            requestedSerial != null -> throw GradleException(
+                "Android connected-test preflight failed: ANDROID_SERIAL '$requestedSerial' is " +
+                    "${deviceRows[requestedSerial] ?: "not attached"}. Run `adb devices` and select " +
+                    "an online device.",
+            )
+            onlineSerials.size == 1 -> onlineSerials.single()
+            onlineSerials.isEmpty() -> throw GradleException(
+                "Android connected-test preflight failed: no online device is available. Run " +
+                    "`adb devices`, authorize the device, and retry.",
+            )
+            else -> throw GradleException(
+                "Android connected-test preflight failed: multiple online devices are attached " +
+                    "(${onlineSerials.joinToString()}). Set ANDROID_SERIAL explicitly.",
+            )
+        }
+
+        val bootCompleted = runAdb(adb, "-s", serial, "shell", "getprop", "sys.boot_completed")
+        val powerState = runAdb(adb, "-s", serial, "shell", "dumpsys", "power")
+        val windowPolicy = runAdb(adb, "-s", serial, "shell", "dumpsys", "window", "policy")
+        val isBooted = bootCompleted == "1"
+        val isAwake = Regex("(?m)^\\s*mWakefulness=Awake\\s*$").containsMatchIn(powerState) ||
+            Regex("(?m)^\\s*mInteractive=true\\s*$").containsMatchIn(powerState)
+        val isKeyguardShowing = listOf(
+            Regex("(?m)^\\s*showingAndNotOccluded=true\\s*$"),
+            Regex("(?m)^\\s*mIsShowing=true\\s*$"),
+            Regex("(?m)^\\s*mKeyguardShowing=true\\s*$"),
+        ).any { pattern -> pattern.containsMatchIn(windowPolicy) }
+        val failures = buildList {
+            if (!isBooted) add("Android has not completed booting")
+            if (!isAwake) add("the display is not awake")
+            if (isKeyguardShowing) add("the keyguard is showing")
+        }
+        if (failures.isNotEmpty()) {
+            throw GradleException(
+                "Android connected-test preflight failed for '$serial': ${failures.joinToString()}. " +
+                    "Wake and unlock the selected device, keep its screen on, then rerun the task. " +
+                    "The gate deliberately does not bypass a secure keyguard.",
+            )
+        }
+
+        logger.lifecycle("Android connected-test device '$serial' is online, booted, awake, and unlocked.")
+    }
+}
+
+subprojects {
+    if (path in connectedDebugTestProjects) {
+        tasks.matching { task -> task.name == "connectedDebugAndroidTest" }.configureEach {
+            dependsOn(verifyConnectedAndroidDeviceReady)
+        }
+    }
+}
+
 tasks.register("qaFull") {
     group = "verification"
-    description = "Run qaQuick plus connected UI tests on device/emulator."
+    description = "Run qaQuick plus connected UI tests on a preflight-verified device/emulator."
     dependsOn(
         "qaQuick",
         ":app:connectedDebugAndroidTest",

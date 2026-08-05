@@ -6,6 +6,7 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.collection.TabRowTab
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
+import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.LazyRowNodeProps
 import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
@@ -190,7 +191,7 @@ open class UiTreeBuilder {
     }
 
     /**
-     * Node recomposition inputs that also compare session identity to avoid reusing stale lazy-container lambdas.
+     * Node recomposition inputs that preserve reference-sensitive loader and child-session identity.
      */
     private class EmitInputs(
         private val spec: NodeSpec,
@@ -203,7 +204,7 @@ open class UiTreeBuilder {
             return spec == other.spec &&
                 modifier == other.modifier &&
                 localSnapshot == other.localSnapshot &&
-                hasSameSessionIdentity(spec, other.spec)
+                hasSameReferenceIdentity(spec, other.spec)
         }
 
         override fun hashCode(): Int {
@@ -240,7 +241,7 @@ private fun canReuseVNode(
     return previous.type == next.type &&
         previous.key == next.key &&
         previous.spec == next.spec &&
-        hasSameSessionIdentity(previous.spec, next.spec) &&
+        hasSameReferenceIdentity(previous.spec, next.spec) &&
         previous.modifier == next.modifier &&
         previous.environment == next.environment &&
         previous.children.hasSameElementReferences(next.children)
@@ -255,13 +256,17 @@ private fun List<VNode>.hasSameElementReferences(other: List<VNode>): Boolean {
 }
 
 /**
- * Compares whether nodes with child sessions still point to the same content factories.
+ * Compares identities that are intentionally excluded from ordinary value equality.
  */
-private fun hasSameSessionIdentity(
+private fun hasSameReferenceIdentity(
     previous: NodeSpec,
     next: NodeSpec,
 ): Boolean {
     return when {
+        previous is ImageNodeSpec && next is ImageNodeSpec -> {
+            previous.imageLoader === next.imageLoader
+        }
+
         previous is LazyColumnNodeProps && next is LazyColumnNodeProps -> {
             previous.items.hasSameSessionIdentity(next.items)
         }

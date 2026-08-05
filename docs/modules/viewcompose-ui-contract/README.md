@@ -60,6 +60,10 @@ created for the node.
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.
+- [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/),
+  [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/),
+  and [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
+  define portable image sources, request policy, platform targets, and disposable load handles.
 - The unit, shape, graphics, key-input, gesture, semantics, and tooling packages complete the
   platform-neutral vocabulary used across ViewCompose modules.
 
@@ -86,6 +90,18 @@ Because the current line is alpha, the documentation site intentionally does not
   otherwise.
 - `AndroidViewNodeProps.update` and `onReset` are replay-safe transaction callbacks. External
   one-shot work belongs in `onCommit`; resource cleanup belongs in `onRelease`.
+- Image loading is an optional capability. `UiImageLoader` is caller-owned, runs on the owning UI
+  thread, and returns a handle for the started work. The renderer owns replacing and disposing the
+  handle for a mounted image View; a loader must not retain that View after disposal.
+- `ImageSource.Url` accepts only absolute HTTP(S) URLs; `ImageSource.Uri` accepts absolute URIs for
+  other loader-supported schemes. `UiImageDecodeSize.Fixed` uses positive `UiDp` bounds. The
+  renderer includes its captured `UiDensity` in `UiImageRequest`, and adapters resolve those logical
+  bounds to platform pixels without changing layout size.
+- `ImageSource.Model` requires a caller-provided stable key. Its equality and diagnostic text must
+  not depend on the raw model payload, so adapters can accept arbitrary platform-specific models
+  without leaking them into logs or persistence.
+- A `UiImageRequestExtension` is identified by its concrete runtime type plus `stableKey`. Adapters
+  ignore extension types they do not own, and callers must change the key when load behavior changes.
 
 Collection prefetch, native cache sizing, motion, and shared-pool values are renderer hints rather
 than semantic state. A platform may clamp or ignore an unsupported optimization without changing
@@ -99,6 +115,7 @@ the declared content.
 - [Lazy collection guide](../../guides/lazy-collections.md)
 - [Focus and input guide](../../guides/focus-and-input.md)
 - [Nested scrolling guide](../../guides/nested-scroll.md)
+- [Image loading guide](../../guides/image-loading.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
 ## Compatibility notes

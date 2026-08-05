@@ -5,6 +5,7 @@ import com.viewcompose.ui.node.collection.TabRowTab
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
+import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.LazyRowNodeProps
 import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
@@ -42,7 +43,8 @@ internal object NodeBindingDiffer {
         val prevSpec = previous.spec
         val nextSpec = next.spec
         val sessionContentChanged = hasSessionBackedContentChange(prevSpec, nextSpec)
-        if (prevSpec == nextSpec && !sessionContentChanged) {
+        val imageLoaderChanged = hasImageLoaderIdentityChange(prevSpec, nextSpec)
+        if (prevSpec == nextSpec && !sessionContentChanged && !imageLoaderChanged) {
             return if (modifierChanged) {
                 NodeBindingPlan.Rebind
             } else {
@@ -73,6 +75,15 @@ internal object NodeBindingDiffer {
             )
         }
         return NodeBindingPlan.Rebind
+    }
+
+    private fun hasImageLoaderIdentityChange(
+        previous: NodeSpec,
+        next: NodeSpec,
+    ): Boolean {
+        return previous is ImageNodeSpec &&
+            next is ImageNodeSpec &&
+            previous.imageLoader !== next.imageLoader
     }
 
     private fun hasSessionBackedContentChange(

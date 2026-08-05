@@ -71,7 +71,7 @@ sealed interface NodeType {
     /** Command-recorded custom drawing surface. */
     data object Canvas : NodeType
 
-    /** Resource or remote image content. */
+    /** Resource, URI, file, URL, or adapter-model image content. */
     data object Image : NodeType
 
     /** Caller-supplied native Android View boundary. */

@@ -8,6 +8,7 @@ import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.SegmentedControlItem
+import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.IconButtonNodeProps
 import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
@@ -65,15 +66,34 @@ fun UiTreeBuilder.Button(
 }
 
 /**
- * Emits an IconButton node and appends click semantics through Modifier.
+ * Emits an icon-only button whose image uses the current scoped loader.
+ *
+ * A non-null [icon] is loaded with [ImageContentScale.Inside]; a resource remains directly
+ * renderable when no loader is installed. Click semantics are emitted only while [enabled] is
+ * `true` and [onClick] is non-null. The component applies its required square size and click
+ * semantics before appending [modifier].
+ *
+ * @sample com.viewcompose.widget.core.samples.imageLoadingSample
+ * @receiver active tree builder that receives the emitted button node
+ * @param icon primary icon source, or `null` for no icon content
+ * @param contentDescription accessibility description, or `null` for decorative content
+ * @param onClick callback invoked synchronously for an enabled click, or `null` for no action
+ * @param variant visual button variant used to resolve theme colors and shape
+ * @param size control size used for bounds, padding, and theme defaults
+ * @param tint optional ARGB icon tint; `null` resolves the themed content color
+ * @param requestOptions immutable decode, cache, transition, and adapter-extension policy
+ * @param enabled whether the button accepts clicks and uses enabled theme tokens
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after required size and click semantics
  */
 fun UiTreeBuilder.IconButton(
-    icon: ImageSource,
+    icon: ImageSource?,
     contentDescription: String? = null,
     onClick: (() -> Unit)? = null,
     variant: ButtonVariant = ButtonVariant.Text,
     size: ButtonSize = ButtonSize.Medium,
     tint: Int? = null,
+    requestOptions: UiImageRequestOptions = UiImageRequestOptions(),
     enabled: Boolean = true,
     key: Any? = null,
     modifier: Modifier = Modifier,
@@ -104,7 +124,8 @@ fun UiTreeBuilder.IconButton(
             placeholder = null,
             error = null,
             fallback = null,
-            remoteImageLoader = ImageLoading.current,
+            imageLoader = ImageLoading.current,
+            requestOptions = requestOptions,
             enabled = enabled,
             backgroundColor = IconButtonDefaults.containerColor(variant, enabled),
             borderWidth = IconButtonDefaults.borderWidth(variant),
