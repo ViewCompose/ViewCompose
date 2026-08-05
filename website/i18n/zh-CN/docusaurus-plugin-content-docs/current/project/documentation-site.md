@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: fd61da9feae3ce83037f86979a3ceac50798bb73a55ec411c371af4b7570788c
+translation_source_hash: 138853e634ef0844220704e06296c8f8f4bf5b33dfe2d4ff82ad22fc58d2cd2e
 translation_status: current
 ---
 
@@ -115,6 +115,12 @@ accessible name、图片替代文本、表头、iframe title 和重复 ID；重�
 
 `.github/workflows/documentation.yml` 构建受影响 PR，但不部署。推送到 `main` 或在 `main`
 手工运行时，生成完整站点并通过受保护的 `github-pages` environment 部署。
+
+部署任务只有在正式域名冒烟验证通过后才算成功。该验证会访问英文和简体中文模块目录，以及
+所有当前模块手册；它还会验证两个目录和一个代表性当前手册的不带尾斜杠形式，以保护 GitHub
+Pages 的兼容行为。验证会拒绝 HTTP 错误、以 HTTP 200 返回的 Docusaurus“找不到页面”、未由
+主文档插件渲染的页面，以及缺少任一当前模块链接的目录。验证会为 CDN 传播进行短暂重试，若
+仍失败则令受保护的 Pages environment 失败，而不会把损坏的发布标记为成功。
 
 仓库 Pages source 必须设置为 **GitHub Actions**。入库 `CNAME` 声明
 `docs.viewcompose.com`；DNS 将 `docs` CNAME 指向 `viewcompose.github.io`，GitHub 验证域名后
