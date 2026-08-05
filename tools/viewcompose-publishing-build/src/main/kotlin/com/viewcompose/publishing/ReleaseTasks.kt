@@ -68,6 +68,15 @@ abstract class PlanViewComposeReleaseTask : DefaultTask() {
     abstract val artifacts: ListProperty<String>
 
     @get:Input
+    abstract val declaredVersions: MapProperty<String, String>
+
+    @get:Input
+    abstract val declaredSourceRevisions: MapProperty<String, String>
+
+    @get:Input
+    abstract val unpublishedArtifacts: ListProperty<String>
+
+    @get:Input
     abstract val artifactDependencies: MapProperty<String, String>
 
     @get:OutputFile
@@ -86,6 +95,11 @@ abstract class PlanViewComposeReleaseTask : DefaultTask() {
             root = root,
             git = GitRepository(root),
             artifacts = artifacts.get().toSet(),
+            declaredVersions = declaredVersions.get().mapValues { (_, version) ->
+                MavenVersion.parse(version)
+            },
+            declaredSourceRevisions = declaredSourceRevisions.get(),
+            unpublishedArtifacts = unpublishedArtifacts.get().toSet(),
             dependencies = dependencies,
         ).plan()
         jsonOutput.get().asFile.writeParented(plan.toJson())

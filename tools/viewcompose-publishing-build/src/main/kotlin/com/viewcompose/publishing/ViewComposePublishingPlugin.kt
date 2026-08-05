@@ -162,6 +162,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 moduleVersions.set(metadata.moduleVersions)
                 moduleSourceRevisions.set(metadata.moduleSourceRevisions)
                 strictApiDocsModules.set(metadata.strictApiDocsModules)
+                unpublishedModules.set(metadata.unpublishedModules)
                 documentationReleaseEntries.set(
                     documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
                 )
@@ -203,6 +204,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             dependsOn(verifyConfiguration)
             repositoryDirectory.set(project.layout.projectDirectory)
             artifacts.set(releaseArtifacts)
+            declaredVersions.set(metadata.moduleVersions)
+            declaredSourceRevisions.set(metadata.moduleSourceRevisions)
+            unpublishedArtifacts.set(metadata.unpublishedModules)
             this.artifactDependencies.set(artifactDependencies)
             jsonOutput.set(releasePlanJson)
             markdownOutput.set(releasePlanMarkdown)
@@ -545,6 +549,9 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
     abstract val strictApiDocsModules: ListProperty<String>
 
     @get:Input
+    abstract val unpublishedModules: ListProperty<String>
+
+    @get:Input
     abstract val documentationReleaseEntries: ListProperty<String>
 
     @TaskAction
@@ -585,6 +592,14 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
         check(missingStrictModules.isEmpty()) {
             "Published modules missing the strict API documentation gate: " +
                 "${missingStrictModules.sorted().joinToString()}."
+        }
+        val unpublished = unpublishedModules.get()
+        check(unpublished.distinct().size == unpublished.size) {
+            "Unpublished Maven artifact list contains duplicates."
+        }
+        val unknownUnpublished = unpublished.toSet() - versions.keys
+        check(unknownUnpublished.isEmpty()) {
+            "Unknown unpublished Maven artifacts: ${unknownUnpublished.sorted().joinToString()}."
         }
 
         val documentationEntries = documentationReleaseEntries.get()
@@ -962,6 +977,7 @@ private data class PublishingMetadata(
     val scmDeveloperConnection: String,
     val scmUrl: String,
     val strictApiDocsModules: List<String>,
+    val unpublishedModules: List<String>,
     val moduleVersions: Map<String, String>,
     val moduleSourceRevisions: Map<String, String>,
 ) {
@@ -1005,6 +1021,12 @@ private data class PublishingMetadata(
                     .map(String::trim)
                     .filter(String::isNotEmpty)
                     .distinct()
+                    .sorted(),
+                unpublishedModules = properties.getProperty("release.unpublishedModules")
+                    .orEmpty()
+                    .split(',')
+                    .map(String::trim)
+                    .filter(String::isNotEmpty)
                     .sorted(),
                 moduleVersions = versions,
                 moduleSourceRevisions = sourceRevisions,

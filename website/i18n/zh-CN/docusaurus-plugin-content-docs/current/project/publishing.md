@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 0726f3c8058066135cf2d290d85f961bdf162cb4884c45ab669452f1e4babbca
+translation_source_hash: 7db010cd0c1dc5cb64dabc5f412278b1bed5801ccdcde0f155b34f8be4c37ab9
 translation_status: current
 ---
 
@@ -83,6 +83,18 @@ release tag。Central 发布失败时不得创建最终 release tag。
 Maven Central 发布。仅当独立制品来源证据能定位到唯一 release commit 时，才允许补建历史 release
 tag，且注释必须声明该记录由历史重建。禁止把补建 tag 默认为原始发布时创建的 tag。
 
+### 已登记的首次发布
+
+制品必须在首次 Central 发布前登记，但最终 release tag 只能在 Central 显示 `Published` 后创建。
+该临时状态记录在 `gradle/viewcompose-publishing.properties` 的 `release.unpublishedModules` 中；只有
+这个显式集合内的制品可以暂时没有 Maven release tag。对于这些制品，规划器会从仓库起点扫描
+Changeset，要求直接发布声明，并推荐已经登记的初始版本与 source revision，不会提前升级版本或重复
+追加文档历史。
+
+首个 signed tag 推送后，应在下一次仓库改动中把制品移出 `release.unpublishedModules`。以下状态都会
+使规划失败：未标记制品缺少 tag、已标记制品已经存在 tag，或入库版本元数据领先于最新 tag。这样可
+区分真正的首次发布、未拉取 tag 和过期发布状态。
+
 ## 每个 PR 的发布意图
 
 ViewCompose 为每个 PR 保存一份不可变 Changeset，而不维护一份共享可变的“已改模块”清单。发布
@@ -136,11 +148,11 @@ git fetch origin main --tags
 ./gradlew planViewComposeRelease
 ```
 
-规划器为每个登记制品选择符合 `maven/<artifact-id>/<version>` 的最高语义版本 tag，验证签名并读取
-注释中的 `sourceRevision`。这个不可变 revision，而不是可变的当前发布元数据，才是该制品的比较
-边界。规划器随后：
+对于每个已发布制品，规划器选择符合 `maven/<artifact-id>/<version>` 的最高语义版本 tag，验证
+签名并读取唯一且严格的 `sourceRevision` token。这个不可变 revision，而不是可变的当前发布元数据，
+才是该制品的比较边界。显式首次发布使用已登记的 source revision 和上文的仓库历史规则。规划器随后：
 
-1. 读取该 revision 到 `HEAD` 之间新增的 Changeset；
+1. 读取比较边界到 `HEAD` 之间新增的 Changeset；
 2. 确认每条影响发布的直接路径都有声明；
 3. 取制品直接影响的最高等级；
 4. 从 Gradle `api`、`implementation`、`compileOnly`、`runtimeOnly` project dependency 推导当前依赖图；
