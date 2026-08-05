@@ -11,6 +11,10 @@ This directory contains multi-step work that is currently active and must surviv
   establish diagnostic and benchmark baselines, optimize atomic state publication, modifier-only
   View patches, LocalSnapshot allocation, and conditionally shared frame scheduling while recording
   explicit rollback gates and rejected high-risk alternatives.
+- [Compose migration capability convergence](./compose-migration-capability-convergence.md) —
+  prioritize lifecycle, ownership, keyed identity, RTL, Insets, and atomic navigation gaps while
+  preserving the native Android View engine and recording explicit test, rollback, and rejection
+  decisions for high-risk Compose parity work.
 
 Completed tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention plans are retained in the
