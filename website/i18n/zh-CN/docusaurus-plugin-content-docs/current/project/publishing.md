@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: c8bc158f2cf6ed4c862f0e06b332cc3a854f8c5ff7c9ac63ad92042a7d6b5290
+translation_source_hash: bb7ec18e06750ed9fc9ecc309ec521959340205181ef8059a4e0fa20fdb669f3
 translation_status: current
 ---
 
@@ -179,6 +179,36 @@ minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发�
 
 2026-08-04 的 backfill Changeset 一次性记录了首个 Central 边界之后、此流程建立之前影响发布的
 改动。它只是迁移记录，不能作为以后在合并后补写发布意图的先例。
+
+## 有效计划归档门禁
+
+完成实现本身不等于到达 Maven 发布边界。`docs/project/plans/` 下除目录 index 外的每份文档，都
+必须且只能包含一个机器可读的 `## Maven release changesets` section：
+
+```md
+## Maven release changesets
+
+- `release/changes/example-feature.json`
+```
+
+尚未开始影响发布的实现时，计划改用一条 `- None.`。这样只是在未来会涉及相同制品的计划，不会
+阻塞更早且无关的发布。新增计划第一份生产 Changeset 的同一 PR 必须替换 `None`，之后继续列出该
+计划拥有的每份 Changeset；同一 Changeset 不能属于两份 active plan。
+
+公开上传 Central 前，`verifyArchivedViewComposeReleasePlans` 会解析所有 active plan，读取它们声明的
+不可变 Changeset，并根据当前项目依赖图推导直接制品和所有 transitive reverse-dependent release。
+如果该集合与 `-PviewComposePublishModules` 相交，任务会拒绝上传并报告必须收口的 active plan。
+完成计划移入 `docs/archive/`、更新 active/archive 两个 index、保留最终证据并通过文档校验后，阻塞
+才会解除。
+
+该门禁刻意不阻塞 `planViewComposeRelease`、`prepareViewComposeRelease` 或本地 Maven 发布，因为
+这些操作仍属于发版验收。根任务 `publishSelectedViewComposeToMavenCentral` 和每个模块级 Central
+上传任务都依赖该门禁，所以绕过根便捷任务也不能绕过计划验收。可单独运行：
+
+```bash
+./gradlew verifyArchivedViewComposeReleasePlans \
+  -PviewComposePublishModules=viewcompose-runtime,viewcompose-navigation-core
+```
 
 ## 依赖暴露契约
 
@@ -396,8 +426,10 @@ cd tools/viewcompose-studio-plugin
 4. 运行 `qaQuick`、`verifyCompleteViewComposeApiDocs`、
    `verifyViewComposePublishedConsumption` 和相关 release test。
 5. 强制 PGP 签名并检查每个 POM、sources JAR、javadoc JAR 和 checksum。
-6. 上传 Central staging deployment，并从 staging repository 验证消费。
-7. Central 显示 `Published` 后，为每个已发布制品创建、推送并远端验证一个 signed
+6. 归档所有关联选定 release Changeset 的 active execution plan，并使用精确发布集合运行
+   `verifyArchivedViewComposeReleasePlans`。
+7. 上传 Central staging deployment，并从 staging repository 验证消费。
+8. Central 显示 `Published` 后，为每个已发布制品创建、推送并远端验证一个 signed
    `maven/<artifact-id>/<version>` tag。
-8. 运行 `prepareMarketplaceRelease`，在目标 Android Studio 安装 ZIP 并做 Preview smoke test。
-9. 首个插件版本人工上传；批准后再启用 token 自动化。
+9. 运行 `prepareMarketplaceRelease`，在目标 Android Studio 安装 ZIP 并做 Preview smoke test。
+10. 首个插件版本人工上传；批准后再启用 token 自动化。

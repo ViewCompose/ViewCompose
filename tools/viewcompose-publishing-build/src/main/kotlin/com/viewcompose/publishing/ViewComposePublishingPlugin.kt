@@ -289,6 +289,22 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             modules.set(selectedModules)
             moduleVersions.set(metadata.moduleVersions)
         }
+        val verifyArchivedReleasePlans =
+            project.tasks.register<VerifyArchivedViewComposeReleasePlansTask>(
+                "verifyArchivedViewComposeReleasePlans",
+            ) {
+                group = "publishing"
+                description =
+                    "Blocks Central uploads covered by Maven changesets in active execution plans."
+                repositoryDirectory.set(project.layout.projectDirectory)
+                plansDirectory.set(project.layout.projectDirectory.dir("docs/project/plans"))
+                releaseChangesDirectory.set(
+                    project.layout.projectDirectory.dir("release/changes"),
+                )
+                modules.set(selectedModules)
+                availableModules.set(metadata.moduleVersions.keys.sorted())
+                this.artifactDependencies.set(artifactDependencies)
+            }
         val publishSelectedLocal =
             project.tasks.register("publishSelectedViewComposeToLocalRepository") {
             group = "publishing"
@@ -305,7 +321,12 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             group = "publishing"
             description =
                 "Uploads selected stable artifacts to a manual Central Portal deployment."
-            dependsOn(verifyConfiguration, verifySelection, verifyCentralSelection)
+            dependsOn(
+                verifyConfiguration,
+                verifySelection,
+                verifyCentralSelection,
+                verifyArchivedReleasePlans,
+            )
             dependsOn(
                 selectedModules.get().map { module ->
                     ":$module:publishAllPublicationsToMavenCentralRepository"
@@ -316,7 +337,12 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             publishedProject.tasks.matching { task ->
                 task.name.endsWith("ToMavenCentralRepository")
             }.configureEach {
-                dependsOn(verifyConfiguration, verifySelection, verifyCentralSelection)
+                dependsOn(
+                    verifyConfiguration,
+                    verifySelection,
+                    verifyCentralSelection,
+                    verifyArchivedReleasePlans,
+                )
             }
             publishedProject.tasks.named("publishAndReleaseToMavenCentral").configure {
                 // A public Maven Central release is irreversible. Keep the plugin-provided shortcut

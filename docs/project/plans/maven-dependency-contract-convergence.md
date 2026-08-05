@@ -7,6 +7,10 @@
 - Scope: published ViewCompose artifacts, generated Maven metadata, external-consumer verification,
   installation documentation, and dependency-governance gates
 
+## Maven release changesets
+
+- `release/changes/20260805-maven-dependency-contract-convergence.json`
+
 ## Decision summary
 
 ViewCompose will follow the dependency-management shape used by mature AndroidX libraries:

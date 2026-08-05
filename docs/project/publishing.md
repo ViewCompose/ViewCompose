@@ -204,6 +204,41 @@ The backfill Changeset dated 2026-08-04 classifies publication-relevant changes 
 first Central boundary and before this workflow existed. It is a one-time migration record, not a
 precedent for reconstructing release intent after merge.
 
+## Active-plan archival gate
+
+Implementation completion is not by itself the Maven publication boundary. Every document under
+`docs/project/plans/`, except its directory index, contains exactly one machine-readable
+`## Maven release changesets` section:
+
+```md
+## Maven release changesets
+
+- `release/changes/example-feature.json`
+```
+
+A plan that has not started publication-relevant implementation uses one `- None.` entry instead.
+This prevents a future plan that happens to mention the same artifact from blocking an earlier,
+unrelated release. Replace `None` in the same pull request that adds the plan's first production
+Changeset, and list every later Changeset owned by that plan. One Changeset cannot belong to two
+active plans.
+
+Before a public Central upload, `verifyArchivedViewComposeReleasePlans` parses every active plan,
+loads its declared immutable Changesets, and derives both their direct artifacts and every
+transitive reverse-dependent release from the current project dependency graph. The task rejects
+the upload when that derived set intersects `-PviewComposePublishModules` and reports the active
+plans that must close. Moving the completed plan to `docs/archive/`, updating the active and archive
+indexes, preserving its final evidence, and passing documentation verification remove the blocker.
+
+The gate intentionally does not block `planViewComposeRelease`, `prepareViewComposeRelease`, or
+local Maven publication because those operations are part of release validation. It is a dependency
+of the root `publishSelectedViewComposeToMavenCentral` task and every module-specific Central upload
+task, so bypassing the root convenience task does not bypass plan acceptance. It can be run alone:
+
+```bash
+./gradlew verifyArchivedViewComposeReleasePlans \
+  -PviewComposePublishModules=viewcompose-runtime,viewcompose-navigation-core
+```
+
 ## Dependency exposure contract
 
 Published dependencies follow an AndroidX-style capability contract: an application declares the
@@ -470,9 +505,11 @@ Use `-PviewComposeMarketplaceChannels=default,eap` to select channels; the defau
 4. Run `qaQuick`, `verifyCompleteViewComposeApiDocs`, `verifyViewComposePublishedConsumption`, and
    the relevant release tests.
 5. Require PGP signing and inspect every generated POM, sources JAR, javadoc JAR, and checksum.
-6. Upload to a Central staging deployment and verify consumption from that staging repository.
-7. After Central reports `Published`, create, push, and remotely verify one signed
+6. Archive every active execution plan linked to the selected release Changesets and run
+   `verifyArchivedViewComposeReleasePlans` with the exact publication selection.
+7. Upload to a Central staging deployment and verify consumption from that staging repository.
+8. After Central reports `Published`, create, push, and remotely verify one signed
    `maven/<artifact-id>/<version>` tag for every published artifact.
-8. Run `prepareMarketplaceRelease`, install the ZIP into the target Android Studio build, and do a
+9. Run `prepareMarketplaceRelease`, install the ZIP into the target Android Studio build, and do a
    final preview smoke test.
-9. Upload the first plugin release manually; enable token-based automation only after approval.
+10. Upload the first plugin release manually; enable token-based automation only after approval.

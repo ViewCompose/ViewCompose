@@ -421,6 +421,15 @@ under `docs/project/plans/` record status, scope, non-goals, baseline, completio
 steps, validation, last verified date, and next action. When complete, durable conclusions move to
 active documentation and the plan moves to `docs/archive/`.
 
+Every active plan also contains exactly one `## Maven release changesets` section. Use one
+`- None.` entry until the plan owns a production Changeset; once implementation adds immutable
+`release/changes/*.json` files, list each repository-relative path as its own inline-code bullet.
+Before a public Maven Central upload, the publishing gate derives the direct and
+dependency-propagated artifact scope of those Changesets and rejects any selected artifact still
+owned by an active plan. Planning, metadata preparation, and local publication remain available
+before this acceptance boundary. A completed plan must move to the archive, update both plan
+indexes, and preserve its final evidence before the related Central upload can proceed.
+
 Deprecated public documentation remains available until its supported release line reaches end of
 life. Mark it as deprecated, link its replacement, and preserve versioned URLs. Repository-only
 documents that no longer represent a supported contract move to the archive.

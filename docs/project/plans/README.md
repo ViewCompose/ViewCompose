@@ -15,6 +15,10 @@ This directory contains multi-step work that is currently active and must surviv
   advertised entry artifacts with AndroidX-style `api`/`implementation` boundaries, add published
   consumer and metadata gates, simplify base installation, and evaluate a compatibility BOM only
   after independent-version evidence exists.
+- [Compose migration capability convergence](./compose-migration-capability-convergence.md) —
+  prioritize lifecycle, ownership, keyed identity, RTL, Insets, and atomic navigation gaps while
+  preserving the native Android View engine and recording explicit test, rollback, and rejection
+  decisions for high-risk Compose parity work.
 
 Completed tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention plans are retained in the
@@ -24,3 +28,9 @@ Before adding a plan, read [Documentation governance](../documentation-governanc
 have a clear completion condition, be updated during implementation, and move to
 [`docs/archive/`](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md)
 when complete.
+
+Every active plan must also contain exactly one `## Maven release changesets` section. Declare
+`- None.` before publication-relevant implementation begins; afterward, replace it with one
+inline-code bullet for every immutable `release/changes/*.json` file owned by the plan. Maven
+Central upload rejects selected direct or dependency-propagated artifacts while their linked plan
+remains in this directory.
