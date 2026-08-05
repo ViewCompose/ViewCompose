@@ -2,8 +2,9 @@
 
 ## Status
 
-- State: Active
+- State: Completed and accepted for release archival
 - Started: 2026-08-05
+- Completed: 2026-08-05
 - Scope: published ViewCompose artifacts, generated Maven metadata, external-consumer verification,
   installation documentation, and dependency-governance gates
 
@@ -124,12 +125,12 @@ edge has a reviewed exposure classification.
 
 ### Phase 3: Public Maven rollout
 
-- **Pending:** Release every artifact selected by release-intent and reverse-dependency planning.
-- **Pending:** Confirm Maven Central serves the new Gradle Module Metadata and POM scopes.
-- **Pending:** After that publication is available, switch README, getting-started tutorials, and Maven-backed
+- **Release handoff:** Release every artifact selected by release-intent and reverse-dependency planning.
+- **Release handoff:** Confirm Maven Central serves the new Gradle Module Metadata and POM scopes.
+- **Release handoff:** After that publication is available, switch README, getting-started tutorials, and Maven-backed
   samples from the previously published four-coordinate baseline to the host-only ViewCompose
   coordinate.
-- **Pending:** Run the tutorials from a clean repository that has no generated local Maven repository.
+- **Release handoff:** Run the tutorials from a clean repository that has no generated local Maven repository.
 
 The installation example must not move early: current tutorials intentionally remain valid for the
 already-published version. Advertising host-only installation against a version whose metadata still
@@ -137,14 +138,14 @@ marks foundation dependencies private would make clean consumer builds fail.
 
 ### Phase 4: Compatibility platform evaluation
 
-- **Pending:** Establish at least two independently versioned release sets and record which combinations are
+- **Deferred:** Establish at least two independently versioned release sets and record which combinations are
   verified together.
-- **Pending:** Prototype a generated `viewcompose-bom` backed by the release planner's compatibility set.
-- **Pending:** Add a consumer that imports the regular Gradle platform and omits versions from feature
+- **Deferred:** Prototype a generated `viewcompose-bom` backed by the release planner's compatibility set.
+- **Deferred:** Add a consumer that imports the regular Gradle platform and omits versions from feature
   coordinates.
-- **Pending:** Verify selective publication, documentation history, Maven Central requirements, and reverse
+- **Deferred:** Verify selective publication, documentation history, Maven Central requirements, and reverse
   dependency release propagation for a POM-only platform artifact.
-- **Pending:** Publish the BOM only if it removes real version-selection failures without coupling otherwise
+- **Deferred:** Publish the BOM only if it removes real version-selection failures without coupling otherwise
   independent releases.
 
 Rollback condition: discard the prototype if it requires manual duplicate version tables, forces
@@ -180,8 +181,24 @@ exact transitive dependency versions plus documented verified sets remain author
 
 ## Completion condition
 
-Phases 0 through 2 are complete when the local publication, host-only consumption, documentation,
-and release-intent gates pass. Phase 3 completes the public rollout after Maven Central availability.
-The plan remains active for the conditional Phase 4 evaluation and is archived after the BOM
-decision is either implemented with evidence or explicitly rejected with recorded compatibility and
-release results.
+Phases 0 through 2 are complete: local publication, host-only consumption, documentation, and
+release-intent gates pass. Phase 3 is an operational handoff to the normative publishing workflow,
+which requires this implementation plan to be archived before Central upload. Phase 4 is explicitly
+deferred because the repository does not yet have two independently versioned compatibility sets;
+no BOM is published in this release. A future BOM evaluation requires a separate evidence-backed
+plan rather than keeping this implementation plan active.
+
+## Final evidence and archival decision
+
+- The host-only Android consumer compiles state, Modifier, widget, and `setUiContent` usage against
+  locally published artifacts.
+- Dependency-contract verification covers every registered Maven artifact and validates Gradle
+  declarations plus generated POM scopes.
+- `qaQuick`, `qaPreview`, complete versioned API assembly, the production documentation build, and
+  all PR documentation checks pass on PR #75.
+- Clean release planning selects 19 artifacts: 18 existing artifacts advance from
+  `0.1.0-alpha02` to `0.1.0-alpha03`, while `viewcompose-image-glide` retains its first release at
+  `0.1.0-alpha01`.
+- On 2026-08-05 the release owner authorized archival and continuation into the Maven publication
+  workflow. Central availability checks and the host-only documentation switch remain release
+  operations, not unfinished implementation work.

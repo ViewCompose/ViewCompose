@@ -26,6 +26,8 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `maven-dependency-contract-convergence.md` | AndroidX 风格依赖暴露契约、Host-only 消费验证、Maven 元数据门禁和模块治理标准已经完成；Central 发布与发布后文档切换移交正式发布流程，BOM 在具备独立版本兼容性证据前继续延期 |
+| `image-loading-pipeline-generalization.md` | 通用图片源协议、Renderer 请求生命周期、Coil/Glide 适配、迁移与发布登记已经完成；已记录并接受最终真机重跑受锁屏设备限制的历史证据 |
 | `DOCUMENT_LANGUAGE_CONSISTENCY_2026-08.md` | 67 篇有效公共手写文档已实现完整中英文镜像，12 篇错位权威源、33 个英文中文页标题和 14 个缺失镜像已收口，并加入语言、覆盖与指纹硬门禁 |
 | `LAYERED_TASK_LIST_TUTORIALS_2026-08.md` | 同一个可运行任务清单应用已经形成六章分层教程，包含可编译双语片段、真机行为测试与 `qaQuick`/`qaFull` 门禁 |
 | `COMPOSE_MIGRATION_PAIRED_SAMPLES_2026-08.md` | 四个 Compose/ViewCompose 迁移域已有可编译成对源码、双语片段与 `qaQuick` 漂移门禁 |
