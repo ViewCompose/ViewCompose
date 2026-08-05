@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Align public tutorials with the Maven baseline and prevent first-release Changesets from being replayed.",
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "This change updates only the repository tutorial dependency guard to validate the published host-first coordinates; it does not alter any published artifact output."
+    }
+  ]
+}

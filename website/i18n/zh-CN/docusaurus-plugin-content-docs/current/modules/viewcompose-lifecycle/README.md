@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-lifecycle/README.md
-translation_source_hash: 2405178d584ea9e9e6ffdaeeeae2c75164b3cb1a55d1c899655a473f94941ce2
+translation_source_hash: b449bd7fe5b7e2147b31bdc2fadc9746c3fa45a58ddd9d0aac5d6e7d2fc52cb5
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ Lifecycle。它提供 Android 宿主安装的 LifecycleOwner Local，以及感�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-lifecycle:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-lifecycle:0.1.0-alpha03")
 }
 ```
 
@@ -118,6 +118,6 @@ Flow identity、Lifecycle identity、活跃阈值和 Context 共同构成 produc
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了 nullable Owner 查询、Scoped Owner 提供、感知 commit 的 collector 启动、
+`0.1.0-alpha03` 建立了 nullable Owner 查询、Scoped Owner 提供、感知 commit 的 collector 启动、
 结构化取消、`repeatOnLifecycle` 重启行为，以及不活跃期间保留 State。Flow 错误应显式建模，
 收集 Context 中绝不能传入独立 Job。

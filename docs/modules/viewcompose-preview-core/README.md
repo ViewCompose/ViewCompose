@@ -8,7 +8,7 @@ Studio plugin, tests, and CI. It contains no Android or IDE runtime dependency.
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
 }
 ```
 
@@ -89,6 +89,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line uses protocol version 1, exact-version negotiation, deterministic JSON and
+The `0.1.0-alpha02` line uses protocol version 1, exact-version negotiation, deterministic JSON and
 fingerprints, bounded worker batches, auto-height configuration, application-owned theme providers,
 and source-aware render diagnostics. The wire format is not yet promised stable across alpha lines.

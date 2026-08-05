@@ -18,7 +18,7 @@ modules.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-renderer:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-renderer:0.1.0-alpha03")
 }
 ```
 
@@ -63,16 +63,16 @@ back safely.
 
 ## Principal APIs
 
-- [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
+- [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha03/viewcompose-renderer/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
   owns the transactional VNode-to-View render and disposal boundary.
-- [`ChildReconciler`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.reconcile/-child-reconciler/)
+- [`ChildReconciler`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha03/viewcompose-renderer/com.viewcompose.renderer.reconcile/-child-reconciler/)
   produces insert, reuse, and removal plans without mutating platform state.
-- [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
+- [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha03/viewcompose-renderer/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
   converts stable lazy-item keys into ordered RecyclerView updates and deliberately falls back to a
   full reload when identity is missing or ambiguous.
 - `RenderTreeResult`, `RenderStats`, `RenderStructureStats`, patch records, and layout-pass sampling
   provide immutable diagnostics used by the demo, preview tooling, and performance tests.
-- [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
+- [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha03/viewcompose-renderer/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
   is the optional SPI for effects such as advanced shadows. Without a backend, decoration requests
   stay on a no-op path and no shadow implementation is loaded.
 - `ViewDecorationHostLayout` and `DecorationChildDrawingOrder` support custom drawing planes and
@@ -141,7 +141,7 @@ Because the current line is alpha, the documentation site intentionally does not
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes the first published reconciliation, native binding,
+The `0.1.0-alpha03` line establishes the first published reconciliation, native binding,
 diagnostics, tooling association, and decoration-backend contracts. Do not persist mounted nodes,
 patch records, diagnostic tree objects, opaque lazy content tokens, or View tags as external data.
 Custom hosts and decoration backends must be upgraded with renderer contract changes even when an

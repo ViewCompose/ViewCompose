@@ -8,7 +8,7 @@ Compose `AndroidView` bridge, and the first-party preview catalog and Paparazzi 
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
 }
 ```
 
@@ -101,6 +101,6 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes the coherent native/DSL theme resolution, retained Compose
+The `0.1.0-alpha03` line establishes the coherent native/DSL theme resolution, retained Compose
 bridge session, explicit root-access overload, and shared catalog/snapshot coverage model. Static
 preview protocol compatibility remains owned by preview-core.

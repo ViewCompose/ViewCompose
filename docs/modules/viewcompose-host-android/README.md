@@ -14,7 +14,7 @@ application intentionally uses its advanced APIs independently of the host.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
 }
 ```
 
@@ -155,7 +155,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes the Activity, Fragment, custom-container, saveable-state,
+The `0.1.0-alpha03` line establishes the Activity, Fragment, custom-container, saveable-state,
 frame-scheduling, and native View transaction contracts. Do not persist `RenderSession`, Android
 root Views, saved-state registry instances, or renderer diagnostics. Custom hosts must be reviewed
 when host, widget-core, or renderer contracts change even when their DSL source still compiles.

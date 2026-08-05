@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-widget-core/README.md
-translation_source_hash: 5f3b252808a4221959c366629c9aa50a45545e75e839f60c4eb88636d252c627
+translation_source_hash: 492148d8e65da0dcbf391ad496207c3341202c094ae10d970f20dec6b9dc86ec
 translation_status: current
 ---
 
@@ -23,7 +23,7 @@ Popup，不执行图片解码，也不提供可选的动画、手势、图形、
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha03")
 }
 ```
 
@@ -53,22 +53,22 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 
 ## 主要 API
 
-- [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-ui-tree-builder/)
+- [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-ui-tree-builder/)
   及其组件函数构建声明式节点树，不会创建 Android View。
-- [`Theme` 与 `UiTheme`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-theme/)
+- [`Theme` 与 `UiTheme`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-theme/)
   暴露不可变的颜色、排版、形状、尺寸与浮层 Token，并提供明确的 Android Theme 解析与刷新
   行为。
-- [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-environment/)
+- [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
   和宿主能力划定作用域。
 - `Image`、`Icon`、[`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-widget-core/current/com.viewcompose.widget.core/-provide-image-loader.html)
   与 `UiImageRequestOptions` 暴露图片语义，但不选择 Coil、Glide 或其他解码器。子树可以安装
   一个 `UiImageLoader`，也可以不安装，让资源图片继续渲染。
-- [`remember`、`produceState` 与 Effect](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/)
+- [`remember`、`produceState` 与 Effect](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/)
   把平台无关组合 Runtime 与结构化协程和已提交副作用连接起来。
-- [`rememberSaveable` 与 `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-saveable-state-registry/)
+- [`rememberSaveable` 与 `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-saveable-state-registry/)
   通过事务式恢复让状态跨组合释放和宿主重建继续存活。
-- [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-render-session/)
+- [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha03/viewcompose-widget-core/com.viewcompose.widget.core/-render-session/)
   为一个 Android `ViewGroup` 协调组合、渲染器协调、原生提交 Effect、浮层、诊断、失败恢复
   与释放。
 - 浮层规格与 Host 定义平台无关的 Dialog、Popup、Bottom Sheet、Snackbar 和 Toast 标识、定位、
@@ -116,7 +116,7 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 首次建立公共 Widget、Theme、Local、可保存状态、浮层与 Render Session 契约。
+`0.1.0-alpha03` 首次建立公共 Widget、Theme、Local、可保存状态、浮层与 Render Session 契约。
 不要把自动 Saveable Key、Session 标识、VNode 实现名称、回调实例、工具元数据或诊断结构
 持久化为长期外部数据。即使应用组件源码仍能编译，契约变化也可能要求自定义渲染器与 Host
 同步升级。

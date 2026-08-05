@@ -69,7 +69,8 @@ Diff / Patch 渲染器
 
 ## 快速开始
 
-当前公开版本为 `0.1.0-alpha01`，可以直接从 Maven Central 获取。
+推荐的 Android 宿主版本为 `0.1.0-alpha03`，可以直接从 Maven Central 获取。ViewCompose
+模块采用独立版本，因此可选功能和平台无关 Core 的当前版本可能不同。
 
 ```kotlin
 repositories {
@@ -77,14 +78,12 @@ repositories {
 }
 
 dependencies {
-    val viewComposeVersion = "0.1.0-alpha01"
-
-    implementation("com.viewcompose:viewcompose-runtime:$viewComposeVersion")
-    implementation("com.viewcompose:viewcompose-ui-contract:$viewComposeVersion")
-    implementation("com.viewcompose:viewcompose-widget-core:$viewComposeVersion")
-    implementation("com.viewcompose:viewcompose-host-android:$viewComposeVersion")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
 }
 ```
+
+宿主会传递暴露 Runtime、UI Contract 和 Widget Core API。只有在构建底层集成，或明确不通过
+Android 宿主直接使用这些模块时，才需要单独添加基础模块坐标。
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -113,12 +112,12 @@ class MainActivity : ComponentActivity() {
 Feature 模块会在适用时带入对应的平台无关 Core，Core 也可以单独依赖：
 
 ```kotlin
-implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha01")
-implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha01")
+implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
 
 // 纯 Kotlin/JVM 的策略和状态模型可以独立使用。
-implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha01")
-implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
+implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
+implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 ```
 
 所有公开产物都包含源码包，可以在 IDE 中直接进入框架实现。完整的产物和版本约定见

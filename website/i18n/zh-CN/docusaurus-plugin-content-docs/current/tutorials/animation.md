@@ -2,7 +2,7 @@
 title: 使用 AnimatedVisibility
 sidebar_position: 11
 translation_source: tutorials/animation.md
-translation_source_hash: 55977d1b8dcfad4ba03127a23cc06091a4397f444ddf9e9646ee47caa673b1bc
+translation_source_hash: f83fdb754300d4ce452647b14b15de1363c83e3ab8846bb211f4397ab7f13a26
 translation_status: current
 ---
 
@@ -16,11 +16,8 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

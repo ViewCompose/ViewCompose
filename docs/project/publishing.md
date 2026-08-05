@@ -167,12 +167,16 @@ git fetch origin main --tags
 
 For every previously published artifact, the planner selects the highest semantic version tag
 matching `maven/<artifact-id>/<version>`, cryptographically verifies the signed annotation, and
-reads its single strict `sourceRevision` token. That immutable revision—not mutable current
-publishing metadata—is the artifact's comparison boundary. Explicit first releases use the
-registered source revision and repository-history rule above. The planner then:
+reads its single strict `sourceRevision` token for source and API-documentation provenance. The tag
+target's immutable release commit—not mutable current publishing metadata—is the comparison and
+Changeset-consumption boundary because it is the exact repository state used for publication. A
+Changeset or publication input merged after source freeze but included in that release is therefore
+not replayed as a new release. Explicit first releases use the registered source revision and
+repository-history rule above. The planner then:
 
-1. loads Changesets introduced between that revision and `HEAD`;
-2. verifies that every publication-relevant direct path has a matching declaration;
+1. loads Changesets and publication-relevant direct paths introduced between the release-tag target
+   and `HEAD`;
+2. verifies that every direct change has a matching unconsumed declaration;
 3. takes the highest direct impact recorded for the artifact;
 4. derives the current project dependency graph from Gradle `api`, `implementation`,
    `compileOnly`, and `runtimeOnly` project dependencies;
@@ -263,10 +267,10 @@ including their platform-neutral core artifact:
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
 }
 ```
 
@@ -274,10 +278,10 @@ Core artifacts are also independently consumable from Kotlin/JVM modules:
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
+    implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```
 

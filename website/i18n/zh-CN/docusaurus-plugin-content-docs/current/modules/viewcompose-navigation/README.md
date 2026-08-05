@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation/README.md
-translation_source_hash: 99952594dc76479194178f521d1530720cde4bb577c663c82e45b08b4a4746f8
+translation_source_hash: 5d0d596c9ff2ab6fe829042ed19d62f944f236d864b379d6aa140c4c92654f9b
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
 }
 ```
 
@@ -168,7 +168,7 @@ String、Android `Uri` 和 `ACTION_VIEW Intent` 入口都使用同一个严格�
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 确立了一个 controller 对一个 host 的连接、主线程串行命令、目的地和图 ownership、
+`0.1.0-alpha03` 确立了一个 controller 对一个 host 的连接、主线程串行命令、目的地和图 ownership、
 防御式进程死亡恢复、预测性返回 preview、对齐 Android 的原生 View motion，以及最多三个自适应
 pane。请通过 `rememberNavHostController` 持久化 controller 状态，不要在宿主之外保留 Android
 owner 或 session 对象。

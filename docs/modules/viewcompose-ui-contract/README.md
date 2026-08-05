@@ -16,7 +16,7 @@ runtime, widget, renderer, and host modules.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha03")
 }
 ```
 
@@ -47,18 +47,18 @@ created for the node.
 
 ## Principal APIs
 
-- [`VNode` and `NodeType`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.node/-v-node/)
+- [`VNode` and `NodeType`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node/-v-node/)
   define immutable tree content and renderer dispatch.
-- [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
+- [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   and its concrete property snapshots define the supported renderer inputs.
-- [`Modifier`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.modifier/-modifier/)
+- [`Modifier`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.modifier/-modifier/)
   carries ordered layout, drawing, interaction, semantics, focus, and parent-data elements.
-- [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
+- [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
   captures density, locale tags, and logical layout direction for a subtree.
-- [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
+- [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   and pager state bridge platform scrolling to observable runtime state.
-- [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
-  and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
+- [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
+  and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/),
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/),
@@ -120,7 +120,7 @@ the declared content.
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes the first public renderer contract. Adding a `NodeType`, a
+The `0.1.0-alpha03` line establishes the first public renderer contract. Adding a `NodeType`, a
 concrete `NodeSpec`, or a modifier element can require a renderer update even when application DSL
 source remains unchanged. Custom renderers should fail clearly for unknown contracts and should not
 persist enum ordinals, sealed-subtype names, tooling metadata, native view identities, or callback

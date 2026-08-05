@@ -10,7 +10,7 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-03**
+Last verified: **2026-08-05**
 
 Re-verification owner: **maintainers of the runtime, UI contract, Android host, and navigation
 module families**
@@ -21,10 +21,10 @@ The target is the following independently versioned ViewCompose set:
 
 | Module family | Artifacts | Verified version |
 | --- | --- | --- |
-| State and composition | `viewcompose-runtime`, `viewcompose-widget-core` | `0.1.0-alpha01` |
-| UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer`, `viewcompose-widget-constraintlayout` | `0.1.0-alpha01` |
-| Android ownership | `viewcompose-host-android`, `viewcompose-lifecycle`, `viewcompose-viewmodel` | `0.1.0-alpha01` |
-| Navigation | `viewcompose-navigation-core`, `viewcompose-navigation` | `0.1.0-alpha01` |
+| State and composition | `viewcompose-runtime`, `viewcompose-widget-core` | runtime `0.1.0-alpha02`; widget `0.1.0-alpha03` |
+| UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer`, `viewcompose-widget-constraintlayout` | `0.1.0-alpha03` |
+| Android ownership | `viewcompose-host-android`, `viewcompose-lifecycle`, `viewcompose-viewmodel` | `0.1.0-alpha03` |
+| Navigation | `viewcompose-navigation-core`, `viewcompose-navigation` | core `0.1.0-alpha02`; Android `0.1.0-alpha03` |
 
 The immutable release revisions are recorded in
 [`gradle/viewcompose-publishing.properties`](../../gradle/viewcompose-publishing.properties).

@@ -6,8 +6,9 @@ have identical semantics.
 
 - **Source state:** Jetpack Compose UI and Runtime 1.11.4, Activity 1.13.0, Lifecycle 2.11.0,
   and SavedState 1.5.0.
-- **Target state:** ViewCompose 0.1.0-alpha01.
-- **Last verified:** 2026-08-03.
+- **Target state:** `viewcompose-host-android`, `viewcompose-lifecycle`, `viewcompose-viewmodel`, and
+  `viewcompose-renderer` 0.1.0-alpha03.
+- **Last verified:** 2026-08-05.
 - **Re-verification owner:** maintainers of `viewcompose-host-android`, `viewcompose-lifecycle`,
   `viewcompose-viewmodel`, and `viewcompose-renderer`.
 
@@ -180,7 +181,7 @@ Owner migration is a semantic task, not a type-name substitution:
 Lifecycle 2.11 adds general scoped ViewModels for arbitrary Compose UI regions. A
 `ViewModelStoreProvider` can keep child stores across configuration changes, clear them when their
 UI scope permanently leaves, and inherit the parent's factory and `CreationExtras`. ViewCompose
-0.1.0-alpha01 has comparable permanent-removal behavior for navigation entry and graph owners, but
+0.1.0-alpha03 has comparable permanent-removal behavior for navigation entry and graph owners, but
 does not expose an equivalent general provider for arbitrary UI subtrees. Its navigation owner
 factory behavior must also not be described as full parent-factory or `CreationExtras` propagation
 without additional implementation and tests.
@@ -224,7 +225,7 @@ Re-verify the KDoc, module manual, rollback test, and this page together when th
 
 ## Unsupported direct interop
 
-ViewCompose 0.1.0-alpha01 has no direct equivalent of Compose `AndroidViewBinding` or
+ViewCompose 0.1.0-alpha03 has no direct equivalent of Compose `AndroidViewBinding` or
 `AndroidFragment`. A factory can inflate an XML layout, but ViewBinding lifecycle management and
 Fragment ownership remain application responsibilities. Do not place a Fragment directly inside a
 ViewCompose render tree or infer support from the ability to host its root View.

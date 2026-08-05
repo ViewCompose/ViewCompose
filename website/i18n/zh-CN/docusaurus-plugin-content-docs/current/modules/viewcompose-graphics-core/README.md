@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-graphics-core/README.md
-translation_source_hash: a412277bd83a867553cadf42d654e170cd68e1285074dc1972823800137fef5d
+translation_source_hash: 71b9db253be583a2e2387f0a8add8870f144771a2b45561ff3cd506eec13f030
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ Paint 与 Filter、有序绘制命令、经过验证且可复用的 Scene、可�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-graphics-core:0.1.0-alpha02")
 }
 ```
 
@@ -125,6 +125,6 @@ State、不同步线程，也不推断 Size、Density、Theme 输入；Key 必�
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立 Android 对齐坐标与颜色约定、有序命令回放、平衡不可变 Scene、浅不可变
+`0.1.0-alpha02` 建立 Android 对齐坐标与颜色约定、有序命令回放、平衡不可变 Scene、浅不可变
 Paint 模型、轻量 Image Reference 与单条目显式 Key Cache。平台执行属于 Renderer，组合 Modifier
 属于 `viewcompose-graphics`。

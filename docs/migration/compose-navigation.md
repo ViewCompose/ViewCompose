@@ -6,8 +6,9 @@ actual source before mapping APIs or lifecycle behavior.
 
 - **Source state:** Navigation 2.9.8 or Navigation3 1.1.4, with Compose UI/Runtime 1.11.4,
   Activity 1.13.0, Lifecycle 2.11.0, and SavedState 1.5.0.
-- **Target state:** ViewCompose 0.1.0-alpha01.
-- **Last verified:** 2026-08-03.
+- **Target state:** `viewcompose-navigation-core` 0.1.0-alpha02 and
+  `viewcompose-navigation`, `viewcompose-lifecycle`, and `viewcompose-viewmodel` 0.1.0-alpha03.
+- **Last verified:** 2026-08-05.
 - **Re-verification owner:** maintainers of `viewcompose-navigation-core`,
   `viewcompose-navigation`, `viewcompose-lifecycle`, and `viewcompose-viewmodel`.
 

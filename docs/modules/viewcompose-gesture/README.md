@@ -9,7 +9,7 @@ the Android renderer owns the native pointer stream and recognition engine.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
 }
 ```
 
@@ -136,7 +136,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes synchronous callback delivery, latest-lambda remembered state,
+The `0.1.0-alpha03` line establishes synchronous callback delivery, latest-lambda remembered state,
 renderer-owned recognition, immediate anchored settling, explicit cancellation, and detachable
 nested-scroll dispatch. API resemblance to Jetpack Compose gesture modifiers does not imply the same
 suspend mutation, `MutatorMutex`, or animation behavior.

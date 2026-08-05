@@ -2,7 +2,7 @@
 title: 使用主题
 sidebar_position: 7
 translation_source: tutorials/theming.md
-translation_source_hash: 9c009d5f00f4de49fee3015107cca96d48d67d67546c43fcb4803e532a1e96bb
+translation_source_hash: d3ea9bf506cb10da8ccb092bd7154e73de98e11a160d78e21923c1330e1bfb99
 translation_status: current
 ---
 
@@ -17,10 +17,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

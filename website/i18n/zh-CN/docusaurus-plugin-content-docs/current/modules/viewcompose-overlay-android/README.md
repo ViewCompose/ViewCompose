@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-android/README.md
-translation_source_hash: cc49ceadf5620a7d64b01f68ab734380531c7c8c985f25f743b2d3153f3407aa
+translation_source_hash: 85fc430078b92bd444628119c42ba21f063feeb5ec25b740e2ef7450ee4201df
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha03")
 }
 ```
 
@@ -124,6 +124,6 @@ Android Window flag、Material 回调、Popup 几何或系统栏外观时，再�
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了可选 Service Provider 发现、会话隔离的平台 handle、嵌套 Surface 渲染、
+`0.1.0-alpha03` 建立了可选 Service Provider 发现、会话隔离的平台 handle、嵌套 Surface 渲染、
 锚定 Popup 恢复、Material Bottom Sheet 与 Snackbar，以及使用 Application Context 的 Toast。
 Android Window 对象属于后端实现细节；应用状态应始终通过声明式浮层请求保持权威。

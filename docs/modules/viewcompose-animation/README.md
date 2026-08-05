@@ -9,7 +9,7 @@ channels, visibility/content transitions, and measured-size animation.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
 }
 ```
 
@@ -236,7 +236,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes composition-owned target animation, explicit last-mutation-wins
+The `0.1.0-alpha03` line establishes composition-owned target animation, explicit last-mutation-wins
 `Animatable`, shared-duration transitions, continuous channels, exit-aware visibility lifetime,
 alpha-only content replacement, and renderer-hosted measured-size motion. Similar API names do not
 imply complete Jetpack Compose Animation parity; the behavioral differences above are part of this

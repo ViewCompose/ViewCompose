@@ -2,7 +2,7 @@
 title: 读取渲染诊断
 sidebar_position: 14
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: 1f9b78fb40936238818bcd99d21a2cad6f77e3ef32f7728d966c447b39215004
+translation_source_hash: 2d99ffc2a757cd5bb023007db3281ee2c6f0e886ced467ec599ec1316be5f7f7
 translation_status: current
 ---
 
@@ -16,10 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

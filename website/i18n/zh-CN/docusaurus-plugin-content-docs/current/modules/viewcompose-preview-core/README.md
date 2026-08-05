@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-core/README.md
-translation_source_hash: 5fe089dcbc7ad925ffd2918404354fd987a92fdd6c45c53e987f4688ed2bf305
+translation_source_hash: 8c811d945ccf57b0513200b783afd6e0a796e8d2aa22757418a7e9f936bdce56
 translation_status: current
 ---
 
@@ -13,7 +13,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
 }
 ```
 
@@ -84,6 +84,6 @@ Scope 与 Source Call Site，不保留 Runtime 所有的 View、VNode、ClassLoa
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 使用 Protocol Version 1、严格版本协商、确定性 JSON 与 Fingerprint、受限 Worker Batch、
+`0.1.0-alpha02` 使用 Protocol Version 1、严格版本协商、确定性 JSON 与 Fingerprint、受限 Worker Batch、
 Auto-height Configuration、应用所有的 Theme Provider 与感知源码的 Render Diagnostic。Alpha 线之间尚不
 承诺 Wire Format 稳定。

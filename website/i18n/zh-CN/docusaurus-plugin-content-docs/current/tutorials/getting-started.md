@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 8a6b54143eac111a606c2e75f218885dafa7dff99108153f934a817eeede1722
+translation_source_hash: ebae0455ce7150f935b96ea2d7905cb2a812a282d9f7a1b1fab3fe048a17adbe
 translation_status: current
 ---
 
@@ -18,38 +18,40 @@ translation_status: current
 
 ## 必需依赖
 
-确认应用可以解析 Maven Central，然后添加完整的运行时依赖集合：
+确认应用可以解析 Maven Central，然后添加 Android 宿主坐标：
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
 ```
+
+宿主会传递暴露 runtime、UI contract 和 widget API；widget core 还会继续暴露其公开 API 使用的
+text 契约。Renderer、lifecycle 和 ViewModel 集成作为宿主运行时依赖引入，但调用其高级 API 时
+仍需有意添加直接依赖。只有在不使用 Android 宿主构建更底层的集成时，才需要直接添加基础模块
+坐标。
 
 计数器不依赖 Preview 工具。如果要继续完成可选 Preview 部分，现在还要添加已发布插件和仅用于
 debug 的产物：
 
 ```kotlin title="build.gradle.kts（可选 Preview）"
 plugins {
-    id("com.viewcompose.preview") version "0.1.0-alpha01"
+    id("com.viewcompose.preview") version "0.1.0-alpha02"
 }
 
 dependencies {
-    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha01")
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
     add(
         "viewComposePreviewWorkerHost",
-        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
     )
     add(
         "viewComposePreviewRunner",
-        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
     )
 }
 ```
@@ -71,19 +73,21 @@ dependencies {
 你需要一个使用 Kotlin 的 Android 应用、Android SDK，以及供 Android Gradle Plugin 使用的
 JDK 17。仓库示例使用 `compileSdk = 36`、`minSdk = 24` 和 JVM target 11。
 
-本教程最后验证于 2026-08-03，使用以下 ViewCompose 产物：
+本教程最后于 2026-08-05 从公开 Maven Central 验证，使用以下 ViewCompose 产物：
 
-| 产物 | 版本 | 显式依赖原因 |
+| 产物 | 版本 | 引入方式 |
 | --- | --- | --- |
-| `viewcompose-runtime` | `0.1.0-alpha01` | 快照状态与观察机制 |
-| `viewcompose-ui-contract` | `0.1.0-alpha01` | `Modifier`、布局单位与对齐契约 |
-| `viewcompose-widget-core` | `0.1.0-alpha01` | `Column`、`Text`、`Button`、主题默认值与 `remember` |
-| `viewcompose-host-android` | `0.1.0-alpha01` | Activity 宿主与 Android renderer 安装 |
-| `viewcompose-preview-core` | `0.1.0-alpha01` | 仅用于 debug 的静态 Preview 注解与配置 |
-| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha01` | 编译后 Preview 发现与隔离渲染任务 |
+| `viewcompose-host-android` | `0.1.0-alpha03` | 应用显式依赖 |
+| `viewcompose-runtime` | `0.1.0-alpha02` | 传递引入的基础依赖 |
+| `viewcompose-ui-contract` | `0.1.0-alpha03` | 传递引入的基础依赖 |
+| `viewcompose-widget-core` | `0.1.0-alpha03` | 传递引入的基础依赖 |
+| `viewcompose-preview-gradle-plugin` | `0.1.0-alpha02` | 可选的显式插件 |
+| `viewcompose-preview-core` | `0.1.0-alpha02` | 可选的 debug 依赖 |
+| `viewcompose-preview-worker-host` | `0.1.0-alpha02` | 可选的 Preview 配置 |
+| `viewcompose-preview-runner` | `0.1.0-alpha03` | 可选的 Preview 配置 |
 
 ViewCompose 产物独立演进。混用比本教程更新的版本前，请检查
-[已发布模块目录](../modules/README.md)。
+[已发布模块目录](../modules/README.md)，再混用此验证集合之外的版本。
 
 仓库示例也使用这些完全相同的 Maven 坐标，因此质量门禁验证的就是外部应用实际使用的依赖路径。
 

@@ -2,7 +2,7 @@
 title: 使用布局与 Modifier
 sidebar_position: 4
 translation_source: tutorials/layouts-and-modifiers.md
-translation_source_hash: 2ac6b39de92380958f5e44416b76e4ce553a3fd7d7de1e7ffee821f83e7d377c
+translation_source_hash: dab049246442cc39915c38684a102969bb88c2444d0fc95e34c5da404105c5cf
 translation_status: current
 ---
 
@@ -10,16 +10,13 @@ translation_status: current
 
 ## 必需依赖
 
-本页可以独立使用。请先添加完整的 Maven 依赖：
+本页可以独立使用。请添加 Android 宿主；它会传递引入 UI contract 和 widget API：
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

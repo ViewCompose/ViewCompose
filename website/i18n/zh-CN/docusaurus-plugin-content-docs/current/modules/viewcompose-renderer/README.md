@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer/README.md
-translation_source_hash: 8b48346fa3b33822b4b326c479438301e141f2d823e739edfb4c71b09738cca3
+translation_source_hash: 32243c8a39460acdb2fef7e534a0adaef322af6cc526aeb31e76fd8d61f4272d
 translation_status: current
 ---
 
@@ -21,7 +21,7 @@ shape 与绘图命令，并提供渲染工作量、树结构、布局过程和�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-renderer:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-renderer:0.1.0-alpha03")
 }
 ```
 
@@ -61,15 +61,15 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 
 ## 主要 API
 
-- [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
+- [`ViewTreeRenderer`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha03/viewcompose-renderer/com.viewcompose.renderer.view.tree/-view-tree-renderer/)
   管理 VNode 到 View 的事务渲染与释放边界。
-- [`ChildReconciler`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.reconcile/-child-reconciler/)
+- [`ChildReconciler`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha03/viewcompose-renderer/com.viewcompose.renderer.reconcile/-child-reconciler/)
   在不修改平台状态的前提下生成插入、复用和移除计划。
-- [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
+- [`LazyListDiff`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha03/viewcompose-renderer/com.viewcompose.renderer.reconcile/-lazy-list-diff/)
   把稳定 Lazy item key 转换成有序 RecyclerView 更新；身份缺失或有歧义时会主动退化为全量刷新。
 - `RenderTreeResult`、`RenderStats`、`RenderStructureStats`、patch 记录和布局过程采样提供不可变
   诊断数据，供 demo、预览工具和性能测试使用。
-- [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha01/viewcompose-renderer/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
+- [`AndroidViewDecorationBackend`](https://docs.viewcompose.com/api/viewcompose-renderer/0.1.0-alpha03/viewcompose-renderer/com.viewcompose.renderer.decoration/-android-view-decoration-backend/)
   是高级阴影等普通 View 状态无法表达的效果的可选 SPI。没有后端时，装饰请求走空操作路径，
   也不会加载阴影实现。
 - `ViewDecorationHostLayout` 和 `DecorationChildDrawingOrder` 支持自定义绘制平面与声明式
@@ -130,6 +130,6 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了第一版公开的差分、原生绑定、诊断、工具关联和装饰后端契约。不要把
+`0.1.0-alpha03` 建立了第一版公开的差分、原生绑定、诊断、工具关联和装饰后端契约。不要把
 mounted node、patch 记录、诊断树对象、不透明 Lazy content token 或 View tag 作为外部长久
 数据持久化。即使应用 DSL 源码仍能编译，自定义 host 和装饰后端也必须随渲染器契约变化升级。

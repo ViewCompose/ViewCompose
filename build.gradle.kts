@@ -832,12 +832,26 @@ data class TutorialSample(
 )
 
 val tutorialBaseArtifacts =
+    listOf("viewcompose-host-android")
+
+val tutorialPublishingPropertiesFile =
+    rootDir.resolve("gradle/viewcompose-publishing.properties")
+val tutorialPublishingProperties =
+    java.util.Properties().apply {
+        tutorialPublishingPropertiesFile.inputStream().use(::load)
+    }
+val tutorialPublishedVersion = { artifact: String ->
+    tutorialPublishingProperties.getProperty("module.$artifact.version")
+        ?: error("Missing published version for tutorial artifact '$artifact'.")
+}
+val tutorialPublishedVersions =
     listOf(
-        "viewcompose-runtime",
-        "viewcompose-ui-contract",
-        "viewcompose-widget-core",
         "viewcompose-host-android",
-    )
+        "viewcompose-navigation",
+        "viewcompose-overlay-android",
+        "viewcompose-animation",
+        "viewcompose-gesture",
+    ).associateWith(tutorialPublishedVersion)
 
 val tutorialSamplesByPage =
     mapOf(
@@ -855,7 +869,6 @@ val tutorialSamplesByPage =
             TutorialSample(
                 "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/TextInputTutorialActivity.kt",
                 "text-input",
-                listOf("viewcompose-text-core"),
             ),
         "lazy-lists.md" to
             TutorialSample(
@@ -871,7 +884,7 @@ val tutorialSamplesByPage =
             TutorialSample(
                 "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt",
                 "navigation",
-                listOf("viewcompose-navigation-core", "viewcompose-navigation"),
+                listOf("viewcompose-navigation"),
             ),
         "overlays.md" to
             TutorialSample(
@@ -925,6 +938,7 @@ tasks.register("verifyTutorialSamples") {
         tutorialSamplesByPage.values.map { sample -> rootDir.resolve(sample.source) },
         rootDir.resolve("samples/tutorials/build.gradle.kts"),
         rootDir.resolve("samples/counter/build.gradle.kts"),
+        tutorialPublishingPropertiesFile,
     )
     inputs.files(
         documentationRoots.flatMap { docsRoot ->
@@ -943,7 +957,7 @@ tasks.register("verifyTutorialSamples") {
                 """```kotlin title="build\.gradle\.kts"\s*([\s\S]*?)```""",
             )
         val coordinateRegex =
-            Regex("""implementation\("com\.viewcompose:([^:"]+):0\.1\.0-alpha01"\)""")
+            Regex("""implementation\("com\.viewcompose:([^:"]+):([^"]+)"\)""")
 
         fun compiledRegion(sourcePath: String, region: String): String? {
             val sourceFile = rootDir.resolve(sourcePath)
@@ -1005,12 +1019,14 @@ tasks.register("verifyTutorialSamples") {
                 } else {
                     val block = dependencyBlock.groupValues[1]
                     val actualArtifacts =
-                        coordinateRegex.findAll(block).map { match -> match.groupValues[1] }.toList()
-                    val expectedArtifacts = tutorialBaseArtifacts + sample.requiredArtifacts
-                    if (
-                        actualArtifacts.size != expectedArtifacts.size ||
-                        actualArtifacts.toSet() != expectedArtifacts.toSet()
-                    ) {
+                        coordinateRegex.findAll(block)
+                            .map { match -> match.groupValues[1] to match.groupValues[2] }
+                            .toList()
+                    val expectedArtifacts =
+                        (tutorialBaseArtifacts + sample.requiredArtifacts).map { artifact ->
+                            artifact to tutorialPublishedVersions.getValue(artifact)
+                        }
+                    if (actualArtifacts != expectedArtifacts) {
                         violations +=
                             "${page.relativeTo(rootDir)} -> Maven artifacts $actualArtifacts do not match $expectedArtifacts"
                     }
@@ -1039,11 +1055,15 @@ tasks.register("verifyTutorialSamples") {
                 } else {
                     val actualArtifacts =
                         coordinateRegex.findAll(dependencyBlock.groupValues[1])
-                            .map { match -> match.groupValues[1] }
+                            .map { match -> match.groupValues[1] to match.groupValues[2] }
                             .toList()
-                    if (actualArtifacts != tutorialBaseArtifacts) {
+                    val expectedArtifacts =
+                        tutorialBaseArtifacts.map { artifact ->
+                            artifact to tutorialPublishedVersions.getValue(artifact)
+                        }
+                    if (actualArtifacts != expectedArtifacts) {
                         violations +=
-                            "${gettingStartedPage.relativeTo(rootDir)} -> Maven artifacts $actualArtifacts do not match $tutorialBaseArtifacts"
+                            "${gettingStartedPage.relativeTo(rootDir)} -> Maven artifacts $actualArtifacts do not match $expectedArtifacts"
                     }
                     if ("repositories { mavenCentral() }" !in dependencyBlock.groupValues[1]) {
                         violations +=
@@ -1051,10 +1071,10 @@ tasks.register("verifyTutorialSamples") {
                     }
                 }
                 listOf(
-                    "id(\"com.viewcompose.preview\") version \"0.1.0-alpha01\"",
-                    "com.viewcompose:viewcompose-preview-core:0.1.0-alpha01",
-                    "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha01",
-                    "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha01",
+                    "id(\"com.viewcompose.preview\") version \"${tutorialPublishedVersion("viewcompose-preview-gradle-plugin")}\"",
+                    "com.viewcompose:viewcompose-preview-core:${tutorialPublishedVersion("viewcompose-preview-core")}",
+                    "com.viewcompose:viewcompose-preview-worker-host:${tutorialPublishedVersion("viewcompose-preview-worker-host")}",
+                    "com.viewcompose:viewcompose-preview-runner:${tutorialPublishedVersion("viewcompose-preview-runner")}",
                 ).forEach { requiredPreviewDependency ->
                     if (requiredPreviewDependency !in leadingContent) {
                         violations +=

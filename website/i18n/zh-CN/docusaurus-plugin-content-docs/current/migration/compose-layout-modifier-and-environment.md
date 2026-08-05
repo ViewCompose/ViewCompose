@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: 96433929e6368d08609ea7088b8f19313231821ccf642a6d8fe731c4540e5fa6
+translation_source_hash: 08d1e43b332938d7c539094d21f553ce6222867c201ec3f468d270c2eca60281
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 | 基线 | 版本 | 用途 |
 | --- | --- | --- |
-| ViewCompose 已发布模块 | `0.1.0-alpha01` | 本迁移指南的目标版本 |
+| ViewCompose 已发布模块 | runtime `0.1.0-alpha02`；UI contract、renderer、widget 与 host `0.1.0-alpha03` | 本迁移指南的目标版本 |
 | Compose Runtime、UI 与 Foundation | `1.11.4` stable | 上游语义参考 |
 | 仓库 Compose 依赖 | `1.7.8` | 本仓库中的可执行对照基线 |
 | 仓库 Kotlin 工具链 | `2.0.21` | 对照代码的编译基线 |
@@ -33,7 +33,7 @@ translation_status: current
 - **Intentionally different**：ViewCompose 提供刻意设计的替代契约；代码需要重新设计，而不是简单改名。
 - **Unsupported**：在已验证基线中不存在公开等价能力。
 
-最后验证日期：**2026-08-03**。
+最后验证日期：**2026-08-05**。
 
 复核负责人：**ViewCompose UI Contract 与 Renderer 维护者**。
 
@@ -43,7 +43,7 @@ translation_status: current
 
 1. **官方语义复核**使用 Android Developers API 文档、行为指南和 Compose 1.11.4 的
    AndroidX 发布说明。这些来源定义本文描述的上游行为。
-2. **本地可执行证据**使用 ViewCompose `0.1.0-alpha01` 源码契约和仓库测试。仓库的
+2. **本地可执行证据**使用上面这组独立版本化的 ViewCompose 目标源码契约和仓库测试。仓库的
    Compose 1.7.8 依赖可用于编译对照，但不能用来否定 Compose 1.11.4 已记录的语义变化。
 
 本文不声明性能等价。本次复核没有为 Compose 布局节点与 Android View 建立可比较的基准测试条件。
@@ -102,7 +102,7 @@ ViewCompose 渲染 Android View、按 renderer 规则折叠 Modifier 元素，�
 
 ## 能力矩阵
 
-| 概念 | Compose 1.11.4 行为 | ViewCompose `0.1.0-alpha01` 行为 | 状态 | 必需的迁移动作 |
+| 概念 | Compose 1.11.4 行为 | ViewCompose 已验证版本集合行为 | 状态 | 必需的迁移动作 |
 | --- | --- | --- | --- | --- |
 | 内置布局容器 | `Row`、`Column`、`Box` 和 Foundation 布局在 `Constraints` 下测量 Compose 布局节点。 | `Row`、`Column`、`Box`、流式布局、滚动容器和 ConstraintLayout 发出 VNode，并最终成为 Android `ViewGroup` 实现。 | Partially supported | 在原生 View 实现上重新检查默认值、溢出、裁剪、weight 和固有尺寸假设。 |
 | 自定义测量 | `Layout`、`MeasurePolicy` 和布局 Modifier 节点允许应用代码测量并放置 Compose 子项。普通测量中每个子项只能测量一次。 | 未发现公开的通用测量策略、measurable/placeable 契约或布局 Modifier。自定义多子项测量需要 renderer 扩展，或通过互操作托管 Android `ViewGroup`。 | Unsupported | 围绕内置容器或具有生命周期所有权的 Android View 实现重新设计自定义 Compose 布局。 |

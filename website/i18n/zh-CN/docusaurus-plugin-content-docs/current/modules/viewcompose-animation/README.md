@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: 6a1f988da666f86c799355b27ea4a2420b782028897f3b4cf54d1c0ff1eaaa6a
+translation_source_hash: 0a0cfc90e4a137cfcb2d922bfac6ebf5d418d32e68b08f12243546b90255b244
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ UI Node 发射与 Android View Renderer。它提供状态驱动值动画、命�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
 }
 ```
 
@@ -217,7 +217,7 @@ Detach，通常不应使用。
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了组合所有目标动画、显式 Last-mutation-wins `Animatable`、共享时长
+`0.1.0-alpha03` 建立了组合所有目标动画、显式 Last-mutation-wins `Animatable`、共享时长
 Transition、持续 Channel、感知 Exit 的可见性生命周期、仅 Alpha 内容替换和 Renderer Host
 测量尺寸动效。相似 API 名称不代表完整 Jetpack Compose Animation 对齐；以上差异是本版本的
 公共契约。

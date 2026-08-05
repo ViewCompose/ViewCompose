@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel/README.md
-translation_source_hash: a182c28d4c173db639a624a22624039240831e1ef31813a67e61d776589ac6ac
+translation_source_hash: 42189623a68d0950a2d56b6c01af2141aece06a7a3c657db3880b09db8b42e40
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-viewmodel:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-viewmodel:0.1.0-alpha03")
 }
 ```
 
@@ -136,6 +136,6 @@ Holder 类保持 public 只是为了让 AndroidX Factory 能构造它。应用�
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立了 nullable Owner 查询、嵌套 Owner 提供、AndroidX Store Identity、显式与
+`0.1.0-alpha03` 建立了 nullable Owner 查询、嵌套 Owner 提供、AndroidX Store Identity、显式与
 默认 Factory/Extras 优先级、Keyed 实例和 SavedStateHandle Holder。应让 Owner，而不是组合
 调用位置，成为权威生命周期边界。

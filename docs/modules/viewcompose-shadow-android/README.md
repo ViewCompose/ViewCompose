@@ -8,7 +8,7 @@ multi-layer effects, and connects them to the renderer's parent drawing planes.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-shadow-android:0.1.0-alpha03")
 }
 ```
 
@@ -88,7 +88,7 @@ The complete generated reference is available in the
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes optional ServiceLoader discovery, wrapper-free decoration
+The `0.1.0-alpha03` line establishes optional ServiceLoader discovery, wrapper-free decoration
 planes, exact multi-layer rasterization, byte-bounded caches, and explicit RenderNode replay with
 capability fallbacks. It does not promise native elevation equivalence or a general RenderEffect
 pipeline.

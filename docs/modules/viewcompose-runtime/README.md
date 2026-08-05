@@ -12,7 +12,7 @@ their hosts.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha02")
 }
 ```
 
@@ -45,16 +45,16 @@ Snapshot.withMutableSnapshot {
 
 ## Principal APIs
 
-- [`State`, `MutableState`, and `derivedStateOf`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime/)
+- [`State`, `MutableState`, and `derivedStateOf`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/)
   provide snapshot-aware values and lazy dependency-derived state.
-- [`Snapshot` and `MutableSnapshot`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime/-snapshot/)
+- [`Snapshot` and `MutableSnapshot`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/-snapshot/)
   provide consistent reads and atomic buffered writes with conflict reporting.
-- [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
+- [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
   turns state reads into an explicit invalidation subscription.
-- [`ComposerLite`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime.composition/-composer-lite/)
+- [`ComposerLite`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.composition/-composer-lite/)
   provides transactional positional composition, remembered values, effects, and diagnostics without
   compiler-generated change flags.
-- [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
+- [`MonotonicFrameClock`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.frame/-monotonic-frame-clock/)
   is the platform-neutral timing contract consumed by animation integrations.
 
 The complete generated reference is available under the
@@ -94,7 +94,7 @@ API or when building a custom host/runtime integration.
 
 ## Compatibility notes
 
-The `0.1.0-alpha01` line establishes the initial snapshot and lightweight-composition contracts.
+The `0.1.0-alpha02` line establishes the initial snapshot and lightweight-composition contracts.
 There is no earlier stable migration path. Do not persist internal snapshot identifiers,
 composition saveable keys, diagnostics shapes, or implementation class names as long-lived external
 data; only behavior explicitly described by the public API reference is a supported contract.

@@ -69,6 +69,16 @@ class ReleasePlanningTest {
                 repositoryRootRevision = tag.sourceRevision,
             )
         }
+
+        val published = artifactReleaseBaseline(
+            artifact = "viewcompose-runtime",
+            declaredVersion = tag.version,
+            declaredSourceRevision = tag.sourceRevision,
+            unpublished = false,
+            tags = listOf(tag),
+            repositoryRootRevision = tag.sourceRevision,
+        )
+        assertEquals(tag.releaseRevision, published.comparisonRevision)
     }
 
     @Test

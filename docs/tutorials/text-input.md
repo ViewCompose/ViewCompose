@@ -7,18 +7,14 @@ sidebar_position: 5
 
 ## Required dependencies
 
-This page is standalone. Text editing requires the separate `viewcompose-text-core` artifact in
-addition to the base application modules:
+This page is standalone. The Android host supplies text editing and the base application APIs
+transitively, so no separate `viewcompose-text-core` dependency is needed:
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-text-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

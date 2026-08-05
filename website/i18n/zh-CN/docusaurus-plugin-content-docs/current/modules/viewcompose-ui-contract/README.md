@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 6235aef5ccf7141d646d5772ec1fb57b859083d767e8a61f43c4d3ec5ef662e1
+translation_source_hash: 14c8faa9f26610fb3a260a82a0a7281de2e925dd62b223a5b24ec8249b65a808
 translation_status: current
 ---
 
@@ -20,7 +20,7 @@ Pager 状态。
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha03")
 }
 ```
 
@@ -49,18 +49,18 @@ val gap = VNode(
 
 ## 主要 API
 
-- [`VNode` 与 `NodeType`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.node/-v-node/)
+- [`VNode` 与 `NodeType`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node/-v-node/)
   定义不可变树内容与渲染器分派。
-- [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
+- [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   及其具体属性快照定义渲染器支持的输入。
-- [`Modifier`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.modifier/-modifier/)
+- [`Modifier`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.modifier/-modifier/)
   携带有序的布局、绘制、交互、语义、焦点与 Parent Data 元素。
-- [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
+- [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
   捕获子树的密度、语言标签与逻辑布局方向。
-- [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
+- [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   与 Pager 状态把平台滚动能力桥接到可观察的 Runtime 状态。
-- [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
-  与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha01/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
+- [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
+  与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/)、
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/)
@@ -114,7 +114,7 @@ val gap = VNode(
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 首次建立公共渲染器契约。即使应用 DSL 源码没有变化，新增 `NodeType`、具体
+`0.1.0-alpha03` 首次建立公共渲染器契约。即使应用 DSL 源码没有变化，新增 `NodeType`、具体
 `NodeSpec` 或 Modifier 元素也可能要求渲染器同步升级。自定义渲染器应对未知契约明确失败，
 也不应把枚举序号、密封子类型名称、工具元数据、原生 View 标识或回调实例持久化为长期外部
 数据。

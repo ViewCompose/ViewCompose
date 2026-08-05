@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: 34fb7331283b24a34e65afe9801aed0b011d01c31a2bbc07afc20a654d957d03
+translation_source_hash: ddfe98058600f726c23c98f7b70ea966b0632548d2a18eabdc1dc739f00b02a1
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-core:0.1.0-alpha02")
 }
 ```
 
@@ -167,6 +167,6 @@ entry，并要求栈顶始终可见。`NavPaneScene` 默认把所有可见 pane 
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 确立了不可变快照、单一待处理的两阶段事务、独立保留栈、严格 URI 匹配、图层级
+`0.1.0-alpha02` 确立了不可变快照、单一待处理的两阶段事务、独立保留栈、严格 URI 匹配、图层级
 验证、生命周期规划和三个逻辑 pane 角色。只能持久化已提交快照，不要持久化 controller、事务、
 策略、工厂或宿主生命周期计划。

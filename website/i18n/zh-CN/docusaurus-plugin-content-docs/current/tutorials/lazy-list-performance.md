@@ -2,7 +2,7 @@
 title: 调整 Lazy 列表性能
 sidebar_position: 13
 translation_source: tutorials/lazy-list-performance.md
-translation_source_hash: 3704112c56768b91ec3631be670ec853484dacb6f0cd9de77ee080ef2ba4b804
+translation_source_hash: 28d3979c29dbb9ec34a98a8e99b6c8ee005dc651b79e50533bb5ca30368d9362
 translation_status: current
 ---
 
@@ -16,10 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-runtime:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-ui-contract:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-widget-core:0.1.0-alpha01")
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture-core/README.md
-translation_source_hash: 41308c47b50587305fe81a004c2ab906cd7450976d5e9e8d82470dc1d61b8aeb
+translation_source_hash: c5f6c107aad422144a166d7168629300e44a31b732d7c27255db7e57edcb6469
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-gesture-core:0.1.0-alpha03")
 }
 ```
 
@@ -114,6 +114,6 @@ val result = resolveAnchoredSettleTarget(
 
 ## 兼容性说明
 
-`0.1.0-alpha01` 建立速度优先于距离、逻辑 Horizontal Swipe 方向、相邻锚点移动、严格锚点顺序和
+`0.1.0-alpha03` 建立速度优先于距离、逻辑 Horizontal Swipe 方向、相邻锚点移动、严格锚点顺序和
 语义 Offset 保留契约。指针派发、可变状态、组合所有权与 Android 事件集成属于
 `viewcompose-gesture` 和 Renderer。
