@@ -627,6 +627,7 @@ lifecycle stage and public-contract migration deserve separate turns even when t
 | 2026-08-05 | 9 certification | Metadata commit | Clean-tree `qaQuick` passed; `planViewComposeRelease` reproduced a base-revision tag limitation | Release planning stops on both this branch and base revision `1848f0d2` because the existing `maven/viewcompose-animation/0.1.0-alpha02` tag does not declare `sourceRevision=<full SHA>`. This PR does not rewrite immutable release tags. |
 | 2026-08-05 | Baseline repair | `9421adb1` | `qaPreview`, `qaQuick`, documentation structure/language/translation checks, publishing tests, and release intent passed | Reviewed and recorded all ten stale light-theme Paparazzi images, added the independent `qaPreview` CI job, and documented the baseline-review rule. Added a connected-device preflight to every repository debug connected-test entry; the locked Samsung device now fails immediately with awake/keyguard diagnostics. Fixed signed-tag parsing to accept the documented inline `sourceRevision` token while rejecting missing, malformed, uppercase, or duplicate values. |
 | 2026-08-05 | First-release planning | `0a358ca1` | Publishing configuration/tests and clean-tree `planViewComposeRelease` passed | Added explicit `release.unpublishedModules` state so missing tags remain fatal except for a declared first publication. The plan contains 18 releases, keeps Glide at `unreleased` → `0.1.0-alpha01` and source revision `79a78900`, and continues to use verified signed tags for every previously published artifact. |
+| 2026-08-05 | Baseline CI portability | `9bf7c7d8`–`390e0385` | Local and Ubuntu CI `qaPreview` passed; CI `qaQuick`, translation verification, and documentation-source verification passed | CI now retains Paparazzi failure images and reports for seven days. The only Ubuntu mismatch was `0.132710%` native editable-text glyph rasterization drift, so the harness uses a documented `0.15%` ceiling without replacing the reviewed macOS baseline. The translation-policy test now derives every required migration page from `docs/migration/` instead of maintaining a stale second list. |
 
 ## Blockers
 
@@ -640,14 +641,16 @@ task controls with non-interactive status text.
 
 ## Last verified
 
-2026-08-05: focused module tests, app compilation, `qaQuick` (634 tasks), `qaPreview` (268 tasks),
-documentation
-structure/language/translation checks, website type checking, migration sample pairing, module
+2026-08-05: focused module tests, app compilation, local and Ubuntu CI `qaQuick`, local and Ubuntu
+CI `qaPreview` (268 local tasks), documentation structure/language/translation checks, website type
+checking, migration sample pairing, module
 boundary checks, publishing configuration, release intent, five-module strict API audits, assembled
 API verification, complete-history API assembly, and the production website build passed. Fixed
 `UiDp` decode bounds use the
 renderer-captured density for Coil and Glide. Ten light-theme Paparazzi baselines were visually
-reviewed and now pass the independent CI-backed gate. Clean-tree release planning verifies the
+reviewed and now pass the independent CI-backed gate on macOS and Linux; CI retains actionable
+failure artifacts, and the documented `0.15%` ceiling covers only measured native editable-text
+glyph rasterization drift. Clean-tree release planning verifies the
 documented inline signed-tag metadata and produces 18 release entries, including Glide's explicit
 first release at its frozen source revision. The device gate reproduced the current Samsung Android
 13 state as Doze plus showing keyguard and stopped before instrumentation with recovery guidance.
@@ -657,6 +660,5 @@ rebuilt Demo remains for final user verification.
 
 ## Next action
 
-Push the baseline-hardening commits to the Draft pull request, let both `qaQuick` and `qaPreview` CI
-checks complete, then rerun `qaFull` on an awake and unlocked device and complete the final media
-Demo confirmation before archiving this plan or marking the pull request ready.
+Rerun `qaFull` on an awake and unlocked device and complete the final media Demo confirmation before
+archiving this plan or marking the Draft pull request ready.
