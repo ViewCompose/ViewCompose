@@ -80,3 +80,16 @@ jobs:
 
       - name: Run qaPreview
         run: ./gradlew qaPreview --stacktrace
+
+      - name: Upload qaPreview failure reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qa-preview-failure-${{ github.run_attempt }}
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            viewcompose-preview/build/paparazzi/failures/
+            viewcompose-preview/build/reports/paparazzi/
+            viewcompose-preview/build/reports/tests/testDebugUnitTest/
+            viewcompose-preview/build/test-results/testDebugUnitTest/
