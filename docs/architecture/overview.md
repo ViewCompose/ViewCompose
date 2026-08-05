@@ -67,7 +67,7 @@ Dependencies flow one way from the foundation through optional capabilities and 
    required public contract and core modules. Renderer, lifecycle, and ViewModel internals remain
    private to the host unless consumers directly opt into their APIs.
 8. The exact published edges live in
-   [`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)
+   [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
    and are enforced against Gradle declarations and generated Maven metadata.
 
 ### 2.2 Architectural assessment

@@ -84,11 +84,11 @@ Maven coordinate remain safe because Gradle resolves one selected version.
 
 ### Phase 0: Baseline and diagnostics
 
-- [x] Record the previous four-coordinate getting-started baseline.
-- [x] Add an isolated Android consumer that declares only `viewcompose-host-android` plus the Android
+- **Completed:** Record the previous four-coordinate getting-started baseline.
+- **Completed:** Add an isolated Android consumer that declares only `viewcompose-host-android` plus the Android
   libraries directly used by its source and theme.
-- [x] Compile representative state, Modifier, widget, and `setUiContent` usage from that consumer.
-- [x] Extend local-repository inspection to validate ViewCompose dependency scopes in generated
+- **Completed:** Compile representative state, Modifier, widget, and `setUiContent` usage from that consumer.
+- **Completed:** Extend local-repository inspection to validate ViewCompose dependency scopes in generated
   POMs.
 
 Exit condition: the test fails when the host stops exporting any required base module and passes
@@ -96,14 +96,14 @@ against locally published artifacts.
 
 ### Phase 1: Public dependency convergence
 
-- [x] Export runtime, UI contract, and widget core from the Android host.
-- [x] Export runtime and UI contract from widget core.
-- [x] Correct feature and foundation edges whose types occur in advertised public signatures,
+- **Completed:** Export runtime, UI contract, and widget core from the Android host.
+- **Completed:** Export runtime and UI contract from widget core.
+- **Completed:** Correct feature and foundation edges whose types occur in advertised public signatures,
   including animation, gesture, lifecycle, renderer, graphics contracts, shadows, overlays, image
   adapters, and ConstraintLayout.
-- [x] Keep lifecycle, ViewModel, renderer installation, optional backends, and tooling internals
+- **Completed:** Keep lifecycle, ViewModel, renderer installation, optional backends, and tooling internals
   private where they do not form the advertised surface.
-- [x] Record the publication-metadata release impact in an immutable Changeset.
+- **Completed:** Record the publication-metadata release impact in an immutable Changeset.
 
 Rollback condition: revert an individual exposure change when published-consumer tests show no
 public compile requirement and the wider compile classpath causes a measured regression. Do not
@@ -111,25 +111,25 @@ revert the host/widget base chain while their public signatures still require it
 
 ### Phase 2: Governance and documentation
 
-- [x] Add one machine-readable dependency-exposure contract covering every registered artifact.
-- [x] Reject missing modules, unclassified edges, duplicate configurations, and mismatches between
+- **Completed:** Add one machine-readable dependency-exposure contract covering every registered artifact.
+- **Completed:** Reject missing modules, unclassified edges, duplicate configurations, and mismatches between
   the contract and Gradle build declarations.
-- [x] Run that gate before local or Central publication.
-- [x] Define the normative `api`/`implementation` policy in publishing and contributor workflow
+- **Completed:** Run that gate before local or Central publication.
+- **Completed:** Define the normative `api`/`implementation` policy in publishing and contributor workflow
   documentation, with current Chinese mirrors.
-- [x] Update module manuals to distinguish public and private dependency exposure.
+- **Completed:** Update module manuals to distinguish public and private dependency exposure.
 
 Exit condition: a new published module cannot pass normal QA until every ViewCompose dependency
 edge has a reviewed exposure classification.
 
 ### Phase 3: Public Maven rollout
 
-- [ ] Release every artifact selected by release-intent and reverse-dependency planning.
-- [ ] Confirm Maven Central serves the new Gradle Module Metadata and POM scopes.
-- [ ] After that publication is available, switch README, getting-started tutorials, and Maven-backed
+- **Pending:** Release every artifact selected by release-intent and reverse-dependency planning.
+- **Pending:** Confirm Maven Central serves the new Gradle Module Metadata and POM scopes.
+- **Pending:** After that publication is available, switch README, getting-started tutorials, and Maven-backed
   samples from the previously published four-coordinate baseline to the host-only ViewCompose
   coordinate.
-- [ ] Run the tutorials from a clean repository that has no generated local Maven repository.
+- **Pending:** Run the tutorials from a clean repository that has no generated local Maven repository.
 
 The installation example must not move early: current tutorials intentionally remain valid for the
 already-published version. Advertising host-only installation against a version whose metadata still
@@ -137,14 +137,14 @@ marks foundation dependencies private would make clean consumer builds fail.
 
 ### Phase 4: Compatibility platform evaluation
 
-- [ ] Establish at least two independently versioned release sets and record which combinations are
+- **Pending:** Establish at least two independently versioned release sets and record which combinations are
   verified together.
-- [ ] Prototype a generated `viewcompose-bom` backed by the release planner's compatibility set.
-- [ ] Add a consumer that imports the regular Gradle platform and omits versions from feature
+- **Pending:** Prototype a generated `viewcompose-bom` backed by the release planner's compatibility set.
+- **Pending:** Add a consumer that imports the regular Gradle platform and omits versions from feature
   coordinates.
-- [ ] Verify selective publication, documentation history, Maven Central requirements, and reverse
+- **Pending:** Verify selective publication, documentation history, Maven Central requirements, and reverse
   dependency release propagation for a POM-only platform artifact.
-- [ ] Publish the BOM only if it removes real version-selection failures without coupling otherwise
+- **Pending:** Publish the BOM only if it removes real version-selection failures without coupling otherwise
   independent releases.
 
 Rollback condition: discard the prototype if it requires manual duplicate version tables, forces

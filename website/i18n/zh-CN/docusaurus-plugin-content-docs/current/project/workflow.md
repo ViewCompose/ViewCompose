@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 1d5e7bbe44f0e6a36a8f13862608f6a538c89fb0210bf6a405464f60613b4f10
+translation_source_hash: bf04ca1fe85bdf758562b1cc141b1d2de03fd8ee38168b391d6e33703e905fb0
 translation_status: current
 ---
 
@@ -275,7 +275,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 10. 普通应用只声明实际使用的 Host 或可选 Feature。禁止把内部基础坐标写成修补不完整 Maven
     元数据的必需依赖。
 11. 所有直接 ViewCompose 发布边必须在同一变更中登记到
-    [`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)。
+    [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)。
     `verifyViewComposeDependencyContracts` 会阻断契约与 Gradle 声明漂移。
 12. 新增或修改入口必须增加最小外部 Consumer 编译测试。发版前，本地仓库检查必须验证 `api`
     保持为 Maven compile scope、`implementation` 保持为 runtime scope。

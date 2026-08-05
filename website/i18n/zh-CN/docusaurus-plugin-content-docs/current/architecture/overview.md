@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: deacae78398843123469739e3baff59555fb2442d10cde774b1ef35fbe6802d5
+translation_source_hash: b1c4ce4e3ecd7f8207853a45382fb2d978cea7008518e9aa5dd5e9729dde0ee7
 translation_status: current
 ---
 
@@ -73,7 +73,7 @@ translation_status: current
    Widget Core。可选 Feature 同样暴露其公开契约与 Core。Renderer、Lifecycle 与 ViewModel
    内部能力保持为 Host 私有实现，除非 Consumer 显式选择直接使用它们的 API。
 8. 精确发布边记录在
-   [`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)，
+   [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)，
    并对 Gradle 声明与生成的 Maven 元数据执行门禁。
 
 ### 2.2 当前架构判断

@@ -243,7 +243,7 @@ last resort.
 10. A normal application declares the host or optional-feature artifacts it uses. Do not document
     internal foundation coordinates as mandatory workarounds for incomplete Maven metadata.
 11. Add every direct ViewCompose publication edge to
-    [`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)
+    [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
     in the same change. `verifyViewComposeDependencyContracts` rejects drift between that contract
     and Gradle declarations.
 12. A new or changed entry point must include a minimal external-consumer compile test. Published

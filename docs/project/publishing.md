@@ -298,7 +298,7 @@ Classify every direct dependency using these rules:
 5. A new published module must define its intended entry-point role and exact dependency exposure
    before its first release. It must not silently copy the dependency shape of a neighboring module.
 
-[`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)
+[`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
 is the machine-readable allowlist for every registered artifact's direct ViewCompose dependencies.
 `verifyViewComposeDependencyContracts` compares it with Gradle declarations, and local repository
 inspection verifies that `api` dependencies become Maven compile scope while `implementation`

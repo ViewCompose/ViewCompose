@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: bb7ec18e06750ed9fc9ecc309ec521959340205181ef8059a4e0fa20fdb669f3
+translation_source_hash: df7a2cc5644880328613f2583a0c5d3f3fc9eff79a878433f27553786a4d671b
 translation_status: current
 ---
 
@@ -263,7 +263,7 @@ dependencies {
    回归用例。
 5. 新发布模块必须在首发前定义入口角色与精确依赖暴露；禁止静默复制相邻模块的依赖形态。
 
-[`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)
+[`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
 是所有登记产物直接 ViewCompose 依赖的机器可读白名单。`verifyViewComposeDependencyContracts`
 会将其与 Gradle 声明对比；本地仓库检查会验证 `api` 生成 Maven compile scope，
 `implementation` 生成 runtime scope。发布消费 Smoke Project 随后使用生成仓库编译最小 Host、
