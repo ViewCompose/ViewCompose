@@ -2,7 +2,11 @@
 
 This directory contains multi-step work that is currently active and must survive across sessions.
 
-There are no active cross-session execution plans.
+## Active plans
+
+- [General image loading pipeline and Glide adapter](./image-loading-pipeline-generalization.md) —
+  generalize local/remote/custom image sources, add renderer-owned request disposal, migrate Coil,
+  and add an optional Glide integration.
 
 Completed tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention plans are retained in the

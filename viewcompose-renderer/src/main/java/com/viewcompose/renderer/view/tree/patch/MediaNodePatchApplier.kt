@@ -40,21 +40,25 @@ internal object MediaNodePatchApplier {
             previous.placeholder != next.placeholder ||
             previous.error != next.error ||
             previous.fallback != next.fallback ||
-            previous.remoteImageLoader != next.remoteImageLoader
+            previous.imageLoader !== next.imageLoader ||
+            previous.requestOptions != next.requestOptions ||
+            previous.contentScale != next.contentScale
         if (sourceChanged) {
-            // Delegate source changes to MediaViewBinder so placeholders, errors, and remote-loading policy remain consistent.
-            // Source changes go back through MediaViewBinder to keep placeholder, error, and remote loading policy consistent.
+            // Source changes return through MediaViewBinder so resource states and request replacement stay consistent.
             MediaViewBinder.bindImage(
                 view = view,
                 spec = MediaViewBinder.ImageSpec(
                     contentDescription = next.contentDescription,
+                    contentScale = next.contentScale,
                     scaleType = with(MediaViewBinder) { next.contentScale.toScaleType() },
                     tint = next.tint,
                     source = next.source,
                     placeholder = next.placeholder,
                     error = next.error,
                     fallback = next.fallback,
-                    remoteImageLoader = next.remoteImageLoader,
+                    imageLoader = next.imageLoader,
+                    requestOptions = next.requestOptions,
+                    density = view.requireUiEnvironment().density,
                 ),
             )
         }
@@ -85,19 +89,24 @@ internal object MediaNodePatchApplier {
             previous.placeholder != next.placeholder ||
             previous.error != next.error ||
             previous.fallback != next.fallback ||
-            previous.remoteImageLoader != next.remoteImageLoader
+            previous.imageLoader !== next.imageLoader ||
+            previous.requestOptions != next.requestOptions ||
+            previous.contentScale != next.contentScale
         if (sourceChanged) {
             MediaViewBinder.bindImage(
                 view = view,
                 spec = MediaViewBinder.ImageSpec(
                     contentDescription = next.contentDescription,
+                    contentScale = next.contentScale,
                     scaleType = with(MediaViewBinder) { next.contentScale.toScaleType() },
                     tint = next.tint,
                     source = next.source,
                     placeholder = next.placeholder,
                     error = next.error,
                     fallback = next.fallback,
-                    remoteImageLoader = next.remoteImageLoader,
+                    imageLoader = next.imageLoader,
+                    requestOptions = next.requestOptions,
+                    density = view.requireUiEnvironment().density,
                 ),
             )
         }

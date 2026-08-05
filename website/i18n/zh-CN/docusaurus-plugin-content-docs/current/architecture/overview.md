@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 08647a876c07100acf1d4527043362feeaf80e1397888d9c1cdf8415095848a6
+translation_source_hash: b38078aa18db7d66d723e489d1f83d6e64b0bbfb17d89862a052bb51e5641db1
 translation_status: current
 ---
 
@@ -25,7 +25,7 @@ translation_status: current
 
 - 技术基线：Kotlin + Android View System
 - SDK：`minSdk 24`、`compileSdk 36`
-- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-shadow-android`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview-core`、`:viewcompose-preview-runner`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
+- 当前模块：`:viewcompose-runtime`、`:viewcompose-text-core`、`:viewcompose-ui-contract`、`:viewcompose-navigation-core`、`:viewcompose-navigation`（特性分支孵化中）、`:viewcompose-animation-core`、`:viewcompose-animation`、`:viewcompose-gesture-core`、`:viewcompose-gesture`、`:viewcompose-graphics-core`、`:viewcompose-graphics`、`:viewcompose-shadow-android`、`:viewcompose-widget-core`、`:viewcompose-widget-constraintlayout`、`:viewcompose-renderer`、`:viewcompose-host-android`、`:viewcompose-overlay-android`、`:viewcompose-image-coil`、`:viewcompose-image-glide`、`:viewcompose-lifecycle`、`:viewcompose-viewmodel`、`:viewcompose-preview-core`、`:viewcompose-preview-runner`、`:viewcompose-preview`、`:viewcompose-benchmark`、`:app`
 
 ### 2.1 模块职责
 
@@ -48,7 +48,8 @@ translation_status: current
 | `viewcompose-renderer` | Android View 渲染实现（reconcile、binder、patch、container） | 只消费 `ui-contract`，不承载业务 DSL |
 | `viewcompose-host-android` | Android 宿主运行时与入口（`setUiContent/renderInto/RenderSession`、`AndroidView/nativeView`、宿主 Local 注入） | 只做平台执行与注入，不承载业务 DSL |
 | `viewcompose-overlay-android` | Android overlay host/presenter（Dialog/Popup/ModalBottomSheet/Snackbar/Toast） | 只做平台实现，不依赖 renderer 资源 |
-| `viewcompose-image-coil` | 远程图片加载桥接（`RemoteImageLoader` Android 实现） | 通过平台无关 target 契约接入，不回流核心渲染逻辑 |
+| `viewcompose-image-coil` | 可选图片加载适配器 | 为 Coil 3 实现 `UiImageLoader`，接收通用 source/request 契约，不把 Coil 关注点回流到 renderer 核心 |
+| `viewcompose-image-glide` | 可选的源码构建图片加载适配器 | 为 Glide 5 实现 `UiImageLoader`，按目标解析 `RequestManager` 并使用应用所有的 `AppGlideModule` 配置；Maven 发布接入尚未完成 |
 | `viewcompose-lifecycle` | 生命周期感知的状态收集 API（`collectAsStateWithLifecycle`）与生命周期 Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
 | `viewcompose-viewmodel` | ViewModel/SavedStateHandle 协作 API（`viewModel`、`savedStateHandle`）与 ViewModel Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
 | `viewcompose-preview-core` | Preview 注解、确定性配置和跨进程请求/结果协议 | 纯 Kotlin/JVM；禁止 Android、Compose 与 IDE SDK 依赖 |
@@ -62,7 +63,7 @@ translation_status: current
 模块依赖固定为“基础层 -> 可选能力层 -> 工具层 -> Demo 应用”的单向消费关系；箭头表示后者可以消费前者，禁止基础层为了复用某个可选实现而产生反向依赖。
 
 1. 基础层包括 runtime、纯 Kotlin 内核、UI contract、widget-core、renderer、lifecycle/viewmodel 与 host-android。每个基础模块的 Gradle project 依赖使用显式白名单；新增依赖必须先证明属于稳定基础契约。
-2. navigation、animation、gesture、graphics、shadow、constraintlayout、overlay 与 image-coil 属于可选能力。它们可以依赖基础层，但基础层禁止依赖这些模块；未引入任一可选能力时，核心渲染链仍必须可独立编译运行。
+2. navigation、animation、gesture、graphics、shadow、constraintlayout、overlay、image-coil 与 image-glide 属于可选能力。它们可以依赖基础层，但基础层禁止依赖这些模块；未引入任一可选能力时，核心渲染链仍必须可独立编译运行。
 3. preview、preview worker/runner/Gradle plugin 与 benchmark 属于工具层。运行时基础模块和可选能力模块均禁止依赖工具层；所有框架模块禁止依赖 `app`。
 4. 新增 `viewcompose-*` 模块时，必须在同一提交中登记为“基础 / 可选能力 / 工具”之一。未分类模块、基础模块白名单外依赖、可选能力到工具层的依赖都会由 `verifyModuleDependencyBoundaries` 阻断。
 5. `qaQuick` 固定执行该边界测试。不能以 Demo 可以编译、依赖当前恰好存在或 code review 已确认作为跳过理由。
@@ -144,6 +145,21 @@ flowchart TD
 1. Android `Dialog/PopupWindow/Toast/Snackbar` 宿主实现只放 `viewcompose-overlay-android`。
 2. `viewcompose-widget-core` 只保留平台无关声明契约与 runtime 组合能力。
 3. demo 专用逻辑不回流到框架模块。
+
+### 4.1.1 图片加载管线边界
+
+1. `viewcompose-ui-contract` 持有平台无关的 `ImageSource`、`UiImageRequest`、`UiImageLoader`、
+   platform target 与可释放句柄契约，不依赖 Android 或具体解码器。
+2. `viewcompose-widget-core` 持有 `Image`/`Icon` 声明面与作用域化的 `ProvideImageLoader` 注入点。
+   没有 loader 也是合法状态：Resource source 仍然可以渲染。
+3. `viewcompose-renderer` 持有 Android `ImageView` 绑定生命周期。在启动变化后的工作前替换旧
+   句柄，在直接 fallback/resource 绑定前清理旧句柄，并在移除、回滚和 Session 释放时释放它。
+4. `viewcompose-image-coil` 与 `viewcompose-image-glide` 在 renderer 旁边实现契约，负责解码器
+   特有的映射并使用应用所有的解码器配置，但不拥有挂载 View，也不关闭调用方所有的 loader。
+5. `ImageSource.Model` 必须使用显式稳定 key。框架不把适配器 payload 作为原始值序列化、记录
+   日志或比较。
+6. 空 source 的 fallback 属于 Renderer 状态而非 request 状态。Request extension 必须不可变，
+   以具体类型和稳定 key 比较；不拥有该类型的适配器会忽略它。
 
 ### 4.2 `Modifier / NodeSpec / Theme` 边界
 

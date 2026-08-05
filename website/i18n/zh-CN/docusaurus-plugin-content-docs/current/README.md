@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 9deea7625d416ae72a389bc031ec7a41d4034118f983b3e1ba786c8242c170a8
+translation_source_hash: 12db018e7464332ba5612aedd37aa2dc411f45518c41632d67c902b8eaa72cb5
 translation_status: current
 ---
 
@@ -61,6 +61,7 @@ GitHub 托管文档站点的内容边界。
 - [导航](https://docs.viewcompose.com/guides/navigation)
 - [浮层](https://docs.viewcompose.com/guides/overlays)
 - [阴影](https://docs.viewcompose.com/guides/shadows)
+- [图片加载](./guides/image-loading.md)
 
 ## 从 Jetpack Compose 迁移
 
@@ -71,6 +72,7 @@ GitHub 托管文档站点的内容边界。
 - [布局、Modifier 与环境](./migration/compose-layout-modifier-and-environment.md)
 - [宿主、生命周期与 Android 互操作](./migration/compose-host-lifecycle-and-android-interop.md)
 - [Navigation 2 与 Navigation 3](./migration/compose-navigation.md)
+- [图片加载](./migration/image-loading.md)
 
 ## 已发布模块
 

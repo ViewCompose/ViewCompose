@@ -1,7 +1,9 @@
 package com.viewcompose
 
 import android.view.ViewGroup
-import com.viewcompose.image.coil.CoilRemoteImageLoader
+import coil3.ImageLoader
+import com.viewcompose.image.coil.CoilImageLoaderAdapter
+import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -9,10 +11,11 @@ import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
 import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.Column
+import com.viewcompose.widget.core.DisposableEffect
 import com.viewcompose.widget.core.IconButton
-import com.viewcompose.widget.core.ProvideRemoteImageLoader
+import com.viewcompose.widget.core.ProvideImageLoader
 import com.viewcompose.widget.core.Scaffold
 import com.viewcompose.widget.core.SideEffect
 import com.viewcompose.widget.core.Theme
@@ -20,7 +23,6 @@ import com.viewcompose.widget.core.TopAppBar
 import com.viewcompose.widget.core.TopAppBarDefaults
 import com.viewcompose.widget.core.UiTheme
 import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.ui.unit.dp
 import com.viewcompose.widget.core.remember
 
 /**
@@ -33,13 +35,19 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
     content: (UiTreeBuilder) -> Unit,
 ) {
     val themeModeState = remember { mutableStateOf(DemoThemeSession.mode) }
-    val remoteImageLoader = remember { CoilRemoteImageLoader(root.context.applicationContext) }
+    val coilImageLoader = remember {
+        ImageLoader.Builder(root.context.applicationContext).build()
+    }
+    val imageLoader = remember { CoilImageLoaderAdapter(coilImageLoader) }
+    DisposableEffect(coilImageLoader) {
+        return@DisposableEffect coilImageLoader::shutdown
+    }
     val activity = root.context.findAppCompatActivity()
     val themeTokens = DemoThemeTokens.select(
         mode = themeModeState.value,
         isSystemDark = DemoThemeTokens.isSystemDark(root.context),
     )
-    ProvideRemoteImageLoader(remoteImageLoader) {
+    ProvideImageLoader(imageLoader) {
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
             val currentTheme = Theme.current
             SideEffect {

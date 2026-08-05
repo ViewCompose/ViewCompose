@@ -10,7 +10,7 @@ or overlay backends. Android applications normally receive it through `viewcompo
 which installs the renderer, scheduling runtime, lifecycle, and saved-state boundaries.
 
 This module does not implement View reconciliation, own Activity or Fragment lifecycle, present
-platform dialogs and popups, load remote images, or provide optional animation, gesture, graphics,
+platform dialogs and popups, perform image decoding, or provide optional animation, gesture, graphics,
 shadow, navigation, or ConstraintLayout features. Those responsibilities remain in their dedicated
 modules.
 
@@ -57,6 +57,9 @@ by a later renderer or child render session.
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
   image loading, focus, frame clock, and host capabilities.
+- `Image`, `Icon`, [`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-widget-core/current/com.viewcompose.widget.core/-provide-image-loader.html),
+  and `UiImageRequestOptions` expose image semantics without selecting Coil, Glide, or another
+  decoder. A subtree may install one `UiImageLoader` or leave it absent for resource-only rendering.
 - [`remember`, `produceState`, and effects](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/)
   integrate the platform-neutral composition runtime with structured coroutines and committed
   side effects.
@@ -95,6 +98,11 @@ Because the current line is alpha, the documentation site intentionally does not
   `viewcompose-overlay-android` or a custom `OverlayHost`.
 - Lazy collection keys must remain stable and unique. Reuse, prefetch, and motion policies are
   renderer hints; they must not be used as business state.
+- Image components keep source identity and request options in the `NodeSpec`. A loader is looked up
+  while emitting the node, so changing the provider is an explicit render input. The renderer
+  replaces the previous operation before starting the next one and disposes it when the node or
+  session leaves the mounted tree. A resource can therefore use an installed loader's decoding and
+  transform behavior; a null source selects the node fallback without starting that loader.
 
 Building a VNode tree is thread-confined to its active composition context. Standard Android hosts
 serialize rendering, state callbacks, effects, and platform operations on the main thread. Custom
@@ -107,6 +115,7 @@ hosts must preserve the same ordering and ownership guarantees.
 - [Node specifications and renderer registration](../../architecture/node-spec.md)
 - [Lazy collection guide](../../guides/lazy-collections.md)
 - [Theme and Android integration](../../guides/theming.md)
+- [Image loading guide](../../guides/image-loading.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
 ## Compatibility notes

@@ -17,7 +17,7 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 
 - Technology: Kotlin on the Android View system.
 - SDK: `minSdk 24`, `compileSdk 36`.
-- Modules: `:viewcompose-runtime`, `:viewcompose-text-core`, `:viewcompose-ui-contract`, `:viewcompose-navigation-core`, `:viewcompose-navigation` (incubating on a feature branch), `:viewcompose-animation-core`, `:viewcompose-animation`, `:viewcompose-gesture-core`, `:viewcompose-gesture`, `:viewcompose-graphics-core`, `:viewcompose-graphics`, `:viewcompose-shadow-android`, `:viewcompose-widget-core`, `:viewcompose-widget-constraintlayout`, `:viewcompose-renderer`, `:viewcompose-host-android`, `:viewcompose-overlay-android`, `:viewcompose-image-coil`, `:viewcompose-lifecycle`, `:viewcompose-viewmodel`, `:viewcompose-preview-core`, `:viewcompose-preview-runner`, `:viewcompose-preview`, `:viewcompose-benchmark`, and `:app`.
+- Modules: `:viewcompose-runtime`, `:viewcompose-text-core`, `:viewcompose-ui-contract`, `:viewcompose-navigation-core`, `:viewcompose-navigation` (incubating on a feature branch), `:viewcompose-animation-core`, `:viewcompose-animation`, `:viewcompose-gesture-core`, `:viewcompose-gesture`, `:viewcompose-graphics-core`, `:viewcompose-graphics`, `:viewcompose-shadow-android`, `:viewcompose-widget-core`, `:viewcompose-widget-constraintlayout`, `:viewcompose-renderer`, `:viewcompose-host-android`, `:viewcompose-overlay-android`, `:viewcompose-image-coil`, `:viewcompose-image-glide`, `:viewcompose-lifecycle`, `:viewcompose-viewmodel`, `:viewcompose-preview-core`, `:viewcompose-preview-runner`, `:viewcompose-preview`, `:viewcompose-benchmark`, and `:app`.
 
 ### 2.1 Module responsibilities
 
@@ -40,7 +40,8 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-renderer` | Android View rendering: reconciliation, binders, patches, and containers | Consumes ui-contract and does not contain business DSL. |
 | `viewcompose-host-android` | Android host runtime and entry points: `setUiContent`, `renderInto`, `RenderSession`, native View interop, and host Local injection | Executes and injects platform behavior without business DSL. |
 | `viewcompose-overlay-android` | Android overlay host and presenters for dialogs, popups, bottom sheets, snackbars, and toasts | Platform implementation only; it does not depend on renderer resources. |
-| `viewcompose-image-coil` | Remote-image loading bridge | Integrates through platform-independent target contracts and does not feed Coil concerns back into the renderer core. |
+| `viewcompose-image-coil` | Optional image-loading adapter | Implements `UiImageLoader` for Coil 3; it accepts the general source/request contract without feeding Coil concerns back into the renderer core. |
+| `viewcompose-image-glide` | Optional source-built image-loading adapter | Implements `UiImageLoader` for Glide 5 with target-scoped `RequestManager` resolution and application-owned `AppGlideModule` configuration; Maven publication onboarding remains pending. |
 | `viewcompose-lifecycle` | Lifecycle-aware collection APIs and lifecycle Local entry points | Does not contain Android View implementations or add host-injection logic. |
 | `viewcompose-viewmodel` | ViewModel and SavedStateHandle collaboration APIs and ViewModel Local entry points | Does not contain Android View implementations or add host-injection logic. |
 | `viewcompose-preview-core` | Preview annotations, deterministic configuration, and cross-process request/result protocols | Pure Kotlin/JVM with no Android, Compose, or IDE SDK dependency. |
@@ -54,7 +55,7 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 Dependencies flow one way from the foundation through optional capabilities and tooling to the demo app. A higher layer may consume a lower layer; a lower layer must not depend on an optional implementation for reuse.
 
 1. The foundation includes runtime, pure-Kotlin kernels, UI contract, widget-core, renderer, lifecycle/viewmodel, and host-android. Each foundation module has an explicit Gradle project-dependency allowlist. A new dependency must first be justified as a stable foundation contract.
-2. Navigation, animation, gesture, graphics, shadow, ConstraintLayout, overlay, and image-coil are optional capabilities. They may depend on the foundation, but the foundation must not depend on them. The core render path must compile and run when none is present.
+2. Navigation, animation, gesture, graphics, shadow, ConstraintLayout, overlay, image-coil, and image-glide are optional capabilities. They may depend on the foundation, but the foundation must not depend on them. The core render path must compile and run when none is present.
 3. Preview, preview worker/runner/Gradle plugin, and benchmark are tooling. Runtime and optional-capability modules must not depend on tooling, and no framework module may depend on `app`.
 4. Every new `viewcompose-*` module must be classified as foundation, optional capability, or tooling in the same change. `verifyModuleDependencyBoundaries` rejects unclassified modules, dependencies outside a foundation allowlist, and optional-capability dependencies on tooling.
 5. `qaQuick` always runs the boundary check. A compilable demo, an already-present dependency, or review approval is not a reason to bypass it.
@@ -119,6 +120,24 @@ flowchart TD
 1. Android dialog, popup, toast, and snackbar host implementations live only in overlay-android.
 2. widget-core retains platform-independent declaration contracts and runtime composition capabilities.
 3. Demo-only logic must not flow back into framework modules.
+
+### 4.1.1 Image loading pipeline
+
+1. `viewcompose-ui-contract` owns the portable `ImageSource`, `UiImageRequest`, `UiImageLoader`,
+   platform-target, and disposable-handle contracts. It does not depend on Android or a decoder.
+2. `viewcompose-widget-core` owns the `Image`/`Icon` declaration surface and the scoped
+   `ProvideImageLoader` injection point. A missing loader is valid: resource sources still render.
+3. `viewcompose-renderer` owns the Android `ImageView` binding lifecycle. It replaces a previous
+   handle before starting changed work, clears it before direct fallback/resource binding, and
+   disposes it on removal, rollback, and session disposal.
+4. `viewcompose-image-coil` and `viewcompose-image-glide` implement the contract beside the renderer.
+   They own decoder-specific mapping, use application-owned decoder configuration, and never own
+   the mounted View or shut down a caller-owned loader.
+5. `ImageSource.Model` uses an explicit stable key. Adapter-specific payloads are not serialized,
+   logged, or compared as raw values by the framework.
+6. Null-source fallback is renderer state rather than request state. Request extensions are
+   immutable, compare by concrete type plus stable key, and are ignored by adapters that do not own
+   their type.
 
 ### 4.2 `Modifier`, `NodeSpec`, and theme
 

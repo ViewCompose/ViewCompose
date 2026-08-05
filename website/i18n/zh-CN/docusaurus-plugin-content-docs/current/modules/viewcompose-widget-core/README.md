@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-widget-core/README.md
-translation_source_hash: ac97904361e83f44aa881f6b22ba70786e8f4176e574e509384f8a18f4439091
+translation_source_hash: 5efbee3d0022134f5f16b24a4e1a11d62c4b4bfb90353b2e545f5ca362592966
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ Android 应用通常通过 `viewcompose-host-android` 获得它；Host 模块负
 Runtime、生命周期与 Saved State 边界。
 
 本模块不实现 View 协调，不持有 Activity 或 Fragment 生命周期，不呈现平台 Dialog 和
-Popup，不加载远程图片，也不提供可选的动画、手势、图形、阴影、导航或 ConstraintLayout
+Popup，不执行图片解码，也不提供可选的动画、手势、图形、阴影、导航或 ConstraintLayout
 能力。这些职责分别保留在对应的独立模块中。
 
 ## 产物与稳定性
@@ -61,6 +61,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
   和宿主能力划定作用域。
+- `Image`、`Icon`、[`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-widget-core/current/com.viewcompose.widget.core/-provide-image-loader.html)
+  与 `UiImageRequestOptions` 暴露图片语义，但不选择 Coil、Glide 或其他解码器。子树可以安装
+  一个 `UiImageLoader`，也可以不安装，让资源图片继续渲染。
 - [`remember`、`produceState` 与 Effect](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/)
   把平台无关组合 Runtime 与结构化协程和已提交副作用连接起来。
 - [`rememberSaveable` 与 `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-widget-core/0.1.0-alpha01/viewcompose-widget-core/com.viewcompose.widget.core/-saveable-state-registry/)
@@ -93,6 +96,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - 浮层请求是声明式的，按 Render Session ID 与 Request Key 划分作用域。后续提交省略已有请求
   就会关闭它。平台呈现需要 `viewcompose-overlay-android` 或自定义 `OverlayHost`。
 - Lazy 容器 Key 必须稳定且唯一。复用、预取与动效 Policy 是渲染器提示，不能作为业务状态。
+- 图片组件会把 source 身份和请求 options 保存在 `NodeSpec` 中。发射节点时读取 loader，因此
+  更换 provider 是明确的渲染输入。渲染器会在启动新工作前替换旧工作，并在节点或 Session 离开
+  挂载树时释放旧工作。因此 Resource 也能复用已安装 loader 的解码和变换能力；空 source 会
+  选择 node fallback，而不会启动 loader。
 
 构建 VNode 树时，线程由活跃组合上下文封闭。标准 Android Host 会在主线程串行化渲染、状态
 回调、Effect 与平台操作。自定义 Host 必须保持相同的顺序与所有权保证。
@@ -104,6 +111,7 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - [节点规格与渲染器注册](https://docs.viewcompose.com/zh-CN/architecture/node-spec)
 - [Lazy 容器指南](https://docs.viewcompose.com/zh-CN/guides/lazy-collections)
 - [主题与 Android 集成](https://docs.viewcompose.com/zh-CN/guides/theming)
+- [图片加载指南](https://docs.viewcompose.com/zh-CN/guides/image-loading)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 
 ## 兼容性说明

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "summary": "Generalize image loading from a remote-only protocol to portable sources, request policy, and disposable renderer-owned work.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-widget-core", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer", "impact": "feature" },
+    { "artifact": "viewcompose-image-coil", "impact": "breaking" }
+  ],
+  "shared": [
+    {
+      "path": "build.gradle.kts",
+      "reason": "This change registers the optional unpublished Glide module and its verification tasks; it does not alter the output of a published artifact."
+    },
+    {
+      "path": "settings.gradle.kts",
+      "reason": "This change includes the optional unpublished Glide module; no published artifact is added or versioned by this shared project registration."
+    },
+    {
+      "path": "gradle/libs.versions.toml",
+      "reason": "The Glide dependency version is used only by the optional unpublished adapter and is not a publication input for the current catalog."
+    }
+  ]
+}

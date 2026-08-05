@@ -2,7 +2,8 @@ package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.ui.node.RemoteImageLoader
+import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiImageRequestOptions
 
 /** Shared renderer contract for image and image-backed action nodes. */
 interface ImageNodeSpec : NodeSpec {
@@ -18,15 +19,18 @@ interface ImageNodeSpec : NodeSpec {
     /** Image source, or `null` for no image. */
     val source: ImageSource?
 
-    /** Android resource shown while a remote request is pending. */
+    /** Android resource shown while a configured loader request is pending. */
     val placeholder: ImageSource.Resource?
 
-    /** Android resource shown after a remote request fails. */
+    /** Android resource shown after a configured loader request fails. */
     val error: ImageSource.Resource?
 
-    /** Android resource used when a remote URL is blank. */
+    /** Android resource shown when no primary source is present. */
     val fallback: ImageSource.Resource?
 
-    /** Loader used for [ImageSource.Remote] values. */
-    val remoteImageLoader: RemoteImageLoader?
+    /** Loader used for every non-null source, including [ImageSource.Resource]. */
+    val imageLoader: UiImageLoader?
+
+    /** Common decode, cache, transition, and adapter-extension options. */
+    val requestOptions: UiImageRequestOptions
 }

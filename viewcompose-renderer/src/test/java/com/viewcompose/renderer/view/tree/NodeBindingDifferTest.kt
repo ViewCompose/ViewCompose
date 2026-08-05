@@ -21,6 +21,8 @@ import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiImageLoadHandle
+import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
@@ -449,6 +451,17 @@ class NodeBindingDifferTest {
     fun `patches image semantic updates`() {
         val previous = imageNode(tint = 0xFF000000.toInt())
         val next = imageNode(tint = 0xFFFF0000.toInt())
+
+        val plan = NodeBindingDiffer.plan(previous, next)
+
+        assertTrue(plan is NodeBindingPlan.Patch)
+        assertTrue((plan as NodeBindingPlan.Patch).patch is ImageNodePatch)
+    }
+
+    @Test
+    fun `patches image when equal loaders have different identities`() {
+        val previous = imageNode(imageLoader = EqualLoader("first"))
+        val next = imageNode(imageLoader = EqualLoader("second"))
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
@@ -904,6 +917,7 @@ class NodeBindingDifferTest {
 
     private fun imageNode(
         tint: Int? = null,
+        imageLoader: UiImageLoader? = null,
     ): VNode {
         return VNode(
             type = NodeType.Image,
@@ -915,10 +929,25 @@ class NodeBindingDifferTest {
                 placeholder = null,
                 error = null,
                 fallback = null,
-                remoteImageLoader = null,
+                imageLoader = imageLoader,
             ),
             modifier = Modifier,
         )
+    }
+
+    private class EqualLoader(
+        private val label: String,
+    ) : UiImageLoader {
+        override fun load(
+            target: com.viewcompose.ui.node.UiImageTarget,
+            request: com.viewcompose.ui.node.UiImageRequest,
+        ): UiImageLoadHandle = UiImageLoadHandle {}
+
+        override fun equals(other: Any?): Boolean = other is EqualLoader
+
+        override fun hashCode(): Int = 0
+
+        override fun toString(): String = "EqualLoader($label)"
     }
 
     private fun iconButtonNode(
@@ -934,7 +963,7 @@ class NodeBindingDifferTest {
                 placeholder = null,
                 error = null,
                 fallback = null,
-                remoteImageLoader = null,
+                imageLoader = null,
                 enabled = enabled,
                 backgroundColor = 0xFF0000FF.toInt(),
                 borderWidth = 0.dp,

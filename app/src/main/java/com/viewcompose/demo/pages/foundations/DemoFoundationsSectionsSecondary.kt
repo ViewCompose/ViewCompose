@@ -1,8 +1,10 @@
 package com.viewcompose
 
-import com.viewcompose.preview.tooling.ViewComposePreview
 import android.graphics.Typeface
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import com.viewcompose.preview.tooling.ViewComposePreview
+import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
@@ -18,6 +20,11 @@ import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextDecoration
 import com.viewcompose.ui.node.TextOverflow
+import com.viewcompose.ui.node.PlatformUiImageTarget
+import com.viewcompose.ui.node.UiImageDecodeSize
+import com.viewcompose.ui.node.UiImageLoadHandle
+import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.widget.core.Button
 import com.viewcompose.widget.core.ButtonSize
 import com.viewcompose.widget.core.ButtonVariant
@@ -38,8 +45,25 @@ import com.viewcompose.widget.core.Theme
 import com.viewcompose.widget.core.UiTextStyle
 import com.viewcompose.widget.core.UiThemeOverride
 import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.widget.core.ProvideImageLoader
+import com.viewcompose.widget.core.remember
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
+
+private val DemoDelayedImageLoader = UiImageLoader { target, request ->
+    val imageView = (target as? PlatformUiImageTarget)?.target as? ImageView
+        ?: error("DemoDelayedImageLoader requires an ImageView target")
+    val resultResource = when (val source = request.source) {
+        is ImageSource.Resource -> source.resId
+        is ImageSource.Model -> source.value as? Int
+            ?: error("Demo model must contain a drawable resource ID")
+        else -> error("Demo loader supports only Resource and Model sources")
+    }
+    val delayMillis = if (request.source is ImageSource.Model) 320L else 120L
+    val completion = Runnable { imageView.setImageResource(resultResource) }
+    imageView.postDelayed(completion, delayMillis)
+    UiImageLoadHandle { imageView.removeCallbacks(completion) }
+}
 
 @ViewComposePreview(name = "Foundations · Progress", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsProgressSection() {
@@ -76,96 +100,251 @@ internal fun UiTreeBuilder.FoundationsProgressSection() {
 
 @ViewComposePreview(name = "Foundations · Media", group = "Demo/Sections")
 internal fun UiTreeBuilder.FoundationsMediaSection() {
+    val pipelineMode = remember { mutableStateOf(0) }
     ScenarioSection(
         kind = ScenarioKind.Visual,
         title = "Image + Icon",
-        subtitle = "媒体原语与远程加载分离。控件定义语义，加载保持可插拔。",
+        subtitle = "按 source、回退、请求替换和图标样式分组验证媒体管线。",
     ) {
-        Row(
-            spacing = 16.dp,
-            verticalAlignment = VerticalAlignment.Center,
-            modifier = Modifier.fillMaxWidth().margin(bottom = 12.dp),
+        Surface(
+            variant = SurfaceVariant.Variant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
         ) {
-            Image(
-                source = ImageSource.Resource(R.drawable.demo_media_image),
-                contentDescription = "启动图标",
-                contentScale = ImageContentScale.Crop,
-                modifier = Modifier
-                    .size(64.dp, 64.dp)
-                    .shape(Theme.shapes.medium),
-            )
             Column(
                 spacing = 8.dp,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(text = "Image 使用类型化 source 和 contentScale。")
+                Text(text = "1. 本地 Resource 也经过 Loader")
                 Text(
-                    text = "远程加载由可选的 Coil 集成模块提供，不改变 Image API。",
+                    text = "64dp 目标显式使用 64×64dp 解码请求，并由 contentScale 完成裁剪。",
                     style = UiTextStyle(fontSizeSp = 13.sp),
                     color = TextDefaults.secondaryColor(),
                 )
-            }
-        }
-        Image(
-            source = ImageSource.Remote("https://picsum.photos/seed/viewcompose-demo/640/360"),
-            contentDescription = "远程图片",
-            contentScale = ImageContentScale.Crop,
-            placeholder = ImageSource.Resource(R.drawable.demo_media_image),
-            error = ImageSource.Resource(R.drawable.demo_media_image),
-            fallback = ImageSource.Resource(R.drawable.demo_media_image),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-                .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                .shape(Theme.shapes.medium)
-                .testTag(DemoTestTags.FOUNDATIONS_REMOTE_IMAGE)
-                .margin(bottom = 12.dp),
-        )
-        Image(
-            source = ImageSource.Remote(null),
-            contentDescription = "回退图片",
-            contentScale = ImageContentScale.Crop,
-            fallback = ImageSource.Resource(R.drawable.demo_media_image),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(88.dp)
-                .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                .shape(Theme.shapes.medium)
-                .testTag(DemoTestTags.FOUNDATIONS_FALLBACK_IMAGE)
-                .margin(bottom = 12.dp),
-        )
-        Row(
-            spacing = 12.dp,
-            verticalAlignment = VerticalAlignment.Center,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Surface(modifier = Modifier.padding(8.dp)) {
-                Icon(source = ImageSource.Resource(R.drawable.demo_media_icon), contentDescription = "前景图标")
-            }
-            UiThemeOverride(colors = { copy(onSurface = secondary) }) {
-                Surface(variant = SurfaceVariant.Variant, modifier = Modifier.padding(8.dp)) {
-                    Icon(source = ImageSource.Resource(R.drawable.demo_media_icon), contentDescription = "Secondary 图标")
+                Row(
+                    spacing = 16.dp,
+                    verticalAlignment = VerticalAlignment.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Image(
+                        source = ImageSource.Resource(R.drawable.demo_media_image),
+                        contentDescription = "Loader 加载的本地图片",
+                        contentScale = ImageContentScale.Crop,
+                        requestOptions = UiImageRequestOptions(
+                            decodeSize = UiImageDecodeSize.Fixed(width = 64.dp, height = 64.dp),
+                        ),
+                        modifier = Modifier
+                            .size(64.dp, 64.dp)
+                            .shape(Theme.shapes.medium),
+                    )
+                    Text(
+                        text = "安装 Coil 时复用解码、裁剪和缓存；未安装 Loader 时仍可直接显示。",
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
-            Text(
-                text = "Icon 默认跟随 ContentColor.current，自然适配局部 surface/content 作用域。",
-                modifier = Modifier.weight(1f),
-            )
         }
-        Row(
-            spacing = 12.dp,
-            modifier = Modifier.fillMaxWidth().margin(top = 12.dp),
+        Surface(
+            variant = SurfaceVariant.Variant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
         ) {
-            IconButton(icon = ImageSource.Resource(R.drawable.demo_media_icon), contentDescription = "默认图标按钮")
-            IconButton(
-                icon = ImageSource.Resource(R.drawable.demo_media_icon),
-                contentDescription = "Primary 图标按钮",
-                variant = ButtonVariant.Primary,
-                modifier = Modifier.testTag(DemoTestTags.FOUNDATIONS_PRIMARY_ICON_BUTTON),
-            )
-            IconButton(icon = ImageSource.Resource(R.drawable.demo_media_icon), contentDescription = "Tonal 图标按钮", variant = ButtonVariant.Tonal)
-            IconButton(icon = ImageSource.Resource(R.drawable.demo_media_icon), contentDescription = "Outlined 图标按钮", variant = ButtonVariant.Outlined)
-            IconButton(icon = ImageSource.Resource(R.drawable.demo_media_icon), contentDescription = "禁用图标按钮", enabled = false)
+            Column(
+                spacing = 8.dp,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = "2. URL 与空 source")
+                Text(
+                    text = "左侧发起网络请求；右侧 source = null，不启动 Loader，直接显示 fallback。",
+                    style = UiTextStyle(fontSizeSp = 13.sp),
+                    color = TextDefaults.secondaryColor(),
+                )
+                Row(
+                    spacing = 12.dp,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        spacing = 6.dp,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = "远程 URL", style = UiTextStyle(fontSizeSp = 13.sp))
+                        Image(
+                            source = ImageSource.Url("https://picsum.photos/seed/viewcompose-demo/640/360"),
+                            contentDescription = "远程 URL 图片",
+                            contentScale = ImageContentScale.Crop,
+                            placeholder = ImageSource.Resource(R.drawable.demo_media_image),
+                            error = ImageSource.Resource(R.drawable.demo_media_image),
+                            fallback = ImageSource.Resource(R.drawable.demo_media_image),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(88.dp)
+                                .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+                                .shape(Theme.shapes.medium)
+                                .testTag(DemoTestTags.FOUNDATIONS_REMOTE_IMAGE),
+                        )
+                    }
+                    Column(
+                        spacing = 6.dp,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(text = "直接 fallback", style = UiTextStyle(fontSizeSp = 13.sp))
+                        Image(
+                            source = null,
+                            contentDescription = "空 source 的回退图片",
+                            contentScale = ImageContentScale.Crop,
+                            fallback = ImageSource.Resource(R.drawable.demo_media_image),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(88.dp)
+                                .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+                                .shape(Theme.shapes.medium)
+                                .testTag(DemoTestTags.FOUNDATIONS_FALLBACK_IMAGE),
+                        )
+                    }
+                }
+            }
+        }
+        Surface(
+            variant = SurfaceVariant.Variant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+        ) {
+            Column(
+                spacing = 8.dp,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = "3. 请求替换与取消")
+                Text(
+                    text = "点击按钮复用同一个 ImageView，依次验证 Resource、null fallback 和延迟 Model。",
+                    style = UiTextStyle(fontSizeSp = 13.sp),
+                    color = TextDefaults.secondaryColor(),
+                )
+                ProvideImageLoader(DemoDelayedImageLoader) {
+                    val source = when (pipelineMode.value) {
+                        0 -> ImageSource.Resource(R.drawable.demo_media_image)
+                        1 -> null
+                        else -> ImageSource.Model(
+                            value = R.drawable.demo_media_icon,
+                            stableKey = "demo-delayed-model-v1",
+                        )
+                    }
+                    Image(
+                        source = source,
+                        contentDescription = "图片管线切换结果",
+                        contentScale = ImageContentScale.Crop,
+                        placeholder = ImageSource.Resource(R.drawable.demo_media_icon),
+                        fallback = ImageSource.Resource(R.drawable.demo_media_image),
+                        requestOptions = UiImageRequestOptions(
+                            decodeSize = UiImageDecodeSize.Fixed(width = 320.dp, height = 180.dp),
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(96.dp)
+                            .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+                            .shape(Theme.shapes.medium),
+                    )
+                    Button(
+                        text = when (pipelineMode.value) {
+                            0 -> "当前：Loader 加载本地 Resource"
+                            1 -> "当前：空 source 直接 fallback"
+                            else -> "当前：Loader 加载延迟 Model"
+                        },
+                        onClick = { pipelineMode.value = (pipelineMode.value + 1) % 3 },
+                        variant = ButtonVariant.Outlined,
+                        size = ButtonSize.Compact,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        }
+        Surface(
+            variant = SurfaceVariant.Variant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+        ) {
+            Column(
+                spacing = 8.dp,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(text = "4. Icon 颜色与 IconButton 变体")
+                Text(
+                    text = "Icon 跟随 ContentColor.current；按钮变体分行排列，避免窄屏拥挤。",
+                    style = UiTextStyle(fontSizeSp = 13.sp),
+                    color = TextDefaults.secondaryColor(),
+                )
+                Row(
+                    spacing = 12.dp,
+                    verticalAlignment = VerticalAlignment.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Surface(modifier = Modifier.padding(8.dp)) {
+                        Icon(
+                            source = ImageSource.Resource(R.drawable.demo_media_icon),
+                            contentDescription = "默认 ContentColor 图标",
+                        )
+                    }
+                    UiThemeOverride(colors = { copy(onSurface = secondary) }) {
+                        Surface(modifier = Modifier.padding(8.dp)) {
+                            Icon(
+                                source = ImageSource.Resource(R.drawable.demo_media_icon),
+                                contentDescription = "Secondary ContentColor 图标",
+                            )
+                        }
+                    }
+                    Text(
+                        text = "默认 / Secondary",
+                        style = UiTextStyle(fontSizeSp = 13.sp),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Text(
+                    text = "默认 / Primary / Tonal",
+                    style = UiTextStyle(fontSizeSp = 13.sp),
+                )
+                Row(
+                    spacing = 12.dp,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    IconButton(
+                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                        contentDescription = "默认图标按钮",
+                    )
+                    IconButton(
+                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                        contentDescription = "Primary 图标按钮",
+                        variant = ButtonVariant.Primary,
+                        modifier = Modifier.testTag(DemoTestTags.FOUNDATIONS_PRIMARY_ICON_BUTTON),
+                    )
+                    IconButton(
+                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                        contentDescription = "Tonal 图标按钮",
+                        variant = ButtonVariant.Tonal,
+                    )
+                }
+                Text(
+                    text = "Outlined / Disabled",
+                    style = UiTextStyle(fontSizeSp = 13.sp),
+                )
+                Row(
+                    spacing = 12.dp,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    IconButton(
+                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                        contentDescription = "Outlined 图标按钮",
+                        variant = ButtonVariant.Outlined,
+                    )
+                    IconButton(
+                        icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                        contentDescription = "禁用图标按钮",
+                        enabled = false,
+                    )
+                }
+            }
         }
     }
 }

@@ -4,31 +4,29 @@ import android.content.res.ColorStateList
 import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
-import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.ui.node.RemoteImageLoader
-import com.viewcompose.ui.node.RemoteImageRequest
-import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.ImageContentScale
-import com.viewcompose.ui.node.spec.ImageNodeProps
+import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiImageRequest
+import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.IconButtonNodeProps
 import com.viewcompose.ui.node.spec.ImageNodeSpec
-import com.viewcompose.renderer.interop.asRemoteImageTarget
+import com.viewcompose.ui.unit.UiDensity
 
-/**
- * Binds image and icon-button nodes and maps sources, scaling, tint, and click semantics to Android.
- * Binds image and icon-button nodes, mapping image sources, scale types, color filters, and click
- * semantics to Android widgets.
- */
+/** Binds image and icon-button nodes to Android targets and manages loader request replacement. */
 internal object MediaViewBinder {
     data class ImageSpec(
         val contentDescription: String?,
+        val contentScale: ImageContentScale,
         val scaleType: ImageView.ScaleType,
         val tint: Int?,
         val source: ImageSource?,
         val placeholder: ImageSource.Resource?,
         val error: ImageSource.Resource?,
         val fallback: ImageSource.Resource?,
-        val remoteImageLoader: RemoteImageLoader?,
+        val imageLoader: UiImageLoader?,
+        val requestOptions: com.viewcompose.ui.node.UiImageRequestOptions,
+        val density: UiDensity,
     )
 
     fun bindImage(
@@ -37,35 +35,41 @@ internal object MediaViewBinder {
     ) {
         view.contentDescription = spec.contentDescription
         view.scaleType = spec.scaleType
+        // Layout hosts allow shadow overflow, so ImageView must constrain scaled drawables itself.
+        view.cropToPadding = true
         view.imageTintList = spec.tint?.let(ColorStateList::valueOf)
 
         when (val source = spec.source) {
-            is ImageSource.Resource -> {
-                view.setImageResource(source.resId)
-            }
-            is ImageSource.Remote -> {
-                val normalizedUrl = source.url?.takeIf { it.isNotBlank() }
-                if (normalizedUrl == null) {
-                    bindPlaceholder(view, spec.fallback)
-                    return
-                }
-                if (spec.remoteImageLoader == null) {
-                    bindPlaceholder(view, spec.error ?: spec.placeholder ?: spec.fallback)
-                    return
-                }
-                bindPlaceholder(view, spec.placeholder)
-                spec.remoteImageLoader.load(
-                    target = view.asRemoteImageTarget(),
-                    request = RemoteImageRequest(
-                        url = normalizedUrl,
-                        placeholderResId = spec.placeholder?.resId,
-                        errorResId = spec.error?.resId,
-                        fallbackResId = spec.fallback?.resId,
-                    ),
-                )
-            }
             null -> {
-                view.setImageDrawable(null)
+                ImageRequestBindingController.clear(view)
+                bindPlaceholder(view, spec.fallback)
+            }
+            else -> {
+                val loader = spec.imageLoader
+                if (loader != null) {
+                    ImageRequestBindingController.replace(
+                        view = view,
+                        loader = loader,
+                        request = UiImageRequest(
+                            source = source,
+                            placeholder = spec.placeholder,
+                            error = spec.error,
+                            options = spec.requestOptions,
+                            contentScale = spec.contentScale,
+                            density = spec.density,
+                        ),
+                        beforeStart = {
+                            bindPlaceholder(view, spec.placeholder)
+                        },
+                    )
+                } else {
+                    ImageRequestBindingController.clear(view)
+                    if (source is ImageSource.Resource) {
+                        view.setImageResource(source.resId)
+                    } else {
+                        bindPlaceholder(view, spec.error ?: spec.placeholder ?: spec.fallback)
+                    }
+                }
             }
         }
     }
@@ -74,13 +78,16 @@ internal object MediaViewBinder {
         val spec = node.requireSpec<ImageNodeSpec>()
         return ImageSpec(
             contentDescription = spec.contentDescription,
+            contentScale = spec.contentScale,
             scaleType = spec.contentScale.toScaleType(),
             tint = spec.tint,
             source = spec.source,
             placeholder = spec.placeholder,
             error = spec.error,
             fallback = spec.fallback,
-            remoteImageLoader = spec.remoteImageLoader,
+            imageLoader = spec.imageLoader,
+            requestOptions = spec.requestOptions,
+            density = node.environment.density,
         )
     }
 

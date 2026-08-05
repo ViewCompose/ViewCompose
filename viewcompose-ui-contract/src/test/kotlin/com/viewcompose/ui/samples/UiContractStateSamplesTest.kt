@@ -11,6 +11,7 @@ class UiContractStateSamplesTest {
         lazyListStateSample()
         pagerStateSample()
         vNodeModelSample()
-        remoteImageLoaderSample()
+        uiImageLoaderSample()
+        uiImageRequestSample()
     }
 }

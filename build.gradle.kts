@@ -22,6 +22,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-host-android" to "com.viewcompose.host.android",
     "viewcompose-overlay-android" to "com.viewcompose.overlay.android",
     "viewcompose-image-coil" to "com.viewcompose.image.coil",
+    "viewcompose-image-glide" to "com.viewcompose.image.glide",
     "viewcompose-benchmark" to "com.viewcompose.benchmark",
     "viewcompose-lifecycle" to "com.viewcompose.lifecycle",
     "viewcompose-viewmodel" to "com.viewcompose.viewmodel",
@@ -115,6 +116,7 @@ val optionalCapabilityModules = setOf(
     "viewcompose-widget-constraintlayout",
     "viewcompose-overlay-android",
     "viewcompose-image-coil",
+    "viewcompose-image-glide",
 )
 
 // Tooling is downstream of both foundation and optional capabilities and never participates in
@@ -144,6 +146,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-widget-core:compileDebugKotlin",
     ":viewcompose-overlay-android:compileDebugKotlin",
     ":viewcompose-image-coil:compileDebugKotlin",
+    ":viewcompose-image-glide:compileDebugKotlin",
     ":viewcompose-preview:compileDebugKotlin",
     ":viewcompose-animation:compileDebugKotlin",
     ":viewcompose-animation-core:compileKotlin",
@@ -173,6 +176,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-widget-core:testDebugUnitTest",
     ":viewcompose-overlay-android:testDebugUnitTest",
     ":viewcompose-image-coil:testDebugUnitTest",
+    ":viewcompose-image-glide:testDebugUnitTest",
     ":viewcompose-preview:testDebugUnitTest",
     ":viewcompose-animation:testDebugUnitTest",
     ":viewcompose-animation-core:test",

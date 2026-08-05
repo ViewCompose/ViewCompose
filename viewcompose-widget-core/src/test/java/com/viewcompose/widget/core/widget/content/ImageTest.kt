@@ -10,8 +10,9 @@ import com.viewcompose.ui.unit.UiDimension
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
-import com.viewcompose.ui.node.RemoteImageLoader
-import com.viewcompose.ui.node.RemoteImageRequest
+import com.viewcompose.ui.node.UiImageLoadHandle
+import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiImageRequest
 import com.viewcompose.ui.node.spec.ImageNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -62,12 +63,12 @@ class ImageTest {
     }
 
     @Test
-    fun `remote image inherits scoped loader`() {
-        val loader = RemoteImageLoader { _, _ -> }
+    fun `URL image inherits scoped loader`() {
+        val loader = UiImageLoader { _, _: UiImageRequest -> UiImageLoadHandle {} }
         val tree = buildVNodeTree {
-            ProvideRemoteImageLoader(loader) {
+            ProvideImageLoader(loader) {
                 Image(
-                    source = ImageSource.Remote("https://example.com/demo.png"),
+                    source = ImageSource.Url("https://example.com/demo.png"),
                     placeholder = ImageSource.Resource(10),
                     error = ImageSource.Resource(11),
                     fallback = ImageSource.Resource(12),
@@ -78,20 +79,20 @@ class ImageTest {
         val node = tree.single()
         val spec = node.spec as ImageNodeProps
 
-        assertEquals(ImageSource.Remote("https://example.com/demo.png"), spec.source)
-        assertNotNull(spec.remoteImageLoader)
+        assertEquals(ImageSource.Url("https://example.com/demo.png"), spec.source)
+        assertNotNull(spec.imageLoader)
         assertEquals(ImageSource.Resource(10), spec.placeholder)
         assertEquals(ImageSource.Resource(11), spec.error)
         assertEquals(ImageSource.Resource(12), spec.fallback)
     }
 
     @Test
-    fun `remote image can emit nullable url for fallback handling`() {
-        val loader = RemoteImageLoader { _, _: RemoteImageRequest -> }
+    fun `image can emit null source for fallback handling`() {
+        val loader = UiImageLoader { _, _: UiImageRequest -> UiImageLoadHandle {} }
         val tree = buildVNodeTree {
-            ProvideRemoteImageLoader(loader) {
+            ProvideImageLoader(loader) {
                 Image(
-                    source = ImageSource.Remote(null),
+                    source = null,
                     fallback = ImageSource.Resource(99),
                 )
             }
@@ -100,7 +101,7 @@ class ImageTest {
         val node = tree.single()
         val spec = node.spec as ImageNodeProps
 
-        assertEquals(ImageSource.Remote(null), spec.source)
+        assertEquals(null, spec.source)
         assertEquals(ImageSource.Resource(99), spec.fallback)
     }
 
