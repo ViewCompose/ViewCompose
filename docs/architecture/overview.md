@@ -41,7 +41,7 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-host-android` | Android host runtime and entry points: `setUiContent`, `renderInto`, `RenderSession`, native View interop, and host Local injection | Executes and injects platform behavior without business DSL. |
 | `viewcompose-overlay-android` | Android overlay host and presenters for dialogs, popups, bottom sheets, snackbars, and toasts | Platform implementation only; it does not depend on renderer resources. |
 | `viewcompose-image-coil` | Optional image-loading adapter | Implements `UiImageLoader` for Coil 3; it accepts the general source/request contract without feeding Coil concerns back into the renderer core. |
-| `viewcompose-image-glide` | Optional source-built image-loading adapter | Implements `UiImageLoader` for Glide 5 with target-scoped `RequestManager` resolution and application-owned `AppGlideModule` configuration; Maven publication onboarding remains pending. |
+| `viewcompose-image-glide` | Optional image-loading adapter | Implements `UiImageLoader` for Glide 5 with target-scoped `RequestManager` resolution and application-owned `AppGlideModule` configuration. |
 | `viewcompose-lifecycle` | Lifecycle-aware collection APIs and lifecycle Local entry points | Does not contain Android View implementations or add host-injection logic. |
 | `viewcompose-viewmodel` | ViewModel and SavedStateHandle collaboration APIs and ViewModel Local entry points | Does not contain Android View implementations or add host-injection logic. |
 | `viewcompose-preview-core` | Preview annotations, deterministic configuration, and cross-process request/result protocols | Pure Kotlin/JVM with no Android, Compose, or IDE SDK dependency. |

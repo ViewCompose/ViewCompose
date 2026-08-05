@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 002578dbaae8a27a833234e22f22573e90e709c44a1811da5109239ae0406457
+translation_source_hash: c362f8aee135fab4fa697912957ce634f6a8a5ea4418a200e0d3ed93e772f878
 translation_status: current
 ---
 
@@ -24,7 +24,8 @@ translation_status: current
 | `viewcompose-widget-core` | UI | 核心 DSL、组件、主题与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-widget-core) |
 | `viewcompose-host-android` | Android 宿主 | Activity、Fragment 与 View 宿主集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-host-android) |
 | `viewcompose-overlay-android` | Android 宿主 | Android 浮层呈现后端 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-android) |
-| `viewcompose-image-coil` | 集成 | 基于 Coil 的远程图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-coil) |
+| `viewcompose-image-coil` | 集成 | 基于 Coil 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-coil) |
+| `viewcompose-image-glide` | 集成 | 基于 Glide 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-glide) |
 | `viewcompose-lifecycle` | 集成 | 感知生命周期的状态收集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-lifecycle) |
 | `viewcompose-viewmodel` | 集成 | ViewModel 与 SavedStateHandle 集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-viewmodel) |
 | `viewcompose-preview-core` | 预览工具 | 预览注解与工具协议 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-preview-core) |

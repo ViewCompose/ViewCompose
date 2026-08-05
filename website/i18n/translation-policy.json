@@ -36,6 +36,7 @@
     "modules/viewcompose-graphics/README.md",
     "modules/viewcompose-host-android/README.md",
     "modules/viewcompose-image-coil/README.md",
+    "modules/viewcompose-image-glide/README.md",
     "modules/viewcompose-lifecycle/README.md",
     "modules/viewcompose-navigation-core/README.md",
     "modules/viewcompose-navigation/README.md",

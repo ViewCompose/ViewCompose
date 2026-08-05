@@ -2,7 +2,7 @@
 title: 图片加载
 slug: /guides/image-loading
 translation_source: guides/image-loading.md
-translation_source_hash: 958772a9f9bbafb85c57a4c872d99cf3b43689397fadd0e713f67213ccbf8515
+translation_source_hash: 22d5b8d0d9e8e1c8d469c7e3239b53cf0bd19d2e1ae003121abf1730ceeac558
 translation_status: current
 ---
 
@@ -19,7 +19,7 @@ ViewCompose 把图片声明、Android View 绑定和图片解码分在不同层�
 | 内置 drawable 或 resource | 使用 `ImageSource.Resource`，不需要 loader。 |
 | 自定义解码器或测试 fake | 实现 `UiImageLoader`，并返回可释放的 `UiImageLoadHandle`。 |
 | Coil 3 网络、缓存和解码 | 添加 `viewcompose-image-coil`，安装 `CoilImageLoaderAdapter`。 |
-| Glide 5 网络、缓存和解码 | 从源码构建 `viewcompose-image-glide` 并安装 `GlideImageLoaderAdapter`；发布接入尚未完成。 |
+| Glide 5 网络、缓存和解码 | 添加 `viewcompose-image-glide` 并安装 `GlideImageLoaderAdapter`。 |
 | 其他平台解码器 | 保持适配器位于独立可选模块，在 Android 边界映射通用 request。 |
 
 核心模块不假设网络、缓存或解码器。没有 loader 是合法配置，不是错误。
@@ -132,9 +132,8 @@ ProvideImageLoader(imageLoader) {
 
 ## Glide 5 集成
 
-`viewcompose-image-glide` 在源码树中提供 `GlideImageLoaderAdapter`。它从每个目标
-`ImageView` 解析生命周期关联的 `RequestManager`，请求则继承应用的 `AppGlideModule`、registry、
-缓存和默认请求配置：
+`viewcompose-image-glide` 提供 `GlideImageLoaderAdapter`。它从每个目标 `ImageView` 解析生命周期
+关联的 `RequestManager`，请求则继承应用的 `AppGlideModule`、registry、缓存和默认请求配置：
 
 ```kotlin
 val imageLoader = GlideImageLoaderAdapter()
@@ -154,7 +153,8 @@ ProvideImageLoader(imageLoader) {
 尺寸和按密度解析后的固定解码尺寸会直接映射到 Glide，不增加框架缓存。适配器只清理其返回句柄
 所代表的 request target，不拥有目标 `ImageView` 或 Glide singleton。
 
-该模块尚未加入 Maven 发布元数据。在发布 revision 与模块手册接入前，消费者必须使用项目模块。
+兼容性、所有权与运维说明见
+[Image Glide 模块手册](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-glide)。
 
 ## 验证清单
 

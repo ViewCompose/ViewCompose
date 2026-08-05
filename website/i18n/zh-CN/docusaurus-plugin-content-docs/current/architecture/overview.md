@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: b38078aa18db7d66d723e489d1f83d6e64b0bbfb17d89862a052bb51e5641db1
+translation_source_hash: 29e862ce665fdb151b57264c949a7ed267a8a0ba1ae1c4215eee8d3b9483fb43
 translation_status: current
 ---
 
@@ -49,7 +49,7 @@ translation_status: current
 | `viewcompose-host-android` | Android 宿主运行时与入口（`setUiContent/renderInto/RenderSession`、`AndroidView/nativeView`、宿主 Local 注入） | 只做平台执行与注入，不承载业务 DSL |
 | `viewcompose-overlay-android` | Android overlay host/presenter（Dialog/Popup/ModalBottomSheet/Snackbar/Toast） | 只做平台实现，不依赖 renderer 资源 |
 | `viewcompose-image-coil` | 可选图片加载适配器 | 为 Coil 3 实现 `UiImageLoader`，接收通用 source/request 契约，不把 Coil 关注点回流到 renderer 核心 |
-| `viewcompose-image-glide` | 可选的源码构建图片加载适配器 | 为 Glide 5 实现 `UiImageLoader`，按目标解析 `RequestManager` 并使用应用所有的 `AppGlideModule` 配置；Maven 发布接入尚未完成 |
+| `viewcompose-image-glide` | 可选图片加载适配器 | 为 Glide 5 实现 `UiImageLoader`，按目标解析 `RequestManager` 并使用应用所有的 `AppGlideModule` 配置 |
 | `viewcompose-lifecycle` | 生命周期感知的状态收集 API（`collectAsStateWithLifecycle`）与生命周期 Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
 | `viewcompose-viewmodel` | ViewModel/SavedStateHandle 协作 API（`viewModel`、`savedStateHandle`）与 ViewModel Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
 | `viewcompose-preview-core` | Preview 注解、确定性配置和跨进程请求/结果协议 | 纯 Kotlin/JVM；禁止 Android、Compose 与 IDE SDK 依赖 |

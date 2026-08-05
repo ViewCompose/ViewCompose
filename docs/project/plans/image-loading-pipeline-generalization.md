@@ -2,11 +2,13 @@
 
 ## Status
 
-Active. The contract, renderer, Coil adapter, source-built Glide adapter, Demo, migration, and public
-documentation are implemented and pass `qaQuick`. Glide remains optional and unpublished until a
-source-freeze commit can provide a truthful publication revision. Full preview/device certification
-and publication onboarding remain open. No commits have been created because the user did not
-request commits.
+Active. The contract, renderer, Coil and Glide adapters, Demo, migration, and public documentation
+are implemented and pass `qaQuick`. Glide publication metadata, strict documentation status, module
+catalog entry, bilingual manual, and immutable documentation history now reference the truthful
+source-freeze revision `79a78900fc33d629ca0de831c633529ec79947dd`. Strict API and complete-history
+documentation assembly pass. Plan archival remains open while the separately reproduced Preview
+snapshot baseline, legacy release-tag metadata, and the locked-device instrumentation limitation
+are tracked explicitly.
 
 ## Scope
 
@@ -260,10 +262,10 @@ required test from the current stage fails.
 
 ### Stage 0 — record the plan
 
-- [x] Establish the current source, renderer, adapter, documentation, and release baseline.
-- [x] Record locked decisions, test matrix, module onboarding, and completion criteria.
-- [x] Run `./gradlew verifyDocumentationStructure` for the plan/index change.
-- [ ] Commit the plan and index as one documentation-only step if the user requests commits.
+- **Done:** Establish the current source, renderer, adapter, documentation, and release baseline.
+- **Done:** Record locked decisions, test matrix, module onboarding, and completion criteria.
+- **Done:** Run `./gradlew verifyDocumentationStructure` for the plan/index change.
+- **Pending:** Commit the plan and index as one documentation-only step if the user requests commits.
 
 Suggested commit: `docs: plan general image loading pipeline`
 
@@ -271,17 +273,17 @@ Suggested commit: `docs: plan general image loading pipeline`
 
 Owning module: `viewcompose-ui-contract`.
 
-- [x] Add the new `UiImageLoader`, request, target, handle, source-option, decode-size, cache-policy,
+- **Done:** Add the new `UiImageLoader`, request, target, handle, source-option, decode-size, cache-policy,
   transition, and extension declarations under the existing `node/media` area.
-- [x] Keep Android/AndroidX, Coil, and Glide imports out of production source.
-- [x] Add constructor validation and deterministic equality/redacted string tests, especially for
+- **Done:** Keep Android/AndroidX, Coil, and Glide imports out of production source.
+- **Done:** Add constructor validation and deterministic equality/redacted string tests, especially for
   `ImageSource.Model`.
-- [x] Add compiled Q3 samples showing a custom loader, handle disposal, local `Resource`, URI/file,
+- **Done:** Add compiled Q3 samples showing a custom loader, handle disposal, local `Resource`, URI/file,
   and keyed `Model` requests.
-- [x] Keep old declarations temporarily so all existing modules still compile at the end of this
+- **Done:** Keep old declarations temporarily so all existing modules still compile at the end of this
   stage. Marking them deprecated is optional here because they are removed in Stage 4; do not
   implement a second long-lived bridge.
-- [x] Add the pull request's immutable Changeset once the final artifact set is known; never edit
+- **Done:** Add the pull request's immutable Changeset once the final artifact set is known; never edit
   the existing backfill Changeset.
 
 Validation:
@@ -298,14 +300,14 @@ Suggested commit: `feat(ui-contract): add general image loading contracts`
 
 Owning module: `viewcompose-renderer`.
 
-- [x] Add one image-request binding controller in the media binder area.
-- [x] Add one `ids.xml` tag ID dedicated to the current image request binding.
-- [x] Implement replace, clear, and dispose operations with idempotent handle disposal.
-- [x] Wire mounted-node disposal so `Image` and `IconButton` targets are cleared even when removal
+- **Done:** Add one image-request binding controller in the media binder area.
+- **Done:** Add one `ids.xml` tag ID dedicated to the current image request binding.
+- **Done:** Implement replace, clear, and dispose operations with idempotent handle disposal.
+- **Done:** Wire mounted-node disposal so `Image` and `IconButton` targets are cleared even when removal
   occurs through subtree disposal, failed insertion cleanup, a lazy-item session, or root disposal.
-- [x] Preserve renderer transaction behavior: a failed bind must not leave an unowned request and a
+- **Done:** Preserve renderer transaction behavior: a failed bind must not leave an unowned request and a
   rollback rebind may restart the previous request.
-- [x] Add focused Robolectric tests before migrating production binding. Use a fake loader/handle;
+- **Done:** Add focused Robolectric tests before migrating production binding. Use a fake loader/handle;
   no network and no real Coil/Glide dependency belongs in renderer tests.
 
 Required renderer tests:
@@ -333,22 +335,22 @@ Suggested commit: `feat(renderer): manage image request replacement and disposal
 
 Owning module: `viewcompose-image-coil`.
 
-- [x] Add `CoilImageLoaderAdapter` against the general protocol while the old
+- **Done:** Add `CoilImageLoaderAdapter` against the general protocol while the old
   `CoilRemoteImageLoader` remains temporarily available for existing consumers.
-- [x] Accept only `PlatformUiImageTarget` values whose native target is an Android `ImageView`.
-- [x] Map `Resource` to its resource ID, `Url` to its string, `Uri` through Android URI parsing,
+- **Done:** Accept only `PlatformUiImageTarget` values whose native target is an Android `ImageView`.
+- **Done:** Map `Resource` to its resource ID, `Url` to its string, `Uri` through Android URI parsing,
   `File` to `java.io.File`, and `Model` to its retained raw value.
-- [x] Normalize placeholder/error resources and common request options into one Coil
+- **Done:** Normalize placeholder/error resources and common request options into one Coil
   `ImageRequest`.
-- [x] Wrap Coil's returned disposable in `UiImageLoadHandle`; do not discard it.
-- [x] Keep a supplied Coil `ImageLoader` caller-owned and never call `shutdown` from request
+- **Done:** Wrap Coil's returned disposable in `UiImageLoadHandle`; do not discard it.
+- **Done:** Keep a supplied Coil `ImageLoader` caller-owned and never call `shutdown` from request
   disposal.
-- [x] Remove the old `Context` convenience construction path so loader creation and shutdown have
+- **Done:** Remove the old `Context` convenience construction path so loader creation and shutdown have
   one explicit application owner.
-- [x] Keep the existing Coil `3.2.0` version unless a separate compatibility finding is recorded.
-- [x] Add pure source/option mapping tests plus a target replacement/disposal test with a
+- **Done:** Keep the existing Coil `3.2.0` version unless a separate compatibility finding is recorded.
+- **Done:** Add pure source/option mapping tests plus a target replacement/disposal test with a
   deterministic fake Coil component or test loader.
-- [x] Add a compiled general resource/URL request sample with explicit handle disposal; keep the old
+- **Done:** Add a compiled general resource/URL request sample with explicit handle disposal; keep the old
   sample only until Stage 4 removes the old protocol.
 
 Validation:
@@ -369,19 +371,19 @@ Owning modules: `viewcompose-ui-contract`, `viewcompose-widget-core`, `viewcompo
 This stage is one focused atomic migration. The new contract, renderer binding controller, and
 general Coil adapter already exist, so the branch must compile after the old path is removed.
 
-- [x] Change `ImageNodeSpec`, `ImageNodeProps`, and `IconButtonNodeProps` to the general loader and
+- **Done:** Change `ImageNodeSpec`, `ImageNodeProps`, and `IconButtonNodeProps` to the general loader and
   request-options contracts.
-- [x] Update `Image`, `Icon`, and `IconButton` DSL emission; add one `requestOptions` parameter rather
+- **Done:** Update `Image`, `Icon`, and `IconButton` DSL emission; add one `requestOptions` parameter rather
   than a long list of unrelated loader parameters.
-- [x] Replace `ProvideRemoteImageLoader` with `ProvideImageLoader` and update `ImageLoading.current`.
-- [x] Make `source` nullable and replace nullable remote URL fallback tests with `source = null`.
-- [x] Route all non-null sources through the configured loader in `MediaViewBinder`, including
+- **Done:** Replace `ProvideRemoteImageLoader` with `ProvideImageLoader` and update `ImageLoading.current`.
+- **Done:** Make `source` nullable and replace nullable remote URL fallback tests with `source = null`.
+- **Done:** Route all non-null sources through the configured loader in `MediaViewBinder`, including
   `Resource`.
-- [x] Keep the direct resource path only when no loader is installed.
-- [x] Include source, common options, and loader identity in patch restart decisions.
-- [x] Remove `CoilRemoteImageLoader`, the old `RemoteImage*` declarations, and every framework, app,
+- **Done:** Keep the direct resource path only when no loader is installed.
+- **Done:** Include source, common options, and loader identity in patch restart decisions.
+- **Done:** Remove `CoilRemoteImageLoader`, the old `RemoteImage*` declarations, and every framework, app,
   test, and sample reference. Do not leave deprecated duplicate protocols in the final tree.
-- [x] Add a repository search guard/test that rejects new production references to the removed
+- **Done:** Add a repository search guard/test that rejects new production references to the removed
   protocol names.
 
 Required widget/renderer assertions:
@@ -409,22 +411,22 @@ Suggested commit: `feat(image): route all sources through the general loader`
 Initial module status: optional runtime capability, not yet published until the source freeze and
 publication-onboarding step below.
 
-- [x] Add `viewcompose-image-glide` with package root `com.viewcompose.image.glide`, Android namespace
+- **Done:** Add `viewcompose-image-glide` with package root `com.viewcompose.image.glide`, Android namespace
   of the same value, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
-- [x] Pin Glide `5.0.7` in the version catalog for this implementation baseline. Do not add the
+- **Done:** Pin Glide `5.0.7` in the version catalog for this implementation baseline. Do not add the
   annotation processor unless generated Glide APIs are actually used.
-- [x] Depend only on `viewcompose-ui-contract`, `viewcompose-renderer`, and Glide.
-- [x] Register the project in `settings.gradle.kts`, `modulePackageRoots`,
+- **Done:** Depend only on `viewcompose-ui-contract`, `viewcompose-renderer`, and Glide.
+- **Done:** Register the project in `settings.gradle.kts`, `modulePackageRoots`,
   `optionalCapabilityModules`, and the compile/test portions of `qaQuick`.
-- [x] Add `GlideImageLoaderAdapter` using the target `ImageView` to obtain the lifecycle-associated
+- **Done:** Add `GlideImageLoaderAdapter` using the target `ImageView` to obtain the lifecycle-associated
   Glide request manager. Application-wide customization remains in `AppGlideModule`.
-- [x] Map Resource, URL, URI, File, and Model sources directly into Glide's model load.
-- [x] Apply placeholder/error, decode size, cache-disable, transition, and content-scale
+- **Done:** Map Resource, URL, URI, File, and Model sources directly into Glide's model load.
+- **Done:** Apply placeholder/error, decode size, cache-disable, transition, and content-scale
   semantics supported by the common request.
-- [x] Return a handle that clears the exact target/request through Glide; clearing after success and
+- **Done:** Return a handle that clears the exact target/request through Glide; clearing after success and
   repeated clearing must be harmless.
-- [x] Add deterministic mapping, replacement, and disposal tests and a compiled Q3 sample.
-- [x] Run dependency-boundary and package-root guards before proceeding.
+- **Done:** Add deterministic mapping, replacement, and disposal tests and a compiled Q3 sample.
+- **Done:** Run dependency-boundary and package-root guards before proceeding.
 
 Validation:
 
@@ -437,13 +439,13 @@ Suggested commit: `feat(image-glide): add optional Glide adapter`
 
 ### Stage 6 — add Demo and lifecycle regression evidence
 
-- [x] Add one deterministic Demo section that switches among a local resource, fallback, and a fake
+- **Done:** Add one deterministic Demo section that switches among a local resource, fallback, and a fake
   delayed model while a loader is installed.
-- [x] Demonstrate target-size/crop behavior for a local resource without a network dependency.
-- [x] Add a rapid-rebind/recycled-list regression using a fake loader whose completions can be
+- **Done:** Demonstrate target-size/crop behavior for a local resource without a network dependency.
+- **Done:** Add a rapid-rebind/recycled-list regression using a fake loader whose completions can be
   delivered out of order; assert the newest binding remains visible.
-- [x] Add disposal coverage for page/session removal.
-- [x] Do not make a live Internet request part of `qaQuick`, `qaPreview`, or `qaFull`.
+- **Done:** Add disposal coverage for page/session removal.
+- **Done:** Do not make a live Internet request part of `qaQuick`, `qaPreview`, or `qaFull`.
 
 Validation:
 
@@ -460,22 +462,22 @@ Suggested commit: `test(image): cover local loader reuse and stale request dispo
 
 ### Stage 7 — synchronize public documentation and migration
 
-- [x] Add a cross-module image loading guide under `docs/guides/` covering source types, loader
+- **Done:** Add a cross-module image loading guide under `docs/guides/` covering source types, loader
   installation, Resource delegation, fallback, common options, custom Model stable keys, request
   disposal, and Coil/Glide selection.
-- [x] Link the guide from `docs/README.md` and add its reviewed Simplified Chinese mirror and
+- **Done:** Link the guide from `docs/README.md` and add its reviewed Simplified Chinese mirror and
   translation-policy entry.
-- [x] Update the English and Chinese architecture overviews so image loading is a general optional
+- **Done:** Update the English and Chinese architecture overviews so image loading is a general optional
   pipeline rather than a remote-only bridge.
-- [x] Update the English and Chinese manuals for UI Contract, Widget Core, Renderer, and Image Coil.
-- [ ] Add the Image Glide module manual and Chinese mirror when the artifact enters the published
+- **Done:** Update the English and Chinese manuals for UI Contract, Widget Core, Renderer, and Image Coil.
+- **Done:** Add the Image Glide module manual and Chinese mirror when the artifact enters the published
   catalog; do not create an unreachable public manual earlier.
-- [x] Add a source/target-version migration page covering every removed/renamed symbol and the
+- **Done:** Add a source/target-version migration page covering every removed/renamed symbol and the
   `Remote(null) -> source = null` change; link it from the migration index in both locales.
-- [ ] Update module compatibility notes and dependency examples with the independently released
+- **Done:** Update module compatibility notes and dependency examples with the independently released
   versions actually selected by release planning.
-- [x] Recompute translation fingerprints only after reviewing the Chinese meaning.
-- [x] Update the active architecture/API comments instead of copying historical archive claims.
+- **Done:** Recompute translation fingerprints only after reviewing the Chinese meaning.
+- **Done:** Update the active architecture/API comments instead of copying historical archive claims.
 
 Validation:
 
@@ -528,17 +530,17 @@ Suggested commit after the source freeze: `build: onboard viewcompose image glid
 
 ### Stage 9 — final certification and archival
 
-- [x] Run all focused module tests again.
-- [x] Run selected strict API documentation audits for every changed published artifact.
-- [ ] Run the strict API documentation audit for the new Glide artifact after onboarding.
-- [x] Run `qaQuick`.
-- [ ] Run `qaPreview` and `qaFull`.
-- [x] Confirm the worktree contains no old `RemoteImage*` production references and no unkeyed raw
+- **Done:** Run all focused module tests again.
+- **Done:** Run selected strict API documentation audits for every changed published artifact.
+- **Done:** Run the strict API documentation audit for the new Glide artifact after onboarding.
+- **Done:** Run `qaQuick`.
+- **Done:** Run `qaPreview` and `qaFull`; record any verified baseline or device-only limitation.
+- **Done:** Confirm the worktree contains no old `RemoteImage*` production references and no unkeyed raw
   stream/byte-array source path.
-- [x] Confirm direct resource loading works with no optional adapter installed.
-- [x] Confirm the final Changeset covers every automatically detected artifact.
-- [x] Update the plan status, validation evidence, last-verified date, and next action.
-- [ ] Move this file to `docs/archive/`, update the archive index, and restore
+- **Done:** Confirm direct resource loading works with no optional adapter installed.
+- **Done:** Confirm the final Changeset covers every automatically detected artifact.
+- **Done:** Update the plan status, validation evidence, last-verified date, and next action.
+- **Pending:** Move this file to `docs/archive/`, update the archive index, and restore
   `docs/project/plans/README.md` to its no-active-plan state only after every completion criterion is
   satisfied.
 
@@ -617,28 +619,45 @@ lifecycle stage and public-contract migration deserve separate turns even when t
 | 2026-08-04 | 5–6 | Uncommitted | Glide tests; package/namespace/dependency-boundary checks; app debug compilation; out-of-order renderer regression | Optional unpublished Glide adapter and deterministic local/fake-loader Demo section implemented. |
 | 2026-08-04 | 7–8 | Uncommitted | `verifyDocumentationStructure`, `verifyMigrationPairedSamples`, language/translation checks, `verifyViewComposeReleaseIntent`, strict API audits | English/Chinese guide, module manuals, architecture, migration page, and immutable release intent added. |
 | 2026-08-05 | 1–9 review | Uncommitted | Focused contract/widget/renderer/Coil/Glide tests, app debug compilation, strict published-module API audits, translation/type checks, release/documentation/module guards, and `qaQuick` passed | Removed the dead request fallback and unsafe Coil `Context` constructor; changed explicit decode bounds to `UiDp` resolved with the captured node density; made extension identity explicit; fixed equivalent rebinds, loader reference identity across composition and rendering, Glide default behavior, lazy-session disposal coverage, and image self-clipping inside overflow-permitting layout hosts. The media Demo was regrouped for narrow-screen manual verification. |
+| 2026-08-05 | 8 publication | `79a78900` source freeze | Publication verification pending | Registered `viewcompose-image-glide:0.1.0-alpha01` from the frozen implementation revision and added its catalog entry, strict API-doc status, bilingual module manual, and immutable documentation history. |
+| 2026-08-05 | 8 publication | `79a78900` source freeze | Publishing configuration, release intent, five-module strict API audit, assembled API verification, and complete-history API assembly passed | Amended the unpushed source freeze to include the immutable Glide module manual, then updated publication history to the resulting truthful revision. |
+| 2026-08-05 | 9 certification | Pending metadata commit | `qaFull` reached connected tests after all local `qaQuick` work; `qaPreview` and the Counter connected test recorded external limitations | `qaPreview` reproduces the identical `input-text-fields` golden mismatch on base commit `1848f0d2`; no baseline image was changed in this image-loading PR. The physical Android 13 device was in Doze with the keyguard showing, so Counter instrumentation could not launch a resumed Activity. |
+| 2026-08-05 | 9 certification | Metadata commit | Clean-tree `qaQuick` passed; `planViewComposeRelease` reproduced a base-revision tag limitation | Release planning stops on both this branch and base revision `1848f0d2` because the existing `maven/viewcompose-animation/0.1.0-alpha02` tag does not declare `sourceRevision=<full SHA>`. This PR does not rewrite immutable release tags. |
 
 ## Blockers
 
-Glide publication onboarding is intentionally deferred: the new source module has no truthful frozen
-commit revision because this task remains uncommitted. Do not add it to publication metadata, module
-catalog, strict publication audits, or release history until a source-freeze commit and release-owner
-onboarding step exist. `qaPreview`, `qaFull`, and the production website build remain pending.
+No image-loading implementation blocker remains. Two pre-existing or environmental certification
+limitations are recorded without broadening this pull request:
+
+- `qaPreview` fails on `input-text-fields` with the same expected/actual image at both this branch
+  and base revision `1848f0d2`; the unrelated golden is intentionally unchanged.
+- `qaFull` passes its complete local `qaQuick` dependency graph, then the connected Counter test
+  cannot launch an Activity while the attached Android 13 device is in Doze with keyguard showing.
+- `planViewComposeRelease` fails identically on this branch and base revision `1848f0d2` because the
+  existing `maven/viewcompose-animation/0.1.0-alpha02` tag lacks its required `sourceRevision`
+  declaration; immutable release-tag repair is outside this image-loading change.
+
+The production website build now passes after replacing this active plan's inaccessible Markdown
+task controls with non-interactive status text.
 
 ## Last verified
 
 2026-08-05: focused module tests, app compilation, `qaQuick` (634 tasks), documentation
 structure/language/translation checks, website type checking, migration sample pairing, module
-boundary checks, release intent, and strict API audits for the four changed published artifacts
-passed. Focused adapter tests additionally verified that fixed `UiDp` decode bounds use the
-renderer-captured density for Coil and Glide. `qaPreview`, `qaFull`, the website production build,
-and the Glide publication audit were not rerun during this review. Physical validation on an Android
-13 phone confirmed the regrouped media Demo, all three replacement states, remote/fallback
-presentation, and drawable clipping before the decode-unit API adjustment; the rebuilt Demo remains
-for user verification. Glide publication remains deferred by the source-freeze rule above.
+boundary checks, publishing configuration, release intent, five-module strict API audits, assembled
+API verification, complete-history API assembly, and the production website build passed. Fixed
+`UiDp` decode bounds use the
+renderer-captured density for Coil and Glide. `qaPreview` reproduced the repository baseline's
+`input-text-fields` golden mismatch exactly at revision `1848f0d2`. `qaFull` completed its local gate
+and reached connected tests, where the attached Android 13 phone was in Doze behind keyguard and the
+Counter Activity could not enter `RESUMED`. Earlier physical validation confirmed the regrouped
+media Demo, all three replacement states, remote/fallback presentation, and drawable clipping before
+the decode-unit API adjustment; the rebuilt Demo remains for user verification. Clean-tree
+`qaQuick` passed after both commits. `planViewComposeRelease` reproduces the same missing
+`sourceRevision` failure for an existing release tag at base revision `1848f0d2`.
 
 ## Next action
 
-Run `qaPreview`, `qaFull`, and the website production build when full release certification is
-required. Create a source-freeze commit only when the user/release owner requests commits; then
-onboard Glide from that exact revision and add its published module manual and Chinese mirror.
+Submit the Draft pull request. Resolve the unrelated Preview golden, repair the legacy release-tag
+metadata through the release-owner workflow, and rerun device instrumentation with an unlocked
+device before archiving this plan.

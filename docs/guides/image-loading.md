@@ -16,7 +16,7 @@ widget boundary, and let the renderer own the lifetime of the operation attached
 | Bundled drawable or resource | Use `ImageSource.Resource`; no loader is required. |
 | A custom decoder or test fake | Implement `UiImageLoader` and return a disposable `UiImageLoadHandle`. |
 | Coil 3 networking, caching, and decoding | Add `viewcompose-image-coil` and install `CoilImageLoaderAdapter`. |
-| Glide 5 networking, caching, and decoding | Build `viewcompose-image-glide` from source and install `GlideImageLoaderAdapter`; publication onboarding is still pending. |
+| Glide 5 networking, caching, and decoding | Add `viewcompose-image-glide` and install `GlideImageLoaderAdapter`. |
 | Another platform decoder | Keep the adapter in its own optional module and map the portable request at the Android boundary. |
 
 The core modules do not assume a network, cache, or decoder. A missing loader is therefore a valid
@@ -137,9 +137,9 @@ For module-specific compatibility and operational guidance, see the
 
 ## Glide 5
 
-`viewcompose-image-glide` provides `GlideImageLoaderAdapter` in the source tree. It resolves a
-lifecycle-associated `RequestManager` from each target `ImageView`, while requests inherit the
-app's `AppGlideModule`, registry, cache, and default request configuration:
+`viewcompose-image-glide` provides `GlideImageLoaderAdapter`. It resolves a lifecycle-associated
+`RequestManager` from each target `ImageView`, while requests inherit the app's `AppGlideModule`,
+registry, cache, and default request configuration:
 
 ```kotlin
 val imageLoader = GlideImageLoaderAdapter()
@@ -160,8 +160,8 @@ override it. Target, original, and density-resolved fixed decode sizes map to Gl
 introducing a framework cache. The adapter clears only the request target represented by its
 returned handle and does not own the target `ImageView` or Glide singleton.
 
-The module is not yet included in Maven publication metadata. Consumers must use the project module
-until its publication revision and module manual are onboarded.
+For compatibility, ownership, and operational guidance, see the
+[Image Glide manual](../modules/viewcompose-image-glide/README.md).
 
 ## Verification checklist
 

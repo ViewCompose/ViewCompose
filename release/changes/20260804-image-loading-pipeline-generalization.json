@@ -5,7 +5,8 @@
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
     { "artifact": "viewcompose-widget-core", "impact": "breaking" },
     { "artifact": "viewcompose-renderer", "impact": "feature" },
-    { "artifact": "viewcompose-image-coil", "impact": "breaking" }
+    { "artifact": "viewcompose-image-coil", "impact": "breaking" },
+    { "artifact": "viewcompose-image-glide", "impact": "feature" }
   ],
   "shared": [
     {
