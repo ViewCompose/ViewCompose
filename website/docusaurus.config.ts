@@ -11,6 +11,7 @@ const resolveLocalizedMarkdownLink = createLocalizedMarkdownLinkResolver({
   docsDir,
   locales,
   defaultLocale: 'en',
+  trailingSlash: true,
 });
 
 const config: Config = {
@@ -20,7 +21,10 @@ const config: Config = {
   baseUrl: '/',
   organizationName: 'ViewCompose',
   projectName: 'ViewCompose',
-  trailingSlash: false,
+  // GitHub Pages distinguishes `foo.html` from a sibling `foo/` directory. Module manuals need
+  // both `/modules/<artifact>` and `/modules/<artifact>/<version>`, so directory output is the
+  // only static layout that can serve both paths without one shadowing the other.
+  trailingSlash: true,
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
   future: {
@@ -54,13 +58,11 @@ const config: Config = {
   },
   plugins: [
     [
-      '@docusaurus/plugin-content-docs',
+      '@docusaurus/plugin-content-pages',
       {
-        id: 'released-module-manuals',
-        path: 'src/generated/moduleManuals',
-        routeBasePath: 'modules',
-        sidebarPath: false,
-        breadcrumbs: false,
+        id: 'released-module-manual-pages',
+        path: 'src/generated/moduleManualPages',
+        routeBasePath: '/',
         showLastUpdateAuthor: false,
         showLastUpdateTime: false,
       },

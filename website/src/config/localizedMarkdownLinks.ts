@@ -6,6 +6,7 @@ type ResolverOptions = {
   docsDir: string;
   locales: readonly string[];
   defaultLocale: string;
+  trailingSlash: boolean;
 };
 
 type BrokenMarkdownLink = {
@@ -29,23 +30,30 @@ function isWithin(parent: string, child: string): boolean {
   return path !== '' && path !== '..' && !path.startsWith(`..${sep}`) && !isAbsolute(path);
 }
 
-function canonicalRoute(sourcePath: string, docsDir: string): string {
+function canonicalRoute(
+  sourcePath: string,
+  docsDir: string,
+  trailingSlash: boolean,
+): string {
   const source = readFileSync(sourcePath, 'utf8');
   const frontMatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1];
   const declaredSlug = frontMatter
     ?.match(/^slug:\s*(.+?)\s*$/m)?.[1]
     ?.replace(/^['"]|['"]$/g, '');
+  let route: string;
   if (declaredSlug) {
-    return declaredSlug.startsWith('/') ? declaredSlug : `/${declaredSlug}`;
+    route = declaredSlug.startsWith('/') ? declaredSlug : `/${declaredSlug}`;
+  } else {
+    const relativeSource = relative(docsDir, sourcePath).split(sep).join('/');
+    const routeSegments = relativeSource.replace(MARKDOWN_EXTENSION, '').split('/');
+    const lastSegment = routeSegments.at(-1)?.toLowerCase();
+    if (lastSegment === 'readme' || lastSegment === 'index') {
+      routeSegments.pop();
+    }
+    route = routeSegments.length === 0 ? '/' : `/${routeSegments.join('/')}`;
   }
 
-  const relativeSource = relative(docsDir, sourcePath).split(sep).join('/');
-  const routeSegments = relativeSource.replace(MARKDOWN_EXTENSION, '').split('/');
-  const lastSegment = routeSegments.at(-1)?.toLowerCase();
-  if (lastSegment === 'readme' || lastSegment === 'index') {
-    routeSegments.pop();
-  }
-  return routeSegments.length === 0 ? '/' : `/${routeSegments.join('/')}`;
+  return trailingSlash && route !== '/' && !route.endsWith('/') ? `${route}/` : route;
 }
 
 /**
@@ -59,6 +67,7 @@ export function createLocalizedMarkdownLinkResolver({
   docsDir,
   locales,
   defaultLocale,
+  trailingSlash,
 }: ResolverOptions): (link: BrokenMarkdownLink) => string | undefined {
   const localizedRoots = locales
     .filter((locale) => locale !== defaultLocale)
@@ -86,6 +95,6 @@ export function createLocalizedMarkdownLinkResolver({
       return undefined;
     }
 
-    return `${canonicalRoute(targetPath, docsDir)}${url.slice(urlPath.length)}`;
+    return `${canonicalRoute(targetPath, docsDir, trailingSlash)}${url.slice(urlPath.length)}`;
   };
 }
