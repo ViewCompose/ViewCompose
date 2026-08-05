@@ -89,7 +89,13 @@ When an intentional visual change has been reviewed, record its new baseline wit
 Review every changed image before committing it. An unexplained mismatch must be fixed, not
 recorded. Verification reports and difference images are written under
 `viewcompose-preview/build/reports/paparazzi/`, and the repository CI runs `qaPreview` as an
-independent required gate.
+independent required gate. A failed CI run retains its Paparazzi difference images and test reports
+in the `qa-preview-failure-<attempt>` artifact for seven days.
+
+The catalog harness permits at most `0.15%` total image difference solely to absorb the known
+Layoutlib native editable-text glyph rasterization difference between supported macOS and Linux
+hosts. Do not raise this threshold to accept unexplained layout, color, or content changes; fix the
+regression or review and record an intentional baseline instead.
 
 ## Overlay preview policy
 
