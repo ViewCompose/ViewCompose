@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-android/README.md
-translation_source_hash: 6c18cc7060394ba5bd964a1c7123842322ec2aa461a1e24d0fc1b359da42db8a
+translation_source_hash: cc49ceadf5620a7d64b01f68ab734380531c7c8c985f25f743b2d3153f3407aa
 translation_status: current
 ---
 
@@ -20,7 +20,8 @@ dependencies {
 
 - 稳定性：**Alpha**。窗口呈现和 Material 集成在 Alpha 版本之间仍可能演进。
 - 平台：Android 库，最低 SDK 跟随仓库 Android 策略。
-- 后端依赖 widget core 和 host Android，但核心渲染不反向依赖它。
+- UI Contract 与 Widget Core 会被传递暴露，因为它们的 Environment、Builder 和 Overlay
+  Contract 出现在公开 API 中。Host Android 保持为实现依赖，核心渲染不反向依赖本产物。
 - 不引入本产物时 renderer 仍可运行：浮层请求会使用 core 的 no-op host，并只输出一次诊断信息，
   不会导致应用启动失败。
 

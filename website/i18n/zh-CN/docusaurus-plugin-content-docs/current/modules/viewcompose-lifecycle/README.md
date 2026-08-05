@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-lifecycle/README.md
-translation_source_hash: 20f16fe65818068886b255179c43be2dc727c2bd97e28259410c963b2278169f
+translation_source_hash: 2405178d584ea9e9e6ffdaeeeae2c75164b3cb1a55d1c899655a473f94941ce2
 translation_status: current
 ---
 
@@ -20,7 +20,8 @@ dependencies {
 
 - 稳定性：**Alpha**。收集与 Owner 传播契约已经过审查和测试，命名在 Alpha 版本间仍可能演进。
 - 平台：Android 库，最低 SDK 跟随仓库 Android 策略。
-- 本产物依赖 runtime、widget core、Kotlin coroutines 与 AndroidX Lifecycle runtime。
+- Runtime、Widget Core、Kotlin Coroutines 与 AndroidX Lifecycle Runtime 会被传递暴露，因为
+  `State`、`UiTreeBuilder`、`Flow` 与 Lifecycle 类型出现在公开 API 中。
 - 它不拥有 Activity、Fragment、ViewModel 或 SavedStateRegistry。
 
 ## LifecycleOwner 传播

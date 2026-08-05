@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-widget-constraintlayout/README.md
-translation_source_hash: 2301366b4719daee511f722c051776101ae3eb115890b0443af06a075310b311
+translation_source_hash: a065d5fb7de2e238c79d7df510737088fc43438b1d186496132c6666cda5a6a4
 translation_status: current
 ---
 
@@ -20,6 +20,8 @@ dependencies {
 - 稳定性：**Alpha**。DSL 与 Native Mapping 已可用，高级 Helper 对齐仍可能演进。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：`viewcompose-widget-core` 不依赖该产物。
+- UI Contract 与 Widget Core 会被传递暴露，因为它们的 Modifier、单位和 Builder 类型出现在
+  公开 DSL 中；Runtime 保持为实现依赖。
 - 原生引擎：AndroidX ConstraintLayout 及 Guideline、Barrier、Flow、Group、Layer、Placeholder。
 
 ## 内联约束

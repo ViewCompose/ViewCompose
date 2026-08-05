@@ -28,7 +28,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-ui-contract"))
+    api(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-renderer"))
     api(libs.coil.core)
     implementation(libs.coil.network.okhttp)

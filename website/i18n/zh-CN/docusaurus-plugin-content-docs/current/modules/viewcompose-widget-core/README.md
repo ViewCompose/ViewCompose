@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-widget-core/README.md
-translation_source_hash: 5efbee3d0022134f5f16b24a4e1a11d62c4b4bfb90353b2e545f5ca362592966
+translation_source_hash: 5f3b252808a4221959c366629c9aa50a45545e75e839f60c4eb88636d252c627
 translation_status: current
 ---
 
@@ -29,10 +29,10 @@ dependencies {
 
 - 稳定性：**Alpha**。Alpha 版本之间可能发生源码和二进制不兼容变更。
 - 平台：Android Library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
-- 直接依赖的 ViewCompose 模块：以 API 依赖方式使用 `viewcompose-text-core`，以实现依赖方式
-  使用 `viewcompose-runtime` 和 `viewcompose-ui-contract`。
-- Android 运行时依赖：AndroidX Core、AppCompat、Material Components 与 Kotlin Coroutines。
-  具体宿主可能继续暴露其他依赖。
+- Runtime、Text Core 和 UI Contract 会被传递暴露，因为它们的 State、编辑、Modifier、单位、
+  Node 与环境类型构成公开 Widget API。
+- Kotlin Coroutines 会被传递暴露，因为 `CoroutineScope` 出现在组合 Effect API 中。AndroidX
+  Core、AppCompat 与 Material Components 保持为 Android 实现依赖；具体 Host 可能继续暴露其他依赖。
 - 本版本构建基线：Kotlin 2.0.21 与 Android Gradle Plugin 8.7.3。
 
 ## 最小组件示例

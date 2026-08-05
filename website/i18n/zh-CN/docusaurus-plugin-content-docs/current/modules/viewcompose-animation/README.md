@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: 9d7d320fee0d7861b1cb9e0fb6b5e90561a658ac32b454ebc2788084b8cdd7dc
+translation_source_hash: 6a1f988da666f86c799355b27ea4a2420b782028897f3b4cf54d1c0ff1eaaa6a
 translation_status: current
 ---
 
@@ -21,8 +21,9 @@ dependencies {
 - 稳定性：**Alpha**。State Ownership、取消、Retarget、内容保留和 Renderer 交接已有明确契约；
   API 有意小于 Compose Animation，并可能在 Alpha 版本间扩展。
 - 平台：Android 库，最低 SDK 24。
-- `viewcompose-animation-core` 是 API 依赖，也可以独立使用。
-- Runtime、UI Contract 和 Widget 集成是本产物的实现依赖。
+- Animation Core、Runtime、UI Contract 和 Widget Core 会被传递暴露，因为它们的 State、
+  Clock、Modifier、单位和 Builder 类型出现在公开动画 API 中。
+- `viewcompose-animation-core` 也可以脱离 Android UI Host 独立使用。
 - Android `View` 属性动画 Interop 属于 `viewcompose-host-android`，不属于本模块。
 
 ## 组合动画环境

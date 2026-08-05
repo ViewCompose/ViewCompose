@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-coil/README.md
-translation_source_hash: ffd26b04807a2c59bb080d7c3729f48151271485bd3e21d9a484b51f9668677b
+translation_source_hash: 8454e0187cc1f742000f47dcc160a56853f7fafd7cf298cb055193e545f8a2b5
 translation_status: current
 ---
 
@@ -20,7 +20,8 @@ dependencies {
 - 稳定性：**Alpha**。适配器边界已经建立，请求策略遵循 Coil 3。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：没有该产物时，本地资源与核心 Renderer 仍可工作。
-- 它依赖 `viewcompose-ui-contract` 与 `viewcompose-renderer`，二者不会反向依赖它。
+- UI Contract 会被传递暴露，因为平台无关图片 Request 类型出现在公开 Adapter API 中。
+  Renderer 保持为实现依赖；二者都不会反向依赖本产物。
 - Coil Core 是 API 依赖，因为 `CoilImageLoaderAdapter` 的公开构造参数使用
   `coil3.ImageLoader`；OkHttp fetcher 仍是实现依赖。
 

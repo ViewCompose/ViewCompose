@@ -11,6 +11,10 @@ This directory contains multi-step work that is currently active and must surviv
   establish diagnostic and benchmark baselines, optimize atomic state publication, modifier-only
   View patches, LocalSnapshot allocation, and conditionally shared frame scheduling while recording
   explicit rollback gates and rejected high-risk alternatives.
+- [Maven dependency contract convergence](./maven-dependency-contract-convergence.md) — align
+  advertised entry artifacts with AndroidX-style `api`/`implementation` boundaries, add published
+  consumer and metadata gates, simplify base installation, and evaluate a compatibility BOM only
+  after independent-version evidence exists.
 
 Completed tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention plans are retained in the

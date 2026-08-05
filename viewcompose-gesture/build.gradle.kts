@@ -25,9 +25,9 @@ android {
 
 dependencies {
     api(project(":viewcompose-gesture-core"))
-    implementation(project(":viewcompose-runtime"))
-    implementation(project(":viewcompose-ui-contract"))
-    implementation(project(":viewcompose-widget-core"))
+    api(project(":viewcompose-runtime"))
+    api(project(":viewcompose-ui-contract"))
+    api(project(":viewcompose-widget-core"))
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
 }

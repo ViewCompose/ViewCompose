@@ -41,6 +41,10 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
         }
         val metadata = PublishingMetadata.load(project)
         val documentationHistory = DocumentationReleaseHistory.load(project)
+        val publishedDependencyContracts = PublishedDependencyContracts.load(
+            file = project.file("gradle/viewcompose-dependency-contracts.properties"),
+            registeredArtifacts = metadata.moduleVersions.keys,
+        )
         val publishedProjects = metadata.moduleVersions.map { (module, _) ->
             project.findProject(":$module")
                 ?: throw GradleException(
@@ -167,6 +171,37 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                     documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
                 )
             }
+        val actualDependencyContracts = project.provider {
+            publishedProjects.map { publishedProject ->
+                PublishedDependencyContract(
+                    artifact = publishedProject.name,
+                    dependencies = PUBLISHED_DEPENDENCY_CONFIGURATIONS.associateWith { configurationName ->
+                        publishedProject.configurations.findByName(configurationName)
+                            ?.dependencies
+                            ?.withType(ProjectDependency::class.java)
+                            ?.map { dependency -> dependency.path.substringAfterLast(':') }
+                            ?.filter(metadata.moduleVersions::containsKey)
+                            ?.toSet()
+                            .orEmpty()
+                    },
+                ).encoded()
+            }
+        }
+        val verifyDependencyContracts =
+            project.tasks.register<VerifyPublishedDependencyContractsTask>(
+                "verifyViewComposeDependencyContracts",
+            ) {
+                group = "publishing"
+                description =
+                    "Verifies every published project dependency uses its reviewed exposure configuration."
+                expectedContracts.set(
+                    publishedDependencyContracts.map(PublishedDependencyContract::encoded),
+                )
+                actualContracts.set(actualDependencyContracts)
+            }
+        verifyConfiguration.configure {
+            dependsOn(verifyDependencyContracts)
+        }
         val releaseArtifacts = metadata.moduleVersions.keys.sorted()
         val releaseBaseRevision = project.providers
             .gradleProperty("viewComposeReleaseBaseRevision")
@@ -311,6 +346,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             mavenGroup.set(metadata.groupId)
             modules.set(metadata.moduleVersions.keys.sorted())
             moduleVersions.set(metadata.moduleVersions)
+            dependencyContracts.set(
+                publishedDependencyContracts.map(PublishedDependencyContract::encoded),
+            )
             repositoryDirectory.set(localRepository)
         }
         val verifyLocal = project.tasks.register("verifyViewComposeLocalRepository") {
@@ -330,6 +368,9 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             mavenGroup.set(metadata.groupId)
             modules.set(selectedModules)
             moduleVersions.set(metadata.moduleVersions)
+            dependencyContracts.set(
+                publishedDependencyContracts.map(PublishedDependencyContract::encoded),
+            )
             repositoryDirectory.set(localRepository)
         }
         project.tasks.register("verifySelectedViewComposeLocalRepository") {
@@ -341,7 +382,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
         project.tasks.register<GradleBuild>("verifyViewComposePublishedConsumption") {
             group = "publishing"
             description =
-                "Builds isolated feature and core consumers using only the generated Maven repository."
+                "Builds isolated host, feature, and core consumers using only the generated Maven repository."
             dependsOn(verifyLocal)
             dir = project.rootProject.file("tools/viewcompose-publishing-smoke")
             tasks = listOf("clean", "assemble")
@@ -825,6 +866,54 @@ abstract class VerifyPublishingSelectionTask : DefaultTask() {
     }
 }
 
+abstract class VerifyPublishedDependencyContractsTask : DefaultTask() {
+    @get:Input
+    abstract val expectedContracts: ListProperty<String>
+
+    @get:Input
+    abstract val actualContracts: ListProperty<String>
+
+    @TaskAction
+    fun verifyContracts() {
+        val expected = expectedContracts.get()
+            .map(PublishedDependencyContract::decode)
+            .associateBy(PublishedDependencyContract::artifact)
+        val actual = actualContracts.get()
+            .map(PublishedDependencyContract::decode)
+            .associateBy(PublishedDependencyContract::artifact)
+        val failures = mutableListOf<String>()
+        if (expected.keys != actual.keys) {
+            failures +=
+                "artifact coverage differs: missing ${(expected.keys - actual.keys).sorted()}, " +
+                    "unexpected ${(actual.keys - expected.keys).sorted()}"
+        }
+        expected.forEach { (artifact, contract) ->
+            val actualContract = actual[artifact] ?: return@forEach
+            PUBLISHED_DEPENDENCY_CONFIGURATIONS.forEach { configuration ->
+                val expectedDependencies = contract.dependencies.getValue(configuration)
+                val actualDependencies = actualContract.dependencies.getValue(configuration)
+                if (expectedDependencies != actualDependencies) {
+                    failures +=
+                        "$artifact:$configuration -> expected ${expectedDependencies.sorted()}, " +
+                            "found ${actualDependencies.sorted()}"
+                }
+            }
+        }
+        if (failures.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("ViewCompose dependency-contract verification failed:")
+                    failures.sorted().forEach { appendLine("- $it") }
+                    appendLine(
+                        "Update gradle/viewcompose-dependency-contracts.properties only after " +
+                            "reviewing the public compile surface.",
+                    )
+                },
+            )
+        }
+    }
+}
+
 abstract class VerifyCentralPublishingSelectionTask : DefaultTask() {
     @get:Input
     abstract val modules: ListProperty<String>
@@ -858,6 +947,9 @@ abstract class VerifyLocalRepositoryTask : DefaultTask() {
     @get:Input
     abstract val moduleVersions: MapProperty<String, String>
 
+    @get:Input
+    abstract val dependencyContracts: ListProperty<String>
+
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val repositoryDirectory: DirectoryProperty
@@ -867,6 +959,9 @@ abstract class VerifyLocalRepositoryTask : DefaultTask() {
         val group = mavenGroup.get()
         val versions = moduleVersions.get()
         val selectedModules = modules.get().toSet()
+        val contracts = dependencyContracts.get()
+            .map(PublishedDependencyContract::decode)
+            .associateBy(PublishedDependencyContract::artifact)
         val groupDirectory = repositoryDirectory.get().asFile.resolve(group.replace('.', '/'))
         val failures = mutableListOf<String>()
         selectedModules.sorted().forEach { module ->
@@ -929,6 +1024,40 @@ abstract class VerifyLocalRepositoryTask : DefaultTask() {
                 }
                 if ("unspecified" in content) {
                     failures += "$module -> POM contains an unspecified dependency version"
+                }
+                contracts[module]?.let { contract ->
+                    val publishedScopes = POM_DEPENDENCY_PATTERN.findAll(content)
+                        .mapNotNull { match ->
+                            val dependency = match.groupValues[1]
+                            val artifact = POM_ARTIFACT_PATTERN.find(dependency)
+                                ?.groupValues
+                                ?.get(1)
+                                ?: return@mapNotNull null
+                            val dependencyGroup = POM_GROUP_PATTERN.find(dependency)
+                                ?.groupValues
+                                ?.get(1)
+                            if (dependencyGroup != group) return@mapNotNull null
+                            val scope = POM_SCOPE_PATTERN.find(dependency)
+                                ?.groupValues
+                                ?.get(1)
+                                ?: "compile"
+                            artifact to scope
+                        }
+                        .toMap()
+                    contract.dependencies.getValue("api").forEach { dependency ->
+                        if (publishedScopes[dependency] != "compile") {
+                            failures +=
+                                "$module -> API dependency '$dependency' must use compile POM scope, " +
+                                    "found '${publishedScopes[dependency]}'"
+                        }
+                    }
+                    contract.dependencies.getValue("implementation").forEach { dependency ->
+                        if (publishedScopes[dependency] != "runtime") {
+                            failures +=
+                                "$module -> private dependency '$dependency' must use runtime POM scope, " +
+                                    "found '${publishedScopes[dependency]}'"
+                        }
+                    }
                 }
             }
         }
@@ -1147,9 +1276,7 @@ private val FEATURE_CORE_DEPENDENCIES = mapOf(
     "viewcompose-navigation" to "viewcompose-navigation-core",
     "viewcompose-preview" to "viewcompose-preview-core",
 )
-private val PUBLISHED_DEPENDENCY_CONFIGURATIONS = listOf(
-    "api",
-    "implementation",
-    "compileOnly",
-    "runtimeOnly",
-)
+private val POM_DEPENDENCY_PATTERN = Regex("<dependency>([\\s\\S]*?)</dependency>")
+private val POM_GROUP_PATTERN = Regex("<groupId>([^<]+)</groupId>")
+private val POM_ARTIFACT_PATTERN = Regex("<artifactId>([^<]+)</artifactId>")
+private val POM_SCOPE_PATTERN = Regex("<scope>([^<]+)</scope>")

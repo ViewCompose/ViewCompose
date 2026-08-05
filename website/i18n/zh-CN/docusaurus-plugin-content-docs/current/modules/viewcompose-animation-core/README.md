@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation-core/README.md
-translation_source_hash: fb6f7003e2825b0fd479958434a81a61e9aff4defe2c4971e06d8596f5737099
+translation_source_hash: 95fbd222b70aad33871bf9f149cda801cb9286e8f33b9097c47bdf4787d28d26
 translation_status: current
 ---
 
@@ -21,8 +21,8 @@ dependencies {
 - 稳定性：**Alpha**。时间归一化、重复、取消和 Transition Segment 行为已审查并测试；命名和
   高层组合集成在 Alpha 版本间仍可能演进。
 - 平台：Kotlin/JVM，不依赖 Android Framework。
-- 该产物只通过 `viewcompose-runtime` 使用 `MonotonicFrameClock`，并使用 Kotlin 协程实现结构化
-  取消。
+- `viewcompose-runtime` 会被传递暴露，因为 `MonotonicFrameClock` 出现在公开 Clock 与动画
+  API 中。Kotlin 协程用于结构化取消。
 - 应用通常通过 `viewcompose-animation` 间接获得它；自定义 Runtime、确定性采样、预览工具或
   平台无关测试可以直接依赖。
 

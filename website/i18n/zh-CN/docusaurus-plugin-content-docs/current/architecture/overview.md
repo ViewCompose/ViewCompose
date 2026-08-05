@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 29e862ce665fdb151b57264c949a7ed267a8a0ba1ae1c4215eee8d3b9483fb43
+translation_source_hash: deacae78398843123469739e3baff59555fb2442d10cde774b1ef35fbe6802d5
 translation_status: current
 ---
 
@@ -67,6 +67,14 @@ translation_status: current
 3. preview、preview worker/runner/Gradle plugin 与 benchmark 属于工具层。运行时基础模块和可选能力模块均禁止依赖工具层；所有框架模块禁止依赖 `app`。
 4. 新增 `viewcompose-*` 模块时，必须在同一提交中登记为“基础 / 可选能力 / 工具”之一。未分类模块、基础模块白名单外依赖、可选能力到工具层的依赖都会由 `verifyModuleDependencyBoundaries` 阻断。
 5. `qaQuick` 固定执行该边界测试。不能以 Demo 可以编译、依赖当前恰好存在或 code review 已确认作为跳过理由。
+6. 架构方向与 Consumer 暴露是两个独立决策。允许的底层依赖只有在其类型进入 public/protected
+   API，或当前产物明确聚合该能力时才发布为 `api`；否则保持 `implementation`。
+7. `viewcompose-host-android` 是标准 Android 应用入口，并传递暴露 Runtime、UI Contract 和
+   Widget Core。可选 Feature 同样暴露其公开契约与 Core。Renderer、Lifecycle 与 ViewModel
+   内部能力保持为 Host 私有实现，除非 Consumer 显式选择直接使用它们的 API。
+8. 精确发布边记录在
+   [`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)，
+   并对 Gradle 声明与生成的 Maven 元数据执行门禁。
 
 ### 2.2 当前架构判断
 

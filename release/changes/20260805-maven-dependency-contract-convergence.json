@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "summary": "Correct published dependency exposure so entry-point and feature artifacts provide the compile-time contracts required by their public APIs.",
+  "changes": [
+    { "artifact": "viewcompose-animation", "impact": "fix" },
+    { "artifact": "viewcompose-animation-core", "impact": "fix" },
+    { "artifact": "viewcompose-gesture", "impact": "fix" },
+    { "artifact": "viewcompose-gesture-core", "impact": "fix" },
+    { "artifact": "viewcompose-host-android", "impact": "fix" },
+    { "artifact": "viewcompose-image-coil", "impact": "fix" },
+    { "artifact": "viewcompose-image-glide", "impact": "fix" },
+    { "artifact": "viewcompose-lifecycle", "impact": "fix" },
+    { "artifact": "viewcompose-overlay-android", "impact": "fix" },
+    { "artifact": "viewcompose-renderer", "impact": "fix" },
+    { "artifact": "viewcompose-shadow-android", "impact": "fix" },
+    { "artifact": "viewcompose-ui-contract", "impact": "fix" },
+    { "artifact": "viewcompose-viewmodel", "impact": "fix" },
+    { "artifact": "viewcompose-widget-constraintlayout", "impact": "fix" },
+    { "artifact": "viewcompose-widget-core", "impact": "fix" }
+  ]
+}

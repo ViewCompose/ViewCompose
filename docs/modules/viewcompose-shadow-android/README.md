@@ -16,7 +16,8 @@ dependencies {
   raster fidelity may evolve with device evidence.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: core rendering compiles and runs without this artifact.
-- It depends on `viewcompose-renderer` and `viewcompose-ui-contract`; no core module depends back on it.
+- Renderer and UI contract are exposed transitively because their decoration and drawing contract
+  types appear in public backend APIs; no core module depends back on this artifact.
 
 ## Installation and dependency boundary
 

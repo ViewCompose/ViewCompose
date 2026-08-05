@@ -17,8 +17,8 @@ dependencies {
   behavior are reviewed and tested; names and higher-level composition integration may still evolve
   between alphas.
 - Platform: Kotlin/JVM with no Android framework dependency.
-- The artifact depends on `viewcompose-runtime` only for `MonotonicFrameClock` and uses Kotlin
-  coroutines for structured cancellation.
+- `viewcompose-runtime` is exposed transitively because `MonotonicFrameClock` is part of public
+  clock and animation APIs. Kotlin coroutines provide structured cancellation.
 - Applications normally receive it transitively from `viewcompose-animation`; depend on it directly
   for custom runtimes, deterministic sampling, preview tooling, or platform-neutral tests.
 

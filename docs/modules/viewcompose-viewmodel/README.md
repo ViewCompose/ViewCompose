@@ -16,7 +16,9 @@ dependencies {
 - Stability: **Alpha**. Owner, key, factory, and saved-state contracts are reviewed and tested;
   naming may still evolve between alphas.
 - Platform: Android library with a minimum SDK inherited from the repository Android policy.
-- The artifact depends on widget core and AndroidX ViewModel/SavedState support.
+- Widget core and AndroidX ViewModel/SavedState support are exposed transitively because their
+  builder, owner, factory, creation-extra, ViewModel, and `SavedStateHandle` types appear in public
+  APIs.
 - It does not create or clear host owners; ownership remains with Activity, Fragment, navigation, or
   a custom container.
 

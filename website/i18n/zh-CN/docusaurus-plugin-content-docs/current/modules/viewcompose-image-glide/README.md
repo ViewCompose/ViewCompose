@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-glide/README.md
-translation_source_hash: f58b7ce6c360ca817fd9a8e7fb0a8d6beb413405ad8e349e8cbe8160c83de35b
+translation_source_hash: dda0ab8267d9b9b140cf8e2e2a34909bece12f11134a964ce6ccc07b6f2b2c34
 translation_status: current
 ---
 
@@ -20,7 +20,8 @@ dependencies {
 - 稳定性：**Alpha**。适配器边界已经建立，请求执行遵循 Glide 5。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：没有该产物时，本地资源与核心 Renderer 仍可工作。
-- 它依赖 `viewcompose-ui-contract` 与 `viewcompose-renderer`，二者不会反向依赖它。
+- UI Contract 会被传递暴露，因为平台无关图片 Request 类型出现在公开 Adapter API 中。
+  Renderer 保持为实现依赖；二者都不会反向依赖本产物。
 - Glide 保持为实现依赖，因为适配器公开 API 中没有 Glide 类型。应用仍通过常规生成 API 与
   `AppGlideModule` 配置 Glide。
 

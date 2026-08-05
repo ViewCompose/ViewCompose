@@ -26,9 +26,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-runtime"))
-    implementation(project(":viewcompose-ui-contract"))
-    implementation(project(":viewcompose-widget-core"))
+    api(project(":viewcompose-runtime"))
+    api(project(":viewcompose-ui-contract"))
+    api(project(":viewcompose-widget-core"))
     implementation(project(":viewcompose-lifecycle"))
     implementation(project(":viewcompose-viewmodel"))
     implementation(project(":viewcompose-renderer"))

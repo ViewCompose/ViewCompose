@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 56d11b4b0035344f2b9b32dc13bbef308508843e932e5925df13d5b5ef27e9d0
+translation_source_hash: 1d5e7bbe44f0e6a36a8f13862608f6a538c89fb0210bf6a405464f60613b4f10
 translation_status: current
 ---
 
@@ -269,6 +269,19 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 6. 新增模块必须在 `foundationModuleDependencyRules`、`optionalCapabilityModules`、`toolingModules` 中且仅在一处登记；基础模块还必须显式登记允许的下游依赖。
 7. `qaQuick` 中的 `verifyModuleDependencyBoundaries` 是硬门禁。未分类模块、依赖反向、基础白名单外依赖不得豁免合并。
 8. 以上约束必须通过模块 guard tests 持续校验，禁止只靠 code review 口头约束。
+9. 公开依赖按 Consumer 暴露而不是实现便利性分类：public/protected 签名类型与明确的入口聚合使用
+   `api`；完全属于私有实现的依赖使用 `implementation`。caller-owned 平台集成是唯一例外，且
+   必须在模块手册与外部 Consumer 测试中写明，不能根据已有 `implementation` 声明反推。
+10. 普通应用只声明实际使用的 Host 或可选 Feature。禁止把内部基础坐标写成修补不完整 Maven
+    元数据的必需依赖。
+11. 所有直接 ViewCompose 发布边必须在同一变更中登记到
+    [`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)。
+    `verifyViewComposeDependencyContracts` 会阻断契约与 Gradle 声明漂移。
+12. 新增或修改入口必须增加最小外部 Consumer 编译测试。发版前，本地仓库检查必须验证 `api`
+    保持为 Maven compile scope、`implementation` 保持为 runtime scope。
+13. 依赖暴露变更属于发布输入变更；同一 PR 必须更新所属模块手册并添加不可变 Release Intent。
+14. 只有 Maven Central 已提供包含该元数据的版本后，公开安装示例才切换到精简依赖集合。发布后
+    的文档更新与 Maven-backed Sample 必须在没有生成本地仓库的干净 Checkout 中验证。
 
 ## 5.11 模块单包根约束
 

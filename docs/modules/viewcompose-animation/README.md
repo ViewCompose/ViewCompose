@@ -17,8 +17,9 @@ dependencies {
   handoff have reviewed contracts; the APIs are intentionally smaller than Compose Animation and
   may expand between alphas.
 - Platform: Android library, minimum SDK 24.
-- `viewcompose-animation-core` is an API dependency and can also be used independently.
-- Runtime, UI contract, and widget integration are implementation dependencies of this artifact.
+- Animation core, runtime, UI contract, and widget core are exposed transitively because their
+  state, clock, modifier, unit, and builder types appear in the public animation surface.
+- `viewcompose-animation-core` can also be used independently from an Android UI host.
 - Android `View` property animation interop belongs to `viewcompose-host-android`, not this module.
 
 ## Composition animation environment

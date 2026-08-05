@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture/README.md
-translation_source_hash: aeef09010a5e735db543c3e4d72fab7455287c6b941dc952266af4cd8a6cfa37
+translation_source_hash: 8610b7b3dbb621d59f7cfe5e7e4c6335e27cb6cf2ade664ba61dc32d78e0ffd0
 translation_status: current
 ---
 
@@ -21,7 +21,8 @@ dependencies {
 - 稳定性：**Alpha**。Modifier 形态与当前状态语义已经审查并测试；手势仲裁和更完整的 Mutation
   API 在 Alpha 版本间仍可能演进。
 - 平台：Android Library API，但公开值保持 Renderer-neutral。
-- 它传递暴露 `viewcompose-gesture-core`，并在内部使用 Runtime/Widget 组合能力。
+- Gesture Core、Runtime、UI Contract 和 Widget Core 会被传递暴露，因为它们的策略、State、
+  Modifier 和 Builder 类型出现在公开手势 API 中。
 - 大多数应用应依赖本产物，而不是直接依赖 Gesture Core。
 
 ## 识别所有权

@@ -15,7 +15,8 @@ dependencies {
 - Stability: **Alpha**. The adapter boundary is established; request execution follows Glide 5.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: local resources and the core renderer work without this artifact.
-- It depends on `viewcompose-ui-contract` and `viewcompose-renderer`; neither depends back on it.
+- UI contract is exposed transitively because portable image request types appear in public adapter
+  APIs. Renderer remains an implementation dependency; neither module depends back on this artifact.
 - Glide remains an implementation dependency because no Glide type appears in the adapter's public
   API. The application still configures Glide through its normal generated API and `AppGlideModule`.
 

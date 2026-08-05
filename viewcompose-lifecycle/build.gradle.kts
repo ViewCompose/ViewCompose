@@ -24,10 +24,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-runtime"))
-    implementation(project(":viewcompose-widget-core"))
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
+    api(project(":viewcompose-runtime"))
+    api(project(":viewcompose-widget-core"))
+    api(libs.kotlinx.coroutines.core)
+    api(libs.androidx.lifecycle.runtime.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 }

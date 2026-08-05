@@ -16,7 +16,8 @@ dependencies {
 - Stability: **Alpha**. Modifier shapes and current state semantics are reviewed and tested; gesture
   arbitration and richer mutation APIs may evolve between alphas.
 - Platform: Android library API, although the public values are renderer-neutral.
-- It exposes `viewcompose-gesture-core` transitively and uses runtime/widget composition internally.
+- Gesture core, runtime, UI contract, and widget core are exposed transitively because their policy,
+  state, modifier, and builder types appear in the public gesture surface.
 - Most applications should depend on this artifact rather than gesture core directly.
 
 ## Recognition ownership

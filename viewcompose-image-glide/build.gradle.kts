@@ -28,7 +28,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-ui-contract"))
+    api(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-renderer"))
     implementation(libs.glide)
     testImplementation(libs.junit)

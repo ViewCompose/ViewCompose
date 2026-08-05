@@ -5,9 +5,10 @@ Android View system. It creates Activity and Fragment roots, owns retained rende
 Android lifecycle and state services, resolves theme and environment values, schedules invalidation
 work on Choreographer frames, and exposes explicit native View, animation, and graphics interop.
 
-Most Android applications should depend on this module together with the widget APIs they use. A
-direct dependency on `viewcompose-renderer` is unnecessary unless the application implements a
-custom rendering host or renderer extension.
+Most Android applications need only this ViewCompose dependency. It exposes runtime, UI contract,
+and widget core transitively, while renderer, lifecycle, and ViewModel integration remain private
+host implementation details. Depend on one of those lower-level artifacts directly only when the
+application intentionally uses its advanced APIs independently of the host.
 
 ## Artifact and stability
 
@@ -19,9 +20,13 @@ dependencies {
 
 - Stability: **Alpha**. Host extension and native interop contracts may change between alpha releases.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
-- Direct ViewCompose dependencies: runtime, UI contract, widget core, lifecycle, ViewModel, and renderer.
+- Dependency exposure: runtime, UI contract, and widget core are API dependencies; lifecycle,
+  ViewModel, and renderer are implementation dependencies.
 - Android dependencies: AndroidX Activity/Fragment/AppCompat, Lifecycle, SavedState,
   ConstraintLayout, DynamicAnimation, Material Components, and Kotlin coroutines for Android.
+- Activity/Fragment class hierarchy, Material theme, and optional native animation or
+  ConstraintLayout interop are caller-owned platform integrations. Applications declare the
+  AndroidX/Material artifacts they directly use; the host does not act as their version catalog.
 
 ## Recommended host entry points
 

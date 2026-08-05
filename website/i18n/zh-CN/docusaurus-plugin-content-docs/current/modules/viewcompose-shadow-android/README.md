@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-shadow-android/README.md
-translation_source_hash: c95bdf6adc2dad8ccd6a2e37ec3fe61b2ed80ee259a9180a440e6336c10c1907
+translation_source_hash: e9aa5889ebcd2c9f88703c7c95795c16a389ad2cd42d355ae967389edc93b138
 translation_status: current
 ---
 
@@ -20,7 +20,8 @@ dependencies {
 - 稳定性：**Alpha**。Modifier Contract 在 Alpha 线内稳定；Backend 选择与栅格保真可能随设备证据演进。
 - 平台：Android 7.0（API 24）及以上。
 - 可选：没有该产物时，核心渲染仍可编译并运行。
-- 它依赖 `viewcompose-renderer` 与 `viewcompose-ui-contract`，核心模块不会反向依赖它。
+- Renderer 与 UI Contract 会被传递暴露，因为它们的 Decoration 与 Drawing Contract 类型
+  出现在公开 Backend API 中；核心模块不会反向依赖本产物。
 
 ## 安装与依赖边界
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer/README.md
-translation_source_hash: 8e75f1a60c4bc7bef947b246c1656b8c6c11c0c5c5682d9eb330b548551a8ed9
+translation_source_hash: 8b48346fa3b33822b4b326c479438301e141f2d823e739edfb4c71b09738cca3
 translation_status: current
 ---
 
@@ -27,7 +27,8 @@ dependencies {
 
 - 稳定性：**Alpha**。渲染扩展契约和诊断模型在 alpha 版本间可能变化。
 - 平台：Android library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
-- 直接 ViewCompose 依赖：runtime、text core、UI contract、graphics core 和 gesture core。
+- UI Contract 会被传递暴露，因为 Renderer 入口会接收并返回其 Node 与 Modifier 类型。
+  Runtime、Text Core、Graphics Core 和 Gesture Core 保持为实现依赖。
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
   ConstraintLayout、SwipeRefreshLayout 和 Material Components。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.7.3。

@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 7db010cd0c1dc5cb64dabc5f412278b1bed5801ccdcde0f155b34f8be4c37ab9
+translation_source_hash: c8bc158f2cf6ed4c862f0e06b332cc3a854f8c5ff7c9ac63ad92042a7d6b5290
 translation_status: current
 ---
 
@@ -180,9 +180,24 @@ minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发�
 2026-08-04 的 backfill Changeset 一次性记录了首个 Central 边界之后、此流程建立之前影响发布的
 改动。它只是迁移记录，不能作为以后在合并后补写发布意图的先例。
 
-## 依赖形态
+## 依赖暴露契约
 
-feature 制品传递暴露其平台无关 core：
+公开依赖遵循 AndroidX 风格的能力契约：应用声明自己实际使用的入口或可选 Feature 产物，这些
+产物负责暴露其公开 API 所需的 ViewCompose 类型。因此最小 Android 应用只需要一个 ViewCompose
+坐标：
+
+```kotlin
+dependencies {
+    implementation("com.viewcompose:viewcompose-host-android:<version-with-this-contract>")
+}
+```
+
+`viewcompose-host-android` 会传递暴露 Runtime、UI Contract 与 Widget Core。Renderer、Lifecycle
+和 ViewModel 集成保持为 Host 私有实现；只有应用直接使用其高级 API 时才显式依赖。业务侧重复
+声明一个已经传递引入的产物不会产生 Gradle 冲突，但属于冗余；它应表达有意直接使用 API，而
+不是弥补错误的发布元数据。
+
+Feature 产物会暴露编译其公开 API 所需的全部 ViewCompose 模块，包括平台无关 Core：
 
 ```kotlin
 dependencies {
@@ -204,8 +219,43 @@ dependencies {
 }
 ```
 
+所有直接依赖按以下规则分类：
+
+1. 依赖类型出现在 public/protected 签名、Receiver、泛型边界、父类型、Type Alias、已编译公开
+   Sample 中，或当前产物被明确设计为该能力的标准入口时，使用 `api`。唯一例外是已明确记录、且
+   Consumer 为编写平台入口本就必须声明的 caller-owned 平台集成；模块手册与 Consumer Smoke Test
+   必须写明该直接依赖。
+2. Consumer 无需在编译类路径解析该依赖，也能编译并使用受支持的公开 API 时，才使用
+   `implementation`。
+3. ViewCompose 内部依赖与第三方依赖采用同一套判断。生产代码存在 Import 既不是 `api` 的充分
+   条件，也不是必要条件；发布契约才是判断依据。
+4. 禁止要求用户声明内部坐标来修补缺失的编译依赖边。应修复所属产物的元数据，并增加 Consumer
+   回归用例。
+5. 新发布模块必须在首发前定义入口角色与精确依赖暴露；禁止静默复制相邻模块的依赖形态。
+
+[`gradle/viewcompose-dependency-contracts.properties`](../../gradle/viewcompose-dependency-contracts.properties)
+是所有登记产物直接 ViewCompose 依赖的机器可读白名单。`verifyViewComposeDependencyContracts`
+会将其与 Gradle 声明对比；本地仓库检查会验证 `api` 生成 Maven compile scope，
+`implementation` 生成 runtime scope。发布消费 Smoke Project 随后使用生成仓库编译最小 Host、
+可选 Feature 与纯 JVM Core 三条路径。这些检查进入发布配置和仓库验证流程；修改依赖边时，必须
+同步更新契约、所属模块手册与 Release Intent。
+
+Maven Central 尚未提供包含相应元数据的版本时，禁止提前把当前安装页或 Maven-backed 仓库 Sample
+切换为精简依赖集合。Central 发布成功后，再把 README、教程与 Sample 切换到精简集合，并在不含
+`build/maven-repository` 的干净 Checkout 中验证。这样可以保证源码变更等待首次公开发版期间，
+文档仍然真实可用。
+
 Gradle Module Metadata 保留 `api`/`implementation` variant；同时为其他构建工具生成 Maven POM。
 每个制品发布 sources JAR 供 IDE 导航，并发布 javadoc JAR 满足仓库要求。
+
+ViewCompose 当前不发布 BOM。各模块独立发版，Release Planner 还可能传播仅依赖更新，因此目前
+BOM 会承诺尚未由证据支持的独立版本组合兼容性。现阶段继续显式填写版本。只有混合版本兼容测试
+覆盖受支持组合，且发布自动化能够原子更新 Platform 后，才评估 BOM；禁止用人工维护的版本目录
+替代这一证据。
+
+Android Host 有意不充当 AndroidX 或 Material 版本目录。应用仍需声明其类继承、主题或可选原生
+Interop 直接使用的 Activity/Fragment 与 Material 依赖。这个 caller-owned 例外不能用于隐藏
+Host DSL 必需的 ViewCompose 基础模块。
 
 ## 本地 Maven 工作流
 
@@ -243,8 +293,9 @@ Gradle Module Metadata 保留 `api`/`implementation` variant；同时为其他�
 ```
 
 这些命令分别发布并验证独立集合、检查已有 repository、验证主制品/sources/docs/POM/checksum/
-stable signature/feature-to-core dependency，以及构建一个 Android feature consumer 和一个纯 JVM
-core consumer。完整发布任务不属于 `qaQuick`；日常 QA 只运行廉价 coordinate/version 验证。
+stable signature/feature-to-core dependency，以及构建最小 Android Host、Android Feature 与纯
+JVM Core 三个 Consumer。完整发布任务不属于 `qaQuick`；日常 QA 只运行廉价
+coordinate/version 验证。
 
 ## 版本 override 与签名
 
