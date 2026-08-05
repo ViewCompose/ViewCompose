@@ -12,6 +12,10 @@ gate. Connected testing now fails before instrumentation with an actionable devi
 when the selected phone is asleep or locked. Plan archival remains open only for the unlocked-device
 `qaFull` run and final manual Demo confirmation.
 
+## Maven release changesets
+
+- `release/changes/20260804-image-loading-pipeline-generalization.json`
+
 ## Scope
 
 Generalize ViewCompose image loading from a remote-URL-only adapter boundary into one target-aware

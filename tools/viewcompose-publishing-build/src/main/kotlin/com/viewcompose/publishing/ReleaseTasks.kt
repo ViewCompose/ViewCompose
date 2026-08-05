@@ -9,9 +9,12 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
 abstract class VerifyViewComposeReleaseIntentTask : DefaultTask() {
@@ -137,6 +140,45 @@ abstract class PrepareViewComposeReleaseTask : DefaultTask() {
         logger.lifecycle(
             "Prepared ${versions.size} ViewCompose artifact(s). Review the metadata diff, run " +
                 "release verification, and commit it as the metadata-only release commit.",
+        )
+    }
+}
+
+abstract class VerifyArchivedViewComposeReleasePlansTask : DefaultTask() {
+    @get:Internal
+    abstract val repositoryDirectory: DirectoryProperty
+
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val plansDirectory: DirectoryProperty
+
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val releaseChangesDirectory: DirectoryProperty
+
+    @get:Input
+    abstract val modules: ListProperty<String>
+
+    @get:Input
+    abstract val availableModules: ListProperty<String>
+
+    @get:Input
+    abstract val artifactDependencies: MapProperty<String, String>
+
+    @TaskAction
+    fun verifyArchival() {
+        val verification = ActiveReleasePlanArchivalGate.verify(
+            repositoryRoot = repositoryDirectory.get().asFile,
+            plansDirectory = plansDirectory.get().asFile,
+            selectedArtifacts = modules.get().toSet(),
+            knownArtifacts = availableModules.get().toSet(),
+            dependencies = artifactDependencies.get().mapValues { (_, encoded) ->
+                encoded.split(',').map(String::trim).filter(String::isNotEmpty).toSet()
+            },
+        )
+        logger.lifecycle(
+            "Verified ${verification.activePlanCount} active execution plan(s) and " +
+                "${verification.linkedChangeSetCount} linked Maven release changeset(s).",
         )
     }
 }

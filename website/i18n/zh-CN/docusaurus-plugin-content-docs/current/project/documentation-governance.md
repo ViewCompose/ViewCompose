@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 0cf615408a3498b60bba3116a5d07b02050ffae8c52d03f767873cbfa169f932
+translation_source_hash: 9a4cec84c39bc96649e3be8010a7ec3625004a56da47bbb4b9d72d99502b6dcb
 translation_status: current
 ---
 
@@ -235,6 +235,13 @@ section index 可达；archive 由 archive index 代表。
 建页前先找既有真相源，不能创建第二份 roadmap、architecture overview、module manual 或 status。
 只有跨多个实质步骤/Session 时使用 active plan；计划记录状态、范围、non-goal、baseline、完成条件、
 步骤、验证、last verified 和 next action。完成后把长期结论移到有效文档，再移入 archive。
+
+每份 active plan 还必须且只能包含一个 `## Maven release changesets` section。计划尚未产生生产
+Changeset 时使用一条 `- None.`；实现开始新增不可变 `release/changes/*.json` 后，把每个仓库相对
+路径作为独立 inline-code bullet。公开上传 Maven Central 前，发布门禁根据这些 Changeset 推导直接
+制品与 dependency propagation 制品；若选定制品仍属于 active plan，就拒绝上传。该验收边界之前
+仍可运行 release planning、metadata preparation 和本地发布。相关 Central 上传只有在完成计划已
+移入 archive、两个计划 index 已更新且最终证据得到保留后才能继续。
 
 deprecated 公共文档保留到支持 release line EOL，标记 deprecated、链接替代并保留版本 URL；
 不再代表支持契约的仓库文档移到 archive。
