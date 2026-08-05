@@ -2,15 +2,16 @@
 
 ## Status
 
-Active. The contract, renderer, Coil and Glide adapters, Demo, migration, and public documentation
-are implemented and pass `qaQuick`. Glide publication metadata, strict documentation status, module
+Completed and accepted for release archival on 2026-08-05. The contract, renderer, Coil and Glide
+adapters, Demo, migration, and public documentation are implemented and pass `qaQuick`. Glide
+publication metadata, strict documentation status, module
 catalog entry, bilingual manual, and immutable documentation history now reference the truthful
 source-freeze revision `79a78900fc33d629ca0de831c633529ec79947dd`. Strict API and complete-history
 documentation assembly pass. The pre-existing Preview baselines and release-planner defects are
 fixed, `qaPreview` and `planViewComposeRelease` pass, and both now have regression coverage or a CI
 gate. Connected testing now fails before instrumentation with an actionable device-readiness error
-when the selected phone is asleep or locked. Plan archival remains open only for the unlocked-device
-`qaFull` run and final manual Demo confirmation.
+when the selected phone is asleep or locked. The release owner accepted that explicitly recorded
+device-only limitation and authorized archival; no unrecorded `qaFull` rerun is claimed.
 
 ## Maven release changesets
 
@@ -271,7 +272,7 @@ required test from the current stage fails.
 - **Done:** Establish the current source, renderer, adapter, documentation, and release baseline.
 - **Done:** Record locked decisions, test matrix, module onboarding, and completion criteria.
 - **Done:** Run `./gradlew verifyDocumentationStructure` for the plan/index change.
-- **Pending:** Commit the plan and index as one documentation-only step if the user requests commits.
+- **Done:** Record the plan and index in the implementation history.
 
 Suggested commit: `docs: plan general image loading pipeline`
 
@@ -546,9 +547,8 @@ Suggested commit after the source freeze: `build: onboard viewcompose image glid
 - **Done:** Confirm direct resource loading works with no optional adapter installed.
 - **Done:** Confirm the final Changeset covers every automatically detected artifact.
 - **Done:** Update the plan status, validation evidence, last-verified date, and next action.
-- **Pending:** Move this file to `docs/archive/`, update the archive index, and restore
-  `docs/project/plans/README.md` to its no-active-plan state only after every completion criterion is
-  satisfied.
+- **Done:** Move this file to `docs/archive/` and update the active and archive indexes after release
+  acceptance.
 
 Final validation:
 
@@ -635,10 +635,11 @@ lifecycle stage and public-contract migration deserve separate turns even when t
 
 ## Blockers
 
-No implementation, Preview-baseline, documentation, or release-planning blocker remains. The only
-outstanding execution prerequisite is an awake and unlocked Android device for `qaFull`. The new
-`verifyConnectedAndroidDeviceReady` gate identifies the current Samsung device as asleep with the
-keyguard showing and stops before Espresso; it deliberately does not bypass a secure lock screen.
+No implementation, Preview-baseline, documentation, release-planning, or publication blocker
+remains. A final `qaFull` rerun on an awake and unlocked device was not recorded. The
+`verifyConnectedAndroidDeviceReady` gate identified the Samsung device as asleep with the keyguard
+showing and stopped before Espresso; it deliberately did not bypass a secure lock screen. The
+release owner accepted this device-only limitation when authorizing archival and publication.
 
 The production website build now passes after replacing this active plan's inaccessible Markdown
 task controls with non-interactive status text.
@@ -664,5 +665,5 @@ rebuilt Demo remains for final user verification.
 
 ## Next action
 
-Rerun `qaFull` on an awake and unlocked device and complete the final media Demo confirmation before
-archiving this plan or marking the Draft pull request ready.
+None in this archived plan. Maven publication, Central verification, and post-release documentation
+updates continue under the normative publishing workflow.

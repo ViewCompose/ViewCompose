@@ -24,10 +24,11 @@ dependencies {
 
 - Stability: **Alpha**. Source and binary compatibility may change between alpha releases.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
-- Direct ViewCompose dependencies: `viewcompose-text-core` as an API dependency, with
-  `viewcompose-runtime` and `viewcompose-ui-contract` as implementation dependencies.
-- Android runtime dependencies: AndroidX Core, AppCompat, Material Components, and Kotlin
-  coroutines. A concrete host may expose additional dependencies.
+- Runtime, text core, and UI contract are exposed transitively because their state, editing,
+  modifier, unit, node, and environment types form the public widget surface.
+- Kotlin coroutines is exposed because `CoroutineScope` appears in composition-effect APIs.
+  AndroidX Core, AppCompat, and Material Components remain Android implementation dependencies; a
+  concrete host may expose additional dependencies.
 - Build baseline for this release: Kotlin 2.0.21 and Android Gradle Plugin 8.7.3.
 
 ## Minimal component usage

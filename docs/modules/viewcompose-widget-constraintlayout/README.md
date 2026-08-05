@@ -14,6 +14,8 @@ dependencies {
 - Stability: **Alpha**. The DSL and native mapping are available; advanced helper parity may evolve.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: `viewcompose-widget-core` does not depend on this artifact.
+- UI contract and widget core are exposed transitively because their modifier, unit, and builder
+  types appear in the public DSL; runtime remains an implementation dependency.
 - Native engine: AndroidX ConstraintLayout and its Guideline, Barrier, Flow, Group, Layer, and
   Placeholder helpers.
 

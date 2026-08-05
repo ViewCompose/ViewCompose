@@ -28,7 +28,7 @@ android {
 dependencies {
     implementation(project(":viewcompose-runtime"))
     implementation(project(":viewcompose-text-core"))
-    implementation(project(":viewcompose-ui-contract"))
+    api(project(":viewcompose-ui-contract"))
     implementation(project(":viewcompose-graphics-core"))
     implementation(project(":viewcompose-gesture-core"))
     implementation(libs.androidx.core.ktx)

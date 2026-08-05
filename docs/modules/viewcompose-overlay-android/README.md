@@ -15,7 +15,9 @@ dependencies {
 
 - Stability: **Alpha**. Window presentation and Material integration may evolve between alphas.
 - Platform: Android library with a minimum SDK inherited from the repository Android policy.
-- The backend depends on widget core and host Android but core rendering does not depend on it.
+- UI contract and widget core are exposed transitively because their environment, builder, and
+  overlay contracts appear in public APIs. Host Android remains an implementation dependency, and
+  core rendering does not depend on this artifact.
 - Omitting the artifact keeps the renderer operational: overlay requests use the core no-op host and
   emit a one-time diagnostic message instead of failing application startup.
 

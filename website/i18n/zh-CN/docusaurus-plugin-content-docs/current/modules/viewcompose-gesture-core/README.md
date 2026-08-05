@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture-core/README.md
-translation_source_hash: a97c2ae1bb38da8dc1a5dddc96b9078ea77587ec9396c560aed2a135b263a640
+translation_source_hash: 41308c47b50587305fe81a004c2ab906cd7450976d5e9e8d82470dc1d61b8aeb
 translation_status: current
 ---
 
@@ -21,7 +21,7 @@ dependencies {
 - 稳定性：**Alpha**。当前阈值顺序和锚点选择行为已经审查并测试；策略命名与高层手势集成在
   Alpha 版本间仍可能演进。
 - 平台：Kotlin/JVM，不依赖 Android Framework。
-- 该产物只依赖 `viewcompose-ui-contract` 中共享的方向与 Swipe 值。
+- UI Contract 会被传递暴露，因为共享的方向与 Swipe 值出现在公开策略签名中。
 - 应用通常通过 `viewcompose-gesture` 间接获得它；自定义 Renderer、确定性策略测试或非 Android
   指针集成可以直接依赖。
 

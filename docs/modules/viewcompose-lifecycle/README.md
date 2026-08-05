@@ -15,7 +15,8 @@ dependencies {
 - Stability: **Alpha**. Collection and owner-propagation contracts are reviewed and tested; naming
   may still evolve between alphas.
 - Platform: Android library with a minimum SDK inherited from the repository Android policy.
-- The artifact depends on runtime, widget core, Kotlin coroutines, and AndroidX Lifecycle runtime.
+- Runtime, widget core, Kotlin coroutines, and AndroidX Lifecycle runtime are exposed transitively
+  because `State`, `UiTreeBuilder`, `Flow`, and lifecycle types appear in public APIs.
 - It does not own Activities, Fragments, ViewModels, or saved-state registries.
 
 ## Lifecycle owner propagation

@@ -59,6 +59,16 @@ Dependencies flow one way from the foundation through optional capabilities and 
 3. Preview, preview worker/runner/Gradle plugin, and benchmark are tooling. Runtime and optional-capability modules must not depend on tooling, and no framework module may depend on `app`.
 4. Every new `viewcompose-*` module must be classified as foundation, optional capability, or tooling in the same change. `verifyModuleDependencyBoundaries` rejects unclassified modules, dependencies outside a foundation allowlist, and optional-capability dependencies on tooling.
 5. `qaQuick` always runs the boundary check. A compilable demo, an already-present dependency, or review approval is not a reason to bypass it.
+6. Architectural direction and consumer exposure are separate decisions. An allowed lower-level
+   dependency is published as `api` only when its types form part of the public/protected surface or
+   the artifact intentionally aggregates that capability; otherwise it remains `implementation`.
+7. `viewcompose-host-android` is the standard Android application entry point and transitively
+   exposes runtime, UI contract, and widget core. Optional feature artifacts similarly expose their
+   required public contract and core modules. Renderer, lifecycle, and ViewModel internals remain
+   private to the host unless consumers directly opt into their APIs.
+8. The exact published edges live in
+   [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
+   and are enforced against Gradle declarations and generated Maven metadata.
 
 ### 2.2 Architectural assessment
 

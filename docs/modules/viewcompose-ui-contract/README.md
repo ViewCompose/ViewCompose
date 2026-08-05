@@ -22,10 +22,10 @@ dependencies {
 
 - Stability: **Alpha**. Source and binary compatibility may change between alpha releases.
 - Platform: Kotlin/JVM, compiled with the Java 11 toolchain; no Android SDK or AndroidX dependency.
-- Direct ViewCompose dependencies: `viewcompose-text-core` as an API dependency, plus
-  `viewcompose-runtime` and `viewcompose-graphics-core` as implementation dependencies.
-- Transitively exposed contract family: the platform-neutral text document and editing model from
-  `viewcompose-text-core`.
+- Transitively exposed contract families: platform-neutral text/editing from
+  `viewcompose-text-core` and drawing models from `viewcompose-graphics-core`; both appear in public
+  UI contract signatures.
+- `viewcompose-runtime` remains an implementation dependency.
 - Build baseline for this release: Kotlin 2.0.21.
 
 ## Minimal contract usage

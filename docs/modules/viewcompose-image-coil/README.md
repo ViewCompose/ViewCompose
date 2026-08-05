@@ -15,7 +15,8 @@ dependencies {
 - Stability: **Alpha**. The adapter boundary is established; request policy follows Coil 3.
 - Platform: Android 7.0 (API 24) and newer.
 - Optional: local resources and the core renderer work without this artifact.
-- It depends on `viewcompose-ui-contract` and `viewcompose-renderer`; neither depends back on it.
+- UI contract is exposed transitively because portable image request types appear in public adapter
+  APIs. Renderer remains an implementation dependency; neither module depends back on this artifact.
 - Coil Core is an API dependency because `CoilImageLoaderAdapter` accepts `coil3.ImageLoader` in
   its public constructor. The OkHttp fetcher remains an implementation dependency.
 

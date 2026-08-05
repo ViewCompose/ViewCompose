@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 7274a5c292189a35dca840f73cdaf21410b348a9531ae95c78564b4c45a125b5
+translation_source_hash: 55608a2fcd3e4732296ae76638979b25fbbf91133c7bc76456cea7ae2ab87277
 translation_status: current
 ---
 
@@ -10,8 +10,9 @@ translation_status: current
 它负责创建 Activity/Fragment 根节点、管理保留式渲染会话、提供 Android 生命周期和状态服务、
 解析主题与环境、把失效请求调度到 Choreographer 帧，并提供显式的原生 View、动画与图形互操作。
 
-大多数 Android 应用应依赖本模块以及实际使用的 widget API。只有实现自定义渲染 host 或
-renderer 扩展时，才需要直接依赖 `viewcompose-renderer`。
+大多数 Android 应用只需要这一个 ViewCompose 依赖。它会传递暴露 Runtime、UI Contract 与
+Widget Core，而 Renderer、Lifecycle 和 ViewModel 集成保持为 Host 私有实现。只有应用需要
+脱离 Host 直接使用某个底层高级 API 时，才显式依赖相应产物。
 
 ## 构件与稳定性
 
@@ -23,9 +24,12 @@ dependencies {
 
 - 稳定性：**Alpha**。host 扩展与原生互操作契约在 alpha 版本间可能变化。
 - 平台：Android library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
-- 直接 ViewCompose 依赖：runtime、UI contract、widget core、lifecycle、ViewModel 和 renderer。
+- 依赖暴露：Runtime、UI Contract 与 Widget Core 是 API 依赖；Lifecycle、ViewModel 和 Renderer
+  是实现依赖。
 - Android 依赖：AndroidX Activity/Fragment/AppCompat、Lifecycle、SavedState、
   ConstraintLayout、DynamicAnimation、Material Components 和 Android coroutines。
+- Activity/Fragment 类层次、Material 主题，以及可选原生动画或 ConstraintLayout Interop 属于
+  caller-owned 平台集成。应用声明自己直接使用的 AndroidX/Material 产物；Host 不充当其版本目录。
 
 ## 推荐 host 入口
 

@@ -239,9 +239,27 @@ task, so bypassing the root convenience task does not bypass plan acceptance. It
   -PviewComposePublishModules=viewcompose-runtime,viewcompose-navigation-core
 ```
 
-## Dependency shape
+## Dependency exposure contract
 
-Feature artifacts expose their platform-neutral core artifact transitively:
+Published dependencies follow an AndroidX-style capability contract: an application declares the
+entry-point or optional-feature artifacts it intentionally uses, while those artifacts expose the
+ViewCompose types required by their public API. A minimal Android application therefore needs only
+one ViewCompose coordinate:
+
+```kotlin
+dependencies {
+    implementation("com.viewcompose:viewcompose-host-android:<version-with-this-contract>")
+}
+```
+
+`viewcompose-host-android` exposes runtime, UI contract, and widget core transitively. Renderer,
+lifecycle, and ViewModel integration remain private implementation details of the host unless an
+application directly uses their advanced APIs. Adding a second direct dependency on an already
+transitive artifact is harmless Gradle deduplication, but it is redundant and should communicate
+deliberate direct API usage rather than compensate for incorrect publication metadata.
+
+Feature artifacts expose every ViewCompose module required to compile their public surface,
+including their platform-neutral core artifact:
 
 ```kotlin
 dependencies {
@@ -263,9 +281,53 @@ dependencies {
 }
 ```
 
+Classify every direct dependency using these rules:
+
+1. Use `api` when a dependency type appears in a public or protected signature, receiver, generic
+   bound, supertype, type alias, or compiled public sample, or when the artifact intentionally acts
+   as the supported entry point for that capability. The only exception is a documented
+   caller-owned platform integration that consumers must already declare to author that platform
+   entry point; its module manual and consumer smoke test must name the direct dependency.
+2. Use `implementation` only when consumers can compile and use the supported public surface
+   without resolving that dependency on their compile classpath.
+3. Treat ViewCompose and third-party dependencies identically. An import in production source is
+   neither sufficient nor necessary evidence for `api`; the published contract is the deciding
+   factor.
+4. Do not ask users to declare internal coordinates merely to repair a missing compile edge. Fix
+   the owning artifact's metadata and add a consumer regression instead.
+5. A new published module must define its intended entry-point role and exact dependency exposure
+   before its first release. It must not silently copy the dependency shape of a neighboring module.
+
+[`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
+is the machine-readable allowlist for every registered artifact's direct ViewCompose dependencies.
+`verifyViewComposeDependencyContracts` compares it with Gradle declarations, and local repository
+inspection verifies that `api` dependencies become Maven compile scope while `implementation`
+dependencies become runtime scope. Published-consumption smoke projects then compile the minimal
+host, optional-feature, and pure-JVM core paths against the generated repository. These checks are
+part of the publishing configuration and repository verification workflows; changing a dependency
+edge requires updating the contract, the owning module manual, and release intent together.
+
+Do not switch current installation pages or Maven-backed repository samples to a reduced dependency
+set before Maven Central serves a release containing the corresponding metadata. After Central
+publication succeeds, update README, tutorials, and samples to the reduced set and verify them from
+a clean checkout without `build/maven-repository`. This ordering keeps documentation truthful while
+the source change is waiting for its first public release.
+
 Gradle Module Metadata preserves `api`/`implementation` variant semantics. Maven POMs are also
 generated for other build tools. Every artifact publishes a sources JAR for IDE source navigation
 and a javadoc JAR for repository requirements.
+
+ViewCompose does not currently publish a BOM. Modules release independently, and the release
+planner may propagate dependency-only releases, so a BOM would promise compatibility that has not
+yet been established for independently versioned combinations. Continue to use explicit versions.
+Evaluate a BOM only after compatibility tests cover supported mixed-version sets and release
+automation can update the platform atomically; do not introduce a manually maintained version
+catalog as a substitute.
+
+The Android host deliberately does not act as an AndroidX or Material version catalog. Applications
+continue to declare Activity/Fragment and Material dependencies they directly use for their class
+hierarchy, theme, or optional native interop. This caller-owned exception does not permit hiding a
+ViewCompose foundation module required by the advertised host DSL.
 
 ## Local Maven workflow
 
@@ -312,8 +374,8 @@ stable-version signatures, and feature-to-core dependencies:
 ./gradlew verifyViewComposeLocalRepository
 ```
 
-Build two isolated consumers that know nothing about project modules—one Android feature consumer
-and one pure JVM core consumer:
+Build three isolated consumers that know nothing about project modules—a minimal Android host
+consumer, an Android feature consumer, and a pure JVM core consumer:
 
 ```bash
 ./gradlew verifyViewComposePublishedConsumption

@@ -16,7 +16,8 @@ dependencies {
 - Stability: **Alpha**. The current threshold ordering and anchor-selection behavior are reviewed
   and tested; policy names and higher-level gesture integration may still evolve between alphas.
 - Platform: Kotlin/JVM with no Android framework dependency.
-- The artifact depends only on `viewcompose-ui-contract` for shared orientation and swipe values.
+- UI contract is exposed transitively because shared orientation and swipe values appear in public
+  policy signatures.
 - Applications normally receive it transitively from `viewcompose-gesture`; depend on it directly
   for custom renderers, deterministic policy tests, or non-Android pointer integrations.
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-viewmodel/README.md
-translation_source_hash: 1d941267cd132a82bd23d5438074056ffac963cf9fa2e90e836ffa1ce46aab13
+translation_source_hash: a182c28d4c173db639a624a22624039240831e1ef31813a67e61d776589ac6ac
 translation_status: current
 ---
 
@@ -21,7 +21,8 @@ dependencies {
 - 稳定性：**Alpha**。Owner、key、factory 与 Saved State 契约已经过审查和测试，命名在 Alpha
   版本间仍可能演进。
 - 平台：Android 库，最低 SDK 跟随仓库 Android 策略。
-- 本产物依赖 widget core 与 AndroidX ViewModel/SavedState 支持。
+- Widget Core 与 AndroidX ViewModel/SavedState 支持会被传递暴露，因为它们的 Builder、Owner、
+  Factory、Creation Extra、ViewModel 与 `SavedStateHandle` 类型出现在公开 API 中。
 - 它不创建或清理宿主 Owner；Ownership 仍属于 Activity、Fragment、导航或自定义容器。
 
 ## Owner 传播

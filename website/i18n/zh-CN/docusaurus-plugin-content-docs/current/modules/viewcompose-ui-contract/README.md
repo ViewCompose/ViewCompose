@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: faf570052f36b8342930437f2d66d23b76a8124229e99a854bca41aa0b52c41e
+translation_source_hash: 6235aef5ccf7141d646d5772ec1fb57b859083d767e8a61f43c4d3ec5ef662e1
 translation_status: current
 ---
 
@@ -26,9 +26,9 @@ dependencies {
 
 - 稳定性：**Alpha**。Alpha 版本之间可能发生源码和二进制不兼容变更。
 - 平台：Kotlin/JVM，使用 Java 11 工具链编译；不依赖 Android SDK 或 AndroidX。
-- 直接依赖的 ViewCompose 模块：以 API 依赖方式使用 `viewcompose-text-core`，以实现依赖方式
-  使用 `viewcompose-runtime` 和 `viewcompose-graphics-core`。
-- 传递暴露的契约族：来自 `viewcompose-text-core` 的平台无关文本 Document 与编辑模型。
+- 传递暴露的契约族：来自 `viewcompose-text-core` 的平台无关文本/编辑模型，以及来自
+  `viewcompose-graphics-core` 的绘图模型；二者都出现在公开 UI Contract 签名中。
+- `viewcompose-runtime` 保持为实现依赖。
 - 本版本构建基线：Kotlin 2.0.21。
 
 ## 最小契约示例

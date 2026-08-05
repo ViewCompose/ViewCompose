@@ -12,6 +12,6 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":viewcompose-ui-contract"))
+    api(project(":viewcompose-ui-contract"))
     testImplementation(libs.junit)
 }

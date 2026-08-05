@@ -12,7 +12,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":viewcompose-runtime"))
+    api(project(":viewcompose-runtime"))
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
 }

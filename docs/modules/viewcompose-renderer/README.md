@@ -25,7 +25,9 @@ dependencies {
 - Stability: **Alpha**. Renderer extension contracts and diagnostics may change between alpha
   releases.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
-- Direct ViewCompose dependencies: runtime, text core, UI contract, graphics core, and gesture core.
+- UI contract is exposed transitively because renderer entry points accept and return its node and
+  modifier types. Runtime, text core, graphics core, and gesture core remain implementation
+  dependencies.
 - Android runtime dependencies: AndroidX Core, AppCompat, RecyclerView, ViewPager2,
   ConstraintLayout, SwipeRefreshLayout, and Material Components.
 - Build baseline for this release: Kotlin 2.0.21 and Android Gradle Plugin 8.7.3.

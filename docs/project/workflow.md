@@ -235,6 +235,25 @@ last resort.
    allowed downstream dependencies.
 7. `verifyModuleDependencyBoundaries` in `qaQuick` is a non-waivable gate.
 8. Guard tests enforce the boundary; review convention alone is insufficient.
+9. Classify each published dependency by consumer exposure, not by implementation convenience:
+   public/protected signature types and intentional entry-point aggregates use `api`; dependencies
+   that are fully private to the implementation use `implementation`. A caller-owned platform
+   integration is the only exception and must be named in the module manual and external-consumer
+   test; it cannot be inferred from an existing `implementation` declaration.
+10. A normal application declares the host or optional-feature artifacts it uses. Do not document
+    internal foundation coordinates as mandatory workarounds for incomplete Maven metadata.
+11. Add every direct ViewCompose publication edge to
+    [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
+    in the same change. `verifyViewComposeDependencyContracts` rejects drift between that contract
+    and Gradle declarations.
+12. A new or changed entry point must include a minimal external-consumer compile test. Published
+    repository inspection must preserve `api` as Maven compile scope and `implementation` as runtime
+    scope before release.
+13. Dependency exposure changes are publication-input changes: update the owning module manual and
+    add immutable release intent in the same pull request.
+14. Public installation examples switch to a reduced dependency set only after Maven Central serves
+    a release containing that metadata. Verify the post-publication documentation update and
+    Maven-backed samples from a clean checkout without a generated local repository.
 
 ### 5.12 One package root per module
 

@@ -94,6 +94,13 @@ const config: Config = {
             ],
             to: '/tutorials',
           },
+          {
+            from: [
+              '/project/plans/image-loading-pipeline-generalization',
+              '/project/plans/maven-dependency-contract-convergence',
+            ],
+            to: '/project/plans',
+          },
         ],
       },
     ],
