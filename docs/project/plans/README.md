@@ -20,3 +20,9 @@ Before adding a plan, read [Documentation governance](../documentation-governanc
 have a clear completion condition, be updated during implementation, and move to
 [`docs/archive/`](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md)
 when complete.
+
+Every active plan must also contain exactly one `## Maven release changesets` section. Declare
+`- None.` before publication-relevant implementation begins; afterward, replace it with one
+inline-code bullet for every immutable `release/changes/*.json` file owned by the plan. Maven
+Central upload rejects selected direct or dependency-propagated artifacts while their linked plan
+remains in this directory.

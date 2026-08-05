@@ -16,6 +16,10 @@ Last verified: 2026-08-05.
 Next action: execute Phase 0 without changing runtime behavior, capture the first same-device
 baseline, and update the status and evidence ledger in this plan before scheduling Phase 1.
 
+## Maven release changesets
+
+- None. Implementation has not started, so this plan owns no publication-relevant Changeset yet.
+
 ## Objective
 
 Improve ViewCompose state publication, local propagation, Android View patching, and multi-session
