@@ -6,9 +6,11 @@ Active. The contract, renderer, Coil and Glide adapters, Demo, migration, and pu
 are implemented and pass `qaQuick`. Glide publication metadata, strict documentation status, module
 catalog entry, bilingual manual, and immutable documentation history now reference the truthful
 source-freeze revision `79a78900fc33d629ca0de831c633529ec79947dd`. Strict API and complete-history
-documentation assembly pass. Plan archival remains open while the separately reproduced Preview
-snapshot baseline, legacy release-tag metadata, and the locked-device instrumentation limitation
-are tracked explicitly.
+documentation assembly pass. The pre-existing Preview baselines and release-planner defects are
+fixed, `qaPreview` and `planViewComposeRelease` pass, and both now have regression coverage or a CI
+gate. Connected testing now fails before instrumentation with an actionable device-readiness error
+when the selected phone is asleep or locked. Plan archival remains open only for the unlocked-device
+`qaFull` run and final manual Demo confirmation.
 
 ## Scope
 
@@ -623,41 +625,38 @@ lifecycle stage and public-contract migration deserve separate turns even when t
 | 2026-08-05 | 8 publication | `79a78900` source freeze | Publishing configuration, release intent, five-module strict API audit, assembled API verification, and complete-history API assembly passed | Amended the unpushed source freeze to include the immutable Glide module manual, then updated publication history to the resulting truthful revision. |
 | 2026-08-05 | 9 certification | Pending metadata commit | `qaFull` reached connected tests after all local `qaQuick` work; `qaPreview` and the Counter connected test recorded external limitations | `qaPreview` reproduces the identical `input-text-fields` golden mismatch on base commit `1848f0d2`; no baseline image was changed in this image-loading PR. The physical Android 13 device was in Doze with the keyguard showing, so Counter instrumentation could not launch a resumed Activity. |
 | 2026-08-05 | 9 certification | Metadata commit | Clean-tree `qaQuick` passed; `planViewComposeRelease` reproduced a base-revision tag limitation | Release planning stops on both this branch and base revision `1848f0d2` because the existing `maven/viewcompose-animation/0.1.0-alpha02` tag does not declare `sourceRevision=<full SHA>`. This PR does not rewrite immutable release tags. |
+| 2026-08-05 | Baseline repair | `9421adb1` | `qaPreview`, `qaQuick`, documentation structure/language/translation checks, publishing tests, and release intent passed | Reviewed and recorded all ten stale light-theme Paparazzi images, added the independent `qaPreview` CI job, and documented the baseline-review rule. Added a connected-device preflight to every repository debug connected-test entry; the locked Samsung device now fails immediately with awake/keyguard diagnostics. Fixed signed-tag parsing to accept the documented inline `sourceRevision` token while rejecting missing, malformed, uppercase, or duplicate values. |
+| 2026-08-05 | First-release planning | `0a358ca1` | Publishing configuration/tests and clean-tree `planViewComposeRelease` passed | Added explicit `release.unpublishedModules` state so missing tags remain fatal except for a declared first publication. The plan contains 18 releases, keeps Glide at `unreleased` → `0.1.0-alpha01` and source revision `79a78900`, and continues to use verified signed tags for every previously published artifact. |
 
 ## Blockers
 
-No image-loading implementation blocker remains. Two pre-existing or environmental certification
-limitations are recorded without broadening this pull request:
-
-- `qaPreview` fails on `input-text-fields` with the same expected/actual image at both this branch
-  and base revision `1848f0d2`; the unrelated golden is intentionally unchanged.
-- `qaFull` passes its complete local `qaQuick` dependency graph, then the connected Counter test
-  cannot launch an Activity while the attached Android 13 device is in Doze with keyguard showing.
-- `planViewComposeRelease` fails identically on this branch and base revision `1848f0d2` because the
-  existing `maven/viewcompose-animation/0.1.0-alpha02` tag lacks its required `sourceRevision`
-  declaration; immutable release-tag repair is outside this image-loading change.
+No implementation, Preview-baseline, documentation, or release-planning blocker remains. The only
+outstanding execution prerequisite is an awake and unlocked Android device for `qaFull`. The new
+`verifyConnectedAndroidDeviceReady` gate identifies the current Samsung device as asleep with the
+keyguard showing and stops before Espresso; it deliberately does not bypass a secure lock screen.
 
 The production website build now passes after replacing this active plan's inaccessible Markdown
 task controls with non-interactive status text.
 
 ## Last verified
 
-2026-08-05: focused module tests, app compilation, `qaQuick` (634 tasks), documentation
+2026-08-05: focused module tests, app compilation, `qaQuick` (634 tasks), `qaPreview` (268 tasks),
+documentation
 structure/language/translation checks, website type checking, migration sample pairing, module
 boundary checks, publishing configuration, release intent, five-module strict API audits, assembled
 API verification, complete-history API assembly, and the production website build passed. Fixed
 `UiDp` decode bounds use the
-renderer-captured density for Coil and Glide. `qaPreview` reproduced the repository baseline's
-`input-text-fields` golden mismatch exactly at revision `1848f0d2`. `qaFull` completed its local gate
-and reached connected tests, where the attached Android 13 phone was in Doze behind keyguard and the
-Counter Activity could not enter `RESUMED`. Earlier physical validation confirmed the regrouped
-media Demo, all three replacement states, remote/fallback presentation, and drawable clipping before
-the decode-unit API adjustment; the rebuilt Demo remains for user verification. Clean-tree
-`qaQuick` passed after both commits. `planViewComposeRelease` reproduces the same missing
-`sourceRevision` failure for an existing release tag at base revision `1848f0d2`.
+renderer-captured density for Coil and Glide. Ten light-theme Paparazzi baselines were visually
+reviewed and now pass the independent CI-backed gate. Clean-tree release planning verifies the
+documented inline signed-tag metadata and produces 18 release entries, including Glide's explicit
+first release at its frozen source revision. The device gate reproduced the current Samsung Android
+13 state as Doze plus showing keyguard and stopped before instrumentation with recovery guidance.
+Earlier physical validation confirmed the regrouped media Demo, all three replacement states,
+remote/fallback presentation, and drawable clipping before the decode-unit API adjustment; the
+rebuilt Demo remains for final user verification.
 
 ## Next action
 
-Submit the Draft pull request. Resolve the unrelated Preview golden, repair the legacy release-tag
-metadata through the release-owner workflow, and rerun device instrumentation with an unlocked
-device before archiving this plan.
+Push the baseline-hardening commits to the Draft pull request, let both `qaQuick` and `qaPreview` CI
+checks complete, then rerun `qaFull` on an awake and unlocked device and complete the final media
+Demo confirmation before archiving this plan or marking the pull request ready.
