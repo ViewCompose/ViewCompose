@@ -23,6 +23,10 @@ export const CURRENT_DOCUMENTATION_TOOLING_PATHS = Object.freeze([
     replaceDirectory: true,
   }),
   Object.freeze({
+    relativePath: 'gradle/viewcompose-dependency-contracts.properties',
+    replaceDirectory: false,
+  }),
+  Object.freeze({
     relativePath: 'gradle/viewcompose-documentation-releases.properties',
     replaceDirectory: false,
   }),
@@ -122,6 +126,48 @@ export async function installCurrentDocumentationTooling(
   }
 }
 
+export function projectDependencyContractsForPublishingMetadata(
+  contractContent,
+  publishingContent,
+) {
+  const registeredArtifacts = new Set(
+    [...publishingContent.matchAll(/^module\.(viewcompose-[a-z0-9-]+)\.version=/gmu)]
+      .map((match) => match[1]),
+  );
+  if (registeredArtifacts.size === 0) {
+    throw new Error('Cannot project dependency contracts without registered Maven artifacts');
+  }
+
+  const contractArtifactPattern = /^module\.(viewcompose-[a-z0-9-]+)=/u;
+  const contractArtifacts = new Set(
+    contractContent
+      .split(/\r?\n/u)
+      .map((line) => contractArtifactPattern.exec(line)?.[1])
+      .filter(Boolean),
+  );
+  const missing = [...registeredArtifacts].filter((artifact) => !contractArtifacts.has(artifact));
+  if (missing.length > 0) {
+    throw new Error(`Dependency contracts are missing registered artifacts: ${missing.sort().join(', ')}`);
+  }
+
+  const projected = contractContent.split(/\r?\n/u).flatMap((line) => {
+    const artifact = contractArtifactPattern.exec(line)?.[1];
+    if (!artifact) return [line];
+    if (!registeredArtifacts.has(artifact)) return [];
+    const separator = line.indexOf('=');
+    const declarations = line.slice(separator + 1).split(';').map((declaration) => {
+      const configurationSeparator = declaration.indexOf('=');
+      const configuration = declaration.slice(0, configurationSeparator);
+      const dependencies = declaration.slice(configurationSeparator + 1)
+        .split(',')
+        .filter((dependency) => registeredArtifacts.has(dependency));
+      return `${configuration}=${dependencies.join(',')}`;
+    });
+    return [`${line.slice(0, separator)}=${declarations.join(';')}`];
+  });
+  return projected.join('\n');
+}
+
 async function generateRevision(revision, entries, releases) {
   await capture('git', ['cat-file', '-e', `${revision}^{commit}`], {cwd: repositoryRoot});
   const workspace = await mkdtemp(resolve(tmpdir(), 'viewcompose-versioned-api-'));
@@ -141,6 +187,16 @@ async function generateRevision(revision, entries, releases) {
         entry.sourceRevision,
       );
     }
+    const dependencyContractsPath = resolve(
+      workspace,
+      'gradle/viewcompose-dependency-contracts.properties',
+    );
+    const dependencyContracts = await readFile(dependencyContractsPath, 'utf8');
+    await writeFile(
+      dependencyContractsPath,
+      projectDependencyContractsForPublishingMetadata(dependencyContracts, metadata),
+      'utf8',
+    );
     await writeFile(metadataPath, metadata, 'utf8');
     const wrapper = resolve(workspace, 'gradlew');
     await chmod(wrapper, 0o755);
