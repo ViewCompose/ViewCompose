@@ -85,11 +85,11 @@ test('rewrites historical manuals to immutable API and public document routes', 
   assert.equal(
     rewritten,
     '[API](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha01/) ' +
-      '[Architecture](/architecture/overview)',
+      '[Architecture](/architecture/overview/)',
   );
 
   const document = versionedManualDocument(entries[0], '# Runtime\n\nBody.\n', entries);
-  assert.match(document, /slug: \/viewcompose-runtime\/0\.1\.0-alpha01/u);
+  assert.match(document, /slug: \/modules\/viewcompose-runtime\/0\.1\.0-alpha01/u);
   assert.match(document, /Released documentation snapshot/u);
   assert.match(document, new RegExp(revision, 'u'));
 });

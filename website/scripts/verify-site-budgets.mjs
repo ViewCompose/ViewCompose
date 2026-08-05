@@ -25,7 +25,10 @@ export async function verifySiteBudgets({
   const cssFiles = allFiles.filter((path) => relativePath(path).startsWith('assets/css/'));
   const searchIndexes = allFiles.filter((path) => /(^|\/)search-index-[^/]+\.json$/.test(relativePath(path)));
   const canonicalApiFiles = allFiles.filter((path) => relativePath(path).startsWith('api/'));
-  const localizedApiCopies = allFiles.filter((path) => relativePath(path).split('/')[1] === 'api');
+  const localizedApiCopies = allFiles.filter((path) => {
+    const segments = relativePath(path).split('/');
+    return segments[1] === 'api' && !(segments.length === 3 && segments[2] === 'index.html');
+  });
   const apiManifest = await readJson(resolve(buildDirectory, 'api', 'manifest.json'));
 
   const outputBytes = await totalBytes(allFiles);

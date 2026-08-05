@@ -51,6 +51,8 @@ test('API history is budgeted per immutable artifact version', async () => {
 test('localized Dokka copies fail the site budget gate', async () => {
   const {root, buildDirectory, budgetsPath} = await fixture();
   try {
+    await mkdir(resolve(buildDirectory, 'zh-CN/api'), {recursive: true});
+    await writeFile(resolve(buildDirectory, 'zh-CN/api/index.html'), 'landing', 'utf8');
     await mkdir(resolve(buildDirectory, 'zh-CN/api/artifact/1.0.0'), {recursive: true});
     await writeFile(resolve(buildDirectory, 'zh-CN/api/artifact/1.0.0/index.html'), 'copy', 'utf8');
 
@@ -58,6 +60,18 @@ test('localized Dokka copies fail the site budget gate', async () => {
       verifySiteBudgets({buildDirectory, budgetsPath}),
       /localized API output duplicates canonical Dokka files/u,
     );
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('localized API landing does not count as a duplicated Dokka tree', async () => {
+  const {root, buildDirectory, budgetsPath} = await fixture();
+  try {
+    await mkdir(resolve(buildDirectory, 'zh-CN/api'), {recursive: true});
+    await writeFile(resolve(buildDirectory, 'zh-CN/api/index.html'), 'landing', 'utf8');
+
+    await verifySiteBudgets({buildDirectory, budgetsPath});
   } finally {
     await rm(root, {recursive: true, force: true});
   }

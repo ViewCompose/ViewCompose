@@ -39,12 +39,17 @@ function isRedirect($) {
   return $('meta[http-equiv="refresh" i]').length > 0;
 }
 
+function isClientRenderedSearchPage(path) {
+  return /^(?:zh-CN\/)?search(?:\/index)?\.html$/u.test(path);
+}
+
 export async function verifyAccessibility() {
   const htmlFiles = await collectFiles(buildDir, (path) => path.endsWith('.html'));
   const violations = [];
   let auditedPages = 0;
   let redirectPages = 0;
   let generatedApiPages = 0;
+  let clientRenderedSearchPages = 0;
 
   for (const file of htmlFiles) {
     const path = relativeBuildPath(file);
@@ -52,6 +57,12 @@ export async function verifyAccessibility() {
     // pages here would make third-party template changes indistinguishable from site regressions.
     if (path.startsWith('api/') || path.includes('/api/')) {
       generatedApiPages += 1;
+      continue;
+    }
+    // Local search renders its results after hydration and intentionally has no server-rendered
+    // document landmark. Audit every authored target page instead of treating this shell as prose.
+    if (isClientRenderedSearchPage(path)) {
+      clientRenderedSearchPages += 1;
       continue;
     }
 
@@ -136,9 +147,10 @@ export async function verifyAccessibility() {
 
   console.log(
     `Accessibility verification passed: ${auditedPages} site pages audited, ` +
-      `${redirectPages} redirects and ${generatedApiPages} generated API pages excluded.`,
+      `${redirectPages} redirects, ${clientRenderedSearchPages} client-rendered search pages, and ` +
+      `${generatedApiPages} generated API pages excluded.`,
   );
-  return {auditedPages, redirectPages, generatedApiPages};
+  return {auditedPages, redirectPages, clientRenderedSearchPages, generatedApiPages};
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {

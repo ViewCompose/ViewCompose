@@ -12,7 +12,7 @@ test('localized API copies are removed without deleting locale landing pages', a
     await mkdir(resolve(buildDirectory, 'zh-CN/api/artifact/version'), {recursive: true});
     await writeFile(resolve(buildDirectory, 'api/artifact/version/index.html'), 'canonical', 'utf8');
     await writeFile(resolve(buildDirectory, 'zh-CN/api/artifact/version/index.html'), 'duplicate', 'utf8');
-    await writeFile(resolve(buildDirectory, 'zh-CN/api.html'), 'landing', 'utf8');
+    await writeFile(resolve(buildDirectory, 'zh-CN/api/index.html'), 'landing', 'utf8');
 
     await pruneLocalizedApiCopies({buildDirectory});
 
@@ -20,8 +20,8 @@ test('localized API copies are removed without deleting locale landing pages', a
       await readFile(resolve(buildDirectory, 'api/artifact/version/index.html'), 'utf8'),
       'canonical',
     );
-    assert.equal(await readFile(resolve(buildDirectory, 'zh-CN/api.html'), 'utf8'), 'landing');
-    await assert.rejects(access(resolve(buildDirectory, 'zh-CN/api')));
+    assert.equal(await readFile(resolve(buildDirectory, 'zh-CN/api/index.html'), 'utf8'), 'landing');
+    await assert.rejects(access(resolve(buildDirectory, 'zh-CN/api/artifact/version')));
   } finally {
     await rm(buildDirectory, {recursive: true, force: true});
   }

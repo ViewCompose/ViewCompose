@@ -6,7 +6,7 @@ import {loadDocumentationReleases} from './documentation-releases.mjs';
 
 const websiteRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repositoryRoot = resolve(websiteRoot, '..');
-const outputRoot = resolve(websiteRoot, 'src/generated/moduleManuals');
+const outputRoot = resolve(websiteRoot, 'src/generated/moduleManualPages');
 
 function gitFile(revision, path) {
   return new Promise((accept, reject) => {
@@ -39,7 +39,9 @@ function routeForMarkdown(sourcePath, target) {
   if (!resolved.startsWith('docs/')) return undefined;
   const routeSegments = resolved.slice('docs/'.length).replace(/\.mdx?$/u, '').split('/');
   if (['readme', 'index'].includes(routeSegments.at(-1)?.toLowerCase())) routeSegments.pop();
-  return `/${routeSegments.join('/')}${fragment ?? ''}`;
+  const route = `/${routeSegments.join('/')}`;
+  const slashTerminatedRoute = route === '/' ? route : `${route}/`;
+  return `${slashTerminatedRoute}${fragment ?? ''}`;
 }
 
 export function rewriteSnapshotLinks(content, {artifact, order, entries, sourcePath}) {
@@ -82,7 +84,7 @@ export function versionedManualDocument(entry, source, entries) {
     `https://github.com/ViewCompose/ViewCompose/blob/${entry.sourceRevision}/${sourcePath}`;
   return `---
 title: ${JSON.stringify(`${title} ${entry.version}`)}
-slug: /${entry.artifact}/${entry.version}
+slug: /modules/${entry.artifact}/${entry.version}
 pagination_next: null
 pagination_prev: null
 custom_edit_url: null
@@ -91,7 +93,7 @@ custom_edit_url: null
 > **Released documentation snapshot.** This immutable manual describes
 > \`${entry.artifact}:${entry.version}\` from
 > [source revision \`${entry.sourceRevision.slice(0, 8)}\`](${revisionUrl}). For current guidance,
-> open the [live module manual](/modules/${entry.artifact}).
+> open the [live module manual](/modules/${entry.artifact}/).
 
 ${body.trim()}\n`;
 }
@@ -103,7 +105,7 @@ export async function generateVersionedModuleManuals() {
   for (const entry of releases.entries) {
     const sourcePath = `docs/modules/${entry.artifact}/README.md`;
     const source = await gitFile(entry.sourceRevision, sourcePath);
-    const output = resolve(outputRoot, entry.artifact, `${entry.version}.md`);
+    const output = resolve(outputRoot, 'modules', entry.artifact, `${entry.version}.md`);
     await mkdir(dirname(output), {recursive: true});
     await writeFile(output, versionedManualDocument(entry, source, releases.entries), 'utf8');
   }
