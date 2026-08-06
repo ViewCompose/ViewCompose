@@ -12,15 +12,15 @@ import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.width
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.remember
 
 /**
  * ViewCompose 版本的列表性能场景。

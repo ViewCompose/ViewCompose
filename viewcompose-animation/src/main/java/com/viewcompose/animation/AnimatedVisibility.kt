@@ -6,12 +6,12 @@ import com.viewcompose.animation.core.tween
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.AnimatedVisibilityHostNodeProps
-import com.viewcompose.widget.core.Box
-import com.viewcompose.widget.core.BoxScope
-import com.viewcompose.widget.core.ColumnScope
-import com.viewcompose.widget.core.RowScope
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Box
+import com.viewcompose.ui.foundation.BoxScope
+import com.viewcompose.ui.foundation.ColumnScope
+import com.viewcompose.ui.foundation.RowScope
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
 import kotlin.math.abs
 
 /** Selects which measured axes participate in an expand or shrink transition. */

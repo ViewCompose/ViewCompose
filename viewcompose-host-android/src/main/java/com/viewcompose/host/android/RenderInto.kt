@@ -2,13 +2,14 @@ package com.viewcompose.host.android
 
 import android.view.ViewGroup
 import com.viewcompose.host.android.runtime.ensureAndroidRenderSessionPlatformInstalled
-import com.viewcompose.widget.core.OverlayHost
-import com.viewcompose.widget.core.OverlayHostDefaults
-import com.viewcompose.widget.core.RenderStats
-import com.viewcompose.widget.core.RenderTreeResult
-import com.viewcompose.widget.core.RenderFailure
-import com.viewcompose.widget.core.RenderFrameReport
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.node.PlatformRenderContainerHandle
+import com.viewcompose.ui.foundation.OverlayHost
+import com.viewcompose.ui.foundation.OverlayHostDefaults
+import com.viewcompose.ui.foundation.RenderStats
+import com.viewcompose.ui.foundation.RenderTreeResult
+import com.viewcompose.ui.foundation.RenderFailure
+import com.viewcompose.ui.foundation.RenderFrameReport
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Owns a retained ViewCompose render session and its mounted Android View tree.
@@ -18,7 +19,7 @@ import com.viewcompose.widget.core.UiTreeBuilder
  * session's fail-fast lifecycle contract.
  */
 class RenderSession internal constructor(
-    private val delegate: com.viewcompose.widget.core.RenderSession,
+    private val delegate: com.viewcompose.ui.foundation.RenderSession,
 ) {
     /** Last render failure; later successful frames do not erase this historical failure. */
     val lastRenderFailure: RenderFailure?
@@ -79,8 +80,10 @@ fun renderInto(
     content: UiTreeBuilder.() -> Unit,
 ): RenderSession {
     ensureAndroidRenderSessionPlatformInstalled()
-    val session = com.viewcompose.widget.core.RenderSession(
-        container = container,
+    val session = com.viewcompose.ui.foundation.RenderSession(
+        container = object : PlatformRenderContainerHandle {
+            override val container: Any = container
+        },
         content = content,
         debug = debug,
         debugTag = debugTag,

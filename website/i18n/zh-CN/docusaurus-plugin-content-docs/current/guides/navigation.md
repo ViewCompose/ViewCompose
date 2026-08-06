@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 40550a290bbf2f8cf8a25611f14e88d29d776ce915fc3a859a5a884da1ad1a99
+translation_source_hash: 6e7573952bec62a3098cd92e371b66833e200a5898d56778b72c12cd6f34b0f7
 translation_status: current
 ---
 
@@ -15,7 +15,7 @@ ViewCompose 导航只把 Android `Activity`/`Window` 当作根平台宿主。des
 
 1. `viewcompose-navigation-core`：纯 Kotlin/JVM，拥有不可变 route/back stack、两阶段导航
    事务、页面生命周期规划和持久化契约；
-2. `viewcompose-navigation`：拥有 destination `RenderSession`、AndroidX Lifecycle/ViewModel/
+2. `viewcompose-navigation-android`：拥有 destination `RenderSession`、AndroidX Lifecycle/ViewModel/
    SavedState adapter、系统返回、转场和 destination 容器 View。
 
 Android 集成在孵化期间与现有应用入口隔离；公共 API 委托给内部事务测试使用的同一 coordinator。
@@ -150,13 +150,13 @@ stack；public-host 集成测试持有真实 owner、ViewModel、provider 和 co
 
 每次导航变更必须通过：
 
-1. `viewcompose-navigation` 完整单测；
+1. `viewcompose-navigation-android` 完整单测；
 2. API 33 Back/lifecycle 与真实进程死亡；
 3. API 35 平台 Predictive Back 与真实进程死亡；
 4. 仓库 `qaFull`。
 
 ```bash
-./gradlew :viewcompose-navigation:testDebugUnitTest --no-configuration-cache
+./gradlew :viewcompose-navigation-android:testDebugUnitTest --no-configuration-cache
 
 ANDROID_SERIAL=<api33-device> ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.NavigationBackDeviceTest \

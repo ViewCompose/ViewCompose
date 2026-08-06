@@ -5,17 +5,17 @@ import com.viewcompose.text.InputTransformation
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.EmailField
-import com.viewcompose.widget.core.NumberField
-import com.viewcompose.widget.core.PasswordField
-import com.viewcompose.widget.core.TextArea
-import com.viewcompose.widget.core.TextField
-import com.viewcompose.widget.core.TextFieldSize
-import com.viewcompose.widget.core.TextFieldVariant
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.EmailField
+import com.viewcompose.ui.foundation.NumberField
+import com.viewcompose.ui.foundation.PasswordField
+import com.viewcompose.ui.foundation.TextArea
+import com.viewcompose.ui.foundation.TextField
+import com.viewcompose.ui.foundation.TextFieldSize
+import com.viewcompose.ui.foundation.TextFieldVariant
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.rememberTextFieldState
+import com.viewcompose.ui.foundation.rememberTextFieldState
 
 @ViewComposePreview(name = "TextField", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseTextField() {

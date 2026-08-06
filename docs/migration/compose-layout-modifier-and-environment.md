@@ -8,7 +8,7 @@ does not imply equivalent measurement, lifecycle, invalidation, or Android integ
 
 | Baseline | Version | Purpose |
 | --- | --- | --- |
-| ViewCompose published modules | runtime `0.1.0-alpha02`; UI contract, renderer, widget, and host `0.1.0-alpha03` | Target of this migration guide |
+| ViewCompose target modules | runtime `0.1.0-alpha02`; UI Contract and Host `0.1.0-alpha03`; UI Foundation and Renderer `0.1.0-alpha01` | Target of this migration guide |
 | Compose Runtime, UI, and Foundation | `1.11.4` stable | Upstream semantic reference |
 | Repository Compose dependencies | `1.7.8` | Executable comparison baseline in this repository |
 | Repository Kotlin toolchain | `2.0.21` | Compilation baseline for comparison code |
@@ -30,9 +30,9 @@ This page uses exactly four capability states:
   redesigned rather than renamed.
 - **Unsupported**: no public equivalent exists in the verified baseline.
 
-Last verified: **2026-08-05**.
+Last verified: **2026-08-06**.
 
-Re-verification owner: **ViewCompose UI Contract and Renderer maintainers**.
+Re-verification owner: **ViewCompose UI Contract, UI Foundation, and Android Renderer maintainers**.
 
 ## Evidence model
 
@@ -131,10 +131,10 @@ also defines the ordinary single-measure rule and the public `Layout` escape hat
 ViewCompose builds immutable VNodes first. The Android renderer then creates native widgets and
 containers. For example, Text becomes `TextView`, Row and Column become an oriented
 `DeclarativeLinearLayout`, and Box becomes `DeclarativeBoxLayout`. The definitive mapping is in
-[`ViewNodeFactory.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewNodeFactory.kt),
+[`ViewNodeFactory.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewNodeFactory.kt),
 lines 55–126. Row and Column retain Android `LinearLayout` measurement and implement declarative
 arrangement during native placement; see
-[`DeclarativeLinearLayout.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/container/layout/DeclarativeLinearLayout.kt),
+[`DeclarativeLinearLayout.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/container/layout/DeclarativeLinearLayout.kt),
 lines 21–92.
 
 Consequently, a Compose custom `Layout` cannot be translated as a normal ViewCompose component.
@@ -163,7 +163,7 @@ ViewCompose resolves dimensions through native LayoutParams. The parent-aware pr
 4. the renderer's node-and-parent default.
 
 This precedence is implemented in
-[`ViewLayoutParamsFactory.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt),
+[`ViewLayoutParamsFactory.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt),
 lines 73–99. Exact dp dimensions are converted with the VNode's captured density. Fill helpers map
 to Android `MATCH_PARENT`; they do not preserve every fractional or intrinsic Compose option.
 
@@ -182,7 +182,7 @@ container structure.
 The public dimension and edge contracts are in
 [`ModifierLayoutExtensions.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt),
 lines 6–187 and 189–290. Their native LayoutParams application is in
-[`ViewLayoutParamsFactory.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt),
+[`ViewLayoutParamsFactory.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt),
 lines 91–149 and 168–192.
 
 ## Row, Column, Box, and scoped parent data
@@ -200,9 +200,9 @@ ViewCompose exposes these supported scoped operations:
 | `BoxScope` | box `align` | FrameLayout child gravity |
 
 The declarations and positive-weight check are in
-[`LayoutScopes.kt`](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/dsl/LayoutScopes.kt),
+[`LayoutScopes.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/LayoutScopes.kt),
 lines 12–96. Parent-data validation is in
-[`ModifierParentDataValidator.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/layout/ModifierParentDataValidator.kt),
+[`ModifierParentDataValidator.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/layout/ModifierParentDataValidator.kt),
 lines 28–97.
 
 Scope availability is the supported application API, but it is not a complete runtime type-safety
@@ -224,7 +224,7 @@ Android ConstraintLayout zero-dimension convention.
 The contract elements are defined in
 [`ModifierElementsLayout.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierElementsLayout.kt),
 lines 117–150. Parent-aware conversion is implemented in
-[`ViewLayoutParamsFactory.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt),
+[`ViewLayoutParamsFactory.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt),
 lines 91–98 and 247–255.
 
 This is a practical migration path, not proof of Compose ConstraintLayout parity. Recheck
@@ -253,13 +253,13 @@ separate renderer phases. The verified folding rules include:
 | System-bar and IME inset padding | Both values are retained and their selected physical sides are added. |
 
 The fold is implemented in
-[`ResolvedModifiers.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/modifier/ResolvedModifiers.kt),
+[`ResolvedModifiers.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/modifier/ResolvedModifiers.kt),
 lines 72–172. Do not infer a rule for one modifier family from another family.
 
 Equality also drives reuse. `NodeBindingDiffer` can skip a subtree when the node, environment,
 specification, children, and modifier inputs remain equivalent. An environment or modifier change
 causes a rebind; see
-[`NodeBindingDiffer.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/binder/core/NodeBindingDiffer.kt),
+[`NodeBindingDiffer.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/NodeBindingDiffer.kt),
 lines 22–75.
 
 `NativeViewElement` is a special case. Its equality and hash code use only `stableKey`, deliberately
@@ -307,14 +307,14 @@ ViewCompose captures an immutable `UiEnvironmentValues` on every emitted VNode. 
 The snapshot contract explicitly requires a new tree after a platform configuration change; see
 [`UiEnvironmentValues.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/environment/UiEnvironmentValues.kt),
 lines 92–112. The Android bridge reads resources and configuration in
-[`AndroidEnvironmentBridge.kt`](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidEnvironmentBridge.kt),
+[`AndroidEnvironmentBridge.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/environment/AndroidEnvironmentBridge.kt),
 lines 15–29. Unit conversion is defined by
 [`UiUnits.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/unit/UiUnits.kt),
 lines 157–223.
 
 At bind time, the renderer stores the environment on the View, applies native layout direction, and
 sets TextView locales. That boundary is in
-[`ViewModifierApplier.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewModifierApplier.kt),
+[`ViewModifierApplier.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewModifierApplier.kt),
 lines 41–55. A changed environment forces a full node rebind rather than a visual-only patch.
 
 Direction support is incomplete at the modifier API boundary. Row, Column, Box, and Constraint
@@ -336,16 +336,16 @@ Compose distinguishes tracked `compositionLocalOf` reads from broad
 ViewCompose `UiLocal` is a typed handle into a thread-scoped immutable map used while a VNode tree is
 built. `ProvideLocal` installs a value for a nested block and restores the prior map afterward.
 `ProvideLocals` performs the same operation for multiple bindings. The implementation is in
-[`UiLocals.kt`](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/context/UiLocals.kt),
+[`UiLocals.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/UiLocals.kt),
 lines 3–103, and
-[`LocalValue.kt`](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/context/LocalValue.kt),
+[`LocalValue.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/LocalValue.kt),
 lines 35–120.
 
 The crucial migration rule is that `UiLocals.current(local)` is lookup, not observation. It does not
 register that call site as a dependent reader. Instead, `UiTreeBuilder.emit` captures the complete
 current local snapshot as one of its composition inputs. When another invalidation already causes
 composition and that snapshot differs, the node group is rebuilt. See
-[`UiTreeBuilder.kt`](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/dsl/UiTreeBuilder.kt),
+[`UiTreeBuilder.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/UiTreeBuilder.kt),
 lines 66–124 and 192–214.
 
 Therefore:
@@ -365,9 +365,9 @@ scope returns. ViewCompose preserves locals explicitly for those boundaries.
 For lazy lists, `LazyItemCollector` captures a `LocalSnapshot`, includes it in the effective content
 token, creates a child session with that snapshot, and refreshes both the snapshot and content
 closure on update. See
-[`LazyCollectionScope.kt`](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/dsl/collection/LazyCollectionScope.kt),
+[`LazyCollectionScope.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/collection/LazyCollectionScope.kt),
 lines 147–193, and
-[`WidgetLazyListItemSession.kt`](../../viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/session/WidgetLazyListItemSession.kt),
+[`WidgetLazyListItemSession.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/WidgetLazyListItemSession.kt),
 lines 8–72.
 
 This preserves nested local values across holder reuse, but it does not remove the caller's identity
@@ -390,7 +390,7 @@ ViewCompose offers two focused modifiers:
 The renderer installs an AndroidX `WindowInsetsCompat` listener, records base padding, and adds the
 selected inset pixels. Removing both modifiers restores base padding and removes the listener. The
 implementation is in
-[`ModifierInsetsApplier.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierInsetsApplier.kt),
+[`ModifierInsetsApplier.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierInsetsApplier.kt),
 lines 11–128.
 
 Unlike Compose, the listener returns the incoming insets unchanged and does not communicate how
@@ -432,7 +432,7 @@ transaction-aware lifecycle:
 The public contract is in
 [`AndroidInteropDsl.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidInteropDsl.kt),
 lines 11–82. Mounting and commit scheduling are in
-[`ViewTreePatchPipeline.kt`](../../viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt),
+[`ViewTreePatchPipeline.kt`](../../viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt),
 lines 527–579.
 
 `update`, `onReset`, and `nativeView` must not start non-repeatable external work. A failed frame can
@@ -467,37 +467,37 @@ The following local evidence protects the claims in this page:
   [`ModifierContractTest.kt`](../../viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/ModifierContractTest.kt),
   lines 20–49, 85–117, and 170–212.
 - Modifier folding, additive z-index, ordered shadows, and ConstraintLayout parent data:
-  [`ResolvedModifiersTest.kt`](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt),
+  [`ResolvedModifiersTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt),
   lines 38–47, 82–129, and 165–205.
 - Compatible and incompatible scoped parent data:
-  [`ModifierParentDataValidatorTest.kt`](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/layout/ModifierParentDataValidatorTest.kt),
+  [`ModifierParentDataValidatorTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/layout/ModifierParentDataValidatorTest.kt),
   lines 31–159.
 - Structural modifier equality and environment-driven renderer rebind:
-  [`NodeBindingDifferTest.kt`](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/tree/NodeBindingDifferTest.kt),
+  [`NodeBindingDifferTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/NodeBindingDifferTest.kt),
   lines 115–141.
 - Density, locales, direction, nested environment values, and capture into a VNode:
-  [`EnvironmentTest.kt`](../../viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/context/EnvironmentTest.kt),
+  [`EnvironmentTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/EnvironmentTest.kt),
   lines 15–68.
 - Density-sensitive ConstraintLayout resolution:
-  [`DeclarativeConstraintLayoutEnvironmentTest.kt`](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/container/DeclarativeConstraintLayoutEnvironmentTest.kt),
+  [`DeclarativeConstraintLayoutEnvironmentTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/DeclarativeConstraintLayoutEnvironmentTest.kt),
   lines 21–79.
 - Nested `UiLocal` provision, restoration, and explicit snapshot restoration:
-  [`BusinessLocalApiTest.kt`](../../viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/context/BusinessLocalApiTest.kt),
+  [`BusinessLocalApiTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/BusinessLocalApiTest.kt),
   lines 13–103.
 - Local-snapshot stability and environment-driven subtree replacement:
-  [`SubtreeRecompositionTest.kt`](../../viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/SubtreeRecompositionTest.kt),
+  [`SubtreeRecompositionTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SubtreeRecompositionTest.kt),
   lines 59–123.
 - Delayed lazy, pager, and tab content tokens changing with captured locals:
-  [`LazyContentLocalPropagationTest.kt`](../../viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/context/LazyContentLocalPropagationTest.kt),
+  [`LazyContentLocalPropagationTest.kt`](../../viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/LazyContentLocalPropagationTest.kt),
   lines 16–90.
 - Insets modifier defaults and coexistence:
-  [`InsetsPaddingModifierTest.kt`](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/modifier/InsetsPaddingModifierTest.kt),
+  [`InsetsPaddingModifierTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/InsetsPaddingModifierTest.kt),
   lines 14–48. This does **not** cover real dispatch, nesting, consumption, or animation.
 - Native modifier stable-key equality:
-  [`NativeViewElementTest.kt`](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/modifier/NativeViewElementTest.kt),
+  [`NativeViewElementTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/NativeViewElementTest.kt),
   lines 14–55.
 - AndroidView rollback, commit publication, and release failure isolation:
-  [`ViewTreeRenderTransactionTest.kt`](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt),
+  [`ViewTreeRenderTransactionTest.kt`](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt),
   lines 330–341 and 393–470.
 
 Existing compiled API samples cover Modifier chain construction and AndroidView interop, but no

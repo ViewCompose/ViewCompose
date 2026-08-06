@@ -29,7 +29,7 @@ android {
 
 dependencies {
     api(project(":viewcompose-ui-contract"))
-    implementation(project(":viewcompose-renderer"))
+    implementation(project(":viewcompose-renderer-android"))
     api(libs.coil.core)
     implementation(libs.coil.network.okhttp)
     testImplementation(libs.junit)

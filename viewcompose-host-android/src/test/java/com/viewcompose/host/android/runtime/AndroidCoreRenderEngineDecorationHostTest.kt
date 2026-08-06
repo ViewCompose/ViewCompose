@@ -14,6 +14,8 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.dropShadow
 import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.PlatformRenderContainerHandle
+import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import com.viewcompose.ui.unit.dp
@@ -28,12 +30,30 @@ import org.robolectric.RuntimeEnvironment
 @RunWith(RobolectricTestRunner::class)
 class AndroidCoreRenderEngineDecorationHostTest {
     @Test
+    fun `android engine rejects a render handle without a ViewGroup`() {
+        val engine = AndroidCoreRenderEngine()
+        val error = runCatching {
+            engine.renderInto(
+                container = object : PlatformRenderContainerHandle {
+                    override val container: Any = Any()
+                },
+                previousMountedNodes = emptyList(),
+                nodes = emptyList(),
+                collectDiagnostics = false,
+            )
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("ViewGroup-backed render container"))
+    }
+
+    @Test
     fun `plain render session mounts directly without an extra decoration host`() {
         val externalContainer = FrameLayout(RuntimeEnvironment.getApplication())
         val engine = AndroidCoreRenderEngine()
 
         val frame = engine.renderInto(
-            container = externalContainer,
+            container = externalContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode()),
             collectDiagnostics = false,
@@ -43,7 +63,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
         assertFalse(externalContainer.getChildAt(0) is ViewDecorationHostLayout)
 
         engine.disposeMounted(
-            container = externalContainer,
+            container = externalContainer.renderContainerHandle(),
             mountedNodes = frame.mountedNodes,
         )
 
@@ -56,7 +76,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
         val engine = AndroidCoreRenderEngine()
 
         val frame = engine.renderInto(
-            container = host,
+            container = host.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode()),
             collectDiagnostics = false,
@@ -66,7 +86,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
         assertFalse(host.getChildAt(0) is ViewDecorationHostLayout)
 
         engine.disposeMounted(
-            container = host,
+            container = host.renderContainerHandle(),
             mountedNodes = frame.mountedNodes,
         )
 
@@ -78,14 +98,14 @@ class AndroidCoreRenderEngineDecorationHostTest {
         val externalContainer = FrameLayout(RuntimeEnvironment.getApplication())
         val engine = AndroidCoreRenderEngine()
         val plainFrame = engine.renderInto(
-            container = externalContainer,
+            container = externalContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode()),
             collectDiagnostics = false,
         )
 
         val orderedFrame = engine.renderInto(
-            container = externalContainer,
+            container = externalContainer.renderContainerHandle(),
             previousMountedNodes = plainFrame.mountedNodes,
             nodes = listOf(spacerNode(modifier = Modifier.zIndex(1f))),
             collectDiagnostics = false,
@@ -97,7 +117,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
         assertEquals(1, (host as ViewDecorationHostLayout).childCount)
 
         val plainAgainFrame = engine.renderInto(
-            container = externalContainer,
+            container = externalContainer.renderContainerHandle(),
             previousMountedNodes = orderedFrame.mountedNodes,
             nodes = listOf(spacerNode()),
             collectDiagnostics = false,
@@ -106,7 +126,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
         assertEquals(1, externalContainer.childCount)
         assertFalse(externalContainer.getChildAt(0) is ViewDecorationHostLayout)
 
-        engine.disposeMounted(externalContainer, plainAgainFrame.mountedNodes)
+        engine.disposeMounted(externalContainer.renderContainerHandle(), plainAgainFrame.mountedNodes)
         assertEquals(0, externalContainer.childCount)
     }
 
@@ -116,7 +136,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
         val engine = AndroidCoreRenderEngine()
 
         val frame = engine.renderInto(
-            container = externalContainer,
+            container = externalContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(spacerNode(modifier = Modifier.zIndex(0f))),
             collectDiagnostics = false,
@@ -125,7 +145,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
         assertEquals(1, externalContainer.childCount)
         assertFalse(externalContainer.getChildAt(0) is ViewDecorationHostLayout)
 
-        engine.disposeMounted(externalContainer, frame.mountedNodes)
+        engine.disposeMounted(externalContainer.renderContainerHandle(), frame.mountedNodes)
     }
 
     @Test
@@ -135,7 +155,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
         val engine = AndroidCoreRenderEngine()
 
         val frame = engine.renderInto(
-            container = externalContainer,
+            container = externalContainer.renderContainerHandle(),
             previousMountedNodes = emptyList(),
             nodes = listOf(
                 spacerNode(
@@ -147,7 +167,7 @@ class AndroidCoreRenderEngineDecorationHostTest {
 
         assertEquals(1, externalContainer.childCount)
         assertTrue(externalContainer.getChildAt(0) is ViewDecorationHostLayout)
-        engine.disposeMounted(externalContainer, frame.mountedNodes)
+        engine.disposeMounted(externalContainer.renderContainerHandle(), frame.mountedNodes)
         assertEquals(0, externalContainer.childCount)
     }
 
@@ -157,6 +177,12 @@ class AndroidCoreRenderEngineDecorationHostTest {
             spec = EmptyNodeSpec,
             modifier = modifier,
         )
+    }
+
+    private fun ViewGroup.renderContainerHandle(): RenderContainerHandle {
+        return object : PlatformRenderContainerHandle {
+            override val container: Any = this@renderContainerHandle
+        }
     }
 
     private object TestDecorationBackend : AndroidViewDecorationBackend {

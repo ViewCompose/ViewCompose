@@ -13,11 +13,11 @@ import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.overlayAnchor
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.zIndex
-import com.viewcompose.widget.core.Box
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.Theme
+import com.viewcompose.ui.foundation.Box
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.unit.dp
 
 internal object ModifierPreviewSpecs {

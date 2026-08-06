@@ -49,19 +49,13 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-runtime"))
-    implementation(project(":viewcompose-ui-contract"))
-    implementation(project(":viewcompose-renderer"))
+    implementation(project(":viewcompose-android"))
     implementation(project(":viewcompose-shadow-android"))
-    implementation(project(":viewcompose-widget-core"))
-    implementation(project(":viewcompose-widget-constraintlayout"))
-    implementation(project(":viewcompose-host-android"))
+    implementation(project(":viewcompose-constraintlayout-androidx"))
     implementation(project(":viewcompose-animation"))
     implementation(project(":viewcompose-gesture"))
     implementation(project(":viewcompose-graphics"))
-    implementation(project(":viewcompose-lifecycle"))
-    implementation(project(":viewcompose-viewmodel"))
-    implementation(project(":viewcompose-overlay-android"))
+    implementation(project(":viewcompose-overlay-material3-android"))
     implementation(project(":viewcompose-image-coil"))
     compileOnly(project(":viewcompose-preview-core"))
     debugImplementation(project(":viewcompose-preview"))
@@ -73,7 +67,7 @@ dependencies {
         "viewComposePreviewRunner",
         project(":viewcompose-preview-runner"),
     )
-    implementation(project(":viewcompose-navigation"))
+    implementation(project(":viewcompose-navigation-android"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

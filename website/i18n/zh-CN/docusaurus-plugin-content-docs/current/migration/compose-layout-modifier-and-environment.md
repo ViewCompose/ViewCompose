@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: 08d1e43b332938d7c539094d21f553ce6222867c201ec3f468d270c2eca60281
+translation_source_hash: 575dfee6219d0b1027c7ba23b2797653b384397fde52b3f250ecf47db5cf77b6
 translation_status: current
 ---
 
@@ -14,7 +14,7 @@ translation_status: current
 
 | 基线 | 版本 | 用途 |
 | --- | --- | --- |
-| ViewCompose 已发布模块 | runtime `0.1.0-alpha02`；UI contract、renderer、widget 与 host `0.1.0-alpha03` | 本迁移指南的目标版本 |
+| ViewCompose 目标模块 | runtime `0.1.0-alpha02`；UI Contract 与 Host `0.1.0-alpha03`；UI Foundation 与 Renderer `0.1.0-alpha01` | 本迁移指南的目标版本 |
 | Compose Runtime、UI 与 Foundation | `1.11.4` stable | 上游语义参考 |
 | 仓库 Compose 依赖 | `1.7.8` | 本仓库中的可执行对照基线 |
 | 仓库 Kotlin 工具链 | `2.0.21` | 对照代码的编译基线 |
@@ -33,9 +33,9 @@ translation_status: current
 - **Intentionally different**：ViewCompose 提供刻意设计的替代契约；代码需要重新设计，而不是简单改名。
 - **Unsupported**：在已验证基线中不存在公开等价能力。
 
-最后验证日期：**2026-08-05**。
+最后验证日期：**2026-08-06**。
 
-复核负责人：**ViewCompose UI Contract 与 Renderer 维护者**。
+复核负责人：**ViewCompose UI Contract、UI Foundation 与 Android Renderer 维护者**。
 
 ## 证据模型
 
@@ -129,10 +129,10 @@ Compose 布局是一套节点协议。父级传递约束，子项报告测量尺
 ViewCompose 会先构建不可变 VNode。Android renderer 随后创建原生 widget 和容器。例如，Text
 会成为 `TextView`，Row 和 Column 会成为设置了方向的 `DeclarativeLinearLayout`，Box 会成为
 `DeclarativeBoxLayout`。完整映射见固定 revision 的
-[`ViewNodeFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewNodeFactory.kt)
+[`ViewNodeFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewNodeFactory.kt)
 第 55–126 行。Row 和 Column 保留 Android `LinearLayout` 测量，并在原生放置阶段实现声明式
 arrangement；参见
-[`DeclarativeLinearLayout.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/container/layout/DeclarativeLinearLayout.kt)
+[`DeclarativeLinearLayout.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/container/layout/DeclarativeLinearLayout.kt)
 第 21–92 行。
 
 因此，Compose 自定义 `Layout` 无法翻译成普通 ViewCompose 组件。请选择以下边界之一：
@@ -159,7 +159,7 @@ ViewCompose 通过原生 LayoutParams 解析尺寸。感知父级的优先级如
 4. renderer 根据节点和父级确定的默认值。
 
 该优先级实现在固定 revision 的
-[`ViewLayoutParamsFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt)
+[`ViewLayoutParamsFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt)
 第 73–99 行。精确 dp 尺寸使用 VNode 捕获的 density 转换。Fill 辅助方法映射为 Android
 `MATCH_PARENT`；它们不会保留 Compose 的所有比例或固有尺寸选项。
 
@@ -176,7 +176,7 @@ Padding 与 margin 有不同的原生落点：
 公开尺寸与边缘契约见固定 revision 的
 [`ModifierLayoutExtensions.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierLayoutExtensions.kt)
 第 6–187 行和第 189–290 行。原生 LayoutParams 应用见
-[`ViewLayoutParamsFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt)
+[`ViewLayoutParamsFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt)
 第 91–149 行和第 168–192 行。
 
 ## Row、Column、Box 与作用域父数据
@@ -194,9 +194,9 @@ ViewCompose 提供以下受支持作用域操作：
 | `BoxScope` | Box `align` | FrameLayout 子项 gravity |
 
 声明和正数 weight 校验见固定 revision 的
-[`LayoutScopes.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/dsl/LayoutScopes.kt)
+[`LayoutScopes.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/LayoutScopes.kt)
 第 12–96 行。父数据校验见
-[`ModifierParentDataValidator.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/layout/ModifierParentDataValidator.kt)
+[`ModifierParentDataValidator.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/layout/ModifierParentDataValidator.kt)
 第 28–97 行。
 
 这些 receiver scope 暴露的操作是受支持的应用 API，但作用域本身并不是完整的运行时类型安全
@@ -216,7 +216,7 @@ fill-to-constraints 使用 Android ConstraintLayout 的零尺寸约定。
 契约元素定义在固定 revision 的
 [`ModifierElementsLayout.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/modifier/ModifierElementsLayout.kt)
 第 117–150 行。感知父级的转换实现在
-[`ViewLayoutParamsFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt)
+[`ViewLayoutParamsFactory.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewLayoutParamsFactory.kt)
 第 91–98 行和第 247–255 行。
 
 这是可行迁移路径，不是 Compose ConstraintLayout 对等性的证明。应根据 ViewCompose 模块契约
@@ -243,12 +243,12 @@ fill-to-constraints 使用 Android ConstraintLayout 的零尺寸约定。
 | 系统栏与 IME inset padding | 两者都会保留，选中的物理边会相加。 |
 
 折叠逻辑实现在固定 revision 的
-[`ResolvedModifiers.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/modifier/ResolvedModifiers.kt)
+[`ResolvedModifiers.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/modifier/ResolvedModifiers.kt)
 第 72–172 行。不要根据一个 Modifier 家族推断另一个家族的规则。
 
 相等性还会驱动复用。当节点、环境、spec、children 和 Modifier 输入保持等价时，
 `NodeBindingDiffer` 可以跳过子树。环境或 Modifier 变化会导致 rebind；参见固定 revision 的
-[`NodeBindingDiffer.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/binder/core/NodeBindingDiffer.kt)
+[`NodeBindingDiffer.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/NodeBindingDiffer.kt)
 第 22–75 行。
 
 `NativeViewElement` 是特殊情况。它的相等性和 hash code 只使用 `stableKey`，刻意忽略回调
@@ -294,14 +294,14 @@ ViewCompose 会在每个发出的 VNode 上捕获不可变 `UiEnvironmentValues`
 快照契约明确要求平台配置变化后生成新树；参见固定 revision 的
 [`UiEnvironmentValues.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/environment/UiEnvironmentValues.kt)
 第 92–112 行。Android bridge 在
-[`AndroidEnvironmentBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/bridge/AndroidEnvironmentBridge.kt)
+[`AndroidEnvironmentBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-host-android/src/main/java/com/viewcompose/host/android/environment/AndroidEnvironmentBridge.kt)
 第 15–29 行读取资源和 configuration。单位转换定义在
 [`UiUnits.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/unit/UiUnits.kt)
 第 157–223 行。
 
 绑定时，renderer 把环境存到 View、应用原生布局方向并设置 TextView locale。该边界位于固定
 revision 的
-[`ViewModifierApplier.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewModifierApplier.kt)
+[`ViewModifierApplier.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/ViewModifierApplier.kt)
 第 41–55 行。环境变化会强制完整节点 rebind，而不是只执行视觉 patch。
 
 Modifier API 边界的方向支持并不完整。Row、Column、Box 和 Constraint 对齐类型可以表达逻辑
@@ -322,15 +322,15 @@ Compose 区分会追踪读取的 `compositionLocalOf` 与宽粒度的 `staticCom
 ViewCompose `UiLocal` 是一个类型化句柄，指向构建 VNode 树时使用的线程作用域不可变 map。
 `ProvideLocal` 为嵌套 block 安装值，block 结束后恢复之前的 map。`ProvideLocals` 为多个绑定
 执行相同操作。实现位于固定 revision 的
-[`UiLocals.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/context/UiLocals.kt)
+[`UiLocals.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/UiLocals.kt)
 第 3–103 行，以及
-[`LocalValue.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/context/LocalValue.kt)
+[`LocalValue.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/LocalValue.kt)
 第 35–120 行。
 
 关键迁移规则是：`UiLocals.current(local)` 是查询，不是观察。它不会把调用点登记为依赖读取者。
 相反，`UiTreeBuilder.emit` 会把完整当前 local 快照作为一个 composition 输入捕获。当其他失效
 已经触发 composition 时，如果该快照不同，节点 group 会重建。参见固定 revision 的
-[`UiTreeBuilder.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/dsl/UiTreeBuilder.kt)
+[`UiTreeBuilder.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/UiTreeBuilder.kt)
 第 66–124 行和第 192–214 行。
 
 因此：
@@ -348,9 +348,9 @@ ViewCompose 会为这些边界显式保存 local。
 
 对于 lazy list，`LazyItemCollector` 会捕获 `LocalSnapshot`、把它包含进有效 content token、
 使用该快照创建子 session，并在更新时同时刷新快照和内容闭包。参见固定 revision 的
-[`LazyCollectionScope.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/dsl/collection/LazyCollectionScope.kt)
+[`LazyCollectionScope.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/dsl/collection/LazyCollectionScope.kt)
 第 147–193 行，以及
-[`WidgetLazyListItemSession.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/session/WidgetLazyListItemSession.kt)
+[`WidgetLazyListItemSession.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/WidgetLazyListItemSession.kt)
 第 8–72 行。
 
 这会在 holder 复用期间保留嵌套 local 值，但不会移除调用方的身份责任。Key 必须稳定且唯一。
@@ -370,7 +370,7 @@ ViewCompose 提供两个聚焦的 Modifier：
 
 Renderer 会安装 AndroidX `WindowInsetsCompat` listener、记录基础 padding，并加上选中的 inset
 像素。移除两个 Modifier 后会恢复基础 padding 并移除 listener。实现位于固定 revision 的
-[`ModifierInsetsApplier.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierInsetsApplier.kt)
+[`ModifierInsetsApplier.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/binder/core/modifier/ModifierInsetsApplier.kt)
 第 11–128 行。
 
 与 Compose 不同，该 listener 原样返回传入 inset，不会传达祖先 ViewCompose Modifier 已应用的
@@ -408,7 +408,7 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
 公开契约位于固定 revision 的
 [`AndroidInteropDsl.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidInteropDsl.kt)
 第 11–82 行。挂载和 commit 调度位于
-[`ViewTreePatchPipeline.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt)
+[`ViewTreePatchPipeline.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/main/java/com/viewcompose/renderer/view/tree/pipeline/ViewTreePatchPipeline.kt)
 第 527–579 行。
 
 `update`、`onReset` 和 `nativeView` 不得启动不可重复的外部工作。失败帧可能恢复之前已提交的
@@ -438,37 +438,37 @@ ViewCompose 在根本上不同：每个第一方 VNode 都会成为 Android View
   [`ModifierContractTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/test/kotlin/com/viewcompose/ui/modifier/ModifierContractTest.kt)，
   第 20–49、85–117 和 170–212 行。
 - Modifier 折叠、z-index 相加、有序 shadow 与 ConstraintLayout 父数据：固定 revision 的
-  [`ResolvedModifiersTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt)，
+  [`ResolvedModifiersTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/ResolvedModifiersTest.kt)，
   第 38–47、82–129 和 165–205 行。
 - 兼容与不兼容的作用域父数据：固定 revision 的
-  [`ModifierParentDataValidatorTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/test/java/com/viewcompose/renderer/layout/ModifierParentDataValidatorTest.kt)，
+  [`ModifierParentDataValidatorTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/layout/ModifierParentDataValidatorTest.kt)，
   第 31–159 行。
 - 结构 Modifier 相等性与环境驱动的 renderer rebind：固定 revision 的
-  [`NodeBindingDifferTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/tree/NodeBindingDifferTest.kt)，
+  [`NodeBindingDifferTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/NodeBindingDifferTest.kt)，
   第 115–141 行。
 - Density、locale、direction、嵌套环境值及其向 VNode 的捕获：固定 revision 的
-  [`EnvironmentTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/context/EnvironmentTest.kt)，
+  [`EnvironmentTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/EnvironmentTest.kt)，
   第 15–68 行。
 - 感知 density 的 ConstraintLayout 解析：固定 revision 的
-  [`DeclarativeConstraintLayoutEnvironmentTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/container/DeclarativeConstraintLayoutEnvironmentTest.kt)，
+  [`DeclarativeConstraintLayoutEnvironmentTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/DeclarativeConstraintLayoutEnvironmentTest.kt)，
   第 21–79 行。
 - 嵌套 `UiLocal` 提供、恢复和显式快照恢复：固定 revision 的
-  [`BusinessLocalApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/context/BusinessLocalApiTest.kt)，
+  [`BusinessLocalApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/BusinessLocalApiTest.kt)，
   第 13–103 行。
 - Local 快照稳定性与环境驱动的子树替换：固定 revision 的
-  [`SubtreeRecompositionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/SubtreeRecompositionTest.kt)，
+  [`SubtreeRecompositionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SubtreeRecompositionTest.kt)，
   第 59–123 行。
 - 随捕获 local 变化的延迟 lazy、pager 与 tab content token：固定 revision 的
-  [`LazyContentLocalPropagationTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/context/LazyContentLocalPropagationTest.kt)，
+  [`LazyContentLocalPropagationTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/context/LazyContentLocalPropagationTest.kt)，
   第 16–90 行。
 - Insets Modifier 默认值与共存：固定 revision 的
-  [`InsetsPaddingModifierTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/test/java/com/viewcompose/renderer/modifier/InsetsPaddingModifierTest.kt)，
+  [`InsetsPaddingModifierTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/InsetsPaddingModifierTest.kt)，
   第 14–48 行。该测试**不**覆盖真实分发、嵌套、消费或动画。
 - 原生 Modifier 稳定 key 相等性：固定 revision 的
-  [`NativeViewElementTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/test/java/com/viewcompose/renderer/modifier/NativeViewElementTest.kt)，
+  [`NativeViewElementTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/modifier/NativeViewElementTest.kt)，
   第 14–55 行。
 - AndroidView 回滚、commit 发布和 release 失败隔离：固定 revision 的
-  [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)，
+  [`ViewTreeRenderTransactionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)，
   第 330–341 行和第 393–470 行。
 
 现有已编译 API sample 覆盖 Modifier 链构造和 AndroidView 互操作，但当前没有已编译迁移 sample

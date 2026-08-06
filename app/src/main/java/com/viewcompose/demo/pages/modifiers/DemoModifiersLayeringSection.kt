@@ -12,13 +12,13 @@ import com.viewcompose.ui.modifier.offset
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.modifier.zIndex
-import com.viewcompose.widget.core.Box
-import com.viewcompose.widget.core.SurfaceDefaults
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Box
+import com.viewcompose.ui.foundation.SurfaceDefaults
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiTextStyle
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 

@@ -23,17 +23,17 @@ import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.viewmodel.savedStateHandle
 import com.viewcompose.viewmodel.viewModel
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.ButtonVariant
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.ButtonVariant
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.UiTextStyle
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.produceState
-import com.viewcompose.widget.core.rememberSaveable
+import com.viewcompose.ui.foundation.produceState
+import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.ui.unit.sp
 import java.util.concurrent.atomic.AtomicInteger
 

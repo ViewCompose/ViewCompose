@@ -10,32 +10,34 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 
 | Artifact | Family | Runtime role | Manual |
 | --- | --- | --- | --- |
-| `viewcompose-runtime` | Foundation | Platform-neutral state and observation runtime | [Available](./viewcompose-runtime/README.md) |
-| `viewcompose-text-core` | Foundation | Platform-neutral text editing model | [Available](./viewcompose-text-core/README.md) |
-| `viewcompose-ui-contract` | Foundation | Platform-neutral UI contracts and node specifications | [Available](./viewcompose-ui-contract/README.md) |
-| `viewcompose-navigation-core` | Navigation | Platform-neutral navigation state and transactions | [Available](./viewcompose-navigation-core/README.md) |
-| `viewcompose-navigation` | Navigation | Android navigation host integration | [Available](./viewcompose-navigation/README.md) |
-| `viewcompose-renderer` | Rendering | Android View renderer and reconciliation engine | [Available](./viewcompose-renderer/README.md) |
-| `viewcompose-widget-core` | UI | Core DSL, components, theme, and local values | [Available](./viewcompose-widget-core/README.md) |
-| `viewcompose-host-android` | Android host | Activity, Fragment, and View host integration | [Available](./viewcompose-host-android/README.md) |
-| `viewcompose-overlay-android` | Android host | Android overlay presentation backend | [Available](./viewcompose-overlay-android/README.md) |
+| `viewcompose-runtime` | Kernel | Platform-neutral state and observation runtime | [Available](./viewcompose-runtime/README.md) |
+| `viewcompose-text-core` | Kernel | Platform-neutral text editing model | [Available](./viewcompose-text-core/README.md) |
+| `viewcompose-ui-contract` | Kernel | Platform-neutral UI contracts and node specifications | [Available](./viewcompose-ui-contract/README.md) |
+| `viewcompose-navigation-core` | Kernel | Platform-neutral navigation state and transactions | [Available](./viewcompose-navigation-core/README.md) |
+| `viewcompose-renderer-android` | Android Engine | Android View renderer and reconciliation engine | [Available](./viewcompose-renderer-android/README.md) |
+| `viewcompose-ui-foundation` | UI Foundation | Core DSL, components, tokens, and local values | [Available](./viewcompose-ui-foundation/README.md) |
+| `viewcompose-host-android` | Android Engine | Low-level View host, session, state, and interop engine | [Available](./viewcompose-host-android/README.md) |
+| `viewcompose-material3` | Design System | Material 3 theme and dynamic-color adapter | [Available](./viewcompose-material3/README.md) |
+| `viewcompose-android` | Aggregate | Standard Android application entry dependency | [Available](./viewcompose-android/README.md) |
+| `viewcompose-navigation-android` | Integration | Android navigation host integration | [Available](./viewcompose-navigation-android/README.md) |
+| `viewcompose-overlay-material3-android` | Integration | Material-backed Android overlay presentation | [Available](./viewcompose-overlay-material3-android/README.md) |
 | `viewcompose-image-coil` | Integration | Coil-backed general image loading | [Available](./viewcompose-image-coil/README.md) |
 | `viewcompose-image-glide` | Integration | Glide-backed general image loading | [Available](./viewcompose-image-glide/README.md) |
-| `viewcompose-lifecycle` | Integration | Lifecycle-aware state collection | [Available](./viewcompose-lifecycle/README.md) |
-| `viewcompose-viewmodel` | Integration | ViewModel and SavedStateHandle integration | [Available](./viewcompose-viewmodel/README.md) |
+| `viewcompose-lifecycle-androidx` | Integration | AndroidX Lifecycle-aware state collection | [Available](./viewcompose-lifecycle-androidx/README.md) |
+| `viewcompose-viewmodel-androidx` | Integration | AndroidX ViewModel and SavedStateHandle integration | [Available](./viewcompose-viewmodel-androidx/README.md) |
 | `viewcompose-preview-core` | Preview tooling | Preview annotations and tooling protocol | [Available](./viewcompose-preview-core/README.md) |
 | `viewcompose-preview-gradle-plugin` | Preview tooling | Preview discovery and Gradle tasks | [Available](./viewcompose-preview-gradle-plugin/README.md) |
 | `viewcompose-preview-runner` | Preview tooling | Layoutlib preview rendering runtime | [Available](./viewcompose-preview-runner/README.md) |
 | `viewcompose-preview-worker-host` | Preview tooling | Isolated preview worker host | [Available](./viewcompose-preview-worker-host/README.md) |
 | `viewcompose-preview` | Preview tooling | Development preview and snapshot integration | [Available](./viewcompose-preview/README.md) |
-| `viewcompose-animation-core` | Animation | Platform-neutral animation engine contracts | [Available](./viewcompose-animation-core/README.md) |
-| `viewcompose-animation` | Animation | Animation DSL and composition integration | [Available](./viewcompose-animation/README.md) |
-| `viewcompose-gesture-core` | Gesture | Platform-neutral gesture policies | [Available](./viewcompose-gesture-core/README.md) |
-| `viewcompose-gesture` | Gesture | Gesture DSL and state APIs | [Available](./viewcompose-gesture/README.md) |
-| `viewcompose-graphics-core` | Graphics | Platform-neutral graphics model | [Available](./viewcompose-graphics-core/README.md) |
-| `viewcompose-graphics` | Graphics | Drawing DSL and composition integration | [Available](./viewcompose-graphics/README.md) |
-| `viewcompose-shadow-android` | Optional Android backend | Advanced Android shadow rendering | [Available](./viewcompose-shadow-android/README.md) |
-| `viewcompose-widget-constraintlayout` | Optional widget | ConstraintLayout DSL | [Available](./viewcompose-widget-constraintlayout/README.md) |
+| `viewcompose-animation-core` | Kernel | Platform-neutral animation engine contracts | [Available](./viewcompose-animation-core/README.md) |
+| `viewcompose-animation` | UI Foundation | Animation DSL and composition integration | [Available](./viewcompose-animation/README.md) |
+| `viewcompose-gesture-core` | Kernel | Platform-neutral gesture policies | [Available](./viewcompose-gesture-core/README.md) |
+| `viewcompose-gesture` | UI Foundation | Gesture DSL and state APIs | [Available](./viewcompose-gesture/README.md) |
+| `viewcompose-graphics-core` | Kernel | Platform-neutral graphics model | [Available](./viewcompose-graphics-core/README.md) |
+| `viewcompose-graphics` | UI Foundation | Drawing DSL and composition integration | [Available](./viewcompose-graphics/README.md) |
+| `viewcompose-shadow-android` | Integration | Advanced Android shadow rendering | [Available](./viewcompose-shadow-android/README.md) |
+| `viewcompose-constraintlayout-androidx` | Integration | AndroidX ConstraintLayout DSL | [Available](./viewcompose-constraintlayout-androidx/README.md) |
 
 ## Catalog rules
 

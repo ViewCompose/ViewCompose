@@ -15,7 +15,7 @@ dependencies {
 - Stability: **Alpha**. Node and modifier contracts are reviewed and tested; renderer fidelity and
   advanced drawing APIs may evolve between alphas.
 - Platform: Android library and ViewCompose composition integration.
-- It exposes graphics core, UI contracts, and widget core transitively.
+- It exposes Graphics Core, UI Contract, and UI Foundation transitively.
 - Use `viewcompose-graphics-core` alone for platform-neutral command/model code.
 
 ## Draw execution model
@@ -101,8 +101,8 @@ and cache-aware modifier elements.
 ## Related documentation
 
 - [Graphics Core module](../viewcompose-graphics-core/README.md)
-- [Renderer module](../viewcompose-renderer/README.md)
-- [Widget Core module](../viewcompose-widget-core/README.md)
+- [Renderer module](../viewcompose-renderer-android/README.md)
+- [UI Foundation module](../viewcompose-ui-foundation/README.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
 The complete generated reference is available in the

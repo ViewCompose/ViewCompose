@@ -18,7 +18,7 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.padding
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.unit.dp
 
 /**

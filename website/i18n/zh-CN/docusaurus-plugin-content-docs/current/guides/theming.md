@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: 9435fd5414f5cbc9886c1fe7846a0bf5f6e166d9cda15800866754ffa1cc921f
+translation_source_hash: b757132d52c09ebd2c30d981a9878cc8112b9d332ff8d540ff070b402210d04a
 translation_status: current
 ---
 
@@ -133,21 +133,21 @@ translation_status: current
 1. 业务 Local 只承载语义值，不承载 renderer 平台实现细节。
 2. Local 作用域恢复与 snapshot 传播语义必须保持（lazy/overlay 不回退）。
 
-## 5. Android Bridge 边界
+## 5. Material 3 Design System 边界
 
-Android 主题桥接只做“平台语义到框架语义”的映射，内部固定为：
+`viewcompose-material3` 只做 Android Material/AppCompat 语义到框架语义的映射，内部固定为：
 
-`AndroidThemeSnapshotReader -> ThemeTokenMapper -> UiThemeTokens`
+`Material3ThemeSnapshotReader -> Material3ThemeTokenMapper -> UiThemeTokens`
 
 其中：
 
 1. `SnapshotReader` 负责批量读取 Android / AppCompat / Material 主题字段。
 2. `ThemeTokenMapper` 负责把平台字段映射到框架 token，并处理 fallback。
 3. bridge 不直接产出组件级默认值，不绕过 `Defaults` 层。
-4. Android `ComponentActivity/Fragment.setUiContent` 默认解析并提供 Android Theme；根容器、框架原生 View、`AndroidView` 与 Overlay 共用同一个解析上下文。
-5. `UiTheme(androidContext = ...)` 默认在平台支持时套用 Material 动态色；可通过 `AndroidDynamicColorPolicy.Disabled` 显式关闭。
+4. `viewcompose-android` 的 `ComponentActivity/Fragment.setUiContent` 默认解析并提供 Material 3 Theme；根容器、框架原生 View、`AndroidView` 与 Overlay 共用同一个解析上下文。
+5. `setUiContent` 默认在平台支持时套用 Material 动态色；可通过 `Material3DynamicColorPolicy.Disabled` 显式关闭。底层直接组合时，使用 `viewcompose-material3` 的 `Material3ThemeBridge.resolveContext(...)` 与 `Material3Theme(...)`。
 6. 组合内使用 Android 主题时会监听配置变化并重新读取 token；离开组合后注销回调，`metadata.revision` 随刷新递增。
-7. 运行时调用 `setTheme/applyStyle` 后，可把 `AndroidThemeRefreshController` 传给 `setUiContent`，再在主线程调用 `refresh()`；控制器会重新解析动态色上下文并触发主题子树刷新。
+7. 运行时调用 `setTheme/applyStyle` 后，可把 `Material3ThemeRefreshController` 传给 `setUiContent`，再在主线程调用 `refresh()`；控制器会重新解析动态色上下文并触发主题子树刷新。
 
 当前 bridge 覆盖矩阵：
 
@@ -189,12 +189,12 @@ Android 主题桥接只做“平台语义到框架语义”的映射，内部固
 
 1. bridge 的 fallback 必须显式落到 `UiThemeDefaults.light/dark()`，禁止散落字面量。
 2. 新增桥接字段时，必须同时定义“读取来源 + fallback 规则 + token 归属”。
-3. bridge 新能力若改变可视结果，必须补 `AndroidThemeBridgeTest` 或 Android 侧桥接测试。
+3. Bridge 新能力若改变可视结果，必须补 `Material3ThemeBridgeTest` 或 Material 3 侧桥接测试。
 
 主动刷新示例：
 
 ```kotlin
-val themeRefreshController = AndroidThemeRefreshController()
+val themeRefreshController = Material3ThemeRefreshController()
 
 setUiContent(themeRefreshController = themeRefreshController) {
     // content

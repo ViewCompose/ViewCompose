@@ -139,9 +139,9 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             writeText("app asset")
         }
         project.writeJava(
-            "app/src/main/java/com/viewcompose/widget/core/UiTreeBuilder.java",
+            "app/src/main/java/com/viewcompose/ui/foundation/UiTreeBuilder.java",
             """
-            package com.viewcompose.widget.core;
+            package com.viewcompose.ui.foundation;
             public final class UiTreeBuilder {}
             """,
         )
@@ -152,7 +152,7 @@ class ViewComposePreviewGradlePluginFunctionalTest {
             import com.viewcompose.preview.tooling.PreviewLightDark;
             import com.viewcompose.preview.tooling.PreviewTheme;
             import com.viewcompose.preview.tooling.ViewComposePreview;
-            import com.viewcompose.widget.core.UiTreeBuilder;
+            import com.viewcompose.ui.foundation.UiTreeBuilder;
 
             public final class SamplePreviews {
                 @ViewComposePreview(

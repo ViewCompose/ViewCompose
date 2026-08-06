@@ -74,9 +74,11 @@ Coil image loading, navigation, and ConstraintLayout do not become core requirem
 
 ## Get started
 
-The recommended Android host is `0.1.0-alpha03` and is available from Maven Central. ViewCompose
-modules are independently versioned, so optional features and platform-neutral cores may have a
-different current version.
+The standard Android dependency is the `viewcompose-android` aggregate. The hard-cut artifact line
+starts at `0.1.0-alpha01`; this source checkout verifies it through the generated local Maven
+repository until that coordinate is released to Maven Central. ViewCompose modules are
+independently versioned, so optional features and platform-neutral cores may have a different
+current version.
 
 ```kotlin
 repositories {
@@ -84,13 +86,13 @@ repositories {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
 }
 ```
 
-The host exposes runtime, UI contract, and widget-core APIs transitively. Add those foundation
-coordinates only when building lower-level integrations or intentionally using them without the
-Android host.
+The aggregate exposes runtime, UI contract, UI Foundation, host, Material 3 theme, Lifecycle, and
+ViewModel APIs transitively. Add those lower-level coordinates only when building an integration
+or intentionally using its advanced APIs without the aggregate.
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -120,7 +122,7 @@ Feature artifacts bring their platform-neutral core where appropriate and may al
 separately:
 
 ```kotlin
-implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
 implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
 
 // Pure Kotlin/JVM policy and state models are available independently.
@@ -135,11 +137,12 @@ See [Publishing](docs/project/publishing.md) for the complete artifact and versi
 
 | Area | Modules | Purpose |
 | --- | --- | --- |
-| Runtime | `viewcompose-runtime`, `viewcompose-text-core`, `viewcompose-ui-contract` | State, composition, editing, and semantic contracts |
-| Android UI | `viewcompose-widget-core`, `viewcompose-renderer`, `viewcompose-host-android` | DSL, native View mapping, and host sessions |
-| Android integration | `viewcompose-lifecycle`, `viewcompose-viewmodel`, `viewcompose-overlay-android`, `viewcompose-image-coil` | Platform lifecycle and services |
-| Feature pairs | `viewcompose-navigation*`, `viewcompose-animation*`, `viewcompose-gesture*`, `viewcompose-graphics*` | Independently evolving core + Android capabilities |
-| Optional UI | `viewcompose-shadow-android`, `viewcompose-widget-constraintlayout` | Advanced rendering and layout integrations |
+| Kernel | `viewcompose-runtime`, `viewcompose-text-core`, `viewcompose-ui-contract`, `*-core` | State, editing, contracts, and platform-neutral policy |
+| UI Foundation | `viewcompose-ui-foundation`, `viewcompose-animation`, `viewcompose-gesture`, `viewcompose-graphics` | Platform-neutral UI and capability DSLs |
+| Android Engine | `viewcompose-renderer-android`, `viewcompose-host-android` | Native View mapping and low-level host sessions |
+| Design System | `viewcompose-material3` | Material 3 theme interpretation and token mapping |
+| Integrations | `viewcompose-*-androidx`, `viewcompose-*-android`, image adapters | AndroidX, Material, decoder, and optional platform integrations |
+| Aggregate | `viewcompose-android` | Standard Android application entry point |
 | Tooling | `viewcompose-preview*`, `viewcompose-benchmark` | Preview, diagnostics, snapshots, and performance testing |
 
 Module versions are intentionally independent. Depending on a feature does not require adopting

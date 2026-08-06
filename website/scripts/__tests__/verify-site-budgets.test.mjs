@@ -41,6 +41,7 @@ test('API history is budgeted per immutable artifact version', async () => {
     const result = await verifySiteBudgets({buildDirectory, budgetsPath});
 
     assert.equal(result.apiVersionSizes['artifact/1.0.0'], 3);
+    assert.equal(result.apiTreeSizes['artifact/1.0.0'], 3);
     assert.equal(result.averageApiVersionBytes, 3);
     assert.equal(result.nonApiBytes, 4);
   } finally {
@@ -88,7 +89,56 @@ test('one oversized API version cannot hide behind an acceptable average', async
 
     await assert.rejects(
       verifySiteBudgets({buildDirectory, budgetsPath}),
-      /API version \(artifact\/1\.0\.0\)/u,
+      /API tree \(artifact\/1\.0\.0\)/u,
+    );
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('unpublished current Dokka is budgeted as an API tree instead of routing overhead', async () => {
+  const {root, buildDirectory, budgetsPath} = await fixture();
+  try {
+    await mkdir(resolve(buildDirectory, 'api/viewcompose-unreleased/current'), {recursive: true});
+    await writeFile(
+      resolve(buildDirectory, 'api/viewcompose-unreleased/current/index.html'),
+      'x'.repeat(2048),
+      'utf8',
+    );
+    await writeFile(
+      budgetsPath,
+      `${JSON.stringify({...permissiveBudgets, maxApiRoutingOverheadMiB: 0.001})}\n`,
+      'utf8',
+    );
+
+    const result = await verifySiteBudgets({buildDirectory, budgetsPath});
+
+    assert.equal(result.apiTreeSizes['viewcompose-unreleased/current'], 2048);
+    assert.equal(result.apiVersionSizes['viewcompose-unreleased/current'], undefined);
+    assert.ok(result.apiRoutingOverheadBytes < 1024);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('released current aliases remain routing overhead', async () => {
+  const {root, buildDirectory, budgetsPath} = await fixture();
+  try {
+    await mkdir(resolve(buildDirectory, 'api/artifact/current'), {recursive: true});
+    await writeFile(
+      resolve(buildDirectory, 'api/artifact/current/index.html'),
+      'x'.repeat(2048),
+      'utf8',
+    );
+    await writeFile(
+      budgetsPath,
+      `${JSON.stringify({...permissiveBudgets, maxApiRoutingOverheadMiB: 0.001})}\n`,
+      'utf8',
+    );
+
+    await assert.rejects(
+      verifySiteBudgets({buildDirectory, budgetsPath}),
+      /API manifest and alias overhead/u,
     );
   } finally {
     await rm(root, {recursive: true, force: true});

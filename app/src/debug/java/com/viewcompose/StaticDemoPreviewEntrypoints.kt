@@ -2,7 +2,7 @@ package com.viewcompose
 
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.ViewComposePreview
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Static-preview entry point used to exercise the complete Gradle and Studio rendering path.

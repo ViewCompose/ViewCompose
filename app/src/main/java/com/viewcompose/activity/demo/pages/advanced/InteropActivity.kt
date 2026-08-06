@@ -1,7 +1,7 @@
 package com.viewcompose
 
 import android.view.ViewGroup
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Interop chapter 的 Activity 入口，用于验证 ViewCompose 与原生 Android View 的互操作边界。

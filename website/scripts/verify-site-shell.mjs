@@ -3,7 +3,7 @@ import {resolve} from 'node:path';
 import {buildDir} from './site-quality-lib.mjs';
 
 const homepagePaths = ['index.html', 'zh-CN/index.html'];
-const removedHomepageCoordinate = 'com.viewcompose:viewcompose-widget-core';
+const removedHomepageCoordinate = 'com.viewcompose:viewcompose-ui-foundation';
 const themeStoragePattern = /localStorage\.getItem\(["'](theme(?:-[A-Za-z0-9_-]+)?)["']\)/gu;
 
 export function analyzeSiteShellPages(pages) {

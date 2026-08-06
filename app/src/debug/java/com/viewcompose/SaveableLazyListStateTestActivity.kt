@@ -2,16 +2,16 @@ package com.viewcompose
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.state.LazyListState
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.rememberLazyListState
+import com.viewcompose.ui.foundation.rememberLazyListState
 
 /**
  * rememberLazyListState 恢复测试的 debug-only 宿主。

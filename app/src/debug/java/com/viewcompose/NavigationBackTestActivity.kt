@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
@@ -31,9 +31,9 @@ import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.widget.core.OverlayHostDefaults
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.rememberSaveable
+import com.viewcompose.ui.foundation.OverlayHostDefaults
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.rememberSaveable
 import com.viewcompose.viewmodel.savedStateHandle
 
 /**

@@ -1,7 +1,7 @@
 package com.viewcompose
 
 import android.view.ViewGroup
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * 指定 Preview demo 初始页签，帮助预览宿主和截图流程定位同一示例。

@@ -6,7 +6,7 @@ layout units, interaction contracts, and renderer-connected state for lazy colle
 
 Use it directly when building a custom renderer, host bridge, tooling integration, or reusable API
 that exposes ViewCompose contract types. Application UI normally receives it transitively through
-`viewcompose-widget-core`.
+`viewcompose-ui-foundation`.
 
 This module does not compose a DSL tree, create Android `View` instances, reconcile nodes, schedule
 frames, or integrate Android lifecycle and saved state. Those responsibilities belong to the

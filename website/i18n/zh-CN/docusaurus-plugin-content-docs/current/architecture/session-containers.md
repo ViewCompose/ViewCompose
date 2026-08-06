@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 283721f6140f6529e2c579ea6c9b928d63a74e40ca76df2b07a64b281e964719
+translation_source_hash: 35860a4059f6220c4c2ebebe98e362a2f47a49972f0696460a8c534d567adbcc
 translation_status: current
 ---
 
@@ -56,9 +56,9 @@ translation_status: current
 
 基础单测（通用机制）：
 
-1. [`LazyListDiffTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
-2. [`LazyHolderRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
-3. [`LazyItemSessionControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+1. [`LazyListDiffTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
+2. [`LazyHolderRegistryTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
+3. [`LazyItemSessionControllerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
 
 当前已覆盖专项：
 

@@ -9,8 +9,8 @@ import com.viewcompose.preview.ViewComposePreview
 import com.viewcompose.preview.ViewComposePreviewWithRoot
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.ViewComposePreviewThemeProvider
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.UiThemeDefaults
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiThemeDefaults
 
 /** Supplies the same application theme to native Views and the ViewCompose DSL tree. */
 @ViewComposePreviewThemeProvider

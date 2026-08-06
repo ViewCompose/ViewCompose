@@ -1,14 +1,15 @@
-# Android Host
+# Android Host Engine
 
-`viewcompose-host-android` is the supported boundary between a ViewCompose composition and the
-Android View system. It creates Activity and Fragment roots, owns retained render sessions, provides
-Android lifecycle and state services, resolves theme and environment values, schedules invalidation
-work on Choreographer frames, and exposes explicit native View, animation, and graphics interop.
+`viewcompose-host-android` is the low-level Android View host engine. It installs the renderer,
+owns retained render sessions, schedules invalidations on Choreographer frames, bridges Android
+saved state and environment values, adapts focus/logging/tracing, discovers optional Android
+overlay hosts, and exposes native View, animation, and graphics interop. It deliberately does not
+own Activity/Fragment convenience entry points, Material theme resolution, Lifecycle locals, or
+ViewModel locals.
 
-Most Android applications need only this ViewCompose dependency. It exposes runtime, UI contract,
-and widget core transitively, while renderer, lifecycle, and ViewModel integration remain private
-host implementation details. Depend on one of those lower-level artifacts directly only when the
-application intentionally uses its advanced APIs independently of the host.
+Applications should normally depend on [`viewcompose-android`](../viewcompose-android/README.md).
+Depend on this artifact directly only when building a custom container host or using its interop
+APIs without the standard Activity/Fragment integration.
 
 ## Artifact and stability
 
@@ -18,60 +19,20 @@ dependencies {
 }
 ```
 
-- Stability: **Alpha**. Host extension and native interop contracts may change between alpha releases.
+- Stability: **Alpha**.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
-- Dependency exposure: runtime, UI contract, and widget core are API dependencies; lifecycle,
-  ViewModel, and renderer are implementation dependencies.
-- Android dependencies: AndroidX Activity/Fragment/AppCompat, Lifecycle, SavedState,
-  ConstraintLayout, DynamicAnimation, Material Components, and Kotlin coroutines for Android.
-- Activity/Fragment class hierarchy, Material theme, and optional native animation or
-  ConstraintLayout interop are caller-owned platform integrations. Applications declare the
-  AndroidX/Material artifacts they directly use; the host does not act as their version catalog.
+- API dependencies: runtime, UI contract, UI foundation, AndroidX Lifecycle, and AndroidX
+  SavedState where their types appear in public signatures.
+- Private implementation dependencies: Android renderer, coroutines Android, ConstraintLayout,
+  and DynamicAnimation.
+- Material Components is not a dependency of this module.
 
-## Recommended host entry points
-
-Use `ComponentActivity.setUiContent` when ViewCompose owns the Activity content:
-
-```kotlin
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setUiContent {
-            Text("Hello from ViewCompose")
-        }
-    }
-}
-```
-
-Use `Fragment.setUiContent` from `onCreateView` when a Fragment owns the content:
-
-```kotlin
-override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?,
-): View = setUiContent {
-    ProfilePage()
-}
-```
-
-Both integrations create a full-size root, render the first frame synchronously, and provide:
-
-- the current `LifecycleOwner` and `ViewModelStoreOwner`;
-- an Android-backed `SaveableStateRegistry` for `rememberSaveable`;
-- Android density, locale, layout direction, and context environment values;
-- Android theme resolution, including the selected dynamic-color policy;
-- the main animation coroutine context and a Choreographer-backed monotonic frame clock;
-- an Android overlay host by default, with an injectable factory for custom hosts and tests.
-
-Repeated `setUiContent` calls dispose the previous session. Fragment sessions follow the current
-View lifecycle and are released across View recreation; Activity sessions end at Activity
-destruction.
+The module exclusively owns `com.viewcompose.host.android`. Activity and Fragment composition
+roots use `com.viewcompose.android` and therefore cannot silently expand this low-level package.
 
 ## Custom container hosting
 
-`renderInto(container)` is the low-level retained-session API. It installs the Android renderer and
-commits the first frame before returning:
+`renderInto(container)` installs the Android engine and commits the first frame before returning:
 
 ```kotlin
 val session = renderInto(container) {
@@ -79,13 +40,17 @@ val session = renderInto(container) {
 }
 
 session.setRenderingActive(false)
-session.render() // explicit rendering remains synchronous while inactive
+session.render()
 session.dispose()
 ```
 
-This entry deliberately does not provide lifecycle, ViewModel, saved state, environment, theme, or
-frame-clock locals. A custom host owns those providers and must dispose the session before the
-container or its lifecycle is abandoned. One container must have only one active mounted-tree owner.
+This low-level entry does not automatically provide Lifecycle, ViewModel, saved state,
+environment, theme, or frame-clock locals. A custom host owns those providers and must dispose the
+session before abandoning its container. One container must have only one mounted-tree owner.
+
+`AndroidEnvironmentBridge.fromContext(context)` maps density, font scale, locales, and layout
+direction to `UiEnvironmentValues`. `AndroidOverlayHostDefaults.androidOrNoOp(root)` performs the
+optional overlay `ServiceLoader` lookup without moving Android service discovery into UI Foundation.
 
 ## Native View transaction contract
 
@@ -102,60 +67,28 @@ AndroidView(
 ```
 
 - `factory` runs only for a new native node.
-- `update`, `onReset`, and `Modifier.nativeView` are replay-safe configuration. They can run again
-  while a failed frame restores the last committed tree and must not perform external one-shot work.
-- `onCommit` runs only after the entire View-tree transaction commits.
+- `update`, `onReset`, and `Modifier.nativeView` are replay-safe configuration.
+- `onCommit` runs only after the complete View-tree transaction commits.
 - `onRelease` runs once after committed removal or session disposal.
-- Stable sibling keys retain the correct native View across reordering.
 
-## Saved state
+## Saved state, scheduling, and threading
 
-`viewComposeSaveableStateRegistry(owner)` binds one ViewCompose registry to an Android
-`SavedStateRegistryOwner` identity. Restored values are consumed on first access; every Android save
-pulls the latest committed ViewCompose snapshot. Destroying the owner unregisters the provider and
-releases the process-local binding.
-
-Values may be null, recursively saveable lists or string-keyed maps, or Android values supported by
-Bundle such as `Parcelable`, `Serializable`, `IBinder`, `Size`, and `SizeF`. Functions and unsupported
-objects are rejected by the saveable-state contract. A corrupt restored entry is isolated so other
-keys can still restore.
-
-## Frame scheduling and threading
-
-- View creation, binding, reconciliation, explicit rendering, and disposal are main-thread work.
-- State invalidations coalesce onto the next Choreographer frame.
-- `RenderSession.render()` cancels a pending scheduled callback and renders synchronously.
-- Inactive sessions preserve one pending invalidation and schedule it after reactivation.
-- Cancelling a coroutine waiting on `AndroidMonotonicFrameClock` removes its pending frame callback.
-- `lastFrameReport` describes the latest attempted frame; `lastRenderFailure` intentionally retains
-  historical failure information after a later successful frame.
-
-## Animation and graphics interop
-
-`AndroidAnimationInterop` starts platform `ObjectAnimator`, `ValueAnimator`,
-`ViewPropertyAnimator`, spring, fling, transition, and MotionLayout operations. Returned animation
-objects are caller-owned and must be cancelled with the owning lifecycle. These operations are not
-ViewCompose state animations and do not participate in render rollback.
-
-`AndroidGraphicsInterop` provides API-gated RenderEffect and RuntimeShader factories, bitmap
-rendering helpers, and View layer-paint configuration. API-gated methods return `null` or `false`
-when unsupported. `Modifier.androidAnimation` and `Modifier.androidGraphics` are replay-safe native
-View configuration modifiers; do not start one-shot work from their callbacks.
+`viewComposeSaveableStateRegistry(owner)` binds framework saveable state to an Android
+`SavedStateRegistryOwner`. View creation, reconciliation, explicit rendering, and disposal are
+main-thread work. State invalidations coalesce onto the next Choreographer frame, while an explicit
+`RenderSession.render()` remains synchronous.
 
 ## Related documentation
 
-- [Architecture and module boundaries](../../architecture/overview.md)
-- [Render failure and commit semantics](../../architecture/render-failures.md)
-- [Lifecycle and saved-state architecture](../../architecture/lifecycle-and-saved-state.md)
-- [Theme integration guide](../../guides/theming.md)
-- [Source documentation and API comment standard](../../project/api-documentation-quality.md)
+- [Five-layer architecture](../../architecture/decisions/0002-five-layer-runtime-module-architecture.md)
+- [Architecture overview](../../architecture/overview.md)
+- [Render failure semantics](../../architecture/render-failures.md)
+- [Android aggregate](../viewcompose-android/README.md)
 
-The complete generated reference is available in the
+The generated reference is available in the
 [`viewcompose-host-android` API tree](https://docs.viewcompose.com/api/viewcompose-host-android/current/).
 
 ## Compatibility notes
 
-The `0.1.0-alpha03` line establishes the Activity, Fragment, custom-container, saveable-state,
-frame-scheduling, and native View transaction contracts. Do not persist `RenderSession`, Android
-root Views, saved-state registry instances, or renderer diagnostics. Custom hosts must be reviewed
-when host, widget-core, or renderer contracts change even when their DSL source still compiles.
+The Activity and Fragment `setUiContent` extensions moved to `viewcompose-android` in the hard-cut
+five-layer architecture. No compatibility facade remains in this low-level artifact.

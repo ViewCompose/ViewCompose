@@ -594,5 +594,5 @@ private const val PREVIEWS_DESCRIPTOR =
 private const val PREVIEW_THEME_PROVIDER_DESCRIPTOR =
     "Lcom/viewcompose/preview/tooling/ViewComposePreviewThemeProvider;"
 private const val ENTRY_POINT_DESCRIPTOR =
-    "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V"
+    "(Lcom/viewcompose/ui/foundation/UiTreeBuilder;)V"
 private val SOURCE_FILE_EXTENSIONS = setOf("java", "kt")

@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: 658ea5622fc12283e000ec346db3e4ba2d5a499fa0f7fb848a1821ddcf4b6848
+translation_source_hash: 6cf9c680db7230cc73adb004e8fdf2f129ded0dc164827028a033db110a32d07
 translation_status: current
 ---
 
@@ -12,9 +12,9 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-05**
+最后验证日期：**2026-08-06**
 
-复核责任人：**runtime、UI contract、Android host 和 navigation 模块族的维护者**
+复核责任人：**Kernel、UI Foundation、Android Engine、Android 聚合层与 navigation 模块族的维护者**
 
 ## 已验证的源状态与目标状态
 
@@ -22,10 +22,10 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 
 | 模块族 | 产物 | 已验证版本 |
 | --- | --- | --- |
-| 状态与组合 | `viewcompose-runtime`、`viewcompose-widget-core` | runtime `0.1.0-alpha02`；widget `0.1.0-alpha03` |
-| UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer`、`viewcompose-widget-constraintlayout` | `0.1.0-alpha03` |
-| Android 所有权 | `viewcompose-host-android`、`viewcompose-lifecycle`、`viewcompose-viewmodel` | `0.1.0-alpha03` |
-| 导航 | `viewcompose-navigation-core`、`viewcompose-navigation` | core `0.1.0-alpha02`；Android `0.1.0-alpha03` |
+| 状态与组合 | `viewcompose-runtime`、`viewcompose-ui-foundation` | runtime `0.1.0-alpha02`；UI Foundation `0.1.0-alpha01` |
+| UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer-android`、`viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha03`；renderer/ConstraintLayout `0.1.0-alpha01` |
+| Android 所有权 | `viewcompose-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` | 聚合层/集成层 `0.1.0-alpha01`；host `0.1.0-alpha03` |
+| 导航 | `viewcompose-navigation-core`、`viewcompose-navigation-android` | core `0.1.0-alpha02`；Android `0.1.0-alpha01` |
 
 不可变的发布源码 revision 记录在
 [`gradle/viewcompose-publishing.properties`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/gradle/viewcompose-publishing.properties)。
@@ -129,13 +129,13 @@ Kotlin `2.0.21`，声明位置是
   组合了 Activity 宿主、remember 可变状态、View 布局、Modifier 和输入；
 - [runtime 样例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt)
   覆盖可变与派生状态、快照事务、策略、观察和组合；
-- [widget-core 样例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-widget-core/src/test/samples/com/viewcompose/widget/core/samples/WidgetCoreSamples.kt)
+- [UI Foundation 样例](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt)
   覆盖可保存状态 registry 和主题所有权；
-- [Android 宿主样例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt)
+- [Android 宿主样例](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt)
   覆盖 Activity、Fragment、自定义容器和 Android View 宿主；
 - [navigation-core 样例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt)
   覆盖图、深链、事务和生命周期规划；
-- [Android 导航样例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-navigation/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt)
+- [Android 导航样例](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt)
   覆盖 remember 宿主、controller 操作和 motion 配置。
 
 根 `qaQuick` 任务会编译这些样例源码集或使用它们的测试。它还会运行

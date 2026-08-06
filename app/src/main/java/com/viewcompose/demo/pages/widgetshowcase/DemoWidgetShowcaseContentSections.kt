@@ -11,16 +11,16 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextDecoration
 import com.viewcompose.ui.node.TextOverflow
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Divider
-import com.viewcompose.widget.core.Icon
-import com.viewcompose.widget.core.Image
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Divider
+import com.viewcompose.ui.foundation.Icon
+import com.viewcompose.ui.foundation.Image
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiTextStyle
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 

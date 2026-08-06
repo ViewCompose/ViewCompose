@@ -4,7 +4,7 @@ import android.content.Intent
 import android.view.ViewGroup
 import com.viewcompose.performance.EXTRA_PERFORMANCE_ENGINE
 import com.viewcompose.performance.PerformanceComparisonActivity
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * demo 应用入口 Activity。

@@ -34,13 +34,13 @@ import com.viewcompose.ui.environment.UiLocaleList
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.tooling.UiNodeToolingMetadata
 import com.viewcompose.ui.unit.UiDensity
-import com.viewcompose.widget.core.AndroidDynamicColorPolicy
-import com.viewcompose.widget.core.AndroidThemeBridge
-import com.viewcompose.widget.core.ProvideSaveableStateRegistry
-import com.viewcompose.widget.core.RenderFailure
-import com.viewcompose.widget.core.RenderTreeResult
-import com.viewcompose.widget.core.UiEnvironment
-import com.viewcompose.widget.core.UiTheme
+import com.viewcompose.material3.Material3DynamicColorPolicy
+import com.viewcompose.material3.Material3ThemeBridge
+import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
+import com.viewcompose.ui.foundation.RenderFailure
+import com.viewcompose.ui.foundation.RenderTreeResult
+import com.viewcompose.ui.foundation.UiEnvironment
+import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import java.io.Closeable
 import kotlin.math.roundToInt
@@ -119,13 +119,13 @@ object StaticPreviewRenderer {
         } ?: run {
             // The default path mirrors the native Android host. Dynamic color stays disabled so a
             // request remains reproducible across Studio, Gradle, and CI machines.
-            val resolvedAndroidTheme = AndroidThemeBridge.resolveContext(
+            val resolvedAndroidTheme = Material3ThemeBridge.resolveContext(
                 context = previewContext,
-                dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+                dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
             )
             PreviewThemeResolution(
                 context = resolvedAndroidTheme.context,
-                tokens = AndroidThemeBridge.fromResolvedTheme(resolvedAndroidTheme),
+                tokens = Material3ThemeBridge.fromResolvedTheme(resolvedAndroidTheme),
             )
         }
         val themeTokens = resolvedPreviewTheme.tokens
@@ -543,7 +543,7 @@ private fun RenderTreeResult.toPreviewSnapshot(
 
 private const val MAX_AUTO_CAPTURE_PIXELS: Long = 16_000_000L
 
-private fun List<com.viewcompose.widget.core.RenderTreeNode>.toPreviewTreeNodes():
+private fun List<com.viewcompose.ui.foundation.RenderTreeNode>.toPreviewTreeNodes():
     List<PreviewRenderTreeNode> {
     return map { node ->
         val tooling = node.toolingMetadata

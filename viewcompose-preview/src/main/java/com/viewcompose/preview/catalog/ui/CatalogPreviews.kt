@@ -20,9 +20,9 @@ import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.UiTextStyle
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 

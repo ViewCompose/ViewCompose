@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.shadow.android.ShadowRenderPolicy
 

@@ -53,9 +53,9 @@ Every container covers at least these six cases:
 
 Foundation unit tests:
 
-1. [LazyListDiffTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
-2. [LazyHolderRegistryTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
-3. [LazyItemSessionControllerTest.kt](../../viewcompose-renderer/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+1. [LazyListDiffTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
+2. [LazyHolderRegistryTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
+3. [LazyItemSessionControllerTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
 
 Covered special cases:
 

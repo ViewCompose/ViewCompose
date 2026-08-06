@@ -7,22 +7,22 @@ import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.ButtonSize
-import com.viewcompose.widget.core.ButtonVariant
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.IconButton
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.SegmentedControl
-import com.viewcompose.widget.core.SegmentedControlSize
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextButton
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.ButtonSize
+import com.viewcompose.ui.foundation.ButtonVariant
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.SegmentedControl
+import com.viewcompose.ui.foundation.SegmentedControlSize
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextButton
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiTextStyle
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.unit.sp
 
 @ViewComposePreview(name = "Button", group = "Demo/Components")

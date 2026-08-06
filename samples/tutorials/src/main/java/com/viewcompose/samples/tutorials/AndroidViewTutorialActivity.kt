@@ -5,16 +5,16 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import com.viewcompose.host.android.AndroidView
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.remember
 
 class AndroidViewTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -77,6 +77,13 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                     "-PviewComposeDocsModules."
             dependsOn(verifyDocumentationSelection)
             val selectedModules = documentationModules.get()
+            val selectedUnpublishedModules = selectedModules
+                .filter(metadata.unpublishedModules::contains)
+            dependsOn(
+                selectedUnpublishedModules.map { module ->
+                    ":$module:dokkaGeneratePublicationHtml"
+                },
+            )
             inputs.file(project.layout.projectDirectory.file("gradle/viewcompose-publishing.properties"))
             inputs.file(
                 project.layout.projectDirectory.file(
@@ -96,6 +103,12 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
             )
             inputs.property("selectedModules", selectedModules)
+            inputs.property("selectedUnpublishedModules", selectedUnpublishedModules)
+            inputs.files(
+                selectedUnpublishedModules.map { module ->
+                    project.project(":$module").layout.buildDirectory.dir("dokka/html")
+                },
+            )
             outputs.dir(apiOutputDirectory)
             workingDir(project.layout.projectDirectory)
             commandLine(
@@ -121,6 +134,8 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             documentationReleaseEntries.set(
                 documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
             )
+            unpublishedArtifacts.set(metadata.unpublishedModules)
+            retiredArtifacts.set(metadata.retiredModules)
             scmUrl.set(metadata.scmUrl)
             requireCompleteCatalog.set(false)
         }
@@ -139,6 +154,8 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
             documentationReleaseEntries.set(
                 documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
             )
+            unpublishedArtifacts.set(metadata.unpublishedModules)
+            retiredArtifacts.set(metadata.retiredModules)
             scmUrl.set(metadata.scmUrl)
             requireCompleteCatalog.set(true)
         }
@@ -167,6 +184,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
                 moduleSourceRevisions.set(metadata.moduleSourceRevisions)
                 strictApiDocsModules.set(metadata.strictApiDocsModules)
                 unpublishedModules.set(metadata.unpublishedModules)
+                retiredModules.set(metadata.retiredModules)
                 documentationReleaseEntries.set(
                     documentationHistory.entries.map(DocumentationReleaseEntry::encoded),
                 )
@@ -619,6 +637,9 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
     abstract val unpublishedModules: ListProperty<String>
 
     @get:Input
+    abstract val retiredModules: ListProperty<String>
+
+    @get:Input
     abstract val documentationReleaseEntries: ListProperty<String>
 
     @TaskAction
@@ -668,6 +689,16 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
         check(unknownUnpublished.isEmpty()) {
             "Unknown unpublished Maven artifacts: ${unknownUnpublished.sorted().joinToString()}."
         }
+        val retired = retiredModules.get()
+        check(retired.distinct().size == retired.size) {
+            "Retired Maven artifact list contains duplicates."
+        }
+        retired.forEach { module ->
+            check(MODULE_PATTERN.matches(module)) { "Invalid retired artifact id '$module'." }
+            check(module !in versions) {
+                "Retired Maven artifact '$module' is still registered as an active publication."
+            }
+        }
 
         val documentationEntries = documentationReleaseEntries.get()
             .map(DocumentationReleaseEntry::decode)
@@ -699,7 +730,7 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
                 "Documentation release '${entry.module}:${entry.version}' must use a full " +
                     "lowercase Git commit SHA."
             }
-            check(entry.module in versions) {
+            check(entry.module in versions || entry.module in retired) {
                 "Documentation history contains unknown module '${entry.module}'."
             }
         }
@@ -707,10 +738,11 @@ abstract class VerifyPublishingConfigurationTask : DefaultTask() {
             .associateBy { entry -> Triple(entry.module, entry.version, entry.sourceRevision) }
         versions.forEach { (module, version) ->
             val revision = checkNotNull(sourceRevisions[module])
-            check(Triple(module, version, revision) in documentationPairs) {
+            check(module in unpublished || Triple(module, version, revision) in documentationPairs) {
                 "Current publication '$module:$version' at '$revision' is missing from " +
                     "gradle/viewcompose-documentation-releases.properties. Register its " +
-                    "immutable documentation release before advancing publishing metadata."
+                    "immutable documentation release before advancing publishing metadata or " +
+                    "mark the artifact as unpublished until its first release."
             }
         }
     }
@@ -737,6 +769,12 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
     abstract val documentationReleaseEntries: ListProperty<String>
 
     @get:Input
+    abstract val unpublishedArtifacts: ListProperty<String>
+
+    @get:Input
+    abstract val retiredArtifacts: ListProperty<String>
+
+    @get:Input
     abstract val scmUrl: Property<String>
 
     @get:Input
@@ -749,9 +787,15 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
         val expected = expectedModules.get().toSet()
         val versions = moduleVersions.get()
         val revisions = moduleSourceRevisions.get()
+        val historyModules = if (selected == expected) {
+            selected + retiredArtifacts.get()
+        } else {
+            selected
+        }
         val releaseEntries = documentationReleaseEntries.get()
             .map(DocumentationReleaseEntry::decode)
-            .filter { entry -> entry.module in selected }
+            .filter { entry -> entry.module in historyModules }
+        val unpublished = unpublishedArtifacts.get().toSet()
         val failures = mutableListOf<String>()
 
         if (requireCompleteCatalog.get() && selected != expected) {
@@ -798,13 +842,22 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
                 return@forEach
             }
             val moduleRoot = root.resolve(module)
-            verifyRedirect(
-                file = moduleRoot.resolve("current/index.html"),
-                module = module,
-                alias = "current",
-                version = version,
-                failures = failures,
-            )
+            val currentIndex = moduleRoot.resolve("current/index.html")
+            if (module in unpublished) {
+                verifyUnpublishedCurrentApi(
+                    file = currentIndex,
+                    module = module,
+                    failures = failures,
+                )
+            } else {
+                verifyRedirect(
+                    file = currentIndex,
+                    module = module,
+                    alias = "current",
+                    version = version,
+                    failures = failures,
+                )
+            }
             val latestRedirect = moduleRoot.resolve("latest/index.html")
             val latestStable = releaseEntries
                 .filter { entry -> entry.module == module && entry.version.isStableRelease() }
@@ -866,6 +919,21 @@ abstract class VerifyApiDocumentationOutputTask : DefaultTask() {
         val content = file.readText()
         if ("../$version/" !in content) {
             failures += "$module -> $alias alias does not target '$version'"
+        }
+    }
+
+    private fun verifyUnpublishedCurrentApi(
+        file: File,
+        module: String,
+        failures: MutableList<String>,
+    ) {
+        if (!file.isFile) {
+            failures += "$module -> unpublished current API is missing"
+            return
+        }
+        val content = file.readText()
+        if ("http-equiv=\"refresh\"" in content) {
+            failures += "$module -> unpublished current API must not redirect to an unreleased version"
         }
     }
 }
@@ -1133,6 +1201,7 @@ private data class PublishingMetadata(
     val scmUrl: String,
     val strictApiDocsModules: List<String>,
     val unpublishedModules: List<String>,
+    val retiredModules: List<String>,
     val moduleVersions: Map<String, String>,
     val moduleSourceRevisions: Map<String, String>,
 ) {
@@ -1178,6 +1247,12 @@ private data class PublishingMetadata(
                     .distinct()
                     .sorted(),
                 unpublishedModules = properties.getProperty("release.unpublishedModules")
+                    .orEmpty()
+                    .split(',')
+                    .map(String::trim)
+                    .filter(String::isNotEmpty)
+                    .sorted(),
+                retiredModules = properties.getProperty("release.retiredModules")
                     .orEmpty()
                     .split(',')
                     .map(String::trim)
@@ -1299,7 +1374,7 @@ private val FEATURE_CORE_DEPENDENCIES = mapOf(
     "viewcompose-animation" to "viewcompose-animation-core",
     "viewcompose-gesture" to "viewcompose-gesture-core",
     "viewcompose-graphics" to "viewcompose-graphics-core",
-    "viewcompose-navigation" to "viewcompose-navigation-core",
+    "viewcompose-navigation-android" to "viewcompose-navigation-core",
     "viewcompose-preview" to "viewcompose-preview-core",
 )
 private val POM_DEPENDENCY_PATTERN = Regex("<dependency>([\\s\\S]*?)</dependency>")

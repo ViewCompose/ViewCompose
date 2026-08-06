@@ -9,20 +9,20 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.ButtonVariant
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.SearchBar
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.SurfaceVariant
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.ButtonVariant
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.SearchBar
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceVariant
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.rememberTextFieldState
+import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.rememberTextFieldState
 
 @ViewComposePreview(name = "Preview · Bridge", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewToolingBridge() {

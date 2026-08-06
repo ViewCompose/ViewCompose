@@ -23,12 +23,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-runtime"))
-    implementation(project(":viewcompose-ui-contract"))
-    implementation(project(":viewcompose-widget-core"))
-    implementation(project(":viewcompose-host-android"))
+    implementation(project(":viewcompose-android"))
     implementation(project(":viewcompose-navigation-core"))
-    implementation(project(":viewcompose-navigation"))
+    implementation(project(":viewcompose-navigation-android"))
 
     implementation(libs.androidx.activity)
     implementation(libs.androidx.activity.compose)

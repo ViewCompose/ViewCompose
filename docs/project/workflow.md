@@ -96,8 +96,8 @@ nearest directory or mix platform, DSL, runtime, and Demo responsibilities.
 
 Decide in this order:
 
-1. module ownership, for example runtime, ui-contract, animation/gesture/graphics core and DSL,
-   widget-core, constraintlayout, renderer, host-android, lifecycle, viewmodel, or app;
+1. layer and module ownership: Kernel, UI Foundation, Android Engine, Design System, Integrations,
+   aggregate, tooling, or app;
 2. directory ownership, for example `context/`, `dsl/`, `runtime/`, `view/`, or `defaults/`;
 3. file name.
 
@@ -115,19 +115,19 @@ ownership are required review items.
 
 ### 5.2 Environment sources
 
-1. Host environment semantics come from `viewcompose-widget-core/context/Environment` and
+1. Host environment semantics come from `viewcompose-ui-foundation/context/Environment` and
    `UiEnvironment`.
 2. Android extraction enters `UiEnvironmentValues` through `AndroidEnvironmentBridge`.
 3. Renderer does not create another semantic channel; it uses only internal platform conversion in
-   `viewcompose-renderer/view/DimensionUtils.kt`.
+   `viewcompose-renderer-android/view/DimensionUtils.kt`.
 4. Renderer containers do not add private density caches or dp/sp conversion helpers.
 5. Correct existing divergence and update documentation in the same step.
 
 #### 5.2.1 Lifecycle and ViewModel APIs
 
-1. `collectAsState/collectAsStateWithLifecycle` belongs to `:viewcompose-lifecycle` under
+1. `collectAsState/collectAsStateWithLifecycle` belongs to `:viewcompose-lifecycle-androidx` under
    `com.viewcompose.lifecycle`.
-2. `viewModel/savedStateHandle` belongs to `:viewcompose-viewmodel` under
+2. `viewModel/savedStateHandle` belongs to `:viewcompose-viewmodel-androidx` under
    `com.viewcompose.viewmodel`.
 3. Default host Local injection belongs to the `viewcompose-host-android` bridge and is not
    duplicated in those modules.
@@ -137,9 +137,9 @@ ownership are required review items.
 Use an SPI for optional overlay, host, and decoration assembly. Reflection is a separately reviewed
 last resort.
 
-1. Default overlay assembly uses `OverlayHostFactoryProvider + ServiceLoader`, never a new
+1. Default overlay assembly uses `AndroidOverlayHostFactoryProvider + ServiceLoader`, never a new
    `Class.forName` primary path.
-2. `viewcompose-overlay-android` registers through `META-INF/services`; absence falls back to an
+2. `viewcompose-overlay-material3-android` registers through `META-INF/services`; absence falls back to an
    observable stable no-op.
 3. Optional decoration uses `AndroidViewDecorationBackend + ServiceLoader`; renderer and host do
    not depend on the shadow implementation, and absence is a no-op.
@@ -166,7 +166,7 @@ last resort.
 2. If stability is impossible, accept nearest-stable-ancestor fallback and test it.
 3. Structure drift remains observable; do not suppress warnings or exceptions.
 4. Changed `emit(spec/modifier)` inputs mark the group dirty.
-5. Add a runtime/widget-core test for group reuse and fallback.
+5. Add a Runtime/UI Foundation test for group reuse and fallback.
 
 ### 5.7 Snapshot consistency
 
@@ -225,35 +225,40 @@ last resort.
 
 ### 5.11 Module dependencies
 
-1. widget-core production source cannot import `com.viewcompose.renderer.*`.
-2. ui-contract production source cannot import `android.*` or `androidx.*`.
-3. `setUiContent`, `renderInto`, and `AndroidView/nativeView` live only in host-android.
-4. Foundation modules depend only on their `foundationModuleDependencyRules` allowlist and cannot
-   depend on optional navigation/shadow or tooling modules.
-5. Optional capabilities do not depend on tooling; no `viewcompose-*` module depends on app.
-6. Register a module exactly once as foundation, optional, or tooling; foundation modules declare
-   allowed downstream dependencies.
-7. `verifyModuleDependencyBoundaries` in `qaQuick` is a non-waivable gate.
-8. Guard tests enforce the boundary; review convention alone is insufficient.
-9. Classify each published dependency by consumer exposure, not by implementation convenience:
+1. Register every runtime module exactly once as Kernel, UI Foundation, Android Engine, Design
+   System, Integration, or the explicit consumer aggregate; register Tooling separately.
+2. Dependencies may point to the same or a lower allowed layer only. Tooling never enters a
+   published runtime dependency, and no `viewcompose-*` module depends on `app`.
+3. UI Foundation production sources cannot import Renderer, AndroidX, or Material APIs. UI Contract
+   production sources cannot import `android.*` or `androidx.*`.
+4. `ComponentActivity/Fragment.setUiContent` lives in `viewcompose-android`; `renderInto` and
+   `AndroidView/nativeView` remain in the low-level `viewcompose-host-android` engine.
+5. Material theme policy lives in `viewcompose-material3`, and Material-backed presentation lives
+   only in explicitly named integrations. UI Foundation, Renderer Android, and Host Android cannot
+   import or depend on Material Components.
+6. `verifyModuleDependencyBoundaries` and `verifyDesignSystemIsolation` in `qaQuick` are
+   non-waivable gates. Guard tests enforce these boundaries; review convention alone is
+   insufficient.
+7. Classify each published dependency by consumer exposure, not by implementation convenience:
    public/protected signature types and intentional entry-point aggregates use `api`; dependencies
    that are fully private to the implementation use `implementation`. A caller-owned platform
    integration is the only exception and must be named in the module manual and external-consumer
    test; it cannot be inferred from an existing `implementation` declaration.
-10. A normal application declares the host or optional-feature artifacts it uses. Do not document
-    internal foundation coordinates as mandatory workarounds for incomplete Maven metadata.
-11. Add every direct ViewCompose publication edge to
+8. A normal application declares the aggregate and optional-feature artifacts it uses. Do not
+    document lower-layer coordinates as mandatory workarounds for incomplete Maven metadata.
+9. Add every direct ViewCompose publication edge to
     [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
     in the same change. `verifyViewComposeDependencyContracts` rejects drift between that contract
     and Gradle declarations.
-12. A new or changed entry point must include a minimal external-consumer compile test. Published
+10. A new or changed entry point must include a minimal external-consumer compile test. Published
     repository inspection must preserve `api` as Maven compile scope and `implementation` as runtime
     scope before release.
-13. Dependency exposure changes are publication-input changes: update the owning module manual and
+11. Dependency exposure changes are publication-input changes: update the owning module manual and
     add immutable release intent in the same pull request.
-14. Public installation examples switch to a reduced dependency set only after Maven Central serves
-    a release containing that metadata. Verify the post-publication documentation update and
-    Maven-backed samples from a clean checkout without a generated local repository.
+12. Before first Central publication, a repository Maven sample may use a new coordinate only when
+    its gate first publishes the current checkout to `build/maven-repository` and then consumes the
+    generated POM. After publication, repeat the installation verification from a clean checkout
+    without the generated repository.
 
 ### 5.12 One package root per module
 
@@ -272,9 +277,10 @@ last resort.
 
 ### 5.14 Host session and diagnostics
 
-1. Android frame clock and dispatcher implementation lives in host-android; widget-core retains only
-   the `RenderSessionRuntime` contract/provider.
-2. `setUiContent/renderInto` expose core `RenderStats/RenderTreeResult`, never renderer types.
+1. Android frame clock and dispatcher implementation lives in host-android; UI Foundation retains
+   only the `RenderSessionRuntime` contract/provider.
+2. Aggregate `setUiContent` and Engine `renderInto` expose core `RenderStats/RenderTreeResult`, never
+   renderer implementation types.
 3. Lazy-item and overlay child sessions use the session contract rather than constructing a
    platform implementation directly.
 4. Guards cover renderer-type leakage and provider-missing no-op fallback.

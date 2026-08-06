@@ -6,21 +6,21 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.widget.core.Badge
-import com.viewcompose.widget.core.BadgedBox
-import com.viewcompose.widget.core.CircularProgressIndicator
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Icon
-import com.viewcompose.widget.core.IconButton
-import com.viewcompose.widget.core.LinearProgressIndicator
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.SearchBar
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Badge
+import com.viewcompose.ui.foundation.BadgedBox
+import com.viewcompose.ui.foundation.CircularProgressIndicator
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Icon
+import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.LinearProgressIndicator
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.SearchBar
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiTextStyle
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.rememberTextFieldState
+import com.viewcompose.ui.foundation.rememberTextFieldState
 import com.viewcompose.ui.unit.sp
 
 @ViewComposePreview(name = "SearchBar", group = "Demo/Components")

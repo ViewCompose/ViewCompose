@@ -1,6 +1,6 @@
 package com.viewcompose.preview.catalog.model
 
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Preview 用例的领域分组，保持与 demo 模块和快照报告的分类一致。

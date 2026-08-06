@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.view.ViewGroup
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
 
 /**
  * Diagnostics chapter 的 Activity 入口，集中展示运行时、主题、renderer 和缺口追踪信息。

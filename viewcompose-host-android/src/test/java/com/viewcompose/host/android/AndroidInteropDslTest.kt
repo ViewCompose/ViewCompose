@@ -11,7 +11,7 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.NativeViewElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
-import com.viewcompose.widget.core.buildVNodeTree
+import com.viewcompose.ui.foundation.buildVNodeTree
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

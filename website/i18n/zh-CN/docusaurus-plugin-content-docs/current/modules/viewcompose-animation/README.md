@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: 0a0cfc90e4a137cfcb2d922bfac6ebf5d418d32e68b08f12243546b90255b244
+translation_source_hash: cbc69053ba8537e852d8c2c780c11bdf34bafa28fa9e3243e66224f17e226db3
 translation_status: current
 ---
 
@@ -21,7 +21,7 @@ dependencies {
 - 稳定性：**Alpha**。State Ownership、取消、Retarget、内容保留和 Renderer 交接已有明确契约；
   API 有意小于 Compose Animation，并可能在 Alpha 版本间扩展。
 - 平台：Android 库，最低 SDK 24。
-- Animation Core、Runtime、UI Contract 和 Widget Core 会被传递暴露，因为它们的 State、
+- Animation Core、Runtime、UI Contract 和 UI Foundation 会被传递暴露，因为它们的 State、
   Clock、Modifier、单位和 Builder 类型出现在公开动画 API 中。
 - `viewcompose-animation-core` 也可以脱离 Android UI Host 独立使用。
 - Android `View` 属性动画 Interop 属于 `viewcompose-host-android`，不属于本模块。
@@ -207,8 +207,8 @@ Detach，通常不应使用。
 
 - [Animation Core 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-animation-core)
 - [Runtime 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-runtime)
-- [Widget Core 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-widget-core)
-- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer)
+- [UI Foundation 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation)
+- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
 - [架构概览](https://docs.viewcompose.com/zh-CN/architecture/overview)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 

@@ -3,14 +3,14 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Text
 
 class LazyListsTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

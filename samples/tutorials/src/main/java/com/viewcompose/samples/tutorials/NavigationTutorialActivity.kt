@@ -3,7 +3,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.navigation.core.NavRoute
@@ -11,10 +11,10 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
 
 private const val HOME = "home"
 private const val DETAILS = "details"

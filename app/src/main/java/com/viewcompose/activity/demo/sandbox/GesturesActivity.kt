@@ -1,7 +1,7 @@
 package com.viewcompose
 
 import android.view.ViewGroup
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * 指定 Gestures sandbox 初始页签，便于回放点击、拖拽、滑动和变换手势。

@@ -2,7 +2,7 @@
 title: 读取渲染诊断
 sidebar_position: 14
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: 2d99ffc2a757cd5bb023007db3281ee2c6f0e886ced467ec599ec1316be5f7f7
+translation_source_hash: ddc5f5af21843981b0c0385f682d001f728816493dd2a1f85eb7d79a100492df
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -32,17 +32,17 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.RenderStats
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.RenderStats
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.remember
 import java.util.concurrent.atomic.AtomicReference
 
 class RenderDiagnosticsTutorialActivity : ComponentActivity() {

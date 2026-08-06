@@ -9,6 +9,7 @@ import styles from './styles.module.css';
 type ModuleEntry = {
   artifact: string;
   version: string;
+  unpublished: boolean;
   family: string;
   role: string;
   manual: string;
@@ -53,7 +54,9 @@ function ApiReference(): ReactNode {
           {Object.entries(groupedModules).map(([family, entries]) => (
             <section key={family} aria-labelledby={`family-${family.replaceAll(' ', '-')}`}>
               <Heading as="h2" id={`family-${family.replaceAll(' ', '-')}`}>
-                {family}
+                {family === 'Retired'
+                  ? translate({id: 'api.family.retired', message: 'Retired'})
+                  : family}
               </Heading>
               <div className={styles.moduleGrid}>
                 {entries.map((module) => (
@@ -62,8 +65,30 @@ function ApiReference(): ReactNode {
                       <Heading as="h3">{module.artifact}</Heading>
                       <code>{module.version}</code>
                     </div>
-                    <p>{module.role}</p>
+                    <p>
+                      {module.family === 'Retired'
+                        ? translate({
+                            id: 'api.module.retiredRole',
+                            message: 'Superseded coordinate; immutable release history only',
+                          })
+                        : module.role}
+                    </p>
                     <div className={styles.versionHistory}>
+                      {module.unpublished ? (
+                        <div>
+                          <code>
+                            {translate({id: 'api.module.unreleased', message: 'unreleased'})}
+                          </code>
+                          <span>
+                            <Link to={`/api/${module.artifact}/current/`} data-noBrokenLinkCheck>
+                              {translate({id: 'api.module.openApi', message: 'API'})}
+                            </Link>
+                            <Link to={`/modules/${module.artifact}/`}>
+                              {translate({id: 'api.module.openManual', message: 'Manual'})}
+                            </Link>
+                          </span>
+                        </div>
+                      ) : null}
                       {[...module.versions].reverse().map((release) => (
                         <div key={release.version}>
                           <code>{release.version}</code>

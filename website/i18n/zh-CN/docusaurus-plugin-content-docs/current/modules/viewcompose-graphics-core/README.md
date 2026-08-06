@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-graphics-core/README.md
-translation_source_hash: 71b9db253be583a2e2387f0a8add8870f144771a2b45561ff3cd506eec13f030
+translation_source_hash: 09c0f6724bc5024e58fc49a7193feab2e1a922737974408125b68b0ab1edd623
 translation_status: current
 ---
 
@@ -116,7 +116,7 @@ State、不同步线程，也不推断 Size、Density、Theme 输入；Key 必�
 ## 相关文档
 
 - [UI Contract 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract)
-- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer)
+- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
 - [架构概览](https://docs.viewcompose.com/zh-CN/architecture/overview)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 

@@ -1,7 +1,7 @@
 package com.viewcompose
 
 import android.view.ViewGroup
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Graphics sandbox 的 Activity 入口，用于验证 Canvas、绘制 modifier 和缓存绘制管线。

@@ -2,7 +2,7 @@
 title: 使用导航
 sidebar_position: 8
 translation_source: tutorials/navigation.md
-translation_source_hash: 07a2cec06aaa5e26dee5783d9134e5c3ccbf53bea81ce7c65009d342cdf61255
+translation_source_hash: c99bc8f8e30f69978232d0910f0acaea59a1b8d25a07507cdb27f7ca674db38a
 translation_status: current
 ---
 
@@ -16,8 +16,8 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -33,7 +33,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.navigation.core.NavRoute
@@ -41,10 +41,10 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
 
 private const val HOME = "home"
 private const val DETAILS = "details"

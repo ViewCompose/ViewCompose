@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-graphics/README.md
-translation_source_hash: 37ec99d4576698b559073ad6677d53fdf1b99a251180816b56108cde96c80aa1
+translation_source_hash: b2fdcb9dfd11e34069f19ec18c5b845e38e6bcb7c8bc2c82ca7deb927cc327ac
 translation_status: current
 ---
 
@@ -21,7 +21,7 @@ dependencies {
 - 稳定性：**Alpha**。Node 和 Modifier 契约已经审查并测试；Renderer 保真与高级绘制 API 仍可能
   在 Alpha 版本间演进。
 - 平台：Android Library 与 ViewCompose 组合集成。
-- 它传递暴露 Graphics Core、UI Contract 和 Widget Core。
+- 它传递暴露 Graphics Core、UI Contract 和 UI Foundation。
 - 仅需平台无关 Command/Model 代码时使用 `viewcompose-graphics-core`。
 
 ## Draw 执行模型
@@ -100,8 +100,8 @@ Origin 使用 Android `Canvas.drawText`，不增加换行或富文本布局。
 ## 相关文档
 
 - [Graphics Core 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-graphics-core)
-- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer)
-- [Widget Core 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-widget-core)
+- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
+- [UI Foundation 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 
 完整生成参考位于

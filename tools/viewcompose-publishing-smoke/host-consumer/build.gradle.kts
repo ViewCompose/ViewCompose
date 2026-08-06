@@ -28,7 +28,5 @@ fun viewCompose(module: String): String =
     "$viewComposeGroup:$module:${checkNotNull(viewComposeVersions[module])}"
 
 dependencies {
-    implementation(viewCompose("viewcompose-host-android"))
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation(viewCompose("viewcompose-android"))
 }

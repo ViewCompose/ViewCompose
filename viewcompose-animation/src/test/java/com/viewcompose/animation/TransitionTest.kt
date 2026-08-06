@@ -11,8 +11,8 @@ import com.viewcompose.animation.core.EasingDefaults
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.composition.ComposerLite
-import com.viewcompose.widget.core.ComposerContext
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.ComposerContext
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

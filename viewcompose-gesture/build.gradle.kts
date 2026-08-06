@@ -27,7 +27,7 @@ dependencies {
     api(project(":viewcompose-gesture-core"))
     api(project(":viewcompose-runtime"))
     api(project(":viewcompose-ui-contract"))
-    api(project(":viewcompose-widget-core"))
+    api(project(":viewcompose-ui-foundation"))
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
 }

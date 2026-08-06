@@ -8,8 +8,8 @@ import com.viewcompose.graphics.Canvas
 import com.viewcompose.graphics.core.PathModel
 import com.viewcompose.navigation.core.NavGraph
 import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * These core types must remain visible when a consumer declares only their feature artifacts.

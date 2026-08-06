@@ -29,9 +29,9 @@ import com.viewcompose.runtime.frame.MonotonicFrameClock
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
 
 /** Animates a scalar target owned by the current composition call position. */
 fun UiTreeBuilder.animateAsStateSample(target: Float): State<Float> {

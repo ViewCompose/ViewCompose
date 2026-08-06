@@ -20,10 +20,10 @@ import com.viewcompose.ui.modifier.focusRequester
 import com.viewcompose.ui.modifier.focusable
 import com.viewcompose.ui.modifier.onKeyEvent
 import com.viewcompose.ui.modifier.onPreviewKeyEvent
-import com.viewcompose.widget.core.RenderFailure
-import com.viewcompose.widget.core.RenderFailureOperation
-import com.viewcompose.widget.core.RenderFailurePhase
-import com.viewcompose.widget.core.RenderFrameStatus
+import com.viewcompose.ui.foundation.RenderFailure
+import com.viewcompose.ui.foundation.RenderFailureOperation
+import com.viewcompose.ui.foundation.RenderFailurePhase
+import com.viewcompose.ui.foundation.RenderFrameStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

@@ -129,6 +129,7 @@ export async function installCurrentDocumentationTooling(
 export function projectDependencyContractsForPublishingMetadata(
   contractContent,
   publishingContent,
+  historicalContractContent,
 ) {
   const registeredArtifacts = new Set(
     [...publishingContent.matchAll(/^module\.(viewcompose-[a-z0-9-]+)\.version=/gmu)]
@@ -139,8 +140,28 @@ export function projectDependencyContractsForPublishingMetadata(
   }
 
   const contractArtifactPattern = /^module\.(viewcompose-[a-z0-9-]+)=/u;
+  const allowHistoricalFallback = historicalContractContent !== undefined;
+  const historicalContractLines = new Map(
+    (historicalContractContent ?? '')
+      .split(/\r?\n/u)
+      .map((line) => [contractArtifactPattern.exec(line)?.[1], line])
+      .filter(([artifact]) => artifact),
+  );
+  const augmentedContractContent = [
+    contractContent.trimEnd(),
+    ...[...registeredArtifacts]
+      .filter((artifact) => !contractContent.includes(`module.${artifact}=`))
+      .map((artifact) =>
+        historicalContractLines.get(artifact) ??
+          (allowHistoricalFallback
+            ? `module.${artifact}=api=;implementation=;compileOnly=;runtimeOnly=`
+            : undefined),
+      )
+      .filter(Boolean),
+    '',
+  ].join('\n');
   const contractArtifacts = new Set(
-    contractContent
+    augmentedContractContent
       .split(/\r?\n/u)
       .map((line) => contractArtifactPattern.exec(line)?.[1])
       .filter(Boolean),
@@ -150,7 +171,7 @@ export function projectDependencyContractsForPublishingMetadata(
     throw new Error(`Dependency contracts are missing registered artifacts: ${missing.sort().join(', ')}`);
   }
 
-  const projected = contractContent.split(/\r?\n/u).flatMap((line) => {
+  const projected = augmentedContractContent.split(/\r?\n/u).flatMap((line) => {
     const artifact = contractArtifactPattern.exec(line)?.[1];
     if (!artifact) return [line];
     if (!registeredArtifacts.has(artifact)) return [];
@@ -173,6 +194,13 @@ async function generateRevision(revision, entries, releases) {
   const workspace = await mkdtemp(resolve(tmpdir(), 'viewcompose-versioned-api-'));
   try {
     await extractRevision(revision, workspace);
+    const dependencyContractsPath = resolve(
+      workspace,
+      'gradle/viewcompose-dependency-contracts.properties',
+    );
+    const historicalDependencyContracts = await readFile(dependencyContractsPath, 'utf8').catch(
+      () => '',
+    );
     await installCurrentDocumentationTooling(workspace);
     const metadataPath = resolve(workspace, 'gradle/viewcompose-publishing.properties');
     let metadata = await readFile(metadataPath, 'utf8');
@@ -187,14 +215,14 @@ async function generateRevision(revision, entries, releases) {
         entry.sourceRevision,
       );
     }
-    const dependencyContractsPath = resolve(
-      workspace,
-      'gradle/viewcompose-dependency-contracts.properties',
-    );
     const dependencyContracts = await readFile(dependencyContractsPath, 'utf8');
     await writeFile(
       dependencyContractsPath,
-      projectDependencyContractsForPublishingMetadata(dependencyContracts, metadata),
+      projectDependencyContractsForPublishingMetadata(
+        dependencyContracts,
+        metadata,
+        historicalDependencyContracts,
+      ),
       'utf8',
     );
     await writeFile(metadataPath, metadata, 'utf8');
@@ -241,10 +269,28 @@ async function writeAliases(artifact, entries, current) {
   }
 }
 
+async function copyUnpublishedCurrentApi(artifact) {
+  const source = resolve(repositoryRoot, artifact, 'build/dokka/html');
+  const destination = resolve(outputRoot, artifact, 'current');
+  try {
+    await cp(source, destination, {recursive: true, force: true});
+  } catch (error) {
+    throw new Error(
+      `Unable to copy current API for unpublished artifact ${artifact}. ` +
+        `Run :${artifact}:dokkaGeneratePublicationHtml first: ${error.message}`,
+    );
+  }
+}
+
 async function main(argumentsList) {
   const releases = await loadDocumentationReleases(repositoryRoot);
   const modules = selectedModules(argumentsList, new Set(releases.current.keys()));
-  const selected = releases.entries.filter((entry) => modules.includes(entry.artifact));
+  const completeSelection = modules.length === releases.current.size;
+  const historyArtifacts = new Set([
+    ...modules,
+    ...(completeSelection ? releases.retired : []),
+  ]);
+  const selected = releases.entries.filter((entry) => historyArtifacts.has(entry.artifact));
   await rm(outputRoot, {recursive: true, force: true});
   await mkdir(outputRoot, {recursive: true});
 
@@ -254,7 +300,11 @@ async function main(argumentsList) {
   }
   for (const artifact of modules) {
     const entries = selected.filter((entry) => entry.artifact === artifact);
-    await writeAliases(artifact, entries, releases.current.get(artifact));
+    if (releases.unpublished.has(artifact)) {
+      await copyUnpublishedCurrentApi(artifact);
+    } else {
+      await writeAliases(artifact, entries, releases.current.get(artifact));
+    }
   }
   const manifest = selected.map(({artifact, version, sourceRevision}) => ({
     artifact,

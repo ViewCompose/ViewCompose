@@ -170,11 +170,11 @@ For compatibility, ownership, and operational guidance, see the
 - Rebind a row from one source to another before the first operation completes.
 - Dispose a mounted tree and assert that no delayed callback writes to its old `ImageView`.
 - Test placeholder, error, fallback, disabled cache, explicit size, and transition behavior.
-- Keep adapter dependencies optional; the UI contract, widget core, and renderer must compile without them.
+- Keep adapter dependencies optional; UI Contract, UI Foundation, and Renderer must compile without them.
 
 ## Related documentation
 
 - [UI Contract module](../modules/viewcompose-ui-contract/README.md)
-- [Widget Core module](../modules/viewcompose-widget-core/README.md)
-- [Renderer module](../modules/viewcompose-renderer/README.md)
+- [UI Foundation module](../modules/viewcompose-ui-foundation/README.md)
+- [Renderer module](../modules/viewcompose-renderer-android/README.md)
 - [Migrate image loading](../migration/image-loading.md)

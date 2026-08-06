@@ -1,7 +1,7 @@
 package com.viewcompose
 
 import android.view.ViewGroup
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * 指定 Input demo 初始页签，便于直接验证文本输入、焦点和控件状态场景。

@@ -2,7 +2,7 @@
 title: 使用 Overlay
 sidebar_position: 9
 translation_source: tutorials/overlays.md
-translation_source_hash: 4d80149f3f6e9c3a3727fbd681c59bffea29c89ed569b4bc750031f9d781292b
+translation_source_hash: f80b6af772840d5d57cdfb8f9b65efb6544f5fc894ebfe08a630e31516b5e72e
 translation_status: current
 ---
 
@@ -16,14 +16,14 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
 ```
 
-缺少 `viewcompose-overlay-android` 或 `overlayHostFactory` 时，`Dialog` 声明没有对应的 Android
+缺少 `viewcompose-overlay-material3-android` 或 `overlayHostFactory` 时，`Dialog` 声明没有对应的 Android
 presenter，无法显示。
 
 ## 显示确认对话框
@@ -36,19 +36,19 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
-import com.viewcompose.overlay.android.host.AndroidOverlayHost
+import com.viewcompose.android.setUiContent
+import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Dialog
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Dialog
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.remember
 
 class OverlaysTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

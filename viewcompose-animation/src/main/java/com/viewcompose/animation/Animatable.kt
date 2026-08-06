@@ -8,8 +8,8 @@ import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.frame.MonotonicFrameClock
-import com.viewcompose.widget.core.LocalMonotonicFrameClock
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.LocalMonotonicFrameClock
+import com.viewcompose.ui.foundation.remember
 import java.util.concurrent.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext

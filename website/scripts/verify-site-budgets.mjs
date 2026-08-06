@@ -43,18 +43,33 @@ export async function verifySiteBudgets({
   const searchIndexSizes = await Promise.all(
     searchIndexes.map(async (path) => ({path, bytes: (await stat(path)).size})),
   );
-  const apiVersionSizes = await Promise.all(
+  const immutableApiVersionSizes = await Promise.all(
     apiManifest.map(async ({artifact, version}) => {
       const prefix = `api/${artifact}/${version}/`;
       const files = canonicalApiFiles.filter((path) => relativePath(path).startsWith(prefix));
       return {artifact, version, bytes: await totalBytes(files)};
     }),
   );
-  const versionedApiBytes = apiVersionSizes.reduce((total, entry) => total + entry.bytes, 0);
-  const apiRoutingOverheadBytes = apiBytes - versionedApiBytes;
-  const averageApiVersionBytes = apiVersionSizes.length === 0
+  const releasedArtifacts = new Set(apiManifest.map(({artifact}) => artifact));
+  const unpublishedCurrentArtifacts = new Set(
+    canonicalApiFiles.flatMap((path) => {
+      const match = /^api\/(viewcompose-[a-z0-9-]+)\/current\//u.exec(relativePath(path));
+      return match && !releasedArtifacts.has(match[1]) ? [match[1]] : [];
+    }),
+  );
+  const unpublishedCurrentApiSizes = await Promise.all(
+    [...unpublishedCurrentArtifacts].sort().map(async (artifact) => {
+      const prefix = `api/${artifact}/current/`;
+      const files = canonicalApiFiles.filter((path) => relativePath(path).startsWith(prefix));
+      return {artifact, version: 'current', bytes: await totalBytes(files)};
+    }),
+  );
+  const apiTreeSizes = [...immutableApiVersionSizes, ...unpublishedCurrentApiSizes];
+  const apiTreeBytes = apiTreeSizes.reduce((total, entry) => total + entry.bytes, 0);
+  const apiRoutingOverheadBytes = apiBytes - apiTreeBytes;
+  const averageApiTreeBytes = apiTreeSizes.length === 0
     ? 0
-    : versionedApiBytes / apiVersionSizes.length;
+    : apiTreeBytes / apiTreeSizes.length;
   const violations = [];
 
   const check = (actual, maximum, description, format) => {
@@ -65,9 +80,9 @@ export async function verifySiteBudgets({
 
   check(nonApiBytes, budgets.maxNonApiOutputMiB * MIB, 'non-API site output', formatMiB);
   check(
-    averageApiVersionBytes,
+    averageApiTreeBytes,
     budgets.maxAverageApiVersionMiB * MIB,
-    'average immutable API version',
+    'average API tree',
     formatMiB,
   );
   check(
@@ -76,15 +91,15 @@ export async function verifySiteBudgets({
     'API manifest and alias overhead',
     formatMiB,
   );
-  for (const entry of apiVersionSizes) {
+  for (const entry of apiTreeSizes) {
     check(
       entry.bytes,
       budgets.maxApiVersionMiB * MIB,
-      `API version (${entry.artifact}/${entry.version})`,
+      `API tree (${entry.artifact}/${entry.version})`,
       formatMiB,
     );
   }
-  if (apiVersionSizes.length === 0) {
+  if (immutableApiVersionSizes.length === 0) {
     violations.push('API manifest contains no immutable artifact versions');
   }
   if (localizedApiCopies.length > 0) {
@@ -144,7 +159,7 @@ export async function verifySiteBudgets({
   const summary = [
     `output ${formatMiB(outputBytes)}`,
     `non-API ${formatMiB(nonApiBytes)}/${formatMiB(budgets.maxNonApiOutputMiB * MIB)}`,
-    `API ${apiVersionSizes.length} versions averaging ${formatMiB(averageApiVersionBytes)}/${formatMiB(budgets.maxAverageApiVersionMiB * MIB)}`,
+    `API ${immutableApiVersionSizes.length} immutable versions and ${unpublishedCurrentApiSizes.length} unpublished current trees averaging ${formatMiB(averageApiTreeBytes)}/${formatMiB(budgets.maxAverageApiVersionMiB * MIB)}`,
     `API routing overhead ${formatMiB(apiRoutingOverheadBytes)}/${formatMiB(budgets.maxApiRoutingOverheadMiB * MIB)}`,
     `JavaScript ${formatMiB(javascriptBytes)}/${formatMiB(budgets.maxTotalJavaScriptMiB * MIB)}`,
     `largest JS ${formatKiB(largestJavaScript?.bytes ?? 0)}/${formatKiB(budgets.maxLargestJavaScriptKiB * KIB)}`,
@@ -160,10 +175,14 @@ export async function verifySiteBudgets({
     outputBytes,
     nonApiBytes,
     apiBytes,
-    averageApiVersionBytes,
+    averageApiTreeBytes,
+    averageApiVersionBytes: averageApiTreeBytes,
     apiRoutingOverheadBytes,
     apiVersionSizes: Object.fromEntries(
-      apiVersionSizes.map(({artifact, version, bytes}) => [`${artifact}/${version}`, bytes]),
+      immutableApiVersionSizes.map(({artifact, version, bytes}) => [`${artifact}/${version}`, bytes]),
+    ),
+    apiTreeSizes: Object.fromEntries(
+      apiTreeSizes.map(({artifact, version, bytes}) => [`${artifact}/${version}`, bytes]),
     ),
     javascriptBytes,
     largestJavaScriptBytes: largestJavaScript?.bytes ?? 0,

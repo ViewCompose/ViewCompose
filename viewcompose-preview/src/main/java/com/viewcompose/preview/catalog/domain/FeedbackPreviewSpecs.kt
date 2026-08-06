@@ -7,14 +7,14 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
-import com.viewcompose.widget.core.CircularProgressIndicator
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Divider
-import com.viewcompose.widget.core.LinearProgressIndicator
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.SurfaceVariant
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.CircularProgressIndicator
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Divider
+import com.viewcompose.ui.foundation.LinearProgressIndicator
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceVariant
+import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.unit.dp
 
 internal object FeedbackPreviewSpecs {

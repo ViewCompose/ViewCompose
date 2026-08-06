@@ -72,3 +72,47 @@ test('historical API workspaces receive only contracts for their registered arti
   assert.doesNotMatch(projected, /module\.viewcompose-image-glide=/u);
   assert.doesNotMatch(projected, /api=.*viewcompose-image-glide/u);
 });
+
+test('historical API workspaces recover retired contracts from their source revision', () => {
+  const projected = projectDependencyContractsForPublishingMetadata(
+    [
+      'schema.version=1',
+      'module.viewcompose-ui-foundation=api=viewcompose-runtime;implementation=;compileOnly=;runtimeOnly=',
+      '',
+    ].join('\n'),
+    [
+      'module.viewcompose-runtime.version=0.1.0-alpha01',
+      'module.viewcompose-widget-core.version=0.1.0-alpha01',
+      '',
+    ].join('\n'),
+    [
+      'schema.version=1',
+      'module.viewcompose-runtime=api=;implementation=;compileOnly=;runtimeOnly=',
+      'module.viewcompose-widget-core=api=viewcompose-runtime;implementation=;compileOnly=;runtimeOnly=',
+      '',
+    ].join('\n'),
+  );
+
+  assert.match(
+    projected,
+    /^module\.viewcompose-widget-core=api=viewcompose-runtime;implementation=;compileOnly=;runtimeOnly=$/mu,
+  );
+  assert.doesNotMatch(projected, /module\.viewcompose-ui-foundation=/u);
+});
+
+test('historical API workspaces synthesize documentation-only contracts before the registry existed', () => {
+  const projected = projectDependencyContractsForPublishingMetadata(
+    'schema.version=1\n',
+    [
+      'module.viewcompose-runtime.version=0.1.0-alpha01',
+      'module.viewcompose-widget-core.version=0.1.0-alpha01',
+      '',
+    ].join('\n'),
+    '',
+  );
+
+  assert.match(
+    projected,
+    /^module\.viewcompose-widget-core=api=;implementation=;compileOnly=;runtimeOnly=$/mu,
+  );
+});

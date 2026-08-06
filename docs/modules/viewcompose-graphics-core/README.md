@@ -121,7 +121,7 @@ save/restore rejection, path command order, and fill type.
 ## Related documentation
 
 - [UI Contract module](../viewcompose-ui-contract/README.md)
-- [Renderer module](../viewcompose-renderer/README.md)
+- [Renderer module](../viewcompose-renderer-android/README.md)
 - [Architecture overview](../../architecture/overview.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 

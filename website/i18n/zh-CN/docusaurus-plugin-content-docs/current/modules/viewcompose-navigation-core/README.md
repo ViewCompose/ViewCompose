@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-core/README.md
-translation_source_hash: ddfe98058600f726c23c98f7b70ea966b0632548d2a18eabdc1dc739f00b02a1
+translation_source_hash: 987383f043907b9afb05b6eaffaea1be76b148f4c5e8d1c4721da04ac62c530c
 translation_status: current
 ---
 
@@ -11,7 +11,7 @@ translation_status: current
 场景选择。
 
 该模块不包含 Android 或 AndroidX 类型。`Activity`、预测性返回、`LifecycleOwner`、
-`SavedStateRegistryOwner`、View 挂载、转场和进程死亡适配器均位于 `viewcompose-navigation`。
+`SavedStateRegistryOwner`、View 挂载、转场和进程死亡适配器均位于 `viewcompose-navigation-android`。
 
 ## 产物与稳定性
 

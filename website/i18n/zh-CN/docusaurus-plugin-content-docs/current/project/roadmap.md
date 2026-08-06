@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: b56c5c4ee1545c9ed7d2b59bee5df8b73978ae70812f3560b26e496e65c3545e
+translation_source_hash: 13b11f35791ea934a05842aa7b9d57d40fcc16811735985b226d3d574a1124b8
 translation_status: current
 ---
 
@@ -32,17 +32,17 @@ translation_status: current
 3. `Overlay` 已分层为：
    - session-bound surface：`Dialog`、`Popup`、`ModalBottomSheet`
    - host-driven feedback：`Snackbar`、`Toast`
-4. Android 宿主入口已统一到 `:viewcompose-host-android`（`setUiContent/renderInto/RenderSession`），并内部管理 session 生命周期
+4. `:viewcompose-android` 负责 Activity/Fragment 的 `setUiContent`；底层 `:viewcompose-host-android` 引擎负责 `renderInto`、`RenderSession` 与挂载树生命周期
 5. `system bars insets` 已转为组件侧 `Modifier.systemBarsInsetsPadding(...)`
-6. 生命周期与 ViewModel 协作 API 已拆分为 `:viewcompose-lifecycle` 与 `:viewcompose-viewmodel`，并统一到新包 `com.viewcompose.lifecycle` / `com.viewcompose.viewmodel`
+6. 生命周期与 ViewModel 协作 API 已拆分为 `:viewcompose-lifecycle-androidx` 与 `:viewcompose-viewmodel-androidx`，并统一到新包 `com.viewcompose.lifecycle` / `com.viewcompose.viewmodel`
 7. 重组模型已硬切到 `SlotTable Lite` 节点组级脏区重组（无旧全量重建开关）
-8. 依赖边界已收口为 `runtime + ui-contract + widget-core + renderer(android) + host-android`，`widget-core` 不再直依赖 `renderer`
+8. 运行时职责按 Kernel、UI Foundation、Android Engine、Design System 与 Integrations 五层划分；`viewcompose-android` 是经审查的应用聚合层，不是第六层
 9. `viewcompose-runtime` 已硬切为纯 Kotlin/JVM，并补齐 `policy/snapshot/observation/invalidation/composer` 核心测试分支
 10. 宿主公开诊断回调已收口到 core 自有类型（`RenderStats/RenderTreeResult`），host API 不再泄漏 renderer 实现类型
-11. overlay 默认装配已改为 `OverlayHostFactoryProvider + ServiceLoader`，无实现时稳定回退 no-op（移除反射路径）
+11. overlay 默认装配已改为 `AndroidOverlayHostFactoryProvider + ServiceLoader`，无实现时稳定回退 no-op（移除反射路径）
 12. 开发预览模块已落地：`viewcompose-preview` 提供 Compose Preview bridge + `PreviewCatalog` + Paparazzi 快照回归（`qaPreview`）
 13. 动画与手势模块已落地：`viewcompose-animation-core` + `viewcompose-animation` + `viewcompose-gesture-core` + `viewcompose-gesture`（Compose-like API + 手势策略内核 + renderer 事件适配 + lazy/pager motion 策略 + Android interop）
-14. 约束布局能力已落地：`viewcompose-widget-constraintlayout` + renderer `DeclarativeConstraintLayout`，支持 anchors/dimension/bias/baseline/baselineToTop/baselineToBottom/circle/guideline/barrier/chain(+weights)/Flow/Group/Layer/Placeholder/decoupled `ConstraintSet`，并补齐 match-constraint `min/max/percent/constrained`
+14. 约束布局能力已落地：`viewcompose-constraintlayout-androidx` + renderer `DeclarativeConstraintLayout`，支持 anchors/dimension/bias/baseline/baselineToTop/baselineToBottom/circle/guideline/barrier/chain(+weights)/Flow/Group/Layer/Placeholder/decoupled `ConstraintSet`，并补齐 match-constraint `min/max/percent/constrained`
 15. graphics 能力已落地：`viewcompose-graphics-core` + `viewcompose-graphics` + renderer draw pipeline + `host-android` interop；`Graphics` demo 与 preview/Paparazzi 覆盖已接入，并完成 v2 P0 语义收口（RoundRect 四角半径 / Drawable DrawPaint / ImageFilter Chain）
 16. 组合事务已落地：`ComposerLite.prepareRoot/commit/abort` 覆盖 slot、观察订阅、RememberObserver 与 Effect，失败组合保留旧依赖并可继续失效重组。
 17. 结构化协程已落地：`RenderSession` 统一持有组合父 Job，提供 `LaunchedEffect/rememberCoroutineScope`，`produceState` 已硬切 suspend + `awaitDispose`，Flow 与动画已移除独立根 Job。
@@ -55,7 +55,7 @@ translation_status: current
 24. 结构化无障碍语义已落地：`Modifier.semantics` 覆盖描述、状态、role、heading、live region、选择/勾选/启用、错误、进度与子树策略；renderer 映射原生 Accessibility，并在 View 复用时恢复原始语义。
 25. 结构化渲染失败与原生副作用边界已落地：`RenderFailure/RenderFrameReport` 覆盖阶段、恢复结果、帧号与 AndroidView 操作；不可重放动作通过事务成功后发布的 `AndroidView.onCommit` 执行。
 26. Overlay P2 完整度已增强：Popup 使用平台无关 positioner 支持四向精确锚定、RTL、翻转/夹取和滚动跟随；Snackbar/Toast 使用统一队列策略与结构化结束原因。
-27. Theming P2 完整度已增强：Android 动态色策略、配置变化驱动的 token 生命周期、来源/修订元数据，以及四角独立的 rounded/cut + dimension/fraction shape 桥接已落地。
+27. Theming P2 位于 `viewcompose-material3`：Android 动态色策略、配置变化驱动的 token 生命周期、来源/修订元数据，以及四角独立的 rounded/cut + dimension/fraction shape 桥接已落地。
 28. Diagnostics P2 可视化已落地：公开 `RenderTreeResult` 提供 render tree、逐节点 patch 时间线、CompositionLocal 快照与结构化重组原因，demo 检查器可直接浏览。
 29. Lifecycle/SavedState P2 已收口：恢复值使用 composition claim/commit/release 事务，快速生命周期重启串行取消 collector，损坏 Bundle entry 隔离，destroyed host 明确拒绝。
 30. 发布态性能基准已固定：release/benchmark target 启用 R8 与 resource shrink，新增无 ART 预编译的冷启动/state patch 基线及 `qaRelease`/`benchmarkRelease` 入口。
@@ -90,7 +90,7 @@ translation_status: current
 ## 3. 统一设计原则
 
 1. 组件参数负责语义，`Modifier` 负责通用修饰，`Theme/Defaults` 负责默认值。
-2. 平台实现不回流到 DSL 模块：Android 宿主实现进入 `viewcompose-overlay-android` 或 bridge 层。
+2. 平台实现不回流到 DSL 模块：Android 宿主实现进入 `viewcompose-overlay-material3-android` 或 bridge 层。
 3. 新能力以“最小可验证步”推进：文档、实现、测试、demo 逐步落地并小步提交。
 4. 路线图文档必须和实现同步更新，禁止“代码已变、roadmap 未收口”。
 
@@ -111,7 +111,7 @@ translation_status: current
 | Diagnostics | render/layout 聚合、render tree、逐节点 patch、CompositionLocal 与重组原因均已结构化输出并接入 demo 检查器 | 节点边界高亮、跨 session 关联与逐节点耗时 |
 | UI Testing | 核心 instrumentation 路径与 P1 焦点/键盘、nested scroll、失败回滚真机用例已建立 | 扩展多 API/TV/ChromeOS、overlay 宿主与主题断言矩阵 |
 | Developer Preview | Compose Preview、Paparazzi 与独立 Studio 插件链路已建立；插件支持静态渲染、源码双向联动、布局/View/组合诊断、全部预览、有界缓存和增量刷新 | 继续扩展预览覆盖域与快照矩阵（Dark/Tablet） |
-| ConstraintLayout | 已新增 `viewcompose-widget-constraintlayout` 与 renderer 映射，核心能力覆盖 anchors/helpers/constraintSet + advanced dimensions/weights/circle/baseline extensions + Virtual Helpers（Flow/Group/Layer/Placeholder） | 下一步推进 MotionLayout interop 专题（保持 host-android 边界） |
+| ConstraintLayout | 已新增 `viewcompose-constraintlayout-androidx` 与 renderer 映射，核心能力覆盖 anchors/helpers/constraintSet + advanced dimensions/weights/circle/baseline extensions + Virtual Helpers（Flow/Group/Layer/Placeholder） | 下一步推进 MotionLayout interop 专题（保持 host-android 边界） |
 | Animation | `viewcompose-animation-core` + `viewcompose-animation` 已完成内核/DSL 分层；`Transition` 为共享时间线语义，`Animatable` 支持最后一次 mutation 生效的 cancel/retarget/stop；`AnimatedVisibility` 与 `animateContentSize` 已落地 | 发布态性能画像与更多复杂场景样例 |
 | Gesture | `viewcompose-gesture-core` + `viewcompose-gesture` + renderer dispatcher 已支持 tap/drag/anchoredDraggable/transform、统一 nested scroll 和结构化并发取消；双指接管与系统 CANCEL 不会触发旧拖动 settle | 扩展原生三方滚动控件与真实设备多指回归 |
 | Graphics | 2D draw 主链与独立 `viewcompose-shadow-android` 装饰层已落地，支持 Canvas、draw modifiers、不可变 `DrawScene`、有序多层外/内阴影、静态栅格缓存和后端诊断 | 扩展 dark/tablet 快照；在明确预算下研究动态 RenderEffect/转场阴影 |
@@ -277,7 +277,7 @@ translation_status: current
 
 里程碑标记为 `Completed` 之前，必须满足：
 
-1. `:viewcompose-renderer:compileDebugKotlin` 与 `:app:compileDebugKotlin` 通过
+1. `:viewcompose-renderer-android:compileDebugKotlin` 与 `:app:compileDebugKotlin` 通过
 2. `:app:connectedDebugAndroidTest` 与教程示例的 connected test 全绿（或在 roadmap 中登记明确豁免范围与截止时间）
 
 ## 7. 非目标（当前阶段）

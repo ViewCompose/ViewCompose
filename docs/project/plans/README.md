@@ -4,6 +4,11 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
+- [Five-layer module architecture hard cut](./five-layer-module-architecture-hard-cut.md) —
+  replace the broad foundation/optional split with enforceable Kernel, UI Foundation, Android
+  Engine, Design System, and Integration layers; rename misleading artifacts, isolate Material 3,
+  converge exclusive package ownership and opaque platform handles, and restore the complete Maven,
+  sample, tooling, and documentation gates after the hard cut.
 - [Runtime data propagation and Android View patch optimization](./runtime-data-propagation-and-view-patch-optimization.md) —
   establish diagnostic and benchmark baselines, optimize atomic state publication, modifier-only
   View patches, LocalSnapshot allocation, and conditionally shared frame scheduling while recording

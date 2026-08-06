@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 14c8faa9f26610fb3a260a82a0a7281de2e925dd62b223a5b24ec8249b65a808
+translation_source_hash: 679e92b294ce52545549820e5ea270f74dc60312e81503b2446decec141e307c
 translation_status: current
 ---
 
@@ -11,7 +11,7 @@ translation_status: current
 Pager 状态。
 
 开发自定义渲染器、宿主桥接、工具集成，或者需要在可复用 API 中暴露 ViewCompose 契约类型
-时，可以直接使用本模块。普通应用 UI 通常通过 `viewcompose-widget-core` 传递获得它。
+时，可以直接使用本模块。普通应用 UI 通常通过 `viewcompose-ui-foundation` 传递获得它。
 
 本模块不负责组合 DSL 树、创建 Android `View`、协调节点、调度帧，也不负责 Android 生命周期
 和状态保存集成。这些职责分别属于 Runtime、Widget、Renderer 与 Host 模块。

@@ -223,7 +223,7 @@ Executable source is the truth for code samples:
 
 - non-trivial samples live in a compiled sample/demo source set and are referenced from docs;
 - every tutorial starts with one complete Maven dependency block, including any optional feature
-  artifact such as `viewcompose-overlay-android`; a reader must not discover a required dependency
+  artifact such as `viewcompose-overlay-material3-android`; a reader must not discover a required dependency
   only after reaching the sample;
 - standalone tutorial samples live under `samples/<name>`, resolve ViewCompose through published
   Maven coordinates, use only public APIs, compile from `qaQuick`, and run representative behavior

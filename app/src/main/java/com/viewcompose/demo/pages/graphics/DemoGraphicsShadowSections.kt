@@ -21,20 +21,20 @@ import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.DisposableEffect
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.SegmentedControl
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.SurfaceDefaults
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.TextField
-import com.viewcompose.widget.core.TextFieldSize
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.rememberTextFieldState
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.SegmentedControl
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceDefaults
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.TextField
+import com.viewcompose.ui.foundation.TextFieldSize
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.rememberTextFieldState
 
 internal const val GRAPHICS_PAGE_DRAWING: Int = 0
 internal const val GRAPHICS_PAGE_OUTER_SHADOWS: Int = 1

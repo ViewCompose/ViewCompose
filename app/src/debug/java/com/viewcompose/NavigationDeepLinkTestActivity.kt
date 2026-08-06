@@ -5,7 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.navigation.NavDeepLinkResult
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavResult
@@ -23,8 +23,8 @@ import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.widget.core.OverlayHostDefaults
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.OverlayHostDefaults
+import com.viewcompose.ui.foundation.Text
 
 /**
  * 导航 deep link 设备测试的 debug-only 宿主。

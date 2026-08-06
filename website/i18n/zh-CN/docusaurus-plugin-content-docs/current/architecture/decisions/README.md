@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: 293ad3c680c82820f1d0233094d69542c316111fe783fa67f4c1fcc889f9c3b1
+translation_source_hash: 3e54944b53702bca1cda952b28bde7c61feaa95ed16e2b471ec58bf097f03bf2
 translation_status: current
 ---
 
@@ -12,6 +12,8 @@ translation_status: current
 ## 已接受的决策
 
 - [ADR-0001：托管文档平台](./0001-hosted-documentation-platform.md)
+- [ADR-0002：五层运行时模块架构](./0002-five-layer-runtime-module-architecture.md)
+- [ADR-0003：公开包所有权与平台 Handle](./0003-public-package-ownership-and-platform-handles.md)
 
 ## 规则
 

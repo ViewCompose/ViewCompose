@@ -14,7 +14,7 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import com.viewcompose.host.android.viewComposeSaveableStateRegistry
-import com.viewcompose.widget.core.SaveableStateRegistry as ViewComposeSaveableStateRegistry
+import com.viewcompose.ui.foundation.SaveableStateRegistry as ViewComposeSaveableStateRegistry
 import java.io.Closeable
 
 /**

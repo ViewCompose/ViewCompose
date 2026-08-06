@@ -43,9 +43,9 @@ work and strengthen consistency inside the native Android View architecture.
 The planned work may affect these implementation areas:
 
 - `viewcompose-runtime`: snapshot apply, observation delivery, diagnostics, and transaction tests;
-- `viewcompose-widget-core`: local snapshot representation and render diagnostics;
+- `viewcompose-ui-foundation`: local snapshot representation and render diagnostics;
 - `viewcompose-animation` and `viewcompose-gesture`: atomic publication of related state holders;
-- `viewcompose-renderer`: modifier-only binding plans and Android View patch classification;
+- `viewcompose-renderer-android`: modifier-only binding plans and Android View patch classification;
 - `viewcompose-host-android`: shared frame batching for independent render sessions;
 - `viewcompose-benchmark` and the Demo benchmark surfaces: targeted workloads and trace metrics;
 - active architecture, performance, migration, module, and localized documentation affected by an
@@ -606,7 +606,7 @@ the following same-change documentation obligations:
 
 - Snapshot or Observation semantics: runtime KDoc, compiled samples when Q3, runtime module manual,
   state architecture, state migration comparison, and both required locales.
-- Local lookup or propagation semantics: widget-core KDoc, widget-core module manual, architecture
+- Local lookup or propagation semantics: UI Foundation KDoc, UI Foundation module manual, architecture
   environment rules, layout/environment migration comparison, and both required locales.
 - Renderer patch or rollback behavior: renderer module manual, performance specification, relevant
   architecture pages, and both required locales.

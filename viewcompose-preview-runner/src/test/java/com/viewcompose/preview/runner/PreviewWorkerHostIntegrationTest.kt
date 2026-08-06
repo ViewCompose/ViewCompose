@@ -33,7 +33,7 @@ class PreviewWorkerHostIntegrationTest {
                 ownerClassName =
                     "com.viewcompose.preview.runner.StaticPreviewWorkerPaparazziTestKt",
                 methodName = "resolvedStaticPreviewEntryPoint",
-                methodDescriptor = "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V",
+                methodDescriptor = "(Lcom/viewcompose/ui/foundation/UiTreeBuilder;)V",
             ),
             variants = listOf(
                 PreviewVariant(

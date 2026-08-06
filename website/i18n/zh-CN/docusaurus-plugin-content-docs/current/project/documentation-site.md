@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 138853e634ef0844220704e06296c8f8f4bf5b33dfe2d4ff82ad22fc58d2cd2e
+translation_source_hash: 86a976159a6a7ee5f633bcea127fe15f511cff445b29732932b7b50654757caf
 translation_status: current
 ---
 
@@ -22,7 +22,10 @@ translation_status: current
 3. `verify:translations` 检查必需中文覆盖、英文源指纹、显式过期状态和过期警告。
 4. `verifyCompleteViewComposeApiDocs` 按 source revision 对不可变发布注册表分组，在临时工作区
    重建每个 revision，运行当前维护的 Dokka 工具，把每个制品/版本树复制到忽略目录
-   `website/generated/api/`，并验证完整 manifest、不可变路由、别名和固定源码链接。
+   `website/generated/api/`，并验证完整 manifest、不可变路由、别名和固定源码链接。列在
+   `release.unpublishedModules` 中的产物只从工作树生成可变 `current` API，不伪造不可变版本路由。
+   若冻结 revision 早于依赖契约注册表，临时文档工作区只为配置当前 Dokka 工具生成空契约行；
+   编译仍以该 revision 的 Gradle 构建为准，这些临时契约不会参与发布。
 5. 站点生成器读取发布元数据、不可变注册表和 `docs/modules/README.md`，从同一冻结 Git
    revision 生成目录和每个已发布制品/版本的模块手册快照，不维护第二份注册表。
 6. Docusaurus type-check 并构建手写文档、站点界面、生成 API、本地化搜索索引和兼容重定向，
@@ -69,10 +72,11 @@ Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-C
 路由。
 
 预算模型把预期的发布历史增长与真正的回归分开：非 API 产物上限为 40 MiB；不可变
-artifact/version 树的平均上限为 4.5 MiB，任一单独树不得超过 24 MiB；manifest 与可变别名
-另有 1 MiB 配额。其他上限为 Docusaurus 构建 120 秒、JavaScript 总计 8 MiB/单文件
-768 KiB、CSS 128 KiB、各 locale 搜索索引 4 MiB。门禁也会拒绝任何带 locale 前缀的 API
-副本。提高阈值必须附有读者或发布价值的测量说明。
+artifact/version 树与未发布制品的工作树 `current` Dokka 共用 API 树预算，平均上限为
+4.5 MiB，任一单独树不得超过 24 MiB。只有 manifest 与重定向别名使用独立的 1 MiB 路由
+配额。其他上限为 Docusaurus 构建 120 秒、JavaScript 总计 8 MiB/单文件 768 KiB、CSS
+128 KiB、各 locale 搜索索引 4 MiB。门禁也会拒绝任何带 locale 前缀的 API 副本。提高阈值
+必须附有读者或发布价值的测量说明。
 
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、
 accessible name、图片替代文本、表头、iframe title 和重复 ID；重定向 stub 与 Dokka 生成页
@@ -83,8 +87,9 @@ accessible name、图片替代文本、表头、iframe title 和重复 ID；重�
 
 ## 发布版本与别名
 
-不可变 API 路径为 `/api/<artifact>/<version>/`。`current` 跟随仓库当前登记版本；`latest`
-只为稳定版本生成，alpha、beta、RC、snapshot、preview、development 和 EAP 不得成为 `latest`。
+不可变 API 路径为 `/api/<artifact>/<version>/`。`current` 跟随仓库当前登记版本；产物首次发布
+前，`current` 直接包含从工作树生成的 Dokka，且不存在版本化路由。`latest` 只为稳定版本生成，
+alpha、beta、RC、snapshot、preview、development 和 EAP 不得成为 `latest`。
 
 不可变模块手册快照路径为 `/modules/<artifact>/<version>`；无版本路径继续指向当前维护手册。
 历史手册只生成权威英文快照，包括等价的 `zh-CN` 路由，避免 locale 路径冒充未经审阅的历史
@@ -97,6 +102,11 @@ accessible name、图片替代文本、表头、iframe title 和重复 ID；重�
 
 由于记录提交会改变元数据提交，发布分两步：先在一个提交冻结模块源码、注释、编译样例和手册；
 再用仅含元数据的发布提交追加历史记录并更新版本/revision。冻结提交必须推送且在 Git 历史可达。
+
+`release.retiredModules` 让被替代坐标继续保留在不可变文档历史中，但不会重新进入活动模块目录；
+API 首页会把它们列入独立的 Retired 历史分组。`release.unpublishedModules` 只允许包含尚未首发的
+活动产物；API 首页会链接其工作树 `current` 输出并标记为 unreleased。首次发布时，必须在追加
+第一条不可变文档记录的同一个元数据变更中把它移出该列表。
 
 `verifyAssembledViewComposeApiDocs` 验证本地选择的子集；部署与完整目录 CI 必须使用
 `verifyCompleteViewComposeApiDocs`，后者拒绝 partial selection。站点还验证两个 locale 的
@@ -135,9 +145,9 @@ identity token。
 - 发布历史失败时追加缺失的不可变记录或修正未发布元数据，不重写已发布制品/版本。
 - Dokka 失败时用制品子集复现并修复源码/API 配置。
 - Docusaurus 坏链/锚点保持严格；只有生成的静态 API 链接享受明确豁免。
-- 预算失败时区分非 API 产物、API 平均值、单个 API 版本、路由开销和 locale 重复副本；修复
-  回归，或记录并审查确有必要的阈值变化。不得恢复会因合法追加不可变发布记录而失败的固定总
-  产物上限。
+- 预算失败时区分非 API 产物、API 树平均值、单个不可变或未发布 `current` API 树、路由开销
+  和 locale 重复副本；修复回归，或记录并审查确有必要的阈值变化。不得恢复会因合法追加
+  不可变发布记录而失败的固定总产物上限。
 - 无障碍失败时修复页面或主题，不削弱门禁。
 - 语言或翻译验证失败时先审阅和同步中文语义，再更新指纹；必需页面不得过期。
 - 语言放置验证失败时修正文叙述位置或缺失的必需镜像；真实外语 UI 字面量使用代码格式，不得
@@ -147,8 +157,9 @@ identity token。
 
 ## 最近验证
 
-2026-08-04：干净完整历史构建从冻结 revision 重建全部 25 个制品版本，通过不可变源码链接、
-manifest、`current` 和稳定版 `latest` 验证。生产站点验证 25 个 API 路由、25 个英文模块手册
-快照、25 个 `zh-CN` 英文回退快照、语言放置、翻译新鲜度、本地搜索、兼容重定向和 208 个
-站点自有无障碍页面。删除未使用的 locale 前缀 Dokka 副本后，产物降至 115.7 MiB；非 API
-产物 25.1 MiB，25 个 API 版本平均 3.6 MiB，最大 JavaScript 650 KiB，完整站点构建 20.0 秒。
+2026-08-06：干净完整历史构建从冻结 revision 重建 69 个不可变制品版本，并从工作树生成 9 个
+未发布 `current` API 树；不可变源码链接、manifest、退役历史、current/unreleased 与仅稳定版
+`latest` 验证均通过。生产站点验证 69 个英文模块手册快照、69 个 `zh-CN` 英文回退快照、语言
+放置、80 个最新中文镜像、本地搜索、兼容重定向和 310 个站点自有无障碍页面。产物总计
+316.3 MiB，非 API 产物 32.9 MiB，78 个 API 树平均 3.6 MiB，路由开销低于显示精度
+0.1 MiB，最大 JavaScript 650 KiB，完整站点构建 24.2 秒。

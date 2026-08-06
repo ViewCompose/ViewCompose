@@ -6,11 +6,11 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.alpha
 import com.viewcompose.ui.modifier.fillMaxSize
-import com.viewcompose.widget.core.Box
-import com.viewcompose.widget.core.BoxScope
-import com.viewcompose.widget.core.SideEffect
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Box
+import com.viewcompose.ui.foundation.BoxScope
+import com.viewcompose.ui.foundation.SideEffect
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
 
 /**
  * Cross-fades content for the last displayed state into content for [targetState].

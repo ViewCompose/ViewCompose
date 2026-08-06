@@ -15,17 +15,19 @@ val modulePackageRoots = mapOf(
     "viewcompose-runtime" to "com.viewcompose.runtime",
     "viewcompose-text-core" to "com.viewcompose.text",
     "viewcompose-navigation-core" to "com.viewcompose.navigation.core",
-    "viewcompose-navigation" to "com.viewcompose.navigation",
+    "viewcompose-navigation-android" to "com.viewcompose.navigation",
     "viewcompose-ui-contract" to "com.viewcompose.ui",
-    "viewcompose-renderer" to "com.viewcompose.renderer",
-    "viewcompose-widget-core" to "com.viewcompose.widget.core",
+    "viewcompose-renderer-android" to "com.viewcompose.renderer",
+    "viewcompose-ui-foundation" to "com.viewcompose.ui.foundation",
     "viewcompose-host-android" to "com.viewcompose.host.android",
-    "viewcompose-overlay-android" to "com.viewcompose.overlay.android",
+    "viewcompose-material3" to "com.viewcompose.material3",
+    "viewcompose-android" to "com.viewcompose.android",
+    "viewcompose-overlay-material3-android" to "com.viewcompose.overlay.material3.android",
     "viewcompose-image-coil" to "com.viewcompose.image.coil",
     "viewcompose-image-glide" to "com.viewcompose.image.glide",
     "viewcompose-benchmark" to "com.viewcompose.benchmark",
-    "viewcompose-lifecycle" to "com.viewcompose.lifecycle",
-    "viewcompose-viewmodel" to "com.viewcompose.viewmodel",
+    "viewcompose-lifecycle-androidx" to "com.viewcompose.lifecycle",
+    "viewcompose-viewmodel-androidx" to "com.viewcompose.viewmodel",
     "viewcompose-preview-core" to "com.viewcompose.preview.tooling",
     "viewcompose-preview-gradle-plugin" to "com.viewcompose.preview.gradle",
     "viewcompose-preview-runner" to "com.viewcompose.preview.runner",
@@ -38,7 +40,13 @@ val modulePackageRoots = mapOf(
     "viewcompose-graphics" to "com.viewcompose.graphics",
     "viewcompose-graphics-core" to "com.viewcompose.graphics.core",
     "viewcompose-shadow-android" to "com.viewcompose.shadow.android",
-    "viewcompose-widget-constraintlayout" to "com.viewcompose.widget.constraintlayout",
+    "viewcompose-constraintlayout-androidx" to "com.viewcompose.constraintlayout",
+)
+
+val forbiddenLegacyPackageRoots = setOf(
+    "com.viewcompose.widget.core",
+    "com.viewcompose.widget.constraintlayout",
+    "com.viewcompose.overlay.android",
 )
 
 val kotlinJvmModules = setOf(
@@ -54,69 +62,42 @@ val kotlinJvmModules = setOf(
     "viewcompose-graphics-core",
 )
 
-// Foundation modules sit on the runtime path and therefore use an explicit project-dependency
-// allowlist. Adding an edge here is an architecture decision, not a convenient implementation
-// shortcut: optional capabilities must never become prerequisites of the core render pipeline.
-val foundationModuleDependencyRules = mapOf(
-    "viewcompose-runtime" to emptySet(),
-    "viewcompose-text-core" to setOf("viewcompose-runtime"),
-    "viewcompose-navigation-core" to emptySet(),
-    "viewcompose-animation-core" to setOf("viewcompose-runtime"),
-    "viewcompose-graphics-core" to emptySet(),
-    "viewcompose-ui-contract" to
-        setOf(
-            "viewcompose-runtime",
-            "viewcompose-text-core",
-            "viewcompose-graphics-core",
-        ),
-    "viewcompose-gesture-core" to setOf("viewcompose-ui-contract"),
-    "viewcompose-widget-core" to
-        setOf(
-            "viewcompose-runtime",
-            "viewcompose-text-core",
-            "viewcompose-ui-contract",
-        ),
-    "viewcompose-renderer" to
-        setOf(
-            "viewcompose-runtime",
-            "viewcompose-text-core",
-            "viewcompose-ui-contract",
-            "viewcompose-graphics-core",
-            "viewcompose-gesture-core",
-        ),
-    "viewcompose-lifecycle" to
-        setOf(
-            "viewcompose-runtime",
-            "viewcompose-widget-core",
-        ),
-    "viewcompose-viewmodel" to
-        setOf(
-            "viewcompose-runtime",
-            "viewcompose-widget-core",
-        ),
-    "viewcompose-host-android" to
-        setOf(
-            "viewcompose-runtime",
-            "viewcompose-ui-contract",
-            "viewcompose-widget-core",
-            "viewcompose-lifecycle",
-            "viewcompose-viewmodel",
-            "viewcompose-renderer",
-        ),
+// Every published runtime module belongs to exactly one architectural layer. The layer gate is
+// intentionally independent of Maven api/implementation visibility: both kinds of project edge
+// must respect the same ownership direction.
+val runtimeModuleLayers = mapOf(
+    "viewcompose-runtime" to "kernel",
+    "viewcompose-text-core" to "kernel",
+    "viewcompose-navigation-core" to "kernel",
+    "viewcompose-animation-core" to "kernel",
+    "viewcompose-graphics-core" to "kernel",
+    "viewcompose-ui-contract" to "kernel",
+    "viewcompose-gesture-core" to "kernel",
+    "viewcompose-ui-foundation" to "ui-foundation",
+    "viewcompose-animation" to "ui-foundation",
+    "viewcompose-gesture" to "ui-foundation",
+    "viewcompose-graphics" to "ui-foundation",
+    "viewcompose-renderer-android" to "android-engine",
+    "viewcompose-host-android" to "android-engine",
+    "viewcompose-material3" to "design-system",
+    "viewcompose-navigation-android" to "integration",
+    "viewcompose-lifecycle-androidx" to "integration",
+    "viewcompose-viewmodel-androidx" to "integration",
+    "viewcompose-constraintlayout-androidx" to "integration",
+    "viewcompose-overlay-material3-android" to "integration",
+    "viewcompose-image-coil" to "integration",
+    "viewcompose-image-glide" to "integration",
+    "viewcompose-shadow-android" to "integration",
+    "viewcompose-android" to "aggregate",
 )
 
-// Optional capabilities may consume foundation modules, but no foundation module may depend on
-// them. A capability also cannot depend on preview/build tooling.
-val optionalCapabilityModules = setOf(
-    "viewcompose-navigation",
-    "viewcompose-animation",
-    "viewcompose-gesture",
-    "viewcompose-graphics",
-    "viewcompose-shadow-android",
-    "viewcompose-widget-constraintlayout",
-    "viewcompose-overlay-android",
-    "viewcompose-image-coil",
-    "viewcompose-image-glide",
+val allowedDependencyLayers = mapOf(
+    "kernel" to setOf("kernel"),
+    "ui-foundation" to setOf("kernel", "ui-foundation"),
+    "android-engine" to setOf("kernel", "ui-foundation", "android-engine"),
+    "design-system" to setOf("kernel", "ui-foundation"),
+    "integration" to setOf("kernel", "ui-foundation", "android-engine", "design-system", "integration"),
+    "aggregate" to setOf("kernel", "ui-foundation", "android-engine", "design-system", "integration"),
 )
 
 // Tooling is downstream of both foundation and optional capabilities and never participates in
@@ -133,18 +114,20 @@ val toolingModules = setOf(
 val qaQuickTasks = listOf(
     ":viewcompose-runtime:compileKotlin",
     ":viewcompose-navigation-core:compileKotlin",
-    ":viewcompose-navigation:compileDebugKotlin",
+    ":viewcompose-navigation-android:compileDebugKotlin",
     ":viewcompose-ui-contract:compileKotlin",
     ":viewcompose-host-android:compileDebugKotlin",
-    ":viewcompose-lifecycle:compileDebugKotlin",
-    ":viewcompose-viewmodel:compileDebugKotlin",
+    ":viewcompose-material3:compileDebugKotlin",
+    ":viewcompose-android:compileDebugKotlin",
+    ":viewcompose-lifecycle-androidx:compileDebugKotlin",
+    ":viewcompose-viewmodel-androidx:compileDebugKotlin",
     ":viewcompose-preview-core:compileKotlin",
     ":viewcompose-preview-gradle-plugin:compileKotlin",
     ":viewcompose-preview-runner:compileDebugKotlin",
     ":viewcompose-preview-worker-host:compileKotlin",
-    ":viewcompose-renderer:compileDebugKotlin",
-    ":viewcompose-widget-core:compileDebugKotlin",
-    ":viewcompose-overlay-android:compileDebugKotlin",
+    ":viewcompose-renderer-android:compileDebugKotlin",
+    ":viewcompose-ui-foundation:compileDebugKotlin",
+    ":viewcompose-overlay-material3-android:compileDebugKotlin",
     ":viewcompose-image-coil:compileDebugKotlin",
     ":viewcompose-image-glide:compileDebugKotlin",
     ":viewcompose-preview:compileDebugKotlin",
@@ -155,7 +138,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-graphics:compileDebugKotlin",
     ":viewcompose-graphics-core:compileKotlin",
     ":viewcompose-shadow-android:compileDebugKotlin",
-    ":viewcompose-widget-constraintlayout:compileDebugKotlin",
+    ":viewcompose-constraintlayout-androidx:compileDebugKotlin",
     ":samples:counter:assembleDebug",
     ":samples:counter:compileDebugAndroidTestKotlin",
     ":samples:tutorials:assembleDebug",
@@ -163,18 +146,20 @@ val qaQuickTasks = listOf(
     ":app:compileDebugKotlin",
     ":viewcompose-runtime:test",
     ":viewcompose-navigation-core:test",
-    ":viewcompose-navigation:testDebugUnitTest",
+    ":viewcompose-navigation-android:testDebugUnitTest",
     ":viewcompose-ui-contract:test",
     ":viewcompose-host-android:testDebugUnitTest",
-    ":viewcompose-lifecycle:testDebugUnitTest",
-    ":viewcompose-viewmodel:testDebugUnitTest",
+    ":viewcompose-material3:testDebugUnitTest",
+    ":viewcompose-android:testDebugUnitTest",
+    ":viewcompose-lifecycle-androidx:testDebugUnitTest",
+    ":viewcompose-viewmodel-androidx:testDebugUnitTest",
     ":viewcompose-preview-core:test",
     ":viewcompose-preview-gradle-plugin:test",
     ":viewcompose-preview-runner:testDebugUnitTest",
     ":viewcompose-preview-worker-host:test",
-    ":viewcompose-renderer:testDebugUnitTest",
-    ":viewcompose-widget-core:testDebugUnitTest",
-    ":viewcompose-overlay-android:testDebugUnitTest",
+    ":viewcompose-renderer-android:testDebugUnitTest",
+    ":viewcompose-ui-foundation:testDebugUnitTest",
+    ":viewcompose-overlay-material3-android:testDebugUnitTest",
     ":viewcompose-image-coil:testDebugUnitTest",
     ":viewcompose-image-glide:testDebugUnitTest",
     ":viewcompose-preview:testDebugUnitTest",
@@ -185,7 +170,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-graphics:testDebugUnitTest",
     ":viewcompose-graphics-core:test",
     ":viewcompose-shadow-android:testDebugUnitTest",
-    ":viewcompose-widget-constraintlayout:testDebugUnitTest",
+    ":viewcompose-constraintlayout-androidx:testDebugUnitTest",
     ":app:testDebugUnitTest",
 )
 
@@ -196,6 +181,24 @@ tasks.register("verifyModulePackageRoots") {
         val packageRegex = Regex("^\\s*package\\s+([A-Za-z0-9_.]+)", RegexOption.MULTILINE)
         val sourceSets = listOf("main", "test", "androidTest")
         val violations = mutableListOf<String>()
+
+        modulePackageRoots.entries
+            .groupBy(Map.Entry<String, String>::value)
+            .filterValues { owners -> owners.size > 1 }
+            .forEach { (packageRoot, owners) ->
+                violations +=
+                    "package root '$packageRoot' has multiple owners: " +
+                        owners.map(Map.Entry<String, String>::key).sorted().joinToString()
+            }
+
+        modulePackageRoots.forEach { (module, packageRoot) ->
+            if (forbiddenLegacyPackageRoots.any { legacy ->
+                    packageRoot == legacy || packageRoot.startsWith("$legacy.")
+                }
+            ) {
+                violations += "$module -> canonical package root '$packageRoot' uses a retired taxonomy"
+            }
+        }
 
         modulePackageRoots.forEach { (module, expectedPrefix) ->
             val srcDir = rootDir.resolve(module).resolve("src")
@@ -212,8 +215,51 @@ tasks.register("verifyModulePackageRoots") {
                             violations += "${module}:${sourceSet}:${file.relativeTo(rootDir)} -> missing package declaration"
                             return@fileLoop
                         }
-                        if (!packageName.startsWith(expectedPrefix)) {
+                        if (
+                            packageName != expectedPrefix &&
+                            !packageName.startsWith("$expectedPrefix.")
+                        ) {
                             violations += "${module}:${sourceSet}:${file.relativeTo(rootDir)} -> package '$packageName' not under '$expectedPrefix'"
+                        }
+                        val canonicalOwner =
+                            modulePackageRoots.entries
+                                .filter { (_, registeredRoot) ->
+                                    packageName == registeredRoot ||
+                                        packageName.startsWith("$registeredRoot.")
+                                }
+                                .maxByOrNull { (_, registeredRoot) -> registeredRoot.length }
+                        if (canonicalOwner != null && canonicalOwner.key != module) {
+                            violations +=
+                                "${module}:${sourceSet}:${file.relativeTo(rootDir)} -> " +
+                                    "package '$packageName' belongs to the more-specific root " +
+                                    "'${canonicalOwner.value}' owned by '${canonicalOwner.key}'"
+                        }
+                        forbiddenLegacyPackageRoots.firstOrNull { legacy ->
+                            packageName == legacy || packageName.startsWith("$legacy.")
+                        }?.let { legacy ->
+                            violations +=
+                                "${module}:${sourceSet}:${file.relativeTo(rootDir)} -> " +
+                                    "package '$packageName' uses retired root '$legacy'"
+                        }
+                    }
+            }
+
+
+            val serviceDirectory = srcDir.resolve("main/resources/META-INF/services")
+            if (serviceDirectory.exists()) {
+                serviceDirectory.listFiles().orEmpty()
+                    .filter(File::isFile)
+                    .forEach { serviceFile ->
+                        val declarations = listOf(serviceFile.name) +
+                            serviceFile.readLines().map(String::trim).filter(String::isNotEmpty)
+                        declarations.forEach { declaration ->
+                            forbiddenLegacyPackageRoots.firstOrNull { legacy ->
+                                declaration == legacy || declaration.startsWith("$legacy.")
+                            }?.let { legacy ->
+                                violations +=
+                                    "${serviceFile.relativeTo(rootDir)} -> service declaration " +
+                                        "'$declaration' uses retired root '$legacy'"
+                            }
                         }
                     }
             }
@@ -237,8 +283,9 @@ tasks.register("verifyAndroidModuleNamespaces") {
         val namespaceRegex = Regex("""namespace\s*=\s*"([^"]+)"""")
         val violations = mutableListOf<String>()
 
-        modulePackageRoots.forEach { (module, expectedNamespace) ->
+        modulePackageRoots.forEach { (module, packageRoot) ->
             if (module in kotlinJvmModules) return@forEach
+            val expectedNamespace = packageRoot
             val buildFile = rootDir.resolve(module).resolve("build.gradle.kts")
             if (!buildFile.exists()) {
                 violations += "$module -> missing build.gradle.kts"
@@ -279,14 +326,12 @@ tasks.register("verifyModuleDependencyBoundaries") {
             moduleReferenceRegex.findAll(rootDir.resolve("settings.gradle.kts").readText())
                 .map { match -> match.groupValues[1] }
                 .toSet()
-        val classifiedModules =
-            foundationModuleDependencyRules.keys + optionalCapabilityModules + toolingModules
+        val classifiedModules = runtimeModuleLayers.keys + toolingModules
 
         classifiedModules.sorted().forEach { module ->
             val memberships =
                 listOf(
-                    module in foundationModuleDependencyRules,
-                    module in optionalCapabilityModules,
+                    module in runtimeModuleLayers,
                     module in toolingModules,
                 ).count { membership -> membership }
             if (memberships != 1) {
@@ -296,24 +341,13 @@ tasks.register("verifyModuleDependencyBoundaries") {
 
         (declaredModules - classifiedModules).sorted().forEach { module ->
             violations +=
-                "$module -> unclassified module; register it as foundation, optional capability, or tooling"
+                "$module -> unclassified module; register it in the five-layer runtime map or tooling"
         }
         (classifiedModules - declaredModules).sorted().forEach { module ->
             violations += "$module -> boundary classification has no matching module in settings.gradle.kts"
         }
         (declaredModules - modulePackageRoots.keys).sorted().forEach { module ->
             violations += "$module -> missing canonical package-root registration"
-        }
-
-        foundationModuleDependencyRules.forEach { (module, allowedDependencies) ->
-            allowedDependencies
-                .filter { dependency -> dependency !in foundationModuleDependencyRules }
-                .sorted()
-                .forEach { dependency ->
-                    violations +=
-                        "$module -> invalid foundation allowlist target '$dependency'; " +
-                            "foundation modules may only depend on other foundation modules"
-                }
         }
 
         val dependenciesByModule =
@@ -329,23 +363,20 @@ tasks.register("verifyModuleDependencyBoundaries") {
                 }
             }
 
-        foundationModuleDependencyRules.forEach { (module, allowedDependencies) ->
-            val actualDependencies = dependenciesByModule[module].orEmpty()
-            (actualDependencies - allowedDependencies).sorted().forEach { dependency ->
-                violations +=
-                    "$module -> forbidden foundation dependency '$dependency'; " +
-                        "foundation dependencies must be explicitly allowlisted"
-            }
-        }
-
-        optionalCapabilityModules.forEach { module ->
+        runtimeModuleLayers.forEach { (module, layer) ->
+            val allowedLayers = allowedDependencyLayers.getValue(layer)
             dependenciesByModule[module].orEmpty()
-                .filter { dependency -> dependency in toolingModules }
+                .filter { dependency ->
+                    val dependencyLayer = runtimeModuleLayers[dependency]
+                    dependency in toolingModules ||
+                        (dependencyLayer != null && dependencyLayer !in allowedLayers)
+                }
                 .sorted()
                 .forEach { dependency ->
+                    val dependencyLayer = runtimeModuleLayers[dependency] ?: "tooling"
                     violations +=
-                        "$module -> forbidden tooling dependency '$dependency'; " +
-                            "runtime capabilities must stay tooling-independent"
+                        "$module ($layer) -> forbidden dependency '$dependency' ($dependencyLayer); " +
+                            "the five-layer dependency direction must remain acyclic"
                 }
         }
 
@@ -367,6 +398,129 @@ tasks.register("verifyModuleDependencyBoundaries") {
             error(
                 buildString {
                     appendLine("Module dependency-boundary verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyDesignSystemIsolation") {
+    group = "verification"
+    description =
+        "Verify UI Foundation and Android Engine stay independent of Material design policy."
+    doLast {
+        val violations = mutableListOf<String>()
+        val materialFreeModules =
+            listOf(
+                "viewcompose-ui-foundation",
+                "viewcompose-renderer-android",
+                "viewcompose-host-android",
+            )
+        val productionConfigurations = setOf("api", "implementation", "compileOnly")
+
+        materialFreeModules.forEach { module ->
+            val moduleProject = project(":$module")
+            productionConfigurations.forEach { configurationName ->
+                moduleProject.configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.group == "com.google.android.material" }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> forbidden Material dependency " +
+                                "'${dependency.group}:${dependency.name}'"
+                    }
+            }
+
+            val mainDirectory = rootDir.resolve(module).resolve("src/main")
+            if (mainDirectory.exists()) {
+                mainDirectory.walkTopDown()
+                    .filter { file ->
+                        file.isFile && (file.extension == "kt" || file.extension == "java")
+                    }
+                    .forEach { file ->
+                        file.useLines { lines ->
+                            lines.forEachIndexed { index, line ->
+                                val trimmed = line.trimStart()
+                                if (trimmed.startsWith("import com.google.android.material.")) {
+                                    violations +=
+                                        "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                            "forbidden Material import '$trimmed'"
+                                }
+                                if (
+                                    module == "viewcompose-ui-foundation" &&
+                                    trimmed.startsWith("import androidx.")
+                                ) {
+                                    violations +=
+                                        "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                            "UI Foundation cannot import AndroidX '$trimmed'"
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+
+        val uiFoundation = project(":viewcompose-ui-foundation")
+        productionConfigurations.forEach { configurationName ->
+            uiFoundation.configurations.findByName(configurationName)
+                ?.dependencies
+                ?.filter { dependency -> dependency.group?.startsWith("androidx.") == true }
+                ?.forEach { dependency ->
+                    violations +=
+                        "viewcompose-ui-foundation:$configurationName -> forbidden AndroidX " +
+                            "dependency '${dependency.group}:${dependency.name}'"
+                }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Design-system isolation verification failed:")
+                    violations.sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyUiFoundationPlatformBoundary") {
+    group = "verification"
+    description =
+        "Verify UI Foundation delegates Android execution, host adaptation, logging, and tracing."
+    doLast {
+        val forbiddenImports = setOf(
+            "android.content.Context",
+            "android.os.LocaleList",
+            "android.os.Trace",
+            "android.util.Log",
+            "android.view.View",
+            "android.view.ViewGroup",
+        )
+        val violations = mutableListOf<String>()
+        val mainDirectory = rootDir.resolve("viewcompose-ui-foundation/src/main")
+
+        mainDirectory.walkTopDown()
+            .filter { file -> file.isFile && (file.extension == "kt" || file.extension == "java") }
+            .forEach { file ->
+                file.useLines { lines ->
+                    lines.forEachIndexed { index, line ->
+                        val importedType = line.trim()
+                            .takeIf { it.startsWith("import ") }
+                            ?.removePrefix("import ")
+                        if (importedType in forbiddenImports) {
+                            violations +=
+                                "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                    "Android execution import '$importedType' belongs in Android Engine"
+                        }
+                    }
+                }
+            }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("UI Foundation platform-boundary verification failed:")
                     violations.sorted().forEach { appendLine("- $it") }
                 },
             )
@@ -727,7 +881,7 @@ val migrationPairedSamplesByPage =
                 "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/navigation/ComposeNavigationSample.kt" to
                     "compose-navigation",
                 "samples/compose-migration/src/main/java/com/viewcompose/samples/migration/navigation/ViewComposeNavigationSample.kt" to
-                    "viewcompose-navigation",
+                    "viewcompose-navigation-android",
             ),
     )
 
@@ -832,7 +986,7 @@ data class TutorialSample(
 )
 
 val tutorialBaseArtifacts =
-    listOf("viewcompose-host-android")
+    listOf("viewcompose-android")
 
 val tutorialPublishingPropertiesFile =
     rootDir.resolve("gradle/viewcompose-publishing.properties")
@@ -846,9 +1000,9 @@ val tutorialPublishedVersion = { artifact: String ->
 }
 val tutorialPublishedVersions =
     listOf(
-        "viewcompose-host-android",
-        "viewcompose-navigation",
-        "viewcompose-overlay-android",
+        "viewcompose-android",
+        "viewcompose-navigation-android",
+        "viewcompose-overlay-material3-android",
         "viewcompose-animation",
         "viewcompose-gesture",
     ).associateWith(tutorialPublishedVersion)
@@ -884,13 +1038,13 @@ val tutorialSamplesByPage =
             TutorialSample(
                 "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/NavigationTutorialActivity.kt",
                 "navigation",
-                listOf("viewcompose-navigation"),
+                listOf("viewcompose-navigation-android"),
             ),
         "overlays.md" to
             TutorialSample(
                 "samples/tutorials/src/main/java/com/viewcompose/samples/tutorials/OverlaysTutorialActivity.kt",
                 "overlays",
-                listOf("viewcompose-overlay-android"),
+                listOf("viewcompose-overlay-material3-android"),
             ),
         "android-view.md" to
             TutorialSample(
@@ -1396,11 +1550,14 @@ tasks.register("qaQuick") {
     dependsOn("verifyModulePackageRoots")
     dependsOn("verifyAndroidModuleNamespaces")
     dependsOn("verifyModuleDependencyBoundaries")
+    dependsOn("verifyDesignSystemIsolation")
+    dependsOn("verifyUiFoundationPlatformBoundary")
     dependsOn("verifyDocumentationStructure")
     dependsOn("verifyMigrationPairedSamples")
     dependsOn("verifyTutorialSamples")
     dependsOn("verifyViewComposePublishingConfiguration")
     dependsOn("verifyViewComposeReleaseIntent")
+    dependsOn("publishViewComposeToLocalRepository")
     dependsOn(gradle.includedBuild("viewcompose-publishing-build").task(":test"))
     dependsOn("verifyRuntimePurity")
     dependsOn("verifyNavigationCorePurity")
@@ -1411,6 +1568,16 @@ tasks.register("qaQuick") {
     dependsOn("verifyPreviewGradlePluginBoundary")
     dependsOn("verifyPreviewWorkerHostBoundary")
     dependsOn(qaQuickTasks)
+}
+
+// The tutorial applications deliberately use Maven coordinates instead of project dependencies.
+// Order their resolution after the current checkout has produced its local Maven repository so a
+// hard-cut artifact rename is verifiable before the first Central publication.
+val publishForMavenSamples = tasks.named("publishViewComposeToLocalRepository")
+listOf(":samples:counter", ":samples:tutorials").forEach { sampleProjectPath ->
+    project(sampleProjectPath).tasks.configureEach {
+        mustRunAfter(publishForMavenSamples)
+    }
 }
 
 val connectedDebugTestProjects = setOf(

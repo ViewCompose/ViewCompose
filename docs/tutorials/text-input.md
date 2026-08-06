@@ -14,7 +14,7 @@ transitively, so no separate `viewcompose-text-core` dependency is needed:
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -30,16 +30,16 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextField
-import com.viewcompose.widget.core.rememberTextFieldState
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextField
+import com.viewcompose.ui.foundation.rememberTextFieldState
 
 class TextInputTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

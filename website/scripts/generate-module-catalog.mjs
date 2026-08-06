@@ -31,12 +31,32 @@ for (const match of catalog.matchAll(rowPattern)) {
   entries.push({
     artifact,
     version: current.version,
+    unpublished: releases.unpublished.has(artifact),
     versions: releases.entries
       .filter((entry) => entry.artifact === artifact)
       .map(({version, sourceRevision}) => ({version, sourceRevision})),
     family: match[2].trim(),
     role: match[3].trim(),
     manual,
+  });
+}
+
+for (const artifact of releases.retired) {
+  const versions = releases.entries
+    .filter((entry) => entry.artifact === artifact)
+    .map(({version, sourceRevision}) => ({version, sourceRevision}));
+  const latest = versions.at(-1);
+  if (!latest) {
+    throw new Error(`Retired artifact has no immutable documentation history: ${artifact}`);
+  }
+  entries.push({
+    artifact,
+    version: latest.version,
+    unpublished: false,
+    versions,
+    family: 'Retired',
+    role: 'Superseded coordinate; immutable release history only',
+    manual: '',
   });
 }
 

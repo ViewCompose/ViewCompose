@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReleaseIntentTest {
-    private val artifacts = setOf("viewcompose-runtime", "viewcompose-widget-core")
+    private val artifacts = setOf("viewcompose-runtime", "viewcompose-ui-foundation")
 
     @Test
     fun `parser accepts direct ignored and shared classifications`() {
@@ -19,7 +19,7 @@ class ReleaseIntentTest {
                   "schemaVersion": 1,
                   "summary": "Classify runtime source and shared build input changes.",
                   "changes": [{"artifact":"viewcompose-runtime","impact":"fix"}],
-                  "ignored": [{"artifact":"viewcompose-widget-core","reason":"Test-only fixture update."}],
+                  "ignored": [{"artifact":"viewcompose-ui-foundation","reason":"Test-only fixture update."}],
                   "shared": [{"path":"build.gradle.kts","reason":"Verification wiring only."}]
                 }
                 """.trimIndent(),
@@ -29,7 +29,7 @@ class ReleaseIntentTest {
         val result = ReleaseChangeSetParser.parse(file, artifacts)
 
         assertEquals(ReleaseImpact.Fix, result.changes.single().impact)
-        assertEquals("viewcompose-widget-core", result.ignored.single().artifact)
+        assertEquals("viewcompose-ui-foundation", result.ignored.single().artifact)
         assertEquals("build.gradle.kts", result.shared.single().path)
     }
 
@@ -39,8 +39,8 @@ class ReleaseIntentTest {
             listOf(
                 "viewcompose-runtime/src/main/kotlin/Runtime.kt",
                 "viewcompose-runtime/src/test/kotlin/RuntimeTest.kt",
-                "viewcompose-widget-core/src/test/samples/Sample.kt",
-                "viewcompose-widget-core/build.gradle.kts",
+                "viewcompose-ui-foundation/src/test/samples/Sample.kt",
+                "viewcompose-ui-foundation/build.gradle.kts",
                 "gradle/libs.versions.toml",
             ),
             artifacts,
@@ -50,7 +50,7 @@ class ReleaseIntentTest {
             listOf("viewcompose-runtime/src/main/kotlin/Runtime.kt"),
             result.artifactPaths.getValue("viewcompose-runtime"),
         )
-        assertEquals(2, result.artifactPaths.getValue("viewcompose-widget-core").size)
+        assertEquals(2, result.artifactPaths.getValue("viewcompose-ui-foundation").size)
         assertEquals(listOf("gradle/libs.versions.toml"), result.sharedPaths)
     }
 

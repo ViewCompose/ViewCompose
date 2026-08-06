@@ -88,7 +88,7 @@ must keep expensive work outside state accessors and composition blocks or cache
 - [Published module catalog](../README.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
-Android applications normally consume this artifact transitively through `viewcompose-widget-core`
+Android applications normally consume this artifact transitively through `viewcompose-ui-foundation`
 or `viewcompose-host-android`. Depend on it explicitly only when its types appear in your own public
 API or when building a custom host/runtime integration.
 

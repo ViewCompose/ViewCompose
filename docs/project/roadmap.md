@@ -24,18 +24,18 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 2. Modifier ownership is general decoration plus scoped parent data.
 3. Overlay is split into session-bound surfaces (`Dialog`, `Popup`, `ModalBottomSheet`) and
    host-driven feedback (`Snackbar`, `Toast`).
-4. Android host APIs live in `:viewcompose-host-android` (`setUiContent/renderInto/RenderSession`),
-   which owns session lifetime.
+4. `:viewcompose-android` owns Activity/Fragment `setUiContent`; the low-level
+   `:viewcompose-host-android` engine owns `renderInto`, `RenderSession`, and mounted-tree lifetime.
 5. System-bar insets use component-side `Modifier.systemBarsInsetsPadding(...)`.
-6. Lifecycle and ViewModel collaboration is split into `:viewcompose-lifecycle` and
-   `:viewcompose-viewmodel` under `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`.
+6. Lifecycle and ViewModel collaboration is split into `:viewcompose-lifecycle-androidx` and
+   `:viewcompose-viewmodel-androidx` under `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`.
 7. Recomposition uses SlotTable Lite node-group invalidation without a legacy full-rebuild switch.
-8. Dependency ownership is `runtime + ui-contract + widget-core + renderer(android) +
-   host-android`; widget-core has no direct renderer dependency.
+8. Runtime ownership follows Kernel, UI Foundation, Android Engine, Design System, and Integrations;
+   `viewcompose-android` is the reviewed application aggregate, not a sixth layer.
 9. `viewcompose-runtime` is pure Kotlin/JVM with policy, snapshot, observation, invalidation, and
    composer branch coverage.
 10. Public host diagnostics expose core-owned `RenderStats/RenderTreeResult`, not renderer types.
-11. Default overlay assembly uses `OverlayHostFactoryProvider + ServiceLoader` and falls back to a
+11. Default overlay assembly uses `AndroidOverlayHostFactoryProvider + ServiceLoader` and falls back to a
     stable no-op without reflection.
 12. `viewcompose-preview` provides the Compose Preview bridge, `PreviewCatalog`, and Paparazzi
     snapshots through `qaPreview`.
@@ -43,7 +43,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
     `viewcompose-animation-core + viewcompose-animation + viewcompose-gesture-core +
     viewcompose-gesture`, including Compose-like APIs, a policy core, renderer event mapping,
     Lazy/Pager motion policy, and Android interop.
-14. `viewcompose-widget-constraintlayout` and renderer `DeclarativeConstraintLayout` support
+14. `viewcompose-constraintlayout-androidx` and renderer `DeclarativeConstraintLayout` support
     anchors, dimensions, bias, baseline extensions, circle, guideline, barrier, weighted chains,
     Flow/Group/Layer/Placeholder, decoupled `ConstraintSet`, and match-constraint
     min/max/percent/constrained behavior.
@@ -81,8 +81,9 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 26. Overlay P2 includes a platform-neutral Popup positioner with four-way anchors, RTL,
     flip/clamp, and scroll following, plus unified Snackbar/Toast queue policy and structured end
     reasons.
-27. Theming P2 includes Android dynamic-color policy, configuration-driven token lifecycle,
-    source/revision metadata, and independent rounded/cut dimension/fraction corner bridging.
+27. Theming P2 lives in `viewcompose-material3` and includes Android dynamic-color policy,
+    configuration-driven token lifecycle, source/revision metadata, and independent rounded/cut
+    dimension/fraction corner bridging.
 28. Diagnostics P2 exposes render tree, per-node patch timeline, CompositionLocal snapshots, and
     structured recomposition reasons through `RenderTreeResult` and the Demo inspector.
 29. Lifecycle/SavedState P2 uses claim/commit/release restoration transactions, serial collector
@@ -139,7 +140,7 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 1. Component parameters own semantics, Modifier owns general decoration, and Theme/Defaults owns
    defaults.
 2. Platform implementations do not flow back into DSL modules; Android hosting belongs in
-   `viewcompose-overlay-android` or a bridge layer.
+   `viewcompose-overlay-material3-android` or a bridge layer.
 3. Add capability in minimum verifiable steps with documentation, implementation, tests, and Demo.
 4. Roadmap and implementation change together; code cannot advance while the roadmap remains stale.
 
@@ -261,7 +262,7 @@ structure diff can diverge from content refresh, and independent overlay-surface
 
 Before a milestone is `Completed`:
 
-1. `:viewcompose-renderer:compileDebugKotlin` and `:app:compileDebugKotlin` pass;
+1. `:viewcompose-renderer-android:compileDebugKotlin` and `:app:compileDebugKotlin` pass;
 2. `:app:connectedDebugAndroidTest` and applicable tutorial connected tests pass, or the roadmap
    records a scoped exemption and deadline.
 

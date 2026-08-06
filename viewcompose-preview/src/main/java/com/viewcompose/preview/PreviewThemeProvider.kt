@@ -2,7 +2,7 @@ package com.viewcompose.preview
 
 import android.content.Context
 import com.viewcompose.preview.tooling.PreviewTheme
-import com.viewcompose.widget.core.UiThemeTokens
+import com.viewcompose.ui.foundation.UiThemeTokens
 
 /**
  * One application-owned theme resolution shared by the preview root, native Views, and DSL tree.

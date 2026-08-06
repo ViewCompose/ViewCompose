@@ -78,7 +78,7 @@ Use `backendStats()`, `cacheStats()`, and `innerCacheStats()` for diagnostics.
 
 ## Related documentation
 
-- [Renderer module](../viewcompose-renderer/README.md)
+- [Renderer module](../viewcompose-renderer-android/README.md)
 - [UI Contract module](../viewcompose-ui-contract/README.md)
 - [Graphics module](../viewcompose-graphics/README.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)

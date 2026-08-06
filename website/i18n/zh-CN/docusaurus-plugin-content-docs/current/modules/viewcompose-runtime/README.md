@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 2bb655c1727013912a16609929acda2d8251be1d042b648304bbaebb368a2157
+translation_source_hash: 2718116a0a881dd943bb18cfae9e91c04706c756697c5a214660d0b363f22fbb
 translation_status: current
 ---
 
@@ -88,7 +88,7 @@ Snapshot.withMutableSnapshot {
 - [已发布模块目录](../README.md)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/project/api-documentation-quality)
 
-Android 应用通常通过 `viewcompose-widget-core` 或 `viewcompose-host-android` 传递使用本产物。
+Android 应用通常通过 `viewcompose-ui-foundation` 或 `viewcompose-host-android` 传递使用本产物。
 只有在自身公共 API 暴露其类型，或者开发自定义宿主/运行时集成时，才需要显式依赖。
 
 ## 兼容性说明

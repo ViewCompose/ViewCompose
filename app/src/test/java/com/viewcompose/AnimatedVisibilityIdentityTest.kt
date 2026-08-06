@@ -6,8 +6,8 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import com.viewcompose.animation.AnimatedVisibility
 import com.viewcompose.host.android.renderInto
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Text
 import org.junit.Assert.assertSame
 import org.junit.Test
 import org.junit.runner.RunWith

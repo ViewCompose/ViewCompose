@@ -9,7 +9,7 @@ import android.view.WindowManager
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.Lifecycle
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
@@ -17,8 +17,8 @@ import com.viewcompose.navigation.NavPanePolicy
 import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.navigation.rememberNavHostController
-import com.viewcompose.widget.core.OverlayHostDefaults
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.OverlayHostDefaults
+import com.viewcompose.ui.foundation.Text
 
 /**
  * 自适应原生导航窗格的 debug-only 设备认证宿主。

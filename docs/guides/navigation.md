@@ -13,7 +13,7 @@ The navigation subsystem is split into two layers:
    - two-phase navigation transactions
    - page lifecycle planning
    - persistence contracts
-2. `viewcompose-navigation`
+2. `viewcompose-navigation-android`
    - destination `RenderSession` ownership
    - AndroidX `LifecycleOwner`, `ViewModelStoreOwner`, and SavedState adapters
    - back dispatch, transitions, and destination container Views
@@ -260,7 +260,7 @@ only through fresh resource instances.
 
 Every navigation change must pass this P0 merge gate:
 
-1. the complete `viewcompose-navigation` unit suite;
+1. the complete `viewcompose-navigation-android` unit suite;
 2. API 33 compatibility Back/lifecycle tests and real process-death restoration;
 3. API 35 platform predictive-gesture tests and real process-death restoration;
 4. the repository-wide quick checks and connected device suite through `qaFull`.
@@ -268,7 +268,7 @@ Every navigation change must pass this P0 merge gate:
 Reference commands:
 
 ```bash
-./gradlew :viewcompose-navigation:testDebugUnitTest --no-configuration-cache
+./gradlew :viewcompose-navigation-android:testDebugUnitTest --no-configuration-cache
 
 ANDROID_SERIAL=<api33-device> ./gradlew :app:connectedDebugAndroidTest \
   -Pandroid.testInstrumentationRunnerArguments.class=com.viewcompose.NavigationBackDeviceTest \

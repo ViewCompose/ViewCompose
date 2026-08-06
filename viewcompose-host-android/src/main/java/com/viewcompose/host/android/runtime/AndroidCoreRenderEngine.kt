@@ -10,19 +10,21 @@ import com.viewcompose.ui.modifier.DropShadowModifierElement
 import com.viewcompose.ui.modifier.InnerShadowModifierElement
 import com.viewcompose.ui.modifier.ZIndexModifierElement
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.RenderContainerHandle
+import com.viewcompose.ui.node.nativeContainer
 import com.viewcompose.ui.node.spec.AndroidViewOperation
-import com.viewcompose.widget.core.CoreRenderEngine
-import com.viewcompose.widget.core.CoreRenderCommitEffect
-import com.viewcompose.widget.core.CoreRenderCommitFailure
-import com.viewcompose.widget.core.CoreRenderFrame
-import com.viewcompose.widget.core.NodeTypeBindingStats
-import com.viewcompose.widget.core.RenderStats
-import com.viewcompose.widget.core.RenderStructureStats
-import com.viewcompose.widget.core.RenderTreeResult
-import com.viewcompose.widget.core.RenderTreeNode
-import com.viewcompose.widget.core.RenderPatchRecord
-import com.viewcompose.widget.core.RenderPatchOperation
-import com.viewcompose.widget.core.RenderFailureOperation
+import com.viewcompose.ui.foundation.CoreRenderEngine
+import com.viewcompose.ui.foundation.CoreRenderCommitEffect
+import com.viewcompose.ui.foundation.CoreRenderCommitFailure
+import com.viewcompose.ui.foundation.CoreRenderFrame
+import com.viewcompose.ui.foundation.NodeTypeBindingStats
+import com.viewcompose.ui.foundation.RenderStats
+import com.viewcompose.ui.foundation.RenderStructureStats
+import com.viewcompose.ui.foundation.RenderTreeResult
+import com.viewcompose.ui.foundation.RenderTreeNode
+import com.viewcompose.ui.foundation.RenderPatchRecord
+import com.viewcompose.ui.foundation.RenderPatchOperation
+import com.viewcompose.ui.foundation.RenderFailureOperation
 
 /**
  * Adapts the platform-neutral core render contract to the Android View renderer.
@@ -49,14 +51,15 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
      * @return mounted nodes, statistics, diagnostics, and deferred commit work for the frame
      */
     override fun renderInto(
-        container: ViewGroup,
+        container: RenderContainerHandle,
         previousMountedNodes: List<Any>,
         nodes: List<VNode>,
         collectDiagnostics: Boolean,
     ): CoreRenderFrame {
+        val androidContainer = container.requireAndroidViewGroup()
         val previous = previousMountedNodes.filterIsInstance<MountedNode>()
         val hostResolution = resolveRenderHost(
-            container = container,
+            container = androidContainer,
             previousMountedNodes = previous,
             nodes = nodes,
         )
@@ -98,10 +101,11 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
      * @return native release failures collected while disposing the tree
      */
     override fun disposeMounted(
-        container: ViewGroup,
+        container: RenderContainerHandle,
         mountedNodes: List<Any>,
     ): List<CoreRenderCommitFailure> {
-        val renderHost = decorationHostOrNull(container) ?: container
+        val androidContainer = container.requireAndroidViewGroup()
+        val renderHost = decorationHostOrNull(androidContainer) ?: androidContainer
         val failures = ViewTreeRenderer.disposeMounted(
             container = renderHost,
             mountedNodes = mountedNodes.filterIsInstance<MountedNode>(),
@@ -112,9 +116,9 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
                 cause = failure.cause,
             )
         }
-        if (renderHost !== container && renderHost.childCount == 0) {
-            container.removeView(renderHost)
-            container.setTag(R.id.viewcompose_decoration_render_host, null)
+        if (renderHost !== androidContainer && renderHost.childCount == 0) {
+            androidContainer.removeView(renderHost)
+            androidContainer.setTag(R.id.viewcompose_decoration_render_host, null)
         }
         return failures
     }
@@ -293,4 +297,9 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             AndroidViewOperation.Release -> RenderFailureOperation.AndroidViewRelease
         }
     }
+}
+
+private fun RenderContainerHandle.requireAndroidViewGroup(): ViewGroup {
+    return nativeContainer as? ViewGroup
+        ?: error("AndroidCoreRenderEngine requires a ViewGroup-backed render container.")
 }

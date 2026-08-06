@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-governance.md
-translation_source_hash: 9a4cec84c39bc96649e3be8010a7ec3625004a56da47bbb4b9d72d99502b6dcb
+translation_source_hash: f7534316fb214c54f30c3b8eb649c475e82253b789520f1b8c7ddf7893d0611a
 translation_status: current
 ---
 
@@ -121,7 +121,7 @@ Compose 文档，也不能把名称相似当作语义等价。
 模块版本和验证动作，但不能要求先完成另一篇教程；得到可运行结果后可以推荐相关页面。
 
 - 非平凡 sample 位于可编译 sample/Demo source set 并由文档引用；
-- 每篇教程开头都放置完整 Maven 依赖块，包括 `viewcompose-overlay-android` 等可选能力产物；
+- 每篇教程开头都放置完整 Maven 依赖块，包括 `viewcompose-overlay-material3-android` 等可选能力产物；
   不能让读者到示例中途才发现缺少依赖；
 - 独立教程示例放在 `samples/<name>`，通过已发布 Maven 坐标解析 ViewCompose，只使用 public API，
   由 `qaQuick` 编译并由 `qaFull` 运行代表性行为验证；

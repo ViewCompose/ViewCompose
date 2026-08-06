@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.viewcompose.preview.host.ViewComposePreviewHost
 import com.viewcompose.preview.tooling.PreviewTheme
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Configures the Compose-to-ViewCompose preview bridge.

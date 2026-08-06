@@ -17,12 +17,12 @@ import com.viewcompose.ui.modifier.graphicsLayer
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.SurfaceVariant
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceVariant
+import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.remember
 
 /**
  * 提供手势组件的预览规格，用最小可交互场景覆盖点击、拖拽、滑动和缩放。

@@ -2,7 +2,7 @@ package com.viewcompose
 
 import android.content.Intent
 import android.view.ViewGroup
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * 指定 Foundations demo 初始页签，保持目录入口和测试入口的定位一致。

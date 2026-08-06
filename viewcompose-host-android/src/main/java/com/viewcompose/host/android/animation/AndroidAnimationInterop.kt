@@ -17,7 +17,7 @@ import androidx.dynamicanimation.animation.SpringForce
 import com.viewcompose.host.android.AndroidView
 import com.viewcompose.host.android.nativeView
 import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Starts Android platform animations for Views mounted in a ViewCompose tree.

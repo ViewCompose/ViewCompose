@@ -140,25 +140,26 @@ Boundary constraints:
 2. Local scope restoration and snapshot propagation must remain correct through Lazy and overlay
    sessions.
 
-## 5. Android bridge boundary
+## 5. Material 3 design-system boundary
 
-The Android theme bridge maps platform semantics to framework semantics through:
+`viewcompose-material3` maps Android Material/AppCompat semantics to framework semantics through:
 
-`AndroidThemeSnapshotReader -> ThemeTokenMapper -> UiThemeTokens`
+`Material3ThemeSnapshotReader -> Material3ThemeTokenMapper -> UiThemeTokens`
 
 Responsibilities:
 
 1. `SnapshotReader` reads Android, AppCompat, and Material theme fields in batches.
 2. `ThemeTokenMapper` maps platform fields to framework tokens and applies fallback rules.
 3. The bridge does not produce component defaults or bypass `Defaults`.
-4. Android `ComponentActivity/Fragment.setUiContent` resolves and provides the Android theme by
-   default. The root container, framework native Views, `AndroidView`, and overlays share the same
-   resolved context.
-5. `UiTheme(androidContext = ...)` applies Material dynamic color when supported unless
-   `AndroidDynamicColorPolicy.Disabled` is selected.
+4. The `viewcompose-android` `ComponentActivity/Fragment.setUiContent` entry points resolve and
+   provide the Material 3 theme by default. The root container, framework native Views,
+   `AndroidView`, and overlays share the same resolved context.
+5. `setUiContent` applies Material dynamic color when supported unless
+   `Material3DynamicColorPolicy.Disabled` is selected. A direct low-level composition uses
+   `Material3ThemeBridge.resolveContext(...)` and `Material3Theme(...)` from `viewcompose-material3`.
 6. An Android-backed theme used in composition observes configuration changes and rereads tokens;
    callbacks are removed when it leaves composition, and `metadata.revision` increments on refresh.
-7. After runtime `setTheme/applyStyle`, pass an `AndroidThemeRefreshController` to `setUiContent`
+7. After runtime `setTheme/applyStyle`, pass a `Material3ThemeRefreshController` to `setUiContent`
    and call `refresh()` on the main thread. The controller resolves the dynamic-color context again
    and refreshes the themed subtree.
 
@@ -204,13 +205,13 @@ Implementation constraints:
 
 1. Fallback resolves explicitly to `UiThemeDefaults.light/dark()`; do not scatter literals.
 2. A new bridged field defines its source, fallback rule, and owning token.
-3. A bridge change that affects visible output adds `AndroidThemeBridgeTest` or an Android bridge
+3. A bridge change that affects visible output adds `Material3ThemeBridgeTest` or a Material 3 bridge
    test.
 
 Active refresh example:
 
 ```kotlin
-val themeRefreshController = AndroidThemeRefreshController()
+val themeRefreshController = Material3ThemeRefreshController()
 
 setUiContent(themeRefreshController = themeRefreshController) {
     // content
