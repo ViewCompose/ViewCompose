@@ -14,7 +14,7 @@ artifact:
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
@@ -32,16 +32,16 @@ package com.viewcompose.samples.tutorials
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.viewcompose.animation.AnimatedVisibility
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.remember
 
 class AnimationTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

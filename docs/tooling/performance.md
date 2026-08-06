@@ -25,7 +25,7 @@ For historical analysis, see
 8. Framework RecyclerView containers do not share `RecycledViewPool` by default and retain the
    platform `itemAnimator`. A container can opt into pool sharing and animator policy through
    `reusePolicy/motionPolicy`.
-9. Renderer dimension conversion uses `viewcompose-renderer/view/DimensionUtils.kt`; containers do
+9. Renderer dimension conversion uses `viewcompose-renderer-android/view/DimensionUtils.kt`; containers do
    not duplicate density or dp-to-pixel behavior.
 10. State uses `SnapshotMutationPolicy + MVCC + MutableSnapshot` transactions, and recomposition
     reads from one consistent snapshot.

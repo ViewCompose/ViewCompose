@@ -69,7 +69,8 @@ Diff / Patch 渲染器
 
 ## 快速开始
 
-推荐的 Android 宿主版本为 `0.1.0-alpha03`，可以直接从 Maven Central 获取。ViewCompose
+标准 Android 依赖是 `viewcompose-android` 聚合包。硬切后的产物线从 `0.1.0-alpha01` 开始；
+该坐标发布到 Maven Central 前，源码 Checkout 会通过生成的本地 Maven 仓库验证。ViewCompose
 模块采用独立版本，因此可选功能和平台无关 Core 的当前版本可能不同。
 
 ```kotlin
@@ -78,12 +79,12 @@ repositories {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
 }
 ```
 
-宿主会传递暴露 Runtime、UI Contract 和 Widget Core API。只有在构建底层集成，或明确不通过
-Android 宿主直接使用这些模块时，才需要单独添加基础模块坐标。
+聚合包会传递暴露 Runtime、UI Contract、UI Foundation、Host、Material 3 Theme、Lifecycle 与
+ViewModel API。只有在构建集成，或明确绕过聚合包使用高级 API 时，才直接添加下层模块坐标。
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -112,7 +113,7 @@ class MainActivity : ComponentActivity() {
 Feature 模块会在适用时带入对应的平台无关 Core，Core 也可以单独依赖：
 
 ```kotlin
-implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
 implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
 
 // 纯 Kotlin/JVM 的策略和状态模型可以独立使用。
@@ -127,11 +128,12 @@ implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 
 | 领域 | 模块 | 作用 |
 | --- | --- | --- |
-| 运行时 | `viewcompose-runtime`、`viewcompose-text-core`、`viewcompose-ui-contract` | 状态、组合、编辑与语义契约 |
-| Android UI | `viewcompose-widget-core`、`viewcompose-renderer`、`viewcompose-host-android` | DSL、原生 View 映射与宿主会话 |
-| Android 集成 | `viewcompose-lifecycle`、`viewcompose-viewmodel`、`viewcompose-overlay-android`、`viewcompose-image-coil` | 平台生命周期与系统服务 |
-| Feature/Core | `viewcompose-navigation*`、`viewcompose-animation*`、`viewcompose-gesture*`、`viewcompose-graphics*` | 独立演进的 Core 与 Android 能力 |
-| 可选 UI | `viewcompose-shadow-android`、`viewcompose-widget-constraintlayout` | 高级渲染与布局集成 |
+| Kernel | `viewcompose-runtime`、`viewcompose-text-core`、`viewcompose-ui-contract`、`*-core` | 状态、编辑、契约与平台无关策略 |
+| UI Foundation | `viewcompose-ui-foundation`、`viewcompose-animation`、`viewcompose-gesture`、`viewcompose-graphics` | 平台无关 UI 与能力 DSL |
+| Android Engine | `viewcompose-renderer-android`、`viewcompose-host-android` | 原生 View 映射与底层宿主 Session |
+| Design System | `viewcompose-material3` | Material 3 主题解释与 Token 映射 |
+| Integrations | `viewcompose-*-androidx`、`viewcompose-*-android`、图片适配器 | AndroidX、Material、解码器与可选平台集成 |
+| 聚合入口 | `viewcompose-android` | 标准 Android 应用入口 |
 | 工具链 | `viewcompose-preview*`、`viewcompose-benchmark` | 预览、诊断、快照与性能测试 |
 
 模块版本有意保持独立。依赖某一项 Feature 不要求同时引入无关模块，也不要求整个项目使用同一个

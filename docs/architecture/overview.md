@@ -13,11 +13,13 @@ If an implementation needs to depart from this specification, update this docume
 
 The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/ARCHITECTURE_FULL_2026-03-06.md).
 
-## 2. Current baseline (2026-07)
+## 2. Current baseline (2026-08)
 
 - Technology: Kotlin on the Android View system.
 - SDK: `minSdk 24`, `compileSdk 36`.
-- Modules: `:viewcompose-runtime`, `:viewcompose-text-core`, `:viewcompose-ui-contract`, `:viewcompose-navigation-core`, `:viewcompose-navigation` (incubating on a feature branch), `:viewcompose-animation-core`, `:viewcompose-animation`, `:viewcompose-gesture-core`, `:viewcompose-gesture`, `:viewcompose-graphics-core`, `:viewcompose-graphics`, `:viewcompose-shadow-android`, `:viewcompose-widget-core`, `:viewcompose-widget-constraintlayout`, `:viewcompose-renderer`, `:viewcompose-host-android`, `:viewcompose-overlay-android`, `:viewcompose-image-coil`, `:viewcompose-image-glide`, `:viewcompose-lifecycle`, `:viewcompose-viewmodel`, `:viewcompose-preview-core`, `:viewcompose-preview-runner`, `:viewcompose-preview`, `:viewcompose-benchmark`, and `:app`.
+- Runtime modules are classified into five dependency layers: Kernel, UI Foundation, Android Engine,
+  Design System, and Integrations. `viewcompose-android` is the consumer aggregate above those
+  layers; preview, benchmark, and build support remain orthogonal tooling.
 
 ### 2.1 Module responsibilities
 
@@ -27,7 +29,7 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-text-core` | Complete plain-text editing state, including text, selection, composition, `EditingBuffer`, input transformations, undo, and redo | Pure Kotlin/JVM with no Android types; offsets use UTF-16 to match platform editing protocols. |
 | `viewcompose-ui-contract` | Pure Kotlin UI contracts such as `Modifier`, `VNode`, `NodeSpec`, layout enums, and collection/state protocols | Production sources must not import `android.*` or `androidx.*`. |
 | `viewcompose-navigation-core` | System-navigation kernel: routes, back stack, two-phase transactions, and page-lifecycle planning | Pure Kotlin/JVM with no Android or AndroidX types; page sessions and platform back adapters do not belong here. |
-| `viewcompose-navigation` | Android system-navigation integration: destination owners, page sessions, `NavHost`, and back adapters | Depends on navigation-core and host-android; must not change the app's default entry point before stabilization, and host-android must not depend back on it. |
+| `viewcompose-navigation-android` | Android system-navigation integration: destination owners, page sessions, `NavHost`, and back adapters | Depends on navigation-core and host-android; host-android must not depend back on it. |
 | `viewcompose-animation-core` | Animation kernel: `AnimationSpec`, `Easing`, converters, engine, and `TransitionCore` | Pure Kotlin/JVM; no Android dependency. |
 | `viewcompose-animation` | Animation DSL integration: `animate*AsState`, `Animatable`, transitions, `AnimatedVisibility`, and animated content | Public-call API; runtime driving uses `MonotonicFrameClock` plus coroutines and does not depend directly on Android View animations. |
 | `viewcompose-gesture-core` | Gesture policy kernel: axis lock, transform slop, and swipe settling | Pure Kotlin/JVM; the renderer only adapts events and invokes this kernel. |
@@ -35,15 +37,17 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-graphics-core` | Platform-independent graphics kernel: geometry, paths, brushes, draw commands, and draw caches | Pure Kotlin/JVM; defines graphics models only. |
 | `viewcompose-graphics` | Graphics DSL integration: `Canvas`, `drawBehind`, `drawWithContent`, and `drawWithCache` | Defines business-facing APIs and contract mappings without depending directly on Android Canvas. |
 | `viewcompose-shadow-android` | Optional advanced-shadow backend, cache, and Android drawing implementation | Depends only on the renderer's minimal decoration SPI; renderer and host do not depend on it; installation uses `ServiceLoader` or an explicit call. |
-| `viewcompose-widget-core` | DSL, theme/defaults, locals, and overlay declaration contracts | Does not depend on renderer and does not define Android host entry points. |
-| `viewcompose-widget-constraintlayout` | ConstraintLayout component DSL | Contains only the DSL and scopes; platform rendering remains in renderer. |
-| `viewcompose-renderer` | Android View rendering: reconciliation, binders, patches, and containers | Consumes ui-contract and does not contain business DSL. |
-| `viewcompose-host-android` | Android host runtime and entry points: `setUiContent`, `renderInto`, `RenderSession`, native View interop, and host Local injection | Executes and injects platform behavior without business DSL. |
-| `viewcompose-overlay-android` | Android overlay host and presenters for dialogs, popups, bottom sheets, snackbars, and toasts | Platform implementation only; it does not depend on renderer resources. |
+| `viewcompose-ui-foundation` | Renderer-independent DSL, framework theme/defaults, locals, composition coordinator, and overlay declaration contracts | Owns `com.viewcompose.ui.foundation`; does not depend on AndroidX, Material, renderer, or Android host entry points, and delegates native containers, focus, logging, and tracing through host-installed contracts. |
+| `viewcompose-constraintlayout-androidx` | ConstraintLayout component DSL | Contains only the DSL and scopes; platform rendering remains in renderer. |
+| `viewcompose-renderer-android` | Android View rendering: reconciliation, binders, patches, containers, framework shape drawing, and progress drawing | Consumes portable contracts and contains neither business DSL nor Material widgets. |
+| `viewcompose-host-android` | Low-level Android engine host: `renderInto`, `RenderSession`, native View interop, and render-platform installation | Does not expose Activity/Fragment convenience entry points and does not depend on Material. |
+| `viewcompose-material3` | Material 3 theme snapshot, token mapping, dynamic-color policy, and refresh lifecycle | Owns all Material/AppCompat theme interpretation; UI Foundation and Android Engine do not depend on it. |
+| `viewcompose-android` | Standard Android consumer aggregate and Activity/Fragment `setUiContent` entry points | Aggregates the default engine, UI Foundation, Material 3 theme bridge, Lifecycle, and ViewModel integrations without becoming a dependency of lower layers. |
+| `viewcompose-overlay-material3-android` | Android overlay host and presenters for dialogs, popups, bottom sheets, snackbars, and toasts | Platform implementation only; it does not depend on renderer resources. |
 | `viewcompose-image-coil` | Optional image-loading adapter | Implements `UiImageLoader` for Coil 3; it accepts the general source/request contract without feeding Coil concerns back into the renderer core. |
 | `viewcompose-image-glide` | Optional image-loading adapter | Implements `UiImageLoader` for Glide 5 with target-scoped `RequestManager` resolution and application-owned `AppGlideModule` configuration. |
-| `viewcompose-lifecycle` | Lifecycle-aware collection APIs and lifecycle Local entry points | Does not contain Android View implementations or add host-injection logic. |
-| `viewcompose-viewmodel` | ViewModel and SavedStateHandle collaboration APIs and ViewModel Local entry points | Does not contain Android View implementations or add host-injection logic. |
+| `viewcompose-lifecycle-androidx` | Lifecycle-aware collection APIs and lifecycle Local entry points | Does not contain Android View implementations or add host-injection logic. |
+| `viewcompose-viewmodel-androidx` | ViewModel and SavedStateHandle collaboration APIs and ViewModel Local entry points | Does not contain Android View implementations or add host-injection logic. |
 | `viewcompose-preview-core` | Preview annotations, deterministic configuration, and cross-process request/result protocols | Pure Kotlin/JVM with no Android, Compose, or IDE SDK dependency. |
 | `viewcompose-preview-runner` | Native View static rendering, image export, and structured diagnostics in an isolated process | May use Android/Layoutlib; must not depend on Compose or the IDE SDK. |
 | `viewcompose-preview` | Development previews and screenshot regression: Compose Preview bridge, `PreviewCatalog`, and Paparazzi | Development-only, excluded from app runtime entry points, and must not depend on `:app`. |
@@ -52,21 +56,44 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 
 #### 2.1.1 Hard dependency direction
 
-Dependencies flow one way from the foundation through optional capabilities and tooling to the demo app. A higher layer may consume a lower layer; a lower layer must not depend on an optional implementation for reuse.
+Runtime dependencies follow the five-layer order below. A layer may consume the same or a lower
+layer when the dependency contract permits it; lower layers never depend on a higher layer.
 
-1. The foundation includes runtime, pure-Kotlin kernels, UI contract, widget-core, renderer, lifecycle/viewmodel, and host-android. Each foundation module has an explicit Gradle project-dependency allowlist. A new dependency must first be justified as a stable foundation contract.
-2. Navigation, animation, gesture, graphics, shadow, ConstraintLayout, overlay, image-coil, and image-glide are optional capabilities. They may depend on the foundation, but the foundation must not depend on them. The core render path must compile and run when none is present.
-3. Preview, preview worker/runner/Gradle plugin, and benchmark are tooling. Runtime and optional-capability modules must not depend on tooling, and no framework module may depend on `app`.
-4. Every new `viewcompose-*` module must be classified as foundation, optional capability, or tooling in the same change. `verifyModuleDependencyBoundaries` rejects unclassified modules, dependencies outside a foundation allowlist, and optional-capability dependencies on tooling.
-5. `qaQuick` always runs the boundary check. A compilable demo, an already-present dependency, or review approval is not a reason to bypass it.
-6. Architectural direction and consumer exposure are separate decisions. An allowed lower-level
+1. **Kernel** contains pure state, text, UI contracts, and policy kernels: runtime, text-core,
+   ui-contract, navigation-core, animation-core, gesture-core, and graphics-core.
+2. **UI Foundation** contains the renderer-independent public UI surface: ui-foundation,
+   animation, gesture, and graphics. It may model Android-only declarative values because this
+   framework targets Android View, but native container access, host adaptation, logging, tracing,
+   and scheduling are installed by Android Engine. It cannot depend on Android Engine, Design
+   System, or Integrations.
+3. **Android Engine** contains renderer-android and host-android. It maps contracts to Android View
+   without owning Material design policy or AndroidX feature integrations.
+4. **Design System** contains material3. It may interpret Material/AppCompat themes and supply
+   framework tokens, but Material types and dependencies must not leak into UI Foundation or the
+   Android Engine.
+5. **Integrations** contains navigation-android, lifecycle-androidx, viewmodel-androidx,
+   constraintlayout-androidx, overlay-material3-android, image adapters, and shadow-android. A name
+   suffix identifies the external platform or design-system ownership when that distinction affects
+   dependencies.
+6. `viewcompose-android` is an aggregate, not a sixth architectural layer. It is the standard app
+   dependency and owns convenience composition roots that intentionally assemble several layers.
+7. Preview, preview worker/runner/Gradle plugin, and benchmark are tooling. Runtime modules must not
+   depend on tooling, and no framework module may depend on `app`.
+8. Every new runtime module must be classified into one of the five layers or as an aggregate in the
+   same change. `verifyModuleDependencyBoundaries` rejects unclassified modules and upward edges.
+9. `qaQuick` always runs `verifyModuleDependencyBoundaries`, `verifyDesignSystemIsolation`,
+   `verifyUiFoundationPlatformBoundary`, and the package/namespace ownership gates. Together they
+   reject unclassified/upward dependencies, Material in UI Foundation or Android Engine, AndroidX
+   or Android execution imports in UI Foundation, legacy package roots, split package ownership,
+   and namespace drift. A compilable demo, an already-present dependency, or review approval is
+   not a reason to bypass these gates.
+10. Architectural direction and consumer exposure are separate decisions. An allowed lower-level
    dependency is published as `api` only when its types form part of the public/protected surface or
    the artifact intentionally aggregates that capability; otherwise it remains `implementation`.
-7. `viewcompose-host-android` is the standard Android application entry point and transitively
-   exposes runtime, UI contract, and widget core. Optional feature artifacts similarly expose their
-   required public contract and core modules. Renderer, lifecycle, and ViewModel internals remain
-   private to the host unless consumers directly opt into their APIs.
-8. The exact published edges live in
+11. `viewcompose-android` is the standard Android application entry point. Lower-level artifacts are
+   documented for advanced consumers who intentionally need their APIs; a minimal app does not list
+   runtime, UI contract, UI Foundation, renderer, host, Lifecycle, or ViewModel separately.
+12. The exact published edges live in
    [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
    and are enforced against Gradle declarations and generated Maven metadata.
 
@@ -78,13 +105,13 @@ The project is a maintainable View-based declarative UI v1:
 2. Reusable containers such as lists and pagers use independent session refresh paths.
 3. Overlay declarations and platform implementations are separated.
 4. Node semantics are exclusively `NodeSpec`; the former `Props` path no longer exists.
-5. Lifecycle and ViewModel collaboration APIs live in dedicated modules while host auto-injection remains intact.
+5. Lifecycle and ViewModel collaboration APIs live in dedicated AndroidX integrations while the aggregate owns their automatic host injection.
 6. Animation and gesture use kernel, DSL, and Android interop layers.
 7. Graphics uses core, DSL, renderer pipeline, and host interop layers.
 8. ConstraintLayout separates its widget DSL from renderer platform mapping and covers anchors, dimensions, bias, baseline links, circles, guidelines, barriers, chains and weights, Flow, Group, Layer, Placeholder, decoupled constraint sets, and advanced match-constraint parameters.
 9. Theme tokens are in a consumption-closure phase: every new token must be consumed by defaults/composite defaults or explicitly registered as a reserved semantic palette entry.
 10. Text input has one source of truth, `TextFieldState`. The pure-Kotlin editor owns value, selection, composition, and history; renderer's `ViewComposeEditText` only adapts Android `Editable` and `InputConnection`.
-11. System navigation incubates independently: first stabilize the pure-Kotlin back-stack transaction and page-lifecycle kernel, then integrate Android page sessions without changing current Activity or Fragment host entry points before stabilization.
+11. System navigation keeps its pure-Kotlin transaction kernel separate from Android page sessions and back dispatch.
 
 ### 2.3 `app` directory baseline
 
@@ -97,7 +124,7 @@ The app separates entry points from demonstrations:
 5. `app/src/main/java/com/viewcompose/demo/pages/<feature>`: feature demos such as foundations, layouts, input, and feedback.
 6. `app/src/androidTest/java/com/viewcompose`: demo and UI regression tests.
 
-### 2.4 `viewcompose-renderer` directory baseline
+### 2.4 `viewcompose-renderer-android` directory baseline
 
 Renderer code is grouped by responsibility instead of flattened into one package:
 
@@ -111,8 +138,8 @@ Renderer code is grouped by responsibility instead of flattened into one package
 
 ```mermaid
 flowchart TD
-    A["Business DSL"] --> B["ComponentActivity.setUiContent(...) / Fragment.setUiContent(...)"]
-    B --> C["renderInto(container)"]
+    A["Business DSL"] --> B["viewcompose-android: setUiContent(...)"]
+    B --> C["host-android: renderInto(container)"]
     C --> D["RenderSession"]
     D --> E["ComposerLite.composeRoot / runGroup"]
     E --> F["buildVNodeTree (group cached reuse)"]
@@ -127,17 +154,18 @@ flowchart TD
 
 ### 4.1 Platform implementation
 
-1. Android dialog, popup, toast, and snackbar host implementations live only in overlay-android.
-2. widget-core retains platform-independent declaration contracts and runtime composition capabilities.
+1. Android Material dialog, popup, toast, and snackbar host implementations live only in `viewcompose-overlay-material3-android`.
+2. `viewcompose-ui-foundation` retains renderer-independent declaration contracts and runtime
+   composition capabilities behind opaque host-installed platform handles.
 3. Demo-only logic must not flow back into framework modules.
 
 ### 4.1.1 Image loading pipeline
 
 1. `viewcompose-ui-contract` owns the portable `ImageSource`, `UiImageRequest`, `UiImageLoader`,
    platform-target, and disposable-handle contracts. It does not depend on Android or a decoder.
-2. `viewcompose-widget-core` owns the `Image`/`Icon` declaration surface and the scoped
+2. `viewcompose-ui-foundation` owns the `Image`/`Icon` declaration surface and the scoped
    `ProvideImageLoader` injection point. A missing loader is valid: resource sources still render.
-3. `viewcompose-renderer` owns the Android `ImageView` binding lifecycle. It replaces a previous
+3. `viewcompose-renderer-android` owns the Android `ImageView` binding lifecycle. It replaces a previous
    handle before starting changed work, clears it before direct fallback/resource binding, and
    disposes it on removal, rollback, and session disposal.
 4. `viewcompose-image-coil` and `viewcompose-image-glide` implement the contract beside the renderer.
@@ -154,7 +182,7 @@ flowchart TD
 1. `Modifier` carries general decorations and scoped parent data.
 2. Component semantics use component DSL parameters and `NodeSpec`.
 3. Theme defaults flow from `Theme` to `Defaults`; theme is not a general-purpose modifier.
-4. `AndroidThemeBridge` has a snapshot-reader layer and a token-mapper layer. The reader only reads Android/AppCompat/Material fields; the mapper performs semantic mapping and fallbacks.
+4. `Material3ThemeBridge` in `viewcompose-material3` has a snapshot-reader layer and a token-mapper layer. The reader only reads Android/AppCompat/Material fields; the mapper performs semantic mapping and fallbacks.
 5. Best-effort `surfaceTint` and uniform `shapeAppearance*Component` mapping is allowed. The bridge must not guess non-uniform corner shapes or three control-size tiers merely to increase coverage.
 6. `controls` remain framework-owned defaults unless Android exposes a stable, uniform source. Scattered widget styles must not become global token truth.
 7. ui-contract modifier files contain only globally stable semantics. Policies that apply to one container belong in its DSL parameters and `NodeSpec`.
@@ -166,12 +194,12 @@ See [Modifier architecture](modifier.md), [NodeSpec architecture](node-spec.md),
 
 ### 4.3 Host integration
 
-1. Activity and Fragment `setUiContent(...)` entry points do not expose internal `RenderSession`; the host disposes it automatically, using the Fragment view lifecycle where applicable.
-2. The default overlay factory uses `OverlayHostDefaults.androidOrNoOp(...)`: discover Android implementations through `OverlayHostFactoryProvider` and `ServiceLoader`, otherwise fall back to no-op with a diagnostic.
-3. overlay-android registers its provider through `META-INF/services`; string reflection is forbidden.
-4. Public host callbacks expose only widget-core diagnostic types; renderer diagnostic types remain internal adapters.
+1. Activity and Fragment `setUiContent(...)` entry points live in `viewcompose-android`, do not expose internal `RenderSession`, and dispose it automatically using the Fragment view lifecycle where applicable.
+2. The default overlay factory uses `AndroidOverlayHostDefaults.androidOrNoOp(...)`: Host Android discovers implementations through `AndroidOverlayHostFactoryProvider` and `ServiceLoader`, otherwise it falls back to UI Foundation's no-op host with a diagnostic.
+3. `viewcompose-overlay-material3-android` registers `com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider` through `META-INF/services`; string reflection is forbidden.
+4. Public host callbacks expose only UI Foundation diagnostic types; renderer diagnostic types remain internal adapters.
 5. System-bar insets use `Modifier.systemBarsInsetsPadding(...)`, not a global Activity option.
-6. host-android atomically installs the render engine, frame scheduler, and composition coroutine context through `installRenderSessionPlatform(...)`. A session captures one platform snapshot, and missing or duplicate installation fails immediately rather than degrading piecemeal.
+6. host-android atomically installs the render engine, frame scheduler, composition coroutine context, focus adapter, and logging/tracing adapter through `installRenderSessionPlatform(...)`. UI Foundation coordinates composition against opaque `RenderContainerHandle` values; only Android Engine unwraps them as `ViewGroup`. A session captures one platform snapshot, and missing or duplicate installation fails immediately rather than degrading piecemeal.
 
 ### 4.4 Lazy session containers
 
@@ -186,13 +214,13 @@ Use the [session-container checklist](session-containers.md).
 
 ### 4.5 Environment and Locals
 
-1. Android host entry points inject `UiEnvironment(androidContext = root.context)` by default, while business code may override values in a local subtree.
-2. Renderer consumes resolved `NodeSpec` and platform values; it does not depend on widget-core Environment or Local implementations.
+1. Android host entry points map resources with `AndroidEnvironmentBridge.fromContext(root.context)` and inject the resulting values through `UiEnvironment(values = ...)`; business code may override values in a local subtree.
+2. Renderer consumes resolved `NodeSpec` and platform values; it does not depend on UI Foundation Environment or Local implementations.
 3. Renderer dp/sp conversion goes through its shared `DimensionUtils.kt`; containers must not duplicate density helpers.
-4. `AndroidEnvironmentBridge` is the only Android environment extraction entry point.
+4. `com.viewcompose.host.android.environment.AndroidEnvironmentBridge` is the only Android environment extraction entry point; UI Foundation accepts only resolved `UiEnvironmentValues`.
 5. Custom tokens and built-in Locals use `uiLocalOf`, `UiLocals.current`, `ProvideLocal`, and `ProvideLocals`; do not add a new dedicated `ProvideXxx` pattern.
 6. Local snapshot/restore behavior must propagate consistently through lazy containers and overlays.
-7. Lifecycle and ViewModel Locals use the public packages `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`, while `AndroidHostBridge` performs default injection.
+7. Lifecycle and ViewModel Locals use the public packages `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`, while the `viewcompose-android` composition root performs default injection.
 
 ### 4.6 SlotTable Lite recomposition
 
@@ -254,7 +282,7 @@ Use the [session-container checklist](session-containers.md).
 1. Each module has one responsibility-aligned package-root prefix and may organize subpackages beneath it.
 2. The rule covers `src/main`, `src/test`, and `src/androidTest`; tests are not exempt.
 3. Android module namespace matches its package root, except the Kotlin/JVM ui-contract module.
-4. Lifecycle and ViewModel Local APIs remain in their dedicated public packages and modules, not widget-core.
+4. Lifecycle and ViewModel Local APIs remain in their dedicated public packages and AndroidX integration modules, not UI Foundation.
 
 ### 4.12 Development previews
 
@@ -338,9 +366,9 @@ See the [navigation guide](../guides/navigation.md).
 
 1. `ViewTreeRenderer` remains a complexity hotspot; add focused helpers instead of expanding its main class.
 2. The current model combines node-group recomposition with root-level traversal scheduling. Future work should improve group-key diagnostics and fine-grained skip hit rates.
-3. widget-core no longer depends directly on renderer. Preserve the runtime/ui-contract/widget-core/renderer/host-android layering.
+3. Preserve the five-layer direction: Kernel -> UI Foundation -> Android Engine -> Design System / Integrations, with `viewcompose-android` only as the top-level aggregate.
 4. Lazy session regression covers grid and both pager orientations. Lazy P1 includes structured item DSL, observable layout state, sticky headers, content type/span, prefetch, and boundary behavior.
-5. `AndroidHostBridge` now lives in host-android. A future multiplatform effort should further isolate Android-specific theme and environment bridges that remain in widget-core.
+5. Activity/Fragment bridges live in `viewcompose-android`; low-level mounting remains in host-android, and Material theme interpretation remains in material3.
 
 ## 6. Required change checklist
 

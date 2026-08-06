@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lifecycle-and-saved-state.md
-translation_source_hash: f873b44460271f13a28a5807c49e46ccffc4c08a7ab1d34a661278de48c6efb9
+translation_source_hash: 3c6fba53a79dd7136d5a2c0084c73f1ed8d37a4e5d2b9c6c9295f6608298120f
 translation_status: current
 ---
 
@@ -21,6 +21,11 @@ translation_status: current
 
 `ComponentActivity.setUiContent` 的会话绑定到 Activity 生命周期；
 `Fragment.setUiContent` 的会话绑定到 Fragment view lifecycle，并在 view 销毁时释放。
+
+Activity/Fragment 入口与自动 Owner 安装属于 `viewcompose-android`。`viewcompose-host-android`
+负责底层 Session、Scheduler、`renderInto` 与 Android SavedState 桥接，不得重新承载
+Activity/Fragment 便利 API。生命周期感知收集与 ViewModel 访问继续位于各自命名的 AndroidX
+集成模块。
 
 边界规则：
 

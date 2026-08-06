@@ -121,22 +121,22 @@ Current 2026-08 result:
 | `gesturePriority` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Gesture arbitration priority | Global | Resolves nested competition |
 | `nestedScroll` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | Parent/child scroll and fling protocol | Global | AndroidX transparent host |
 | `animateContentSize` | `viewcompose-animation` / `com.viewcompose.animation` | public | Layout size transition | Layout-aware | Real parent re-layout, not visual scaling |
-| `constrainAs` / `constrain` | `viewcompose-widget-constraintlayout` | public | Constraint parent data | Container-specific | `ConstraintLayout` children only |
+| `constrainAs` / `constrain` | `viewcompose-constraintlayout-androidx` | public | Constraint parent data | Container-specific | `ConstraintLayout` children only |
 | `nativeView` | `viewcompose-host-android` / `com.viewcompose.host.android` | public | Configure native Android View | Android interop | Escape hatch around general semantics |
 | `androidAnimation` | `viewcompose-host-android` / animation namespace | public | Android animation interop | Android interop | Alias over `nativeView` |
 | `androidGraphics` | `viewcompose-host-android` / graphics namespace | public | Android graphics interop | Android interop | Alias over `nativeView` |
-| `resolve` | `viewcompose-renderer` / `com.viewcompose.renderer.modifier` | internal | Resolve to `ResolvedModifiers` | Renderer internal | Not an application dependency |
+| `resolve` | `viewcompose-renderer-android` / `com.viewcompose.renderer.modifier` | internal | Resolve to `ResolvedModifiers` | Renderer internal | Not an application dependency |
 
 ### 3.4 Scoped Modifier APIs
 
 | API | Scope | Module / namespace | Purpose | Constraints |
 | --- | --- | --- | --- | --- |
-| `weight` | `RowScope` | `viewcompose-widget-core` | Horizontal linear weight | `weight > 0` |
-| `align` | `RowScope` | `viewcompose-widget-core` | Cross-axis vertical alignment | `VerticalAlignment` |
-| `weight` | `ColumnScope` | `viewcompose-widget-core` | Vertical linear weight | `weight > 0` |
-| `align` | `ColumnScope` | `viewcompose-widget-core` | Cross-axis horizontal alignment | `HorizontalAlignment` |
-| `align` | `BoxScope` | `viewcompose-widget-core` | Child position in Box | `BoxAlignment` |
-| `constrainAs / constrain` | `ConstraintLayout` child context | `viewcompose-widget-constraintlayout` | Constraint parent data | Global extension, meaningful only under `ConstraintLayout` |
+| `weight` | `RowScope` | `viewcompose-ui-foundation` | Horizontal linear weight | `weight > 0` |
+| `align` | `RowScope` | `viewcompose-ui-foundation` | Cross-axis vertical alignment | `VerticalAlignment` |
+| `weight` | `ColumnScope` | `viewcompose-ui-foundation` | Vertical linear weight | `weight > 0` |
+| `align` | `ColumnScope` | `viewcompose-ui-foundation` | Cross-axis horizontal alignment | `HorizontalAlignment` |
+| `align` | `BoxScope` | `viewcompose-ui-foundation` | Child position in Box | `BoxAlignment` |
+| `constrainAs / constrain` | `ConstraintLayout` child context | `viewcompose-constraintlayout-androidx` | Constraint parent data | Global extension, meaningful only under `ConstraintLayout` |
 
 ### 3.5 Advanced-shadow example and constraints
 

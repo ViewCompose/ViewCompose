@@ -43,6 +43,11 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
 
+      - name: Generate CI-only Maven signing key
+        run: |
+          gpg --batch --pinentry-mode loopback --passphrase '' \
+            --quick-generate-key "ViewCompose CI <ci@viewcompose.invalid>" rsa2048 sign 1d
+
       - name: Run qaQuick
         env:
           VIEWCOMPOSE_RELEASE_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -77,6 +82,11 @@ jobs:
 
       - name: Make Gradle wrapper executable
         run: chmod +x gradlew
+
+      - name: Generate CI-only Maven signing key
+        run: |
+          gpg --batch --pinentry-mode loopback --passphrase '' \
+            --quick-generate-key "ViewCompose CI <ci@viewcompose.invalid>" rsa2048 sign 1d
 
       - name: Run qaPreview
         run: ./gradlew qaPreview --stacktrace

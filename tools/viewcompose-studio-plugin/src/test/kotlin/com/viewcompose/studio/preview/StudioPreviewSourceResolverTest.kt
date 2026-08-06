@@ -22,7 +22,7 @@ class StudioPreviewSourceResolverTest {
         val source = resolveRuntimeSource(listOf(framework, application)) { fileName ->
             when (fileName) {
                 "Text.kt" -> listOf(
-                    "/project/viewcompose-widget-core/src/main/java/com/viewcompose/widget/material/Text.kt",
+                    "/project/viewcompose-ui-foundation/src/main/java/com/viewcompose/widget/material/Text.kt",
                 )
                 "AboutPage.kt" -> listOf(
                     "/project/app/src/main/java/com/example/pages/AboutPage.kt",
@@ -88,13 +88,13 @@ class StudioPreviewSourceResolverTest {
             ),
             findCandidatePaths = {
                 listOf(
-                    "/project/viewcompose-widget-core/src/main/java/com/viewcompose/widget/material/Text.kt",
+                    "/project/viewcompose-ui-foundation/src/main/java/com/viewcompose/widget/material/Text.kt",
                 )
             },
         )
 
         assertEquals(
-            "/project/viewcompose-widget-core/src/main/java/com/viewcompose/widget/material/Text.kt",
+            "/project/viewcompose-ui-foundation/src/main/java/com/viewcompose/widget/material/Text.kt",
             source?.filePath,
         )
         assertEquals(42, source?.line)

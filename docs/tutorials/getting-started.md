@@ -15,23 +15,22 @@ also verifies that preview discovery stays connected to the compiled function.
 
 ## Required dependencies
 
-Make sure the application resolves Maven Central, then add the Android host coordinate:
+Make sure the application resolves Maven Central, then add the standard Android aggregate:
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
 ```
 
-The host exposes runtime, UI-contract, and widget APIs transitively; widget core in turn exposes
-the text contracts used by its public API. Renderer, lifecycle, and ViewModel integrations arrive
-as host runtime dependencies, but their advanced APIs require a deliberate direct dependency. Add
-a foundation coordinate directly only when building a lower-level integration without the Android
-host.
+The aggregate exposes runtime, UI-contract, UI Foundation, host, Material 3 theme, Lifecycle, and
+ViewModel APIs transitively. Their advanced APIs may still be addressed through a deliberate direct
+dependency. Add a lower-level coordinate directly only when building an integration without the
+aggregate.
 
 The counter runs without preview tooling. To follow the optional preview section, also add the
 published plugin and its debug-only artifacts now:
@@ -71,15 +70,20 @@ Expected result: every press increments the visible count without replacing the 
 You need an Android application using Kotlin, an Android SDK, and JDK 17 for the Android Gradle
 Plugin. The sample uses `compileSdk = 36`, `minSdk = 24`, and JVM target 11.
 
-This tutorial was last verified from public Maven Central on 2026-08-05 with these ViewCompose
-artifacts:
+This hard-cut dependency set was verified on 2026-08-06 through the repository-generated local
+Maven repository. It becomes a public installation path after the listed new coordinates are
+released to Maven Central:
 
 | Artifact | Version | How it is supplied |
 | --- | --- | --- |
-| `viewcompose-host-android` | `0.1.0-alpha03` | Explicit application dependency |
+| `viewcompose-android` | `0.1.0-alpha01` | Explicit application dependency |
+| `viewcompose-host-android` | `0.1.0-alpha03` | Transitive low-level engine dependency |
 | `viewcompose-runtime` | `0.1.0-alpha02` | Transitive foundation dependency |
 | `viewcompose-ui-contract` | `0.1.0-alpha03` | Transitive foundation dependency |
-| `viewcompose-widget-core` | `0.1.0-alpha03` | Transitive foundation dependency |
+| `viewcompose-ui-foundation` | `0.1.0-alpha01` | Transitive UI Foundation dependency |
+| `viewcompose-material3` | `0.1.0-alpha01` | Transitive design-system dependency |
+| `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | Transitive AndroidX integration |
+| `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | Transitive AndroidX integration |
 | `viewcompose-preview-gradle-plugin` | `0.1.0-alpha02` | Optional explicit plugin |
 | `viewcompose-preview-core` | `0.1.0-alpha02` | Optional debug dependency |
 | `viewcompose-preview-worker-host` | `0.1.0-alpha02` | Optional preview configuration |
@@ -88,8 +92,9 @@ artifacts:
 ViewCompose artifacts evolve independently. Check the
 [published module catalog](../modules/README.md) before mixing versions outside this verified set.
 
-The repository sample uses these exact Maven coordinates, so its quality gate verifies the same
-dependency path used by an external application.
+The repository sample uses these exact Maven coordinates. `qaQuick` first publishes the current
+checkout to `build/maven-repository`, then verifies the same generated POM path used by an external
+application.
 
 ## 1. Use a Material application theme
 
@@ -115,7 +120,7 @@ package com.example.counter
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
@@ -123,12 +128,12 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -188,7 +193,7 @@ package com.viewcompose.samples.counter
 
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.ViewComposePreview
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Renders the initial counter state through the native static-preview toolchain.

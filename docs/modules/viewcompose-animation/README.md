@@ -17,7 +17,7 @@ dependencies {
   handoff have reviewed contracts; the APIs are intentionally smaller than Compose Animation and
   may expand between alphas.
 - Platform: Android library, minimum SDK 24.
-- Animation core, runtime, UI contract, and widget core are exposed transitively because their
+- Animation Core, Runtime, UI Contract, and UI Foundation are exposed transitively because their
   state, clock, modifier, unit, and builder types appear in the public animation surface.
 - `viewcompose-animation-core` can also be used independently from an Android UI host.
 - Android `View` property animation interop belongs to `viewcompose-host-android`, not this module.
@@ -226,8 +226,8 @@ modifier chain, the last specification wins.
 
 - [Animation core module](../viewcompose-animation-core/README.md)
 - [Runtime module](../viewcompose-runtime/README.md)
-- [Widget core module](../viewcompose-widget-core/README.md)
-- [Renderer module](../viewcompose-renderer/README.md)
+- [UI Foundation module](../viewcompose-ui-foundation/README.md)
+- [Renderer module](../viewcompose-renderer-android/README.md)
 - [Architecture overview](../../architecture/overview.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 

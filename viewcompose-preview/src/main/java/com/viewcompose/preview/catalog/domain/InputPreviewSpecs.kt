@@ -7,20 +7,20 @@ import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.BasicTextField
-import com.viewcompose.widget.core.Checkbox
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.IconButton
-import com.viewcompose.widget.core.PasswordField
-import com.viewcompose.widget.core.RadioButton
-import com.viewcompose.widget.core.SearchBar
-import com.viewcompose.widget.core.Slider
-import com.viewcompose.widget.core.Switch
-import com.viewcompose.widget.core.TextArea
-import com.viewcompose.widget.core.TextField
+import com.viewcompose.ui.foundation.BasicTextField
+import com.viewcompose.ui.foundation.Checkbox
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.PasswordField
+import com.viewcompose.ui.foundation.RadioButton
+import com.viewcompose.ui.foundation.SearchBar
+import com.viewcompose.ui.foundation.Slider
+import com.viewcompose.ui.foundation.Switch
+import com.viewcompose.ui.foundation.TextArea
+import com.viewcompose.ui.foundation.TextField
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.rememberTextFieldState
+import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.rememberTextFieldState
 import com.viewcompose.ui.node.ImageSource
 
 internal object InputPreviewSpecs {

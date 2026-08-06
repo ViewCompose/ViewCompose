@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: bf04ca1fe85bdf758562b1cc141b1d2de03fd8ee38168b391d6e33703e905fb0
+translation_source_hash: 86d1c0d8f745c491906cca2746e11144672313f8b476de660eb8519316756330
 translation_status: current
 ---
 
@@ -132,7 +132,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 
 默认判断顺序：
 
-1. 先判断模块职责边界，例如 `viewcompose-runtime`、`viewcompose-ui-contract`、`viewcompose-animation-core`、`viewcompose-animation`、`viewcompose-gesture-core`、`viewcompose-gesture`、`viewcompose-graphics-core`、`viewcompose-graphics`、`viewcompose-widget-core`、`viewcompose-widget-constraintlayout`、`viewcompose-renderer`、`viewcompose-host-android`、`viewcompose-lifecycle`、`viewcompose-viewmodel`、`app`
+1. 先判断模块职责边界，例如 `viewcompose-runtime`、`viewcompose-ui-contract`、`viewcompose-animation-core`、`viewcompose-animation`、`viewcompose-gesture-core`、`viewcompose-gesture`、`viewcompose-graphics-core`、`viewcompose-graphics`、`viewcompose-ui-foundation`、`viewcompose-constraintlayout-androidx`、`viewcompose-renderer-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx`、`app`
 2. 再判断目录职责边界，例如 `context/`、`dsl/`、`runtime/`、`view/`、`defaults/`
 3. 最后才决定具体文件名
 
@@ -155,9 +155,9 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 
 新增映射或扩展框架能力时，环境来源必须遵守单一入口，不允许另起一套：
 
-1. 宿主侧环境语义统一来自 `viewcompose-widget-core/context/Environment` 与 `UiEnvironment`。
+1. 宿主侧环境语义统一来自 `viewcompose-ui-foundation/context/Environment` 与 `UiEnvironment`。
 2. Android 环境提取统一通过 `AndroidEnvironmentBridge` 进入 `UiEnvironmentValues`。
-3. renderer 不新增环境语义通道；只允许使用 renderer 内部尺寸工具（`viewcompose-renderer/view/DimensionUtils.kt`）做平台换算。
+3. renderer 不新增环境语义通道；只允许使用 renderer 内部尺寸工具（`viewcompose-renderer-android/view/DimensionUtils.kt`）做平台换算。
 4. 禁止在 renderer 容器类新增私有 `density` 缓存或 `dpToPx`/`spToPx` 辅助方法。
 5. 发现现存代码偏离以上约束时，必须在同一步改动里完成“代码修正 + 文档更新”。
 
@@ -165,16 +165,16 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 
 生命周期与 ViewModel 协作能力的新增/修改必须遵守：
 
-1. `collectAsState`/`collectAsStateWithLifecycle` 放在 `:viewcompose-lifecycle`（`com.viewcompose.lifecycle`）。
-2. `viewModel`/`savedStateHandle` 放在 `:viewcompose-viewmodel`（`com.viewcompose.viewmodel`）。
+1. `collectAsState`/`collectAsStateWithLifecycle` 放在 `:viewcompose-lifecycle-androidx`（`com.viewcompose.lifecycle`）。
+2. `viewModel`/`savedStateHandle` 放在 `:viewcompose-viewmodel-androidx`（`com.viewcompose.viewmodel`）。
 3. 宿主默认 Local 注入由 `viewcompose-host-android` 的 host bridge 负责，不在上述模块重复实现注入逻辑。
 
 ## 5.3 服务提供者优先约束（Overlay/Host/Decoration）
 
 扩展装配默认走服务契约（SPI），反射仅作为最后兜底且需单独评审：
 
-1. overlay 默认装配必须通过 `OverlayHostFactoryProvider + ServiceLoader`，禁止新增 `Class.forName` 字符串反射主路径。
-2. `viewcompose-overlay-android` 的默认实现必须通过 `META-INF/services` 注册 provider；缺失时行为必须稳定回退 no-op 并可观测日志提示。
+1. overlay 默认装配必须通过 `AndroidOverlayHostFactoryProvider + ServiceLoader`，禁止新增 `Class.forName` 字符串反射主路径。
+2. `viewcompose-overlay-material3-android` 的默认实现必须通过 `META-INF/services` 注册 provider；缺失时行为必须稳定回退 no-op 并可观测日志提示。
 3. 可选 View 装饰后端必须通过 `AndroidViewDecorationBackend + ServiceLoader` 接入；renderer/host 禁止反向依赖具体阴影实现，缺失后端时必须稳定 no-op。
 4. 若确实需要反射（临时兼容场景），必须在同一步补充架构文档与契约测试，并登记移除计划，不得长期保留。
 
@@ -205,7 +205,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 2. 若设计上无法保持稳定，必须接受“最近稳定祖先回退重组”语义，并补充对应测试。
 3. 禁止通过关闭告警或吞异常掩盖结构漂移；结构漂移必须可观测（日志/诊断可见）。
 4. `emit` 参数变化（`spec/modifier`）必须可触发组级重组，禁止出现“参数变化但组被错误复用”。
-5. 相关改动至少补一条 runtime/widget-core 单测验证组复用与回退行为。
+5. 相关改动至少补一条 Runtime/UI Foundation 单测验证组复用与回退行为。
 
 ## 5.7 状态快照一致性约束
 
@@ -259,29 +259,33 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 
 ## 5.10 模块依赖边界约束
 
-完成 `widget-core` 与 `renderer` 解耦后，新增/重构代码必须遵守：
-
-1. `viewcompose-widget-core` 主源码禁止新增 `com.viewcompose.renderer.*` import。
-2. `viewcompose-ui-contract` 主源码禁止新增 `android.*` / `androidx.*` import。
-3. Android 宿主入口 API（`setUiContent`、`renderInto`、`AndroidView/nativeView`）只放 `viewcompose-host-android`。
-4. 基础模块只允许声明 `foundationModuleDependencyRules` 白名单内的 Gradle project 依赖；禁止依赖 navigation、shadow 等可选能力或 preview/benchmark 工具模块。
-5. 可选能力模块禁止依赖工具模块；任意 `viewcompose-*` 模块禁止依赖 `app`。
-6. 新增模块必须在 `foundationModuleDependencyRules`、`optionalCapabilityModules`、`toolingModules` 中且仅在一处登记；基础模块还必须显式登记允许的下游依赖。
-7. `qaQuick` 中的 `verifyModuleDependencyBoundaries` 是硬门禁。未分类模块、依赖反向、基础白名单外依赖不得豁免合并。
-8. 以上约束必须通过模块 guard tests 持续校验，禁止只靠 code review 口头约束。
-9. 公开依赖按 Consumer 暴露而不是实现便利性分类：public/protected 签名类型与明确的入口聚合使用
+1. 每个运行时模块必须且只能登记为 Kernel、UI Foundation、Android Engine、Design System、
+   Integration 或显式 Consumer Aggregate；Tooling 单独登记。
+2. 依赖只能指向同层或门禁允许的低层。Tooling 禁止进入公开运行时依赖，任意
+   `viewcompose-*` 模块禁止依赖 `app`。
+3. UI Foundation 主源码禁止导入 Renderer、AndroidX 或 Material API；UI Contract 主源码禁止
+   导入 `android.*` 或 `androidx.*`。
+4. `ComponentActivity/Fragment.setUiContent` 只位于 `viewcompose-android`；`renderInto` 与
+   `AndroidView/nativeView` 保留在底层 `viewcompose-host-android` Engine。
+5. Material Theme Policy 只位于 `viewcompose-material3`，Material-backed Presentation 只能位于
+   名称明确的 Integration。UI Foundation、Renderer Android 与 Host Android 禁止导入或依赖
+   Material Components。
+6. `qaQuick` 中的 `verifyModuleDependencyBoundaries` 与 `verifyDesignSystemIsolation` 是不可豁免
+   硬门禁；禁止只靠 Code Review 口头维持边界。
+7. 公开依赖按 Consumer 暴露而不是实现便利性分类：public/protected 签名类型与明确的入口聚合使用
    `api`；完全属于私有实现的依赖使用 `implementation`。caller-owned 平台集成是唯一例外，且
    必须在模块手册与外部 Consumer 测试中写明，不能根据已有 `implementation` 声明反推。
-10. 普通应用只声明实际使用的 Host 或可选 Feature。禁止把内部基础坐标写成修补不完整 Maven
-    元数据的必需依赖。
-11. 所有直接 ViewCompose 发布边必须在同一变更中登记到
+8. 普通应用只声明实际使用的 Aggregate 与可选 Feature。禁止把下层坐标写成修补不完整 Maven
+   元数据的必需依赖。
+9. 所有直接 ViewCompose 发布边必须在同一变更中登记到
     [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)。
     `verifyViewComposeDependencyContracts` 会阻断契约与 Gradle 声明漂移。
-12. 新增或修改入口必须增加最小外部 Consumer 编译测试。发版前，本地仓库检查必须验证 `api`
+10. 新增或修改入口必须增加最小外部 Consumer 编译测试。发版前，本地仓库检查必须验证 `api`
     保持为 Maven compile scope、`implementation` 保持为 runtime scope。
-13. 依赖暴露变更属于发布输入变更；同一 PR 必须更新所属模块手册并添加不可变 Release Intent。
-14. 只有 Maven Central 已提供包含该元数据的版本后，公开安装示例才切换到精简依赖集合。发布后
-    的文档更新与 Maven-backed Sample 必须在没有生成本地仓库的干净 Checkout 中验证。
+11. 依赖暴露变更属于发布输入变更；同一 PR 必须更新所属模块手册并添加不可变 Release Intent。
+12. 首次 Central 发布前，仓库 Maven Sample 只有在门禁先将当前 Checkout 发布到
+    `build/maven-repository`，再消费生成 POM 时，才能使用新坐标。发布后必须在没有生成仓库的
+    干净 Checkout 中再次验证安装路径。
 
 ## 5.11 模块单包根约束
 
@@ -305,8 +309,8 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 
 涉及 `RenderSession`、host 诊断回调或会话创建路径改动时，必须遵守：
 
-1. Android 会话执行细节（frame clock/dispatcher）只放 `viewcompose-host-android`，`widget-core` 仅保留 `RenderSessionRuntime` 契约与 provider。
-2. `host-android` 对外 API（`setUiContent`/`renderInto`）禁止暴露 renderer 诊断类型；统一使用 core 诊断类型 `RenderStats`/`RenderTreeResult`。
+1. Android 会话执行细节（frame clock/dispatcher）只放 `viewcompose-host-android`，UI Foundation 仅保留 `RenderSessionRuntime` 契约与 provider。
+2. 聚合层的 `setUiContent` 与 Engine 的 `renderInto` 禁止暴露 renderer 实现诊断类型；统一使用 core 诊断类型 `RenderStats`/`RenderTreeResult`。
 3. lazy item 子会话与 overlay surface 子会话必须通过会话契约创建，禁止直接 new 平台具体实现类。
 4. 相关重构必须补边界守卫测试，至少覆盖“禁止 renderer 类型泄漏到 host public API”与“provider 缺失回退 no-op”两条路径。
 
@@ -354,7 +358,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 
 涉及 `ConstraintLayout` 能力新增或改造时，必须遵守：
 
-1. 组件 DSL 与 scope 只放 `:viewcompose-widget-constraintlayout`；renderer 只做 Android `ConstraintLayout` 映射与约束应用。
+1. 组件 DSL 与 scope 只放 `:viewcompose-constraintlayout-androidx`；renderer 只做 Android `ConstraintLayout` 映射与约束应用。
 2. `layoutId/constrainAs/constrain` 属于 parent-data，错误宿主必须触发 `ModifierParentDataValidator` 警告，禁止静默忽略。
 3. 同一 child 同时存在 inline 约束与 decoupled `ConstraintSet` 时，必须保持 inline 优先并输出一次 warning。
 4. `ConstraintDimension` 与 `Modifier.width/height/size` 冲突时，必须保持约束 dimension 优先。

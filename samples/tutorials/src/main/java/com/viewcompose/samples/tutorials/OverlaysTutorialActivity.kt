@@ -3,19 +3,19 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
-import com.viewcompose.overlay.android.host.AndroidOverlayHost
+import com.viewcompose.android.setUiContent
+import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Dialog
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Dialog
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.remember
 
 class OverlaysTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

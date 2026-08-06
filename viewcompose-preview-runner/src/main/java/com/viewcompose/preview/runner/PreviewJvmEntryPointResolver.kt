@@ -4,7 +4,7 @@ import com.viewcompose.preview.PreviewThemeProvider
 import com.viewcompose.preview.tooling.PreviewDescriptor
 import com.viewcompose.preview.tooling.PreviewDiagnostic
 import com.viewcompose.preview.tooling.PreviewDiagnosticSeverity
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier

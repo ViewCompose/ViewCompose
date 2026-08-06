@@ -10,17 +10,17 @@ import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.widget.core.DisposableEffect
-import com.viewcompose.widget.core.HorizontalPager
-import com.viewcompose.widget.core.NavigationBar
-import com.viewcompose.widget.core.ProvideImageLoader
-import com.viewcompose.widget.core.Scaffold
-import com.viewcompose.widget.core.SideEffect
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiTheme
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.rememberSaveable
+import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.HorizontalPager
+import com.viewcompose.ui.foundation.NavigationBar
+import com.viewcompose.ui.foundation.ProvideImageLoader
+import com.viewcompose.ui.foundation.Scaffold
+import com.viewcompose.ui.foundation.SideEffect
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiTheme
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.rememberSaveable
 
 /**
  * demo 首页根脚手架，承载目录、诊断、设置和关于四个顶层页面。

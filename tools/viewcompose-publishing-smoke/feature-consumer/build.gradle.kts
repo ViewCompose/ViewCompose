@@ -28,10 +28,10 @@ fun viewCompose(module: String): String =
     "$viewComposeGroup:$module:${checkNotNull(viewComposeVersions[module])}"
 
 dependencies {
-    implementation(viewCompose("viewcompose-navigation"))
+    implementation(viewCompose("viewcompose-navigation-android"))
     implementation(viewCompose("viewcompose-animation"))
     implementation(viewCompose("viewcompose-gesture"))
     implementation(viewCompose("viewcompose-graphics"))
     implementation(viewCompose("viewcompose-shadow-android"))
-    implementation(viewCompose("viewcompose-widget-constraintlayout"))
+    implementation(viewCompose("viewcompose-constraintlayout-androidx"))
 }

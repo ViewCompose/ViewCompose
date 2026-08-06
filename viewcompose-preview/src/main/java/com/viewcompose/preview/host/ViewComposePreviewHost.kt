@@ -9,14 +9,15 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.viewcompose.host.android.RenderSession
+import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.preview.tooling.PreviewTheme
-import com.viewcompose.widget.core.OverlayHost
-import com.viewcompose.widget.core.OverlayHostDefaults
-import com.viewcompose.widget.core.UiEnvironment
-import com.viewcompose.widget.core.UiTheme
-import com.viewcompose.widget.core.UiThemeDefaults
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.OverlayHost
+import com.viewcompose.ui.foundation.OverlayHostDefaults
+import com.viewcompose.ui.foundation.UiEnvironment
+import com.viewcompose.ui.foundation.UiTheme
+import com.viewcompose.ui.foundation.UiThemeDefaults
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Embeds a ViewCompose render session in a Compose `AndroidView` host.
@@ -69,7 +70,7 @@ fun ViewComposePreviewHost(
                     themeMode = themeMode,
                 ),
                 content = {
-                    UiEnvironment(androidContext = container.context) {
+                    UiEnvironment(values = AndroidEnvironmentBridge.fromContext(container.context)) {
                         UiTheme(
                             tokens = when (themeMode) {
                                 PreviewTheme.Light -> UiThemeDefaults.light()

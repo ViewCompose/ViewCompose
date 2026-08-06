@@ -11,7 +11,7 @@ import com.viewcompose.graphics.drawBehind
 import com.viewcompose.graphics.drawWithCache
 import com.viewcompose.graphics.drawWithContent
 import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 fun UiTreeBuilder.canvasSample() {
     Canvas { context ->

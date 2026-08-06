@@ -1,6 +1,6 @@
 ---
 translation_source: guides/focus-and-input.md
-translation_source_hash: 1710dd7c7e2d61b847ba556da4521a003d4aa0bcb942389df6a1fe7e4db40898
+translation_source_hash: 52fb3b4d11198b94493275be5a434d6bc130ea855a66b94780c908e19a3bfd6f
 translation_status: current
 ---
 
@@ -11,8 +11,8 @@ translation_status: current
 焦点契约分为三层：
 
 1. `viewcompose-ui-contract` 拥有平台无关的焦点方向、requester 状态、焦点属性和按键事件值。
-2. `viewcompose-renderer` 把这些契约绑定到 Android `View` 焦点与按键分发。
-3. `viewcompose-widget-core` 通过 `LocalFocusManager.current` 暴露当前渲染 Session。
+2. `viewcompose-renderer-android` 把这些契约绑定到 Android `View` 焦点与按键分发。
+3. `viewcompose-ui-foundation` 通过 `LocalFocusManager.current` 暴露当前渲染 Session。
 
 `FocusRequester` 不直接持有 View。节点挂载、重新绑定、回滚和销毁时，由渲染器连接或断开
 connector。

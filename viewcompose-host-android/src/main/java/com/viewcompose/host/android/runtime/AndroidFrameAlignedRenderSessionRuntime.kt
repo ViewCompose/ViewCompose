@@ -1,7 +1,7 @@
 package com.viewcompose.host.android.runtime
 
 import android.os.Trace
-import com.viewcompose.widget.core.RenderSessionRuntime
+import com.viewcompose.ui.foundation.RenderSessionRuntime
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**

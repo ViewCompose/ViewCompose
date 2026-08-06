@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-shadow-android/README.md
-translation_source_hash: c4f29eb91d936f6cdb17edb10a3b7bee33692c1ed59e8233d612a2de605b578c
+translation_source_hash: bdb9712a701438e8a66eb62746042683c9766bfa27868c161d80c1e137d9a574
 translation_status: current
 ---
 
@@ -76,7 +76,7 @@ API 29 以下、Software Canvas 或 RenderNode 运行时失败都会回退到 Bi
 
 ## 相关文档
 
-- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer)
+- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
 - [UI Contract 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract)
 - [Graphics 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-graphics)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)

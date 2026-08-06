@@ -26,7 +26,7 @@ android {
 dependencies {
     api(project(":viewcompose-graphics-core"))
     api(project(":viewcompose-ui-contract"))
-    api(project(":viewcompose-widget-core"))
+    api(project(":viewcompose-ui-foundation"))
     implementation(project(":viewcompose-runtime"))
     testImplementation(libs.junit)
 }

@@ -16,6 +16,14 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        // Source-tree Maven samples resolve the exact artifacts produced by the current checkout.
+        // Release consumers use Maven Central; this repository never escapes the build directory.
+        maven {
+            url = uri(layout.rootDirectory.dir("build/maven-repository"))
+            content {
+                includeGroup("com.viewcompose")
+            }
+        }
         google()
         mavenCentral()
     }
@@ -30,16 +38,18 @@ include(":viewcompose-runtime")
 include(":viewcompose-text-core")
 include(":viewcompose-ui-contract")
 include(":viewcompose-navigation-core")
-include(":viewcompose-navigation")
-include(":viewcompose-renderer")
-include(":viewcompose-widget-core")
+include(":viewcompose-navigation-android")
+include(":viewcompose-renderer-android")
+include(":viewcompose-ui-foundation")
 include(":viewcompose-host-android")
-include(":viewcompose-overlay-android")
+include(":viewcompose-material3")
+include(":viewcompose-android")
+include(":viewcompose-overlay-material3-android")
 include(":viewcompose-image-coil")
 include(":viewcompose-image-glide")
 include(":viewcompose-benchmark")
-include(":viewcompose-lifecycle")
-include(":viewcompose-viewmodel")
+include(":viewcompose-lifecycle-androidx")
+include(":viewcompose-viewmodel-androidx")
 include(":viewcompose-preview-core")
 include(":viewcompose-preview-gradle-plugin")
 include(":viewcompose-preview-runner")
@@ -52,5 +62,5 @@ include(":viewcompose-gesture-core")
 include(":viewcompose-graphics")
 include(":viewcompose-graphics-core")
 include(":viewcompose-shadow-android")
-include(":viewcompose-widget-constraintlayout")
+include(":viewcompose-constraintlayout-androidx")
  

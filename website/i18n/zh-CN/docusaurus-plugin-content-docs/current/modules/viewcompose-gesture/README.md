@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture/README.md
-translation_source_hash: d8e1e7685e4a9320a16e50749ac5cb4d55e7e89fdd686ddec95d1f19db3b713b
+translation_source_hash: f736a35a549d0b294f602bc67818a640924afe958e8c0b5fddbb3236e156f56a
 translation_status: current
 ---
 
@@ -21,7 +21,7 @@ dependencies {
 - 稳定性：**Alpha**。Modifier 形态与当前状态语义已经审查并测试；手势仲裁和更完整的 Mutation
   API 在 Alpha 版本间仍可能演进。
 - 平台：Android Library API，但公开值保持 Renderer-neutral。
-- Gesture Core、Runtime、UI Contract 和 Widget Core 会被传递暴露，因为它们的策略、State、
+- Gesture Core、Runtime、UI Contract 和 UI Foundation 会被传递暴露，因为它们的策略、State、
   Modifier 和 Builder 类型出现在公开手势 API 中。
 - 大多数应用应依赖本产物，而不是直接依赖 Gesture Core。
 
@@ -118,7 +118,7 @@ Post 回调在之后。可选 `NestedScrollDispatcher` 支持应用主动派发�
 
 - [Gesture Core 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-gesture-core)
 - [UI Contract 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract)
-- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer)
+- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 
 完整生成参考位于

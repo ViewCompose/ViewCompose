@@ -62,7 +62,13 @@ export function rewriteSnapshotLinks(content, {artifact, order, entries, sourceP
     const target = rawTarget.trim().replace(/^<|>$/gu, '');
     if (!target.startsWith('.')) return link;
     const route = routeForMarkdown(sourcePath, target);
-    return route ? `](${route})` : link;
+    if (!route) return link;
+    const moduleRoute = /^\/modules\/(viewcompose-[a-z0-9-]+)\/(#.*)?$/u.exec(route);
+    if (!moduleRoute) return `](${route})`;
+    const version = versionAtRelease(moduleRoute[1]);
+    return version
+      ? `](/modules/${moduleRoute[1]}/${version}/${moduleRoute[2] ?? ''})`
+      : `](${route})`;
   });
   return rewritten;
 }
@@ -93,7 +99,7 @@ custom_edit_url: null
 > **Released documentation snapshot.** This immutable manual describes
 > \`${entry.artifact}:${entry.version}\` from
 > [source revision \`${entry.sourceRevision.slice(0, 8)}\`](${revisionUrl}). For current guidance,
-> open the [live module manual](/modules/${entry.artifact}/).
+> open the [current module catalog](/modules/).
 
 ${body.trim()}\n`;
 }

@@ -7,7 +7,7 @@ selection.
 
 The module contains no Android or AndroidX types. `Activity`, predictive Back, `LifecycleOwner`,
 `SavedStateRegistryOwner`, View mounting, transitions, and process-death adapters live in
-`viewcompose-navigation`.
+`viewcompose-navigation-android`.
 
 ## Artifact and stability
 

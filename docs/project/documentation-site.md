@@ -20,7 +20,12 @@ The production artifact is assembled in seven explicit stages:
 4. `verifyCompleteViewComposeApiDocs` groups the immutable release registry by source revision,
    reconstructs each revision in a temporary workspace, runs the current maintained Dokka tooling,
    copies every released artifact/version tree to ignored paths under `website/generated/api/`, and
-   verifies the complete manifest, immutable routes, aliases, and pinned source links.
+   verifies the complete manifest, immutable routes, aliases, and pinned source links. Artifacts in
+   `release.unpublishedModules` instead generate only a mutable `current` API tree from the working
+   source; they never receive a fabricated immutable version route.
+   When a frozen revision predates the dependency-contract registry, the temporary documentation
+   workspace synthesizes empty registry rows only to configure current Dokka tooling; compilation
+   still follows that revision's Gradle build and the synthetic rows are never published.
 5. the website generators read publishing metadata, the immutable release registry, and
    `docs/modules/README.md`. They generate the catalog plus one module-manual snapshot per released
    artifact/version from the same frozen Git revision; they do not maintain a second registry.
@@ -73,9 +78,10 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Non-API output is
-limited to 40 MiB. Immutable artifact/version trees may average at most 4.5 MiB and no individual
-tree may exceed 24 MiB; manifests and mutable aliases have a separate 1 MiB allowance. The other
-ceilings are 120 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for
+limited to 40 MiB. Immutable artifact/version trees and working-tree `current` Dokka for unpublished
+artifacts share the API-tree budget: they may average at most 4.5 MiB and no individual tree may
+exceed 24 MiB. Only manifests and redirect aliases use the separate 1 MiB routing allowance. The
+other ceilings are 120 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for
 JavaScript, 128 KiB for CSS, and 4 MiB for each locale's search index. The gate also rejects any
 locale-prefixed API copy. Raise a threshold only with a measured explanation of the reader or
 release value that requires the additional cost.
@@ -93,9 +99,10 @@ rejects the removed standalone Maven-coordinate banner on either homepage.
 ## Released versions and aliases
 
 Immutable API trees use `/api/<artifact>/<version>/`. The mutable `current` alias follows the
-version currently registered by the repository. The `latest` alias is generated only for stable
-versions; alpha, beta, release-candidate, snapshot, preview, development, and EAP versions must not
-silently become `latest`.
+version currently registered by the repository. Before an artifact's first release, its `current`
+route contains Dokka generated from the working source and no versioned route exists. The `latest`
+alias is generated only for stable versions; alpha, beta, release-candidate, snapshot, preview,
+development, and EAP versions must not silently become `latest`.
 
 Immutable module-manual snapshots use `/modules/<artifact>/<version>`; the unversioned
 `/modules/<artifact>` page remains the maintained current guide. Historical manuals are generated
@@ -110,6 +117,13 @@ verification rejects missing or movable source links. Because recording a commit
 metadata commit, release preparation uses two steps: freeze module source and manual in one commit,
 then append the history entry and update version/revision metadata in a metadata-only release
 commit. The frozen commit must be pushed and remain reachable from Git history.
+
+`release.retiredModules` keeps superseded coordinates valid in immutable documentation history
+without returning them to the active module catalog; the API landing lists them in a separate
+Retired history group. `release.unpublishedModules` is allowed only for active artifacts before
+their first release; the API landing links their working-tree `current` output and labels them
+unreleased. Remove an artifact from that list in the same release metadata change that appends its
+first immutable documentation entry.
 
 `verifyAssembledViewComposeApiDocs` validates an explicit local subset selected with
 `-PviewComposeDocsModules`. Deployment and complete-catalog CI must use
@@ -162,8 +176,8 @@ identity token.
   links are the only links explicitly exempted from its route graph.
 - If the accessibility gate fails, fix the rendered page or theme component. Do not suppress a
   rule because a minifier formats otherwise valid HTML differently.
-- If a site budget fails, inspect whether the regression is non-API output, API average, one API
-  version, routing overhead, or a locale-prefixed duplicate. Remove the regression or document and
+- If a site budget fails, inspect whether the regression is non-API output, API-tree average, one
+  immutable or unpublished-current API tree, routing overhead, or a locale-prefixed duplicate. Remove the regression or document and
   review an intentional threshold change; do not restore a fixed total-output ceiling that fails
   merely because valid immutable release entries were appended.
 - If translation verification reports source drift, review and update the Chinese meaning before
@@ -178,11 +192,11 @@ identity token.
 
 ## Last verified
 
-2026-08-04: a clean complete-history build reconstructed all 25 released artifact versions from the
-recorded frozen revision and passed immutable source-link, manifest, `current`, and stable-only
-`latest` verification. The production site verified 25 API routes, 25 English module-manual
-snapshots, 25 `zh-CN` English-fallback snapshot routes, language placement, translation freshness,
-local search, compatibility redirects, and 208 site-owned accessibility pages. Removing the unused
-locale-prefixed Dokka copy reduced the measured output to 115.7 MiB; non-API output was 25.1 MiB,
-the 25 API versions averaged 3.6 MiB, the largest JavaScript asset was 650 KiB, and the full site
-build took 20.0 seconds.
+2026-08-06: a clean complete-history build reconstructed 69 immutable artifact versions and built
+9 unpublished `current` API trees from the working source. It passed immutable source-link,
+manifest, retired-history, current/unreleased, and stable-only `latest` verification. The production
+site verified 69 English module-manual snapshots, 69 `zh-CN` English-fallback snapshot routes,
+language placement, 80 current Chinese mirrors, local search, compatibility redirects, and 310
+site-owned accessibility pages. Measured output was 316.3 MiB; non-API output was 32.9 MiB, the 78
+API trees averaged 3.6 MiB, routing overhead was below the displayed 0.1 MiB precision, the largest
+JavaScript asset was 650 KiB, and the full site build took 24.2 seconds.

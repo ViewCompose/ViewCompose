@@ -13,14 +13,14 @@ This page is standalone. Dialog presentation requires the separate Android overl
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
-    implementation("com.viewcompose:viewcompose-overlay-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
 ```
 
-Without `viewcompose-overlay-android` and `overlayHostFactory`, the `Dialog` declaration has no
+Without `viewcompose-overlay-material3-android` and `overlayHostFactory`, the `Dialog` declaration has no
 Android presenter.
 
 ## Show a confirmation dialog
@@ -33,19 +33,19 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
-import com.viewcompose.overlay.android.host.AndroidOverlayHost
+import com.viewcompose.android.setUiContent
+import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Dialog
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Dialog
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.remember
 
 class OverlaysTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -6,8 +6,8 @@ The focus contract is split into three layers:
 
 1. `viewcompose-ui-contract` owns platform-independent focus directions, requester state,
    focus properties, and key-event values.
-2. `viewcompose-renderer` binds those contracts to Android `View` focus and key dispatch.
-3. `viewcompose-widget-core` exposes the current render session through
+2. `viewcompose-renderer-android` binds those contracts to Android `View` focus and key dispatch.
+3. `viewcompose-ui-foundation` exposes the current render session through
    `LocalFocusManager.current`.
 
 Focus requesters never retain a `View` directly. The renderer attaches and detaches connectors as

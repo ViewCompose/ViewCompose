@@ -2,7 +2,7 @@
 title: 使用状态与事件
 sidebar_position: 3
 translation_source: tutorials/state-and-events.md
-translation_source_hash: c03513f45a73dd17c375699ae57895cad9bb38886211b52813b114e3d4f3efe6
+translation_source_hash: 8311aee50c26ca6a9d56ce20fb0d61e03898cb9012e35ac10dc6666fed5adc66
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -33,17 +33,17 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.remember
 
 class StateTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

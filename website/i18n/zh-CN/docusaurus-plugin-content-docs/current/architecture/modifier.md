@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 5d35605216c1b4b0c2190103ac78bf9deb3e557d3ef9269a3af324befc65281d
+translation_source_hash: 5af23e7752e0c64e91abe9c04e4d1131682e8f7f11084ca22b0b5d4dfdfb6c71
 translation_status: current
 ---
 
@@ -113,23 +113,23 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `gesturePriority` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 设置手势优先级 | 全局 | 用于嵌套冲突仲裁 |
 | `nestedScroll` | `viewcompose-gesture` / `com.viewcompose.gesture` | public | 声明父子滚动与 fling 消费协议 | 全局 | 透明宿主接入 AndroidX nested-scrolling 链 |
 | `animateContentSize` | `viewcompose-animation` / `com.viewcompose.animation` | public | 节点尺寸变化动画 | 全局（布局参与） | 非视觉缩放，真实参与父布局重排 |
-| `constrainAs` | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 按 `ConstraintReference` 声明子项约束 | 指定容器 | 仅 `ConstraintLayout` 子项有效 |
-| `constrain` | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 通过字符串 ID 声明子项约束 | 指定容器 | `constrainAs` 的短写风格入口 |
+| `constrainAs` | `viewcompose-constraintlayout-androidx` / `com.viewcompose.constraintlayout` | public | 按 `ConstraintReference` 声明子项约束 | 指定容器 | 仅 `ConstraintLayout` 子项有效 |
+| `constrain` | `viewcompose-constraintlayout-androidx` / `com.viewcompose.constraintlayout` | public | 通过字符串 ID 声明子项约束 | 指定容器 | `constrainAs` 的短写风格入口 |
 | `nativeView` | `viewcompose-host-android` / `com.viewcompose.host.android` | public | 直接配置底层 Android `View` | Android interop | 逃生通道，绕过通用语义层 |
 | `androidAnimation` | `viewcompose-host-android` / `com.viewcompose.host.android.animation` | public | 配置 Android 动画互操作 | Android interop | 基于 `nativeView` 封装别名 |
 | `androidGraphics` | `viewcompose-host-android` / `com.viewcompose.host.android.graphics` | public | 配置 Android 图形互操作 | Android interop | 基于 `nativeView` 封装别名 |
-| `resolve` | `viewcompose-renderer` / `com.viewcompose.renderer.modifier` | internal | 将 modifier 链解析为 `ResolvedModifiers` | renderer internal | 框架内部 API，业务侧不可依赖 |
+| `resolve` | `viewcompose-renderer-android` / `com.viewcompose.renderer.modifier` | internal | 将 modifier 链解析为 `ResolvedModifiers` | renderer internal | 框架内部 API，业务侧不可依赖 |
 
 ### 3.4 作用域限定的 Modifier API
 
 | API | 作用域 | 模块/命名空间 | 可见性 | 用途备注 | 生效范围 | 补充说明 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `weight` | `RowScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置横向线性布局权重 | `Row` 子项 | 仅 `RowScope` 可用，要求 `weight > 0` |
-| `align` | `RowScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置交叉轴（垂直）对齐 | `Row` 子项 | 参数 `VerticalAlignment` |
-| `weight` | `ColumnScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置纵向线性布局权重 | `Column` 子项 | 仅 `ColumnScope` 可用，要求 `weight > 0` |
-| `align` | `ColumnScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置交叉轴（水平）对齐 | `Column` 子项 | 参数 `HorizontalAlignment` |
-| `align` | `BoxScope` | `viewcompose-widget-core` / `com.viewcompose.widget.core` | public | 设置子项在 Box 内对齐 | `Box` 子项 | 参数 `BoxAlignment` |
-| `constrainAs / constrain` | `ConstraintLayout` 子项上下文 | `viewcompose-widget-constraintlayout` / `com.viewcompose.widget.constraintlayout` | public | 声明子项约束 parent-data | `ConstraintLayout` 子项 | 入口是全局 `Modifier` 扩展，但语义仅在 `ConstraintLayout` 生效 |
+| `weight` | `RowScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置横向线性布局权重 | `Row` 子项 | 仅 `RowScope` 可用，要求 `weight > 0` |
+| `align` | `RowScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置交叉轴（垂直）对齐 | `Row` 子项 | 参数 `VerticalAlignment` |
+| `weight` | `ColumnScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置纵向线性布局权重 | `Column` 子项 | 仅 `ColumnScope` 可用，要求 `weight > 0` |
+| `align` | `ColumnScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置交叉轴（水平）对齐 | `Column` 子项 | 参数 `HorizontalAlignment` |
+| `align` | `BoxScope` | `viewcompose-ui-foundation` / `com.viewcompose.ui.foundation` | public | 设置子项在 Box 内对齐 | `Box` 子项 | 参数 `BoxAlignment` |
+| `constrainAs / constrain` | `ConstraintLayout` 子项上下文 | `viewcompose-constraintlayout-androidx` / `com.viewcompose.constraintlayout` | public | 声明子项约束 parent-data | `ConstraintLayout` 子项 | 入口是全局 `Modifier` 扩展，但语义仅在 `ConstraintLayout` 生效 |
 
 ### 3.5 高级阴影示例与约束
 

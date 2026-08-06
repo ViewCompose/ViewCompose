@@ -2,7 +2,7 @@
 title: 使用主题
 sidebar_position: 7
 translation_source: tutorials/theming.md
-translation_source_hash: d3ea9bf506cb10da8ccb092bd7154e73de98e11a160d78e21923c1330e1bfb99
+translation_source_hash: 0f4debeac7524b25913d4b895f66d5cfc0e1b851d5bcc54e9f89dd903c08792f
 translation_status: current
 ---
 
@@ -10,14 +10,14 @@ translation_status: current
 
 ## 必需依赖
 
-本页可以独立使用。主题 API 位于 `viewcompose-widget-core`，Android 主题解析由
+本页可以独立使用。主题 API 位于 `viewcompose-ui-foundation`，Android 主题解析由
 `viewcompose-host-android` 安装：
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -39,17 +39,17 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.Theme
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.Theme
 
 class ThemingTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

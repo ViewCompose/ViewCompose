@@ -4,16 +4,16 @@ import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.Checkbox
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.RadioButton
-import com.viewcompose.widget.core.Slider
-import com.viewcompose.widget.core.Switch
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Checkbox
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.RadioButton
+import com.viewcompose.ui.foundation.Slider
+import com.viewcompose.ui.foundation.Switch
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.remember
 
 @ViewComposePreview(name = "Checkbox", group = "Demo/Components")
 internal fun UiTreeBuilder.ShowcaseCheckbox() {

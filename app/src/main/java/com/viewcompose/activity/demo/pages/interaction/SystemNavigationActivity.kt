@@ -4,11 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.navigation.NavDeepLinkResult
 import com.viewcompose.navigation.NavHostController
 import com.viewcompose.navigation.core.NavStackSetSnapshot
-import com.viewcompose.overlay.android.host.AndroidOverlayHost
+import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.runtime.mutableStateOf
 
 /**

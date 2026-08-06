@@ -10,7 +10,7 @@ From the repository root, generate selected API references when iterating locall
 
 ```bash
 ./gradlew verifyAssembledViewComposeApiDocs \
-  -PviewComposeDocsModules=viewcompose-runtime,viewcompose-widget-core
+  -PviewComposeDocsModules=viewcompose-runtime,viewcompose-ui-foundation
 ```
 
 Then build the site:

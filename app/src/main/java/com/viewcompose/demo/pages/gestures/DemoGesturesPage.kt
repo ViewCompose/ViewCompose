@@ -31,17 +31,17 @@ import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.DisposableEffect
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.SurfaceVariant
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceVariant
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.UiTextStyle
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.unit.sp
 import kotlin.math.roundToInt
 

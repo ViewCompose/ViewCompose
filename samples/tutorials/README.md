@@ -4,13 +4,13 @@ This non-published Android application backs the independently readable ViewComp
 Every capability has one self-contained Activity file; tutorial files do not share application
 models or build a progressive showcase application.
 
-The base application depends only on the published
-`com.viewcompose:viewcompose-host-android:0.1.0-alpha03` coordinate. Runtime, UI-contract, widget,
-and text APIs are available transitively; renderer, lifecycle, and ViewModel integrations remain
-host runtime details unless a caller deliberately uses their advanced APIs. The module adds only
-the feature artifacts used across the tutorials, each at its independently published version, so
-the repository can compile all files in one quality-gate task. Each tutorial page lists only the
-complete subset needed for that specific Activity.
+The base application depends only on
+`com.viewcompose:viewcompose-android:0.1.0-alpha01`. Runtime, UI contract, UI Foundation, engine,
+Material 3 theme, Lifecycle, and ViewModel APIs are available transitively. The module adds only
+the optional feature artifacts used across the tutorials. `qaQuick` publishes the current checkout
+to `build/maven-repository` before compiling these Maven-coordinate consumers, so new artifact
+names and generated POM edges are verified before their first Central release. Each tutorial page
+lists only the complete subset needed for that Activity.
 
 Run the local checks with:
 

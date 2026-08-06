@@ -2,7 +2,7 @@ package com.viewcompose.samples.counter
 
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.ViewComposePreview
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * Renders the initial counter state through the native static-preview toolchain.

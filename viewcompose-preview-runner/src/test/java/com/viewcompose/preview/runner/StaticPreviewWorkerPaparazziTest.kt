@@ -42,16 +42,16 @@ import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.width
 import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.AndroidDynamicColorPolicy
-import com.viewcompose.widget.core.AndroidThemeBridge
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Environment
-import com.viewcompose.widget.core.LocalSaveableStateRegistry
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiThemeOrigin
-import com.viewcompose.widget.core.UiThemeTokens
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.material3.Material3DynamicColorPolicy
+import com.viewcompose.material3.Material3ThemeBridge
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Environment
+import com.viewcompose.ui.foundation.LocalSaveableStateRegistry
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiThemeOrigin
+import com.viewcompose.ui.foundation.UiThemeTokens
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.viewmodel.LocalViewModelStoreOwner
 import com.viewcompose.viewmodel.savedStateHandle
 import java.io.File
@@ -382,7 +382,7 @@ class StaticPreviewWorkerPaparazziTest {
                             "com.viewcompose.preview.runner.StaticPreviewWorkerPaparazziTestKt",
                         methodName = "resolvedStaticPreviewEntryPoint",
                         methodDescriptor =
-                            "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V",
+                            "(Lcom/viewcompose/ui/foundation/UiTreeBuilder;)V",
                     ),
                 ),
             )
@@ -413,7 +413,7 @@ class StaticPreviewWorkerPaparazziTest {
                     ownerClassName =
                         "com.viewcompose.preview.runner.StaticPreviewWorkerPaparazziTestKt",
                     methodName = "providerResolvedPreviewEntryPoint",
-                    methodDescriptor = "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V",
+                    methodDescriptor = "(Lcom/viewcompose/ui/foundation/UiTreeBuilder;)V",
                 ),
                 themeProviderClassName = PaparazziTestPreviewThemeProvider::class.java.name,
             ),
@@ -541,9 +541,9 @@ class StaticPreviewWorkerPaparazziTest {
                 base = paparazzi.context,
                 preview = themedRequest.configuration,
             )
-            val expectedBackground = AndroidThemeBridge.fromContext(
+            val expectedBackground = Material3ThemeBridge.fromContext(
                 context = configuredContext,
-                dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+                dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
             ).colors.background
 
             val mount = StaticPreviewRenderer.mount(
@@ -699,9 +699,9 @@ class PaparazziTestPreviewThemeProvider : PreviewThemeProvider {
         context: Context,
         theme: PreviewTheme,
     ): PreviewThemeResolution {
-        val tokens = AndroidThemeBridge.fromContext(
+        val tokens = Material3ThemeBridge.fromContext(
             context = context,
-            dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+            dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
         ).let { base ->
             base.copy(
                 colors = base.colors.copy(background = PROVIDER_BACKGROUND_COLOR),

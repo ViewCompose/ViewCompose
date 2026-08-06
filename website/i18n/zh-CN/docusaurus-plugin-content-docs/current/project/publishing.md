@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 88315b340019158e9e3ef2b5182d3bb0b78b38b1a43db00a72c510cb44c555ec
+translation_source_hash: 4b17d4b2c0c32edf5d6bf08777b8fd23c4ba1e044bffdaaeffa9da1d396081e5
 translation_status: current
 ---
 
@@ -42,7 +42,7 @@ maven/<artifact-id>/<version>
 ```text
 maven/viewcompose-runtime/0.1.0-alpha02
 maven/viewcompose-navigation-core/0.2.0
-maven/viewcompose-navigation/0.2.0
+maven/viewcompose-navigation-android/0.2.0
 ```
 
 同一个 Central deployment 的多个 tag 可以指向同一个仅元数据 release commit。tag 必须指向该
@@ -110,7 +110,7 @@ ViewCompose 为每个 PR 保存一份不可变 Changeset，而不维护一份共
   ],
   "ignored": [
     {
-      "artifact": "viewcompose-widget-core",
+      "artifact": "viewcompose-ui-foundation",
       "reason": "Only a test fixture changed; no published source or metadata changed."
     }
   ]
@@ -221,20 +221,20 @@ minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:<version-with-this-contract>")
+    implementation("com.viewcompose:viewcompose-android:<version-with-this-contract>")
 }
 ```
 
-`viewcompose-host-android` 会传递暴露 Runtime、UI Contract 与 Widget Core。Renderer、Lifecycle
-和 ViewModel 集成保持为 Host 私有实现；只有应用直接使用其高级 API 时才显式依赖。业务侧重复
-声明一个已经传递引入的产物不会产生 Gradle 冲突，但属于冗余；它应表达有意直接使用 API，而
-不是弥补错误的发布元数据。
+`viewcompose-android` 会传递暴露标准 UI Foundation、Android Engine、Material 3 Theme Bridge、
+Lifecycle 与 ViewModel 集成。`viewcompose-host-android` 保留为高级挂载和自定义集成使用的底层
+Engine 产物。业务侧重复声明一个已经传递引入的产物不会产生 Gradle 冲突，但属于冗余；它应表达
+有意直接使用 API，而不是弥补错误的发布元数据。
 
 Feature 产物会暴露编译其公开 API 所需的全部 ViewCompose 模块，包括平台无关 Core：
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
     implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
     implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
@@ -273,10 +273,10 @@ dependencies {
 可选 Feature 与纯 JVM Core 三条路径。这些检查进入发布配置和仓库验证流程；修改依赖边时，必须
 同步更新契约、所属模块手册与 Release Intent。
 
-Maven Central 尚未提供包含相应元数据的版本时，禁止提前把当前安装页或 Maven-backed 仓库 Sample
-切换为精简依赖集合。Central 发布成功后，再把 README、教程与 Sample 切换到精简集合，并在不含
-`build/maven-repository` 的干净 Checkout 中验证。这样可以保证源码变更等待首次公开发版期间，
-文档仍然真实可用。
+仓库内 Maven Sample 只有在同一门禁先把当前 Checkout 发布到 `build/maven-repository`，再通过
+生成的 POM 编译 Sample 时，才可以提前采用尚未公开的坐标。公开 Release Note 仍必须区分这种
+源码已验证状态与 Maven Central 可用状态。Central 发布成功后，还要在不含
+`build/maven-repository` 的干净 Checkout 中再次验证安装路径。
 
 Gradle Module Metadata 保留 `api`/`implementation` variant；同时为其他构建工具生成 Maven POM。
 每个制品发布 sources JAR 供 IDE 导航，并发布 javadoc JAR 满足仓库要求。
@@ -308,7 +308,7 @@ Host DSL 必需的 ViewCompose 基础模块。
 
 ```bash
 ./gradlew publishSelectedViewComposeToLocalRepository \
-  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation
+  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation-android
 ```
 
 选择性发布不会删除 repository，因此可以解析已 staged 的独立版本。全模块任务用于 snapshot QA；
@@ -316,7 +316,7 @@ Host DSL 必需的 ViewCompose 基础模块。
 
 ```bash
 ./gradlew verifySelectedViewComposeLocalRepository \
-  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation
+  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation-android
 
 ./gradlew inspectViewComposeLocalRepository
 
@@ -327,8 +327,11 @@ Host DSL 必需的 ViewCompose 基础模块。
 
 这些命令分别发布并验证独立集合、检查已有 repository、验证主制品/sources/docs/POM/checksum/
 stable signature/feature-to-core dependency，以及构建最小 Android Host、Android Feature 与纯
-JVM Core 三个 Consumer。完整发布任务不属于 `qaQuick`；日常 QA 只运行廉价
-coordinate/version 验证。
+JVM Core 三个 Consumer。`qaQuick` 会先把完整的当前制品集合发布到生成的本地 repository，从而在
+合并前覆盖 stable 签名和 Maven metadata。Counter preview sample 刻意消费公开的
+`viewcompose-android` 坐标而非 project dependency，因此 `qaPreview` 也会先执行同一本地发布。
+Repository 检查与隔离 Consumer 构建仍是显式的深层门禁；两个 QA 门禁都不会执行 Maven Central
+上传。
 
 ## 版本 override 与签名
 
@@ -336,7 +339,7 @@ coordinate/version 验证。
 
 ```bash
 ./gradlew publishViewComposeToLocalRepository \
-  -PviewComposeVersion.viewcompose-navigation=0.2.0-SNAPSHOT
+  -PviewComposeVersion.viewcompose-navigation-android=0.2.0-SNAPSHOT
 ```
 
 可用 `-PviewComposeGroup=...` 验证 namespace。特殊文档 dry run 可用
@@ -350,6 +353,10 @@ coordinate/version 验证。
 VIEWCOMPOSE_SIGNING_KEY
 VIEWCOMPOSE_SIGNING_PASSWORD
 ```
+
+PR CI 不持有可信 release key。每个 `qaQuick` 和 `qaPreview` job 都只在一次性 Runner 内生成一个
+短期、无保护的测试 key，用于覆盖本地 stable 制品签名；该 key 及其产物不会上传，也不作为公开
+发布信任依据。Maven Central 工作流必须使用上面的内存 release credentials。
 
 stable 必须签名，`-SNAPSHOT` 本地 QA 可不签名，secret 不得入库。
 

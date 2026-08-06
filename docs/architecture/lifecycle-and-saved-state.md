@@ -18,6 +18,11 @@ A `ComponentActivity.setUiContent` session is bound to the Activity lifecycle. A
 `Fragment.setUiContent` session is bound to the Fragment view lifecycle and is released when the
 view is destroyed.
 
+Activity/Fragment entry and automatic owner installation belong to `viewcompose-android`.
+`viewcompose-host-android` owns the low-level session, scheduler, `renderInto`, and Android saved-
+state bridge; it must not regain Activity/Fragment convenience APIs. Lifecycle-aware collection
+and ViewModel access remain in their named AndroidX integrations.
+
 Boundary rules:
 
 1. Calling `setUiContent` again releases the previous session first.

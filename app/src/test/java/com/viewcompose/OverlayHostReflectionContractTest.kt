@@ -5,7 +5,7 @@ package com.viewcompose
  * Test responsibility: covers Overlay Host Reflection Contract behavior in app demo and guards the contract against regressions.
  */
 
-import com.viewcompose.widget.core.OverlayHostFactoryProvider
+import com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.ServiceLoader
@@ -14,14 +14,14 @@ class OverlayHostReflectionContractTest {
     @Test
     fun androidOverlayHostProvider_isDiscoverableViaServiceLoader() {
         val providers = ServiceLoader.load(
-            OverlayHostFactoryProvider::class.java,
-            OverlayHostFactoryProvider::class.java.classLoader,
+            AndroidOverlayHostFactoryProvider::class.java,
+            AndroidOverlayHostFactoryProvider::class.java.classLoader,
         ).toList()
 
         assertTrue(
             "Missing Android overlay host service provider.",
             providers.any { provider ->
-                provider::class.java.name == "com.viewcompose.overlay.android.host.AndroidOverlayHostFactoryProvider"
+                provider::class.java.name == "com.viewcompose.overlay.material3.android.host.AndroidOverlayHostFactoryProvider"
             },
         )
     }

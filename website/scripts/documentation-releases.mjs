@@ -30,6 +30,20 @@ function required(properties, key) {
   return value;
 }
 
+function artifactSet(properties, key) {
+  const values = (properties.get(key) ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (new Set(values).size !== values.length) {
+    throw new Error(`${key} must contain unique artifact ids`);
+  }
+  for (const artifact of values) {
+    if (!modulePattern.test(artifact)) throw new Error(`${key} is invalid: ${artifact}`);
+  }
+  return new Set(values);
+}
+
 export function isStableRelease(version) {
   const qualifier = version.toLowerCase();
   return !['-alpha', '-beta', '-rc', '-snapshot', '-dev', '-preview', '-eap'].some(
@@ -80,9 +94,20 @@ export function parseDocumentationReleases({historyContent, publishingContent}) 
   }
   if (current.size === 0) throw new Error('No published modules were found');
 
+  const unpublished = artifactSet(publishing, 'release.unpublishedModules');
+  const retired = artifactSet(publishing, 'release.retiredModules');
+  const unknownUnpublished = [...unpublished].filter((artifact) => !current.has(artifact));
+  if (unknownUnpublished.length > 0) {
+    throw new Error(`Unknown unpublished artifacts: ${unknownUnpublished.sort().join(', ')}`);
+  }
+  const activeRetired = [...retired].filter((artifact) => current.has(artifact));
+  if (activeRetired.length > 0) {
+    throw new Error(`Retired artifacts remain active: ${activeRetired.sort().join(', ')}`);
+  }
+
   const seen = new Set();
   for (const entry of entries) {
-    if (!current.has(entry.artifact)) {
+    if (!current.has(entry.artifact) && !retired.has(entry.artifact)) {
       throw new Error(`Documentation history contains unknown artifact: ${entry.artifact}`);
     }
     const key = `${entry.artifact}|${entry.version}`;
@@ -96,7 +121,7 @@ export function parseDocumentationReleases({historyContent, publishingContent}) 
         entry.version === release.version &&
         entry.sourceRevision === release.sourceRevision,
     );
-    if (!found) {
+    if (!found && !unpublished.has(artifact)) {
       throw new Error(
         `Current publication ${artifact}:${release.version} at ${release.sourceRevision} ` +
           'is missing from immutable documentation history',
@@ -105,7 +130,7 @@ export function parseDocumentationReleases({historyContent, publishingContent}) 
   }
 
   entries.sort((left, right) => left.order - right.order || left.artifact.localeCompare(right.artifact));
-  return {entries, current};
+  return {entries, current, unpublished, retired};
 }
 
 export async function loadDocumentationReleases(repositoryRoot) {

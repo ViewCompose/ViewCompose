@@ -196,11 +196,11 @@ object UiNodeTooling {
         "com.viewcompose.runtime.",
         "com.viewcompose.host.android.runtime.",
     )
-    private const val UI_TREE_BUILDER_CLASS = "com.viewcompose.widget.core.UiTreeBuilder"
+    private const val UI_TREE_BUILDER_CLASS = "com.viewcompose.ui.foundation.UiTreeBuilder"
     private const val COMPOSER_LITE_CLASS =
         "com.viewcompose.runtime.composition.ComposerLite"
     private const val COMPOSER_CONTEXT_CLASS =
-        "com.viewcompose.widget.core.ComposerContext"
+        "com.viewcompose.ui.foundation.ComposerContext"
     private const val RENDER_SESSION_CLASS =
-        "com.viewcompose.widget.core.RenderSession"
+        "com.viewcompose.ui.foundation.RenderSession"
 }

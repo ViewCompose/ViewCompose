@@ -16,7 +16,7 @@ dependencies {
 - Stability: **Alpha**. Modifier shapes and current state semantics are reviewed and tested; gesture
   arbitration and richer mutation APIs may evolve between alphas.
 - Platform: Android library API, although the public values are renderer-neutral.
-- Gesture core, runtime, UI contract, and widget core are exposed transitively because their policy,
+- Gesture Core, Runtime, UI Contract, and UI Foundation are exposed transitively because their policy,
   state, modifier, and builder types appear in the public gesture surface.
 - Most applications should depend on this artifact rather than gesture core directly.
 
@@ -128,7 +128,7 @@ anchored nearest settle, invalid free orientation, priority encoding, and nested
 
 - [Gesture Core module](../viewcompose-gesture-core/README.md)
 - [UI Contract module](../viewcompose-ui-contract/README.md)
-- [Renderer module](../viewcompose-renderer/README.md)
+- [Renderer module](../viewcompose-renderer-android/README.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
 The complete generated reference is available in the

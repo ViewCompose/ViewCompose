@@ -14,17 +14,17 @@ import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.spec.ConstraintChainStyle
 import com.viewcompose.ui.node.spec.ConstraintDimension
-import com.viewcompose.widget.core.Box
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.FlowRow
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.ScrollableRow
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.SurfaceVariant
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.Theme
+import com.viewcompose.ui.foundation.Box
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.FlowRow
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.ScrollableRow
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceVariant
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.constraintlayout.*
+import com.viewcompose.constraintlayout.*
 
 internal object ContainerPreviewSpecs {
     val all: List<PreviewSpec> = listOf(

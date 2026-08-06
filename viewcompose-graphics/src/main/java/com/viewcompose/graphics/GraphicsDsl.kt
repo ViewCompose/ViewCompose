@@ -6,7 +6,7 @@ import com.viewcompose.ui.modifier.DrawWithCacheModifierElement
 import com.viewcompose.ui.modifier.DrawWithContentModifierElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.CanvasNodeProps
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /** Source-level alias for a command recorder invoked with the current draw context. */
 typealias DrawBlock = com.viewcompose.ui.graphics.DrawBlock

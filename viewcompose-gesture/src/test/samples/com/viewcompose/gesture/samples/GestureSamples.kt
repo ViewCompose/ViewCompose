@@ -18,7 +18,7 @@ import com.viewcompose.ui.gesture.NestedScrollSource
 import com.viewcompose.ui.gesture.PointerEventResult
 import com.viewcompose.ui.gesture.ScrollDelta
 import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 fun rawPointerInput(): Modifier {
     return Modifier.pointerInput(key = "canvas-input") { event ->

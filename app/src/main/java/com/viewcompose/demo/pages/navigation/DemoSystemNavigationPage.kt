@@ -26,15 +26,15 @@ import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
-import com.viewcompose.widget.core.IconButton
-import com.viewcompose.widget.core.NavigationBar
-import com.viewcompose.widget.core.Scaffold
-import com.viewcompose.widget.core.SideEffect
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.TopAppBar
-import com.viewcompose.widget.core.TopAppBarDefaults
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.rememberSaveable
+import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.NavigationBar
+import com.viewcompose.ui.foundation.Scaffold
+import com.viewcompose.ui.foundation.SideEffect
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.TopAppBar
+import com.viewcompose.ui.foundation.TopAppBarDefaults
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.rememberSaveable
 
 @ViewComposePreview(name = "System navigation", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewSystemNavigation() {

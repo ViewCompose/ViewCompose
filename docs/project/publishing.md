@@ -41,7 +41,7 @@ For example:
 ```text
 maven/viewcompose-runtime/0.1.0-alpha02
 maven/viewcompose-navigation-core/0.2.0
-maven/viewcompose-navigation/0.2.0
+maven/viewcompose-navigation-android/0.2.0
 ```
 
 All tags in one Central deployment may point to the same metadata-only release commit. The tag
@@ -119,7 +119,7 @@ until a new `release/changes/<unique>.json` file classifies it. The machine-read
   ],
   "ignored": [
     {
-      "artifact": "viewcompose-widget-core",
+      "artifact": "viewcompose-ui-foundation",
       "reason": "Only a test fixture changed; no published source or metadata changed."
     }
   ]
@@ -252,22 +252,22 @@ one ViewCompose coordinate:
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:<version-with-this-contract>")
+    implementation("com.viewcompose:viewcompose-android:<version-with-this-contract>")
 }
 ```
 
-`viewcompose-host-android` exposes runtime, UI contract, and widget core transitively. Renderer,
-lifecycle, and ViewModel integration remain private implementation details of the host unless an
-application directly uses their advanced APIs. Adding a second direct dependency on an already
-transitive artifact is harmless Gradle deduplication, but it is redundant and should communicate
-deliberate direct API usage rather than compensate for incorrect publication metadata.
+`viewcompose-android` exposes the standard UI Foundation, Android Engine, Material 3 theme bridge,
+Lifecycle, and ViewModel integrations transitively. `viewcompose-host-android` remains a low-level
+engine artifact for advanced mounting and custom integrations. Adding a second direct dependency
+on an already transitive artifact is harmless Gradle deduplication, but it is redundant and should
+communicate deliberate direct API usage rather than compensate for incorrect publication metadata.
 
 Feature artifacts expose every ViewCompose module required to compile their public surface,
 including their platform-neutral core artifact:
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-navigation:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
     implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
     implementation("com.viewcompose:viewcompose-graphics:0.1.0-alpha03")
@@ -311,11 +311,11 @@ host, optional-feature, and pure-JVM core paths against the generated repository
 part of the publishing configuration and repository verification workflows; changing a dependency
 edge requires updating the contract, the owning module manual, and release intent together.
 
-Do not switch current installation pages or Maven-backed repository samples to a reduced dependency
-set before Maven Central serves a release containing the corresponding metadata. After Central
-publication succeeds, update README, tutorials, and samples to the reduced set and verify them from
-a clean checkout without `build/maven-repository`. This ordering keeps documentation truthful while
-the source change is waiting for its first public release.
+Repository Maven samples may adopt an unpublished coordinate only when the same gate first
+publishes the current checkout to `build/maven-repository` and then compiles the sample through the
+generated POM. Public release notes must still distinguish this source-verified state from Maven
+Central availability. After Central publication succeeds, verify the installation path again from
+a clean checkout without `build/maven-repository`.
 
 Gradle Module Metadata preserves `api`/`implementation` variant semantics. Maven POMs are also
 generated for other build tools. Every artifact publishes a sources JAR for IDE source navigation
@@ -351,7 +351,7 @@ Publish only the artifacts that are independently evolving in the current releas
 
 ```bash
 ./gradlew publishSelectedViewComposeToLocalRepository \
-  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation
+  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation-android
 ```
 
 Selective publication never deletes the repository, so it can resolve already staged independent
@@ -362,7 +362,7 @@ Publish and validate only that independent release set:
 
 ```bash
 ./gradlew verifySelectedViewComposeLocalRepository \
-  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation
+  -PviewComposePublishModules=viewcompose-navigation-core,viewcompose-navigation-android
 ```
 
 Inspect an already generated repository without publishing again:
@@ -385,8 +385,12 @@ consumer, an Android feature consumer, and a pure JVM core consumer:
 ./gradlew verifyViewComposePublishedConsumption
 ```
 
-The full publication tasks are intentionally not part of `qaQuick`; only the cheap coordinate and
-version validation runs during normal project QA.
+`qaQuick` publishes the complete current artifact set to the generated local repository so stable
+signatures and Maven metadata are exercised before merge. `qaPreview` performs the same local
+publication first because the Counter preview sample deliberately consumes the public
+`viewcompose-android` coordinate instead of a project dependency. Repository inspection and the
+isolated published-consumer builds remain explicit deeper checks; Maven Central upload tasks are
+never part of either QA gate.
 
 ## Version overrides and signing
 
@@ -395,7 +399,7 @@ editing the file:
 
 ```bash
 ./gradlew publishViewComposeToLocalRepository \
-  -PviewComposeVersion.viewcompose-navigation=0.2.0-SNAPSHOT
+  -PviewComposeVersion.viewcompose-navigation-android=0.2.0-SNAPSHOT
 ```
 
 The group can be overridden for namespace validation with `-PviewComposeGroup=...`.
@@ -413,6 +417,11 @@ CI releases use in-memory PGP signing:
 VIEWCOMPOSE_SIGNING_KEY
 VIEWCOMPOSE_SIGNING_PASSWORD
 ```
+
+Pull-request CI does not have a trusted release key. Each `qaQuick` and `qaPreview` job generates a
+short-lived, unprotected test key inside its disposable runner solely to exercise local stable
+artifact signing. That key and its artifacts are never uploaded or trusted for a public release.
+Maven Central workflows must use the in-memory release credentials above.
 
 Stable versions always require signatures; `-SNAPSHOT` versions may remain unsigned for local QA.
 Secrets must remain outside the repository.

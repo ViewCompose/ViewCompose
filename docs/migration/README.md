@@ -10,10 +10,10 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-05**
+Last verified: **2026-08-06**
 
-Re-verification owner: **maintainers of the runtime, UI contract, Android host, and navigation
-module families**
+Re-verification owner: **maintainers of the Kernel, UI Foundation, Android Engine, Android
+aggregate, and navigation module families**
 
 ## Verified source and target states
 
@@ -21,10 +21,10 @@ The target is the following independently versioned ViewCompose set:
 
 | Module family | Artifacts | Verified version |
 | --- | --- | --- |
-| State and composition | `viewcompose-runtime`, `viewcompose-widget-core` | runtime `0.1.0-alpha02`; widget `0.1.0-alpha03` |
-| UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer`, `viewcompose-widget-constraintlayout` | `0.1.0-alpha03` |
-| Android ownership | `viewcompose-host-android`, `viewcompose-lifecycle`, `viewcompose-viewmodel` | `0.1.0-alpha03` |
-| Navigation | `viewcompose-navigation-core`, `viewcompose-navigation` | core `0.1.0-alpha02`; Android `0.1.0-alpha03` |
+| State and composition | `viewcompose-runtime`, `viewcompose-ui-foundation` | runtime `0.1.0-alpha02`; UI Foundation `0.1.0-alpha01` |
+| UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer-android`, `viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha03`; renderer/ConstraintLayout `0.1.0-alpha01` |
+| Android ownership | `viewcompose-android`, `viewcompose-host-android`, `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx` | aggregate/integrations `0.1.0-alpha01`; host `0.1.0-alpha03` |
+| Navigation | `viewcompose-navigation-core`, `viewcompose-navigation-android` | core `0.1.0-alpha02`; Android `0.1.0-alpha01` |
 
 The immutable release revisions are recorded in
 [`gradle/viewcompose-publishing.properties`](../../gradle/viewcompose-publishing.properties).
@@ -134,13 +134,13 @@ Documentation snippets are not a second source of truth. Use these compiled repo
   combines Activity hosting, remembered mutable state, View-backed layout, modifiers, and input;
 - [runtime samples](../../viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt)
   cover mutable and derived state, snapshot transactions, policies, observation, and composition;
-- [widget-core samples](../../viewcompose-widget-core/src/test/samples/com/viewcompose/widget/core/samples/WidgetCoreSamples.kt)
+- [UI Foundation samples](../../viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt)
   cover saveable-state registry and theme ownership;
-- [Android host samples](../../viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt)
+- [Android application-entry samples](../../viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt)
   cover Activity, Fragment, custom-container, and Android View hosting;
 - [navigation-core samples](../../viewcompose-navigation-core/src/test/samples/com/viewcompose/navigation/core/samples/NavigationCoreSamples.kt)
   cover graphs, deep links, transactions, and lifecycle planning; and
-- [Android navigation samples](../../viewcompose-navigation/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt)
+- [Android navigation samples](../../viewcompose-navigation-android/src/test/samples/com/viewcompose/navigation/samples/NavigationAndroidSamples.kt)
   cover remembered hosts, controller operations, and motion configuration.
 
 The root `qaQuick` task compiles these sample source sets or the tests that consume them. It also

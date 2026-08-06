@@ -17,7 +17,7 @@ dependencies {
 - Runtime: Android API 24 or newer.
 - Recommended scope: debug, test, or dedicated preview source sets. Application release code does
   not need the Compose bridge or catalog.
-- Transitive API: preview-core annotations/protocol, widget-core DSL and theme types, and the Compose
+- Transitive API: preview-core annotations/protocol, UI Foundation DSL and theme types, and the Compose
   runtime, UI, and preview annotations required by the bridge.
 
 ## Choose the preview path

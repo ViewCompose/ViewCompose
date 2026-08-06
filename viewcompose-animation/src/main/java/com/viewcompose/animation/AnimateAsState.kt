@@ -8,10 +8,10 @@ import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.unit.UiDp
-import com.viewcompose.widget.core.LaunchedEffect
-import com.viewcompose.widget.core.LocalAnimationCoroutineContext
-import com.viewcompose.widget.core.LocalMonotonicFrameClock
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.LaunchedEffect
+import com.viewcompose.ui.foundation.LocalAnimationCoroutineContext
+import com.viewcompose.ui.foundation.LocalMonotonicFrameClock
+import com.viewcompose.ui.foundation.remember
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 

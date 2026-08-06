@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-coil/README.md
-translation_source_hash: df5ea2cf0f839b88ce5e37d74bcfea1aa53117c2ce73d0492270efb749340921
+translation_source_hash: cfe0ffdb2f2b0ed65ccb2d610df3bd8385c9422dd419338693773a944076f27a
 translation_status: current
 ---
 
@@ -60,7 +60,7 @@ dependencies {
 ## 相关文档
 
 - [UI Contract 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract)
-- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer)
+- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
 - [图片加载指南](https://docs.viewcompose.com/zh-CN/guides/image-loading)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 

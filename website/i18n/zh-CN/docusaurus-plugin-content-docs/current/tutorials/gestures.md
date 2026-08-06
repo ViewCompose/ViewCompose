@@ -2,7 +2,7 @@
 title: 使用手势
 sidebar_position: 12
 translation_source: tutorials/gestures.md
-translation_source_hash: e434dd1d76882886a4b151d67d0df47b4f2b3c704dbcf602591954cc08e3b671
+translation_source_hash: 777c73e6d66a03e3acc67fe7b65f69a8475f4b8eae11e462100d1aacc539dabc
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
@@ -34,17 +34,17 @@ package com.viewcompose.samples.tutorials
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.viewcompose.gesture.combinedClickable
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.remember
 
 class GesturesTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

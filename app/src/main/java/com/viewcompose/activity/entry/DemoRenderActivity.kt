@@ -5,10 +5,10 @@ import android.os.Bundle
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import com.viewcompose.host.android.setUiContent
-import com.viewcompose.overlay.android.host.AndroidOverlayHost
-import com.viewcompose.widget.core.AndroidDynamicColorPolicy
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.android.setUiContent
+import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
+import com.viewcompose.material3.Material3DynamicColorPolicy
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * demo Activity 的 ViewCompose 渲染基类。
@@ -47,7 +47,7 @@ abstract class DemoRenderActivity : AppCompatActivity() {
             debugTag = "ViewComposeSample",
             // DemoThemeTokens are intentionally device-independent. Keep the native View context
             // on the same stable application theme instead of adding a wallpaper-derived overlay.
-            dynamicColorPolicy = AndroidDynamicColorPolicy.Disabled,
+            dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
             overlayHostFactory = ::AndroidOverlayHost,
             onRenderResult = DemoRenderDiagnosticsStore::record,
         ) { root ->

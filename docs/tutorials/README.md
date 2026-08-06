@@ -17,8 +17,8 @@ without completing another chapter.
 | accept editable text | [Use text input](./text-input.md) | none |
 | show a scrolling collection | [Use a lazy list](./lazy-lists.md) | none |
 | follow light, dark, and semantic colors | [Use themes](./theming.md) | none |
-| move between screens | [Use navigation](./navigation.md) | `viewcompose-navigation` |
-| show a dialog | [Use overlays](./overlays.md) | `viewcompose-overlay-android` |
+| move between screens | [Use navigation](./navigation.md) | `viewcompose-navigation-android` |
+| show a dialog | [Use overlays](./overlays.md) | `viewcompose-overlay-material3-android` |
 | embed a native View | [Use AndroidView](./android-view.md) | none |
 | show and hide content with motion | [Use AnimatedVisibility](./animation.md) | `viewcompose-animation` |
 | handle taps and long presses | [Use gestures](./gestures.md) | `viewcompose-gesture` |

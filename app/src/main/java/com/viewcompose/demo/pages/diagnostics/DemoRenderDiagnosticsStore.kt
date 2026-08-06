@@ -1,11 +1,11 @@
 package com.viewcompose
 
 import com.viewcompose.runtime.composition.CompositionDiagnostics
-import com.viewcompose.widget.core.RenderPatchRecord
-import com.viewcompose.widget.core.RenderStats
-import com.viewcompose.widget.core.RenderStructureStats
-import com.viewcompose.widget.core.RenderTreeNode
-import com.viewcompose.widget.core.RenderTreeResult
+import com.viewcompose.ui.foundation.RenderPatchRecord
+import com.viewcompose.ui.foundation.RenderStats
+import com.viewcompose.ui.foundation.RenderStructureStats
+import com.viewcompose.ui.foundation.RenderTreeNode
+import com.viewcompose.ui.foundation.RenderTreeResult
 
 /**
  * 记录一次渲染后的诊断快照，供 Diagnostics 页面展示 renderer 是否进入 patch-active 路径。

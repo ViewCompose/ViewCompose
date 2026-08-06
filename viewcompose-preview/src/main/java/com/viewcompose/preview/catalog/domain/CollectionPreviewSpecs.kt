@@ -8,17 +8,17 @@ import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.HorizontalPager
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.LazyVerticalGrid
-import com.viewcompose.widget.core.Surface
-import com.viewcompose.widget.core.SurfaceVariant
-import com.viewcompose.widget.core.TabRow
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.VerticalPager
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.HorizontalPager
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.LazyVerticalGrid
+import com.viewcompose.ui.foundation.Surface
+import com.viewcompose.ui.foundation.SurfaceVariant
+import com.viewcompose.ui.foundation.TabRow
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.VerticalPager
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.remember
 
 /**
  * 提供集合类组件的预览规格，覆盖列表、网格和导航栏的 catalog 示例。

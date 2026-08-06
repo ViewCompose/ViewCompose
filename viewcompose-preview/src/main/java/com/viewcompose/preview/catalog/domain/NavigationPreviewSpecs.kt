@@ -6,13 +6,13 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.BottomAppBar
-import com.viewcompose.widget.core.IconButton
-import com.viewcompose.widget.core.NavigationBar
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TopAppBar
+import com.viewcompose.ui.foundation.BottomAppBar
+import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.NavigationBar
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TopAppBar
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.node.ImageSource
 
 internal object NavigationPreviewSpecs {

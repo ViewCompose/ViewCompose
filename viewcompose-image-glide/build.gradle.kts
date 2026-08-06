@@ -29,7 +29,7 @@ android {
 
 dependencies {
     api(project(":viewcompose-ui-contract"))
-    implementation(project(":viewcompose-renderer"))
+    implementation(project(":viewcompose-renderer-android"))
     implementation(libs.glide)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

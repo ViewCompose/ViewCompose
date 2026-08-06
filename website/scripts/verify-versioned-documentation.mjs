@@ -103,7 +103,9 @@ export async function verifyVersionedDocumentation() {
     await requireFile(currentRedirect, failures);
     try {
       const redirect = await readFile(currentRedirect, 'utf8');
-      if (!redirect.includes(`../${current.version}/`)) {
+      if (releases.unpublished.has(artifact) && redirect.includes('http-equiv="refresh"')) {
+        failures.push(`api/${artifact}/current -> unpublished API must be generated from the working tree`);
+      } else if (!releases.unpublished.has(artifact) && !redirect.includes(`../${current.version}/`)) {
         failures.push(`api/${artifact}/current -> does not target ${current.version}`);
       }
     } catch {

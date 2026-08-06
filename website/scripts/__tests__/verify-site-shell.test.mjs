@@ -36,7 +36,7 @@ test('rejects the removed standalone Maven coordinate', () => {
   const result = analyzeSiteShellPages({
     'index.html': homepage(
       'theme-viewcompose-docs',
-      '<main>com.viewcompose:viewcompose-widget-core:0.1.0-alpha01</main>',
+      '<main>com.viewcompose:viewcompose-ui-foundation:0.1.0-alpha01</main>',
     ),
     'zh-CN/index.html': homepage('theme-viewcompose-docs'),
   });

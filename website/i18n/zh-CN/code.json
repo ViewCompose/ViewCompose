@@ -86,6 +86,15 @@
   "api.header.description": {
     "message": "每个 Maven 产物都独立发布 Kotlin KDoc 和 Java Javadoc。"
   },
+  "api.family.retired": {
+    "message": "已退役"
+  },
+  "api.module.retiredRole": {
+    "message": "已被替代的坐标；仅保留不可变发布历史"
+  },
+  "api.module.unreleased": {
+    "message": "未发布"
+  },
   "api.module.openReference": {
     "message": "打开 {version} 参考 →"
   },

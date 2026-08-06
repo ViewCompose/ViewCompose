@@ -3,9 +3,9 @@ package com.viewcompose
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiTreeBuilder
 
 @ViewComposePreview(name = "Roadmap placeholder", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewChapterPlaceholder() {

@@ -3,7 +3,7 @@ title: 能力教程
 sidebar_position: 2
 slug: /tutorials
 translation_source: tutorials/README.md
-translation_source_hash: 71e358fd93ececa5a78c7f0cbe38ce43b45abd363545865d51cdfb43e7ad07c7
+translation_source_hash: 3fb6e9833f9419c5a46103ab3c30bc94d2593bdebdbf25288391978fee35185f
 translation_status: current
 ---
 
@@ -19,8 +19,8 @@ Activity 文件，而且无需先完成其他章节就能编译运行。
 | 接收可编辑文本 | [使用文本输入](./text-input.md) | 无 |
 | 显示滚动集合 | [使用 Lazy 列表](./lazy-lists.md) | 无 |
 | 跟随明暗模式和语义颜色 | [使用主题](./theming.md) | 无 |
-| 在页面之间跳转 | [使用导航](./navigation.md) | `viewcompose-navigation` |
-| 显示对话框 | [使用 Overlay](./overlays.md) | `viewcompose-overlay-android` |
+| 在页面之间跳转 | [使用导航](./navigation.md) | `viewcompose-navigation-android` |
+| 显示对话框 | [使用 Overlay](./overlays.md) | `viewcompose-overlay-material3-android` |
 | 嵌入原生 View | [使用 AndroidView](./android-view.md) | 无 |
 | 让内容以动画显示和隐藏 | [使用 AnimatedVisibility](./animation.md) | `viewcompose-animation` |
 | 处理点击和长按 | [使用手势](./gestures.md) | `viewcompose-gesture` |

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: 4dc63b8914c54d54a4fb97911b703060c7f4092825a6f043e278d6853c3b96fb
+translation_source_hash: 129fb84621cec7e97fbad3e63baea1c95f1bcbe560127a0ccc3696e9eee4c5df
 translation_status: current
 ---
 
@@ -21,7 +21,7 @@ dependencies {
 - 稳定性：**Alpha**。公开桥接与主题 Provider 契约在稳定版前可能随预览工具继续演进。
 - 运行环境：Android API 24 及以上。
 - 推荐作用域：debug、test 或专用 preview source set。应用 release 代码不需要 Compose 桥接和目录。
-- 传递 API：preview-core 注解/协议、widget-core DSL 与主题类型，以及桥接需要的 Compose runtime、UI
+- 传递 API：preview-core 注解/协议、UI Foundation DSL 与主题类型，以及桥接需要的 Compose runtime、UI
   和 preview 注解。
 
 ## 选择预览路径

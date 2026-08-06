@@ -23,22 +23,21 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+    sourceSets["test"].java.srcDir("src/test/samples")
 }
 
 dependencies {
     api(project(":viewcompose-runtime"))
     api(project(":viewcompose-ui-contract"))
-    api(project(":viewcompose-widget-core"))
-    implementation(project(":viewcompose-lifecycle"))
-    implementation(project(":viewcompose-viewmodel"))
-    implementation(project(":viewcompose-renderer"))
+    api(project(":viewcompose-ui-foundation"))
+    implementation(project(":viewcompose-renderer-android"))
+    api(libs.androidx.lifecycle.runtime.ktx)
+    api(libs.androidx.savedstate)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.dynamicanimation)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }

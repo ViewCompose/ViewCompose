@@ -2,7 +2,7 @@
 title: 使用 AnimatedVisibility
 sidebar_position: 11
 translation_source: tutorials/animation.md
-translation_source_hash: f83fdb754300d4ce452647b14b15de1363c83e3ab8846bb211f4397ab7f13a26
+translation_source_hash: 4fa47846163ee27d66a35845b5e2fb4c444ccbb902b41b12b0829f0600ca0ec3
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
@@ -34,16 +34,16 @@ package com.viewcompose.samples.tutorials
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.viewcompose.animation.AnimatedVisibility
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Button
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.remember
 
 class AnimationTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -11,11 +11,12 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.UiEnvironment
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.UiEnvironment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -34,7 +35,7 @@ class DemoSectionsLayoutTest {
         val host = FrameLayout(context)
         val valueText = "snapshot|5|1760000000000|尚未捕获|1|1"
         val session = renderInto(host) {
-            UiEnvironment(androidContext = context) {
+            UiEnvironment(values = AndroidEnvironmentBridge.fromContext(context)) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     DiagnosticFactGroup(
                         title = "Renderer",

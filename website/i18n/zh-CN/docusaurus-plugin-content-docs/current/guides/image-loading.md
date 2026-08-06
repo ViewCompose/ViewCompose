@@ -2,7 +2,7 @@
 title: 图片加载
 slug: /guides/image-loading
 translation_source: guides/image-loading.md
-translation_source_hash: 22d5b8d0d9e8e1c8d469c7e3239b53cf0bd19d2e1ae003121abf1730ceeac558
+translation_source_hash: 617bba6b0ae1f7e368c3319e681c1da855c2d5c8063e9a33d551404b59293085
 translation_status: current
 ---
 
@@ -163,11 +163,11 @@ ProvideImageLoader(imageLoader) {
 - 在首个操作完成前，把一行从一个 source 重新绑定到另一个 source。
 - 释放挂载树，并确认延迟回调不会写入旧 `ImageView`。
 - 测试 placeholder、error、fallback、禁用缓存、显式尺寸和过渡行为。
-- 保持适配器依赖可选；UI Contract、Widget Core 与 Renderer 必须在没有它们时仍能编译。
+- 保持适配器依赖可选；UI Contract、UI Foundation 与 Renderer 必须在没有它们时仍能编译。
 
 ## 相关文档
 
 - [UI Contract 模块](../modules/viewcompose-ui-contract/README.md)
-- [Widget Core 模块](../modules/viewcompose-widget-core/README.md)
-- [Renderer 模块](../modules/viewcompose-renderer/README.md)
+- [UI Foundation 模块](../modules/viewcompose-ui-foundation/README.md)
+- [Renderer 模块](../modules/viewcompose-renderer-android/README.md)
 - [迁移图片加载](../migration/image-loading.md)

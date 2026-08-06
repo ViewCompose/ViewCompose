@@ -45,13 +45,14 @@ Navigation 2, or Navigation 3.
 
 The required and conditional work can affect:
 
-- `viewcompose-host-android`: Fragment hosting, ViewTree owner integration, frame/session terminal
-  behavior, and Android View public callback documentation;
-- `viewcompose-runtime` and `viewcompose-widget-core`: keyed composition identity, remember/effect
+- `viewcompose-android`: Activity/Fragment hosting and automatic owner integration;
+- `viewcompose-host-android`: low-level ViewTree owner integration, frame/session terminal behavior,
+  and Android View public callback documentation;
+- `viewcompose-runtime` and `viewcompose-ui-foundation`: keyed composition identity, remember/effect
   movement, saveable-state claim recovery, and focused snapshot/derived-state correctness tests;
-- `viewcompose-navigation-core` and `viewcompose-navigation`: entry and graph owners, atomic stack
+- `viewcompose-navigation-core` and `viewcompose-navigation-android`: entry and graph owners, atomic stack
   commands, deep-link query policy, retained destination diagnostics, and process restoration;
-- `viewcompose-ui-contract`, `viewcompose-renderer`, and layout-owning widget modules: logical edge
+- `viewcompose-ui-contract`, `viewcompose-renderer-android`, and layout-owning widget modules: logical edge
   contracts, scoped Box parent data, WindowInsets application and consumption, and renderer
   diagnostics;
 - `viewcompose-benchmark`, Demo/device certification surfaces, and owning module tests where a
@@ -564,9 +565,10 @@ public pages.
 
 Use the documentation impact matrix as follows:
 
-- Fragment or session behavior updates the host module manual, host migration page, and applicable
-  architecture/guide pages;
-- key, snapshot, remember, or saveable behavior updates runtime/widget-core manuals and the state
+- Fragment entry behavior updates the Android aggregate manual; low-level session behavior updates
+  the host-engine manual. Both update the host migration page and applicable architecture/guide
+  pages;
+- key, snapshot, remember, or saveable behavior updates Runtime/UI Foundation manuals and the state
   migration page;
 - logical edges, Box parent data, or Insets update contract/renderer module manuals and the layout
   migration page;

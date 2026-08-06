@@ -5,9 +5,9 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
 
 @ViewComposePreview(name = "Modifiers · Visual", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewModifiersVisual() {

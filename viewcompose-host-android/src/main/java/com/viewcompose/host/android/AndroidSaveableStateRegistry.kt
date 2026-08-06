@@ -10,8 +10,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryOwner
-import com.viewcompose.widget.core.SaveableStateRegistry
-import com.viewcompose.widget.core.createSaveableStateRegistry
+import com.viewcompose.ui.foundation.SaveableStateRegistry
+import com.viewcompose.ui.foundation.createSaveableStateRegistry
 import java.io.Serializable
 import java.util.IdentityHashMap
 

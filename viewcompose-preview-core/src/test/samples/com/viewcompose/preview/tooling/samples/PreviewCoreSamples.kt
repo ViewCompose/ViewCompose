@@ -32,7 +32,7 @@ fun previewProtocolRoundTripSample(): PreviewRenderRequest {
             entryPoint = PreviewJvmEntryPoint(
                 ownerClassName = "com.example.AccountPreviewsKt",
                 methodName = "accountPreview",
-                methodDescriptor = "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V",
+                methodDescriptor = "(Lcom/viewcompose/ui/foundation/UiTreeBuilder;)V",
             ),
             variants = listOf(variant),
         ),

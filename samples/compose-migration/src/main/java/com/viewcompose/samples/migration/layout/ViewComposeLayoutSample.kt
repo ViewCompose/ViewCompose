@@ -5,12 +5,12 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.ProvideLocal
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.UiLocals
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.uiLocalOf
+import com.viewcompose.ui.foundation.ProvideLocal
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiLocals
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.uiLocalOf
 
 // DOCS_REGION_START(viewcompose-layout)
 private val LocalContentPadding = uiLocalOf { 8.dp }

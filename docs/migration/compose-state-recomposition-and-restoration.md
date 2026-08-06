@@ -5,10 +5,10 @@ defines a migration path from a Compose-owned UI to a ViewCompose-owned Android 
 an engineering comparison, not a source-compatibility promise: similarly named APIs do not imply
 identical compiler, invalidation, identity, or restoration behavior.
 
-Last verified: **2026-08-05**
+Last verified: **2026-08-06**
 
-Re-verification owner: **maintainers of `viewcompose-runtime`, `viewcompose-widget-core`, and
-`viewcompose-host-android`**
+Re-verification owner: **maintainers of `viewcompose-runtime`, `viewcompose-ui-foundation`,
+`viewcompose-android`, and the AndroidX lifecycle integrations**
 
 ## Baseline and comparison rules
 
@@ -17,10 +17,11 @@ The supported comparison target is the following independently versioned ViewCom
 | Artifact | Version | Role in this page |
 | --- | --- | --- |
 | `viewcompose-runtime` | `0.1.0-alpha02` | Mutable state, derived state, snapshots, observation, and `ComposerLite` |
-| `viewcompose-widget-core` | `0.1.0-alpha03` | `remember`, `key`, effects, `Saver`, and `rememberSaveable` |
-| `viewcompose-host-android` | `0.1.0-alpha03` | Activity/Fragment hosting and Android SavedState integration |
-| `viewcompose-lifecycle` | `0.1.0-alpha03` | Composition- and lifecycle-scoped state collection |
-| `viewcompose-viewmodel` | `0.1.0-alpha03` | AndroidX ViewModel and `SavedStateHandle` ownership |
+| `viewcompose-ui-foundation` | `0.1.0-alpha01` | `remember`, `key`, effects, `Saver`, and `rememberSaveable` |
+| `viewcompose-android` | `0.1.0-alpha01` | Activity/Fragment entry points and default Android owner installation |
+| `viewcompose-host-android` | `0.1.0-alpha03` | Low-level custom-container hosting and Android SavedState bridge |
+| `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | Composition- and lifecycle-scoped state collection |
+| `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | AndroidX ViewModel and `SavedStateHandle` ownership |
 
 The upstream stable semantic baseline is:
 
@@ -131,14 +132,14 @@ Do not begin by replacing API names. First decide which lifetime owns each value
 | --- | --- | --- |
 | One committed composition position | `remember` | Use for replaceable in-memory objects and state holders |
 | Composition plus Activity/Fragment recreation | `rememberSaveable` with an installed `SaveableStateRegistry` | Save only the minimum UI state needed to reconstruct the screen |
-| Screen or navigation destination business state | AndroidX `ViewModel` through `viewcompose-viewmodel` | The `ViewModelStoreOwner`, not the call position, defines lifetime |
+| Screen or navigation destination business state | AndroidX `ViewModel` through `viewcompose-viewmodel-androidx` | The `ViewModelStoreOwner`, not the call position, defines lifetime |
 | System-initiated process recreation for ViewModel state | `SavedStateHandle` | Store small reconstruction inputs rather than derived screen models |
 | Durable application data | Repository or database outside composition | Neither `rememberSaveable` nor `SavedStateHandle` is durable storage |
 
 Lifecycle `2.11.0` also provides Compose-specific scoped ViewModel APIs. They are relevant to the
 source application's ownership design, but ViewCompose destination, graph, Activity, and Fragment
 owners are installed through its own host and navigation integrations. See the
-[ViewModel integration manual](../modules/viewcompose-viewmodel/README.md) before translating a
+[ViewModel integration manual](../modules/viewcompose-viewmodel-androidx/README.md) before translating a
 Compose-scoped ViewModel boundary.
 
 ## Mutable state and mutation policies
@@ -249,7 +250,7 @@ The read-only-to-mutable nesting difference is inferred from the current impleme
 dedicated regression test. Treat it as a migration risk, not as a feature to depend on. Replace
 Compose snapshot collections with immutable collections stored in `MutableState`, or keep the
 collection in an external observable owner and collect it through
-[`viewcompose-lifecycle`](../modules/viewcompose-lifecycle/README.md).
+[`viewcompose-lifecycle-androidx`](../modules/viewcompose-lifecycle-androidx/README.md).
 
 ## Recomposition without the Compose compiler
 
@@ -279,7 +280,7 @@ Repository evidence:
   lines 3-76;
 - `viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt`,
   lines 16-169;
-- `viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/SubtreeRecompositionTest.kt`;
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SubtreeRecompositionTest.kt`;
 - `viewcompose-runtime/src/test/kotlin/com/viewcompose/runtime/composition/ComposerDiagnosticsTest.kt`.
 
 Migration consequence: move frequently changing reads into the smallest ViewCompose component or
@@ -306,13 +307,13 @@ position is not searched and moved.
 
 Repository evidence:
 
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/composition/Remember.kt`;
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/composition/Key.kt`;
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Remember.kt`;
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Key.kt`;
 - `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
   lines 178-318 and 432-460;
 - `viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt`,
   lines 241-262, 368-457, and 481-517;
-- `viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RememberTest.kt`.
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberTest.kt`.
 
 Use stable `key` scopes to isolate branches and effect identity, but use a lazy container's item-key
 contract when items can reorder. Do not promise that ordinary keyed siblings retain their
@@ -340,20 +341,20 @@ ViewCompose supports these migration-level lifecycles, with a host-specific comm
 
 Repository evidence:
 
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/effects/SideEffect.kt`;
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/effects/DisposableEffect.kt`;
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/effects/CoroutineEffects.kt`,
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/SideEffect.kt`;
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/DisposableEffect.kt`;
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/CoroutineEffects.kt`,
   lines 12-102;
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/composition/ProduceState.kt`,
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/ProduceState.kt`,
   lines 49-80;
 - `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
   lines 320-430 and 566-745;
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/session/RenderSession.kt`,
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt`,
   lines 170-245;
-- `viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/SideEffectTest.kt`;
-- `viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/DisposableEffectTest.kt`;
-- `viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/CoroutineEffectsTest.kt`;
-- `viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RenderSessionFailureTest.kt`,
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SideEffectTest.kt`;
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/DisposableEffectTest.kt`;
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/CoroutineEffectsTest.kt`;
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt`,
   lines 100-153.
 
 Failures after the renderer establishes the new native tree are reported as committed-frame
@@ -385,15 +386,15 @@ ViewCompose is **Partially supported**:
 
 Repository evidence:
 
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/RememberSaveable.kt`,
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/RememberSaveable.kt`,
   lines 5-160;
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/Saver.kt`,
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/Saver.kt`,
   lines 8-90;
 - `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
   lines 379-396;
-- `viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RememberSaveableTest.kt`;
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt`;
 - compiled saveable-registry sample in
-  `viewcompose-widget-core/src/test/samples/com/viewcompose/widget/core/samples/WidgetCoreSamples.kt`.
+  `viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt`.
 
 Prefer automatic positional keys. Use a ViewCompose explicit key only when the ownership design
 requires one, keep it stable and unique, and do not carry that pattern back to current Compose.
@@ -418,13 +419,13 @@ tree commits. Its registry uses a claim transaction:
 
 Repository evidence:
 
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/SaveableStateRegistry.kt`,
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/SaveableStateRegistry.kt`,
   lines 3-253;
-- `viewcompose-widget-core/src/main/java/com/viewcompose/widget/core/runtime/saveable/RememberSaveable.kt`,
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/RememberSaveable.kt`,
   lines 76-160;
 - `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
   lines 616-745;
-- `viewcompose-widget-core/src/test/java/com/viewcompose/widget/core/runtime/RememberSaveableTest.kt`,
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt`,
   lines 39-163.
 
 A custom ViewCompose host registry must implement this claim protocol; a Compose-style immediate
@@ -449,7 +450,7 @@ or frame-clock services. Its owner must provide and dispose those services expli
 
 Repository evidence:
 
-- `viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidHostBridge.kt`,
+- `viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt`,
   lines 60-108, 131-180, and 194-224;
 - `viewcompose-host-android/src/main/java/com/viewcompose/host/android/AndroidSaveableStateRegistry.kt`,
   lines 18-254;
@@ -541,7 +542,7 @@ Re-verify this page when any of the following changes:
 - Android process-death certification coverage.
 
 The runtime maintainer owns state, snapshot, observation, remember, and recomposition conclusions.
-The widget-core maintainer owns effects, Saver, and claim transaction conclusions. The Android host
-maintainer owns Activity, Fragment, Bundle, and process-recreation conclusions. A comparison update
+The UI Foundation maintainer owns effects, Saver, and claim transaction conclusions. The Android
+aggregate and Engine maintainers jointly own Activity, Fragment, Bundle, and process-recreation conclusions. A comparison update
 is complete only when those owners agree on the capability label and the cited source/test evidence
 still protects the documented claim.

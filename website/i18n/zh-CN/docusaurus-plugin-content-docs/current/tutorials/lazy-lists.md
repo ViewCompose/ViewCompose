@@ -2,7 +2,7 @@
 title: 使用 Lazy 列表
 sidebar_position: 6
 translation_source: tutorials/lazy-lists.md
-translation_source_hash: 30727264d2b7a61863f24cd9300d74c8986bae1455963b8c0f33856412c6c64e
+translation_source_hash: bf9fcadec396b21ba1caad65d1f8fd779fceafb3c2554c8ce16ef21192be36eb
 translation_status: current
 ---
 
@@ -10,13 +10,13 @@ translation_status: current
 
 ## 必需依赖
 
-本页可以独立使用。`LazyColumn` 位于 `viewcompose-widget-core`，不需要额外的集合产物：
+本页可以独立使用。`LazyColumn` 位于 `viewcompose-ui-foundation`，不需要额外的集合产物：
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -32,14 +32,14 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.host.android.setUiContent
+import com.viewcompose.android.setUiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.LazyColumn
-import com.viewcompose.widget.core.Text
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.Text
 
 class LazyListsTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

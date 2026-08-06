@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-glide/README.md
-translation_source_hash: dda0ab8267d9b9b140cf8e2e2a34909bece12f11134a964ce6ccc07b6f2b2c34
+translation_source_hash: a367f05cf9cf3ff43c0383083e24e9bbf39579121ae743ffc45c502a000d8796
 translation_status: current
 ---
 
@@ -74,7 +74,7 @@ Renderer 解析。适配器只接受包装 Android `ImageView` 的 Renderer Targ
 ## 相关文档
 
 - [UI Contract 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-contract)
-- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer)
+- [Renderer 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-renderer-android)
 - [图片加载指南](https://docs.viewcompose.com/zh-CN/guides/image-loading)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 

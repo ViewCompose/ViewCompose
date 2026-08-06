@@ -73,7 +73,7 @@ disposes it before replacement or mounted-node removal. The adapter does not own
 ## Related documentation
 
 - [UI Contract module](../viewcompose-ui-contract/README.md)
-- [Renderer module](../viewcompose-renderer/README.md)
+- [Renderer module](../viewcompose-renderer-android/README.md)
 - [Image loading guide](../../guides/image-loading.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 

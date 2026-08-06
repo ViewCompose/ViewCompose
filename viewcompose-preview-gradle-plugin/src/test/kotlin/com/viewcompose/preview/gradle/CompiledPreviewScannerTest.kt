@@ -305,6 +305,6 @@ class CompiledPreviewScannerTest {
         const val THEME_DESCRIPTOR =
             "Lcom/viewcompose/preview/tooling/PreviewTheme;"
         const val ENTRY_POINT_DESCRIPTOR =
-            "(Lcom/viewcompose/widget/core/UiTreeBuilder;)V"
+            "(Lcom/viewcompose/ui/foundation/UiTreeBuilder;)V"
     }
 }

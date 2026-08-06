@@ -3,8 +3,8 @@ package com.viewcompose.gesture
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.gesture.TransformDelta
-import com.viewcompose.widget.core.remember
-import com.viewcompose.widget.core.rememberUpdatedState
+import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.rememberUpdatedState
 import kotlin.math.abs
 
 /**

@@ -12,18 +12,18 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.DisposableEffect
-import com.viewcompose.widget.core.IconButton
-import com.viewcompose.widget.core.ProvideImageLoader
-import com.viewcompose.widget.core.Scaffold
-import com.viewcompose.widget.core.SideEffect
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.TopAppBar
-import com.viewcompose.widget.core.TopAppBarDefaults
-import com.viewcompose.widget.core.UiTheme
-import com.viewcompose.widget.core.UiTreeBuilder
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.ProvideImageLoader
+import com.viewcompose.ui.foundation.Scaffold
+import com.viewcompose.ui.foundation.SideEffect
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.TopAppBar
+import com.viewcompose.ui.foundation.TopAppBarDefaults
+import com.viewcompose.ui.foundation.UiTheme
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
 
 /**
  * demo 子页面共享脚手架，提供返回按钮、系统栏内边距和主题覆盖。

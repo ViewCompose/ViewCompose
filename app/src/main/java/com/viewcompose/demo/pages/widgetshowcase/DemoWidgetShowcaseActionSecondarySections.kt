@@ -7,22 +7,22 @@ import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.widget.core.Chip
-import com.viewcompose.widget.core.ChipVariant
-import com.viewcompose.widget.core.Column
-import com.viewcompose.widget.core.ExtendedFloatingActionButton
-import com.viewcompose.widget.core.FabSize
-import com.viewcompose.widget.core.FloatingActionButton
-import com.viewcompose.widget.core.FlowRow
-import com.viewcompose.widget.core.Icon
-import com.viewcompose.widget.core.Row
-import com.viewcompose.widget.core.Text
-import com.viewcompose.widget.core.TextDefaults
-import com.viewcompose.widget.core.Theme
-import com.viewcompose.widget.core.UiTextStyle
-import com.viewcompose.widget.core.UiTreeBuilder
+import com.viewcompose.ui.foundation.Chip
+import com.viewcompose.ui.foundation.ChipVariant
+import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.ExtendedFloatingActionButton
+import com.viewcompose.ui.foundation.FabSize
+import com.viewcompose.ui.foundation.FloatingActionButton
+import com.viewcompose.ui.foundation.FlowRow
+import com.viewcompose.ui.foundation.Icon
+import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiTextStyle
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
-import com.viewcompose.widget.core.remember
+import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.unit.sp
 
 @ViewComposePreview(name = "Chip", group = "Demo/Components")
