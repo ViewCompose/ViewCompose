@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: ef7c70752132e9c2bc66cf66e11c711ef8ee3a55e5c42a035060b38827d87e40
+translation_source_hash: 4b17d4b2c0c32edf5d6bf08777b8fd23c4ba1e044bffdaaeffa9da1d396081e5
 translation_status: current
 ---
 
@@ -327,8 +327,11 @@ Host DSL 必需的 ViewCompose 基础模块。
 
 这些命令分别发布并验证独立集合、检查已有 repository、验证主制品/sources/docs/POM/checksum/
 stable signature/feature-to-core dependency，以及构建最小 Android Host、Android Feature 与纯
-JVM Core 三个 Consumer。完整发布任务不属于 `qaQuick`；日常 QA 只运行廉价
-coordinate/version 验证。
+JVM Core 三个 Consumer。`qaQuick` 会先把完整的当前制品集合发布到生成的本地 repository，从而在
+合并前覆盖 stable 签名和 Maven metadata。Counter preview sample 刻意消费公开的
+`viewcompose-android` 坐标而非 project dependency，因此 `qaPreview` 也会先执行同一本地发布。
+Repository 检查与隔离 Consumer 构建仍是显式的深层门禁；两个 QA 门禁都不会执行 Maven Central
+上传。
 
 ## 版本 override 与签名
 
@@ -350,6 +353,10 @@ coordinate/version 验证。
 VIEWCOMPOSE_SIGNING_KEY
 VIEWCOMPOSE_SIGNING_PASSWORD
 ```
+
+PR CI 不持有可信 release key。每个 `qaQuick` 和 `qaPreview` job 都只在一次性 Runner 内生成一个
+短期、无保护的测试 key，用于覆盖本地 stable 制品签名；该 key 及其产物不会上传，也不作为公开
+发布信任依据。Maven Central 工作流必须使用上面的内存 release credentials。
 
 stable 必须签名，`-SNAPSHOT` 本地 QA 可不签名，secret 不得入库。
 

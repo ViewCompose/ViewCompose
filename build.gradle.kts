@@ -1773,6 +1773,7 @@ tasks.register<Exec>("testBenchmarkComparisonTool") {
 tasks.register("qaPreview") {
     group = "verification"
     description = "Run static-runner tests and preview snapshot verification."
+    dependsOn(publishForMavenSamples)
     dependsOn(
         ":samples:counter:verifyCounterPreview",
         ":viewcompose-preview-core:test",

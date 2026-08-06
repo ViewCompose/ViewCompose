@@ -385,8 +385,12 @@ consumer, an Android feature consumer, and a pure JVM core consumer:
 ./gradlew verifyViewComposePublishedConsumption
 ```
 
-The full publication tasks are intentionally not part of `qaQuick`; only the cheap coordinate and
-version validation runs during normal project QA.
+`qaQuick` publishes the complete current artifact set to the generated local repository so stable
+signatures and Maven metadata are exercised before merge. `qaPreview` performs the same local
+publication first because the Counter preview sample deliberately consumes the public
+`viewcompose-android` coordinate instead of a project dependency. Repository inspection and the
+isolated published-consumer builds remain explicit deeper checks; Maven Central upload tasks are
+never part of either QA gate.
 
 ## Version overrides and signing
 
@@ -413,6 +417,11 @@ CI releases use in-memory PGP signing:
 VIEWCOMPOSE_SIGNING_KEY
 VIEWCOMPOSE_SIGNING_PASSWORD
 ```
+
+Pull-request CI does not have a trusted release key. Each `qaQuick` and `qaPreview` job generates a
+short-lived, unprotected test key inside its disposable runner solely to exercise local stable
+artifact signing. That key and its artifacts are never uploaded or trusted for a public release.
+Maven Central workflows must use the in-memory release credentials above.
 
 Stable versions always require signatures; `-SNAPSHOT` versions may remain unsigned for local QA.
 Secrets must remain outside the repository.
