@@ -17,6 +17,8 @@ import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
+import com.viewcompose.ui.node.spec.LazyColumnNodeProps
+import com.viewcompose.ui.node.spec.RowNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.SemanticsRole
@@ -120,6 +122,10 @@ class ExperimentalComponentRecipesTest {
         assertEquals(SemanticsRole.Switch, cutSemantics.role)
         assertEquals(false, cutSemantics.checked)
         assertTrue(rounded.modifier.toString().contains("ClickableModifierElement"))
+        assertEquals(
+            roundedRecipes().switch.stateLayerColors,
+            (rounded.spec as RowNodeProps).stateLayerColors,
+        )
     }
 
     @Test
@@ -225,6 +231,15 @@ class ExperimentalComponentRecipesTest {
                 .configuration
             assertEquals(SemanticsRole.Tab, semantics.role)
             assertEquals(index == 1, semantics.selected)
+            val expectedStateLayers = if (index == 1) {
+                cutCornerRecipes().navigation.selectedStateLayerColors
+            } else {
+                cutCornerRecipes().navigation.unselectedStateLayerColors
+            }
+            assertEquals(
+                expectedStateLayers,
+                (destination.spec as BoxNodeProps).stateLayerColors,
+            )
         }
         val visibleLabels = composed.flatten()
             .filter { node -> node.type == NodeType.Text }
@@ -257,6 +272,44 @@ class ExperimentalComponentRecipesTest {
                 assertFalse(node.spec.toString().contains(recipes.identity.value))
             }
         }
+    }
+
+    @Test
+    fun `captured recipe bundle restores the complete component policy`() {
+        val recipes = cutCornerRecipes()
+        lateinit var snapshot: UiLocalSnapshot
+
+        buildVNodeTree {
+            ProvideExperimentalComponentRecipes(recipes) {
+                snapshot = captureUiLocalSnapshot()
+            }
+        }
+
+        val restoredTree = withUiLocalSnapshot(snapshot) {
+            buildVNodeTree {
+                ExperimentalRecipeAction(text = "Restored")
+                ExperimentalRecipeSwitch(
+                    text = "Sync",
+                    checked = true,
+                    onCheckedChange = {},
+                )
+            }
+        }
+
+        assertEquals(recipes.action.enabledContainerColor, (restoredTree[0].spec as ButtonNodeProps).backgroundColor)
+        assertEquals(recipes.switch.stateLayerColors, (restoredTree[1].spec as RowNodeProps).stateLayerColors)
+    }
+
+    @Test
+    fun `delayed content identity follows complete immutable recipe values`() {
+        val first = roundedRecipes()
+        val equalValue = first.copy()
+        val changed = first.copy(
+            switch = first.switch.copy(trackWidth = 60.dp),
+        )
+
+        assertEquals(recipeDelayedContentToken(first), recipeDelayedContentToken(equalValue))
+        assertNotEquals(recipeDelayedContentToken(first), recipeDelayedContentToken(changed))
     }
 
     private fun recipeTree(
@@ -350,6 +403,23 @@ class ExperimentalComponentRecipesTest {
             NavigationBarItem(label = "Search", icon = ImageSource.Resource(2)),
             NavigationBarItem(label = "Profile", icon = ImageSource.Resource(3)),
         )
+    }
+
+    private fun recipeDelayedContentToken(recipes: ExperimentalComponentRecipes): Any? {
+        val tree = buildVNodeTree {
+            ProvideExperimentalComponentRecipes(recipes) {
+                LazyColumn {
+                    item(
+                        key = "recipe-action",
+                        contentToken = "stable-action",
+                    ) {
+                        ExperimentalRecipeAction(text = "Deferred")
+                    }
+                }
+            }
+        }
+
+        return (tree.single().spec as LazyColumnNodeProps).items.single().contentToken
     }
 
     private fun com.viewcompose.ui.node.VNode.flatten(): List<com.viewcompose.ui.node.VNode> {
