@@ -293,6 +293,22 @@ Accepted native compact-input experiment, 2026-08-07:
   phase will not accept that risk until a generic composite surface/target contract passes the same
   overlap, clipping, scrolling, semantics, and explicit-size matrix.
 
+Accepted native compact-input color correction, 2026-08-07:
+
+- the Android bridge still exposes AppCompat `colorControlActivated`, but UI Foundation now selects
+  `colors.primary` for enabled Checkbox, RadioButton, Switch, and Slider defaults. This keeps a
+  legacy accent alias from overriding the Material component role;
+- Slider now resolves active-track, inactive-track, and thumb colors into its NodeSpec. Android
+  Renderer binds all three segments and patches the inactive segment without falling back to the
+  platform theme;
+- native Switch and Slider tinting uses `SRC_IN`. A Samsung-device experiment showed that `SRC`
+  filled transparent drawable-mask bounds and turned round thumbs into rectangles, so it was
+  rejected. `SRC_IN` preserves OEM geometry and its built-in coverage while correcting semantic
+  hue ownership;
+- exact Switch/Slider track coverage, geometry, and motion remain the conditional Phase 4 work.
+  This correction does not introduce custom drawables or reinterpret Material tokens in Android
+  Renderer.
+
 Interaction-state baseline, 2026-08-07:
 
 - the pinned Material Components `1.13.0` selectors use the component content role for the state
@@ -429,4 +445,5 @@ This plan is complete when:
 | 2026-08-07 | 2 | Button 48dp target / 40dp visible surface reports and screenshots at 1.0/1.3 font scale; edge-target device click; focused unit suites | Button experiment retained; compact-control generalization remains conditional |
 | 2026-08-07 | 2 | Default-theme screenshot review plus Renderer circular-corner, complete-outline, and shape-patch pixel tests | Generic shape path fix retained; Button full-shape token remains unchanged |
 | 2026-08-07 | 2 | Checkbox, RadioButton, Switch, and Slider 48dp View/semantic reports at 1.0/1.3 font scale; adjacent-target, scrolling, explicit-size, clipping, and focused unit coverage | Native compact-input experiment retained; Chip expansion deferred pending a generic composite-target contract |
+| 2026-08-07 | 2 | Semantic-default and Renderer tint/patch tests plus Samsung device screenshot review of Switch and Slider | Primary and explicit inactive-track ownership retained with `SRC_IN`; `SRC` rejected because it broke OEM drawable masks |
 | 2026-08-07 | 2 | Button RippleDrawable report plus pinned Material selector comparison for pressed, focused, and hovered output | State-layer mismatch confirmed; baseline retained and production behavior unchanged pending a reusable renderer-neutral contract |

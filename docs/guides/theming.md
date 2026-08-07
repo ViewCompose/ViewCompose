@@ -186,6 +186,10 @@ Current bridge matrix:
    - bridged: `android:textColorPrimary / textColorSecondary`;
    - bridged: AppCompat `colorControlNormal / colorControlActivated / colorControlHighlight`;
    - standard states: `disabled / pressed / focused / checked / selected`.
+   - these bridge values remain general state roles. Enabled Checkbox, RadioButton, Switch, and
+     Slider defaults resolve selection from `colors.primary`; Slider resolves its inactive segment
+     from `colors.secondaryContainer`. This prevents an AppCompat accent alias from mixing with a
+     Material semantic palette while preserving explicit access to `controlActivated`.
 3. `typography`
    - bridged: all 15 Material 3 `textAppearanceDisplay*/Headline*/Title*/Body*/Label*` roles;
    - family fallback: legacy Android `textAppearanceLarge/Medium/Small` applies only to

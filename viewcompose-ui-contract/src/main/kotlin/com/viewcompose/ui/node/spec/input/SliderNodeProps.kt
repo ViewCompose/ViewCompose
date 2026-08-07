@@ -8,8 +8,10 @@ package com.viewcompose.ui.node.spec
  * @property value externally controlled current value
  * @property enabled whether the slider accepts input
  * @property thumbColor draggable thumb color
- * @property trackColor slider track color
+ * @property trackColor active slider track color
  * @property onValueChange callback receiving an accepted value
+ * @property inactiveTrackColor track color after the current value; defaults to [trackColor] for
+ * renderers and direct constructors that do not distinguish the two track segments
  */
 data class SliderNodeProps(
     val min: Int,
@@ -19,4 +21,5 @@ data class SliderNodeProps(
     val thumbColor: Int,
     val trackColor: Int,
     val onValueChange: ((Int) -> Unit)?,
+    val inactiveTrackColor: Int = trackColor,
 ) : NodeSpec

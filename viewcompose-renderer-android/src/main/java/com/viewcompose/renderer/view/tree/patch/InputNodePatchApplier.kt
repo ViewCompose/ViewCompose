@@ -229,6 +229,9 @@ internal object InputNodePatchApplier {
         if (previous.trackColor != next.trackColor) {
             view.progressTintList = ColorStateList.valueOf(next.trackColor)
         }
+        if (previous.inactiveTrackColor != next.inactiveTrackColor) {
+            view.progressBackgroundTintList = ColorStateList.valueOf(next.inactiveTrackColor)
+        }
     }
 
     private fun hasTextAppearanceChange(

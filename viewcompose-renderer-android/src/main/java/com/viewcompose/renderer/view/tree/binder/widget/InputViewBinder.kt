@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
 import android.content.res.ColorStateList
+import android.graphics.PorterDuff
 import android.text.InputType
 import android.text.Selection
 import android.view.View
@@ -73,6 +74,7 @@ internal object InputViewBinder {
         val thumbColor: Int,
         val trackColor: Int,
         val onValueChange: ((Int) -> Unit)?,
+        val inactiveTrackColor: Int = trackColor,
     )
 
     fun bindTextField(
@@ -139,7 +141,12 @@ internal object InputViewBinder {
         view.max = (spec.max - spec.min).coerceAtLeast(0)
         view.progress = resolvedValue - spec.min
         view.isEnabled = spec.enabled
+        // Keep native/OEM geometry masks while making every slider segment framework-owned.
+        view.progressTintMode = PorterDuff.Mode.SRC_IN
+        view.progressBackgroundTintMode = PorterDuff.Mode.SRC_IN
+        view.thumbTintMode = PorterDuff.Mode.SRC_IN
         view.progressTintList = ColorStateList.valueOf(spec.trackColor)
+        view.progressBackgroundTintList = ColorStateList.valueOf(spec.inactiveTrackColor)
         view.thumbTintList = ColorStateList.valueOf(spec.thumbColor)
     }
 
@@ -156,6 +163,9 @@ internal object InputViewBinder {
         view.isEnabled = spec.enabled
         view.isChecked = spec.checked
         if (view is Switch) {
+            // SRC_IN preserves legacy/OEM switch geometry; SRC can fill transparent mask bounds.
+            view.thumbTintMode = PorterDuff.Mode.SRC_IN
+            view.trackTintMode = PorterDuff.Mode.SRC_IN
             view.buttonTintList = ColorStateList.valueOf(spec.controlColor)
             view.thumbTintList = ColorStateList.valueOf(spec.thumbColor ?: spec.controlColor)
             view.trackTintList = ColorStateList.valueOf(spec.trackColor ?: spec.controlColor)
@@ -259,6 +269,7 @@ internal object InputViewBinder {
             thumbColor = spec.thumbColor,
             trackColor = spec.trackColor,
             onValueChange = spec.onValueChange,
+            inactiveTrackColor = spec.inactiveTrackColor,
         )
     }
 

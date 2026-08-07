@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: bea7f3151a0d6ce173f784db5eaf4b20e2091a9c65f0953eab940c3a5a04bfff
+translation_source_hash: 40afe8f805c251218b0ba4c22a86ebb5d4e13ea0c9e87e7179f121e370792345
 translation_status: current
 ---
 
@@ -109,6 +109,10 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - Slider 绑定使用渲染器中性的 `AppCompatSeekBar` 子类，因为平台控件可能在 `AT_MOST` 测量
   规格下忽略 `minimumHeight`。它会遵守已声明的最小值，同时让应用或父容器的精确高度保持
   最终权限；Android Renderer 不解释任何 Material 策略或 Token。
+- 原生 Switch 与 Slider 绑定通过 `SRC_IN` 应用每个已解析 Tint，从而保留平台或 OEM Drawable
+  遮罩。Slider 分别持有激活轨道、非激活轨道和 Thumb Tint，定向 Patch 可在不重建 View 的
+  情况下更新非激活轨道。在独立且经过测试的自定义控件契约被接受前，平台 Drawable 几何及其
+  内建覆盖率仍具有最终权限。
 
 ## Android host 与线程规则
 

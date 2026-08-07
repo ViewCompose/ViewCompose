@@ -82,6 +82,9 @@ Because the current line is alpha, the documentation site intentionally does not
   `visualHeight` is the requested centered surface height. A renderer must clamp an invalid visual
   height to the effective bounds and must keep explicit application surface modifiers
   authoritative.
+- `SliderNodeProps.trackColor` is the active segment at or before the current value, while
+  `inactiveTrackColor` is the remaining segment. Renderers must bind both resolved colors and must
+  not recover either segment from a platform theme.
 - Modifier order is semantic. Layout and parent-data collection, visual decoration, input,
   semantics, and drawing phases consume the ordered elements according to their documented phase
   rules; reordering elements may change behavior.
@@ -133,3 +136,7 @@ instances as long-lived external data.
 Adding `ButtonNodeProps.visualHeight` is a Q2 immutable snapshot-contract change. The source default
 equals `minHeight`, but precompiled constructor call sites and custom renderers must be rebuilt for
 the corresponding alpha release.
+
+Adding `SliderNodeProps.inactiveTrackColor` is also a Q2 immutable snapshot-contract change. Its
+source default equals `trackColor` so direct source construction remains concise, but precompiled
+constructor call sites and custom renderers must be rebuilt for the corresponding alpha release.
