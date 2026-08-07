@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 59618d66ece241c7d2bd2af7b1cbad7a5076bb6a636010c5e7c2657a2879cfdf
+translation_source_hash: fde8ba1dc6ed617f6f87338d50196463ed988697622fc7160daecebe2f1f83a0
 translation_status: current
 ---
 
@@ -69,6 +69,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   渐变 Brush、逻辑 Shape、Border、裁剪、Elevation 与精确 Shadow，并把最小有效边界与可选的
   居中可见高度分开。设计系统在发射前选择这些值，Android Renderer 只接收中立的
   `SurfaceNodeProps` 快照。编译样例 `basicSurfaceSample` 展示了该契约。
+- `BasicButton` 是建立在 `BasicSurface`、Row、Text 与 Icon 上的 Q3 动作组合。其 Q2
+  `BasicButtonStyle` 只包含已经解析的几何、排版、内容与交互值。它不会发射原生 Button 节点，
+  现有 `Button` API 则继续保留该兼容路径。编译样例 `basicButtonSample` 展示连续圆角动作。
 - `UiControlSizing.minimumInteractiveHeight` 是 Checkbox、RadioButton、Switch 与 Slider 使用的
   设计系统无关有效高度策略。它的中性默认值是零，因此保留原生固有测量。设计系统可以提供
   正的最小值；组件会在调用方 Modifier 之前应用它，所以应用显式指定的精确高度仍具有最终权限。
@@ -175,3 +178,7 @@ Q2 `SliderNodeProps` 快照中；预编译调用方与自定义渲染器必须�
 调用方 Elevation 优先，调用方 Shadow 绘制在样式 Shadow 之后。`Surface` 现通过该基础组件
 解析原有默认值，保持公共源码 API，同时把 `NodeType.Surface` 的具体规格改为
 `SurfaceNodeProps`。
+
+`BasicButtonStyle` 是 Q2 已解析值契约，`BasicButton` 是 Q3 组合 API。它属于增量能力，不会改变
+现有 `Button` 签名或原生 Renderer 行为。内部对比夹具现已使用该生产基础组件，证明两套独立
+动作 Recipe，同时不向 UI Foundation 加入设计系统词汇。

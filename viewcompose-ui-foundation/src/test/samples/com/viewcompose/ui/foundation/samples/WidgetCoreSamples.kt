@@ -14,7 +14,10 @@ import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.BasicButton
+import com.viewcompose.ui.foundation.BasicButtonStyle
 import com.viewcompose.ui.foundation.BasicSurface
 import com.viewcompose.ui.foundation.BasicSurfaceStyle
 import com.viewcompose.ui.foundation.Checkbox
@@ -123,6 +126,34 @@ fun basicSurfaceSample() {
     val surface = node.spec as SurfaceNodeProps
     check(surface.minimumHeight == 48.dp)
     check(surface.visualHeight == 40.dp)
+}
+
+fun basicButtonSample() {
+    val tree = buildVNodeTree {
+        BasicButton(
+            text = "Continue",
+            onClick = {},
+            style = BasicButtonStyle(
+                surface = BasicSurfaceStyle(
+                    fill = Brush.SolidColor(0xFF244C5A.toInt()),
+                    shape = UiShape.continuous(20.dp),
+                    clipContent = true,
+                ),
+                contentColor = 0xFFFFFFFF.toInt(),
+                textStyle = com.viewcompose.ui.foundation.UiTextStyle(fontSizeSp = 14.sp),
+                stateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x33FFFFFF,
+                    focusedColor = 0x2AFFFFFF,
+                    hoveredColor = 0x1FFFFFFF,
+                ),
+                minimumHeight = 48.dp,
+                visualHeight = 40.dp,
+                paddingHorizontal = 16.dp,
+            ),
+        )
+    }
+
+    check(tree.single().type == com.viewcompose.ui.node.NodeType.Surface)
 }
 
 fun compactInputTargetSample() {

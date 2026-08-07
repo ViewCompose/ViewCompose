@@ -25,7 +25,6 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiStateLayerColors
-import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 import com.viewcompose.ui.modifier.SemanticsRole
@@ -219,38 +218,30 @@ internal fun UiTreeBuilder.ExperimentalRecipeAction(
     val contentColor = if (enabled) recipe.enabledContentColor else recipe.disabledContentColor
     val containerColor = if (enabled) recipe.enabledContainerColor else recipe.disabledContainerColor
     val borderColor = if (enabled) recipe.enabledBorderColor else recipe.disabledBorderColor
-    val stateLayers = recipe.stateLayerColors.takeIf { enabled }
-    val style = recipe.textStyle
-
-    emit(
-        type = NodeType.Button,
+    BasicButton(
+        text = text,
+        onClick = onClick,
+        enabled = enabled,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
         key = key,
-        spec = ButtonNodeProps(
-            text = text,
-            enabled = enabled,
-            onClick = onClick,
-            textColor = contentColor,
-            textSizeSp = style.fontSizeSp,
-            fontWeight = style.fontWeight,
-            fontFamily = uiFontFamily(style.fontFamily),
-            letterSpacingEm = style.letterSpacingEm,
-            lineHeightSp = style.lineHeightSp,
-            includeFontPadding = style.includeFontPadding,
-            backgroundColor = containerColor,
-            borderWidth = recipe.borderWidth,
-            borderColor = borderColor,
-            shape = recipe.shape,
-            rippleColor = stateLayers?.pressedColor ?: 0x00000000,
-            minHeight = recipe.minHeight,
+        style = BasicButtonStyle(
+            surface = BasicSurfaceStyle(
+                fill = Brush.SolidColor(containerColor),
+                shape = recipe.shape,
+                borderWidth = recipe.borderWidth,
+                borderColor = borderColor,
+                clipContent = true,
+            ),
+            contentColor = contentColor,
+            textStyle = recipe.textStyle,
+            stateLayerColors = recipe.stateLayerColors,
+            minimumHeight = recipe.minHeight,
+            visualHeight = recipe.visualHeight,
             paddingHorizontal = recipe.horizontalPadding,
             paddingVertical = recipe.verticalPadding,
-            leadingIcon = leadingIcon,
-            trailingIcon = trailingIcon,
-            iconTint = contentColor,
             iconSize = recipe.iconSize,
             iconSpacing = recipe.iconSpacing,
-            visualHeight = recipe.visualHeight,
-            stateLayerColors = stateLayers,
         ),
         modifier = modifier,
     )

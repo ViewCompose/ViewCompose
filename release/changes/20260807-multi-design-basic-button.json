@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add a design-system-neutral BasicButton composite over BasicSurface while preserving the existing native Button compatibility path.",
+  "changes": [
+    { "artifact": "viewcompose-ui-foundation", "impact": "feature" }
+  ],
+  "ignored": []
+}

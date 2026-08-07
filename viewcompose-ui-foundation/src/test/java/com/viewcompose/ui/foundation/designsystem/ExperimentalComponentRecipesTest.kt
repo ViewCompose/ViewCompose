@@ -13,7 +13,6 @@ import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.BoxNodeProps
-import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
@@ -23,6 +22,8 @@ import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.SemanticsRole
+import com.viewcompose.ui.modifier.PaddingModifierElement
+import com.viewcompose.graphics.core.Brush
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -39,16 +40,19 @@ class ExperimentalComponentRecipesTest {
 
         val roundedTree = recipeTree(tokens, rounded)
         val cutTree = recipeTree(tokens, cut)
-        val roundedAction = roundedTree[0].spec as ButtonNodeProps
-        val cutAction = cutTree[0].spec as ButtonNodeProps
+        val roundedAction = roundedTree[0].spec as SurfaceNodeProps
+        val cutAction = cutTree[0].spec as SurfaceNodeProps
         val roundedSurface = roundedTree[1].spec as SurfaceNodeProps
         val cutSurface = cutTree[1].spec as SurfaceNodeProps
 
-        assertEquals(NodeType.Button, roundedTree[0].type)
+        assertEquals(NodeType.Surface, roundedTree[0].type)
         assertEquals(NodeType.Surface, roundedTree[1].type)
-        assertNotEquals(roundedAction.backgroundColor, cutAction.backgroundColor)
+        assertNotEquals(roundedAction.fill, cutAction.fill)
         assertNotEquals(roundedAction.shape, cutAction.shape)
-        assertNotEquals(roundedAction.paddingHorizontal, cutAction.paddingHorizontal)
+        assertNotEquals(
+            roundedTree[0].children.single().modifier.elements.filterIsInstance<PaddingModifierElement>().single(),
+            cutTree[0].children.single().modifier.elements.filterIsInstance<PaddingModifierElement>().single(),
+        )
         assertNotEquals(roundedSurface.fill, cutSurface.fill)
         assertNotEquals(roundedSurface.shape, cutSurface.shape)
         assertEquals(rounded.action.stateLayerColors, roundedAction.stateLayerColors)
@@ -72,10 +76,12 @@ class ExperimentalComponentRecipesTest {
                 ExperimentalRecipeAction(text = "Disabled", enabled = false)
             }
         }
-        val spec = tree.single().spec as ButtonNodeProps
+        val root = tree.single()
+        val spec = root.spec as SurfaceNodeProps
+        val label = root.flatten().single { it.type == NodeType.Text }.spec as TextNodeProps
 
-        assertEquals(recipes.action.disabledContainerColor, spec.backgroundColor)
-        assertEquals(recipes.action.disabledContentColor, spec.textColor)
+        assertEquals(recipes.action.disabledContainerColor, (spec.fill as Brush.SolidColor).color)
+        assertEquals(recipes.action.disabledContentColor, label.textColor)
         assertEquals(recipes.action.disabledBorderColor, spec.borderColor)
         assertEquals(0x00000000, spec.rippleColor)
         assertNull(spec.stateLayerColors)
@@ -267,7 +273,7 @@ class ExperimentalComponentRecipesTest {
             val flattened = tree.flatMap { root -> root.flatten() }
 
             assertEquals(5, tree.size)
-            assertTrue(flattened.any { node -> node.type == NodeType.Button })
+            assertFalse(flattened.any { node -> node.type == NodeType.Button })
             assertTrue(flattened.any { node -> node.type == NodeType.Surface })
             assertTrue(flattened.any { node -> node.type == NodeType.TextField })
             flattened.forEach { node ->
@@ -298,7 +304,10 @@ class ExperimentalComponentRecipesTest {
             }
         }
 
-        assertEquals(recipes.action.enabledContainerColor, (restoredTree[0].spec as ButtonNodeProps).backgroundColor)
+        assertEquals(
+            recipes.action.enabledContainerColor,
+            ((restoredTree[0].spec as SurfaceNodeProps).fill as Brush.SolidColor).color,
+        )
         assertEquals(recipes.switch.stateLayerColors, (restoredTree[1].spec as RowNodeProps).stateLayerColors)
     }
 
@@ -320,7 +329,7 @@ class ExperimentalComponentRecipesTest {
     ) = buildVNodeTree {
         UiTheme(tokens) {
             ProvideExperimentalComponentRecipes(recipes) {
-                ExperimentalRecipeAction(text = "Action")
+                ExperimentalRecipeAction(text = "Action", onClick = {})
                 ExperimentalRecipeSurface(onClick = {}) {
                     Text("Content")
                 }
@@ -379,7 +388,7 @@ class ExperimentalComponentRecipesTest {
         recipes: ExperimentalComponentRecipes,
     ) = buildVNodeTree {
         ProvideExperimentalComponentRecipes(recipes) {
-            ExperimentalRecipeAction(text = "Action")
+            ExperimentalRecipeAction(text = "Action", onClick = {})
             ExperimentalRecipeSurface(onClick = {}) { Text("Surface") }
             ExperimentalRecipeSwitch(
                 text = "Sync",

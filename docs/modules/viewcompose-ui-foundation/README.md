@@ -71,6 +71,10 @@ by a later renderer or child render session.
   it also separates minimum effective bounds from an optional centered visual height. Design
   systems select those values before emission, while the Android Renderer receives only a neutral
   `SurfaceNodeProps` snapshot. The compiled `basicSurfaceSample` demonstrates the contract.
+- `BasicButton` is a Q3 action composite over `BasicSurface`, Row, Text, and Icon. Its Q2
+  `BasicButtonStyle` contains only resolved geometry, typography, content, and interaction values.
+  It emits no native Button node, while the existing `Button` API keeps that compatibility path.
+  The compiled `basicButtonSample` demonstrates a continuous-corner action.
 - `UiControlSizing.minimumInteractiveHeight` is the design-system-neutral effective-height policy
   used by Checkbox, RadioButton, Switch, and Slider. Its neutral default is zero, preserving native
   intrinsic measurement. A design system may supply a positive minimum; the component applies it
@@ -198,3 +202,8 @@ release.
 modifiers replace the default visual surface, caller elevation wins, and caller shadows follow
 the style shadows. `Surface` now resolves its existing defaults through this primitive, preserving
 its public source API while changing the concrete `NodeType.Surface` spec to `SurfaceNodeProps`.
+
+`BasicButtonStyle` is a Q2 resolved-value contract and `BasicButton` is a Q3 composite API. It is
+additive and does not change the existing `Button` signature or native renderer behavior. The
+internal contrast fixture now consumes this production primitive, proving two independent action
+recipes without adding design-system vocabulary to UI Foundation.

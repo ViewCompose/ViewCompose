@@ -26,6 +26,8 @@ passes its accessibility, input, retained-patch, and device visual gates.
 - [`20260807-multi-design-basic-surface.json`](../../../release/changes/20260807-multi-design-basic-surface.json)
   covers the Phase 2 resolved Surface contract, Basic primitive, continuous-corner/gradient
   renderer path, and the `SurfaceNodeProps` migration.
+- [`20260807-multi-design-basic-button.json`](../../../release/changes/20260807-multi-design-basic-button.json)
+  covers the Phase 2 neutral action composite and its compiled sample.
 
 ## Objective
 
@@ -353,7 +355,9 @@ compiled Q3 sample, and record a publication changeset in a release-scoped execu
 
 Status: in progress. The first production slice implements Q3 `BasicSurface`, Q2
 `BasicSurfaceStyle`/`SurfaceNodeProps`, gradient fills, continuous corners, and effective-versus-
-visual bounds. Basic action and toggle adoption plus the full device matrix remain in this phase.
+visual bounds. Q3 `BasicButton` and Q2 `BasicButtonStyle` now provide the shared action composite
+used by the internal contrast fixture. Public Basic toggle adoption and the full device matrix
+remain under evaluation in this phase.
 
 Planned work:
 
