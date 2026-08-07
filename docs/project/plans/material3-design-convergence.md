@@ -3,8 +3,10 @@
 ## Status
 
 Active. Phase 0 and the low-risk Phase 1 release slice are implemented and Phase 1 is under review
-in pull request 79. Phase 2 has accepted the first independently revertible Button visual/effective
-target slice; compact-control expansion and the interaction-state matrix remain in progress.
+in pull request 79. Phase 2 has accepted independently revertible effective-target changes for
+Button and the native Checkbox, RadioButton, Switch, and Slider controls. Chip expansion is
+deferred behind a generic composite-target contract. The interaction-state baseline is complete,
+but production state-layer changes remain conditional on a small renderer-neutral contract.
 
 This is a temporary execution plan and remains canonical English-only under the documentation
 governance policy. When the accepted work is complete, durable contracts move into the theme guide
@@ -12,10 +14,10 @@ and owning module manuals before this plan moves to `docs/archive/`.
 
 Last verified: 2026-08-07.
 
-Next action: review and release Phase 1 while Phase 2 establishes overlap, scrolling, clipping, and
-explicit-size tests before deciding whether to generalize the Button mechanism to compact controls.
-Do not start TextField or custom-control structural changes before their required current-behavior
-tests exist.
+Next action: review and release Phase 1, then decide whether the Button/IconButton state-layer
+experiment can preserve the existing one-color fallback without adding Material policy to Android
+Renderer. Do not generalize to Chip, start TextField work, or start custom-control structural
+changes before each area's required current-behavior tests and keep criteria exist.
 
 ## Maven release changesets
 
@@ -422,3 +424,5 @@ This plan is complete when:
 | 2026-08-06 | 1 | UI Foundation unit suite, Material mapper/static-token/Robolectric tests | Low-risk implementation retained pending release review |
 | 2026-08-07 | 2 | Default-theme Settings fixture; API 35 screenshots and View/drawable/accessibility bounds at 1.0/1.3 font scale | Accessibility gap confirmed; Button separation experiment approved, generic expansion remains conditional |
 | 2026-08-07 | 2 | Button 48dp target / 40dp visible surface reports and screenshots at 1.0/1.3 font scale; edge-target device click; focused unit suites | Button experiment retained; compact-control generalization remains conditional |
+| 2026-08-07 | 2 | Checkbox, RadioButton, Switch, and Slider 48dp View/semantic reports at 1.0/1.3 font scale; adjacent-target, scrolling, explicit-size, clipping, and focused unit coverage | Native compact-input experiment retained; Chip expansion deferred pending a generic composite-target contract |
+| 2026-08-07 | 2 | Button RippleDrawable report plus pinned Material selector comparison for pressed, focused, and hovered output | State-layer mismatch confirmed; baseline retained and production behavior unchanged pending a reusable renderer-neutral contract |
