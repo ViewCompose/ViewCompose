@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: a006e33a18e33f3764733280ece5d81f82e6ceda8312de09af7aaf8769ff5ffe
+translation_source_hash: bea7f3151a0d6ce173f784db5eaf4b20e2091a9c65f0953eab940c3a5a04bfff
 translation_status: current
 ---
 
@@ -32,6 +32,11 @@ dependencies {
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
   ConstraintLayout 与 SwipeRefreshLayout；不依赖 Material Components。
 - 通用 Surface、圆角/切角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
+- 引擎自有圆角使用圆弧绘制。Shape 边框会沿向内偏移半个线宽的路径居中绘制，保证轮廓完整落在
+  逻辑 Drawable 边界内，包括组件在较大触控目标中居中较短可见 Surface 的情况。
+- Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
+  涟漪和轮廓，同时不改变测量、命中测试或无障碍边界。显式 Background、Border、Corner Radius
+  或 Shape Modifier 会关闭组件提供的内缩，保证应用样式优先。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
 
 ## 渲染模型
@@ -100,6 +105,10 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - 只要影响输出的捕获值发生变化，Lazy item 的 `contentToken` 就必须变化。即使 item 语义未变，
   session 回调也会从 next 列表中的原始 item 实例刷新。
 - 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
+- Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
+- Slider 绑定使用渲染器中性的 `AppCompatSeekBar` 子类，因为平台控件可能在 `AT_MOST` 测量
+  规格下忽略 `minimumHeight`。它会遵守已声明的最小值，同时让应用或父容器的精确高度保持
+  最终权限；Android Renderer 不解释任何 Material 策略或 Token。
 
 ## Android host 与线程规则
 

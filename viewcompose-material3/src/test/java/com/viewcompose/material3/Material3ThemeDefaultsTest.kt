@@ -60,6 +60,10 @@ class Material3ThemeDefaultsTest {
         val theme = Material3ThemeDefaults.light()
 
         assertEquals(48.dp, theme.controls.button.mediumHeight)
+        assertEquals(48.dp, theme.controls.minimumInteractiveHeight)
+        assertEquals(40.dp, theme.controls.button.compactVisualHeight)
+        assertEquals(40.dp, theme.controls.button.mediumVisualHeight)
+        assertEquals(48.dp, theme.controls.button.largeVisualHeight)
         assertEquals(24.dp, theme.controls.button.mediumHorizontalPadding)
         assertEquals(56.dp, theme.controls.textField.mediumHeight)
         assertEquals(16.dp, theme.controls.textField.mediumHorizontalPadding)

@@ -39,9 +39,60 @@ class ModifierNodeStyleResolverTest {
         assertEquals(99, style.backgroundDrawableResId)
         assertNotNull(style.backgroundColor)
         assertEquals(0xFF0000AA.toInt(), style.backgroundColor)
+        assertEquals(VerticalSurfaceInsetsPx.Zero, style.surfaceInsets)
     }
 
-    private fun buttonVNode(modifier: Modifier): VNode {
+    @Test
+    fun `button style centers visual surface inside effective height`() {
+        val node = buttonVNode(
+            modifier = Modifier,
+            minHeight = 48.dp,
+            visualHeight = 40.dp,
+        )
+
+        val style = ModifierNodeStyleResolver.resolveNodeStyle(
+            node = node,
+            resolved = node.modifier.resolve(),
+            defaultRippleColor = 0xFF00FF00.toInt(),
+        )
+
+        assertEquals(VerticalSurfaceInsetsPx(top = 4, bottom = 4), style.surfaceInsets)
+    }
+
+    @Test
+    fun `explicit button surface override disables component visual inset`() {
+        val node = buttonVNode(
+            modifier = Modifier.backgroundColor(0xFF0000AA.toInt()),
+            minHeight = 48.dp,
+            visualHeight = 40.dp,
+        )
+
+        val style = ModifierNodeStyleResolver.resolveNodeStyle(
+            node = node,
+            resolved = node.modifier.resolve(),
+            defaultRippleColor = 0xFF00FF00.toInt(),
+        )
+
+        assertEquals(VerticalSurfaceInsetsPx.Zero, style.surfaceInsets)
+    }
+
+    @Test
+    fun `surface inset clamps invalid visual height and preserves odd pixels`() {
+        assertEquals(
+            VerticalSurfaceInsetsPx(top = 3, bottom = 4),
+            centeredVerticalSurfaceInsets(effectiveHeightPx = 48, visualHeightPx = 41),
+        )
+        assertEquals(
+            VerticalSurfaceInsetsPx.Zero,
+            centeredVerticalSurfaceInsets(effectiveHeightPx = 40, visualHeightPx = 48),
+        )
+    }
+
+    private fun buttonVNode(
+        modifier: Modifier,
+        minHeight: com.viewcompose.ui.unit.UiDp = 0.dp,
+        visualHeight: com.viewcompose.ui.unit.UiDp = minHeight,
+    ): VNode {
         return VNode(
             type = NodeType.Button,
             spec = ButtonNodeProps(
@@ -55,7 +106,7 @@ class ModifierNodeStyleResolverTest {
                 borderColor = 0,
                 shape = UiShape.rounded(0.dp),
                 rippleColor = 0x33000000,
-                minHeight = 0.dp,
+                minHeight = minHeight,
                 paddingHorizontal = 0.dp,
                 paddingVertical = 0.dp,
                 leadingIcon = null,
@@ -63,6 +114,7 @@ class ModifierNodeStyleResolverTest {
                 iconTint = 0,
                 iconSize = 0.dp,
                 iconSpacing = 0.dp,
+                visualHeight = visualHeight,
             ),
             modifier = modifier,
             children = emptyList(),

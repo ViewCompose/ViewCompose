@@ -31,6 +31,7 @@ internal object ModifierNodeStyleResolver {
         resolved: ResolvedModifiers,
         defaultRippleColor: Int,
     ): NodeStyle {
+        val surfaceInsets = readNodeSurfaceInsets(node, resolved)
         return NodeStyle(
             backgroundDrawableResId = resolved.backgroundDrawableRes?.resId,
             backgroundColor = resolved.backgroundColor?.color ?: readNodeBackgroundColor(node),
@@ -57,6 +58,7 @@ internal object ModifierNodeStyleResolver {
             lineHeightPx = readNodeLineHeight(node)?.let(node.environment.density::roundToPx),
             includeFontPadding = readNodeIncludeFontPadding(node),
             clickable = resolved.clickable != null || readNodeClickable(node),
+            surfaceInsets = surfaceInsets,
         )
     }
 
@@ -139,6 +141,18 @@ internal object ModifierNodeStyleResolver {
         is ButtonNodeProps -> spec.minHeight
         is TextFieldNodeProps -> spec.minHeight
         else -> null
+    }
+
+    private fun readNodeSurfaceInsets(
+        node: VNode,
+        resolved: ResolvedModifiers,
+    ): VerticalSurfaceInsetsPx {
+        if (resolved.hasExplicitSurfaceOverride()) return VerticalSurfaceInsetsPx.Zero
+        val spec = node.spec as? ButtonNodeProps ?: return VerticalSurfaceInsetsPx.Zero
+        return centeredVerticalSurfaceInsets(
+            effectiveHeightPx = node.environment.roundToPx(spec.minHeight),
+            visualHeightPx = node.environment.roundToPx(spec.visualHeight),
+        )
     }
 
     private fun readNodePadding(node: VNode): PaddingModifierElement? = when (val spec = node.spec) {
@@ -237,7 +251,41 @@ internal data class NodeStyle(
     val lineHeightPx: Int?,
     val includeFontPadding: Boolean?,
     val clickable: Boolean,
+    val surfaceInsets: VerticalSurfaceInsetsPx = VerticalSurfaceInsetsPx.Zero,
 )
+
+/** Pixel insets that center a node's visual surface inside its effective View bounds. */
+internal data class VerticalSurfaceInsetsPx(
+    val top: Int,
+    val bottom: Int,
+) {
+    companion object {
+        val Zero = VerticalSurfaceInsetsPx(top = 0, bottom = 0)
+    }
+}
+
+/** Returns non-negative centered insets while preserving the requested visual height in pixels. */
+internal fun centeredVerticalSurfaceInsets(
+    effectiveHeightPx: Int,
+    visualHeightPx: Int,
+): VerticalSurfaceInsetsPx {
+    val effective = effectiveHeightPx.coerceAtLeast(0)
+    val visual = visualHeightPx.coerceIn(0, effective)
+    val totalInset = effective - visual
+    val top = totalInset / 2
+    return VerticalSurfaceInsetsPx(
+        top = top,
+        bottom = totalInset - top,
+    )
+}
+
+private fun ResolvedModifiers.hasExplicitSurfaceOverride(): Boolean {
+    return backgroundDrawableRes != null ||
+        backgroundColor != null ||
+        border != null ||
+        cornerRadius != null ||
+        shape != null
+}
 
 /**
  * Style that an outer host must apply during layout and inset handling.

@@ -106,6 +106,9 @@ Constraints:
    `textSizeSp` is insufficient.
 5. The renderer applies the text style already resolved in `NodeSpec` and does not recreate theme
    semantics.
+6. When a component separates its effective target from its visual surface, the theme supplies both
+   dimensions, Defaults resolve them into `NodeSpec`, and the renderer only applies the resolved
+   geometry. Explicit application surface modifiers remain authoritative.
 
 ## 4. Local override rules
 
@@ -198,7 +201,10 @@ Current bridge matrix:
 6. `controls`
    - Android themes provide no uniform sources corresponding to `compact / medium / large`;
    - `Material3ThemeDefaults` therefore supplies the pinned standard sizing profile, and bridge
-     results retain it while replacing resource-backed colors, typography, and shapes.
+     results retain it while replacing resource-backed colors, typography, and shapes;
+   - the Material 3 profile also selects a 48dp minimum effective height for Checkbox,
+     RadioButton, Switch, and Slider. UI Foundation consumes the neutral token before caller
+     modifiers, so explicit exact application sizing remains authoritative.
 
 The bridge does not:
 
@@ -255,9 +261,10 @@ regression contract.
 1. Keep the theme model stable and do not return to complete per-component token precomputation.
 2. Dynamic color, complete 15-role typography, complete absolute shape mapping, and configuration
    lifecycle are implemented; expand the multi-window and vendor-theme device matrix.
-3. Treat touch-target expansion, TextField floating/focus behavior, and exact Switch/Slider
-   geometry as test-first component work. A complete token bridge alone does not provide those
-   structural behaviors.
+3. Button and native compact-input touch targets now use test-backed effective-size policies.
+   Continue treating composite Chip expansion, TextField floating/focus behavior, and exact
+   Switch/Slider visual geometry as test-first component work; a complete token bridge alone does
+   not provide those structural behaviors.
 4. Keep theme regression aligned with overlay, input, and container scenarios in the
    [roadmap](../project/roadmap.md).
 

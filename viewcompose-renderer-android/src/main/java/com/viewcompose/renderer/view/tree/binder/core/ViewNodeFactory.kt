@@ -8,7 +8,6 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RadioButton
-import android.widget.SeekBar
 import android.widget.Switch
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -64,7 +63,7 @@ internal object ViewNodeFactory {
             NodeType.Checkbox -> CheckBox(context)
             NodeType.Switch -> Switch(context)
             NodeType.RadioButton -> RadioButton(context)
-            NodeType.Slider -> SeekBar(context)
+            NodeType.Slider -> ViewComposeSeekBar(context)
             NodeType.LinearProgressIndicator -> DeclarativeProgressIndicatorView(
                 context,
                 DeclarativeProgressIndicatorView.Mode.Linear,

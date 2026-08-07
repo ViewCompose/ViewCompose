@@ -4,7 +4,13 @@ import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
 
 /**
- * Defines compact, medium, and large button dimensions.
+ * Defines effective target and visible-container dimensions for each Button size tier.
+ *
+ * The height fields are minimum layout and semantic target heights. The visual-height fields
+ * describe the centered background, border, shape, and ripple container inside that target. A
+ * visual height defaults to its matching target height, so non-Material themes keep the existing
+ * single-bound surface unless they opt into a smaller visible container. Values are immutable and
+ * are not validated; renderers clamp the requested visual height into the effective bounds.
  *
  * @property compactHeight minimum height used by compact buttons
  * @property mediumHeight minimum height used by medium buttons
@@ -15,6 +21,9 @@ import com.viewcompose.ui.unit.UiSp
  * @property compactVerticalPadding top and bottom content padding for compact buttons
  * @property mediumVerticalPadding top and bottom content padding for medium buttons
  * @property largeVerticalPadding top and bottom content padding for large buttons
+ * @property compactVisualHeight visible container height inside the compact target
+ * @property mediumVisualHeight visible container height inside the medium target
+ * @property largeVisualHeight visible container height inside the large target
  */
 data class UiButtonSizing(
     val compactHeight: UiDp,
@@ -26,6 +35,9 @@ data class UiButtonSizing(
     val compactVerticalPadding: UiDp,
     val mediumVerticalPadding: UiDp,
     val largeVerticalPadding: UiDp,
+    val compactVisualHeight: UiDp = compactHeight,
+    val mediumVisualHeight: UiDp = mediumHeight,
+    val largeVisualHeight: UiDp = largeHeight,
 )
 
 /**
@@ -377,6 +389,8 @@ data class UiBadgeSizing(
  * @property menu menu dimensions
  * @property tooltip tooltip dimensions
  * @property badge badge dimensions
+ * @property minimumInteractiveHeight minimum effective height for compact interactive controls;
+ * zero preserves each native control's intrinsic measurement
  */
 data class UiControlSizing(
     val button: UiButtonSizing,
@@ -392,4 +406,5 @@ data class UiControlSizing(
     val menu: UiMenuSizing = UiMenuSizing.default(),
     val tooltip: UiTooltipSizing = UiTooltipSizing.default(),
     val badge: UiBadgeSizing = UiBadgeSizing.default(),
+    val minimumInteractiveHeight: UiDp = UiDp.Zero,
 )

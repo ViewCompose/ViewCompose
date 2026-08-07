@@ -1,15 +1,31 @@
 package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.minHeight
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 
 /**
- * Emits a checkbox node with a text label.
+ * Displays a labeled checkbox and reports accepted checked-state changes.
  *
- * This DSL only describes the current checked state; callers own state storage and update it from onCheckedChange.
+ * State remains caller-owned. The current theme supplies a minimum effective height before
+ * [modifier] is appended; this can enlarge the native View and accessibility bounds without
+ * changing its centered platform indicator. An explicit exact height in [modifier] remains
+ * authoritative.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.compactInputTargetSample
+ * @receiver active tree builder that receives the emitted Checkbox node
+ * @param text visible label associated with the checkbox
+ * @param checked current caller-owned checked state
+ * @param onCheckedChange callback invoked synchronously on the renderer thread with the requested state
+ * @param enabled whether input is accepted and enabled color roles are used
+ * @param checkedColor ARGB indicator color used for the checked state
+ * @param uncheckedColor ARGB indicator color used for the unchecked state
+ * @param style immutable text appearance snapshot for [text]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after the themed minimum effective height
  */
 fun UiTreeBuilder.Checkbox(
     text: String,
@@ -44,14 +60,30 @@ fun UiTreeBuilder.Checkbox(
             includeFontPadding = style.includeFontPadding,
             rippleColor = InputControlDefaults.pressedColor(),
         ),
-        modifier = modifier,
+        modifier = Modifier
+            .minHeight(InputControlDefaults.minimumInteractiveHeight())
+            .then(modifier),
     )
 }
 
 /**
- * Emits a switch node with a text label.
+ * Displays a labeled switch and reports accepted checked-state changes.
  *
- * Default thumb and track colors resolve from the complete checked and enabled state.
+ * State remains caller-owned, and default thumb and track colors resolve from the complete checked
+ * and enabled state. The current theme supplies a minimum effective height before [modifier] is
+ * appended; an explicit exact height in [modifier] remains authoritative.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.compactInputTargetSample
+ * @receiver active tree builder that receives the emitted Switch node
+ * @param text visible label associated with the switch
+ * @param checked current caller-owned checked state
+ * @param onCheckedChange callback invoked synchronously on the renderer thread with the requested state
+ * @param enabled whether input is accepted and enabled color roles are used
+ * @param thumbColor optional ARGB thumb color, or `null` to retain the renderer-native value
+ * @param trackColor optional ARGB track color, or `null` to retain the renderer-native value
+ * @param style immutable text appearance snapshot for [text]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after the themed minimum effective height
  */
 fun UiTreeBuilder.Switch(
     text: String,
@@ -86,14 +118,29 @@ fun UiTreeBuilder.Switch(
             includeFontPadding = style.includeFontPadding,
             rippleColor = InputControlDefaults.pressedColor(),
         ),
-        modifier = modifier,
+        modifier = Modifier
+            .minHeight(InputControlDefaults.minimumInteractiveHeight())
+            .then(modifier),
     )
 }
 
 /**
- * Emits a radio button node for mutually exclusive selection flows.
+ * Displays a labeled radio button for a caller-owned mutually exclusive selection flow.
  *
- * This function does not manage group exclusivity; callers should enforce a single selected option with shared state.
+ * This component does not manage group exclusivity. The current theme supplies a minimum effective
+ * height before [modifier] is appended; an explicit exact height in [modifier] remains authoritative.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.compactInputTargetSample
+ * @receiver active tree builder that receives the emitted RadioButton node
+ * @param text visible label associated with the option
+ * @param checked whether this option is currently selected
+ * @param onCheckedChange callback invoked synchronously on the renderer thread with the requested state
+ * @param enabled whether input is accepted and enabled color roles are used
+ * @param checkedColor ARGB indicator color used for the selected state
+ * @param uncheckedColor ARGB indicator color used for the unselected state
+ * @param style immutable text appearance snapshot for [text]
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after the themed minimum effective height
  */
 fun UiTreeBuilder.RadioButton(
     text: String,
@@ -128,14 +175,32 @@ fun UiTreeBuilder.RadioButton(
             includeFontPadding = style.includeFontPadding,
             rippleColor = InputControlDefaults.pressedColor(),
         ),
-        modifier = modifier,
+        modifier = Modifier
+            .minHeight(InputControlDefaults.minimumInteractiveHeight())
+            .then(modifier),
     )
 }
 
 /**
- * Emits an integer-valued slider node.
+ * Displays an integer-valued slider and reports accepted value changes.
  *
- * value should stay within min..max; the renderer maps it onto the platform progress range.
+ * State remains caller-owned. Callers should keep [value] within the inclusive [min] to [max]
+ * range; this DSL does not normalize inconsistent inputs. The current theme supplies a minimum
+ * effective height before [modifier] is appended. Android Renderer keeps the native track and
+ * thumb centered inside that height, while an explicit exact application or parent height remains
+ * authoritative.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.compactInputTargetSample
+ * @receiver active tree builder that receives the emitted Slider node
+ * @param value current caller-owned integer value
+ * @param onValueChange callback invoked synchronously on the renderer thread with the requested value
+ * @param min inclusive lower bound of the platform progress range
+ * @param max inclusive upper bound of the platform progress range
+ * @param enabled whether input is accepted and enabled color roles are used
+ * @param thumbColor ARGB color applied to the slider thumb
+ * @param trackColor ARGB color applied to the active slider track
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended after the themed minimum effective height
  */
 fun UiTreeBuilder.Slider(
     value: Int,
@@ -160,6 +225,8 @@ fun UiTreeBuilder.Slider(
             trackColor = trackColor,
             onValueChange = onValueChange,
         ),
-        modifier = modifier,
+        modifier = Modifier
+            .minHeight(InputControlDefaults.minimumInteractiveHeight())
+            .then(modifier),
     )
 }

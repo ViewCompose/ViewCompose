@@ -78,6 +78,10 @@ Because the current line is alpha, the documentation site intentionally does not
   does not validate compatibility; a renderer must reject an unsupported pair deterministically.
 - A node specification is an immutable render snapshot. Callbacks may capture mutable application
   state, but the spec itself must not be used as a native-object owner.
+- `ButtonNodeProps.minHeight` is the effective minimum View and semantic target height, while
+  `visualHeight` is the requested centered surface height. A renderer must clamp an invalid visual
+  height to the effective bounds and must keep explicit application surface modifiers
+  authoritative.
 - Modifier order is semantic. Layout and parent-data collection, visual decoration, input,
   semantics, and drawing phases consume the ordered elements according to their documented phase
   rules; reordering elements may change behavior.
@@ -125,3 +129,7 @@ concrete `NodeSpec`, or a modifier element can require a renderer update even wh
 source remains unchanged. Custom renderers should fail clearly for unknown contracts and should not
 persist enum ordinals, sealed-subtype names, tooling metadata, native view identities, or callback
 instances as long-lived external data.
+
+Adding `ButtonNodeProps.visualHeight` is a Q2 immutable snapshot-contract change. The source default
+equals `minHeight`, but precompiled constructor call sites and custom renderers must be rebuilt for
+the corresponding alpha release.

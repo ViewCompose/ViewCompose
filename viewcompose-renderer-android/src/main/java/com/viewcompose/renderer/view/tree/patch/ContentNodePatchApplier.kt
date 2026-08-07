@@ -137,6 +137,8 @@ internal object ContentNodePatchApplier {
                 shape = patch.next.shape,
                 rippleColor = patch.next.rippleColor,
                 clickable = true,
+                effectiveHeight = patch.next.minHeight,
+                visualHeight = patch.next.visualHeight,
             )
         }
         if (patch.previous.minHeight != patch.next.minHeight) {
@@ -186,7 +188,8 @@ internal object ContentNodePatchApplier {
             patch.previous.borderWidth != patch.next.borderWidth ||
             patch.previous.borderColor != patch.next.borderColor ||
             patch.previous.shape != patch.next.shape ||
-            patch.previous.rippleColor != patch.next.rippleColor
+            patch.previous.rippleColor != patch.next.rippleColor ||
+            patch.previous.visualHeight != patch.next.visualHeight
     }
 
     private fun hasTextAppearanceChange(patch: TextNodePatch): Boolean {

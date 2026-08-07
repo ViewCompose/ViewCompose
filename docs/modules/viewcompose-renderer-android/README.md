@@ -32,6 +32,13 @@ dependencies {
   ConstraintLayout, and SwipeRefreshLayout. Material Components is not a dependency.
 - Generic surfaces, rounded/cut shapes, and progress indicators use engine-owned Android drawing
   implementations driven by resolved node values.
+- Engine-owned rounded shapes use circular arcs. Shape borders are centered on a path inset by half
+  the stroke width, keeping the complete outline inside its logical drawable bounds even when a
+  component centers a shorter visible surface inside a larger target.
+- A Button may request a visible surface shorter than its effective View target. The engine centers
+  its background, border, ripple, and outline inside the View without changing measurement,
+  hit-testing, or accessibility bounds. An explicit background, border, corner radius, or shape
+  modifier disables that component-provided inset so application styling remains authoritative.
 - Build baseline for this release: Kotlin 2.0.21 and Android Gradle Plugin 8.13.2.
 
 ## Rendering model
@@ -108,6 +115,12 @@ Because the current line is alpha, the documentation site intentionally does not
   otherwise unchanged.
 - Targeted patching and subtree skipping are optimizations. Custom host behavior must not infer
   business state from patch records or diagnostic counters.
+- Button surface-inset changes participate in targeted style patching. They must not recreate the
+  native View or change its effective measured target.
+- Slider binding uses a renderer-neutral `AppCompatSeekBar` subclass because the platform widget
+  can ignore `minimumHeight` under an `AT_MOST` measure spec. It honors the declared minimum while
+  leaving an exact application or parent height authoritative; no Material policy or token is
+  interpreted in Android Renderer.
 
 ## Android host and threading rules
 

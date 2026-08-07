@@ -54,7 +54,17 @@ missing. Each snapshot includes:
 - all 15 standard display, headline, title, body, and label typography roles;
 - extra-small, small, medium, large, extra-large, and full shape roles; and
 - the selected standard sizing profile for buttons, text fields, segmented controls, progress
-  indicators, FABs, search, and badges.
+  indicators, FABs, search, badges, and native compact-input effective targets.
+
+The standard Button profile uses a 48dp effective target with a centered 40dp visible container for
+compact and medium buttons, and a 56dp target with a 48dp visible container for large buttons. This
+is a token choice consumed through UI Foundation's design-system-neutral sizing contract; the
+Material adapter does not participate in Android hit testing or View drawing.
+
+Checkbox, RadioButton, Switch, and Slider use a 48dp minimum effective height. Their native
+indicator, thumb, track, and label geometry remains centered and platform-rendered; an explicit
+exact application height or tighter parent constraint still wins. This policy is expressed through
+UI Foundation's neutral control-sizing token rather than a Material branch in Android Renderer.
 
 The Android bridge replaces available values from the active theme. It reads all 15 Material text
 appearances and the five absolute `shapeAppearanceCorner*` roles, while legacy Android
@@ -63,9 +73,11 @@ headline values retain the complete static Material snapshot instead of being co
 legacy size or falling back to UI Foundation's neutral defaults.
 
 The adapter does not add Material policy to Android Renderer. Component defaults resolve semantic
-roles in UI Foundation before a NodeSpec reaches the renderer. Touch-target expansion, TextField
-floating-label/focus structure, and exact Switch/Slider geometry are not implied by the token
-bridge and require separate tested component work.
+roles in UI Foundation before a NodeSpec reaches the renderer. Button visual/effective height
+separation is explicitly represented by the sizing tokens and NodeSpec. The native compact-input
+target policy is likewise consumed by UI Foundation; composite Chip target/surface separation,
+TextField floating-label/focus structure, and exact Switch/Slider visual geometry are not implied
+by the token bridge and require separate tested component work.
 
 ## Related documentation
 

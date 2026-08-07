@@ -2,23 +2,27 @@
 
 ## Status
 
-Active. Phase 0 and the low-risk Phase 1 release slice are implemented in the current worktree and
-covered by focused unit tests and representative real-renderer visual evidence. Later interaction
-and geometry phases remain unscheduled and must start from the baselines defined here.
+Active. Phase 0 and the low-risk Phase 1 release slice are implemented and Phase 1 is under review
+in pull request 79. Phase 2 has accepted independently revertible effective-target changes for
+Button and the native Checkbox, RadioButton, Switch, and Slider controls. Chip expansion is
+deferred behind a generic composite-target contract. The interaction-state baseline is complete,
+but production state-layer changes remain conditional on a small renderer-neutral contract.
 
 This is a temporary execution plan and remains canonical English-only under the documentation
 governance policy. When the accepted work is complete, durable contracts move into the theme guide
 and owning module manuals before this plan moves to `docs/archive/`.
 
-Last verified: 2026-08-06.
+Last verified: 2026-08-07.
 
-Next action: review and release Phase 1, then decide whether the touch-target baseline in Phase 2
-has enough product value to enter scheduling. Do not start TextField or custom-control structural
-changes before their required current-behavior tests exist.
+Next action: review and release Phase 1, then decide whether the Button/IconButton state-layer
+experiment can preserve the existing one-color fallback without adding Material policy to Android
+Renderer. Do not generalize to Chip, start TextField work, or start custom-control structural
+changes before each area's required current-behavior tests and keep criteria exist.
 
 ## Maven release changesets
 
 - `release/changes/20260807-material3-phase1.json`
+- `release/changes/20260807-material3-phase2-button-target.json`
 
 ## Objective
 
@@ -215,6 +219,9 @@ Completion gate:
 
 Do not begin with production behavior changes.
 
+Status: current-behavior fixture captured; Button and native compact-input experiments accepted;
+composite Chip and interaction-state work remain conditional and in progress.
+
 Required baseline:
 
 1. Cover Button, IconButton, Chip, Checkbox, RadioButton, Switch, Slider, navigation destinations,
@@ -225,6 +232,84 @@ Required baseline:
 4. Verify semantics bounds, accessibility focus, ripple clipping, parent clipping, scrolling,
    minimum-size overrides, and explicit compact application layouts.
 5. Record current behavior before adding a touch-delegate, outer node, or renderer mechanism.
+
+Initial baseline evidence, 2026-08-07:
+
+- a dedicated Settings entry opens a default Material 3 page that deliberately bypasses the demo's
+  custom `DemoThemeTokens` while preserving explicit Light, Dark, and Android-theme bridge modes;
+- `Material3TouchTargetBaselineUiTest` passed on the Pixel 9a API 35 AVD at 1.0 and 1.3 font scale;
+- the standard Button currently exposes one ambiguous 48dp visual/View/semantic height rather than
+  a 40dp visible container inside a 48dp target;
+- IconButton is already 48dp, while Chip, Checkbox, RadioButton, Switch, and Slider expose current
+  View/semantic heights of 32dp, 32dp, 32dp, 27dp, and 18dp respectively at both font scales;
+- generated evidence contains one screenshot and one bounds report per font scale; reports record
+  View, drawable, accessibility-node, clickable, and enabled state without adding runtime logging;
+- the first production experiment will address Button visual/touch separation. A general compact
+  control target mechanism remains conditional on overlap, scrolling, clipping, and explicit-size
+  tests instead of being inferred from the Button result.
+
+Accepted Button experiment, 2026-08-07:
+
+- `UiButtonSizing` and `ButtonNodeProps` now represent effective and visual heights independently;
+  existing and custom themes preserve their previous geometry through equal-height defaults;
+- the Material 3 profile selects 48dp/40dp effective/visual heights for compact and medium Button,
+  and 56dp/48dp for large Button;
+- Android Renderer centers only the resolved background, border, ripple, and outline. The native
+  View, semantic bounds, and hit target keep the effective height, and explicit application surface
+  modifiers disable the component inset;
+- the Pixel 9a API 35 test passed at 1.0 and 1.3 font scale. Reports record 48dp View and semantic
+  heights with a 40dp visual surface, and a device tap inside the effective target but outside the
+  visible surface triggers the callback;
+- focused UI Foundation, Material 3, and Android Renderer unit suites pass. The implementation is
+  retained because it satisfies the keep rule without a Material dependency or policy branch in
+  Android Renderer;
+- screenshot review exposed a generic engine-owned shape defect rather than a Button token error.
+  Rounded corners now use circular arcs, borders use a half-stroke inset path, and shape patches
+  rebuild cached geometry. Renderer pixel tests cover pill corners and all four outline edges;
+- this result does not by itself approve a generic touch-delegate or wrapper. Compact-control work
+  must still prove deterministic overlap, scrolling, clipping, accessibility, and explicit-size
+  behavior.
+
+Accepted native compact-input experiment, 2026-08-07:
+
+- `UiControlSizing.minimumInteractiveHeight` provides a renderer-independent policy with a neutral
+  zero default. The Material 3 profile selects 48dp without changing custom or unthemed intrinsic
+  geometry;
+- Checkbox, RadioButton, Switch, and Slider prepend that minimum before the caller modifier. An
+  explicit 32dp application height and a 32dp parent constraint remain authoritative;
+- Android's `SeekBar` ignores its minimum height under a normal `AT_MOST` measure spec. Android
+  Renderer therefore uses a small renderer-neutral subclass that honors the already-resolved
+  minimum, keeps track/thumb content centered, and still yields to an exact height. No Material
+  dependency or Material-specific branch enters the renderer;
+- the Pixel 9a API 35 test passed at 1.0 and 1.3 font scale with 48dp View and semantic heights for
+  all four controls. Zero-spacing adjacent Checkbox Views meet at one boundary without overlap;
+  device taps at either side select the deterministic corresponding control after scrolling;
+- the same fixture verifies explicit compact sizing and parent clipping at 32dp. Focused UI
+  Foundation, Material 3, and Android Renderer suites cover token resolution, modifier order, and
+  the `SeekBar` measurement exception;
+- Chip remains at its 32dp visual/View/semantic height. It is a composite control whose surface,
+  click behavior, and caller modifier currently share one node. A wrapper or expanded hit region
+  would change modifier precedence, accessibility ownership, or adjacent-target behavior. This
+  phase will not accept that risk until a generic composite surface/target contract passes the same
+  overlap, clipping, scrolling, semantics, and explicit-size matrix.
+
+Interaction-state baseline, 2026-08-07:
+
+- the pinned Material Components `1.13.0` selectors use the component content role for the state
+  layer. For a primary Button this is `onPrimary`; pressed and focused opacity are `0.10`, hovered
+  opacity is `0.08`, and selector order gives pressed precedence over focused and hovered;
+- the current ViewCompose surface contract carries one `rippleColor` integer. Android Renderer
+  creates a value-only `ColorStateList`, so pressed, focused, and hovered all resolve to the same
+  `onSurface`-derived color and opacity. The device baseline records this difference explicitly;
+- extending `UiStateColor.resolve` with a hover flag would not fix component-specific content roles,
+  and deriving Material opacity or content roles inside Android Renderer would violate the layer
+  boundary. Any retained experiment must carry a generic state-layer color set through the
+  component/NodeSpec boundary and preserve the existing one-color API as a compatibility fallback;
+- because this contract affects every clickable surface and custom renderer, production behavior
+  remains unchanged in the baseline commit. Start with Button and IconButton only after tests cover
+  disabled, pressed, focused, hovered, pressed-plus-focused precedence, caller override, patching,
+  and Light/Dark output. Expand to composite and selection controls only if that small contract is
+  reusable without a Material-specific renderer branch.
 
 Keep the implementation only when it provides at least 48dp effective targets for standard
 Material components without changing visual geometry, stealing adjacent input, breaking scrolling,
@@ -340,3 +425,8 @@ This plan is complete when:
 | --- | --- | --- | --- |
 | 2026-08-06 | 0 | CodeGraph/source inventory and local Material Components `1.13.0` resource audit | Standard non-Expressive baseline selected |
 | 2026-08-06 | 1 | UI Foundation unit suite, Material mapper/static-token/Robolectric tests | Low-risk implementation retained pending release review |
+| 2026-08-07 | 2 | Default-theme Settings fixture; API 35 screenshots and View/drawable/accessibility bounds at 1.0/1.3 font scale | Accessibility gap confirmed; Button separation experiment approved, generic expansion remains conditional |
+| 2026-08-07 | 2 | Button 48dp target / 40dp visible surface reports and screenshots at 1.0/1.3 font scale; edge-target device click; focused unit suites | Button experiment retained; compact-control generalization remains conditional |
+| 2026-08-07 | 2 | Default-theme screenshot review plus Renderer circular-corner, complete-outline, and shape-patch pixel tests | Generic shape path fix retained; Button full-shape token remains unchanged |
+| 2026-08-07 | 2 | Checkbox, RadioButton, Switch, and Slider 48dp View/semantic reports at 1.0/1.3 font scale; adjacent-target, scrolling, explicit-size, clipping, and focused unit coverage | Native compact-input experiment retained; Chip expansion deferred pending a generic composite-target contract |
+| 2026-08-07 | 2 | Button RippleDrawable report plus pinned Material selector comparison for pressed, focused, and hovered output | State-layer mismatch confirmed; baseline retained and production behavior unchanged pending a reusable renderer-neutral contract |

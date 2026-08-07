@@ -138,6 +138,22 @@ object ButtonDefaults {
     }
 
     /**
+     * Returns the visible container height centered inside the effective target for [size].
+     *
+     * @param size interaction-density tier whose theme token is selected
+     * @return logical height used for the Button background, border, shape, and ripple
+     */
+    fun visualHeight(
+        size: ButtonSize = ButtonSize.Medium,
+    ): UiDp {
+        return when (size) {
+            ButtonSize.Compact -> Theme.controls.button.compactVisualHeight
+            ButtonSize.Medium -> Theme.controls.button.mediumVisualHeight
+            ButtonSize.Large -> Theme.controls.button.largeVisualHeight
+        }
+    }
+
+    /**
      * Resolves start and end content padding for [size] and [variant].
      *
      * Text buttons use their lower horizontal inset independently of the theme's filled-button

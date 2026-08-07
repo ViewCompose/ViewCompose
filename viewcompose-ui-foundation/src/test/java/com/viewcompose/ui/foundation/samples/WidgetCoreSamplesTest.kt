@@ -7,7 +7,10 @@ class WidgetCoreSamplesTest {
     fun `documentation samples remain executable`() {
         themeStateColorSample()
         themeProviderSample()
+        buttonSample()
+        compactInputTargetSample()
         popupPositioningSample()
         saveableStateRegistrySample()
+        imageLoadingSample()
     }
 }
