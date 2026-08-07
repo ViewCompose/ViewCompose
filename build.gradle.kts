@@ -1668,11 +1668,20 @@ val verifyConnectedAndroidDeviceReady = tasks.register("verifyConnectedAndroidDe
         val isBooted = bootCompleted == "1"
         val isAwake = Regex("(?m)^\\s*mWakefulness=Awake\\s*$").containsMatchIn(powerState) ||
             Regex("(?m)^\\s*mInteractive=true\\s*$").containsMatchIn(powerState)
-        val isKeyguardShowing = listOf(
-            Regex("(?m)^\\s*showingAndNotOccluded=true\\s*$"),
-            Regex("(?m)^\\s*mIsShowing=true\\s*$"),
-            Regex("(?m)^\\s*mKeyguardShowing=true\\s*$"),
-        ).any { pattern -> pattern.containsMatchIn(windowPolicy) }
+        fun readBooleanPolicyField(name: String): Boolean? {
+            return Regex("(?m)^\\s*${Regex.escape(name)}=(true|false)\\s*$")
+                .find(windowPolicy)
+                ?.groupValues
+                ?.get(1)
+                ?.toBooleanStrict()
+        }
+        // Android 7.0 can leave showingAndNotOccluded=true after the launcher is visible while
+        // reporting the authoritative mIsShowing=false. Prefer explicit keyguard state and use
+        // older/version-specific fields only when the stronger signal is absent.
+        val isKeyguardShowing = readBooleanPolicyField("mIsShowing")
+            ?: readBooleanPolicyField("mKeyguardShowing")
+            ?: readBooleanPolicyField("showingAndNotOccluded")
+            ?: false
         val failures = buildList {
             if (!isBooted) add("Android has not completed booting")
             if (!isAwake) add("the display is not awake")

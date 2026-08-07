@@ -9,8 +9,8 @@ import com.viewcompose.ui.unit.UiDp
  * Defines fully resolved visual values consumed by [BasicSurface].
  *
  * This Q2 value contains no theme lookup or design-system identity. Brush coordinates use the
- * rendered surface's local pixel coordinate space. Shadow lists are copied at construction and
- * remain ordered from back to front.
+ * rendered surface's local pixel coordinate space. Rendering snapshots the shadow lists at
+ * construction, preserving declaration order even if a caller supplied a mutable list.
  *
  * @property fill solid or gradient fill drawn inside [shape]
  * @property shape geometry shared by fill, border, ripple, clipping, shadows, and diagnostics

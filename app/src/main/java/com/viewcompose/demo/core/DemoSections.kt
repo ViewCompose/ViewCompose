@@ -71,7 +71,7 @@ internal fun UiTreeBuilder.ThemeSwatchRow(
     ) {
         Text(
             text = label,
-            style = UiTextStyle(fontSizeSp = 13.sp),
+            style = UiTextStyle(fontSizeSp = 13.sp, lineHeightSp = 18.sp),
             color = TextDefaults.secondaryColor(),
         )
         Row(
@@ -295,7 +295,7 @@ internal fun UiTreeBuilder.DiagnosticFactGroup(
             ) {
                 Text(
                     text = fact.label,
-                    style = UiTextStyle(fontSizeSp = 13.sp),
+                    style = UiTextStyle(fontSizeSp = 13.sp, lineHeightSp = 18.sp),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.width(136.dp),
                 )

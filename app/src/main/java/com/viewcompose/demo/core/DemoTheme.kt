@@ -208,9 +208,9 @@ object DemoThemeTokens {
             inversePrimary = 0xFF53DBC8.toInt(),
         ),
         typography = UiTypography(
-            titleMedium = UiTextStyle(fontSizeSp = 22.sp),
-            bodyMedium = UiTextStyle(fontSizeSp = 16.sp),
-            labelMedium = UiTextStyle(fontSizeSp = 14.sp),
+            titleMedium = UiTextStyle(fontSizeSp = 22.sp, lineHeightSp = 28.sp),
+            bodyMedium = UiTextStyle(fontSizeSp = 16.sp, lineHeightSp = 24.sp),
+            labelMedium = UiTextStyle(fontSizeSp = 14.sp, lineHeightSp = 20.sp),
         ),
         metadata = UiThemeMetadata(isDark = false),
     )
@@ -261,9 +261,9 @@ object DemoThemeTokens {
             inversePrimary = 0xFF006A60.toInt(),
         ),
         typography = UiTypography(
-            titleMedium = UiTextStyle(fontSizeSp = 22.sp),
-            bodyMedium = UiTextStyle(fontSizeSp = 16.sp),
-            labelMedium = UiTextStyle(fontSizeSp = 14.sp),
+            titleMedium = UiTextStyle(fontSizeSp = 22.sp, lineHeightSp = 28.sp),
+            bodyMedium = UiTextStyle(fontSizeSp = 16.sp, lineHeightSp = 24.sp),
+            labelMedium = UiTextStyle(fontSizeSp = 14.sp, lineHeightSp = 20.sp),
         ),
         metadata = UiThemeMetadata(isDark = true),
     )

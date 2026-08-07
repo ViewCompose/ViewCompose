@@ -2,12 +2,12 @@
 
 ## Status
 
-Active. Phase 0 and the test-only Phase 1 five-component architecture fixture are complete on
-`codex/multi-design-system-foundation`. Current visual and performance evidence remains the
-before-change baseline; the first design-system-specific device capture is required when a shared
-Basic primitive enters production in Phase 2. The branch is based on the accepted Material 3
-interaction-state work so the new architecture can preserve those generic state-layer contracts
-instead of reintroducing a parallel mechanism.
+Active. Phases 0 through 4 are implemented on `codex/multi-design-system-foundation`. The internal
+five-component slice now exercises two visually distinct design-system bundles through shared
+Basic primitives and design-system-owned composites. Its behavior and screenshot matrix passes on
+API 24, 31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain
+non-representative for release performance acceptance; physical-device and Samsung visual
+acceptance remain release-owner gates rather than reasons to broaden the architecture.
 
 This plan is canonical English-only under the documentation governance policy. It records both the
 target architecture and the staged evidence required before public APIs or production rendering
@@ -16,10 +16,10 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-07.
 
-Next action: establish the Phase 2 current-behavior and public-API baseline for a generic
-interactive `BasicSurface`-level primitive. Do not publish a general recipe bundle, replace native
-Switch behavior, or begin One UI/Cupertino implementation before the Basic surface experiment
-passes its accessibility, input, retained-patch, and device visual gates.
+Next action: implement Phase 5 root/session replacement and prove coherent local capture across
+lazy and overlay sessions. Keep the aggregate Material 3 default and generic host boundary
+unchanged. Do not publish a general recipe registry or begin the public One UI slice until switching
+cannot retain a mixed token/recipe snapshot.
 
 ## Maven release changesets
 
@@ -355,11 +355,12 @@ compiled Q3 sample, and record a publication changeset in a release-scoped execu
 
 ## Phase 2: Basic components and unified surface/shape foundation
 
-Status: in progress. The first production slice implements Q3 `BasicSurface`, Q2
+Status: complete. The production slice implements Q3 `BasicSurface`, Q2
 `BasicSurfaceStyle`/`SurfaceNodeProps`, gradient fills, continuous corners, and effective-versus-
 visual bounds. Q3 `BasicButton` and Q2 `BasicButtonStyle` now provide the shared action composite
-used by the internal contrast fixture. Public Basic toggle adoption and the full device matrix
-remain under evaluation in this phase.
+used by the internal contrast fixture. A public Basic toggle was rejected: the second system proved
+that control structure and placement remain recipe-owned while existing surface, semantics, motion,
+and native input contracts already supply the reusable core.
 
 Planned work:
 
@@ -390,8 +391,9 @@ without enabling a second design system.
 
 ## Phase 3: Motion scheme, shape transition, and reduced motion
 
-Status: implemented at the public contract and deterministic unit-test level. Integration into the
-five-component slice, emulator screenshots, and performance comparison remain Phase 4 evidence.
+Status: complete. The semantic motion and shape fallback contracts are integrated into the
+five-component slice and covered by deterministic unit, interaction, reduced-motion, and emulator
+evidence.
 
 Planned work:
 
@@ -436,7 +438,8 @@ morph path independently if it does not improve fidelity or performance.
 
 ## Phase 4: Five-component high-fidelity vertical slice
 
-Status: pending Phase 3.
+Status: complete for implementation and representative emulator evidence. Physical Pixel/Samsung
+visual acceptance and physical-device performance thresholds remain release gates.
 
 Implement the internal contrast design system across Button, Switch, TextField, NavigationBar, and
 Surface/Card. This phase proves the architecture before a public non-Material artifact exists.
@@ -464,6 +467,27 @@ Keep criteria:
 
 Failure decision: revise or narrow the shared recipe vocabulary. Do not expand an unproven model
 into every component to protect sunk cost.
+
+### Phase 4 implementation decision and evidence
+
+- `RoundedReference` and `CutContrast` resolve immutable token, recipe, motion, capability, and
+  conformance bundles outside Android Renderer. The renderer has no design-system branch.
+- Button and Surface/Card reuse `BasicButton` and `BasicSurface`. Switch and NavigationBar remain
+  owned composites; TextField retains the native `EditText` editing core through `BasicTextField`.
+- The fixture exposes its design-system identity, token source, recipe identity, mode, reduced
+  motion, font scale, direction, shape, colors, capabilities, and per-component conformance in the
+  rendered screen and screenshot sidecars.
+- Instrumentation covers enabled/disabled, selected/checked, error, focus, hover, pressed, d-pad
+  activation, accessibility switch action, native IME connection, autofill or the pre-26 fallback,
+  selection, state recreation, and the Settings entry.
+- The deterministic matrix passes on API 24, 31, 35, and 36 emulators for light LTR 1.0x, dark RTL
+  1.3x with reduced motion, and light LTR 2.0x. Every final API 35 screenshot was visually inspected;
+  API 24, 31, and 36 compatibility captures were also inspected. The 2.0x pass found and corrected
+  missing explicit multi-line line heights in the diagnostic fixture.
+- Macrobenchmark coverage records initial build, patch-only update, scroll/draw, and active
+  animation for both bundles. A one-iteration API 35 emulator smoke trace passes, but emulator frame
+  timing is intentionally not compared with Phase 0 budgets. The formal five-iteration and physical
+  performance runs remain release-owner gates.
 
 ## Phase 5: Host resolution, switching, overlays, and system UI
 
