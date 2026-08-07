@@ -33,11 +33,11 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.unit.dp
 
-/** Emits controls resolved only from the host or static Material 3 theme adapter. */
-internal fun UiTreeBuilder.Material3DefaultThemePage() {
+/** Emits one stable component fixture under an explicitly identified theme source. */
+internal fun UiTreeBuilder.Material3DefaultThemePage(source: DemoThemeSource) {
     val defaultButtonClicks = remember { mutableStateOf(0) }
     LazyColumn(
-        items = listOf("intro", "buttons", "compact", "selection", "navigation", "targetProbes"),
+        items = listOf("intro", "source", "buttons", "compact", "selection", "navigation", "targetProbes"),
         key = { it },
         modifier = Modifier
             .fillMaxSize()
@@ -52,22 +52,26 @@ internal fun UiTreeBuilder.Material3DefaultThemePage() {
                 modifier = Modifier.fillMaxWidth().margin(top = 16.dp, bottom = 8.dp),
             ) {
                 Text(
-                    text = "默认 Material3 验证",
+                    text = "主题与 Token 验证",
                     style = Theme.typography.headlineSmall,
                     color = Theme.colors.onBackground,
                 )
                 Text(
-                    text = "本页不使用 DemoThemeTokens；圆角、色彩、字体和尺寸均来自 Material3 适配层。",
+                    text = "同一组组件固定不变；仅切换主题来源。截图先核对来源和 token 数值，再检查组件消费结果。",
                     style = Theme.typography.bodyMedium,
                     color = Theme.colors.onSurfaceVariant,
                 )
+                ThemeFixtureBadge(source)
             }
+
+            "source" -> ThemeSourceSnapshotSection(source)
 
             "buttons" -> Column(
                 spacing = 12.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 12.dp),
             ) {
                 Text(text = "Buttons", style = Theme.typography.titleMedium)
+                ThemeFixtureBadge(source)
                 Row(spacing = 8.dp, verticalAlignment = VerticalAlignment.Center) {
                     Button(
                         text = "Default",
@@ -90,6 +94,7 @@ internal fun UiTreeBuilder.Material3DefaultThemePage() {
                 modifier = Modifier.fillMaxWidth().margin(top = 20.dp),
             ) {
                 Text(text = "Compact controls", style = Theme.typography.titleMedium)
+                ThemeFixtureBadge(source)
                 Row(spacing = 12.dp, verticalAlignment = VerticalAlignment.Center) {
                     IconButton(
                         icon = ImageSource.Resource(R.drawable.demo_media_icon),
@@ -105,13 +110,14 @@ internal fun UiTreeBuilder.Material3DefaultThemePage() {
                 }
             }
 
-            "selection" -> Material3DefaultSelectionControls()
+            "selection" -> Material3DefaultSelectionControls(source)
 
             "navigation" -> Column(
                 spacing = 12.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 20.dp, bottom = 24.dp),
             ) {
                 Text(text = "Navigation", style = Theme.typography.titleMedium)
+                ThemeFixtureBadge(source)
                 NavigationBar(
                     selectedIndex = 0,
                     onItemSelected = {},
@@ -123,12 +129,74 @@ internal fun UiTreeBuilder.Material3DefaultThemePage() {
                 }
             }
 
-            else -> Material3TouchTargetProbes()
+            else -> Material3TouchTargetProbes(source)
         }
     }
 }
 
-private fun UiTreeBuilder.Material3TouchTargetProbes() {
+private fun UiTreeBuilder.ThemeFixtureBadge(source: DemoThemeSource) {
+    val mode = if (Theme.current.metadata.isDark == true) "dark" else "light"
+    Text(
+        text = "theme-token-matrix-v1 · ${source.id} · $mode",
+        style = Theme.typography.labelSmall,
+        color = Theme.colors.onSurfaceVariant,
+    )
+}
+
+private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
+    val colors = Theme.colors
+    val rolesDistinct = colors.secondary != colors.secondaryContainer
+    Column(
+        spacing = 12.dp,
+        modifier = Modifier.fillMaxWidth().margin(top = 12.dp),
+    ) {
+        Text(text = "Source + Token Snapshot", style = Theme.typography.titleMedium)
+        DiagnosticFactGroup(
+            title = "Screenshot identity",
+            facts = listOf(
+                DiagnosticFact("Fixture", "theme-token-matrix-v1"),
+                DiagnosticFact("Source", "${source.id} · ${source.label}"),
+                DiagnosticFact("Definition", source.description),
+                DiagnosticFact("Metadata origin", Theme.current.metadata.origin.name),
+                DiagnosticFact("Mode", if (Theme.current.metadata.isDark == true) "Dark" else "Light"),
+                DiagnosticFact("Primary", colors.primary.asColorHex()),
+                DiagnosticFact("PrimaryContainer", colors.primaryContainer.asColorHex()),
+                DiagnosticFact("Secondary", colors.secondary.asColorHex()),
+                DiagnosticFact("SecondaryContainer", colors.secondaryContainer.asColorHex()),
+                DiagnosticFact("OnSecondaryContainer", colors.onSecondaryContainer.asColorHex()),
+                DiagnosticFact("Surface", colors.surface.asColorHex()),
+                DiagnosticFact("SurfaceContainer", colors.surfaceContainer.asColorHex()),
+                DiagnosticFact("Role check", if (rolesDistinct) "DISTINCT" else "COLLISION"),
+            ),
+            valueTagsByLabel = mapOf(
+                "Source" to DemoTestTags.MATERIAL3_THEME_SOURCE,
+                "Metadata origin" to DemoTestTags.MATERIAL3_THEME_ORIGIN,
+                "Mode" to DemoTestTags.MATERIAL3_THEME_MODE,
+                "Secondary" to DemoTestTags.MATERIAL3_THEME_SECONDARY,
+                "SecondaryContainer" to DemoTestTags.MATERIAL3_THEME_SECONDARY_CONTAINER,
+                "Role check" to DemoTestTags.MATERIAL3_THEME_ROLE_COLLISION,
+            ),
+        )
+        ThemeSwatchRow(
+            label = "Primary roles",
+            swatches = listOf(
+                ThemeSwatch("P", colors.primary),
+                ThemeSwatch("PC", colors.primaryContainer),
+                ThemeSwatch("OnP", colors.onPrimaryContainer),
+            ),
+        )
+        ThemeSwatchRow(
+            label = "Secondary roles",
+            swatches = listOf(
+                ThemeSwatch("S", colors.secondary),
+                ThemeSwatch("SC", colors.secondaryContainer),
+                ThemeSwatch("OnS", colors.onSecondaryContainer),
+            ),
+        )
+    }
+}
+
+private fun UiTreeBuilder.Material3TouchTargetProbes(source: DemoThemeSource) {
     val firstChecked = remember { mutableStateOf(false) }
     val secondChecked = remember { mutableStateOf(false) }
     Column(
@@ -136,6 +204,7 @@ private fun UiTreeBuilder.Material3TouchTargetProbes() {
         modifier = Modifier.fillMaxWidth().margin(top = 20.dp, bottom = 24.dp),
     ) {
         Text(text = "Touch target probes", style = Theme.typography.titleMedium)
+        ThemeFixtureBadge(source)
         Checkbox(
             text = "Adjacent first",
             checked = firstChecked.value,
@@ -178,7 +247,7 @@ private fun UiTreeBuilder.Material3TouchTargetProbes() {
     }
 }
 
-private fun UiTreeBuilder.Material3DefaultSelectionControls() {
+private fun UiTreeBuilder.Material3DefaultSelectionControls(source: DemoThemeSource) {
     val checked = remember { mutableStateOf(true) }
     val sliderValue = remember { mutableStateOf(50) }
     Column(
@@ -186,6 +255,7 @@ private fun UiTreeBuilder.Material3DefaultSelectionControls() {
         modifier = Modifier.fillMaxWidth().margin(top = 20.dp),
     ) {
         Text(text = "Selection controls", style = Theme.typography.titleMedium)
+        ThemeFixtureBadge(source)
         Checkbox(
             text = "Checkbox",
             checked = checked.value,
