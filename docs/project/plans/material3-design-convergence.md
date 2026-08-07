@@ -10,11 +10,11 @@ This is a temporary execution plan and remains canonical English-only under the 
 governance policy. When the accepted work is complete, durable contracts move into the theme guide
 and owning module manuals before this plan moves to `docs/archive/`.
 
-Last verified: 2026-08-06.
+Last verified: 2026-08-07.
 
-Next action: review and release Phase 1, then decide whether the touch-target baseline in Phase 2
-has enough product value to enter scheduling. Do not start TextField or custom-control structural
-changes before their required current-behavior tests exist.
+Next action: review and release Phase 1 while Phase 2 evaluates a renderer-neutral visual-container
+and effective-touch-target separation against the captured current-behavior baseline. Do not start
+TextField or custom-control structural changes before their required current-behavior tests exist.
 
 ## Maven release changesets
 
@@ -215,6 +215,8 @@ Completion gate:
 
 Do not begin with production behavior changes.
 
+Status: current-behavior fixture and evidence captured; production experiment in progress.
+
 Required baseline:
 
 1. Cover Button, IconButton, Chip, Checkbox, RadioButton, Switch, Slider, navigation destinations,
@@ -225,6 +227,21 @@ Required baseline:
 4. Verify semantics bounds, accessibility focus, ripple clipping, parent clipping, scrolling,
    minimum-size overrides, and explicit compact application layouts.
 5. Record current behavior before adding a touch-delegate, outer node, or renderer mechanism.
+
+Initial baseline evidence, 2026-08-07:
+
+- a dedicated Settings entry opens a default Material 3 page that deliberately bypasses the demo's
+  custom `DemoThemeTokens` while preserving explicit Light, Dark, and Android-theme bridge modes;
+- `Material3TouchTargetBaselineUiTest` passed on the Pixel 9a API 35 AVD at 1.0 and 1.3 font scale;
+- the standard Button currently exposes one ambiguous 48dp visual/View/semantic height rather than
+  a 40dp visible container inside a 48dp target;
+- IconButton is already 48dp, while Chip, Checkbox, RadioButton, Switch, and Slider expose current
+  View/semantic heights of 32dp, 32dp, 32dp, 27dp, and 18dp respectively at both font scales;
+- generated evidence contains one screenshot and one bounds report per font scale; reports record
+  View, drawable, accessibility-node, clickable, and enabled state without adding runtime logging;
+- the first production experiment will address Button visual/touch separation. A general compact
+  control target mechanism remains conditional on overlap, scrolling, clipping, and explicit-size
+  tests instead of being inferred from the Button result.
 
 Keep the implementation only when it provides at least 48dp effective targets for standard
 Material components without changing visual geometry, stealing adjacent input, breaking scrolling,
@@ -340,3 +357,4 @@ This plan is complete when:
 | --- | --- | --- | --- |
 | 2026-08-06 | 0 | CodeGraph/source inventory and local Material Components `1.13.0` resource audit | Standard non-Expressive baseline selected |
 | 2026-08-06 | 1 | UI Foundation unit suite, Material mapper/static-token/Robolectric tests | Low-risk implementation retained pending release review |
+| 2026-08-07 | 2 | Default-theme Settings fixture; API 35 screenshots and View/drawable/accessibility bounds at 1.0/1.3 font scale | Accessibility gap confirmed; Button separation experiment approved, generic expansion remains conditional |

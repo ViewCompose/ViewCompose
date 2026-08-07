@@ -6,6 +6,16 @@ package com.viewcompose
  */
 internal object DemoTestTags {
     const val HOME_NAVIGATION_BAR = "home_navigation_bar"
+    const val SETTINGS_MATERIAL3_DEFAULT_ENTRY = "settings_material3_default_entry"
+    const val MATERIAL3_DEFAULT_ROOT = "material3_default_root"
+    const val MATERIAL3_DEFAULT_BUTTON = "material3_default_button"
+    const val MATERIAL3_DEFAULT_ICON_BUTTON = "material3_default_icon_button"
+    const val MATERIAL3_DEFAULT_CHIP = "material3_default_chip"
+    const val MATERIAL3_DEFAULT_CHECKBOX = "material3_default_checkbox"
+    const val MATERIAL3_DEFAULT_RADIO = "material3_default_radio"
+    const val MATERIAL3_DEFAULT_SWITCH = "material3_default_switch"
+    const val MATERIAL3_DEFAULT_SLIDER = "material3_default_slider"
+    const val MATERIAL3_DEFAULT_NAVIGATION = "material3_default_navigation"
 
     fun catalogModuleButton(moduleKey: String): String = "catalog_module_$moduleKey"
 

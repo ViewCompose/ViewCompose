@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import android.content.Intent
 import android.view.ViewGroup
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.ViewComposePreview
@@ -8,8 +9,10 @@ import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
+import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Environment
 import com.viewcompose.ui.foundation.LazyColumn
@@ -53,7 +56,7 @@ internal fun UiTreeBuilder.SettingsPage(
     val langIndexState = remember { mutableStateOf(0) }
 
     LazyColumn(
-        items = listOf("theme", "environment", "stats", "debug", "language"),
+        items = listOf("theme", "material3-default", "environment", "stats", "debug", "language"),
         key = { it },
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
     ) { section ->
@@ -77,6 +80,32 @@ internal fun UiTreeBuilder.SettingsPage(
                     },
                     size = SegmentedControlSize.Medium,
                     modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            "material3-default" -> Column(
+                spacing = 0.dp,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = "默认 Material3 主题",
+                    style = UiTextStyle(fontSizeSp = 18.sp),
+                    modifier = Modifier.margin(top = 20.dp, bottom = 8.dp),
+                )
+                Text(
+                    text = "独立页面不注入 Demo 自定义 Token，用于验证框架默认圆角、尺寸和交互区域。",
+                    style = UiTextStyle(fontSizeSp = 12.sp),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier.margin(bottom = 8.dp),
+                )
+                Button(
+                    text = "打开默认主题验证",
+                    onClick = {
+                        root?.context?.startActivity(
+                            Intent(root.context, Material3DefaultThemeActivity::class.java),
+                        )
+                    },
+                    modifier = Modifier.testTag(DemoTestTags.SETTINGS_MATERIAL3_DEFAULT_ENTRY),
                 )
             }
 
