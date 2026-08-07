@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: d7d55d53f22510bf9100ac85b053d2a6b5d3aa6bac690b7d5987a58bab625d8a
+translation_source_hash: f808faad9ef3ac48e861dab7d5f433dd2762fe3ce9abf22511674ea75fb64dae
 translation_status: current
 ---
 
