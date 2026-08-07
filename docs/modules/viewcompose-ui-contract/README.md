@@ -60,6 +60,8 @@ created for the node.
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.
+- `UiStateLayerColors` carries already-resolved pressed, focused, and hovered ARGB values without
+  embedding design-system roles or opacity policy in the renderer contract.
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/),
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/),
   and [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -82,6 +84,11 @@ Because the current line is alpha, the documentation site intentionally does not
   `visualHeight` is the requested centered surface height. A renderer must clamp an invalid visual
   height to the effective bounds and must keep explicit application surface modifiers
   authoritative.
+- Button, IconButton, Box, Row, and SegmentedControl state layers use
+  pressed-before-focused-before-hovered precedence while an enabled target is active; inactive and
+  disabled states are transparent. A null `stateLayerColors` preserves the legacy value-only
+  `rippleColor` contract for direct emitters and older custom renderers. SegmentedControl carries
+  separate selected and unselected sets because their semantic content roles differ.
 - `SliderNodeProps.trackColor` is the active segment at or before the current value, while
   `inactiveTrackColor` is the remaining segment. Renderers must bind both resolved colors and must
   not recover either segment from a platform theme.
@@ -140,3 +147,9 @@ the corresponding alpha release.
 Adding `SliderNodeProps.inactiveTrackColor` is also a Q2 immutable snapshot-contract change. Its
 source default equals `trackColor` so direct source construction remains concise, but precompiled
 constructor call sites and custom renderers must be rebuilt for the corresponding alpha release.
+
+`UiStateLayerColors` is a Q2 immutable resolved-color value. Adding nullable fields to
+`ButtonNodeProps`, `IconButtonNodeProps`, `BoxNodeProps`, `RowNodeProps`, and
+`SegmentedControlNodeProps` preserves source construction and the one-color renderer fallback, but
+it changes their binary constructor contracts. Precompiled direct constructors and custom
+renderers must be rebuilt for the corresponding alpha release.

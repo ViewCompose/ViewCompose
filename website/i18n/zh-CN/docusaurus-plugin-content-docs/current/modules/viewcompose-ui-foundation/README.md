@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 2d21379c7250755318cdca4291c9f2f61dad2caba27f0ac4a584382a57ee94dd
+translation_source_hash: 2e1d79387d4f86595d3758d5d78c08aa9a92a08a279f7516ced67371845dfff2
 translation_status: current
 ---
 
@@ -58,9 +58,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-ui-tree-builder/)
   及其组件函数构建声明式节点树，不会创建 Android View。
 - [`Theme` 与 `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
-  暴露不可变的颜色、排版、形状、尺寸与浮层 Token，但不选择具体设计系统。排版支持完整的
-  Display、Headline、Title、Body 与 Label 分级；形状支持 Extra Small、Small、Medium、Large、
-  Extra Large 与 Full 角色，具体值由设计系统适配器提供。
+  暴露不可变的颜色、排版、形状、尺寸、交互与浮层 Token，但不选择具体设计系统。排版支持
+  完整的 Display、Headline、Title、Body 与 Label 分级；形状支持 Extra Small、Small、Medium、
+  Large、Extra Large 与 Full 角色。`UiInteractionTokens` 提供通用按下、聚焦和悬停透明度，
+  具体值由设计系统适配器提供。
 - `UiButtonSizing` 把有效最小触控高度与可见 Surface 高度分开。中性主题和现有自定义主题中，
   每个可见高度默认等于对应的有效高度，因此维持原有渲染；设计系统适配器可以选择更小且居中
   的 Surface，而不缩小 View 或无障碍边界。
@@ -70,6 +71,12 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - Checkbox、RadioButton、Switch 与 Slider 的启用态选中或激活默认颜色从
   `Theme.colors.primary` 解析。Slider 还从 `Theme.colors.secondaryContainer` 解析非激活轨道。
   AppCompat `controlActivated` 继续作为通用状态 Token 提供，但不会覆盖这些组件语义角色。
+- Button 与 IconButton Defaults 会把自身启用态语义内容角色与 `UiInteractionTokens` 组合，
+  发出已解析的按下、聚焦和悬停颜色。调用方可通过 `stateLayerColors` 替换完整集合；Button 的
+  显式旧 `rippleColor` 重载会有意让所有活动状态继续使用同一个颜色。
+- Chip、FAB、Extended FAB、可点击 Surface、Card、ListItem 和 DropdownMenuItem 通过内部
+  Box/Row NodeSpec 字段复用同一内容角色解析。SegmentedControl 分别解析选中与未选中集合，
+  因此切换选中项时也会切换交互角色；静态或禁用组合控件保持空的多状态契约。
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
   和宿主能力划定作用域。
@@ -153,3 +160,8 @@ Slider 是 Q3 组件 API：它们先加入解析后的最小目标，再应用�
 
 Slider 新增的 `inactiveTrackColor` 参数属于 Q3 组件 API 变更。它提供主题化源码默认值并解析到
 Q2 `SliderNodeProps` 快照中；预编译调用方与自定义渲染器必须随对应 Alpha 版本重新构建。
+
+`UiInteractionTokens` 是 Q2 不可变主题值；将它加入 `UiThemeTokens` 后，预编译构造调用和穷举
+解构会发生二进制变化。Button 与 IconButton 状态层参数属于 Q3 组件 API 变更。源码调用方会
+获得语义化多状态默认值；曾显式提供旧 `rippleColor` 的 Button 调用方保留专用兼容重载。预编译
+默认参数调用点必须随本次 Alpha 版本重新构建。

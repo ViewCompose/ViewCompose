@@ -7,6 +7,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -36,7 +37,61 @@ class ButtonTest {
         assertEquals(ButtonDefaults.textStyle(ButtonSize.Large).fontSizeSp, spec.textSizeSp)
         assertEquals(ButtonDefaults.height(ButtonSize.Large), spec.minHeight)
         assertEquals(ButtonDefaults.visualHeight(ButtonSize.Large), spec.visualHeight)
+        assertEquals(ButtonDefaults.stateLayerColors(), spec.stateLayerColors)
         assertTrue(node.spec is ButtonNodeProps)
+    }
+
+    @Test
+    fun `button resolves variant state layers from content roles and interaction tokens`() {
+        val base = UiThemeDefaults.light()
+        val tokens = base.copy(
+            colors = base.colors.copy(
+                onPrimary = 0xFF102030.toInt(),
+                onSecondaryContainer = 0xFF405060.toInt(),
+                primary = 0xFF708090.toInt(),
+            ),
+            interactions = UiInteractionTokens(
+                pressedStateLayerOpacity = 0.10f,
+                focusedStateLayerOpacity = 0.20f,
+                hoveredStateLayerOpacity = 0.30f,
+            ),
+        )
+
+        val tree = buildVNodeTree {
+            UiTheme(tokens) {
+                Button(text = "Primary")
+                Button(text = "Tonal", variant = ButtonVariant.Tonal)
+                Button(text = "Outlined", variant = ButtonVariant.Outlined)
+            }
+        }
+
+        assertEquals(
+            UiStateLayerColors(0x1A102030, 0x33102030, 0x4D102030),
+            (tree[0].spec as ButtonNodeProps).stateLayerColors,
+        )
+        assertEquals(
+            UiStateLayerColors(0x1A405060, 0x33405060, 0x4D405060),
+            (tree[1].spec as ButtonNodeProps).stateLayerColors,
+        )
+        assertEquals(
+            UiStateLayerColors(0x1A708090, 0x33708090, 0x4D708090),
+            (tree[2].spec as ButtonNodeProps).stateLayerColors,
+        )
+    }
+
+    @Test
+    fun `explicit legacy ripple color keeps single-color renderer fallback`() {
+        val tree = buildVNodeTree {
+            Button(
+                text = "Legacy",
+                rippleColor = 0x33445566,
+            )
+        }
+
+        val spec = tree.single().spec as ButtonNodeProps
+
+        assertEquals(0x33445566, spec.rippleColor)
+        assertEquals(null, spec.stateLayerColors)
     }
 
     @Test

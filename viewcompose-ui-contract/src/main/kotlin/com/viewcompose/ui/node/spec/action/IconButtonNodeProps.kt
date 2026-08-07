@@ -4,6 +4,7 @@ import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.UiImageRequestOptions
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 
@@ -30,6 +31,8 @@ import com.viewcompose.ui.unit.UiDp
  * @property shape outline used for background, border, clipping, and ripple
  * @property rippleColor pressed-state ripple color
  * @property contentPadding padding applied around the icon on every edge
+ * @property stateLayerColors resolved pressed, focused, and hovered colors, or `null` to retain the
+ * single-color [rippleColor] compatibility behavior
  */
 data class IconButtonNodeProps(
     override val contentDescription: String?,
@@ -48,4 +51,5 @@ data class IconButtonNodeProps(
     val shape: UiShape,
     val rippleColor: Int,
     val contentPadding: UiDp,
+    val stateLayerColors: UiStateLayerColors? = null,
 ) : ImageNodeSpec

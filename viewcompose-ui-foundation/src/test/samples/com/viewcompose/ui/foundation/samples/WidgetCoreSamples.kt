@@ -6,6 +6,7 @@ import com.viewcompose.ui.node.UiImageDecodeSize
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.UiImageRequestOptions
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.modifier.MinHeightModifierElement
@@ -71,13 +72,22 @@ fun buttonSample() {
 
     val node = buildVNodeTree {
         UiTheme(tokens) {
-            Button(text = "Confirm", onClick = {})
+            Button(
+                text = "Confirm",
+                onClick = {},
+                stateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x1AFFFFFF,
+                    focusedColor = 0x1AFFFFFF,
+                    hoveredColor = 0x14FFFFFF,
+                ),
+            )
         }
     }.single()
     val spec = node.spec as ButtonNodeProps
 
     check(spec.minHeight == 48.dp)
     check(spec.visualHeight == 40.dp)
+    check(spec.stateLayerColors?.hoveredColor == 0x14FFFFFF)
 }
 
 fun compactInputTargetSample() {
@@ -156,6 +166,11 @@ fun imageLoadingSample() {
                 icon = ImageSource.Resource(2),
                 contentDescription = "Close",
                 onClick = {},
+                stateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x1A000000,
+                    focusedColor = 0x1A000000,
+                    hoveredColor = 0x14000000,
+                ),
             )
         }
     }

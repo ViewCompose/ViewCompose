@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: 607234d33f65b29791ea54e17dfa6c7c255d423d4d606ef76800da947ea9a571
+translation_source_hash: a740abb9c4589e6499675b26299282876ee124d695401bb819617fe90305af92
 translation_status: current
 ---
 
@@ -57,11 +57,16 @@ Material3Theme(resolvedTheme = resolved) {
 - Display、Headline、Title、Body 和 Label 共 15 个标准排版角色；
 - Extra Small、Small、Medium、Large、Extra Large 与 Full 六级形状角色；
 - Button、TextField、SegmentedControl、ProgressIndicator、FAB、Search 与 Badge 采用的标准尺寸
-  配置，以及原生紧凑输入控件的有效目标尺寸。
+  配置，以及原生紧凑输入控件的有效目标尺寸；
+- 标准交互透明度：按下 `0.10`、聚焦 `0.10`、悬停 `0.08`。
 
 标准 Button 尺寸配置中，Compact 与 Medium 使用 48dp 有效触控目标和居中的 40dp 可见容器，
 Large 使用 56dp 目标和 48dp 可见容器。这是由 UI Foundation 设计系统无关尺寸契约消费的
 Token 选择；Material 适配器不参与 Android 命中测试或 View 绘制。
+
+Button 与 IconButton Defaults 会把这些交互透明度与各 Variant 的启用态内容角色组合后再发出
+NodeSpec。例如 Primary Button 使用 `onPrimary`，Tonal Button 使用
+`onSecondaryContainer`。适配器不生成选择器，Android Renderer 也不知道 Material 角色名。
 
 Checkbox、RadioButton、Switch 与 Slider 使用 48dp 最小有效高度。它们的原生指示器、Thumb、
 Track 与 Label 几何仍由平台渲染并保持居中；应用显式指定的精确高度或更严格的父容器约束仍会
@@ -99,3 +104,7 @@ Token Bridge 自动提供，必须作为独立组件工作进行测试。
 `Material3*` API 家族并迁移到这里，不提供兼容别名。
 当前 Alpha 版本线还增加了完整形状和排版角色以及公开静态 Material 3 回退；穷举构造或解构
 相关 UI Foundation Data Class 的使用方，需要随对应 Alpha 版本同步更新。
+
+Android 主题没有暴露一套完整的逐状态透明度族，因此标准交互透明度配置会在 Android 主题映射
+期间保留。应用可以替换通用 `UiInteractionTokens` 或组件已解析的 `stateLayerColors`，无需依赖
+Material API。

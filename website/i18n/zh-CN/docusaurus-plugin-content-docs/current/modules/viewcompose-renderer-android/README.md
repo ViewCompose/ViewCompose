@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 40afe8f805c251218b0ba4c22a86ebb5d4e13ea0c9e87e7179f121e370792345
+translation_source_hash: 01b37b5d8e04f1f6333db43d13a2ae4958aa6a9d526905126f6983decce9e563
 translation_status: current
 ---
 
@@ -37,6 +37,9 @@ dependencies {
 - Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
   涟漪和轮廓，同时不改变测量、命中测试或无障碍边界。显式 Background、Border、Corner Radius
   或 Shape Modifier 会关闭组件提供的内缩，保证应用样式优先。
+- Button、IconButton、交互式 Box/Row 组合控件与 SegmentedControl 状态层使用 NodeSpec 中
+  已解析的 `UiStateLayerColors`。引擎在现有 Shape 遮罩和可见 Surface 内缩中应用启用态的
+  按下、聚焦和悬停选择器，不选择语义角色或 Material 透明度值。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
 
 ## 渲染模型
@@ -106,6 +109,10 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   session 回调也会从 next 列表中的原始 item 实例刷新。
 - 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
+- Button 与 IconButton 状态层变化参与定向样式 Patch，只重建 Surface Drawable。交互式
+  Box/Row 变化会重新执行现有样式绑定；SegmentedControl 只重建选中角色发生变化的分段背景。
+  按下优先于聚焦和悬停，聚焦优先于悬停；多状态路径的非活动态或禁用态保持透明。多状态契约
+  为空时，原有单值 Ripple 选择器保持不变。
 - Slider 绑定使用渲染器中性的 `AppCompatSeekBar` 子类，因为平台控件可能在 `AT_MOST` 测量
   规格下忽略 `minimumHeight`。它会遵守已声明的最小值，同时让应用或父容器的精确高度保持
   最终权限；Android Renderer 不解释任何 Material 策略或 Token。
@@ -148,3 +155,7 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 原生绑定、诊断、工具关联和装饰后端契约。不要把
 mounted node、patch 记录、诊断树对象、不透明 Lazy content token 或 View tag 作为外部长久
 数据持久化。即使应用 DSL 源码仍能编译，自定义 host 和装饰后端也必须随渲染器契约变化升级。
+
+Renderer 的多状态路径实现通用 UI Contract，并非 Material 功能。采用 `UiStateLayerColors` 的
+自定义 Renderer 必须保留启用态优先级与透明非活动态；收到空值的 Renderer 可以继续使用其已有
+单色兼容路径。

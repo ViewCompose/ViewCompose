@@ -1,7 +1,9 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiSp
+import kotlin.math.roundToInt
 
 /**
  * Stores the complete semantic color scheme as packed ARGB integers.
@@ -156,6 +158,36 @@ data class UiStateColors(
     val controlHighlight: UiStateColor,
 )
 
+/**
+ * Defines design-system-neutral opacity policy for transient component state layers.
+ *
+ * Values are fractions in `0f..1f`. Component defaults combine them with their semantic content
+ * role before emitting a renderer contract; renderers never interpret these values directly.
+ *
+ * @property pressedStateLayerOpacity opacity used while an enabled component is pressed
+ * @property focusedStateLayerOpacity opacity used while enabled and focused but not pressed
+ * @property hoveredStateLayerOpacity opacity used while enabled and hovered without a
+ * higher-priority state
+ * @throws IllegalArgumentException if any opacity is not finite or is outside `0f..1f`
+ */
+data class UiInteractionTokens(
+    val pressedStateLayerOpacity: Float,
+    val focusedStateLayerOpacity: Float = pressedStateLayerOpacity,
+    val hoveredStateLayerOpacity: Float = focusedStateLayerOpacity,
+) {
+    init {
+        require(pressedStateLayerOpacity.isFinite() && pressedStateLayerOpacity in 0f..1f) {
+            "pressedStateLayerOpacity must be finite and in 0f..1f."
+        }
+        require(focusedStateLayerOpacity.isFinite() && focusedStateLayerOpacity in 0f..1f) {
+            "focusedStateLayerOpacity must be finite and in 0f..1f."
+        }
+        require(hoveredStateLayerOpacity.isFinite() && hoveredStateLayerOpacity in 0f..1f) {
+            "hoveredStateLayerOpacity must be finite and in 0f..1f."
+        }
+    }
+}
+
 /** Derives framework state-color roles from a semantic [UiColors] scheme. */
 object UiStateColorDefaults {
     /**
@@ -299,6 +331,7 @@ data class UiTypography(
  * @property stateColors state-aware colors; derived from [colors] by default
  * @property shapes component shape tiers
  * @property controls core component sizing tokens
+ * @property interactions transient interaction-state opacity tokens
  * @property overlays modal overlay tokens
  * @property metadata origin, brightness, and revision diagnostics
  */
@@ -308,6 +341,7 @@ data class UiThemeTokens(
     val stateColors: UiStateColors = UiStateColorDefaults.from(colors),
     val shapes: UiShapes = UiShapeDefaults.default(),
     val controls: UiControlSizing = UiControlSizeDefaults.default(),
+    val interactions: UiInteractionTokens = defaultInteractionTokens(colors),
     val overlays: UiOverlays = UiOverlayDefaults.default(),
     val metadata: UiThemeMetadata = UiThemeMetadata(),
 )
@@ -355,6 +389,39 @@ internal fun pressedOverlayColorFor(contentColor: Int): Int {
 internal fun colorWithAlpha(color: Int, alpha: Float): Int {
     val alphaChannel = (alpha.coerceIn(0f, 1f) * 255f).toInt()
     return (alphaChannel shl 24) or (color and 0x00FFFFFF)
+}
+
+/** Returns [color] with an alpha channel rounded from the clamped state-layer [opacity]. */
+internal fun stateLayerColorWithOpacity(color: Int, opacity: Float): Int {
+    val alphaChannel = (opacity.coerceIn(0f, 1f) * 255f).roundToInt()
+    return (alphaChannel shl 24) or (color and 0x00FFFFFF)
+}
+
+/** Resolves the current theme's transient interaction opacities against one semantic content role. */
+internal fun stateLayerColorsFor(contentColor: Int): UiStateLayerColors {
+    return UiStateLayerColors(
+        pressedColor = stateLayerColorWithOpacity(
+            contentColor,
+            Theme.interactions.pressedStateLayerOpacity,
+        ),
+        focusedColor = stateLayerColorWithOpacity(
+            contentColor,
+            Theme.interactions.focusedStateLayerOpacity,
+        ),
+        hoveredColor = stateLayerColorWithOpacity(
+            contentColor,
+            Theme.interactions.hoveredStateLayerOpacity,
+        ),
+    )
+}
+
+private fun defaultInteractionTokens(colors: UiColors): UiInteractionTokens {
+    val legacyOpacity = ((colors.ripple ushr 24) and 0xFF) / 255f
+    return UiInteractionTokens(
+        pressedStateLayerOpacity = legacyOpacity,
+        focusedStateLayerOpacity = legacyOpacity,
+        hoveredStateLayerOpacity = legacyOpacity,
+    )
 }
 
 /**

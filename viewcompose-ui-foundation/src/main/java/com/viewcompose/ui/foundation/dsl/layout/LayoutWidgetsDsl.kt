@@ -10,6 +10,7 @@ import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ColumnNodeProps
 import com.viewcompose.ui.node.spec.DividerNodeProps
@@ -32,12 +33,32 @@ fun UiTreeBuilder.Box(
     modifier: Modifier = Modifier,
     content: BoxScope.() -> Unit,
 ) {
+    StateLayerBox(
+        key = key,
+        contentAlignment = contentAlignment,
+        rippleColor = rippleColor,
+        modifier = modifier,
+        content = content,
+    )
+}
+
+/** Emits a Box whose component has already resolved its renderer-neutral interaction colors. */
+internal fun UiTreeBuilder.StateLayerBox(
+    type: NodeType = NodeType.Box,
+    key: Any? = null,
+    contentAlignment: BoxAlignment = BoxAlignment.TopStart,
+    rippleColor: Int? = null,
+    stateLayerColors: UiStateLayerColors? = null,
+    modifier: Modifier = Modifier,
+    content: BoxScope.() -> Unit,
+) {
     emitResolved(
-        type = NodeType.Box,
+        type = type,
         key = key,
         spec = BoxNodeProps(
             contentAlignment = contentAlignment,
             rippleColor = rippleColor,
+            stateLayerColors = stateLayerColors,
         ),
         modifier = modifier,
         children = BoxScope().apply(content).build(),
@@ -76,15 +97,18 @@ fun UiTreeBuilder.Surface(
         )
         .then(modifier)
     ProvideLocal(LocalContentColor, contentColor) {
-        emitResolved(
+        StateLayerBox(
             type = NodeType.Surface,
             key = key,
-            spec = BoxNodeProps(
-                contentAlignment = contentAlignment,
-                rippleColor = SurfaceDefaults.pressedColor(),
-            ),
+            contentAlignment = contentAlignment,
+            rippleColor = SurfaceDefaults.pressedColor(),
+            stateLayerColors = if (enabled && onClick != null) {
+                stateLayerColorsFor(contentColor)
+            } else {
+                null
+            },
             modifier = semanticModifier,
-            children = BoxScope().apply(content).build(),
+            content = content,
         )
     }
 }
@@ -135,6 +159,27 @@ fun UiTreeBuilder.Row(
     modifier: Modifier = Modifier,
     content: RowScope.() -> Unit,
 ) {
+    StateLayerRow(
+        key = key,
+        spacing = spacing,
+        arrangement = arrangement,
+        verticalAlignment = verticalAlignment,
+        modifier = modifier,
+        content = content,
+    )
+}
+
+/** Emits a Row whose component has already resolved its renderer-neutral interaction colors. */
+internal fun UiTreeBuilder.StateLayerRow(
+    key: Any? = null,
+    spacing: UiDp = UiDp.Zero,
+    arrangement: MainAxisArrangement = MainAxisArrangement.Start,
+    verticalAlignment: VerticalAlignment = VerticalAlignment.Top,
+    rippleColor: Int? = null,
+    stateLayerColors: UiStateLayerColors? = null,
+    modifier: Modifier = Modifier,
+    content: RowScope.() -> Unit,
+) {
     emitResolved(
         type = NodeType.Row,
         key = key,
@@ -142,6 +187,8 @@ fun UiTreeBuilder.Row(
             spacing = spacing,
             arrangement = arrangement,
             verticalAlignment = verticalAlignment,
+            rippleColor = rippleColor,
+            stateLayerColors = stateLayerColors,
         ),
         modifier = modifier,
         children = RowScope().apply(content).build(),

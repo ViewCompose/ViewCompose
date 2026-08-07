@@ -217,8 +217,14 @@ fun UiTreeBuilder.DropdownMenuItem(
             },
         )
         .then(modifier)
-    Row(
+    StateLayerRow(
         verticalAlignment = VerticalAlignment.Center,
+        rippleColor = if (enabled) Theme.colors.ripple else null,
+        stateLayerColors = if (enabled) {
+            stateLayerColorsFor(DropdownMenuDefaults.contentColor())
+        } else {
+            null
+        },
         modifier = itemModifier,
     ) {
         if (leadingIcon != null) {

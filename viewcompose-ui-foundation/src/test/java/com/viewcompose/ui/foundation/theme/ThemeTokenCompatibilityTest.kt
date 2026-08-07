@@ -7,6 +7,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class ThemeTokenCompatibilityTest {
@@ -88,5 +89,15 @@ class ThemeTokenCompatibilityTest {
         assertEquals(typography.headlineLarge, typography.displayLarge)
         assertEquals(typography.headlineMedium, typography.displayMedium)
         assertEquals(typography.headlineSmall, typography.displaySmall)
+    }
+
+    @Test
+    fun `interaction tokens reject invalid opacity`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            UiInteractionTokens(pressedStateLayerOpacity = Float.NaN)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            UiInteractionTokens(pressedStateLayerOpacity = 1.01f)
+        }
     }
 }

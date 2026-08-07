@@ -1,5 +1,6 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.shape.UiShape
@@ -228,4 +229,20 @@ object ButtonDefaults {
 
     /** Resolves the current pressed-state control highlight. */
     fun pressedColor(): Int = Theme.stateColors.controlHighlight.resolve(pressed = true)
+
+    /**
+     * Resolves transient interaction colors from the enabled content role for [variant].
+     *
+     * The current interaction tokens provide opacity only. This keeps component-specific semantic
+     * roles in UI Foundation and sends fully resolved ARGB values to renderers.
+     *
+     * @param variant visual hierarchy whose enabled content role supplies the state-layer base
+     * @return immutable pressed, focused, and hovered state-layer colors
+     */
+    fun stateLayerColors(
+        variant: ButtonVariant = ButtonVariant.Primary,
+    ): UiStateLayerColors {
+        val baseColor = contentColor(variant = variant, enabled = true)
+        return stateLayerColorsFor(baseColor)
+    }
 }

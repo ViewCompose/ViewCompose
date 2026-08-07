@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: 2824b5c987eecbfef27fae3be36f9cba198f452143efc74f39b436dfabc1bc67
+translation_source_hash: d7d55d53f22510bf9100ac85b053d2a6b5d3aa6bac690b7d5987a58bab625d8a
 translation_status: current
 ---
 
@@ -28,8 +28,9 @@ translation_status: current
 3. `typography`
 4. `shapes`
 5. `controls`
-6. `overlays`
-7. `metadata`
+6. `interactions`
+7. `overlays`
+8. `metadata`
 
 关键原则：
 
@@ -45,8 +46,10 @@ translation_status: current
 4. `shapes` 提供语义化 `extraSmall / small / medium / large / extraLarge / full` 六级形状；
    每个绝对形状完整表达四角、圆角/切角与绝对/百分比尺寸，`full` 表达相对边界的胶囊或圆形。
 5. `controls` 仍是框架自有尺寸 token，不承诺与 Android 原主题系统一一对齐。
-6. `overlays` 当前由语义 token 承载跨组件蒙层配置。
-7. `metadata` 标记 token 来源、深色状态与配置修订号，用于生命周期刷新和诊断，不参与组件默认值推导。
+6. `interactions` 承载与设计系统无关的按下、聚焦和悬停状态层透明度。组件 Defaults 会把透明度
+   与自身启用态内容角色组合后再发出已解析颜色；Renderer 不解释主题角色或透明度策略。
+7. `overlays` 当前由语义 token 承载跨组件蒙层配置。
+8. `metadata` 标记 token 来源、深色状态与配置修订号，用于生命周期刷新和诊断，不参与组件默认值推导。
 
 ## 2.3 Token 使用闭环
 
@@ -102,6 +105,10 @@ translation_status: current
 5. renderer 只负责应用 `NodeSpec` 中已经解析好的文本样式，不重新发明主题语义。
 6. 组件需要分离有效触控目标与可见 Surface 时，主题同时提供两个尺寸，Defaults 把它们解析进
    `NodeSpec`，renderer 只应用已解析几何；应用显式 Surface Modifier 仍具有最高优先级。
+7. Button、IconButton、边界明确的交互式组合控件和 SegmentedControl 状态层遵循同一链路：
+   组件 Defaults 选择语义内容角色，`interactions` 提供状态透明度，`NodeSpec` 携带已解析
+   ARGB 颜色，Renderer 应用“按下优先于聚焦、聚焦优先于悬停”的通用选择器。
+   SegmentedControl 分别携带选中与未选中角色集合。
 
 ## 4. 局部覆盖（Override）规则
 
@@ -191,6 +198,10 @@ translation_status: current
    - Material 3 配置还会为 Checkbox、RadioButton、Switch 与 Slider 选择 48dp 最小有效高度。
      UI Foundation 会在调用方 Modifier 之前消费这个中性 Token，因此应用显式指定的精确尺寸
      仍具有最终权限
+7. `interactions`
+   - `Material3ThemeDefaults` 提供按下 `0.10`、聚焦 `0.10`、悬停 `0.08` 的透明度
+   - Android Bridge 替换资源支持的语义颜色时继续保留该回退策略，因为 Android 主题没有暴露
+     一套统一、完整的组件状态层透明度族
 
 不做：
 
@@ -246,9 +257,11 @@ themeRefreshController.refresh()
 1. 保持主题模型稳定，不回退到“组件全量 token 预计算”。
 2. 动态色、完整 15 角色排版、完整绝对形状映射与配置生命周期已落地；继续补多窗口/厂商主题
    的设备矩阵。
-3. Button 与原生紧凑输入控件的触控目标现已采用测试保护的有效尺寸策略。组合式 Chip 扩展、
-   TextField 浮动/Focus 行为以及 Switch/Slider 精确可见几何仍必须按测试优先的组件工作处理；
-   完整 Token Bridge 本身不会自动提供这些结构行为。
+3. Button 与原生紧凑输入控件的触控目标现已采用测试保护的有效尺寸策略。Button、IconButton、
+   Chip、FAB 变体、可点击 Surface/Card/ListItem/DropdownMenuItem 与 SegmentedControl 会从
+   组件内容角色解析标准按下、聚焦和悬停状态层，而不会把 Material 策略放入 Android Renderer。
+   Chip 触控目标扩展、TextField 浮动/Focus 行为、带显式 Ripple 覆盖的导航控件，以及原生输入
+   控件的精确几何仍必须按测试优先处理；完整 Token Bridge 本身不会自动提供这些结构行为。
 4. 与 `ROADMAP` 中 Overlay、Input、容器场景联动完善主题回归。
 
 后续结构改造的顺序、证据与回退规则记录在英文的

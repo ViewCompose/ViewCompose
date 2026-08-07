@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: e0e16cc23fc5f1a9d1b38e7128331c334e8055ec3350188bc845326c920859d0
+translation_source_hash: 3751edacb902578ddcd681b9e00e2fcede603afede2c586d5674d07a99420c7e
 translation_status: current
 ---
 
@@ -62,6 +62,8 @@ val gap = VNode(
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。
+- `UiStateLayerColors` 携带已经解析的按下、聚焦和悬停 ARGB 值，不把设计系统角色或透明度策略
+  写入 Renderer 契约。
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/)、
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/)
   与 [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -81,6 +83,10 @@ val gap = VNode(
 - `ButtonNodeProps.minHeight` 表示有效的最小 View 与语义触控高度，`visualHeight` 表示请求的
   居中 Surface 高度。渲染器必须把非法可见高度限制在有效边界内，并保证应用显式 Surface
   Modifier 的优先级。
+- Button、IconButton、Box、Row 与 SegmentedControl 状态层在启用目标处于活动状态时使用
+  “按下优先于聚焦、聚焦优先于悬停”的顺序；非活动态和禁用态保持透明。`stateLayerColors`
+  为空时，为直接发射者和旧自定义 Renderer 保留原有的单值 `rippleColor` 契约。
+  SegmentedControl 会分别携带选中与未选中集合，因为二者使用不同的语义内容角色。
 - `SliderNodeProps.trackColor` 表示当前值之前（含当前值）的激活轨道，`inactiveTrackColor`
   表示其余轨道。渲染器必须绑定这两个已解析颜色，不得再从平台主题恢复任一轨道颜色。
 - Modifier 顺序具有语义。布局与 Parent Data 收集、视觉装饰、输入、Semantics 与绘制阶段会
@@ -130,3 +136,8 @@ val gap = VNode(
 新增 `SliderNodeProps.inactiveTrackColor` 同样属于 Q2 不可变快照契约变更。源码默认值等于
 `trackColor`，因此直接源码构造仍保持简洁；预编译构造调用点与自定义渲染器仍必须随对应
 Alpha 版本重新构建。
+
+`UiStateLayerColors` 是 Q2 不可变已解析颜色值。为 `ButtonNodeProps`、`IconButtonNodeProps`、
+`BoxNodeProps`、`RowNodeProps` 和 `SegmentedControlNodeProps` 增加可空字段后，源码构造与单色
+Renderer 回退保持不变，但二进制构造契约发生变化。预编译直接构造调用点和自定义 Renderer
+必须随对应 Alpha 版本重新构建。

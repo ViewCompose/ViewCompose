@@ -13,8 +13,14 @@ import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.backgroundDrawableRes
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.ButtonNodeProps
+import com.viewcompose.ui.node.spec.BoxNodeProps
+import com.viewcompose.ui.node.spec.RowNodeProps
+import com.viewcompose.ui.layout.BoxAlignment
+import com.viewcompose.ui.layout.MainAxisArrangement
+import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.renderer.modifier.resolve
 import org.junit.Assert.assertEquals
@@ -60,6 +66,66 @@ class ModifierNodeStyleResolverTest {
     }
 
     @Test
+    fun `button style carries resolved state layers without material policy`() {
+        val colors = UiStateLayerColors(
+            pressedColor = 0x1A112233,
+            focusedColor = 0x1A223344,
+            hoveredColor = 0x14223344,
+        )
+        val node = buttonVNode(
+            modifier = Modifier,
+            stateLayerColors = colors,
+        )
+
+        val style = ModifierNodeStyleResolver.resolveNodeStyle(
+            node = node,
+            resolved = node.modifier.resolve(),
+            defaultRippleColor = 0xFF00FF00.toInt(),
+        )
+
+        assertEquals(colors, style.stateLayerColors)
+    }
+
+    @Test
+    fun `box and row styles carry the same renderer-neutral state-layer contract`() {
+        val colors = UiStateLayerColors(
+            pressedColor = 0x1A112233,
+            focusedColor = 0x1A223344,
+            hoveredColor = 0x14223344,
+        )
+        val nodes = listOf(
+            VNode(
+                type = NodeType.Box,
+                spec = BoxNodeProps(
+                    contentAlignment = BoxAlignment.Center,
+                    rippleColor = 0x22112233,
+                    stateLayerColors = colors,
+                ),
+            ),
+            VNode(
+                type = NodeType.Row,
+                spec = RowNodeProps(
+                    spacing = 0.dp,
+                    arrangement = MainAxisArrangement.Start,
+                    verticalAlignment = VerticalAlignment.Center,
+                    rippleColor = 0x22112233,
+                    stateLayerColors = colors,
+                ),
+            ),
+        )
+
+        nodes.forEach { node ->
+            val style = ModifierNodeStyleResolver.resolveNodeStyle(
+                node = node,
+                resolved = node.modifier.resolve(),
+                defaultRippleColor = 0xFF00FF00.toInt(),
+            )
+            assertEquals(0x22112233, style.rippleColor)
+            assertEquals(colors, style.stateLayerColors)
+        }
+    }
+
+    @Test
     fun `explicit button surface override disables component visual inset`() {
         val node = buttonVNode(
             modifier = Modifier.backgroundColor(0xFF0000AA.toInt()),
@@ -92,6 +158,7 @@ class ModifierNodeStyleResolverTest {
         modifier: Modifier,
         minHeight: com.viewcompose.ui.unit.UiDp = 0.dp,
         visualHeight: com.viewcompose.ui.unit.UiDp = minHeight,
+        stateLayerColors: UiStateLayerColors? = null,
     ): VNode {
         return VNode(
             type = NodeType.Button,
@@ -115,6 +182,7 @@ class ModifierNodeStyleResolverTest {
                 iconSize = 0.dp,
                 iconSpacing = 0.dp,
                 visualHeight = visualHeight,
+                stateLayerColors = stateLayerColors,
             ),
             modifier = modifier,
             children = emptyList(),

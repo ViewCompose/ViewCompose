@@ -10,6 +10,7 @@ import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.modifier.resolve
 import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
@@ -69,6 +70,7 @@ internal object ViewModifierApplier {
         borderColor: Int,
         shape: UiShape,
         rippleColor: Int,
+        stateLayerColors: UiStateLayerColors? = null,
         clickable: Boolean,
         effectiveHeight: UiDp? = null,
         visualHeight: UiDp? = null,
@@ -102,6 +104,7 @@ internal object ViewModifierApplier {
             borderColor = resolved?.border?.color ?: borderColor,
             cornerRadius = resolved?.cornerRadius,
             rippleColor = rippleColor,
+            stateLayerColors = stateLayerColors,
             clickable = resolved?.clickable != null || clickable,
             forceClip = resolved?.graphicsLayer?.clip ?: (resolved?.clip?.clip ?: false),
             shape = resolved?.shape?.shape
@@ -247,6 +250,7 @@ internal object ViewModifierApplier {
             previousStyle.cornerRadius != nextStyle.cornerRadius ||
             previousStyle.shape != nextStyle.shape ||
             previousStyle.rippleColor != nextStyle.rippleColor ||
+            previousStyle.stateLayerColors != nextStyle.stateLayerColors ||
             previousStyle.clickable != nextStyle.clickable ||
             previousStyle.surfaceInsets != nextStyle.surfaceInsets ||
             previous.resolved.clip != next.resolved.clip ||

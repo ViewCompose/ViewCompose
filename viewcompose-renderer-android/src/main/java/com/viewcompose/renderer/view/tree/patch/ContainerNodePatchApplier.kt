@@ -307,6 +307,8 @@ internal object ContainerNodePatchApplier {
                 textColor = patch.next.textColor,
                 selectedTextColor = patch.next.selectedTextColor,
                 rippleColor = patch.next.rippleColor,
+                unselectedStateLayerColors = patch.next.unselectedStateLayerColors,
+                selectedStateLayerColors = patch.next.selectedStateLayerColors,
                 textSizePx = environment.toPx(patch.next.textSizeSp),
                 fontWeight = patch.next.fontWeight,
                 fontFamily = patch.next.fontFamily,

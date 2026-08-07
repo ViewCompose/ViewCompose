@@ -42,6 +42,14 @@ class SegmentedControlTest {
         assertEquals(SegmentedControlDefaults.textColor(), spec.textColor)
         assertEquals(SegmentedControlDefaults.selectedTextColor(), spec.selectedTextColor)
         assertEquals(SegmentedControlDefaults.rippleColor(), spec.rippleColor)
+        assertEquals(
+            SegmentedControlDefaults.stateLayerColors(selected = false),
+            spec.unselectedStateLayerColors,
+        )
+        assertEquals(
+            SegmentedControlDefaults.stateLayerColors(selected = true),
+            spec.selectedStateLayerColors,
+        )
         assertEquals(SegmentedControlDefaults.textStyle().fontSizeSp, spec.textSizeSp)
         assertEquals(3, spec.items.size)
         assertEquals("System", spec.items[0].label)
@@ -81,6 +89,14 @@ class SegmentedControlTest {
         assertEquals(406, spec.indicatorColor)
         assertEquals(408, spec.textColor)
         assertEquals(410, spec.selectedTextColor)
+        assertEquals(
+            stateLayerColorsFor(408),
+            spec.unselectedStateLayerColors,
+        )
+        assertEquals(
+            stateLayerColorsFor(410),
+            spec.selectedStateLayerColors,
+        )
     }
 
     @Test

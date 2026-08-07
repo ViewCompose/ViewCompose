@@ -57,10 +57,11 @@ by a later renderer or child render session.
 - [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-ui-tree-builder/)
   and its component functions build declarative node trees without creating Android Views.
 - [`Theme` and `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
-  expose immutable color, typography, shape, sizing, and overlay tokens without choosing a design
-  system. Typography supports all display, headline, title, body, and label tiers; shapes support
-  extra-small, small, medium, large, extra-large, and full roles. Design-system adapters provide
-  their concrete values.
+  expose immutable color, typography, shape, sizing, interaction, and overlay tokens without
+  choosing a design system. Typography supports all display, headline, title, body, and label
+  tiers; shapes support extra-small, small, medium, large, extra-large, and full roles.
+  `UiInteractionTokens` supplies generic pressed, focused, and hovered opacities. Design-system
+  adapters provide their concrete values.
 - `UiButtonSizing` keeps the effective minimum target height separate from the visible surface
   height. Neutral and existing custom themes preserve their previous rendering because each visual
   height defaults to its corresponding effective height; a design-system adapter may opt into a
@@ -73,6 +74,14 @@ by a later renderer or child render session.
   control role from `Theme.colors.primary`. Slider additionally resolves its inactive segment from
   `Theme.colors.secondaryContainer`. AppCompat `controlActivated` remains available as a general
   state token but does not override these component semantic roles.
+- Button and IconButton defaults combine their enabled semantic content role with
+  `UiInteractionTokens` and emit resolved pressed, focused, and hovered colors. Callers can replace
+  the complete set through `stateLayerColors`; Button's explicit legacy `rippleColor` overload
+  intentionally retains one color for every active state.
+- Chip, FAB, extended FAB, clickable Surface, Card, ListItem, and DropdownMenuItem use the same
+  content-role resolution through internal Box/Row NodeSpec fields. SegmentedControl resolves
+  independent selected and unselected sets so switching selection also switches the interaction
+  role. Passive and disabled composites keep a null multi-state contract.
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
   image loading, focus, frame clock, and host capabilities.
@@ -171,3 +180,10 @@ layout decisions.
 Slider's added `inactiveTrackColor` parameter is a Q3 component API change. It has a themed source
 default and is resolved into the Q2 `SliderNodeProps` snapshot; precompiled callers and custom
 renderers must be rebuilt for the corresponding alpha release.
+
+`UiInteractionTokens` is a Q2 immutable theme value, and its addition to `UiThemeTokens` is a
+binary change for precompiled constructors and exhaustive destructuring. Button and IconButton
+state-layer parameters are Q3 component API changes. Source callers receive semantic multi-state
+defaults, and Button callers that explicitly supplied the former `rippleColor` retain a dedicated
+compatibility overload; precompiled default-argument call sites must be rebuilt for this alpha
+release.

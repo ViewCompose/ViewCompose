@@ -23,6 +23,7 @@ import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
@@ -448,6 +449,27 @@ class NodeBindingDifferTest {
     }
 
     @Test
+    fun `rebinds box and row when state-layer colors change`() {
+        val previousColors = UiStateLayerColors(1, 2, 3)
+        val nextColors = UiStateLayerColors(4, 5, 6)
+
+        assertSame(
+            NodeBindingPlan.Rebind,
+            NodeBindingDiffer.plan(
+                boxNode(stateLayerColors = previousColors),
+                boxNode(stateLayerColors = nextColors),
+            ),
+        )
+        assertSame(
+            NodeBindingPlan.Rebind,
+            NodeBindingDiffer.plan(
+                rowNode(stateLayerColors = previousColors),
+                rowNode(stateLayerColors = nextColors),
+            ),
+        )
+    }
+
+    @Test
     fun `patches image semantic updates`() {
         val previous = imageNode(tint = 0xFF000000.toInt())
         val next = imageNode(tint = 0xFFFF0000.toInt())
@@ -854,6 +876,7 @@ class NodeBindingDifferTest {
 
     private fun rowNode(
         spacing: UiDp = 8.dp,
+        stateLayerColors: UiStateLayerColors? = null,
     ): VNode {
         return VNode(
             type = NodeType.Row,
@@ -861,6 +884,7 @@ class NodeBindingDifferTest {
                 spacing = spacing,
                 arrangement = com.viewcompose.ui.layout.MainAxisArrangement.Start,
                 verticalAlignment = com.viewcompose.ui.layout.VerticalAlignment.Top,
+                stateLayerColors = stateLayerColors,
             ),
             modifier = Modifier,
         )
@@ -883,12 +907,14 @@ class NodeBindingDifferTest {
     private fun boxNode(
         contentAlignment: com.viewcompose.ui.layout.BoxAlignment = com.viewcompose.ui.layout.BoxAlignment.TopStart,
         rippleColor: Int? = null,
+        stateLayerColors: UiStateLayerColors? = null,
     ): VNode {
         return VNode(
             type = NodeType.Box,
             spec = BoxNodeProps(
                 contentAlignment = contentAlignment,
                 rippleColor = rippleColor,
+                stateLayerColors = stateLayerColors,
             ),
             modifier = Modifier,
         )

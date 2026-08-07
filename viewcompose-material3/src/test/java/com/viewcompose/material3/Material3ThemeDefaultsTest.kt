@@ -10,6 +10,7 @@ import com.viewcompose.ui.foundation.ButtonDefaults
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.CardDefaults
 import com.viewcompose.ui.foundation.CardVariant
+import com.viewcompose.ui.foundation.IconButtonDefaults
 import com.viewcompose.ui.foundation.ProgressIndicatorDefaults
 import com.viewcompose.ui.foundation.SearchBarDefaults
 import com.viewcompose.ui.foundation.TextFieldDefaults
@@ -70,6 +71,9 @@ class Material3ThemeDefaultsTest {
         assertEquals(4.dp, theme.controls.progressIndicator.linearTrackThickness)
         assertEquals(40.dp, theme.controls.progressIndicator.circularSize)
         assertEquals(6.dp, theme.controls.badge.dotSize)
+        assertEquals(0.10f, theme.interactions.pressedStateLayerOpacity)
+        assertEquals(0.10f, theme.interactions.focusedStateLayerOpacity)
+        assertEquals(0.08f, theme.interactions.hoveredStateLayerOpacity)
     }
 
     @Test
@@ -109,4 +113,39 @@ class Material3ThemeDefaultsTest {
         assertEquals(theme.colors.surfaceContainerHigh, searchContainer)
         assertEquals(theme.typography.headlineSmall.fontSizeSp, dialogTitleSize)
     }
+
+    @Test
+    fun `button state layers use variant content roles and standard opacities`() {
+        listOf(Material3ThemeDefaults.light(), Material3ThemeDefaults.dark()).forEach { theme ->
+            var primaryPressed = 0
+            var primaryFocused = 0
+            var primaryHovered = 0
+            var tonalPressed = 0
+            var outlinedPressed = 0
+            var iconPressed = 0
+
+            buildVNodeTree {
+                UiTheme(theme) {
+                    ButtonDefaults.stateLayerColors(ButtonVariant.Primary).let { colors ->
+                        primaryPressed = colors.pressedColor
+                        primaryFocused = colors.focusedColor
+                        primaryHovered = colors.hoveredColor
+                    }
+                    tonalPressed = ButtonDefaults.stateLayerColors(ButtonVariant.Tonal).pressedColor
+                    outlinedPressed =
+                        ButtonDefaults.stateLayerColors(ButtonVariant.Outlined).pressedColor
+                    iconPressed = IconButtonDefaults.stateLayerColors().pressedColor
+                }
+            }
+
+            assertEquals(theme.colors.onPrimary.withStateAlpha(0x1A), primaryPressed)
+            assertEquals(theme.colors.onPrimary.withStateAlpha(0x1A), primaryFocused)
+            assertEquals(theme.colors.onPrimary.withStateAlpha(0x14), primaryHovered)
+            assertEquals(theme.colors.onSecondaryContainer.withStateAlpha(0x1A), tonalPressed)
+            assertEquals(theme.colors.primary.withStateAlpha(0x1A), outlinedPressed)
+            assertEquals(theme.colors.onSurfaceVariant.withStateAlpha(0x1A), iconPressed)
+        }
+    }
+
+    private fun Int.withStateAlpha(alpha: Int): Int = (alpha shl 24) or (this and 0x00FFFFFF)
 }

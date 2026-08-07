@@ -118,7 +118,8 @@ internal object MediaNodePatchApplier {
             previous.borderWidth != next.borderWidth ||
             previous.borderColor != next.borderColor ||
             previous.shape != next.shape ||
-            previous.rippleColor != next.rippleColor
+            previous.rippleColor != next.rippleColor ||
+            previous.stateLayerColors != next.stateLayerColors
         ) {
             ViewModifierApplier.applyStylePatch(
                 view = view,
@@ -127,6 +128,7 @@ internal object MediaNodePatchApplier {
                 borderColor = next.borderColor,
                 shape = next.shape,
                 rippleColor = next.rippleColor,
+                stateLayerColors = next.stateLayerColors,
                 clickable = true,
             )
         }

@@ -46,9 +46,14 @@ fun UiTreeBuilder.Card(
         }
         .then(modifier)
     ProvideLocal(LocalContentColor, CardDefaults.contentColor()) {
-        Box(
+        StateLayerBox(
             key = key,
             rippleColor = if (enabled && onClick != null) CardDefaults.pressedColor() else null,
+            stateLayerColors = if (enabled && onClick != null) {
+                stateLayerColorsFor(CardDefaults.contentColor())
+            } else {
+                null
+            },
             modifier = semanticModifier,
             content = content,
         )
@@ -122,10 +127,12 @@ fun UiTreeBuilder.ListItem(
             }
         }
         .then(modifier)
-    Row(
+    StateLayerRow(
         key = key,
         spacing = ListItemDefaults.leadingTrailingSpacing(),
         verticalAlignment = VerticalAlignment.Center,
+        rippleColor = if (onClick != null) Theme.colors.ripple else null,
+        stateLayerColors = if (onClick != null) stateLayerColorsFor(Theme.colors.onSurface) else null,
         modifier = semanticModifier,
     ) {
         if (leadingContent != null) {

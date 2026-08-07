@@ -329,8 +329,11 @@ class ThemeTest {
         val spec = tree.single().spec as ButtonNodeProps
         assertEquals(customTheme.colors.primary, spec.backgroundColor)
         assertEquals(customTheme.shapes.full, spec.shape)
-        assertEquals(pressedOverlayColorFor(customTheme.colors.onSurface), spec.rippleColor)
         assertEquals(0xFFFFFFFF.toInt(), spec.textColor)
+        assertEquals(0x1AFFFFFF, spec.rippleColor)
+        assertEquals(0x1AFFFFFF, spec.stateLayerColors?.pressedColor)
+        assertEquals(0x1AFFFFFF, spec.stateLayerColors?.focusedColor)
+        assertEquals(0x1AFFFFFF, spec.stateLayerColors?.hoveredColor)
         assertEquals(customTheme.typography.labelLarge.fontSizeSp, spec.textSizeSp)
         assertEquals(customTheme.controls.button.mediumHeight, ButtonDefaults.height())
         assertEquals(customTheme.controls.button.mediumHeight, spec.minHeight)
