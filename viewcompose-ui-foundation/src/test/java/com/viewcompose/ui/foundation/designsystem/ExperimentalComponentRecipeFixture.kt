@@ -2,6 +2,8 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.layout.BoxAlignment
+import com.viewcompose.ui.layout.HorizontalAlignment
+import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.alpha
@@ -11,6 +13,7 @@ import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.elevation
 import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.minHeight
 import com.viewcompose.ui.modifier.padding
@@ -18,9 +21,11 @@ import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ButtonNodeProps
+import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.shape.UiShape
@@ -138,12 +143,48 @@ internal data class ExperimentalTextFieldRecipe(
     val supportingTextStyle: UiTextStyle,
 )
 
+internal enum class ExperimentalNavigationStructure {
+    SharedBarNode,
+    ComposedDestinations,
+}
+
+internal enum class ExperimentalNavigationLabelPolicy {
+    Always,
+    SelectedOnly,
+    Never,
+}
+
+/** Resolved navigation values plus the design-system-owned structural choice. */
+internal data class ExperimentalNavigationRecipe(
+    val structure: ExperimentalNavigationStructure,
+    val labelPolicy: ExperimentalNavigationLabelPolicy,
+    val containerColor: Int,
+    val containerShape: UiShape,
+    val selectedIconColor: Int,
+    val unselectedIconColor: Int,
+    val selectedLabelColor: Int,
+    val unselectedLabelColor: Int,
+    val indicatorColor: Int,
+    val indicatorShape: UiShape,
+    val selectedStateLayerColors: UiStateLayerColors,
+    val unselectedStateLayerColors: UiStateLayerColors,
+    val height: UiDp,
+    val iconSize: UiDp,
+    val indicatorHorizontalPadding: UiDp,
+    val indicatorVerticalPadding: UiDp,
+    val itemSpacing: UiDp,
+    val labelStyle: UiTextStyle,
+    val badgeColor: Int,
+    val badgeTextColor: Int,
+)
+
 internal data class ExperimentalComponentRecipes(
     val identity: ExperimentalComponentRecipeIdentity,
     val action: ExperimentalActionRecipe,
     val surface: ExperimentalSurfaceRecipe,
     val switch: ExperimentalSwitchRecipe,
     val textField: ExperimentalTextFieldRecipe,
+    val navigation: ExperimentalNavigationRecipe,
 )
 
 private val LocalExperimentalComponentRecipes = uiLocalOf<ExperimentalComponentRecipes?>(
@@ -434,6 +475,146 @@ internal fun UiTreeBuilder.ExperimentalRecipeTextField(
                 color = supportColor,
                 modifier = Modifier.margin(top = recipe.decorationSpacing),
             )
+        }
+    }
+}
+
+/**
+ * Selects either the existing fixed navigation node or a design-system-owned generic composition.
+ *
+ * Keeping this choice above NodeSpec resolution demonstrates that Android Renderer does not need
+ * to identify the active design system even when navigation structure differs materially.
+ */
+internal fun UiTreeBuilder.ExperimentalRecipeNavigationBar(
+    items: List<NavigationBarItem>,
+    selectedIndex: Int,
+    onItemSelected: (Int) -> Unit,
+    key: Any? = null,
+    modifier: Modifier = Modifier,
+) {
+    val recipe = currentExperimentalComponentRecipes().navigation
+    when (recipe.structure) {
+        ExperimentalNavigationStructure.SharedBarNode -> {
+            val style = recipe.labelStyle
+            emit(
+                type = NodeType.NavigationBar,
+                key = key,
+                spec = NavigationBarNodeProps(
+                    items = items,
+                    selectedIndex = selectedIndex,
+                    onItemSelected = onItemSelected,
+                    containerColor = recipe.containerColor,
+                    selectedIconColor = recipe.selectedIconColor,
+                    unselectedIconColor = recipe.unselectedIconColor,
+                    selectedLabelColor = recipe.selectedLabelColor,
+                    unselectedLabelColor = recipe.unselectedLabelColor,
+                    indicatorColor = recipe.indicatorColor,
+                    rippleColor = recipe.unselectedStateLayerColors.pressedColor,
+                    iconSize = recipe.iconSize,
+                    labelSizeSp = style.fontSizeSp,
+                    labelFontWeight = style.fontWeight,
+                    labelFontFamily = uiFontFamily(style.fontFamily),
+                    labelLetterSpacingEm = style.letterSpacingEm,
+                    labelLineHeightSp = style.lineHeightSp,
+                    labelIncludeFontPadding = style.includeFontPadding,
+                    badgeColor = recipe.badgeColor,
+                    badgeTextColor = recipe.badgeTextColor,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(recipe.height)
+                    .then(modifier),
+            )
+        }
+
+        ExperimentalNavigationStructure.ComposedDestinations -> {
+            Row(
+                key = key,
+                arrangement = MainAxisArrangement.SpaceEvenly,
+                verticalAlignment = VerticalAlignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(recipe.height)
+                    .backgroundColor(recipe.containerColor)
+                    .shape(recipe.containerShape)
+                    .clip()
+                    .then(modifier),
+            ) {
+                items.forEachIndexed { index, item ->
+                    val selected = index == selectedIndex
+                    val stateLayers = if (selected) {
+                        recipe.selectedStateLayerColors
+                    } else {
+                        recipe.unselectedStateLayerColors
+                    }
+                    StateLayerBox(
+                        key = item.key,
+                        contentAlignment = BoxAlignment.Center,
+                        rippleColor = stateLayers.pressedColor,
+                        stateLayerColors = stateLayers,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onItemSelected(index) }
+                            .semantics(mergeDescendants = true) {
+                                role = SemanticsRole.Tab
+                                this.selected = selected
+                                enabled = true
+                            },
+                    ) {
+                        Column(
+                            spacing = recipe.itemSpacing,
+                            arrangement = MainAxisArrangement.Center,
+                            horizontalAlignment = HorizontalAlignment.Center,
+                        ) {
+                            Box(
+                                contentAlignment = BoxAlignment.Center,
+                                modifier = Modifier
+                                    .let { current ->
+                                        if (selected) {
+                                            current
+                                                .backgroundColor(recipe.indicatorColor)
+                                                .shape(recipe.indicatorShape)
+                                                .clip()
+                                        } else {
+                                            current
+                                        }
+                                    }
+                                    .padding(
+                                        horizontal = recipe.indicatorHorizontalPadding,
+                                        vertical = recipe.indicatorVerticalPadding,
+                                    ),
+                            ) {
+                                Icon(
+                                    source = if (selected) item.selectedIcon ?: item.icon else item.icon,
+                                    contentDescription = item.label,
+                                    tint = if (selected) {
+                                        recipe.selectedIconColor
+                                    } else {
+                                        recipe.unselectedIconColor
+                                    },
+                                    size = recipe.iconSize,
+                                )
+                            }
+                            val showLabel = when (recipe.labelPolicy) {
+                                ExperimentalNavigationLabelPolicy.Always -> true
+                                ExperimentalNavigationLabelPolicy.SelectedOnly -> selected
+                                ExperimentalNavigationLabelPolicy.Never -> false
+                            }
+                            if (showLabel) {
+                                Text(
+                                    text = item.label,
+                                    style = recipe.labelStyle,
+                                    color = if (selected) {
+                                        recipe.selectedLabelColor
+                                    } else {
+                                        recipe.unselectedLabelColor
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

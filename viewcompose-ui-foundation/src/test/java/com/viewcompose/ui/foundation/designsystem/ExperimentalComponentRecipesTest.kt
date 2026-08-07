@@ -2,6 +2,8 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
+import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.NavigationBarItem
 /*
  * 测试职责：验证内部非 Material Recipe 可在相同主题下生成不同的中立 NodeSpec，且不影响现有组件路径。
  * Test responsibility: proves that internal non-Material recipes can emit different neutral
@@ -14,6 +16,7 @@ import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.SemanticsRole
@@ -204,6 +207,58 @@ class ExperimentalComponentRecipesTest {
         assertEquals(TextFieldValue("Ada"), spec.value)
     }
 
+    @Test
+    fun `navigation recipe may retain shared node or own composite structure`() {
+        val shared = navigationTree(roundedRecipes())
+        val composed = navigationTree(cutCornerRecipes())
+
+        assertEquals(NodeType.NavigationBar, shared.type)
+        assertTrue(shared.spec is NavigationBarNodeProps)
+        assertEquals(NodeType.Row, composed.type)
+        assertFalse(composed.flatten().any { node -> node.type == NodeType.NavigationBar })
+        assertEquals(3, composed.children.size)
+        composed.children.forEachIndexed { index, destination ->
+            assertEquals(NodeType.Box, destination.type)
+            val semantics = destination.modifier.elements
+                .filterIsInstance<SemanticsModifierElement>()
+                .single()
+                .configuration
+            assertEquals(SemanticsRole.Tab, semantics.role)
+            assertEquals(index == 1, semantics.selected)
+        }
+        val visibleLabels = composed.flatten()
+            .filter { node -> node.type == NodeType.Text }
+            .map { node -> (node.spec as TextNodeProps).text.toString() }
+        assertEquals(listOf("Search"), visibleLabels)
+    }
+
+    @Test
+    fun `fixed navigation transport cannot express structural recipe decisions`() {
+        val fieldNames = NavigationBarNodeProps::class.java.declaredFields
+            .map { field -> field.name }
+            .toSet()
+
+        assertFalse("NavigationBarNodeProps unexpectedly owns indicator shape", "indicatorShape" in fieldNames)
+        assertFalse("NavigationBarNodeProps unexpectedly owns label policy", "labelPolicy" in fieldNames)
+        assertFalse("NavigationBarNodeProps unexpectedly owns destination layout", "destinationLayout" in fieldNames)
+    }
+
+    @Test
+    fun `five component contrast fixture emits no design-system identity`() {
+        listOf(roundedRecipes(), cutCornerRecipes()).forEach { recipes ->
+            val tree = fiveComponentTree(recipes)
+            val flattened = tree.flatMap { root -> root.flatten() }
+
+            assertEquals(5, tree.size)
+            assertTrue(flattened.any { node -> node.type == NodeType.Button })
+            assertTrue(flattened.any { node -> node.type == NodeType.Surface })
+            assertTrue(flattened.any { node -> node.type == NodeType.TextField })
+            flattened.forEach { node ->
+                assertFalse(node.spec.toString().contains(recipes.identity.value))
+            }
+        }
+    }
+
     private fun recipeTree(
         tokens: UiThemeTokens,
         recipes: ExperimentalComponentRecipes,
@@ -252,6 +307,50 @@ class ExperimentalComponentRecipesTest {
             )
         }
     }.single()
+
+    private fun navigationTree(
+        recipes: ExperimentalComponentRecipes,
+    ) = buildVNodeTree {
+        ProvideExperimentalComponentRecipes(recipes) {
+            ExperimentalRecipeNavigationBar(
+                items = navigationItems(),
+                selectedIndex = 1,
+                onItemSelected = {},
+            )
+        }
+    }.single()
+
+    private fun fiveComponentTree(
+        recipes: ExperimentalComponentRecipes,
+    ) = buildVNodeTree {
+        ProvideExperimentalComponentRecipes(recipes) {
+            ExperimentalRecipeAction(text = "Action")
+            ExperimentalRecipeSurface(onClick = {}) { Text("Surface") }
+            ExperimentalRecipeSwitch(
+                text = "Sync",
+                checked = true,
+                onCheckedChange = {},
+            )
+            ExperimentalRecipeTextField(
+                state = TextFieldState(TextFieldValue("Ada")),
+                label = "Account",
+                placeholder = "Name",
+            )
+            ExperimentalRecipeNavigationBar(
+                items = navigationItems(),
+                selectedIndex = 1,
+                onItemSelected = {},
+            )
+        }
+    }
+
+    private fun navigationItems(): List<NavigationBarItem> {
+        return listOf(
+            NavigationBarItem(label = "Home", icon = ImageSource.Resource(1)),
+            NavigationBarItem(label = "Search", icon = ImageSource.Resource(2)),
+            NavigationBarItem(label = "Profile", icon = ImageSource.Resource(3)),
+        )
+    }
 
     private fun com.viewcompose.ui.node.VNode.flatten(): List<com.viewcompose.ui.node.VNode> {
         return listOf(this) + children.flatMap { child -> child.flatten() }
@@ -347,6 +446,36 @@ class ExperimentalComponentRecipesTest {
                 labelStyle = UiTextStyle(fontSizeSp = 13.sp, fontWeight = 600),
                 supportingTextStyle = UiTextStyle(fontSizeSp = 12.sp, fontWeight = 400),
             ),
+            navigation = ExperimentalNavigationRecipe(
+                structure = ExperimentalNavigationStructure.SharedBarNode,
+                labelPolicy = ExperimentalNavigationLabelPolicy.Always,
+                containerColor = 0xFFF4FBF6.toInt(),
+                containerShape = UiShape.rounded(0.dp),
+                selectedIconColor = 0xFF214E34.toInt(),
+                unselectedIconColor = 0xFF53645A.toInt(),
+                selectedLabelColor = 0xFF214E34.toInt(),
+                unselectedLabelColor = 0xFF53645A.toInt(),
+                indicatorColor = 0xFFC8E8D0.toInt(),
+                indicatorShape = UiShape.roundedRelative(0.5f),
+                selectedStateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x1F214E34,
+                    focusedColor = 0x29214E34,
+                    hoveredColor = 0x14214E34,
+                ),
+                unselectedStateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x1F53645A,
+                    focusedColor = 0x2953645A,
+                    hoveredColor = 0x1453645A,
+                ),
+                height = 80.dp,
+                iconSize = 24.dp,
+                indicatorHorizontalPadding = 18.dp,
+                indicatorVerticalPadding = 4.dp,
+                itemSpacing = 4.dp,
+                labelStyle = UiTextStyle(fontSizeSp = 12.sp, fontWeight = 600),
+                badgeColor = 0xFFBA1A1A.toInt(),
+                badgeTextColor = 0xFFFFFFFF.toInt(),
+            ),
         )
     }
 
@@ -441,6 +570,36 @@ class ExperimentalComponentRecipesTest {
                 textStyle = UiTextStyle(fontSizeSp = 17.sp, fontWeight = 500),
                 labelStyle = UiTextStyle(fontSizeSp = 14.sp, fontWeight = 650),
                 supportingTextStyle = UiTextStyle(fontSizeSp = 12.sp, fontWeight = 500),
+            ),
+            navigation = ExperimentalNavigationRecipe(
+                structure = ExperimentalNavigationStructure.ComposedDestinations,
+                labelPolicy = ExperimentalNavigationLabelPolicy.SelectedOnly,
+                containerColor = 0xFFFFF0E8.toInt(),
+                containerShape = UiShape.cut(12.dp),
+                selectedIconColor = 0xFFFFF4EF.toInt(),
+                unselectedIconColor = 0xFF77574B.toInt(),
+                selectedLabelColor = 0xFF6A2B18.toInt(),
+                unselectedLabelColor = 0xFF77574B.toInt(),
+                indicatorColor = 0xFF6A2B18.toInt(),
+                indicatorShape = UiShape.cut(5.dp),
+                selectedStateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x1FFFF4EF,
+                    focusedColor = 0x29FFF4EF,
+                    hoveredColor = 0x14FFF4EF,
+                ),
+                unselectedStateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x1F77574B,
+                    focusedColor = 0x2977574B,
+                    hoveredColor = 0x1477574B,
+                ),
+                height = 72.dp,
+                iconSize = 22.dp,
+                indicatorHorizontalPadding = 16.dp,
+                indicatorVerticalPadding = 6.dp,
+                itemSpacing = 6.dp,
+                labelStyle = UiTextStyle(fontSizeSp = 13.sp, fontWeight = 650),
+                badgeColor = 0xFFBA1A1A.toInt(),
+                badgeTextColor = 0xFFFFFFFF.toInt(),
             ),
         )
     }
