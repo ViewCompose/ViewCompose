@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
@@ -10,8 +11,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import com.viewcompose.material3.Material3ThemeDefaults
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -198,6 +201,50 @@ class Material3TouchTargetBaselineUiTest {
         }
     }
 
+    @Test
+    fun material3Button_recordsCurrentSingleColorStateLayerBaseline() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val intent = Material3DefaultThemeActivity.newIntent(context, 1f)
+        launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
+            waitForUiIdle()
+            var evidence = ""
+            scenario.onActivity { activity ->
+                val button = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
+                val ripple = findRippleDrawable(button.background)
+                assertNotNull("Expected Material3 Button RippleDrawable", ripple)
+                val material = Material3ThemeDefaults.light().colors
+                val pressed = material.ripple
+                val focused = material.ripple
+                val hovered = material.ripple
+                val referencePressed = material.onPrimary.withAlpha(0.10f)
+                val referenceFocused = material.onPrimary.withAlpha(0.10f)
+                val referenceHovered = material.onPrimary.withAlpha(0.08f)
+
+                assertEquals(pressed, focused)
+                assertEquals(pressed, hovered)
+                assertNotEquals(referencePressed, pressed)
+                assertNotEquals(referenceHovered, hovered)
+
+                evidence = buildString {
+                    appendLine("suite=material3-phase2-state-layer-current")
+                    appendLine("component=primary-button")
+                    appendLine("actualPressed=${pressed.toArgbHex()}")
+                    appendLine("actualFocused=${focused.toArgbHex()}")
+                    appendLine("actualHovered=${hovered.toArgbHex()}")
+                    appendLine("referencePressed=${referencePressed.toArgbHex()}")
+                    appendLine("referenceFocused=${referenceFocused.toArgbHex()}")
+                    appendLine("referenceHovered=${referenceHovered.toArgbHex()}")
+                }
+            }
+            val instrumentation = InstrumentationRegistry.getInstrumentation()
+            val artifact = File(
+                instrumentation.targetContext.getExternalFilesDir(null),
+                "material3-phase2-state-layer-current.txt",
+            ).apply { writeText(evidence) }
+            preserveAfterConnectedTest(artifact)
+        }
+    }
+
     private fun requireVisualSurfaceBounds(view: View): Rect {
         val bounds = findInnermostDrawableBounds(view.background)
         assertNotNull("Expected a drawable surface for ${view.javaClass.simpleName}", bounds)
@@ -227,6 +274,30 @@ class Material3TouchTargetBaselineUiTest {
             else -> Rect(drawable.bounds)
         }
     }
+
+    private fun findRippleDrawable(drawable: Drawable?): RippleDrawable? {
+        return when (drawable) {
+            null -> null
+            is RippleDrawable -> drawable
+            is InsetDrawable -> findRippleDrawable(drawable.drawable)
+            is LayerDrawable -> (0 until drawable.numberOfLayers)
+                .asSequence()
+                .mapNotNull { index -> findRippleDrawable(drawable.getDrawable(index)) }
+                .firstOrNull()
+            else -> null
+        }
+    }
+
+    private fun Int.withAlpha(opacity: Float): Int {
+        return Color.argb(
+            (opacity.coerceIn(0f, 1f) * 255f).roundToInt(),
+            Color.red(this),
+            Color.green(this),
+            Color.blue(this),
+        )
+    }
+
+    private fun Int.toArgbHex(): String = "#%08X".format(this)
 
     private fun View.boundsEvidence(tag: String, density: Float): String {
         val semanticBounds = Rect().also { bounds ->

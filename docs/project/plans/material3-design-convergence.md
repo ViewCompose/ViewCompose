@@ -288,6 +288,24 @@ Accepted native compact-input experiment, 2026-08-07:
   phase will not accept that risk until a generic composite surface/target contract passes the same
   overlap, clipping, scrolling, semantics, and explicit-size matrix.
 
+Interaction-state baseline, 2026-08-07:
+
+- the pinned Material Components `1.13.0` selectors use the component content role for the state
+  layer. For a primary Button this is `onPrimary`; pressed and focused opacity are `0.10`, hovered
+  opacity is `0.08`, and selector order gives pressed precedence over focused and hovered;
+- the current ViewCompose surface contract carries one `rippleColor` integer. Android Renderer
+  creates a value-only `ColorStateList`, so pressed, focused, and hovered all resolve to the same
+  `onSurface`-derived color and opacity. The device baseline records this difference explicitly;
+- extending `UiStateColor.resolve` with a hover flag would not fix component-specific content roles,
+  and deriving Material opacity or content roles inside Android Renderer would violate the layer
+  boundary. Any retained experiment must carry a generic state-layer color set through the
+  component/NodeSpec boundary and preserve the existing one-color API as a compatibility fallback;
+- because this contract affects every clickable surface and custom renderer, production behavior
+  remains unchanged in the baseline commit. Start with Button and IconButton only after tests cover
+  disabled, pressed, focused, hovered, pressed-plus-focused precedence, caller override, patching,
+  and Light/Dark output. Expand to composite and selection controls only if that small contract is
+  reusable without a Material-specific renderer branch.
+
 Keep the implementation only when it provides at least 48dp effective targets for standard
 Material components without changing visual geometry, stealing adjacent input, breaking scrolling,
 or weakening explicit sizing. If no small, renderer-neutral contract can satisfy those conditions,
