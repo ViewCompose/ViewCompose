@@ -55,7 +55,7 @@ class ProgressIndicatorTest {
         assertEquals(NodeType.LinearProgressIndicator, node.type)
         assertEquals(0.42f, spec.progress)
         assertEquals(customTheme.colors.primary, spec.indicatorColor)
-        assertEquals(customTheme.colors.outlineVariant, spec.trackColor)
+        assertEquals(customTheme.colors.secondaryContainer, spec.trackColor)
         assertEquals(customTheme.controls.progressIndicator.linearTrackThickness, spec.trackThickness)
         assertEquals(UiDimension.MatchParent, width.width)
         assertEquals(
@@ -102,7 +102,7 @@ class ProgressIndicatorTest {
         assertEquals(NodeType.CircularProgressIndicator, node.type)
         assertEquals(null, spec.progress)
         assertEquals(customTheme.colors.primary, spec.indicatorColor)
-        assertEquals(customTheme.colors.outlineVariant, spec.trackColor)
+        assertEquals(customTheme.colors.secondaryContainer, spec.trackColor)
         assertEquals(customTheme.controls.progressIndicator.circularTrackThickness, spec.trackThickness)
         assertEquals(customTheme.controls.progressIndicator.circularSize, spec.indicatorSize)
         assertEquals(UiDimension.Exact(customTheme.controls.progressIndicator.circularSize), size.width)

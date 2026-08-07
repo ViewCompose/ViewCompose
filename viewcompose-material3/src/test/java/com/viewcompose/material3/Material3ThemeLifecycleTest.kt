@@ -12,6 +12,7 @@ import com.google.android.material.color.DynamicColors
 import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 import com.viewcompose.ui.foundation.UiThemeOrigin
 import com.viewcompose.material3.test.R as TestR
 import org.junit.Assert.assertEquals
@@ -52,6 +53,18 @@ class Material3ThemeLifecycleTest {
         assertEquals(UiCornerFamily.Cut, tokens.shapes.small.bottomStart.family)
         assertEquals(UiCornerSize.Absolute(20.dp), tokens.shapes.small.bottomStart.size)
         assertEquals(UiThemeOrigin.AndroidTheme, tokens.metadata.origin)
+    }
+
+    @Test
+    fun `legacy title fallback does not collapse new display and headline roles`() {
+        val tokens = Material3ThemeBridge.fromContext(
+            context = themedContext(),
+            dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
+        )
+
+        assertEquals(30.sp, tokens.typography.titleLarge.fontSizeSp)
+        assertEquals(32.sp, tokens.typography.headlineLarge.fontSizeSp)
+        assertEquals(57.sp, tokens.typography.displayLarge.fontSizeSp)
     }
 
     @Test

@@ -6,7 +6,7 @@ import com.viewcompose.ui.unit.UiSp
 /** Default visual, typography, and size tokens for navigation bars. */
 object NavigationBarDefaults {
     /** Returns the navigation-bar container color. */
-    fun containerColor(): Int = Theme.colors.surface
+    fun containerColor(): Int = Theme.colors.surfaceContainer
 
     /** Returns the icon color for a selected destination. */
     fun selectedIconColor(): Int = Theme.colors.onSecondaryContainer

@@ -42,12 +42,12 @@ object FabDefaults {
         }
     }
 
-    /** Resolves the framework FAB shape for [size]. */
+    /** Resolves the semantic theme shape for [size]. */
     fun shape(size: FabSize = FabSize.Medium): UiShape {
         return when (size) {
-            FabSize.Small -> UiShape.rounded(12.dp)
-            FabSize.Medium -> UiShape.rounded(16.dp)
-            FabSize.Large -> UiShape.rounded(28.dp)
+            FabSize.Small -> Theme.shapes.medium
+            FabSize.Medium -> Theme.shapes.large
+            FabSize.Large -> Theme.shapes.extraLarge
         }
     }
 

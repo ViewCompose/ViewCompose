@@ -51,15 +51,15 @@ fun UiTreeBuilder.Checkbox(
 /**
  * Emits a switch node with a text label.
  *
- * Null thumbColor/trackColor lets the renderer use platform defaults or theme-derived colors.
+ * Default thumb and track colors resolve from the complete checked and enabled state.
  */
 fun UiTreeBuilder.Switch(
     text: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     enabled: Boolean = true,
-    thumbColor: Int? = null,
-    trackColor: Int? = null,
+    thumbColor: Int? = InputControlDefaults.switchThumbColor(checked, enabled),
+    trackColor: Int? = InputControlDefaults.switchTrackColor(checked, enabled),
     style: UiTextStyle = InputControlDefaults.labelStyle(),
     key: Any? = null,
     modifier: Modifier = Modifier,

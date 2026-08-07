@@ -77,9 +77,11 @@ internal data class Material3ThemeSnapshot(
  * Parsed result of Android shapeAppearance attributes.
  */
 internal data class Material3ThemeShapeSnapshot(
+    val extraSmall: UiShape? = null,
     val small: UiShape? = null,
     val medium: UiShape? = null,
     val large: UiShape? = null,
+    val extraLarge: UiShape? = null,
 )
 
 /**
@@ -98,6 +100,12 @@ internal data class Material3TextStyleSnapshot(
  * Snapshot of Android typography-related textAppearance values.
  */
 internal data class Material3ThemeTypographySnapshot(
+    val displayLarge: Material3TextStyleSnapshot? = null,
+    val displayMedium: Material3TextStyleSnapshot? = null,
+    val displaySmall: Material3TextStyleSnapshot? = null,
+    val headlineLarge: Material3TextStyleSnapshot? = null,
+    val headlineMedium: Material3TextStyleSnapshot? = null,
+    val headlineSmall: Material3TextStyleSnapshot? = null,
     val titleLarge: Material3TextStyleSnapshot? = null,
     val titleMedium: Material3TextStyleSnapshot? = null,
     val titleSmall: Material3TextStyleSnapshot? = null,
@@ -235,16 +243,20 @@ internal object Material3ThemeSnapshotReader {
 
     private fun readShapeSnapshot(context: Context): Material3ThemeShapeSnapshot {
         val attrs = intArrayOf(
-            com.google.android.material.R.attr.shapeAppearanceSmallComponent,
-            com.google.android.material.R.attr.shapeAppearanceMediumComponent,
-            com.google.android.material.R.attr.shapeAppearanceLargeComponent,
+            com.google.android.material.R.attr.shapeAppearanceCornerExtraSmall,
+            com.google.android.material.R.attr.shapeAppearanceCornerSmall,
+            com.google.android.material.R.attr.shapeAppearanceCornerMedium,
+            com.google.android.material.R.attr.shapeAppearanceCornerLarge,
+            com.google.android.material.R.attr.shapeAppearanceCornerExtraLarge,
         )
         val typedArray = context.obtainStyledAttributes(attrs)
         return try {
             Material3ThemeShapeSnapshot(
-                small = typedArray.getStyleShapeOrNull(context, 0),
-                medium = typedArray.getStyleShapeOrNull(context, 1),
-                large = typedArray.getStyleShapeOrNull(context, 2),
+                extraSmall = typedArray.getStyleShapeOrNull(context, 0),
+                small = typedArray.getStyleShapeOrNull(context, 1),
+                medium = typedArray.getStyleShapeOrNull(context, 2),
+                large = typedArray.getStyleShapeOrNull(context, 3),
+                extraLarge = typedArray.getStyleShapeOrNull(context, 4),
             )
         } finally {
             typedArray.recycle()
@@ -253,6 +265,12 @@ internal object Material3ThemeSnapshotReader {
 
     private fun readTypographySnapshot(context: Context): Material3ThemeTypographySnapshot {
         val attrs = intArrayOf(
+            com.google.android.material.R.attr.textAppearanceDisplayLarge,
+            com.google.android.material.R.attr.textAppearanceDisplayMedium,
+            com.google.android.material.R.attr.textAppearanceDisplaySmall,
+            com.google.android.material.R.attr.textAppearanceHeadlineLarge,
+            com.google.android.material.R.attr.textAppearanceHeadlineMedium,
+            com.google.android.material.R.attr.textAppearanceHeadlineSmall,
             com.google.android.material.R.attr.textAppearanceTitleLarge,
             com.google.android.material.R.attr.textAppearanceTitleMedium,
             com.google.android.material.R.attr.textAppearanceTitleSmall,
@@ -268,19 +286,25 @@ internal object Material3ThemeSnapshotReader {
         )
         val typedArray = context.obtainStyledAttributes(attrs)
         return try {
-            val legacyTitle = typedArray.getTextStyleSnapshot(context, 9)
-            val legacyBody = typedArray.getTextStyleSnapshot(context, 10)
-            val legacyLabel = typedArray.getTextStyleSnapshot(context, 11)
+            val legacyTitle = typedArray.getTextStyleSnapshot(context, 15)
+            val legacyBody = typedArray.getTextStyleSnapshot(context, 16)
+            val legacyLabel = typedArray.getTextStyleSnapshot(context, 17)
             Material3ThemeTypographySnapshot(
-                titleLarge = typedArray.getTextStyleSnapshot(context, 0) ?: legacyTitle,
-                titleMedium = typedArray.getTextStyleSnapshot(context, 1) ?: legacyTitle,
-                titleSmall = typedArray.getTextStyleSnapshot(context, 2) ?: legacyTitle,
-                bodyLarge = typedArray.getTextStyleSnapshot(context, 3) ?: legacyBody,
-                bodyMedium = typedArray.getTextStyleSnapshot(context, 4) ?: legacyBody,
-                bodySmall = typedArray.getTextStyleSnapshot(context, 5) ?: legacyBody,
-                labelLarge = typedArray.getTextStyleSnapshot(context, 6) ?: legacyLabel,
-                labelMedium = typedArray.getTextStyleSnapshot(context, 7) ?: legacyLabel,
-                labelSmall = typedArray.getTextStyleSnapshot(context, 8) ?: legacyLabel,
+                displayLarge = typedArray.getTextStyleSnapshot(context, 0),
+                displayMedium = typedArray.getTextStyleSnapshot(context, 1),
+                displaySmall = typedArray.getTextStyleSnapshot(context, 2),
+                headlineLarge = typedArray.getTextStyleSnapshot(context, 3),
+                headlineMedium = typedArray.getTextStyleSnapshot(context, 4),
+                headlineSmall = typedArray.getTextStyleSnapshot(context, 5),
+                titleLarge = typedArray.getTextStyleSnapshot(context, 6) ?: legacyTitle,
+                titleMedium = typedArray.getTextStyleSnapshot(context, 7) ?: legacyTitle,
+                titleSmall = typedArray.getTextStyleSnapshot(context, 8) ?: legacyTitle,
+                bodyLarge = typedArray.getTextStyleSnapshot(context, 9) ?: legacyBody,
+                bodyMedium = typedArray.getTextStyleSnapshot(context, 10) ?: legacyBody,
+                bodySmall = typedArray.getTextStyleSnapshot(context, 11) ?: legacyBody,
+                labelLarge = typedArray.getTextStyleSnapshot(context, 12) ?: legacyLabel,
+                labelMedium = typedArray.getTextStyleSnapshot(context, 13) ?: legacyLabel,
+                labelSmall = typedArray.getTextStyleSnapshot(context, 14) ?: legacyLabel,
             )
         } finally {
             typedArray.recycle()

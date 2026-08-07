@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: b757132d52c09ebd2c30d981a9878cc8112b9d332ff8d540ff070b402210d04a
+translation_source_hash: 813626c5fa4b7d89520f06b553c221b2da8650a272f4cc8e3a705ff54ece7350
 translation_status: current
 ---
 
@@ -41,8 +41,9 @@ translation_status: current
 
 1. `colors` 同时承载基础色、`on*` 前景色、`*Container` 容器色、轮廓色、逆表面色与 ripple。
 2. `stateColors` 承载文本、普通控件、激活控件和交互高亮的 default/disabled/pressed/focused/checked/selected 状态。
-3. `typography` 只保留 tiered `title*/body*/label*` 作为唯一主入口。
-4. `shapes` 只保留语义化 `small / medium / large` 三级形状作为唯一主入口；每个形状完整表达四角、圆角/切角与绝对/百分比尺寸。
+3. `typography` 提供完整 15 角色 `display*/headline*/title*/body*/label*` 比例。
+4. `shapes` 提供语义化 `extraSmall / small / medium / large / extraLarge / full` 六级形状；
+   每个绝对形状完整表达四角、圆角/切角与绝对/百分比尺寸，`full` 表达相对边界的胶囊或圆形。
 5. `controls` 仍是框架自有尺寸 token，不承诺与 Android 原主题系统一一对齐。
 6. `overlays` 当前由语义 token 承载跨组件蒙层配置。
 7. `metadata` 标记 token 来源、深色状态与配置修订号，用于生命周期刷新和诊断，不参与组件默认值推导。
@@ -58,8 +59,9 @@ translation_status: current
 
 1. 扩展表面：`onBackground / surfaceDim / surfaceBright / surfaceContainer*`
 2. 第三强调色：`tertiary / onTertiary / tertiaryContainer / onTertiaryContainer`
-3. 反色与蒙层：`inversePrimary / scrim / surfaceTint`
-4. 业务语义：`success / warning / info`
+3. 预留错误容器：`errorContainer / onErrorContainer`，直到组件存在语义正确的容器错误处理
+4. 反色与蒙层：`inversePrimary / scrim / surfaceTint`
+5. 业务语义：`success / warning / info`
 
 说明：本轮不强绑到现有核心组件，避免为了提高使用率污染语义。
 
@@ -166,18 +168,20 @@ translation_status: current
    - 已桥接：AppCompat `colorControlNormal / colorControlActivated / colorControlHighlight`
    - 标准状态：`disabled / pressed / focused / checked / selected`
 3. `typography`
-   - 已桥接：Material 3 `textAppearanceTitle*/Body*/Label*`
-   - fallback：旧 Android `textAppearanceLarge/Medium/Small`
+   - 已桥接：全部 15 个 Material 3 `textAppearanceDisplay*/Headline*/Title*/Body*/Label*` 角色
+   - 家族回退：旧 Android `textAppearanceLarge/Medium/Small` 只作用于 Title/Body/Label，
+     不会折叠 Display 或 Headline 角色
    - 已桥接字段：`fontSizeSp / fontWeight / fontFamily / letterSpacingEm / lineHeightSp / includeFontPadding`
 4. `shapes`
-   - 已桥接：`shapeAppearanceSmallComponent / Medium / Large`
+   - 已桥接：`shapeAppearanceCornerExtraSmall / Small / Medium / Large / ExtraLarge`
    - 已桥接：四角独立尺寸、`rounded/cut` corner family、dimension/fraction corner size
    - Android 的物理 left/right 会按当前布局方向转换为框架的逻辑 start/end
 5. `overlays`
    - 已桥接：`android:backgroundDimAmount -> scrimOpacity`
 6. `controls`
-   - 当前不做主题级强桥接，继续走 framework defaults
-   - 原因：Android 原主题系统没有与 `compact / medium / large` 一一对应的统一来源
+   - Android 原主题系统没有与 `compact / medium / large` 一一对应的统一来源
+   - 因此由 `Material3ThemeDefaults` 提供固定的标准尺寸配置；Bridge 替换资源支持的颜色、
+     排版和形状时继续保留该配置
 
 不做：
 
@@ -187,7 +191,8 @@ translation_status: current
 
 实现约束：
 
-1. bridge 的 fallback 必须显式落到 `UiThemeDefaults.light/dark()`，禁止散落字面量。
+1. Material Bridge 的 fallback 必须显式落到 `Material3ThemeDefaults.light/dark()`，不能借用
+   UI Foundation 的中性回退，也禁止散落字面量。
 2. 新增桥接字段时，必须同时定义“读取来源 + fallback 规则 + token 归属”。
 3. Bridge 新能力若改变可视结果，必须补 `Material3ThemeBridgeTest` 或 Material 3 侧桥接测试。
 
@@ -230,8 +235,14 @@ themeRefreshController.refresh()
 ## 8. 当前阶段重点
 
 1. 保持主题模型稳定，不回退到“组件全量 token 预计算”。
-2. 动态色、完整 shape 映射与配置生命周期已落地；继续补多窗口/厂商主题的设备矩阵。
-3. 与 `ROADMAP` 中 overlay、input、容器场景联动完善主题回归。
+2. 动态色、完整 15 角色排版、完整绝对形状映射与配置生命周期已落地；继续补多窗口/厂商主题
+   的设备矩阵。
+3. 触控区域扩展、TextField 浮动/Focus 行为以及 Switch/Slider 精确几何必须按测试优先的组件
+   工作处理；完整 Token Bridge 本身不会自动提供这些结构行为。
+4. 与 `ROADMAP` 中 Overlay、Input、容器场景联动完善主题回归。
+
+后续结构改造的顺序、证据与回退规则记录在英文的
+[Material 3 设计收敛计划](https://docs.viewcompose.com/project/plans/material3-design-convergence)。
 
 路线图见：
 

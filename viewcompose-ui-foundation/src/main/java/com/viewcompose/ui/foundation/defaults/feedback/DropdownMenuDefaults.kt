@@ -7,7 +7,7 @@ import com.viewcompose.ui.shape.UiShape
 /** Default visual, size, and spacing tokens for dropdown menus and their items. */
 object DropdownMenuDefaults {
     /** Returns the menu container color. */
-    fun containerColor(): Int = Theme.colors.surface
+    fun containerColor(): Int = Theme.colors.surfaceContainer
 
     /** Returns the primary menu content color. */
     fun contentColor(): Int = Theme.colors.onSurface
@@ -16,7 +16,7 @@ object DropdownMenuDefaults {
     fun textStyle(): UiTextStyle = TextDefaults.bodyMediumStyle()
 
     /** Returns the menu container shape. */
-    fun shape(): UiShape = Theme.shapes.medium
+    fun shape(): UiShape = Theme.shapes.extraSmall
 
     /** Returns the menu elevation. */
     fun elevation(): UiDp = Theme.controls.menu.elevation

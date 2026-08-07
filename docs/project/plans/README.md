@@ -4,6 +4,10 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
+- [Material 3 design convergence](./material3-design-convergence.md) — complete the standard
+  Material 3 token and theme bridge, correct low-risk component defaults, and require baseline,
+  accessibility, visual, and rollback evidence before touch-target, TextField, Switch, or Slider
+  structural convergence.
 - [Five-layer module architecture hard cut](./five-layer-module-architecture-hard-cut.md) —
   replace the broad foundation/optional split with enforceable Kernel, UI Foundation, Android
   Engine, Design System, and Integration layers; rename misleading artifacts, isolate Material 3,

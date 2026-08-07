@@ -94,18 +94,21 @@ internal fun waitForUiIdle() {
     instrumentation.waitForIdleSync()
 }
 
-/**
- * 保存当前设备截图，供失败时人工排查。
- * Saves the current device screenshot for manual failure investigation.
- */
-internal fun captureDeviceScreenshot(name: String) {
+/** Saves the current device screenshot for visual acceptance or failure investigation. */
+internal fun captureDeviceScreenshot(
+    name: String,
+    directoryName: String = "ui-test-screenshots",
+): File {
     val context = InstrumentationRegistry.getInstrumentation().targetContext
-    val directory = File(context.getExternalFilesDir(null), "ui-test-screenshots")
+    val directory = File(context.getExternalFilesDir(null), directoryName)
     if (!directory.exists()) {
         directory.mkdirs()
     }
-    UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        .takeScreenshot(File(directory, "$name.png"))
+    val output = File(directory, "$name.png")
+    val captured = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        .takeScreenshot(output)
+    assertTrue("Expected device screenshot capture to succeed: ${output.absolutePath}", captured)
+    return output
 }
 
 /**

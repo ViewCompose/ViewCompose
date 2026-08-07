@@ -53,7 +53,7 @@ fun UiTreeBuilder.Button(
             shape = ButtonDefaults.shape(),
             rippleColor = rippleColor,
             minHeight = ButtonDefaults.height(size),
-            paddingHorizontal = ButtonDefaults.horizontalPadding(size),
+            paddingHorizontal = ButtonDefaults.horizontalPadding(size, variant),
             paddingVertical = ButtonDefaults.verticalPadding(size),
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,

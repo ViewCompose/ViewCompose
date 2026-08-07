@@ -80,13 +80,13 @@ class TextFieldTest {
         assertEquals(TextFieldImeAction.Next, spec.keyboardOptions.imeAction)
         assertEquals(customTheme.colors.onSurfaceVariant, spec.hintColor)
         assertEquals(customTheme.colors.onSurface, spec.textColor)
-        assertEquals(customTheme.typography.bodyMedium.fontSizeSp, spec.textSizeSp)
-        assertEquals(customTheme.typography.bodyMedium.fontWeight, spec.fontWeight)
-        assertEquals(customTheme.typography.bodyMedium.letterSpacingEm, spec.letterSpacingEm)
-        assertEquals(customTheme.typography.bodyMedium.lineHeightSp, spec.lineHeightSp)
-        assertEquals(customTheme.typography.bodyMedium.includeFontPadding, spec.includeFontPadding)
-        assertEquals(customTheme.colors.surface, spec.backgroundColor)
-        assertEquals(customTheme.shapes.small, spec.shape)
+        assertEquals(customTheme.typography.bodyLarge.fontSizeSp, spec.textSizeSp)
+        assertEquals(customTheme.typography.bodyLarge.fontWeight, spec.fontWeight)
+        assertEquals(customTheme.typography.bodyLarge.letterSpacingEm, spec.letterSpacingEm)
+        assertEquals(customTheme.typography.bodyLarge.lineHeightSp, spec.lineHeightSp)
+        assertEquals(customTheme.typography.bodyLarge.includeFontPadding, spec.includeFontPadding)
+        assertEquals(customTheme.colors.surfaceContainerHighest, spec.backgroundColor)
+        assertEquals(customTheme.shapes.extraSmall, spec.shape)
         assertEquals(true, spec.enabled)
         assertTrue(node.spec is TextFieldNodeProps)
     }
@@ -219,8 +219,8 @@ class TextFieldTest {
 
         assertEquals(202, disabledSpec.backgroundColor)
         assertEquals(209, errorSpec.borderColor)
-        assertEquals(Theme.colors.onErrorContainer, errorSpec.textColor)
-        assertEquals(Theme.colors.onErrorContainer, errorSpec.hintColor)
+        assertEquals(Theme.colors.onSurface, errorSpec.textColor)
+        assertEquals(Theme.colors.onSurfaceVariant, errorSpec.hintColor)
     }
 
     private fun com.viewcompose.ui.modifier.Modifier.readModifierElements(): List<Any?> {

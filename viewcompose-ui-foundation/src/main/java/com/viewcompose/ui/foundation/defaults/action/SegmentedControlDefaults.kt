@@ -21,7 +21,7 @@ object SegmentedControlDefaults {
     fun backgroundColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
-            override?.background ?: Theme.colors.surfaceVariant
+            override?.background ?: Theme.colors.surface
         } else {
             override?.backgroundDisabled ?: Theme.colors.surface
         }
@@ -31,20 +31,20 @@ object SegmentedControlDefaults {
     fun indicatorColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
-            override?.indicator ?: Theme.stateColors.controlActivated.resolve(selected = true)
+            override?.indicator ?: Theme.colors.secondaryContainer
         } else {
             override?.indicatorDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
         }
     }
 
-    /** Returns the current small theme shape. */
-    fun shape(): UiShape = Theme.shapes.small
+    /** Returns the current full theme shape. */
+    fun shape(): UiShape = Theme.shapes.full
 
     /** Resolves unselected label color for [enabled] state. */
     fun textColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
-            override?.text ?: Theme.stateColors.secondaryText.resolve()
+            override?.text ?: Theme.colors.onSurface
         } else {
             override?.textDisabled ?: Theme.stateColors.secondaryText.resolve(enabled = false)
         }
@@ -54,7 +54,7 @@ object SegmentedControlDefaults {
     fun selectedTextColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSegmentedControlColors)
         return if (enabled) {
-            override?.selectedText ?: Theme.colors.onPrimary
+            override?.selectedText ?: Theme.colors.onSecondaryContainer
         } else {
             override?.selectedTextDisabled ?: Theme.colors.onSurfaceVariant
         }

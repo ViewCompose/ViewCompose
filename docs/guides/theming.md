@@ -37,9 +37,10 @@ Current token semantics:
    surfaces, and ripple.
 2. `stateColors` defines default/disabled/pressed/focused/checked/selected values for text, ordinary
    controls, activated controls, and interaction highlights.
-3. `typography` exposes only tiered `title*/body*/label*` values as canonical entries.
-4. `shapes` exposes only semantic `small / medium / large` tiers. Each shape represents four
-   corners, rounded/cut families, and absolute or percentage dimensions.
+3. `typography` exposes the complete 15-role `display*/headline*/title*/body*/label*` scale.
+4. `shapes` exposes semantic `extraSmall / small / medium / large / extraLarge / full` tiers. Each
+   absolute shape represents four corners, rounded/cut families, and absolute or percentage
+   dimensions; `full` expresses a bounds-relative pill or circle.
 5. `controls` is a framework-owned sizing family and does not promise one-to-one alignment with the
    Android theme system.
 6. `overlays` stores cross-component modal configuration as semantic tokens.
@@ -78,8 +79,10 @@ component consumer:
 
 1. extended surfaces: `onBackground / surfaceDim / surfaceBright / surfaceContainer*`;
 2. tertiary emphasis: `tertiary / onTertiary / tertiaryContainer / onTertiaryContainer`;
-3. inverse and overlay colors: `inversePrimary / scrim / surfaceTint`;
-4. application semantics: `success / warning / info`.
+3. reserved error containers: `errorContainer / onErrorContainer` until a component has a
+   semantically correct container-error treatment;
+4. inverse and overlay colors: `inversePrimary / scrim / surfaceTint`;
+5. application semantics: `success / warning / info`.
 
 These are not forced onto existing core components merely to increase usage counts.
 
@@ -181,19 +184,21 @@ Current bridge matrix:
    - bridged: AppCompat `colorControlNormal / colorControlActivated / colorControlHighlight`;
    - standard states: `disabled / pressed / focused / checked / selected`.
 3. `typography`
-   - bridged: Material 3 `textAppearanceTitle*/Body*/Label*`;
-   - fallback: legacy Android `textAppearanceLarge/Medium/Small`;
+   - bridged: all 15 Material 3 `textAppearanceDisplay*/Headline*/Title*/Body*/Label*` roles;
+   - family fallback: legacy Android `textAppearanceLarge/Medium/Small` applies only to
+     title/body/label roles and does not collapse display or headline roles;
    - fields: `fontSizeSp / fontWeight / fontFamily / letterSpacingEm / lineHeightSp / includeFontPadding`.
 4. `shapes`
-   - bridged: `shapeAppearanceSmallComponent / Medium / Large`;
+   - bridged: `shapeAppearanceCornerExtraSmall / Small / Medium / Large / ExtraLarge`;
    - bridged: independent corners, `rounded/cut` families, and dimension/fraction corner sizes;
    - physical Android left/right values map to framework logical start/end using current layout
      direction.
 5. `overlays`
    - bridged: `android:backgroundDimAmount -> scrimOpacity`.
 6. `controls`
-   - no theme-level bridge; values continue to use framework defaults;
-   - Android themes provide no uniform sources corresponding to `compact / medium / large`.
+   - Android themes provide no uniform sources corresponding to `compact / medium / large`;
+   - `Material3ThemeDefaults` therefore supplies the pinned standard sizing profile, and bridge
+     results retain it while replacing resource-backed colors, typography, and shapes.
 
 The bridge does not:
 
@@ -203,7 +208,8 @@ The bridge does not:
 
 Implementation constraints:
 
-1. Fallback resolves explicitly to `UiThemeDefaults.light/dark()`; do not scatter literals.
+1. Material bridge fallback resolves explicitly to `Material3ThemeDefaults.light/dark()`; do not
+   borrow UI Foundation's neutral fallback or scatter literals.
 2. A new bridged field defines its source, fallback rule, and owning token.
 3. A bridge change that affects visible output adds `Material3ThemeBridgeTest` or a Material 3 bridge
    test.
@@ -247,7 +253,13 @@ regression contract.
 ## 8. Current priorities
 
 1. Keep the theme model stable and do not return to complete per-component token precomputation.
-2. Dynamic color, complete shape mapping, and configuration lifecycle are implemented; expand the
-   multi-window and vendor-theme device matrix.
-3. Keep theme regression aligned with overlay, input, and container scenarios in the
+2. Dynamic color, complete 15-role typography, complete absolute shape mapping, and configuration
+   lifecycle are implemented; expand the multi-window and vendor-theme device matrix.
+3. Treat touch-target expansion, TextField floating/focus behavior, and exact Switch/Slider
+   geometry as test-first component work. A complete token bridge alone does not provide those
+   structural behaviors.
+4. Keep theme regression aligned with overlay, input, and container scenarios in the
    [roadmap](../project/roadmap.md).
+
+The ordered evidence and rollback policy for the remaining structural work is recorded in the
+[Material 3 design convergence plan](../project/plans/material3-design-convergence.md).
