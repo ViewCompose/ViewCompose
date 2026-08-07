@@ -1,5 +1,6 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
@@ -9,6 +10,8 @@ import com.viewcompose.ui.modifier.border
 import com.viewcompose.ui.modifier.clickable
 import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.elevation
+import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.minHeight
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.semantics
@@ -99,11 +102,48 @@ internal data class ExperimentalSwitchRecipe(
     val stateLayerColors: UiStateLayerColors,
 )
 
+internal enum class ExperimentalTextFieldDecoration {
+    StackedLabel,
+    PlaceholderLabel,
+}
+
+/** Resolved decoration values wrapped around the shared native editing core. */
+internal data class ExperimentalTextFieldRecipe(
+    val decoration: ExperimentalTextFieldDecoration,
+    val enabledContainerColor: Int,
+    val disabledContainerColor: Int,
+    val errorContainerColor: Int,
+    val enabledTextColor: Int,
+    val disabledTextColor: Int,
+    val enabledHintColor: Int,
+    val disabledHintColor: Int,
+    val enabledLabelColor: Int,
+    val disabledLabelColor: Int,
+    val errorLabelColor: Int,
+    val supportingTextColor: Int,
+    val errorSupportingTextColor: Int,
+    val enabledBorderColor: Int,
+    val disabledBorderColor: Int,
+    val errorBorderColor: Int,
+    val borderWidth: UiDp,
+    val errorBorderWidth: UiDp,
+    val shape: UiShape,
+    val minimumHeight: UiDp,
+    val horizontalPadding: UiDp,
+    val verticalPadding: UiDp,
+    val decorationSpacing: UiDp,
+    val cursorColor: Int,
+    val textStyle: UiTextStyle,
+    val labelStyle: UiTextStyle,
+    val supportingTextStyle: UiTextStyle,
+)
+
 internal data class ExperimentalComponentRecipes(
     val identity: ExperimentalComponentRecipeIdentity,
     val action: ExperimentalActionRecipe,
     val surface: ExperimentalSurfaceRecipe,
     val switch: ExperimentalSwitchRecipe,
+    val textField: ExperimentalTextFieldRecipe,
 )
 
 private val LocalExperimentalComponentRecipes = uiLocalOf<ExperimentalComponentRecipes?>(
@@ -305,5 +345,95 @@ private fun UiTreeBuilder.experimentalSwitchTrack(
                 .shape(recipe.thumbShape)
                 .clip(),
         ) {}
+    }
+}
+
+/**
+ * Keeps editing, selection, IME, autofill, and cursor ownership in BasicTextField while allowing
+ * the design system to own the surrounding label/supporting structure and resolved decoration.
+ */
+internal fun UiTreeBuilder.ExperimentalRecipeTextField(
+    state: TextFieldState,
+    label: String = "",
+    placeholder: String = "",
+    supportingText: String = "",
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    singleLine: Boolean = true,
+    readOnly: Boolean = false,
+    key: Any? = null,
+    modifier: Modifier = Modifier,
+) {
+    val recipe = currentExperimentalComponentRecipes().textField
+    val containerColor = when {
+        isError -> recipe.errorContainerColor
+        !enabled -> recipe.disabledContainerColor
+        else -> recipe.enabledContainerColor
+    }
+    val textColor = if (enabled) recipe.enabledTextColor else recipe.disabledTextColor
+    val hintColor = if (enabled) recipe.enabledHintColor else recipe.disabledHintColor
+    val labelColor = when {
+        isError -> recipe.errorLabelColor
+        !enabled -> recipe.disabledLabelColor
+        else -> recipe.enabledLabelColor
+    }
+    val supportColor = if (isError) {
+        recipe.errorSupportingTextColor
+    } else {
+        recipe.supportingTextColor
+    }
+    val borderColor = when {
+        isError -> recipe.errorBorderColor
+        !enabled -> recipe.disabledBorderColor
+        else -> recipe.enabledBorderColor
+    }
+    val resolvedPlaceholder = when (recipe.decoration) {
+        ExperimentalTextFieldDecoration.StackedLabel -> placeholder
+        ExperimentalTextFieldDecoration.PlaceholderLabel -> placeholder.ifEmpty { label }
+    }
+
+    Column(
+        key = key,
+        modifier = modifier,
+    ) {
+        if (recipe.decoration == ExperimentalTextFieldDecoration.StackedLabel && label.isNotBlank()) {
+            Text(
+                text = label,
+                style = recipe.labelStyle,
+                color = labelColor,
+                modifier = Modifier.margin(bottom = recipe.decorationSpacing),
+            )
+        }
+        BasicTextField(
+            state = state,
+            placeholder = resolvedPlaceholder,
+            enabled = enabled,
+            singleLine = singleLine,
+            readOnly = readOnly,
+            cursorColor = recipe.cursorColor,
+            textColor = textColor,
+            textStyle = recipe.textStyle,
+            hintColor = hintColor,
+            backgroundColor = containerColor,
+            borderWidth = if (isError) recipe.errorBorderWidth else recipe.borderWidth,
+            borderColor = borderColor,
+            shape = recipe.shape,
+            minHeight = if (singleLine) recipe.minimumHeight else UiDp.Zero,
+            paddingHorizontal = recipe.horizontalPadding,
+            paddingVertical = recipe.verticalPadding,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics {
+                    if (isError && supportingText.isNotBlank()) error = supportingText
+                },
+        )
+        if (supportingText.isNotBlank()) {
+            Text(
+                text = supportingText,
+                style = recipe.supportingTextStyle,
+                color = supportColor,
+                modifier = Modifier.margin(top = recipe.decorationSpacing),
+            )
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.text.TextFieldState
+import com.viewcompose.text.TextFieldValue
 /*
  * 测试职责：验证内部非 Material Recipe 可在相同主题下生成不同的中立 NodeSpec，且不影响现有组件路径。
  * Test responsibility: proves that internal non-Material recipes can emit different neutral
@@ -10,6 +12,8 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
+import com.viewcompose.ui.node.spec.TextFieldNodeProps
+import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.SemanticsRole
@@ -145,6 +149,61 @@ class ExperimentalComponentRecipesTest {
         assertFalse("ToggleNodeProps unexpectedly owns motion", "motion" in fieldNames)
     }
 
+    @Test
+    fun `text field recipes share native editing core but own decoration structure`() {
+        val rounded = textFieldTree(
+            recipes = roundedRecipes(),
+            isError = false,
+        )
+        val cut = textFieldTree(
+            recipes = cutCornerRecipes(),
+            isError = false,
+        )
+        val roundedField = rounded.flatten().single { node -> node.type == NodeType.TextField }
+        val cutField = cut.flatten().single { node -> node.type == NodeType.TextField }
+        val roundedSpec = roundedField.spec as TextFieldNodeProps
+        val cutSpec = cutField.spec as TextFieldNodeProps
+
+        assertEquals(NodeType.Column, rounded.type)
+        assertEquals(NodeType.Column, cut.type)
+        assertEquals(listOf(NodeType.Text, NodeType.TextField, NodeType.Text), rounded.children.map { it.type })
+        assertEquals(listOf(NodeType.TextField, NodeType.Text), cut.children.map { it.type })
+        assertTrue(rounded.flatten().filter { it.type == NodeType.Text }
+            .map { (it.spec as TextNodeProps).text.toString() }
+            .contains("Account"))
+        assertFalse(cut.flatten().filter { it.type == NodeType.Text }
+            .map { (it.spec as TextNodeProps).text.toString() }
+            .contains("Account"))
+        assertEquals("Name", roundedSpec.placeholder)
+        assertEquals("Name", cutSpec.placeholder)
+        assertEquals(TextFieldValue("Ada"), roundedSpec.value)
+        assertEquals(TextFieldValue("Ada"), cutSpec.value)
+        assertNotEquals(roundedSpec.shape, cutSpec.shape)
+        assertNotEquals(roundedSpec.backgroundColor, cutSpec.backgroundColor)
+        assertNotEquals(roundedSpec.paddingHorizontal, cutSpec.paddingHorizontal)
+    }
+
+    @Test
+    fun `text field error recipe resolves decoration and semantic error without replacing state`() {
+        val root = textFieldTree(
+            recipes = cutCornerRecipes(),
+            isError = true,
+        )
+        val field = root.flatten().single { node -> node.type == NodeType.TextField }
+        val spec = field.spec as TextFieldNodeProps
+        val semantics = field.modifier.elements
+            .filterIsInstance<SemanticsModifierElement>()
+            .single()
+            .configuration
+        val recipe = cutCornerRecipes().textField
+
+        assertEquals(recipe.errorContainerColor, spec.backgroundColor)
+        assertEquals(recipe.errorBorderColor, spec.borderColor)
+        assertEquals(recipe.errorBorderWidth, spec.borderWidth)
+        assertEquals("Required", semantics.error)
+        assertEquals(TextFieldValue("Ada"), spec.value)
+    }
+
     private fun recipeTree(
         tokens: UiThemeTokens,
         recipes: ExperimentalComponentRecipes,
@@ -175,6 +234,21 @@ class ExperimentalComponentRecipesTest {
                 checked = checked,
                 enabled = enabled,
                 onCheckedChange = {},
+            )
+        }
+    }.single()
+
+    private fun textFieldTree(
+        recipes: ExperimentalComponentRecipes,
+        isError: Boolean,
+    ) = buildVNodeTree {
+        ProvideExperimentalComponentRecipes(recipes) {
+            ExperimentalRecipeTextField(
+                state = TextFieldState(TextFieldValue("Ada")),
+                label = "Account",
+                placeholder = "Name",
+                supportingText = if (isError) "Required" else "Visible to teammates",
+                isError = isError,
             )
         }
     }.single()
@@ -244,6 +318,35 @@ class ExperimentalComponentRecipesTest {
                     hoveredColor = 0x14142019,
                 ),
             ),
+            textField = ExperimentalTextFieldRecipe(
+                decoration = ExperimentalTextFieldDecoration.StackedLabel,
+                enabledContainerColor = 0xFFF4FBF6.toInt(),
+                disabledContainerColor = 0x66F4FBF6,
+                errorContainerColor = 0xFFFFEDEA.toInt(),
+                enabledTextColor = 0xFF142019.toInt(),
+                disabledTextColor = 0x66142019,
+                enabledHintColor = 0xFF53645A.toInt(),
+                disabledHintColor = 0x6653645A,
+                enabledLabelColor = 0xFF214E34.toInt(),
+                disabledLabelColor = 0x66214E34,
+                errorLabelColor = 0xFFBA1A1A.toInt(),
+                supportingTextColor = 0xFF53645A.toInt(),
+                errorSupportingTextColor = 0xFFBA1A1A.toInt(),
+                enabledBorderColor = 0xFF819085.toInt(),
+                disabledBorderColor = 0x66819085,
+                errorBorderColor = 0xFFBA1A1A.toInt(),
+                borderWidth = 1.dp,
+                errorBorderWidth = 2.dp,
+                shape = UiShape.rounded(12.dp),
+                minimumHeight = 52.dp,
+                horizontalPadding = 16.dp,
+                verticalPadding = 12.dp,
+                decorationSpacing = 6.dp,
+                cursorColor = 0xFF214E34.toInt(),
+                textStyle = UiTextStyle(fontSizeSp = 16.sp, fontWeight = 450),
+                labelStyle = UiTextStyle(fontSizeSp = 13.sp, fontWeight = 600),
+                supportingTextStyle = UiTextStyle(fontSizeSp = 12.sp, fontWeight = 400),
+            ),
         )
     }
 
@@ -309,6 +412,35 @@ class ExperimentalComponentRecipesTest {
                     focusedColor = 0x2932150C,
                     hoveredColor = 0x1432150C,
                 ),
+            ),
+            textField = ExperimentalTextFieldRecipe(
+                decoration = ExperimentalTextFieldDecoration.PlaceholderLabel,
+                enabledContainerColor = 0xFFFFF0E8.toInt(),
+                disabledContainerColor = 0x66FFF0E8,
+                errorContainerColor = 0xFFFFDAD6.toInt(),
+                enabledTextColor = 0xFF32150C.toInt(),
+                disabledTextColor = 0x6632150C,
+                enabledHintColor = 0xFF77574B.toInt(),
+                disabledHintColor = 0x6677574B,
+                enabledLabelColor = 0xFF6A2B18.toInt(),
+                disabledLabelColor = 0x666A2B18,
+                errorLabelColor = 0xFFBA1A1A.toInt(),
+                supportingTextColor = 0xFF77574B.toInt(),
+                errorSupportingTextColor = 0xFFBA1A1A.toInt(),
+                enabledBorderColor = 0xFF6A2B18.toInt(),
+                disabledBorderColor = 0x666A2B18,
+                errorBorderColor = 0xFFBA1A1A.toInt(),
+                borderWidth = 2.dp,
+                errorBorderWidth = 3.dp,
+                shape = UiShape.cut(10.dp),
+                minimumHeight = 56.dp,
+                horizontalPadding = 20.dp,
+                verticalPadding = 14.dp,
+                decorationSpacing = 8.dp,
+                cursorColor = 0xFF6A2B18.toInt(),
+                textStyle = UiTextStyle(fontSizeSp = 17.sp, fontWeight = 500),
+                labelStyle = UiTextStyle(fontSizeSp = 14.sp, fontWeight = 650),
+                supportingTextStyle = UiTextStyle(fontSizeSp = 12.sp, fontWeight = 500),
             ),
         )
     }
