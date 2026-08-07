@@ -2,13 +2,12 @@
 
 ## Status
 
-Active. Phase 0 and the low-risk Phase 1 release slice are implemented and Phase 1 is under review
-in pull request 79. Phase 2 has accepted independently revertible effective-target changes for
-Button and the native Checkbox, RadioButton, Switch, and Slider controls. Chip expansion is
-deferred behind a generic composite-target contract. The interaction-state baseline is complete,
-but production state-layer changes remain conditional on a small renderer-neutral contract. The
-Settings verification fixture now isolates Android XML, static Material 3, and Demo custom-token
-sources with deliberately different palettes and screenshot-stable source diagnostics.
+Active. Phase 0 and the low-risk Phase 1 release slice are implemented. Phase 2 has accepted
+independently revertible effective-target changes for Button and the native Checkbox, RadioButton,
+Switch, and Slider controls. It has also accepted a bounded action/composite state-layer slice
+through a small renderer-neutral contract. Chip touch-target expansion remains deferred behind a
+generic composite-target contract. The Settings verification fixture isolates Android XML, static Material 3, and Demo
+custom-token sources with deliberately different palettes and screenshot-stable source diagnostics.
 
 This is a temporary execution plan and remains canonical English-only under the documentation
 governance policy. When the accepted work is complete, durable contracts move into the theme guide
@@ -16,17 +15,18 @@ and owning module manuals before this plan moves to `docs/archive/`.
 
 Last verified: 2026-08-07.
 
-Next action: use the accepted three-source fixture for subsequent visual evidence, review and
-release Phase 1, then decide whether the Button/IconButton state-layer experiment can preserve the
-existing one-color fallback without adding Material policy to Android Renderer. Do not generalize
-to Chip, start TextField work, or start custom-control structural changes before each area's
-required current-behavior tests and keep criteria exist.
+Next action: review and release the retained Phase 1 and Phase 2 slices, then decide whether product
+value justifies a generic composite-target experiment for Chip. Do not extend state layers into
+navigation APIs with explicit ripple overrides or native control geometry, start TextField work, or
+start custom-control structural changes before each area's required current-behavior tests and keep
+criteria exist.
 
 ## Maven release changesets
 
 - `release/changes/20260807-material3-phase1.json`
 - `release/changes/20260807-material3-phase2-button-target.json`
 - `release/changes/20260807-material3-native-selection-colors.json`
+- `release/changes/20260807-material3-button-state-layers.json`
 
 ## Objective
 
@@ -224,8 +224,8 @@ Completion gate:
 
 Do not begin with production behavior changes.
 
-Status: current-behavior fixture captured; Button and native compact-input experiments accepted;
-composite Chip and interaction-state work remain conditional and in progress.
+Status: current-behavior fixture captured; Button, native compact-input, and Button/IconButton
+state-layer experiments accepted; composite Chip work remains conditional.
 
 Required baseline:
 
@@ -349,6 +349,59 @@ Interaction-state baseline, 2026-08-07:
   and Light/Dark output. Expand to composite and selection controls only if that small contract is
   reusable without a Material-specific renderer branch.
 
+Accepted Button/IconButton state-layer experiment, 2026-08-07:
+
+- `UiStateLayerColors` carries already-resolved pressed, focused, and hovered colors without a
+  Material role, platform type, lifecycle owner, or state machine. A null value retains the exact
+  previous value-only ripple selector for direct emitters and compatibility paths;
+- `UiInteractionTokens` carries only generic state opacities. The Material 3 profile selects
+  `0.10 / 0.10 / 0.08`, while neutral and existing custom themes derive equal state opacity from
+  their previous ripple alpha so their visual intensity does not change unexpectedly;
+- Button and IconButton Defaults select the enabled component content role, combine it with the
+  interaction opacity, and emit resolved colors. Android Renderer implements only the generic
+  enabled selector with pressed-before-focused-before-hovered precedence;
+- state-layer changes take the existing targeted style-patch route: the native Button/IconButton is
+  retained, only its surface drawable is rebuilt, and Button's centered visual-surface inset and
+  shape mask remain the clipping boundary;
+- focused UI Contract, UI Foundation, Material 3, and Android Renderer tests cover state order,
+  transparent inactive/disabled output, semantic role selection, caller override, one-color
+  fallback, and retained-View patching;
+- API 35 attached-View screenshots record default, pressed, focused, and hovered Button output.
+  Pixel differences are confined to the pill surface, do not enter the surrounding effective
+  target, and preserve the accepted Button geometry. The implementation is retained because it
+  materially corrects all three states without a Material dependency or policy branch in Android
+  Renderer;
+- the Settings theme-source fixture now includes a manual `Interaction state layers` section for
+  Primary, Tonal, Outlined, and IconButton variants. It prints the active semantic base roles and
+  resolved pressed/focused/hovered ARGB values, supports touch hold and pointer hover, and provides
+  explicit focus/clear actions so review does not depend on keyboard traversal setup;
+- this initial acceptance was intentionally limited to Button and IconButton. Any expansion
+  required a separate evidence and keep decision and did not authorize a framework-wide clickable
+  abstraction or policy for controls with different native drawing and selection behavior.
+
+Accepted bounded composite state-layer expansion, 2026-08-07:
+
+- the existing generic contract is reused by nullable Box and Row NodeSpec fields. Public Box/Row
+  DSL signatures remain unchanged, passive containers keep null, and direct emitters retain their
+  one-color fallback;
+- Chip, FAB, extended FAB, clickable Surface, Card, ListItem, and DropdownMenuItem resolve their
+  enabled content role before emission. This covers the framework-owned shape boundary without a
+  wrapper, touch-delegate, Material renderer branch, or new interaction state machine;
+- SegmentedControl carries separate selected and unselected sets. Selection patches rebuild only
+  the two backgrounds whose semantic role changes, while equal or null role sets retain the
+  previous cached-background path;
+- focused UI Foundation and Android Renderer tests cover custom content roles, passive/disabled
+  absence, Box/Row style binding, selector installation, selected-role switching, rebind behavior,
+  and the value-only fallback. The API 35 fixture verifies stateful RippleDrawables for Chip, FAB,
+  and both segments and exports a composite screenshot with intact shape clipping;
+- NavigationBar and TabRow are excluded because their public single-color `rippleColor` parameter
+  cannot be silently subordinated to a generated multi-state default. Checkbox, RadioButton,
+  Switch, and Slider are excluded because their Material state layers attach to native icon, thumb,
+  or handle geometry rather than the complete labeled View. Those families need independent API
+  and geometry baselines before any expansion;
+- this expansion does not approve Chip touch-target restructuring. It changes feedback colors only
+  and preserves current measurement, semantics ownership, modifier precedence, and click routing.
+
 Keep the implementation only when it provides at least 48dp effective targets for standard
 Material components without changing visual geometry, stealing adjacent input, breaking scrolling,
 or weakening explicit sizing. If no small, renderer-neutral contract can satisfy those conditions,
@@ -470,3 +523,5 @@ This plan is complete when:
 | 2026-08-07 | 2 | Semantic-default and Renderer tint/patch tests plus Samsung device screenshot review of Switch and Slider | Primary and explicit inactive-track ownership retained with `SRC_IN`; `SRC` rejected because it broke OEM drawable masks |
 | 2026-08-07 | 2 | API 35 Android XML/static Material 3/Demo custom-token screenshot matrix, metadata sidecars, and token-source unit coverage | Three-source verification fixture retained; palettes and secondary/container roles remain intentionally distinct |
 | 2026-08-07 | 2 | Button RippleDrawable report plus pinned Material selector comparison for pressed, focused, and hovered output | State-layer mismatch confirmed; baseline retained and production behavior unchanged pending a reusable renderer-neutral contract |
+| 2026-08-07 | 2 | Generic selector and targeted-patch tests plus API 35 attached-View default/pressed/focused/hovered screenshots | Button/IconButton state-layer experiment retained; expansion beyond these two components remains out of scope |
+| 2026-08-07 | 2 | Composite NodeSpec/default tests, SegmentedControl role-switch rendering tests, and API 35 Chip/FAB/segment selector plus screenshot evidence | Bounded composite expansion retained; navigation override APIs and native-control geometry remain deferred |

@@ -3,6 +3,7 @@ package com.viewcompose.material3
 import com.viewcompose.ui.foundation.UiColors
 import com.viewcompose.ui.foundation.UiControlSizeDefaults
 import com.viewcompose.ui.foundation.UiControlSizing
+import com.viewcompose.ui.foundation.UiInteractionTokens
 import com.viewcompose.ui.foundation.UiShapes
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiThemeMetadata
@@ -51,10 +52,19 @@ object Material3ThemeDefaults {
             typography = typography(),
             shapes = shapes(),
             controls = controls(),
+            interactions = interactions(),
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.Custom,
                 isDark = isDark,
             ),
+        )
+    }
+
+    private fun interactions(): UiInteractionTokens {
+        return UiInteractionTokens(
+            pressedStateLayerOpacity = 0.10f,
+            focusedStateLayerOpacity = 0.10f,
+            hoveredStateLayerOpacity = 0.08f,
         )
     }
 

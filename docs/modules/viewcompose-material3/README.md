@@ -54,12 +54,18 @@ missing. Each snapshot includes:
 - all 15 standard display, headline, title, body, and label typography roles;
 - extra-small, small, medium, large, extra-large, and full shape roles; and
 - the selected standard sizing profile for buttons, text fields, segmented controls, progress
-  indicators, FABs, search, badges, and native compact-input effective targets.
+  indicators, FABs, search, badges, and native compact-input effective targets; and
+- standard interaction opacities: `0.10` pressed, `0.10` focused, and `0.08` hovered.
 
 The standard Button profile uses a 48dp effective target with a centered 40dp visible container for
 compact and medium buttons, and a 56dp target with a 48dp visible container for large buttons. This
 is a token choice consumed through UI Foundation's design-system-neutral sizing contract; the
 Material adapter does not participate in Android hit testing or View drawing.
+
+Button and IconButton Defaults combine those interaction opacities with each variant's enabled
+content role before emitting a NodeSpec. For example, a primary Button uses `onPrimary`, while a
+tonal Button uses `onSecondaryContainer`. The adapter does not produce selectors and Android
+Renderer remains unaware of Material role names.
 
 Checkbox, RadioButton, Switch, and Slider use a 48dp minimum effective height. Their native
 indicator, thumb, track, and label geometry remains centered and platform-rendered; an explicit
@@ -101,3 +107,8 @@ foundation were renamed to the `Material3*` API family and moved here without co
 The current alpha line also adds complete shape and typography roles and a public static Material 3
 fallback; consumers that exhaustively construct or destructure affected UI Foundation data classes
 must update with the corresponding alpha release.
+
+The standard interaction-opacity profile is retained across Android theme mapping because the
+platform theme does not expose one complete per-state opacity family. Applications can replace the
+generic `UiInteractionTokens` or a component's resolved `stateLayerColors` without depending on
+Material APIs.

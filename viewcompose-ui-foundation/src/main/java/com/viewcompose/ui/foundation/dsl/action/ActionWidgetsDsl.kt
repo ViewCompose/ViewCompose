@@ -9,6 +9,7 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.SegmentedControlItem
 import com.viewcompose.ui.node.UiImageRequestOptions
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.IconButtonNodeProps
 import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
@@ -32,7 +33,8 @@ import com.viewcompose.ui.node.spec.uiFontFamily
  * @param variant visual hierarchy used to resolve container, content, and border roles
  * @param size interaction-density tier used for target, visible container, padding, icon, and text
  * @param enabled whether input is accepted and enabled color roles are used
- * @param rippleColor ARGB feedback color used inside the visible container
+ * @param stateLayerColors resolved pressed, focused, and hovered colors clipped to the visible
+ * container
  * @param style immutable text appearance snapshot for the label
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended to the emitted Button node
@@ -45,10 +47,91 @@ fun UiTreeBuilder.Button(
     variant: ButtonVariant = ButtonVariant.Primary,
     size: ButtonSize = ButtonSize.Medium,
     enabled: Boolean = true,
-    rippleColor: Int = ButtonDefaults.pressedColor(),
+    stateLayerColors: UiStateLayerColors = ButtonDefaults.stateLayerColors(variant),
     style: UiTextStyle = ButtonDefaults.textStyle(size),
     key: Any? = null,
     modifier: Modifier = Modifier,
+) {
+    emitButton(
+        text = text,
+        onClick = onClick,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        variant = variant,
+        size = size,
+        enabled = enabled,
+        rippleColor = stateLayerColors.pressedColor,
+        stateLayerColors = stateLayerColors,
+        style = style,
+        key = key,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Displays a themed text action with one compatibility feedback color for every active state.
+ *
+ * Prefer the state-layer overload for distinct pressed, focused, and hovered feedback. This
+ * overload preserves source compatibility for callers that explicitly supplied the former
+ * single-color `rippleColor` parameter; Android Renderer also retains the corresponding nullable
+ * NodeSpec fallback for custom emitters.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.buttonSample
+ * @receiver active tree builder that receives the emitted Button node
+ * @param text visible action label
+ * @param onClick callback invoked synchronously on the renderer thread for an enabled click
+ * @param leadingIcon optional resource icon placed before [text]
+ * @param trailingIcon optional resource icon placed after [text]
+ * @param variant visual hierarchy used to resolve container, content, and border roles
+ * @param size interaction-density tier used for target, visible container, padding, icon, and text
+ * @param enabled whether input is accepted and enabled color roles are used
+ * @param rippleColor ARGB feedback color used for pressed, focused, and hovered states
+ * @param style immutable text appearance snapshot for the label
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended to the emitted Button node
+ */
+fun UiTreeBuilder.Button(
+    text: String,
+    onClick: (() -> Unit)? = null,
+    leadingIcon: ImageSource.Resource? = null,
+    trailingIcon: ImageSource.Resource? = null,
+    variant: ButtonVariant = ButtonVariant.Primary,
+    size: ButtonSize = ButtonSize.Medium,
+    enabled: Boolean = true,
+    rippleColor: Int,
+    style: UiTextStyle = ButtonDefaults.textStyle(size),
+    key: Any? = null,
+    modifier: Modifier = Modifier,
+) {
+    emitButton(
+        text = text,
+        onClick = onClick,
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        variant = variant,
+        size = size,
+        enabled = enabled,
+        rippleColor = rippleColor,
+        stateLayerColors = null,
+        style = style,
+        key = key,
+        modifier = modifier,
+    )
+}
+
+private fun UiTreeBuilder.emitButton(
+    text: String,
+    onClick: (() -> Unit)?,
+    leadingIcon: ImageSource.Resource?,
+    trailingIcon: ImageSource.Resource?,
+    variant: ButtonVariant,
+    size: ButtonSize,
+    enabled: Boolean,
+    rippleColor: Int,
+    stateLayerColors: UiStateLayerColors?,
+    style: UiTextStyle,
+    key: Any?,
+    modifier: Modifier,
 ) {
     val contentColor = ButtonDefaults.contentColor(variant, enabled)
     val iconSizeValue = ButtonDefaults.iconSize(size)
@@ -81,6 +164,7 @@ fun UiTreeBuilder.Button(
             iconSize = iconSizeValue,
             iconSpacing = iconSpacingValue,
             visualHeight = ButtonDefaults.visualHeight(size),
+            stateLayerColors = stateLayerColors,
         ),
         modifier = modifier,
     )
@@ -104,6 +188,7 @@ fun UiTreeBuilder.Button(
  * @param tint optional ARGB icon tint; `null` resolves the themed content color
  * @param requestOptions immutable decode, cache, transition, and adapter-extension policy
  * @param enabled whether the button accepts clicks and uses enabled theme tokens
+ * @param stateLayerColors resolved pressed, focused, and hovered colors clipped to the button shape
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after required size and click semantics
  */
@@ -116,6 +201,7 @@ fun UiTreeBuilder.IconButton(
     tint: Int? = null,
     requestOptions: UiImageRequestOptions = UiImageRequestOptions(),
     enabled: Boolean = true,
+    stateLayerColors: UiStateLayerColors = IconButtonDefaults.stateLayerColors(variant),
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -152,8 +238,9 @@ fun UiTreeBuilder.IconButton(
             borderWidth = IconButtonDefaults.borderWidth(variant),
             borderColor = IconButtonDefaults.borderColor(variant, enabled),
             shape = IconButtonDefaults.shape(),
-            rippleColor = IconButtonDefaults.pressedColor(),
+            rippleColor = stateLayerColors.pressedColor,
             contentPadding = contentPaddingValue,
+            stateLayerColors = stateLayerColors,
         ),
         modifier = semanticModifier,
     )
@@ -227,6 +314,8 @@ fun UiTreeBuilder.SegmentedControl(
             includeFontPadding = style.includeFontPadding,
             paddingHorizontal = paddingHorizontal,
             paddingVertical = paddingVertical,
+            unselectedStateLayerColors = SegmentedControlDefaults.stateLayerColors(selected = false),
+            selectedStateLayerColors = SegmentedControlDefaults.stateLayerColors(selected = true),
         ),
         modifier = Modifier
             .height(SegmentedControlDefaults.height(size))

@@ -1,5 +1,6 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.shape.UiShape
@@ -67,6 +68,16 @@ object SegmentedControlDefaults {
         } else {
             0x00000000
         }
+    }
+
+    /** Resolves interaction colors from the selected or unselected enabled label role. */
+    internal fun stateLayerColors(selected: Boolean): UiStateLayerColors {
+        val contentColor = if (selected) {
+            selectedTextColor(enabled = true)
+        } else {
+            textColor(enabled = true)
+        }
+        return stateLayerColorsFor(contentColor)
     }
 
     /** Resolves label typography for [size]. */

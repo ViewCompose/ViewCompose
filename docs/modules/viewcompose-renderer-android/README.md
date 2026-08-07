@@ -39,6 +39,10 @@ dependencies {
   its background, border, ripple, and outline inside the View without changing measurement,
   hit-testing, or accessibility bounds. An explicit background, border, corner radius, or shape
   modifier disables that component-provided inset so application styling remains authoritative.
+- Button, IconButton, interactive Box/Row composites, and SegmentedControl state layers use
+  resolved `UiStateLayerColors` from their NodeSpecs. The engine applies enabled pressed, focused,
+  and hovered selector states inside the existing shape mask and visual-surface inset; it does not
+  select semantic roles or Material opacity values.
 - Build baseline for this release: Kotlin 2.0.21 and Android Gradle Plugin 8.13.2.
 
 ## Rendering model
@@ -117,6 +121,12 @@ Because the current line is alpha, the documentation site intentionally does not
   business state from patch records or diagnostic counters.
 - Button surface-inset changes participate in targeted style patching. They must not recreate the
   native View or change its effective measured target.
+- Button and IconButton state-layer changes participate in targeted style patching and rebuild only
+  the surface drawable. Interactive Box/Row changes re-run their existing style binding, while
+  SegmentedControl rebuilds only segment backgrounds whose selected role changed. Pressed takes
+  precedence over focused and hovered, focused takes precedence over hovered, and inactive or
+  disabled multi-state layers are transparent. A null multi-state contract keeps the previous
+  value-only ripple selector unchanged.
 - Slider binding uses a renderer-neutral `AppCompatSeekBar` subclass because the platform widget
   can ignore `minimumHeight` under an `AT_MOST` measure spec. It honors the declared minimum while
   leaving an exact application or parent height authoritative; no Material policy or token is
@@ -166,3 +176,8 @@ diagnostics, tooling association, and decoration-backend contracts. Do not persi
 patch records, diagnostic tree objects, opaque lazy content tokens, or View tags as external data.
 Custom hosts and decoration backends must be upgraded with renderer contract changes even when an
 application's DSL source still compiles.
+
+The renderer's multi-state path is an implementation of the generic UI Contract rather than a
+Material feature. Custom renderers that adopt `UiStateLayerColors` must preserve its enabled-state
+precedence and transparent inactive behavior; renderers that receive null may continue their
+documented one-color compatibility path.

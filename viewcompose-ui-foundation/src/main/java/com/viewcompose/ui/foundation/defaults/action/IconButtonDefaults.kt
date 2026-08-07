@@ -1,5 +1,6 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.shape.UiShape
@@ -58,4 +59,17 @@ object IconButtonDefaults {
 
     /** Returns the Button pressed-state highlight. */
     fun pressedColor(): Int = ButtonDefaults.pressedColor()
+
+    /**
+     * Resolves transient interaction colors from the enabled icon role for [variant].
+     *
+     * @param variant visual hierarchy whose enabled icon role supplies the state-layer base
+     * @return immutable pressed, focused, and hovered state-layer colors
+     */
+    fun stateLayerColors(
+        variant: ButtonVariant = ButtonVariant.Text,
+    ): UiStateLayerColors {
+        val baseColor = contentColor(variant = variant, enabled = true)
+        return stateLayerColorsFor(baseColor)
+    }
 }

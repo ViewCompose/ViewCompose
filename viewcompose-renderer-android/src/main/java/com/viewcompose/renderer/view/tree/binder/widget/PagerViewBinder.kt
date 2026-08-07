@@ -2,6 +2,7 @@ package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.SegmentedControlItem
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
@@ -39,6 +40,8 @@ internal object PagerViewBinder {
         val textColor: Int,
         val selectedTextColor: Int,
         val rippleColor: Int,
+        val unselectedStateLayerColors: UiStateLayerColors? = null,
+        val selectedStateLayerColors: UiStateLayerColors? = null,
         val textSizePx: Float,
         val fontWeight: Int? = null,
         val fontFamily: UiFontFamily? = null,
@@ -109,6 +112,8 @@ internal object PagerViewBinder {
             textColor = spec.textColor,
             selectedTextColor = spec.selectedTextColor,
             rippleColor = spec.rippleColor,
+            unselectedStateLayerColors = spec.unselectedStateLayerColors,
+            selectedStateLayerColors = spec.selectedStateLayerColors,
             textSizePx = spec.textSizePx,
             fontWeight = spec.fontWeight,
             fontFamily = spec.fontFamily,
@@ -205,6 +210,8 @@ internal object PagerViewBinder {
             textColor = spec.textColor,
             selectedTextColor = spec.selectedTextColor,
             rippleColor = spec.rippleColor,
+            unselectedStateLayerColors = spec.unselectedStateLayerColors,
+            selectedStateLayerColors = spec.selectedStateLayerColors,
             textSizePx = node.environment.toPx(spec.textSizeSp),
             fontWeight = spec.fontWeight,
             fontFamily = spec.fontFamily,

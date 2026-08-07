@@ -14,6 +14,7 @@ import com.viewcompose.renderer.R
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.renderer.view.requireUiEnvironment
@@ -69,6 +70,7 @@ internal object ModifierSurfaceStyleApplier {
             borderColor = nodeStyle.borderColor,
             cornerRadius = nodeStyle.cornerRadius,
             rippleColor = nodeStyle.rippleColor,
+            stateLayerColors = nodeStyle.stateLayerColors,
             clickable = nodeStyle.clickable,
             forceClip = resolved.graphicsLayer?.clip ?: (resolved.clip?.clip ?: false),
             shape = nodeStyle.shape,
@@ -88,6 +90,7 @@ internal object ModifierSurfaceStyleApplier {
         borderColor: Int,
         cornerRadius: CornerRadiusModifierElement?,
         rippleColor: Int,
+        stateLayerColors: UiStateLayerColors? = null,
         clickable: Boolean,
         forceClip: Boolean = false,
         shape: UiShape? = null,
@@ -115,6 +118,7 @@ internal object ModifierSurfaceStyleApplier {
                     borderWidth = borderWidth,
                     borderColor = borderColor,
                     rippleColor = rippleColor,
+                    stateLayerColors = stateLayerColors,
                     clickable = clickable,
                     shape = resolvedShape,
                     layoutDirection = view.layoutDirection,
@@ -126,6 +130,7 @@ internal object ModifierSurfaceStyleApplier {
                     borderWidth = borderWidth,
                     borderColor = borderColor,
                     rippleColor = rippleColor,
+                    stateLayerColors = stateLayerColors,
                     clickable = clickable,
                     shape = resolvedShape,
                     layoutDirection = view.layoutDirection,
@@ -140,7 +145,7 @@ internal object ModifierSurfaceStyleApplier {
             restoreOriginalBackground(view)
             if (clickable) {
                 view.foreground = RippleDrawable(
-                    ColorStateList.valueOf(rippleColor),
+                    interactionColorStateList(rippleColor, stateLayerColors),
                     null,
                     null,
                 )
@@ -179,6 +184,7 @@ internal object ModifierSurfaceStyleApplier {
         borderWidth: Int,
         borderColor: Int,
         rippleColor: Int,
+        stateLayerColors: UiStateLayerColors?,
         clickable: Boolean,
         shape: UiShape?,
         layoutDirection: Int,
@@ -194,7 +200,7 @@ internal object ModifierSurfaceStyleApplier {
             return content
         }
         return RippleDrawable(
-            ColorStateList.valueOf(rippleColor),
+            interactionColorStateList(rippleColor, stateLayerColors),
             content,
             UiShapeDrawable(shape, layoutDirection, density).apply {
                 setFillColor(Color.WHITE)
@@ -207,6 +213,7 @@ internal object ModifierSurfaceStyleApplier {
         borderWidth: Int,
         borderColor: Int,
         rippleColor: Int,
+        stateLayerColors: UiStateLayerColors?,
         clickable: Boolean,
         shape: UiShape?,
         layoutDirection: Int,
@@ -229,7 +236,7 @@ internal object ModifierSurfaceStyleApplier {
             return layeredContent
         }
         return RippleDrawable(
-            ColorStateList.valueOf(rippleColor),
+            interactionColorStateList(rippleColor, stateLayerColors),
             layeredContent,
             UiShapeDrawable(shape, layoutDirection, density).apply {
                 setFillColor(Color.WHITE)
@@ -301,3 +308,27 @@ internal object ModifierSurfaceStyleApplier {
             ?.mutate()
     }
 }
+
+/** Builds the Android selector for an already resolved renderer-neutral state-layer contract. */
+internal fun UiStateLayerColors.toColorStateList(): ColorStateList {
+    return ColorStateList(
+        arrayOf(
+            intArrayOf(android.R.attr.state_enabled, android.R.attr.state_pressed),
+            intArrayOf(android.R.attr.state_enabled, android.R.attr.state_focused),
+            intArrayOf(android.R.attr.state_enabled, android.R.attr.state_hovered),
+            intArrayOf(),
+        ),
+        intArrayOf(
+            pressedColor,
+            focusedColor,
+            hoveredColor,
+            Color.TRANSPARENT,
+        ),
+    )
+}
+
+/** Preserves the previous value-only selector when no multi-state contract is supplied. */
+internal fun interactionColorStateList(
+    rippleColor: Int,
+    stateLayerColors: UiStateLayerColors?,
+): ColorStateList = stateLayerColors?.toColorStateList() ?: ColorStateList.valueOf(rippleColor)

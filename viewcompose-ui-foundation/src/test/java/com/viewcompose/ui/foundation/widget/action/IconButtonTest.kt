@@ -39,8 +39,33 @@ class IconButtonTest {
         assertEquals(UiDimension.Exact(IconButtonDefaults.size()), size.height)
         assertEquals(IconButtonDefaults.containerColor(ButtonVariant.Text), spec.backgroundColor)
         assertEquals(IconButtonDefaults.shape(), spec.shape)
+        assertEquals(IconButtonDefaults.stateLayerColors(), spec.stateLayerColors)
         assertEquals(true, spec.enabled)
         assertTrue(node.spec is IconButtonNodeProps)
+    }
+
+    @Test
+    fun `icon button state layer follows icon content role`() {
+        val base = UiThemeDefaults.light()
+        val tokens = base.copy(
+            colors = base.colors.copy(onSurfaceVariant = 0xFF123456.toInt()),
+            interactions = UiInteractionTokens(
+                pressedStateLayerOpacity = 0.10f,
+                focusedStateLayerOpacity = 0.10f,
+                hoveredStateLayerOpacity = 0.08f,
+            ),
+        )
+
+        val tree = buildVNodeTree {
+            UiTheme(tokens) {
+                IconButton(icon = ImageSource.Resource(8))
+            }
+        }
+
+        val spec = tree.single().spec as IconButtonNodeProps
+        assertEquals(0x1A123456, spec.stateLayerColors?.pressedColor)
+        assertEquals(0x1A123456, spec.stateLayerColors?.focusedColor)
+        assertEquals(0x14123456, spec.stateLayerColors?.hoveredColor)
     }
 
     @Test

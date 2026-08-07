@@ -3,15 +3,17 @@ package com.viewcompose.renderer.view.tree
 import android.graphics.Color
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.ui.modifier.PaddingModifierElement
-import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.IconButtonNodeProps
+import com.viewcompose.ui.node.spec.RowNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.renderer.modifier.ResolvedModifiers
 import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.roundToPx
@@ -50,6 +52,7 @@ internal object ModifierNodeStyleResolver {
                 resolved.minWidth?.minWidth ?: com.viewcompose.ui.unit.UiDp.Zero,
             ),
             rippleColor = readNodeRippleColor(node) ?: defaultRippleColor,
+            stateLayerColors = readNodeStateLayerColors(node),
             textColor = readNodeTextColor(node),
             textSizePx = readNodeTextSize(node)?.let(node.environment::toPx),
             fontWeight = readNodeFontWeight(node),
@@ -128,6 +131,15 @@ internal object ModifierNodeStyleResolver {
         is IconButtonNodeProps -> spec.rippleColor
         is ToggleNodeProps -> spec.rippleColor
         is BoxNodeProps -> spec.rippleColor
+        is RowNodeProps -> spec.rippleColor
+        else -> null
+    }
+
+    private fun readNodeStateLayerColors(node: VNode): UiStateLayerColors? = when (val spec = node.spec) {
+        is ButtonNodeProps -> spec.stateLayerColors
+        is IconButtonNodeProps -> spec.stateLayerColors
+        is BoxNodeProps -> spec.stateLayerColors
+        is RowNodeProps -> spec.stateLayerColors
         else -> null
     }
 
@@ -243,6 +255,7 @@ internal data class NodeStyle(
     val minHeight: Int,
     val minWidth: Int,
     val rippleColor: Int,
+    val stateLayerColors: UiStateLayerColors?,
     val textColor: Int?,
     val textSizePx: Float?,
     val fontWeight: Int?,

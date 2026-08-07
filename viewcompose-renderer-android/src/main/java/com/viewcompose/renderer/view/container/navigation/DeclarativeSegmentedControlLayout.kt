@@ -1,7 +1,6 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
@@ -13,9 +12,11 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
 import com.viewcompose.ui.node.SegmentedControlItem
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.renderer.view.tree.ContentViewBinder
+import com.viewcompose.renderer.view.tree.interactionColorStateList
 import java.util.IdentityHashMap
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.UiDp
@@ -42,6 +43,8 @@ internal class DeclarativeSegmentedControlLayout(
     private var textColorState: Int = Color.BLACK
     private var selectedTextColorState: Int = Color.WHITE
     private var rippleColorState: Int = Color.TRANSPARENT
+    private var unselectedStateLayerColorsState: UiStateLayerColors? = null
+    private var selectedStateLayerColorsState: UiStateLayerColors? = null
     private var textSizePxState: Float = 14f
     private var fontWeightState: Int? = null
     private var fontFamilyState: UiFontFamily? = null
@@ -75,6 +78,8 @@ internal class DeclarativeSegmentedControlLayout(
         textColor: Int,
         selectedTextColor: Int,
         rippleColor: Int,
+        unselectedStateLayerColors: UiStateLayerColors?,
+        selectedStateLayerColors: UiStateLayerColors?,
         textSizePx: Float,
         fontWeight: Int?,
         fontFamily: UiFontFamily?,
@@ -111,6 +116,8 @@ internal class DeclarativeSegmentedControlLayout(
             textColorState != textColor ||
             selectedTextColorState != selectedTextColor ||
             rippleColorState != rippleColor ||
+            unselectedStateLayerColorsState != unselectedStateLayerColors ||
+            selectedStateLayerColorsState != selectedStateLayerColors ||
             textSizePxState != textSizePx ||
             fontWeightState != fontWeight ||
             fontFamilyState != fontFamily ||
@@ -138,6 +145,8 @@ internal class DeclarativeSegmentedControlLayout(
         textColorState = textColor
         selectedTextColorState = selectedTextColor
         rippleColorState = rippleColor
+        unselectedStateLayerColorsState = unselectedStateLayerColors
+        selectedStateLayerColorsState = selectedStateLayerColors
         textSizePxState = textSizePx
         fontWeightState = fontWeight
         fontFamilyState = fontFamily
@@ -157,6 +166,8 @@ internal class DeclarativeSegmentedControlLayout(
                 textColor = textColor,
                 selectedTextColor = selectedTextColor,
                 rippleColor = rippleColor,
+                unselectedStateLayerColors = unselectedStateLayerColors,
+                selectedStateLayerColors = selectedStateLayerColors,
                 textSizePx = textSizePx,
                 fontWeight = fontWeight,
                 fontFamily = fontFamily,
@@ -204,6 +215,8 @@ internal class DeclarativeSegmentedControlLayout(
         textColor: Int,
         selectedTextColor: Int,
         rippleColor: Int,
+        unselectedStateLayerColors: UiStateLayerColors?,
+        selectedStateLayerColors: UiStateLayerColors?,
         textSizePx: Float,
         fontWeight: Int?,
         fontFamily: UiFontFamily?,
@@ -248,6 +261,11 @@ internal class DeclarativeSegmentedControlLayout(
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColor,
+                stateLayerColors = if (isSelected) {
+                    selectedStateLayerColors
+                } else {
+                    unselectedStateLayerColors
+                },
                 shape = shape.inset(indicatorInset),
             )
             segmentBackgrounds[child] = segmentBackground
@@ -295,21 +313,40 @@ internal class DeclarativeSegmentedControlLayout(
         if (child.currentTextColor != resolvedTextColor) {
             child.setTextColor(resolvedTextColor)
         }
-        val segmentBackground = segmentBackgrounds[child]
-            ?: createSegmentBackground(
+        val stateRolesDiffer = selectedStateLayerColorsState != unselectedStateLayerColorsState
+        if (stateRolesDiffer) {
+            val segmentBackground = createSegmentBackground(
                 enabled = enabledState,
                 selected = isSelected,
                 indicatorColor = indicatorColor,
                 rippleColor = rippleColorState,
+                stateLayerColors = if (isSelected) {
+                    selectedStateLayerColorsState
+                } else {
+                    unselectedStateLayerColorsState
+                },
                 shape = shapeState.inset(indicatorInset),
-            ).also { created ->
-                segmentBackgrounds[child] = created
-                child.background = created.drawable
-            }
-        segmentBackground.updateIndicator(
-            selected = isSelected,
-            indicatorColor = indicatorColor,
-        )
+            )
+            segmentBackgrounds[child] = segmentBackground
+            child.background = segmentBackground.drawable
+        } else {
+            val segmentBackground = segmentBackgrounds[child]
+                ?: createSegmentBackground(
+                    enabled = enabledState,
+                    selected = isSelected,
+                    indicatorColor = indicatorColor,
+                    rippleColor = rippleColorState,
+                    stateLayerColors = selectedStateLayerColorsState,
+                    shape = shapeState.inset(indicatorInset),
+                ).also { created ->
+                    segmentBackgrounds[child] = created
+                    child.background = created.drawable
+                }
+            segmentBackground.updateIndicator(
+                selected = isSelected,
+                indicatorColor = indicatorColor,
+            )
+        }
         child.isSelected = isSelected
     }
 
@@ -318,6 +355,7 @@ internal class DeclarativeSegmentedControlLayout(
         selected: Boolean,
         indicatorColor: Int,
         rippleColor: Int,
+        stateLayerColors: UiStateLayerColors?,
         shape: UiShape,
     ): SegmentBackground {
         val indicator = UiShapeDrawable(shape, layoutDirection, densityState).apply {
@@ -327,7 +365,7 @@ internal class DeclarativeSegmentedControlLayout(
         }
         val drawable = if (enabled) {
             RippleDrawable(
-                ColorStateList.valueOf(rippleColor),
+                interactionColorStateList(rippleColor, stateLayerColors),
                 indicator,
                 UiShapeDrawable(shape, layoutDirection, densityState).apply {
                     setFillColor(Color.WHITE)
@@ -346,10 +384,6 @@ internal class DeclarativeSegmentedControlLayout(
         val drawable: Drawable,
         private val indicator: UiShapeDrawable,
     ) {
-        /**
-         * Changes only the indicator fill to avoid recreating ripple and background layers.
-         * Switches only the indicator fill color, avoiding recreation of ripple/background layers.
-         */
         fun updateIndicator(
             selected: Boolean,
             indicatorColor: Int,

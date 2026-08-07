@@ -21,8 +21,9 @@ The core fields of `UiThemeTokens` are:
 3. `typography`
 4. `shapes`
 5. `controls`
-6. `overlays`
-7. `metadata`
+6. `interactions`
+7. `overlays`
+8. `metadata`
 
 Core principles:
 
@@ -43,8 +44,11 @@ Current token semantics:
    dimensions; `full` expresses a bounds-relative pill or circle.
 5. `controls` is a framework-owned sizing family and does not promise one-to-one alignment with the
    Android theme system.
-6. `overlays` stores cross-component modal configuration as semantic tokens.
-7. `metadata` records token origin, dark state, and configuration revision for lifecycle refresh and
+6. `interactions` stores design-system-neutral pressed, focused, and hovered state-layer opacities.
+   Component defaults combine those opacities with their own enabled content role before emitting
+   resolved colors; renderers do not interpret theme roles or opacity policy.
+7. `overlays` stores cross-component modal configuration as semantic tokens.
+8. `metadata` records token origin, dark state, and configuration revision for lifecycle refresh and
    diagnostics; it does not derive component defaults.
 
 ### 2.1 Canonical semantic entries
@@ -109,6 +113,11 @@ Constraints:
 6. When a component separates its effective target from its visual surface, the theme supplies both
    dimensions, Defaults resolve them into `NodeSpec`, and the renderer only applies the resolved
    geometry. Explicit application surface modifiers remain authoritative.
+7. Button, IconButton, bounded interactive composites, and SegmentedControl state layers follow the
+   same path: component Defaults select the semantic content role, `interactions` supplies state
+   opacity, `NodeSpec` carries resolved ARGB colors, and the renderer applies the generic
+   pressed-before-focused-before-hovered selector. SegmentedControl carries separate selected and
+   unselected role sets.
 
 ## 4. Local override rules
 
@@ -209,6 +218,10 @@ Current bridge matrix:
    - the Material 3 profile also selects a 48dp minimum effective height for Checkbox,
      RadioButton, Switch, and Slider. UI Foundation consumes the neutral token before caller
      modifiers, so explicit exact application sizing remains authoritative.
+7. `interactions`
+   - `Material3ThemeDefaults` supplies `0.10` pressed, `0.10` focused, and `0.08` hovered opacity;
+   - the Android bridge retains that fallback policy while replacing resource-backed semantic
+     colors, because Android themes do not expose one uniform component state-layer opacity family.
 
 The bridge does not:
 
@@ -266,9 +279,12 @@ regression contract.
 2. Dynamic color, complete 15-role typography, complete absolute shape mapping, and configuration
    lifecycle are implemented; expand the multi-window and vendor-theme device matrix.
 3. Button and native compact-input touch targets now use test-backed effective-size policies.
-   Continue treating composite Chip expansion, TextField floating/focus behavior, and exact
-   Switch/Slider visual geometry as test-first component work; a complete token bridge alone does
-   not provide those structural behaviors.
+   Button, IconButton, Chip, FAB variants, clickable Surface/Card/ListItem/DropdownMenuItem, and
+   SegmentedControl resolve standard pressed, focused, and hovered layers from component content
+   roles without introducing Material policy in Android Renderer. Chip touch-target expansion,
+   TextField floating/focus behavior, navigation controls with explicit ripple overrides, and exact
+   native input geometry remain test-first work; a complete token bridge alone does not provide
+   those structural behaviors.
 4. Keep theme regression aligned with overlay, input, and container scenarios in the
    [roadmap](../project/roadmap.md).
 

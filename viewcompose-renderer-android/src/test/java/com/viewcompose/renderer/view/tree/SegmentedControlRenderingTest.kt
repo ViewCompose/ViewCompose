@@ -17,11 +17,14 @@ import com.viewcompose.renderer.view.shape.UiShapeDrawable
 import com.viewcompose.renderer.view.container.DeclarativeSegmentedControlLayout
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.SegmentedControlItem
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
 import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -73,9 +76,64 @@ class SegmentedControlRenderingTest {
         assertEquals(0, patched.stats.reboundNodes)
     }
 
+    @Test
+    fun `selected and unselected segments use their resolved state-layer roles`() {
+        val container = FrameLayout(context)
+        val unselected = UiStateLayerColors(
+            pressedColor = 0x1A112233,
+            focusedColor = 0x1A223344,
+            hoveredColor = 0x14223344,
+        )
+        val selected = UiStateLayerColors(
+            pressedColor = 0x1A445566,
+            focusedColor = 0x1A556677,
+            hoveredColor = 0x14556677,
+        )
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                segmentedControlNode(
+                    selectedIndex = 0,
+                    backgroundColor = Color.WHITE,
+                    unselectedStateLayerColors = unselected,
+                    selectedStateLayerColors = selected,
+                ),
+            ),
+        )
+        val view = initial.mountedNodes.single().view as DeclarativeSegmentedControlLayout
+        val first = view.getChildAt(0) as TextView
+        val second = view.getChildAt(1) as TextView
+        val firstBackground = first.background
+        val secondBackground = second.background
+
+        assertTrue((first.background as RippleDrawable).hasFocusStateSpecified())
+        assertTrue((second.background as RippleDrawable).hasFocusStateSpecified())
+
+        ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(
+                segmentedControlNode(
+                    selectedIndex = 1,
+                    backgroundColor = Color.WHITE,
+                    unselectedStateLayerColors = unselected,
+                    selectedStateLayerColors = selected,
+                ),
+            ),
+        )
+
+        assertNotSame(firstBackground, first.background)
+        assertNotSame(secondBackground, second.background)
+        assertTrue((first.background as RippleDrawable).hasFocusStateSpecified())
+        assertTrue((second.background as RippleDrawable).hasFocusStateSpecified())
+    }
+
     private fun segmentedControlNode(
         selectedIndex: Int,
         backgroundColor: Int,
+        unselectedStateLayerColors: UiStateLayerColors? = null,
+        selectedStateLayerColors: UiStateLayerColors? = null,
     ): VNode {
         return VNode(
             type = NodeType.SegmentedControl,
@@ -97,6 +155,8 @@ class SegmentedControlRenderingTest {
                 textSizeSp = 14.sp,
                 paddingHorizontal = 14.dp,
                 paddingVertical = 8.dp,
+                unselectedStateLayerColors = unselectedStateLayerColors,
+                selectedStateLayerColors = selectedStateLayerColors,
             ),
         )
     }
@@ -109,4 +169,5 @@ class SegmentedControlRenderingTest {
         val ripple = background as RippleDrawable
         return (ripple.getDrawable(0) as UiShapeDrawable).currentFillColor
     }
+
 }

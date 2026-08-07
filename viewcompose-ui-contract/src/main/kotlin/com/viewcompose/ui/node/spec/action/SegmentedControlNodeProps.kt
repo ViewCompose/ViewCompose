@@ -1,6 +1,7 @@
 package com.viewcompose.ui.node.spec
 
 import com.viewcompose.ui.node.SegmentedControlItem
+import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
@@ -18,6 +19,8 @@ import com.viewcompose.ui.unit.UiSp
  * @property textColor unselected label color
  * @property selectedTextColor selected label color
  * @property rippleColor pressed-state ripple color
+ * @property unselectedStateLayerColors interaction colors based on the enabled unselected content role
+ * @property selectedStateLayerColors interaction colors based on the enabled selected content role
  * @property textSizeSp label size in scale-independent pixels
  * @property fontWeight optional platform font weight override
  * @property fontFamily optional renderer-compatible font family
@@ -46,4 +49,6 @@ data class SegmentedControlNodeProps(
     val includeFontPadding: Boolean = false,
     val paddingHorizontal: UiDp,
     val paddingVertical: UiDp,
+    val unselectedStateLayerColors: UiStateLayerColors? = null,
+    val selectedStateLayerColors: UiStateLayerColors? = null,
 ) : NodeSpec

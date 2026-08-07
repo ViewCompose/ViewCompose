@@ -1,17 +1,24 @@
 package com.viewcompose
 
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.ButtonDefaults
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.Chip
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.IconButtonDefaults
+import com.viewcompose.ui.foundation.FloatingActionButton
+import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.LocalFocusManager
 import com.viewcompose.ui.foundation.NavigationBar
 import com.viewcompose.ui.foundation.RadioButton
 import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.SegmentedControl
 import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.Switch
 import com.viewcompose.ui.foundation.Text
@@ -25,6 +32,8 @@ import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.focusRequester
+import com.viewcompose.ui.modifier.focusable
 import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
@@ -36,8 +45,19 @@ import com.viewcompose.ui.unit.dp
 /** Emits one stable component fixture under an explicitly identified theme source. */
 internal fun UiTreeBuilder.Material3DefaultThemePage(source: DemoThemeSource) {
     val defaultButtonClicks = remember { mutableStateOf(0) }
+    val stateLayerFocusRequester = remember { FocusRequester() }
+    val stateLayerSegmentedIndex = remember { mutableStateOf(0) }
     LazyColumn(
-        items = listOf("intro", "source", "buttons", "compact", "selection", "navigation", "targetProbes"),
+        items = listOf(
+            "intro",
+            "source",
+            "buttons",
+            "stateLayers",
+            "compact",
+            "selection",
+            "navigation",
+            "targetProbes",
+        ),
         key = { it },
         modifier = Modifier
             .fillMaxSize()
@@ -89,6 +109,13 @@ internal fun UiTreeBuilder.Material3DefaultThemePage(source: DemoThemeSource) {
                 )
             }
 
+            "stateLayers" -> Material3StateLayerVerification(
+                source = source,
+                focusRequester = stateLayerFocusRequester,
+                segmentedIndex = stateLayerSegmentedIndex.value,
+                onSegmentSelected = { index -> stateLayerSegmentedIndex.value = index },
+            )
+
             "compact" -> Column(
                 spacing = 12.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 20.dp),
@@ -132,6 +159,130 @@ internal fun UiTreeBuilder.Material3DefaultThemePage(source: DemoThemeSource) {
             else -> Material3TouchTargetProbes(source)
         }
     }
+}
+
+private fun UiTreeBuilder.Material3StateLayerVerification(
+    source: DemoThemeSource,
+    focusRequester: FocusRequester,
+    segmentedIndex: Int,
+    onSegmentSelected: (Int) -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    val primary = ButtonDefaults.stateLayerColors(ButtonVariant.Primary)
+    val tonal = ButtonDefaults.stateLayerColors(ButtonVariant.Tonal)
+    val outlined = ButtonDefaults.stateLayerColors(ButtonVariant.Outlined)
+    val icon = IconButtonDefaults.stateLayerColors()
+
+    Column(
+        spacing = 12.dp,
+        modifier = Modifier.fillMaxWidth().margin(top = 20.dp),
+    ) {
+        Text(text = "Interaction state layers", style = Theme.typography.titleMedium)
+        ThemeFixtureBadge(source)
+        Text(
+            text = "长按控件检查 pressed；点击“聚焦 Primary”固定 focused；连接鼠标或触控笔悬停检查 hovered。状态层只能覆盖可见胶囊，不应染色外侧触控区域。",
+            style = Theme.typography.bodySmall,
+            color = Theme.colors.onSurfaceVariant,
+        )
+        Row(spacing = 8.dp, verticalAlignment = VerticalAlignment.Center) {
+            Button(
+                text = "Primary",
+                onClick = {},
+                modifier = Modifier
+                    .focusRequester(focusRequester)
+                    .focusable()
+                    .testTag(DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY),
+            )
+            Button(
+                text = "Tonal",
+                variant = ButtonVariant.Tonal,
+                onClick = {},
+                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_TONAL),
+            )
+            Button(
+                text = "Outlined",
+                variant = ButtonVariant.Outlined,
+                onClick = {},
+                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_OUTLINED),
+            )
+        }
+        Row(spacing = 8.dp, verticalAlignment = VerticalAlignment.Center) {
+            IconButton(
+                icon = ImageSource.Resource(R.drawable.demo_media_icon),
+                contentDescription = "State-layer icon button",
+                onClick = {},
+                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_ICON),
+            )
+            Button(
+                text = "聚焦 Primary",
+                variant = ButtonVariant.Outlined,
+                onClick = { focusRequester.requestFocus() },
+                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_FOCUS_ACTION),
+            )
+            Button(
+                text = "清除焦点",
+                variant = ButtonVariant.Text,
+                onClick = { focusManager.clearFocus(force = true) },
+            )
+        }
+        Text(
+            text = "聚焦后直接观察 Primary 的 focused 状态层；清除焦点后应恢复默认外观。",
+            style = Theme.typography.bodySmall,
+            color = Theme.colors.onSurfaceVariant,
+        )
+        Text(text = "Composite controls", style = Theme.typography.labelLarge)
+        Row(spacing = 12.dp, verticalAlignment = VerticalAlignment.Center) {
+            Chip(
+                label = "Assist chip",
+                onClick = {},
+                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_CHIP),
+            )
+            FloatingActionButton(
+                onClick = {},
+                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_STATE_LAYER_FAB),
+            ) {
+                Icon(
+                    source = ImageSource.Resource(R.drawable.demo_media_icon),
+                    contentDescription = "State-layer FAB",
+                )
+            }
+        }
+        SegmentedControl(
+            items = listOf("Selected", "Other"),
+            selectedIndex = segmentedIndex,
+            onSelectionChange = onSegmentSelected,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(DemoTestTags.MATERIAL3_STATE_LAYER_SEGMENTED),
+        )
+        Text(
+            text = "长按或悬停 Chip、FAB 和两个分段；切换分段后，状态层应跟随 selected / unselected 内容角色。",
+            style = Theme.typography.bodySmall,
+            color = Theme.colors.onSurfaceVariant,
+        )
+        DiagnosticFactGroup(
+            title = "Resolved state-layer contract",
+            facts = listOf(
+                DiagnosticFact("Opacity P/F/H", "10% / 10% / 8%"),
+                DiagnosticFact("Primary base", Theme.colors.onPrimary.asColorHex()),
+                DiagnosticFact("Primary P/F/H", primary.asStateLayerHex()),
+                DiagnosticFact("Tonal base", Theme.colors.onSecondaryContainer.asColorHex()),
+                DiagnosticFact("Tonal P/F/H", tonal.asStateLayerHex()),
+                DiagnosticFact("Outlined base", Theme.colors.primary.asColorHex()),
+                DiagnosticFact("Outlined P/F/H", outlined.asStateLayerHex()),
+                DiagnosticFact("Icon base", Theme.colors.onSurfaceVariant.asColorHex()),
+                DiagnosticFact("Icon P/F/H", icon.asStateLayerHex()),
+                DiagnosticFact("Chip base", Theme.colors.onSurfaceVariant.asColorHex()),
+                DiagnosticFact("FAB base", Theme.colors.onPrimaryContainer.asColorHex()),
+                DiagnosticFact("Segment base", "${Theme.colors.onSecondaryContainer.asColorHex()} selected"),
+            ),
+        )
+    }
+}
+
+private fun com.viewcompose.ui.node.UiStateLayerColors.asStateLayerHex(): String {
+    return listOf(pressedColor, focusedColor, hoveredColor)
+        .joinToString(separator = " / ") { color -> color.asColorHex() }
 }
 
 private fun UiTreeBuilder.ThemeFixtureBadge(source: DemoThemeSource) {

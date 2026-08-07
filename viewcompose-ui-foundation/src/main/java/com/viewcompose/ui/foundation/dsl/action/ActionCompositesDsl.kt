@@ -39,10 +39,11 @@ fun UiTreeBuilder.FloatingActionButton(
         .clickable(onClick)
         .then(modifier)
     ProvideLocal(LocalContentColor, contentColor) {
-        Box(
+        StateLayerBox(
             key = key,
             contentAlignment = BoxAlignment.Center,
             rippleColor = FabDefaults.pressedColor(),
+            stateLayerColors = stateLayerColorsFor(contentColor),
             modifier = semanticModifier,
         ) {
             content()
@@ -73,10 +74,12 @@ fun UiTreeBuilder.ExtendedFloatingActionButton(
         .padding(horizontal = FabDefaults.extendedHorizontalPadding())
         .then(modifier)
     ProvideLocal(LocalContentColor, contentColor) {
-        Row(
+        StateLayerRow(
             key = key,
             spacing = if (icon != null) FabDefaults.extendedIconSpacing() else UiDp.Zero,
             verticalAlignment = VerticalAlignment.Center,
+            rippleColor = FabDefaults.pressedColor(),
+            stateLayerColors = stateLayerColorsFor(contentColor),
             modifier = semanticModifier,
         ) {
             if (icon != null) {
@@ -140,10 +143,12 @@ fun UiTreeBuilder.Chip(
         .padding(left = leftPadding, right = rightPadding)
         .then(modifier)
     ProvideLocal(LocalContentColor, cColor) {
-        Row(
+        StateLayerRow(
             key = key,
             spacing = ChipDefaults.iconSpacing(),
             verticalAlignment = VerticalAlignment.Center,
+            rippleColor = ChipDefaults.pressedColor(),
+            stateLayerColors = if (enabled) stateLayerColorsFor(cColor) else null,
             modifier = semanticModifier,
         ) {
             if (leadingIcon != null) {

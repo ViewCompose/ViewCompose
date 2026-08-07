@@ -10,6 +10,7 @@ import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.LazyRowNodeProps
 import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.NodeSpec
+import com.viewcompose.ui.node.spec.RowNodeProps
 import com.viewcompose.ui.node.spec.TabRowNodeProps
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 
@@ -58,11 +59,18 @@ internal object NodeBindingDiffer {
         if (prevSpec::class != nextSpec::class) {
             return NodeBindingPlan.Rebind
         }
-        if (
-            prevSpec is BoxNodeProps &&
-            nextSpec is BoxNodeProps &&
-            prevSpec.rippleColor != nextSpec.rippleColor
-        ) {
+        val containerInteractionChanged = when {
+            prevSpec is BoxNodeProps && nextSpec is BoxNodeProps -> {
+                prevSpec.rippleColor != nextSpec.rippleColor ||
+                    prevSpec.stateLayerColors != nextSpec.stateLayerColors
+            }
+            prevSpec is RowNodeProps && nextSpec is RowNodeProps -> {
+                prevSpec.rippleColor != nextSpec.rippleColor ||
+                    prevSpec.stateLayerColors != nextSpec.stateLayerColors
+            }
+            else -> false
+        }
+        if (containerInteractionChanged) {
             // Container ripple participates in style binding through NodeSpec, so changes require modifier and style rebinding.
             // Container ripple is resolved from NodeSpec, so this change must re-run modifier/style binding.
             return NodeBindingPlan.Rebind

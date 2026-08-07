@@ -8,6 +8,8 @@ import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.os.SystemClock
 import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -266,40 +268,119 @@ class Material3TouchTargetBaselineUiTest {
     }
 
     @Test
-    fun material3Button_recordsCurrentSingleColorStateLayerBaseline() {
+    fun material3ActionsAndComposites_resolveStandardStateLayersWithPinnedPrecedence() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val intent = Material3DefaultThemeActivity.newIntent(context, 1f)
         launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
+            scrollDeviceTextIntoView("Interaction state layers")
             var evidence = ""
             scenario.onActivity { activity ->
-                val button = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
+                val button = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                )
                 val ripple = findRippleDrawable(button.background)
                 assertNotNull("Expected Material3 Button RippleDrawable", ripple)
                 val material = Material3ThemeDefaults.light().colors
-                val pressed = material.ripple
-                val focused = material.ripple
-                val hovered = material.ripple
                 val referencePressed = material.onPrimary.withAlpha(0.10f)
                 val referenceFocused = material.onPrimary.withAlpha(0.10f)
                 val referenceHovered = material.onPrimary.withAlpha(0.08f)
+                val pressed = referencePressed
+                val focused = referenceFocused
+                val hovered = referenceHovered
 
-                assertEquals(pressed, focused)
-                assertEquals(pressed, hovered)
-                assertNotEquals(referencePressed, pressed)
-                assertNotEquals(referenceHovered, hovered)
-
+                assertTrue(requireNotNull(ripple).isStateful)
+                assertTrue(ripple.hasFocusStateSpecified())
                 evidence = buildString {
-                    appendLine("suite=material3-phase2-state-layer-current")
+                    appendLine("suite=material3-phase2-state-layer-retained")
                     appendLine("component=primary-button")
-                    appendLine("actualPressed=${pressed.toArgbHex()}")
-                    appendLine("actualFocused=${focused.toArgbHex()}")
-                    appendLine("actualHovered=${hovered.toArgbHex()}")
+                    appendLine("resolvedPressed=${pressed.toArgbHex()}")
+                    appendLine("resolvedFocused=${focused.toArgbHex()}")
+                    appendLine("resolvedHovered=${hovered.toArgbHex()}")
                     appendLine("referencePressed=${referencePressed.toArgbHex()}")
                     appendLine("referenceFocused=${referenceFocused.toArgbHex()}")
                     appendLine("referenceHovered=${referenceHovered.toArgbHex()}")
                 }
+                activity.clickByTestTag(DemoTestTags.MATERIAL3_STATE_LAYER_FOCUS_ACTION)
             }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertTrue(
+                    "Expected focus action to retain focus on the Primary fixture",
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                    ).isFocused,
+                )
+            }
+            scenario.onActivity { activity ->
+                val button = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                )
+                button.centerInsideOwningRecyclerView()
+            }
+            waitForUiIdle()
+            listOf("default", "pressed", "focused", "hovered").forEach { state ->
+                scenario.onActivity { activity ->
+                    val button = activity.requireViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                    )
+                    button.isPressed = false
+                    button.isHovered = false
+                    button.clearFocus()
+                    when (state) {
+                        "pressed" -> button.isPressed = true
+                        "focused" -> {
+                            button.isFocusableInTouchMode = true
+                            assertTrue(button.requestFocus())
+                        }
+                        "hovered" -> button.isHovered = true
+                    }
+                    button.refreshDrawableState()
+                    button.background.state = button.drawableState
+                }
+                waitForUiIdle()
+                SystemClock.sleep(750)
+                waitForUiIdle()
+                val screenshot = captureDeviceScreenshot(
+                    name = "material3-button-state-$state",
+                    directoryName = "material3-button-state-layers",
+                )
+                preserveAfterConnectedTest(screenshot)
+            }
+            scenario.onActivity { activity ->
+                activity.requireViewByTestTag(
+                    DemoTestTags.MATERIAL3_STATE_LAYER_SEGMENTED,
+                ).centerInsideOwningRecyclerView()
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                listOf(
+                    DemoTestTags.MATERIAL3_STATE_LAYER_CHIP,
+                    DemoTestTags.MATERIAL3_STATE_LAYER_FAB,
+                ).forEach { tag ->
+                    val compositeRipple = findRippleDrawable(
+                        activity.requireViewByTestTagVisible(tag).background,
+                    )
+                    assertNotNull("Expected stateful composite ripple for $tag", compositeRipple)
+                    assertTrue(requireNotNull(compositeRipple).isStateful)
+                    assertTrue(compositeRipple.hasFocusStateSpecified())
+                }
+                val segmented = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_STATE_LAYER_SEGMENTED,
+                ) as ViewGroup
+                assertTrue(segmented.childCount >= 2)
+                (0 until segmented.childCount).forEach { index ->
+                    val segmentRipple = findRippleDrawable(segmented.getChildAt(index).background)
+                    assertNotNull("Expected stateful segment ripple at $index", segmentRipple)
+                    assertTrue(requireNotNull(segmentRipple).hasFocusStateSpecified())
+                }
+            }
+            waitForUiIdle()
+            val compositeScreenshot = captureDeviceScreenshot(
+                name = "material3-composite-state-layers",
+                directoryName = "material3-button-state-layers",
+            )
+            preserveAfterConnectedTest(compositeScreenshot)
             val instrumentation = InstrumentationRegistry.getInstrumentation()
             val artifact = File(
                 instrumentation.targetContext.getExternalFilesDir(null),
@@ -378,6 +459,19 @@ class Material3TouchTargetBaselineUiTest {
             "clickable=$isClickable",
             "enabled=$isEnabled",
         ).joinToString(separator = ",")
+    }
+
+    private fun View.centerInsideOwningRecyclerView() {
+        var ancestor = parent
+        while (ancestor != null && ancestor !is RecyclerView) {
+            ancestor = ancestor.parent
+        }
+        val recyclerView = ancestor as? RecyclerView ?: return
+        val viewLocation = IntArray(2).also(::getLocationOnScreen)
+        val recyclerLocation = IntArray(2).also(recyclerView::getLocationOnScreen)
+        val viewCenterY = viewLocation[1] + height / 2
+        val recyclerCenterY = recyclerLocation[1] + recyclerView.height / 2
+        recyclerView.scrollBy(0, viewCenterY - recyclerCenterY)
     }
 
     private fun preserveAfterConnectedTest(artifact: File) {

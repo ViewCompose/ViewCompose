@@ -52,6 +52,17 @@ class AdditionalWidgetCoverageTest {
         assertEquals(NodeType.Row, node.type)
         assertEquals(ChipDefaults.iconSpacing(), spec.spacing)
         assertEquals(VerticalAlignment.Center, spec.verticalAlignment)
+        assertEquals(ChipDefaults.pressedColor(), spec.rippleColor)
+        assertEquals(
+            stateLayerColorsFor(
+                ChipDefaults.contentColor(
+                    variant = ChipVariant.Filter,
+                    selected = true,
+                    enabled = true,
+                ),
+            ),
+            spec.stateLayerColors,
+        )
         assertTrue(textChildren.any { it.text == "Sync" })
         assertTrue(node.children.size >= 2)
     }

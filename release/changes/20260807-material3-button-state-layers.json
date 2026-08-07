@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "summary": "Resolve Material 3 action and bounded composite pressed, focused, and hovered layers through a renderer-neutral state-color contract while preserving the legacy one-color fallback.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-material3", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
+  ],
+  "ignored": []
+}

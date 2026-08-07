@@ -441,6 +441,7 @@ internal object Material3ThemeTokenMapper {
             ),
             shapes = fallback.shapes,
             controls = fallback.controls,
+            interactions = fallback.interactions,
             overlays = UiOverlays(
                 scrimOpacity = readScrimOpacity() ?: fallback.overlays.scrimOpacity,
             ),
