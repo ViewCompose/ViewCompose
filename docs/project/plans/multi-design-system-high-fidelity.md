@@ -2,10 +2,10 @@
 
 ## Status
 
-Active. Phase 0 has implemented the plan, recipe-context characterization, and source-boundary
-guards on `codex/multi-design-system-foundation`. Current visual and performance evidence is
-reused as the before-change baseline; the first design-system-specific capture is required when
-the internal contrast fixture enters Phase 1. The branch is based on the accepted Material 3
+Active. Phase 0 and the test-only Phase 1 five-component architecture fixture are complete on
+`codex/multi-design-system-foundation`. Current visual and performance evidence remains the
+before-change baseline; the first design-system-specific device capture is required when a shared
+Basic primitive enters production in Phase 2. The branch is based on the accepted Material 3
 interaction-state work so the new architecture can preserve those generic state-layer contracts
 instead of reintroducing a parallel mechanism.
 
@@ -16,10 +16,10 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-07.
 
-Next action: extend the retained Phase 1 test-only recipe experiment into the five-component
-contrast fixture, then use its evidence to select the first production Basic primitive in Phase 2.
-Do not publish a general recipe API or begin One UI/Cupertino implementation before that fixture
-passes its keep criteria.
+Next action: establish the Phase 2 current-behavior and public-API baseline for a generic
+interactive `BasicSurface`-level primitive. Do not publish a general recipe bundle, replace native
+Switch behavior, or begin One UI/Cupertino implementation before the Basic surface experiment
+passes its accessibility, input, retained-patch, and device visual gates.
 
 ## Maven release changesets
 
@@ -244,8 +244,7 @@ smallest action/surface slice without rewriting every default object or changing
 
 ## Phase 1: Recipe boundary and internal contrast design system
 
-Status: Action/Surface architecture experiment implemented in test source; the five-component
-contrast fixture remains pending.
+Status: complete in test source; no production or publication input changed.
 
 Build the smallest internal architecture experiment that can express two visibly different
 component policies over the same runtime and renderer contracts. The experiment remains outside
@@ -294,14 +293,63 @@ Current evidence:
   NodeSpecs;
 - disabled Action values remove interaction layers deterministically;
 - installing the experimental provider does not change existing Button or Surface defaults;
+- a framework-composed Switch expresses independent track/thumb geometry, rounded or cut shapes,
+  leading or trailing control placement, 48dp-or-larger effective targets, state layers, and merged
+  checked semantics through generic Row/Box/Text nodes. It deliberately does not use
+  `ToggleNodeProps` or the OEM-native `android.widget.Switch` path;
+- current `ToggleNodeProps` carries tint and checked state but no track/thumb geometry, shape, or
+  motion contract. It remains suitable for native themed controls, not the high-fidelity custom
+  Switch target;
+- both TextField recipes retain `BasicTextField`, `TextFieldState`, and the native editing node for
+  IME, selection, cursor, autofill, receive-content, and undo ownership. One recipe emits an
+  external stacked label while the other uses placeholder-label structure; error border and
+  semantic error resolution remain recipe-owned decoration;
+- one NavigationBar recipe retains the existing fixed navigation node while the contrast recipe
+  emits generic destination containers with a cut indicator and selected-only labels. The latter
+  demonstrates that structural choice belongs above NodeSpec resolution and does not require an
+  Android Renderer design-system branch;
+- current `NavigationBarNodeProps` does not carry indicator shape, label visibility policy, or a
+  general destination layout contract. Extending it into a union of every navigation structure is
+  rejected; materially different bars remain design-system-owned composites;
+- the combined fixture emits Button, Surface/Card, Switch, TextField, and NavigationBar behavior
+  over one typed recipe Local, and no emitted NodeSpec contains recipe or design-system identity;
 - no production source, public API, publication input, or Maven changeset is added by the
   experiment.
 - focused UI Foundation and Android Renderer tests, `verifyDocumentationStructure`, and `qaQuick`
-  passed on 2026-08-07. The full quick gate executed 1,359 tasks successfully.
+  passed on 2026-08-07. The full quick gate was repeated after the five-component fixture and
+  executed 1,359 tasks successfully.
+
+### Phase 1 production decision
+
+The five-component fixture does not justify a public universal `ComponentRecipes` bundle. A
+design-system module can own its typed recipe Local and resolve values before calling shared Basic
+primitives or its own composites.
+
+Production candidates, in order:
+
+1. **Interactive Basic surface:** highest reuse across action containers, Card, navigation
+   destinations, chips, and custom controls. It must unify resolved fill, shape, clip, border,
+   state layer, click semantics, and effective/visual bounds without selecting a design system.
+2. **Existing BasicTextField:** retain and document it as the shared editing core; add no competing
+   text editing primitive. Design-system modules own label and supporting decoration.
+3. **Basic toggle:** conditionally build on the surface/semantics foundation after device tests
+   cover click, keyboard/d-pad, TalkBack actions, checked announcement, RTL, overlapping targets,
+   drag policy, animation, and state restoration.
+4. **Action composites:** first attempt to build design-system actions from the interactive surface
+   plus Row/Text/Icon. Keep the existing Button node for current Material/native compatibility;
+   add a lower-level Button transport only if the composite path fails measurable behavior or
+   performance gates.
+5. **Navigation composites:** keep structure in each design-system module. Do not add one universal
+   BasicNavigationBar or expand `NavigationBarNodeProps` until two independent systems demonstrate
+   the same missing renderer transport.
+
+`BasicSurface` is therefore the first Phase 2 production experiment. Before implementation, assign
+Q levels to every proposed public value and component API, define exact modifier precedence, add a
+compiled Q3 sample, and record a publication changeset in a release-scoped execution slice.
 
 ## Phase 2: Basic components and unified surface/shape foundation
 
-Status: pending Phase 1.
+Status: pending production kickoff and public-API baseline.
 
 Planned work:
 
