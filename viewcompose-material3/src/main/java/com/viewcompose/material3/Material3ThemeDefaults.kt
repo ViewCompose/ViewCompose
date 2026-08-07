@@ -117,6 +117,9 @@ object Material3ThemeDefaults {
                 compactVerticalPadding = 8.dp,
                 mediumVerticalPadding = 8.dp,
                 largeVerticalPadding = 8.dp,
+                compactVisualHeight = 40.dp,
+                mediumVisualHeight = 40.dp,
+                largeVisualHeight = 48.dp,
             ),
             textField = base.textField.copy(
                 compactHeight = 48.dp,

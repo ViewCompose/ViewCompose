@@ -15,7 +15,27 @@ import com.viewcompose.ui.node.spec.SegmentedControlNodeProps
 import com.viewcompose.ui.node.spec.uiFontFamily
 
 /**
- * Emits a Button node and resolves colors, sizing, shape, and text style from theme defaults.
+ * Displays a themed text action and invokes [onClick] for an accepted enabled click.
+ *
+ * The current theme resolves visual hierarchy, typography, padding, shape, effective minimum
+ * height, and the centered visible container height. A design system may therefore retain a 48dp
+ * semantic and touch target while drawing a smaller container. Explicit visual modifiers remain
+ * authoritative over the component surface. State remains caller-owned; this component stores no
+ * selection or progress value.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.buttonSample
+ * @receiver active tree builder that receives the emitted Button node
+ * @param text visible action label
+ * @param onClick callback invoked synchronously on the renderer thread for an enabled click
+ * @param leadingIcon optional resource icon placed before [text]
+ * @param trailingIcon optional resource icon placed after [text]
+ * @param variant visual hierarchy used to resolve container, content, and border roles
+ * @param size interaction-density tier used for target, visible container, padding, icon, and text
+ * @param enabled whether input is accepted and enabled color roles are used
+ * @param rippleColor ARGB feedback color used inside the visible container
+ * @param style immutable text appearance snapshot for the label
+ * @param key optional stable sibling identity used during reconciliation
+ * @param modifier ordered configuration appended to the emitted Button node
  */
 fun UiTreeBuilder.Button(
     text: String,
@@ -60,6 +80,7 @@ fun UiTreeBuilder.Button(
             iconTint = contentColor,
             iconSize = iconSizeValue,
             iconSpacing = iconSpacingValue,
+            visualHeight = ButtonDefaults.visualHeight(size),
         ),
         modifier = modifier,
     )

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 2721592770de1e748b0d3d2153993673f69fc82accfc8a61adf053dea19899aa
+translation_source_hash: d5044dc73bcd509e6d02d12667835f1fb857496464081c42c9a01f16b50499c8
 translation_status: current
 ---
 
@@ -61,6 +61,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   暴露不可变的颜色、排版、形状、尺寸与浮层 Token，但不选择具体设计系统。排版支持完整的
   Display、Headline、Title、Body 与 Label 分级；形状支持 Extra Small、Small、Medium、Large、
   Extra Large 与 Full 角色，具体值由设计系统适配器提供。
+- `UiButtonSizing` 把有效最小触控高度与可见 Surface 高度分开。中性主题和现有自定义主题中，
+  每个可见高度默认等于对应的有效高度，因此维持原有渲染；设计系统适配器可以选择更小且居中
+  的 Surface，而不缩小 View 或无障碍边界。
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
   和宿主能力划定作用域。
@@ -132,3 +135,7 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 完整 `UiTypography` 与 `UiShapes` 值契约属于 Alpha 版本线的源码和二进制变更。它们仍是不可变、
 不包含生命周期或所有权协议的 Q2 值；直接构造保留源码默认值，但穷举解构、反射以及预编译调用方
 必须针对对应版本重新构建。
+
+`UiButtonSizing` 同样是 Q2 不可变值契约。新增的可见高度字段提供源码默认值，但对预编译的
+直接构造调用和穷举解构属于二进制变更。`Button` 会把两类高度都解析进 `ButtonNodeProps`；
+自定义渲染器必须遵守该契约，或明确说明其可见边界与有效边界仍保持一致。

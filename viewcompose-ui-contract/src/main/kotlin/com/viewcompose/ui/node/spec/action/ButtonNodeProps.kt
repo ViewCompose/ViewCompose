@@ -31,6 +31,8 @@ import com.viewcompose.ui.unit.UiSp
  * @property iconTint tint applied to resource icons
  * @property iconSize requested icon width and height
  * @property iconSpacing spacing between an icon and the label
+ * @property visualHeight requested centered background, border, shape, and ripple height inside
+ * the effective [minHeight] target; values at or above [minHeight] produce no vertical inset
  */
 data class ButtonNodeProps(
     val text: CharSequence?,
@@ -56,4 +58,5 @@ data class ButtonNodeProps(
     val iconTint: Int,
     val iconSize: UiDp,
     val iconSpacing: UiDp,
+    val visualHeight: UiDp = minHeight,
 ) : NodeSpec

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "summary": "Separate Material 3 Button visual containers from their effective Android View and accessibility target bounds.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-material3", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
+  ],
+  "ignored": []
+}

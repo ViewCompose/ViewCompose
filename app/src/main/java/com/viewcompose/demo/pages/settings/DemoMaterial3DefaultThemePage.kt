@@ -31,6 +31,7 @@ import com.viewcompose.ui.unit.dp
 
 /** Emits controls resolved only from the host or static Material 3 theme adapter. */
 internal fun UiTreeBuilder.Material3DefaultThemePage() {
+    val defaultButtonClicks = remember { mutableStateOf(0) }
     LazyColumn(
         items = listOf("intro", "buttons", "compact", "selection", "navigation"),
         key = { it },
@@ -66,12 +67,18 @@ internal fun UiTreeBuilder.Material3DefaultThemePage() {
                 Row(spacing = 8.dp, verticalAlignment = VerticalAlignment.Center) {
                     Button(
                         text = "Default",
-                        onClick = {},
+                        onClick = { defaultButtonClicks.value += 1 },
                         modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_BUTTON),
                     )
                     Button(text = "Outlined", variant = ButtonVariant.Outlined, onClick = {})
                     Button(text = "Disabled", enabled = false)
                 }
+                Text(
+                    text = "Default clicks: ${defaultButtonClicks.value}",
+                    style = Theme.typography.bodySmall,
+                    color = Theme.colors.onSurfaceVariant,
+                    modifier = Modifier.testTag(DemoTestTags.MATERIAL3_DEFAULT_BUTTON_STATUS),
+                )
             }
 
             "compact" -> Column(

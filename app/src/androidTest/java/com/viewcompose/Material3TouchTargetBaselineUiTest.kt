@@ -49,19 +49,30 @@ class Material3TouchTargetBaselineUiTest {
     }
 
     @Test
-    fun currentBehavior_recordsVisualAndEffectiveBoundsAtSupportedFontScales() {
+    fun material3Defaults_separateVisualAndEffectiveBoundsAtSupportedFontScales() {
         listOf(1f, 1.3f).forEach { fontScale ->
             val context = ApplicationProvider.getApplicationContext<android.content.Context>()
             val intent = Material3DefaultThemeActivity.newIntent(context, fontScale)
             launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
                 waitForUiIdle()
                 var evidence = ""
+                var touchX = 0
+                var touchY = 0
                 scenario.onActivity { activity ->
                     val button = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
                     val density = activity.resources.displayMetrics.density
                     assertEquals(48, (button.height / density).toInt())
                     val visualBounds = requireVisualSurfaceBounds(button)
-                    assertEquals(button.height, visualBounds.height())
+                    assertEquals(40, (visualBounds.height() / density).roundToInt())
+
+                    val semanticBounds = Rect().also { bounds ->
+                        button.createAccessibilityNodeInfo().getBoundsInScreen(bounds)
+                    }
+                    assertEquals(48, (semanticBounds.height() / density).roundToInt())
+
+                    val location = IntArray(2).also(button::getLocationOnScreen)
+                    touchX = location[0] + button.width / 2
+                    touchY = location[1] + density.roundToInt()
 
                     val tags = listOf(
                         DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
@@ -74,7 +85,7 @@ class Material3TouchTargetBaselineUiTest {
                         DemoTestTags.MATERIAL3_DEFAULT_NAVIGATION,
                     )
                     evidence = buildString {
-                        appendLine("suite=material3-phase2-current-touch-target-baseline")
+                        appendLine("suite=material3-phase2-button-touch-target")
                         appendLine("fontScale=${activity.resources.configuration.fontScale}")
                         appendLine("density=$density")
                         tags.forEach { tag ->
@@ -87,12 +98,22 @@ class Material3TouchTargetBaselineUiTest {
                         assertTrue("Expected measured control for $tag", view.width > 0 && view.height > 0)
                     }
                 }
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).click(touchX, touchY)
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    assertEquals(
+                        "Default clicks: 1",
+                        activity.requireTextViewByTestTagVisible(
+                            DemoTestTags.MATERIAL3_DEFAULT_BUTTON_STATUS,
+                        ).text.toString(),
+                    )
+                }
                 val scaleLabel = (fontScale * 100).toInt()
                 val screenshot = captureDeviceScreenshot(
-                    name = "material3-phase2-current-font-$scaleLabel",
+                    name = "material3-phase2-button-font-$scaleLabel",
                     directoryName = "material3-touch-target-baseline",
                 )
-                val metadata = File(screenshot.parentFile, "material3-phase2-current-font-$scaleLabel.txt")
+                val metadata = File(screenshot.parentFile, "material3-phase2-button-font-$scaleLabel.txt")
                     .apply { writeText(evidence) }
                 preserveAfterConnectedTest(screenshot)
                 preserveAfterConnectedTest(metadata)

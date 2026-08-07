@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: 813626c5fa4b7d89520f06b553c221b2da8650a272f4cc8e3a705ff54ece7350
+translation_source_hash: aacba37746acc776bd001d48e0cda171df5eade9da93c5fc8287e092b4418de5
 translation_status: current
 ---
 
@@ -100,6 +100,8 @@ translation_status: current
 3. 不在 DSL 层散落重复主题推导逻辑。
 4. 复合组件内部文本必须把完整文本样式写入 `NodeSpec`，不能只下发 `textSizeSp`。
 5. renderer 只负责应用 `NodeSpec` 中已经解析好的文本样式，不重新发明主题语义。
+6. 组件需要分离有效触控目标与可见 Surface 时，主题同时提供两个尺寸，Defaults 把它们解析进
+   `NodeSpec`，renderer 只应用已解析几何；应用显式 Surface Modifier 仍具有最高优先级。
 
 ## 4. 局部覆盖（Override）规则
 

@@ -56,6 +56,11 @@ missing. Each snapshot includes:
 - the selected standard sizing profile for buttons, text fields, segmented controls, progress
   indicators, FABs, search, and badges.
 
+The standard Button profile uses a 48dp effective target with a centered 40dp visible container for
+compact and medium buttons, and a 56dp target with a 48dp visible container for large buttons. This
+is a token choice consumed through UI Foundation's design-system-neutral sizing contract; the
+Material adapter does not participate in Android hit testing or View drawing.
+
 The Android bridge replaces available values from the active theme. It reads all 15 Material text
 appearances and the five absolute `shapeAppearanceCorner*` roles, while legacy Android
 large/medium/small text appearances remain title/body/label family fallbacks. Missing display and
@@ -63,9 +68,10 @@ headline values retain the complete static Material snapshot instead of being co
 legacy size or falling back to UI Foundation's neutral defaults.
 
 The adapter does not add Material policy to Android Renderer. Component defaults resolve semantic
-roles in UI Foundation before a NodeSpec reaches the renderer. Touch-target expansion, TextField
-floating-label/focus structure, and exact Switch/Slider geometry are not implied by the token
-bridge and require separate tested component work.
+roles in UI Foundation before a NodeSpec reaches the renderer. Button visual/effective height
+separation is explicitly represented by the sizing tokens and NodeSpec. Compact-control
+touch-target expansion, TextField floating-label/focus structure, and exact Switch/Slider geometry
+are not implied by the token bridge and require separate tested component work.
 
 ## Related documentation
 

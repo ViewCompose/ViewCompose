@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 679e92b294ce52545549820e5ea270f74dc60312e81503b2446decec141e307c
+translation_source_hash: 9e44da3fdde9f713fb99c77d113017ac85bcf35a05001c83fe131a528a328dd2
 translation_status: current
 ---
 
@@ -78,6 +78,9 @@ val gap = VNode(
 - `VNode.type` 与 `VNode.spec` 是注册表层面的配对。为了保持构造轻量，创建节点时不会验证
   兼容性；渲染器必须确定性地拒绝不支持的配对。
 - 节点规格是不可变渲染快照。回调可以捕获可变应用状态，但规格本身不能充当原生对象持有者。
+- `ButtonNodeProps.minHeight` 表示有效的最小 View 与语义触控高度，`visualHeight` 表示请求的
+  居中 Surface 高度。渲染器必须把非法可见高度限制在有效边界内，并保证应用显式 Surface
+  Modifier 的优先级。
 - Modifier 顺序具有语义。布局与 Parent Data 收集、视觉装饰、输入、Semantics 与绘制阶段会
   按各自阶段规则消费有序元素；调整顺序可能改变行为。
 - 每个 VNode 子树都捕获 `UiEnvironmentValues`。渲染器必须使用捕获值，不能改用无关的进程
@@ -118,3 +121,6 @@ val gap = VNode(
 `NodeSpec` 或 Modifier 元素也可能要求渲染器同步升级。自定义渲染器应对未知契约明确失败，
 也不应把枚举序号、密封子类型名称、工具元数据、原生 View 标识或回调实例持久化为长期外部
 数据。
+
+新增 `ButtonNodeProps.visualHeight` 属于 Q2 不可变快照契约变更。源码默认值等于 `minHeight`，
+但预编译的构造调用点和自定义渲染器仍必须随对应 Alpha 版本重新构建。

@@ -70,9 +70,30 @@ internal object ViewModifierApplier {
         shape: UiShape,
         rippleColor: Int,
         clickable: Boolean,
+        effectiveHeight: UiDp? = null,
+        visualHeight: UiDp? = null,
     ) {
         val resolved = view.getTag(R.id.viewcompose_resolved_modifiers) as? ResolvedModifiers
         val environment = view.requireUiEnvironment()
+        val requestedSurfaceInsets = if (effectiveHeight != null && visualHeight != null) {
+            centeredVerticalSurfaceInsets(
+                effectiveHeightPx = environment.roundToPx(effectiveHeight),
+                visualHeightPx = environment.roundToPx(visualHeight),
+            )
+        } else {
+            VerticalSurfaceInsetsPx.Zero
+        }
+        val surfaceInsets = if (
+            resolved?.backgroundDrawableRes != null ||
+            resolved?.backgroundColor != null ||
+            resolved?.border != null ||
+            resolved?.cornerRadius != null ||
+            resolved?.shape != null
+        ) {
+            VerticalSurfaceInsetsPx.Zero
+        } else {
+            requestedSurfaceInsets
+        }
         ModifierSurfaceStyleApplier.applyBackgroundAndInteraction(
             view = view,
             backgroundDrawableResId = resolved?.backgroundDrawableRes?.resId,
@@ -85,6 +106,7 @@ internal object ViewModifierApplier {
             forceClip = resolved?.graphicsLayer?.clip ?: (resolved?.clip?.clip ?: false),
             shape = resolved?.shape?.shape
                 ?: if (resolved?.cornerRadius == null) shape else null,
+            surfaceInsets = surfaceInsets,
         )
     }
 
@@ -226,6 +248,7 @@ internal object ViewModifierApplier {
             previousStyle.shape != nextStyle.shape ||
             previousStyle.rippleColor != nextStyle.rippleColor ||
             previousStyle.clickable != nextStyle.clickable ||
+            previousStyle.surfaceInsets != nextStyle.surfaceInsets ||
             previous.resolved.clip != next.resolved.clip ||
             previous.resolved.graphicsLayer?.clip != next.resolved.graphicsLayer?.clip
     }

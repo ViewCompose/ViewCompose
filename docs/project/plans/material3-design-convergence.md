@@ -2,9 +2,9 @@
 
 ## Status
 
-Active. Phase 0 and the low-risk Phase 1 release slice are implemented in the current worktree and
-covered by focused unit tests and representative real-renderer visual evidence. Later interaction
-and geometry phases remain unscheduled and must start from the baselines defined here.
+Active. Phase 0 and the low-risk Phase 1 release slice are implemented and Phase 1 is under review
+in pull request 79. Phase 2 has accepted the first independently revertible Button visual/effective
+target slice; compact-control expansion and the interaction-state matrix remain in progress.
 
 This is a temporary execution plan and remains canonical English-only under the documentation
 governance policy. When the accepted work is complete, durable contracts move into the theme guide
@@ -12,13 +12,15 @@ and owning module manuals before this plan moves to `docs/archive/`.
 
 Last verified: 2026-08-07.
 
-Next action: review and release Phase 1 while Phase 2 evaluates a renderer-neutral visual-container
-and effective-touch-target separation against the captured current-behavior baseline. Do not start
-TextField or custom-control structural changes before their required current-behavior tests exist.
+Next action: review and release Phase 1 while Phase 2 establishes overlap, scrolling, clipping, and
+explicit-size tests before deciding whether to generalize the Button mechanism to compact controls.
+Do not start TextField or custom-control structural changes before their required current-behavior
+tests exist.
 
 ## Maven release changesets
 
 - `release/changes/20260807-material3-phase1.json`
+- `release/changes/20260807-material3-phase2-button-target.json`
 
 ## Objective
 
@@ -215,7 +217,8 @@ Completion gate:
 
 Do not begin with production behavior changes.
 
-Status: current-behavior fixture and evidence captured; production experiment in progress.
+Status: current-behavior fixture captured; Button experiment accepted; compact-control and
+interaction-state work in progress.
 
 Required baseline:
 
@@ -242,6 +245,25 @@ Initial baseline evidence, 2026-08-07:
 - the first production experiment will address Button visual/touch separation. A general compact
   control target mechanism remains conditional on overlap, scrolling, clipping, and explicit-size
   tests instead of being inferred from the Button result.
+
+Accepted Button experiment, 2026-08-07:
+
+- `UiButtonSizing` and `ButtonNodeProps` now represent effective and visual heights independently;
+  existing and custom themes preserve their previous geometry through equal-height defaults;
+- the Material 3 profile selects 48dp/40dp effective/visual heights for compact and medium Button,
+  and 56dp/48dp for large Button;
+- Android Renderer centers only the resolved background, border, ripple, and outline. The native
+  View, semantic bounds, and hit target keep the effective height, and explicit application surface
+  modifiers disable the component inset;
+- the Pixel 9a API 35 test passed at 1.0 and 1.3 font scale. Reports record 48dp View and semantic
+  heights with a 40dp visual surface, and a device tap inside the effective target but outside the
+  visible surface triggers the callback;
+- focused UI Foundation, Material 3, and Android Renderer unit suites pass. The implementation is
+  retained because it satisfies the keep rule without a Material dependency or policy branch in
+  Android Renderer;
+- this result does not by itself approve a generic touch-delegate or wrapper. Compact-control work
+  must still prove deterministic overlap, scrolling, clipping, accessibility, and explicit-size
+  behavior.
 
 Keep the implementation only when it provides at least 48dp effective targets for standard
 Material components without changing visual geometry, stealing adjacent input, breaking scrolling,
@@ -358,3 +380,4 @@ This plan is complete when:
 | 2026-08-06 | 0 | CodeGraph/source inventory and local Material Components `1.13.0` resource audit | Standard non-Expressive baseline selected |
 | 2026-08-06 | 1 | UI Foundation unit suite, Material mapper/static-token/Robolectric tests | Low-risk implementation retained pending release review |
 | 2026-08-07 | 2 | Default-theme Settings fixture; API 35 screenshots and View/drawable/accessibility bounds at 1.0/1.3 font scale | Accessibility gap confirmed; Button separation experiment approved, generic expansion remains conditional |
+| 2026-08-07 | 2 | Button 48dp target / 40dp visible surface reports and screenshots at 1.0/1.3 font scale; edge-target device click; focused unit suites | Button experiment retained; compact-control generalization remains conditional |

@@ -61,6 +61,10 @@ by a later renderer or child render session.
   system. Typography supports all display, headline, title, body, and label tiers; shapes support
   extra-small, small, medium, large, extra-large, and full roles. Design-system adapters provide
   their concrete values.
+- `UiButtonSizing` keeps the effective minimum target height separate from the visible surface
+  height. Neutral and existing custom themes preserve their previous rendering because each visual
+  height defaults to its corresponding effective height; a design-system adapter may opt into a
+  smaller centered surface without shrinking the View or accessibility bounds.
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
   image loading, focus, frame clock, and host capabilities.
@@ -144,3 +148,8 @@ The complete `UiTypography` and `UiShapes` value contracts are an alpha-line sou
 change. They remain immutable Q2 values with no lifecycle or ownership protocol; direct
 construction keeps source defaults, while exhaustive destructuring, reflection, and precompiled
 callers must be rebuilt for the corresponding release.
+
+`UiButtonSizing` is likewise a Q2 immutable value contract. Its added visual-height fields have
+source defaults but are a binary change for precompiled direct constructors and exhaustive
+destructuring. `Button` resolves both heights into `ButtonNodeProps`; custom renderers must honor
+that contract or deliberately document that their visual and effective bounds remain identical.

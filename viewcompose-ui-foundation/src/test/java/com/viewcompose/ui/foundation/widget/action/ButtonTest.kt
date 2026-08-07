@@ -35,6 +35,7 @@ class ButtonTest {
         assertEquals(ButtonDefaults.contentColor(), spec.textColor)
         assertEquals(ButtonDefaults.textStyle(ButtonSize.Large).fontSizeSp, spec.textSizeSp)
         assertEquals(ButtonDefaults.height(ButtonSize.Large), spec.minHeight)
+        assertEquals(ButtonDefaults.visualHeight(ButtonSize.Large), spec.visualHeight)
         assertTrue(node.spec is ButtonNodeProps)
     }
 

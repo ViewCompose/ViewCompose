@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: 9045607e7177e31a6dfc3bc8e6a56896aca652ecf33c77e1413c273790b23373
+translation_source_hash: c330aec972450bb4e8c6959ae032992adcbfc2c59d6f0898f390e1cac2afd463
 translation_status: current
 ---
 
@@ -59,14 +59,19 @@ Material3Theme(resolvedTheme = resolved) {
 - Button、TextField、SegmentedControl、ProgressIndicator、FAB、Search 与 Badge 采用的标准尺寸
   配置。
 
+标准 Button 尺寸配置中，Compact 与 Medium 使用 48dp 有效触控目标和居中的 40dp 可见容器，
+Large 使用 56dp 目标和 48dp 可见容器。这是由 UI Foundation 设计系统无关尺寸契约消费的
+Token 选择；Material 适配器不参与 Android 命中测试或 View 绘制。
+
 Android Bridge 会用当前主题中存在的值替换快照内容。它读取全部 15 个 Material Text
 Appearance 和五个绝对 `shapeAppearanceCorner*` 角色；旧 Android Large/Medium/Small Text
 Appearance 继续作为 Title/Body/Label 家族回退。缺失的 Display 和 Headline 会保留完整 Material
 静态快照，不会折叠到旧字号，也不会退回 UI Foundation 的中性默认值。
 
 本适配器不会把 Material 策略放进 Android Renderer。组件默认值在 NodeSpec 进入 Renderer
-之前，已在 UI Foundation 中解析为语义角色。触控区域扩展、TextField 浮动 Label/Focus 结构，
-以及 Switch/Slider 精确几何不由 Token Bridge 自动提供，必须作为独立组件工作进行测试。
+之前，已在 UI Foundation 中解析为语义角色。Button 的可见/有效高度分离会由尺寸 Token 与
+NodeSpec 明确表达；紧凑控件触控区域扩展、TextField 浮动 Label/Focus 结构，以及
+Switch/Slider 精确几何不由 Token Bridge 自动提供，必须作为独立组件工作进行测试。
 
 ## 相关文档
 

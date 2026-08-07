@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: a006e33a18e33f3764733280ece5d81f82e6ceda8312de09af7aaf8769ff5ffe
+translation_source_hash: 2f8db8b0da867ebdcf8722afa269132e0ffa5abd06348080e5c6b00b1fc94012
 translation_status: current
 ---
 
@@ -32,6 +32,9 @@ dependencies {
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
   ConstraintLayout 与 SwipeRefreshLayout；不依赖 Material Components。
 - 通用 Surface、圆角/切角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
+- Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
+  涟漪和轮廓，同时不改变测量、命中测试或无障碍边界。显式 Background、Border、Corner Radius
+  或 Shape Modifier 会关闭组件提供的内缩，保证应用样式优先。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
 
 ## 渲染模型
@@ -100,6 +103,7 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - 只要影响输出的捕获值发生变化，Lazy item 的 `contentToken` 就必须变化。即使 item 语义未变，
   session 回调也会从 next 列表中的原始 item 实例刷新。
 - 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
+- Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
 
 ## Android host 与线程规则
 

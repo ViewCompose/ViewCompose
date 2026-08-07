@@ -106,6 +106,9 @@ Constraints:
    `textSizeSp` is insufficient.
 5. The renderer applies the text style already resolved in `NodeSpec` and does not recreate theme
    semantics.
+6. When a component separates its effective target from its visual surface, the theme supplies both
+   dimensions, Defaults resolve them into `NodeSpec`, and the renderer only applies the resolved
+   geometry. Explicit application surface modifiers remain authoritative.
 
 ## 4. Local override rules
 

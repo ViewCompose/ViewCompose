@@ -9,6 +9,7 @@ internal object DemoTestTags {
     const val SETTINGS_MATERIAL3_DEFAULT_ENTRY = "settings_material3_default_entry"
     const val MATERIAL3_DEFAULT_ROOT = "material3_default_root"
     const val MATERIAL3_DEFAULT_BUTTON = "material3_default_button"
+    const val MATERIAL3_DEFAULT_BUTTON_STATUS = "material3_default_button_status"
     const val MATERIAL3_DEFAULT_ICON_BUTTON = "material3_default_icon_button"
     const val MATERIAL3_DEFAULT_CHIP = "material3_default_chip"
     const val MATERIAL3_DEFAULT_CHECKBOX = "material3_default_checkbox"

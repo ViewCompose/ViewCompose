@@ -7,7 +7,9 @@ import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.node.spec.ImageNodeSpec
+import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.Image
@@ -50,6 +52,29 @@ fun themeProviderSample() {
     }
 
     check(observedPrimary == customPrimary)
+}
+
+fun buttonSample() {
+    val tokens = UiThemeDefaults.light().let { defaults ->
+        defaults.copy(
+            controls = defaults.controls.copy(
+                button = defaults.controls.button.copy(
+                    mediumHeight = 48.dp,
+                    mediumVisualHeight = 40.dp,
+                ),
+            ),
+        )
+    }
+
+    val node = buildVNodeTree {
+        UiTheme(tokens) {
+            Button(text = "Confirm", onClick = {})
+        }
+    }.single()
+    val spec = node.spec as ButtonNodeProps
+
+    check(spec.minHeight == 48.dp)
+    check(spec.visualHeight == 40.dp)
 }
 
 fun popupPositioningSample() {

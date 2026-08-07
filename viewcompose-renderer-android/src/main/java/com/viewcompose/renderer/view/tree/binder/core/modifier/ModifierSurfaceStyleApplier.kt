@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
 import android.view.View
@@ -71,6 +72,7 @@ internal object ModifierSurfaceStyleApplier {
             clickable = nodeStyle.clickable,
             forceClip = resolved.graphicsLayer?.clip ?: (resolved.clip?.clip ?: false),
             shape = nodeStyle.shape,
+            surfaceInsets = nodeStyle.surfaceInsets,
         )
     }
 
@@ -89,6 +91,7 @@ internal object ModifierSurfaceStyleApplier {
         clickable: Boolean,
         forceClip: Boolean = false,
         shape: UiShape? = null,
+        surfaceInsets: VerticalSurfaceInsetsPx = VerticalSurfaceInsetsPx.Zero,
     ) {
         val legacyHasCorner = cornerRadius != null &&
             (cornerRadius.topStart > UiDp.Zero || cornerRadius.topEnd > UiDp.Zero ||
@@ -106,7 +109,7 @@ internal object ModifierSurfaceStyleApplier {
         if (hasCustomSurface) {
             // Custom surfaces put ripple, content, and border in the background to avoid foreground clipping conflicts.
             // Custom surfaces put ripple/content/border into background to avoid foreground and clipping conflicts.
-            view.background = if (backgroundDrawable != null) {
+            val resolvedBackground = if (backgroundDrawable != null) {
                 createDrawableResourceBackground(
                     backgroundDrawable = backgroundDrawable,
                     borderWidth = borderWidth,
@@ -129,6 +132,7 @@ internal object ModifierSurfaceStyleApplier {
                     density = density,
                 )
             }
+            view.background = resolvedBackground.withVerticalInsets(surfaceInsets)
             view.foreground = null
         } else {
             // Without a custom surface, restore native background and use a foreground ripple only when clickable.
@@ -150,6 +154,7 @@ internal object ModifierSurfaceStyleApplier {
             shape = resolvedShape,
             forceClip = forceClip || shouldAutoClipForDrawableShape,
             density = density,
+            surfaceInsets = surfaceInsets,
         )
     }
 
@@ -237,6 +242,7 @@ internal object ModifierSurfaceStyleApplier {
         shape: UiShape?,
         forceClip: Boolean = false,
         density: UiDensity,
+        surfaceInsets: VerticalSurfaceInsetsPx = VerticalSurfaceInsetsPx.Zero,
     ) {
         if (shape == null && !forceClip) {
             view.clipToOutline = false
@@ -248,7 +254,14 @@ internal object ModifierSurfaceStyleApplier {
             val outlineDrawable = UiShapeDrawable(shape, view.layoutDirection, density)
             view.outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
-                    outlineDrawable.setBounds(0, 0, view.width, view.height)
+                    val top = surfaceInsets.top.coerceIn(0, view.height)
+                    val bottom = (view.height - surfaceInsets.bottom).coerceIn(top, view.height)
+                    outlineDrawable.setBounds(
+                        0,
+                        top,
+                        view.width,
+                        bottom,
+                    )
                     outlineDrawable.getOutline(outline)
                 }
             }
@@ -258,6 +271,17 @@ internal object ModifierSurfaceStyleApplier {
         // Apply rounded outline for shadow, but only clip content when clip() is explicitly requested.
         view.clipToOutline = forceClip
         view.invalidateOutline()
+    }
+
+    private fun Drawable.withVerticalInsets(insets: VerticalSurfaceInsetsPx): Drawable {
+        if (insets == VerticalSurfaceInsetsPx.Zero) return this
+        return InsetDrawable(
+            this,
+            0,
+            insets.top,
+            0,
+            insets.bottom,
+        )
     }
 
     private fun CornerRadiusModifierElement.toUiShape(): UiShape {
