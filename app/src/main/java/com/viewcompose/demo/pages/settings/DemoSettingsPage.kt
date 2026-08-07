@@ -1,6 +1,5 @@
 package com.viewcompose
 
-import android.content.Intent
 import android.view.ViewGroup
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.preview.tooling.ViewComposePreview
@@ -84,28 +83,60 @@ internal fun UiTreeBuilder.SettingsPage(
             }
 
             "material3-default" -> Column(
-                spacing = 0.dp,
+                spacing = 8.dp,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = "默认 Material3 主题",
+                    text = "主题与 Token 验证",
                     style = UiTextStyle(fontSizeSp = 18.sp),
-                    modifier = Modifier.margin(top = 20.dp, bottom = 8.dp),
+                    modifier = Modifier.margin(top = 20.dp),
                 )
                 Text(
-                    text = "独立页面不注入 Demo 自定义 Token，用于验证框架默认圆角、尺寸和交互区域。",
+                    text = "使用同一组组件分别验证 Android XML、Material3 静态基线和 Demo 自定义 Token；页面内会标注来源与关键色值，便于截图诊断。",
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.margin(bottom = 8.dp),
                 )
                 Button(
-                    text = "打开默认主题验证",
+                    text = "验证 Android XML 主题",
                     onClick = {
                         root?.context?.startActivity(
-                            Intent(root.context, Material3DefaultThemeActivity::class.java),
+                            Material3DefaultThemeActivity.newIntent(
+                                context = root.context,
+                                source = DemoThemeSource.AndroidXml,
+                            ),
                         )
                     },
-                    modifier = Modifier.testTag(DemoTestTags.SETTINGS_MATERIAL3_DEFAULT_ENTRY),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SETTINGS_THEME_XML_ENTRY),
+                )
+                Button(
+                    text = "验证 Material3 静态基线",
+                    onClick = {
+                        root?.context?.startActivity(
+                            Material3DefaultThemeActivity.newIntent(
+                                context = root.context,
+                                source = DemoThemeSource.Material3Defaults,
+                            ),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SETTINGS_MATERIAL3_DEFAULT_ENTRY),
+                )
+                Button(
+                    text = "验证 Demo 自定义 Token",
+                    onClick = {
+                        root?.context?.startActivity(
+                            Material3DefaultThemeActivity.newIntent(
+                                context = root.context,
+                                source = DemoThemeSource.DemoCustom,
+                            ),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SETTINGS_THEME_CUSTOM_ENTRY),
                 )
             }
 

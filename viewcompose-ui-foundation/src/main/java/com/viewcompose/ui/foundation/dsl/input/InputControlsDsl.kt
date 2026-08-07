@@ -199,6 +199,7 @@ fun UiTreeBuilder.RadioButton(
  * @param enabled whether input is accepted and enabled color roles are used
  * @param thumbColor ARGB color applied to the slider thumb
  * @param trackColor ARGB color applied to the active slider track
+ * @param inactiveTrackColor ARGB color applied to the track after the current value
  * @param key optional stable sibling identity used during reconciliation
  * @param modifier ordered configuration appended after the themed minimum effective height
  */
@@ -210,6 +211,7 @@ fun UiTreeBuilder.Slider(
     enabled: Boolean = true,
     thumbColor: Int = InputControlDefaults.sliderThumbColor(enabled),
     trackColor: Int = InputControlDefaults.sliderTrackColor(enabled),
+    inactiveTrackColor: Int = InputControlDefaults.sliderInactiveTrackColor(enabled),
     key: Any? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -224,6 +226,7 @@ fun UiTreeBuilder.Slider(
             thumbColor = thumbColor,
             trackColor = trackColor,
             onValueChange = onValueChange,
+            inactiveTrackColor = inactiveTrackColor,
         ),
         modifier = Modifier
             .minHeight(InputControlDefaults.minimumInteractiveHeight())

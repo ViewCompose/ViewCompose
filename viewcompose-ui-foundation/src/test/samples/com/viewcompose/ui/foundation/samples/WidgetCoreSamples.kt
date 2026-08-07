@@ -90,7 +90,13 @@ fun compactInputTargetSample() {
     val nodes = buildVNodeTree {
         UiTheme(tokens) {
             Checkbox(text = "Share diagnostics", checked = true, onCheckedChange = {})
-            Slider(value = 50, onValueChange = {})
+            Slider(
+                value = 50,
+                onValueChange = {},
+                thumbColor = 0xFF6750A4.toInt(),
+                trackColor = 0xFF6750A4.toInt(),
+                inactiveTrackColor = 0xFFE8DEF8.toInt(),
+            )
         }
     }
 

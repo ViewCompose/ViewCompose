@@ -69,6 +69,10 @@ by a later renderer or child render session.
   used by Checkbox, RadioButton, Switch, and Slider. Its neutral default is zero, preserving native
   intrinsic measurement. A design system may supply a positive minimum; the component applies it
   before the caller modifier so an explicit exact application height remains authoritative.
+- Enabled Checkbox, RadioButton, Switch, and Slider defaults resolve their selected or active
+  control role from `Theme.colors.primary`. Slider additionally resolves its inactive segment from
+  `Theme.colors.secondaryContainer`. AppCompat `controlActivated` remains available as a general
+  state token but does not override these component semantic roles.
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
   image loading, focus, frame clock, and host capabilities.
@@ -163,3 +167,7 @@ default and the same binary-compatibility consequence for precompiled direct con
 exhaustive destructuring. Checkbox, RadioButton, Switch, and Slider are Q3 component APIs: they
 prepend the resolved minimum target and then apply the caller modifier, preserving explicit exact
 layout decisions.
+
+Slider's added `inactiveTrackColor` parameter is a Q3 component API change. It has a themed source
+default and is resolved into the Q2 `SliderNodeProps` snapshot; precompiled callers and custom
+renderers must be rebuilt for the corresponding alpha release.

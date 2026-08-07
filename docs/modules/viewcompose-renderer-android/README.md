@@ -121,6 +121,11 @@ Because the current line is alpha, the documentation site intentionally does not
   can ignore `minimumHeight` under an `AT_MOST` measure spec. It honors the declared minimum while
   leaving an exact application or parent height authoritative; no Material policy or token is
   interpreted in Android Renderer.
+- Native Switch and Slider binding applies every resolved tint with `SRC_IN`, preserving the
+  platform or OEM drawable mask. Slider owns active-track, inactive-track, and thumb tint
+  independently, and targeted patches update the inactive track without recreating the View.
+  Platform drawable geometry and its built-in coverage remain authoritative until a separate
+  tested custom-control contract is accepted.
 
 ## Android host and threading rules
 

@@ -6,7 +6,9 @@ Active. Phase 0 and the low-risk Phase 1 release slice are implemented and Phase
 in pull request 79. Phase 2 has accepted independently revertible effective-target changes for
 Button and the native Checkbox, RadioButton, Switch, and Slider controls. Chip expansion is
 deferred behind a generic composite-target contract. The interaction-state baseline is complete,
-but production state-layer changes remain conditional on a small renderer-neutral contract.
+but production state-layer changes remain conditional on a small renderer-neutral contract. The
+Settings verification fixture now isolates Android XML, static Material 3, and Demo custom-token
+sources with deliberately different palettes and screenshot-stable source diagnostics.
 
 This is a temporary execution plan and remains canonical English-only under the documentation
 governance policy. When the accepted work is complete, durable contracts move into the theme guide
@@ -14,15 +16,17 @@ and owning module manuals before this plan moves to `docs/archive/`.
 
 Last verified: 2026-08-07.
 
-Next action: review and release Phase 1, then decide whether the Button/IconButton state-layer
-experiment can preserve the existing one-color fallback without adding Material policy to Android
-Renderer. Do not generalize to Chip, start TextField work, or start custom-control structural
-changes before each area's required current-behavior tests and keep criteria exist.
+Next action: use the accepted three-source fixture for subsequent visual evidence, review and
+release Phase 1, then decide whether the Button/IconButton state-layer experiment can preserve the
+existing one-color fallback without adding Material policy to Android Renderer. Do not generalize
+to Chip, start TextField work, or start custom-control structural changes before each area's
+required current-behavior tests and keep criteria exist.
 
 ## Maven release changesets
 
 - `release/changes/20260807-material3-phase1.json`
 - `release/changes/20260807-material3-phase2-button-target.json`
+- `release/changes/20260807-material3-native-selection-colors.json`
 
 ## Objective
 
@@ -135,6 +139,7 @@ Completed evidence:
 
 Before Phase 2 or later work, add diagnostics/test fixtures that can record:
 
+- the active token source, light/dark mode, semantic-role values, and accidental role collisions;
 - visual bounds, measured bounds, semantic bounds, and effective touch bounds;
 - focused, hovered, pressed, selected, checked, enabled, and error state precedence;
 - TextField label position, indicator width/color, cursor color, and supporting-text layout;
@@ -235,8 +240,8 @@ Required baseline:
 
 Initial baseline evidence, 2026-08-07:
 
-- a dedicated Settings entry opens a default Material 3 page that deliberately bypasses the demo's
-  custom `DemoThemeTokens` while preserving explicit Light, Dark, and Android-theme bridge modes;
+- three dedicated Settings entries open one shared component fixture with isolated Android XML,
+  static Material 3, and Demo custom-token sources while preserving explicit Light and Dark modes;
 - `Material3TouchTargetBaselineUiTest` passed on the Pixel 9a API 35 AVD at 1.0 and 1.3 font scale;
 - the standard Button currently exposes one ambiguous 48dp visual/View/semantic height rather than
   a 40dp visible container inside a 48dp target;
@@ -292,6 +297,39 @@ Accepted native compact-input experiment, 2026-08-07:
   would change modifier precedence, accessibility ownership, or adjacent-target behavior. This
   phase will not accept that risk until a generic composite surface/target contract passes the same
   overlap, clipping, scrolling, semantics, and explicit-size matrix.
+
+Accepted native compact-input color correction, 2026-08-07:
+
+- the Android bridge still exposes AppCompat `colorControlActivated`, but UI Foundation now selects
+  `colors.primary` for enabled Checkbox, RadioButton, Switch, and Slider defaults. This keeps a
+  legacy accent alias from overriding the Material component role;
+- Slider now resolves active-track, inactive-track, and thumb colors into its NodeSpec. Android
+  Renderer binds all three segments and patches the inactive segment without falling back to the
+  platform theme;
+- native Switch and Slider tinting uses `SRC_IN`. A Samsung-device experiment showed that `SRC`
+  filled transparent drawable-mask bounds and turned round thumbs into rectangles, so it was
+  rejected. `SRC_IN` preserves OEM geometry and its built-in coverage while correcting semantic
+  hue ownership;
+- exact Switch/Slider track coverage, geometry, and motion remain the conditional Phase 4 work.
+  This correction does not introduce custom drawables or reinterpret Material tokens in Android
+  Renderer.
+
+Accepted theme-source verification upgrade, 2026-08-07:
+
+- the host Android XML theme and `DemoThemeTokens` now use intentionally distinct warm and cool
+  palettes. Both define complete semantic color roles, so a missing container role cannot silently
+  collapse to its base role through sparse compatibility defaults;
+- Settings exposes Android XML, static Material 3, and Demo custom-token entries backed by the same
+  component fixture. A stable source/mode badge appears on every scroll section so a cropped
+  screenshot remains attributable;
+- the fixture and normal diagnostics report token origin, primary and secondary role families, and
+  a `secondary != secondaryContainer` collision check. Source identity is explicit even when token
+  metadata reports a generic custom origin;
+- the API 35 source-matrix test exported one PNG and metadata sidecar for each source. An initial
+  run caught an empty Activity-transition frame; the retained fixture waits for compositor settling,
+  and the repeated run visually confirmed three distinct palettes and `DISTINCT` role checks;
+- this matrix is representative diagnostic evidence. It does not create a full state-by-state
+  golden screenshot suite or broaden the conditional structural work in later phases.
 
 Interaction-state baseline, 2026-08-07:
 
@@ -429,4 +467,6 @@ This plan is complete when:
 | 2026-08-07 | 2 | Button 48dp target / 40dp visible surface reports and screenshots at 1.0/1.3 font scale; edge-target device click; focused unit suites | Button experiment retained; compact-control generalization remains conditional |
 | 2026-08-07 | 2 | Default-theme screenshot review plus Renderer circular-corner, complete-outline, and shape-patch pixel tests | Generic shape path fix retained; Button full-shape token remains unchanged |
 | 2026-08-07 | 2 | Checkbox, RadioButton, Switch, and Slider 48dp View/semantic reports at 1.0/1.3 font scale; adjacent-target, scrolling, explicit-size, clipping, and focused unit coverage | Native compact-input experiment retained; Chip expansion deferred pending a generic composite-target contract |
+| 2026-08-07 | 2 | Semantic-default and Renderer tint/patch tests plus Samsung device screenshot review of Switch and Slider | Primary and explicit inactive-track ownership retained with `SRC_IN`; `SRC` rejected because it broke OEM drawable masks |
+| 2026-08-07 | 2 | API 35 Android XML/static Material 3/Demo custom-token screenshot matrix, metadata sidecars, and token-source unit coverage | Three-source verification fixture retained; palettes and secondary/container roles remain intentionally distinct |
 | 2026-08-07 | 2 | Button RippleDrawable report plus pinned Material selector comparison for pressed, focused, and hovered output | State-layer mismatch confirmed; baseline retained and production behavior unchanged pending a reusable renderer-neutral contract |

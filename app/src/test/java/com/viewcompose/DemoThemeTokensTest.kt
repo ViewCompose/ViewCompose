@@ -7,27 +7,43 @@ package com.viewcompose
 
 import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
 
 class DemoThemeTokensTest {
     @Test
-    fun `light theme matches app day palette`() {
-        assertEquals(0xFFF7F2EA.toInt(), DemoThemeTokens.light.colors.background)
-        assertEquals(0xFFEFE4D2.toInt(), DemoThemeTokens.light.colors.surface)
-        assertEquals(0xFF7B9E68.toInt(), DemoThemeTokens.light.colors.primary)
-        assertEquals(0xFF9A7AAE.toInt(), DemoThemeTokens.light.colors.secondary)
-        assertEquals(0xFF2F241B.toInt(), DemoThemeTokens.light.colors.onSurface)
+    fun `light theme uses a distinct custom verification palette`() {
+        assertEquals(0xFFF4FBF8.toInt(), DemoThemeTokens.light.colors.background)
+        assertEquals(0xFFF4FBF8.toInt(), DemoThemeTokens.light.colors.surface)
+        assertEquals(0xFF006A60.toInt(), DemoThemeTokens.light.colors.primary)
+        assertNotEquals(0xFF7B9E68.toInt(), DemoThemeTokens.light.colors.primary)
+        assertEquals(0xFF4A635E.toInt(), DemoThemeTokens.light.colors.secondary)
+        assertEquals(0xFFCCE8E1.toInt(), DemoThemeTokens.light.colors.secondaryContainer)
+        assertEquals(0xFF06201C.toInt(), DemoThemeTokens.light.colors.onSecondaryContainer)
+        assertNotEquals(
+            DemoThemeTokens.light.colors.secondary,
+            DemoThemeTokens.light.colors.secondaryContainer,
+        )
+        assertEquals(0xFF161D1B.toInt(), DemoThemeTokens.light.colors.onSurface)
         assertEquals(false, DemoThemeTokens.light.metadata.isDark)
     }
 
     @Test
-    fun `dark theme matches app night palette`() {
-        assertEquals(0xFF1F1B18.toInt(), DemoThemeTokens.dark.colors.background)
-        assertEquals(0xFF2C2621.toInt(), DemoThemeTokens.dark.colors.surface)
-        assertEquals(0xFF98C27F.toInt(), DemoThemeTokens.dark.colors.primary)
-        assertEquals(0xFFB39AC9.toInt(), DemoThemeTokens.dark.colors.secondary)
-        assertEquals(0xFFF4EFE8.toInt(), DemoThemeTokens.dark.colors.onSurface)
+    fun `dark theme uses a distinct custom verification palette`() {
+        assertEquals(0xFF0E1513.toInt(), DemoThemeTokens.dark.colors.background)
+        assertEquals(0xFF0E1513.toInt(), DemoThemeTokens.dark.colors.surface)
+        assertEquals(0xFF53DBC8.toInt(), DemoThemeTokens.dark.colors.primary)
+        assertNotEquals(0xFF98C27F.toInt(), DemoThemeTokens.dark.colors.primary)
+        assertEquals(0xFFB1CCC5.toInt(), DemoThemeTokens.dark.colors.secondary)
+        assertEquals(0xFF334B46.toInt(), DemoThemeTokens.dark.colors.secondaryContainer)
+        assertEquals(0xFFCCE8E1.toInt(), DemoThemeTokens.dark.colors.onSecondaryContainer)
+        assertNotEquals(
+            DemoThemeTokens.dark.colors.secondary,
+            DemoThemeTokens.dark.colors.secondaryContainer,
+        )
+        assertEquals(0xFFDDE4E1.toInt(), DemoThemeTokens.dark.colors.onSurface)
         assertEquals(true, DemoThemeTokens.dark.metadata.isDark)
     }
 
@@ -46,6 +62,20 @@ class DemoThemeTokensTest {
         assertSame(
             DemoThemeTokens.light,
             DemoThemeTokens.select(DemoThemeMode.Light, isSystemDark = true),
+        )
+    }
+
+    @Test
+    fun `theme verification sources stay isolated`() {
+        assertNull(DemoThemeSource.AndroidXml.tokens(isDark = false))
+        assertEquals(
+            0xFFE8DEF8.toInt(),
+            DemoThemeSource.Material3Defaults.tokens(isDark = false)?.colors?.secondaryContainer,
+        )
+        assertSame(DemoThemeTokens.light, DemoThemeSource.DemoCustom.tokens(isDark = false))
+        assertEquals(
+            DemoThemeSource.Material3Defaults,
+            DemoThemeSource.fromId("unknown-source"),
         )
     }
 }

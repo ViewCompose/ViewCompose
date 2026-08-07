@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
+import android.os.SystemClock
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -24,6 +25,67 @@ import kotlin.math.roundToInt
 @RunWith(AndroidJUnit4::class)
 class Material3TouchTargetBaselineUiTest {
     @Test
+    fun themeSources_exportDistinctScreenshotIdentityAndTokenRoles() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        DemoThemeSource.entries.forEach { source ->
+            val intent = Material3DefaultThemeActivity.newIntent(
+                context = context,
+                source = source,
+            )
+            launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
+                waitForUiIdle()
+                SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MILLIS)
+                waitForUiIdle()
+                var evidence = ""
+                scenario.onActivity { activity ->
+                    val sourceValue = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_THEME_SOURCE,
+                    ).text.toString()
+                    val originValue = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_THEME_ORIGIN,
+                    ).text.toString()
+                    val modeValue = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_THEME_MODE,
+                    ).text.toString()
+                    val secondaryValue = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_THEME_SECONDARY,
+                    ).text.toString()
+                    val secondaryContainerValue = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_THEME_SECONDARY_CONTAINER,
+                    ).text.toString()
+                    val roleCheck = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_THEME_ROLE_COLLISION,
+                    ).text.toString()
+
+                    assertEquals("${source.id} · ${source.label}", sourceValue)
+                    assertEquals("Light", modeValue)
+                    assertNotEquals(secondaryValue, secondaryContainerValue)
+                    assertEquals("DISTINCT", roleCheck)
+
+                    evidence = buildString {
+                        appendLine("suite=material3-theme-source-matrix-v1")
+                        appendLine("source=$sourceValue")
+                        appendLine("origin=$originValue")
+                        appendLine("mode=$modeValue")
+                        appendLine("secondary=$secondaryValue")
+                        appendLine("secondaryContainer=$secondaryContainerValue")
+                        appendLine("roleCheck=$roleCheck")
+                    }
+                }
+                val artifactName = "material3-theme-source-${source.id}-light"
+                val screenshot = captureDeviceScreenshot(
+                    name = artifactName,
+                    directoryName = "material3-theme-source-matrix",
+                )
+                val metadata = File(screenshot.parentFile, "$artifactName.txt")
+                    .apply { writeText(evidence) }
+                preserveAfterConnectedTest(screenshot)
+                preserveAfterConnectedTest(metadata)
+            }
+        }
+    }
+
+    @Test
     fun settingsEntry_opensDefaultMaterial3ThemeWithoutDemoTokens() {
         launchDemoActivity(MainActivity::class.java, DemoThemeMode.Light).use { scenario ->
             clickDeviceText("设置")
@@ -35,6 +97,8 @@ class Material3TouchTargetBaselineUiTest {
             )
             try {
                 scenario.onActivity { activity ->
+                    activity.requireViewByTestTagVisible(DemoTestTags.SETTINGS_THEME_XML_ENTRY)
+                    activity.requireViewByTestTagVisible(DemoTestTags.SETTINGS_THEME_CUSTOM_ENTRY)
                     activity.clickByTestTag(DemoTestTags.SETTINGS_MATERIAL3_DEFAULT_ENTRY)
                 }
                 val launched = instrumentation.waitForMonitorWithTimeout(monitor, 5_000)
@@ -323,5 +387,9 @@ class Material3TouchTargetBaselineUiTest {
         val outputPath = "$outputDirectory/${artifact.name}"
         device.executeShellCommand("cp ${artifact.absolutePath} $outputPath")
         assertEquals(outputPath, device.executeShellCommand("ls $outputPath").trim())
+    }
+
+    private companion object {
+        const val WINDOW_TRANSITION_SETTLE_MILLIS = 750L
     }
 }

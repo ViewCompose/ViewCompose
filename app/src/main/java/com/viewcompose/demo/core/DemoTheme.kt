@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
+import com.viewcompose.material3.Material3ThemeDefaults
 import com.viewcompose.ui.foundation.UiColors
 import com.viewcompose.ui.foundation.UiControlSizeDefaults
 import com.viewcompose.ui.foundation.UiButtonSizing
@@ -29,6 +30,44 @@ enum class DemoThemeMode {
     System,
     Light,
     Dark,
+}
+
+/** Identifies the isolated theme source rendered by the theme verification fixture. */
+internal enum class DemoThemeSource(
+    val id: String,
+    val label: String,
+    val description: String,
+) {
+    AndroidXml(
+        id = "android-xml",
+        label = "Android XML",
+        description = "Theme.ViewCompose resolved through the Android Material3 bridge",
+    ),
+    Material3Defaults(
+        id = "material3-static",
+        label = "Material3 Static",
+        description = "Deterministic Material3ThemeDefaults without app token overrides",
+    ),
+    DemoCustom(
+        id = "demo-custom",
+        label = "Demo Custom",
+        description = "The app-owned DemoThemeTokens palette and sizing profile",
+    ),
+    ;
+
+    fun tokens(isDark: Boolean): UiThemeTokens? {
+        return when (this) {
+            AndroidXml -> null
+            Material3Defaults -> if (isDark) Material3ThemeDefaults.dark() else Material3ThemeDefaults.light()
+            DemoCustom -> if (isDark) DemoThemeTokens.dark else DemoThemeTokens.light
+        }
+    }
+
+    companion object {
+        fun fromId(id: String?): DemoThemeSource {
+            return entries.firstOrNull { source -> source.id == id } ?: Material3Defaults
+        }
+    }
 }
 
 /**
@@ -129,18 +168,44 @@ object DemoThemeTokens {
      */
     val light: UiThemeTokens = createDemoThemeTokens(
         colors = UiColors(
-            background = 0xFFF7F2EA.toInt(),
-            surface = 0xFFEFE4D2.toInt(),
-            surfaceVariant = 0xFFF8EED8.toInt(),
-            primary = 0xFF7B9E68.toInt(),
-            secondary = 0xFF9A7AAE.toInt(),
+            background = 0xFFF4FBF8.toInt(),
+            onBackground = 0xFF161D1B.toInt(),
+            surface = 0xFFF4FBF8.toInt(),
+            surfaceVariant = 0xFFDAE5E1.toInt(),
+            surfaceDim = 0xFFD5DBD9.toInt(),
+            surfaceBright = 0xFFF4FBF8.toInt(),
+            surfaceContainerLowest = 0xFFFFFFFF.toInt(),
+            surfaceContainerLow = 0xFFEEF5F2.toInt(),
+            surfaceContainer = 0xFFE8EFED.toInt(),
+            surfaceContainerHigh = 0xFFE2E9E7.toInt(),
+            surfaceContainerHighest = 0xFFDDE4E1.toInt(),
+            onSurface = 0xFF161D1B.toInt(),
+            onSurfaceVariant = 0xFF3F4946.toInt(),
+            primary = 0xFF006A60.toInt(),
+            onPrimary = 0xFFFFFFFF.toInt(),
+            primaryContainer = 0xFF74F8E5.toInt(),
+            onPrimaryContainer = 0xFF00201C.toInt(),
+            secondary = 0xFF4A635E.toInt(),
+            onSecondary = 0xFFFFFFFF.toInt(),
+            secondaryContainer = 0xFFCCE8E1.toInt(),
+            onSecondaryContainer = 0xFF06201C.toInt(),
+            tertiary = 0xFF456179.toInt(),
+            onTertiary = 0xFFFFFFFF.toInt(),
+            tertiaryContainer = 0xFFCCE5FF.toInt(),
+            onTertiaryContainer = 0xFF001E31.toInt(),
             error = 0xFFB3261E.toInt(),
+            onError = 0xFFFFFFFF.toInt(),
+            errorContainer = 0xFFF9DEDC.toInt(),
+            onErrorContainer = 0xFF410E0B.toInt(),
             success = 0xFF2E7D32.toInt(),
             warning = 0xFFF57C00.toInt(),
             info = 0xFF1565C0.toInt(),
-            onSurface = 0xFF2F241B.toInt(),
-            onSurfaceVariant = 0xFF6A5A4A.toInt(),
-            outline = 0xFFCCBDAA.toInt(),
+            outline = 0xFF6F7976.toInt(),
+            outlineVariant = 0xFFBEC9C5.toInt(),
+            surfaceTint = 0xFF006A60.toInt(),
+            inverseSurface = 0xFF2B3230.toInt(),
+            inverseOnSurface = 0xFFECF2F0.toInt(),
+            inversePrimary = 0xFF53DBC8.toInt(),
         ),
         typography = UiTypography(
             titleMedium = UiTextStyle(fontSizeSp = 22.sp),
@@ -156,18 +221,44 @@ object DemoThemeTokens {
      */
     val dark: UiThemeTokens = createDemoThemeTokens(
         colors = UiColors(
-            background = 0xFF1F1B18.toInt(),
-            surface = 0xFF2C2621.toInt(),
-            surfaceVariant = 0xFF3A332D.toInt(),
-            primary = 0xFF98C27F.toInt(),
-            secondary = 0xFFB39AC9.toInt(),
+            background = 0xFF0E1513.toInt(),
+            onBackground = 0xFFDDE4E1.toInt(),
+            surface = 0xFF0E1513.toInt(),
+            surfaceVariant = 0xFF3F4946.toInt(),
+            surfaceDim = 0xFF0E1513.toInt(),
+            surfaceBright = 0xFF343B39.toInt(),
+            surfaceContainerLowest = 0xFF090F0D.toInt(),
+            surfaceContainerLow = 0xFF161D1B.toInt(),
+            surfaceContainer = 0xFF1A211F.toInt(),
+            surfaceContainerHigh = 0xFF252B29.toInt(),
+            surfaceContainerHighest = 0xFF2F3634.toInt(),
+            onSurface = 0xFFDDE4E1.toInt(),
+            onSurfaceVariant = 0xFFBEC9C5.toInt(),
+            primary = 0xFF53DBC8.toInt(),
+            onPrimary = 0xFF003731.toInt(),
+            primaryContainer = 0xFF005047.toInt(),
+            onPrimaryContainer = 0xFF74F8E5.toInt(),
+            secondary = 0xFFB1CCC5.toInt(),
+            onSecondary = 0xFF1C3530.toInt(),
+            secondaryContainer = 0xFF334B46.toInt(),
+            onSecondaryContainer = 0xFFCCE8E1.toInt(),
+            tertiary = 0xFFADCAE5.toInt(),
+            onTertiary = 0xFF143349.toInt(),
+            tertiaryContainer = 0xFF2C4961.toInt(),
+            onTertiaryContainer = 0xFFCCE5FF.toInt(),
             error = 0xFFF2B8B5.toInt(),
+            onError = 0xFF601410.toInt(),
+            errorContainer = 0xFF8C1D18.toInt(),
+            onErrorContainer = 0xFFF9DEDC.toInt(),
             success = 0xFF81C784.toInt(),
             warning = 0xFFFBC02D.toInt(),
             info = 0xFF64B5F6.toInt(),
-            onSurface = 0xFFF4EFE8.toInt(),
-            onSurfaceVariant = 0xFFD0C4B6.toInt(),
-            outline = 0xFF5B5046.toInt(),
+            outline = 0xFF89938F.toInt(),
+            outlineVariant = 0xFF3F4946.toInt(),
+            surfaceTint = 0xFF53DBC8.toInt(),
+            inverseSurface = 0xFFDDE4E1.toInt(),
+            inverseOnSurface = 0xFF2B3230.toInt(),
+            inversePrimary = 0xFF006A60.toInt(),
         ),
         typography = UiTypography(
             titleMedium = UiTextStyle(fontSizeSp = 22.sp),

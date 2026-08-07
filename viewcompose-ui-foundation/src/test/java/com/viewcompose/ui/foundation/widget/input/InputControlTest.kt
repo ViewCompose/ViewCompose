@@ -1,8 +1,8 @@
 package com.viewcompose.ui.foundation
 
 /*
- * 测试职责：覆盖 widget-core widget/input 中的 Input Control 行为，防止 DSL、状态或主题契约在后续重构中回退。
- * Test responsibility: covers Input Control behavior in widget-core widget/input and guards DSL, state, or theme contracts against regressions.
+ * Covers input-control DSL, state, and theme contracts so selection colors cannot silently fall
+ * back to unrelated Android compatibility attributes.
  */
 
 import com.viewcompose.ui.modifier.MinHeightModifierElement
@@ -209,5 +209,52 @@ class InputControlTest {
         assertEquals(207, switchSpec.controlColor)
         assertEquals(211, radioSpec.controlColor)
         assertEquals(213, sliderSpec.thumbColor)
+        assertEquals(213, sliderSpec.inactiveTrackColor)
+    }
+
+    @Test
+    fun `selection controls use semantic primary instead of legacy activated color`() {
+        val primary = 0xFF246B4A.toInt()
+        val inactiveTrack = 0xFFDDE8DF.toInt()
+        val legacyActivated = 0xFF8D6BA8.toInt()
+        val baseTheme = UiThemeDefaults.light()
+        val theme = baseTheme.copy(
+            colors = baseTheme.colors.copy(
+                primary = primary,
+                secondaryContainer = inactiveTrack,
+            ),
+            stateColors = baseTheme.stateColors.copy(
+                controlActivated = baseTheme.stateColors.controlActivated.copy(
+                    defaultColor = legacyActivated,
+                    checkedColor = legacyActivated,
+                ),
+            ),
+        )
+
+        val tree = buildVNodeTree {
+            UiTheme(theme) {
+                Column {
+                    Checkbox(text = "Checkbox", checked = true, onCheckedChange = {})
+                    Switch(text = "Switch", checked = true, onCheckedChange = {})
+                    RadioButton(text = "Radio", checked = true, onCheckedChange = {})
+                    Slider(value = 50, onValueChange = {})
+                }
+            }
+        }
+
+        val checkbox = tree.single().children[0].spec as ToggleNodeProps
+        val switch = tree.single().children[1].spec as ToggleNodeProps
+        val radio = tree.single().children[2].spec as ToggleNodeProps
+        val slider = tree.single().children[3].spec as SliderNodeProps
+
+        assertEquals(primary, checkbox.controlColor)
+        assertEquals(primary, checkbox.checkedColor)
+        assertEquals(primary, switch.controlColor)
+        assertEquals(primary, switch.trackColor)
+        assertEquals(primary, radio.controlColor)
+        assertEquals(primary, radio.checkedColor)
+        assertEquals(primary, slider.thumbColor)
+        assertEquals(primary, slider.trackColor)
+        assertEquals(inactiveTrack, slider.inactiveTrackColor)
     }
 }

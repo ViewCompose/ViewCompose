@@ -111,6 +111,11 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) 
             title = "当前主题基线",
             facts = listOf(
                 DiagnosticFact("Mode", modeLabel),
+                DiagnosticFact(
+                    "Source",
+                    "${DemoThemeSource.DemoCustom.id} · ${DemoThemeSource.DemoCustom.label}",
+                ),
+                DiagnosticFact("Metadata origin", Theme.current.metadata.origin.name),
                 DiagnosticFact("Background", Theme.colors.background.asColorHex()),
                 DiagnosticFact("Surface", Theme.colors.surface.asColorHex()),
                 DiagnosticFact("SurfaceVariant", Theme.colors.surfaceVariant.asColorHex()),
@@ -120,9 +125,17 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) 
                 DiagnosticFact("OnPrimary", Theme.colors.onPrimary.asColorHex()),
                 DiagnosticFact("Secondary", Theme.colors.secondary.asColorHex()),
                 DiagnosticFact("OnSecondary", Theme.colors.onSecondary.asColorHex()),
+                DiagnosticFact("SecondaryContainer", Theme.colors.secondaryContainer.asColorHex()),
+                DiagnosticFact("OnSecondaryContainer", Theme.colors.onSecondaryContainer.asColorHex()),
+                DiagnosticFact(
+                    "Role check",
+                    if (Theme.colors.secondary != Theme.colors.secondaryContainer) "DISTINCT" else "COLLISION",
+                ),
             ),
             valueTagsByLabel = mapOf(
                 "Mode" to DemoTestTags.DIAGNOSTICS_THEME_MODE,
+                "Source" to DemoTestTags.DIAGNOSTICS_THEME_SOURCE,
+                "SecondaryContainer" to DemoTestTags.DIAGNOSTICS_THEME_SECONDARY_CONTAINER,
             ),
         )
     }
@@ -156,10 +169,17 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotPaletteSection() {
             ),
         )
         ThemeSwatchRow(
-            label = "Accent / Error / Outline",
+            label = "Primary / Secondary roles",
             swatches = listOf(
-                ThemeSwatch("Primary", Theme.colors.primary),
-                ThemeSwatch("Secondary", Theme.colors.secondary),
+                ThemeSwatch("P", Theme.colors.primary),
+                ThemeSwatch("S", Theme.colors.secondary),
+                ThemeSwatch("SC", Theme.colors.secondaryContainer),
+                ThemeSwatch("OnS", Theme.colors.onSecondaryContainer),
+            ),
+        )
+        ThemeSwatchRow(
+            label = "Error / Outline",
+            swatches = listOf(
                 ThemeSwatch("Error", Theme.colors.error),
                 ThemeSwatch("Outline", Theme.colors.outline),
             ),
@@ -634,7 +654,8 @@ internal fun UiTreeBuilder.DiagnosticsThemeVerificationSection() {
     VerificationNotesSection(
         what = "该页是 Theme token 实际消费的权威人工回归入口，目标不是看数值对不对，而是确认 token 最终确实驱动了关键组件默认值。",
         howToVerify = listOf(
-            "依次切换 Light / Dark / System，确认 Theme Snapshot 的颜色值和下方组件视觉一起变化，而不是只有数值变化。",
+            "本页固定验证 demo-custom 来源；依次切换 Light / Dark / System，确认 Source 不变而 Mode、Theme Snapshot 和组件视觉一起变化。",
+            "如需区分 Android XML、Material3 静态基线和 Demo 自定义 Token，进入设置页的三个独立验证入口，对照相同 fixture 与截图来源标识。",
             "先看 Surface 家族，确认 Default/Variant surface、ListItem、TopAppBar 的前景文字都保持可读，OutlinedCard 边框跟随 outline。",
             "看 Action 家族，确认 Primary/Secondary/Tonal/Outlined/Text 五种按钮的强调层级明显不同，FAB 和 Extended FAB 跟随当前主题。",
             "看 Input / Selection 家族，确认错误态 TextField 与普通 TextField 的 container、text、hint 有明显语义差异，SearchBar 使用较大圆角与较高 control sizing。",
@@ -649,7 +670,7 @@ internal fun UiTreeBuilder.DiagnosticsThemeVerificationSection() {
             "真实功能页中的 Dialog / Popup / BottomSheet、SearchBar、NavigationBar / SegmentedControl 与此页口径一致。",
         ),
         relatedGaps = listOf(
-            "本轮不新增主题专项 instrumentation，稳定 testTag 仅为后续自动化预留。",
+            "主题来源矩阵只覆盖稳定的代表性组件，不扩展成所有状态组合的全量 golden 图集。",
             "overlay 真实主题验证继续依赖既有功能页，不在本页重复堆叠完整交互。",
         ),
     )

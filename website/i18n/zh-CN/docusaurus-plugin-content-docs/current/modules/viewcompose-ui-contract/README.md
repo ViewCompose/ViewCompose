@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 9e44da3fdde9f713fb99c77d113017ac85bcf35a05001c83fe131a528a328dd2
+translation_source_hash: e0e16cc23fc5f1a9d1b38e7128331c334e8055ec3350188bc845326c920859d0
 translation_status: current
 ---
 
@@ -81,6 +81,8 @@ val gap = VNode(
 - `ButtonNodeProps.minHeight` 表示有效的最小 View 与语义触控高度，`visualHeight` 表示请求的
   居中 Surface 高度。渲染器必须把非法可见高度限制在有效边界内，并保证应用显式 Surface
   Modifier 的优先级。
+- `SliderNodeProps.trackColor` 表示当前值之前（含当前值）的激活轨道，`inactiveTrackColor`
+  表示其余轨道。渲染器必须绑定这两个已解析颜色，不得再从平台主题恢复任一轨道颜色。
 - Modifier 顺序具有语义。布局与 Parent Data 收集、视觉装饰、输入、Semantics 与绘制阶段会
   按各自阶段规则消费有序元素；调整顺序可能改变行为。
 - 每个 VNode 子树都捕获 `UiEnvironmentValues`。渲染器必须使用捕获值，不能改用无关的进程
@@ -124,3 +126,7 @@ val gap = VNode(
 
 新增 `ButtonNodeProps.visualHeight` 属于 Q2 不可变快照契约变更。源码默认值等于 `minHeight`，
 但预编译的构造调用点和自定义渲染器仍必须随对应 Alpha 版本重新构建。
+
+新增 `SliderNodeProps.inactiveTrackColor` 同样属于 Q2 不可变快照契约变更。源码默认值等于
+`trackColor`，因此直接源码构造仍保持简洁；预编译构造调用点与自定义渲染器仍必须随对应
+Alpha 版本重新构建。

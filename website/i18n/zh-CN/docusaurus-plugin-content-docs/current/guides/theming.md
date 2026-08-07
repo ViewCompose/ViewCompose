@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: 2c503af279010c43e58c4c4efbdea544723c1189296ffe7e3c34a360e1d1305b
+translation_source_hash: 2824b5c987eecbfef27fae3be36f9cba198f452143efc74f39b436dfabc1bc67
 translation_status: current
 ---
 
@@ -169,6 +169,10 @@ translation_status: current
    - 已桥接：`android:textColorPrimary / textColorSecondary`
    - 已桥接：AppCompat `colorControlNormal / colorControlActivated / colorControlHighlight`
    - 标准状态：`disabled / pressed / focused / checked / selected`
+   - 这些 Bridge 值仍是通用状态角色。Checkbox、RadioButton、Switch 与 Slider 的启用态默认值
+     从 `colors.primary` 解析选中色，Slider 的非激活轨道从 `colors.secondaryContainer` 解析。
+     这可避免 AppCompat Accent 别名混入 Material 语义配色，同时保留对
+     `controlActivated` 的显式访问。
 3. `typography`
    - 已桥接：全部 15 个 Material 3 `textAppearanceDisplay*/Headline*/Title*/Body*/Label*` 角色
    - 家族回退：旧 Android `textAppearanceLarge/Medium/Small` 只作用于 Title/Body/Label，

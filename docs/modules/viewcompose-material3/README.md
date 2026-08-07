@@ -66,6 +66,11 @@ indicator, thumb, track, and label geometry remains centered and platform-render
 exact application height or tighter parent constraint still wins. This policy is expressed through
 UI Foundation's neutral control-sizing token rather than a Material branch in Android Renderer.
 
+Their enabled selection color is the Material `primary` role resolved by UI Foundation rather than
+the AppCompat `colorControlActivated` bridge value. Slider uses `secondaryContainer` for its
+inactive segment. The bridge continues to expose legacy state colors for applications that request
+them explicitly, but they do not replace these component semantic roles.
+
 The Android bridge replaces available values from the active theme. It reads all 15 Material text
 appearances and the five absolute `shapeAppearanceCorner*` roles, while legacy Android
 large/medium/small text appearances remain title/body/label family fallbacks. Missing display and

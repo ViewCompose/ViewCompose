@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: f86340f1cfcd5cf774a6de770affdbbba891a340526d74afa363a44e9b23b2b8
+translation_source_hash: 607234d33f65b29791ea54e17dfa6c7c255d423d4d606ef76800da947ea9a571
 translation_status: current
 ---
 
@@ -67,6 +67,10 @@ Checkbox、RadioButton、Switch 与 Slider 使用 48dp 最小有效高度。它�
 Track 与 Label 几何仍由平台渲染并保持居中；应用显式指定的精确高度或更严格的父容器约束仍会
 生效。这项策略通过 UI Foundation 的中性控件尺寸 Token 表达，而不是在 Android Renderer 中
 添加 Material 分支。
+
+这些控件的启用态选中颜色由 UI Foundation 解析为 Material `primary` 角色，不使用 AppCompat
+`colorControlActivated` 桥接值；Slider 的非激活轨道使用 `secondaryContainer`。Bridge 仍会
+暴露旧状态色供应用显式使用，但这些值不会替换组件语义角色。
 
 Android Bridge 会用当前主题中存在的值替换快照内容。它读取全部 15 个 Material Text
 Appearance 和五个绝对 `shapeAppearanceCorner*` 角色；旧 Android Large/Medium/Small Text
