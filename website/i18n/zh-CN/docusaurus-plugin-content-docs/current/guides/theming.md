@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: aacba37746acc776bd001d48e0cda171df5eade9da93c5fc8287e092b4418de5
+translation_source_hash: 2c503af279010c43e58c4c4efbdea544723c1189296ffe7e3c34a360e1d1305b
 translation_status: current
 ---
 
@@ -184,6 +184,9 @@ translation_status: current
    - Android 原主题系统没有与 `compact / medium / large` 一一对应的统一来源
    - 因此由 `Material3ThemeDefaults` 提供固定的标准尺寸配置；Bridge 替换资源支持的颜色、
      排版和形状时继续保留该配置
+   - Material 3 配置还会为 Checkbox、RadioButton、Switch 与 Slider 选择 48dp 最小有效高度。
+     UI Foundation 会在调用方 Modifier 之前消费这个中性 Token，因此应用显式指定的精确尺寸
+     仍具有最终权限
 
 不做：
 
@@ -239,8 +242,9 @@ themeRefreshController.refresh()
 1. 保持主题模型稳定，不回退到“组件全量 token 预计算”。
 2. 动态色、完整 15 角色排版、完整绝对形状映射与配置生命周期已落地；继续补多窗口/厂商主题
    的设备矩阵。
-3. 触控区域扩展、TextField 浮动/Focus 行为以及 Switch/Slider 精确几何必须按测试优先的组件
-   工作处理；完整 Token Bridge 本身不会自动提供这些结构行为。
+3. Button 与原生紧凑输入控件的触控目标现已采用测试保护的有效尺寸策略。组合式 Chip 扩展、
+   TextField 浮动/Focus 行为以及 Switch/Slider 精确可见几何仍必须按测试优先的组件工作处理；
+   完整 Token Bridge 本身不会自动提供这些结构行为。
 4. 与 `ROADMAP` 中 Overlay、Input、容器场景联动完善主题回归。
 
 后续结构改造的顺序、证据与回退规则记录在英文的

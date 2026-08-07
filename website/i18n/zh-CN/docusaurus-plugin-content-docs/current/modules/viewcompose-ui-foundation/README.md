@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: d5044dc73bcd509e6d02d12667835f1fb857496464081c42c9a01f16b50499c8
+translation_source_hash: ffa27108482139ff1c22e1fbf3a003b2f0c64b988d09af3a65b0363318fe535b
 translation_status: current
 ---
 
@@ -64,6 +64,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - `UiButtonSizing` 把有效最小触控高度与可见 Surface 高度分开。中性主题和现有自定义主题中，
   每个可见高度默认等于对应的有效高度，因此维持原有渲染；设计系统适配器可以选择更小且居中
   的 Surface，而不缩小 View 或无障碍边界。
+- `UiControlSizing.minimumInteractiveHeight` 是 Checkbox、RadioButton、Switch 与 Slider 使用的
+  设计系统无关有效高度策略。它的中性默认值是零，因此保留原生固有测量。设计系统可以提供
+  正的最小值；组件会在调用方 Modifier 之前应用它，所以应用显式指定的精确高度仍具有最终权限。
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
   和宿主能力划定作用域。
@@ -139,3 +142,8 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 `UiButtonSizing` 同样是 Q2 不可变值契约。新增的可见高度字段提供源码默认值，但对预编译的
 直接构造调用和穷举解构属于二进制变更。`Button` 会把两类高度都解析进 `ButtonNodeProps`；
 自定义渲染器必须遵守该契约，或明确说明其可见边界与有效边界仍保持一致。
+
+`UiControlSizing.minimumInteractiveHeight` 是另一个 Q2 不可变值字段。它提供源码默认值，但对
+预编译直接构造调用与穷举解构具有相同的二进制兼容影响。Checkbox、RadioButton、Switch 与
+Slider 是 Q3 组件 API：它们先加入解析后的最小目标，再应用调用方 Modifier，从而保留显式的
+精确布局决策。

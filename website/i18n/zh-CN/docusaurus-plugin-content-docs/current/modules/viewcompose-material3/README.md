@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: c330aec972450bb4e8c6959ae032992adcbfc2c59d6f0898f390e1cac2afd463
+translation_source_hash: f86340f1cfcd5cf774a6de770affdbbba891a340526d74afa363a44e9b23b2b8
 translation_status: current
 ---
 
@@ -57,11 +57,16 @@ Material3Theme(resolvedTheme = resolved) {
 - Display、Headline、Title、Body 和 Label 共 15 个标准排版角色；
 - Extra Small、Small、Medium、Large、Extra Large 与 Full 六级形状角色；
 - Button、TextField、SegmentedControl、ProgressIndicator、FAB、Search 与 Badge 采用的标准尺寸
-  配置。
+  配置，以及原生紧凑输入控件的有效目标尺寸。
 
 标准 Button 尺寸配置中，Compact 与 Medium 使用 48dp 有效触控目标和居中的 40dp 可见容器，
 Large 使用 56dp 目标和 48dp 可见容器。这是由 UI Foundation 设计系统无关尺寸契约消费的
 Token 选择；Material 适配器不参与 Android 命中测试或 View 绘制。
+
+Checkbox、RadioButton、Switch 与 Slider 使用 48dp 最小有效高度。它们的原生指示器、Thumb、
+Track 与 Label 几何仍由平台渲染并保持居中；应用显式指定的精确高度或更严格的父容器约束仍会
+生效。这项策略通过 UI Foundation 的中性控件尺寸 Token 表达，而不是在 Android Renderer 中
+添加 Material 分支。
 
 Android Bridge 会用当前主题中存在的值替换快照内容。它读取全部 15 个 Material Text
 Appearance 和五个绝对 `shapeAppearanceCorner*` 角色；旧 Android Large/Medium/Small Text
@@ -70,8 +75,9 @@ Appearance 继续作为 Title/Body/Label 家族回退。缺失的 Display 和 He
 
 本适配器不会把 Material 策略放进 Android Renderer。组件默认值在 NodeSpec 进入 Renderer
 之前，已在 UI Foundation 中解析为语义角色。Button 的可见/有效高度分离会由尺寸 Token 与
-NodeSpec 明确表达；紧凑控件触控区域扩展、TextField 浮动 Label/Focus 结构，以及
-Switch/Slider 精确几何不由 Token Bridge 自动提供，必须作为独立组件工作进行测试。
+NodeSpec 明确表达；原生紧凑输入控件的目标策略同样由 UI Foundation 消费。组合式 Chip 的
+目标/Surface 分离、TextField 浮动 Label/Focus 结构，以及 Switch/Slider 精确可见几何不由
+Token Bridge 自动提供，必须作为独立组件工作进行测试。
 
 ## 相关文档
 

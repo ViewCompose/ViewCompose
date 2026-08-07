@@ -70,6 +70,20 @@ class Material3TouchTargetBaselineUiTest {
                     }
                     assertEquals(48, (semanticBounds.height() / density).roundToInt())
 
+                    listOf(
+                        DemoTestTags.MATERIAL3_DEFAULT_CHECKBOX,
+                        DemoTestTags.MATERIAL3_DEFAULT_RADIO,
+                        DemoTestTags.MATERIAL3_DEFAULT_SWITCH,
+                        DemoTestTags.MATERIAL3_DEFAULT_SLIDER,
+                    ).forEach { tag ->
+                        val view = activity.requireViewByTestTagVisible(tag)
+                        assertEquals(48, (view.height / density).roundToInt())
+                        val inputSemanticBounds = Rect().also { bounds ->
+                            view.createAccessibilityNodeInfo().getBoundsInScreen(bounds)
+                        }
+                        assertEquals(48, (inputSemanticBounds.height() / density).roundToInt())
+                    }
+
                     val location = IntArray(2).also(button::getLocationOnScreen)
                     touchX = location[0] + button.width / 2
                     touchY = location[1] + density.roundToInt()
@@ -85,7 +99,7 @@ class Material3TouchTargetBaselineUiTest {
                         DemoTestTags.MATERIAL3_DEFAULT_NAVIGATION,
                     )
                     evidence = buildString {
-                        appendLine("suite=material3-phase2-button-touch-target")
+                        appendLine("suite=material3-phase2-touch-targets")
                         appendLine("fontScale=${activity.resources.configuration.fontScale}")
                         appendLine("density=$density")
                         tags.forEach { tag ->
@@ -117,6 +131,69 @@ class Material3TouchTargetBaselineUiTest {
                     .apply { writeText(evidence) }
                 preserveAfterConnectedTest(screenshot)
                 preserveAfterConnectedTest(metadata)
+            }
+        }
+    }
+
+    @Test
+    fun compactTargets_useNonOverlappingViewsAndRespectExplicitConstraints() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val intent = Material3DefaultThemeActivity.newIntent(context, 1f)
+        launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
+            scrollDeviceTextIntoView("Touch target probes")
+            var firstTouchX = 0
+            var firstTouchY = 0
+            var secondTouchX = 0
+            var secondTouchY = 0
+            scenario.onActivity { activity ->
+                val density = activity.resources.displayMetrics.density
+                val first = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_TARGET_ADJACENT_FIRST)
+                val second = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_TARGET_ADJACENT_SECOND)
+                val explicit = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_TARGET_EXPLICIT_COMPACT,
+                )
+                val clippedParent = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_TARGET_CLIPPED_PARENT,
+                )
+                val clippedChild = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_TARGET_CLIPPED_CHILD,
+                )
+
+                assertEquals(48, (first.height / density).roundToInt())
+                assertEquals(48, (second.height / density).roundToInt())
+                assertEquals(32, (explicit.height / density).roundToInt())
+                assertEquals(32, (clippedParent.height / density).roundToInt())
+                assertEquals(32, (clippedChild.height / density).roundToInt())
+
+                val firstLocation = IntArray(2).also(first::getLocationOnScreen)
+                val secondLocation = IntArray(2).also(second::getLocationOnScreen)
+                assertEquals(firstLocation[1] + first.height, secondLocation[1])
+                firstTouchX = firstLocation[0] + first.width / 2
+                firstTouchY = firstLocation[1] + first.height - 1
+                secondTouchX = secondLocation[0] + second.width / 2
+                secondTouchY = secondLocation[1] + 1
+            }
+
+            val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            device.click(firstTouchX, firstTouchY)
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertEquals(
+                    "Adjacent: true/false",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_TARGET_ADJACENT_STATUS,
+                    ).text.toString(),
+                )
+            }
+            device.click(secondTouchX, secondTouchY)
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertEquals(
+                    "Adjacent: true/true",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_TARGET_ADJACENT_STATUS,
+                    ).text.toString(),
+                )
             }
         }
     }

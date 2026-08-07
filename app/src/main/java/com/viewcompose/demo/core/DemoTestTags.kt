@@ -17,6 +17,12 @@ internal object DemoTestTags {
     const val MATERIAL3_DEFAULT_SWITCH = "material3_default_switch"
     const val MATERIAL3_DEFAULT_SLIDER = "material3_default_slider"
     const val MATERIAL3_DEFAULT_NAVIGATION = "material3_default_navigation"
+    const val MATERIAL3_TARGET_ADJACENT_FIRST = "material3_target_adjacent_first"
+    const val MATERIAL3_TARGET_ADJACENT_SECOND = "material3_target_adjacent_second"
+    const val MATERIAL3_TARGET_ADJACENT_STATUS = "material3_target_adjacent_status"
+    const val MATERIAL3_TARGET_EXPLICIT_COMPACT = "material3_target_explicit_compact"
+    const val MATERIAL3_TARGET_CLIPPED_PARENT = "material3_target_clipped_parent"
+    const val MATERIAL3_TARGET_CLIPPED_CHILD = "material3_target_clipped_child"
 
     fun catalogModuleButton(moduleKey: String): String = "catalog_module_$moduleKey"
 

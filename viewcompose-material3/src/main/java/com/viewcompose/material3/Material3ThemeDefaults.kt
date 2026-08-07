@@ -107,6 +107,7 @@ object Material3ThemeDefaults {
     private fun controls(): UiControlSizing {
         val base = UiControlSizeDefaults.default()
         return base.copy(
+            minimumInteractiveHeight = 48.dp,
             button = base.button.copy(
                 compactHeight = 48.dp,
                 mediumHeight = 48.dp,

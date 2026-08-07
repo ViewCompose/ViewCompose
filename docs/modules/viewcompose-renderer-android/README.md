@@ -114,6 +114,10 @@ Because the current line is alpha, the documentation site intentionally does not
   business state from patch records or diagnostic counters.
 - Button surface-inset changes participate in targeted style patching. They must not recreate the
   native View or change its effective measured target.
+- Slider binding uses a renderer-neutral `AppCompatSeekBar` subclass because the platform widget
+  can ignore `minimumHeight` under an `AT_MOST` measure spec. It honors the declared minimum while
+  leaving an exact application or parent height authoritative; no Material policy or token is
+  interpreted in Android Renderer.
 
 ## Android host and threading rules
 

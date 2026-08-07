@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Separate Material 3 Button visual containers from their effective Android View and accessibility target bounds.",
+  "summary": "Separate Material 3 Button surfaces from effective targets and enforce 48dp native compact-input targets without overriding exact application constraints.",
   "changes": [
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
     { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },

@@ -7,6 +7,19 @@ package com.viewcompose.ui.foundation
  * into other input controls.
  */
 object InputControlDefaults {
+    /**
+     * Returns the theme's minimum effective height for native compact input controls.
+     *
+     * A zero value preserves the native control's intrinsic measurement. A positive value is
+     * applied before the caller's [com.viewcompose.ui.modifier.Modifier], so an explicit exact
+     * application height or tighter parent constraint remains authoritative.
+     *
+     * @return immutable density-independent minimum height from the current theme snapshot
+     */
+    fun minimumInteractiveHeight(): com.viewcompose.ui.unit.UiDp {
+        return Theme.controls.minimumInteractiveHeight
+    }
+
     /** Returns the shared body typography used by labeled controls. */
     fun labelStyle(): UiTextStyle = TextDefaults.bodyStyle()
 

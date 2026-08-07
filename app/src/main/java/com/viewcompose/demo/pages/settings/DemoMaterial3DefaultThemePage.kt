@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Checkbox
@@ -17,11 +18,14 @@ import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
+import com.viewcompose.ui.modifier.clip
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.height
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
@@ -33,7 +37,7 @@ import com.viewcompose.ui.unit.dp
 internal fun UiTreeBuilder.Material3DefaultThemePage() {
     val defaultButtonClicks = remember { mutableStateOf(0) }
     LazyColumn(
-        items = listOf("intro", "buttons", "compact", "selection", "navigation"),
+        items = listOf("intro", "buttons", "compact", "selection", "navigation", "targetProbes"),
         key = { it },
         modifier = Modifier
             .fillMaxSize()
@@ -103,7 +107,7 @@ internal fun UiTreeBuilder.Material3DefaultThemePage() {
 
             "selection" -> Material3DefaultSelectionControls()
 
-            else -> Column(
+            "navigation" -> Column(
                 spacing = 12.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 20.dp, bottom = 24.dp),
             ) {
@@ -118,6 +122,58 @@ internal fun UiTreeBuilder.Material3DefaultThemePage() {
                     Item(label = "Profile", icon = ImageSource.Resource(R.drawable.demo_media_icon))
                 }
             }
+
+            else -> Material3TouchTargetProbes()
+        }
+    }
+}
+
+private fun UiTreeBuilder.Material3TouchTargetProbes() {
+    val firstChecked = remember { mutableStateOf(false) }
+    val secondChecked = remember { mutableStateOf(false) }
+    Column(
+        spacing = 0.dp,
+        modifier = Modifier.fillMaxWidth().margin(top = 20.dp, bottom = 24.dp),
+    ) {
+        Text(text = "Touch target probes", style = Theme.typography.titleMedium)
+        Checkbox(
+            text = "Adjacent first",
+            checked = firstChecked.value,
+            onCheckedChange = { firstChecked.value = it },
+            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_TARGET_ADJACENT_FIRST),
+        )
+        Checkbox(
+            text = "Adjacent second",
+            checked = secondChecked.value,
+            onCheckedChange = { secondChecked.value = it },
+            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_TARGET_ADJACENT_SECOND),
+        )
+        Text(
+            text = "Adjacent: ${firstChecked.value}/${secondChecked.value}",
+            style = Theme.typography.bodySmall,
+            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_TARGET_ADJACENT_STATUS),
+        )
+        Checkbox(
+            text = "Explicit 32dp target",
+            checked = false,
+            onCheckedChange = {},
+            modifier = Modifier
+                .height(32.dp)
+                .testTag(DemoTestTags.MATERIAL3_TARGET_EXPLICIT_COMPACT),
+        )
+        Box(
+            contentAlignment = BoxAlignment.CenterStart,
+            modifier = Modifier
+                .height(32.dp)
+                .clip()
+                .testTag(DemoTestTags.MATERIAL3_TARGET_CLIPPED_PARENT),
+        ) {
+            Checkbox(
+                text = "Clipped 32dp parent",
+                checked = false,
+                onCheckedChange = {},
+                modifier = Modifier.testTag(DemoTestTags.MATERIAL3_TARGET_CLIPPED_CHILD),
+            )
         }
     }
 }

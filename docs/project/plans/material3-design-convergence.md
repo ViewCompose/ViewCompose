@@ -217,8 +217,8 @@ Completion gate:
 
 Do not begin with production behavior changes.
 
-Status: current-behavior fixture captured; Button experiment accepted; compact-control and
-interaction-state work in progress.
+Status: current-behavior fixture captured; Button and native compact-input experiments accepted;
+composite Chip and interaction-state work remain conditional and in progress.
 
 Required baseline:
 
@@ -264,6 +264,29 @@ Accepted Button experiment, 2026-08-07:
 - this result does not by itself approve a generic touch-delegate or wrapper. Compact-control work
   must still prove deterministic overlap, scrolling, clipping, accessibility, and explicit-size
   behavior.
+
+Accepted native compact-input experiment, 2026-08-07:
+
+- `UiControlSizing.minimumInteractiveHeight` provides a renderer-independent policy with a neutral
+  zero default. The Material 3 profile selects 48dp without changing custom or unthemed intrinsic
+  geometry;
+- Checkbox, RadioButton, Switch, and Slider prepend that minimum before the caller modifier. An
+  explicit 32dp application height and a 32dp parent constraint remain authoritative;
+- Android's `SeekBar` ignores its minimum height under a normal `AT_MOST` measure spec. Android
+  Renderer therefore uses a small renderer-neutral subclass that honors the already-resolved
+  minimum, keeps track/thumb content centered, and still yields to an exact height. No Material
+  dependency or Material-specific branch enters the renderer;
+- the Pixel 9a API 35 test passed at 1.0 and 1.3 font scale with 48dp View and semantic heights for
+  all four controls. Zero-spacing adjacent Checkbox Views meet at one boundary without overlap;
+  device taps at either side select the deterministic corresponding control after scrolling;
+- the same fixture verifies explicit compact sizing and parent clipping at 32dp. Focused UI
+  Foundation, Material 3, and Android Renderer suites cover token resolution, modifier order, and
+  the `SeekBar` measurement exception;
+- Chip remains at its 32dp visual/View/semantic height. It is a composite control whose surface,
+  click behavior, and caller modifier currently share one node. A wrapper or expanded hit region
+  would change modifier precedence, accessibility ownership, or adjacent-target behavior. This
+  phase will not accept that risk until a generic composite surface/target contract passes the same
+  overlap, clipping, scrolling, semantics, and explicit-size matrix.
 
 Keep the implementation only when it provides at least 48dp effective targets for standard
 Material components without changing visual geometry, stealing adjacent input, breaking scrolling,

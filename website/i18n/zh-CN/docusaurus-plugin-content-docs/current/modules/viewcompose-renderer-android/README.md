@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 2f8db8b0da867ebdcf8722afa269132e0ffa5abd06348080e5c6b00b1fc94012
+translation_source_hash: 79b84ae197c106bd2fd25abba67ab81dd0102cb82e669f99162bea15f0ac7675
 translation_status: current
 ---
 
@@ -104,6 +104,9 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   session 回调也会从 next 列表中的原始 item 实例刷新。
 - 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
+- Slider 绑定使用渲染器中性的 `AppCompatSeekBar` 子类，因为平台控件可能在 `AT_MOST` 测量
+  规格下忽略 `minimumHeight`。它会遵守已声明的最小值，同时让应用或父容器的精确高度保持
+  最终权限；Android Renderer 不解释任何 Material 策略或 Token。
 
 ## Android host 与线程规则
 

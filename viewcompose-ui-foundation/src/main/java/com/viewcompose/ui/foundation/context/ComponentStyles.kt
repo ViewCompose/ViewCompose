@@ -389,6 +389,8 @@ data class UiBadgeSizing(
  * @property menu menu dimensions
  * @property tooltip tooltip dimensions
  * @property badge badge dimensions
+ * @property minimumInteractiveHeight minimum effective height for compact interactive controls;
+ * zero preserves each native control's intrinsic measurement
  */
 data class UiControlSizing(
     val button: UiButtonSizing,
@@ -404,4 +406,5 @@ data class UiControlSizing(
     val menu: UiMenuSizing = UiMenuSizing.default(),
     val tooltip: UiTooltipSizing = UiTooltipSizing.default(),
     val badge: UiBadgeSizing = UiBadgeSizing.default(),
+    val minimumInteractiveHeight: UiDp = UiDp.Zero,
 )

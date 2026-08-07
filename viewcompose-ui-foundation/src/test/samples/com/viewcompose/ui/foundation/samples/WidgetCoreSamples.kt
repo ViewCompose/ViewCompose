@@ -8,8 +8,10 @@ import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.ButtonNodeProps
+import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.Image
@@ -19,6 +21,7 @@ import com.viewcompose.ui.foundation.PopupOverflowPolicy
 import com.viewcompose.ui.foundation.PopupPositioner
 import com.viewcompose.ui.foundation.PopupSize
 import com.viewcompose.ui.foundation.ProvideImageLoader
+import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiTheme
@@ -75,6 +78,26 @@ fun buttonSample() {
 
     check(spec.minHeight == 48.dp)
     check(spec.visualHeight == 40.dp)
+}
+
+fun compactInputTargetSample() {
+    val tokens = UiThemeDefaults.light().let { defaults ->
+        defaults.copy(
+            controls = defaults.controls.copy(minimumInteractiveHeight = 48.dp),
+        )
+    }
+
+    val nodes = buildVNodeTree {
+        UiTheme(tokens) {
+            Checkbox(text = "Share diagnostics", checked = true, onCheckedChange = {})
+            Slider(value = 50, onValueChange = {})
+        }
+    }
+
+    nodes.forEach { node ->
+        val target = node.modifier.elements.first() as MinHeightModifierElement
+        check(target.minHeight == 48.dp)
+    }
 }
 
 fun popupPositioningSample() {

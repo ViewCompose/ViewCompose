@@ -5,6 +5,7 @@ package com.viewcompose.ui.foundation
  * Test responsibility: covers Input Control behavior in widget-core widget/input and guards DSL, state, or theme contracts against regressions.
  */
 
+import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.SliderNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
@@ -67,6 +68,10 @@ class InputControlTest {
         assertEquals(customTheme.typography.bodyMedium.lineHeightSp, spec.lineHeightSp)
         assertEquals(customTheme.typography.bodyMedium.includeFontPadding, spec.includeFontPadding)
         assertEquals(pressedOverlayColorFor(customTheme.colors.onSurface), spec.rippleColor)
+        assertEquals(
+            customTheme.controls.minimumInteractiveHeight,
+            (node.modifier.elements.first() as MinHeightModifierElement).minHeight,
+        )
         assertTrue(node.spec is ToggleNodeProps)
     }
 
@@ -90,6 +95,10 @@ class InputControlTest {
         assertEquals(10, spec.min)
         assertEquals(60, spec.max)
         assertEquals(false, spec.enabled)
+        assertEquals(
+            UiControlSizeDefaults.default().minimumInteractiveHeight,
+            (node.modifier.elements.first() as MinHeightModifierElement).minHeight,
+        )
         assertTrue(node.spec is SliderNodeProps)
     }
 
