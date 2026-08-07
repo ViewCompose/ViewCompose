@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 2aafd9fe55735a7d13ccbd6c59607e3c6fe69cfe458a2815cae07e2b3d75cdd7
+translation_source_hash: 52bc78807b4beff6e3c1337b4003e4c20f463ca364d24ee5e9564b241c118c6c
 translation_status: current
 ---
 
@@ -31,7 +31,10 @@ dependencies {
   Runtime、Text Core、Graphics Core 和 Gesture Core 保持为实现依赖。
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
   ConstraintLayout 与 SwipeRefreshLayout；不依赖 Material Components。
-- 通用 Surface、圆角/切角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
+- 通用 Surface、圆角/切角/连续圆角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
+- `SurfaceNodeProps` 使用同一份缓存的 `UiShapeDrawable` 几何来完成纯色或渐变 Fill、Border、
+  Ripple Mask、Outline 与可选裁剪。连续圆角使用凸三次曲线路径；稳定绘制不会逐帧分配 Path、
+  Shader、Drawable 或集合。
 - 引擎自有圆角使用圆弧绘制。Shape 边框会沿向内偏移半个线宽的路径居中绘制，保证轮廓完整落在
   逻辑 Drawable 边界内，包括组件在较大触控目标中居中较短可见 Surface 的情况。
 - Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
@@ -109,6 +112,9 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   session 回调也会从 next 列表中的原始 item 实例刷新。
 - 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
+- Basic Surface 使用相同的有效/可见边界模型。Surface 快照变化会对保留的
+  `DeclarativeBoxLayout` 执行中立重绑定；调用方 Background、Border 或 Shape Modifier 会移除
+  组件提供的可见内缩，并占满有效边界。
 - Button 与 IconButton 状态层变化参与定向样式 Patch，只重建 Surface Drawable。交互式
   Box/Row 变化会重新执行现有样式绑定；SegmentedControl 只重建选中角色发生变化的分段背景。
   按下优先于聚焦和悬停，聚焦优先于悬停；多状态路径的非活动态或禁用态保持透明。多状态契约

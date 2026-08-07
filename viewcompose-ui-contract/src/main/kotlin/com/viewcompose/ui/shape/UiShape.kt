@@ -2,9 +2,10 @@ package com.viewcompose.ui.shape
 
 import com.viewcompose.ui.unit.UiDp
 
-/** Defines whether a corner follows a rounded arc or a straight cut. */
+/** Defines whether a corner follows a circular arc, continuous curve, or straight cut. */
 enum class UiCornerFamily {
     Rounded,
+    Continuous,
     Cut,
 }
 
@@ -141,6 +142,24 @@ data class UiShape(
             return uniform(
                 family = UiCornerFamily.Rounded,
                 size = UiCornerSize.Relative(fraction),
+            )
+        }
+
+        /**
+         * Creates a uniform continuous-corner shape with an absolute [size].
+         *
+         * Continuous corners use a renderer-owned superellipse-like curve. Renderers that cannot
+         * execute that geometry must fall back to the closest rounded corner without changing the
+         * component bounds.
+         *
+         * @param size non-negative corner extent for every corner
+         * @return a uniform continuous-corner shape
+         * @throws IllegalArgumentException if [size] is negative
+         */
+        fun continuous(size: UiDp): UiShape {
+            return uniform(
+                family = UiCornerFamily.Continuous,
+                size = UiCornerSize.Absolute(size),
             )
         }
 

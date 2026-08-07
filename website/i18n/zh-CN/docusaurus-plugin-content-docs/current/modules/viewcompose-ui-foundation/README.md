@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: cd5988e8ba4c8ca31ea984406bfada01cccceeac7834cc0a01165f61270582c5
+translation_source_hash: 59618d66ece241c7d2bd2af7b1cbad7a5076bb6a636010c5e7c2657a2879cfdf
 translation_status: current
 ---
 
@@ -65,6 +65,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - `UiButtonSizing` 把有效最小触控高度与可见 Surface 高度分开。中性主题和现有自定义主题中，
   每个可见高度默认等于对应的有效高度，因此维持原有渲染；设计系统适配器可以选择更小且居中
   的 Surface，而不缩小 View 或无障碍边界。
+- `BasicSurface` 是 Q3 设计系统中立基础组件。其 Q2 `BasicSurfaceStyle` 接受已经解析的纯色或
+  渐变 Brush、逻辑 Shape、Border、裁剪、Elevation 与精确 Shadow，并把最小有效边界与可选的
+  居中可见高度分开。设计系统在发射前选择这些值，Android Renderer 只接收中立的
+  `SurfaceNodeProps` 快照。编译样例 `basicSurfaceSample` 展示了该契约。
 - `UiControlSizing.minimumInteractiveHeight` 是 Checkbox、RadioButton、Switch 与 Slider 使用的
   设计系统无关有效高度策略。它的中性默认值是零，因此保留原生固有测量。设计系统可以提供
   正的最小值；组件会在调用方 Modifier 之前应用它，所以应用显式指定的精确高度仍具有最终权限。
@@ -165,3 +169,9 @@ Q2 `SliderNodeProps` 快照中；预编译调用方与自定义渲染器必须�
 解构会发生二进制变化。Button 与 IconButton 状态层参数属于 Q3 组件 API 变更。源码调用方会
 获得语义化多状态默认值；曾显式提供旧 `rippleColor` 的 Button 调用方保留专用兼容重载。预编译
 默认参数调用点必须随本次 Alpha 版本重新构建。
+
+`BasicSurfaceStyle` 是 Q2 已解析值契约，`BasicSurface` 是 Q3 组件 API。`BasicSurface` 会在
+已解析样式与行为之后追加调用方 Modifier：调用方 Surface Modifier 替换默认可见 Surface，
+调用方 Elevation 优先，调用方 Shadow 绘制在样式 Shadow 之后。`Surface` 现通过该基础组件
+解析原有默认值，保持公共源码 API，同时把 `NodeType.Surface` 的具体规格改为
+`SurfaceNodeProps`。

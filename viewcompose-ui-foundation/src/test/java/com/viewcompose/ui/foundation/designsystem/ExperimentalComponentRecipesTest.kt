@@ -19,6 +19,7 @@ import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.NavigationBarNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.modifier.SemanticsRole
@@ -40,15 +41,16 @@ class ExperimentalComponentRecipesTest {
         val cutTree = recipeTree(tokens, cut)
         val roundedAction = roundedTree[0].spec as ButtonNodeProps
         val cutAction = cutTree[0].spec as ButtonNodeProps
-        val roundedSurface = roundedTree[1].spec as BoxNodeProps
-        val cutSurface = cutTree[1].spec as BoxNodeProps
+        val roundedSurface = roundedTree[1].spec as SurfaceNodeProps
+        val cutSurface = cutTree[1].spec as SurfaceNodeProps
 
         assertEquals(NodeType.Button, roundedTree[0].type)
         assertEquals(NodeType.Surface, roundedTree[1].type)
         assertNotEquals(roundedAction.backgroundColor, cutAction.backgroundColor)
         assertNotEquals(roundedAction.shape, cutAction.shape)
         assertNotEquals(roundedAction.paddingHorizontal, cutAction.paddingHorizontal)
-        assertNotEquals(roundedTree[1].modifier, cutTree[1].modifier)
+        assertNotEquals(roundedSurface.fill, cutSurface.fill)
+        assertNotEquals(roundedSurface.shape, cutSurface.shape)
         assertEquals(rounded.action.stateLayerColors, roundedAction.stateLayerColors)
         assertEquals(cut.action.stateLayerColors, cutAction.stateLayerColors)
         assertEquals(rounded.surface.stateLayerColors, roundedSurface.stateLayerColors)

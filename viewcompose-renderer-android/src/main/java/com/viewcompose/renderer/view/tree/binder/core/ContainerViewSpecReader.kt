@@ -15,6 +15,7 @@ import com.viewcompose.ui.node.spec.DividerNodeProps
 import com.viewcompose.ui.node.spec.FlowColumnNodeProps
 import com.viewcompose.ui.node.spec.FlowRowNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.renderer.view.roundToPx
 
 /**
@@ -64,6 +65,13 @@ internal object ContainerViewSpecReader {
 
     fun readBoxSpec(node: VNode): ContainerViewBinder.BoxSpec {
         val spec = node.requireSpec<BoxNodeProps>()
+        return ContainerViewBinder.BoxSpec(
+            gravity = spec.contentAlignment.toGravity(),
+        )
+    }
+
+    fun readSurfaceSpec(node: VNode): ContainerViewBinder.BoxSpec {
+        val spec = node.requireSpec<SurfaceNodeProps>()
         return ContainerViewBinder.BoxSpec(
             gravity = spec.contentAlignment.toGravity(),
         )

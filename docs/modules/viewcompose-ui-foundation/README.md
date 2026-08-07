@@ -66,6 +66,11 @@ by a later renderer or child render session.
   height. Neutral and existing custom themes preserve their previous rendering because each visual
   height defaults to its corresponding effective height; a design-system adapter may opt into a
   smaller centered surface without shrinking the View or accessibility bounds.
+- `BasicSurface` is a Q3 design-system-neutral primitive. Its Q2 `BasicSurfaceStyle` accepts a
+  resolved solid or gradient brush, logical shape, border, clipping, elevation, and exact shadows;
+  it also separates minimum effective bounds from an optional centered visual height. Design
+  systems select those values before emission, while the Android Renderer receives only a neutral
+  `SurfaceNodeProps` snapshot. The compiled `basicSurfaceSample` demonstrates the contract.
 - `UiControlSizing.minimumInteractiveHeight` is the design-system-neutral effective-height policy
   used by Checkbox, RadioButton, Switch, and Slider. Its neutral default is zero, preserving native
   intrinsic measurement. A design system may supply a positive minimum; the component applies it
@@ -187,3 +192,9 @@ state-layer parameters are Q3 component API changes. Source callers receive sema
 defaults, and Button callers that explicitly supplied the former `rippleColor` retain a dedicated
 compatibility overload; precompiled default-argument call sites must be rebuilt for this alpha
 release.
+
+`BasicSurfaceStyle` is a Q2 resolved-value contract and `BasicSurface` is a Q3 component API.
+`BasicSurface` appends caller modifiers after its resolved style and behavior: caller surface
+modifiers replace the default visual surface, caller elevation wins, and caller shadows follow
+the style shadows. `Surface` now resolves its existing defaults through this primitive, preserving
+its public source API while changing the concrete `NodeType.Surface` spec to `SurfaceNodeProps`.

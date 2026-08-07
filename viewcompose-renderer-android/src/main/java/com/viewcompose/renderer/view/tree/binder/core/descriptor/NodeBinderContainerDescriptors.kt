@@ -14,6 +14,7 @@ import com.viewcompose.ui.node.spec.PullToRefreshNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
 import com.viewcompose.ui.node.spec.ScrollableColumnNodeProps
 import com.viewcompose.ui.node.spec.ScrollableRowNodeProps
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
@@ -184,10 +185,9 @@ internal fun MutableList<NodeBinderDescriptor>.addContainerNodeBinderDescriptors
             bind = { view, node ->
                 ContainerViewBinder.bindBox(
                     view = view as DeclarativeBoxLayout,
-                    spec = ContainerViewBinder.readBoxSpec(node),
+                    spec = ContainerViewBinder.readSurfaceSpec(node),
                 )
             },
-            patch = boxPatch,
         ),
     )
     add(

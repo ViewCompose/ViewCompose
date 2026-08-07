@@ -30,8 +30,11 @@ dependencies {
   dependencies.
 - Android runtime dependencies: AndroidX Core, AppCompat, RecyclerView, ViewPager2,
   ConstraintLayout, and SwipeRefreshLayout. Material Components is not a dependency.
-- Generic surfaces, rounded/cut shapes, and progress indicators use engine-owned Android drawing
+- Generic surfaces, rounded/cut/continuous shapes, and progress indicators use engine-owned Android drawing
   implementations driven by resolved node values.
+- `SurfaceNodeProps` uses one cached `UiShapeDrawable` geometry for solid or gradient fill, border,
+  ripple mask, outline, and optional clipping. Continuous corners use a convex cubic path; stable
+  drawing performs no per-frame Path, shader, drawable, or collection allocation.
 - Engine-owned rounded shapes use circular arcs. Shape borders are centered on a path inset by half
   the stroke width, keeping the complete outline inside its logical drawable bounds even when a
   component centers a shorter visible surface inside a larger target.
@@ -121,6 +124,9 @@ Because the current line is alpha, the documentation site intentionally does not
   business state from patch records or diagnostic counters.
 - Button surface-inset changes participate in targeted style patching. They must not recreate the
   native View or change its effective measured target.
+- Basic Surface uses the same effective/visual-bound model. A changed surface snapshot performs a
+  neutral rebind of the retained `DeclarativeBoxLayout`; caller background, border, or shape
+  modifiers remove the component-provided visual inset and occupy the full effective bounds.
 - Button and IconButton state-layer changes participate in targeted style patching and rebuild only
   the surface drawable. Interactive Box/Row changes re-run their existing style binding, while
   SegmentedControl rebuilds only segment backgrounds whose selected role changed. Pressed takes

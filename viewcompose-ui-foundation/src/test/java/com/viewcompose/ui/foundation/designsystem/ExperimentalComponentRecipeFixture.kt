@@ -1,5 +1,6 @@
 package com.viewcompose.ui.foundation
 
+import com.viewcompose.graphics.core.Brush
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.HorizontalAlignment
@@ -264,40 +265,26 @@ internal fun UiTreeBuilder.ExperimentalRecipeSurface(
     content: BoxScope.() -> Unit,
 ) {
     val recipe = currentExperimentalComponentRecipes().surface
-    val interactive = enabled && onClick != null
-    val semanticModifier = Modifier
-        .backgroundColor(recipe.containerColor)
-        .shape(recipe.shape)
-        .clip()
-        .let { current ->
-            if (recipe.borderWidth > UiDp.Zero) {
-                current.border(recipe.borderWidth, recipe.borderColor)
-            } else {
-                current
-            }
-        }
-        .let { current ->
-            if (recipe.elevation > UiDp.Zero) current.elevation(recipe.elevation) else current
-        }
-        .let { current ->
-            if (!enabled) current.alpha(recipe.disabledAlpha) else current
-        }
-        .let { current ->
-            if (interactive) current.clickable(requireNotNull(onClick)) else current
-        }
-        .then(modifier)
-
-    ProvideLocal(LocalContentColor, recipe.contentColor) {
-        StateLayerBox(
-            type = NodeType.Surface,
-            key = key,
-            contentAlignment = contentAlignment,
-            rippleColor = recipe.stateLayerColors.pressedColor.takeIf { interactive },
-            stateLayerColors = recipe.stateLayerColors.takeIf { interactive },
-            modifier = semanticModifier,
-            content = content,
-        )
-    }
+    BasicSurface(
+        style = BasicSurfaceStyle(
+            fill = Brush.SolidColor(recipe.containerColor),
+            shape = recipe.shape,
+            borderWidth = recipe.borderWidth,
+            borderColor = recipe.borderColor,
+            elevation = recipe.elevation,
+            clipContent = true,
+        ),
+        contentColor = recipe.contentColor,
+        enabled = enabled,
+        onClick = onClick,
+        stateLayerColors = recipe.stateLayerColors,
+        key = key,
+        contentAlignment = contentAlignment,
+        modifier = Modifier
+            .then(if (!enabled) Modifier.alpha(recipe.disabledAlpha) else Modifier)
+            .then(modifier),
+        content = content,
+    )
 }
 
 /**

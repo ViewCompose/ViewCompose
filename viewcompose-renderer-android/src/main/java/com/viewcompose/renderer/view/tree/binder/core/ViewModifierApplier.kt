@@ -100,6 +100,7 @@ internal object ViewModifierApplier {
             view = view,
             backgroundDrawableResId = resolved?.backgroundDrawableRes?.resId,
             backgroundColor = resolved?.backgroundColor?.color ?: backgroundColor,
+            surfaceFill = null,
             borderWidth = environment.roundToPx(resolved?.border?.width ?: borderWidth),
             borderColor = resolved?.border?.color ?: borderColor,
             cornerRadius = resolved?.cornerRadius,

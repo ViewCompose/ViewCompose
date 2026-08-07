@@ -3,6 +3,7 @@ package com.viewcompose.ui.foundation
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -43,8 +44,8 @@ class CompositeStateLayerTest {
             Card(onClick = null) {}
         }
 
-        val clickableSurface = tree[0].spec as BoxNodeProps
-        val passiveSurface = tree[1].spec as BoxNodeProps
+        val clickableSurface = tree[0].spec as SurfaceNodeProps
+        val passiveSurface = tree[1].spec as SurfaceNodeProps
         val clickableCard = tree[2].spec as BoxNodeProps
         val passiveCard = tree[3].spec as BoxNodeProps
 

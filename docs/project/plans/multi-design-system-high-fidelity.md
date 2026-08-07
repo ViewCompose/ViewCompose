@@ -23,7 +23,9 @@ passes its accessibility, input, retained-patch, and device visual gates.
 
 ## Maven release changesets
 
-- None.
+- [`20260807-multi-design-basic-surface.json`](../../../release/changes/20260807-multi-design-basic-surface.json)
+  covers the Phase 2 resolved Surface contract, Basic primitive, continuous-corner/gradient
+  renderer path, and the `SurfaceNodeProps` migration.
 
 ## Objective
 
@@ -349,7 +351,9 @@ compiled Q3 sample, and record a publication changeset in a release-scoped execu
 
 ## Phase 2: Basic components and unified surface/shape foundation
 
-Status: pending production kickoff and public-API baseline.
+Status: in progress. The first production slice implements Q3 `BasicSurface`, Q2
+`BasicSurfaceStyle`/`SurfaceNodeProps`, gradient fills, continuous corners, and effective-versus-
+visual bounds. Basic action and toggle adoption plus the full device matrix remain in this phase.
 
 Planned work:
 
