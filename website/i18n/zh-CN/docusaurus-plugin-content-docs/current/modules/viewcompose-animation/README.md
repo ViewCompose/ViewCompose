@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation/README.md
-translation_source_hash: cbc69053ba8537e852d8c2c780c11bdf34bafa28fa9e3243e66224f17e226db3
+translation_source_hash: cb94cc818897eb9fa792b80cbd671082589ccc513bfe3c0c74bbb9d08631efa4
 translation_status: current
 ---
 
@@ -34,6 +34,20 @@ dependencies {
 
 Frame Clock 或动画 Context 变化会重启相关 Effect。动画调用离开组合时会被取消。样本通过
 ViewCompose 可观察 State 写入，并使读取方失效。
+
+设计系统组件可以先解析语义 `MotionScheme`，再调用这些 API。Scheme 仍是 animation-core 的
+不可变策略；`Animatable`、Target-as-state API 和 `Transition` 仍是唯一由组合所有的 Runner。
+快速 Retarget 因而继续使用既有 Last-writer 取消与过期帧拒绝语义，不创建组件私有动画循环。
+
+## Shape 转场与降级
+
+`interpolateUiShape(start, end, fraction)` 只在对应 Corner 使用相同 Family，且 Size 同为 Absolute
+或同为 Relative 时插值。结果会以 `UiShapeInterpolationMode.Compatible` 标记这条路径。Family
+或 Size 类型不匹配时，中点前选择起点、中点及之后选择终点，并用 `DiscreteFallback` 供诊断归因。
+
+该 Helper 不拥有 Clock、View 或 State。应通过 `Animatable`、`animateFloatAsState` 或 `Transition`
+驱动有限进度。它有意不提供任意 Path Morph；无法证明几何兼容的组件会保留确定性静态/离散降级，
+且不改变 Bounds、输入所有权或 Semantics。
 
 ## Target-as-state 动画
 
@@ -200,6 +214,7 @@ Detach，通常不应使用。
 - 验证完成前 Retarget，确保过期 Job 无法发布；
 - Transition 在同一组合 Pass 声明所有 Channel，并断言最长时长控制逻辑完成；
 - 验证可见性内容保留到 Exit 终帧；
+- 分开测试兼容与不兼容 Shape 转场，包括降级归因；
 - Wrapper 位置、约束或 Modifier 路由相关的尺寸动画应在 Android Renderer 测试；Animation 模块
   单元测试只验证契约序列化。
 

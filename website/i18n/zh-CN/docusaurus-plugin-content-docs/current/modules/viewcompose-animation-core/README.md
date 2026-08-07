@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-animation-core/README.md
-translation_source_hash: 2d2cd3b684802e6a857b7b60ab1f5e69b9d08296e8c2fcc0b80f822fba6b2289
+translation_source_hash: 7b0e14d7f310107783c86394f46f61ee650e0b931722c31854bfb0c90d754148
 translation_status: current
 ---
 
@@ -55,6 +55,21 @@ val motion = repeatable(
 执行有界反解。Bézier x 坐标应保持在 `0f..1f`；构造函数不会拒绝非单调曲线。引擎会把最终
 视觉进度限制在 `0f..1f`，包括 Spring 与 Easing 输出，因此当前 animation-core 不暴露视觉
 过冲。
+
+## 语义动效方案与减少动效
+
+`MotionScheme` 提供五种不绑定组件或设计系统的语义时序角色：快速/默认效果、快速/默认空间
+移动，以及强调空间移动。组件选择 `MotionRole`，不在结构 Recipe 中复制原始时长。这个不可变
+方案不拥有 Clock 或动画 State，而是解析为已有 `AnimationSpec` 系列。
+
+`ReducedMotionPolicy` 保持相同目标状态，同时把非必要移动替换为 `SnapSpec` 或缩短后的规格。
+传达状态所必需的转场会缩短时长，而不会被隐藏。缩放会递归应用到 Tween 延迟、有界 Spring
+时长、Keyframe 时长与检查点，以及 Repeat 的子规格。应用或集成根显式传入宿主的减少动效决定；
+animation-core 不读取平台设置。
+
+`MotionInterruptionPolicy.RetargetFromCurrent` 与 `viewcompose-animation` 的 Last-writer 行为一致。
+`SnapToTarget` 是组件 Owner 策略：Owner 应立即选择目标，而不是启动 Runner。一个 Scheme 不会
+启动相互竞争的循环。
 
 ## 确定性采样
 
@@ -137,7 +152,7 @@ Owner 保证。`TransitionCore` 非线程安全，也不会启动或取消工作
 - Transition 应先注册 Channel 再推进时间，并显式测试 Segment 中途 Retarget。
 
 模块测试覆盖 Tween 完成与延迟、Reverse Repeat 终态、无限动画帧节拍、取消、ARGB 往返、最大
-Channel 时长与 Transition Retarget。
+Channel 时长、Transition Retarget、语义角色解析与确定性减少动效替换。
 
 ## 相关文档
 

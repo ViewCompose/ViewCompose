@@ -28,6 +28,8 @@ passes its accessibility, input, retained-patch, and device visual gates.
   renderer path, and the `SurfaceNodeProps` migration.
 - [`20260807-multi-design-basic-button.json`](../../../release/changes/20260807-multi-design-basic-button.json)
   covers the Phase 2 neutral action composite and its compiled sample.
+- [`20260807-multi-design-motion.json`](../../../release/changes/20260807-multi-design-motion.json)
+  covers the Phase 3 semantic motion/reduced-motion policy and compatible shape interpolation.
 
 ## Objective
 
@@ -388,7 +390,8 @@ without enabling a second design system.
 
 ## Phase 3: Motion scheme, shape transition, and reduced motion
 
-Status: pending Phase 2.
+Status: implemented at the public contract and deterministic unit-test level. Integration into the
+five-component slice, emulator screenshots, and performance comparison remain Phase 4 evidence.
 
 Planned work:
 
@@ -412,6 +415,24 @@ Keep criteria:
 
 Rollback: keep static shape support and duration/easing transitions; remove the physical solver or
 morph path independently if it does not improve fidelity or performance.
+
+### Phase 3 implementation decision
+
+- `MotionScheme` separates five semantic roles, interruption policy, and reduced-motion policy from
+  component structure. It resolves to existing immutable `AnimationSpec` values and owns no clock
+  or coroutine.
+- Existing `Animatable`, target-as-state APIs, and `Transition` remain the shared lifecycle-owned
+  runners. Their last-writer cancellation and stale-frame rejection already satisfy the required
+  retargeting contract, so a parallel component loop was rejected.
+- The existing bounded, duration-based `SpringSpec` remains the fallback spring model. No measured
+  fidelity or performance evidence justified adding a physical solver in this phase.
+- `interpolateUiShape` interpolates matching corner families with matching absolute/relative size
+  representations. Any mismatch returns an attributable discrete endpoint fallback; arbitrary Path
+  Morph remains explicitly unsupported.
+- Unit evidence covers semantic role selection, snap/shorten reduced motion, recursive keyframe
+  scaling, compatible absolute/relative interpolation, clamped progress, and incompatible-family
+  fallback. Cancellation, reversal, detach, saved state, and visual timing stay in the Phase 4
+  component/emulator matrix where an actual owner and rendered View exist.
 
 ## Phase 4: Five-component high-fidelity vertical slice
 

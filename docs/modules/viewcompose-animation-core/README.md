@@ -56,6 +56,24 @@ control points and performs a bounded inversion of the x axis. Keep Bézier x co
 progress to `0f..1f`, including spring and easing output, so animation-core does not expose visual
 overshoot in this release.
 
+## Semantic motion schemes and reduced motion
+
+`MotionScheme` groups five semantic timing roles without naming a component or design system:
+fast/default effects, fast/default spatial movement, and expressive spatial movement. A component
+selects a `MotionRole`; it does not copy raw durations into its structural recipe. The immutable
+scheme owns neither a clock nor animation state and resolves to the existing `AnimationSpec`
+families.
+
+`ReducedMotionPolicy` resolves the same target state while replacing non-essential movement with
+`SnapSpec` or a shortened specification. Essential state communication is duration-scaled rather
+than hidden. Scaling applies recursively to tween delay, bounded spring duration, keyframe duration
+and checkpoints, and repeating child specifications. Applications or integration roots supply the
+host's reduced-motion decision explicitly; animation-core performs no platform settings lookup.
+
+`MotionInterruptionPolicy.RetargetFromCurrent` matches the last-writer behavior in
+`viewcompose-animation`. `SnapToTarget` is a component-owner policy: the owner must select the
+target immediately instead of starting a runner. A scheme never launches competing loops.
+
 ## Deterministic sampling
 
 `sampleAnimationValue` evaluates one specification at an explicit nanosecond play time. It has no
@@ -149,7 +167,8 @@ than each channel's current sampled value; higher-level channel owners preserve 
   explicitly.
 
 The module test suite covers tween completion and delay, reverse-repeat terminal state, infinite
-frame pacing, cancellation, ARGB round trips, maximum channel duration, and transition retargeting.
+frame pacing, cancellation, ARGB round trips, maximum channel duration, transition retargeting,
+semantic role resolution, and deterministic reduced-motion substitution.
 
 ## Related documentation
 

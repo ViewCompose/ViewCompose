@@ -189,6 +189,16 @@ flowchart TD
 8. Do not reintroduce `Props`, `TypedPropKeys`, `PropKeys`, or `node.props`.
 9. Constraint parent data (`layoutId`, `constrainAs`, and `constrain`) is valid only for ConstraintLayout children; an invalid host must produce a validator warning.
 10. Composite components must transfer complete text styling through `NodeSpec`, including font size, weight, family, letter spacing, line height, and font-padding inclusion.
+11. Foundation tokens, component recipes, and resolved rendering contracts are distinct values.
+    Foundation tokens remain reusable immutable semantics; a design-system module owns its typed
+    recipes and resolves them through shared Basic primitives or its own composites before
+    emitting a design-system-neutral `NodeSpec`.
+12. `BasicSurface` is the shared resolved decoration and interaction boundary. It may transport
+    fill/brush, shape, border, clip, state layer, visual bounds, effective target bounds, shadows,
+    and effects, but it does not select a Material, One UI, Cupertino, or product variant.
+13. Structurally different navigation, text-field decoration, and custom-control arrangements stay
+    in the owning design-system module. Renderer branches on a design-system identity and one
+    universal component-recipe bundle are forbidden.
 
 See [Modifier architecture](modifier.md), [NodeSpec architecture](node-spec.md), and [theming](../guides/theming.md).
 
@@ -308,6 +318,12 @@ Use the [session-container checklist](session-containers.md).
 10. `Animatable` normally obtains the frame clock from `rememberAnimatable(...)`; non-composition callers may bind one explicitly.
 11. Gesture policy belongs in gesture-core; renderer must not add parallel axis-lock, slop, or settling branches.
 12. `combinedClickable` participates only when enabled and at least one click, double-click, or long-click callback exists.
+13. `MotionScheme` selects semantic timing and reduced-motion substitution without owning a clock
+    or loop. Composition-owned motion continues through `Animatable`, target-as-state APIs, or
+    `Transition`; component recipes never launch animation work.
+14. Shape transition interpolates only compatible corner family/size representations. Incompatible
+    geometry uses a reported discrete/static fallback; arbitrary Path Morph is not a generic
+    animation contract.
 
 ### 4.14 Graphics
 

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 1a4928b0c10a070b867a07cb3715d2be7ecfc92e0d0ab4ce78cd31e8fe5d5b1c
+translation_source_hash: ed5cec6ba9b594d6efac7ec6a8f4c7207daf4cfe3916c1bcf9895300868b29af
 translation_status: current
 ---
 
@@ -187,6 +187,14 @@ flowchart TD
 8. 禁止新增 `Props/TypedPropKeys/PropKeys/node.props` 动态语义路径。
 9. 约束 parent-data（`layoutId/constrainAs/constrain`）仅允许用于 `ConstraintLayout` 子节点；错误宿主必须输出 validator 警告。
 10. 复合组件内部文本样式必须通过 `NodeSpec` 全量传递（`fontSize/fontWeight/fontFamily/letterSpacing/lineHeight/includeFontPadding`），禁止重新退回“只传 `textSizeSp`”。
+11. Foundation Token、组件 Recipe 与已解析渲染契约是三类独立值。Foundation Token 保持可复用
+    的不可变语义；设计系统模块拥有自己的强类型 Recipe，并在发射设计系统无关 `NodeSpec` 前，
+    通过共享 Basic 原语或自有 Composite 完成解析。
+12. `BasicSurface` 是共享的已解析装饰与交互边界。它可以传递 Fill/Brush、Shape、Border、Clip、
+    State Layer、Visual Bounds、有效 Target Bounds、Shadow 与 Effect，但不选择 Material、One UI、
+    Cupertino 或产品 Variant。
+13. 结构不同的导航、TextField 装饰与自定义 Control 排列保留在所属设计系统模块。禁止 Renderer
+    按设计系统 Identity 分支，也禁止建立一个通用组件 Recipe 大集合。
 
 对应规范：
 
@@ -331,6 +339,10 @@ flowchart TD
 13. `AnimatedSizeHost` 收起路径必须避免“子节点先跳到末端尺寸”；子节点布局需跟随 host 当前动画尺寸，保证展开/收起两方向的视觉连续性。
 14. 手势策略新增或修改（axis lock/slop/swipe settle）必须下沉到 `viewcompose-gesture-core`；renderer 禁止新增并行策略分支。
 15. `combinedClickable` 只有在 `enabled=true` 且至少提供一个回调（click/double/long）时才参与仲裁；无回调场景必须视为 no-op 且不消费触摸流。
+16. `MotionScheme` 选择语义时序与减少动效替换，但不拥有 Clock 或 Loop。组合所有的动效继续
+    通过 `Animatable`、Target-as-state API 或 `Transition` 执行；组件 Recipe 不启动动画任务。
+17. Shape 转场只插值兼容的 Corner Family/Size 表示。不兼容几何使用可诊断的离散/静态降级；
+    任意 Path Morph 不属于通用动画契约。
 
 ### 4.15 Graphics 边界
 

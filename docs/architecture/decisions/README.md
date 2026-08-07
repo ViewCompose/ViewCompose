@@ -9,6 +9,7 @@ architecture pages describe how the system works now.
 - [ADR-0001: Hosted documentation platform](./0001-hosted-documentation-platform.md)
 - [ADR-0002: Five-layer runtime module architecture](./0002-five-layer-runtime-module-architecture.md)
 - [ADR-0003: Public package ownership and platform handles](./0003-public-package-ownership-and-platform-handles.md)
+- [ADR-0004: Design-system resolution boundary](./0004-design-system-resolution-boundary.md)
 
 ## Rules
 

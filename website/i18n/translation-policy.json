@@ -6,6 +6,7 @@
     "architecture/decisions/0001-hosted-documentation-platform.md",
     "architecture/decisions/0002-five-layer-runtime-module-architecture.md",
     "architecture/decisions/0003-public-package-ownership-and-platform-handles.md",
+    "architecture/decisions/0004-design-system-resolution-boundary.md",
     "architecture/decisions/README.md",
     "architecture/lifecycle-and-saved-state.md",
     "architecture/modifier.md",

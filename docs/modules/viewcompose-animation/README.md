@@ -33,6 +33,25 @@ Changing the frame clock or animation context restarts affected effects. Removin
 from composition cancels it. Samples are written through ViewCompose observable state and invalidate
 their readers.
 
+Design-system components may resolve a semantic `MotionScheme` before calling these APIs. The
+scheme remains immutable policy from animation-core; `Animatable`, target-as-state APIs, and
+`Transition` remain the only composition-owned runners. Rapid retargeting therefore keeps the
+existing last-writer cancellation and stale-frame rejection semantics instead of creating a
+component-private animation loop.
+
+## Shape transitions and fallback
+
+`interpolateUiShape(start, end, fraction)` interpolates corresponding corners only when each pair
+uses the same family and both size representations are absolute or both are relative. The result
+reports `UiShapeInterpolationMode.Compatible` for that path. Family or size-kind mismatches select
+the start shape before the midpoint and the destination at and after it, reporting
+`DiscreteFallback` for diagnostics.
+
+The helper owns no clock, View, or state. Drive its finite progress through `Animatable`,
+`animateFloatAsState`, or `Transition`. It deliberately does not offer arbitrary Path Morph; a
+component that cannot prove compatible geometry retains a deterministic static/discrete fallback
+without changing bounds, input ownership, or semantics.
+
 ## Target-as-state animation
 
 `animateFloatAsState`, `animateIntAsState`, `animateColorAsState`, `animateDpAsState`, and the generic
@@ -219,6 +238,7 @@ modifier chain, the last specification wins.
 - For transitions, declare every channel in the same composition pass and assert the longest
   duration controls logical completion.
 - Test visibility content retention through the terminal exit frame.
+- Test compatible and incompatible shape transitions separately, including fallback attribution.
 - Test size animation on the Android renderer when wrapper placement, constraints, or modifier
   routing matters; the animation module's unit tests verify only contract serialization.
 
