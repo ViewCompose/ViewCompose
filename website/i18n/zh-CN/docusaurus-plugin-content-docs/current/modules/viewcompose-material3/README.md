@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: 421ac965fc7c0664d0611f23823d84ff54fbf6f7f27eb53f3af50ba5a3f68c11
+translation_source_hash: 9045607e7177e31a6dfc3bc8e6a56896aca652ecf33c77e1413c273790b23373
 translation_status: current
 ---
 
@@ -25,6 +25,7 @@ dependencies {
 - 平台：Android library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
 - API 依赖：`viewcompose-ui-foundation`。
 - 实现依赖：Material Components、AppCompat 与 AndroidX Core。
+- 基线：Material Components `1.13.0` 中的标准、非 Expressive Material 3。
 
 ## 主题解析
 
@@ -46,6 +47,27 @@ Material3Theme(resolvedTheme = resolved) {
 
 标准应用通过 `viewcompose-android` 自动获得这套生命周期。
 
+## Token 基线与回退
+
+当没有 Android 主题 Context，或 Android 主题缺少单个属性时，
+`Material3ThemeDefaults.light()` 与 `Material3ThemeDefaults.dark()` 会提供确定性的 Material 3
+快照。每份快照都包含：
+
+- 适配器所需的完整 Material 配色，包括表面容器、反色、轮廓以及容器内容角色；
+- Display、Headline、Title、Body 和 Label 共 15 个标准排版角色；
+- Extra Small、Small、Medium、Large、Extra Large 与 Full 六级形状角色；
+- Button、TextField、SegmentedControl、ProgressIndicator、FAB、Search 与 Badge 采用的标准尺寸
+  配置。
+
+Android Bridge 会用当前主题中存在的值替换快照内容。它读取全部 15 个 Material Text
+Appearance 和五个绝对 `shapeAppearanceCorner*` 角色；旧 Android Large/Medium/Small Text
+Appearance 继续作为 Title/Body/Label 家族回退。缺失的 Display 和 Headline 会保留完整 Material
+静态快照，不会折叠到旧字号，也不会退回 UI Foundation 的中性默认值。
+
+本适配器不会把 Material 策略放进 Android Renderer。组件默认值在 NodeSpec 进入 Renderer
+之前，已在 UI Foundation 中解析为语义角色。触控区域扩展、TextField 浮动 Label/Focus 结构，
+以及 Switch/Slider 精确几何不由 Token Bridge 自动提供，必须作为独立组件工作进行测试。
+
 ## 相关文档
 
 - [主题指南](../../guides/theming.md)
@@ -60,3 +82,5 @@ Material3Theme(resolvedTheme = resolved) {
 
 本模块从 `0.1.0-alpha01` 开始。原先位于 UI Foundation 的 Android Theme Bridge 类型已重命名为
 `Material3*` API 家族并迁移到这里，不提供兼容别名。
+当前 Alpha 版本线还增加了完整形状和排版角色以及公开静态 Material 3 回退；穷举构造或解构
+相关 UI Foundation Data Class 的使用方，需要随对应 Alpha 版本同步更新。

@@ -21,10 +21,9 @@ object CardDefaults {
         variant: CardVariant = CardVariant.Filled,
     ): Int {
         return when (variant) {
-            CardVariant.Filled -> Theme.colors.surfaceVariant
-            CardVariant.Elevated,
-            CardVariant.Outlined,
-            -> Theme.colors.surface
+            CardVariant.Filled -> Theme.colors.surfaceContainerHighest
+            CardVariant.Elevated -> Theme.colors.surfaceContainerLow
+            CardVariant.Outlined -> Theme.colors.surface
         }
     }
 
@@ -39,7 +38,7 @@ object CardDefaults {
         variant: CardVariant = CardVariant.Filled,
     ): UiDp {
         return when (variant) {
-            CardVariant.Elevated -> 2.dp
+            CardVariant.Elevated -> 1.dp
             else -> 0.dp
         }
     }
@@ -59,7 +58,7 @@ object CardDefaults {
         variant: CardVariant = CardVariant.Filled,
     ): Int {
         return when (variant) {
-            CardVariant.Outlined -> Theme.colors.outline
+            CardVariant.Outlined -> Theme.colors.outlineVariant
             else -> 0x00000000
         }
     }

@@ -7,7 +7,7 @@ import com.viewcompose.ui.shape.UiShape
 /** Default visual, typography, and spacing tokens for alert dialogs. */
 object AlertDialogDefaults {
     /** Returns the dialog container color. */
-    fun containerColor(): Int = Theme.colors.surface
+    fun containerColor(): Int = Theme.colors.surfaceContainerHigh
 
     /** Returns the dialog title color. */
     fun titleColor(): Int = Theme.colors.onSurface
@@ -19,13 +19,13 @@ object AlertDialogDefaults {
     fun iconTint(): Int = Theme.colors.primary
 
     /** Returns the dialog title text style. */
-    fun titleStyle(): UiTextStyle = TextDefaults.titleLargeStyle()
+    fun titleStyle(): UiTextStyle = TextDefaults.headlineSmallStyle()
 
     /** Returns the dialog supporting-text style. */
     fun textStyle(): UiTextStyle = TextDefaults.bodyMediumStyle()
 
     /** Returns the dialog container shape. */
-    fun shape(): UiShape = Theme.shapes.medium
+    fun shape(): UiShape = Theme.shapes.extraLarge
 
     /** Returns the padding between the dialog edge and its content. */
     fun contentPadding(): UiDp = 24.dp

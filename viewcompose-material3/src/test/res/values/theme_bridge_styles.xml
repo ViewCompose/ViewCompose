@@ -8,8 +8,13 @@
         <item name="cornerSizeBottomLeft">20dp</item>
     </style>
 
+    <style name="ViewComposeLegacyLargeTextAppearance">
+        <item name="android:textSize">30sp</item>
+    </style>
+
     <style name="ViewComposeTestTheme">
-        <item name="shapeAppearanceSmallComponent">@style/ViewComposeTestShapeAppearance</item>
+        <item name="shapeAppearanceCornerSmall">@style/ViewComposeTestShapeAppearance</item>
+        <item name="android:textAppearanceLarge">@style/ViewComposeLegacyLargeTextAppearance</item>
         <item name="colorPrimary">#FF102030</item>
         <item name="colorTertiary">#FF304050</item>
         <item name="colorOnTertiary">#FFF0F1F2</item>

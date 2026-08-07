@@ -167,15 +167,15 @@ object UiStateColorDefaults {
         return UiStateColors(
             primaryText = UiStateColor(
                 defaultColor = colors.onSurface,
-                disabledColor = colors.onSurfaceVariant,
+                disabledColor = colorWithAlpha(colors.onSurface, 0.38f),
             ),
             secondaryText = UiStateColor(
                 defaultColor = colors.onSurfaceVariant,
-                disabledColor = colors.outline,
+                disabledColor = colorWithAlpha(colors.onSurface, 0.38f),
             ),
             control = UiStateColor(
-                defaultColor = colors.outline,
-                disabledColor = colors.outlineVariant,
+                defaultColor = colors.onSurfaceVariant,
+                disabledColor = colorWithAlpha(colors.onSurface, 0.38f),
                 pressedColor = colors.primary,
                 focusedColor = colors.primary,
                 checkedColor = colors.primary,
@@ -183,7 +183,7 @@ object UiStateColorDefaults {
             ),
             controlActivated = UiStateColor(
                 defaultColor = colors.primary,
-                disabledColor = colors.outlineVariant,
+                disabledColor = colorWithAlpha(colors.onSurface, 0.38f),
                 pressedColor = colors.primary,
                 focusedColor = colors.primary,
                 checkedColor = colors.primary,
@@ -202,16 +202,27 @@ object UiStateColorDefaults {
 }
 
 /**
- * Defines small, medium, and large component shape tiers.
+ * Defines the complete semantic corner scale available to component defaults.
+ *
+ * The absolute tiers do not prescribe a design system. A design-system adapter supplies the
+ * concrete geometry, while [full] expresses a pill or circle independently of final bounds.
+ * Existing three-tier themes remain source-compatible because the additional tiers derive from
+ * [small] and [large] when omitted.
  *
  * @property small shape for compact controls and small surfaces
  * @property medium shape for standard controls and surfaces
- * @property large shape for prominent or large surfaces
+ * @property large shape for prominent surfaces
+ * @property extraSmall shape for controls with minimal corner treatment
+ * @property extraLarge shape for prominent modal surfaces
+ * @property full bounds-relative shape for pill and circular containers
  */
 data class UiShapes(
     val small: UiShape,
     val medium: UiShape,
     val large: UiShape = medium,
+    val extraSmall: UiShape = small,
+    val extraLarge: UiShape = large,
+    val full: UiShape = UiShape.roundedRelative(0.5f),
 )
 
 /**
@@ -239,9 +250,12 @@ data class UiTextStyle(
 )
 
 /**
- * Groups title, body, and label typography at large, medium, and small tiers.
+ * Groups display, headline, title, body, and label typography at three semantic tiers.
  *
- * The medium styles are required and serve as defaults for omitted size tiers.
+ * The original title, body, and label medium styles remain the minimum constructor surface.
+ * Omitted tiers derive from their nearest existing family so non-Material custom themes keep a
+ * complete usable scale. Design-system adapters should supply all fifteen roles when their type
+ * scale distinguishes them.
  *
  * @property titleMedium standard title style
  * @property bodyMedium standard body style
@@ -252,6 +266,12 @@ data class UiTextStyle(
  * @property bodySmall small body style
  * @property labelLarge large label style
  * @property labelSmall small label style
+ * @property headlineLarge large section-heading style
+ * @property headlineMedium medium section-heading style
+ * @property headlineSmall small section-heading style
+ * @property displayLarge largest display style
+ * @property displayMedium medium display style
+ * @property displaySmall smallest display style
  */
 data class UiTypography(
     val titleMedium: UiTextStyle,
@@ -263,6 +283,12 @@ data class UiTypography(
     val bodySmall: UiTextStyle = bodyMedium,
     val labelLarge: UiTextStyle = labelMedium,
     val labelSmall: UiTextStyle = labelMedium,
+    val headlineLarge: UiTextStyle = titleLarge,
+    val headlineMedium: UiTextStyle = titleMedium,
+    val headlineSmall: UiTextStyle = titleSmall,
+    val displayLarge: UiTextStyle = headlineLarge,
+    val displayMedium: UiTextStyle = headlineMedium,
+    val displaySmall: UiTextStyle = headlineSmall,
 )
 
 /**
@@ -322,7 +348,13 @@ data class UiThemeMetadata(
  */
 internal fun pressedOverlayColorFor(contentColor: Int): Int {
     val base = contentColor and 0x00FFFFFF
-    return 0x22000000 or base
+    return 0x1A000000 or base
+}
+
+/** Returns [color] with its alpha channel replaced by the clamped [alpha] fraction. */
+internal fun colorWithAlpha(color: Int, alpha: Float): Int {
+    val alphaChannel = (alpha.coerceIn(0f, 1f) * 255f).toInt()
+    return (alphaChannel shl 24) or (color and 0x00FFFFFF)
 }
 
 /**

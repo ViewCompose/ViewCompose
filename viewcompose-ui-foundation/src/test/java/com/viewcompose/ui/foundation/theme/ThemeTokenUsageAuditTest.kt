@@ -225,6 +225,8 @@ class ThemeTokenUsageAuditTest {
             "onTertiary",
             "tertiaryContainer",
             "onTertiaryContainer",
+            "errorContainer",
+            "onErrorContainer",
             "inversePrimary",
             "scrim",
             "success",

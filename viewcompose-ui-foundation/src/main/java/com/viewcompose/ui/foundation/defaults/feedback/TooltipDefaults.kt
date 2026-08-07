@@ -13,10 +13,10 @@ object TooltipDefaults {
     fun contentColor(): Int = Theme.colors.inverseOnSurface
 
     /** Returns the text style used by tooltip content. */
-    fun textStyle(): UiTextStyle = TextDefaults.labelMediumStyle()
+    fun textStyle(): UiTextStyle = TextDefaults.bodySmallStyle()
 
     /** Returns the tooltip container shape. */
-    fun shape(): UiShape = Theme.shapes.small
+    fun shape(): UiShape = Theme.shapes.extraSmall
 
     /** Returns the horizontal padding around tooltip content. */
     fun horizontalPadding(): UiDp = Theme.controls.tooltip.horizontalPadding

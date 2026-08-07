@@ -10,8 +10,8 @@ import com.viewcompose.ui.shape.UiShape
  * Editable text uses large body typography for search readability.
  */
 object SearchBarDefaults {
-    /** Returns the current variant surface color. */
-    fun containerColor(): Int = Theme.colors.surfaceVariant
+    /** Returns the current high-emphasis surface-container color. */
+    fun containerColor(): Int = Theme.colors.surfaceContainerHigh
 
     /** Returns primary content color for text. */
     fun contentColor(): Int = Theme.colors.onSurface
@@ -25,8 +25,8 @@ object SearchBarDefaults {
     /** Returns minimum search-bar height. */
     fun height(): UiDp = Theme.controls.searchBar.height
 
-    /** Returns the current large theme shape. */
-    fun shape(): UiShape = Theme.shapes.large
+    /** Returns the current full theme shape. */
+    fun shape(): UiShape = Theme.shapes.full
 
     /** Returns start and end content padding. */
     fun horizontalPadding(): UiDp = Theme.controls.searchBar.horizontalPadding

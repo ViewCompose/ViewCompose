@@ -8,7 +8,6 @@ package com.viewcompose.material3
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
-import com.viewcompose.ui.foundation.UiThemeDefaults
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -79,10 +78,10 @@ class Material3ThemeBridgeTest {
         )
 
         assertEquals(99, tokens.colors.primary)
-        assertEquals(UiThemeDefaults.light().colors.surface, tokens.colors.surface)
-        assertEquals(UiThemeDefaults.light().colors.onSurface, tokens.colors.onSurface)
-        assertEquals(UiThemeDefaults.light().colors.onSurfaceVariant, tokens.colors.onSurfaceVariant)
-        assertEquals(UiThemeDefaults.light().typography.bodyMedium.fontSizeSp, tokens.typography.bodyMedium.fontSizeSp)
+        assertEquals(Material3ThemeDefaults.light().colors.surface, tokens.colors.surface)
+        assertEquals(Material3ThemeDefaults.light().colors.onSurface, tokens.colors.onSurface)
+        assertEquals(Material3ThemeDefaults.light().colors.onSurfaceVariant, tokens.colors.onSurfaceVariant)
+        assertEquals(Material3ThemeDefaults.light().typography.bodyMedium.fontSizeSp, tokens.typography.bodyMedium.fontSizeSp)
     }
 
     @Test
@@ -92,12 +91,12 @@ class Material3ThemeBridgeTest {
             isDarkMode = true,
         )
 
-        assertEquals(UiThemeDefaults.dark().colors.background, tokens.colors.background)
-        assertEquals(UiThemeDefaults.dark().colors.surface, tokens.colors.surface)
-        assertEquals(UiThemeDefaults.dark().colors.primary, tokens.colors.primary)
-        assertEquals(UiThemeDefaults.dark().colors.onSurface, tokens.colors.onSurface)
-        assertEquals(UiThemeDefaults.dark().colors.onSurfaceVariant, tokens.colors.onSurfaceVariant)
-        assertEquals(UiThemeDefaults.dark().typography.titleMedium.fontSizeSp, tokens.typography.titleMedium.fontSizeSp)
+        assertEquals(Material3ThemeDefaults.dark().colors.background, tokens.colors.background)
+        assertEquals(Material3ThemeDefaults.dark().colors.surface, tokens.colors.surface)
+        assertEquals(Material3ThemeDefaults.dark().colors.primary, tokens.colors.primary)
+        assertEquals(Material3ThemeDefaults.dark().colors.onSurface, tokens.colors.onSurface)
+        assertEquals(Material3ThemeDefaults.dark().colors.onSurfaceVariant, tokens.colors.onSurfaceVariant)
+        assertEquals(Material3ThemeDefaults.dark().typography.titleMedium.fontSizeSp, tokens.typography.titleMedium.fontSizeSp)
     }
 
     @Test
@@ -125,7 +124,7 @@ class Material3ThemeBridgeTest {
             readTextSizeSp = { null },
         )
 
-        val fallback = UiThemeDefaults.light()
+        val fallback = Material3ThemeDefaults.light()
         assertEquals(fallback.typography.titleMedium.fontSizeSp, tokens.typography.titleMedium.fontSizeSp)
         assertEquals(fallback.typography.bodyMedium.fontSizeSp, tokens.typography.bodyMedium.fontSizeSp)
         assertEquals(fallback.typography.labelMedium.fontSizeSp, tokens.typography.labelMedium.fontSizeSp)
@@ -143,7 +142,7 @@ class Material3ThemeBridgeTest {
             },
         )
 
-        val fallback = UiThemeDefaults.light()
+        val fallback = Material3ThemeDefaults.light()
         assertEquals(fallback.typography.titleMedium.fontSizeSp, tokens.typography.titleMedium.fontSizeSp)
         assertEquals(20.sp, tokens.typography.bodyMedium.fontSizeSp)
         assertEquals(fallback.typography.labelMedium.fontSizeSp, tokens.typography.labelMedium.fontSizeSp)
@@ -157,9 +156,11 @@ class Material3ThemeBridgeTest {
                     ripple = 77,
                 ),
                 shapes = Material3ThemeShapeSnapshot(
+                    extraSmall = UiShape.cut(4.dp),
                     small = UiShape.rounded(12.dp),
                     medium = UiShape.cut(20.dp),
                     large = UiShape.roundedRelative(0.5f),
+                    extraLarge = UiShape.rounded(28.dp),
                 ),
                 scrimOpacity = 0.58f,
             ),
@@ -167,9 +168,11 @@ class Material3ThemeBridgeTest {
 
         assertEquals(77, tokens.colors.ripple)
         assertEquals(0.58f, tokens.overlays.scrimOpacity, 0.0001f)
+        assertEquals(UiShape.cut(4.dp), tokens.shapes.extraSmall)
         assertEquals(UiShape.rounded(12.dp), tokens.shapes.small)
         assertEquals(UiShape.cut(20.dp), tokens.shapes.medium)
         assertEquals(UiShape.roundedRelative(0.5f), tokens.shapes.large)
+        assertEquals(UiShape.rounded(28.dp), tokens.shapes.extraLarge)
     }
 
     @Test
@@ -177,6 +180,12 @@ class Material3ThemeBridgeTest {
         val tokens = Material3ThemeTokenMapper.fromSnapshot(
             snapshot = Material3ThemeSnapshot(
                 typography = Material3ThemeTypographySnapshot(
+                    displayLarge = Material3TextStyleSnapshot(
+                        fontSizeSp = 61.sp,
+                    ),
+                    headlineSmall = Material3TextStyleSnapshot(
+                        fontSizeSp = 25.sp,
+                    ),
                     titleLarge = Material3TextStyleSnapshot(
                         fontSizeSp = 30.sp,
                         fontWeight = 700,
@@ -195,6 +204,8 @@ class Material3ThemeBridgeTest {
             ),
         )
 
+        assertEquals(61.sp, tokens.typography.displayLarge.fontSizeSp)
+        assertEquals(25.sp, tokens.typography.headlineSmall.fontSizeSp)
         assertEquals(30.sp, tokens.typography.titleLarge.fontSizeSp)
         assertEquals(700, tokens.typography.titleLarge.fontWeight)
         assertEquals(0.04f, tokens.typography.titleLarge.letterSpacingEm)

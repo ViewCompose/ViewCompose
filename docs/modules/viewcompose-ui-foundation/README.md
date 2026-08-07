@@ -58,7 +58,9 @@ by a later renderer or child render session.
   and its component functions build declarative node trees without creating Android Views.
 - [`Theme` and `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
   expose immutable color, typography, shape, sizing, and overlay tokens without choosing a design
-  system.
+  system. Typography supports all display, headline, title, body, and label tiers; shapes support
+  extra-small, small, medium, large, extra-large, and full roles. Design-system adapters provide
+  their concrete values.
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
   image loading, focus, frame clock, and host capabilities.
@@ -92,6 +94,11 @@ Because the current line is alpha, the documentation site intentionally does not
   composition releases its restored claim so a later attempt can still restore the value.
 - `UiTheme` accepts platform-independent tokens. Material Android resource resolution belongs to
   `viewcompose-material3`, including configuration observation and explicit refresh.
+- Existing three-family typography construction remains concise: omitted headline roles derive
+  from title roles and omitted display roles derive from headlines. Existing three-tier shape
+  construction also remains valid: omitted extra-small/extra-large roles derive from small/large,
+  and full defaults to a bounds-relative pill. These are compatibility fallbacks, not Material
+  values; Material applications receive the concrete scale from `viewcompose-material3`.
 - Each `RenderSession` exclusively owns one container, its mounted nodes, composition, coroutine
   scope, and session-scoped overlays. Call `dispose` with the host lifecycle; the session cannot be
   reused afterward.
@@ -132,3 +139,8 @@ retired package alias. Do not persist automatic saveable keys, session identifie
 implementation names, callback instances, tooling metadata, or diagnostics shapes as external
 long-lived data. Custom renderers and hosts must be upgraded with contract changes even when an
 application's component source still compiles.
+
+The complete `UiTypography` and `UiShapes` value contracts are an alpha-line source and binary
+change. They remain immutable Q2 values with no lifecycle or ownership protocol; direct
+construction keeps source defaults, while exhaustive destructuring, reflection, and precompiled
+callers must be rebuilt for the corresponding release.

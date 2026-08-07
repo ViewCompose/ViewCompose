@@ -18,7 +18,7 @@ object ProgressIndicatorDefaults {
     /** Returns the inactive linear-track color. */
     fun linearTrackColor(): Int {
         val override = UiLocals.current(LocalProgressIndicatorColors)
-        return override?.linearTrack ?: Theme.colors.outlineVariant
+        return override?.linearTrack ?: Theme.colors.secondaryContainer
     }
 
     /** Returns the thickness of a linear indicator and its track. */
@@ -33,7 +33,7 @@ object ProgressIndicatorDefaults {
     /** Returns the inactive circular-track color. */
     fun circularTrackColor(): Int {
         val override = UiLocals.current(LocalProgressIndicatorColors)
-        return override?.circularTrack ?: Theme.colors.outlineVariant
+        return override?.circularTrack ?: Theme.colors.secondaryContainer
     }
 
     /** Returns the default square bounds of a circular indicator. */

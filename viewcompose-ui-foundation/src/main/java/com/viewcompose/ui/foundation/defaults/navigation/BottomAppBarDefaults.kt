@@ -5,7 +5,7 @@ import com.viewcompose.ui.unit.UiDp
 /** Default visual and size tokens for bottom app bars. */
 object BottomAppBarDefaults {
     /** Returns the app-bar container color. */
-    fun containerColor(): Int = Theme.colors.surface
+    fun containerColor(): Int = Theme.colors.surfaceContainer
 
     /** Returns the app-bar height. */
     fun height(): UiDp = Theme.controls.appBar.bottomHeight

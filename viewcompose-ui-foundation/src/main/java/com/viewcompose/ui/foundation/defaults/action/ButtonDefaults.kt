@@ -36,19 +36,19 @@ object ButtonDefaults {
             ButtonVariant.Primary -> if (enabled) {
                 override?.primaryContainer ?: Theme.colors.primary
             } else {
-                override?.primaryDisabledContainer ?: Theme.colors.outlineVariant
+                override?.primaryDisabledContainer ?: colorWithAlpha(Theme.colors.onSurface, 0.12f)
             }
 
             ButtonVariant.Secondary -> if (enabled) {
                 override?.secondaryContainer ?: Theme.colors.secondary
             } else {
-                override?.secondaryDisabledContainer ?: Theme.colors.outlineVariant
+                override?.secondaryDisabledContainer ?: colorWithAlpha(Theme.colors.onSurface, 0.12f)
             }
 
             ButtonVariant.Tonal -> if (enabled) {
                 override?.tonalContainer ?: Theme.colors.secondaryContainer
             } else {
-                override?.tonalDisabledContainer ?: Theme.colors.surfaceVariant
+                override?.tonalDisabledContainer ?: colorWithAlpha(Theme.colors.onSurface, 0.12f)
             }
 
             ButtonVariant.Outlined -> 0x00000000
@@ -67,31 +67,31 @@ object ButtonDefaults {
             ButtonVariant.Primary -> if (enabled) {
                 override?.primaryContent ?: Theme.colors.onPrimary
             } else {
-                override?.primaryDisabledContent ?: Theme.stateColors.primaryText.resolve(enabled = false)
+                override?.primaryDisabledContent ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
             }
 
             ButtonVariant.Secondary -> if (enabled) {
                 override?.secondaryContent ?: Theme.colors.onSecondary
             } else {
-                override?.secondaryDisabledContent ?: Theme.stateColors.primaryText.resolve(enabled = false)
+                override?.secondaryDisabledContent ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
             }
 
             ButtonVariant.Tonal -> if (enabled) {
                 override?.tonalContent ?: Theme.colors.onSecondaryContainer
             } else {
-                override?.tonalDisabledContent ?: Theme.stateColors.primaryText.resolve(enabled = false)
+                override?.tonalDisabledContent ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
             }
 
             ButtonVariant.Outlined -> if (enabled) {
-                override?.outlinedContent ?: Theme.stateColors.primaryText.resolve()
+                override?.outlinedContent ?: Theme.colors.primary
             } else {
-                override?.outlinedDisabledContent ?: Theme.stateColors.primaryText.resolve(enabled = false)
+                override?.outlinedDisabledContent ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
             }
 
             ButtonVariant.Text -> if (enabled) {
                 Theme.colors.primary
             } else {
-                Theme.stateColors.primaryText.resolve(enabled = false)
+                colorWithAlpha(Theme.colors.onSurface, 0.38f)
             }
         }
     }
@@ -106,7 +106,7 @@ object ButtonDefaults {
             ButtonVariant.Outlined -> if (enabled) {
                 override?.outlinedBorder ?: Theme.colors.outline
             } else {
-                override?.outlinedDisabledBorder ?: Theme.colors.outlineVariant
+                override?.outlinedDisabledBorder ?: colorWithAlpha(Theme.colors.onSurface, 0.12f)
             }
 
             else -> 0x00000000
@@ -123,8 +123,8 @@ object ButtonDefaults {
         }
     }
 
-    /** Returns the current small theme shape. */
-    fun shape(): UiShape = Theme.shapes.small
+    /** Returns the current full theme shape. */
+    fun shape(): UiShape = Theme.shapes.full
 
     /** Resolves the minimum height for [size]. */
     fun height(
@@ -137,10 +137,28 @@ object ButtonDefaults {
         }
     }
 
-    /** Resolves start and end content padding for [size]. */
+    /**
+     * Resolves start and end content padding for [size] and [variant].
+     *
+     * Text buttons use their lower horizontal inset independently of the theme's filled-button
+     * sizing profile.
+     *
+     * @param size interaction-density tier
+     * @param variant visual hierarchy whose container treatment determines the inset
+     * @return the start and end content inset
+     */
     fun horizontalPadding(
         size: ButtonSize = ButtonSize.Medium,
+        variant: ButtonVariant = ButtonVariant.Primary,
     ): UiDp {
+        if (variant == ButtonVariant.Text) {
+            return when (size) {
+                ButtonSize.Compact,
+                ButtonSize.Medium,
+                -> 12.dp
+                ButtonSize.Large -> 16.dp
+            }
+        }
         return when (size) {
             ButtonSize.Compact -> Theme.controls.button.compactHorizontalPadding
             ButtonSize.Medium -> Theme.controls.button.mediumHorizontalPadding

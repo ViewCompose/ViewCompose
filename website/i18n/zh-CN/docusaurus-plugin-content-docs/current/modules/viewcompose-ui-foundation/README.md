@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 09236de4a97119b76da2179af82d38ff99c1ca5a89fd9c26747b9f5fd1bf878c
+translation_source_hash: 2721592770de1e748b0d3d2153993673f69fc82accfc8a61adf053dea19899aa
 translation_status: current
 ---
 
@@ -58,7 +58,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-ui-tree-builder/)
   及其组件函数构建声明式节点树，不会创建 Android View。
 - [`Theme` 与 `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
-  暴露不可变的颜色、排版、形状、尺寸与浮层 Token，但不选择具体设计系统。
+  暴露不可变的颜色、排版、形状、尺寸与浮层 Token，但不选择具体设计系统。排版支持完整的
+  Display、Headline、Title、Body 与 Label 分级；形状支持 Extra Small、Small、Medium、Large、
+  Extra Large 与 Full 角色，具体值由设计系统适配器提供。
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
   和宿主能力划定作用域。
@@ -89,6 +91,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   让后续尝试仍能恢复它。
 - `UiTheme` 只接收平台无关 Token。Material Android 资源解析、Configuration 观察和主动刷新属于
   `viewcompose-material3`。
+- 现有三类排版构造仍保持简洁：省略的 Headline 角色从 Title 派生，省略的 Display 角色从
+  Headline 派生。现有三级形状构造也继续有效：省略的 Extra Small/Extra Large 分别从
+  Small/Large 派生，Full 默认是相对边界的胶囊形。这些只是兼容回退，不是 Material 数值；
+  Material 应用会从 `viewcompose-material3` 获得具体比例。
 - 每个 `RenderSession` 独占一个容器、其挂载节点、组合、协程 Scope 与 Session 范围浮层。应随
   宿主生命周期调用 `dispose`；释放后的 Session 不能再次使用。
 - 组合准备和树渲染失败会保留上一帧。渲染器建立新原生树之后发生的失败，会按已提交帧失败
@@ -122,3 +128,7 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 不要把自动 Saveable Key、Session 标识、VNode 实现名称、回调实例、工具元数据或诊断结构
 持久化为长期外部数据。即使应用组件源码仍能编译，契约变化也可能要求自定义渲染器与 Host
 同步升级。
+
+完整 `UiTypography` 与 `UiShapes` 值契约属于 Alpha 版本线的源码和二进制变更。它们仍是不可变、
+不包含生命周期或所有权协议的 Q2 值；直接构造保留源码默认值，但穷举解构、反射以及预编译调用方
+必须针对对应版本重新构建。

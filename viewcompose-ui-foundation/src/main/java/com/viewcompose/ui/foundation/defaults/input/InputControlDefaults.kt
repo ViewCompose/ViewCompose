@@ -16,7 +16,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.label ?: Theme.stateColors.primaryText.resolve()
         } else {
-            override?.labelDisabled ?: Theme.stateColors.primaryText.resolve(enabled = false)
+            override?.labelDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -26,7 +26,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -36,7 +36,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -46,7 +46,7 @@ object InputControlDefaults {
         return if (enabled) {
             Theme.stateColors.control.resolve()
         } else {
-            override?.controlDisabled ?: Theme.stateColors.control.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -56,7 +56,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.label ?: Theme.stateColors.primaryText.resolve()
         } else {
-            override?.labelDisabled ?: Theme.stateColors.primaryText.resolve(enabled = false)
+            override?.labelDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -66,7 +66,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -74,9 +74,10 @@ object InputControlDefaults {
     fun switchThumbColor(checked: Boolean = true, enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return when {
-            !enabled -> override?.controlDisabled ?: Theme.stateColors.control.resolve(enabled = false)
-            checked -> override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
-            else -> Theme.stateColors.control.resolve()
+            !enabled && checked -> override?.controlDisabled ?: Theme.colors.surface
+            !enabled -> override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
+            checked -> override?.control ?: Theme.colors.onPrimary
+            else -> Theme.colors.outline
         }
     }
 
@@ -84,12 +85,10 @@ object InputControlDefaults {
     fun switchTrackColor(checked: Boolean = true, enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSwitchColors)
         return when {
-            !enabled -> override?.controlDisabled ?: Theme.stateColors.control.resolve(enabled = false)
-            checked -> {
-                val base = override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
-                (base and 0x00FFFFFF) or 0x61000000
-            }
-            else -> Theme.stateColors.control.resolve()
+            !enabled && checked -> override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.12f)
+            !enabled -> override?.controlDisabled ?: colorWithAlpha(Theme.colors.surfaceContainerHighest, 0.12f)
+            checked -> override?.control ?: Theme.colors.primary
+            else -> Theme.colors.surfaceContainerHighest
         }
     }
 
@@ -99,7 +98,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.label ?: Theme.stateColors.primaryText.resolve()
         } else {
-            override?.labelDisabled ?: Theme.stateColors.primaryText.resolve(enabled = false)
+            override?.labelDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -109,7 +108,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -119,7 +118,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.control ?: Theme.stateColors.controlActivated.resolve(checked = true)
         } else {
-            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -129,7 +128,7 @@ object InputControlDefaults {
         return if (enabled) {
             Theme.stateColors.control.resolve()
         } else {
-            override?.controlDisabled ?: Theme.stateColors.control.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -139,7 +138,7 @@ object InputControlDefaults {
         return if (enabled) {
             override?.control ?: Theme.stateColors.controlActivated.resolve()
         } else {
-            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -149,18 +148,17 @@ object InputControlDefaults {
         return if (enabled) {
             override?.control ?: Theme.stateColors.controlActivated.resolve()
         } else {
-            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
-    /** Resolves Slider track color, applying a translucent activated tone while enabled. */
+    /** Resolves the active Slider track color. */
     fun sliderTrackColor(enabled: Boolean = true): Int {
         val override = UiLocals.current(LocalSliderColors)
         return if (enabled) {
-            val base = override?.control ?: Theme.stateColors.controlActivated.resolve()
-            (base and 0x00FFFFFF) or 0x61000000
+            override?.control ?: Theme.colors.primary
         } else {
-            override?.controlDisabled ?: Theme.stateColors.controlActivated.resolve(enabled = false)
+            override?.controlDisabled ?: colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 

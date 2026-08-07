@@ -24,6 +24,34 @@ object TextDefaults {
         }
     }
 
+    /**
+     * Returns a display style at [tier] from the current theme.
+     *
+     * @param tier semantic size within the display family
+     * @return the matching display text style
+     */
+    fun displayStyle(tier: TypographyTier = TypographyTier.Medium): UiTextStyle {
+        return when (tier) {
+            TypographyTier.Large -> Theme.typography.displayLarge
+            TypographyTier.Medium -> Theme.typography.displayMedium
+            TypographyTier.Small -> Theme.typography.displaySmall
+        }
+    }
+
+    /**
+     * Returns a headline style at [tier] from the current theme.
+     *
+     * @param tier semantic size within the headline family
+     * @return the matching headline text style
+     */
+    fun headlineStyle(tier: TypographyTier = TypographyTier.Medium): UiTextStyle {
+        return when (tier) {
+            TypographyTier.Large -> Theme.typography.headlineLarge
+            TypographyTier.Medium -> Theme.typography.headlineMedium
+            TypographyTier.Small -> Theme.typography.headlineSmall
+        }
+    }
+
     /** Returns a body style at [tier] from the current theme. */
     fun bodyStyle(tier: TypographyTier = TypographyTier.Medium): UiTextStyle {
         return when (tier) {
@@ -50,6 +78,24 @@ object TextDefaults {
 
     /** Returns the current theme's small title style. */
     fun titleSmallStyle(): UiTextStyle = titleStyle(TypographyTier.Small)
+
+    /** Returns the current theme's large display style. */
+    fun displayLargeStyle(): UiTextStyle = displayStyle(TypographyTier.Large)
+
+    /** Returns the current theme's medium display style. */
+    fun displayMediumStyle(): UiTextStyle = displayStyle(TypographyTier.Medium)
+
+    /** Returns the current theme's small display style. */
+    fun displaySmallStyle(): UiTextStyle = displayStyle(TypographyTier.Small)
+
+    /** Returns the current theme's large headline style. */
+    fun headlineLargeStyle(): UiTextStyle = headlineStyle(TypographyTier.Large)
+
+    /** Returns the current theme's medium headline style. */
+    fun headlineMediumStyle(): UiTextStyle = headlineStyle(TypographyTier.Medium)
+
+    /** Returns the current theme's small headline style. */
+    fun headlineSmallStyle(): UiTextStyle = headlineStyle(TypographyTier.Small)
 
     /** Returns the current theme's large body style. */
     fun bodyLargeStyle(): UiTextStyle = bodyStyle(TypographyTier.Large)

@@ -10,29 +10,35 @@ import com.viewcompose.ui.shape.UiShape
 object IconButtonDefaults {
     /** Delegates container color resolution to [ButtonDefaults]. */
     fun containerColor(
-        variant: ButtonVariant = ButtonVariant.Primary,
+        variant: ButtonVariant = ButtonVariant.Text,
         enabled: Boolean = true,
     ): Int = ButtonDefaults.containerColor(variant, enabled)
 
     /** Delegates icon color resolution to [ButtonDefaults]. */
     fun contentColor(
-        variant: ButtonVariant = ButtonVariant.Primary,
+        variant: ButtonVariant = ButtonVariant.Text,
         enabled: Boolean = true,
-    ): Int = ButtonDefaults.contentColor(variant, enabled)
+    ): Int {
+        return if (variant == ButtonVariant.Text) {
+            if (enabled) Theme.colors.onSurfaceVariant else colorWithAlpha(Theme.colors.onSurface, 0.38f)
+        } else {
+            ButtonDefaults.contentColor(variant, enabled)
+        }
+    }
 
     /** Delegates border color resolution to [ButtonDefaults]. */
     fun borderColor(
-        variant: ButtonVariant = ButtonVariant.Primary,
+        variant: ButtonVariant = ButtonVariant.Text,
         enabled: Boolean = true,
     ): Int = ButtonDefaults.borderColor(variant, enabled)
 
     /** Delegates border width resolution to [ButtonDefaults]. */
     fun borderWidth(
-        variant: ButtonVariant = ButtonVariant.Primary,
+        variant: ButtonVariant = ButtonVariant.Text,
     ): UiDp = ButtonDefaults.borderWidth(variant)
 
-    /** Returns the Button default shape. */
-    fun shape(): UiShape = ButtonDefaults.shape()
+    /** Returns the full shape used by standard icon buttons. */
+    fun shape(): UiShape = Theme.shapes.full
 
     /** Uses the corresponding Button height as square IconButton bounds. */
     fun size(
@@ -44,9 +50,9 @@ object IconButtonDefaults {
         size: ButtonSize = ButtonSize.Medium,
     ): UiDp {
         return when (size) {
-            ButtonSize.Compact -> 8.dp
-            ButtonSize.Medium -> 10.dp
-            ButtonSize.Large -> 12.dp
+            ButtonSize.Compact -> 12.dp
+            ButtonSize.Medium -> 12.dp
+            ButtonSize.Large -> 16.dp
         }
     }
 

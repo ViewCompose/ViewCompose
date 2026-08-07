@@ -60,12 +60,12 @@ class ThemeTokenCompatibilityTest {
         }
 
         assertEquals(customTheme.colors.secondary, secondaryContainer)
-        assertEquals(customTheme.colors.onErrorContainer, errorColor)
+        assertEquals(customTheme.colors.onSurfaceVariant, errorColor)
         assertEquals(customTheme.typography.labelSmall.fontSizeSp, compactTextSize)
         assertEquals(customTheme.typography.bodyLarge.fontSizeSp, largeTextSize)
         assertEquals(customTheme.typography.bodyLarge.fontSizeSp, listHeadlineSize)
         assertEquals(customTheme.typography.titleMedium.fontSizeSp, topTitleSize)
-        assertEquals(customTheme.shapes.small, smallShape)
+        assertEquals(customTheme.shapes.full, smallShape)
     }
 
     @Test
@@ -82,5 +82,11 @@ class ThemeTokenCompatibilityTest {
         assertEquals(typography.bodyMedium, typography.bodySmall)
         assertEquals(typography.labelMedium, typography.labelLarge)
         assertEquals(typography.labelMedium, typography.labelSmall)
+        assertEquals(typography.titleLarge, typography.headlineLarge)
+        assertEquals(typography.titleMedium, typography.headlineMedium)
+        assertEquals(typography.titleSmall, typography.headlineSmall)
+        assertEquals(typography.headlineLarge, typography.displayLarge)
+        assertEquals(typography.headlineMedium, typography.displayMedium)
+        assertEquals(typography.headlineSmall, typography.displaySmall)
     }
 }

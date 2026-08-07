@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Complete the standard Material 3 token bridge, deterministic fallback themes, and low-risk semantic component defaults.",
+  "changes": [
+    { "artifact": "viewcompose-material3", "impact": "feature" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" }
+  ],
+  "ignored": []
+}

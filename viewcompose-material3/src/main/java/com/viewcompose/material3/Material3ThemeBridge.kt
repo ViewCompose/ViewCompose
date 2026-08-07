@@ -13,7 +13,6 @@ import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiStateColorDefaults
 import com.viewcompose.ui.foundation.UiStateColors
 import com.viewcompose.ui.foundation.UiTextStyle
-import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.UiThemeMetadata
 import com.viewcompose.ui.foundation.UiThemeOrigin
 import com.viewcompose.ui.foundation.UiThemeTokens
@@ -185,13 +184,13 @@ object Material3ThemeBridge {
  */
 internal object Material3ThemeTokenMapper {
     /**
-     * Builds tokens from a complete Android snapshot, falling back to framework light/dark defaults.
+     * Builds tokens from a complete Android snapshot, falling back to Material light/dark defaults.
      */
     fun fromSnapshot(
         snapshot: Material3ThemeSnapshot,
         isDarkMode: Boolean = false,
     ): UiThemeTokens {
-        val fallback = if (isDarkMode) UiThemeDefaults.dark() else UiThemeDefaults.light()
+        val fallback = if (isDarkMode) Material3ThemeDefaults.dark() else Material3ThemeDefaults.light()
         val baseTokens = fromThemeColors(
             readColor = { attr ->
                 when (attr) {
@@ -284,11 +283,38 @@ internal object Material3ThemeTokenMapper {
                 bodySmall = resolveTextStyle(snapshot.typography.bodySmall, fallback.typography.bodySmall),
                 labelLarge = resolveTextStyle(snapshot.typography.labelLarge, fallback.typography.labelLarge),
                 labelSmall = resolveTextStyle(snapshot.typography.labelSmall, fallback.typography.labelSmall),
+                headlineLarge = resolveTextStyle(
+                    snapshot.typography.headlineLarge,
+                    fallback.typography.headlineLarge,
+                ),
+                headlineMedium = resolveTextStyle(
+                    snapshot.typography.headlineMedium,
+                    fallback.typography.headlineMedium,
+                ),
+                headlineSmall = resolveTextStyle(
+                    snapshot.typography.headlineSmall,
+                    fallback.typography.headlineSmall,
+                ),
+                displayLarge = resolveTextStyle(
+                    snapshot.typography.displayLarge,
+                    fallback.typography.displayLarge,
+                ),
+                displayMedium = resolveTextStyle(
+                    snapshot.typography.displayMedium,
+                    fallback.typography.displayMedium,
+                ),
+                displaySmall = resolveTextStyle(
+                    snapshot.typography.displaySmall,
+                    fallback.typography.displaySmall,
+                ),
             ),
             shapes = UiShapes(
                 small = snapshot.shapes.small ?: fallback.shapes.small,
                 medium = snapshot.shapes.medium ?: fallback.shapes.medium,
                 large = snapshot.shapes.large ?: fallback.shapes.large,
+                extraSmall = snapshot.shapes.extraSmall ?: fallback.shapes.extraSmall,
+                extraLarge = snapshot.shapes.extraLarge ?: fallback.shapes.extraLarge,
+                full = fallback.shapes.full,
             ),
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.AndroidTheme,
@@ -308,7 +334,7 @@ internal object Material3ThemeTokenMapper {
         readScrimOpacity: () -> Float? = { null },
         isDarkMode: Boolean = false,
     ): UiThemeTokens {
-        val fallback = if (isDarkMode) UiThemeDefaults.dark() else UiThemeDefaults.light()
+        val fallback = if (isDarkMode) Material3ThemeDefaults.dark() else Material3ThemeDefaults.light()
         val colors = UiColors(
             background = readColor(android.R.attr.colorBackground) ?: fallback.colors.background,
             onBackground = readColor(com.google.android.material.R.attr.colorOnBackground)
@@ -399,16 +425,16 @@ internal object Material3ThemeTokenMapper {
                 controlHighlight = readStateColor(androidx.appcompat.R.attr.colorControlHighlight)
                     ?: fallbackStateColors.controlHighlight,
             ),
-            typography = UiTypography(
-                titleMedium = UiTextStyle(
+            typography = fallback.typography.copy(
+                titleMedium = fallback.typography.titleMedium.copy(
                     fontSizeSp = readTextSizeSp(android.R.attr.textAppearanceLarge)
                         ?: fallback.typography.titleMedium.fontSizeSp,
                 ),
-                bodyMedium = UiTextStyle(
+                bodyMedium = fallback.typography.bodyMedium.copy(
                     fontSizeSp = readTextSizeSp(android.R.attr.textAppearanceMedium)
                         ?: fallback.typography.bodyMedium.fontSizeSp,
                 ),
-                labelMedium = UiTextStyle(
+                labelMedium = fallback.typography.labelMedium.copy(
                     fontSizeSp = readTextSizeSp(android.R.attr.textAppearanceSmall)
                         ?: fallback.typography.labelMedium.fontSizeSp,
                 ),

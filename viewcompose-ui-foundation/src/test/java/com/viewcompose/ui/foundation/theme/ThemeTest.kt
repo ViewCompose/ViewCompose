@@ -181,7 +181,7 @@ class ThemeTest {
 
         assertEquals(0xFF225577.toInt(), buttonContainer)
         assertEquals(0xFF225577.toInt(), progressIndicator)
-        assertEquals(0xFF225577.toInt(), segmentedIndicator)
+        assertEquals(baseTheme.colors.secondaryContainer, segmentedIndicator)
     }
 
     @Test
@@ -328,7 +328,7 @@ class ThemeTest {
 
         val spec = tree.single().spec as ButtonNodeProps
         assertEquals(customTheme.colors.primary, spec.backgroundColor)
-        assertEquals(customTheme.shapes.small, spec.shape)
+        assertEquals(customTheme.shapes.full, spec.shape)
         assertEquals(pressedOverlayColorFor(customTheme.colors.onSurface), spec.rippleColor)
         assertEquals(0xFFFFFFFF.toInt(), spec.textColor)
         assertEquals(customTheme.typography.labelLarge.fontSizeSp, spec.textSizeSp)
@@ -351,7 +351,7 @@ class ThemeTest {
         assertEquals(0x00000000, spec.backgroundColor)
         assertEquals(Theme.colors.outline, spec.borderColor)
         assertEquals(1.dp, spec.borderWidth)
-        assertEquals(Theme.colors.onSurface, spec.textColor)
+        assertEquals(Theme.colors.primary, spec.textColor)
     }
 
     @Test
@@ -370,8 +370,8 @@ class ThemeTest {
         val spec = tree.single().spec as ButtonNodeProps
 
         assertEquals(false, spec.enabled)
-        assertEquals(baseTheme.colors.outlineVariant, spec.backgroundColor)
-        assertEquals(baseTheme.colors.onSurfaceVariant, spec.textColor)
+        assertEquals(colorWithAlpha(baseTheme.colors.onSurface, 0.12f), spec.backgroundColor)
+        assertEquals(colorWithAlpha(baseTheme.colors.onSurface, 0.38f), spec.textColor)
     }
 
     @Test
@@ -504,9 +504,9 @@ class ThemeTest {
 
         assertEquals(customTheme.colors.secondaryContainer, buttonTonal)
         assertEquals(customTheme.colors.outline, outlinedBorder)
-        assertEquals(customTheme.colors.outlineVariant, disabledPrimary)
-        assertEquals(customTheme.colors.outlineVariant, linearProgressTrack)
-        assertEquals(customTheme.colors.primary, segmentedIndicator)
+        assertEquals(colorWithAlpha(customTheme.colors.onSurface, 0.12f), disabledPrimary)
+        assertEquals(customTheme.colors.secondaryContainer, linearProgressTrack)
+        assertEquals(customTheme.colors.secondaryContainer, segmentedIndicator)
     }
 
     @Test
@@ -676,9 +676,9 @@ class ThemeTest {
             }
         }
 
-        assertEquals(customTheme.colors.surface, container)
-        assertEquals(customTheme.colors.surfaceVariant, disabledContainer)
-        assertEquals(customTheme.colors.onErrorContainer, errorColor)
+        assertEquals(customTheme.colors.surfaceContainerHighest, container)
+        assertEquals(customTheme.colors.surfaceContainerHighest, disabledContainer)
+        assertEquals(customTheme.colors.onSurfaceVariant, errorColor)
         assertEquals(customTheme.colors.primary, controlColor)
         assertEquals(customTheme.shapes.medium, surfaceShape)
         assertEquals(pressedOverlayColorFor(customTheme.colors.onSurface), pressedColor)
@@ -782,7 +782,7 @@ class ThemeTest {
         assertEquals(0xFF778899.toInt(), buttonPrimary)
         assertEquals(0xFF998877.toInt(), segmentedIndicator)
         assertEquals(0xFF556677.toInt(), disabledControl)
-        assertEquals(baseTheme.colors.surface, baseTextField)
+        assertEquals(baseTheme.colors.surfaceContainerHighest, baseTextField)
     }
 
     @Test

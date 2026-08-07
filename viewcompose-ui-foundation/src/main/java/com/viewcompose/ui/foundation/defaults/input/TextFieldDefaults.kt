@@ -30,32 +30,30 @@ object TextFieldDefaults {
     ): UiTextStyle {
         return when (size) {
             TextFieldSize.Compact -> TextDefaults.labelSmallStyle()
-            TextFieldSize.Medium -> TextDefaults.bodyMediumStyle()
+            TextFieldSize.Medium -> TextDefaults.bodyLargeStyle()
             TextFieldSize.Large -> TextDefaults.bodyLargeStyle()
         }
     }
 
-    /** Resolves editable text color for enabled and error state. */
+    /** Resolves editable text color without replacing content color in the error state. */
     fun textColor(
         enabled: Boolean = true,
         isError: Boolean = false,
     ): Int {
         return when {
-            isError -> Theme.colors.onErrorContainer
             enabled -> Theme.stateColors.primaryText.resolve()
-            else -> Theme.stateColors.primaryText.resolve(enabled = false)
+            else -> colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
-    /** Resolves placeholder color for enabled and error state. */
+    /** Resolves placeholder color without replacing content color in the error state. */
     fun hintColor(
         enabled: Boolean = true,
         isError: Boolean = false,
     ): Int {
         return when {
-            isError -> Theme.colors.onErrorContainer
             enabled -> Theme.stateColors.secondaryText.resolve()
-            else -> Theme.stateColors.secondaryText.resolve(enabled = false)
+            else -> colorWithAlpha(Theme.colors.onSurface, 0.38f)
         }
     }
 
@@ -63,19 +61,25 @@ object TextFieldDefaults {
     fun labelColor(
         enabled: Boolean = true,
         isError: Boolean = false,
-    ): Int = hintColor(enabled = enabled, isError = isError)
+    ): Int {
+        return when {
+            isError -> Theme.colors.error
+            enabled -> Theme.colors.onSurfaceVariant
+            else -> colorWithAlpha(Theme.colors.onSurface, 0.38f)
+        }
+    }
 
     /** Resolves supporting text color using placeholder color semantics. */
     fun supportingTextColor(
         enabled: Boolean = true,
         isError: Boolean = false,
-    ): Int = hintColor(enabled = enabled, isError = isError)
+    ): Int = labelColor(enabled = enabled, isError = isError)
 
-    /** Returns medium label typography. */
-    fun labelTextStyle(): UiTextStyle = TextDefaults.labelMediumStyle()
+    /** Returns small body typography. */
+    fun labelTextStyle(): UiTextStyle = TextDefaults.bodySmallStyle()
 
-    /** Returns medium label typography for supporting text. */
-    fun supportingTextStyle(): UiTextStyle = TextDefaults.labelMediumStyle()
+    /** Returns small body typography for supporting text. */
+    fun supportingTextStyle(): UiTextStyle = TextDefaults.bodySmallStyle()
 
     /** Resolves container color for [variant], [enabled], and [isError] state. */
     fun containerColor(
@@ -86,23 +90,17 @@ object TextFieldDefaults {
         val override = UiLocals.current(LocalTextFieldColors)
         return when {
             variant == TextFieldVariant.Outlined -> 0x00000000
-            isError && variant == TextFieldVariant.Tonal ->
-                override?.tonalErrorContainer ?: Theme.colors.errorContainer
-
-            isError ->
-                override?.filledErrorContainer ?: Theme.colors.errorContainer
-
             variant == TextFieldVariant.Tonal && enabled ->
-                override?.tonalContainer ?: Theme.colors.surfaceVariant
+                override?.tonalContainer ?: Theme.colors.surfaceContainerHigh
 
             variant == TextFieldVariant.Tonal ->
-                override?.tonalDisabledContainer ?: Theme.colors.surfaceVariant
+                override?.tonalDisabledContainer ?: Theme.colors.surfaceContainerHighest
 
             enabled ->
-                override?.filledContainer ?: Theme.colors.surface
+                override?.filledContainer ?: Theme.colors.surfaceContainerHighest
 
             else ->
-                override?.filledDisabledContainer ?: Theme.colors.surfaceVariant
+                override?.filledDisabledContainer ?: Theme.colors.surfaceContainerHighest
         }
     }
 
@@ -118,10 +116,10 @@ object TextFieldDefaults {
                 override?.outlinedErrorBorder ?: Theme.colors.error
 
             variant == TextFieldVariant.Outlined && enabled ->
-                override?.outlinedBorder ?: Theme.stateColors.control.resolve()
+                override?.outlinedBorder ?: Theme.colors.outline
 
             variant == TextFieldVariant.Outlined ->
-                override?.outlinedDisabledBorder ?: Theme.stateColors.control.resolve(enabled = false)
+                override?.outlinedDisabledBorder ?: colorWithAlpha(Theme.colors.onSurface, 0.12f)
 
             else -> 0x00000000
         }
@@ -137,8 +135,8 @@ object TextFieldDefaults {
         }
     }
 
-    /** Returns the current small theme shape. */
-    fun shape(): UiShape = Theme.shapes.small
+    /** Returns the current extra-small theme shape. */
+    fun shape(): UiShape = Theme.shapes.extraSmall
 
     /** Resolves minimum field height for [size]. */
     fun height(

@@ -21,8 +21,8 @@ object ChipDefaults {
         enabled: Boolean = true,
     ): Int {
         return when {
-            !enabled -> Theme.colors.surface
-            selected && variant == ChipVariant.Filter -> Theme.colors.surfaceVariant
+            !enabled -> colorWithAlpha(Theme.colors.onSurface, 0.12f)
+            selected && variant == ChipVariant.Filter -> Theme.colors.secondaryContainer
             else -> 0x00000000 // transparent
         }
     }
@@ -34,9 +34,9 @@ object ChipDefaults {
         enabled: Boolean = true,
     ): Int {
         return when {
-            !enabled -> Theme.colors.onSurfaceVariant
-            selected -> Theme.colors.primary
-            else -> Theme.colors.onSurface
+            !enabled -> colorWithAlpha(Theme.colors.onSurface, 0.38f)
+            selected -> Theme.colors.onSecondaryContainer
+            else -> Theme.colors.onSurfaceVariant
         }
     }
 
@@ -48,6 +48,7 @@ object ChipDefaults {
     ): Int {
         return when {
             selected && variant == ChipVariant.Filter -> 0x00000000
+            !enabled -> colorWithAlpha(Theme.colors.onSurface, 0.12f)
             else -> Theme.colors.outline
         }
     }
