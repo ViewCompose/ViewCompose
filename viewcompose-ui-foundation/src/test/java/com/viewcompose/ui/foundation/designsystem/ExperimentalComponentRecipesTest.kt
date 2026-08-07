@@ -11,9 +11,13 @@ import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.modifier.SemanticsModifierElement
+import com.viewcompose.ui.modifier.SemanticsRole
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ExperimentalComponentRecipesTest {
@@ -82,6 +86,65 @@ class ExperimentalComponentRecipesTest {
         assertEquals(baseline[1].modifier, provided[1].modifier)
     }
 
+    @Test
+    fun `switch recipe owns generic geometry order and checked semantics`() {
+        val rounded = switchTree(recipes = roundedRecipes(), checked = true)
+        val cut = switchTree(recipes = cutCornerRecipes(), checked = false)
+
+        assertEquals(NodeType.Row, rounded.type)
+        assertEquals(NodeType.Row, cut.type)
+        assertFalse(rounded.flatten().any { node -> node.type == NodeType.Switch })
+        assertFalse(cut.flatten().any { node -> node.type == NodeType.Switch })
+        assertEquals(NodeType.Box, rounded.children.first().type)
+        assertEquals(NodeType.Text, rounded.children.last().type)
+        assertEquals(NodeType.Text, cut.children.first().type)
+        assertEquals(NodeType.Box, cut.children.last().type)
+
+        val roundedSemantics = rounded.modifier.elements
+            .filterIsInstance<SemanticsModifierElement>()
+            .single()
+            .configuration
+        val cutSemantics = cut.modifier.elements
+            .filterIsInstance<SemanticsModifierElement>()
+            .single()
+            .configuration
+        assertEquals(SemanticsRole.Switch, roundedSemantics.role)
+        assertEquals(true, roundedSemantics.checked)
+        assertEquals(SemanticsRole.Switch, cutSemantics.role)
+        assertEquals(false, cutSemantics.checked)
+        assertTrue(rounded.modifier.toString().contains("ClickableModifierElement"))
+    }
+
+    @Test
+    fun `disabled recipe switch removes click handling and retains disabled semantics`() {
+        val node = switchTree(
+            recipes = cutCornerRecipes(),
+            checked = true,
+            enabled = false,
+        )
+        val semantics = node.modifier.elements
+            .filterIsInstance<SemanticsModifierElement>()
+            .single()
+            .configuration
+
+        assertEquals(false, semantics.enabled)
+        assertEquals(true, semantics.checked)
+        assertFalse(node.modifier.toString().contains("ClickableModifierElement"))
+        assertNull((node.spec as com.viewcompose.ui.node.spec.RowNodeProps).stateLayerColors)
+    }
+
+    @Test
+    fun `native switch transport cannot express high fidelity geometry or motion`() {
+        val fieldNames = com.viewcompose.ui.node.spec.ToggleNodeProps::class.java.declaredFields
+            .map { field -> field.name }
+            .toSet()
+
+        assertFalse("ToggleNodeProps unexpectedly owns shape", "shape" in fieldNames)
+        assertFalse("ToggleNodeProps unexpectedly owns track geometry", "trackWidth" in fieldNames)
+        assertFalse("ToggleNodeProps unexpectedly owns thumb geometry", "thumbSize" in fieldNames)
+        assertFalse("ToggleNodeProps unexpectedly owns motion", "motion" in fieldNames)
+    }
+
     private fun recipeTree(
         tokens: UiThemeTokens,
         recipes: ExperimentalComponentRecipes,
@@ -99,6 +162,25 @@ class ExperimentalComponentRecipesTest {
     private fun existingComponentTree() = buildVNodeTree {
         Button(text = "Existing")
         Surface { Text("Content") }
+    }
+
+    private fun switchTree(
+        recipes: ExperimentalComponentRecipes,
+        checked: Boolean,
+        enabled: Boolean = true,
+    ) = buildVNodeTree {
+        ProvideExperimentalComponentRecipes(recipes) {
+            ExperimentalRecipeSwitch(
+                text = "Sync",
+                checked = checked,
+                enabled = enabled,
+                onCheckedChange = {},
+            )
+        }
+    }.single()
+
+    private fun com.viewcompose.ui.node.VNode.flatten(): List<com.viewcompose.ui.node.VNode> {
+        return listOf(this) + children.flatMap { child -> child.flatten() }
     }
 
     private fun roundedRecipes(): ExperimentalComponentRecipes {
@@ -131,6 +213,31 @@ class ExperimentalComponentRecipesTest {
                 contentColor = 0xFF142019.toInt(),
                 shape = UiShape.rounded(20.dp),
                 elevation = 2.dp,
+                stateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x1F142019,
+                    focusedColor = 0x29142019,
+                    hoveredColor = 0x14142019,
+                ),
+            ),
+            switch = ExperimentalSwitchRecipe(
+                controlPlacement = ExperimentalControlPlacement.Leading,
+                checkedTrackColor = 0xFF214E34.toInt(),
+                uncheckedTrackColor = 0xFFCAD8CE.toInt(),
+                disabledTrackColor = 0x6677867B,
+                checkedThumbColor = 0xFFFFFFFF.toInt(),
+                uncheckedThumbColor = 0xFFF5FBF6.toInt(),
+                disabledThumbColor = 0x99FFFFFF.toInt(),
+                enabledLabelColor = 0xFF142019.toInt(),
+                disabledLabelColor = 0x66142019,
+                trackShape = UiShape.roundedRelative(0.5f),
+                thumbShape = UiShape.roundedRelative(0.5f),
+                trackWidth = 44.dp,
+                trackHeight = 26.dp,
+                trackPadding = 3.dp,
+                thumbSize = 20.dp,
+                minimumInteractiveHeight = 48.dp,
+                labelSpacing = 12.dp,
+                labelStyle = UiTextStyle(fontSizeSp = 14.sp, fontWeight = 500),
                 stateLayerColors = UiStateLayerColors(
                     pressedColor = 0x1F142019,
                     focusedColor = 0x29142019,
@@ -172,6 +279,31 @@ class ExperimentalComponentRecipesTest {
                 borderWidth = 2.dp,
                 borderColor = 0xFF6A2B18.toInt(),
                 disabledAlpha = 0.48f,
+                stateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x1F32150C,
+                    focusedColor = 0x2932150C,
+                    hoveredColor = 0x1432150C,
+                ),
+            ),
+            switch = ExperimentalSwitchRecipe(
+                controlPlacement = ExperimentalControlPlacement.Trailing,
+                checkedTrackColor = 0xFF6A2B18.toInt(),
+                uncheckedTrackColor = 0xFFFFD8C9.toInt(),
+                disabledTrackColor = 0x66B89A8E,
+                checkedThumbColor = 0xFFFFF4EF.toInt(),
+                uncheckedThumbColor = 0xFF6A2B18.toInt(),
+                disabledThumbColor = 0x99FFF4EF.toInt(),
+                enabledLabelColor = 0xFF32150C.toInt(),
+                disabledLabelColor = 0x6632150C,
+                trackShape = UiShape.cut(6.dp),
+                thumbShape = UiShape.cut(3.dp),
+                trackWidth = 52.dp,
+                trackHeight = 28.dp,
+                trackPadding = 4.dp,
+                thumbSize = 20.dp,
+                minimumInteractiveHeight = 52.dp,
+                labelSpacing = 16.dp,
+                labelStyle = UiTextStyle(fontSizeSp = 16.sp, fontWeight = 650),
                 stateLayerColors = UiStateLayerColors(
                     pressedColor = 0x1F32150C,
                     focusedColor = 0x2932150C,
