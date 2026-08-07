@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 79b84ae197c106bd2fd25abba67ab81dd0102cb82e669f99162bea15f0ac7675
+translation_source_hash: bea7f3151a0d6ce173f784db5eaf4b20e2091a9c65f0953eab940c3a5a04bfff
 translation_status: current
 ---
 
@@ -32,6 +32,8 @@ dependencies {
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
   ConstraintLayout 与 SwipeRefreshLayout；不依赖 Material Components。
 - 通用 Surface、圆角/切角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
+- 引擎自有圆角使用圆弧绘制。Shape 边框会沿向内偏移半个线宽的路径居中绘制，保证轮廓完整落在
+  逻辑 Drawable 边界内，包括组件在较大触控目标中居中较短可见 Surface 的情况。
 - Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
   涟漪和轮廓，同时不改变测量、命中测试或无障碍边界。显式 Background、Border、Corner Radius
   或 Shape Modifier 会关闭组件提供的内缩，保证应用样式优先。

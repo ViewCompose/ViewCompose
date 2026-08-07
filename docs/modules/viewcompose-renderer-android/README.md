@@ -32,6 +32,9 @@ dependencies {
   ConstraintLayout, and SwipeRefreshLayout. Material Components is not a dependency.
 - Generic surfaces, rounded/cut shapes, and progress indicators use engine-owned Android drawing
   implementations driven by resolved node values.
+- Engine-owned rounded shapes use circular arcs. Shape borders are centered on a path inset by half
+  the stroke width, keeping the complete outline inside its logical drawable bounds even when a
+  component centers a shorter visible surface inside a larger target.
 - A Button may request a visible surface shorter than its effective View target. The engine centers
   its background, border, ripple, and outline inside the View without changing measurement,
   hit-testing, or accessibility bounds. An explicit background, border, corner radius, or shape

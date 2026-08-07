@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Separate Material 3 Button surfaces from effective targets and enforce 48dp native compact-input targets without overriding exact application constraints.",
+  "summary": "Separate Material 3 Button surfaces from effective targets, preserve complete circular shape outlines, and enforce 48dp native compact-input targets without overriding exact application constraints.",
   "changes": [
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
     { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },

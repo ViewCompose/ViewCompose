@@ -263,6 +263,9 @@ Accepted Button experiment, 2026-08-07:
 - focused UI Foundation, Material 3, and Android Renderer unit suites pass. The implementation is
   retained because it satisfies the keep rule without a Material dependency or policy branch in
   Android Renderer;
+- screenshot review exposed a generic engine-owned shape defect rather than a Button token error.
+  Rounded corners now use circular arcs, borders use a half-stroke inset path, and shape patches
+  rebuild cached geometry. Renderer pixel tests cover pill corners and all four outline edges;
 - this result does not by itself approve a generic touch-delegate or wrapper. Compact-control work
   must still prove deterministic overlap, scrolling, clipping, accessibility, and explicit-size
   behavior.
@@ -424,5 +427,6 @@ This plan is complete when:
 | 2026-08-06 | 1 | UI Foundation unit suite, Material mapper/static-token/Robolectric tests | Low-risk implementation retained pending release review |
 | 2026-08-07 | 2 | Default-theme Settings fixture; API 35 screenshots and View/drawable/accessibility bounds at 1.0/1.3 font scale | Accessibility gap confirmed; Button separation experiment approved, generic expansion remains conditional |
 | 2026-08-07 | 2 | Button 48dp target / 40dp visible surface reports and screenshots at 1.0/1.3 font scale; edge-target device click; focused unit suites | Button experiment retained; compact-control generalization remains conditional |
+| 2026-08-07 | 2 | Default-theme screenshot review plus Renderer circular-corner, complete-outline, and shape-patch pixel tests | Generic shape path fix retained; Button full-shape token remains unchanged |
 | 2026-08-07 | 2 | Checkbox, RadioButton, Switch, and Slider 48dp View/semantic reports at 1.0/1.3 font scale; adjacent-target, scrolling, explicit-size, clipping, and focused unit coverage | Native compact-input experiment retained; Chip expansion deferred pending a generic composite-target contract |
 | 2026-08-07 | 2 | Button RippleDrawable report plus pinned Material selector comparison for pressed, focused, and hovered output | State-layer mismatch confirmed; baseline retained and production behavior unchanged pending a reusable renderer-neutral contract |
