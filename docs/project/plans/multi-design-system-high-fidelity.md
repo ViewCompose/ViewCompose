@@ -1259,6 +1259,60 @@ Rollback: attribution may remain when independently truthful, but a presenter or
 abstraction that fails behavior, visual, dependency, or performance gates is removed rather than
 hidden behind optimistic conformance.
 
+## Phase 17: One UI public-guidance correction and explicit overlay adapter
+
+Status: implementation and focused JVM/Android compilation complete; emulator visual acceptance,
+published-consumer verification, and full repository gates remain required before release.
+
+Goal: correct high-value One UI 7 mismatches that the public Samsung guidance can support, make
+every interpreted token genuinely overrideable, and add One UI overlay presentation without a
+duplicate application-host facade or a Material dependency.
+
+Audit decisions:
+
+| Area | Decision | Evidence boundary |
+| --- | --- | --- |
+| Button geometry | Use the published `18dp` contained-button radius and separate the 36dp visual surface from the 48dp effective target | Exact public drawable value; target separation is ViewCompose accessibility policy |
+| Button vocabulary | Add Flat beside Neutral and Primary | Public guidance distinguishes flat, gray contained, and colored contained emphasis |
+| Primary/activated color | Align static action colors to published values and make Switch consume `stateColors.controlActivated` | Exact public color values |
+| Layout margin | Use at least 24dp in the deterministic fixture | Exact public grid minimum; applications still own page layout |
+| Bottom navigation | Replace the Material-style selected pill with selected text plus underline | Public component guidance and reference imagery; underline dimensions remain interpreted |
+| Surface, Switch, TextField, typography, overlay chrome | Keep named, overrideable ViewCompose interpretation values | Samsung does not publish a complete numeric token set for these paths |
+
+Ordered implementation:
+
+1. Remove private component sizing constants where an existing Button, TextField, NavigationBar,
+   shape, or activated-control token already declares the value. Add unit tests that override those
+   paths and inspect the emitted node specs.
+2. Preserve One UI as a DSL-composite design system over neutral primitives and the native editing
+   core. Do not add Samsung or Material branches to Renderer.
+3. Add `viewcompose-overlay-oneui7-android` as a narrow Integration artifact over
+   `viewcompose-overlay-android`. Retain neutral Dialog, Popup, Toast, nested sessions, and cleanup;
+   own only One UI Snackbar and bottom-dialog presentation.
+4. Keep neutral `setUiContent`. Do not publish `setOneUi7UiContent`, because the adapter does not
+   need a different Android Context before View creation.
+5. Keep `OneUi7Theme` overlay attribution unsupported by default. The explicit root assembly passes
+   the active adapter's `integrationAttribution` into the theme so diagnostics describe runtime
+   truth instead of classpath capability.
+6. Add Light/LTR/1.0 and Dark/RTL/1.3 demo evidence for components, Snackbar, and bottom dialog;
+   retain the physical Samsung acceptance gate before claiming OEM fidelity.
+
+Keep gate:
+
+- One UI production modules contain no Google Material dependency, import, presenter, or service
+  registration;
+- Button, TextField, NavigationBar, shape, and activated-control overrides change emitted output;
+- Snackbar queue terminal callbacks and sheet session cleanup remain exactly-once/root-scoped;
+- the isolated Maven consumer resolves the explicit One UI adapter without a Material artifact;
+- strict API docs, bilingual module/architecture/guide pages, dependency contracts, and the single
+  immutable release changeset pass; and
+- emulator screenshots are inspected for clipping, geometry, theme identity, RTL, and the actual
+  presenter attribution before the implementation is retained.
+
+Rollback: remove only the One UI presenter adapter or an interpreted visual correction that fails
+the screenshot/behavior gates. Preserve the token-consumption fixes and truthful unsupported
+attribution when they pass independently.
+
 ## Testing and evidence matrix
 
 Every structural phase selects a proportional subset and records why omitted cells are safe.

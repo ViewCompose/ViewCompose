@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/design-systems.md
-translation_source_hash: a6a2b78a93b54d10dfa4a3691820c855c445ce121a167314de9384fdec7875b6
+translation_source_hash: 82787bce0653015e951ffecf622f2b873bb113ea5b91a1c54d886903ce481e07
 translation_status: current
 ---
 
@@ -203,15 +203,18 @@ Overlay 选择遵循与 Context、Token 解析相同的 Root 边界：
 
 - `viewcompose-overlay-android` 负责不依赖 Material 的 Android Window 传输、嵌套渲染容器、
   Toast 与生命周期清理；
-- 具名 Adapter 只提供保留设计库价值的行为，目前是 Material Snackbar 与 Modal Bottom Sheet；
+- 具名 Adapter 只提供保留设计系统价值的行为，目前包括 Material 与 One UI 的 Snackbar、Modal
+  Bottom Sheet 呈现；
 - 中立 `setUiContent` 显式构造中立传输，`setMaterial3UiContent` 显式构造 Material Adapter；
 - Service Discovery 只是底层中立 Host 的便捷能力，不得在设计系统间选择；
 - `UiIntegrationAttribution` 随设计系统快照传递，为延迟 Overlay 诊断记录 Transport、Presenter、
   Conformance 与 Fallback。
 
-One UI 当前使用中立 Dialog、Popup 与 Toast。Snackbar 与 Modal Bottom Sheet 保持
-`Unsupported`；在 One UI 拥有并验证对应 Recipe 前禁止 Material Fallback。只有必须在 View
-构造前解析不同 Android Context 的设计系统才需要新增 Activity/Fragment Extension。
+One UI 使用中立 Dialog、Popup 与 Toast，并通过显式
+`viewcompose-overlay-oneui7-android` Adapter 提供自有 Snackbar 和底部 Dialog Recipe。未在 Root
+安装该 Adapter 时，这两项能力仍如实报告为 `Unsupported`；Classpath 存在不会自动选择它们，且
+禁止 Material Fallback。只有必须在 View 构造前解析不同 Android Context 的设计系统才需要新增
+Activity/Fragment Extension。
 
 - `viewcompose-host-android` 始终保持设计系统无关。
 - `viewcompose-android` 这类通用名称的聚合模块必须收敛到中立 Host 入口；Material 便捷能力属于
@@ -262,6 +265,7 @@ Material 组件的优先顺序是：
 | 底层挂载与平台安装 | `viewcompose-host-android` |
 | Material XML/Dynamic Color 映射与 Material 策略 | `viewcompose-material3` 或 Material 具名 Android 集成 |
 | One UI Token、Recipe 与组件 | `viewcompose-oneui7` |
+| One UI Android Overlay 呈现 | `viewcompose-overlay-oneui7-android` |
 | 产品专属设计词汇 | 产品自有设计系统模块 |
 | Material/OEM 外部控件互操作 | 通过中立边界挂载的具名 Android 集成 |
 | Demo 矩阵与截图诊断 | `app` 与 Preview/Test Tooling |

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 6130de555a4e0bc5b159e8e4c307c5248c74e36dae97a0be21c4db530235ee2f
+translation_source_hash: 84f7fffa3b6065ca322fb569015cc13d2f843dfd6a810f809b68fd31a15a5321
 translation_status: current
 ---
 
@@ -57,6 +57,7 @@ translation_status: current
 | `viewcompose-android` | 中立 Android Consumer 聚合包与 Activity/Fragment `setUiContent` 入口 | 聚合默认 Engine、UI Foundation、Lifecycle 与 ViewModel 集成，不选择 Material 或其他设计系统；显式根 Context 与 Composition Provider 决定设计策略 |
 | `viewcompose-overlay-android` | 不依赖 Material 的 Android Overlay 传输，负责 Dialog、Popup、Toast、嵌套 Surface 与 Root/Session 清理 | 提供窄型 Snackbar 与 Modal Sheet Presenter 插槽；不选择或依赖设计系统 |
 | `viewcompose-overlay-material3-android` | Material Snackbar 与 Modal Bottom Sheet Adapter | 把 Material Presenter 显式装配到中立 Android 传输，不注册完整 Host Provider |
+| `viewcompose-overlay-oneui7-android` | 不依赖 Material 的 One UI Snackbar 与底部 Dialog Adapter | 把 One UI Presenter 显式装配到中立 Android 传输，不新增重复的 Activity/Fragment Host API |
 | `viewcompose-image-coil` | 可选图片加载适配器 | 为 Coil 3 实现 `UiImageLoader`，接收通用 source/request 契约，不把 Coil 关注点回流到 renderer 核心 |
 | `viewcompose-image-glide` | 可选图片加载适配器 | 为 Glide 5 实现 `UiImageLoader`，按目标解析 `RequestManager` 并使用应用所有的 `AppGlideModule` 配置 |
 | `viewcompose-lifecycle-androidx` | 生命周期感知的状态收集 API（`collectAsStateWithLifecycle`）与生命周期 Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
@@ -166,7 +167,8 @@ flowchart TD
 
 1. 通用 Android Dialog、PopupWindow、Toast、锚点观察与嵌套 Overlay 容器只放
    `viewcompose-overlay-android`；Material Snackbar 与 Modal Sheet Presenter 只放
-   `viewcompose-overlay-material3-android`。
+   `viewcompose-overlay-material3-android`；One UI Snackbar 与底部 Dialog Presenter 只放
+   `viewcompose-overlay-oneui7-android`。
 2. `viewcompose-ui-foundation` 只保留渲染器无关声明契约，以及位于宿主所安装不透明平台 Handle
    之后的 runtime 组合能力。
 3. demo 专用逻辑不回流到框架模块。

@@ -51,6 +51,7 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-android` | Neutral Android consumer aggregate and Activity/Fragment `setUiContent` entry points | Aggregates the default engine, UI Foundation, Lifecycle, and ViewModel integrations without selecting Material or another design system. An explicit root Context and composition provider establish design policy. |
 | `viewcompose-overlay-android` | Material-free Android overlay transport for dialogs, popups, toasts, nested surfaces, and root/session cleanup | Supplies narrow Snackbar and modal-sheet presenter slots; it never selects or depends on a design system. |
 | `viewcompose-overlay-material3-android` | Material Snackbar and modal-bottom-sheet adapter | Explicitly composes Material presenters with the neutral Android transport and registers no whole-host provider. |
+| `viewcompose-overlay-oneui7-android` | Material-free One UI Snackbar and bottom-dialog adapter | Explicitly composes One UI presenters with the neutral Android transport; it adds no duplicate Activity/Fragment host API. |
 | `viewcompose-image-coil` | Optional image-loading adapter | Implements `UiImageLoader` for Coil 3; it accepts the general source/request contract without feeding Coil concerns back into the renderer core. |
 | `viewcompose-image-glide` | Optional image-loading adapter | Implements `UiImageLoader` for Glide 5 with target-scoped `RequestManager` resolution and application-owned `AppGlideModule` configuration. |
 | `viewcompose-lifecycle-androidx` | Lifecycle-aware collection APIs and lifecycle Local entry points | Does not contain Android View implementations or add host-injection logic. |
@@ -166,7 +167,8 @@ flowchart TD
 
 1. Generic Android Dialog, PopupWindow, Toast, anchor observation, and nested overlay containers
    live only in `viewcompose-overlay-android`. Material Snackbar and modal-sheet presenters live
-   only in `viewcompose-overlay-material3-android`.
+   only in `viewcompose-overlay-material3-android`; One UI Snackbar and bottom-dialog presenters
+   live only in `viewcompose-overlay-oneui7-android`.
 2. `viewcompose-ui-foundation` retains renderer-independent declaration contracts and runtime
    composition capabilities behind opaque host-installed platform handles.
 3. Demo-only logic must not flow back into framework modules.

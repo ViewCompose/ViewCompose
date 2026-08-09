@@ -38,6 +38,11 @@ fun UiTreeBuilder.oneUi7ComponentsSample() {
                 onClick = {},
                 variant = OneUi7ButtonVariant.Neutral,
             )
+            OneUi7Button(
+                text = "Flat action",
+                onClick = {},
+                variant = OneUi7ButtonVariant.Flat,
+            )
             OneUi7Surface(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "One UI 7 alpha surface",

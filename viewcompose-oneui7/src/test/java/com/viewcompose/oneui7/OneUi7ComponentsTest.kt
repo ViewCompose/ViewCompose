@@ -7,13 +7,17 @@ import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiDesignSystemAttribution
 import com.viewcompose.ui.foundation.UiDesignConformance
+import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.buildVNodeTree
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
+import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.shape.UiCornerFamily
+import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -27,9 +31,12 @@ class OneUi7ComponentsTest {
 
         assertEquals(false, light.metadata.isDark)
         assertEquals(true, dark.metadata.isDark)
-        assertEquals(0xFF006FFD.toInt(), light.colors.primary)
-        assertEquals(0xFF5FA2FF.toInt(), dark.colors.primary)
+        assertEquals(0xFF0072DE.toInt(), light.colors.primary)
+        assertEquals(0xFF3E91FF.toInt(), dark.colors.primary)
+        assertEquals(0xFF3E91FF.toInt(), light.stateColors.controlActivated.checkedColor)
         assertEquals(48f, light.controls.button.mediumHeight.value)
+        assertEquals(36f, light.controls.button.mediumVisualHeight.value)
+        assertEquals(18f, light.shapes.medium.uniformAbsoluteSizeOrNull?.value)
         assertEquals("viewcompose-oneui7/static", light.metadata.provenance.sourceId)
         assertTrue(
             listOf(
@@ -57,10 +64,13 @@ class OneUi7ComponentsTest {
             listOf("button", "navigation-bar", "surface-card", "switch", "text-field"),
             attribution?.components?.map { it.familyId }?.sorted(),
         )
-        assertEquals("unsupported", attribution?.integration("overlay.snackbar")?.presenterId)
         assertEquals(
             UiDesignConformance.Unsupported,
             attribution?.integration("overlay.modal-bottom-sheet")?.conformance,
+        )
+        assertEquals(
+            "install-viewcompose-overlay-oneui7-android",
+            attribution?.integration("overlay.snackbar")?.fallback,
         )
     }
 
@@ -166,6 +176,70 @@ class OneUi7ComponentsTest {
         }.flatten()
 
         assertEquals(1, nodes.count { node -> node.type == NodeType.TextField })
+    }
+
+    @Test
+    fun componentsConsumeOverriddenShapeSizingAndActivatedColorTokens() {
+        val defaults = OneUi7ThemeDefaults.light()
+        val activated = 0xFF22AA66.toInt()
+        val tokens = defaults.copy(
+            shapes = defaults.shapes.copy(medium = UiShape.rounded(7.dp)),
+            controls = defaults.controls.copy(
+                button = defaults.controls.button.copy(
+                    mediumHeight = 60.dp,
+                    mediumVisualHeight = 42.dp,
+                    mediumHorizontalPadding = 31.dp,
+                    mediumVerticalPadding = 9.dp,
+                ),
+                textField = defaults.controls.textField.copy(
+                    mediumHeight = 62.dp,
+                    mediumHorizontalPadding = 23.dp,
+                    mediumVerticalPadding = 15.dp,
+                ),
+                navigationBar = defaults.controls.navigationBar.copy(height = 74.dp),
+            ),
+            stateColors = defaults.stateColors.copy(
+                controlActivated = UiStateColor(
+                    defaultColor = activated,
+                    checkedColor = activated,
+                ),
+            ),
+        )
+
+        val button = buildVNodeTree {
+            OneUi7Theme(tokens) {
+                OneUi7Button(text = "Action", onClick = {})
+            }
+        }.single().spec as SurfaceNodeProps
+        assertEquals(60f, button.minimumHeight.value)
+        assertEquals(42f, button.visualHeight?.value)
+        assertEquals(7f, button.shape.uniformAbsoluteSizeOrNull?.value)
+
+        val textField = buildVNodeTree {
+            OneUi7Theme(tokens) {
+                OneUi7TextField(state = TextFieldState(), label = "")
+            }
+        }.flatten().single { it.type == NodeType.TextField }.spec as TextFieldNodeProps
+        assertEquals(62f, textField.minHeight.value)
+        assertEquals(23f, textField.paddingHorizontal.value)
+        assertEquals(15f, textField.paddingVertical.value)
+        assertEquals(7f, textField.shape.uniformAbsoluteSizeOrNull?.value)
+
+        val navigation = buildVNodeTree {
+            OneUi7Theme(tokens) {
+                OneUi7NavigationBar(
+                    items = listOf(
+                        OneUi7NavigationItem("home", "Home"),
+                        OneUi7NavigationItem("search", "Search"),
+                    ),
+                    selectedIndex = 0,
+                    onItemSelected = {},
+                )
+            }
+        }.single().spec as SurfaceNodeProps
+        assertEquals(74f, navigation.minimumHeight.value)
+
+        assertEquals(activated, OneUi7Recipes.from(tokens).activatedControlColor)
     }
 }
 

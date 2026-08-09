@@ -26,6 +26,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-android" to "com.viewcompose.android",
     "viewcompose-overlay-android" to "com.viewcompose.overlay.android",
     "viewcompose-overlay-material3-android" to "com.viewcompose.overlay.material3.android",
+    "viewcompose-overlay-oneui7-android" to "com.viewcompose.overlay.oneui7.android",
     "viewcompose-image-coil" to "com.viewcompose.image.coil",
     "viewcompose-image-glide" to "com.viewcompose.image.glide",
     "viewcompose-benchmark" to "com.viewcompose.benchmark",
@@ -90,6 +91,7 @@ val runtimeModuleLayers = mapOf(
     "viewcompose-constraintlayout-androidx" to "integration",
     "viewcompose-overlay-android" to "integration",
     "viewcompose-overlay-material3-android" to "integration",
+    "viewcompose-overlay-oneui7-android" to "integration",
     "viewcompose-image-coil" to "integration",
     "viewcompose-image-glide" to "integration",
     "viewcompose-shadow-android" to "integration",
@@ -137,6 +139,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-ui-foundation:compileDebugKotlin",
     ":viewcompose-overlay-android:compileDebugKotlin",
     ":viewcompose-overlay-material3-android:compileDebugKotlin",
+    ":viewcompose-overlay-oneui7-android:compileDebugKotlin",
     ":viewcompose-image-coil:compileDebugKotlin",
     ":viewcompose-image-glide:compileDebugKotlin",
     ":viewcompose-preview:compileDebugKotlin",
@@ -172,6 +175,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-ui-foundation:testDebugUnitTest",
     ":viewcompose-overlay-android:testDebugUnitTest",
     ":viewcompose-overlay-material3-android:testDebugUnitTest",
+    ":viewcompose-overlay-oneui7-android:testDebugUnitTest",
     ":viewcompose-image-coil:testDebugUnitTest",
     ":viewcompose-image-glide:testDebugUnitTest",
     ":viewcompose-preview:testDebugUnitTest",
@@ -545,18 +549,22 @@ tasks.register("verifyDesignSystemIsolation") {
             }
         }
 
-        val oneUiMainDirectory = rootDir.resolve("viewcompose-oneui7/src/main")
-        productionConfigurations.forEach { configurationName ->
-            project(":viewcompose-oneui7").configurations.findByName(configurationName)
-                ?.dependencies
-                ?.filter { dependency -> dependency.group == "com.google.android.material" }
-                ?.forEach { dependency ->
-                    violations +=
-                        "viewcompose-oneui7:$configurationName -> forbidden Material dependency " +
-                            "'${dependency.group}:${dependency.name}'"
-                }
-        }
-        if (oneUiMainDirectory.exists()) {
+        val oneUiModules = listOf("viewcompose-oneui7", "viewcompose-overlay-oneui7-android")
+        oneUiModules.forEach { module ->
+            productionConfigurations.forEach { configurationName ->
+                project(":$module").configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.group == "com.google.android.material" }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> forbidden Material dependency " +
+                                "'${dependency.group}:${dependency.name}'"
+                    }
+            }
+            val oneUiMainDirectory = rootDir.resolve("$module/src/main")
+            if (!oneUiMainDirectory.exists()) {
+                return@forEach
+            }
             oneUiMainDirectory.walkTopDown()
                 .filter { file -> file.isFile && (file.extension == "kt" || file.extension == "java") }
                 .forEach { file ->

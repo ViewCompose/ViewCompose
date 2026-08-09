@@ -13,7 +13,10 @@ import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.DesignSystemDiagnostics
 import com.viewcompose.ui.foundation.Environment
 import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.ModalBottomSheet
 import com.viewcompose.ui.foundation.Row
+import com.viewcompose.ui.foundation.Snackbar
+import com.viewcompose.ui.foundation.SnackbarDuration
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -35,6 +38,8 @@ internal fun UiTreeBuilder.DemoOneUi7VerificationPage() {
     val clicks = rememberSaveable(key = "one-ui-7-clicks") { mutableStateOf(0) }
     val checked = rememberSaveable(key = "one-ui-7-switch") { mutableStateOf(true) }
     val selected = rememberSaveable(key = "one-ui-7-navigation") { mutableStateOf(0) }
+    val snackbarVisible = rememberSaveable(key = "one-ui-7-snackbar") { mutableStateOf(false) }
+    val sheetVisible = rememberSaveable(key = "one-ui-7-sheet") { mutableStateOf(false) }
     val account = rememberTextFieldState("Galaxy")
     val destinations = listOf(
         OneUi7NavigationItem("home", "Home"),
@@ -50,13 +55,13 @@ internal fun UiTreeBuilder.DemoOneUi7VerificationPage() {
             if (integration.fallback == "none") "" else "→${integration.fallback}"
     } ?: "unattributed"
     LazyColumn(
-        items = listOf("identity", "button", "surface", "switch", "textfield", "navigation"),
+        items = listOf("identity", "button", "surface", "switch", "textfield", "navigation", "overlay"),
         key = { it },
         modifier = Modifier
             .fillMaxSize()
             .backgroundColor(Theme.colors.background)
             .systemBarsInsetsPadding()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag(DemoTestTags.ONE_UI_7_ROOT),
     ) { section ->
         when (section) {
@@ -139,6 +144,11 @@ internal fun UiTreeBuilder.DemoOneUi7VerificationPage() {
                         variant = OneUi7ButtonVariant.Neutral,
                     )
                 }
+                OneUi7Button(
+                    text = "Flat action",
+                    onClick = {},
+                    variant = OneUi7ButtonVariant.Flat,
+                )
                 Text(
                     text = "Button clicks: ${clicks.value}",
                     color = Theme.colors.onSurfaceVariant,
@@ -197,7 +207,7 @@ internal fun UiTreeBuilder.DemoOneUi7VerificationPage() {
                 )
             }
 
-            else -> Column(
+            "navigation" -> Column(
                 spacing = 8.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 20.dp, bottom = 28.dp),
             ) {
@@ -215,6 +225,73 @@ internal fun UiTreeBuilder.DemoOneUi7VerificationPage() {
                     modifier = Modifier.testTag(DemoTestTags.ONE_UI_7_NAVIGATION_STATUS),
                 )
             }
+
+            else -> Column(
+                spacing = 8.dp,
+                modifier = Modifier.fillMaxWidth().margin(top = 20.dp, bottom = 28.dp),
+            ) {
+                Text("One UI overlays", color = Theme.colors.onSurface, style = Theme.typography.titleMedium)
+                Text(
+                    "Neutral Android transport with explicit One UI presenters.",
+                    color = Theme.colors.onSurfaceVariant,
+                    style = Theme.typography.bodySmall,
+                )
+                Row(spacing = 10.dp, verticalAlignment = VerticalAlignment.Center) {
+                    OneUi7Button(
+                        text = "Show snackbar",
+                        onClick = { snackbarVisible.value = true },
+                        modifier = Modifier.testTag(DemoTestTags.ONE_UI_7_SNACKBAR_ACTION),
+                    )
+                    OneUi7Button(
+                        text = "Show sheet",
+                        onClick = { sheetVisible.value = true },
+                        variant = OneUi7ButtonVariant.Neutral,
+                        modifier = Modifier.testTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_ACTION),
+                    )
+                }
+            }
+        }
+    }
+
+    Snackbar(
+        visible = snackbarVisible.value,
+        message = "One UI overlay presenter is active",
+        actionLabel = "Done",
+        duration = SnackbarDuration.Indefinite,
+        requestKey = "one-ui-7-snackbar",
+        onAction = { snackbarVisible.value = false },
+        onDismiss = { snackbarVisible.value = false },
+    )
+    ModalBottomSheet(
+        visible = sheetVisible.value,
+        requestKey = "one-ui-7-bottom-sheet",
+        skipPartiallyExpanded = true,
+        onDismissRequest = { sheetVisible.value = false },
+    ) {
+        Column(
+            spacing = 12.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+                .testTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_CONTENT),
+        ) {
+            Text(
+                "Connected devices",
+                color = Theme.colors.onSurface,
+                style = Theme.typography.titleLarge,
+            )
+            Text(
+                "This bottom dialog is rendered by the One UI adapter without Material Components.",
+                color = Theme.colors.onSurfaceVariant,
+                style = Theme.typography.bodyMedium,
+            )
+            OneUi7Button(
+                text = "Close",
+                onClick = { sheetVisible.value = false },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_DISMISS),
+            )
         }
     }
 }

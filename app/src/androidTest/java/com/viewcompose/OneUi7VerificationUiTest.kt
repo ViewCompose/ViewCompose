@@ -78,13 +78,22 @@ class OneUi7VerificationUiTest {
                     assertEquals("viewcompose-oneui7", designSystem)
                     assertEquals(OneUi7Reference.componentSet, recipeSet)
                     assertEquals("viewcompose-overlay-android/dialog", overlayTransport)
-                    assertTrue(overlayPresenters.contains("overlay.snackbar:unsupported/Unsupported"))
-                    assertTrue(overlayPresenters.contains("overlay.modal-bottom-sheet:unsupported/Unsupported"))
+                    assertTrue(
+                        overlayPresenters.contains(
+                            "overlay.snackbar:viewcompose-oneui7/native-snackbar/Equivalent",
+                        ),
+                    )
+                    assertTrue(
+                        overlayPresenters.contains(
+                            "overlay.modal-bottom-sheet:" +
+                                "viewcompose-oneui7/bottom-sheet-dialog/Equivalent",
+                        ),
+                    )
                     assertTrue(!overlayPresenters.contains("material-components"))
-                    assertTrue(componentBackends.contains("switch:one-ui7-switch-v1:DslComposite/Equivalent"))
+                    assertTrue(componentBackends.contains("switch:one-ui7-switch-v2:DslComposite/Equivalent"))
                     assertTrue(
                         componentBackends.contains(
-                            "text-field:one-ui7-text-field-v1:NativeBehavioralCore/Equivalent",
+                            "text-field:one-ui7-text-field-v2:NativeBehavioralCore/Equivalent",
                         ),
                     )
                     productionMetadata = buildString {
@@ -187,6 +196,37 @@ class OneUi7VerificationUiTest {
                     label = "one-ui7-${fixture.label}-components",
                     metadata = fixture.metadata(productionMetadata),
                 )
+                scenario.onActivity { activity ->
+                    activity.scrollFixtureToPosition(OVERLAY_POSITION)
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    activity.clickByTestTag(DemoTestTags.ONE_UI_7_SNACKBAR_ACTION)
+                }
+                assertTrue(
+                    "Expected One UI Snackbar presenter",
+                    device.wait(Until.hasObject(By.desc("One UI Snackbar")), UI_TIMEOUT_MILLIS),
+                )
+                captureEvidence(
+                    label = "one-ui7-${fixture.label}-snackbar",
+                    metadata = fixture.metadata(productionMetadata),
+                )
+                device.findObject(By.text("Done")).click()
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    activity.clickByTestTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
+                }
+                assertTrue(
+                    "Expected One UI bottom-sheet presenter",
+                    device.wait(Until.hasObject(By.desc("One UI Bottom Sheet")), UI_TIMEOUT_MILLIS),
+                )
+                assertTrue(device.hasObject(By.text("Connected devices")))
+                captureEvidence(
+                    label = "one-ui7-${fixture.label}-bottom-sheet",
+                    metadata = fixture.metadata(productionMetadata),
+                )
+                device.findObject(By.text("Close")).click()
+                waitForUiIdle()
             }
         }
     }
@@ -386,5 +426,6 @@ class OneUi7VerificationUiTest {
         const val SWITCH_POSITION = 3
         const val TEXT_FIELD_POSITION = 4
         const val NAVIGATION_POSITION = 5
+        const val OVERLAY_POSITION = 6
     }
 }

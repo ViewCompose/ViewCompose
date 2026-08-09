@@ -132,15 +132,16 @@ ownership are required review items.
 3. Default host Local injection belongs to the `viewcompose-host-android` bridge and is not
    duplicated in those modules.
 
-### 5.3 Service-provider-first assembly
+### 5.3 Root-scoped integration assembly
 
-Use an SPI for optional overlay, host, and decoration assembly. Reflection is a separately reviewed
-last resort.
+Normal application roots select integrations explicitly. SPI discovery is reserved for low-level
+neutral extensions, and reflection is a separately reviewed last resort.
 
-1. Default overlay assembly uses `AndroidOverlayHostFactoryProvider + ServiceLoader`, never a new
-   `Class.forName` primary path.
-2. `viewcompose-overlay-material3-android` registers through `META-INF/services`; absence falls back to an
-   observable stable no-op.
+1. Activity, Fragment, navigation, and named design-system roots construct their root-scoped
+   overlay host explicitly; classpath order may not select a design system.
+2. `AndroidOverlayHostFactoryProvider + ServiceLoader` remains only for custom low-level hosts and
+   discovers exactly one neutral `viewcompose-overlay-android` provider. Material and One UI
+   adapters register no whole-host provider.
 3. Optional decoration uses `AndroidViewDecorationBackend + ServiceLoader`; renderer and host do
    not depend on the shadow implementation, and absence is a no-op.
 4. Temporary reflection includes architecture documentation, contract tests, and a removal plan.

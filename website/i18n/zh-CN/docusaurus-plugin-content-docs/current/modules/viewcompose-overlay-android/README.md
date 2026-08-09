@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-android/README.md
-translation_source_hash: 7a80bbcdd4174929d0555b8ad3065bed2a3de520ac892baa2046d79b55c9e0d8
+translation_source_hash: b776c9a447afa907c58256505a20459a34cc902ab8680642a0e35c1389e8918b
 translation_status: current
 ---
 
@@ -73,6 +73,7 @@ Java `ServiceLoader` 只允许从本产物发现一个中立 Provider：零个�
 - [Overlay 指南](../../guides/overlays.md)
 - [UI Foundation 模块](../viewcompose-ui-foundation/README.md)
 - [Material 3 Overlay Adapter](../viewcompose-overlay-material3-android/README.md)
+- [One UI 7 Overlay Adapter](../viewcompose-overlay-oneui7-android/README.md)
 
 生成式参考位于
 [`viewcompose-overlay-android` API 目录](https://docs.viewcompose.com/api/viewcompose-overlay-android/current/)。

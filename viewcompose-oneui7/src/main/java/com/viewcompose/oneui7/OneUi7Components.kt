@@ -30,6 +30,7 @@ import com.viewcompose.ui.foundation.UiLocals
 import com.viewcompose.ui.foundation.UiNavigationBarSizing
 import com.viewcompose.ui.foundation.UiOverlays
 import com.viewcompose.ui.foundation.UiShapes
+import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiStateColorDefaults
 import com.viewcompose.ui.foundation.UiTextFieldSizing
 import com.viewcompose.ui.foundation.UiTextStyle
@@ -44,6 +45,7 @@ import com.viewcompose.ui.foundation.UiTypography
 import com.viewcompose.ui.foundation.uiLocalOf
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
+import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
@@ -79,13 +81,16 @@ object OneUi7Reference {
     const val componentSet: String = "one-ui-7-five-component-alpha"
 }
 
-/** Selects the filled primary or lower-emphasis neutral One UI 7 alpha button recipe. */
+/** Selects high-, medium-, or low-emphasis One UI 7 alpha button presentation. */
 enum class OneUi7ButtonVariant {
     /** Uses the primary accent container and its paired content color. */
     Primary,
 
     /** Uses the neutral surface container and standard surface content color. */
     Neutral,
+
+    /** Uses no resting container for low-emphasis toolbar and dialog actions. */
+    Flat,
 }
 
 /**
@@ -131,29 +136,43 @@ object OneUi7ThemeDefaults {
     private fun createTokens(isDark: Boolean): UiThemeTokens {
         val base = if (isDark) UiThemeDefaults.dark() else UiThemeDefaults.light()
         val colors = if (isDark) darkColors() else lightColors()
+        val defaultStateColors = UiStateColorDefaults.from(colors)
+        val activatedControlColor = 0xFF3E91FF.toInt()
         return UiThemeTokens(
             colors = colors,
             typography = typography(),
-            stateColors = UiStateColorDefaults.from(colors),
+            stateColors = defaultStateColors.copy(
+                controlActivated = UiStateColor(
+                    defaultColor = activatedControlColor,
+                    disabledColor = colors.onSurface.withAlpha(0.38f),
+                    pressedColor = activatedControlColor,
+                    focusedColor = activatedControlColor,
+                    checkedColor = activatedControlColor,
+                    selectedColor = activatedControlColor,
+                ),
+            ),
             shapes = UiShapes(
                 extraSmall = UiShape.rounded(10.dp),
                 small = UiShape.rounded(14.dp),
-                medium = UiShape.rounded(20.dp),
+                medium = UiShape.rounded(18.dp),
                 large = UiShape.rounded(26.dp),
                 extraLarge = UiShape.rounded(32.dp),
                 full = UiShape.roundedRelative(0.5f),
             ),
             controls = base.controls.copy(
                 button = UiButtonSizing(
-                    compactHeight = 44.dp,
+                    compactHeight = 48.dp,
                     mediumHeight = 48.dp,
                     largeHeight = 56.dp,
                     compactHorizontalPadding = 20.dp,
                     mediumHorizontalPadding = 24.dp,
                     largeHorizontalPadding = 28.dp,
                     compactVerticalPadding = 8.dp,
-                    mediumVerticalPadding = 10.dp,
-                    largeVerticalPadding = 12.dp,
+                    mediumVerticalPadding = 8.dp,
+                    largeVerticalPadding = 10.dp,
+                    compactVisualHeight = 36.dp,
+                    mediumVisualHeight = 36.dp,
+                    largeVisualHeight = 44.dp,
                 ),
                 textField = UiTextFieldSizing(
                     compactHeight = 48.dp,
@@ -217,7 +236,7 @@ object OneUi7ThemeDefaults {
         surfaceContainerHigh = 0xFFE8E9EC.toInt(),
         onSurface = 0xFF17181A.toInt(),
         onSurfaceVariant = 0xFF5D6168.toInt(),
-        primary = 0xFF006FFD.toInt(),
+        primary = 0xFF0072DE.toInt(),
         onPrimary = 0xFFFFFFFF.toInt(),
         primaryContainer = 0xFFD9E8FF.toInt(),
         onPrimaryContainer = 0xFF003A7A.toInt(),
@@ -248,7 +267,7 @@ object OneUi7ThemeDefaults {
         surfaceContainerHigh = 0xFF2B2D31.toInt(),
         onSurface = 0xFFF5F6F7.toInt(),
         onSurfaceVariant = 0xFFB6BAC1.toInt(),
-        primary = 0xFF5FA2FF.toInt(),
+        primary = 0xFF3E91FF.toInt(),
         onPrimary = 0xFF002E67.toInt(),
         primaryContainer = 0xFF153E6F.toInt(),
         onPrimaryContainer = 0xFFD8E8FF.toInt(),
@@ -288,20 +307,61 @@ private val LocalOneUi7Recipes = uiLocalOf<OneUi7Recipes?>(
  * @sample com.viewcompose.oneui7.samples.oneUi7ComponentsSample
  * @receiver active tree builder receiving the design-system scope
  * @param tokens immutable semantic values used to derive the five component recipes
+ * @param integrations runtime integration attribution supplied by the root assembly; the default
+ * remains unsupported until an explicit One UI overlay adapter is installed
  * @param content subtree built synchronously with the same token and recipe snapshot
  */
 fun UiTreeBuilder.OneUi7Theme(
     tokens: UiThemeTokens = OneUi7ThemeDefaults.light(),
+    integrations: List<UiIntegrationAttribution> = OneUi7DefaultIntegrations,
     content: UiTreeBuilder.() -> Unit,
 ) {
     UiTheme(tokens) {
-        DesignSystemAttributionProvider(OneUi7Attribution) {
+        DesignSystemAttributionProvider(OneUi7Attribution.copy(integrations = integrations)) {
             ProvideLocal(LocalOneUi7Recipes, OneUi7Recipes.from(tokens)) {
                 content()
             }
         }
     }
 }
+
+private val OneUi7DefaultIntegrations = listOf(
+    UiIntegrationAttribution(
+        capabilityId = "overlay.dialog",
+        transportId = "viewcompose-overlay-android/dialog",
+        presenterId = "unsupported",
+        conformance = UiDesignConformance.Unsupported,
+        fallback = "install-viewcompose-overlay-oneui7-android",
+    ),
+    UiIntegrationAttribution(
+        capabilityId = "overlay.popup",
+        transportId = "viewcompose-overlay-android/popup",
+        presenterId = "unsupported",
+        conformance = UiDesignConformance.Unsupported,
+        fallback = "install-viewcompose-overlay-oneui7-android",
+    ),
+    UiIntegrationAttribution(
+        capabilityId = "overlay.snackbar",
+        transportId = "viewcompose-overlay-android/transient-queue",
+        presenterId = "unsupported",
+        conformance = UiDesignConformance.Unsupported,
+        fallback = "install-viewcompose-overlay-oneui7-android",
+    ),
+    UiIntegrationAttribution(
+        capabilityId = "overlay.modal-bottom-sheet",
+        transportId = "viewcompose-overlay-android/modal-session",
+        presenterId = "unsupported",
+        conformance = UiDesignConformance.Unsupported,
+        fallback = "install-viewcompose-overlay-oneui7-android",
+    ),
+    UiIntegrationAttribution(
+        capabilityId = "overlay.toast",
+        transportId = "viewcompose-overlay-android/transient-queue",
+        presenterId = "android.widget.Toast",
+        conformance = UiDesignConformance.Degraded,
+        fallback = "platform-toast",
+    ),
+)
 
 private val OneUi7Attribution = UiDesignSystemAttribution(
     designSystemId = "viewcompose-oneui7",
@@ -316,68 +376,34 @@ private val OneUi7Attribution = UiDesignSystemAttribution(
         ),
         UiComponentAttribution(
             familyId = "button",
-            recipeId = "one-ui7-button-v1",
+            recipeId = "one-ui7-button-v2",
             backend = UiComponentBackend.DslComposite,
             conformance = UiDesignConformance.Equivalent,
             capabilityPath = "basic-button",
         ),
         UiComponentAttribution(
             familyId = "switch",
-            recipeId = "one-ui7-switch-v1",
+            recipeId = "one-ui7-switch-v2",
             backend = UiComponentBackend.DslComposite,
             conformance = UiDesignConformance.Equivalent,
             capabilityPath = "anchored-drag-composite",
         ),
         UiComponentAttribution(
             familyId = "text-field",
-            recipeId = "one-ui7-text-field-v1",
+            recipeId = "one-ui7-text-field-v2",
             backend = UiComponentBackend.NativeBehavioralCore,
             conformance = UiDesignConformance.Equivalent,
             capabilityPath = "android-edit-text",
         ),
         UiComponentAttribution(
             familyId = "navigation-bar",
-            recipeId = "one-ui7-navigation-v1",
+            recipeId = "one-ui7-navigation-v2",
             backend = UiComponentBackend.DslComposite,
             conformance = UiDesignConformance.Equivalent,
             capabilityPath = "text-destination-composite",
         ),
     ),
-    integrations = listOf(
-        UiIntegrationAttribution(
-            capabilityId = "overlay.dialog",
-            transportId = "viewcompose-overlay-android/dialog",
-            presenterId = "viewcompose-oneui7/captured-dialog-content",
-            conformance = UiDesignConformance.Equivalent,
-        ),
-        UiIntegrationAttribution(
-            capabilityId = "overlay.popup",
-            transportId = "viewcompose-overlay-android/popup",
-            presenterId = "viewcompose-oneui7/captured-popup-content",
-            conformance = UiDesignConformance.Equivalent,
-        ),
-        UiIntegrationAttribution(
-            capabilityId = "overlay.snackbar",
-            transportId = "viewcompose-overlay-android/transient-queue",
-            presenterId = "unsupported",
-            conformance = UiDesignConformance.Unsupported,
-            fallback = "none",
-        ),
-        UiIntegrationAttribution(
-            capabilityId = "overlay.modal-bottom-sheet",
-            transportId = "viewcompose-overlay-android/modal-session",
-            presenterId = "unsupported",
-            conformance = UiDesignConformance.Unsupported,
-            fallback = "none",
-        ),
-        UiIntegrationAttribution(
-            capabilityId = "overlay.toast",
-            transportId = "viewcompose-overlay-android/transient-queue",
-            presenterId = "android.widget.Toast",
-            conformance = UiDesignConformance.Degraded,
-            fallback = "platform-toast",
-        ),
-    ),
+    integrations = OneUi7DefaultIntegrations,
 )
 
 /**
@@ -391,7 +417,7 @@ private val OneUi7Attribution = UiDesignSystemAttribution(
  * @receiver active builder inside [OneUi7Theme]
  * @param text localized single-line action label
  * @param onClick optional action callback; `null` emits a non-interactive semantic button
- * @param variant primary or neutral container treatment
+ * @param variant high-emphasis primary, medium-emphasis neutral, or low-emphasis flat treatment
  * @param enabled whether click, focus state, and enabled semantics are active
  * @param key optional stable root identity
  * @param modifier caller configuration appended to the root action
@@ -407,6 +433,7 @@ fun UiTreeBuilder.OneUi7Button(
 ) {
     val recipes = oneUi7Recipes()
     val containerColor = when {
+        variant == OneUi7ButtonVariant.Flat -> 0x00000000
         !enabled -> recipes.disabledContainerColor
         variant == OneUi7ButtonVariant.Primary -> recipes.colors.primary
         else -> recipes.colors.surfaceContainer
@@ -414,6 +441,7 @@ fun UiTreeBuilder.OneUi7Button(
     val contentColor = when {
         !enabled -> recipes.disabledContentColor
         variant == OneUi7ButtonVariant.Primary -> recipes.colors.onPrimary
+        variant == OneUi7ButtonVariant.Flat -> recipes.colors.primary
         else -> recipes.colors.onSurface
     }
     BasicButton(
@@ -430,10 +458,10 @@ fun UiTreeBuilder.OneUi7Button(
             contentColor = contentColor,
             textStyle = recipes.buttonTextStyle,
             stateLayerColors = stateLayers(contentColor, recipes.interactions),
-            minimumHeight = 48.dp,
-            visualHeight = 48.dp,
-            paddingHorizontal = 24.dp,
-            paddingVertical = 10.dp,
+            minimumHeight = recipes.buttonSizing.mediumHeight,
+            visualHeight = recipes.buttonSizing.mediumVisualHeight,
+            paddingHorizontal = recipes.buttonSizing.mediumHorizontalPadding,
+            paddingVertical = recipes.buttonSizing.mediumVerticalPadding,
         ),
         modifier = modifier,
     )
@@ -516,7 +544,7 @@ fun UiTreeBuilder.OneUi7Switch(
     val recipes = oneUi7Recipes()
     val trackColor = when {
         !enabled -> recipes.colors.surfaceContainerHigh
-        checked -> recipes.colors.primary
+        checked -> recipes.activatedControlColor
         else -> recipes.colors.surfaceContainerHigh
     }
     val thumbColor = when {
@@ -666,9 +694,9 @@ fun UiTreeBuilder.OneUi7TextField(
             borderWidth = if (isError) 1.dp else UiDp.Zero,
             borderColor = if (isError) recipes.colors.error else 0x00000000,
             shape = recipes.fieldShape,
-            minHeight = 56.dp,
-            paddingHorizontal = 18.dp,
-            paddingVertical = 12.dp,
+            minHeight = recipes.textFieldSizing.mediumHeight,
+            paddingHorizontal = recipes.textFieldSizing.mediumHorizontalPadding,
+            paddingVertical = recipes.textFieldSizing.mediumVerticalPadding,
             autofillHints = autofillHints,
             modifier = Modifier.fillMaxWidth().semantics {
                 if (isError && supportingText.isNotBlank()) error = supportingText
@@ -720,13 +748,10 @@ fun UiTreeBuilder.OneUi7NavigationBar(
     BasicSurface(
         style = BasicSurfaceStyle(
             fill = Brush.SolidColor(recipes.colors.surface),
-            shape = recipes.navigationShape,
-            borderWidth = 1.dp,
-            borderColor = recipes.colors.outlineVariant,
-            clipContent = true,
+            shape = UiShape.rounded(UiDp.Zero),
         ),
         contentColor = recipes.colors.onSurface,
-        minimumHeight = 68.dp,
+        minimumHeight = recipes.navigationBarSizing.height,
         key = key,
         modifier = modifier.fillMaxWidth().semantics {
             collectionInfo = SemanticsCollectionInfo(
@@ -754,10 +779,8 @@ fun UiTreeBuilder.OneUi7NavigationBar(
                 }
                 BasicSurface(
                     style = BasicSurfaceStyle(
-                        fill = Brush.SolidColor(
-                            if (selected) recipes.colors.primaryContainer else 0x00000000,
-                        ),
-                        shape = recipes.fullShape,
+                        fill = Brush.SolidColor(0x00000000),
+                        shape = recipes.navigationItemShape,
                         clipContent = true,
                     ),
                     contentColor = contentColor,
@@ -778,25 +801,49 @@ fun UiTreeBuilder.OneUi7NavigationBar(
                     },
                     contentAlignment = BoxAlignment.Center,
                 ) {
-                    Text(
-                        text = item.label,
-                        color = contentColor,
-                        style = if (selected) recipes.navigationSelectedTextStyle else recipes.navigationTextStyle,
-                        maxLines = 1,
-                    )
+                    Column(
+                        spacing = 4.dp,
+                        horizontalAlignment = HorizontalAlignment.Center,
+                    ) {
+                        Text(
+                            text = item.label,
+                            color = contentColor,
+                            style = if (selected) {
+                                recipes.navigationSelectedTextStyle
+                            } else {
+                                recipes.navigationTextStyle
+                            },
+                            maxLines = 1,
+                        )
+                        BasicSurface(
+                            style = BasicSurfaceStyle(
+                                fill = Brush.SolidColor(
+                                    if (selected) contentColor else 0x00000000,
+                                ),
+                                shape = recipes.fullShape,
+                                clipContent = true,
+                            ),
+                            contentColor = contentColor,
+                            modifier = Modifier.size(width = 32.dp, height = 2.dp),
+                        ) {}
+                    }
                 }
             }
         }
     }
 }
 
-private data class OneUi7Recipes(
+internal data class OneUi7Recipes(
     val colors: UiColors,
     val interactions: UiInteractionTokens,
+    val buttonSizing: UiButtonSizing,
+    val textFieldSizing: UiTextFieldSizing,
+    val navigationBarSizing: UiNavigationBarSizing,
+    val activatedControlColor: Int,
     val actionShape: UiShape,
     val surfaceShape: UiShape,
     val fieldShape: UiShape,
-    val navigationShape: UiShape,
+    val navigationItemShape: UiShape,
     val fullShape: UiShape,
     val buttonTextStyle: UiTextStyle,
     val bodyTextStyle: UiTextStyle,
@@ -811,17 +858,26 @@ private data class OneUi7Recipes(
         fun from(tokens: UiThemeTokens): OneUi7Recipes = OneUi7Recipes(
             colors = tokens.colors,
             interactions = tokens.interactions,
-            actionShape = tokens.shapes.full,
+            buttonSizing = tokens.controls.button,
+            textFieldSizing = tokens.controls.textField,
+            navigationBarSizing = tokens.controls.navigationBar,
+            activatedControlColor = tokens.stateColors.controlActivated.checkedColor,
+            actionShape = tokens.shapes.medium,
             surfaceShape = tokens.shapes.large,
             fieldShape = tokens.shapes.medium,
-            navigationShape = tokens.shapes.large,
+            navigationItemShape = tokens.shapes.extraSmall,
             fullShape = tokens.shapes.full,
             buttonTextStyle = tokens.typography.labelLarge,
             bodyTextStyle = tokens.typography.bodyMedium,
             labelTextStyle = tokens.typography.labelMedium,
             supportingTextStyle = tokens.typography.bodySmall,
-            navigationTextStyle = tokens.typography.labelMedium,
-            navigationSelectedTextStyle = tokens.typography.labelMedium.copy(fontWeight = 750),
+            navigationTextStyle = tokens.typography.labelMedium.copy(
+                fontSizeSp = tokens.controls.navigationBar.labelSizeSp,
+            ),
+            navigationSelectedTextStyle = tokens.typography.labelMedium.copy(
+                fontSizeSp = tokens.controls.navigationBar.labelSizeSp,
+                fontWeight = 750,
+            ),
             disabledContainerColor = tokens.colors.surfaceContainerHigh,
             disabledContentColor = tokens.colors.onSurface.withAlpha(0.38f),
         )

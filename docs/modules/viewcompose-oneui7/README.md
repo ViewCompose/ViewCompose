@@ -33,6 +33,30 @@ the public [bottom-navigation guidance](https://developer.samsung.com/one-ui/com
 for text-only destinations. These links define the visual reference, not a promise that all One UI
 components or Samsung-private values are reproduced.
 
+## Public-guidance audit
+
+The 2026-08-09 audit separates published numeric guidance from visual interpretation:
+
+| Area | Samsung public evidence | ViewCompose result |
+| --- | --- | --- |
+| Contained Button shape | The published Button drawable uses an `18dp` radius | Medium Button and field shape token is `18dp`; the 48dp target contains a 36dp visual Button |
+| Button emphasis | Flat, gray contained, and colored contained treatments | `Flat`, `Neutral`, and `Primary` variants map to low, medium, and high emphasis |
+| Primary Button color | `#0072DE` in Light and `#3E91FF` in Dark | Static primary action roles use those values |
+| Activated control color | `#3E91FF` in Light and Dark | Switch checked track resolves through `stateColors.controlActivated` |
+| Horizontal screen margin | At least `24dp` | The verification fixture uses `24dp`; layout remains an application responsibility |
+| Bottom navigation | Text only, normally fewer than four and at most five; no swipe switching | The selected item uses text plus an underline, without a Material-style pill |
+| Snackbar | Short feedback with an optional action on the right | Supplied by the explicit One UI Android overlay adapter |
+
+Samsung does not publish exact public values for this alpha's Surface/Card padding, Switch bounds,
+TextField padding, complete typography scale, or One UI 7 overlay chrome. Those remain
+ViewCompose-owned interpretation values and require screenshot acceptance; they are not presented
+as Samsung tokens.
+
+Component geometry now resolves from the provided snapshot. Copying and overriding
+`tokens.controls.button`, `tokens.controls.textField`, `tokens.controls.navigationBar`,
+`tokens.shapes.medium`, or `tokens.stateColors.controlActivated` changes the corresponding emitted
+component instead of being shadowed by private hard-coded values.
+
 ## Minimal setup
 
 Install one complete immutable snapshot at the root of the content that uses these components:
@@ -95,9 +119,12 @@ private typed recipes remain separate and no One UI policy enters UI Foundation 
   discrete or static endpoint when shapes are incompatible.
 
 The module owns token and component policy only. It does not install Android window behavior,
-overlay presenters, system-bar policy, a renderer branch, or a mutable global registry.
-Its integration attribution declares neutral Android Dialog/Popup/Toast paths and marks Snackbar
-and modal bottom sheet `Unsupported`; it never reports or selects a Material fallback.
+system-bar policy, a renderer branch, or a mutable global registry. The optional
+[`viewcompose-overlay-oneui7-android`](../viewcompose-overlay-oneui7-android/README.md) artifact owns
+One UI Snackbar and modal-bottom-sheet presenters. Default theme attribution keeps those optional
+capabilities `Unsupported`. An explicitly installed adapter supplies a root-owned attribution list
+that upgrades its presenters plus neutral Android Dialog/Popup transport and degraded Android
+Toast fallback; neither path reports or selects a Material fallback.
 
 ## Verification and limitations
 
@@ -116,5 +143,6 @@ support, or as a replacement for Samsung platform components outside the five en
 
 - [Theming guide](../../guides/theming.md)
 - [UI Foundation](../viewcompose-ui-foundation/README.md)
+- [One UI 7 Android overlay adapter](../viewcompose-overlay-oneui7-android/README.md)
 - [Architecture overview](../../architecture/overview.md)
 - [Design-system resolution boundary](../../architecture/decisions/0004-design-system-resolution-boundary.md)

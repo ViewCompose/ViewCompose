@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: f4c3203af7b3ca86dafbb9711c669d20f91b627366474dd931862fa03653059a
+translation_source_hash: fac23172c6b0623adb608a99087389066497655bb996914c75bf253e2ea35f55
 translation_status: current
 ---
 
@@ -35,6 +35,29 @@ dependencies {
 [One UI 组件指南](https://developer.samsung.com/one-ui/index.html)。Navigation 依据公开的
 [底部导航指南](https://developer.samsung.com/one-ui/comp/bottom-navigation.html)实现纯文字
 Destination。这些链接只定义视觉参考，不代表框架会复现所有 One UI 组件或 Samsung 私有数值。
+
+## 公开指南审计
+
+2026-08-09 的审计将已公开的精确数值与视觉解释值分开记录：
+
+| 范围 | Samsung 公开依据 | ViewCompose 结果 |
+| --- | --- | --- |
+| Contained Button 形状 | 公开 Button Drawable 使用 `18dp` 圆角 | Medium Button 与 Field 形状 Token 为 `18dp`；48dp 触控目标内放置 36dp 可视 Button |
+| Button 强调层级 | Flat、灰色 Contained、彩色 Contained | `Flat`、`Neutral`、`Primary` 分别对应低、中、高强调 |
+| Primary Button 颜色 | Light 为 `#0072DE`，Dark 为 `#3E91FF` | 静态 Primary Action 角色采用这两个值 |
+| Activated Control 颜色 | Light/Dark 都为 `#3E91FF` | Switch Checked Track 通过 `stateColors.controlActivated` 解析 |
+| 屏幕水平边距 | 至少 `24dp` | 验证 Fixture 使用 `24dp`；实际页面布局仍由应用负责 |
+| Bottom Navigation | 纯文字，通常少于四项、最多五项，不通过 Swipe 切换 | Selected Item 使用文字加下划线，不使用 Material 风格 Pill |
+| Snackbar | 短时反馈，可在右侧提供 Action | 由显式 One UI Android Overlay Adapter 提供 |
+
+Samsung 没有公开本 Alpha 所用 Surface/Card Padding、Switch Bounds、TextField Padding、完整
+Typography Scale 或 One UI 7 Overlay Chrome 的精确值。这些仍是 ViewCompose 自有解释值，需要通过
+截图验收，文档不会把它们表述成 Samsung Token。
+
+组件 Geometry 现在会从调用方提供的 Snapshot 解析。复制并覆盖
+`tokens.controls.button`、`tokens.controls.textField`、`tokens.controls.navigationBar`、
+`tokens.shapes.medium` 或 `tokens.stateColors.controlActivated` 时，对应组件会真实变化，不再被组件
+内部硬编码值遮蔽。
 
 ## 最小接入
 
@@ -75,9 +98,6 @@ setUiContent {
 路径。在应用显式覆盖之前，快照来源报告为 `FrameworkDefault`。这些元数据只作为证据；私有强类型
 Recipe 仍保持独立，One UI 策略不会进入 UI Foundation 或 Renderer。
 
-集成 Attribution 声明中立 Android Dialog/Popup/Toast 路径，并把 Snackbar 与 Modal Bottom Sheet
-标记为 `Unsupported`；它不会报告或选择 Material Fallback。
-
 ## 行为与降级契约
 
 - Button 与 Switch 的有效触控目标至少为 48dp；Navigation Destination 在 68dp Bar 内提供
@@ -95,8 +115,13 @@ Recipe 仍保持独立，One UI 策略不会进入 UI Foundation 或 Renderer。
 - Shape Morph 不属于本组件集。框架的 Shape Transition 契约遇到不兼容 Shape 时，可以选择离散
   或静态终点。
 
-本模块只拥有 Token 与组件策略，不安装 Android Window 行为、Overlay Presenter、System Bar
-策略、Renderer 分支或可变全局注册表。
+本模块只拥有 Token 与组件策略，不安装 Android Window 行为、System Bar 策略、Renderer 分支或
+可变全局注册表。可选的
+[`viewcompose-overlay-oneui7-android`](../viewcompose-overlay-oneui7-android/README.md) 产物拥有 One UI
+Snackbar 与 Modal Bottom Sheet Presenter。主题默认 Attribution 会把这些可选能力保持为
+`Unsupported`；只有显式安装的 Adapter 才提供 Root 自有 Attribution 列表，把 Presenter 连同
+中立 Android Dialog/Popup Transport 和降级 Android Toast Fallback 升级为实际结果。两条路径都
+不会报告或选择 Material Fallback。
 
 ## 验证与限制
 
@@ -113,5 +138,6 @@ Pixel 与 Samsung 真机截图验收仍是发布负责人门禁。Alpha 版本�
 
 - [主题指南](../../guides/theming.md)
 - [UI Foundation](../viewcompose-ui-foundation/README.md)
+- [One UI 7 Android Overlay Adapter](../viewcompose-overlay-oneui7-android/README.md)
 - [架构总览](../../architecture/overview.md)
 - [Design System 解析边界](../../architecture/decisions/0004-design-system-resolution-boundary.md)

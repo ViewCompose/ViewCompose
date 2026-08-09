@@ -77,6 +77,7 @@ constructs its adapter explicitly.
 - [Overlay guide](../../guides/overlays.md)
 - [UI Foundation module](../viewcompose-ui-foundation/README.md)
 - [Material 3 overlay adapter](../viewcompose-overlay-material3-android/README.md)
+- [One UI 7 overlay adapter](../viewcompose-overlay-oneui7-android/README.md)
 
 The generated reference is available in the
 [`viewcompose-overlay-android` API tree](https://docs.viewcompose.com/api/viewcompose-overlay-android/current/).

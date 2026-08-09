@@ -221,8 +221,8 @@ Overlay selection follows the same root boundary as Context and token resolution
 
 - `viewcompose-overlay-android` owns Material-free Android window transport, nested render
   containers, Toast, and lifecycle cleanup;
-- named adapters supply only behavior with retained design-library value, currently Material
-  Snackbar and modal bottom sheet;
+- named adapters supply only behavior with retained design-system value, currently Material and
+  One UI Snackbar/modal-bottom-sheet presentation;
 - neutral `setUiContent` constructs the neutral transport explicitly, while
   `setMaterial3UiContent` constructs the Material adapter explicitly;
 - service discovery is a low-level neutral-host convenience and may never choose among design
@@ -230,10 +230,12 @@ Overlay selection follows the same root boundary as Context and token resolution
 - `UiIntegrationAttribution` travels with the design-system snapshot and records transport,
   presenter, conformance, and fallback for delayed overlay diagnostics.
 
-One UI currently uses neutral Dialog, Popup, and Toast behavior. Snackbar and modal bottom sheet
-remain `Unsupported`; a Material fallback is forbidden until One UI owns and verifies those
-recipes. Adding another design system does not require another Activity/Fragment extension unless
-that system must resolve a different Android Context before View construction.
+One UI uses neutral Dialog, Popup, and Toast behavior plus the explicit
+`viewcompose-overlay-oneui7-android` adapter for its Snackbar and bottom-dialog recipes. Without
+that root adapter, those two capabilities remain truthfully `Unsupported`; classpath presence does
+not select them, and a Material fallback is forbidden. Adding another design system does not
+require another Activity/Fragment extension unless that system must resolve a different Android
+Context before View construction.
 
 - `viewcompose-host-android` is always design-system neutral.
 - A generally named aggregate such as `viewcompose-android` must converge on neutral host entry
@@ -296,6 +298,7 @@ Ownership rules:
 | Low-level mounting and platform installation | `viewcompose-host-android` |
 | Material XML/dynamic-color mapping and Material policy | `viewcompose-material3` or a Material-named Android integration |
 | One UI tokens, recipes, and components | `viewcompose-oneui7` |
+| One UI Android overlay presentation | `viewcompose-overlay-oneui7-android` |
 | Product-specific design vocabulary | Product-owned design-system module |
 | Material/OEM external widget interop | Named Android integration, mounted through a neutral boundary |
 | Demo matrices and screenshot diagnostics | `app` and preview/test tooling |

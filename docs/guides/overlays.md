@@ -12,13 +12,21 @@ Neutral `setUiContent` and the Android navigation host select it explicitly.
 
 `viewcompose-overlay-material3-android` adds only Material Snackbar and modal-bottom-sheet
 presenters. `setMaterial3UiContent` selects that adapter explicitly; placing the artifact on the
-runtime classpath does not alter a neutral or One UI root. Custom low-level hosts may use
+runtime classpath does not alter a neutral or One UI root.
+
+`viewcompose-overlay-oneui7-android` adds Material-free One UI Snackbar and bottom-dialog
+presenters. One UI roots keep neutral `setUiContent`, construct that adapter through
+`overlayHostFactory`, and pass its `integrationAttribution` to `OneUi7Theme`. There is no duplicate
+One UI Activity/Fragment host extension because One UI does not require a different root Context.
+
+Custom low-level hosts may use
 `AndroidOverlayHostDefaults.androidOrNoOp`, but service discovery accepts exactly one neutral
 provider and never selects a design system.
 
 The active design-system attribution reports each overlay transport, presenter, conformance, and
-fallback. One UI currently reports Snackbar and modal bottom sheet as `Unsupported`, rather than
-silently falling back to Material.
+fallback. A One UI theme without its adapter reports Snackbar and modal bottom sheet as
+`Unsupported`; explicit adapter assembly upgrades them to `Equivalent`. It never silently falls
+back to Material.
 
 ## Popup positioning
 

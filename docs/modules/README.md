@@ -24,6 +24,7 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-navigation-android` | Integration | Android navigation host integration | [Available](./viewcompose-navigation-android/README.md) |
 | `viewcompose-overlay-android` | Integration | Material-free Android overlay transport | [Available](./viewcompose-overlay-android/README.md) |
 | `viewcompose-overlay-material3-android` | Integration | Material-backed Android overlay presentation | [Available](./viewcompose-overlay-material3-android/README.md) |
+| `viewcompose-overlay-oneui7-android` | Integration | Material-free One UI Snackbar and bottom-dialog presentation | [Available](./viewcompose-overlay-oneui7-android/README.md) |
 | `viewcompose-image-coil` | Integration | Coil-backed general image loading | [Available](./viewcompose-image-coil/README.md) |
 | `viewcompose-image-glide` | Integration | Glide-backed general image loading | [Available](./viewcompose-image-glide/README.md) |
 | `viewcompose-lifecycle-androidx` | Integration | AndroidX Lifecycle-aware state collection | [Available](./viewcompose-lifecycle-androidx/README.md) |

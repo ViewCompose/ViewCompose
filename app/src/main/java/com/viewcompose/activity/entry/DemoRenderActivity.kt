@@ -42,6 +42,11 @@ abstract class DemoRenderActivity : AppCompatActivity() {
             return
         }
         enableEdgeToEdge()
+        installDemoContent()
+    }
+
+    /** Installs the root integration used by this demo Activity. */
+    protected open fun installDemoContent() {
         setMaterial3UiContent(
             debug = true,
             debugTag = "ViewComposeSample",
