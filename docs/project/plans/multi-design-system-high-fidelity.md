@@ -1104,7 +1104,7 @@ Approved target graph:
 | Artifact | Retained responsibility | Forbidden responsibility |
 | --- | --- | --- |
 | `viewcompose-ui-foundation` | overlay requests, behavior specs, queues, session ownership, captured content | Android windows, Material widgets, design-system selection |
-| `viewcompose-overlay-android` | neutral Android dialog, popup, toast, render-container bridge, root-scoped host assembly, explicit unsupported fallback | Material dependencies, Material token names, process-global design policy |
+| `viewcompose-overlay-platform-android` | neutral Android dialog, popup, toast, render-container bridge, root-scoped host assembly, explicit unsupported fallback | Material dependencies, Material token names, process-global design policy |
 | `viewcompose-overlay-material3-android` | only Material presenters whose native dependency has retained value, initially snackbar and modal bottom sheet | generic Android window transport, whole-host service registration, One UI fallback |
 | `viewcompose-android` | neutral Activity/Fragment root with an explicit neutral Android overlay factory | Material provider discovery or Material-named diagnostics |
 | `viewcompose-material3-android` | Material Context/token installation plus explicit Material overlay assembly | duplicated lifecycle/render-session implementation |
@@ -1130,9 +1130,10 @@ explicit without changing UI Foundation's request or session model.
 
 Ordered work:
 
-1. Add `viewcompose-overlay-android` as an Android integration artifact with strict API docs,
+1. Add `viewcompose-overlay-platform-android` as an Android integration artifact with strict API docs,
    compiled Q3 samples, module documentation, publishing metadata, dependency contracts, and an
-   immutable release changeset.
+   immutable release changeset. Do not reuse the retired `viewcompose-overlay-android` coordinate;
+   its released versions and documentation remain immutable history.
 2. Move Android Dialog, PopupWindow, Toast, anchor observation, coordinate placement, and opaque
    render-container bridging out of the Material package without changing their session cleanup.
 3. Expose one root-scoped `AndroidOverlayHost` that assembles neutral presenters and accepts narrow
