@@ -371,6 +371,8 @@ private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
                 "Design system" to DemoTestTags.MATERIAL3_DESIGN_SYSTEM,
                 "Recipe set" to DemoTestTags.MATERIAL3_RECIPE_SET,
                 "Component backends" to DemoTestTags.MATERIAL3_COMPONENT_BACKENDS,
+                "Overlay transport" to DemoTestTags.MATERIAL3_OVERLAY_TRANSPORT,
+                "Overlay presenters" to DemoTestTags.MATERIAL3_OVERLAY_PRESENTERS,
                 "Mode" to DemoTestTags.MATERIAL3_THEME_MODE,
                 "Secondary" to DemoTestTags.MATERIAL3_THEME_SECONDARY,
                 "SecondaryContainer" to DemoTestTags.MATERIAL3_THEME_SECONDARY_CONTAINER,

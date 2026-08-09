@@ -68,6 +68,12 @@ class Material3TouchTargetBaselineUiTest {
                     val componentBackends = activity.requireTextViewByTestTagVisible(
                         DemoTestTags.MATERIAL3_COMPONENT_BACKENDS,
                     ).text.toString()
+                    val overlayTransport = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_OVERLAY_TRANSPORT,
+                    ).text.toString()
+                    val overlayPresenters = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_OVERLAY_PRESENTERS,
+                    ).text.toString()
                     val secondaryValue = activity.requireTextViewByTestTagVisible(
                         DemoTestTags.MATERIAL3_THEME_SECONDARY,
                     ).text.toString()
@@ -85,6 +91,13 @@ class Material3TouchTargetBaselineUiTest {
                     assertTrue(componentBackends.contains("surface-card:DslComposite/Exact"))
                     assertTrue(componentBackends.contains("switch:NativeBehavioralCore/Equivalent"))
                     assertTrue(componentBackends.contains("navigation-bar:NeutralCustomView/Equivalent"))
+                    assertEquals("viewcompose-overlay-android/dialog", overlayTransport)
+                    assertTrue(overlayPresenters.contains("overlay.snackbar:material-components/snackbar/Equivalent"))
+                    assertTrue(
+                        overlayPresenters.contains(
+                            "overlay.modal-bottom-sheet:material-components/bottom-sheet-dialog/Equivalent",
+                        ),
+                    )
                     assertNotEquals(secondaryValue, secondaryContainerValue)
                     assertEquals("DISTINCT", roleCheck)
                     when (source) {
@@ -115,6 +128,8 @@ class Material3TouchTargetBaselineUiTest {
                         appendLine("designSystem=$designSystem")
                         appendLine("recipeSet=$recipeSet")
                         appendLine("componentBackends=$componentBackends")
+                        appendLine("overlayTransport=$overlayTransport")
+                        appendLine("overlayPresenters=$overlayPresenters")
                         appendLine("mode=$modeValue")
                         appendLine("secondary=$secondaryValue")
                         appendLine("secondaryContainer=$secondaryContainerValue")

@@ -105,6 +105,8 @@ internal fun UiTreeBuilder.DemoOneUi7VerificationPage() {
                         "Design system" to DemoTestTags.ONE_UI_7_DESIGN_SYSTEM,
                         "Recipe set" to DemoTestTags.ONE_UI_7_RECIPE_SET,
                         "Component backends" to DemoTestTags.ONE_UI_7_COMPONENT_BACKENDS,
+                        "Overlay transport" to DemoTestTags.ONE_UI_7_OVERLAY_TRANSPORT,
+                        "Overlay presenters" to DemoTestTags.ONE_UI_7_OVERLAY_PRESENTERS,
                     ),
                 )
                 DiagnosticFactGroup(

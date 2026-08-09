@@ -67,10 +67,20 @@ class OneUi7VerificationUiTest {
                     val componentBackends = activity.requireTextViewByTestTagVisible(
                         DemoTestTags.ONE_UI_7_COMPONENT_BACKENDS,
                     ).text.toString()
+                    val overlayTransport = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ONE_UI_7_OVERLAY_TRANSPORT,
+                    ).text.toString()
+                    val overlayPresenters = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ONE_UI_7_OVERLAY_PRESENTERS,
+                    ).text.toString()
                     assertEquals("viewcompose-oneui7/static", tokenProducer)
                     assertEquals("FrameworkDefault", primaryOrigin)
                     assertEquals("viewcompose-oneui7", designSystem)
                     assertEquals(OneUi7Reference.componentSet, recipeSet)
+                    assertEquals("viewcompose-overlay-android/dialog", overlayTransport)
+                    assertTrue(overlayPresenters.contains("overlay.snackbar:unsupported/Unsupported"))
+                    assertTrue(overlayPresenters.contains("overlay.modal-bottom-sheet:unsupported/Unsupported"))
+                    assertTrue(!overlayPresenters.contains("material-components"))
                     assertTrue(componentBackends.contains("switch:one-ui7-switch-v1:DslComposite/Equivalent"))
                     assertTrue(
                         componentBackends.contains(
@@ -83,6 +93,8 @@ class OneUi7VerificationUiTest {
                         appendLine("designSystem=$designSystem")
                         appendLine("recipeSet=$recipeSet")
                         appendLine("componentBackends=$componentBackends")
+                        appendLine("overlayTransport=$overlayTransport")
+                        appendLine("overlayPresenters=$overlayPresenters")
                     }
                 }
                 captureEvidence(
