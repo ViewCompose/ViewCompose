@@ -2,7 +2,9 @@
 
 ## Status
 
-Active. Phases 0 through 12 are implemented on `codex/multi-design-system-foundation`. Phase 8 closes
+Active. Phases 0 through 12 are implemented on `codex/multi-design-system-foundation`. Phases 13
+through 16 now converge Android overlay ownership and root-level integration without introducing
+one Activity/Fragment extension family per design system. Phase 8 closes
 the retained native-behavior parity gaps exposed by the current design-system-owned controls. The
 internal pressure slice now exercises three visually distinct design-system bundles through shared
 Basic primitives and design-system-owned composites. Its behavior and screenshot matrix pass on
@@ -19,8 +21,9 @@ Material 3 and One UI now own parallel five-family pressure slices without shari
 Production diagnostics identify token producer/effective origin, recipe, backend, conformance,
 capability, and fallback; the Settings matrix verifies XML, static, and application-override
 sources. The Foundation-default and mapped-backend audits retained native behavioral cores where
-replacement has no proven benefit. Implementation work is complete; physical-device performance,
-Samsung visual acceptance, publication, and release-time archival remain external release gates.
+replacement has no proven benefit. The remaining implementation work extracts the neutral Android
+overlay transport, replaces classpath-selected design policy with explicit root assembly, and
+narrows the Material overlay artifact to presenters with a measured Material dependency.
 
 This plan is canonical English-only under the documentation governance policy. It records both the
 target architecture and the staged evidence required before public APIs or production rendering
@@ -29,10 +32,11 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-09.
 
-Next action: run release-owner Pixel/physical Samsung acceptance and formal device benchmarks, then
-publish the linked Maven changeset. These gates are not used to bypass the neutral-host or backend
-boundaries. The release workflow must archive this plan only after every linked changeset is
-included and immediately before Maven upload.
+Next action: complete Phases 13 through 16 and their emulator/Maven acceptance matrix, then run
+release-owner Pixel/physical Samsung acceptance and formal device benchmarks before publishing the
+linked Maven changesets. These gates are not used to bypass the neutral-host or backend boundaries.
+The release workflow must archive this plan only after every linked changeset is included and
+immediately before Maven upload.
 
 ## Maven release changesets
 
@@ -1064,6 +1068,166 @@ land as separate reversible slices.
 Rollback: one component family at a time. Retain independently valuable behavior foundations only
 when their generic tests and API review pass. A failed custom control returns to its native core or
 named integration; it never earns a design-system branch in Renderer.
+
+## Phase 13: Android overlay ownership and selection baseline
+
+Status: in progress. The source, API, dependency, discovery, and coverage audit is recorded below;
+the pre-extraction test and Maven baselines remain to be frozen before production movement.
+
+Goal: distinguish platform window transport from Material presentation and prove the current
+selection failure before moving a published symbol or dependency.
+
+Recorded baseline:
+
+- UI Foundation already owns the platform-neutral request protocol, session/key reconciliation,
+  transient-feedback queue, and nested `OverlaySurfaceContent`. Dialog, popup, and modal-sheet
+  content captures the declaring `LocalSnapshot`, including the effective design-system snapshot.
+- `viewcompose-overlay-material3-android` currently mixes neutral Android `Dialog`, `PopupWindow`,
+  nested render-container bridging, and Android `Toast` code with Material `Snackbar`,
+  `BottomSheetDialog`, and `BottomSheetBehavior` code.
+- The artifact depends on Google Material Components but not `viewcompose-material3`; Material
+  widget presence therefore selects a backend without proving that the effective Material token or
+  recipe snapshot owns its presentation.
+- `viewcompose-host-android` discovers an entire overlay host through `ServiceLoader`, caches only
+  the first provider, and neither rejects nor reports multiple providers. Its neutral fallback
+  message names the Material artifact. This is safe for one optional backend but is not a valid
+  multi-design-system selection contract.
+- Neutral `viewcompose-android` and named `viewcompose-material3-android` both default to that same
+  discovered host. A One UI root can therefore receive Material snackbar and bottom-sheet behavior
+  solely because the Material backend is present on the runtime classpath.
+- Platform presenter implementations have compiled samples but no owning-module behavioral tests.
+  UI Foundation protects queueing and request reconciliation independently; app coverage protects
+  provider discovery, not presenter ownership or multi-provider behavior.
+
+Approved target graph:
+
+| Artifact | Retained responsibility | Forbidden responsibility |
+| --- | --- | --- |
+| `viewcompose-ui-foundation` | overlay requests, behavior specs, queues, session ownership, captured content | Android windows, Material widgets, design-system selection |
+| `viewcompose-overlay-android` | neutral Android dialog, popup, toast, render-container bridge, root-scoped host assembly, explicit unsupported fallback | Material dependencies, Material token names, process-global design policy |
+| `viewcompose-overlay-material3-android` | only Material presenters whose native dependency has retained value, initially snackbar and modal bottom sheet | generic Android window transport, whole-host service registration, One UI fallback |
+| `viewcompose-android` | neutral Activity/Fragment root with an explicit neutral Android overlay factory | Material provider discovery or Material-named diagnostics |
+| `viewcompose-material3-android` | Material Context/token installation plus explicit Material overlay assembly | duplicated lifecycle/render-session implementation |
+| `viewcompose-oneui7` | design-owned content/recipes and declared overlay conformance | accidental Material backend use; Android integration module without a platform need |
+
+Keep gate:
+
+- public API, generated reference, POM, minimal-consumer, provider-discovery, window lifecycle, and
+  representative screenshot baselines exist before extraction;
+- the target introduces no design-system branch in Host Android, Renderer, or UI Foundation; and
+- the plan records unsupported/degraded behavior explicitly instead of preserving an accidental
+  Material fallback.
+
+Rollback: Phase 13 changes only evidence and documentation. Revert a noisy fixture rather than
+weakening the ownership assertion.
+
+## Phase 14: Neutral Android overlay transport extraction
+
+Status: planned after the Phase 13 baseline passes.
+
+Goal: publish one Material-free Android overlay transport and make unsupported presenter slots
+explicit without changing UI Foundation's request or session model.
+
+Ordered work:
+
+1. Add `viewcompose-overlay-android` as an Android integration artifact with strict API docs,
+   compiled Q3 samples, module documentation, publishing metadata, dependency contracts, and an
+   immutable release changeset.
+2. Move Android Dialog, PopupWindow, Toast, anchor observation, coordinate placement, and opaque
+   render-container bridging out of the Material package without changing their session cleanup.
+3. Expose one root-scoped `AndroidOverlayHost` that assembles neutral presenters and accepts narrow
+   optional snackbar and modal-sheet presenter slots. Missing slots use attributable unsupported
+   presenters; they never search for a design system.
+4. Keep the transitional Host Android service contract only for discovering the single neutral
+   transport. Reject duplicate providers deterministically and remove Material artifact names from
+   neutral diagnostics. Normal application roots do not use discovery for design selection.
+5. Add Robolectric coverage for dialog/popup lifetime, toast queue completion, unsupported slots,
+   provider uniqueness, and root/session isolation before deleting the old implementations.
+
+Keep gate:
+
+- the new artifact has no Google Material, AppCompat theme, Material 3, or One UI dependency;
+- neutral Dialog/Popup/Toast behavior and cleanup match the recorded baseline;
+- unsupported Snackbar/ModalBottomSheet requests are attributable and never instantiate Material;
+- the Material implementation can consume the narrow presenter slots without copying generic
+  window/session code; and
+- API/POM and isolated Maven consumers pass.
+
+Rollback: revert the new artifact and source movement together. Do not leave duplicate production
+presenters in neutral and Material modules.
+
+## Phase 15: Explicit root overlay assembly and Material adapter narrowing
+
+Status: planned after Phase 14.
+
+Goal: select overlay capabilities from the same root integration that resolves platform Context,
+without requiring every design system to publish Activity and Fragment extensions.
+
+Ordered work:
+
+1. Make neutral `ComponentActivity/Fragment.setUiContent` default to the neutral Android overlay
+   transport through an explicit factory dependency, not a classpath-selected design backend.
+2. Keep `viewcompose-material3-android` because Material Context must be resolved before View
+   construction. Its `setMaterial3UiContent` remains a thin convenience facade and explicitly
+   assembles neutral presenters plus Material snackbar/modal-sheet presenters.
+3. Do not add `setOneUi7UiContent` or require a `viewcompose-oneui7-android` artifact while One UI
+   uses the neutral root Context. Token/recipe-only systems continue to use neutral `setUiContent`
+   and their composition provider.
+4. Remove Material whole-host service registration. Preserve a neutral discovery facade only for
+   low-level/custom hosts, with duplicate-provider failure and an explicit factory parameter as the
+   preferred contract.
+5. Add source/dependency guards proving that neutral roots and transports contain no Material
+   symbol, dependency, artifact recommendation, or provider registration.
+
+Keep gate:
+
+- a Material application retains one dependency and one host call;
+- a neutral or One UI application receives no Material widget or dependency through overlay
+  defaults;
+- Activity/Fragment lifecycle implementation remains single-owned by `viewcompose-android`;
+- root replacement clears the old overlay host and creates the new host from the same resolved
+  integration snapshot; and
+- no new public universal host SPI is frozen before two context-changing systems prove it.
+
+Rollback: restore only the explicit factory wiring if consumer ergonomics or session cleanup
+regresses. Never restore Material discovery as the neutral default.
+
+## Phase 16: Overlay design provenance and cross-system acceptance
+
+Status: planned after Phase 15.
+
+Goal: prove that delayed overlay content and platform presenter selection report one coherent
+design-system owner, while keeping unsupported alpha capabilities honest.
+
+Ordered work:
+
+1. Extend overlay diagnostics with root-scoped transport, presenter backend, conformance, and
+   fallback attribution. Do not add overlay policy to `UiThemeTokens` or a universal component
+   recipe union.
+2. Verify that dialog, popup, and modal-sheet surface sessions retain the token/recipe/local
+   snapshot captured at declaration and never read a later process-global design identity.
+3. Keep Material Snackbar and BottomSheet behind the Material adapter and record their native
+   behavioral value. Apply Material token/Context provenance where the widget supports stable
+   theming; record any platform-owned remainder.
+4. Verify One UI roots through the neutral Android transport. Unsupported snackbar or modal-sheet
+   presentation remains an explicit alpha capability result until a One UI recipe and behavior
+   baseline justifies an implementation; it must not degrade to Material implicitly.
+5. Add Settings/demo entries and deterministic screenshots that display root design system, token
+   producer, overlay transport, per-type presenter, conformance, and fallback. Cover root switching
+   with an active overlay and reject mixed snapshots.
+
+Keep gate:
+
+- Material, One UI, and neutral fixtures identify their actual overlay presenter and fallback;
+- no delayed overlay surface mixes token, recipe, Context, or backend identity;
+- Material and neutral minimal consumers resolve only the intended transitive artifacts;
+- API 24, 31, 35, and current emulator behavior passes, with API 35 screenshot inspection; and
+- measured startup, root build, overlay show/update/dismiss, and allocation costs remain inside the
+  Phase 13 tolerance or the responsible slice is reverted.
+
+Rollback: attribution may remain when independently truthful, but a presenter or public
+abstraction that fails behavior, visual, dependency, or performance gates is removed rather than
+hidden behind optimistic conformance.
 
 ## Testing and evidence matrix
 
