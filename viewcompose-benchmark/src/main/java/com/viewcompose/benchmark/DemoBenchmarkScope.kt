@@ -152,6 +152,14 @@ internal fun MacrobenchmarkScope.waitForText(text: String) {
 }
 
 /**
+ * 等待指定文本从当前窗口消失。
+ * Waits until the given text disappears from the current window.
+ */
+internal fun MacrobenchmarkScope.waitForTextGone(text: String) {
+    device.wait(Until.gone(By.text(text)), UI_WAIT_TIMEOUT_MS)
+}
+
+/**
  * 在页面内上下滑动，直到找到指定文本。
  * Swipes within the page until the given text is found.
  */

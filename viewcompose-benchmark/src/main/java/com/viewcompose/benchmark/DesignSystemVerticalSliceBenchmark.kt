@@ -62,6 +62,12 @@ class DesignSystemVerticalSliceBenchmark {
     @Test
     fun cupertinoPressureActiveAnimation() = activeAnimation(CUPERTINO_PRESSURE)
 
+    @Test
+    fun cutContrastOverlayLifecycle() = overlayLifecycle(
+        initialKind = CUT_CONTRAST,
+        replacementKind = ROUNDED_REFERENCE,
+    )
+
     private fun initialBuild(kind: String) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(
@@ -122,6 +128,30 @@ class DesignSystemVerticalSliceBenchmark {
     ) {
         clickVisibleTextWithoutIdle("Synchronize workspace")
         waitForText("Checked: false")
+    }
+
+    private fun overlayLifecycle(
+        initialKind: String,
+        replacementKind: String,
+    ) = benchmarkRule.measureRepeated(
+        packageName = TARGET_PACKAGE,
+        metrics = listOf(
+            FrameTimingMetric(),
+            MemoryUsageMetric(MemoryUsageMetric.Mode.Max),
+        ),
+        compilationMode = CompilationMode.None(),
+        iterations = designSystemIterations(),
+        startupMode = StartupMode.WARM,
+        setupBlock = {
+            startDesignSystemAndWait(initialKind)
+        },
+    ) {
+        clickText("Open dialog")
+        waitForText("Overlay system: $initialKind")
+        clickText("Switch overlay to $replacementKind")
+        waitForText("Overlay system: $replacementKind")
+        clickText("Close coherent dialog")
+        waitForTextGone("Overlay system: $replacementKind")
     }
 
     private companion object {
