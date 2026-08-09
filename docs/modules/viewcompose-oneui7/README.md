@@ -20,6 +20,8 @@ dependencies {
 - Stability: **Alpha**.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
 - API dependency: `viewcompose-ui-foundation`, supplied transitively.
+- Runtime dependencies: `viewcompose-animation` and `viewcompose-gesture`, resolved transitively;
+  their types are not exposed by the One UI 7 public signatures.
 - Material dependency: none.
 - Reference: One UI 7 and Samsung Developer One UI guidance, pinned and reviewed on 2026-08-09.
 - Public component-set identity: `one-ui-7-five-component-alpha`.
@@ -72,10 +74,14 @@ available in the
 - Button and Switch expose at least a 48dp effective target. Navigation destinations expose a 52dp
   target inside a 68dp bar.
 - Switch and NavigationBar state is caller-owned. Their callbacks request replacement state and do
-  not mutate caller data.
+  not mutate caller data. Switch supports whole-row click plus bounded follow-finger drag with
+  position/velocity settling, cancellation rollback, and mirrored physical travel in RTL.
 - TextField preserves ViewCompose's native Android editing core for IME, selection, composition,
   autofill, accessibility, and saved-state behavior.
 - RTL reverses visual destination order without changing caller indices or keys.
+- NavigationBar exposes one single-selection accessibility row and each destination's logical
+  column. Android can therefore announce collection positions without a One UI renderer branch;
+  the logical positions remain stable when RTL reverses physical placement.
 - Backdrop blur is not part of this alpha public API. A product requiring that decoration must use
   an opaque or translucent tinted Surface fallback; no content, input, or semantics may depend on
   blur availability.
@@ -87,7 +93,8 @@ overlay presenters, system-bar policy, a renderer branch, or a mutable global re
 
 ## Verification and limitations
 
-Unit tests protect light/dark snapshots, component structure, validation, and callback behavior.
+Unit and gesture-contract tests protect light/dark snapshots, component structure, validation,
+controlled drag bounds/settling/cancellation, and callback behavior.
 The demo Settings entry `Verify One UI 7 five-component alpha` exercises Light/LTR/1.0 and
 Dark/RTL/1.3 configurations and exports deterministic screenshots with token source, component-set
 identity, and conformance labels. API 35 emulator evidence covers state changes, disabled behavior,

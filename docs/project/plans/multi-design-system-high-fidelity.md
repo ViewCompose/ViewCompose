@@ -2,7 +2,8 @@
 
 ## Status
 
-Active. Phases 0 through 7 are implemented on `codex/multi-design-system-foundation`. The internal
+Active. Phases 0 through 8 are implemented on `codex/multi-design-system-foundation`. Phase 8 closes
+the retained native-behavior parity gaps exposed by the current design-system-owned controls. The internal
 pressure slice now exercises three visually distinct design-system bundles through shared Basic
 primitives and design-system-owned composites. Its behavior and screenshot matrix pass on API 24,
 31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain non-representative
@@ -19,9 +20,9 @@ guide, and owning module manuals before this plan is archived.
 Last verified: 2026-08-09.
 
 Next action: complete release-owner Pixel and physical Samsung acceptance, run formal
-physical-device benchmarks, and publish the bounded One UI 7 alpha through Maven. The release
-workflow must archive this plan only after every linked changeset is included and immediately
-before Maven upload.
+physical-device benchmarks, and publish the
+bounded One UI 7 alpha through Maven. The release workflow must archive this plan only after every
+linked changeset is included and immediately before Maven upload.
 
 ## Maven release changesets
 
@@ -634,6 +635,83 @@ Keep criteria:
   frame CPU P50 across eight animation frames. These values prove reproducible instrumentation
   only; emulator numbers are not release thresholds and require physical-device comparison before
   publication claims.
+
+## Phase 8: Native-behavior parity foundation
+
+Status: implemented and retained. The source audit, controlled two-state drag foundation,
+collection-position semantics, renderer verification, and emulator interaction matrix are complete.
+
+Moving geometry from an Android widget into a design-system-owned DSL composite also moves hidden
+behavioral ownership. A component is not accepted merely because its resting screenshot matches.
+The applicable native behavior must either remain in a native core or be supplied by a shared,
+design-system-neutral interaction contract before the custom component is retained.
+
+The audit produced the following benefit-ordered decisions:
+
+| Priority | Native behavior at risk | Decision and gate |
+| --- | --- | --- |
+| P0 | Switch follow-finger movement, bounded travel, velocity/position settle, cancellation, RTL, and click suppression after drag | Implement now in `viewcompose-gesture`; use it in the internal contrast and public One UI 7 Switches |
+| P0 | Anchored state surviving recomposition without jumping, and restoring the committed anchor after cancellation | Correct the generic anchored-drag contract before wiring any component |
+| P1 | Custom Slider tap-to-position, continuous drag, step quantization, directional keys, range accessibility actions, and RTL | Mandatory before any design system replaces the native `SeekBar`; do not publish an unproven universal range API while every current Slider still keeps the native core |
+| P1 | Custom Checkbox/Radio tri-state or group selection semantics and mark-transition policy | Mandatory before the first custom tri-state or mutually exclusive control family; current native controls and two-state composite semantics remain sufficient |
+| P1 | Navigation/Tab/Segmented collection position announcements and explicit traversal policy | Implement logical collection dimensions and item positions for current NavigationBar and SegmentedControl composites; retain native focus search and do not introduce a global roving-focus state machine without a failing fixture |
+| P2 | Explicit haptic policy, rotary input, pointer hover variants, and drag-across selection | Add only for a pinned design-system requirement and physical-device evidence; Android click sound, focus, hover/state layers, and keyboard activation remain available today |
+| P2 | Virtual accessibility descendants for a single custom-drawn View | Require before collapsing a semantic composite into one Canvas/custom View; current DSL composites intentionally retain real child Views |
+
+TextField keeps the native `EditText` editing core. Current native Checkbox, RadioButton, Switch,
+and Slider nodes keep their platform gesture and accessibility behavior. Existing generic click,
+focus, key input, state-layer, transform, nested-scroll, pager, and scroll contracts are retained;
+Phase 8 does not duplicate them inside each design-system module.
+
+The retained implementation slice is deliberately narrow:
+
+1. clamp anchored visual offsets to the installed range;
+2. preserve active offsets when an equivalent anchor set is reinstalled by recomposition;
+3. restore the last committed anchor before cancellation callbacks;
+4. report the semantic value selected by a normal settle;
+5. expose Q3 controlled logical toggle progress independent of physical LTR/RTL anchor direction;
+6. compose that input with the existing click, focus, checked semantics, state-layer, and
+   design-system motion contracts rather than introducing a new Switch node;
+7. wire the internal contrast and One UI 7 Switches without adding design-system branches to the
+   Android Renderer;
+8. expose generic Q3 collection dimensions, selection cardinality, logical child positions, and
+   spans, then map them to Android accessibility metadata without duplicating item selected or
+   heading state;
+9. wire current custom NavigationBar and SegmentedControl composites with logical positions while
+   retaining native View focus search.
+
+Keep criteria:
+
+- a tap toggles exactly once, and a recognized drag never also invokes the click callback;
+- the thumb follows the pointer, never travels beyond either anchor, and settles by the renderer's
+  position/velocity policy;
+- cancellation, modifier replacement, and controlled-state rejection restore caller-owned state;
+- LTR and RTL expose the same logical unchecked-to-checked progress and opposite physical travel;
+- TalkBack click action, D-pad/keyboard activation, checked announcement, 48dp target, state
+  layers, and reduced-motion policy do not regress;
+- equivalent anchor reinstallation during drag does not jump or restart the gesture;
+- targeted unit/renderer tests and API 24, 31, 35, and 36 emulator interaction fixtures pass.
+
+Retained evidence:
+
+- generic anchored-drag tests cover clamping, equivalent-anchor reinstallation, cancellation,
+  settle callbacks, controlled rejection, and logical RTL resynchronization;
+- a renderer touch fixture proves that a recognized drag settles exactly once and does not also
+  click;
+- the public One UI 7 controlled Switch fixture passes click, real follow-finger drag, settle, and
+  post-animation stability in LTR and RTL on API 24, 31, 35, and 36;
+- API 35 stable-frame LTR and RTL screenshots were inspected after the animation window rather
+  than capturing a stale intermediate frame;
+- Android accessibility nodes expose one-row, single-selection collection metadata and logical
+  item positions for One UI 7 NavigationBar in LTR and RTL on API 24 and 35;
+- equivalent anchors installed twice during composition originally exposed an Android snapshot
+  apply conflict; idempotent anchor installation fixed the shared state contract rather than
+  adding a component workaround.
+
+Rollback: revert the component wiring and controlled toggle adapter together. Generic anchored
+clamping, recomposition preservation, and cancellation restoration may remain only if their
+independent tests and compatibility review pass. Do not compensate for a failed composite by
+adding One UI, Cupertino, or Material knowledge to Android Renderer.
 
 ## Testing and evidence matrix
 

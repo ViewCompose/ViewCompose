@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 1ce87bcad0b6956e7e7bc78484ae6c43686a8945bd591aa9b23f1d9213675b17
+translation_source_hash: 2539a2b79c0902bf415b5fbdcb04bc8a5b83318919d09e8f037d3f85df0e5fbd
 translation_status: current
 ---
 
@@ -24,6 +24,8 @@ dependencies {
 - 稳定性：**Alpha**。
 - 平台：Android library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
 - API 依赖：`viewcompose-ui-foundation`，会传递提供给使用方。
+- Runtime 依赖：`viewcompose-animation` 与 `viewcompose-gesture`，会传递解析；One UI 7 的公开
+  Signature 不暴露其中类型。
 - Material 依赖：无。
 - 参考基线：One UI 7 与 Samsung Developer One UI 指南，固定并复核于 2026-08-09。
 - 公开组件集标识：`one-ui-7-five-component-alpha`。
@@ -72,9 +74,13 @@ setUiContent {
 - Button 与 Switch 的有效触控目标至少为 48dp；Navigation Destination 在 68dp Bar 内提供
   52dp 目标。
 - Switch 与 NavigationBar 状态归调用方所有；Callback 只请求替换状态，不会修改调用方数据。
+  Switch 支持整行 Click 与有界 Follow-finger Drag，并按位置/速度 Settle；取消会回滚状态，RTL
+  会镜像物理移动方向。
 - TextField 保留 ViewCompose 的原生 Android 编辑内核，继续承担 IME、选区、组合区、Autofill、
   Accessibility 与 Saved State 行为。
 - RTL 只反转 Destination 的视觉顺序，不改变调用方 Index 或 Key。
+- NavigationBar 暴露一个单选 Accessibility 行，以及每个 Destination 的逻辑列。Android 因而
+  无需 One UI Renderer 分支即可播报集合位置；RTL 反转物理排布时，逻辑位置仍保持稳定。
 - Backdrop Blur 不属于此 Alpha 公开 API。需要该装饰的产品必须采用不透明或半透明着色 Surface
   降级；内容、输入与 Semantics 不得依赖 Blur 是否可用。
 - Shape Morph 不属于本组件集。框架的 Shape Transition 契约遇到不兼容 Shape 时，可以选择离散
@@ -85,7 +91,8 @@ setUiContent {
 
 ## 验证与限制
 
-单元测试保护 Light/Dark 快照、组件结构、参数校验与 Callback 行为。Demo 设置页中的
+单元测试与 Gesture 契约测试保护 Light/Dark 快照、组件结构、参数校验、受控 Drag
+边界/Settle/取消与 Callback 行为。Demo 设置页中的
 `Verify One UI 7 five-component alpha` 入口会覆盖 Light/LTR/1.0 与 Dark/RTL/1.3，并导出包含
 Token 来源、组件集标识与一致性标签的确定性截图。API 35 模拟器证据覆盖状态变化、Disabled、
 原生文本编辑、RTL 顺序与截图锚点。

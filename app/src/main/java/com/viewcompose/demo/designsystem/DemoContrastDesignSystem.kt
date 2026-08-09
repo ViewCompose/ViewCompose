@@ -9,6 +9,8 @@ import com.viewcompose.animation.core.ReducedMotionPolicy
 import com.viewcompose.animation.core.spring
 import com.viewcompose.animation.core.tween
 import com.viewcompose.graphics.core.Brush
+import com.viewcompose.gesture.rememberToggleDragState
+import com.viewcompose.gesture.toggleDraggable
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.foundation.BasicButton
 import com.viewcompose.ui.foundation.BasicButtonStyle
@@ -35,6 +37,10 @@ import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.SemanticsCollectionInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
+import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.offset
@@ -45,7 +51,6 @@ import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.node.UiStateLayerColors
-import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
@@ -680,10 +685,24 @@ internal fun UiTreeBuilder.DemoDesignSwitch(
         Environment.layoutDirection == UiLayoutDirection.Rtl -> UiDp.Zero - travel
         else -> travel
     }
-    val thumbOffset = animateDpAsState(
+    val checkedAnchorOffsetPx = Environment.density.toPx(
+        if (Environment.layoutDirection == UiLayoutDirection.Rtl) UiDp.Zero - travel else travel,
+    )
+    val dragState = rememberToggleDragState(
+        checked = checked,
+        checkedAnchorOffsetPx = checkedAnchorOffsetPx,
+        onCheckedChange = onCheckedChange,
+    )
+    val idleThumbOffset = animateDpAsState(
         targetValue = thumbOffsetTarget,
         animationSpec = spatialSpec,
     ).value
+    val thumbOffset = if (dragState.isDragging.value) {
+        val direction = if (checkedAnchorOffsetPx < 0f) -1f else 1f
+        UiDp(travel.value * dragState.progress.value * direction)
+    } else {
+        idleThumbOffset
+    }
     val trackColor = animateColorAsState(trackColorTarget, effectSpec).value
     val thumbColor = animateColorAsState(thumbColorTarget, effectSpec).value
     val controlIsFirst = when (recipe.placement) {
@@ -727,11 +746,13 @@ internal fun UiTreeBuilder.DemoDesignSwitch(
         stateLayerColors = recipe.stateLayers,
         minimumHeight = 48.dp,
         role = SemanticsRole.Switch,
-        modifier = modifier.semantics(mergeDescendants = true) {
-            role = SemanticsRole.Switch
-            this.checked = checked
-            this.enabled = enabled
-        },
+        modifier = modifier
+            .toggleDraggable(state = dragState, enabled = enabled)
+            .semantics(mergeDescendants = true) {
+                role = SemanticsRole.Switch
+                this.checked = checked
+                this.enabled = enabled
+            },
         contentAlignment = BoxAlignment.CenterStart,
     ) {
         Row(
@@ -808,7 +829,13 @@ internal fun UiTreeBuilder.DemoDesignNavigationBar(
     Row(
         arrangement = MainAxisArrangement.SpaceEvenly,
         verticalAlignment = VerticalAlignment.Center,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().semantics {
+            collectionInfo = SemanticsCollectionInfo(
+                rowCount = 1,
+                columnCount = items.size,
+                selectionMode = SemanticsCollectionSelectionMode.Single,
+            )
+        },
     ) {
         val indexedItems = items.withIndex().let { values ->
             if (Environment.layoutDirection == UiLayoutDirection.Rtl) values.reversed() else values
@@ -831,6 +858,10 @@ internal fun UiTreeBuilder.DemoDesignNavigationBar(
                     .semantics(mergeDescendants = true) {
                         role = SemanticsRole.Tab
                         this.selected = selected
+                        collectionItemInfo = SemanticsCollectionItemInfo(
+                            rowIndex = 0,
+                            columnIndex = index,
+                        )
                     },
                 contentAlignment = BoxAlignment.Center,
             ) {
@@ -895,7 +926,13 @@ internal fun UiTreeBuilder.DemoDesignSegmentedControl(
         ),
         contentColor = recipe.unselectedContentColor,
         minimumHeight = recipe.height,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().semantics {
+            collectionInfo = SemanticsCollectionInfo(
+                rowCount = 1,
+                columnCount = labels.size,
+                selectionMode = SemanticsCollectionSelectionMode.Single,
+            )
+        },
         contentAlignment = BoxAlignment.Center,
     ) {
         Row(
@@ -925,6 +962,10 @@ internal fun UiTreeBuilder.DemoDesignSegmentedControl(
                     modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {
                         role = SemanticsRole.Tab
                         this.selected = selected
+                        collectionItemInfo = SemanticsCollectionItemInfo(
+                            rowIndex = 0,
+                            columnIndex = index,
+                        )
                     },
                     contentAlignment = BoxAlignment.Center,
                 ) {

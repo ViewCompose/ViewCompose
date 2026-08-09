@@ -1,6 +1,10 @@
 package com.viewcompose.oneui7
 
+import com.viewcompose.animation.animateDpAsState
+import com.viewcompose.animation.core.tween
 import com.viewcompose.graphics.core.Brush
+import com.viewcompose.gesture.rememberToggleDragState
+import com.viewcompose.gesture.toggleDraggable
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.foundation.BasicButton
 import com.viewcompose.ui.foundation.BasicButtonStyle
@@ -36,13 +40,16 @@ import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.SemanticsCollectionInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
+import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.offset
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.size
-import com.viewcompose.ui.modifier.SemanticsRole
 import com.viewcompose.ui.node.TextFieldAutofillHint
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.shape.UiShape
@@ -392,9 +399,11 @@ fun UiTreeBuilder.OneUi7Surface(
  * Emits a One UI 7 alpha labeled switch as a design-system-owned composite.
  *
  * The caller owns [checked] and must publish the replacement value from [onCheckedChange]. The
- * complete 48dp-high row is one Switch-semantic target; clicking any enabled part invokes the
- * callback synchronously with `!checked`. Visual geometry is renderer-neutral and follows layout
- * direction, while Android retains focus, accessibility action, and input ownership.
+ * complete 48dp-high row is one Switch-semantic target. Clicking any enabled part invokes the
+ * callback synchronously with `!checked`; horizontal dragging follows the pointer and settles by
+ * position or velocity without also firing the click action. Visual geometry and drag anchors are
+ * renderer-neutral and follow layout direction, while Android retains focus and accessibility
+ * action ownership.
  *
  * @sample com.viewcompose.oneui7.samples.oneUi7ComponentsSample
  * @receiver active builder inside [OneUi7Theme]
@@ -425,6 +434,26 @@ fun UiTreeBuilder.OneUi7Switch(
         checked -> recipes.colors.onPrimary
         else -> recipes.colors.onSurfaceVariant
     }
+    val travel = 20.dp
+    val checkedOffset = if (Environment.layoutDirection == UiLayoutDirection.Rtl) {
+        UiDp.Zero - travel
+    } else {
+        travel
+    }
+    val dragState = rememberToggleDragState(
+        checked = checked,
+        checkedAnchorOffsetPx = Environment.density.toPx(checkedOffset),
+        onCheckedChange = onCheckedChange,
+    )
+    val idleThumbOffset = animateDpAsState(
+        targetValue = if (checked) checkedOffset else UiDp.Zero,
+        animationSpec = tween(durationMillis = 180),
+    ).value
+    val thumbOffset = if (dragState.isDragging.value) {
+        UiDp(checkedOffset.value * dragState.progress.value)
+    } else {
+        idleThumbOffset
+    }
     val control: UiTreeBuilder.() -> Unit = {
         BasicSurface(
             style = BasicSurfaceStyle(
@@ -447,7 +476,7 @@ fun UiTreeBuilder.OneUi7Switch(
                 key = "one-ui7-switch-thumb-$enabled-$checked",
                 modifier = Modifier
                     .size(22.dp, 22.dp)
-                    .offset(x = if (checked) 20.dp else UiDp.Zero),
+                    .offset(x = thumbOffset),
             ) {}
         }
     }
@@ -463,11 +492,13 @@ fun UiTreeBuilder.OneUi7Switch(
         minimumHeight = 48.dp,
         role = SemanticsRole.Switch,
         key = key,
-        modifier = modifier.semantics(mergeDescendants = true) {
-            role = SemanticsRole.Switch
-            this.checked = checked
-            this.enabled = enabled
-        },
+        modifier = modifier
+            .toggleDraggable(state = dragState, enabled = enabled)
+            .semantics(mergeDescendants = true) {
+                role = SemanticsRole.Switch
+                this.checked = checked
+                this.enabled = enabled
+            },
         contentAlignment = BoxAlignment.CenterStart,
     ) {
         Row(
@@ -571,6 +602,8 @@ fun UiTreeBuilder.OneUi7TextField(
  * accepts two through five destinations as the published maximum. [selectedIndex] is caller-owned;
  * clicking an enabled destination invokes [onItemSelected] synchronously with its original list
  * index. RTL presentation reverses visual order without changing callback indices or keys.
+ * Accessibility exposes one single-selection row plus each destination's logical column, selected
+ * state, and tab role; logical positions also remain stable in RTL.
  *
  * @sample com.viewcompose.oneui7.samples.oneUi7ComponentsSample
  * @receiver active builder inside [OneUi7Theme]
@@ -605,7 +638,13 @@ fun UiTreeBuilder.OneUi7NavigationBar(
         contentColor = recipes.colors.onSurface,
         minimumHeight = 68.dp,
         key = key,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().semantics {
+            collectionInfo = SemanticsCollectionInfo(
+                rowCount = 1,
+                columnCount = items.size,
+                selectionMode = SemanticsCollectionSelectionMode.Single,
+            )
+        },
         contentAlignment = BoxAlignment.Center,
     ) {
         Row(
@@ -642,6 +681,10 @@ fun UiTreeBuilder.OneUi7NavigationBar(
                         role = SemanticsRole.Tab
                         this.selected = selected
                         this.enabled = enabled
+                        collectionItemInfo = SemanticsCollectionItemInfo(
+                            rowIndex = 0,
+                            columnIndex = index,
+                        )
                     },
                     contentAlignment = BoxAlignment.Center,
                 ) {

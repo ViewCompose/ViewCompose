@@ -5,12 +5,14 @@ import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import androidx.recyclerview.widget.RecyclerView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -64,6 +66,10 @@ class OneUi7VerificationUiTest {
                         activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_BUTTON_STATUS)
                             .text.toString(),
                     )
+                    activity.scrollFixtureToPosition(SWITCH_POSITION)
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
                     activity.clickByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
                 }
                 waitForUiIdle()
@@ -73,10 +79,45 @@ class OneUi7VerificationUiTest {
                         activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
                             .text.toString(),
                     )
+                    activity.dragByTestTag(
+                        tag = DemoTestTags.ONE_UI_7_SWITCH,
+                        deltaX = if (fixture.rtl) -120f else 120f,
+                    )
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    assertEquals(
+                        "Checked: true",
+                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
+                            .text.toString(),
+                    )
+                }
+                SystemClock.sleep(INTERACTION_STABILITY_MILLIS)
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    assertEquals(
+                        "Checked: true",
+                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
+                            .text.toString(),
+                    )
+                }
+                captureEvidence(
+                    label = "one-ui7-${fixture.label}-switch-drag",
+                    metadata = fixture.metadata(),
+                )
+                scenario.onActivity { activity ->
+                    activity.scrollFixtureToPosition(TEXT_FIELD_POSITION)
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
                     val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_TEXT_FIELD)
                     val editText = requireNotNull(findDescendant(fieldRoot, EditText::class.java))
                     assertEquals("Galaxy", editText.text.toString())
                     assertNotNull(editText.onCreateInputConnection(android.view.inputmethod.EditorInfo()))
+                    activity.scrollFixtureToPosition(NAVIGATION_POSITION)
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
                     activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION)
                 }
 
@@ -100,6 +141,97 @@ class OneUi7VerificationUiTest {
                     label = "one-ui7-${fixture.label}-components",
                     metadata = fixture.metadata(),
                 )
+            }
+        }
+    }
+
+    @Test
+    fun controlledSwitch_dragSettlesOnceInLtrAndRtl() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        listOf(false, true).forEach { rtl ->
+            val intent = OneUi7VerificationActivity.newIntent(
+                context = context,
+                dark = rtl,
+                rtl = rtl,
+                fontScale = if (rtl) 1.3f else 1f,
+            )
+            launchDemoActivity<OneUi7VerificationActivity>(intent).use { scenario ->
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    activity.scrollFixtureToPosition(SWITCH_POSITION)
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    assertEquals(
+                        "Checked: true",
+                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
+                            .text.toString(),
+                    )
+                    activity.clickByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    assertEquals(
+                        "Checked: false",
+                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
+                            .text.toString(),
+                    )
+                    activity.dragByTestTag(
+                        tag = DemoTestTags.ONE_UI_7_SWITCH,
+                        deltaX = if (rtl) -120f else 120f,
+                    )
+                }
+                waitForUiIdle()
+                SystemClock.sleep(INTERACTION_STABILITY_MILLIS)
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    assertEquals(
+                        "Checked: true",
+                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
+                            .text.toString(),
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun navigation_exposesSingleSelectionCollectionPositionsInLtrAndRtl() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        listOf(false, true).forEach { rtl ->
+            val intent = OneUi7VerificationActivity.newIntent(
+                context = context,
+                rtl = rtl,
+            )
+            launchDemoActivity<OneUi7VerificationActivity>(intent).use { scenario ->
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    activity.scrollFixtureToPosition(NAVIGATION_POSITION)
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    val navigation = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION)
+                    val collectionNode = AccessibilityNodeInfoCompat.wrap(
+                        navigation.createAccessibilityNodeInfo(),
+                    )
+                    assertEquals(1, collectionNode.collectionInfo?.rowCount)
+                    assertEquals(3, collectionNode.collectionInfo?.columnCount)
+                    assertEquals(
+                        AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_SINGLE,
+                        collectionNode.collectionInfo?.selectionMode,
+                    )
+                    val itemNodes = navigation.descendantViews()
+                        .map { view ->
+                            AccessibilityNodeInfoCompat.wrap(view.createAccessibilityNodeInfo())
+                        }
+                        .filter { info -> info.collectionItemInfo != null }
+                    assertEquals(
+                        listOf(0, 1, 2),
+                        itemNodes.map { info -> info.collectionItemInfo!!.columnIndex }.sorted(),
+                    )
+                    assertEquals(1, itemNodes.count { info -> info.isSelected })
+                }
             }
         }
     }
@@ -177,6 +309,21 @@ class OneUi7VerificationUiTest {
         return null
     }
 
+    private fun View.descendantViews(): List<View> = buildList {
+        fun collect(view: View) {
+            add(view)
+            if (view is ViewGroup) {
+                repeat(view.childCount) { index -> collect(view.getChildAt(index)) }
+            }
+        }
+        collect(this@descendantViews)
+    }
+
+    private fun android.app.Activity.scrollFixtureToPosition(position: Int) {
+        val root = findViewById<ViewGroup>(android.R.id.content)
+        requireNotNull(findDescendant(root, RecyclerView::class.java)).scrollToPosition(position)
+    }
+
     private data class FixtureCase(
         val label: String,
         val dark: Boolean,
@@ -186,8 +333,12 @@ class OneUi7VerificationUiTest {
 
     private companion object {
         const val WINDOW_SETTLE_MILLIS = 250L
+        const val INTERACTION_STABILITY_MILLIS = 300L
         const val UI_TIMEOUT_MILLIS = 5_000L
         const val PRIVATE_OUTPUT_DIRECTORY = "one-ui7-alpha"
         const val PUBLIC_OUTPUT_DIRECTORY = "viewcompose-one-ui7-alpha"
+        const val SWITCH_POSITION = 3
+        const val TEXT_FIELD_POSITION = 4
+        const val NAVIGATION_POSITION = 5
     }
 }

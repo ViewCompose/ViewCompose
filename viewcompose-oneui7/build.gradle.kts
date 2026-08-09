@@ -25,5 +25,7 @@ android {
 
 dependencies {
     api(project(":viewcompose-ui-foundation"))
+    implementation(project(":viewcompose-animation"))
+    implementation(project(":viewcompose-gesture"))
     testImplementation(libs.junit)
 }

@@ -5,6 +5,8 @@ import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.buildVNodeTree
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
+import com.viewcompose.ui.modifier.SemanticsModifierElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
@@ -36,7 +38,7 @@ class OneUi7ComponentsTest {
     }
 
     @Test
-    fun sampleEmitsFiveComponentsWithoutNativeButtonNode() {
+    fun staticComponentsEmitWithoutNativeButtonNode() {
         val tree = buildVNodeTree {
             OneUi7Theme {
                 Column {
@@ -48,7 +50,6 @@ class OneUi7ComponentsTest {
                             style = Theme.typography.bodyMedium,
                         )
                     }
-                    OneUi7Switch(text = "Sync", checked = true, onCheckedChange = {})
                     OneUi7TextField(state = TextFieldState(), label = "Account")
                     OneUi7NavigationBar(
                         items = listOf(
@@ -64,12 +65,27 @@ class OneUi7ComponentsTest {
         val nodes = tree.flatten()
 
         assertFalse(nodes.any { node -> node.type == NodeType.Button })
-        assertTrue(nodes.count { node -> node.type == NodeType.Surface } >= 8)
+        assertTrue(nodes.count { node -> node.type == NodeType.Surface } >= 4)
         assertEquals(1, nodes.count { node -> node.type == NodeType.TextField })
         assertTrue(
             nodes.filter { node -> node.type == NodeType.Surface }
                 .map { node -> node.spec as SurfaceNodeProps }
                 .any { props -> props.minimumHeight.value == 68f },
+        )
+        val semantics = nodes.flatMap { node ->
+            node.modifier.elements.filterIsInstance<SemanticsModifierElement>()
+                .map(SemanticsModifierElement::configuration)
+        }
+        val collection = semantics.single { configuration -> configuration.collectionInfo != null }
+            .collectionInfo
+        assertEquals(1, collection?.rowCount)
+        assertEquals(2, collection?.columnCount)
+        assertEquals(SemanticsCollectionSelectionMode.Single, collection?.selectionMode)
+        assertEquals(
+            listOf(0, 1),
+            semantics.mapNotNull { configuration ->
+                configuration.collectionItemInfo?.columnIndex
+            }.sorted(),
         )
     }
 
