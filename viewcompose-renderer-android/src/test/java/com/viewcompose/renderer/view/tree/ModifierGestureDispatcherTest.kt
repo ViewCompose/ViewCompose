@@ -160,6 +160,35 @@ class ModifierGestureDispatcherTest {
     }
 
     @Test
+    fun `anchored drag preserves click when the tap never crosses touch slop`() {
+        val view = View(RuntimeEnvironment.getApplication()).apply {
+            layout(0, 0, 240, 80)
+        }
+        var clickCount = 0
+        var settleCount = 0
+        view.setOnClickListener { clickCount += 1 }
+        ModifierGestureApplier.applyGestureState(
+            view = view,
+            resolved = ResolvedModifiers(
+                anchoredDraggable = AnchoredDraggableModifierElement(
+                    enabled = true,
+                    orientation = GestureOrientation.Horizontal,
+                    anchorOffsetsPx = listOf(0f, 100f),
+                    currentOffsetPx = 0f,
+                    onDelta = {},
+                    onSettleToOffset = { settleCount += 1 },
+                ),
+            ),
+        )
+
+        view.dispatch(singlePointerEvent(MotionEvent.ACTION_DOWN, 0L, 40f, 40f))
+        view.dispatch(singlePointerEvent(MotionEvent.ACTION_UP, 40L, 40f, 40f))
+
+        assertEquals(1, clickCount)
+        assertEquals(0, settleCount)
+    }
+
+    @Test
     fun `removing active transform reports modifier cancellation`() {
         val view = View(RuntimeEnvironment.getApplication())
         val cancellationReasons = mutableListOf<GestureCancellationReason>()

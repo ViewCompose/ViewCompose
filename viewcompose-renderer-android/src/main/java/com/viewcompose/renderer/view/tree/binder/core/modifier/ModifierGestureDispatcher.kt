@@ -236,6 +236,15 @@ private class ViewGestureDispatcher(
             // Keep the pointer stream on this view so drag/swipe/transform can receive MOVE/UP events.
             return true
         }
+        if (action == MotionEvent.ACTION_UP && requiresContinuousStream && !consumed) {
+            // ACTION_DOWN was retained above, so Android's native click detector never owned this
+            // stream. Restore the normal click contract only when no gesture claimed the tap.
+            if (hostView.isEnabled && hostView.isClickable) {
+                hostView.performClick()
+            }
+            resetTrackingState()
+            return true
+        }
         return consumed
     }
 
