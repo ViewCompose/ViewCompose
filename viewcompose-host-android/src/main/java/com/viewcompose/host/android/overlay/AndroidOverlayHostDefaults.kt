@@ -7,7 +7,7 @@ import com.viewcompose.ui.foundation.OverlayHostDefaults
 import java.util.ServiceLoader
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Creates an Android [OverlayHost] attached to [rootView]'s window. */
+/** Creates an Android [OverlayHost] attached to the supplied root view's window. */
 fun interface AndroidOverlayHostFactoryProvider {
     /** Creates a host whose platform surfaces are scoped to the supplied Android root. */
     fun create(rootView: View): OverlayHost

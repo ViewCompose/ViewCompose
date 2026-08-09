@@ -15,7 +15,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * Owns a retained ViewCompose render session and its mounted Android View tree.
  *
  * The session is main-thread confined. Call [dispose] when a custom host ends; Activity and Fragment
- * [setUiContent] integrations do this automatically. Operations after disposal follow the core
+ * `setUiContent` integrations do this automatically. Operations after disposal follow the core
  * session's fail-fast lifecycle contract.
  */
 class RenderSession internal constructor(
@@ -56,7 +56,7 @@ class RenderSession internal constructor(
  * The Android render platform is installed on demand and the first frame is rendered synchronously
  * before this function returns. This low-level entry does not provide lifecycle, ViewModel, saved
  * state, environment, theme, or frame-clock locals; custom hosts must provide and dispose those
- * services themselves, or use an Activity/Fragment [setUiContent] integration.
+ * services themselves, or use an Activity/Fragment `setUiContent` integration.
  *
  * @sample com.viewcompose.host.android.samples.renderIntoSample
  * @param container Android parent that owns all Views mounted by the returned session
