@@ -824,6 +824,7 @@ fun UiTreeBuilder.OneUi7NavigationBar(
                                 clipContent = true,
                             ),
                             contentColor = contentColor,
+                            key = OneUi7NavigationIndicatorKey(item.key, selected),
                             modifier = Modifier.size(width = 32.dp, height = 2.dp),
                         ) {}
                     }
@@ -832,6 +833,11 @@ fun UiTreeBuilder.OneUi7NavigationBar(
         }
     }
 }
+
+private data class OneUi7NavigationIndicatorKey(
+    val itemKey: Any,
+    val selected: Boolean,
+)
 
 internal data class OneUi7Recipes(
     val colors: UiColors,

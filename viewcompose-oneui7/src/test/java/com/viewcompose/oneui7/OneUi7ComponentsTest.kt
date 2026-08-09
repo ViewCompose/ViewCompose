@@ -1,5 +1,6 @@
 package com.viewcompose.oneui7
 
+import com.viewcompose.graphics.core.Brush
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.DesignSystemDiagnostics
@@ -11,15 +12,18 @@ import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.buildVNodeTree
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsModifierElement
+import com.viewcompose.ui.modifier.SizeModifierElement
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.unit.UiDimension
 import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -163,6 +167,46 @@ class OneUi7ComponentsTest {
                     }
                 }
             }.exceptionOrNull() is IllegalArgumentException,
+        )
+    }
+
+    @Test
+    fun navigationSelectionRekeysAndRecolorsItsIndicator() {
+        fun indicators(selectedIndex: Int): List<VNode> = buildVNodeTree {
+            OneUi7Theme {
+                OneUi7NavigationBar(
+                    items = listOf(
+                        OneUi7NavigationItem(key = "home", label = "Home"),
+                        OneUi7NavigationItem(key = "search", label = "Search"),
+                    ),
+                    selectedIndex = selectedIndex,
+                    onItemSelected = {},
+                )
+            }
+        }.flatten().filter { node ->
+            val size = node.modifier.elements.filterIsInstance<SizeModifierElement>().singleOrNull()
+            size?.width == UiDimension.Exact(32.dp) && size.height == UiDimension.Exact(2.dp)
+        }
+
+        val homeSelected = indicators(selectedIndex = 0)
+        val searchSelected = indicators(selectedIndex = 1)
+        val primary = OneUi7ThemeDefaults.light().colors.primary
+
+        assertEquals(2, homeSelected.size)
+        assertEquals(2, searchSelected.size)
+        assertNotEquals(homeSelected[0].key, searchSelected[0].key)
+        assertNotEquals(homeSelected[1].key, searchSelected[1].key)
+        assertEquals(
+            listOf(primary, 0x00000000),
+            homeSelected.map { node ->
+                ((node.spec as SurfaceNodeProps).fill as Brush.SolidColor).color
+            },
+        )
+        assertEquals(
+            listOf(0x00000000, primary),
+            searchSelected.map { node ->
+                ((node.spec as SurfaceNodeProps).fill as Brush.SolidColor).color
+            },
         )
     }
 

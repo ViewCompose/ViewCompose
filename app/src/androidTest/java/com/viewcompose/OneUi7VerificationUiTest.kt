@@ -181,7 +181,7 @@ class OneUi7VerificationUiTest {
                     "Expected visible text-only Search destination",
                     device.wait(Until.hasObject(By.text("Search")), UI_TIMEOUT_MILLIS),
                 )
-                device.findObject(By.text("Search")).click()
+                scenario.onActivity { activity -> activity.clickTextView("Search") }
                 waitForUiIdle()
                 SystemClock.sleep(WINDOW_SETTLE_MILLIS)
                 waitForUiIdle()
@@ -192,6 +192,7 @@ class OneUi7VerificationUiTest {
                             .text.toString(),
                     )
                 }
+                waitForUiIdle()
                 captureEvidence(
                     label = "one-ui7-${fixture.label}-components",
                     metadata = fixture.metadata(productionMetadata),
