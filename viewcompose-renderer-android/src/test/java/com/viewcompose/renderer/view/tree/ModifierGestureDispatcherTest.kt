@@ -130,6 +130,36 @@ class ModifierGestureDispatcherTest {
     }
 
     @Test
+    fun `recognized anchored drag settles without also performing click`() {
+        val view = View(RuntimeEnvironment.getApplication()).apply {
+            layout(0, 0, 240, 80)
+        }
+        var clickCount = 0
+        var settleCount = 0
+        view.setOnClickListener { clickCount += 1 }
+        ModifierGestureApplier.applyGestureState(
+            view = view,
+            resolved = ResolvedModifiers(
+                anchoredDraggable = AnchoredDraggableModifierElement(
+                    enabled = true,
+                    orientation = GestureOrientation.Horizontal,
+                    anchorOffsetsPx = listOf(0f, 100f),
+                    currentOffsetPx = 0f,
+                    onDelta = {},
+                    onSettleToOffset = { settleCount += 1 },
+                ),
+            ),
+        )
+
+        view.dispatch(singlePointerEvent(MotionEvent.ACTION_DOWN, 0L, 40f, 40f))
+        view.dispatch(singlePointerEvent(MotionEvent.ACTION_MOVE, 40L, 120f, 40f))
+        view.dispatch(singlePointerEvent(MotionEvent.ACTION_UP, 80L, 140f, 40f))
+
+        assertEquals(1, settleCount)
+        assertEquals(0, clickCount)
+    }
+
+    @Test
     fun `removing active transform reports modifier cancellation`() {
         val view = View(RuntimeEnvironment.getApplication())
         val cancellationReasons = mutableListOf<GestureCancellationReason>()

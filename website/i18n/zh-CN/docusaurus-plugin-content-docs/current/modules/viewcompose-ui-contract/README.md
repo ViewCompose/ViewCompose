@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: e878437d5b2fb771ef0382946eadbd6834d60f74f3ca5b39d43f5acd1d243d45
+translation_source_hash: b4a1b7993d9be48ab5fefcb918e7e1598ac9232cb071519618ce96de2f8e0b05
 translation_status: current
 ---
 
@@ -64,6 +64,9 @@ val gap = VNode(
   为焦点和嵌套滚动定义明确的渲染器连接边界。
 - `UiStateLayerColors` 携带已经解析的按下、聚焦和悬停 ARGB 值，不把设计系统角色或透明度策略
   写入 Renderer 契约。
+- `SemanticsCollectionInfo` 与 `SemanticsCollectionItemInfo` 是 Q3 不可变快照，用于描述集合的
+  逻辑维度、选择策略和子项位置。自定义 Tab、Navigation、SegmentedControl、List 与 Grid
+  可以借此保留平台无障碍位置播报，同时不把设计系统写入 Renderer。
 - `SurfaceNodeProps` 是 `NodeType.Surface` 的 Q2 已解析契约。它携带 Graphics Core Brush、
   逻辑 Shape、Border、状态层、有效最小尺寸、可选的居中可见高度和裁剪策略，不携带设计系统标识。
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/)、
@@ -97,6 +100,8 @@ val gap = VNode(
   表示其余轨道。渲染器必须绑定这两个已解析颜色，不得再从平台主题恢复任一轨道颜色。
 - Modifier 顺序具有语义。布局与 Parent Data 收集、视觉装饰、输入、Semantics 与绘制阶段会
   按各自阶段规则消费有序元素；调整顺序可能改变行为。
+- 集合语义使用逻辑索引。RTL 可以反转物理排布，但不会改变行列元数据或回调身份。集合子项的
+  Heading 与 Selected 元数据来自同一份 `SemanticsConfiguration` 字段，避免重复持有状态。
 - 每个 VNode 子树都捕获 `UiEnvironmentValues`。渲染器必须使用捕获值，不能改用无关的进程
   全局密度、语言或方向状态。
 - `LazyListState`、Pager 状态、焦点请求器与嵌套滚动分发器只连接一个当前渲染器 Connector。
@@ -152,3 +157,8 @@ Renderer 回退保持不变，但二进制构造契约发生变化。预编译�
 自定义 Renderer 必须增加新的类型/规格配对并重新构建预编译调用方。新增
 `UiCornerFamily.Continuous` 与 `UiShape.continuous` 扩展了 Q2 Shape 契约；穷举 Enum 的使用方
 必须处理新 Family，或明确采用其文档化的圆角回退。
+
+`SemanticsCollectionInfo` 与 `SemanticsCollectionItemInfo` 新增 Q3 平台无关集合元数据。
+`SemanticsConfiguration` 增加可空字段会改变其二进制构造契约，因此预编译调用方和自定义
+Renderer 必须重新构建。支持无障碍的 Renderer 应同时映射父集合与子项位置快照；缺少映射会
+丢失位置播报，但不得改变布局、输入或选择回调。

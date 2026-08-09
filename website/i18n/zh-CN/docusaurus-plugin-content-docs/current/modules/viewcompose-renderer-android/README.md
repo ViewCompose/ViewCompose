@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 52bc78807b4beff6e3c1337b4003e4c20f463ca364d24ee5e9564b241c118c6c
+translation_source_hash: 5707d6a1a44474fcb0267001468d0766bf361799e991cc9bd81b48ebcddd68e5
 translation_status: current
 ---
 
@@ -43,6 +43,8 @@ dependencies {
 - Button、IconButton、交互式 Box/Row 组合控件与 SegmentedControl 状态层使用 NodeSpec 中
   已解析的 `UiStateLayerColors`。引擎在现有 Shape 遮罩和可见 Surface 内缩中应用启用态的
   按下、聚焦和悬停选择器，不选择语义角色或 Material 透明度值。
+- 通用集合语义会映射为 AndroidX 无障碍集合元数据。父节点负责行列数量和选择基数，子节点负责
+  逻辑位置和跨度；已有的 `selected` 与 `heading` 语义仍是 item 状态的唯一事实来源。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
 
 ## 渲染模型
@@ -126,6 +128,8 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   遮罩。Slider 分别持有激活轨道、非激活轨道和 Thumb Tint，定向 Patch 可在不重建 View 的
   情况下更新非激活轨道。在独立且经过测试的自定义控件契约被接受前，平台 Drawable 几何及其
   内建覆盖率仍具有最终权限。
+- 集合行列索引是从零开始的逻辑位置。Android 在 RTL 中反向排列后代时，Renderer 不得反转这些
+  索引。选中态和标题态读取 item 已有的语义字段，防止组件通过重复契约暴露相互矛盾的无障碍状态。
 
 ## Android host 与线程规则
 
@@ -165,3 +169,7 @@ mounted node、patch 记录、诊断树对象、不透明 Lazy content token 或
 Renderer 的多状态路径实现通用 UI Contract，并非 Material 功能。采用 `UiStateLayerColors` 的
 自定义 Renderer 必须保留启用态优先级与透明非活动态；收到空值的 Renderer 可以继续使用其已有
 单色兼容路径。
+
+消费集合语义的自定义 Renderer 必须保留逻辑行列顺序，并把 item 跨度、选中态和标题态映射为
+等价的平台无障碍元数据。alpha 阶段尚未识别这些可空集合字段的 Renderer 可以忽略它们，但其
+无障碍输出将无法播报集合位置。

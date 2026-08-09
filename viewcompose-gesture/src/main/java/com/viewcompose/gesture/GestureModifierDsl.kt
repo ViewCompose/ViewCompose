@@ -117,13 +117,15 @@ fun Modifier.draggable(
  *
  * Every invocation installs the latest anchor set into [state] before appending the modifier. Raw
  * movement updates the state's visual offset, while normal completion commits the renderer-selected
- * nearest anchor synchronously. This release does not animate settle movement. Free orientation is
- * unsupported because anchor offsets describe one physical axis.
+ * nearest anchor synchronously and invokes [onValueSettled]. Cancellation restores the last
+ * committed anchor before invoking [onDragCancelled]. This release does not animate settle
+ * movement. Free orientation is unsupported because anchor offsets describe one physical axis.
  *
  * @param state remembered semantic value and offset owner
  * @param anchors non-empty validated positions used for drag and settle
  * @param orientation horizontal or vertical drag axis
  * @param enabled whether the recognizer participates in pointer dispatch
+ * @param onValueSettled callback receiving the semantic value committed after normal completion
  * @param onDragCancelled callback when an active drag ends without settling
  * @return this chain followed by the anchored-drag element
  * @throws IllegalArgumentException if [orientation] is [GestureOrientation.Free]
@@ -134,6 +136,7 @@ fun <T> Modifier.anchoredDraggable(
     anchors: DraggableAnchors<T>,
     orientation: GestureOrientation = GestureOrientation.Horizontal,
     enabled: Boolean = true,
+    onValueSettled: ((value: T) -> Unit)? = null,
     onDragCancelled: ((reason: GestureCancellationReason) -> Unit)? = null,
 ): Modifier {
     require(orientation != GestureOrientation.Free) {
@@ -147,8 +150,14 @@ fun <T> Modifier.anchoredDraggable(
             anchorOffsetsPx = anchors.offsetsPx,
             currentOffsetPx = state.currentOffsetPx.value,
             onDelta = state::dispatchRawDelta,
-            onSettleToOffset = state::settleToOffset,
-            onDragCancelled = onDragCancelled,
+            onSettleToOffset = { offsetPx ->
+                state.settleToOffset(offsetPx)
+                onValueSettled?.invoke(state.currentValue.value)
+            },
+            onDragCancelled = { reason ->
+                state.cancelDrag()
+                onDragCancelled?.invoke(reason)
+            },
         ),
     )
 }

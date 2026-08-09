@@ -1,6 +1,11 @@
 package com.viewcompose.ui.samples
 
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.SemanticsCollectionInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
+import com.viewcompose.ui.modifier.SemanticsModifierElement
+import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
@@ -31,6 +36,30 @@ fun vNodeModelSample() {
     check(spacer.type == NodeType.Spacer)
     check(spacer.key == "content-gap")
     check(spacer.children.isEmpty())
+}
+
+/** Demonstrates parent collection metadata and one selected logical child position. */
+fun collectionSemanticsSample() {
+    val parent = Modifier.semantics {
+        collectionInfo = SemanticsCollectionInfo(
+            rowCount = 1,
+            columnCount = 3,
+            selectionMode = SemanticsCollectionSelectionMode.Single,
+        )
+    }
+    val selectedItem = Modifier.semantics(mergeDescendants = true) {
+        collectionItemInfo = SemanticsCollectionItemInfo(
+            rowIndex = 0,
+            columnIndex = 1,
+        )
+        selected = true
+    }
+
+    val parentSemantics = (parent.elements.single() as SemanticsModifierElement).configuration
+    val itemSemantics = (selectedItem.elements.single() as SemanticsModifierElement).configuration
+    check(parentSemantics.collectionInfo?.columnCount == 3)
+    check(itemSemantics.collectionItemInfo?.columnIndex == 1)
+    check(itemSemantics.selected == true)
 }
 
 /**

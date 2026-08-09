@@ -14,6 +14,7 @@ import com.viewcompose.ui.node.spec.ConstraintItemSpec
 import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -227,6 +228,15 @@ class ModifierContractTest {
                 endInclusive = 1f,
                 steps = 10,
             )
+            collectionInfo = SemanticsCollectionInfo(
+                rowCount = 1,
+                columnCount = 3,
+                selectionMode = SemanticsCollectionSelectionMode.Single,
+            )
+            collectionItemInfo = SemanticsCollectionItemInfo(
+                rowIndex = 0,
+                columnIndex = 1,
+            )
             heading = true
             selected = true
             checked = false
@@ -243,11 +253,30 @@ class ModifierContractTest {
         assertEquals(SemanticsRole.Button, semantics.role)
         assertEquals(SemanticsLiveRegion.Polite, semantics.liveRegion)
         assertEquals(0.5f, semantics.progressRange?.current)
+        assertEquals(3, semantics.collectionInfo?.columnCount)
+        assertEquals(
+            SemanticsCollectionSelectionMode.Single,
+            semantics.collectionInfo?.selectionMode,
+        )
+        assertEquals(1, semantics.collectionItemInfo?.columnIndex)
         assertEquals(true, semantics.heading)
         assertEquals(true, semantics.selected)
         assertEquals(false, semantics.checked)
         assertEquals(false, semantics.enabled)
         assertEquals(true, semantics.mergeDescendants)
+    }
+
+    @Test
+    fun `collection semantics reject invalid dimensions and positions`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            SemanticsCollectionInfo(rowCount = -1, columnCount = 1)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            SemanticsCollectionItemInfo(rowIndex = 0, rowSpan = 0, columnIndex = 0)
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            SemanticsCollectionItemInfo(rowIndex = 0, columnIndex = -1)
+        }
     }
 
     @Test

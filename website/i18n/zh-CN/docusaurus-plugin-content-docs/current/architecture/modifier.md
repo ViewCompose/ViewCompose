@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 5af23e7752e0c64e91abe9c04e4d1131682e8f7f11084ca22b0b5d4dfdfb6c71
+translation_source_hash: 4c01c19f9655b5dd82e05f81163eb46bea66b1181fb2d47fa3e4689b124cd96a
 translation_status: current
 ---
 
@@ -28,6 +28,7 @@ translation_status: current
 12. 声明式焦点与硬件键盘输入已接入：`focusable/focusRequester/focusProperties/focusGroup/onFocusChanged/onPreviewKeyEvent/onKeyEvent` 映射原生 View 焦点搜索，并由 `LocalFocusManager` 提供会话级移动与清除能力
 13. 统一嵌套滚动协议已接入：`Modifier.nestedScroll(connection, dispatcher)` 通过透明宿主映射 AndroidX nested-scrolling parent/child 链，覆盖 pre/post scroll、pre/post fling、Lazy/Pager/普通滚动容器与自定义 drag/transform pan
 14. 高级阴影已接入：`dropShadow/dropShadows` 绘制在节点内容之前，`innerShadow/innerShadows` 绘制在完整内容之后；均支持有序多层、独立 shape、blur/spread/offset/color，并与 `elevation/zIndex` 解耦
+15. `Modifier.semantics` 承载设计系统中立的无障碍状态。集合父节点声明逻辑维度与选择基数，子节点声明逻辑位置与跨度；RTL 只改变物理排列，不改变这些索引，item 的 `selected`/`heading` 仍由同一语义配置中的唯一字段表达
 
 ## 3. API 清单（全量扫描）
 
@@ -93,6 +94,7 @@ rg "^\s*(public\s+)?(internal\s+)?fun\s+(RowScope|ColumnScope|BoxScope|Constrain
 | `onFocusChanged` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 观察自身/后代焦点状态 | 全局 | 回调 `FocusState` |
 | `onPreviewKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 焦点目标前的按键捕获阶段 | 全局 | 从声明式祖先向目标分发 |
 | `onKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 按键冒泡阶段 | 全局 | 从目标向声明式祖先分发 |
+| `semantics` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置无障碍与测试状态 | 全局 | 包含集合维度、item 逻辑位置、选择态和标题态 |
 | `contentDescription` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置无障碍描述 | 全局 | 映射 `View.contentDescription` |
 | `testTag` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置测试标记 | 全局 | 供 UI 测试定位 |
 | `overlayAnchor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | 设置 overlay 锚点 ID | 指定能力 | 用于 Popup/Tooltip/Dropdown 锚定 |

@@ -47,6 +47,78 @@ data class SemanticsProgressRange(
     }
 }
 
+/** Selects whether an accessibility collection allows no, one, or multiple selected items. */
+enum class SemanticsCollectionSelectionMode {
+    /** The collection does not expose item selection. */
+    None,
+
+    /** At most one item is selected. */
+    Single,
+
+    /** Multiple items may be selected. */
+    Multiple,
+}
+
+/**
+ * Describes the dimensions and selection policy of one accessibility collection.
+ *
+ * Attach this value to the semantic parent of a related list, tab row, navigation bar, segmented
+ * control, or grid. Child nodes describe their positions with [SemanticsCollectionItemInfo]. Row
+ * and column counts are logical counts and remain unchanged by right-to-left physical placement.
+ * Renderers map the snapshot to their platform collection metadata without owning selection state.
+ *
+ * This is a Q3 immutable semantics contract.
+ *
+ * @sample com.viewcompose.ui.samples.collectionSemanticsSample
+ * @property rowCount non-negative number of logical rows
+ * @property columnCount non-negative number of logical columns
+ * @property hierarchical whether items may contain nested collections
+ * @property selectionMode supported selection cardinality for the complete collection
+ * @throws IllegalArgumentException when either count is negative
+ */
+data class SemanticsCollectionInfo(
+    val rowCount: Int,
+    val columnCount: Int,
+    val hierarchical: Boolean = false,
+    val selectionMode: SemanticsCollectionSelectionMode = SemanticsCollectionSelectionMode.None,
+) {
+    init {
+        require(rowCount >= 0) { "Semantics collection rowCount must be non-negative." }
+        require(columnCount >= 0) { "Semantics collection columnCount must be non-negative." }
+    }
+}
+
+/**
+ * Describes one node's logical position and span inside an accessibility collection.
+ *
+ * Attach this value to a semantic child whose parent supplies [SemanticsCollectionInfo]. The
+ * child's existing [SemanticsConfiguration.selected] and [SemanticsConfiguration.heading] values
+ * provide its selection and heading metadata, so callers keep one source of truth. Indexes use
+ * logical collection order and do not reverse for right-to-left physical placement.
+ *
+ * This is a Q3 immutable semantics contract.
+ *
+ * @sample com.viewcompose.ui.samples.collectionSemanticsSample
+ * @property rowIndex zero-based logical row containing the item
+ * @property columnIndex zero-based logical column containing the item
+ * @property rowSpan positive number of rows occupied by the item
+ * @property columnSpan positive number of columns occupied by the item
+ * @throws IllegalArgumentException when an index is negative or a span is not positive
+ */
+data class SemanticsCollectionItemInfo(
+    val rowIndex: Int,
+    val columnIndex: Int,
+    val rowSpan: Int = 1,
+    val columnSpan: Int = 1,
+) {
+    init {
+        require(rowIndex >= 0) { "Semantics collection item rowIndex must be non-negative." }
+        require(rowSpan > 0) { "Semantics collection item rowSpan must be positive." }
+        require(columnIndex >= 0) { "Semantics collection item columnIndex must be non-negative." }
+        require(columnSpan > 0) { "Semantics collection item columnSpan must be positive." }
+    }
+}
+
 /**
  * Stores optional accessibility, testing, and semantic state for one node.
  *
@@ -61,6 +133,8 @@ data class SemanticsProgressRange(
  * @property role semantic control role
  * @property liveRegion announcement policy for dynamic content
  * @property progressRange current progress and bounds
+ * @property collectionInfo dimensions and selection policy when this node owns a collection
+ * @property collectionItemInfo logical position and span when this node belongs to a collection
  * @property heading whether the node is an accessibility heading
  * @property selected whether a selectable node is selected
  * @property checked whether a checkable node is checked
@@ -77,6 +151,8 @@ data class SemanticsConfiguration(
     val role: SemanticsRole? = null,
     val liveRegion: SemanticsLiveRegion? = null,
     val progressRange: SemanticsProgressRange? = null,
+    val collectionInfo: SemanticsCollectionInfo? = null,
+    val collectionItemInfo: SemanticsCollectionItemInfo? = null,
     val heading: Boolean? = null,
     val selected: Boolean? = null,
     val checked: Boolean? = null,
@@ -104,6 +180,8 @@ data class SemanticsConfiguration(
             role = next.role ?: role,
             liveRegion = next.liveRegion ?: liveRegion,
             progressRange = next.progressRange ?: progressRange,
+            collectionInfo = next.collectionInfo ?: collectionInfo,
+            collectionItemInfo = next.collectionItemInfo ?: collectionItemInfo,
             heading = next.heading ?: heading,
             selected = next.selected ?: selected,
             checked = next.checked ?: checked,
@@ -151,6 +229,12 @@ class SemanticsPropertyReceiver {
     /** Current accessible progress and range. */
     var progressRange: SemanticsProgressRange? = null
 
+    /** Dimensions and selection policy when the modified node owns a collection. */
+    var collectionInfo: SemanticsCollectionInfo? = null
+
+    /** Logical position and span when the modified node belongs to a collection. */
+    var collectionItemInfo: SemanticsCollectionItemInfo? = null
+
     /** Whether the node is an accessibility heading. */
     var heading: Boolean? = null
 
@@ -184,6 +268,8 @@ class SemanticsPropertyReceiver {
             role = role,
             liveRegion = liveRegion,
             progressRange = progressRange,
+            collectionInfo = collectionInfo,
+            collectionItemInfo = collectionItemInfo,
             heading = heading,
             selected = selected,
             checked = checked,

@@ -20,6 +20,7 @@ import com.viewcompose.ui.modifier.PointerInputModifierElement
 import com.viewcompose.ui.modifier.TransformableModifierElement
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -99,6 +100,92 @@ class GestureModifiersTest {
         assertEquals("B", state.currentValue.value)
         element.onSettleToOffset(10f)
         assertEquals("A", state.currentValue.value)
+    }
+
+    @Test
+    fun `anchored drag clamps movement and preserves active offset across equivalent anchors`() {
+        val state = AnchoredDraggableState(initialValue = "A")
+        val first = Modifier.anchoredDraggable(
+            state = state,
+            anchors = draggableAnchorsOf(0f to "A", 100f to "B"),
+        ).elements.single() as AnchoredDraggableModifierElement
+
+        first.onDelta(140f)
+        assertEquals(100f, state.currentOffsetPx.value)
+        first.onDelta(-65f)
+        assertEquals(35f, state.currentOffsetPx.value)
+        assertTrue(state.isDragging.value)
+
+        Modifier.anchoredDraggable(
+            state = state,
+            anchors = draggableAnchorsOf(0f to "A", 100f to "B"),
+        )
+        assertEquals(35f, state.currentOffsetPx.value)
+        assertTrue(state.isDragging.value)
+    }
+
+    @Test
+    fun `anchored cancellation restores committed anchor before callback`() {
+        val state = AnchoredDraggableState(initialValue = "A")
+        var offsetSeenByCallback: Float? = null
+        val element = Modifier.anchoredDraggable(
+            state = state,
+            anchors = draggableAnchorsOf(0f to "A", 100f to "B"),
+            onDragCancelled = { offsetSeenByCallback = state.currentOffsetPx.value },
+        ).elements.single() as AnchoredDraggableModifierElement
+
+        element.onDelta(60f)
+        element.onDragCancelled?.invoke(
+            com.viewcompose.ui.gesture.GestureCancellationReason.SystemCancelled,
+        )
+
+        assertEquals(0f, offsetSeenByCallback)
+        assertEquals(0f, state.currentOffsetPx.value)
+        assertFalse(state.isDragging.value)
+    }
+
+    @Test
+    fun `anchored settle reports committed semantic value`() {
+        val state = AnchoredDraggableState(initialValue = "A")
+        var settled: String? = null
+        val element = Modifier.anchoredDraggable(
+            state = state,
+            anchors = draggableAnchorsOf(0f to "A", 100f to "B"),
+            onValueSettled = { settled = it },
+        ).elements.single() as AnchoredDraggableModifierElement
+
+        element.onSettleToOffset(80f)
+
+        assertEquals("B", settled)
+        assertFalse(state.isDragging.value)
+    }
+
+    @Test
+    fun `toggle drag exposes logical RTL progress and controlled synchronization`() {
+        var requested: Boolean? = null
+        val state = ToggleDragState(
+            checked = false,
+            onCheckedChangeState = com.viewcompose.runtime.mutableStateOf<(Boolean) -> Unit>(
+                { requested = it },
+            ),
+        )
+        state.update(checked = false, checkedAnchorOffsetPx = -100f)
+        val element = Modifier.toggleDraggable(state)
+            .elements.single() as AnchoredDraggableModifierElement
+
+        element.onDelta(-40f)
+        assertEquals(0.4f, state.progress.value)
+        assertTrue(state.isDragging.value)
+
+        state.update(checked = false, checkedAnchorOffsetPx = -100f)
+        assertEquals(0.4f, state.progress.value)
+
+        element.onSettleToOffset(-100f)
+        assertEquals(true, requested)
+        assertEquals(1f, state.progress.value)
+
+        state.update(checked = false, checkedAnchorOffsetPx = -100f)
+        assertEquals(0f, state.progress.value)
     }
 
     @Test

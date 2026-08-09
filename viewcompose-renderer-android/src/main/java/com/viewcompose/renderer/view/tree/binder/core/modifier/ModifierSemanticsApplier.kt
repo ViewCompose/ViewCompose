@@ -11,6 +11,7 @@ import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.viewcompose.renderer.R
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsConfiguration
 import com.viewcompose.ui.modifier.SemanticsLiveRegion
 import com.viewcompose.ui.modifier.SemanticsRole
@@ -82,6 +83,8 @@ internal object ModifierSemanticsApplier {
             error != null ||
             clickLabel != null ||
             progressRange != null ||
+            collectionInfo != null ||
+            collectionItemInfo != null ||
             selected != null ||
             checked != null ||
             enabled != null
@@ -175,6 +178,28 @@ internal object ModifierSemanticsApplier {
                     range.current,
                 )
             }
+            semantics.collectionInfo?.let { collection ->
+                info.setCollectionInfo(
+                    AccessibilityNodeInfoCompat.CollectionInfoCompat.obtain(
+                        collection.rowCount,
+                        collection.columnCount,
+                        collection.hierarchical,
+                        collection.selectionMode.toAndroidValue(),
+                    ),
+                )
+            }
+            semantics.collectionItemInfo?.let { item ->
+                info.setCollectionItemInfo(
+                    AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(
+                        item.rowIndex,
+                        item.rowSpan,
+                        item.columnIndex,
+                        item.columnSpan,
+                        semantics.heading == true,
+                        semantics.selected == true,
+                    ),
+                )
+            }
             semantics.clickLabel?.let { label ->
                 info.addAction(
                     AccessibilityNodeInfoCompat.AccessibilityActionCompat(
@@ -204,6 +229,17 @@ internal object ModifierSemanticsApplier {
             SemanticsRole.Switch -> Switch::class.java.name
             SemanticsRole.RadioButton -> RadioButton::class.java.name
             SemanticsRole.Image -> ImageView::class.java.name
+        }
+    }
+
+    private fun SemanticsCollectionSelectionMode.toAndroidValue(): Int {
+        return when (this) {
+            SemanticsCollectionSelectionMode.None ->
+                AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_NONE
+            SemanticsCollectionSelectionMode.Single ->
+                AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_SINGLE
+            SemanticsCollectionSelectionMode.Multiple ->
+                AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_MULTIPLE
         }
     }
 }

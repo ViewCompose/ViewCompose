@@ -9,6 +9,9 @@ import android.view.View
 import android.widget.Button
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import com.viewcompose.ui.modifier.SemanticsCollectionInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
+import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsConfiguration
 import com.viewcompose.ui.modifier.SemanticsLiveRegion
 import com.viewcompose.ui.modifier.SemanticsProgressRange
@@ -114,6 +117,53 @@ class ModifierSemanticsApplierTest {
             view.accessibilityLiveRegion,
         )
         assertSame(originalDelegate, ViewCompat.getAccessibilityDelegate(view))
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun `maps collection and item positions to native accessibility`() {
+        val collectionView = View(RuntimeEnvironment.getApplication())
+        ModifierSemanticsApplier.apply(
+            collectionView,
+            SemanticsConfiguration(
+                collectionInfo = SemanticsCollectionInfo(
+                    rowCount = 1,
+                    columnCount = 3,
+                    selectionMode = SemanticsCollectionSelectionMode.Single,
+                ),
+            ),
+        )
+        val collectionNode = AccessibilityNodeInfoCompat.obtain()
+        requireNotNull(ViewCompat.getAccessibilityDelegate(collectionView))
+            .onInitializeAccessibilityNodeInfo(collectionView, collectionNode)
+
+        assertEquals(1, collectionNode.collectionInfo?.rowCount)
+        assertEquals(3, collectionNode.collectionInfo?.columnCount)
+        assertEquals(
+            AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_SINGLE,
+            collectionNode.collectionInfo?.selectionMode,
+        )
+
+        val itemView = View(RuntimeEnvironment.getApplication())
+        ModifierSemanticsApplier.apply(
+            itemView,
+            SemanticsConfiguration(
+                collectionItemInfo = SemanticsCollectionItemInfo(
+                    rowIndex = 0,
+                    columnIndex = 1,
+                ),
+                heading = true,
+                selected = true,
+            ),
+        )
+        val itemNode = AccessibilityNodeInfoCompat.obtain()
+        requireNotNull(ViewCompat.getAccessibilityDelegate(itemView))
+            .onInitializeAccessibilityNodeInfo(itemView, itemNode)
+
+        assertEquals(0, itemNode.collectionItemInfo?.rowIndex)
+        assertEquals(1, itemNode.collectionItemInfo?.columnIndex)
+        assertTrue(itemNode.collectionItemInfo?.isHeading == true)
+        assertTrue(itemNode.collectionItemInfo?.isSelected == true)
     }
 
     @Test
