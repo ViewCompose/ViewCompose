@@ -29,12 +29,7 @@ object AndroidOverlayHostDefaults {
             AndroidOverlayHostFactoryProvider::class.java,
             AndroidOverlayHostFactoryProvider::class.java.classLoader,
         ).toList()
-        check(providers.size <= 1) {
-            "Multiple Android overlay host providers were installed: " +
-                providers.joinToString { candidate -> candidate.javaClass.name } +
-                ". Root integrations must select design-owned presenters explicitly."
-        }
-        providers.singleOrNull()
+        selectSingleAndroidOverlayHostProvider(providers)
     }
 
     /** Returns the installed Android overlay host or the platform-independent no-op fallback. */
@@ -66,4 +61,15 @@ object AndroidOverlayHostDefaults {
                 "Custom low-level hosts require viewcompose-overlay-android on the runtime classpath.",
         )
     }
+}
+
+internal fun selectSingleAndroidOverlayHostProvider(
+    providers: List<AndroidOverlayHostFactoryProvider>,
+): AndroidOverlayHostFactoryProvider? {
+    check(providers.size <= 1) {
+        "Multiple Android overlay host providers were installed: " +
+            providers.joinToString { candidate -> candidate.javaClass.name } +
+            ". Root integrations must select design-owned presenters explicitly."
+    }
+    return providers.singleOrNull()
 }
