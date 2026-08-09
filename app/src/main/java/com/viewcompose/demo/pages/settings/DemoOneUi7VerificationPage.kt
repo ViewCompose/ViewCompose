@@ -10,6 +10,7 @@ import com.viewcompose.oneui7.OneUi7Switch
 import com.viewcompose.oneui7.OneUi7TextField
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.DesignSystemDiagnostics
 import com.viewcompose.ui.foundation.Environment
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.Row
@@ -40,6 +41,10 @@ internal fun UiTreeBuilder.DemoOneUi7VerificationPage() {
         OneUi7NavigationItem("search", "Search"),
         OneUi7NavigationItem("profile", "Profile"),
     )
+    val attribution = DesignSystemDiagnostics.current
+    val componentEvidence = attribution?.components?.joinToString(separator = " · ") { component ->
+        "${component.familyId}:${component.recipeId}:${component.backend.name}/${component.conformance.name}"
+    } ?: "unattributed"
     LazyColumn(
         items = listOf("identity", "button", "surface", "switch", "textfield", "navigation"),
         key = { it },
@@ -70,14 +75,28 @@ internal fun UiTreeBuilder.DemoOneUi7VerificationPage() {
                     facts = listOf(
                         DiagnosticFact("Reference", OneUi7Reference.targetVersion),
                         DiagnosticFact("Component set", OneUi7Reference.componentSet),
-                        DiagnosticFact("Token source", "viewcompose-oneui7/static"),
+                        DiagnosticFact("Token source", Theme.current.metadata.provenance.sourceId),
+                        DiagnosticFact(
+                            "Primary source",
+                            Theme.current.metadata.provenance.originOf("colors.primary").name,
+                        ),
+                        DiagnosticFact("Design system", attribution?.designSystemId ?: "unattributed"),
+                        DiagnosticFact("Recipe set", attribution?.recipeSetId ?: "unattributed"),
+                        DiagnosticFact("Component backends", componentEvidence),
                         DiagnosticFact("Mode", if (Theme.current.metadata.isDark == true) "Dark" else "Light"),
                         DiagnosticFact("Font scale", Environment.density.fontScale.toString()),
                         DiagnosticFact("Direction", Environment.layoutDirection.name),
                         DiagnosticFact("Primary", Theme.colors.primary.asColorHex()),
                         DiagnosticFact("Surface", Theme.colors.surface.asColorHex()),
                     ),
-                    valueTagsByLabel = mapOf("Component set" to DemoTestTags.ONE_UI_7_IDENTITY),
+                    valueTagsByLabel = mapOf(
+                        "Component set" to DemoTestTags.ONE_UI_7_IDENTITY,
+                        "Token source" to DemoTestTags.ONE_UI_7_TOKEN_PRODUCER,
+                        "Primary source" to DemoTestTags.ONE_UI_7_PRIMARY_ORIGIN,
+                        "Design system" to DemoTestTags.ONE_UI_7_DESIGN_SYSTEM,
+                        "Recipe set" to DemoTestTags.ONE_UI_7_RECIPE_SET,
+                        "Component backends" to DemoTestTags.ONE_UI_7_COMPONENT_BACKENDS,
+                    ),
                 )
                 DiagnosticFactGroup(
                     title = "Conformance",

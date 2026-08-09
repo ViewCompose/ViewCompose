@@ -55,11 +55,11 @@ object Material3ThemeDefaults {
             controls = controls(),
             interactions = interactions(),
             metadata = UiThemeMetadata(
-                origin = UiThemeOrigin.Custom,
+                origin = UiThemeOrigin.FrameworkDefault,
                 isDark = isDark,
                 provenance = UiTokenProvenance(
                     sourceId = "viewcompose-material3/static",
-                    defaultOrigin = UiThemeOrigin.Custom,
+                    defaultOrigin = UiThemeOrigin.FrameworkDefault,
                 ),
             ),
         )

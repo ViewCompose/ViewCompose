@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: e38dc5c7da522ccc0a70c3b7a07ef000c87c2ff1410b0f60af3d42f0bf3005b6
+translation_source_hash: e1602a316ac19a4cff1de865bb151fa5c122a08cb75b7fe48a6a985fc935116b
 translation_status: current
 ---
 
@@ -107,7 +107,8 @@ Appearance 继续作为 Title/Body/Label 家族回退。缺失的 Display 和 He
 `viewcompose-material3/android-xml`、`viewcompose-material3/android-dynamic` 或
 `viewcompose-material3/static`。压力切片消费的每个颜色、状态色、排版、形状、控件、交互和浮层
 路径都能解析有效来源：存在的 Android 属性标记为 Android Theme 或 Dynamic；缺失值继续标记为
-具名静态 Material 回退；`UiThemeOverride` 只标记应用实际替换的 Token 家族。
+具名静态 Material 回退，其来源为 `FrameworkDefault`；`UiThemeOverride` 只标记应用实际替换的
+Token 家族。完整静态快照同样报告 `FrameworkDefault`，不会再把第一方默认值误标成应用自定义值。
 
 本适配器不会把 Material 策略放进 Android Renderer。组件默认值在 NodeSpec 进入 Renderer
 之前，已在 UI Foundation 中解析为语义角色。Button 的可见/有效高度分离会由尺寸 Token 与

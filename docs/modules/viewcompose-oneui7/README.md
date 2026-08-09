@@ -72,7 +72,8 @@ available in the
 `OneUi7Theme` also provides the shared `UiDesignSystemAttribution` snapshot. Diagnostics report
 the static `viewcompose-oneui7/static` token producer plus recipe identity, neutral backend,
 Equivalent conformance, and capability path for all five families. This metadata is evidence only;
-the private typed recipes remain separate and no One UI policy enters UI Foundation or Renderer.
+the snapshot reports `FrameworkDefault` until an application applies an explicit override. The
+private typed recipes remain separate and no One UI policy enters UI Foundation or Renderer.
 
 ## Behavior and fallback contract
 

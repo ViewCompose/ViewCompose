@@ -15,6 +15,7 @@ import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTextFieldSizing
 import com.viewcompose.ui.foundation.UiThemeMetadata
 import com.viewcompose.ui.foundation.UiThemeTokens
+import com.viewcompose.ui.foundation.override
 import com.viewcompose.ui.shape.UiCorner
 import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.shape.UiShape
@@ -59,7 +60,18 @@ internal enum class DemoThemeSource(
         return when (this) {
             AndroidXml -> null
             Material3Defaults -> if (isDark) Material3ThemeDefaults.dark() else Material3ThemeDefaults.light()
-            DemoCustom -> if (isDark) DemoThemeTokens.dark else DemoThemeTokens.light
+            DemoCustom -> {
+                val base = if (isDark) Material3ThemeDefaults.dark() else Material3ThemeDefaults.light()
+                val application = if (isDark) DemoThemeTokens.dark else DemoThemeTokens.light
+                base.override(
+                    colors = application.colors,
+                    typography = application.typography,
+                    shapes = application.shapes,
+                    controls = application.controls,
+                    interactions = application.interactions,
+                    overlays = application.overlays,
+                )
+            }
         }
     }
 

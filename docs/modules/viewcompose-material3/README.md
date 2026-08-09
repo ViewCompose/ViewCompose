@@ -110,8 +110,10 @@ legacy size or falling back to UI Foundation's neutral defaults.
 `viewcompose-material3/android-dynamic`, or `viewcompose-material3/static` as the base producer.
 For the pressure slice, every consumed color, state-color, type, shape, control, interaction, and
 overlay path can resolve its effective origin. A present Android attribute is marked Android theme
-or dynamic; a missing value remains a named static Material fallback; `UiThemeOverride` marks only
-the token families replaced by the application.
+or dynamic; a missing value remains a named static Material fallback with `FrameworkDefault`
+origin; `UiThemeOverride` marks only the token families replaced by the application. The complete
+static snapshot also reports `FrameworkDefault`, rather than misclassifying first-party defaults
+as application-owned custom values.
 
 The adapter does not add Material policy to Android Renderer. Component defaults resolve semantic
 roles in UI Foundation before a NodeSpec reaches the renderer. Button visual/effective height

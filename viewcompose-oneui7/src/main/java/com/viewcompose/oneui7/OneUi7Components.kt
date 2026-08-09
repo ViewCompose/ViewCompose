@@ -179,11 +179,11 @@ object OneUi7ThemeDefaults {
             ),
             overlays = UiOverlays(scrimOpacity = 0.40f),
             metadata = UiThemeMetadata(
-                origin = UiThemeOrigin.Custom,
+                origin = UiThemeOrigin.FrameworkDefault,
                 isDark = isDark,
                 provenance = UiTokenProvenance(
                     sourceId = "viewcompose-oneui7/static",
-                    defaultOrigin = UiThemeOrigin.Custom,
+                    defaultOrigin = UiThemeOrigin.FrameworkDefault,
                 ),
             ),
         )

@@ -6,7 +6,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.ViewGroup
 import androidx.core.view.WindowCompat
-import com.viewcompose.ui.foundation.UiTheme
+import com.viewcompose.material3.Material3Theme
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /** Hosts an isolated theme-source fixture for manual and screenshot-based token verification. */
@@ -70,7 +70,7 @@ class Material3DefaultThemeActivity : DemoRenderActivity() {
         if (tokens == null) {
             pageContent()
         } else {
-            UiTheme(tokens, pageContent)
+            Material3Theme(tokens = tokens, content = pageContent)
         }
     }
 

@@ -417,7 +417,7 @@ tasks.register("verifyModuleDependencyBoundaries") {
 tasks.register("verifyDesignSystemIsolation") {
     group = "verification"
     description =
-        "Verify UI Foundation and Android Engine stay independent of Material design policy."
+        "Verify neutral layers and named design-system artifacts remain mutually isolated."
     doLast {
         val violations = mutableListOf<String>()
         val materialFreeModules =
@@ -485,6 +485,92 @@ tasks.register("verifyDesignSystemIsolation") {
                         }
                     }
             }
+        }
+
+        val namedSystemProjects = setOf("viewcompose-material3", "viewcompose-oneui7")
+        val namedSystemPackages = setOf("com.viewcompose.material3", "com.viewcompose.oneui7")
+        materialFreeModules.forEach { module ->
+            val moduleProject = project(":$module")
+            productionConfigurations.forEach { configurationName ->
+                moduleProject.configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.name in namedSystemProjects }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> neutral module cannot depend on " +
+                                "named design system '${dependency.name}'"
+                    }
+            }
+            val mainDirectory = rootDir.resolve(module).resolve("src/main")
+            if (mainDirectory.exists()) {
+                mainDirectory.walkTopDown()
+                    .filter { file ->
+                        file.isFile && (file.extension == "kt" || file.extension == "java")
+                    }
+                    .forEach { file ->
+                        file.useLines { lines ->
+                            lines.forEachIndexed { index, line ->
+                                val trimmed = line.trimStart()
+                                if (namedSystemPackages.any { prefix ->
+                                        trimmed.startsWith("import $prefix.")
+                                    }
+                                ) {
+                                    violations +=
+                                        "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                            "neutral module cannot import named design system '$trimmed'"
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+
+        mapOf(
+            "viewcompose-material3" to setOf("viewcompose-oneui7"),
+            "viewcompose-oneui7" to setOf("viewcompose-material3"),
+        ).forEach { (module, forbiddenProjects) ->
+            val moduleProject = project(":$module")
+            productionConfigurations.forEach { configurationName ->
+                moduleProject.configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.name in forbiddenProjects }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> named systems cannot depend on " +
+                                "each other ('${dependency.name}')"
+                    }
+            }
+        }
+
+        val oneUiMainDirectory = rootDir.resolve("viewcompose-oneui7/src/main")
+        productionConfigurations.forEach { configurationName ->
+            project(":viewcompose-oneui7").configurations.findByName(configurationName)
+                ?.dependencies
+                ?.filter { dependency -> dependency.group == "com.google.android.material" }
+                ?.forEach { dependency ->
+                    violations +=
+                        "viewcompose-oneui7:$configurationName -> forbidden Material dependency " +
+                            "'${dependency.group}:${dependency.name}'"
+                }
+        }
+        if (oneUiMainDirectory.exists()) {
+            oneUiMainDirectory.walkTopDown()
+                .filter { file -> file.isFile && (file.extension == "kt" || file.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import com.viewcompose.material3.") ||
+                                trimmed.startsWith("import com.google.android.material.")
+                            ) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                        "One UI cannot import Material policy '$trimmed'"
+                            }
+                        }
+                    }
+                }
         }
 
         val uiFoundation = project(":viewcompose-ui-foundation")

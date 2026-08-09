@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 405d37db048de104268f4d68bf79d1cc18af3b5bbef5e41e0d8935dd4643eb03
+translation_source_hash: 4438474eb10b4017fc9d0e7aa7e48837b20413f771dbe7098a1dfe1b0e5c46da
 translation_status: current
 ---
 
@@ -72,8 +72,8 @@ setUiContent {
 
 `OneUi7Theme` 还会提供共享的 `UiDesignSystemAttribution` 快照。诊断会为全部五个家族报告静态
 `viewcompose-oneui7/static` Token 生产者、Recipe 身份、中立 Backend、Equivalent 一致性与能力
-路径。这些元数据只作为证据；私有强类型 Recipe 仍保持独立，One UI 策略不会进入 UI Foundation
-或 Renderer。
+路径。在应用显式覆盖之前，快照来源报告为 `FrameworkDefault`。这些元数据只作为证据；私有强类型
+Recipe 仍保持独立，One UI 策略不会进入 UI Foundation 或 Renderer。
 
 ## 行为与降级契约
 

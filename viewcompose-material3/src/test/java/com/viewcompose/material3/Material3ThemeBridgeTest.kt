@@ -175,7 +175,7 @@ class Material3ThemeBridgeTest {
         assertEquals(UiShape.roundedRelative(0.5f), tokens.shapes.large)
         assertEquals(UiShape.rounded(28.dp), tokens.shapes.extraLarge)
         assertEquals(UiThemeOrigin.AndroidTheme, tokens.metadata.provenance.originOf("shapes.medium"))
-        assertEquals(UiThemeOrigin.Custom, tokens.metadata.provenance.originOf("colors.primary"))
+        assertEquals(UiThemeOrigin.FrameworkDefault, tokens.metadata.provenance.originOf("colors.primary"))
     }
 
     @Test
@@ -192,8 +192,8 @@ class Material3ThemeBridgeTest {
             UiThemeOrigin.AndroidDynamicColor,
             tokens.metadata.provenance.originOf("colors.primary"),
         )
-        assertEquals(UiThemeOrigin.Custom, tokens.metadata.provenance.originOf("colors.surface"))
-        assertEquals(UiThemeOrigin.Custom, tokens.metadata.provenance.originOf("controls.button"))
+        assertEquals(UiThemeOrigin.FrameworkDefault, tokens.metadata.provenance.originOf("colors.surface"))
+        assertEquals(UiThemeOrigin.FrameworkDefault, tokens.metadata.provenance.originOf("controls.button"))
     }
 
     @Test

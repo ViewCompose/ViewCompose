@@ -380,7 +380,7 @@ internal object Material3ThemeTokenMapper {
                 UiThemeOrigin.AndroidDynamicColor -> "viewcompose-material3/android-dynamic"
                 else -> "viewcompose-material3/android-xml"
             },
-            defaultOrigin = UiThemeOrigin.Custom,
+            defaultOrigin = UiThemeOrigin.FrameworkDefault,
             tokenOrigins = mapped,
         )
     }

@@ -13,6 +13,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import androidx.recyclerview.widget.RecyclerView
+import com.viewcompose.oneui7.OneUi7Reference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -30,6 +31,7 @@ class OneUi7VerificationUiTest {
             FixtureCase(label = "light-ltr-1_0", dark = false, rtl = false, fontScale = 1f),
             FixtureCase(label = "dark-rtl-1_3", dark = true, rtl = true, fontScale = 1.3f),
         ).forEach { fixture ->
+            var productionMetadata = ""
             val intent = OneUi7VerificationActivity.newIntent(
                 context = context,
                 dark = fixture.dark,
@@ -50,10 +52,42 @@ class OneUi7VerificationUiTest {
                         if (fixture.rtl) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR,
                         activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_ROOT).layoutDirection,
                     )
+                    val tokenProducer = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ONE_UI_7_TOKEN_PRODUCER,
+                    ).text.toString()
+                    val primaryOrigin = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ONE_UI_7_PRIMARY_ORIGIN,
+                    ).text.toString()
+                    val designSystem = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ONE_UI_7_DESIGN_SYSTEM,
+                    ).text.toString()
+                    val recipeSet = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ONE_UI_7_RECIPE_SET,
+                    ).text.toString()
+                    val componentBackends = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ONE_UI_7_COMPONENT_BACKENDS,
+                    ).text.toString()
+                    assertEquals("viewcompose-oneui7/static", tokenProducer)
+                    assertEquals("FrameworkDefault", primaryOrigin)
+                    assertEquals("viewcompose-oneui7", designSystem)
+                    assertEquals(OneUi7Reference.componentSet, recipeSet)
+                    assertTrue(componentBackends.contains("switch:one-ui7-switch-v1:DslComposite/Equivalent"))
+                    assertTrue(
+                        componentBackends.contains(
+                            "text-field:one-ui7-text-field-v1:NativeBehavioralCore/Equivalent",
+                        ),
+                    )
+                    productionMetadata = buildString {
+                        appendLine("tokenProducer=$tokenProducer")
+                        appendLine("primaryOrigin=$primaryOrigin")
+                        appendLine("designSystem=$designSystem")
+                        appendLine("recipeSet=$recipeSet")
+                        appendLine("componentBackends=$componentBackends")
+                    }
                 }
                 captureEvidence(
                     label = "one-ui7-${fixture.label}-top",
-                    metadata = fixture.metadata(),
+                    metadata = fixture.metadata(productionMetadata),
                 )
 
                 scenario.onActivity { activity ->
@@ -103,7 +137,7 @@ class OneUi7VerificationUiTest {
                 }
                 captureEvidence(
                     label = "one-ui7-${fixture.label}-switch-drag",
-                    metadata = fixture.metadata(),
+                    metadata = fixture.metadata(productionMetadata),
                 )
                 scenario.onActivity { activity ->
                     activity.scrollFixtureToPosition(TEXT_FIELD_POSITION)
@@ -139,7 +173,7 @@ class OneUi7VerificationUiTest {
                 }
                 captureEvidence(
                     label = "one-ui7-${fixture.label}-components",
-                    metadata = fixture.metadata(),
+                    metadata = fixture.metadata(productionMetadata),
                 )
             }
         }
@@ -260,10 +294,10 @@ class OneUi7VerificationUiTest {
         }
     }
 
-    private fun FixtureCase.metadata(): String = buildString {
+    private fun FixtureCase.metadata(productionMetadata: String): String = buildString {
         appendLine("suite=one-ui-7-five-component-alpha")
         appendLine("reference=One UI 7")
-        appendLine("tokenSource=viewcompose-oneui7/static")
+        append(productionMetadata)
         appendLine("mode=${if (dark) "dark" else "light"}")
         appendLine("layoutDirection=${if (rtl) "rtl" else "ltr"}")
         appendLine("fontScale=$fontScale")
