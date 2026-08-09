@@ -5,9 +5,11 @@ package com.viewcompose
  * Test responsibility: covers Demo Theme Tokens behavior in app demo and guards the contract against regressions.
  */
 
+import com.viewcompose.ui.foundation.UiThemeOrigin
 import com.viewcompose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -72,7 +74,19 @@ class DemoThemeTokensTest {
             0xFFE8DEF8.toInt(),
             DemoThemeSource.Material3Defaults.tokens(isDark = false)?.colors?.secondaryContainer,
         )
-        assertSame(DemoThemeTokens.light, DemoThemeSource.DemoCustom.tokens(isDark = false))
+        val custom = requireNotNull(DemoThemeSource.DemoCustom.tokens(isDark = false))
+        assertNotSame(DemoThemeTokens.light, custom)
+        assertEquals(DemoThemeTokens.light.colors, custom.colors)
+        assertEquals(DemoThemeTokens.light.typography, custom.typography)
+        assertEquals(DemoThemeTokens.light.stateColors, custom.stateColors)
+        assertEquals(DemoThemeTokens.light.shapes, custom.shapes)
+        assertEquals(DemoThemeTokens.light.controls, custom.controls)
+        assertEquals(DemoThemeTokens.light.interactions, custom.interactions)
+        assertEquals(DemoThemeTokens.light.overlays, custom.overlays)
+        assertEquals(UiThemeOrigin.Override, custom.metadata.origin)
+        assertEquals("viewcompose-material3/static", custom.metadata.provenance.sourceId)
+        assertEquals(UiThemeOrigin.Override, custom.metadata.provenance.originOf("colors.primary"))
+        assertEquals(UiThemeOrigin.Override, custom.metadata.provenance.originOf("shapes.medium"))
         assertEquals(
             DemoThemeSource.Material3Defaults,
             DemoThemeSource.fromId("unknown-source"),
