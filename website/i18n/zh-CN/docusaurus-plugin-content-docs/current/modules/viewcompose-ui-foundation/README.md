@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 1f3223a0b34d4917e3ee1716014e4a6732dff7c82790f258e79ed87113ac7528
+translation_source_hash: 3d5d492a9f06c4a7089351bacd1bd7990e997c35406c6599d6187d737dd45255
 translation_status: current
 ---
 
@@ -63,6 +63,13 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   完整的 Display、Headline、Title、Body 与 Label 分级；形状支持 Extra Small、Small、Medium、
   Large、Extra Large 与 Full 角色。`UiInteractionTokens` 提供通用按下、聚焦和悬停透明度，
   具体值由设计系统适配器提供。
+- `UiTokenProvenance` 是附着在 `UiThemeMetadata` 上的 Q2 非视觉来源快照。若
+  `colors.primary` 这类精确路径没有独立记录，就继承所在家族来源，因此诊断可以区分框架默认、
+  Android 主题或动态映射、具名静态 Token 与应用 Override，而不改变视觉解析。
+- `UiDesignSystemAttribution` 与 `UiComponentAttribution` 是有界 Q2 证据快照，不是 Recipe
+  Registry。具名系统通过 Q3 `DesignSystemAttributionProvider` 提供 Recipe 身份、中立 Backend、
+  Conformance、能力路径和 Fallback；立即内容与已捕获的延迟内容都可从
+  `DesignSystemDiagnostics.current` 读取同一个 Local。
 - `UiButtonSizing` 把有效最小触控高度与可见 Surface 高度分开。中性主题和现有自定义主题中，
   每个可见高度默认等于对应的有效高度，因此维持原有渲染；设计系统适配器可以选择更小且居中
   的 Surface，而不缩小 View 或无障碍边界。
@@ -183,3 +190,9 @@ Q2 `SliderNodeProps` 快照中；预编译调用方与自定义渲染器必须�
 `BasicButtonStyle` 是 Q2 已解析值契约，`BasicButton` 是 Q3 组合 API。它属于增量能力，不会改变
 现有 `Button` 签名或原生 Renderer 行为。内部对比夹具现已使用该生产基础组件，证明两套独立
 动作 Recipe，同时不向 UI Foundation 加入设计系统词汇。
+
+`UiTokenProvenance`、`UiDesignSystemAttribution` 与 `UiComponentAttribution` 是 Q2 不可变
+诊断契约，`DesignSystemAttributionProvider` 是 Q3 Provider API。`UiThemeMetadata` 新增的
+Provenance 具有源码默认值，但改变二进制 Constructor、Copy 与 Component Surface，因此预编译
+直接调用方必须重建。这些契约只保存稳定身份与已解析证据，不授权在 UI Foundation 或 Renderer
+中加入 Recipe、Factory 或具名设计系统分支。

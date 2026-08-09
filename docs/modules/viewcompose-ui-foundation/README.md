@@ -62,6 +62,14 @@ by a later renderer or child render session.
   tiers; shapes support extra-small, small, medium, large, extra-large, and full roles.
   `UiInteractionTokens` supplies generic pressed, focused, and hovered opacities. Design-system
   adapters provide their concrete values.
+- `UiTokenProvenance` is the Q2 non-visual source snapshot attached to `UiThemeMetadata`. Exact
+  paths such as `colors.primary` inherit a family source when no exact entry exists, allowing
+  diagnostics to distinguish framework defaults, Android theme or dynamic mapping, named static
+  tokens, and application overrides without changing visual resolution.
+- `UiDesignSystemAttribution` and `UiComponentAttribution` are bounded Q2 evidence snapshots, not a
+  recipe registry. `DesignSystemAttributionProvider` is the Q3 scope used by named systems to
+  publish recipe identity, neutral backend, conformance, capability path, and fallback;
+  `DesignSystemDiagnostics.current` reads that same local in eager or captured delayed content.
 - `UiButtonSizing` keeps the effective minimum target height separate from the visible surface
   height. Neutral and existing custom themes preserve their previous rendering because each visual
   height defaults to its corresponding effective height; a design-system adapter may opt into a
@@ -207,3 +215,10 @@ its public source API while changing the concrete `NodeType.Surface` spec to `Su
 additive and does not change the existing `Button` signature or native renderer behavior. The
 internal contrast fixture now consumes this production primitive, proving two independent action
 recipes without adding design-system vocabulary to UI Foundation.
+
+`UiTokenProvenance`, `UiDesignSystemAttribution`, and `UiComponentAttribution` are Q2 immutable
+diagnostic contracts. `DesignSystemAttributionProvider` is a Q3 provider API. Adding provenance to
+`UiThemeMetadata` has a source default but changes the binary constructor/copy/component surface,
+so precompiled direct callers must rebuild. The contracts contain stable identities and resolved
+evidence only; they do not authorize recipes, factories, or named design-system branches in UI
+Foundation or Renderer.

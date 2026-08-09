@@ -365,16 +365,87 @@ enum class UiThemeOrigin {
 }
 
 /**
+ * Describes where effective token values originated without changing visual resolution.
+ *
+ * [defaultOrigin] applies when [tokenOrigins] has no exact token path or enclosing family entry.
+ * Paths use stable dotted names such as `colors.primary` or `shapes`; consumers may ask for a
+ * concrete value and inherit a family-level source. [sourceId] identifies the named producer of
+ * the base snapshot, for example `viewcompose-material3/android-xml`.
+ *
+ * @property sourceId stable non-blank producer identity for diagnostics
+ * @property defaultOrigin fallback source for token paths without a more specific entry
+ * @property tokenOrigins exact token- or family-path source overrides
+ * @throws IllegalArgumentException when [sourceId] or a token path is blank
+ */
+data class UiTokenProvenance(
+    val sourceId: String,
+    val defaultOrigin: UiThemeOrigin,
+    val tokenOrigins: Map<String, UiThemeOrigin> = emptyMap(),
+) {
+    init {
+        require(sourceId.isNotBlank()) { "UiTokenProvenance sourceId must not be blank." }
+        require(tokenOrigins.keys.none(String::isBlank)) {
+            "UiTokenProvenance token paths must not be blank."
+        }
+    }
+
+    /**
+     * Resolves the most specific recorded source for [tokenPath].
+     *
+     * Resolution checks the complete path and then removes trailing dotted segments until a
+     * recorded family is found. It returns [defaultOrigin] when no entry matches.
+     *
+     * @param tokenPath non-blank stable token path
+     * @return exact, family-inherited, or default origin
+     * @throws IllegalArgumentException when [tokenPath] is blank
+     */
+    fun originOf(tokenPath: String): UiThemeOrigin {
+        require(tokenPath.isNotBlank()) { "UiTokenProvenance tokenPath must not be blank." }
+        var candidate = tokenPath
+        while (true) {
+            tokenOrigins[candidate]?.let { return it }
+            val separator = candidate.lastIndexOf('.')
+            if (separator < 0) return defaultOrigin
+            candidate = candidate.substring(0, separator)
+        }
+    }
+
+    /**
+     * Returns a snapshot that attributes every supplied token or family path to [origin].
+     *
+     * @param tokenPaths non-blank stable token or family paths
+     * @param origin source category applied to every path
+     * @return this instance when [tokenPaths] is empty, otherwise a copied provenance snapshot
+     * @throws IllegalArgumentException when any path is blank
+     */
+    fun withOrigins(
+        tokenPaths: Set<String>,
+        origin: UiThemeOrigin,
+    ): UiTokenProvenance {
+        require(tokenPaths.none(String::isBlank)) {
+            "UiTokenProvenance token paths must not be blank."
+        }
+        if (tokenPaths.isEmpty()) return this
+        return copy(tokenOrigins = tokenOrigins + tokenPaths.associateWith { origin })
+    }
+}
+
+/**
  * Carries non-visual theme diagnostics without affecting token resolution.
  *
  * @property origin source that produced the current snapshot
  * @property isDark whether the producer classifies the scheme as dark, or `null` when unspecified
  * @property revision producer-owned change counter used to expose theme refreshes
+ * @property provenance per-token source resolution and stable base-producer identity
  */
 data class UiThemeMetadata(
     val origin: UiThemeOrigin = UiThemeOrigin.Custom,
     val isDark: Boolean? = null,
     val revision: Long = 0L,
+    val provenance: UiTokenProvenance = UiTokenProvenance(
+        sourceId = origin.name,
+        defaultOrigin = origin,
+    ),
 )
 
 /**
