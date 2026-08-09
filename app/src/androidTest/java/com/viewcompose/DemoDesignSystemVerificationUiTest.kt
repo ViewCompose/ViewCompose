@@ -13,7 +13,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -23,6 +25,121 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class DemoDesignSystemVerificationUiTest {
+    @Test
+    fun rootReplacement_preservesCallerStateAndRefreshesLazyAndOverlaySnapshots() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val intent = DemoDesignSystemVerificationActivity.newIntent(
+            context = context,
+            kind = DemoDesignSystemKind.CutContrast,
+        )
+        launchDemoActivity<DemoDesignSystemVerificationActivity>(intent).use { scenario ->
+            waitForUiIdle()
+            var previousRoot: View? = null
+            scenario.onActivity { activity ->
+                previousRoot = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_ROOT)
+                activity.clickByTestTag(DemoTestTags.DESIGN_SYSTEM_BUTTON)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertEquals(
+                    "Button clicks: 1",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS,
+                    ).text.toString(),
+                )
+                activity.clickByTestTag(DemoTestTags.DESIGN_SYSTEM_REPLACE_ROOT)
+            }
+            waitForUiIdle()
+            SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MS)
+            waitForUiIdle()
+
+            scenario.onActivity { activity ->
+                val nextRoot = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_ROOT)
+                assertTrue("Expected root View replacement", nextRoot !== previousRoot)
+                assertEquals(
+                    "rounded-reference · Rounded reference",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.DESIGN_SYSTEM_IDENTITY,
+                    ).text.toString(),
+                )
+                assertEquals(
+                    "Lazy system: rounded-reference",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
+                    ).text.toString(),
+                )
+                assertEquals(
+                    "Button clicks: 1",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS,
+                    ).text.toString(),
+                )
+                activity.clickByTestTag(DemoTestTags.DESIGN_SYSTEM_OPEN_DIALOG)
+            }
+
+            val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            assertTrue(
+                "Expected overlay to capture rounded-reference locals",
+                device.wait(
+                    Until.hasObject(By.text("Overlay system: rounded-reference")),
+                    OVERLAY_TIMEOUT_MS,
+                ),
+            )
+            captureEvidence(
+                label = "phase5-overlay-rounded-reference",
+                metadata = "suite=multi-design-phase5\ndesignSystem=rounded-reference\nsnapshot=root+lazy+overlay\n",
+            )
+            device.findObject(By.text("Switch overlay to cut-contrast")).click()
+            waitForUiIdle()
+            SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MS)
+            waitForUiIdle()
+            assertTrue(
+                "Expected restored overlay to capture cut-contrast locals",
+                device.wait(
+                    Until.hasObject(By.text("Overlay system: cut-contrast")),
+                    OVERLAY_TIMEOUT_MS,
+                ),
+            )
+            assertTrue(
+                "Old overlay session must be cleared atomically",
+                !device.hasObject(By.text("Overlay system: rounded-reference")),
+            )
+            captureEvidence(
+                label = "phase5-overlay-cut-contrast",
+                metadata = "suite=multi-design-phase5\ndesignSystem=cut-contrast\nsnapshot=root+lazy+overlay\n",
+            )
+
+            scenario.onActivity { activity ->
+                assertEquals(
+                    "cut-contrast · Cut contrast",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.DESIGN_SYSTEM_IDENTITY,
+                    ).text.toString(),
+                )
+                assertEquals(
+                    "Lazy system: cut-contrast",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
+                    ).text.toString(),
+                )
+                assertEquals(
+                    "Button clicks: 1",
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.DESIGN_SYSTEM_BUTTON_STATUS,
+                    ).text.toString(),
+                )
+            }
+            device.findObject(By.text("Close coherent dialog")).click()
+            assertTrue(
+                "Expected new-session dialog dismissal",
+                device.wait(
+                    Until.gone(By.text("Overlay system: cut-contrast")),
+                    OVERLAY_TIMEOUT_MS,
+                ),
+            )
+        }
+    }
+
     @Test
     fun fiveComponentSlice_exportsAttributionAndPreservesBehaviorAcrossMatrix() {
         resetPublicEvidenceDirectory()
@@ -341,5 +458,6 @@ class DemoDesignSystemVerificationUiTest {
         const val OUTPUT_DIRECTORY = "multi-design-system"
         const val PUBLIC_OUTPUT_DIRECTORY = "viewcompose-multi-design-system"
         const val WINDOW_TRANSITION_SETTLE_MS = 500L
+        const val OVERLAY_TIMEOUT_MS = 5_000L
     }
 }

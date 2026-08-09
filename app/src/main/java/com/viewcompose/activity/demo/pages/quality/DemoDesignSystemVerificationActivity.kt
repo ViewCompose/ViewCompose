@@ -57,10 +57,18 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
         UiEnvironment(fixtureEnvironment) {
             UiTheme(bundle.tokens) {
                 ProvideDemoDesignSystem(bundle) {
-                    DemoDesignSystemVerificationPage()
+                    DemoDesignSystemVerificationPage(onReplaceDesignSystem = ::replaceDesignSystem)
                 }
             }
         }
+    }
+
+    private fun replaceDesignSystem(kind: DemoDesignSystemKind) {
+        if (kind == requestedKind) return
+        intent.putExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND, kind.id)
+        // Recreating the Activity replaces the root RenderSession and every session-bound overlay
+        // together while Android's saved-state owner preserves caller-owned rememberSaveable state.
+        recreate()
     }
 
     companion object {

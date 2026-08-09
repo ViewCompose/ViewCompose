@@ -2,6 +2,7 @@ package com.viewcompose
 
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.Dialog
 import com.viewcompose.ui.foundation.Environment
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.Row
@@ -26,15 +27,22 @@ import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
 /** Renders the internal five-component design-system slice with screenshot-readable attribution. */
-internal fun UiTreeBuilder.DemoDesignSystemVerificationPage() {
+internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
+    onReplaceDesignSystem: (DemoDesignSystemKind) -> Unit,
+) {
     val bundle = DemoDesignSystem
+    val nextKind = when (bundle.kind) {
+        DemoDesignSystemKind.RoundedReference -> DemoDesignSystemKind.CutContrast
+        DemoDesignSystemKind.CutContrast -> DemoDesignSystemKind.RoundedReference
+    }
     val checked = rememberSaveable(key = "design-system-switch") { mutableStateOf(true) }
     val selectedIndex = rememberSaveable(key = "design-system-navigation") { mutableStateOf(0) }
     val buttonClicks = rememberSaveable(key = "design-system-button-clicks") { mutableStateOf(0) }
+    val dialogVisible = rememberSaveable(key = "design-system-dialog-visible") { mutableStateOf(false) }
     val field = rememberTextFieldState("Ada")
     val errorField = rememberTextFieldState("")
     LazyColumn(
-        items = listOf("identity", "button", "surface", "switch", "textfield", "navigation"),
+        items = listOf("identity", "switching", "button", "surface", "switch", "textfield", "navigation"),
         key = { section -> section },
         modifier = Modifier
             .fillMaxSize()
@@ -45,6 +53,30 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage() {
     ) { section ->
         when (section) {
             "identity" -> DemoDesignSystemIdentitySection(bundle)
+            "switching" -> Column(
+                spacing = 10.dp,
+                modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
+            ) {
+                DemoDesignSectionTitle("Root/session coherence")
+                Text(
+                    text = "Lazy system: ${bundle.kind.id}",
+                    color = Theme.colors.onSurfaceVariant,
+                    style = Theme.typography.bodyMedium,
+                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY),
+                )
+                Row(spacing = 10.dp, verticalAlignment = VerticalAlignment.Center) {
+                    DemoDesignButton(
+                        text = "Switch to ${nextKind.id}",
+                        onClick = { onReplaceDesignSystem(nextKind) },
+                        modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_REPLACE_ROOT),
+                    )
+                    DemoDesignButton(
+                        text = "Open dialog",
+                        onClick = { dialogVisible.value = true },
+                        modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_OPEN_DIALOG),
+                    )
+                }
+            }
             "button" -> Column(
                 spacing = 10.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
@@ -170,6 +202,36 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage() {
                     color = Theme.colors.onSurfaceVariant,
                     style = Theme.typography.bodySmall,
                     modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS),
+                )
+            }
+        }
+    }
+    Dialog(
+        visible = dialogVisible.value,
+        requestKey = "design-system-coherence-dialog",
+        onDismissRequest = { dialogVisible.value = false },
+    ) {
+        DemoDesignCard(modifier = Modifier.fillMaxWidth()) {
+            Column(spacing = 10.dp) {
+                Text(
+                    text = "Overlay system: ${bundle.kind.id}",
+                    color = Theme.colors.onSurface,
+                    style = Theme.typography.titleMedium,
+                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_OVERLAY_IDENTITY),
+                )
+                Text(
+                    text = "Overlay token: demo-design-system/${bundle.kind.id}",
+                    color = Theme.colors.onSurfaceVariant,
+                    style = Theme.typography.bodyMedium,
+                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_OVERLAY_TOKEN_SOURCE),
+                )
+                DemoDesignButton(
+                    text = "Switch overlay to ${nextKind.id}",
+                    onClick = { onReplaceDesignSystem(nextKind) },
+                )
+                DemoDesignButton(
+                    text = "Close coherent dialog",
+                    onClick = { dialogVisible.value = false },
                 )
             }
         }

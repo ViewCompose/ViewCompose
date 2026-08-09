@@ -2,7 +2,7 @@
 
 ## Status
 
-Active. Phases 0 through 4 are implemented on `codex/multi-design-system-foundation`. The internal
+Active. Phases 0 through 5 are implemented on `codex/multi-design-system-foundation`. The internal
 five-component slice now exercises two visually distinct design-system bundles through shared
 Basic primitives and design-system-owned composites. Its behavior and screenshot matrix passes on
 API 24, 31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain
@@ -14,12 +14,12 @@ target architecture and the staged evidence required before public APIs or produ
 behavior are retained. Durable accepted contracts must move into the architecture guide, theme
 guide, and owning module manuals before this plan is archived.
 
-Last verified: 2026-08-07.
+Last verified: 2026-08-09.
 
-Next action: implement Phase 5 root/session replacement and prove coherent local capture across
-lazy and overlay sessions. Keep the aggregate Material 3 default and generic host boundary
-unchanged. Do not publish a general recipe registry or begin the public One UI slice until switching
-cannot retain a mixed token/recipe snapshot.
+Next action: pin the official Samsung reference and implement the Phase 6 public One UI alpha
+five-component slice. Keep its API and artifact naming explicit about the supported component set;
+do not claim a complete One UI implementation or make Samsung-only visual behavior part of the
+generic host or Android Renderer.
 
 ## Maven release changesets
 
@@ -491,7 +491,8 @@ into every component to protect sunk cost.
 
 ## Phase 5: Host resolution, switching, overlays, and system UI
 
-Status: pending Phase 4.
+Status: complete for the internal host/session contract and emulator evidence. Public integration
+entry points remain owned by the Phase 6 design-system artifact rather than a general registry.
 
 Planned work:
 
@@ -514,6 +515,28 @@ Keep criteria:
 - lifecycle, saveable state, focus, IME, and back handling remain correct;
 - applications that use the standard aggregate artifact receive Material 3 without extra setup;
 - custom hosts can install a bundle without depending on Material Components.
+
+### Phase 5 implementation decision and evidence
+
+- The generic `viewcompose-host-android` boundary is unchanged, and the aggregate
+  `viewcompose-android` entry continues to install Material 3 by default. The internal fixture
+  resolves its complete immutable bundle at the application root; no host-side design-system
+  selector or general recipe registry was added.
+- Switching replaces the Activity root and its `RenderSession` instead of mutating an active
+  bundle. Android saved state restores committed caller-owned `rememberSaveable` values while all
+  session-bound recipe and capability values are rebuilt from the new bundle.
+- Instrumentation proves that the root View identity changes, caller state survives, and both a
+  keyed `LazyColumn` item and a `Dialog` overlay expose only the new design-system identity. The old
+  overlay session is cleared atomically; no mixed or stale token/recipe snapshot remains visible.
+- Overlay presentation remains design-system-owned content inside the generic Android overlay
+  window semantics. Insets, edge-to-edge behavior, back dismissal, and platform focus ownership
+  therefore remain host contracts rather than component-recipe fields.
+- Two API 35 emulator captures record the complete root/lazy/overlay identity before and after the
+  overlay-triggered replacement. Diagnostics stay snapshot-based and attributable; the phase did
+  not add an always-on event history.
+- The test intentionally waits for state mutation to commit before requesting root replacement.
+  Rebuilding in the same main-thread callback as an uncommitted write is outside the saveable-state
+  contract and would make the test validate scheduler timing rather than application behavior.
 
 ## Phase 6: First public non-Material design system
 
