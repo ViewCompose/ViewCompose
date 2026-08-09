@@ -2,7 +2,7 @@
 
 ## Status
 
-Active. Phases 0 through 10 are implemented on `codex/multi-design-system-foundation`. Phase 8 closes
+Active. Phases 0 through 12 are implemented on `codex/multi-design-system-foundation`. Phase 8 closes
 the retained native-behavior parity gaps exposed by the current design-system-owned controls. The
 internal pressure slice now exercises three visually distinct design-system bundles through shared
 Basic primitives and design-system-owned composites. Its behavior and screenshot matrix pass on
@@ -15,9 +15,12 @@ adding Samsung policy to UI Foundation or Android Renderer.
 A post-Phase-8 architecture review found one P0 ownership violation and several foundation gaps.
 Phases 9 and 10 have now closed the P0: `viewcompose-android` is a neutral aggregate, while
 `viewcompose-material3-android` owns Material context resolution and its named host entry point.
-Material 3 and One UI still have asymmetric component ownership; token/backend provenance is not
-yet sufficient for unambiguous acceptance; and mapped native controls have not all been classified
-against the new backend standard. Phases 11 and 12 remain active in architecture-first order.
+Material 3 and One UI now own parallel five-family pressure slices without sharing a union API.
+Production diagnostics identify token producer/effective origin, recipe, backend, conformance,
+capability, and fallback; the Settings matrix verifies XML, static, and application-override
+sources. The Foundation-default and mapped-backend audits retained native behavioral cores where
+replacement has no proven benefit. Implementation work is complete; physical-device performance,
+Samsung visual acceptance, publication, and release-time archival remain external release gates.
 
 This plan is canonical English-only under the documentation governance policy. It records both the
 target architecture and the staged evidence required before public APIs or production rendering
@@ -26,11 +29,10 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-09.
 
-Next action: implement Phase 11's design-system ownership and provenance convergence on the
-accepted neutral-host boundary. Release-owner Pixel/physical Samsung
-acceptance, formal device benchmarks, and Maven publication remain required after Phases 9 through
-12; they are not used to bypass the P0 host boundary. The release workflow must archive this plan
-only after every linked changeset is included and immediately before Maven upload.
+Next action: run release-owner Pixel/physical Samsung acceptance and formal device benchmarks, then
+publish the linked Maven changeset. These gates are not used to bypass the neutral-host or backend
+boundaries. The release workflow must archive this plan only after every linked changeset is
+included and immediately before Maven upload.
 
 ## Maven release changesets
 
@@ -930,7 +932,8 @@ restore behavior by importing Material into Renderer, UI Foundation, or host-and
 
 ## Phase 11: Design-system ownership and provenance convergence
 
-Status: pending Phase 10.
+Status: implemented and retained. The named Material slice, provenance diagnostics, Settings
+matrix, screenshot metadata, Foundation-default audit, and cross-system isolation guard pass.
 
 Goal: make Material 3, One UI, and future systems follow the same ownership rules without requiring
 the same public component structure.
@@ -954,6 +957,37 @@ Ordered work:
 7. Add isolation tests proving Material and One UI modules can be consumed independently and no
    named system enters Foundation, Renderer, or neutral Host.
 
+### Recorded Phase 11 outcome
+
+The Foundation audit made no broad default move. That is an intentional compatibility decision:
+
+| Current policy family | Classification | Retained decision |
+| --- | --- | --- |
+| Theme, environment, text, icon, divider, scaffold, Basic Surface/Button, interaction, semantics, and gesture values | Reusable semantic foundation | Keep in UI Foundation; none identifies a named design system |
+| Existing Button/IconButton/Chip/FAB/Card/Badge/progress/pull/tooltip defaults | Compatibility defaults for generic components | Preserve public behavior; named systems derive private recipes instead of rewriting generic defaults |
+| Segmented/TextField/Search/Navigation/AppBar/Tab/List/Dialog/Menu/Sheet defaults | Compatibility structural policy | Keep generic APIs source-compatible; allow named components to own different structure and vocabulary |
+| Checkbox/Radio/Switch/Slider mappings and TextField editing | Android platform behavior plus compatibility appearance | Retain native cores until one pinned design system passes the component-specific replacement gate |
+| Material and One UI shapes, sizing, variants, slots, and component colors | Named design policy | Keep in `viewcompose-material3` or `viewcompose-oneui7`; never move into Renderer or neutral Host |
+
+`Material3Surface`, `Material3Card`, `Material3Button`, `Material3Switch`,
+`Material3TextField`, and `Material3NavigationBar` now form `material3-pressure-v1`. Material and
+One UI expose separate typed vocabularies but both publish five-family attribution from the same
+scope as their token/recipe snapshot. Static design-system values report a named producer plus
+`FrameworkDefault`; Android-mapped values report XML or dynamic origin; partial application
+overrides preserve the base producer and mark only replaced families as `Override`.
+
+The Settings theme fixture is the canonical manual matrix. Android XML uses the app's green/tan
+scheme, static Material uses the pinned purple scheme, and the application override uses the
+distinct teal palette and larger shapes. API 35 instrumentation reads production diagnostic tags,
+rejects unknown or contradictory attribution, verifies all five named component anchors, and
+exports separate identity, component, and navigation screenshots with sidecar metadata. One UI
+evidence now uses the same production diagnostic contract rather than handwritten test labels.
+
+`verifyDesignSystemIsolation` now rejects named-system dependencies/imports in neutral modules,
+direct Material/One UI project coupling, and Material dependencies/imports in One UI. Focused
+module tests, generated API documentation, documentation/release-intent gates, and the API 35
+Material/One UI behavior and screenshot fixtures pass.
+
 ### Phase 11 keep gate
 
 - all five pressure families have an explicit owner in Material and One UI;
@@ -969,7 +1003,9 @@ whose only justification is implementation effort already spent or apparent sour
 
 ## Phase 12: Component backend convergence before catalog growth
 
-Status: pending Phase 11.
+Status: implemented and retained without a wholesale backend replacement. The audit selected the
+existing native and composite paths where they already meet the architecture gate; no marginal
+custom backend was introduced merely to make implementation styles look uniform.
 
 Goal: close the remaining shared behavioral foundations and then select the correct backend per
 component. This phase does not authorize wholesale native-widget replacement.
@@ -994,6 +1030,26 @@ Ordered work by benefit:
    lifecycle/rollback/accessibility gate.
 7. Land each component family as a separate reversible slice with its own before/after behavior,
    screenshot, allocation, patch, draw, and animation evidence.
+
+### Recorded Phase 12 outcome
+
+| Family | Retained backend | Decision evidence and reopen condition |
+| --- | --- | --- |
+| TextField | Native Android editing core with design-system-owned decoration | Retains IME, selection, composition, autofill, accessibility, and restore; reopen only for a pinned decoration the current split cannot express |
+| Slider/SeekBar | Native behavioral core | Retains tap, drag, steps, RTL, keys, and range accessibility; a custom path first needs the complete parity and performance baseline |
+| Checkbox/Radio | Native behavioral core | Retains toggle/group semantics and platform input; reopen for a concrete tri-state, custom mark transition, or incompatible group model |
+| Switch | Material: native core; One UI: DSL composite over controlled anchored drag | Both expose 48dp targets and explicit diagnostics; no universal Switch node or renderer branch is justified |
+| Surface/Card/Button | Design-system-owned DSL composites over Basic primitives | Two named consumers prove the neutral contracts; variants and shapes remain separate typed recipes |
+| Navigation/Segmented/small structural controls | DSL composite or neutral custom View according to the executable inventory | Real child Views preserve focus/accessibility; promote drawing only for measured reuse or performance benefit |
+| External or one-system Android widget | Caller-owned `AndroidView` or named integration | Generic Renderer promotion still requires two independent consumers plus lifecycle, rollback, accessibility, and performance evidence |
+
+`ViewNodeBackendInventoryTest` remains the executable complete mapping and
+`UiDesignSystemAttribution` makes the pressure-family decision visible at runtime. Phase 8 already
+supplied controlled drag and collection-accessibility foundations; Phase 11 supplied matching
+Material/One UI component evidence. Because Phase 12 retained existing behavioral cores and added
+no renderer backend, a new allocation/draw/animation experiment had no changed backend to compare.
+Future component replacements must still establish their own baseline before production wiring and
+land as separate reversible slices.
 
 ### Phase 12 keep gate
 

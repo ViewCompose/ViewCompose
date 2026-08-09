@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: fe7a313eaa9b978699436dd9138c1b8f884237296998655a9f46a9573234c436
+translation_source_hash: 8866cd0498423f9d52792e9030d2d59e53058b7872afdd2e3f61a7c81a7add50
 translation_status: current
 ---
 
@@ -154,7 +154,8 @@ translation_status: current
 
 1. `SnapshotReader` 负责批量读取 Android / AppCompat / Material 主题字段。
 2. `ThemeTokenMapper` 负责把平台字段映射到框架 token，并处理 fallback。
-3. bridge 不直接产出组件级默认值，不绕过 `Defaults` 层。
+3. Bridge 只产出语义 Token。Material 具名组件从该快照派生私有强类型 Recipe；通用 Foundation
+   组件与 Renderer 都不会按 Material 身份分支。
 4. `viewcompose-material3-android` 的 `ComponentActivity/Fragment.setMaterial3UiContent` 会显式
    解析并提供 Material 3 Theme；根容器、框架原生 View、`AndroidView` 与 Overlay 共用同一个
    解析 Context。
@@ -211,9 +212,25 @@ translation_status: current
 
 不做：
 
-1. 在 bridge 层写组件业务默认值
-2. 在 bridge 层引入组件级条件分支
+1. 在 Bridge 层写应用组件默认值或通用组件策略
+2. 在 Token Mapper 或通用 Renderer 中引入组件级条件分支
 3. 为了“看起来全覆盖”而猜测性映射控件尺寸
+
+具名组件与来源诊断契约：
+
+1. `Material3Theme` 在同一个同步作用域内提供 Token 快照、私有 `material3-pressure-v1`
+   Recipe 集与 `UiDesignSystemAttribution`。
+2. `Material3Surface`、`Material3Card`、`Material3Button`、`Material3Switch`、
+   `Material3TextField` 与 `Material3NavigationBar` 是受控的第一方压力切片。API 归 Material
+   所有；执行层使用中立 Basic Primitive、保留的原生行为或中立自定义 View，不会在下层增加
+   Material 分支。
+3. `UiThemeMetadata.provenance.sourceId` 会标识 `android-xml`、`android-dynamic` 或具名静态
+   生产者。已映射 Android 值报告 Android 来源，静态回退报告 `FrameworkDefault`，
+   `UiThemeOverride` 只把实际替换的 Token 家族标成 `Override`。
+4. `DesignSystemDiagnostics.current` 会报告设计系统身份、Recipe 集身份、Backend、一致性、能力
+   路径与回退证据；它是诊断数据，不是 Recipe Registry。
+5. 设置页主题矩阵使用刻意不同的 Android XML、Material 静态值和应用覆盖配色与形状。截图测试
+   直接读取生产来源与归属值，并分别使用身份、组件和 Navigation 锚点。
 
 实现约束：
 
@@ -227,7 +244,7 @@ translation_status: current
 ```kotlin
 val themeRefreshController = Material3ThemeRefreshController()
 
-setUiContent(themeRefreshController = themeRefreshController) {
+setMaterial3UiContent(themeRefreshController = themeRefreshController) {
     // content
 }
 
@@ -259,6 +276,8 @@ setUiContent {
 5. 运行时切换使用新 Provider 替换根与 Session，不修改全局 Design System 对象。
 6. 中立 `viewcompose-android` Host 不安装设计系统；应用显式选择 `viewcompose-oneui7` 时不会继承
    Material 根 Context。
+7. 静态快照报告 `viewcompose-oneui7/static` 与 `FrameworkDefault` 来源；
+   `DesignSystemDiagnostics.current` 会导出与截图证据相同的五家族 Recipe、Backend 与一致性归属。
 
 支持范围、一致性标签、降级和发布限制见
 [One UI 7 五组件 Alpha 模块手册](../modules/viewcompose-oneui7/README.md)。
@@ -284,7 +303,9 @@ setUiContent {
 4. demo 验证：Light/Dark + 局部覆盖场景
 5. 测试补齐：单测或 instrumentation 至少覆盖一种回归路径
 
-当前主题语义的权威 demo 验证入口为 `Diagnostics -> 主题诊断`。`Foundations` 中的 theme/overrides/typography 页面继续保留为教学与示例入口，不承担最终人工回归口径。
+设计 Token 的权威验收路径为 `设置 -> 主题与 Token 验证`，再选择 Android XML、Material 静态
+或应用覆盖 Fixture。`Diagnostics -> 主题诊断` 继续作为完整 Token 浏览器；`Foundations` 中的
+Theme/Override/Typography 页面保留为教学示例，不承担最终人工回归口径。
 
 ## 9. 当前阶段重点
 

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 01c898730f1465516b35a299e63959fe7a0562f2ad13e21961071723ac6d09d3
+translation_source_hash: e40875d786c3427c9e499f68973a1acb6f97353c0b4095218d3bcdcc57007bd8
 translation_status: current
 ---
 
@@ -51,7 +51,7 @@ translation_status: current
 | `viewcompose-constraintlayout-androidx` | ConstraintLayout 组件 DSL（`ConstraintLayout/createRef(s)/constrainAs/constrain/constraintSet`） | 仅承载约束布局 DSL 与 scope；平台渲染实现仍在 `viewcompose-renderer-android` |
 | `viewcompose-renderer-android` | Android View 渲染实现（reconcile、binder、patch、container、框架 shape/progress 绘制） | 只消费可移植契约，不承载业务 DSL 或 Material 控件 |
 | `viewcompose-host-android` | 底层 Android Engine 宿主（`renderInto/RenderSession`、`AndroidView/nativeView`、渲染平台安装） | 不提供 Activity/Fragment 便捷入口，不依赖 Material |
-| `viewcompose-material3` | Material 3 主题快照、Token 映射、动态颜色策略与刷新生命周期 | 独占 Material/AppCompat 主题解释；UI Foundation 与 Android Engine 不依赖它 |
+| `viewcompose-material3` | Material 3 主题快照、Token 映射、动态颜色策略、刷新生命周期与受控具名组件压力切片 | 独占 Material/AppCompat 主题解释及 Material Recipe/组件；UI Foundation 与 Android Engine 不依赖它 |
 | `viewcompose-material3-android` | 具名 Material 3 Android 应用聚合与 Activity/Fragment Host 集成 | 在 View 构造前解析 Material 根 Context，再把挂载委托给中立 Android 聚合模块，并提供匹配的 Token 快照 |
 | `viewcompose-oneui7` | 静态 One UI 7 Alpha Token 与限定的 Button、Surface、Switch、TextField、纯文字 NavigationBar 组件集 | 独占其命名 Recipe 与组合组件；不依赖 Material，也不向 Android Renderer 增加 Design System 分支 |
 | `viewcompose-android` | 中立 Android Consumer 聚合包与 Activity/Fragment `setUiContent` 入口 | 聚合默认 Engine、UI Foundation、Lifecycle 与 ViewModel 集成，不选择 Material 或其他设计系统；显式根 Context 与 Composition Provider 决定设计策略 |

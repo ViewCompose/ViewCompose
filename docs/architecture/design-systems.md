@@ -387,28 +387,33 @@ measured result passes the plan's behavior, compatibility, visual, and performan
 revert the component wiring without weakening a shared invariant. Low-benefit module churn,
 speculative extension points, and broad widget replacement are intentionally deferred.
 
-## 15. Current known nonconformance and gaps
+## 15. Current implementation status and bounded gaps
 
-The accepted architecture is ahead of parts of the implementation in these bounded areas:
+The architecture-first convergence is implemented for the current pressure scope:
 
-1. The neutral Host extraction is complete: `viewcompose-android` exposes no Material policy and
-   `viewcompose-material3-android` owns named Material root-context resolution. Delayed root,
-   overlay, lazy, and navigation provenance still needs convergence as the next acceptance slice.
-2. `viewcompose-material3` is primarily a theme adapter while `viewcompose-oneui7` already owns a
-   component slice. Material needs to converge on the same token/recipe/component ownership model
-   without moving Material widgets into Renderer.
-3. Foundation defaults and native widget mappings need an explicit audit for accidental Material
-   geometry, color, and context assumptions.
-4. The repository-wide component/backend inventory and neutral-host placement guards are complete;
-   future mappings must keep that executable inventory current.
-5. Token-source and backend provenance exist only partially in demo/screenshot diagnostics; they
-   must become reliable acceptance evidence.
-6. A second context-changing non-Material system has not demonstrated the need for a public host
-   adapter SPI. The first extraction therefore remains internal and explicit.
+1. `viewcompose-android` is neutral, `viewcompose-material3-android` owns Material root-context
+   resolution, and root, overlay, lazy, and navigation sessions retain one coherent context/local
+   snapshot.
+2. Material 3 and One UI each own a five-family token/recipe/component slice. They share neutral
+   execution contracts but deliberately keep different public vocabularies and backend choices.
+3. The Foundation-default audit retains semantic primitives as reusable values and classifies
+   existing high-level defaults as compatibility policy. Named Material and One UI geometry stays
+   in their modules; native editing, range, and selection behavior remains in Android cores.
+4. The executable node/backend inventory covers every renderer node. Isolation guards reject named
+   design systems in neutral layers, direct Material/One UI coupling, and Material dependencies in
+   One UI.
+5. Theme metadata reports base producer plus effective per-family origin. Design-system diagnostics
+   report recipe, backend, conformance, capability, and fallback evidence. The Settings matrix
+   asserts these production values for Android XML, static Material, and application overrides.
+6. No current evidence justifies replacing native `EditText`, Slider/SeekBar, Checkbox, or Radio
+   behavior. Material Switch retains the native core; One UI Switch uses the proven controlled
+   anchored-drag composite. Future replacements reopen their component-specific parity gate.
 
-These gaps are ordered, baselined, and assigned rollback gates in the
-[active execution plan](../project/plans/multi-design-system-high-fidelity.md). They do not authorize
-new exceptions below the design-system boundary.
+One intentional gap remains: a second context-changing non-Material system has not demonstrated
+the need for a public host-adapter SPI. Explicit assembly remains safer than a speculative plugin
+surface. Release-device performance, Samsung visual acceptance, and Maven publication remain
+release gates in the [active execution plan](../project/plans/multi-design-system-high-fidelity.md),
+not exceptions below the design-system boundary.
 
 ## 16. Related documents
 

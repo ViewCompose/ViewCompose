@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Establish neutral Surface, Button, shape, motion, controlled-toggle interaction, and collection-accessibility foundations for multiple design systems and add the independent One UI 7 five-component alpha artifact.",
+  "summary": "Establish neutral component, motion, interaction, accessibility, host, and provenance foundations for multiple design systems; add independent Material 3 and One UI 7 five-family component slices with explicit backend diagnostics.",
   "changes": [
     { "artifact": "viewcompose-animation-core", "impact": "feature" },
     { "artifact": "viewcompose-animation", "impact": "feature" },

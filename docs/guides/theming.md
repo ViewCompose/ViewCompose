@@ -165,7 +165,9 @@ Responsibilities:
 
 1. `SnapshotReader` reads Android, AppCompat, and Material theme fields in batches.
 2. `ThemeTokenMapper` maps platform fields to framework tokens and applies fallback rules.
-3. The bridge does not produce component defaults or bypass `Defaults`.
+3. The bridge produces semantic tokens only. Material-named components derive private typed
+   recipes from that snapshot; generic Foundation components and Renderer never branch on
+   Material identity.
 4. The `viewcompose-material3-android` `ComponentActivity/Fragment.setMaterial3UiContent` entry
    points resolve and provide Material 3 explicitly. The root container, framework native Views,
    `AndroidView`, and overlays share the same resolved context.
@@ -225,9 +227,27 @@ Current bridge matrix:
 
 The bridge does not:
 
-1. define application component defaults;
-2. introduce component-specific branches;
+1. define application component defaults or generic component policy;
+2. introduce component-specific branches in the token mapper or generic Renderer;
 3. guess control-size mappings merely to appear complete.
+
+Named component and provenance contract:
+
+1. `Material3Theme` provides one token snapshot, the private `material3-pressure-v1` recipe set,
+   and `UiDesignSystemAttribution` from the same synchronous scope.
+2. `Material3Surface`, `Material3Card`, `Material3Button`, `Material3Switch`,
+   `Material3TextField`, and `Material3NavigationBar` are the bounded first-party pressure slice.
+   Their APIs are Material-owned; their execution uses neutral Basic primitives, retained native
+   behavior, or a neutral custom View without adding Material branches below the boundary.
+3. `UiThemeMetadata.provenance.sourceId` identifies `android-xml`, `android-dynamic`, or the named
+   static producer. Mapped Android values report Android origin, static fallbacks report
+   `FrameworkDefault`, and `UiThemeOverride` marks only replaced token families as `Override`.
+4. `DesignSystemDiagnostics.current` reports design-system identity, recipe-set identity, backend,
+   conformance, capability path, and fallback evidence. It is diagnostic data, not a recipe
+   registry.
+5. The Settings theme matrix renders intentionally different Android XML, static Material, and
+   application-override palettes and shapes. Screenshot tests read the production provenance and
+   attribution values and use separate identity, component, and navigation anchors.
 
 Implementation constraints:
 
@@ -242,7 +262,7 @@ Active refresh example:
 ```kotlin
 val themeRefreshController = Material3ThemeRefreshController()
 
-setUiContent(themeRefreshController = themeRefreshController) {
+setMaterial3UiContent(themeRefreshController = themeRefreshController) {
     // content
 }
 
@@ -276,6 +296,9 @@ The boundary is intentionally different from the Material bridge:
    design-system object.
 6. The neutral `viewcompose-android` host installs no design system. Applications opt into
    `viewcompose-oneui7` explicitly without inheriting a Material root Context.
+7. The static snapshot reports `viewcompose-oneui7/static` plus `FrameworkDefault` provenance.
+   `DesignSystemDiagnostics.current` exports the same five-family recipe/backend/conformance
+   attribution used by screenshot evidence.
 
 See the [One UI 7 five-component alpha module manual](../modules/viewcompose-oneui7/README.md) for
 the supported component set, conformance labels, fallbacks, and release limitations.
@@ -299,9 +322,10 @@ Adding a theme field or override capability requires:
 4. Light/Dark and local-override Demo coverage;
 5. at least one unit or instrumentation regression path.
 
-The authoritative manual verification path is `Diagnostics -> Theme diagnostics`. The theme,
-override, and typography pages under `Foundations` remain teaching examples and are not the final
-regression contract.
+The authoritative design-token acceptance path is `Settings -> Theme and token verification`,
+then the Android XML, Material static, or application-override fixture. `Diagnostics -> Theme
+diagnostics` remains the broad token explorer. The theme, override, and typography pages under
+`Foundations` remain teaching examples and are not the final regression contract.
 
 ## 9. Current priorities
 

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/design-systems.md
-translation_source_hash: a013db73f88bfe9034fd7775f12e48c289ad4ae14b1325ff212a41f0e3c11356
+translation_source_hash: b6fef7448516d7f15a33c911404be865c8c790874f0d3423667fc9d4e893bb4b
 translation_status: current
 ---
 
@@ -349,25 +349,30 @@ Diagnostics 是架构证据，不是可有可无的 Demo 装饰。如果审查�
 性能门禁时才保留，否则回退组件接线且不得弱化共享不变量。低收益模块调整、推测性扩展点和大范围
 控件替换继续延后。
 
-## 15. 当前已知不符合项与缺口
+## 15. 当前实现状态与有限缺口
 
-已接受架构在以下有限区域领先于当前实现：
+当前压力范围的架构优先收敛已经落地：
 
-1. 中立 Host 拆分已经完成：`viewcompose-android` 不再暴露 Material Policy，具名
-   `viewcompose-material3-android` 持有 Material 根 Context 解析。下一验收切片仍需收敛延迟 Root、
-   Overlay、Lazy 与 Navigation 的 Provenance。
-2. `viewcompose-material3` 主要还是 Theme Adapter，而 `viewcompose-oneui7` 已拥有一组组件。
-   Material 需要收敛到相同的 Token/Recipe/Component 所有权模型，但不能把 Material Widget 移入
-   Renderer。
-3. Foundation 默认值与原生 Widget 映射需要显式审计，排查意外的 Material Geometry、Color 与
-   Context 假设。
-4. 全仓组件/Backend 清单与中立 Host Placement Guard 已完成；后续映射必须同步维护该可执行清单。
-5. Token Source 与 Backend Provenance 在 Demo/截图诊断中仍不完整，必须升级为可靠验收证据。
-6. 尚无第二个会改变 Context 的非 Material 系统证明公开 Host Adapter SPI 的必要性，因此第一次
-   拆分保持内部显式组装。
+1. `viewcompose-android` 保持中立，`viewcompose-material3-android` 持有 Material 根 Context
+   解析；Root、Overlay、Lazy 与 Navigation Session 会保留同一份一致的 Context/Local 快照。
+2. Material 3 与 One UI 分别拥有五家族 Token、Recipe 与组件切片。两者共享中立执行契约，但会
+   刻意保留不同公开词汇和 Backend 选择。
+3. Foundation 默认值审计保留可复用语义 Primitive，并把既有高层默认值归类为兼容策略。具名
+   Material/One UI 几何留在各自模块；原生编辑、Range 与 Selection 行为继续由 Android Core
+   持有。
+4. 可执行 Node/Backend 清单覆盖全部 Renderer Node。隔离门禁会拒绝中立层中的具名设计系统、
+   Material 与 One UI 直接耦合，以及 One UI 对 Material 的依赖。
+5. Theme Metadata 会报告基础生产者与逐家族有效来源；设计系统诊断会报告 Recipe、Backend、
+   一致性、能力与回退证据。设置页矩阵会对 Android XML、Material 静态值和应用覆盖直接断言这些
+   生产值。
+6. 当前没有证据支持替换原生 `EditText`、Slider/SeekBar、Checkbox 或 Radio 行为。Material
+   Switch 保留原生 Core，One UI Switch 使用已经验证的受控 Anchored Drag 组合；未来替换必须
+   重新打开对应组件的行为对等门禁。
 
-这些缺口的顺序、Baseline 和回退门禁都记录在[有效执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)
-中。它们不授权在设计系统边界以下新增例外。
+仍保留一个有意缺口：尚无第二个会改变 Context 的非 Material 系统证明公开 Host Adapter SPI
+确有必要，因此显式组装比推测性 Plugin Surface 更安全。发布设备性能、Samsung 视觉验收与 Maven
+发布仍是[有效执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)
+中的发布门禁，不构成在设计系统边界下新增例外的理由。
 
 ## 16. 关联文档
 
