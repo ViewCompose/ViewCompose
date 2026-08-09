@@ -1,6 +1,6 @@
 ---
 translation_source: guides/overlays.md
-translation_source_hash: b335839dec107a1fcfb1c42ff0e1c74d6fc78c6b276367c24d82e96eb5702e58
+translation_source_hash: f79bf8471a83d1b50275632def3fcedd017079570b897ecf04bf9786e21668ef
 translation_status: current
 ---
 
@@ -8,6 +8,20 @@ translation_status: current
 
 `Dialog`、`Popup` 和 `ModalBottomSheet` 使用绑定到 Session 的 overlay surface。`Snackbar`
 和 `Toast` 共用宿主持有的瞬态反馈通道，因此即使两者在同一次渲染中声明，顺序也保持确定。
+
+## Backend 选择
+
+`viewcompose-overlay-android` 是中立 Android 传输层，负责 Dialog、PopupWindow、Toast、嵌套
+Overlay Render Session、锚点观察与清理，不依赖 Material。中立 `setUiContent` 与 Android
+Navigation Host 会显式选择它。
+
+`viewcompose-overlay-material3-android` 只增加 Material Snackbar 与 Modal Bottom Sheet
+Presenter。`setMaterial3UiContent` 显式选择该 Adapter；把产物放入 Runtime Classpath 不会改变
+中立或 One UI Root。自定义底层 Host 可以使用 `AndroidOverlayHostDefaults.androidOrNoOp`，但
+Service Discovery 只接受一个中立 Provider，永远不选择设计系统。
+
+当前设计系统 Attribution 会报告每种 Overlay 的 Transport、Presenter、Conformance 与 Fallback。
+One UI 目前把 Snackbar 与 Modal Bottom Sheet 报告为 `Unsupported`，不会静默回退 Material。
 
 ## Popup 定位
 

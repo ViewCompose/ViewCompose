@@ -49,7 +49,8 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-material3-android` | Named Material 3 Android application aggregate and Activity/Fragment host integration | Resolves the Material root Context before View construction, then delegates mounting to the neutral Android aggregate and provides the matching token snapshot. |
 | `viewcompose-oneui7` | Static One UI 7 alpha tokens and the bounded Button, Surface, Switch, TextField, and text-only NavigationBar set | Owns its named recipes and composites; it has no Material dependency and adds no design-system branch to Android Renderer. |
 | `viewcompose-android` | Neutral Android consumer aggregate and Activity/Fragment `setUiContent` entry points | Aggregates the default engine, UI Foundation, Lifecycle, and ViewModel integrations without selecting Material or another design system. An explicit root Context and composition provider establish design policy. |
-| `viewcompose-overlay-material3-android` | Android overlay host and presenters for dialogs, popups, bottom sheets, snackbars, and toasts | Platform implementation only; it does not depend on renderer resources. |
+| `viewcompose-overlay-android` | Material-free Android overlay transport for dialogs, popups, toasts, nested surfaces, and root/session cleanup | Supplies narrow Snackbar and modal-sheet presenter slots; it never selects or depends on a design system. |
+| `viewcompose-overlay-material3-android` | Material Snackbar and modal-bottom-sheet adapter | Explicitly composes Material presenters with the neutral Android transport and registers no whole-host provider. |
 | `viewcompose-image-coil` | Optional image-loading adapter | Implements `UiImageLoader` for Coil 3; it accepts the general source/request contract without feeding Coil concerns back into the renderer core. |
 | `viewcompose-image-glide` | Optional image-loading adapter | Implements `UiImageLoader` for Glide 5 with target-scoped `RequestManager` resolution and application-owned `AppGlideModule` configuration. |
 | `viewcompose-lifecycle-androidx` | Lifecycle-aware collection APIs and lifecycle Local entry points | Does not contain Android View implementations or add host-injection logic. |
@@ -79,7 +80,7 @@ layer when the dependency contract permits it; lower layers never depend on a hi
    or Android Engine. Only material3 interprets Material/AppCompat themes; oneui7 uses static,
    ViewCompose-owned values and has no Material dependency.
 5. **Integrations** contains navigation-android, lifecycle-androidx, viewmodel-androidx,
-   constraintlayout-androidx, overlay-material3-android, image adapters, and shadow-android. A name
+   constraintlayout-androidx, overlay-android, overlay-material3-android, image adapters, and shadow-android. A name
    suffix identifies the external platform or design-system ownership when that distinction affects
    dependencies.
 6. `viewcompose-android` and `viewcompose-material3-android` are application aggregates, not a
@@ -163,7 +164,9 @@ flowchart TD
 
 ### 4.1 Platform implementation
 
-1. Android Material dialog, popup, toast, and snackbar host implementations live only in `viewcompose-overlay-material3-android`.
+1. Generic Android Dialog, PopupWindow, Toast, anchor observation, and nested overlay containers
+   live only in `viewcompose-overlay-android`. Material Snackbar and modal-sheet presenters live
+   only in `viewcompose-overlay-material3-android`.
 2. `viewcompose-ui-foundation` retains renderer-independent declaration contracts and runtime
    composition capabilities behind opaque host-installed platform handles.
 3. Demo-only logic must not flow back into framework modules.
@@ -219,8 +222,12 @@ The complete design-system ownership and onboarding rules are in the
    named `setMaterial3UiContent(...)` entry points live in `viewcompose-material3-android`. Neither
    exposes internal `RenderSession`, and both dispose it automatically using the Fragment view
    lifecycle where applicable.
-2. The default overlay factory uses `AndroidOverlayHostDefaults.androidOrNoOp(...)`: Host Android discovers implementations through `AndroidOverlayHostFactoryProvider` and `ServiceLoader`, otherwise it falls back to UI Foundation's no-op host with a diagnostic.
-3. `viewcompose-overlay-material3-android` registers `com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider` through `META-INF/services`; string reflection is forbidden.
+2. Neutral Activity/Fragment and nested navigation roots explicitly construct
+   `viewcompose-overlay-android`; Material roots explicitly construct the Material adapter. Runtime
+   classpath order never selects a design system.
+3. `AndroidOverlayHostDefaults.androidOrNoOp(...)` and `ServiceLoader` remain only for custom
+   low-level hosts. Exactly one neutral provider is permitted; zero providers returns no-op and
+   duplicates fail deterministically. The Material adapter registers no provider.
 4. Public host callbacks expose only UI Foundation diagnostic types; renderer diagnostic types remain internal adapters.
 5. System-bar insets use `Modifier.systemBarsInsetsPadding(...)`, not a global Activity option.
 6. host-android atomically installs the render engine, frame scheduler, composition coroutine context, focus adapter, and logging/tracing adapter through `installRenderSessionPlatform(...)`. UI Foundation coordinates composition against opaque `RenderContainerHandle` values; only Android Engine unwraps them as `ViewGroup`. A session captures one platform snapshot, and missing or duplicate installation fails immediately rather than degrading piecemeal.

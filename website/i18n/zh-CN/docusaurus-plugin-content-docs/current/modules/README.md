@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: b68a3ebfebde99c6c4e4125c72ef9eb925b8ea2c672d37e940fd83d97ecc4468
+translation_source_hash: 8ac76a1d877d72b06481340ec871bc78fd904f83c216d76b54f10763d2f62c62
 translation_status: current
 ---
 
@@ -27,6 +27,7 @@ translation_status: current
 | `viewcompose-oneui7` | Design System | One UI 7 五组件 Alpha Token 与组件集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-oneui7) |
 | `viewcompose-android` | Aggregate | 中立 Android 应用入口依赖 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-android) |
 | `viewcompose-navigation-android` | Integration | Android 导航宿主集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-android) |
+| `viewcompose-overlay-android` | Integration | 不依赖 Material 的 Android Overlay 传输 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-android) |
 | `viewcompose-overlay-material3-android` | Integration | 基于 Material 的 Android 浮层呈现 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-material3-android) |
 | `viewcompose-image-coil` | 集成 | 基于 Coil 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-coil) |
 | `viewcompose-image-glide` | 集成 | 基于 Glide 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-glide) |

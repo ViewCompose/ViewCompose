@@ -96,6 +96,8 @@ private typed recipes remain separate and no One UI policy enters UI Foundation 
 
 The module owns token and component policy only. It does not install Android window behavior,
 overlay presenters, system-bar policy, a renderer branch, or a mutable global registry.
+Its integration attribution declares neutral Android Dialog/Popup/Toast paths and marks Snackbar
+and modal bottom sheet `Unsupported`; it never reports or selects a Material fallback.
 
 ## Verification and limitations
 

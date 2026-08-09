@@ -66,9 +66,10 @@ by a later renderer or child render session.
   paths such as `colors.primary` inherit a family source when no exact entry exists, allowing
   diagnostics to distinguish framework defaults, Android theme or dynamic mapping, named static
   tokens, and application overrides without changing visual resolution.
-- `UiDesignSystemAttribution` and `UiComponentAttribution` are bounded Q2 evidence snapshots, not a
+- `UiDesignSystemAttribution`, `UiComponentAttribution`, and `UiIntegrationAttribution` are bounded Q2 evidence snapshots, not a
   recipe registry. `DesignSystemAttributionProvider` is the Q3 scope used by named systems to
-  publish recipe identity, neutral backend, conformance, capability path, and fallback;
+  publish recipe identity, neutral backend, integration transport/presenter, conformance,
+  capability path, and fallback;
   `DesignSystemDiagnostics.current` reads that same local in eager or captured delayed content.
 - `UiButtonSizing` keeps the effective minimum target height separate from the visible surface
   height. Neutral and existing custom themes preserve their previous rendering because each visual
@@ -145,7 +146,8 @@ Because the current line is alpha, the documentation site intentionally does not
   roll that tree back.
 - Overlay requests are declarative and scoped by render-session id plus request key. Omitting a
   previously committed request dismisses it. Platform presentation requires
-  `viewcompose-overlay-material3-android` or a custom `OverlayHost`.
+  `viewcompose-overlay-android`, a named adapter such as
+  `viewcompose-overlay-material3-android`, or a custom `OverlayHost`.
 - Lazy collection keys must remain stable and unique. Reuse, prefetch, and motion policies are
   renderer hints; they must not be used as business state.
 - Image components keep source identity and request options in the `NodeSpec`. A loader is looked up

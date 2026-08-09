@@ -217,6 +217,24 @@ refresh; they cannot fall back to process-global policy.
 
 ### 7.3 Host API rules
 
+Overlay selection follows the same root boundary as Context and token resolution:
+
+- `viewcompose-overlay-android` owns Material-free Android window transport, nested render
+  containers, Toast, and lifecycle cleanup;
+- named adapters supply only behavior with retained design-library value, currently Material
+  Snackbar and modal bottom sheet;
+- neutral `setUiContent` constructs the neutral transport explicitly, while
+  `setMaterial3UiContent` constructs the Material adapter explicitly;
+- service discovery is a low-level neutral-host convenience and may never choose among design
+  systems; and
+- `UiIntegrationAttribution` travels with the design-system snapshot and records transport,
+  presenter, conformance, and fallback for delayed overlay diagnostics.
+
+One UI currently uses neutral Dialog, Popup, and Toast behavior. Snackbar and modal bottom sheet
+remain `Unsupported`; a Material fallback is forbidden until One UI owns and verifies those
+recipes. Adding another design system does not require another Activity/Fragment extension unless
+that system must resolve a different Android Context before View construction.
+
 - `viewcompose-host-android` is always design-system neutral.
 - A generally named aggregate such as `viewcompose-android` must converge on neutral host entry
   points; Material convenience belongs in a Material-named module or compatibility facade.

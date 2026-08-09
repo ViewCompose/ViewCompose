@@ -45,6 +45,10 @@ immediately before Maven upload.
   foundations, Phase 3 semantic motion and compatible shape interpolation, and the Phase 6 public
   One UI 7 five-component alpha artifact. Reverse-dependency propagation remains release-planner
   owned.
+- [`20260809-overlay-android-reactivation.json`](../../../release/changes/20260809-overlay-android-reactivation.json)
+  records the deliberate `viewcompose-overlay-android` coordinate reactivation, neutral transport
+  extraction, explicit root selection, Material adapter narrowing, and affected aggregate/runtime
+  hard cuts.
 
 ## Objective
 
@@ -1071,8 +1075,8 @@ named integration; it never earns a design-system branch in Renderer.
 
 ## Phase 13: Android overlay ownership and selection baseline
 
-Status: in progress. The source, API, dependency, discovery, and coverage audit is recorded below;
-the pre-extraction test and Maven baselines remain to be frozen before production movement.
+Status: implemented. The source, API, dependency, discovery, and pre-extraction test baselines were
+recorded before production movement; final Maven and emulator evidence is tracked in Phase 16.
 
 Goal: distinguish platform window transport from Material presentation and prove the current
 selection failure before moving a published symbol or dependency.
@@ -1123,7 +1127,8 @@ weakening the ownership assertion.
 
 ## Phase 14: Neutral Android overlay transport extraction
 
-Status: planned after the Phase 13 baseline passes.
+Status: implemented. The reactivated coordinate is the single Material-free Android transport;
+behavioral, API, POM, and isolated-consumer acceptance remains part of the final verification run.
 
 Goal: publish one Material-free Android overlay transport and make unsupported presenter slots
 explicit without changing UI Foundation's request or session model.
@@ -1160,7 +1165,8 @@ presenters in neutral and Material modules.
 
 ## Phase 15: Explicit root overlay assembly and Material adapter narrowing
 
-Status: planned after Phase 14.
+Status: implemented. Neutral, navigation, and Material roots now select explicit root-scoped hosts;
+the Material whole-host provider has been removed.
 
 Goal: select overlay capabilities from the same root integration that resolves platform Context,
 without requiring every design system to publish Activity and Fragment extensions.
@@ -1196,7 +1202,8 @@ regresses. Never restore Material discovery as the neutral default.
 
 ## Phase 16: Overlay design provenance and cross-system acceptance
 
-Status: planned after Phase 15.
+Status: implementation complete; final emulator screenshots, Maven consumers, and performance
+evidence are in progress.
 
 Goal: prove that delayed overlay content and platform presenter selection report one coherent
 design-system owner, while keeping unsupported alpha capabilities honest.

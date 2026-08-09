@@ -4,6 +4,22 @@
 `Toast` use one host-owned transient-feedback lane so their ordering is deterministic even when
 both types are declared in the same render.
 
+## Backend selection
+
+`viewcompose-overlay-android` is the neutral Android transport. It owns Dialog, PopupWindow, Toast,
+nested overlay render sessions, anchor observation, and cleanup without a Material dependency.
+Neutral `setUiContent` and the Android navigation host select it explicitly.
+
+`viewcompose-overlay-material3-android` adds only Material Snackbar and modal-bottom-sheet
+presenters. `setMaterial3UiContent` selects that adapter explicitly; placing the artifact on the
+runtime classpath does not alter a neutral or One UI root. Custom low-level hosts may use
+`AndroidOverlayHostDefaults.androidOrNoOp`, but service discovery accepts exactly one neutral
+provider and never selects a design system.
+
+The active design-system attribution reports each overlay transport, presenter, conformance, and
+fallback. One UI currently reports Snackbar and modal bottom sheet as `Unsupported`, rather than
+silently falling back to Material.
+
 ## Popup positioning
 
 `Popup` resolves the anchor and popup in window coordinates. The Android presenter observes global

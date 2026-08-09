@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: e40875d786c3427c9e499f68973a1acb6f97353c0b4095218d3bcdcc57007bd8
+translation_source_hash: 6130de555a4e0bc5b159e8e4c307c5248c74e36dae97a0be21c4db530235ee2f
 translation_status: current
 ---
 
@@ -55,7 +55,8 @@ translation_status: current
 | `viewcompose-material3-android` | 具名 Material 3 Android 应用聚合与 Activity/Fragment Host 集成 | 在 View 构造前解析 Material 根 Context，再把挂载委托给中立 Android 聚合模块，并提供匹配的 Token 快照 |
 | `viewcompose-oneui7` | 静态 One UI 7 Alpha Token 与限定的 Button、Surface、Switch、TextField、纯文字 NavigationBar 组件集 | 独占其命名 Recipe 与组合组件；不依赖 Material，也不向 Android Renderer 增加 Design System 分支 |
 | `viewcompose-android` | 中立 Android Consumer 聚合包与 Activity/Fragment `setUiContent` 入口 | 聚合默认 Engine、UI Foundation、Lifecycle 与 ViewModel 集成，不选择 Material 或其他设计系统；显式根 Context 与 Composition Provider 决定设计策略 |
-| `viewcompose-overlay-material3-android` | Android overlay host/presenter（Dialog/Popup/ModalBottomSheet/Snackbar/Toast） | 只做平台实现，不依赖 renderer 资源 |
+| `viewcompose-overlay-android` | 不依赖 Material 的 Android Overlay 传输，负责 Dialog、Popup、Toast、嵌套 Surface 与 Root/Session 清理 | 提供窄型 Snackbar 与 Modal Sheet Presenter 插槽；不选择或依赖设计系统 |
+| `viewcompose-overlay-material3-android` | Material Snackbar 与 Modal Bottom Sheet Adapter | 把 Material Presenter 显式装配到中立 Android 传输，不注册完整 Host Provider |
 | `viewcompose-image-coil` | 可选图片加载适配器 | 为 Coil 3 实现 `UiImageLoader`，接收通用 source/request 契约，不把 Coil 关注点回流到 renderer 核心 |
 | `viewcompose-image-glide` | 可选图片加载适配器 | 为 Glide 5 实现 `UiImageLoader`，按目标解析 `RequestManager` 并使用应用所有的 `AppGlideModule` 配置 |
 | `viewcompose-lifecycle-androidx` | 生命周期感知的状态收集 API（`collectAsStateWithLifecycle`）与生命周期 Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
@@ -74,7 +75,7 @@ translation_status: current
 2. **UI Foundation**：ui-foundation、animation、gesture、graphics 等渲染器无关公开 UI 面。由于框架以 Android View 为目标，它可以描述 Android-only 声明值，但原生容器访问、宿主适配、日志、Trace 与调度必须由 Android Engine 安装；禁止依赖 Android Engine、Design System 或 Integrations。
 3. **Android Engine**：renderer-android 与 host-android，只负责把契约映射为 Android View，不承载 Material 设计策略或 AndroidX 功能集成。
 4. **Design System**：material3 与 oneui7。Design System 模块提供具体 Token Profile、解析后的 Recipe 与自有组合组件，但其身份不得泄漏到 UI Foundation 或 Android Engine。只有 material3 读取 Material/AppCompat Theme；oneui7 使用 ViewCompose 自有静态值且不依赖 Material。
-5. **Integrations**：navigation-android、lifecycle-androidx、viewmodel-androidx、constraintlayout-androidx、overlay-material3-android、图片适配器与 shadow-android。外部平台或设计系统会影响依赖时，模块名必须用后缀明确归属。
+5. **Integrations**：navigation-android、lifecycle-androidx、viewmodel-androidx、constraintlayout-androidx、overlay-android、overlay-material3-android、图片适配器与 shadow-android。外部平台或设计系统会影响依赖时，模块名必须用后缀明确归属。
 6. `viewcompose-android` 与 `viewcompose-material3-android` 是应用聚合包，不是第六层。前者保持
    中立；后者是单依赖 Material 应用路径，可以依赖中立聚合模块与 Material 适配器。
 7. preview、preview worker/runner/Gradle plugin 与 benchmark 属于工具层；运行时模块禁止依赖工具层，所有框架模块禁止依赖 `app`。
@@ -163,7 +164,9 @@ flowchart TD
 
 ### 4.1 平台实现边界
 
-1. Android `Dialog/PopupWindow/Toast/Snackbar` 宿主实现只放 `viewcompose-overlay-material3-android`。
+1. 通用 Android Dialog、PopupWindow、Toast、锚点观察与嵌套 Overlay 容器只放
+   `viewcompose-overlay-android`；Material Snackbar 与 Modal Sheet Presenter 只放
+   `viewcompose-overlay-material3-android`。
 2. `viewcompose-ui-foundation` 只保留渲染器无关声明契约，以及位于宿主所安装不透明平台 Handle
    之后的 runtime 组合能力。
 3. demo 专用逻辑不回流到框架模块。
@@ -216,8 +219,10 @@ flowchart TD
 1. `viewcompose-android` 提供中立 `ComponentActivity/Fragment.setUiContent(...)`；
    `viewcompose-material3-android` 提供具名 `setMaterial3UiContent(...)`。它们都不暴露内部
    `RenderSession`，重复设置内容时会替换旧 Session，并在对应 Lifecycle 销毁时自动 `dispose`。
-3. `setUiContent` 的默认 `overlayHostFactory` 走 `AndroidOverlayHostDefaults.androidOrNoOp(...)`：Host Android 优先通过 `AndroidOverlayHostFactoryProvider`（`ServiceLoader`）发现 Android 实现；缺失时回退 UI Foundation 的 no-op host 并输出提示。
-4. `viewcompose-overlay-material3-android` 必须通过 `META-INF/services` 注册 `com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider`，禁止回退字符串反射装配（`Class.forName`）。
+3. 中立 Activity/Fragment 与嵌套 Navigation Root 显式构造 `viewcompose-overlay-android`；
+   Material Root 显式构造 Material Adapter。Runtime Classpath 顺序不选择设计系统。
+4. `AndroidOverlayHostDefaults.androidOrNoOp(...)` 与 `ServiceLoader` 只保留给自定义底层 Host。
+   只允许一个中立 Provider；零个时回退 no-op，多个时确定性失败。Material Adapter 不注册 Provider。
 5. host 对外回调 `onRenderStats/onRenderResult` 只能暴露 core 自有诊断类型（`com.viewcompose.ui.foundation.RenderStats/RenderTreeResult`），renderer 诊断类型仅允许出现在 host 内部适配层。
 6. system bars insets 走组件侧 `Modifier.systemBarsInsetsPadding(...)`，不绑死 Activity 全局参数。
 7. `viewcompose-host-android` 必须通过 `installRenderSessionPlatform(...)` 一次性原子注册渲染引擎、帧调度 runtime、组合协程上下文、焦点适配以及日志/Trace 适配；UI Foundation 只面向不透明 `RenderContainerHandle` 协调组合，只有 Android Engine 能把它解包为 `ViewGroup`。`RenderSession` 创建时固定使用同一平台快照，缺失或重复安装立即失败。

@@ -1,13 +1,13 @@
 ---
 translation_source: modules/viewcompose-material3-android/README.md
-translation_source_hash: 75a3aa6484a03f007d5bf0f64c45a678210d081a4ae142b53b5db5dbcc1f91b4
+translation_source_hash: 4b3d2c6e792d057ea562a13b3f8a81442f0d675a763fe2cf5bdefb8766d7c6c0
 translation_status: current
 ---
 
 # Material 3 Android 应用集成
 
 `viewcompose-material3-android` 是 Android Material 3 应用推荐使用的单一依赖。它组合中立 Android
-应用聚合模块与 Material 3 适配器，并提供具名的 Activity 和 Fragment
+应用聚合模块、Material 3 适配器与 Material Overlay Adapter，并提供具名的 Activity 和 Fragment
 `setMaterial3UiContent` 入口。
 
 该构件是平台集成与发布边界，不是第二套 Renderer。它私有持有 Material 根 Context 解析，并通过
@@ -24,7 +24,7 @@ dependencies {
 - 稳定性：**Alpha**。
 - 平台：Android library，`minSdk 24`、`compileSdk 36`，Java 11 字节码。
 - API 依赖：`viewcompose-android` 与 `viewcompose-material3`。
-- Material Components、AppCompat、Host、Lifecycle 与 ViewModel 运行时依赖均会传递解析；只有业务
+- Material Components、AppCompat、中立/Material Overlay、Host、Lifecycle 与 ViewModel 运行时依赖均会传递解析；只有业务
   源码直接使用对应 API 时才需要显式声明。
 
 ## 具名 Material Host
@@ -51,6 +51,10 @@ class MainActivity : ComponentActivity() {
 `Material3ThemeRefreshController` 刷新。Provider 挂载期间会观察配置变化。重复调用
 `setMaterial3UiContent` 会释放旧 Render Session 并重建根节点；切换到根 Context 不同的设计系统
 时必须走该路径，不能只在旧 View 上替换 Token。
+
+默认 Overlay Factory 会显式构造 Material Adapter。Material 行为不通过 `ServiceLoader` 选择，
+因此应用其他位置存在本聚合包时，另一个设计系统 Root 也不会意外获得 Material Snackbar 或
+Bottom Sheet 行为。
 
 ## 边界规则
 

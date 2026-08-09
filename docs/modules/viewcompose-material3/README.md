@@ -115,6 +115,10 @@ origin; `UiThemeOverride` marks only the token families replaced by the applicat
 static snapshot also reports `FrameworkDefault`, rather than misclassifying first-party defaults
 as application-owned custom values.
 
+`UiDesignSystemAttribution.integrations` records the overlay transport and per-type presenters.
+Material Dialog/Popup content uses captured Material locals, Snackbar and modal bottom sheet report
+their Material Components adapters, and Android Toast is an explicit degraded platform fallback.
+
 The adapter does not add Material policy to Android Renderer. Component defaults resolve semantic
 roles in UI Foundation before a NodeSpec reaches the renderer. Button visual/effective height
 separation is explicitly represented by the sizing tokens and NodeSpec. The native compact-input

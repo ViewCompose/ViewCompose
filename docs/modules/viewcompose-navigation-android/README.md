@@ -20,7 +20,7 @@ dependencies {
 - Stability: **Alpha**. Host, transition, and predictive-Back contracts may evolve between alphas.
 - Platform: Android library with a minimum SDK inherited from the repository Android policy.
 - Direct ViewCompose dependencies include Navigation Core, Android Host, Renderer, UI Foundation,
-  lifecycle, and ViewModel integration.
+  lifecycle, ViewModel integration, and the neutral Android overlay transport.
 - The artifact transitively supplies `viewcompose-navigation-core`; applications may depend on the
   core artifact alone when they need only the platform-neutral model.
 
@@ -54,6 +54,10 @@ Change `contentKey` when destination content closes over non-observable values. 
 invalidates its owning destination session directly. Changing `key`, controller identity, lifecycle
 owner, debug identity, or overlay factory recreates the native host because those inputs change
 ownership rather than content.
+
+The default nested overlay factory explicitly constructs `viewcompose-overlay-android`; it never
+discovers a Material backend from classpath order. A named design integration may pass an explicit
+factory when its destination surfaces require additional presenters.
 
 ## Command results and re-entrancy
 

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: e1602a316ac19a4cff1de865bb151fa5c122a08cb75b7fe48a6a985fc935116b
+translation_source_hash: b7fa72ffc865cab559a2b0d6e9bb620006c695c2c07bba37ef6d5aad6e33d5aa
 translation_status: current
 ---
 
@@ -109,6 +109,10 @@ Appearance 继续作为 Title/Body/Label 家族回退。缺失的 Display 和 He
 路径都能解析有效来源：存在的 Android 属性标记为 Android Theme 或 Dynamic；缺失值继续标记为
 具名静态 Material 回退，其来源为 `FrameworkDefault`；`UiThemeOverride` 只标记应用实际替换的
 Token 家族。完整静态快照同样报告 `FrameworkDefault`，不会再把第一方默认值误标成应用自定义值。
+
+`UiDesignSystemAttribution.integrations` 记录 Overlay Transport 与逐类型 Presenter。Material
+Dialog/Popup 内容使用捕获的 Material Local，Snackbar 与 Modal Bottom Sheet 报告 Material
+Components Adapter，Android Toast 是显式 Degraded 平台 Fallback。
 
 本适配器不会把 Material 策略放进 Android Renderer。组件默认值在 NodeSpec 进入 Renderer
 之前，已在 UI Foundation 中解析为语义角色。Button 的可见/有效高度分离会由尺寸 Token 与

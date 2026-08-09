@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 4438474eb10b4017fc9d0e7aa7e48837b20413f771dbe7098a1dfe1b0e5c46da
+translation_source_hash: f4c3203af7b3ca86dafbb9711c669d20f91b627366474dd931862fa03653059a
 translation_status: current
 ---
 
@@ -74,6 +74,9 @@ setUiContent {
 `viewcompose-oneui7/static` Token 生产者、Recipe 身份、中立 Backend、Equivalent 一致性与能力
 路径。在应用显式覆盖之前，快照来源报告为 `FrameworkDefault`。这些元数据只作为证据；私有强类型
 Recipe 仍保持独立，One UI 策略不会进入 UI Foundation 或 Renderer。
+
+集成 Attribution 声明中立 Android Dialog/Popup/Toast 路径，并把 Snackbar 与 Modal Bottom Sheet
+标记为 `Unsupported`；它不会报告或选择 Material Fallback。
 
 ## 行为与降级契约
 

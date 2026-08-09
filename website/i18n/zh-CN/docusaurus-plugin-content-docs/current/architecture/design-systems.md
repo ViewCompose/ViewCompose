@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/design-systems.md
-translation_source_hash: b6fef7448516d7f15a33c911404be865c8c790874f0d3423667fc9d4e893bb4b
+translation_source_hash: a6a2b78a93b54d10dfa4a3691820c855c445ce121a167314de9384fdec7875b6
 translation_status: current
 ---
 
@@ -198,6 +198,20 @@ Overlay、Lazy Item Session、Navigation Page Session 与延迟内容必须捕�
 不能回退到进程级全局策略。
 
 ### 7.3 Host API 规则
+
+Overlay 选择遵循与 Context、Token 解析相同的 Root 边界：
+
+- `viewcompose-overlay-android` 负责不依赖 Material 的 Android Window 传输、嵌套渲染容器、
+  Toast 与生命周期清理；
+- 具名 Adapter 只提供保留设计库价值的行为，目前是 Material Snackbar 与 Modal Bottom Sheet；
+- 中立 `setUiContent` 显式构造中立传输，`setMaterial3UiContent` 显式构造 Material Adapter；
+- Service Discovery 只是底层中立 Host 的便捷能力，不得在设计系统间选择；
+- `UiIntegrationAttribution` 随设计系统快照传递，为延迟 Overlay 诊断记录 Transport、Presenter、
+  Conformance 与 Fallback。
+
+One UI 当前使用中立 Dialog、Popup 与 Toast。Snackbar 与 Modal Bottom Sheet 保持
+`Unsupported`；在 One UI 拥有并验证对应 Recipe 前禁止 Material Fallback。只有必须在 View
+构造前解析不同 Android Context 的设计系统才需要新增 Activity/Fragment Extension。
 
 - `viewcompose-host-android` 始终保持设计系统无关。
 - `viewcompose-android` 这类通用名称的聚合模块必须收敛到中立 Host 入口；Material 便捷能力属于

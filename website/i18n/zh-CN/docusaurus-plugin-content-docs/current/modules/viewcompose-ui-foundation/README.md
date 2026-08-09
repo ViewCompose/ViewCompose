@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 3d5d492a9f06c4a7089351bacd1bd7990e997c35406c6599d6187d737dd45255
+translation_source_hash: 0151e626aeff97e6ad64e778b1ec43609dc973f458b4444e70b22f1b1a3ffcbc
 translation_status: current
 ---
 
@@ -66,9 +66,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - `UiTokenProvenance` 是附着在 `UiThemeMetadata` 上的 Q2 非视觉来源快照。若
   `colors.primary` 这类精确路径没有独立记录，就继承所在家族来源，因此诊断可以区分框架默认、
   Android 主题或动态映射、具名静态 Token 与应用 Override，而不改变视觉解析。
-- `UiDesignSystemAttribution` 与 `UiComponentAttribution` 是有界 Q2 证据快照，不是 Recipe
-  Registry。具名系统通过 Q3 `DesignSystemAttributionProvider` 提供 Recipe 身份、中立 Backend、
-  Conformance、能力路径和 Fallback；立即内容与已捕获的延迟内容都可从
+- `UiDesignSystemAttribution`、`UiComponentAttribution` 与 `UiIntegrationAttribution` 是有界 Q2
+  证据快照，不是 Recipe Registry。具名系统通过 Q3 `DesignSystemAttributionProvider` 提供 Recipe
+  身份、中立 Backend、集成 Transport/Presenter、Conformance、能力路径和 Fallback；立即内容与已捕获的延迟内容都可从
   `DesignSystemDiagnostics.current` 读取同一个 Local。
 - `UiButtonSizing` 把有效最小触控高度与可见 Surface 高度分开。中性主题和现有自定义主题中，
   每个可见高度默认等于对应的有效高度，因此维持原有渲染；设计系统适配器可以选择更小且居中
@@ -131,7 +131,8 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - 组合准备和树渲染失败会保留上一帧。渲染器建立新原生树之后发生的失败，会按已提交帧失败
   报告，无法回滚该原生树。
 - 浮层请求是声明式的，按 Render Session ID 与 Request Key 划分作用域。后续提交省略已有请求
-  就会关闭它。平台呈现需要 `viewcompose-overlay-material3-android` 或自定义 `OverlayHost`。
+  就会关闭它。平台呈现需要 `viewcompose-overlay-android`、
+  `viewcompose-overlay-material3-android` 这类具名 Adapter，或自定义 `OverlayHost`。
 - Lazy 容器 Key 必须稳定且唯一。复用、预取与动效 Policy 是渲染器提示，不能作为业务状态。
 - 图片组件会把 source 身份和请求 options 保存在 `NodeSpec` 中。发射节点时读取 loader，因此
   更换 provider 是明确的渲染输入。渲染器会在启动新工作前替换旧工作，并在节点或 Session 离开

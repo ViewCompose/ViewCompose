@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-android/README.md
-translation_source_hash: c08f042c3d6f9df8a7251a92dd832da7761a6df6331c9f4f03fa8fde1df3229a
+translation_source_hash: 96984cfa925d35717248bc75fbbc1409d00c82298055d88d98856b969ff99e91
 translation_status: current
 ---
 
@@ -10,7 +10,8 @@ translation_status: current
 Foundation、中立 Android Host Engine、Lifecycle 集成与 ViewModel 集成，并提供 Activity 和
 Fragment 的 `setUiContent` 入口。
 
-该聚合模块不包含 Material 依赖或设计系统策略，只负责依赖编排与稳定的应用宿主边界。Material
+该聚合模块不包含 Material 依赖或设计系统策略，并以运行时实现依赖包含中立
+`viewcompose-overlay-android` 传输；它负责依赖编排与稳定的应用宿主边界。Material
 应用应改用具名的
 [`viewcompose-material3-android`](../viewcompose-material3-android/README.md) 聚合模块。
 
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
 - Android 状态保存；
 - 密度、Locale、布局方向与 Android Context 环境值；
 - 动画协程上下文与 Choreographer 帧时钟；
-- 可替换的 Overlay Host。
+- 中立 Android Overlay 传输，以及可替换的 Factory。
 
 它们不会解析 Material XML、动态色或设计 Token。没有显式 Provider 时，内容读取确定性的
 `UiThemeDefaults.light()` 框架基线。可选的 `rootContext` 默认使用 Activity 或 Fragment
@@ -65,7 +66,7 @@ Session 在 Activity 销毁时结束。
 ## 依赖规则
 
 静态或应用自有设计系统（例如 `viewcompose-oneui7`）配合 `viewcompose-android` 使用。Android
-Material XML 与动态色集成使用 `viewcompose-material3-android`。Navigation、图片适配器、Overlay
+Material XML 与动态色集成使用 `viewcompose-material3-android`。Navigation、图片适配器、具名 Overlay Presenter
 或高级阴影等能力按需添加；除非业务要约束版本或直接使用独立 API，否则不要重复声明传递基础模块。
 
 ## 相关文档

@@ -5,7 +5,8 @@ to choose its design system explicitly. It combines the UI foundation, neutral A
 engine, Lifecycle integration, and ViewModel integration, and exposes the Activity and Fragment
 `setUiContent` entry points.
 
-The aggregate contains no Material dependency or design-system policy. Its purpose is dependency
+The aggregate contains no Material dependency or design-system policy. It includes the neutral
+`viewcompose-overlay-android` transport as a runtime implementation dependency. Its purpose is dependency
 curation and a stable application-facing host boundary; Material applications use the named
 [`viewcompose-material3-android`](../viewcompose-material3-android/README.md) aggregate instead.
 
@@ -46,7 +47,7 @@ class MainActivity : ComponentActivity() {
 - Android-backed saveable state;
 - density, locale, layout direction, and Android context environment values;
 - the animation coroutine context and Choreographer frame clock; and
-- an injectable overlay host.
+- the neutral Android overlay transport, with an injectable replacement factory.
 
 They do not resolve Material XML, dynamic color, or design tokens. Without an explicit provider,
 content reads the deterministic `UiThemeDefaults.light()` framework baseline. The optional
@@ -63,7 +64,7 @@ lifecycle; Activity sessions end when the Activity is destroyed.
 
 Use `viewcompose-android` with a static or application-owned design system such as
 `viewcompose-oneui7`. Use `viewcompose-material3-android` for Android Material XML and dynamic-color
-integration. Add optional capabilities such as navigation, image adapters, overlays, or advanced
+integration. Add optional capabilities such as navigation, image adapters, named overlay presenters, or advanced
 shadows individually; do not repeat transitive foundation artifacts unless the build intentionally
 constrains versions or directly uses their standalone APIs.
 

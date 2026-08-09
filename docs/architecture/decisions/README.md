@@ -11,6 +11,7 @@ architecture pages describe how the system works now.
 - [ADR-0003: Public package ownership and platform handles](./0003-public-package-ownership-and-platform-handles.md)
 - [ADR-0004: Design-system resolution boundary](./0004-design-system-resolution-boundary.md)
 - [ADR-0005: Design-system host and component backend boundary](./0005-design-system-host-and-component-backend-boundary.md)
+- [ADR-0006: Root-scoped overlay backend selection](./0006-root-scoped-overlay-backend-selection.md)
 
 ## Rules
 

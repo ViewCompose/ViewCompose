@@ -22,6 +22,7 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-oneui7` | Design System | One UI 7 five-component alpha token and component set | [Available](./viewcompose-oneui7/README.md) |
 | `viewcompose-android` | Aggregate | Neutral Android application entry dependency | [Available](./viewcompose-android/README.md) |
 | `viewcompose-navigation-android` | Integration | Android navigation host integration | [Available](./viewcompose-navigation-android/README.md) |
+| `viewcompose-overlay-android` | Integration | Material-free Android overlay transport | [Available](./viewcompose-overlay-android/README.md) |
 | `viewcompose-overlay-material3-android` | Integration | Material-backed Android overlay presentation | [Available](./viewcompose-overlay-material3-android/README.md) |
 | `viewcompose-image-coil` | Integration | Coil-backed general image loading | [Available](./viewcompose-image-coil/README.md) |
 | `viewcompose-image-glide` | Integration | Glide-backed general image loading | [Available](./viewcompose-image-glide/README.md) |

@@ -2,7 +2,7 @@
 
 `viewcompose-material3-android` is the recommended single dependency for an Android Material 3
 application. It combines the neutral Android application aggregate with the Material 3 adapter and
-exposes named Activity and Fragment `setMaterial3UiContent` entry points.
+the Material overlay adapter, and exposes named Activity and Fragment `setMaterial3UiContent` entry points.
 
 This artifact is a platform integration and release boundary, not a second renderer. It privately
 owns Material root-context resolution and publicly exposes the neutral host plus Material token
@@ -19,7 +19,7 @@ dependencies {
 - Stability: **Alpha**.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.
 - API dependencies: `viewcompose-android` and `viewcompose-material3`.
-- Material Components, AppCompat, host, Lifecycle, and ViewModel runtime dependencies resolve
+- Material Components, AppCompat, the neutral and Material overlay artifacts, host, Lifecycle, and ViewModel runtime dependencies resolve
   transitively; applications declare them directly only when their own source uses those APIs.
 
 ## Named Material host
@@ -48,6 +48,10 @@ not recreate the Activity or dispatch configuration change. Configuration change
 while the provider is mounted. Repeating `setMaterial3UiContent` disposes the old render session
 and reconstructs the root; use that path when changing to a design system with another root
 Context rather than patching only tokens on existing Views.
+
+The default overlay factory explicitly constructs the Material adapter. Material behavior is not
+selected through `ServiceLoader`, so another design-system root cannot receive Material Snackbar or
+bottom-sheet behavior merely because this aggregate is present elsewhere in the application.
 
 ## Boundary rule
 
