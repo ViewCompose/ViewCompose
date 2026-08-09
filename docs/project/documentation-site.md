@@ -68,13 +68,15 @@ service, credentials, analytics, or network request after deployment. Search UI 
 reviewed in the standard `zh-CN` message catalog, while the index is generated from the locale's
 rendered documents during every production build.
 
-The per-locale search-index budget is 4.5 MiB. It was raised from 4 MiB after the searchable
+The per-locale search-index budget is 5 MiB. It was first raised from 4 MiB after the searchable
 [multi-design-system architecture standard](../architecture/design-systems.md), ADR-0005, and its
 evidence-heavy [active execution plan](./plans/multi-design-system-high-fidelity.md) measured about
-4.1 MiB for English and 4.4 MiB for Chinese. Keeping these architectural contracts searchable has
-direct reader value and is preferred over path exclusions. A later increase still requires a new
-measurement and reader-value explanation; ordinary document growth does not raise the budget
-automatically.
+4.1 MiB for English and 4.4 MiB for Chinese. After the complete One UI and overlay architecture
+record plus nine additional Chinese mirrors were indexed, the complete build measured 4.4 MiB for
+English and 4.7 MiB for Chinese, so the reviewed ceiling moved to 5 MiB. Keeping these architectural
+contracts searchable has direct reader value and is preferred over path exclusions. A later
+increase still requires a new measurement and reader-value explanation; ordinary document growth
+does not raise the budget automatically.
 
 Compatibility redirects preserve `/docs`, `/getting-started`, `/compose-migration`, and
 `/migrate-from-compose`, including their locale-prefixed forms. Add a redirect only for an
@@ -90,7 +92,7 @@ limited to 40 MiB. Immutable artifact/version trees and working-tree `current` D
 artifacts share the API-tree budget: they may average at most 4.5 MiB and no individual tree may
 exceed 24 MiB. Only manifests and redirect aliases use the separate 1 MiB routing allowance. The
 other ceilings are 120 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for
-JavaScript, 128 KiB for CSS, and 4.5 MiB for each locale's search index. The gate also rejects any
+JavaScript, 128 KiB for CSS, and 5 MiB for each locale's search index. The gate also rejects any
 locale-prefixed API copy. Raise a threshold only with a measured explanation of the reader or
 release value that requires the additional cost.
 
