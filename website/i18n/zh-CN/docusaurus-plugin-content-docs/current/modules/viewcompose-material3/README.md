@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: b7fa72ffc865cab559a2b0d6e9bb620006c695c2c07bba37ef6d5aad6e33d5aa
+translation_source_hash: d03536d71a0c3464a5bb58245baaba4cc76ff110d5a42113fee8fcc67e500350
 translation_status: current
 ---
 
@@ -118,8 +118,9 @@ Components Adapter，Android Toast 是显式 Degraded 平台 Fallback。
 之前，已在 UI Foundation 中解析为语义角色。Button 的可见/有效高度分离会由尺寸 Token 与
 NodeSpec 明确表达；原生紧凑输入控件的目标策略同样由 UI Foundation 消费。组合式 Chip 的
 目标/Surface 分离、TextField 浮动 Label/Focus 结构，以及 Switch/Slider 精确可见几何不由
-Token Bridge 自动提供。当前具名 TextField 与 Switch 有意保留原生行为内核并报告 Equivalent；
-进一步视觉替换必须通过 Phase 12 的行为与无障碍门禁。
+Token Bridge 自动提供。当前具名 TextField 与 Switch 有意保留原生行为内核并报告 Equivalent。
+Material3Switch 保留原生 Tap 与 Thumb Drag 处理，调用方接受新状态后不会重启平台正在执行的
+Thumb Transition；进一步视觉替换必须通过 Phase 12 的行为与无障碍门禁。
 
 ## 相关文档
 

@@ -28,6 +28,63 @@ import kotlin.math.roundToInt
 @RunWith(AndroidJUnit4::class)
 class Material3TouchTargetBaselineUiTest {
     @Test
+    fun namedMaterial3Switch_preservesNativeTapAndDragBehavior() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val intent = Material3DefaultThemeActivity.newIntent(
+            context = context,
+            source = DemoThemeSource.Material3Defaults,
+        )
+        launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ).centerInsideOwningRecyclerView()
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val switch = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ) as android.widget.Switch
+                assertTrue(switch.isChecked)
+                activity.tapByTestTag(DemoTestTags.MATERIAL3_NAMED_SWITCH)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val switch = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ) as android.widget.Switch
+                assertTrue(!switch.isChecked)
+            }
+            var thumbX = 0
+            var thumbY = 0
+            scenario.onActivity { activity ->
+                val switch = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ) as android.widget.Switch
+                val location = IntArray(2).also(switch::getLocationOnScreen)
+                val thumbBounds = requireNotNull(switch.thumbDrawable).bounds
+                thumbX = location[0] + thumbBounds.centerX()
+                thumbY = location[1] + thumbBounds.centerY()
+            }
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).swipe(
+                thumbX,
+                thumbY,
+                thumbX + 120,
+                thumbY,
+                8,
+            )
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val switch = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ) as android.widget.Switch
+                assertTrue(switch.isChecked)
+            }
+        }
+    }
+
+    @Test
     fun themeSources_exportDistinctScreenshotIdentityAndTokenRoles() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         DemoThemeSource.entries.forEach { source ->

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 5707d6a1a44474fcb0267001468d0766bf361799e991cc9bd81b48ebcddd68e5
+translation_source_hash: 70fa18550875ff5563e10d581e6bed6ccbbc300f4ee90f28d108027e57a824bd
 translation_status: current
 ---
 
@@ -113,6 +113,8 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - 只要影响输出的捕获值发生变化，Lazy item 的 `contentToken` 就必须变化。即使 item 语义未变，
   session 回调也会从 next 列表中的原始 item 实例刷新。
 - 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
+- Gesture 分发会保留尚未判定的 Pointer Stream，直到识别出 Drag。若 Stream 结束时没有被 Gesture
+  消费，保留目标会收到一次普通 Click；已识别的 Drag 会消费 Stream 并抑制该 Click。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
 - Basic Surface 使用相同的有效/可见边界模型。Surface 快照变化会对保留的
   `DeclarativeBoxLayout` 执行中立重绑定；调用方 Background、Border 或 Shape Modifier 会移除
@@ -126,8 +128,9 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   最终权限；Android Renderer 不解释任何 Material 策略或 Token。
 - 原生 Switch 与 Slider 绑定通过 `SRC_IN` 应用每个已解析 Tint，从而保留平台或 OEM Drawable
   遮罩。Slider 分别持有激活轨道、非激活轨道和 Thumb Tint，定向 Patch 可在不重建 View 的
-  情况下更新非激活轨道。在独立且经过测试的自定义控件契约被接受前，平台 Drawable 几何及其
-  内建覆盖率仍具有最终权限。
+  情况下更新非激活轨道。当受控 Callback 接受原生 Switch 已提交的值时，定向 Patch 不会再次
+  写入相同值，因此平台或 OEM 的 Thumb Transition 可以继续执行。在独立且经过测试的自定义控件
+  契约被接受前，平台 Drawable 几何及其内建覆盖率仍具有最终权限。
 - 集合行列索引是从零开始的逻辑位置。Android 在 RTL 中反向排列后代时，Renderer 不得反转这些
   索引。选中态和标题态读取 item 已有的语义字段，防止组件通过重复契约暴露相互矛盾的无障碍状态。
 

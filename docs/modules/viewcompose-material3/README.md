@@ -125,8 +125,9 @@ separation is explicitly represented by the sizing tokens and NodeSpec. The nati
 target policy is likewise consumed by UI Foundation; composite Chip target/surface separation,
 TextField floating-label/focus structure and exact Switch/Slider visual geometry are not implied by
 the token bridge. The current named TextField and Switch deliberately retain native behavioral
-cores and report Equivalent conformance; further visual replacement requires the Phase 12 behavior
-and accessibility gate.
+cores and report Equivalent conformance. Material3Switch preserves native tap and thumb-drag
+handling, and accepted caller state does not restart the platform's in-flight thumb transition;
+further visual replacement requires the Phase 12 behavior and accessibility gate.
 
 ## Related documentation
 

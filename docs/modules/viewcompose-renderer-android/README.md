@@ -125,6 +125,9 @@ Because the current line is alpha, the documentation site intentionally does not
   otherwise unchanged.
 - Targeted patching and subtree skipping are optimizations. Custom host behavior must not infer
   business state from patch records or diagnostic counters.
+- Gesture dispatch retains an undecided pointer stream until drag recognition. If the stream ends
+  without gesture consumption, the retained target receives one normal click; a recognized drag
+  consumes the stream and suppresses that click.
 - Button surface-inset changes participate in targeted style patching. They must not recreate the
   native View or change its effective measured target.
 - Basic Surface uses the same effective/visual-bound model. A changed surface snapshot performs a
@@ -143,6 +146,8 @@ Because the current line is alpha, the documentation site intentionally does not
 - Native Switch and Slider binding applies every resolved tint with `SRC_IN`, preserving the
   platform or OEM drawable mask. Slider owns active-track, inactive-track, and thumb tint
   independently, and targeted patches update the inactive track without recreating the View.
+  When a controlled callback accepts a native Switch's already-committed value, targeted patching
+  does not assign that same value again, so the platform or OEM thumb transition stays in flight.
   Platform drawable geometry and its built-in coverage remain authoritative until a separate
   tested custom-control contract is accepted.
 - Collection row and column indexes are logical, zero-based positions. The renderer must not
