@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 0151e626aeff97e6ad64e778b1ec43609dc973f458b4444e70b22f1b1a3ffcbc
+translation_source_hash: ec1b427438e44c57b9316117afd8aaa6b1b35abdbb775547d9b18a084f7f3d08
 translation_status: current
 ---
 
@@ -73,6 +73,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - `UiButtonSizing` 把有效最小触控高度与可见 Surface 高度分开。中性主题和现有自定义主题中，
   每个可见高度默认等于对应的有效高度，因此维持原有渲染；设计系统适配器可以选择更小且居中
   的 Surface，而不缩小 View 或无障碍边界。
+- `UiSwitchSizing` 是 Q2、设计系统中立的组合 Switch 可见几何契约，负责 Track、Thumb、Track
+  内缩与 Label 间距。它有意不拥有有效触控目标；编译样例 `switchSizingTokenSample` 展示如何在
+  独立的 `minimumInteractiveHeight` 策略中放置紧凑可见 Track。
 - `BasicSurface` 是 Q3 设计系统中立基础组件。其 Q2 `BasicSurfaceStyle` 接受已经解析的纯色或
   渐变 Brush、逻辑 Shape、Border、裁剪、Elevation 与精确 Shadow，并把最小有效边界与可选的
   居中可见高度分开。设计系统在发射前选择这些值，Android Renderer 只接收中立的
@@ -168,6 +171,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 `UiButtonSizing` 同样是 Q2 不可变值契约。新增的可见高度字段提供源码默认值，但对预编译的
 直接构造调用和穷举解构属于二进制变更。`Button` 会把两类高度都解析进 `ButtonNodeProps`；
 自定义渲染器必须遵守该契约，或明确说明其可见边界与有效边界仍保持一致。
+
+`UiSwitchSizing` 是加入 `UiControlSizing` 的 Q2 不可变值契约，并提供源码默认值。它会改变
+预编译直接构造调用与穷举解构的二进制兼容性。设计 Recipe 消费解析后的几何值；中立 Android
+Renderer 不会因此获得 One UI 或其他具名设计系统分支。
 
 `UiControlSizing.minimumInteractiveHeight` 是另一个 Q2 不可变值字段。它提供源码默认值，但对
 预编译直接构造调用与穷举解构具有相同的二进制兼容影响。Checkbox、RadioButton、Switch 与

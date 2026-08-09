@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-oneui7-android/README.md
-translation_source_hash: 64497c6964b1de74a6440e80b09c992fb63aa9bee5a6bdcb116c886b0a8787cb
+translation_source_hash: fc84cbb15e9839b9e6a7a2650faef653c9309119b8ba3de1dffdc8988928ddef
 translation_status: current
 ---
 
@@ -61,8 +61,8 @@ Classpath 不会改变行为。
 Adapter 保留中立 Android Dialog、PopupWindow、Toast、嵌套 Render Session 与 Session 清理，并
 新增：
 
-- 使用 One UI Token 快照、24dp Window Margin、Action Target、无障碍感知 Timeout 和单次终止
-  Callback 的队列化原生 Snackbar；
+- 使用随高度变化的全圆角 Pill 外形、One UI Token 快照、24dp Window Margin、Action Target、
+  无障碍感知 Timeout 和单次终止 Callback 的队列化原生 Snackbar；
 - 使用 One UI Surface Geometry、Scrim、System Bar 处理、嵌套 ViewCompose 内容、外部/返回关闭
   策略与 Drag Handle 下滑关闭的底部 Dialog。
 

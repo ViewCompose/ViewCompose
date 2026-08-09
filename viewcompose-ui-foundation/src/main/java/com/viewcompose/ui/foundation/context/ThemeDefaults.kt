@@ -66,6 +66,7 @@ object UiControlSizeDefaults {
             menu = UiMenuSizing.default(),
             tooltip = UiTooltipSizing.default(),
             badge = UiBadgeSizing.default(),
+            switch = UiSwitchSizing.default(),
         )
     }
 }

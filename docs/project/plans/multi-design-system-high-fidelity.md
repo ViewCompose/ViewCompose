@@ -1279,13 +1279,15 @@ Audit decisions:
 | Primary/activated color | Align static action colors to published values and make Switch consume `stateColors.controlActivated` | Exact public color values |
 | Layout margin | Use at least 24dp in the deterministic fixture | Exact public grid minimum; applications still own page layout |
 | Bottom navigation | Replace the Material-style selected pill with selected text plus underline | Public component guidance and reference imagery; underline dimensions remain interpreted |
-| Surface, Switch, TextField, typography, overlay chrome | Keep named, overrideable ViewCompose interpretation values | Samsung does not publish a complete numeric token set for these paths |
+| Switch geometry | Use an overrideable `44dp` by `24dp` track, `18dp` thumb, and `3dp` inset inside the independent 48dp target | Screenshot-accepted ViewCompose interpretation; Samsung does not publish complete numeric Switch geometry |
+| Snackbar shape | Resolve each rendered bar to a full-height pill radius | Screenshot-accepted ViewCompose interpretation rather than a claimed Samsung numeric token |
+| Surface, TextField, typography, remaining overlay chrome | Keep named, overrideable ViewCompose interpretation values | Samsung does not publish a complete numeric token set for these paths |
 
 Ordered implementation:
 
-1. Remove private component sizing constants where an existing Button, TextField, NavigationBar,
-   shape, or activated-control token already declares the value. Add unit tests that override those
-   paths and inspect the emitted node specs.
+1. Remove private component sizing constants where an existing Button, Switch, TextField,
+   NavigationBar, shape, or activated-control token declares the value. Add unit tests that
+   override those paths and inspect the emitted node specs.
 2. Preserve One UI as a DSL-composite design system over neutral primitives and the native editing
    core. Do not add Samsung or Material branches to Renderer.
 3. Add `viewcompose-overlay-oneui7-android` as a narrow Integration artifact over
@@ -1315,6 +1317,9 @@ Recorded validation:
 
 - Pixel 9a API 35 emulator: four One UI verification tests pass in Light/LTR/1.0 and
   Dark/RTL/1.3; component, Switch drag, Snackbar, and bottom-dialog screenshots were inspected;
+- instrumentation measures the Switch as a `44dp × 24dp` visual track with an `18dp` thumb inside
+  a target of at least `48dp`, while a focused presenter test guards the Snackbar radius as half of
+  its actual rendered height for both one-line and taller content;
 - the navigation state transition retains selected text plus the selected underline without a
   persistent Material-style pill, and a JVM test guards indicator identity/color replacement;
 - `verifyViewComposeLocalRepository` and `verifyViewComposePublishedConsumption` pass, including

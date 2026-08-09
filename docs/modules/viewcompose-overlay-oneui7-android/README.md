@@ -56,8 +56,8 @@ capabilities that the active root actually owns. Classpath presence alone never 
 The adapter retains neutral Android Dialog, PopupWindow, Toast, nested render sessions, and
 session cleanup. It adds:
 
-- a queued native Snackbar with a One UI token snapshot, 24dp window margin, action target,
-  accessibility-aware timeout, and exactly-once terminal callbacks; and
+- a queued native Snackbar with a full-height pill outline, One UI token snapshot, 24dp window
+  margin, action target, accessibility-aware timeout, and exactly-once terminal callbacks; and
 - a bottom-gravity dialog with One UI surface geometry, scrim, system-bar handling, nested
   ViewCompose content, outside/back dismissal policy, and drag-handle dismissal.
 

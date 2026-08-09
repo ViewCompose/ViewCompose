@@ -32,6 +32,7 @@ import com.viewcompose.ui.foundation.UiOverlays
 import com.viewcompose.ui.foundation.UiShapes
 import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiStateColorDefaults
+import com.viewcompose.ui.foundation.UiSwitchSizing
 import com.viewcompose.ui.foundation.UiTextFieldSizing
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTheme
@@ -189,6 +190,13 @@ object OneUi7ThemeDefaults {
                     height = 68.dp,
                     iconSize = 0.dp,
                     labelSizeSp = 13.sp,
+                ),
+                switch = UiSwitchSizing(
+                    trackWidth = 44.dp,
+                    trackHeight = 24.dp,
+                    thumbDiameter = 18.dp,
+                    trackPadding = 3.dp,
+                    labelSpacing = 14.dp,
                 ),
                 minimumInteractiveHeight = 48.dp,
             ),
@@ -542,6 +550,7 @@ fun UiTreeBuilder.OneUi7Switch(
     modifier: Modifier = Modifier,
 ) {
     val recipes = oneUi7Recipes()
+    val switchSizing = recipes.switchSizing
     val trackColor = when {
         !enabled -> recipes.colors.surfaceContainerHigh
         checked -> recipes.activatedControlColor
@@ -552,7 +561,13 @@ fun UiTreeBuilder.OneUi7Switch(
         checked -> recipes.colors.onPrimary
         else -> recipes.colors.onSurfaceVariant
     }
-    val travel = 20.dp
+    val travel = UiDp(
+        (
+            switchSizing.trackWidth.value -
+                (switchSizing.trackPadding.value * 2f) -
+                switchSizing.thumbDiameter.value
+            ).coerceAtLeast(0f),
+    )
     val checkedOffset = if (Environment.layoutDirection == UiLayoutDirection.Rtl) {
         UiDp.Zero - travel
     } else {
@@ -581,7 +596,9 @@ fun UiTreeBuilder.OneUi7Switch(
             ),
             contentColor = thumbColor,
             key = "one-ui7-switch-track-$enabled-$checked",
-            modifier = Modifier.size(width = 48.dp, height = 28.dp).padding(3.dp),
+            modifier = Modifier
+                .size(width = switchSizing.trackWidth, height = switchSizing.trackHeight)
+                .padding(switchSizing.trackPadding),
             contentAlignment = BoxAlignment.CenterStart,
         ) {
             BasicSurface(
@@ -593,7 +610,7 @@ fun UiTreeBuilder.OneUi7Switch(
                 contentColor = thumbColor,
                 key = "one-ui7-switch-thumb-$enabled-$checked",
                 modifier = Modifier
-                    .size(22.dp, 22.dp)
+                    .size(switchSizing.thumbDiameter, switchSizing.thumbDiameter)
                     .offset(x = thumbOffset),
             ) {}
         }
@@ -607,7 +624,7 @@ fun UiTreeBuilder.OneUi7Switch(
         enabled = enabled,
         onClick = { onCheckedChange(!checked) },
         stateLayerColors = stateLayers(recipes.colors.onSurface, recipes.interactions),
-        minimumHeight = 48.dp,
+        minimumHeight = recipes.minimumInteractiveHeight,
         role = SemanticsRole.Switch,
         key = key,
         modifier = modifier
@@ -620,7 +637,7 @@ fun UiTreeBuilder.OneUi7Switch(
         contentAlignment = BoxAlignment.CenterStart,
     ) {
         Row(
-            spacing = 14.dp,
+            spacing = switchSizing.labelSpacing,
             verticalAlignment = VerticalAlignment.Center,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
         ) {
@@ -845,6 +862,8 @@ internal data class OneUi7Recipes(
     val buttonSizing: UiButtonSizing,
     val textFieldSizing: UiTextFieldSizing,
     val navigationBarSizing: UiNavigationBarSizing,
+    val switchSizing: UiSwitchSizing,
+    val minimumInteractiveHeight: UiDp,
     val activatedControlColor: Int,
     val actionShape: UiShape,
     val surfaceShape: UiShape,
@@ -867,6 +886,8 @@ internal data class OneUi7Recipes(
             buttonSizing = tokens.controls.button,
             textFieldSizing = tokens.controls.textField,
             navigationBarSizing = tokens.controls.navigationBar,
+            switchSizing = tokens.controls.switch,
+            minimumInteractiveHeight = tokens.controls.minimumInteractiveHeight,
             activatedControlColor = tokens.stateColors.controlActivated.checkedColor,
             actionShape = tokens.shapes.medium,
             surfaceShape = tokens.shapes.large,

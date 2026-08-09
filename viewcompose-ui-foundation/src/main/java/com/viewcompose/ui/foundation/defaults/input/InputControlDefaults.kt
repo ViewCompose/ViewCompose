@@ -20,6 +20,18 @@ object InputControlDefaults {
         return Theme.controls.minimumInteractiveHeight
     }
 
+    /**
+     * Returns the visible geometry snapshot for a design-owned Switch composite.
+     *
+     * Native Android Switch rendering may retain platform geometry. Design-system recipes that
+     * own their track and thumb should consume this snapshot while resolving the effective target
+     * independently through [minimumInteractiveHeight].
+     *
+     * @sample com.viewcompose.ui.foundation.samples.switchSizingTokenSample
+     * @return immutable Switch sizing from the current theme snapshot
+     */
+    fun switchSizing(): UiSwitchSizing = Theme.controls.switch
+
     /** Returns the shared body typography used by labeled controls. */
     fun labelStyle(): UiTextStyle = TextDefaults.bodyStyle()
 

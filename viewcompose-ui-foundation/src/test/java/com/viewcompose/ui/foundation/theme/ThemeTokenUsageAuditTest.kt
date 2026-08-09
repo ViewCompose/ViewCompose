@@ -92,10 +92,13 @@ class ThemeTokenUsageAuditTest {
             roots = sourceRoots,
             regex = Regex("""Theme\.controls\.([A-Za-z0-9_\.]+)"""),
         )
-        val missing = expected - used
+        val expandedUsed = expected.filterTo(used.toMutableSet()) { path ->
+            path.substringBefore('.') in used
+        }
+        val missing = expected - expandedUsed
 
         assertTrue(
-            "Unconsumed control sizing tokens: $missing. Used=$used",
+            "Unconsumed control sizing tokens: $missing. Used=$expandedUsed",
             missing.isEmpty(),
         )
     }

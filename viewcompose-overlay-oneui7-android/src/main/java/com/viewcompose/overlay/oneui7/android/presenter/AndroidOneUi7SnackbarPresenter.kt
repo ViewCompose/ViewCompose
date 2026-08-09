@@ -19,6 +19,7 @@ import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnLayout
 import com.viewcompose.overlay.oneui7.android.OneUi7OverlayStyle
 import com.viewcompose.overlay.oneui7.android.roundedDrawable
 import com.viewcompose.ui.foundation.OverlayEntryId
@@ -130,13 +131,20 @@ internal class AndroidOneUi7SnackbarPresenter(
         val bar = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            minimumHeight = context.dp(48f).roundToInt()
+            val minimumHeightPx = context.dp(48f).roundToInt()
+            minimumHeight = minimumHeightPx
             val horizontalPadding = context.dp(20f).roundToInt()
             setPadding(horizontalPadding, 0, context.dp(8f).roundToInt(), 0)
             background = roundedDrawable(
                 color = style.snackbarColor,
-                radiusPx = context.dp(18f),
+                radiusPx = oneUi7SnackbarCornerRadius(minimumHeightPx),
             )
+            doOnLayout { snackbar ->
+                snackbar.background = roundedDrawable(
+                    color = style.snackbarColor,
+                    radiusPx = oneUi7SnackbarCornerRadius(snackbar.height),
+                )
+            }
             elevation = context.dp(8f)
             contentDescription = ONE_UI_SNACKBAR_DESCRIPTION
         }
@@ -164,7 +172,7 @@ internal class AndroidOneUi7SnackbarPresenter(
                     background = RippleDrawable(
                         ColorStateList.valueOf(style.actionColor.withAlpha(0.16f)),
                         null,
-                        roundedDrawable(Color.WHITE, context.dp(14f)),
+                        roundedDrawable(Color.WHITE, context.dp(24f)),
                     )
                     setPadding(context.dp(12f).roundToInt(), 0, context.dp(12f).roundToInt(), 0)
                     setOnClickListener { onAction() }
@@ -193,6 +201,9 @@ internal class AndroidOneUi7SnackbarPresenter(
         const val ONE_UI_SNACKBAR_DESCRIPTION = "One UI Snackbar"
     }
 }
+
+internal fun oneUi7SnackbarCornerRadius(heightPx: Int): Float =
+    heightPx.coerceAtLeast(0) / 2f
 
 private fun SnackbarDuration.timeoutMillis(context: Context): Long? {
     val base = when (this) {

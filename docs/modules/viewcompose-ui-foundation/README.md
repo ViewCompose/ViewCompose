@@ -75,6 +75,10 @@ by a later renderer or child render session.
   height. Neutral and existing custom themes preserve their previous rendering because each visual
   height defaults to its corresponding effective height; a design-system adapter may opt into a
   smaller centered surface without shrinking the View or accessibility bounds.
+- `UiSwitchSizing` is the Q2, design-system-neutral visible-geometry contract for a composed
+  Switch track, thumb, track inset, and label spacing. It deliberately does not own the effective
+  target; the compiled `switchSizingTokenSample` keeps a compact visual track inside an independent
+  `minimumInteractiveHeight` policy.
 - `BasicSurface` is a Q3 design-system-neutral primitive. Its Q2 `BasicSurfaceStyle` accepts a
   resolved solid or gradient brush, logical shape, border, clipping, elevation, and exact shadows;
   it also separates minimum effective bounds from an optional centered visual height. Design
@@ -189,6 +193,11 @@ callers must be rebuilt for the corresponding release.
 source defaults but are a binary change for precompiled direct constructors and exhaustive
 destructuring. `Button` resolves both heights into `ButtonNodeProps`; custom renderers must honor
 that contract or deliberately document that their visual and effective bounds remain identical.
+
+`UiSwitchSizing` is a Q2 immutable value contract added to `UiControlSizing` with a source default.
+It is a binary change for precompiled direct constructors and exhaustive destructuring. Design
+recipes consume the resolved geometry; the neutral Android Renderer receives no One UI or other
+named design-system branch.
 
 `UiControlSizing.minimumInteractiveHeight` is another Q2 immutable value field with a source
 default and the same binary-compatibility consequence for precompiled direct constructors and

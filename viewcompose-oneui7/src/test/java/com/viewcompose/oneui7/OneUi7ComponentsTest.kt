@@ -40,6 +40,10 @@ class OneUi7ComponentsTest {
         assertEquals(0xFF3E91FF.toInt(), light.stateColors.controlActivated.checkedColor)
         assertEquals(48f, light.controls.button.mediumHeight.value)
         assertEquals(36f, light.controls.button.mediumVisualHeight.value)
+        assertEquals(44f, light.controls.switch.trackWidth.value)
+        assertEquals(24f, light.controls.switch.trackHeight.value)
+        assertEquals(18f, light.controls.switch.thumbDiameter.value)
+        assertEquals(3f, light.controls.switch.trackPadding.value)
         assertEquals(18f, light.shapes.medium.uniformAbsoluteSizeOrNull?.value)
         assertEquals("viewcompose-oneui7/static", light.metadata.provenance.sourceId)
         assertTrue(
@@ -241,6 +245,14 @@ class OneUi7ComponentsTest {
                     mediumVerticalPadding = 15.dp,
                 ),
                 navigationBar = defaults.controls.navigationBar.copy(height = 74.dp),
+                switch = defaults.controls.switch.copy(
+                    trackWidth = 40.dp,
+                    trackHeight = 20.dp,
+                    thumbDiameter = 14.dp,
+                    trackPadding = 3.dp,
+                    labelSpacing = 9.dp,
+                ),
+                minimumInteractiveHeight = 52.dp,
             ),
             stateColors = defaults.stateColors.copy(
                 controlActivated = UiStateColor(
@@ -283,7 +295,14 @@ class OneUi7ComponentsTest {
         }.single().spec as SurfaceNodeProps
         assertEquals(74f, navigation.minimumHeight.value)
 
-        assertEquals(activated, OneUi7Recipes.from(tokens).activatedControlColor)
+        val recipes = OneUi7Recipes.from(tokens)
+        assertEquals(40f, recipes.switchSizing.trackWidth.value)
+        assertEquals(20f, recipes.switchSizing.trackHeight.value)
+        assertEquals(14f, recipes.switchSizing.thumbDiameter.value)
+        assertEquals(3f, recipes.switchSizing.trackPadding.value)
+        assertEquals(9f, recipes.switchSizing.labelSpacing.value)
+        assertEquals(52f, recipes.minimumInteractiveHeight.value)
+        assertEquals(activated, recipes.activatedControlColor)
     }
 }
 

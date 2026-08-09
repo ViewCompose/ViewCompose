@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: fac23172c6b0623adb608a99087389066497655bb996914c75bf253e2ea35f55
+translation_source_hash: 91909d252501da529d0078a40615278565d53d1f4d70676771a6f3301f379a7b
 translation_status: current
 ---
 
@@ -46,9 +46,10 @@ Destination。这些链接只定义视觉参考，不代表框架会复现所有
 | Button 强调层级 | Flat、灰色 Contained、彩色 Contained | `Flat`、`Neutral`、`Primary` 分别对应低、中、高强调 |
 | Primary Button 颜色 | Light 为 `#0072DE`，Dark 为 `#3E91FF` | 静态 Primary Action 角色采用这两个值 |
 | Activated Control 颜色 | Light/Dark 都为 `#3E91FF` | Switch Checked Track 通过 `stateColors.controlActivated` 解析 |
+| Switch 几何 | 没有完整公开的精确尺寸 | 可覆盖解释值采用 `44dp` × `24dp` Track、`18dp` Thumb、`3dp` 内缩，并单独保留 `48dp` 有效目标 |
 | 屏幕水平边距 | 至少 `24dp` | 验证 Fixture 使用 `24dp`；实际页面布局仍由应用负责 |
 | Bottom Navigation | 纯文字，通常少于四项、最多五项，不通过 Swipe 切换 | Selected Item 使用文字加下划线，不使用 Material 风格 Pill |
-| Snackbar | 短时反馈，可在右侧提供 Action | 由显式 One UI Android Overlay Adapter 提供 |
+| Snackbar | 短时反馈，可在右侧提供 Action | 由显式 One UI Android Overlay Adapter 提供，并采用随高度变化的全圆角 Pill 外形 |
 
 Samsung 没有公开本 Alpha 所用 Surface/Card Padding、Switch Bounds、TextField Padding、完整
 Typography Scale 或 One UI 7 Overlay Chrome 的精确值。这些仍是 ViewCompose 自有解释值，需要通过
@@ -56,6 +57,7 @@ Typography Scale 或 One UI 7 Overlay Chrome 的精确值。这些仍是 ViewCom
 
 组件 Geometry 现在会从调用方提供的 Snapshot 解析。复制并覆盖
 `tokens.controls.button`、`tokens.controls.textField`、`tokens.controls.navigationBar`、
+`tokens.controls.switch`、
 `tokens.shapes.medium` 或 `tokens.stateColors.controlActivated` 时，对应组件会真实变化，不再被组件
 内部硬编码值遮蔽。
 
@@ -102,6 +104,8 @@ Recipe 仍保持独立，One UI 策略不会进入 UI Foundation 或 Renderer。
 
 - Button 与 Switch 的有效触控目标至少为 48dp；Navigation Destination 在 68dp Bar 内提供
   52dp 目标。
+- 默认 Switch 在 48dp 有效目标中使用 24dp 高的紧凑可见 Track。Track、Thumb、内缩与 Label
+  间距仍是可覆盖的解释尺寸 Token，不会被表述成 Samsung 已公开的精确 Token。
 - Switch 与 NavigationBar 状态归调用方所有；Callback 只请求替换状态，不会修改调用方数据。
   Switch 支持整行 Click 与有界 Follow-finger Drag，并按位置/速度 Settle；取消会回滚状态，RTL
   会镜像物理移动方向。

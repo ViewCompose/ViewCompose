@@ -24,6 +24,7 @@ import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.Image
+import com.viewcompose.ui.foundation.InputControlDefaults
 import com.viewcompose.ui.foundation.PopupAlignment
 import com.viewcompose.ui.foundation.PopupBounds
 import com.viewcompose.ui.foundation.PopupOverflowPolicy
@@ -34,6 +35,7 @@ import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiStateColor
+import com.viewcompose.ui.foundation.UiSwitchSizing
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.buildVNodeTree
@@ -97,6 +99,34 @@ fun buttonSample() {
     check(spec.minHeight == 48.dp)
     check(spec.visualHeight == 40.dp)
     check(spec.stateLayerColors?.hoveredColor == 0x14FFFFFF)
+}
+
+fun switchSizingTokenSample() {
+    val compactSwitch = UiSwitchSizing(
+        trackWidth = 44.dp,
+        trackHeight = 24.dp,
+        thumbDiameter = 18.dp,
+        trackPadding = 3.dp,
+        labelSpacing = 14.dp,
+    )
+    val tokens = UiThemeDefaults.light().let { defaults ->
+        defaults.copy(
+            controls = defaults.controls.copy(
+                switch = compactSwitch,
+                minimumInteractiveHeight = 48.dp,
+            ),
+        )
+    }
+
+    var resolvedSizing = UiSwitchSizing.default()
+    buildVNodeTree {
+        UiTheme(tokens) {
+            resolvedSizing = InputControlDefaults.switchSizing()
+        }
+    }
+
+    check(resolvedSizing == compactSwitch)
+    check(tokens.controls.minimumInteractiveHeight == 48.dp)
 }
 
 fun basicSurfaceSample() {

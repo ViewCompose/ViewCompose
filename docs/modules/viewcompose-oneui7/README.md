@@ -43,9 +43,10 @@ The 2026-08-09 audit separates published numeric guidance from visual interpreta
 | Button emphasis | Flat, gray contained, and colored contained treatments | `Flat`, `Neutral`, and `Primary` variants map to low, medium, and high emphasis |
 | Primary Button color | `#0072DE` in Light and `#3E91FF` in Dark | Static primary action roles use those values |
 | Activated control color | `#3E91FF` in Light and Dark | Switch checked track resolves through `stateColors.controlActivated` |
+| Switch geometry | No complete public numeric geometry | The overrideable interpretation uses a `44dp` by `24dp` track, `18dp` thumb, `3dp` inset, and separate `48dp` effective target |
 | Horizontal screen margin | At least `24dp` | The verification fixture uses `24dp`; layout remains an application responsibility |
 | Bottom navigation | Text only, normally fewer than four and at most five; no swipe switching | The selected item uses text plus an underline, without a Material-style pill |
-| Snackbar | Short feedback with an optional action on the right | Supplied by the explicit One UI Android overlay adapter |
+| Snackbar | Short feedback with an optional action on the right | Supplied by the explicit One UI Android overlay adapter with a full-height pill outline |
 
 Samsung does not publish exact public values for this alpha's Surface/Card padding, Switch bounds,
 TextField padding, complete typography scale, or One UI 7 overlay chrome. Those remain
@@ -54,6 +55,7 @@ as Samsung tokens.
 
 Component geometry now resolves from the provided snapshot. Copying and overriding
 `tokens.controls.button`, `tokens.controls.textField`, `tokens.controls.navigationBar`,
+`tokens.controls.switch`,
 `tokens.shapes.medium`, or `tokens.stateColors.controlActivated` changes the corresponding emitted
 component instead of being shadowed by private hard-coded values.
 
@@ -103,6 +105,9 @@ private typed recipes remain separate and no One UI policy enters UI Foundation 
 
 - Button and Switch expose at least a 48dp effective target. Navigation destinations expose a 52dp
   target inside a 68dp bar.
+- The default Switch keeps a compact 24dp visible track inside that 48dp target. Track, thumb,
+  inset, and label spacing remain interpreted, overrideable sizing tokens rather than claimed
+  Samsung numeric tokens.
 - Switch and NavigationBar state is caller-owned. Their callbacks request replacement state and do
   not mutate caller data. Switch supports whole-row click plus bounded follow-finger drag with
   position/velocity settling, cancellation rollback, and mirrored physical travel in RTL.

@@ -20,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
+import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
 class OneUi7VerificationUiTest {
@@ -125,6 +126,23 @@ class OneUi7VerificationUiTest {
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
+                    val switchRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH)
+                    val density = activity.resources.displayMetrics.density
+                    val trackWidth = (44f * density).roundToInt()
+                    val trackHeight = (24f * density).roundToInt()
+                    val thumbDiameter = (18f * density).roundToInt()
+                    val descendants = switchRoot.descendantViews()
+                    assertTrue(switchRoot.height >= (48f * density).roundToInt())
+                    assertTrue(
+                        descendants.any { view ->
+                            view.width == trackWidth && view.height == trackHeight
+                        },
+                    )
+                    assertTrue(
+                        descendants.any { view ->
+                            view.width == thumbDiameter && view.height == thumbDiameter
+                        },
+                    )
                     activity.clickByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
                 }
                 waitForUiIdle()
