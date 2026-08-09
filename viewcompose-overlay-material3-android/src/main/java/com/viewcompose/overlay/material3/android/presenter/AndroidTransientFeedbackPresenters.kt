@@ -1,18 +1,11 @@
 package com.viewcompose.overlay.material3.android.presenter
 
-import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.view.View
-import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import com.viewcompose.ui.foundation.OverlayEntryId
 import com.viewcompose.ui.foundation.SnackbarDuration
 import com.viewcompose.ui.foundation.SnackbarOverlayPresenter
 import com.viewcompose.ui.foundation.SnackbarOverlaySpec
-import com.viewcompose.ui.foundation.ToastDuration
-import com.viewcompose.ui.foundation.ToastOverlayPresenter
-import com.viewcompose.ui.foundation.ToastOverlaySpec
 import com.viewcompose.ui.foundation.TransientFeedbackDismissReason
 
 /**
@@ -94,110 +87,12 @@ class AndroidSnackbarOverlayPresenter(
     )
 }
 
-/**
- * Presents declarative transient-feedback requests as Android [Toast] instances.
- *
- * Android exposes no reliable toast-completion callback. The presenter therefore schedules an
- * approximate completion on the main looper so the framework queue can advance. It holds only an
- * application [Context], preventing an outstanding timeout from retaining an Activity.
- *
- * @param appContext application context used to create platform toasts
- */
-class AndroidToastOverlayPresenter(
-    private val appContext: Context,
-) : ToastOverlayPresenter {
-    private val handler = Handler(Looper.getMainLooper())
-    private val activeToasts = mutableMapOf<OverlayEntryId, ActiveToast>()
-
-    /**
-     * Creates and shows one toast and schedules an approximate timeout completion.
-     *
-     * Reusing [entryId] before completion replaces the presenter's tracked platform handle. The
-     * queue contract ensures a prior active entry is dismissed before replacement.
-     */
-    override fun show(
-        entryId: OverlayEntryId,
-        spec: ToastOverlaySpec,
-        onDismissed: (TransientFeedbackDismissReason) -> Unit,
-    ) {
-        val toast = Toast.makeText(
-            appContext,
-            spec.message,
-            spec.duration.toPlatformDuration(),
-        )
-        // Approximate platform duration because Toast exposes no terminal callback.
-        val timeout = Runnable {
-            complete(
-                entryId = entryId,
-                reason = TransientFeedbackDismissReason.Timeout,
-                cancelToast = false,
-            )
-        }
-        activeToasts[entryId] = ActiveToast(
-            toast = toast,
-            timeout = timeout,
-            onDismissed = onDismissed,
-        )
-        toast.show()
-        handler.postDelayed(timeout, spec.duration.toDisplayMillis())
-    }
-
-    /** Cancels [entryId] and completes its queue entry immediately with [reason]. */
-    override fun dismiss(
-        entryId: OverlayEntryId,
-        reason: TransientFeedbackDismissReason,
-    ) {
-        complete(
-            entryId = entryId,
-            reason = reason,
-            cancelToast = true,
-        )
-    }
-
-    /** Completes a toast once and removes its pending timeout callback. */
-    private fun complete(
-        entryId: OverlayEntryId,
-        reason: TransientFeedbackDismissReason,
-        cancelToast: Boolean,
-    ) {
-        val active = activeToasts.remove(entryId) ?: return
-        handler.removeCallbacks(active.timeout)
-        if (cancelToast) {
-            active.toast.cancel()
-        }
-        active.onDismissed(reason)
-    }
-
-    /** Platform toast plus its simulated completion and queue callback. */
-    private data class ActiveToast(
-        val toast: Toast,
-        val timeout: Runnable,
-        val onDismissed: (TransientFeedbackDismissReason) -> Unit,
-    )
-}
-
 /** Converts framework snackbar duration to the Material integer contract. */
 private fun SnackbarDuration.toPlatformDuration(): Int {
     return when (this) {
         SnackbarDuration.Short -> Snackbar.LENGTH_SHORT
         SnackbarDuration.Long -> Snackbar.LENGTH_LONG
         SnackbarDuration.Indefinite -> Snackbar.LENGTH_INDEFINITE
-    }
-}
-
-/** Converts framework toast duration to the Android integer contract. */
-private fun ToastDuration.toPlatformDuration(): Int {
-    return when (this) {
-        ToastDuration.Short -> Toast.LENGTH_SHORT
-        ToastDuration.Long -> Toast.LENGTH_LONG
-    }
-}
-
-/** Estimates toast visibility because the platform provides no completion callback. */
-private fun ToastDuration.toDisplayMillis(): Long {
-    return when (this) {
-        ToastDuration.Short -> 2_000L
-        ToastDuration.Long -> 3_500L
     }
 }
 

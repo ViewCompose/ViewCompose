@@ -4,11 +4,11 @@ import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
 import com.viewcompose.android.setUiContent as setNeutralUiContent
-import com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults
 import com.viewcompose.material3.Material3DynamicColorPolicy
 import com.viewcompose.material3.Material3Theme
 import com.viewcompose.material3.Material3ThemeBridge
 import com.viewcompose.material3.Material3ThemeRefreshController
+import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost as Material3AndroidOverlayHost
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.RenderFailure
 import com.viewcompose.ui.foundation.RenderStats
@@ -40,7 +40,7 @@ fun Fragment.setMaterial3UiContent(
     debugTag: String = "ViewCompose",
     dynamicColorPolicy: Material3DynamicColorPolicy = Material3DynamicColorPolicy.UseIfAvailable,
     themeRefreshController: Material3ThemeRefreshController? = null,
-    overlayHostFactory: (ViewGroup) -> OverlayHost = AndroidOverlayHostDefaults::androidOrNoOp,
+    overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> Material3AndroidOverlayHost(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
     onRenderFailure: ((RenderFailure) -> Unit)? = null,
@@ -93,7 +93,7 @@ fun ComponentActivity.setMaterial3UiContent(
     debugTag: String = "ViewCompose",
     dynamicColorPolicy: Material3DynamicColorPolicy = Material3DynamicColorPolicy.UseIfAvailable,
     themeRefreshController: Material3ThemeRefreshController? = null,
-    overlayHostFactory: (ViewGroup) -> OverlayHost = AndroidOverlayHostDefaults::androidOrNoOp,
+    overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> Material3AndroidOverlayHost(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
     onRenderFailure: ((RenderFailure) -> Unit)? = null,

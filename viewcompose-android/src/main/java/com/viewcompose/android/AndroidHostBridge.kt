@@ -11,11 +11,11 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelStoreOwner
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
-import com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults
 import com.viewcompose.host.android.renderInto
 import com.viewcompose.host.android.runtime.AndroidMonotonicFrameClock
 import com.viewcompose.host.android.viewComposeSaveableStateRegistry
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
+import com.viewcompose.overlay.android.AndroidOverlayHost
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import com.viewcompose.ui.foundation.ProvideAnimationCoroutineContext
 import com.viewcompose.ui.foundation.OverlayHost
@@ -63,7 +63,7 @@ fun Fragment.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     rootContext: Context = requireContext(),
-    overlayHostFactory: (ViewGroup) -> OverlayHost = AndroidOverlayHostDefaults::androidOrNoOp,
+    overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> AndroidOverlayHost(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
     onRenderFailure: ((RenderFailure) -> Unit)? = null,
@@ -131,7 +131,7 @@ fun ComponentActivity.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     rootContext: Context = this,
-    overlayHostFactory: (ViewGroup) -> OverlayHost = AndroidOverlayHostDefaults::androidOrNoOp,
+    overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> AndroidOverlayHost(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
     onRenderFailure: ((RenderFailure) -> Unit)? = null,

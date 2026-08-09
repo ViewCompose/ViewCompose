@@ -30,6 +30,7 @@ android {
 dependencies {
     api(project(":viewcompose-android"))
     api(project(":viewcompose-material3"))
+    implementation(project(":viewcompose-overlay-material3-android"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }

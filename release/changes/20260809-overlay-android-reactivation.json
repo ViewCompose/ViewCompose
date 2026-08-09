@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "summary": "Reactivate viewcompose-overlay-android as the Material-free Android overlay transport, move Material presenters behind explicit Material root assembly, and remove classpath-selected design behavior.",
+  "changes": [
+    { "artifact": "viewcompose-host-android", "impact": "breaking" },
+    { "artifact": "viewcompose-android", "impact": "breaking" },
+    { "artifact": "viewcompose-material3-android", "impact": "feature" },
+    { "artifact": "viewcompose-navigation-android", "impact": "breaking" },
+    { "artifact": "viewcompose-overlay-android", "impact": "breaking" },
+    { "artifact": "viewcompose-overlay-material3-android", "impact": "breaking" }
+  ]
+}

@@ -1,4 +1,4 @@
-package com.viewcompose.overlay.material3.android.presenter
+package com.viewcompose.overlay.android.presenter
 
 import android.app.Dialog
 import android.graphics.Color
@@ -14,7 +14,9 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.PopupWindow
 import androidx.core.view.doOnLayout
+import com.viewcompose.overlay.android.asOverlayRenderContainerHandle
 import com.viewcompose.ui.overlay.OVERLAY_ANCHOR_TAG_KEY
+import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
 import com.viewcompose.ui.foundation.DialogOverlayContent
@@ -43,8 +45,9 @@ import com.viewcompose.ui.foundation.createOverlaySurfaceSession
  *
  * @param rootView render root whose context and window configuration own created dialogs
  */
-class AndroidDialogOverlayPresenter(
+internal class AndroidDialogOverlayPresenter(
     private val rootView: View,
+    private val windowInset: UiDp,
 ) : DialogOverlayPresenter {
     /**
      * Creates and immediately shows a dialog handle for [spec] and [content].
@@ -59,6 +62,7 @@ class AndroidDialogOverlayPresenter(
     ): DialogOverlayHandle {
         return AndroidDialogOverlayHandle(
             rootView = rootView,
+            windowInset = windowInset,
             spec = spec,
             content = content,
         )
@@ -74,7 +78,7 @@ class AndroidDialogOverlayPresenter(
  *
  * @param rootView attached render root searched for overlay anchor tags
  */
-class AndroidPopupOverlayPresenter(
+internal class AndroidPopupOverlayPresenter(
     private val rootView: View,
 ) : PopupOverlayPresenter {
     /**
@@ -99,12 +103,13 @@ class AndroidPopupOverlayPresenter(
 /** Owns one dialog window and the nested render session that supplies its content. */
 private class AndroidDialogOverlayHandle(
     rootView: View,
+    windowInset: UiDp,
     spec: DialogOverlaySpec,
     content: DialogOverlayContent,
 ) : DialogOverlayHandle {
     private val density = AndroidEnvironmentBridge.fromContext(rootView.context).density
     private val dialogContainer = FrameLayout(rootView.context).apply {
-        val inset = density.roundToPx(24.dp)
+        val inset = density.roundToPx(windowInset)
         setPadding(inset, inset, inset, inset)
         background = ColorDrawable(Color.TRANSPARENT)
         layoutParams = ViewGroup.LayoutParams(
@@ -118,7 +123,7 @@ private class AndroidDialogOverlayHandle(
         window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
     }
     private val surfaceSession: OverlaySurfaceSession = createOverlaySurfaceSession(
-        container = dialogContainer.asRenderContainerHandle(),
+        container = dialogContainer.asOverlayRenderContainerHandle(),
         content = content.surface,
     )
     private var currentSpec = spec
@@ -202,7 +207,7 @@ private class AndroidPopupOverlayHandle(
         elevation = density.toPx(12.dp)
     }
     private val surfaceSession: OverlaySurfaceSession = createOverlaySurfaceSession(
-        container = popupContainer.asRenderContainerHandle(),
+        container = popupContainer.asOverlayRenderContainerHandle(),
         content = content.surface,
     )
     private var currentSpec = spec

@@ -3,7 +3,7 @@ package com.viewcompose.navigation
 import android.view.View
 import android.view.ViewGroup
 import com.viewcompose.host.android.AndroidView
-import com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults
+import com.viewcompose.overlay.android.AndroidOverlayHost
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.ui.modifier.Modifier
@@ -152,7 +152,7 @@ private class NavHostNodeKey(
     }
 }
 
-/** Reuses the host container overlay by default and falls back to a no-op implementation. */
+/** Creates a neutral, root-scoped Android overlay transport for the nested navigation host. */
 private val defaultNavOverlayHostFactory: (ViewGroup) -> OverlayHost = { root ->
-    AndroidOverlayHostDefaults.androidOrNoOp(root)
+    AndroidOverlayHost(root)
 }

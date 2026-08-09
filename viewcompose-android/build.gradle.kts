@@ -34,6 +34,7 @@ dependencies {
     api(project(":viewcompose-viewmodel-androidx"))
     api(libs.androidx.activity)
     api(libs.androidx.fragment)
+    implementation(project(":viewcompose-overlay-android"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(project(":viewcompose-oneui7"))
