@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 12db018e7464332ba5612aedd37aa2dc411f45518c41632d67c902b8eaa72cb5
+translation_source_hash: 29cbde3927265f94513b953c9cbba5433e123f64d94f05835a7c4310b190e151
 translation_status: current
 ---
 
@@ -19,7 +19,7 @@ GitHub 托管文档站点的内容边界。
 | --- | --- |
 | 构建第一个应用 | [构建第一个应用](./tutorials/getting-started.md) |
 | 学习某一项能力 | [能力教程](./tutorials/README.md) → 任意选择主题，章节之间没有顺序要求 |
-| 理解框架 | [架构总览](https://docs.viewcompose.com/architecture/overview) → [Modifier 模型](https://docs.viewcompose.com/architecture/modifier) → [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec) |
+| 理解框架 | [架构总览](https://docs.viewcompose.com/architecture/overview) → [多设计系统标准](./architecture/design-systems.md) → [Modifier 模型](https://docs.viewcompose.com/architecture/modifier) → [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec) |
 | 从 Jetpack Compose 迁移 | [Compose 迁移总览](./migration/README.md) → 按状态、布局、宿主或导航选择迁移路径 |
 | 选择或维护已发布产物 | [已发布模块目录](./modules/README.md) → 对应模块手册 |
 | 使用某项能力 | 从下面的[指南](#指南)中选择对应主题 |
@@ -33,6 +33,7 @@ GitHub 托管文档站点的内容边界。
 长期有效的契约、边界和运行时语义：
 
 - [架构总览](https://docs.viewcompose.com/architecture/overview)
+- [多设计系统架构与接入标准](./architecture/design-systems.md)
 - [架构决策](https://docs.viewcompose.com/architecture/decisions)
 - [Modifier 模型](https://docs.viewcompose.com/architecture/modifier)
 - [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec)

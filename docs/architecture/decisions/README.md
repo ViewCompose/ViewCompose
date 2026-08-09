@@ -10,6 +10,7 @@ architecture pages describe how the system works now.
 - [ADR-0002: Five-layer runtime module architecture](./0002-five-layer-runtime-module-architecture.md)
 - [ADR-0003: Public package ownership and platform handles](./0003-public-package-ownership-and-platform-handles.md)
 - [ADR-0004: Design-system resolution boundary](./0004-design-system-resolution-boundary.md)
+- [ADR-0005: Design-system host and component backend boundary](./0005-design-system-host-and-component-backend-boundary.md)
 
 ## Rules
 

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: bbaa1e74fa22cea15aa6d7d739608ffe4eb04eefa66c96db596ba68faa8bf6c5
+translation_source_hash: 58c9e158008bb8a638f17edba1dee1429c1c3bba19be7d49d7f2a4cb07ad94fa
 translation_status: current
 ---
 
@@ -15,6 +15,7 @@ translation_status: current
 - [ADR-0002：五层运行时模块架构](./0002-five-layer-runtime-module-architecture.md)
 - [ADR-0003：公开包所有权与平台 Handle](./0003-public-package-ownership-and-platform-handles.md)
 - [ADR-0004：设计系统解析边界](./0004-design-system-resolution-boundary.md)
+- [ADR-0005：设计系统 Host 与组件 Backend 边界](./0005-design-system-host-and-component-backend-boundary.md)
 
 ## 规则
 

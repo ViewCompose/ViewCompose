@@ -3,14 +3,23 @@
 ## Status
 
 Active. Phases 0 through 8 are implemented on `codex/multi-design-system-foundation`. Phase 8 closes
-the retained native-behavior parity gaps exposed by the current design-system-owned controls. The internal
-pressure slice now exercises three visually distinct design-system bundles through shared Basic
-primitives and design-system-owned composites. Its behavior and screenshot matrix pass on API 24,
-31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain non-representative
-for release performance acceptance; physical-device and Samsung visual acceptance remain
-release-owner gates rather than reasons to broaden the architecture. The public
+the retained native-behavior parity gaps exposed by the current design-system-owned controls. The
+internal pressure slice now exercises three visually distinct design-system bundles through shared
+Basic primitives and design-system-owned composites. Its behavior and screenshot matrix pass on
+API 24, 31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain
+non-representative for release performance acceptance; physical-device and Samsung visual
+acceptance remain release-owner gates rather than reasons to broaden the architecture. The public
 `viewcompose-oneui7` artifact now supplies a deliberately bounded five-component alpha without
-adding Samsung policy to UI Foundation, Android Renderer, or the default Material aggregate.
+adding Samsung policy to UI Foundation or Android Renderer.
+
+A post-Phase-8 architecture review found one P0 ownership violation and several foundation gaps
+that must be closed before catalog expansion or Maven release: `viewcompose-android` still selects
+a Material-themed context and exposes Material policy at generally named host entry points;
+Material 3 and One UI currently have asymmetric component ownership; token/backend provenance is
+not yet sufficient for unambiguous acceptance; and mapped native controls have not all been
+classified against the new backend standard. Phases 9 through 12 therefore reopen the plan in
+architecture-first order. The durable design-system standard and ADR are accepted; implementation
+remains pending.
 
 This plan is canonical English-only under the documentation governance policy. It records both the
 target architecture and the staged evidence required before public APIs or production rendering
@@ -19,10 +28,12 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-09.
 
-Next action: complete release-owner Pixel and physical Samsung acceptance, run formal
-physical-device benchmarks, and publish the
-bounded One UI 7 alpha through Maven. The release workflow must archive this plan only after every
-linked changeset is included and immediately before Maven upload.
+Next action: execute the Phase 9 source, dependency, public-API, Maven-metadata, context-provenance,
+and performance baseline without changing production behavior. Then implement Phase 10's neutral
+host extraction behind the recorded rollback boundary. Release-owner Pixel/physical Samsung
+acceptance, formal device benchmarks, and Maven publication remain required after Phases 9 through
+12; they are not used to bypass the P0 host boundary. The release workflow must archive this plan
+only after every linked changeset is included and immediately before Maven upload.
 
 ## Maven release changesets
 
@@ -713,6 +724,194 @@ clamping, recomposition preservation, and cancellation restoration may remain on
 independent tests and compatibility review pass. Do not compensate for a failed composite by
 adding One UI, Cupertino, or Material knowledge to Android Renderer.
 
+## Phase 9: Architecture constitution, inventory, and migration baseline
+
+Status: in progress. The durable
+[multi-design-system architecture and integration standard](../../architecture/design-systems.md)
+and [ADR-0005](../../architecture/decisions/README.md)
+are accepted. Production refactoring, automated placement guards, and the implementation baseline
+remain open.
+
+This phase freezes the boundary before moving files or APIs. It has no component-catalog objective.
+No production host behavior changes until all baseline artifacts below are reproducible.
+
+### Shortfalls ordered by expected benefit
+
+| Priority | Shortfall | Benefit and decision | Risk control |
+| --- | --- | --- | --- |
+| P0 | Generally named `viewcompose-android` host entry points expose Material policy and resolve a Material-themed `Context` for every root | Fix first. It prevents native View defaults in One UI or future systems from being silently contaminated before inner tokens are provided | Capture public API, source compatibility, root/context, screenshot, startup, and Maven metadata baselines before extraction; keep the old wiring independently reversible |
+| P0 | Context resolution and composition token/recipe provision are fused | Split in Phase 10. Android Views may read attributes during construction, so token overrides alone cannot establish a neutral root | Test the two phases independently and require one coherent snapshot across root, overlays, lazy content, and navigation sessions |
+| P0 | Material 3 is mostly a theme adapter while One UI already owns recipes/components | Converge ownership after host neutrality so both follow the same architecture without forcing identical APIs | Pressure-test with the existing five families; do not broaden either catalog while ownership is moving |
+| P1 | Native widget and custom-control backend choices are implicit | Build a repository-wide inventory and make replacement gates explicit; this prevents future visual work from silently taking over gesture/accessibility behavior | Record current behavior and renderer mapping before changing a backend; one family per reversible change |
+| P1 | Foundation defaults may contain accidental Material geometry/color assumptions | Audit and classify each default as design-neutral, Material-owned, native-platform-owned, or compatibility-only | Move policy only with screenshots and API/default compatibility evidence; do not rename values mechanically |
+| P1 | Demo diagnostics cannot always distinguish Android XML, dynamic, static design-system, application override, and actual component backend | Add provenance before further visual acceptance so screenshots explain what was rendered | Use deliberately different fixture values, stable tags, exported metadata, and tests that fail on unknown provenance |
+| P1 | Source and dependency gates reject Material in lower layers but do not yet enforce every new host/backend placement rule | Add focused guards after the intended module graph is approved | Prefer exact package/module rules over broad text bans; include negative fixtures where the build logic supports them |
+| P2 | A second context-changing non-Material system does not exist | Do not publish a universal host adapter/plugin SPI yet | Keep the first adapter assembly internal; revisit only with an independent second consumer |
+| P2 | Design-system artifact names lack a common `design` or `theme` word | Do not rename. Existing names already state identity and a rename has low architectural benefit | Add `-android` or a capability suffix only when a real split in dependencies or release ownership exists |
+
+### Required baseline artifacts
+
+1. Record every public/protected Activity and Fragment `setUiContent` signature, its Q level,
+   generated API dump, owning module, and transitive Maven exposure.
+2. Record the Gradle and published-POM dependency graph for `viewcompose-android`,
+   `viewcompose-host-android`, `viewcompose-material3`, and `viewcompose-oneui7`.
+3. Add a controlled root fixture that renders the same native Button, Switch, Slider, TextField,
+   and framework composite under:
+   - Android XML Material mapping;
+   - static Material tokens;
+   - static One UI tokens; and
+   - explicit application overrides with intentionally distinct colors and shapes.
+4. Export the actual root/View `Context` chain, token source, recipe identity, component backend,
+   and conformance/fallback result with stable screenshot tags.
+5. Capture root creation, initial render, retained patch, configuration recreation, overlay, lazy
+   item, and navigation page-session behavior before refactoring.
+6. Record startup/build/patch allocations and timing on the existing emulator matrix. These
+   numbers are regression baselines, not release-performance claims.
+7. Classify every core mapping as native behavioral core, DSL composite, neutral custom View, or
+   named Android integration. For each native control, list the behavior that blocks replacement.
+8. Approve the target module/dependency graph and compatibility strategy before moving APIs.
+
+### Phase 9 keep gate
+
+- the baseline distinguishes Material context effects from ViewCompose token effects;
+- API and POM snapshots make accidental consumer dependency or source breakage visible;
+- every mapped component has one backend owner and no ambiguous design-policy owner;
+- architecture/source guards have a concrete target rather than inferring policy from names; and
+- no production behavior, Maven coordinate, or default has changed.
+
+Rollback: this phase is documentation, tests, diagnostics, and baseline evidence. Revert a noisy or
+unstable diagnostic fixture rather than weakening its assertion. Do not begin Phase 10 until the
+P0 context contamination is reproduced or falsified by evidence.
+
+## Phase 10: Neutral Android host and named Material integration
+
+Status: pending Phase 9.
+
+Goal: separate root platform-context resolution from composition design policy, remove implicit
+Material selection from neutral host paths, and preserve a small consumer setup surface.
+
+Ordered work:
+
+1. Define an internal resolved root-platform input that contains the effective `Context`, Android
+   environment, capabilities, and lifecycle-owned refresh hooks without design-system identity.
+2. Keep `viewcompose-host-android` responsible only for mounting, platform installation, session
+   lifecycle, and environment extraction from the already resolved root.
+3. Move Material context wrapping, XML/AppCompat/Material attribute reading, dynamic-color policy,
+   and Material refresh ownership behind a Material-named integration boundary.
+4. Add neutral Activity/Fragment entry points whose parameters and defaults contain no Material
+   types. Determine from the Phase 9 baseline whether old overloads remain temporarily as
+   deprecated Material forwarding facades or move directly while the API is alpha.
+5. Converge generally named `viewcompose-android` on a neutral aggregate. If a separate Material
+   Android artifact is justified, name it by the actual platform boundary and preserve one-line
+   Material application setup through intentional `api` publication rather than hidden lower-layer
+   coupling.
+6. Make root design-system switching reconstruct both the resolved platform context and immutable
+   composition bundle. Never patch only the tokens of Views constructed under the old context.
+7. Propagate the same bundle/provenance through overlays, lazy items, navigation destinations,
+   configuration recreation, and process restore.
+8. Add source/dependency guards that reject Material imports/dependencies and Material public types
+   in neutral Host and generally named neutral entry points.
+9. Update module manuals, theming guidance, compiled Q3 samples, API dumps, aggregate dependency
+   guidance, and immutable release changesets with the production change.
+
+### Phase 10 keep gate
+
+- a static One UI root constructs native Views without an implicit Material wrapper;
+- Material XML and dynamic-color roots retain their accepted output through the named adapter;
+- neutral entry points expose no Material policy types or defaults;
+- root, overlay, lazy, and navigation sessions report one matching bundle and context provenance;
+- source compatibility follows the approved baseline decision, and minimal app Maven dependencies
+  remain no more complex than before;
+- API 24, 31, 35, and current emulator behavior/screenshot matrices pass; and
+- startup, initial render, retained patch, and allocation regressions stay within the approved
+  Phase 9 tolerance.
+
+Rollback: revert neutral-entry wiring and Material adapter movement as one unit if context/session
+coherence, compatibility, dependency ergonomics, or performance gates fail. Keep independent
+diagnostics and source guards only if they remain truthful for the restored implementation. Never
+restore behavior by importing Material into Renderer, UI Foundation, or host-android.
+
+## Phase 11: Design-system ownership and provenance convergence
+
+Status: pending Phase 10.
+
+Goal: make Material 3, One UI, and future systems follow the same ownership rules without requiring
+the same public component structure.
+
+Ordered work:
+
+1. Audit Foundation defaults and classify each as a reusable semantic, Android platform behavior,
+   Material policy, or compatibility default. Move only proven named policy.
+2. Define the smallest complete Material recipe/component slice matching the existing pressure
+   families: Surface/Card, Button, Switch, TextField, and NavigationBar/selection. Reuse neutral
+   Basic primitives and native behavioral cores; do not map generic nodes to Material Components.
+3. Preserve different Material and One UI public vocabularies when their variants, slots, or state
+   models differ. Share execution and interaction contracts only where the pressure slice proves
+   semantic equality.
+4. Make each effective value report its source category: framework default, Android XML mapping,
+   dynamic Material mapping, named static tokens, or application override.
+5. Upgrade the Settings-tab theme diagnostics into the canonical manual matrix. Use deliberately
+   different XML and custom-token palettes/shapes so one screenshot cannot pass by coincidence.
+6. Export recipe/backend/conformance metadata next to stable screenshot anchors and fail captures
+   when the metadata is missing, contradictory, or belongs to another root snapshot.
+7. Add isolation tests proving Material and One UI modules can be consumed independently and no
+   named system enters Foundation, Renderer, or neutral Host.
+
+### Phase 11 keep gate
+
+- all five pressure families have an explicit owner in Material and One UI;
+- the same screenshot can be explained from context source through token, recipe, backend, and
+  renderer fallback;
+- no mega recipe bundle or union component API is introduced;
+- Material Components, if retained for a specific component, remain behind a Material-named module
+  with documented behavior benefit and no leaked concrete type; and
+- default moves do not create unapproved source, binary, screenshot, or dependency regressions.
+
+Rollback: revert one family or provenance adapter independently. Do not keep a shared abstraction
+whose only justification is implementation effort already spent or apparent source deduplication.
+
+## Phase 12: Component backend convergence before catalog growth
+
+Status: pending Phase 11.
+
+Goal: close the remaining shared behavioral foundations and then select the correct backend per
+component. This phase does not authorize wholesale native-widget replacement.
+
+Ordered work by benefit:
+
+1. Preserve the native `EditText` editing core. Separate decoration further only when a pinned
+   design system cannot reach fidelity through current structure, and retain IME, selection,
+   composition, autofill, accessibility, and save/restore behavior.
+2. Keep native Slider/SeekBar until a design system requires incompatible geometry. Before a
+   replacement, complete tap/drag/step/RTL/key/range-accessibility foundations and compare
+   behavior/performance against the native baseline.
+3. Keep native Checkbox/Radio behavior until a custom tri-state, mark transition, or group model is
+   required. Add shared selection/semantics foundations before the custom visual implementation.
+4. Re-evaluate native Switch only against the completed anchored-drag foundation and design-system
+   pressure evidence; do not add a new universal Switch renderer node merely for source reuse.
+5. Use design-system-owned DSL composites for small structural controls when real child Views keep
+   focus and accessibility correct. Use neutral custom Views only for reusable drawing/layout or a
+   demonstrated performance need.
+6. Keep one-system or external Android widget implementations in named integrations through
+   `AndroidView`. Promote them into Renderer only after two independent consumers and the full
+   lifecycle/rollback/accessibility gate.
+7. Land each component family as a separate reversible slice with its own before/after behavior,
+   screenshot, allocation, patch, draw, and animation evidence.
+
+### Phase 12 keep gate
+
+- every changed component meets or exceeds its native behavioral baseline;
+- the backend decision is recorded and visible in diagnostics;
+- shared contracts are name-free and have at least two independent consumers;
+- high-fidelity changes preserve 48dp targets, keyboard/D-pad, TalkBack, RTL, controlled state,
+  reduced motion, recycling, and restore behavior; and
+- a custom backend is reverted when visual benefit is marginal, performance regresses, or the
+  abstraction damages the framework's boundaries or overall design quality.
+
+Rollback: one component family at a time. Retain independently valuable behavior foundations only
+when their generic tests and API review pass. A failed custom control returns to its native core or
+named integration; it never earns a design-system branch in Renderer.
+
 ## Testing and evidence matrix
 
 Every structural phase selects a proportional subset and records why omitted cells are safe.
@@ -765,6 +964,10 @@ or aggregate dependency guidance, API docs, changeset plan, and release gates in
 | API/OEM visual inconsistency | own geometry for high-fidelity controls and declare conformance/fallback by capability |
 | Blur/morph destabilizes older devices | explicit degraded/static paths, debug diagnostics, and independent rollback |
 | Runtime switch mixes state | rebuild at the root and capture one coherent bundle for lazy/overlay sessions |
+| Neutral roots inherit Material context policy | separate pre-View context resolution from composition provision; reject Material types and implicit wrapping in neutral host paths |
+| Host extraction breaks consumers or Maven ergonomics | capture API/POM/minimal-app baselines first; keep any compatibility facade named and independently removable |
+| Token screenshots cannot identify the winning source | use distinct XML/static/override fixtures and export token, recipe, backend, context, and fallback provenance |
+| Backend consistency becomes “custom View everywhere” | preserve native behavioral cores where valuable and select a backend per component from measured behavior and fidelity |
 | Too many files change per component | land recipe, Basic primitive, surface/effect, motion, and public DS work in separate reversible phases |
 | Performance degrades silently | Phase 0 baseline plus per-phase allocation/frame-time keep gates |
 | Alpha public API freezes too early | internal-first experiment, Q-level review, compiled samples, and no unused marker contracts |
@@ -774,6 +977,7 @@ or aggregate dependency guidance, API docs, changeset plan, and release gates in
 Deferred until evidence exists:
 
 - public general renderer/plugin registration;
+- public general host theme/context adapter SPI before a second context-changing design system;
 - in-place live mutation of an active design-system instance;
 - full One UI or Cupertino component catalog before the five-component slice;
 - custom TextField editing engine;
@@ -785,6 +989,9 @@ Rejected for this plan:
 
 - one mega `UiThemeTokens` type containing every design system's component styles;
 - Android Renderer `when (designSystem)` branches;
+- an implicit Material-themed `Context` in neutral host entry points;
+- renaming every design-system artifact to insert `design` or `theme` without a real dependency or
+  platform boundary;
 - Material Components dependencies in UI Foundation or the generic Android Renderer;
 - pixel-identical claims across every API/OEM with no declared fallback;
 - replacing all native widgets before their behavioral value is measured;
@@ -804,7 +1011,13 @@ This plan is complete only when:
    documentation;
 4. root switching, overlays, and diagnostics preserve a coherent design-system snapshot;
 5. shape morph and blur either have retained implementations or documented degraded/static paths;
-6. every linked immutable Maven changeset has shipped and the release workflow has archived this
+6. neutral Android host paths neither expose Material types nor select a Material context, while a
+   named Material adapter preserves XML/dynamic-color behavior and simple consumer setup;
+7. Material and One UI follow the same token/recipe/component ownership boundary, with explicit
+   token source, backend, and conformance diagnostics;
+8. every mapped component has a recorded backend owner, and every replaced native widget passes
+   its applicable behavior/accessibility/lifecycle/performance baseline;
+9. every linked immutable Maven changeset has shipped and the release workflow has archived this
    plan before Maven upload.
 
 At completion, move durable architecture to `docs/architecture/`, user setup to `docs/guides/`,
