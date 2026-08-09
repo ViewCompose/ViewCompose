@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 8f86599b78f2b82326a768f4e332bed55968f0ff5efb59e7b0dda20758cd79ff
+translation_source_hash: 02eb77f6ec685b7205eea7d5709a5a4df215569fcd08a421c88df984f0e79506
 translation_status: current
 ---
 
@@ -18,7 +18,7 @@ translation_status: current
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
 }
 ```
 
@@ -95,3 +95,5 @@ AndroidView(
 
 五层架构硬切后，Activity 与 Fragment 的 `setUiContent` 扩展迁移到 `viewcompose-android`，本底层
 模块不保留兼容 facade。
+`0.1.0-alpha04` 把 Overlay Service Discovery 收窄为单个中立 Provider；标准 Root 显式选择
+Backend，重复 Provider 属于配置错误。

@@ -15,7 +15,7 @@ APIs without the standard Activity/Fragment integration.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
 }
 ```
 
@@ -94,3 +94,5 @@ The generated reference is available in the
 
 The Activity and Fragment `setUiContent` extensions moved to `viewcompose-android` in the hard-cut
 five-layer architecture. No compatibility facade remains in this low-level artifact.
+Version `0.1.0-alpha04` restricts overlay service discovery to one neutral provider; standard roots
+choose their backend explicitly, and duplicate providers are a configuration error.
