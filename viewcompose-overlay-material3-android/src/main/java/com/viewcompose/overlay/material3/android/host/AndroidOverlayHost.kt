@@ -7,6 +7,8 @@ import com.viewcompose.overlay.android.AndroidOverlayHost as PlatformAndroidOver
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.OverlayRequest
 import com.viewcompose.ui.foundation.OverlaySessionId
+import com.viewcompose.ui.foundation.UiDesignConformance
+import com.viewcompose.ui.foundation.UiIntegrationAttribution
 import com.viewcompose.ui.unit.dp
 
 /**
@@ -31,6 +33,30 @@ class AndroidOverlayHost(
         snackbarPresenter = AndroidSnackbarOverlayPresenter(rootView),
         modalBottomSheetPresenter = AndroidModalBottomSheetPresenter(rootView),
     )
+
+    /** Reports the neutral transport and Material presenter selected for every overlay type. */
+    val integrationAttribution: List<UiIntegrationAttribution> =
+        delegate.integrationAttribution.map { attribution ->
+            when (attribution.capabilityId) {
+                "overlay.dialog" -> attribution.copy(
+                    presenterId = "viewcompose-material3/captured-dialog-content",
+                )
+                "overlay.popup" -> attribution.copy(
+                    presenterId = "viewcompose-material3/captured-popup-content",
+                )
+                "overlay.snackbar" -> attribution.copy(
+                    presenterId = "material-components/snackbar",
+                    conformance = UiDesignConformance.Equivalent,
+                    fallback = "none",
+                )
+                "overlay.modal-bottom-sheet" -> attribution.copy(
+                    presenterId = "material-components/bottom-sheet-dialog",
+                    conformance = UiDesignConformance.Equivalent,
+                    fallback = "none",
+                )
+                else -> attribution
+            }
+        }
 
     /**
      * Reconciles [requests] as the complete desired overlay set for [sessionId].

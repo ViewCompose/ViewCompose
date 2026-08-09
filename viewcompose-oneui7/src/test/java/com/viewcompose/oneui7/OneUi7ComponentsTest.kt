@@ -6,6 +6,7 @@ import com.viewcompose.ui.foundation.DesignSystemDiagnostics
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiDesignSystemAttribution
+import com.viewcompose.ui.foundation.UiDesignConformance
 import com.viewcompose.ui.foundation.buildVNodeTree
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsModifierElement
@@ -55,6 +56,11 @@ class OneUi7ComponentsTest {
         assertEquals(
             listOf("button", "navigation-bar", "surface-card", "switch", "text-field"),
             attribution?.components?.map { it.familyId }?.sorted(),
+        )
+        assertEquals("unsupported", attribution?.integration("overlay.snackbar")?.presenterId)
+        assertEquals(
+            UiDesignConformance.Unsupported,
+            attribution?.integration("overlay.modal-bottom-sheet")?.conformance,
         )
     }
 

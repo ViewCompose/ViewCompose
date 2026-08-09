@@ -53,6 +53,14 @@ class DesignSystemDiagnosticsTest {
                     capabilityPath = "android-switch",
                 ),
             ),
+            integrations = listOf(
+                UiIntegrationAttribution(
+                    capabilityId = "overlay.snackbar",
+                    transportId = "test-overlay",
+                    presenterId = "test-snackbar",
+                    conformance = UiDesignConformance.Exact,
+                ),
+            ),
         )
         var inside: UiDesignSystemAttribution? = null
         var outside: UiDesignSystemAttribution? = attribution
@@ -65,6 +73,28 @@ class DesignSystemDiagnosticsTest {
         }
 
         assertEquals(attribution, inside)
+        assertEquals("test-snackbar", inside?.integration("overlay.snackbar")?.presenterId)
         assertNull(outside)
+    }
+
+    @Test
+    fun `attribution rejects duplicate integration capabilities`() {
+        val integration = UiIntegrationAttribution(
+            capabilityId = "overlay.dialog",
+            transportId = "android-dialog",
+            presenterId = "captured-content",
+            conformance = UiDesignConformance.Equivalent,
+        )
+
+        val failure = runCatching {
+            UiDesignSystemAttribution(
+                designSystemId = "test-system",
+                recipeSetId = "test-v1",
+                components = emptyList(),
+                integrations = listOf(integration, integration.copy(presenterId = "duplicate")),
+            )
+        }.exceptionOrNull()
+
+        assertEquals(IllegalArgumentException::class.java, failure?.javaClass)
     }
 }

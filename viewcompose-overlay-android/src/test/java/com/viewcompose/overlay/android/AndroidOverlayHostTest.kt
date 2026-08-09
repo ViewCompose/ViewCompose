@@ -74,6 +74,25 @@ class AndroidOverlayHostTest {
         assertEquals(AndroidOverlayHost::class.java, host::class.java)
     }
 
+    @Test
+    fun `neutral attribution reports platform transport and unsupported design presenters`() {
+        val root = FrameLayout(RuntimeEnvironment.getApplication())
+        val host = AndroidOverlayHost(root)
+
+        assertEquals(
+            "android.app.Dialog",
+            host.integrationAttribution.single { it.capabilityId == "overlay.dialog" }.presenterId,
+        )
+        assertEquals(
+            "unsupported",
+            host.integrationAttribution.single { it.capabilityId == "overlay.snackbar" }.presenterId,
+        )
+        assertEquals(
+            "platform-toast",
+            host.integrationAttribution.single { it.capabilityId == "overlay.toast" }.fallback,
+        )
+    }
+
     private class RecordingSnackbarPresenter : SnackbarOverlayPresenter {
         var lastEntryId: OverlayEntryId? = null
         var lastSpec: SnackbarOverlaySpec? = null

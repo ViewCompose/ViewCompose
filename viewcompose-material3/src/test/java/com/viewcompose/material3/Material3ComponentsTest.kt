@@ -45,6 +45,14 @@ class Material3ComponentsTest {
             listOf("button", "navigation-bar", "surface-card", "switch", "text-field"),
             attribution?.components?.map { it.familyId }?.sorted(),
         )
+        assertEquals(
+            "material-components/snackbar",
+            attribution?.integration("overlay.snackbar")?.presenterId,
+        )
+        assertEquals(
+            "material-components/bottom-sheet-dialog",
+            attribution?.integration("overlay.modal-bottom-sheet")?.presenterId,
+        )
         assertFalse(nodes.any { node -> node.type == NodeType.Button })
         assertTrue(nodes.count { node -> node.type == NodeType.Surface } >= 3)
         assertEquals(1, nodes.count { node -> node.type == NodeType.Switch })

@@ -56,6 +56,34 @@ data class UiComponentAttribution(
 }
 
 /**
+ * Immutable diagnostic attribution for one platform or library integration capability.
+ *
+ * This describes the selected execution path without carrying factories, Android objects, or
+ * mutable backend state. It can therefore travel with captured composition-local snapshots.
+ *
+ * @property capabilityId stable capability identity such as `overlay.snackbar`
+ * @property transportId stable owner of lifecycle, queuing, or platform-surface transport
+ * @property presenterId stable presenter or behavior backend identity
+ * @property conformance accepted fidelity result for this integration path
+ * @property fallback stable fallback identity, or `none` when no fallback is active
+ * @throws IllegalArgumentException when an identity or fallback value is blank
+ */
+data class UiIntegrationAttribution(
+    val capabilityId: String,
+    val transportId: String,
+    val presenterId: String,
+    val conformance: UiDesignConformance,
+    val fallback: String = "none",
+) {
+    init {
+        require(capabilityId.isNotBlank()) { "UiIntegrationAttribution capabilityId must not be blank." }
+        require(transportId.isNotBlank()) { "UiIntegrationAttribution transportId must not be blank." }
+        require(presenterId.isNotBlank()) { "UiIntegrationAttribution presenterId must not be blank." }
+        require(fallback.isNotBlank()) { "UiIntegrationAttribution fallback must not be blank." }
+    }
+}
+
+/**
  * Immutable identity and component-attribution snapshot for one active design-system scope.
  *
  * Component families must be unique so screenshots and delayed-content diagnostics cannot report
@@ -64,12 +92,14 @@ data class UiComponentAttribution(
  * @property designSystemId stable selected design-system identity
  * @property recipeSetId stable versioned identity of the provided recipe slice
  * @property components bounded component evidence owned by this design-system scope
- * @throws IllegalArgumentException for blank identities or duplicate component families
+ * @property integrations bounded platform and library integration evidence for this scope
+ * @throws IllegalArgumentException for blank identities or duplicate capability identities
  */
 data class UiDesignSystemAttribution(
     val designSystemId: String,
     val recipeSetId: String,
     val components: List<UiComponentAttribution>,
+    val integrations: List<UiIntegrationAttribution> = emptyList(),
 ) {
     init {
         require(designSystemId.isNotBlank()) {
@@ -81,12 +111,26 @@ data class UiDesignSystemAttribution(
         require(components.map(UiComponentAttribution::familyId).distinct().size == components.size) {
             "UiDesignSystemAttribution component family ids must be unique."
         }
+        require(
+            integrations.map(UiIntegrationAttribution::capabilityId).distinct().size ==
+                integrations.size,
+        ) {
+            "UiDesignSystemAttribution integration capability ids must be unique."
+        }
     }
 
     /** Returns the attribution for [familyId], or `null` when the family is not provided. */
     fun component(familyId: String): UiComponentAttribution? {
         require(familyId.isNotBlank()) { "UiDesignSystemAttribution familyId must not be blank." }
         return components.firstOrNull { component -> component.familyId == familyId }
+    }
+
+    /** Returns integration evidence for [capabilityId], or `null` when it is not declared. */
+    fun integration(capabilityId: String): UiIntegrationAttribution? {
+        require(capabilityId.isNotBlank()) {
+            "UiDesignSystemAttribution capabilityId must not be blank."
+        }
+        return integrations.firstOrNull { integration -> integration.capabilityId == capabilityId }
     }
 }
 

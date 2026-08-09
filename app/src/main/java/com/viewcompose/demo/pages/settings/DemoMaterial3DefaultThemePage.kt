@@ -325,6 +325,10 @@ private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
     val componentEvidence = attribution?.components?.joinToString(separator = " · ") { component ->
         "${component.familyId}:${component.backend.name}/${component.conformance.name}"
     } ?: "unattributed"
+    val overlayEvidence = attribution?.integrations?.joinToString(separator = " · ") { integration ->
+        "${integration.capabilityId}:${integration.presenterId}/${integration.conformance.name}" +
+            if (integration.fallback == "none") "" else "→${integration.fallback}"
+    } ?: "unattributed"
     Column(
         spacing = 12.dp,
         modifier = Modifier.fillMaxWidth().margin(top = 12.dp),
@@ -343,6 +347,11 @@ private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
                 DiagnosticFact("Design system", attribution?.designSystemId ?: "unattributed"),
                 DiagnosticFact("Recipe set", attribution?.recipeSetId ?: "unattributed"),
                 DiagnosticFact("Component backends", componentEvidence),
+                DiagnosticFact(
+                    "Overlay transport",
+                    attribution?.integration("overlay.dialog")?.transportId ?: "unattributed",
+                ),
+                DiagnosticFact("Overlay presenters", overlayEvidence),
                 DiagnosticFact("Mode", if (Theme.current.metadata.isDark == true) "Dark" else "Light"),
                 DiagnosticFact("Primary", colors.primary.asColorHex()),
                 DiagnosticFact("PrimaryContainer", colors.primaryContainer.asColorHex()),

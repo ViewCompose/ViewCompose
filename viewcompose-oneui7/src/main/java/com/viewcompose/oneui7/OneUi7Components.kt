@@ -25,6 +25,7 @@ import com.viewcompose.ui.foundation.UiColors
 import com.viewcompose.ui.foundation.UiInteractionTokens
 import com.viewcompose.ui.foundation.UiDesignConformance
 import com.viewcompose.ui.foundation.UiDesignSystemAttribution
+import com.viewcompose.ui.foundation.UiIntegrationAttribution
 import com.viewcompose.ui.foundation.UiLocals
 import com.viewcompose.ui.foundation.UiNavigationBarSizing
 import com.viewcompose.ui.foundation.UiOverlays
@@ -340,6 +341,41 @@ private val OneUi7Attribution = UiDesignSystemAttribution(
             backend = UiComponentBackend.DslComposite,
             conformance = UiDesignConformance.Equivalent,
             capabilityPath = "text-destination-composite",
+        ),
+    ),
+    integrations = listOf(
+        UiIntegrationAttribution(
+            capabilityId = "overlay.dialog",
+            transportId = "viewcompose-overlay-android/dialog",
+            presenterId = "viewcompose-oneui7/captured-dialog-content",
+            conformance = UiDesignConformance.Equivalent,
+        ),
+        UiIntegrationAttribution(
+            capabilityId = "overlay.popup",
+            transportId = "viewcompose-overlay-android/popup",
+            presenterId = "viewcompose-oneui7/captured-popup-content",
+            conformance = UiDesignConformance.Equivalent,
+        ),
+        UiIntegrationAttribution(
+            capabilityId = "overlay.snackbar",
+            transportId = "viewcompose-overlay-android/transient-queue",
+            presenterId = "unsupported",
+            conformance = UiDesignConformance.Unsupported,
+            fallback = "none",
+        ),
+        UiIntegrationAttribution(
+            capabilityId = "overlay.modal-bottom-sheet",
+            transportId = "viewcompose-overlay-android/modal-session",
+            presenterId = "unsupported",
+            conformance = UiDesignConformance.Unsupported,
+            fallback = "none",
+        ),
+        UiIntegrationAttribution(
+            capabilityId = "overlay.toast",
+            transportId = "viewcompose-overlay-android/transient-queue",
+            presenterId = "android.widget.Toast",
+            conformance = UiDesignConformance.Degraded,
+            fallback = "platform-toast",
         ),
     ),
 )

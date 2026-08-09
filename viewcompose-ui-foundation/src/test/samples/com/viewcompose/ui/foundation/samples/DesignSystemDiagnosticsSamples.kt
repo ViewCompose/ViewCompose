@@ -6,6 +6,7 @@ import com.viewcompose.ui.foundation.UiComponentAttribution
 import com.viewcompose.ui.foundation.UiComponentBackend
 import com.viewcompose.ui.foundation.UiDesignConformance
 import com.viewcompose.ui.foundation.UiDesignSystemAttribution
+import com.viewcompose.ui.foundation.UiIntegrationAttribution
 import com.viewcompose.ui.foundation.buildVNodeTree
 
 fun designSystemAttributionSample() {
@@ -21,6 +22,14 @@ fun designSystemAttributionSample() {
                 capabilityPath = "basic-button",
             ),
         ),
+        integrations = listOf(
+            UiIntegrationAttribution(
+                capabilityId = "overlay.snackbar",
+                transportId = "product-overlay-transport",
+                presenterId = "product-snackbar-v1",
+                conformance = UiDesignConformance.Exact,
+            ),
+        ),
     )
     var observed: UiDesignSystemAttribution? = null
 
@@ -31,4 +40,5 @@ fun designSystemAttributionSample() {
     }
 
     check(observed?.component("button")?.recipeId == "product-filled-button-v1")
+    check(observed?.integration("overlay.snackbar")?.presenterId == "product-snackbar-v1")
 }

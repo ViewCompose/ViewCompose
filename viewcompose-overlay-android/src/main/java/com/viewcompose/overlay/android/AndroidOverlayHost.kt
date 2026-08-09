@@ -13,6 +13,8 @@ import com.viewcompose.ui.foundation.OverlaySessionId
 import com.viewcompose.ui.foundation.PopupOverlayHost
 import com.viewcompose.ui.foundation.SnackbarOverlayPresenter
 import com.viewcompose.ui.foundation.TransientFeedbackOverlayHost
+import com.viewcompose.ui.foundation.UiDesignConformance
+import com.viewcompose.ui.foundation.UiIntegrationAttribution
 import com.viewcompose.ui.unit.UiDp
 
 /**
@@ -39,6 +41,60 @@ class AndroidOverlayHost(
     snackbarPresenter: SnackbarOverlayPresenter? = null,
     modalBottomSheetPresenter: ModalBottomSheetOverlayPresenter? = null,
 ) : OverlayHost {
+    /**
+     * Reports the root-scoped Android transport and presenter selected for every overlay type.
+     *
+     * Custom snackbar or modal-sheet presenters are reported by runtime class name with degraded
+     * conformance because this neutral host cannot certify a design system's fidelity claim.
+     */
+    val integrationAttribution: List<UiIntegrationAttribution> = listOf(
+        integration(
+            capabilityId = "overlay.dialog",
+            transportId = "viewcompose-overlay-android/dialog",
+            presenterId = "android.app.Dialog",
+            conformance = UiDesignConformance.Equivalent,
+        ),
+        integration(
+            capabilityId = "overlay.popup",
+            transportId = "viewcompose-overlay-android/popup",
+            presenterId = "android.widget.PopupWindow",
+            conformance = UiDesignConformance.Equivalent,
+        ),
+        integration(
+            capabilityId = "overlay.snackbar",
+            transportId = "viewcompose-overlay-android/transient-queue",
+            presenterId = snackbarPresenter?.javaClass?.name ?: "unsupported",
+            conformance = if (snackbarPresenter == null) {
+                UiDesignConformance.Unsupported
+            } else {
+                UiDesignConformance.Degraded
+            },
+            fallback = if (snackbarPresenter == null) "none" else "unverified-custom-presenter",
+        ),
+        integration(
+            capabilityId = "overlay.modal-bottom-sheet",
+            transportId = "viewcompose-overlay-android/modal-session",
+            presenterId = modalBottomSheetPresenter?.javaClass?.name ?: "unsupported",
+            conformance = if (modalBottomSheetPresenter == null) {
+                UiDesignConformance.Unsupported
+            } else {
+                UiDesignConformance.Degraded
+            },
+            fallback = if (modalBottomSheetPresenter == null) {
+                "none"
+            } else {
+                "unverified-custom-presenter"
+            },
+        ),
+        integration(
+            capabilityId = "overlay.toast",
+            transportId = "viewcompose-overlay-android/transient-queue",
+            presenterId = "android.widget.Toast",
+            conformance = UiDesignConformance.Degraded,
+            fallback = "platform-toast",
+        ),
+    )
+
     private val delegate = CompositeOverlayHost(
         DialogOverlayHost(
             AndroidDialogOverlayPresenter(
@@ -80,6 +136,22 @@ class AndroidOverlayHost(
     override fun clear(sessionId: OverlaySessionId) {
         delegate.clear(sessionId)
     }
+}
+
+private fun integration(
+    capabilityId: String,
+    transportId: String,
+    presenterId: String,
+    conformance: UiDesignConformance,
+    fallback: String = "none",
+): UiIntegrationAttribution {
+    return UiIntegrationAttribution(
+        capabilityId = capabilityId,
+        transportId = transportId,
+        presenterId = presenterId,
+        conformance = conformance,
+        fallback = fallback,
+    )
 }
 
 /** Fans one desired request set out to type-specific hosts. */

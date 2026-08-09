@@ -13,6 +13,7 @@ import com.viewcompose.ui.foundation.UiComponentAttribution
 import com.viewcompose.ui.foundation.UiComponentBackend
 import com.viewcompose.ui.foundation.UiDesignConformance
 import com.viewcompose.ui.foundation.UiDesignSystemAttribution
+import com.viewcompose.ui.foundation.UiIntegrationAttribution
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeTokens
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -169,6 +170,39 @@ private val Material3Attribution = UiDesignSystemAttribution(
             backend = UiComponentBackend.NeutralCustomView,
             conformance = UiDesignConformance.Equivalent,
             capabilityPath = "renderer-navigation-bar",
+        ),
+    ),
+    integrations = listOf(
+        UiIntegrationAttribution(
+            capabilityId = "overlay.dialog",
+            transportId = "viewcompose-overlay-android/dialog",
+            presenterId = "viewcompose-material3/captured-dialog-content",
+            conformance = UiDesignConformance.Equivalent,
+        ),
+        UiIntegrationAttribution(
+            capabilityId = "overlay.popup",
+            transportId = "viewcompose-overlay-android/popup",
+            presenterId = "viewcompose-material3/captured-popup-content",
+            conformance = UiDesignConformance.Equivalent,
+        ),
+        UiIntegrationAttribution(
+            capabilityId = "overlay.snackbar",
+            transportId = "viewcompose-overlay-android/transient-queue",
+            presenterId = "material-components/snackbar",
+            conformance = UiDesignConformance.Equivalent,
+        ),
+        UiIntegrationAttribution(
+            capabilityId = "overlay.modal-bottom-sheet",
+            transportId = "viewcompose-overlay-android/modal-session",
+            presenterId = "material-components/bottom-sheet-dialog",
+            conformance = UiDesignConformance.Equivalent,
+        ),
+        UiIntegrationAttribution(
+            capabilityId = "overlay.toast",
+            transportId = "viewcompose-overlay-android/transient-queue",
+            presenterId = "android.widget.Toast",
+            conformance = UiDesignConformance.Degraded,
+            fallback = "platform-toast",
         ),
     ),
 )
