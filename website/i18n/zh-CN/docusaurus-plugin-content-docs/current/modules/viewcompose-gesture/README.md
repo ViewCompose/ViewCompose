@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture/README.md
-translation_source_hash: f01e9fdb98e01faf34f48e2c51e682eacaeb77471e65bb6dd652be76f8c8803f
+translation_source_hash: 9d41522ea3b4e9d8ed47e5b004d82d6075593833d5382a06fd2066203b6e9ed6
 translation_status: current
 ---
 
@@ -107,7 +107,9 @@ val target = Modifier
 移动尚未形成 Drag 时，Renderer 会把 Tap 留给 Click Modifier。已识别的 Drag 会消费结束事件，按
 位置或速度 Settle，并只请求一次替换状态。组件继续拥有几何、Density/Layout Direction 转换、
 Settled 动画、Checked Semantics 与持久化。拖动中使用 `isDragging` 直接绘制 Follow-finger 进度，
-空闲时使用 Design System 自己的 Motion 契约。
+空闲时使用 Design System 自己的 Motion 契约。`lastCompletion` 会在替换状态 Callback 之前同步
+发布，并保留正常 Settle 或取消恢复端点之前的逻辑进度。组件可用其中逐 State 递增的序列号与
+起始进度继续 Settled 动画，避免短暂跳回旧端点。
 
 ## Transform 手势
 
@@ -136,8 +138,8 @@ Post 回调在之后。可选 `NestedScrollDispatcher` 支持应用主动派发�
 - 用新 Lambda 重组，验证 Remember 的 State 转发到最新回调。
 
 模块测试覆盖 Modifier 编码、无操作点击声明、Drag 与 Transform 转发、Anchored
-边界/重组/取消/Settle 行为、受控 LTR/RTL Toggle 进度、非法 Free 方向、优先级编码和
-Nested Scroll 连接。
+边界/重组/取消/Settle 行为、受控 LTR/RTL Toggle 进度、Settle 前 Toggle Completion 快照、
+非法 Free 方向、优先级编码和 Nested Scroll 连接。
 
 ## 相关文档
 

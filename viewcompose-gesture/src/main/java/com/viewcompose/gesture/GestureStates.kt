@@ -210,6 +210,9 @@ class AnchoredDraggableState<T> internal constructor(
     private val draggingState = mutableStateOf(false)
     private var anchors: DraggableAnchors<T>? = null
 
+    internal var lastCompletionStartOffsetPx: Float? = null
+        private set
+
     /** Semantic value committed at the current anchor. */
     val currentValue: State<T>
         get() = currentState
@@ -282,6 +285,7 @@ class AnchoredDraggableState<T> internal constructor(
 
     internal fun settleToOffset(offsetPx: Float) {
         val activeAnchors = anchors ?: return
+        lastCompletionStartOffsetPx = currentOffsetState.value
         val nearest = activeAnchors.nearest(offsetPx)
         draggingState.value = false
         currentState.value = nearest.value
@@ -290,6 +294,7 @@ class AnchoredDraggableState<T> internal constructor(
     }
 
     internal fun cancelDrag() {
+        lastCompletionStartOffsetPx = currentOffsetState.value
         draggingState.value = false
         targetState.value = currentState.value
         currentOffsetState.value = anchors?.offsetOf(currentState.value)

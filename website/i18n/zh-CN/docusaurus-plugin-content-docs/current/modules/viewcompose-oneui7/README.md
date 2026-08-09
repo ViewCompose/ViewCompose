@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 91909d252501da529d0078a40615278565d53d1f4d70676771a6f3301f379a7b
+translation_source_hash: 4587ac87bfe12c9fd39b8e82a2fff2a8ba65f431e36c6fcc55335210abeaf741
 translation_status: current
 ---
 
@@ -108,7 +108,7 @@ Recipe 仍保持独立，One UI 策略不会进入 UI Foundation 或 Renderer。
   间距仍是可覆盖的解释尺寸 Token，不会被表述成 Samsung 已公开的精确 Token。
 - Switch 与 NavigationBar 状态归调用方所有；Callback 只请求替换状态，不会修改调用方数据。
   Switch 支持整行 Click 与有界 Follow-finger Drag，并按位置/速度 Settle；取消会回滚状态，RTL
-  会镜像物理移动方向。
+  会镜像物理移动方向。松手后的 Settle 会从最后一个可见拖动位置继续，不会从端点重新开始。
 - TextField 保留 ViewCompose 的原生 Android 编辑内核，继续承担 IME、选区、组合区、Autofill、
   Accessibility 与 Saved State 行为。
 - RTL 只反转 Destination 的视觉顺序，不改变调用方 Index 或 Key。
@@ -129,8 +129,8 @@ Snackbar 与 Modal Bottom Sheet Presenter。主题默认 Attribution 会把这�
 
 ## 验证与限制
 
-单元测试与 Gesture 契约测试保护 Light/Dark 快照、组件结构、参数校验、受控 Drag
-边界/Settle/取消与 Callback 行为。Demo 设置页中的
+单元测试与 Gesture 契约测试保护 Light/Dark 快照、组件结构、参数校验、真实触摸 Click 分发、
+受控 Drag 边界/Settle/取消、松手连续性与 Callback 行为。Demo 设置页中的
 `Verify One UI 7 five-component alpha` 入口会覆盖 Light/LTR/1.0 与 Dark/RTL/1.3，并导出包含
 Token 来源、组件集标识与一致性标签的确定性截图。API 35 模拟器证据覆盖状态变化、Disabled、
 原生文本编辑、RTL 顺序与截图锚点。

@@ -10,6 +10,7 @@ import com.viewcompose.gesture.rememberAnchoredDraggableState
 import com.viewcompose.gesture.rememberDraggableState
 import com.viewcompose.gesture.rememberTransformableState
 import com.viewcompose.gesture.rememberToggleDragState
+import com.viewcompose.gesture.ToggleDragCompletion
 import com.viewcompose.gesture.toggleDraggable
 import com.viewcompose.gesture.transformable
 import com.viewcompose.runtime.mutableStateOf
@@ -66,13 +67,17 @@ fun UiTreeBuilder.anchoredDragState(): Modifier {
 fun UiTreeBuilder.toggleDragState(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-): Pair<Modifier, Float> {
+): Triple<Modifier, Float, ToggleDragCompletion?> {
     val state = rememberToggleDragState(
         checked = checked,
         checkedAnchorOffsetPx = 72f,
         onCheckedChange = onCheckedChange,
     )
-    return Modifier.toggleDraggable(state) to state.progress.value
+    return Triple(
+        Modifier.toggleDraggable(state),
+        state.progress.value,
+        state.lastCompletion.value,
+    )
 }
 
 fun UiTreeBuilder.transformState(): Modifier {

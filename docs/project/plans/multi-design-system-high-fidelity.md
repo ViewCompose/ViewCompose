@@ -702,7 +702,7 @@ Keep criteria:
 
 - a tap toggles exactly once, and a recognized drag never also invokes the click callback;
 - the thumb follows the pointer, never travels beyond either anchor, and settles by the renderer's
-  position/velocity policy;
+  position/velocity policy without restarting from a stale endpoint after release;
 - cancellation, modifier replacement, and controlled-state rejection restore caller-owned state;
 - LTR and RTL expose the same logical unchecked-to-checked progress and opposite physical travel;
 - TalkBack click action, D-pad/keyboard activation, checked announcement, 48dp target, state
@@ -715,9 +715,14 @@ Retained evidence:
 - generic anchored-drag tests cover clamping, equivalent-anchor reinstallation, cancellation,
   settle callbacks, controlled rejection, and logical RTL resynchronization;
 - a renderer touch fixture proves that a recognized drag settles exactly once and does not also
-  click;
+  click, while an unconsumed tap retained during gesture arbitration returns to normal click
+  dispatch;
 - the public One UI 7 controlled Switch fixture passes click, real follow-finger drag, settle, and
-  post-animation stability in LTR and RTL on API 24, 31, 35, and 36;
+  post-animation stability in LTR and RTL on API 24, 31, 35, and 36; the shared controlled-toggle
+  state publishes the pre-endpoint completion progress before the release transition begins;
+- the Material 3 named Switch fixture starts a real tap on the native target and a real drag on its
+  thumb; accepted controlled state avoids a redundant native assignment so the existing platform
+  transition remains uninterrupted;
 - API 35 stable-frame LTR and RTL screenshots were inspected after the animation window rather
   than capturing a stale intermediate frame;
 - Android accessibility nodes expose one-row, single-selection collection metadata and logical

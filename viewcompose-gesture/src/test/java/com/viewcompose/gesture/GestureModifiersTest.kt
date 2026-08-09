@@ -163,10 +163,15 @@ class GestureModifiersTest {
     @Test
     fun `toggle drag exposes logical RTL progress and controlled synchronization`() {
         var requested: Boolean? = null
-        val state = ToggleDragState(
+        var completionSeenByCallback: ToggleDragCompletion? = null
+        lateinit var state: ToggleDragState
+        state = ToggleDragState(
             checked = false,
             onCheckedChangeState = com.viewcompose.runtime.mutableStateOf<(Boolean) -> Unit>(
-                { requested = it },
+                {
+                    requested = it
+                    completionSeenByCallback = state.lastCompletion.value
+                },
             ),
         )
         state.update(checked = false, checkedAnchorOffsetPx = -100f)
@@ -183,9 +188,36 @@ class GestureModifiersTest {
         element.onSettleToOffset(-100f)
         assertEquals(true, requested)
         assertEquals(1f, state.progress.value)
+        assertEquals(1L, state.lastCompletion.value?.completionId)
+        assertEquals(0.4f, state.lastCompletion.value?.startProgress)
+        assertEquals(true, state.lastCompletion.value?.targetChecked)
+        assertEquals(false, state.lastCompletion.value?.cancelled)
+        assertSame(state.lastCompletion.value, completionSeenByCallback)
 
         state.update(checked = false, checkedAnchorOffsetPx = -100f)
         assertEquals(0f, state.progress.value)
+    }
+
+    @Test
+    fun `toggle cancellation publishes release progress before restoring caller state`() {
+        val state = ToggleDragState(
+            checked = false,
+            onCheckedChangeState = com.viewcompose.runtime.mutableStateOf<(Boolean) -> Unit>({}),
+        )
+        state.update(checked = false, checkedAnchorOffsetPx = 100f)
+        val element = Modifier.toggleDraggable(state)
+            .elements.single() as AnchoredDraggableModifierElement
+
+        element.onDelta(65f)
+        element.onDragCancelled?.invoke(
+            com.viewcompose.ui.gesture.GestureCancellationReason.SystemCancelled,
+        )
+
+        assertEquals(0f, state.progress.value)
+        assertEquals(1L, state.lastCompletion.value?.completionId)
+        assertEquals(0.65f, state.lastCompletion.value?.startProgress)
+        assertEquals(false, state.lastCompletion.value?.targetChecked)
+        assertEquals(true, state.lastCompletion.value?.cancelled)
     }
 
     @Test

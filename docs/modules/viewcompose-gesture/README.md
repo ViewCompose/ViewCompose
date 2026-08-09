@@ -114,7 +114,10 @@ The renderer keeps taps available to the click modifier until movement becomes a
 drags consume completion, settle by position or velocity, and request a replacement state exactly
 once. Components own geometry, density/layout-direction conversion, settled animation, checked
 semantics, and persistence. Use `isDragging` to render follow-finger progress directly and the
-design system's normal motion contract while idle.
+design system's normal motion contract while idle. `lastCompletion` is published synchronously
+before the replacement-state callback and retains the logical progress immediately before normal
+settling or cancellation restored an endpoint. A component uses its per-state sequence and start
+progress to continue the settled animation without briefly jumping to a stale endpoint.
 
 ## Transform gestures
 
@@ -149,7 +152,8 @@ velocity they actually consumed.
 
 The module suite covers modifier encoding, no-op click declarations, drag and transform forwarding,
 anchored bounds/recomposition/cancellation/settle behavior, controlled LTR/RTL toggle progress,
-invalid free orientation, priority encoding, and nested-scroll attachment.
+pre-endpoint toggle completion snapshots, invalid free orientation, priority encoding, and
+nested-scroll attachment.
 
 ## Related documentation
 

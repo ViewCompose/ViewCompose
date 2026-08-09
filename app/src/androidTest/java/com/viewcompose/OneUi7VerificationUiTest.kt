@@ -143,7 +143,7 @@ class OneUi7VerificationUiTest {
                             view.width == thumbDiameter && view.height == thumbDiameter
                         },
                     )
-                    activity.clickByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
+                    activity.tapByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
@@ -272,7 +272,7 @@ class OneUi7VerificationUiTest {
                         activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
                             .text.toString(),
                     )
-                    activity.clickByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
+                    activity.tapByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->

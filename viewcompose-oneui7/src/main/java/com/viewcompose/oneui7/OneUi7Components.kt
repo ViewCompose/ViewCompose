@@ -1,10 +1,13 @@
 package com.viewcompose.oneui7
 
 import com.viewcompose.animation.animateDpAsState
+import com.viewcompose.animation.rememberAnimatable
+import com.viewcompose.animation.core.AnimationConverters
 import com.viewcompose.animation.core.tween
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.gesture.rememberToggleDragState
 import com.viewcompose.gesture.toggleDraggable
+import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.foundation.BasicButton
 import com.viewcompose.ui.foundation.BasicButtonStyle
@@ -15,9 +18,11 @@ import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.DesignSystemAttributionProvider
 import com.viewcompose.ui.foundation.Environment
+import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.foundation.UiButtonSizing
 import com.viewcompose.ui.foundation.UiComponentAttribution
 import com.viewcompose.ui.foundation.UiComponentBackend
@@ -527,9 +532,10 @@ fun UiTreeBuilder.OneUi7Surface(
  * The caller owns [checked] and must publish the replacement value from [onCheckedChange]. The
  * complete 48dp-high row is one Switch-semantic target. Clicking any enabled part invokes the
  * callback synchronously with `!checked`; horizontal dragging follows the pointer and settles by
- * position or velocity without also firing the click action. Visual geometry and drag anchors are
- * renderer-neutral and follow layout direction, while Android retains focus and accessibility
- * action ownership.
+ * position or velocity without also firing the click action. Release settlement continues from
+ * the last follow-finger position instead of restarting from a stale endpoint. Visual geometry and
+ * drag anchors are renderer-neutral and follow layout direction, while Android retains focus and
+ * accessibility action ownership.
  *
  * @sample com.viewcompose.oneui7.samples.oneUi7ComponentsSample
  * @receiver active builder inside [OneUi7Theme]
@@ -578,15 +584,45 @@ fun UiTreeBuilder.OneUi7Switch(
         checkedAnchorOffsetPx = Environment.density.toPx(checkedOffset),
         onCheckedChange = onCheckedChange,
     )
-    val idleThumbOffset = animateDpAsState(
-        targetValue = if (checked) checkedOffset else UiDp.Zero,
-        animationSpec = tween(durationMillis = 180),
-    ).value
-    val thumbOffset = if (dragState.isDragging.value) {
-        UiDp(checkedOffset.value * dragState.progress.value)
-    } else {
-        idleThumbOffset
+    val targetProgress = if (checked) 1f else 0f
+    val animatedProgress = rememberAnimatable(
+        initialValue = targetProgress,
+        converter = AnimationConverters.Float,
+    )
+    val isDragging = dragState.isDragging.value
+    val dragProgress = dragState.progress.value
+    val completion = dragState.lastCompletion.value
+    val appliedCompletionId = remember { mutableStateOf(0L) }
+    LaunchedEffect(isDragging, checked, completion?.completionId) {
+        if (isDragging) {
+            animatedProgress.stop()
+        } else {
+            if (
+                completion != null &&
+                appliedCompletionId.value != completion.completionId
+            ) {
+                animatedProgress.snapTo(completion.startProgress)
+                appliedCompletionId.value = completion.completionId
+            }
+            animatedProgress.animateTo(
+                targetValue = targetProgress,
+                animationSpec = tween(durationMillis = 180),
+            )
+        }
     }
+    val visualProgress = when {
+        isDragging -> dragProgress
+        completion != null && appliedCompletionId.value != completion.completionId -> {
+            completion.startProgress
+        }
+        else -> animatedProgress.value
+    }
+    val thumbInset = if (Environment.layoutDirection == UiLayoutDirection.Rtl) {
+        UiDp.Zero - switchSizing.trackPadding
+    } else {
+        switchSizing.trackPadding
+    }
+    val thumbOffset = thumbInset + (checkedOffset * visualProgress)
     val control: UiTreeBuilder.() -> Unit = {
         BasicSurface(
             style = BasicSurfaceStyle(
@@ -595,10 +631,9 @@ fun UiTreeBuilder.OneUi7Switch(
                 clipContent = true,
             ),
             contentColor = thumbColor,
-            key = "one-ui7-switch-track-$enabled-$checked",
+            key = "one-ui7-switch-track",
             modifier = Modifier
-                .size(width = switchSizing.trackWidth, height = switchSizing.trackHeight)
-                .padding(switchSizing.trackPadding),
+                .size(width = switchSizing.trackWidth, height = switchSizing.trackHeight),
             contentAlignment = BoxAlignment.CenterStart,
         ) {
             BasicSurface(
@@ -608,7 +643,7 @@ fun UiTreeBuilder.OneUi7Switch(
                     clipContent = true,
                 ),
                 contentColor = thumbColor,
-                key = "one-ui7-switch-thumb-$enabled-$checked",
+                key = "one-ui7-switch-thumb",
                 modifier = Modifier
                     .size(switchSizing.thumbDiameter, switchSizing.thumbDiameter)
                     .offset(x = thumbOffset),

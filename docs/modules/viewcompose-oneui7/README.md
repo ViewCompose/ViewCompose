@@ -110,7 +110,8 @@ private typed recipes remain separate and no One UI policy enters UI Foundation 
   Samsung numeric tokens.
 - Switch and NavigationBar state is caller-owned. Their callbacks request replacement state and do
   not mutate caller data. Switch supports whole-row click plus bounded follow-finger drag with
-  position/velocity settling, cancellation rollback, and mirrored physical travel in RTL.
+  position/velocity settling, cancellation rollback, and mirrored physical travel in RTL. Release
+  settlement continues from the last visible drag position rather than restarting at an endpoint.
 - TextField preserves ViewCompose's native Android editing core for IME, selection, composition,
   autofill, accessibility, and saved-state behavior.
 - RTL reverses visual destination order without changing caller indices or keys.
@@ -134,7 +135,8 @@ Toast fallback; neither path reports or selects a Material fallback.
 ## Verification and limitations
 
 Unit and gesture-contract tests protect light/dark snapshots, component structure, validation,
-controlled drag bounds/settling/cancellation, and callback behavior.
+real-touch click dispatch, controlled drag bounds/settling/cancellation, release continuity, and
+callback behavior.
 The demo Settings entry `Verify One UI 7 five-component alpha` exercises Light/LTR/1.0 and
 Dark/RTL/1.3 configurations and exports deterministic screenshots with token source, component-set
 identity, and conformance labels. API 35 emulator evidence covers state changes, disabled behavior,
