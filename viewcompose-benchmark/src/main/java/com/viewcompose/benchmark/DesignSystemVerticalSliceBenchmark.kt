@@ -1,7 +1,9 @@
 package com.viewcompose.benchmark
 
 import androidx.benchmark.macro.CompilationMode
+import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.FrameTimingMetric
+import androidx.benchmark.macro.MemoryUsageMetric
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
@@ -19,6 +21,7 @@ import org.junit.runner.RunWith
  * startup path.
  */
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalMetricApi::class)
 class DesignSystemVerticalSliceBenchmark {
     @get:Rule
     val benchmarkRule = MacrobenchmarkRule()
@@ -61,7 +64,10 @@ class DesignSystemVerticalSliceBenchmark {
 
     private fun initialBuild(kind: String) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
-        metrics = listOf(StartupTimingMetric()),
+        metrics = listOf(
+            StartupTimingMetric(),
+            MemoryUsageMetric(MemoryUsageMetric.Mode.Max),
+        ),
         compilationMode = CompilationMode.None(),
         iterations = designSystemIterations(),
         startupMode = StartupMode.COLD,
@@ -71,7 +77,10 @@ class DesignSystemVerticalSliceBenchmark {
 
     private fun patchOnlyUpdate(kind: String) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
+        metrics = listOf(
+            FrameTimingMetric(),
+            MemoryUsageMetric(MemoryUsageMetric.Mode.Max),
+        ),
         compilationMode = CompilationMode.None(),
         iterations = designSystemIterations(),
         startupMode = StartupMode.WARM,

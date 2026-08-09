@@ -205,6 +205,25 @@ class DemoDesignSystemVerificationUiTest {
                             DemoTestTags.DESIGN_SYSTEM_TOKEN_SOURCE,
                         ).text.toString(),
                     )
+                    assertTrue(
+                        "Expected the pre-extraction Material context wrapper baseline",
+                        activity.requireTextViewByTestTagVisible(
+                            DemoTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
+                        ).text.toString().startsWith("MutableContextWrapper > "),
+                    )
+                    assertEquals(
+                        "#FF7B9E68",
+                        activity.requireTextViewByTestTagVisible(
+                            DemoTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
+                        ).text.toString(),
+                    )
+                    assertEquals(
+                        "Button=DSL/DeclarativeBoxLayout; Switch=DSL/DeclarativeBoxLayout; " +
+                            "TextField=native/ViewComposeEditText",
+                        activity.requireTextViewByTestTagVisible(
+                            DemoTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
+                        ).text.toString(),
+                    )
                     assertEquals(
                         fixture.reducedMotion.toString(),
                         activity.requireTextViewByTestTagVisible(
@@ -418,6 +437,16 @@ class DemoDesignSystemVerificationUiTest {
             appendLine("designSystem=${kind.id}")
             appendLine("tokenSource=demo-design-system/${kind.id}")
             appendLine("recipeIdentity=${kind.id}/pressure-v2")
+            appendLine(
+                "rootContext=" + activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
+                ).text,
+            )
+            appendLine(
+                "androidColorPrimary=" + activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
+                ).text,
+            )
             appendLine("mode=${if (dark) "dark" else "light"}")
             appendLine("reducedMotion=$reducedMotion")
             appendLine("api=${Build.VERSION.SDK_INT}")

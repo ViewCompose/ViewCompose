@@ -28,6 +28,7 @@ import com.viewcompose.ui.unit.sp
 
 /** Renders the internal design-system pressure slice with screenshot-readable attribution. */
 internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
+    hostContext: DemoHostContextSnapshot,
     onReplaceDesignSystem: (DemoDesignSystemKind) -> Unit,
 ) {
     val bundle = DemoDesignSystem
@@ -63,7 +64,7 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
             .testTag(DemoTestTags.DESIGN_SYSTEM_ROOT),
     ) { section ->
         when (section) {
-            "identity" -> DemoDesignSystemIdentitySection(bundle)
+            "identity" -> DemoDesignSystemIdentitySection(bundle, hostContext)
             "switching" -> Column(
                 spacing = 10.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
@@ -268,7 +269,10 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
     }
 }
 
-private fun UiTreeBuilder.DemoDesignSystemIdentitySection(bundle: DemoDesignSystemBundle) {
+private fun UiTreeBuilder.DemoDesignSystemIdentitySection(
+    bundle: DemoDesignSystemBundle,
+    hostContext: DemoHostContextSnapshot,
+) {
     Column(
         spacing = 10.dp,
         modifier = Modifier.fillMaxWidth().margin(top = 16.dp),
@@ -290,6 +294,13 @@ private fun UiTreeBuilder.DemoDesignSystemIdentitySection(bundle: DemoDesignSyst
                 DiagnosticFact("Design system", "${bundle.kind.id} · ${bundle.kind.label}"),
                 DiagnosticFact("Token source", "demo-design-system/${bundle.kind.id}"),
                 DiagnosticFact("Recipe identity", "${bundle.kind.id}/pressure-v2"),
+                DiagnosticFact("Root context", hostContext.chain),
+                DiagnosticFact("Android colorPrimary", hostContext.androidPrimary.asColorHex()),
+                DiagnosticFact(
+                    "Component backends",
+                    "Button=DSL/DeclarativeBoxLayout; Switch=DSL/DeclarativeBoxLayout; " +
+                        "TextField=native/ViewComposeEditText",
+                ),
                 DiagnosticFact("Mode", if (bundle.tokens.metadata.isDark == true) "Dark" else "Light"),
                 DiagnosticFact("Reduced motion", bundle.reducedMotionEnabled.toString()),
                 DiagnosticFact("Font scale", Environment.density.fontScale.toString()),
@@ -303,6 +314,9 @@ private fun UiTreeBuilder.DemoDesignSystemIdentitySection(bundle: DemoDesignSyst
                 "Design system" to DemoTestTags.DESIGN_SYSTEM_IDENTITY,
                 "Token source" to DemoTestTags.DESIGN_SYSTEM_TOKEN_SOURCE,
                 "Recipe identity" to DemoTestTags.DESIGN_SYSTEM_RECIPE_IDENTITY,
+                "Root context" to DemoTestTags.DESIGN_SYSTEM_ROOT_CONTEXT,
+                "Android colorPrimary" to DemoTestTags.DESIGN_SYSTEM_ANDROID_PRIMARY,
+                "Component backends" to DemoTestTags.DESIGN_SYSTEM_COMPONENT_BACKENDS,
                 "Mode" to DemoTestTags.DESIGN_SYSTEM_MODE,
                 "Reduced motion" to DemoTestTags.DESIGN_SYSTEM_REDUCED_MOTION,
                 "Font scale" to DemoTestTags.DESIGN_SYSTEM_FONT_SCALE,

@@ -37,4 +37,5 @@ dependencies {
     api(libs.androidx.fragment)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    testImplementation(project(":viewcompose-oneui7"))
 }

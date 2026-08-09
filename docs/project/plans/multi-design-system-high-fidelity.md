@@ -28,9 +28,8 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-09.
 
-Next action: execute the Phase 9 source, dependency, public-API, Maven-metadata, context-provenance,
-and performance baseline without changing production behavior. Then implement Phase 10's neutral
-host extraction behind the recorded rollback boundary. Release-owner Pixel/physical Samsung
+Next action: implement Phase 10's neutral host extraction and named Material Android integration
+behind the recorded Phase 9 rollback boundary. Release-owner Pixel/physical Samsung
 acceptance, formal device benchmarks, and Maven publication remain required after Phases 9 through
 12; they are not used to bypass the P0 host boundary. The release workflow must archive this plan
 only after every linked changeset is included and immediately before Maven upload.
@@ -726,11 +725,11 @@ adding One UI, Cupertino, or Material knowledge to Android Renderer.
 
 ## Phase 9: Architecture constitution, inventory, and migration baseline
 
-Status: in progress. The durable
+Status: complete on 2026-08-09. The durable
 [multi-design-system architecture and integration standard](../../architecture/design-systems.md)
 and [ADR-0005](../../architecture/decisions/README.md)
-are accepted. Production refactoring, automated placement guards, and the implementation baseline
-remain open.
+are accepted. The API/POM/context/backend/performance baseline is executable and the Phase 10
+module graph and compatibility strategy are approved. Production behavior remains unchanged.
 
 This phase freezes the boundary before moving files or APIs. It has no component-catalog objective.
 No production host behavior changes until all baseline artifacts below are reproducible.
@@ -771,6 +770,82 @@ No production host behavior changes until all baseline artifacts below are repro
    named Android integration. For each native control, list the behavior that blocks replacement.
 8. Approve the target module/dependency graph and compatibility strategy before moving APIs.
 
+### Recorded migration baseline
+
+The generally named host owns two Q3 public extensions, one for `ComponentActivity` and one for
+`Fragment`. Both currently expose the same Material-specific parameters:
+`Material3DynamicColorPolicy` with `UseIfAvailable` default and nullable
+`Material3ThemeRefreshController`, followed by overlay and renderer-diagnostic callbacks. Their
+compiled samples are `activityHostSample` and `fragmentHostSample`; complete API reference
+generation and the owning-module manual are the API snapshots used by this repository because it
+does not maintain a separate Metalava or binary-compatibility dump.
+
+The pre-extraction project and published-POM edges are:
+
+| Artifact | Public ViewCompose edges | Private ViewCompose edges | Relevant external exposure |
+| --- | --- | --- | --- |
+| `viewcompose-android` | Host Android, UI Foundation, Material 3, Lifecycle AndroidX, ViewModel AndroidX | none | Activity and Fragment are public; Material is transitively present through the public Material artifact |
+| `viewcompose-host-android` | Runtime, UI Contract, UI Foundation | Android Renderer | Lifecycle Runtime and SavedState are public; coroutines, ConstraintLayout, and DynamicAnimation are private |
+| `viewcompose-material3` | UI Foundation | none | AppCompat, Core KTX, and Material Components are private implementation inputs |
+| `viewcompose-oneui7` | UI Foundation | Animation and Gesture | no public Samsung or Material dependency |
+
+`gradle/viewcompose-dependency-contracts.properties`, generated-POM validation, and published
+consumption smoke projects remain the executable dependency snapshots. Phase 10 must update all
+three together; it may not make a lower-level coordinate a documented consumer workaround.
+
+`AndroidHostThemeIntegrationTest` now renders Android XML mapping, static Material tokens, static
+One UI tokens, and a deliberately different application override through the same native Button,
+Switch, Slider, TextField editing core, and SegmentedControl composite. The result reproduces the
+P0 issue: every mode constructs Views with the same `MutableContextWrapper` and Android XML
+`colorPrimary`, while the effective composition primary and shape change independently. The
+Settings pressure fixture exports that root context chain, Android attribute value, token source,
+recipe identity, and representative concrete backends with stable screenshot tags.
+
+`ViewNodeBackendInventoryTest` is the executable 36-entry backend inventory. It fails whenever a
+new `NodeType` lacks one owner, concrete View class, and retained behavior rationale. Native
+editing, toggle, range, collection, and pager paths retain their Android behavior cores; generic
+layout/drawing paths remain neutral custom Views; SegmentedControl, NavigationBar, TabRow,
+progress, Surface, and pull-to-refresh are current DSL composites; `AndroidView` is the single
+caller-owned named Android integration boundary. This inventory records current ownership and does
+not bless every generic composite as future design policy.
+
+Existing pressure-slice instrumentation covers root replacement, initial render, retained patch,
+configuration recreation and saved state, overlay replacement, lazy item snapshot refresh, and
+navigation/selection state. The API 35 emulator run on fingerprint
+`google/sdk_gphone64_arm64/emu64a:15/AE3A.240806.036/12592187:user/release-keys` passed the
+cut-contrast screenshot/behavior fixture after context and backend attribution became mandatory.
+
+The pre-extraction R8 benchmark baseline uses three emulator iterations with no ART
+pre-compilation. It is diagnostic rather than a release claim:
+
+| Scenario | Timing baseline | Heap max median | Anonymous RSS max median | File RSS max median |
+| --- | --- | ---: | ---: | ---: |
+| Cut-contrast cold root/initial build | initial display median `1100.87 ms`, range `722.53-4358.30 ms` | `5744 KiB` | `41668 KiB` | `84316 KiB` |
+| Cut-contrast retained patch | CPU frame P50 `52.57 ms`, P90 `69.70 ms`; 4-7 measured frames | `6175 KiB` | `44496 KiB` | `88064 KiB` |
+
+The startup coefficient of variation is too high for an acceptance decision. Phase 10 therefore
+reruns the identical scenarios and retains the extraction only when heap/RSS medians stay within
+10% and patch CPU P50 stays within 15%. Startup comparison requires at least five clean iterations
+with coefficient of variation at or below 0.20; otherwise it remains informational and cannot be
+used either to reject the change or excuse another regression. Physical-device release benchmarks
+remain mandatory.
+
+### Approved Phase 10 graph and compatibility decision
+
+`viewcompose-android` becomes the neutral one-line aggregate and no longer publishes or imports
+Material. A new `viewcompose-material3-android` integration artifact is justified by a real Android
+platform-context and release-ownership boundary; it publicly aggregates neutral Android Host plus
+`viewcompose-material3` and privately owns Material root-context resolution. Static One UI keeps
+using neutral `viewcompose-android` plus `viewcompose-oneui7`.
+
+The neutral Activity/Fragment API keeps the generally named `setUiContent` and accepts an explicit
+Android root context with the Activity/Fragment context as its neutral default. The Material
+integration exposes `setMaterial3UiContent`. Because all published artifacts are still alpha and a
+deprecated all-default Material overload would make zero-argument calls ambiguous with the neutral
+overload, Phase 10 performs the source-level hard cut instead of retaining an unsafe facade. The
+new Material artifact preserves one dependency plus one host call; migration is mechanical and is
+documented in compiled samples and module manuals.
+
 ### Phase 9 keep gate
 
 - the baseline distinguishes Material context effects from ViewCompose token effects;
@@ -785,7 +860,7 @@ P0 context contamination is reproduced or falsified by evidence.
 
 ## Phase 10: Neutral Android host and named Material integration
 
-Status: pending Phase 9.
+Status: in progress after the accepted Phase 9 baseline.
 
 Goal: separate root platform-context resolution from composition design policy, remove implicit
 Material selection from neutral host paths, and preserve a small consumer setup surface.

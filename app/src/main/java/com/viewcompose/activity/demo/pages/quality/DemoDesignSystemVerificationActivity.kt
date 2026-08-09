@@ -1,8 +1,10 @@
 package com.viewcompose
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.ViewGroup
 import androidx.core.view.WindowCompat
 import com.viewcompose.ui.environment.UiEnvironmentValues
@@ -57,7 +59,10 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
         UiEnvironment(fixtureEnvironment) {
             UiTheme(bundle.tokens) {
                 ProvideDemoDesignSystem(bundle) {
-                    DemoDesignSystemVerificationPage(onReplaceDesignSystem = ::replaceDesignSystem)
+                    DemoDesignSystemVerificationPage(
+                        hostContext = DemoHostContextSnapshot.from(root),
+                        onReplaceDesignSystem = ::replaceDesignSystem,
+                    )
                 }
             }
         }
@@ -91,4 +96,38 @@ class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
             .putExtra(EXTRA_FONT_SCALE, fontScale)
             .putExtra(EXTRA_REDUCED_MOTION, reducedMotionEnabled)
     }
+}
+
+/** Actual Android root-context evidence shown next to token and recipe attribution. */
+internal data class DemoHostContextSnapshot(
+    val chain: String,
+    val androidPrimary: Int,
+) {
+    companion object {
+        fun from(root: ViewGroup): DemoHostContextSnapshot {
+            return DemoHostContextSnapshot(
+                chain = root.context.contextChain(),
+                androidPrimary = root.context.resolveColorAttribute(androidx.appcompat.R.attr.colorPrimary),
+            )
+        }
+    }
+}
+
+private fun Context.contextChain(): String {
+    val visited = mutableSetOf<Context>()
+    val names = mutableListOf<String>()
+    var current: Context? = this
+    while (current != null && visited.add(current) && names.size < 8) {
+        names += current.javaClass.simpleName.ifBlank { current.javaClass.name.substringAfterLast('.') }
+        current = (current as? ContextWrapper)?.baseContext
+    }
+    return names.joinToString(" > ")
+}
+
+private fun Context.resolveColorAttribute(attribute: Int): Int {
+    val value = TypedValue()
+    check(theme.resolveAttribute(attribute, value, true)) {
+        "Expected Android theme attribute 0x${attribute.toString(16)}"
+    }
+    return value.data
 }

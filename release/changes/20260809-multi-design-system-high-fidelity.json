@@ -10,5 +10,10 @@
     { "artifact": "viewcompose-renderer-android", "impact": "feature" },
     { "artifact": "viewcompose-oneui7", "impact": "feature" }
   ],
-  "ignored": []
+  "ignored": [
+    {
+      "artifact": "viewcompose-android",
+      "reason": "Phase 9 adds only a test-scoped One UI dependency so Robolectric can reproduce Material root-context contamination under non-Material tokens; production dependencies, sources, POM output, and public API remain unchanged until the separately classified Phase 10 extraction."
+    }
+  ]
 }
