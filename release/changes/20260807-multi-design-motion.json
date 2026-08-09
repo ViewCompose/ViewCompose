@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "summary": "Add semantic motion and reduced-motion resolution plus compatible UiShape interpolation with an explicit discrete fallback.",
-  "changes": [
-    { "artifact": "viewcompose-animation-core", "impact": "feature" },
-    { "artifact": "viewcompose-animation", "impact": "feature" }
-  ],
-  "ignored": []
-}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "summary": "Establish neutral Surface, Button, shape, and motion foundations for multiple design systems and add the independent One UI 7 five-component alpha artifact.",
+  "changes": [
+    { "artifact": "viewcompose-animation-core", "impact": "feature" },
+    { "artifact": "viewcompose-animation", "impact": "feature" },
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" },
+    { "artifact": "viewcompose-oneui7", "impact": "feature" }
+  ],
+  "ignored": []
+}

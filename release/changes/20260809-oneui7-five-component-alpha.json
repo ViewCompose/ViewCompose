@@ -1,8 +1,0 @@
-{
-  "schemaVersion": 1,
-  "summary": "Add the independent One UI 7 five-component alpha design-system artifact with static tokens, shared basic primitives, owned composites, documentation, and emulator verification.",
-  "changes": [
-    { "artifact": "viewcompose-oneui7", "impact": "feature" }
-  ],
-  "ignored": []
-}

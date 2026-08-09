@@ -25,16 +25,11 @@ before Maven upload.
 
 ## Maven release changesets
 
-- [`20260807-multi-design-basic-surface.json`](../../../release/changes/20260807-multi-design-basic-surface.json)
-  covers the Phase 2 resolved Surface contract, Basic primitive, continuous-corner/gradient
-  renderer path, and the `SurfaceNodeProps` migration.
-- [`20260807-multi-design-basic-button.json`](../../../release/changes/20260807-multi-design-basic-button.json)
-  covers the Phase 2 neutral action composite and its compiled sample.
-- [`20260807-multi-design-motion.json`](../../../release/changes/20260807-multi-design-motion.json)
-  covers the Phase 3 semantic motion/reduced-motion policy and compatible shape interpolation.
-- [`20260809-oneui7-five-component-alpha.json`](../../../release/changes/20260809-oneui7-five-component-alpha.json)
-  covers the Phase 6 public One UI 7 five-component alpha artifact, compiled sample, documentation,
-  and application verification entry.
+- [`20260809-multi-design-system-high-fidelity.json`](../../../release/changes/20260809-multi-design-system-high-fidelity.json)
+  is the single PR-owned release intent. It covers the Phase 2 neutral Surface and Button
+  foundations, Phase 3 semantic motion and compatible shape interpolation, and the Phase 6 public
+  One UI 7 five-component alpha artifact. Reverse-dependency propagation remains release-planner
+  owned.
 
 ## Objective
 
