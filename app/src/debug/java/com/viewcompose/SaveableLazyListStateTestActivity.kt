@@ -2,7 +2,7 @@ package com.viewcompose
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.height
@@ -23,7 +23,7 @@ class SaveableLazyListStateTestActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setUiContent {
+        setMaterial3UiContent {
             listState = rememberLazyListState()
             LazyColumn(
                 items = (0 until ITEM_COUNT).toList(),

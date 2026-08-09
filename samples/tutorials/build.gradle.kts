@@ -28,14 +28,11 @@ android {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-navigation-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
     implementation("com.viewcompose:viewcompose-gesture:0.1.0-alpha03")
-
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("com.google.android.material:material:1.13.0")
 
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")

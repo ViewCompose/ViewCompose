@@ -231,11 +231,12 @@ last resort.
    published runtime dependency, and no `viewcompose-*` module depends on `app`.
 3. UI Foundation production sources cannot import Renderer, AndroidX, or Material APIs. UI Contract
    production sources cannot import `android.*` or `androidx.*`.
-4. `ComponentActivity/Fragment.setUiContent` lives in `viewcompose-android`; `renderInto` and
+4. Neutral `ComponentActivity/Fragment.setUiContent` lives in `viewcompose-android`; named
+   `setMaterial3UiContent` lives in `viewcompose-material3-android`; `renderInto` and
    `AndroidView/nativeView` remain in the low-level `viewcompose-host-android` engine.
-5. Material theme policy lives in `viewcompose-material3`, and Material-backed presentation lives
-   only in explicitly named integrations. UI Foundation, Renderer Android, and Host Android cannot
-   import or depend on Material Components.
+5. Material theme policy lives in `viewcompose-material3`, while Material Activity/Fragment and
+   presentation wiring lives only in explicitly named integrations. UI Foundation, Renderer
+   Android, Host Android, and the neutral Android aggregate cannot import or depend on Material.
 6. `verifyModuleDependencyBoundaries` and `verifyDesignSystemIsolation` in `qaQuick` are
    non-waivable gates. Guard tests enforce these boundaries; review convention alone is
    insufficient.

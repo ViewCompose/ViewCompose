@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/design-systems.md
-translation_source_hash: 13cadbd7c5e30714f4fc2d9314e1f443c7d3523073e3a02e7f10de71aec01bd3
+translation_source_hash: a013db73f88bfe9034fd7775f12e48c289ad4ae14b1325ff212a41f0e3c11356
 translation_status: current
 ---
 
@@ -353,14 +353,15 @@ Diagnostics 是架构证据，不是可有可无的 Demo 装饰。如果审查�
 
 已接受架构在以下有限区域领先于当前实现：
 
-1. `viewcompose-android` 当前暴露 Material Theme Policy，并为所有便捷 Root 解析 Material Themed
-   Context。这会让非 Material 设计系统中的原生控件默认值受污染，是第一优先级整改项。
+1. 中立 Host 拆分已经完成：`viewcompose-android` 不再暴露 Material Policy，具名
+   `viewcompose-material3-android` 持有 Material 根 Context 解析。下一验收切片仍需收敛延迟 Root、
+   Overlay、Lazy 与 Navigation 的 Provenance。
 2. `viewcompose-material3` 主要还是 Theme Adapter，而 `viewcompose-oneui7` 已拥有一组组件。
    Material 需要收敛到相同的 Token/Recipe/Component 所有权模型，但不能把 Material Widget 移入
    Renderer。
 3. Foundation 默认值与原生 Widget 映射需要显式审计，排查意外的 Material Geometry、Color 与
    Context 假设。
-4. Backend 选择已在本文档定义，但全仓组件/Backend 清单和自动 Placement Guard 尚未完成。
+4. 全仓组件/Backend 清单与中立 Host Placement Guard 已完成；后续映射必须同步维护该可执行清单。
 5. Token Source 与 Backend Provenance 在 Demo/截图诊断中仍不完整，必须升级为可靠验收证据。
 6. 尚无第二个会改变 Context 的非 Material 系统证明公开 Host Adapter SPI 的必要性，因此第一次
    拆分保持内部显式组装。

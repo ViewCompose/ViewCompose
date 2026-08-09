@@ -166,17 +166,17 @@ Responsibilities:
 1. `SnapshotReader` reads Android, AppCompat, and Material theme fields in batches.
 2. `ThemeTokenMapper` maps platform fields to framework tokens and applies fallback rules.
 3. The bridge does not produce component defaults or bypass `Defaults`.
-4. The `viewcompose-android` `ComponentActivity/Fragment.setUiContent` entry points resolve and
-   provide the Material 3 theme by default. The root container, framework native Views,
+4. The `viewcompose-material3-android` `ComponentActivity/Fragment.setMaterial3UiContent` entry
+   points resolve and provide Material 3 explicitly. The root container, framework native Views,
    `AndroidView`, and overlays share the same resolved context.
-5. `setUiContent` applies Material dynamic color when supported unless
+5. `setMaterial3UiContent` applies Material dynamic color when supported unless
    `Material3DynamicColorPolicy.Disabled` is selected. A direct low-level composition uses
    `Material3ThemeBridge.resolveContext(...)` and `Material3Theme(...)` from `viewcompose-material3`.
 6. An Android-backed theme used in composition observes configuration changes and rereads tokens;
    callbacks are removed when it leaves composition, and `metadata.revision` increments on refresh.
-7. After runtime `setTheme/applyStyle`, pass a `Material3ThemeRefreshController` to `setUiContent`
-   and call `refresh()` on the main thread. The controller resolves the dynamic-color context again
-   and refreshes the themed subtree.
+7. After runtime `setTheme/applyStyle`, pass a `Material3ThemeRefreshController` to
+   `setMaterial3UiContent` and call `refresh()` on the main thread. The controller resolves the
+   dynamic-color context again and refreshes the themed subtree.
 
 Current bridge matrix:
 
@@ -274,8 +274,8 @@ The boundary is intentionally different from the Material bridge:
 4. Android Renderer receives only resolved generic nodes and never tests a One UI identity.
 5. Runtime switching replaces the root/session with a new provider; it does not mutate a global
    design-system object.
-6. `viewcompose-android` keeps Material 3 as its compatibility default. Applications opt into
-   `viewcompose-oneui7` explicitly.
+6. The neutral `viewcompose-android` host installs no design system. Applications opt into
+   `viewcompose-oneui7` explicitly without inheriting a Material root Context.
 
 See the [One UI 7 five-component alpha module manual](../modules/viewcompose-oneui7/README.md) for
 the supported component set, conformance labels, fallbacks, and release limitations.

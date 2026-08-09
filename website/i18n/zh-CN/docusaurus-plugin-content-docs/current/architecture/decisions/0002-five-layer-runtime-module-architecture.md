@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0002-five-layer-runtime-module-architecture.md
-translation_source_hash: 87cc9260dc0b914a86c2a57f3e48e59644e2c5f53eeec4f0330d66f6c736dd21
+translation_source_hash: 4d68e7338ff4495c7b0fca5ec5a83d72e591ffb3b0c96eab48c1c480db12a917
 translation_status: current
 ---
 
@@ -9,6 +9,11 @@ translation_status: current
 ## 状态与日期
 
 已接受并实现——2026-08-06。
+
+本决策原有的隐式 Material 聚合组装已由
+[ADR-0005](./0005-design-system-host-and-component-backend-boundary.md) 替代：
+`viewcompose-android` 保持中立，`viewcompose-material3-android` 作为具名 Material 应用聚合模块；
+五层依赖方向继续有效。
 
 ## 背景
 
@@ -32,8 +37,8 @@ Android 执行、设计策略和可替换集成可以独立测试与发布。
    内容契约。
 3. **Android Engine**：Android View 创建、协调、绑定、宿主、调度、环境适配及明确的 Android/
    AndroidX 互操作。
-4. **Design System**：具体视觉 token、主题解析、组件呈现默认值及设计系统平台适配；默认实现为
-   Material 3。
+4. **Design System**：具体视觉 token、主题解析、组件呈现默认值及设计系统平台适配；Material 3
+   是具名实现，不是中立宿主默认值。
 5. **Integrations**：可选 AndroidX 或第三方适配；移除模块时只应失去相应集成能力。
 
 Tooling 位于五层之外并只向下依赖。消费端 Aggregate 可以暴露经过审核的默认技术栈，但不拥有
@@ -62,9 +67,10 @@ UI 节点携带通用语义与已解析视觉值，Android Renderer 负责实现
 
 ### 5. 易用性放在 Aggregate
 
-`viewcompose-android` 是推荐的单依赖入口，显式组合 Host、UI Foundation、Material 3 和审核过的
-AndroidX 集成。高级使用方可直接依赖底层模块；Host 与 Renderer 不得为了初学者路径反向依赖
-Aggregate 或 Design System。
+`viewcompose-android` 是中立的单依赖入口，显式组合 Host、UI Foundation 和审核过的 AndroidX
+集成，但不选择设计系统。`viewcompose-material3-android` 是具名 Material 单依赖入口，传递暴露
+中立聚合模块与 `viewcompose-material3`。高级使用方可直接依赖底层模块；Host 与 Renderer 不得
+为了初学者路径反向依赖 Aggregate 或 Design System。
 
 ### 6. 产物名表达职责
 
@@ -81,7 +87,8 @@ Engine、AndroidX Integration 和 Material-backed Integration 必须在名称中
 - `viewcompose-viewmodel` → `viewcompose-viewmodel-androidx`
 - `viewcompose-widget-constraintlayout` → `viewcompose-constraintlayout-androidx`
 - `viewcompose-overlay-android` → `viewcompose-overlay-material3-android`
-- 新增 `viewcompose-material3` 与 `viewcompose-android`
+- 新增 `viewcompose-material3`、`viewcompose-android`，以及后续替代隐式 Material 聚合的
+  `viewcompose-material3-android`
 
 职责已经准确的 Kernel、能力 DSL、图片集成、阴影与 Tooling 名称保持不变。
 
@@ -96,13 +103,14 @@ Engine、AndroidX Integration 和 Material-backed Integration 必须在名称中
 - 一次迁移会影响目录、Gradle path、Maven 坐标、示例、Tooling、发布元数据与文档。
 - Android Engine 和 UI Foundation 的生产代码不再依赖 Material。
 - Material 3 可以独立演进或替换，不改变 Kernel 与渲染事务语义。
-- 普通应用通过 `viewcompose-android` 仍保持单依赖接入。
+- 中立应用通过 `viewcompose-android` 保持单依赖接入；Material 应用通过
+  `viewcompose-material3-android` 保持单依赖接入。
 - UI Foundation 允许保留明确属于 Android-only 声明契约的 Android 类型，但不允许 Material 类型。
 - 源码移动期间可短暂存在 split package；最终产物必须没有重复类，并使用审核过的资源 namespace。
 
 ## 验证与发布
 
 改造必须通过 `verifyDesignSystemIsolation` 验证五层依赖门禁、Kernel 纯度、UI Foundation/Android Engine 的 Material 隔离、底层无
-Material 宿主消费、仅依赖 `viewcompose-android` 的标准消费、POM 暴露契约、当前中英文文档、
+Material 宿主消费、分别仅依赖 `viewcompose-android` 与 `viewcompose-material3-android` 的中立和 Material 消费、POM 暴露契约、当前中英文文档、
 `qaQuick`、`qaRelease` 与本地 Maven smoke。执行证据记录在
 [五层硬切计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/project/plans/five-layer-module-architecture-hard-cut.md) 中。

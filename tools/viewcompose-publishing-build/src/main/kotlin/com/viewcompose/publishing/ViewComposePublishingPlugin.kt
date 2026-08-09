@@ -426,7 +426,7 @@ class ViewComposePublishingRootPlugin : Plugin<Project> {
         project.tasks.register<GradleBuild>("verifyViewComposePublishedConsumption") {
             group = "publishing"
             description =
-                "Builds isolated host, feature, and core consumers using only the generated Maven repository."
+                "Builds isolated neutral host, Material host, feature, and core consumers using only the generated Maven repository."
             dependsOn(verifyLocal)
             dir = project.rootProject.file("tools/viewcompose-publishing-smoke")
             tasks = listOf("clean", "assemble")

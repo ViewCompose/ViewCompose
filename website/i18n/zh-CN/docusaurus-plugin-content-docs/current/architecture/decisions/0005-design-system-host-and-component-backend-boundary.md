@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0005-design-system-host-and-component-backend-boundary.md
-translation_source_hash: fcde3d316a01f97d3e0418625a39c50a3240b179c9875f51e0735cb614baad5c
+translation_source_hash: 9f053d1604c189941b2e51ecb46bc0e5edbdfcc30a42974574a5c54fea8641fa
 translation_status: current
 ---
 
@@ -42,9 +42,9 @@ Material Policy 类型。在 Composition 内提供不同 Token，无法撤销已
 也不会隐式把每个 Root 包在 Material Context 中。Overlay 与延迟 Session 使用同一快照。运行时
 设计系统切换通过替换 Root/Session 完成，不就地修改存活的 Identity。
 
-`viewcompose-android` 将收敛到中立便捷入口。Material 专属便捷能力移到 Material 具名模块或
-兼容 Facade 后面。迁移必须先刻画公开 API 和生成的 Maven Dependency，再在收益合理时保持源码
-兼容。过渡期间禁止新增 Material 耦合。
+`viewcompose-android` 提供中立便捷入口；Material 专属便捷能力通过
+`viewcompose-material3-android` 的 `setMaterial3UiContent` 提供。当前 Alpha 迁移采用源码级硬切，
+因为全默认值的弃用重载会与中立零参数入口产生歧义。中立模块继续禁止新增 Material 耦合。
 
 第一次拆分保持显式和内部化。在第二个设计系统也需要改变 Android Context 构造，并独立证明相同
 生命周期和解析契约前，ViewCompose 不公开通用 Host Theme/Plugin SPI。
@@ -109,9 +109,9 @@ Composition 与具名 Integration Module 更容易修改。
 ## 后果与权衡
 
 - 非 Material 系统可以构造原生 View，而不会意外继承 Material Context 默认值。
-- Material 设置在内部会更显式，同时 Material 具名便捷 API 仍可保持很小的应用接入成本。
-- Host 重构会影响公开 Overload 与 Dependency Metadata，因此实施前需要 Source/API 和 Maven
-  Baseline，并保持可逆兼容层。
+- Material 所有权变得显式，同时具名 Material 聚合模块仍保持单依赖、单 Host 调用。
+- Host 重构在记录 Source/API、Maven、Context、截图与性能 Baseline 后，修改了 Alpha 公开
+  Overload 与 Dependency Metadata。
 - 不同系统会有少量有意重复的组件结构，行为、Primitive 与 Renderer 执行继续共享。
 - Backend 改为按组件和证据选择；一个设计系统混合 Native Core、Composite 与 Custom View 并不
   破坏架构一致性。
@@ -122,9 +122,11 @@ Composition 与具名 Integration Module 更容易修改。
 ## 受影响模块与公开契约
 
 - `viewcompose-host-android`：继续作为中立挂载与平台安装 Kernel。
-- `viewcompose-android`：从隐式 Material 便捷聚合向中立入口迁移；兼容策略由实现 Baseline 决定。
-- `viewcompose-material3`：拥有 Theme/Context 解析、Dynamic Color、Recipe、Component 与保留的
-  Material 专属 Android 集成。
+- `viewcompose-android`：拥有中立 Activity/Fragment 入口，不依赖 Material。
+- `viewcompose-material3`：拥有 Material Theme/Context 解析、Dynamic Color、Recipe 与 Component，
+  不持有 Activity/Fragment Lifecycle 接线。
+- `viewcompose-material3-android`：拥有具名 Material Activity/Fragment 集成，是单依赖 Material
+  应用聚合模块。
 - `viewcompose-oneui7` 与未来设计系统模块：拥有自身词汇和组件，只消费中立基础与执行契约。
 - `viewcompose-ui-foundation`：拥有可复用 Basic 原语和 Interaction/Semantic Contract，而不是具名
   Component Policy。

@@ -29,7 +29,7 @@ android {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
 
     debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
     add(

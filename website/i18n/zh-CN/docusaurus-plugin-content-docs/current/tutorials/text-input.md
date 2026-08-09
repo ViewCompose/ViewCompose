@@ -2,7 +2,7 @@
 title: 使用文本输入
 sidebar_position: 5
 translation_source: tutorials/text-input.md
-translation_source_hash: 4172998ac1530b795fa20465fb3dbecc1ddf6b661e80f6ff355ec25da5894dc7
+translation_source_hash: 18db62c8e9abe70e03fe06158532506c542310c0e0332fee04bd05da8e4039f9
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -33,7 +33,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -48,7 +48,7 @@ class TextInputTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val name = rememberTextFieldState()
 
             Column(

@@ -3,12 +3,12 @@ package com.viewcompose.samples.migration.host
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import com.viewcompose.host.android.AndroidView
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 // DOCS_REGION_START(viewcompose-host)
 fun ComponentActivity.installViewComposeInteropSample() {
-    setUiContent {
+    setMaterial3UiContent {
         ViewComposeInteropSample()
     }
 }

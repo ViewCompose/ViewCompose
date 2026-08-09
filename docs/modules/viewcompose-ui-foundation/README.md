@@ -7,8 +7,8 @@ renderer-independent session coordinator that connects a declarative tree to hos
 container, engine, focus, scheduling, logging, and tracing contracts.
 
 Use it directly when authoring reusable ViewCompose components, custom hosts, design-system
-adapters, or overlay backends. Android applications normally receive it through
-`viewcompose-android`, which supplies the standard engine and Material 3 adapter.
+adapters, or overlay backends. Android applications normally receive it through the neutral
+`viewcompose-android` aggregate or the named `viewcompose-material3-android` aggregate.
 
 This module does not implement View reconciliation, own Activity or Fragment lifecycle, present
 platform dialogs and popups, perform image decoding, or provide optional animation, gesture, graphics,

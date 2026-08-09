@@ -69,9 +69,9 @@ Diff / Patch 渲染器
 
 ## 快速开始
 
-标准 Android 依赖是 `viewcompose-android` 聚合包。硬切后的产物线从 `0.1.0-alpha01` 开始；
-该坐标发布到 Maven Central 前，源码 Checkout 会通过生成的本地 Maven 仓库验证。ViewCompose
-模块采用独立版本，因此可选功能和平台无关 Core 的当前版本可能不同。
+标准 Material Android 依赖是具名的 `viewcompose-material3-android` 聚合包。应用安装 One UI 或
+自有设计 Token 时使用中立 `viewcompose-android` 聚合包。产物线从 `0.1.0-alpha01` 开始；坐标发布
+到 Maven Central 前，源码 Checkout 会通过生成的本地 Maven 仓库验证。ViewCompose 模块独立版本化。
 
 ```kotlin
 repositories {
@@ -79,19 +79,19 @@ repositories {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
 }
 ```
 
-聚合包会传递暴露 Runtime、UI Contract、UI Foundation、Host、Material 3 Theme、Lifecycle 与
-ViewModel API。只有在构建集成，或明确绕过聚合包使用高级 API 时，才直接添加下层模块坐标。
+具名聚合包会传递暴露中立 Host、Material 3、Runtime、UI Foundation、Lifecycle 与 ViewModel
+API。只有在构建集成，或明确绕过聚合包使用高级 API 时，才直接添加下层模块坐标。
 
 ```kotlin
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val count = remember { mutableStateOf(0) }
 
             Column(spacing = 16.dp) {
@@ -131,9 +131,9 @@ implementation("com.viewcompose:viewcompose-animation-core:0.1.0-alpha03")
 | Kernel | `viewcompose-runtime`、`viewcompose-text-core`、`viewcompose-ui-contract`、`*-core` | 状态、编辑、契约与平台无关策略 |
 | UI Foundation | `viewcompose-ui-foundation`、`viewcompose-animation`、`viewcompose-gesture`、`viewcompose-graphics` | 平台无关 UI 与能力 DSL |
 | Android Engine | `viewcompose-renderer-android`、`viewcompose-host-android` | 原生 View 映射与底层宿主 Session |
-| Design System | `viewcompose-material3` | Material 3 主题解释与 Token 映射 |
+| Design System | `viewcompose-material3`、`viewcompose-oneui7` | 具名设计 Token、Recipe 与组件 |
 | Integrations | `viewcompose-*-androidx`、`viewcompose-*-android`、图片适配器 | AndroidX、Material、解码器与可选平台集成 |
-| 聚合入口 | `viewcompose-android` | 标准 Android 应用入口 |
+| 聚合入口 | `viewcompose-android`、`viewcompose-material3-android` | 中立与具名 Material 应用入口 |
 | 工具链 | `viewcompose-preview*`、`viewcompose-benchmark` | 预览、诊断、快照与性能测试 |
 
 模块版本有意保持独立。依赖某一项 Feature 不要求同时引入无关模块，也不要求整个项目使用同一个

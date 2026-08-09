@@ -18,8 +18,9 @@ this table. Architecture and guide pages remain the source of truth for cross-mo
 | `viewcompose-ui-foundation` | UI Foundation | Core DSL, components, tokens, and local values | [Available](./viewcompose-ui-foundation/README.md) |
 | `viewcompose-host-android` | Android Engine | Low-level View host, session, state, and interop engine | [Available](./viewcompose-host-android/README.md) |
 | `viewcompose-material3` | Design System | Material 3 theme and dynamic-color adapter | [Available](./viewcompose-material3/README.md) |
+| `viewcompose-material3-android` | Aggregate | Named Material 3 Android application integration | [Available](./viewcompose-material3-android/README.md) |
 | `viewcompose-oneui7` | Design System | One UI 7 five-component alpha token and component set | [Available](./viewcompose-oneui7/README.md) |
-| `viewcompose-android` | Aggregate | Standard Android application entry dependency | [Available](./viewcompose-android/README.md) |
+| `viewcompose-android` | Aggregate | Neutral Android application entry dependency | [Available](./viewcompose-android/README.md) |
 | `viewcompose-navigation-android` | Integration | Android navigation host integration | [Available](./viewcompose-navigation-android/README.md) |
 | `viewcompose-overlay-material3-android` | Integration | Material-backed Android overlay presentation | [Available](./viewcompose-overlay-material3-android/README.md) |
 | `viewcompose-image-coil` | Integration | Coil-backed general image loading | [Available](./viewcompose-image-coil/README.md) |

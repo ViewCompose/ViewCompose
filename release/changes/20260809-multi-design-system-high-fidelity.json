@@ -8,12 +8,8 @@
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
     { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
     { "artifact": "viewcompose-renderer-android", "impact": "feature" },
+    { "artifact": "viewcompose-android", "impact": "breaking" },
+    { "artifact": "viewcompose-material3-android", "impact": "feature" },
     { "artifact": "viewcompose-oneui7", "impact": "feature" }
-  ],
-  "ignored": [
-    {
-      "artifact": "viewcompose-android",
-      "reason": "Phase 9 adds only a test-scoped One UI dependency so Robolectric can reproduce Material root-context contamination under non-Material tokens; production dependencies, sources, POM output, and public API remain unchanged until the separately classified Phase 10 extraction."
-    }
   ]
 }

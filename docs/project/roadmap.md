@@ -24,14 +24,17 @@ Performance retains a dedicated specification in [Performance](../tooling/perfor
 2. Modifier ownership is general decoration plus scoped parent data.
 3. Overlay is split into session-bound surfaces (`Dialog`, `Popup`, `ModalBottomSheet`) and
    host-driven feedback (`Snackbar`, `Toast`).
-4. `:viewcompose-android` owns Activity/Fragment `setUiContent`; the low-level
-   `:viewcompose-host-android` engine owns `renderInto`, `RenderSession`, and mounted-tree lifetime.
+4. `:viewcompose-android` owns neutral Activity/Fragment `setUiContent`, while
+   `:viewcompose-material3-android` owns the named `setMaterial3UiContent` context adapter; the
+   low-level `:viewcompose-host-android` engine owns `renderInto`, `RenderSession`, and mounted-tree
+   lifetime without selecting a design system.
 5. System-bar insets use component-side `Modifier.systemBarsInsetsPadding(...)`.
 6. Lifecycle and ViewModel collaboration is split into `:viewcompose-lifecycle-androidx` and
    `:viewcompose-viewmodel-androidx` under `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`.
 7. Recomposition uses SlotTable Lite node-group invalidation without a legacy full-rebuild switch.
 8. Runtime ownership follows Kernel, UI Foundation, Android Engine, Design System, and Integrations;
-   `viewcompose-android` is the reviewed application aggregate, not a sixth layer.
+   `viewcompose-android` and `viewcompose-material3-android` are reviewed application aggregates,
+   not a sixth layer.
 9. `viewcompose-runtime` is pure Kotlin/JVM with policy, snapshot, observation, invalidation, and
    composer branch coverage.
 10. Public host diagnostics expose core-owned `RenderStats/RenderTreeResult`, not renderer types.

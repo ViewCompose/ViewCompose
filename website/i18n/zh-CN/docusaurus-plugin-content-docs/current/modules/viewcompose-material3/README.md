@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: a740abb9c4589e6499675b26299282876ee124d695401bb819617fe90305af92
+translation_source_hash: f71afaa66886cdfe6957da434023cef7301d38b7f0ddbacef9b78ebba2d3bea0
 translation_status: current
 ---
 
@@ -45,7 +45,8 @@ Material3Theme(resolvedTheme = resolved) {
 }
 ```
 
-标准应用通过 `viewcompose-android` 自动获得这套生命周期。
+Material 应用通过具名的 `viewcompose-material3-android` 集成自动获得这套生命周期。底层集成仍可
+自行解析 Context 并显式安装 `Material3Theme`。
 
 ## Token 基线与回退
 
@@ -92,7 +93,8 @@ Token Bridge 自动提供，必须作为独立组件工作进行测试。
 
 - [主题指南](../../guides/theming.md)
 - [UI Foundation](../viewcompose-ui-foundation/README.md)
-- [Android 聚合模块](../viewcompose-android/README.md)
+- [Material 3 Android 集成](../viewcompose-material3-android/README.md)
+- [中立 Android 聚合模块](../viewcompose-android/README.md)
 - [五层架构](../../architecture/decisions/0002-five-layer-runtime-module-architecture.md)
 
 完整生成参考位于

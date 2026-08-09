@@ -2,7 +2,7 @@
 title: 调整 Lazy 列表性能
 sidebar_position: 13
 translation_source: tutorials/lazy-list-performance.md
-translation_source_hash: fda48716858e71c934e9495e036d49db18048f9d74c397680ac77887ef465d4f
+translation_source_hash: d8bf63c358b0aee5578ba693a093332e8db5327738fa0251deb0f80c65e7d85a
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -32,7 +32,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -47,7 +47,7 @@ class LazyListPerformanceTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val rows = List(500) { index -> "Row #${index + 1}" }
 
             LazyColumn(

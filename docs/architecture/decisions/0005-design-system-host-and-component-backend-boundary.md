@@ -44,10 +44,10 @@ Material, expose Material policy types, or implicitly wrap every root in a Mater
 Overlays and delayed sessions use the same captured snapshot. Runtime design-system switching
 replaces the root/session rather than mutating a live identity in place.
 
-`viewcompose-android` will converge on neutral convenience entry points. Material-specific
-convenience moves behind a Material-named module or compatibility facade. The migration must first
-characterize public APIs and generated Maven dependencies, then preserve source compatibility when
-the benefit justifies it. New Material coupling is forbidden during the transition.
+`viewcompose-android` provides neutral convenience entry points. Material-specific convenience
+lives in `viewcompose-material3-android` through `setMaterial3UiContent`. The alpha migration uses a
+source-level hard cut because a deprecated all-default overload would be ambiguous with the neutral
+zero-argument entry point. New Material coupling remains forbidden in neutral modules.
 
 The first extraction remains explicit and internal. ViewCompose will not publish a general host
 theme/plugin SPI until a second design system independently needs to alter Android context
@@ -121,10 +121,10 @@ identify a dependency or platform boundary and would impose avoidable Maven migr
 ## Consequences and trade-offs
 
 - Non-Material systems can construct native Views without accidental Material context defaults.
-- Material setup becomes more explicit internally, while a Material-named convenience API may
-  preserve a small application setup surface.
-- Host refactoring affects public overloads and dependency metadata, so it requires source/API and
-  Maven baselines before implementation plus a reversible compatibility layer.
+- Material setup is explicit in ownership while the Material-named aggregate preserves one
+  dependency and one host call.
+- Host refactoring changed alpha public overloads and dependency metadata after source/API, Maven,
+  Context, screenshot, and performance baselines were recorded.
 - Some component structure is intentionally duplicated between systems, while behavior,
   primitives, and renderer execution remain shared.
 - Backend selection becomes evidence-driven per component. A design system may mix native cores,
@@ -137,10 +137,11 @@ identify a dependency or platform boundary and would impose avoidable Maven migr
 ## Affected modules and public contracts
 
 - `viewcompose-host-android`: remains the neutral mounting and platform-installation kernel.
-- `viewcompose-android`: transitions from an implicitly Material convenience aggregate toward
-  neutral entry points; compatibility is determined from the implementation baseline.
-- `viewcompose-material3`: owns theme/context resolution, dynamic color, recipes, components, and
-  any retained Material-specific Android integration.
+- `viewcompose-android`: owns neutral Activity/Fragment entry points and has no Material dependency.
+- `viewcompose-material3`: owns Material theme/context resolution, dynamic color, recipes, and
+  components without owning Activity/Fragment lifecycle wiring.
+- `viewcompose-material3-android`: owns named Material Activity/Fragment integration and is the
+  one-dependency Material application aggregate.
 - `viewcompose-oneui7` and future design-system modules: own their vocabulary and components while
   consuming only neutral foundations and execution contracts.
 - `viewcompose-ui-foundation`: owns reusable Basic primitives and interaction/semantic contracts,

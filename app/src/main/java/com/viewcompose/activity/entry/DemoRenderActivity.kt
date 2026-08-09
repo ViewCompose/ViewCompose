@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.material3.Material3DynamicColorPolicy
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -42,7 +42,7 @@ abstract class DemoRenderActivity : AppCompatActivity() {
             return
         }
         enableEdgeToEdge()
-        setUiContent(
+        setMaterial3UiContent(
             debug = true,
             debugTag = "ViewComposeSample",
             // DemoThemeTokens are intentionally device-independent. Keep the native View context

@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="ViewComposeHostTestTheme" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="ViewComposeHostTestTheme" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:colorBackground">#FF102030</item>
-        <item name="colorPrimary">#FF2468AC</item>
-        <item name="colorSurface">#FF304050</item>
-        <item name="colorOnSurface">#FFF1F2F3</item>
+        <item name="android:colorAccent">#FF2468AC</item>
     </style>
 
     <style name="ViewComposeHostAlternateTheme" parent="ViewComposeHostTestTheme">
-        <item name="colorPrimary">#FFAC6824</item>
-        <item name="colorSurface">#FF504030</item>
+        <item name="android:colorAccent">#FFAC6824</item>
     </style>
 </resources>

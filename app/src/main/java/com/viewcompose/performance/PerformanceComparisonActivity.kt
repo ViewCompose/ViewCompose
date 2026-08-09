@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import com.viewcompose.shadow.android.ShadowRenderPolicy
 
@@ -28,7 +28,7 @@ class PerformanceComparisonActivity : AppCompatActivity() {
         ShadowDecorationLayer.resetBackendDiagnostics()
         when (engine) {
             PerformanceEngine.ViewCompose -> {
-                setUiContent(debug = false) {
+                setMaterial3UiContent(debug = false) {
                     when (scenario) {
                         PerformanceScenario.List -> {
                             ViewComposeListPerformanceScreen(shadowsEnabled = false)

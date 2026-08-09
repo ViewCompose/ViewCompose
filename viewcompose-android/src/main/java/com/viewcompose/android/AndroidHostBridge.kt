@@ -22,17 +22,13 @@ import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.ProvideMonotonicFrameClock
 import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
 import com.viewcompose.ui.foundation.ProvideLocal
-import com.viewcompose.material3.Material3DynamicColorPolicy
-import com.viewcompose.material3.Material3ResolvedTheme
-import com.viewcompose.material3.Material3Theme
-import com.viewcompose.material3.Material3ThemeBridge
-import com.viewcompose.material3.Material3ThemeRefreshController
 import com.viewcompose.ui.foundation.RenderStats
 import com.viewcompose.ui.foundation.RenderTreeResult
 import com.viewcompose.ui.foundation.RenderFailure
 import com.viewcompose.ui.foundation.LocalRenderResultListener
 import com.viewcompose.ui.foundation.UiEnvironment
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import java.util.WeakHashMap
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
@@ -45,14 +41,16 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
  *
  * The returned root should be returned from `onCreateView`. Its session is disposed when either the
  * current view lifecycle or the Fragment lifecycle is destroyed. A repeated call first disposes the
- * previous session. Lifecycle, ViewModel, saved state, Android environment, theme, frame clock, and
- * overlay services are provided to [content].
+ * previous session. Lifecycle, ViewModel, saved state, Android environment, frame clock, and
+ * overlay services are provided to [content]. This neutral entry point does not select a design
+ * system or wrap [rootContext]; install design-system tokens inside [content], or use a named
+ * Android design-system integration.
  *
  * @sample com.viewcompose.android.samples.fragmentHostSample
  * @param debug enables render diagnostics and logging
  * @param debugTag log tag used by debug rendering
- * @param dynamicColorPolicy policy used while resolving Android theme tokens
- * @param themeRefreshController optional controller that invalidates the theme after configuration changes
+ * @param rootContext context used to create the root, native descendants, and default overlays;
+ * changing the root design system requires another call with its newly resolved context
  * @param overlayHostFactory creates the overlay host for the new root
  * @param onRenderStats optional callback after every attempted frame
  * @param onRenderResult optional callback for collected render diagnostics
@@ -64,8 +62,7 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
 fun Fragment.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
-    dynamicColorPolicy: Material3DynamicColorPolicy = Material3DynamicColorPolicy.UseIfAvailable,
-    themeRefreshController: Material3ThemeRefreshController? = null,
+    rootContext: Context = requireContext(),
     overlayHostFactory: (ViewGroup) -> OverlayHost = AndroidOverlayHostDefaults::androidOrNoOp,
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -78,12 +75,9 @@ fun Fragment.setUiContent(
     )
     FragmentRenderSessionRegistry.clear(this)
     val saveableStateRegistry = viewComposeSaveableStateRegistry(this)
-    val resolvedTheme = Material3ThemeBridge.resolveContext(
-        context = requireContext(),
-        dynamicColorPolicy = dynamicColorPolicy,
-    )
+    val platform = resolveAndroidHostPlatform(rootContext)
     val root = buildUiContentRoot(
-        context = resolvedTheme.context,
+        context = platform.rootContext,
     )
     val session = renderInto(
         container = root,
@@ -99,8 +93,7 @@ fun Fragment.setUiContent(
             lifecycleOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
             saveableStateRegistry = saveableStateRegistry,
-            resolvedTheme = resolvedTheme,
-            themeRefreshController = themeRefreshController,
+            platform = platform,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -116,14 +109,16 @@ fun Fragment.setUiContent(
  * Installs a ViewCompose root as this Activity's content and starts its render session.
  *
  * A repeated call disposes the previous session before replacing the Activity content View. The
- * host provides lifecycle, ViewModel, saved state, Android environment, theme, frame clock, and
- * overlay services to [content].
+ * host provides lifecycle, ViewModel, saved state, Android environment, frame clock, and overlay
+ * services to [content]. This neutral entry point does not select a design system or wrap
+ * [rootContext]; install design-system tokens inside [content], or use a named Android
+ * design-system integration.
  *
  * @sample com.viewcompose.android.samples.activityHostSample
  * @param debug enables render diagnostics and logging
  * @param debugTag log tag used by debug rendering
- * @param dynamicColorPolicy policy used while resolving Android theme tokens
- * @param themeRefreshController optional controller that invalidates the theme after configuration changes
+ * @param rootContext context used to create the root, native descendants, and default overlays;
+ * changing the root design system requires another call with its newly resolved context
  * @param overlayHostFactory creates the overlay host for the new root
  * @param onRenderStats optional callback after every attempted frame
  * @param onRenderResult optional callback for collected render diagnostics
@@ -135,8 +130,7 @@ fun Fragment.setUiContent(
 fun ComponentActivity.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
-    dynamicColorPolicy: Material3DynamicColorPolicy = Material3DynamicColorPolicy.UseIfAvailable,
-    themeRefreshController: Material3ThemeRefreshController? = null,
+    rootContext: Context = this,
     overlayHostFactory: (ViewGroup) -> OverlayHost = AndroidOverlayHostDefaults::androidOrNoOp,
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -149,12 +143,9 @@ fun ComponentActivity.setUiContent(
     )
     ActivityRenderSessionRegistry.clear(this)
     val saveableStateRegistry = viewComposeSaveableStateRegistry(this)
-    val resolvedTheme = Material3ThemeBridge.resolveContext(
-        context = this,
-        dynamicColorPolicy = dynamicColorPolicy,
-    )
+    val platform = resolveAndroidHostPlatform(rootContext)
     val root = buildUiContentRoot(
-        context = resolvedTheme.context,
+        context = platform.rootContext,
     )
     setContentView(root)
     val session = renderInto(
@@ -171,8 +162,7 @@ fun ComponentActivity.setUiContent(
             lifecycleOwner = this@setUiContent,
             viewModelStoreOwner = this@setUiContent,
             saveableStateRegistry = saveableStateRegistry,
-            resolvedTheme = resolvedTheme,
-            themeRefreshController = themeRefreshController,
+            platform = platform,
             onRenderResult = onRenderResult,
             content = content,
         )
@@ -195,14 +185,26 @@ private fun buildUiContentRoot(
     }
 }
 
-/** Provides the Android host's lifecycle, state, theme, and animation context to one DSL subtree. */
+/** One immutable platform snapshot shared by root construction and environment provision. */
+private data class ResolvedAndroidHostPlatform(
+    val rootContext: Context,
+    val environment: UiEnvironmentValues,
+)
+
+private fun resolveAndroidHostPlatform(rootContext: Context): ResolvedAndroidHostPlatform {
+    return ResolvedAndroidHostPlatform(
+        rootContext = rootContext,
+        environment = AndroidEnvironmentBridge.fromContext(rootContext),
+    )
+}
+
+/** Provides the Android host's lifecycle, state, environment, and animation context to one subtree. */
 private fun UiTreeBuilder.withHostEnvironment(
     root: ViewGroup,
     lifecycleOwner: LifecycleOwner,
     viewModelStoreOwner: ViewModelStoreOwner,
     saveableStateRegistry: com.viewcompose.ui.foundation.SaveableStateRegistry,
-    resolvedTheme: Material3ResolvedTheme,
-    themeRefreshController: Material3ThemeRefreshController?,
+    platform: ResolvedAndroidHostPlatform,
     onRenderResult: ((RenderTreeResult) -> Unit)?,
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ) {
@@ -212,13 +214,8 @@ private fun UiTreeBuilder.withHostEnvironment(
                 ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
                     ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
                         ProvideLocal(LocalRenderResultListener, onRenderResult) {
-                            UiEnvironment(values = AndroidEnvironmentBridge.fromContext(root.context)) {
-                                Material3Theme(
-                                    resolvedTheme = resolvedTheme,
-                                    refreshController = themeRefreshController,
-                                ) {
-                                    content(root)
-                                }
+                            UiEnvironment(values = platform.environment) {
+                                content(root)
                             }
                         }
                     }

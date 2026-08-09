@@ -30,7 +30,6 @@ android {
 dependencies {
     api(project(":viewcompose-host-android"))
     api(project(":viewcompose-ui-foundation"))
-    api(project(":viewcompose-material3"))
     api(project(":viewcompose-lifecycle-androidx"))
     api(project(":viewcompose-viewmodel-androidx"))
     api(libs.androidx.activity)

@@ -2,7 +2,7 @@
 
 ## Status
 
-Active. Phases 0 through 8 are implemented on `codex/multi-design-system-foundation`. Phase 8 closes
+Active. Phases 0 through 10 are implemented on `codex/multi-design-system-foundation`. Phase 8 closes
 the retained native-behavior parity gaps exposed by the current design-system-owned controls. The
 internal pressure slice now exercises three visually distinct design-system bundles through shared
 Basic primitives and design-system-owned composites. Its behavior and screenshot matrix pass on
@@ -12,14 +12,12 @@ acceptance remain release-owner gates rather than reasons to broaden the archite
 `viewcompose-oneui7` artifact now supplies a deliberately bounded five-component alpha without
 adding Samsung policy to UI Foundation or Android Renderer.
 
-A post-Phase-8 architecture review found one P0 ownership violation and several foundation gaps
-that must be closed before catalog expansion or Maven release: `viewcompose-android` still selects
-a Material-themed context and exposes Material policy at generally named host entry points;
-Material 3 and One UI currently have asymmetric component ownership; token/backend provenance is
-not yet sufficient for unambiguous acceptance; and mapped native controls have not all been
-classified against the new backend standard. Phases 9 through 12 therefore reopen the plan in
-architecture-first order. The durable design-system standard and ADR are accepted; implementation
-remains pending.
+A post-Phase-8 architecture review found one P0 ownership violation and several foundation gaps.
+Phases 9 and 10 have now closed the P0: `viewcompose-android` is a neutral aggregate, while
+`viewcompose-material3-android` owns Material context resolution and its named host entry point.
+Material 3 and One UI still have asymmetric component ownership; token/backend provenance is not
+yet sufficient for unambiguous acceptance; and mapped native controls have not all been classified
+against the new backend standard. Phases 11 and 12 remain active in architecture-first order.
 
 This plan is canonical English-only under the documentation governance policy. It records both the
 target architecture and the staged evidence required before public APIs or production rendering
@@ -28,8 +26,8 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-09.
 
-Next action: implement Phase 10's neutral host extraction and named Material Android integration
-behind the recorded Phase 9 rollback boundary. Release-owner Pixel/physical Samsung
+Next action: implement Phase 11's design-system ownership and provenance convergence on the
+accepted neutral-host boundary. Release-owner Pixel/physical Samsung
 acceptance, formal device benchmarks, and Maven publication remain required after Phases 9 through
 12; they are not used to bypass the P0 host boundary. The release workflow must archive this plan
 only after every linked changeset is included and immediately before Maven upload.
@@ -860,7 +858,7 @@ P0 context contamination is reproduced or falsified by evidence.
 
 ## Phase 10: Neutral Android host and named Material integration
 
-Status: in progress after the accepted Phase 9 baseline.
+Status: completed on 2026-08-09 after the accepted Phase 9 baseline.
 
 Goal: separate root platform-context resolution from composition design policy, remove implicit
 Material selection from neutral host paths, and preserve a small consumer setup surface.
@@ -888,6 +886,30 @@ Ordered work:
    in neutral Host and generally named neutral entry points.
 9. Update module manuals, theming guidance, compiled Q3 samples, API dumps, aggregate dependency
    guidance, and immutable release changesets with the production change.
+
+### Phase 10 completion evidence
+
+- `viewcompose-android` now exposes only neutral Activity/Fragment entry points and has no
+  Material dependency, import, policy type, or implicit context wrapper. Static One UI roots use
+  the receiver or explicitly supplied context unchanged.
+- `viewcompose-material3-android` is the named one-coordinate Material application aggregate. Its
+  `setMaterial3UiContent` entry owns Material XML/dynamic-color context resolution and delegates an
+  already resolved context to the neutral host. The alpha API made a documented hard cut rather
+  than retaining an ambiguous zero-argument compatibility overload.
+- Robolectric host/context tests pass on API 24, 31, and 35. On the API 35 Pixel emulator, all three
+  design-system verification scenarios pass, covering root replacement, caller-state retention,
+  lazy/overlay snapshot coherence, Settings diagnostics, and screenshot anchors.
+- Local Maven POM inspection and isolated smoke consumers prove that neutral applications need
+  only `viewcompose-android`, Material applications need only `viewcompose-material3-android`, and
+  the named artifact transitively exposes the reviewed neutral and Material contracts.
+- The repeated three-iteration benchmark remains inside the Phase 9 keep gate. Initial-build heap,
+  anonymous RSS, and file RSS medians changed from `5744/41668/84316 KiB` to
+  `5832/43272/84992 KiB` (`+1.5%/+3.9%/+0.8%`). Retained-patch medians changed from
+  `6175/44496/88064 KiB` to `6479/45828/88448 KiB` (`+4.9%/+3.0%/+0.4%`), while CPU frame P50
+  improved from `52.57 ms` to `34.65 ms`. Initial-display timing remains informational because its
+  coefficient of variation is `0.57`, above the accepted `0.20` threshold.
+- Physical Pixel and Samsung acceptance remains a release-owner gate. The development keep gate
+  uses the available emulator as requested and does not claim physical-device or OEM conformance.
 
 ### Phase 10 keep gate
 

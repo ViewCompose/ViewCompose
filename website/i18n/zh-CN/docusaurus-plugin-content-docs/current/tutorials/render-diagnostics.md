@@ -2,7 +2,7 @@
 title: 读取渲染诊断
 sidebar_position: 14
 translation_source: tutorials/render-diagnostics.md
-translation_source_hash: ddc5f5af21843981b0c0385f682d001f728816493dd2a1f85eb7d79a100492df
+translation_source_hash: c689b5271ba4d66f1e704d5026ee169c1c4b693475ba325f31d1c08d92e72a05
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -32,7 +32,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -50,7 +50,7 @@ class RenderDiagnosticsTutorialActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val latestStats = AtomicReference(RenderStats())
-        setUiContent(
+        setMaterial3UiContent(
             debug = true,
             debugTag = "RenderTutorial",
             onRenderStats = latestStats::set,

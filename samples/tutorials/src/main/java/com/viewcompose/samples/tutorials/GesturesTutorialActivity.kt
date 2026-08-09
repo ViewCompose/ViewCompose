@@ -4,7 +4,7 @@ package com.viewcompose.samples.tutorials
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.viewcompose.gesture.combinedClickable
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -20,7 +20,7 @@ class GesturesTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val message = remember { mutableStateOf("Tap or long-press the card") }
 
             Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {

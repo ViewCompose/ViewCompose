@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ViewComposeMaterial3HostTestTheme" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:colorBackground">#FF102030</item>
+        <item name="colorPrimary">#FF2468AC</item>
+        <item name="colorSurface">#FF304050</item>
+        <item name="colorOnSurface">#FFF1F2F3</item>
+    </style>
+
+    <style name="ViewComposeMaterial3HostAlternateTheme" parent="ViewComposeMaterial3HostTestTheme">
+        <item name="colorPrimary">#FFAC6824</item>
+        <item name="colorSurface">#FF504030</item>
+    </style>
+</resources>

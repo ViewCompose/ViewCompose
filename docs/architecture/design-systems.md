@@ -391,16 +391,16 @@ speculative extension points, and broad widget replacement are intentionally def
 
 The accepted architecture is ahead of parts of the implementation in these bounded areas:
 
-1. `viewcompose-android` currently exposes Material theme policy and resolves a Material-themed
-   context for every convenience root. This can contaminate native widget defaults in a non-Material
-   design system and is the first remediation priority.
+1. The neutral Host extraction is complete: `viewcompose-android` exposes no Material policy and
+   `viewcompose-material3-android` owns named Material root-context resolution. Delayed root,
+   overlay, lazy, and navigation provenance still needs convergence as the next acceptance slice.
 2. `viewcompose-material3` is primarily a theme adapter while `viewcompose-oneui7` already owns a
    component slice. Material needs to converge on the same token/recipe/component ownership model
    without moving Material widgets into Renderer.
 3. Foundation defaults and native widget mappings need an explicit audit for accidental Material
    geometry, color, and context assumptions.
-4. Backend choices are documented here, but a repository-wide component/backend inventory and
-   automated placement guards are not yet complete.
+4. The repository-wide component/backend inventory and neutral-host placement guards are complete;
+   future mappings must keep that executable inventory current.
 5. Token-source and backend provenance exist only partially in demo/screenshot diagnostics; they
    must become reliable acceptance evidence.
 6. A second context-changing non-Material system has not demonstrated the need for a public host

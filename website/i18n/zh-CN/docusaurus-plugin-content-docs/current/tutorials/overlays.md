@@ -2,7 +2,7 @@
 title: 使用 Overlay
 sidebar_position: 9
 translation_source: tutorials/overlays.md
-translation_source_hash: f80b6af772840d5d57cdfb8f9b65efb6544f5fc894ebfe08a630e31516b5e72e
+translation_source_hash: 63462bcc0ae213914f42a60b294be149235e097fb54ea5ab4bf06173e9a45d3a
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-overlay-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
@@ -36,7 +36,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
@@ -54,7 +54,7 @@ class OverlaysTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent(overlayHostFactory = ::AndroidOverlayHost) {
+        setMaterial3UiContent(overlayHostFactory = ::AndroidOverlayHost) {
             val dialogVisible = remember { mutableStateOf(false) }
 
             Button("Delete item", onClick = { dialogVisible.value = true })

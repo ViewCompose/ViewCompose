@@ -252,14 +252,15 @@ one ViewCompose coordinate:
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:<version-with-this-contract>")
+    implementation("com.viewcompose:viewcompose-material3-android:<version-with-this-contract>")
 }
 ```
 
-`viewcompose-android` exposes the standard UI Foundation, Android Engine, Material 3 theme bridge,
-Lifecycle, and ViewModel integrations transitively. `viewcompose-host-android` remains a low-level
-engine artifact for advanced mounting and custom integrations. Adding a second direct dependency
-on an already transitive artifact is harmless Gradle deduplication, but it is redundant and should
+`viewcompose-material3-android` exposes the neutral `viewcompose-android` aggregate plus the
+Material 3 adapter. The neutral aggregate exposes UI Foundation, Android Engine, Lifecycle, and
+ViewModel integrations without Material. `viewcompose-host-android` remains a low-level engine
+artifact for advanced mounting and custom integrations. Adding a second direct dependency on an
+already transitive artifact is harmless Gradle deduplication, but it is redundant and should
 communicate deliberate direct API usage rather than compensate for incorrect publication metadata.
 
 Feature artifacts expose every ViewCompose module required to compile their public surface,
@@ -378,8 +379,8 @@ stable-version signatures, and feature-to-core dependencies:
 ./gradlew verifyViewComposeLocalRepository
 ```
 
-Build three isolated consumers that know nothing about project modules—a minimal Android host
-consumer, an Android feature consumer, and a pure JVM core consumer:
+Build four isolated consumers that know nothing about project modules—a neutral Android host, a
+named Material Android host, an Android feature consumer, and a pure JVM core consumer:
 
 ```bash
 ./gradlew verifyViewComposePublishedConsumption
@@ -388,7 +389,7 @@ consumer, an Android feature consumer, and a pure JVM core consumer:
 `qaQuick` publishes the complete current artifact set to the generated local repository so stable
 signatures and Maven metadata are exercised before merge. `qaPreview` performs the same local
 publication first because the Counter preview sample deliberately consumes the public
-`viewcompose-android` coordinate instead of a project dependency. Repository inspection and the
+`viewcompose-material3-android` coordinate instead of a project dependency. Repository inspection and the
 isolated published-consumer builds remain explicit deeper checks; Maven Central upload tasks are
 never part of either QA gate.
 

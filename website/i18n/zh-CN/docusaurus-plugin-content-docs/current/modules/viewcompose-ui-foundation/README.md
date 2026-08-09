@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: fde8ba1dc6ed617f6f87338d50196463ed988697622fc7160daecebe2f1f83a0
+translation_source_hash: 1f3223a0b34d4917e3ee1716014e4a6732dff7c82790f258e79ed87113ac7528
 translation_status: current
 ---
 
@@ -12,7 +12,8 @@ translation_status: current
 调度、日志与 Trace 契约的渲染器无关 Session 协调器。
 
 开发可复用 ViewCompose 组件、自定义宿主、设计系统适配或浮层后端时，可以直接使用本模块。
-Android 应用通常通过 `viewcompose-android` 获得它，同时取得标准引擎与 Material 3 适配。
+Android 应用通常通过中立 `viewcompose-android` 聚合模块或具名
+`viewcompose-material3-android` 聚合模块获得它。
 
 本模块不实现 View 协调，不持有 Activity 或 Fragment 生命周期，不呈现平台 Dialog 和
 Popup，不执行图片解码，也不提供可选的动画、手势、图形、阴影、导航或 ConstraintLayout

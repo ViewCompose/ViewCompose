@@ -49,7 +49,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-android"))
+    implementation(project(":viewcompose-material3-android"))
     implementation(project(":viewcompose-shadow-android"))
     implementation(project(":viewcompose-constraintlayout-androidx"))
     implementation(project(":viewcompose-animation"))

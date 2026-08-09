@@ -41,7 +41,9 @@ Material3Theme(resolvedTheme = resolved) {
 }
 ```
 
-Standard applications receive this lifecycle automatically through `viewcompose-android`.
+Material applications receive this lifecycle automatically through the named
+`viewcompose-material3-android` integration. Lower-level integrations may continue to resolve the
+Context and install `Material3Theme` explicitly.
 
 ## Token baseline and fallback
 
@@ -94,7 +96,8 @@ by the token bridge and require separate tested component work.
 
 - [Theme guide](../../guides/theming.md)
 - [UI foundation](../viewcompose-ui-foundation/README.md)
-- [Android aggregate](../viewcompose-android/README.md)
+- [Material 3 Android integration](../viewcompose-material3-android/README.md)
+- [Neutral Android aggregate](../viewcompose-android/README.md)
 - [Five-layer architecture](../../architecture/decisions/0002-five-layer-runtime-module-architecture.md)
 
 The generated reference is available in the

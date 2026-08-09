@@ -2,7 +2,7 @@
 title: 使用主题
 sidebar_position: 7
 translation_source: tutorials/theming.md
-translation_source_hash: 0f4debeac7524b25913d4b895f66d5cfc0e1b851d5bcc54e9f89dd903c08792f
+translation_source_hash: 976e4ec81efafafac9d01d7b0098a32350615ea0dbfdbc008403069f7091d015
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -39,7 +39,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -55,7 +55,7 @@ class ThemingTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             Column(
                 spacing = 12.dp,
                 modifier = Modifier
@@ -77,7 +77,7 @@ class ThemingTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-`setUiContent` 会读取 Android 主题并提供 ViewCompose 语义 token。构建界面时直接读取
+`setMaterial3UiContent` 会读取 Android 主题并提供 ViewCompose 语义 token。构建界面时直接读取
 `Theme.colors`，不要长期保存已经解析的颜色整数。明暗配置变化后，宿主会刷新这些 token。
 
 ## 验证结果

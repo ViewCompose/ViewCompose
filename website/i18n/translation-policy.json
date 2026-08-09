@@ -45,6 +45,7 @@
     "modules/viewcompose-image-coil/README.md",
     "modules/viewcompose-image-glide/README.md",
     "modules/viewcompose-lifecycle-androidx/README.md",
+    "modules/viewcompose-material3-android/README.md",
     "modules/viewcompose-material3/README.md",
     "modules/viewcompose-navigation-android/README.md",
     "modules/viewcompose-navigation-core/README.md",

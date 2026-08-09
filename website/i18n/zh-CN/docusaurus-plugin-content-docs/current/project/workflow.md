@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 86d1c0d8f745c491906cca2746e11144672313f8b476de660eb8519316756330
+translation_source_hash: 06d6ba93705009fd6342eb05e9917a89212dba92392f524e78bab5b91a9ae463
 translation_status: current
 ---
 
@@ -265,11 +265,12 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
    `viewcompose-*` 模块禁止依赖 `app`。
 3. UI Foundation 主源码禁止导入 Renderer、AndroidX 或 Material API；UI Contract 主源码禁止
    导入 `android.*` 或 `androidx.*`。
-4. `ComponentActivity/Fragment.setUiContent` 只位于 `viewcompose-android`；`renderInto` 与
+4. 中立 `ComponentActivity/Fragment.setUiContent` 只位于 `viewcompose-android`；具名
+   `setMaterial3UiContent` 位于 `viewcompose-material3-android`；`renderInto` 与
    `AndroidView/nativeView` 保留在底层 `viewcompose-host-android` Engine。
-5. Material Theme Policy 只位于 `viewcompose-material3`，Material-backed Presentation 只能位于
-   名称明确的 Integration。UI Foundation、Renderer Android 与 Host Android 禁止导入或依赖
-   Material Components。
+5. Material Theme Policy 只位于 `viewcompose-material3`，Material Activity/Fragment 与
+   Presentation 接线只能位于名称明确的 Integration。UI Foundation、Renderer Android、Host
+   Android 与中立 Android 聚合模块禁止导入或依赖 Material。
 6. `qaQuick` 中的 `verifyModuleDependencyBoundaries` 与 `verifyDesignSystemIsolation` 是不可豁免
    硬门禁；禁止只靠 Code Review 口头维持边界。
 7. 公开依赖按 Consumer 暴露而不是实现便利性分类：public/protected 签名类型与明确的入口聚合使用

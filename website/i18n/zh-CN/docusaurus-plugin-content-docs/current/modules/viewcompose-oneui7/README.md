@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 2539a2b79c0902bf415b5fbdcb04bc8a5b83318919d09e8f037d3f85df0e5fbd
+translation_source_hash: 7961040e098681f0df269a67a45bdc44249885192c975a9b9b1eaba4faf50a13
 translation_status: current
 ---
 
@@ -50,7 +50,8 @@ setUiContent {
 
 确定性 Dark 快照使用 `OneUi7ThemeDefaults.dark()`。调用方可以复制任一 `UiThemeTokens` 并替换
 语义角色后再提供。切换 Design System 时，应使用新的 Provider 快照替换根内容与 Session，不要
-原地修改活动快照。`viewcompose-android` 仍默认安装 Material 3，因此应用必须显式依赖并安装本产物。
+原地修改活动快照。中立的 `viewcompose-android` Host 不安装任何设计系统，因此应用显式依赖本产物
+并安装 `OneUi7Theme` 时不会再经过隐式 Material Context。
 
 完整的可编译示例见
 [`OneUi7Samples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt)。

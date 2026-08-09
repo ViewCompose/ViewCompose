@@ -48,8 +48,8 @@ setUiContent {
 Use `OneUi7ThemeDefaults.dark()` for the deterministic dark snapshot. Callers may copy either
 `UiThemeTokens` value and replace semantic roles before providing it. To switch between design
 systems, replace the root content/session with a new provider snapshot; do not mutate an active
-snapshot in place. `viewcompose-android` continues to install Material 3 by default, so applications
-must depend on and install this artifact explicitly.
+snapshot in place. The neutral `viewcompose-android` host installs no design system, so applications
+depend on this artifact and install `OneUi7Theme` explicitly without an implicit Material Context.
 
 The complete compiled example is
 [`OneUi7Samples.kt`](../../../viewcompose-oneui7/src/test/samples/com/viewcompose/oneui7/samples/OneUi7Samples.kt).

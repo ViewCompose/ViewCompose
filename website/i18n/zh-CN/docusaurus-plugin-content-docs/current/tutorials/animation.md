@@ -2,7 +2,7 @@
 title: 使用 AnimatedVisibility
 sidebar_position: 11
 translation_source: tutorials/animation.md
-translation_source_hash: 4fa47846163ee27d66a35845b5e2fb4c444ccbb902b41b12b0829f0600ca0ec3
+translation_source_hash: e5b1817f7c19dd581ef86d7265f8dcf260855f0b48618357bd01cf47ef171ef1
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-animation:0.1.0-alpha03")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
@@ -34,7 +34,7 @@ package com.viewcompose.samples.tutorials
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import com.viewcompose.animation.AnimatedVisibility
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -49,7 +49,7 @@ class AnimationTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val visible = remember { mutableStateOf(true) }
 
             Column(

@@ -21,6 +21,7 @@ val modulePackageRoots = mapOf(
     "viewcompose-ui-foundation" to "com.viewcompose.ui.foundation",
     "viewcompose-host-android" to "com.viewcompose.host.android",
     "viewcompose-material3" to "com.viewcompose.material3",
+    "viewcompose-material3-android" to "com.viewcompose.material3.android",
     "viewcompose-oneui7" to "com.viewcompose.oneui7",
     "viewcompose-android" to "com.viewcompose.android",
     "viewcompose-overlay-material3-android" to "com.viewcompose.overlay.material3.android",
@@ -83,6 +84,7 @@ val runtimeModuleLayers = mapOf(
     "viewcompose-material3" to "design-system",
     "viewcompose-oneui7" to "design-system",
     "viewcompose-navigation-android" to "integration",
+    "viewcompose-material3-android" to "aggregate",
     "viewcompose-lifecycle-androidx" to "integration",
     "viewcompose-viewmodel-androidx" to "integration",
     "viewcompose-constraintlayout-androidx" to "integration",
@@ -99,7 +101,8 @@ val allowedDependencyLayers = mapOf(
     "android-engine" to setOf("kernel", "ui-foundation", "android-engine"),
     "design-system" to setOf("kernel", "ui-foundation"),
     "integration" to setOf("kernel", "ui-foundation", "android-engine", "design-system", "integration"),
-    "aggregate" to setOf("kernel", "ui-foundation", "android-engine", "design-system", "integration"),
+    "aggregate" to
+        setOf("kernel", "ui-foundation", "android-engine", "design-system", "integration", "aggregate"),
 )
 
 // Tooling is downstream of both foundation and optional capabilities and never participates in
@@ -120,6 +123,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-ui-contract:compileKotlin",
     ":viewcompose-host-android:compileDebugKotlin",
     ":viewcompose-material3:compileDebugKotlin",
+    ":viewcompose-material3-android:compileDebugKotlin",
     ":viewcompose-oneui7:compileDebugKotlin",
     ":viewcompose-android:compileDebugKotlin",
     ":viewcompose-lifecycle-androidx:compileDebugKotlin",
@@ -153,6 +157,7 @@ val qaQuickTasks = listOf(
     ":viewcompose-ui-contract:test",
     ":viewcompose-host-android:testDebugUnitTest",
     ":viewcompose-material3:testDebugUnitTest",
+    ":viewcompose-material3-android:testDebugUnitTest",
     ":viewcompose-oneui7:testDebugUnitTest",
     ":viewcompose-android:testDebugUnitTest",
     ":viewcompose-lifecycle-androidx:testDebugUnitTest",
@@ -420,6 +425,7 @@ tasks.register("verifyDesignSystemIsolation") {
                 "viewcompose-ui-foundation",
                 "viewcompose-renderer-android",
                 "viewcompose-host-android",
+                "viewcompose-android",
             )
         val productionConfigurations = setOf("api", "implementation", "compileOnly")
 
@@ -433,6 +439,14 @@ tasks.register("verifyDesignSystemIsolation") {
                         violations +=
                             "$module:$configurationName -> forbidden Material dependency " +
                                 "'${dependency.group}:${dependency.name}'"
+                    }
+                moduleProject.configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.name == "viewcompose-material3" }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> forbidden Material project dependency " +
+                                "'${dependency.name}'"
                     }
             }
 
@@ -450,6 +464,14 @@ tasks.register("verifyDesignSystemIsolation") {
                                     violations +=
                                         "${file.relativeTo(rootDir)}:${index + 1} -> " +
                                             "forbidden Material import '$trimmed'"
+                                }
+                                if (
+                                    module == "viewcompose-android" &&
+                                    "com.viewcompose.material3" in line
+                                ) {
+                                    violations +=
+                                        "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                            "neutral Android aggregate cannot reference Material '$trimmed'"
                                 }
                                 if (
                                     module == "viewcompose-ui-foundation" &&
@@ -990,7 +1012,7 @@ data class TutorialSample(
 )
 
 val tutorialBaseArtifacts =
-    listOf("viewcompose-android")
+    listOf("viewcompose-material3-android")
 
 val tutorialPublishingPropertiesFile =
     rootDir.resolve("gradle/viewcompose-publishing.properties")
@@ -1004,7 +1026,7 @@ val tutorialPublishedVersion = { artifact: String ->
 }
 val tutorialPublishedVersions =
     listOf(
-        "viewcompose-android",
+        "viewcompose-material3-android",
         "viewcompose-navigation-android",
         "viewcompose-overlay-material3-android",
         "viewcompose-animation",

@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: 909e05a6650152a52a3e5d52c4da7920f48d10fc48fa794868b12b817f1898fa
+translation_source_hash: fe7a313eaa9b978699436dd9138c1b8f884237296998655a9f46a9573234c436
 translation_status: current
 ---
 
@@ -155,10 +155,16 @@ translation_status: current
 1. `SnapshotReader` 负责批量读取 Android / AppCompat / Material 主题字段。
 2. `ThemeTokenMapper` 负责把平台字段映射到框架 token，并处理 fallback。
 3. bridge 不直接产出组件级默认值，不绕过 `Defaults` 层。
-4. `viewcompose-android` 的 `ComponentActivity/Fragment.setUiContent` 默认解析并提供 Material 3 Theme；根容器、框架原生 View、`AndroidView` 与 Overlay 共用同一个解析上下文。
-5. `setUiContent` 默认在平台支持时套用 Material 动态色；可通过 `Material3DynamicColorPolicy.Disabled` 显式关闭。底层直接组合时，使用 `viewcompose-material3` 的 `Material3ThemeBridge.resolveContext(...)` 与 `Material3Theme(...)`。
+4. `viewcompose-material3-android` 的 `ComponentActivity/Fragment.setMaterial3UiContent` 会显式
+   解析并提供 Material 3 Theme；根容器、框架原生 View、`AndroidView` 与 Overlay 共用同一个
+   解析 Context。
+5. `setMaterial3UiContent` 默认在平台支持时套用 Material 动态色；可通过
+   `Material3DynamicColorPolicy.Disabled` 显式关闭。底层直接组合时，使用
+   `viewcompose-material3` 的 `Material3ThemeBridge.resolveContext(...)` 与 `Material3Theme(...)`。
 6. 组合内使用 Android 主题时会监听配置变化并重新读取 token；离开组合后注销回调，`metadata.revision` 随刷新递增。
-7. 运行时调用 `setTheme/applyStyle` 后，可把 `Material3ThemeRefreshController` 传给 `setUiContent`，再在主线程调用 `refresh()`；控制器会重新解析动态色上下文并触发主题子树刷新。
+7. 运行时调用 `setTheme/applyStyle` 后，可把 `Material3ThemeRefreshController` 传给
+   `setMaterial3UiContent`，再在主线程调用 `refresh()`；控制器会重新解析动态色 Context 并触发
+   主题子树刷新。
 
 当前 bridge 覆盖矩阵：
 
@@ -251,8 +257,8 @@ setUiContent {
    NavigationBar 仍由 Design System 自有组合组件实现。
 4. Android Renderer 只接收已解析的通用 Node，不判断 One UI 身份。
 5. 运行时切换使用新 Provider 替换根与 Session，不修改全局 Design System 对象。
-6. `viewcompose-android` 为兼容性继续默认使用 Material 3；应用显式选择
-   `viewcompose-oneui7`。
+6. 中立 `viewcompose-android` Host 不安装设计系统；应用显式选择 `viewcompose-oneui7` 时不会继承
+   Material 根 Context。
 
 支持范围、一致性标签、降级和发布限制见
 [One UI 7 五组件 Alpha 模块手册](../modules/viewcompose-oneui7/README.md)。

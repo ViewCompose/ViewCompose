@@ -22,4 +22,5 @@ rootProject.name = "viewcompose-publishing-smoke"
 include(":feature-consumer")
 include(":core-consumer")
 include(":host-consumer")
+include(":material-host-consumer")
 include(":engine-consumer")

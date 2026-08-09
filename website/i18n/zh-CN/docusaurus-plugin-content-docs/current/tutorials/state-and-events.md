@@ -2,7 +2,7 @@
 title: 使用状态与事件
 sidebar_position: 3
 translation_source: tutorials/state-and-events.md
-translation_source_hash: 8311aee50c26ca6a9d56ce20fb0d61e03898cb9012e35ac10dc6666fed5adc66
+translation_source_hash: 081f733ce4e1948577f8b78b7dea34a3e27285c73af37d1bfa59fa79ae2b5a68
 translation_status: current
 ---
 
@@ -17,7 +17,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -33,7 +33,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -49,7 +49,7 @@ class StateTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val count = remember { mutableStateOf(0) }
 
             Column(
