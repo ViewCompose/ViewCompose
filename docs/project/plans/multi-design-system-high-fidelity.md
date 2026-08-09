@@ -1261,8 +1261,10 @@ hidden behind optimistic conformance.
 
 ## Phase 17: One UI public-guidance correction and explicit overlay adapter
 
-Status: implementation and focused JVM/Android compilation complete; emulator visual acceptance,
-published-consumer verification, and full repository gates remain required before release.
+Status: implementation retained. Focused JVM/Android tests, API 35 emulator visual acceptance,
+local Maven publication/consumer verification, `qaQuick`, and the bilingual website production
+build pass. Physical Samsung visual acceptance remains a pre-release OEM-fidelity gate, not an
+implementation blocker.
 
 Goal: correct high-value One UI 7 mismatches that the public Samsung guidance can support, make
 every interpreted token genuinely overrideable, and add One UI overlay presentation without a
@@ -1308,6 +1310,17 @@ Keep gate:
   immutable release changeset pass; and
 - emulator screenshots are inspected for clipping, geometry, theme identity, RTL, and the actual
   presenter attribution before the implementation is retained.
+
+Recorded validation:
+
+- Pixel 9a API 35 emulator: four One UI verification tests pass in Light/LTR/1.0 and
+  Dark/RTL/1.3; component, Switch drag, Snackbar, and bottom-dialog screenshots were inspected;
+- the navigation state transition retains selected text plus the selected underline without a
+  persistent Material-style pill, and a JVM test guards indicator identity/color replacement;
+- `verifyViewComposeLocalRepository` and `verifyViewComposePublishedConsumption` pass, including
+  the isolated `oneui-overlay-consumer`; and
+- `qaQuick`, documentation language/translation verification, TypeScript checking, and both-locale
+  production website builds pass.
 
 Rollback: remove only the One UI presenter adapter or an interpreted visual correction that fails
 the screenshot/behavior gates. Preserve the token-consumption fixes and truthful unsupported
