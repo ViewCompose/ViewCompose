@@ -2,8 +2,10 @@ package com.viewcompose.oneui7
 
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.DesignSystemDiagnostics
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiDesignSystemAttribution
 import com.viewcompose.ui.foundation.buildVNodeTree
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsModifierElement
@@ -27,6 +29,7 @@ class OneUi7ComponentsTest {
         assertEquals(0xFF006FFD.toInt(), light.colors.primary)
         assertEquals(0xFF5FA2FF.toInt(), dark.colors.primary)
         assertEquals(48f, light.controls.button.mediumHeight.value)
+        assertEquals("viewcompose-oneui7/static", light.metadata.provenance.sourceId)
         assertTrue(
             listOf(
                 light.shapes.large.topStart,
@@ -34,6 +37,24 @@ class OneUi7ComponentsTest {
                 light.shapes.large.bottomEnd,
                 light.shapes.large.bottomStart,
             ).all { corner -> corner.family == UiCornerFamily.Rounded },
+        )
+    }
+
+    @Test
+    fun themeExportsFiveFamilyAttribution() {
+        var attribution: UiDesignSystemAttribution? = null
+
+        buildVNodeTree {
+            OneUi7Theme {
+                attribution = DesignSystemDiagnostics.current
+            }
+        }
+
+        assertEquals("viewcompose-oneui7", attribution?.designSystemId)
+        assertEquals(OneUi7Reference.componentSet, attribution?.recipeSetId)
+        assertEquals(
+            listOf("button", "navigation-bar", "surface-card", "switch", "text-field"),
+            attribution?.components?.map { it.familyId }?.sorted(),
         )
     }
 

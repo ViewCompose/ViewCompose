@@ -13,13 +13,18 @@ import com.viewcompose.ui.foundation.BasicSurfaceStyle
 import com.viewcompose.ui.foundation.BasicTextField
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.DesignSystemAttributionProvider
 import com.viewcompose.ui.foundation.Environment
 import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiButtonSizing
+import com.viewcompose.ui.foundation.UiComponentAttribution
+import com.viewcompose.ui.foundation.UiComponentBackend
 import com.viewcompose.ui.foundation.UiColors
 import com.viewcompose.ui.foundation.UiInteractionTokens
+import com.viewcompose.ui.foundation.UiDesignConformance
+import com.viewcompose.ui.foundation.UiDesignSystemAttribution
 import com.viewcompose.ui.foundation.UiLocals
 import com.viewcompose.ui.foundation.UiNavigationBarSizing
 import com.viewcompose.ui.foundation.UiOverlays
@@ -32,6 +37,7 @@ import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.UiThemeMetadata
 import com.viewcompose.ui.foundation.UiThemeOrigin
 import com.viewcompose.ui.foundation.UiThemeTokens
+import com.viewcompose.ui.foundation.UiTokenProvenance
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.UiTypography
 import com.viewcompose.ui.foundation.uiLocalOf
@@ -175,6 +181,10 @@ object OneUi7ThemeDefaults {
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.Custom,
                 isDark = isDark,
+                provenance = UiTokenProvenance(
+                    sourceId = "viewcompose-oneui7/static",
+                    defaultOrigin = UiThemeOrigin.Custom,
+                ),
             ),
         )
     }
@@ -284,11 +294,55 @@ fun UiTreeBuilder.OneUi7Theme(
     content: UiTreeBuilder.() -> Unit,
 ) {
     UiTheme(tokens) {
-        ProvideLocal(LocalOneUi7Recipes, OneUi7Recipes.from(tokens)) {
-            content()
+        DesignSystemAttributionProvider(OneUi7Attribution) {
+            ProvideLocal(LocalOneUi7Recipes, OneUi7Recipes.from(tokens)) {
+                content()
+            }
         }
     }
 }
+
+private val OneUi7Attribution = UiDesignSystemAttribution(
+    designSystemId = "viewcompose-oneui7",
+    recipeSetId = OneUi7Reference.componentSet,
+    components = listOf(
+        UiComponentAttribution(
+            familyId = "surface-card",
+            recipeId = "one-ui7-surface-v1",
+            backend = UiComponentBackend.DslComposite,
+            conformance = UiDesignConformance.Equivalent,
+            capabilityPath = "basic-surface",
+        ),
+        UiComponentAttribution(
+            familyId = "button",
+            recipeId = "one-ui7-button-v1",
+            backend = UiComponentBackend.DslComposite,
+            conformance = UiDesignConformance.Equivalent,
+            capabilityPath = "basic-button",
+        ),
+        UiComponentAttribution(
+            familyId = "switch",
+            recipeId = "one-ui7-switch-v1",
+            backend = UiComponentBackend.DslComposite,
+            conformance = UiDesignConformance.Equivalent,
+            capabilityPath = "anchored-drag-composite",
+        ),
+        UiComponentAttribution(
+            familyId = "text-field",
+            recipeId = "one-ui7-text-field-v1",
+            backend = UiComponentBackend.NativeBehavioralCore,
+            conformance = UiDesignConformance.Equivalent,
+            capabilityPath = "android-edit-text",
+        ),
+        UiComponentAttribution(
+            familyId = "navigation-bar",
+            recipeId = "one-ui7-navigation-v1",
+            backend = UiComponentBackend.DslComposite,
+            conformance = UiDesignConformance.Equivalent,
+            capabilityPath = "text-destination-composite",
+        ),
+    ),
+)
 
 /**
  * Emits a One UI 7 alpha text action through the shared design-system-neutral [BasicButton].

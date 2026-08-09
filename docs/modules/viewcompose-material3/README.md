@@ -4,9 +4,12 @@
 Material theme colors, typography, and shapes into platform-independent `UiThemeTokens`, resolves
 dynamic-color contexts, and refreshes tokens after configuration or imperative theme changes.
 
-It does not render core controls and does not participate in View reconciliation. The Android
-engine therefore remains usable without Material Components; only this adapter and explicitly
-Material-backed integrations own that dependency.
+It also owns a bounded Material pressure slice for Surface/Card, Button, Switch, TextField, and
+NavigationBar. Those APIs resolve named recipes into shared Basic primitives, native behavioral
+cores, or neutral renderer nodes; this module does not participate in View reconciliation or map a
+generic node to a Material Components widget. The Android engine therefore remains usable without
+Material Components; only this module and explicitly Material-backed integrations own that
+dependency.
 
 ## Artifact and stability
 
@@ -44,6 +47,24 @@ Material3Theme(resolvedTheme = resolved) {
 Material applications receive this lifecycle automatically through the named
 `viewcompose-material3-android` integration. Lower-level integrations may continue to resolve the
 Context and install `Material3Theme` explicitly.
+
+`Material3Theme(tokens = ...)` provides the same recipe and diagnostic scope from static tokens
+without reading Android resources. Both overloads export `Material3Reference.recipeSet` plus the
+same five-family backend/conformance attribution through `DesignSystemDiagnostics`.
+
+## Public component pressure slice
+
+| Entry point | Recipe/backend boundary | Current conformance |
+| --- | --- | --- |
+| `Material3Surface`, `Material3Card` | Material recipes resolved into shared `BasicSurface` | Exact |
+| `Material3Button` | Material variant recipe resolved into shared `BasicButton` | Exact |
+| `Material3Switch` | Material colors/type over the native Android Switch behavioral core | Equivalent |
+| `Material3TextField` | Material decoration around the native Android editing core | Equivalent |
+| `Material3NavigationBar` | Material selection recipe over the neutral navigation renderer | Equivalent |
+
+The Material and One UI public vocabularies intentionally remain different. They share neutral
+execution and diagnostic contracts only; no union component API or global recipe bundle is
+introduced.
 
 ## Token baseline and fallback
 
@@ -85,12 +106,21 @@ large/medium/small text appearances remain title/body/label family fallbacks. Mi
 headline values retain the complete static Material snapshot instead of being collapsed onto a
 legacy size or falling back to UI Foundation's neutral defaults.
 
+`UiThemeMetadata.provenance` records `viewcompose-material3/android-xml`,
+`viewcompose-material3/android-dynamic`, or `viewcompose-material3/static` as the base producer.
+For the pressure slice, every consumed color, state-color, type, shape, control, interaction, and
+overlay path can resolve its effective origin. A present Android attribute is marked Android theme
+or dynamic; a missing value remains a named static Material fallback; `UiThemeOverride` marks only
+the token families replaced by the application.
+
 The adapter does not add Material policy to Android Renderer. Component defaults resolve semantic
 roles in UI Foundation before a NodeSpec reaches the renderer. Button visual/effective height
 separation is explicitly represented by the sizing tokens and NodeSpec. The native compact-input
 target policy is likewise consumed by UI Foundation; composite Chip target/surface separation,
-TextField floating-label/focus structure, and exact Switch/Slider visual geometry are not implied
-by the token bridge and require separate tested component work.
+TextField floating-label/focus structure and exact Switch/Slider visual geometry are not implied by
+the token bridge. The current named TextField and Switch deliberately retain native behavioral
+cores and report Equivalent conformance; further visual replacement requires the Phase 12 behavior
+and accessibility gate.
 
 ## Related documentation
 
@@ -115,3 +145,7 @@ The standard interaction-opacity profile is retained across Android theme mappin
 platform theme does not expose one complete per-state opacity family. Applications can replace the
 generic `UiInteractionTokens` or a component's resolved `stateLayerColors` without depending on
 Material APIs.
+
+The static `Material3Theme` overload and the six named pressure-slice entry points are additive Q3
+APIs. Their enums and `Material3Reference` are Q2 identity/value contracts. They expose no Material
+widget type and do not change generic UI Foundation component signatures.

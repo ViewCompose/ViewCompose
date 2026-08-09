@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-oneui7/README.md
-translation_source_hash: 7961040e098681f0df269a67a45bdc44249885192c975a9b9b1eaba4faf50a13
+translation_source_hash: 405d37db048de104268f4d68bf79d1cc18af3b5bbef5e41e0d8935dd4643eb03
 translation_status: current
 ---
 
@@ -69,6 +69,11 @@ setUiContent {
 `OneUi7ThemeDefaults`、`OneUi7Theme`、`OneUi7ButtonVariant`、`OneUi7NavigationItem` 与
 `OneUi7Reference` 构成其余公开接入和诊断 API。生成的参考文档位于
 [`viewcompose-oneui7` API 页面](https://docs.viewcompose.com/api/viewcompose-oneui7/current/)。
+
+`OneUi7Theme` 还会提供共享的 `UiDesignSystemAttribution` 快照。诊断会为全部五个家族报告静态
+`viewcompose-oneui7/static` Token 生产者、Recipe 身份、中立 Backend、Equivalent 一致性与能力
+路径。这些元数据只作为证据；私有强类型 Recipe 仍保持独立，One UI 策略不会进入 UI Foundation
+或 Renderer。
 
 ## 行为与降级契约
 

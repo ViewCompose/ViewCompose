@@ -69,6 +69,11 @@ The complete compiled example is
 available in the
 [`viewcompose-oneui7` API tree](https://docs.viewcompose.com/api/viewcompose-oneui7/current/).
 
+`OneUi7Theme` also provides the shared `UiDesignSystemAttribution` snapshot. Diagnostics report
+the static `viewcompose-oneui7/static` token producer plus recipe identity, neutral backend,
+Equivalent conformance, and capability path for all five families. This metadata is evidence only;
+the private typed recipes remain separate and no One UI policy enters UI Foundation or Renderer.
+
 ## Behavior and fallback contract
 
 - Button and Switch expose at least a 48dp effective target. Navigation destinations expose a 52dp

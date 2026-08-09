@@ -6,6 +6,7 @@ package com.viewcompose.material3
  */
 
 import com.viewcompose.ui.shape.UiShape
+import com.viewcompose.ui.foundation.UiThemeOrigin
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 import org.junit.Assert.assertEquals
@@ -173,6 +174,26 @@ class Material3ThemeBridgeTest {
         assertEquals(UiShape.cut(20.dp), tokens.shapes.medium)
         assertEquals(UiShape.roundedRelative(0.5f), tokens.shapes.large)
         assertEquals(UiShape.rounded(28.dp), tokens.shapes.extraLarge)
+        assertEquals(UiThemeOrigin.AndroidTheme, tokens.metadata.provenance.originOf("shapes.medium"))
+        assertEquals(UiThemeOrigin.Custom, tokens.metadata.provenance.originOf("colors.primary"))
+    }
+
+    @Test
+    fun `snapshot provenance distinguishes dynamic mapped values from static fallbacks`() {
+        val tokens = Material3ThemeTokenMapper.fromSnapshot(
+            snapshot = Material3ThemeSnapshot(
+                colors = Material3ThemeColorSnapshot(primary = 0xFF123456.toInt()),
+            ),
+            sourceOrigin = UiThemeOrigin.AndroidDynamicColor,
+        )
+
+        assertEquals("viewcompose-material3/android-dynamic", tokens.metadata.provenance.sourceId)
+        assertEquals(
+            UiThemeOrigin.AndroidDynamicColor,
+            tokens.metadata.provenance.originOf("colors.primary"),
+        )
+        assertEquals(UiThemeOrigin.Custom, tokens.metadata.provenance.originOf("colors.surface"))
+        assertEquals(UiThemeOrigin.Custom, tokens.metadata.provenance.originOf("controls.button"))
     }
 
     @Test

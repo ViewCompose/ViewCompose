@@ -10,6 +10,7 @@ import com.viewcompose.ui.foundation.UiThemeMetadata
 import com.viewcompose.ui.foundation.UiThemeOrigin
 import com.viewcompose.ui.foundation.UiThemeTokens
 import com.viewcompose.ui.foundation.UiTypography
+import com.viewcompose.ui.foundation.UiTokenProvenance
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
@@ -56,6 +57,10 @@ object Material3ThemeDefaults {
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.Custom,
                 isDark = isDark,
+                provenance = UiTokenProvenance(
+                    sourceId = "viewcompose-material3/static",
+                    defaultOrigin = UiThemeOrigin.Custom,
+                ),
             ),
         )
     }

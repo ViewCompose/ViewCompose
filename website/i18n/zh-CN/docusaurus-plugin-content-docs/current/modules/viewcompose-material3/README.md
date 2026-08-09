@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: f71afaa66886cdfe6957da434023cef7301d38b7f0ddbacef9b78ebba2d3bea0
+translation_source_hash: e38dc5c7da522ccc0a70c3b7a07ef000c87c2ff1410b0f60af3d42f0bf3005b6
 translation_status: current
 ---
 
@@ -10,8 +10,11 @@ translation_status: current
 排版和形状读取为平台无关的 `UiThemeTokens`，解析动态色 Context，并在配置变化或主动主题变化后
 刷新 token。
 
-它不渲染核心控件，也不参与 View 协调。因此 Android Engine 可以完全脱离 Material Components；
-只有本适配模块与明确基于 Material 的集成模块持有该依赖。
+它还拥有一个有界 Material 压力切片，覆盖 Surface/Card、Button、Switch、TextField 与
+NavigationBar。这些 API 会把具名 Recipe 解析成共享 Basic 基础组件、原生行为内核或中立
+Renderer 节点；本模块不参与 View 协调，也不会把通用节点映射为 Material Components 控件。
+因此 Android Engine 可以完全脱离 Material Components；只有本模块与明确基于 Material 的
+集成模块持有该依赖。
 
 ## 构件与稳定性
 
@@ -48,6 +51,23 @@ Material3Theme(resolvedTheme = resolved) {
 Material 应用通过具名的 `viewcompose-material3-android` 集成自动获得这套生命周期。底层集成仍可
 自行解析 Context 并显式安装 `Material3Theme`。
 
+`Material3Theme(tokens = ...)` 可以从静态 Token 提供同一套 Recipe 与诊断作用域，而不读取
+Android 资源。两个重载都会通过 `DesignSystemDiagnostics` 导出
+`Material3Reference.recipeSet` 与相同的五家族 Backend/Conformance 归因。
+
+## 公开组件压力切片
+
+| 入口 | Recipe/Backend 边界 | 当前一致性 |
+| --- | --- | --- |
+| `Material3Surface`、`Material3Card` | Material Recipe 解析到共享 `BasicSurface` | Exact |
+| `Material3Button` | Material Variant Recipe 解析到共享 `BasicButton` | Exact |
+| `Material3Switch` | Material 颜色/排版覆盖原生 Android Switch 行为内核 | Equivalent |
+| `Material3TextField` | 原生 Android 编辑内核外包裹 Material 装饰 | Equivalent |
+| `Material3NavigationBar` | Material 选择 Recipe 覆盖中立 Navigation Renderer | Equivalent |
+
+Material 与 One UI 的公开词汇有意保持差异；两者只共享中立执行与诊断契约，不引入 Union 组件
+API 或全局 Recipe Bundle。
+
 ## Token 基线与回退
 
 当没有 Android 主题 Context，或 Android 主题缺少单个属性时，
@@ -83,11 +103,18 @@ Appearance 和五个绝对 `shapeAppearanceCorner*` 角色；旧 Android Large/M
 Appearance 继续作为 Title/Body/Label 家族回退。缺失的 Display 和 Headline 会保留完整 Material
 静态快照，不会折叠到旧字号，也不会退回 UI Foundation 的中性默认值。
 
+`UiThemeMetadata.provenance` 会把基础生产者记录为
+`viewcompose-material3/android-xml`、`viewcompose-material3/android-dynamic` 或
+`viewcompose-material3/static`。压力切片消费的每个颜色、状态色、排版、形状、控件、交互和浮层
+路径都能解析有效来源：存在的 Android 属性标记为 Android Theme 或 Dynamic；缺失值继续标记为
+具名静态 Material 回退；`UiThemeOverride` 只标记应用实际替换的 Token 家族。
+
 本适配器不会把 Material 策略放进 Android Renderer。组件默认值在 NodeSpec 进入 Renderer
 之前，已在 UI Foundation 中解析为语义角色。Button 的可见/有效高度分离会由尺寸 Token 与
 NodeSpec 明确表达；原生紧凑输入控件的目标策略同样由 UI Foundation 消费。组合式 Chip 的
 目标/Surface 分离、TextField 浮动 Label/Focus 结构，以及 Switch/Slider 精确可见几何不由
-Token Bridge 自动提供，必须作为独立组件工作进行测试。
+Token Bridge 自动提供。当前具名 TextField 与 Switch 有意保留原生行为内核并报告 Equivalent；
+进一步视觉替换必须通过 Phase 12 的行为与无障碍门禁。
 
 ## 相关文档
 
@@ -110,3 +137,7 @@ Token Bridge 自动提供，必须作为独立组件工作进行测试。
 Android 主题没有暴露一套完整的逐状态透明度族，因此标准交互透明度配置会在 Android 主题映射
 期间保留。应用可以替换通用 `UiInteractionTokens` 或组件已解析的 `stateLayerColors`，无需依赖
 Material API。
+
+静态 `Material3Theme` 重载与六个具名压力切片入口属于增量 Q3 API；相应 Enum 与
+`Material3Reference` 是 Q2 身份/值契约。它们不暴露 Material 控件类型，也不改变通用 UI
+Foundation 组件签名。

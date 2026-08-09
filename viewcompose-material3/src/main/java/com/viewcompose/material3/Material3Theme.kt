@@ -7,9 +7,16 @@ import android.os.Looper
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.DesignSystemAttributionProvider
+import com.viewcompose.ui.foundation.ProvideLocal
+import com.viewcompose.ui.foundation.UiComponentAttribution
+import com.viewcompose.ui.foundation.UiComponentBackend
+import com.viewcompose.ui.foundation.UiDesignConformance
+import com.viewcompose.ui.foundation.UiDesignSystemAttribution
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeTokens
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.uiLocalOf
 import com.viewcompose.ui.foundation.remember
 import java.lang.ref.WeakReference
 
@@ -79,8 +86,92 @@ fun UiTreeBuilder.Material3Theme(
         }
         disposeEffect
     }
-    UiTheme(tokens = lifecycle.tokens.value, content = content)
+    provideMaterial3Snapshot(tokens = lifecycle.tokens.value, content = content)
 }
+
+/**
+ * Provides a static Material 3 token, recipe, and diagnostic snapshot without Android resources.
+ *
+ * Use the resolved-theme overload or `viewcompose-material3-android` when Android XML or dynamic
+ * color should participate. This overload is suitable for previews, deterministic screenshots,
+ * and products that supply a copied Material token snapshot.
+ *
+ * @sample com.viewcompose.material3.samples.material3ComponentsSample
+ * @receiver builder receiving the scoped Material 3 snapshot
+ * @param tokens immutable Material semantic values used to derive component recipes
+ * @param content subtree built synchronously under the same tokens, recipes, and attribution
+ */
+fun UiTreeBuilder.Material3Theme(
+    tokens: UiThemeTokens = Material3ThemeDefaults.light(),
+    content: UiTreeBuilder.() -> Unit,
+) {
+    provideMaterial3Snapshot(tokens = tokens, content = content)
+}
+
+private val LocalMaterial3Recipes = uiLocalOf<Material3Recipes?>(
+    debugName = "Material3Recipes",
+    debugValueFormatter = { recipes -> if (recipes == null) "missing" else Material3Reference.recipeSet },
+    defaultFactory = { null },
+)
+
+private fun UiTreeBuilder.provideMaterial3Snapshot(
+    tokens: UiThemeTokens,
+    content: UiTreeBuilder.() -> Unit,
+) {
+    UiTheme(tokens) {
+        DesignSystemAttributionProvider(Material3Attribution) {
+            ProvideLocal(LocalMaterial3Recipes, Material3Recipes.from(tokens), content)
+        }
+    }
+}
+
+internal fun material3Recipes(): Material3Recipes = checkNotNull(
+    com.viewcompose.ui.foundation.UiLocals.current(LocalMaterial3Recipes),
+) {
+    "Material 3 components require an active Material3Theme provider."
+}
+
+private val Material3Attribution = UiDesignSystemAttribution(
+    designSystemId = Material3Reference.designSystem,
+    recipeSetId = Material3Reference.recipeSet,
+    components = listOf(
+        UiComponentAttribution(
+            familyId = "surface-card",
+            recipeId = "material3-surface-card-v1",
+            backend = UiComponentBackend.DslComposite,
+            conformance = UiDesignConformance.Exact,
+            capabilityPath = "basic-surface",
+        ),
+        UiComponentAttribution(
+            familyId = "button",
+            recipeId = "material3-button-v1",
+            backend = UiComponentBackend.DslComposite,
+            conformance = UiDesignConformance.Exact,
+            capabilityPath = "basic-button",
+        ),
+        UiComponentAttribution(
+            familyId = "switch",
+            recipeId = "material3-switch-native-v1",
+            backend = UiComponentBackend.NativeBehavioralCore,
+            conformance = UiDesignConformance.Equivalent,
+            capabilityPath = "android-switch",
+        ),
+        UiComponentAttribution(
+            familyId = "text-field",
+            recipeId = "material3-text-field-v1",
+            backend = UiComponentBackend.NativeBehavioralCore,
+            conformance = UiDesignConformance.Equivalent,
+            capabilityPath = "android-edit-text",
+        ),
+        UiComponentAttribution(
+            familyId = "navigation-bar",
+            recipeId = "material3-navigation-bar-v1",
+            backend = UiComponentBackend.NeutralCustomView,
+            conformance = UiDesignConformance.Equivalent,
+            capabilityPath = "renderer-navigation-bar",
+        ),
+    ),
+)
 
 /** Observes Android configuration changes and advances the immutable theme-token revision. */
 @Suppress("DEPRECATION")
