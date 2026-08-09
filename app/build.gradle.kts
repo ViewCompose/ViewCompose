@@ -56,6 +56,7 @@ dependencies {
     implementation(project(":viewcompose-gesture"))
     implementation(project(":viewcompose-graphics"))
     implementation(project(":viewcompose-overlay-material3-android"))
+    implementation(project(":viewcompose-oneui7"))
     implementation(project(":viewcompose-image-coil"))
     compileOnly(project(":viewcompose-preview-core"))
     debugImplementation(project(":viewcompose-preview"))

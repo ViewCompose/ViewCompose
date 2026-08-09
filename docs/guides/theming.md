@@ -250,7 +250,37 @@ setTheme(R.style.AppTheme_Alternate)
 themeRefreshController.refresh()
 ```
 
-## 6. Boundary with components and Modifier
+## 6. One UI 7 alpha design-system boundary
+
+`viewcompose-oneui7` is an explicit alternative design-system artifact rather than a replacement
+for the standard Material aggregate. It provides static light/dark `UiThemeTokens` plus recipes and
+owned composites for the bounded five-component alpha set.
+
+```kotlin
+setUiContent {
+    OneUi7Theme(tokens = OneUi7ThemeDefaults.light()) {
+        OneUi7Button(text = "Continue", onClick = { continueFlow() })
+    }
+}
+```
+
+The boundary is intentionally different from the Material bridge:
+
+1. `OneUi7ThemeDefaults` does not read Android or Samsung resources. Its values are ViewCompose
+   interpretations of pinned public One UI 7 guidance.
+2. `OneUi7Theme` installs one coherent immutable foundation-token and private recipe snapshot.
+3. Button and Surface resolve through shared Basic primitives. Switch, TextField decoration, and
+   text-only NavigationBar remain design-system-owned composites where structure differs.
+4. Android Renderer receives only resolved generic nodes and never tests a One UI identity.
+5. Runtime switching replaces the root/session with a new provider; it does not mutate a global
+   design-system object.
+6. `viewcompose-android` keeps Material 3 as its compatibility default. Applications opt into
+   `viewcompose-oneui7` explicitly.
+
+See the [One UI 7 five-component alpha module manual](../modules/viewcompose-oneui7/README.md) for
+the supported component set, conformance labels, fallbacks, and release limitations.
+
+## 7. Boundary with components and Modifier
 
 1. Theme provides defaults.
 2. Component parameters express component semantics.
@@ -259,7 +289,7 @@ themeRefreshController.refresh()
 See [Modifier architecture](../architecture/modifier.md) and the
 [NodeSpec-only specification](../architecture/node-spec.md).
 
-## 7. Checklist for adding theme capability
+## 8. Checklist for adding theme capability
 
 Adding a theme field or override capability requires:
 
@@ -273,7 +303,7 @@ The authoritative manual verification path is `Diagnostics -> Theme diagnostics`
 override, and typography pages under `Foundations` remain teaching examples and are not the final
 regression contract.
 
-## 8. Current priorities
+## 9. Current priorities
 
 1. Keep the theme model stable and do not return to complete per-component token precomputation.
 2. Dynamic color, complete 15-role typography, complete absolute shape mapping, and configuration

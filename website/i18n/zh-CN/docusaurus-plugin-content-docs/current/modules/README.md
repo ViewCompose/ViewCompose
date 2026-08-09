@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 73afce8159fed6696c77cde0937d3c868952028788c06c386914a58e5282c3d2
+translation_source_hash: ed3ee882979aa9517de2b46a4d8d5435a0fea4c4d9154260065c35b7e26b81fe
 translation_status: current
 ---
 
@@ -23,6 +23,7 @@ translation_status: current
 | `viewcompose-ui-foundation` | UI Foundation | 核心 DSL、组件、token 与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation) |
 | `viewcompose-host-android` | Android Engine | 底层 View 宿主、session、状态与互操作引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-host-android) |
 | `viewcompose-material3` | Design System | Material 3 主题与动态色适配 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-material3) |
+| `viewcompose-oneui7` | Design System | One UI 7 五组件 Alpha Token 与组件集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-oneui7) |
 | `viewcompose-android` | Aggregate | 标准 Android 应用入口依赖 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-android) |
 | `viewcompose-navigation-android` | Integration | Android 导航宿主集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-android) |
 | `viewcompose-overlay-material3-android` | Integration | 基于 Material 的 Android 浮层呈现 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-material3-android) |

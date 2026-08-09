@@ -42,6 +42,7 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-renderer-android` | Android View rendering: reconciliation, binders, patches, containers, framework shape drawing, and progress drawing | Consumes portable contracts and contains neither business DSL nor Material widgets. |
 | `viewcompose-host-android` | Low-level Android engine host: `renderInto`, `RenderSession`, native View interop, and render-platform installation | Does not expose Activity/Fragment convenience entry points and does not depend on Material. |
 | `viewcompose-material3` | Material 3 theme snapshot, token mapping, dynamic-color policy, and refresh lifecycle | Owns all Material/AppCompat theme interpretation; UI Foundation and Android Engine do not depend on it. |
+| `viewcompose-oneui7` | Static One UI 7 alpha tokens and the bounded Button, Surface, Switch, TextField, and text-only NavigationBar set | Owns its named recipes and composites; it has no Material dependency and adds no design-system branch to Android Renderer. |
 | `viewcompose-android` | Standard Android consumer aggregate and Activity/Fragment `setUiContent` entry points | Aggregates the default engine, UI Foundation, Material 3 theme bridge, Lifecycle, and ViewModel integrations without becoming a dependency of lower layers. |
 | `viewcompose-overlay-material3-android` | Android overlay host and presenters for dialogs, popups, bottom sheets, snackbars, and toasts | Platform implementation only; it does not depend on renderer resources. |
 | `viewcompose-image-coil` | Optional image-loading adapter | Implements `UiImageLoader` for Coil 3; it accepts the general source/request contract without feeding Coil concerns back into the renderer core. |
@@ -68,9 +69,10 @@ layer when the dependency contract permits it; lower layers never depend on a hi
    System, or Integrations.
 3. **Android Engine** contains renderer-android and host-android. It maps contracts to Android View
    without owning Material design policy or AndroidX feature integrations.
-4. **Design System** contains material3. It may interpret Material/AppCompat themes and supply
-   framework tokens, but Material types and dependencies must not leak into UI Foundation or the
-   Android Engine.
+4. **Design System** contains material3 and oneui7. A design-system module supplies concrete token
+   profiles, resolved recipes, and owned composites without leaking its identity into UI Foundation
+   or Android Engine. Only material3 interprets Material/AppCompat themes; oneui7 uses static,
+   ViewCompose-owned values and has no Material dependency.
 5. **Integrations** contains navigation-android, lifecycle-androidx, viewmodel-androidx,
    constraintlayout-androidx, overlay-material3-android, image adapters, and shadow-android. A name
    suffix identifies the external platform or design-system ownership when that distinction affects

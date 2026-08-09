@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: ed5cec6ba9b594d6efac7ec6a8f4c7207daf4cfe3916c1bcf9895300868b29af
+translation_source_hash: 555e653fba5455048897581b2788faf9910b9d0638423c7a9f4a46d42f0fe88e
 translation_status: current
 ---
 
@@ -49,6 +49,7 @@ translation_status: current
 | `viewcompose-renderer-android` | Android View 渲染实现（reconcile、binder、patch、container、框架 shape/progress 绘制） | 只消费可移植契约，不承载业务 DSL 或 Material 控件 |
 | `viewcompose-host-android` | 底层 Android Engine 宿主（`renderInto/RenderSession`、`AndroidView/nativeView`、渲染平台安装） | 不提供 Activity/Fragment 便捷入口，不依赖 Material |
 | `viewcompose-material3` | Material 3 主题快照、Token 映射、动态颜色策略与刷新生命周期 | 独占 Material/AppCompat 主题解释；UI Foundation 与 Android Engine 不依赖它 |
+| `viewcompose-oneui7` | 静态 One UI 7 Alpha Token 与限定的 Button、Surface、Switch、TextField、纯文字 NavigationBar 组件集 | 独占其命名 Recipe 与组合组件；不依赖 Material，也不向 Android Renderer 增加 Design System 分支 |
 | `viewcompose-android` | 标准 Android Consumer 聚合包与 Activity/Fragment `setUiContent` 入口 | 聚合默认 Engine、UI Foundation、Material 3 Theme Bridge、Lifecycle 与 ViewModel 集成，且不被底层反向依赖 |
 | `viewcompose-overlay-material3-android` | Android overlay host/presenter（Dialog/Popup/ModalBottomSheet/Snackbar/Toast） | 只做平台实现，不依赖 renderer 资源 |
 | `viewcompose-image-coil` | 可选图片加载适配器 | 为 Coil 3 实现 `UiImageLoader`，接收通用 source/request 契约，不把 Coil 关注点回流到 renderer 核心 |
@@ -68,7 +69,7 @@ translation_status: current
 1. **Kernel**：runtime、text-core、ui-contract、navigation-core、animation-core、gesture-core、graphics-core 等纯状态、文本、契约和策略内核。
 2. **UI Foundation**：ui-foundation、animation、gesture、graphics 等渲染器无关公开 UI 面。由于框架以 Android View 为目标，它可以描述 Android-only 声明值，但原生容器访问、宿主适配、日志、Trace 与调度必须由 Android Engine 安装；禁止依赖 Android Engine、Design System 或 Integrations。
 3. **Android Engine**：renderer-android 与 host-android，只负责把契约映射为 Android View，不承载 Material 设计策略或 AndroidX 功能集成。
-4. **Design System**：material3，可读取 Material/AppCompat Theme 并生成框架 Token，但 Material 类型和依赖不得泄漏到 UI Foundation 或 Android Engine。
+4. **Design System**：material3 与 oneui7。Design System 模块提供具体 Token Profile、解析后的 Recipe 与自有组合组件，但其身份不得泄漏到 UI Foundation 或 Android Engine。只有 material3 读取 Material/AppCompat Theme；oneui7 使用 ViewCompose 自有静态值且不依赖 Material。
 5. **Integrations**：navigation-android、lifecycle-androidx、viewmodel-androidx、constraintlayout-androidx、overlay-material3-android、图片适配器与 shadow-android。外部平台或设计系统会影响依赖时，模块名必须用后缀明确归属。
 6. `viewcompose-android` 是聚合包，不是第六层；它是标准应用依赖，并持有有意组装多个层的便捷组合根。
 7. preview、preview worker/runner/Gradle plugin 与 benchmark 属于工具层；运行时模块禁止依赖工具层，所有框架模块禁止依赖 `app`。

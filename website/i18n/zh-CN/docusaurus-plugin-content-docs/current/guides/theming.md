@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: f808faad9ef3ac48e861dab7d5f433dd2762fe3ce9abf22511674ea75fb64dae
+translation_source_hash: 909e05a6650152a52a3e5d52c4da7920f48d10fc48fa794868b12b817f1898fa
 translation_status: current
 ---
 
@@ -229,7 +229,35 @@ setTheme(R.style.AppTheme_Alternate)
 themeRefreshController.refresh()
 ```
 
-## 6. 与组件和 Modifier 的边界
+## 6. One UI 7 Alpha Design System 边界
+
+`viewcompose-oneui7` 是显式选择的替代 Design System 产物，不会替换标准 Material 聚合入口。
+它提供静态 Light/Dark `UiThemeTokens`，以及限定五组件 Alpha 所需的 Recipe 和自有组合组件。
+
+```kotlin
+setUiContent {
+    OneUi7Theme(tokens = OneUi7ThemeDefaults.light()) {
+        OneUi7Button(text = "Continue", onClick = { continueFlow() })
+    }
+}
+```
+
+这条边界有意不同于 Material Bridge：
+
+1. `OneUi7ThemeDefaults` 不读取 Android 或 Samsung Resource，其中数值是 ViewCompose 对固定
+   One UI 7 公开指南的解释。
+2. `OneUi7Theme` 安装一份完整、不可变的 Foundation Token 与私有 Recipe 快照。
+3. Button 与 Surface 使用共享 Basic Primitive；结构不同时，Switch、TextField 装饰和纯文字
+   NavigationBar 仍由 Design System 自有组合组件实现。
+4. Android Renderer 只接收已解析的通用 Node，不判断 One UI 身份。
+5. 运行时切换使用新 Provider 替换根与 Session，不修改全局 Design System 对象。
+6. `viewcompose-android` 为兼容性继续默认使用 Material 3；应用显式选择
+   `viewcompose-oneui7`。
+
+支持范围、一致性标签、降级和发布限制见
+[One UI 7 五组件 Alpha 模块手册](../modules/viewcompose-oneui7/README.md)。
+
+## 7. 与组件和 Modifier 的边界
 
 1. 主题负责默认值来源
 2. 组件参数负责语义表达
@@ -240,7 +268,7 @@ themeRefreshController.refresh()
 - [Modifier 模型](../architecture/modifier.md)
 - [NodeSpec 模型](../architecture/node-spec.md)
 
-## 7. 新增主题能力的必经清单
+## 8. 新增主题能力的必经清单
 
 新增主题字段或覆盖能力时，至少完成：
 
@@ -252,7 +280,7 @@ themeRefreshController.refresh()
 
 当前主题语义的权威 demo 验证入口为 `Diagnostics -> 主题诊断`。`Foundations` 中的 theme/overrides/typography 页面继续保留为教学与示例入口，不承担最终人工回归口径。
 
-## 8. 当前阶段重点
+## 9. 当前阶段重点
 
 1. 保持主题模型稳定，不回退到“组件全量 token 预计算”。
 2. 动态色、完整 15 角色排版、完整绝对形状映射与配置生命周期已落地；继续补多窗口/厂商主题

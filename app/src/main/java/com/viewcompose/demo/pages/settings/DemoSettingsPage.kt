@@ -173,6 +173,17 @@ internal fun UiTreeBuilder.SettingsPage(
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SETTINGS_DESIGN_SYSTEM_ENTRY),
                 )
+                Button(
+                    text = "验证 One UI 7 五组件 Alpha",
+                    onClick = {
+                        root?.context?.startActivity(
+                            OneUi7VerificationActivity.newIntent(root.context),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SETTINGS_ONE_UI_7_ENTRY),
+                )
             }
 
             "environment" -> Column(

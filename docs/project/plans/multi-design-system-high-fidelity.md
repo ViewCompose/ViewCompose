@@ -2,12 +2,14 @@
 
 ## Status
 
-Active. Phases 0 through 5 are implemented on `codex/multi-design-system-foundation`. The internal
+Active. Phases 0 through 6 are implemented on `codex/multi-design-system-foundation`. The internal
 five-component slice now exercises two visually distinct design-system bundles through shared
 Basic primitives and design-system-owned composites. Its behavior and screenshot matrix passes on
 API 24, 31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain
 non-representative for release performance acceptance; physical-device and Samsung visual
-acceptance remain release-owner gates rather than reasons to broaden the architecture.
+acceptance remain release-owner gates rather than reasons to broaden the architecture. The public
+`viewcompose-oneui7` artifact now supplies a deliberately bounded five-component alpha without
+adding Samsung policy to UI Foundation, Android Renderer, or the default Material aggregate.
 
 This plan is canonical English-only under the documentation governance policy. It records both the
 target architecture and the staged evidence required before public APIs or production rendering
@@ -16,10 +18,10 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-09.
 
-Next action: pin the official Samsung reference and implement the Phase 6 public One UI alpha
-five-component slice. Keep its API and artifact naming explicit about the supported component set;
-do not claim a complete One UI implementation or make Samsung-only visual behavior part of the
-generic host or Android Renderer.
+Next action: complete the Phase 7 internal Cupertino structural pressure test. Keep it non-public,
+exercise continuous corners, segmented navigation, switch structure, typography, translucency,
+motion, and explicit fallbacks, and do not introduce Cupertino fields into generic theme tokens or
+Android Renderer.
 
 ## Maven release changesets
 
@@ -30,6 +32,9 @@ generic host or Android Renderer.
   covers the Phase 2 neutral action composite and its compiled sample.
 - [`20260807-multi-design-motion.json`](../../../release/changes/20260807-multi-design-motion.json)
   covers the Phase 3 semantic motion/reduced-motion policy and compatible shape interpolation.
+- [`20260809-oneui7-five-component-alpha.json`](../../../release/changes/20260809-oneui7-five-component-alpha.json)
+  covers the Phase 6 public One UI 7 five-component alpha artifact, compiled sample, documentation,
+  and application verification entry.
 
 ## Objective
 
@@ -540,7 +545,8 @@ Keep criteria:
 
 ## Phase 6: First public non-Material design system
 
-Status: pending Phase 5.
+Status: complete for implementation and API 35 emulator evidence. Pixel and physical Samsung
+screenshot acceptance plus Maven publication remain release-owner gates.
 
 One UI is the preferred first public target because it exercises Android-native interaction,
 large-title/density/shape differences, and Samsung device validation without making backdrop blur a
@@ -556,6 +562,29 @@ Planned release slice:
 
 Do not claim complete One UI support from a five-component slice. Artifact and documentation names
 must state the supported component set and alpha stability.
+
+### Phase 6 implementation decision and evidence
+
+- The pinned target is One UI 7, using Samsung's public One UI 7 design story and Samsung
+  Developer component guidance reviewed on 2026-08-09. The artifact explicitly states that its
+  static values are ViewCompose interpretations, not Samsung internal tokens or endorsement.
+- `viewcompose-oneui7:0.1.0-alpha01` is an independent Design System artifact with one API
+  dependency on `viewcompose-ui-foundation` and no Material dependency. It is not added to the
+  standard `viewcompose-android` aggregate, so existing applications retain Material 3 defaults.
+- `OneUi7ThemeDefaults.light/dark` and `OneUi7Theme` install one immutable token/recipe snapshot.
+  Button and Surface reuse `BasicButton`/`BasicSurface`; Switch and text-only NavigationBar are
+  owned composites; TextField retains the native Android editing core.
+- Public Q2/Q3 KDoc, one compiled five-component sample, module/API documentation, catalog and
+  dependency registration, and an immutable Maven changeset ship with the implementation.
+- Unit tests cover token snapshots, structure, validation, and callback behavior. An API 35
+  emulator test covers Button, disabled state, Switch state, native TextField editing,
+  NavigationBar selection/RTL ordering, and deterministic Light/LTR/1.0 plus Dark/RTL/1.3
+  screenshots. All four final screenshots were visually inspected.
+- Backdrop blur and shape morph are outside the public alpha surface. The documented fallback is a
+  contrast-safe tinted Surface and a discrete/static shape endpoint; neither optional effect can
+  alter content, input, semantics, or layout.
+- Physical Samsung acceptance remains mandatory before the first Maven upload. This external gate
+  prevents a release claim, but does not justify moving Samsung/OEM policy into shared layers.
 
 ## Phase 7: Cupertino pressure test and advanced effects
 
