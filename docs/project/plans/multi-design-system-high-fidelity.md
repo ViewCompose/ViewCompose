@@ -2,9 +2,10 @@
 
 ## Status
 
-Active. Phases 0 through 12 are implemented on `codex/multi-design-system-foundation`. Phases 13
-through 16 now converge Android overlay ownership and root-level integration without introducing
-one Activity/Fragment extension family per design system. Phase 8 closes
+Active pending release-owner physical-device gates. Phases 0 through 16 are implemented on
+`codex/multi-design-system-foundation`. Phases 13 through 16 converge Android overlay ownership and
+root-level integration without introducing one Activity/Fragment extension family per design
+system. Phase 8 closes
 the retained native-behavior parity gaps exposed by the current design-system-owned controls. The
 internal pressure slice now exercises three visually distinct design-system bundles through shared
 Basic primitives and design-system-owned composites. Its behavior and screenshot matrix pass on
@@ -21,9 +22,11 @@ Material 3 and One UI now own parallel five-family pressure slices without shari
 Production diagnostics identify token producer/effective origin, recipe, backend, conformance,
 capability, and fallback; the Settings matrix verifies XML, static, and application-override
 sources. The Foundation-default and mapped-backend audits retained native behavioral cores where
-replacement has no proven benefit. The remaining implementation work extracts the neutral Android
-overlay transport, replaces classpath-selected design policy with explicit root assembly, and
-narrows the Material overlay artifact to presenters with a measured Material dependency.
+replacement has no proven benefit. The neutral Android overlay transport is now reactivated,
+classpath-selected design policy has been replaced by explicit root assembly, and the Material
+overlay artifact owns only the presenters that retain a measured native dependency benefit. The
+overlay attribution matrix passes on API 24, 31, 35, and 36 emulators, and isolated Maven neutral
+and Material consumers resolve successfully.
 
 This plan is canonical English-only under the documentation governance policy. It records both the
 target architecture and the staged evidence required before public APIs or production rendering
@@ -32,23 +35,20 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-09.
 
-Next action: complete Phases 13 through 16 and their emulator/Maven acceptance matrix, then run
-release-owner Pixel/physical Samsung acceptance and formal device benchmarks before publishing the
-linked Maven changesets. These gates are not used to bypass the neutral-host or backend boundaries.
-The release workflow must archive this plan only after every linked changeset is included and
-immediately before Maven upload.
+Next action: run release-owner physical Pixel/Samsung visual acceptance and formal physical-device
+benchmarks before publishing the linked Maven changeset. These gates are not used to bypass the
+neutral-host or backend boundaries. The release workflow must archive this plan only after every
+linked changeset is included and immediately before Maven upload.
 
 ## Maven release changesets
 
 - [`20260809-multi-design-system-high-fidelity.json`](../../../release/changes/20260809-multi-design-system-high-fidelity.json)
   is the single PR-owned release intent. It covers the Phase 2 neutral Surface and Button
   foundations, Phase 3 semantic motion and compatible shape interpolation, and the Phase 6 public
-  One UI 7 five-component alpha artifact. Reverse-dependency propagation remains release-planner
-  owned.
-- [`20260809-overlay-android-reactivation.json`](../../../release/changes/20260809-overlay-android-reactivation.json)
-  records the deliberate `viewcompose-overlay-android` coordinate reactivation, neutral transport
-  extraction, explicit root selection, Material adapter narrowing, and affected aggregate/runtime
-  hard cuts.
+  One UI 7 five-component alpha artifact. It also records the deliberate
+  `viewcompose-overlay-android` coordinate reactivation, neutral transport extraction, explicit
+  root selection, Material adapter narrowing, and affected aggregate/runtime hard cuts.
+  Reverse-dependency propagation remains release-planner owned.
 
 ## Objective
 
@@ -1127,8 +1127,8 @@ weakening the ownership assertion.
 
 ## Phase 14: Neutral Android overlay transport extraction
 
-Status: implemented. The reactivated coordinate is the single Material-free Android transport;
-behavioral, API, POM, and isolated-consumer acceptance remains part of the final verification run.
+Status: complete. The reactivated coordinate is the single Material-free Android transport;
+behavioral, API, POM, and isolated-consumer acceptance pass.
 
 Goal: publish one Material-free Android overlay transport and make unsupported presenter slots
 explicit without changing UI Foundation's request or session model.
@@ -1202,8 +1202,9 @@ regresses. Never restore Material discovery as the neutral default.
 
 ## Phase 16: Overlay design provenance and cross-system acceptance
 
-Status: implementation complete; final emulator screenshots, Maven consumers, and performance
-evidence are in progress.
+Status: complete for implementation, Maven consumers, the emulator matrix, and representative
+screenshot inspection. Physical Pixel/Samsung visual acceptance and formal physical-device
+performance thresholds remain release-owner gates.
 
 Goal: prove that delayed overlay content and platform presenter selection report one coherent
 design-system owner, while keeping unsupported alpha capabilities honest.
@@ -1224,6 +1225,26 @@ Ordered work:
 5. Add Settings/demo entries and deterministic screenshots that display root design system, token
    producer, overlay transport, per-type presenter, conformance, and fallback. Cover root switching
    with an active overlay and reject mixed snapshots.
+
+Verification evidence recorded on 2026-08-09:
+
+- strict Dokka generation passes for UI Foundation, Host Android, both overlay artifacts, Material
+  3, and One UI 7; the owning public APIs retain compiled samples and module documentation;
+- overlay protocol, presenter attribution, service-provider uniqueness, dialog/popup lifetime,
+  toast completion, root isolation, and cross-system attribution unit tests pass;
+- `verifyDesignSystemIsolation`, `verifyModuleDependencyBoundaries`, and
+  `verifyUiFoundationPlatformBoundary` pass;
+- `verifyViewComposeLocalRepository` and `verifyViewComposePublishedConsumption` pass, including
+  isolated neutral-host, Material-host, feature, engine, and core consumers;
+- the Material token-source matrix and One UI 7 five-component evidence tests pass on API 24, 31,
+  35, and 36 emulators. API 35 light/dark, LTR/RTL, XML/static/custom token screenshots were
+  inspected and show neutral transport plus the correct design-owned or unsupported presenters;
+- `DesignSystemVerticalSliceBenchmark.cutContrastOverlayLifecycle` completes a one-iteration API
+  35 emulator smoke covering show, root-scoped replacement, and dismiss, and emits a Perfetto trace.
+  The observed run contained 68 frames with 7,836 KB maximum Java heap and 52,136 KB maximum
+  anonymous RSS. These emulator values are reproducibility evidence only, not release thresholds;
+  Phase 13 had no valid overlay-specific physical-device before metric, so formal comparative
+  performance acceptance remains intentionally open until the release-owner device run.
 
 Keep gate:
 

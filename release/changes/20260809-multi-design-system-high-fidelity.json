@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Establish neutral component, motion, interaction, accessibility, host, and provenance foundations for multiple design systems; add independent Material 3 and One UI 7 five-family component slices with explicit backend diagnostics.",
+  "summary": "Establish neutral component, motion, interaction, accessibility, host, overlay, and provenance foundations for multiple design systems; add independent Material 3 and One UI 7 slices with explicit root-scoped backend diagnostics.",
   "changes": [
     { "artifact": "viewcompose-animation-core", "impact": "feature" },
     { "artifact": "viewcompose-animation", "impact": "feature" },
@@ -8,9 +8,13 @@
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
     { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
     { "artifact": "viewcompose-renderer-android", "impact": "feature" },
+    { "artifact": "viewcompose-host-android", "impact": "breaking" },
     { "artifact": "viewcompose-android", "impact": "breaking" },
+    { "artifact": "viewcompose-navigation-android", "impact": "breaking" },
     { "artifact": "viewcompose-material3", "impact": "feature" },
     { "artifact": "viewcompose-material3-android", "impact": "feature" },
-    { "artifact": "viewcompose-oneui7", "impact": "feature" }
+    { "artifact": "viewcompose-oneui7", "impact": "feature" },
+    { "artifact": "viewcompose-overlay-android", "impact": "breaking" },
+    { "artifact": "viewcompose-overlay-material3-android", "impact": "breaking" }
   ]
 }
