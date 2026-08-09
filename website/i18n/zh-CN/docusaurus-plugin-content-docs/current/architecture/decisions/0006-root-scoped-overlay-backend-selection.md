@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0006-root-scoped-overlay-backend-selection.md
-translation_source_hash: 060cb30f60fee705eed7edefc4a958786a0787f3a0850f30445784af00d88fea
+translation_source_hash: e18ba2d9cd73b4be8115ca63993e8e8dda1cf00620b5a0bdaae7e8fa8616d9ac
 translation_status: current
 ---
 
@@ -8,7 +8,7 @@ translation_status: current
 
 - 状态：已接受
 - 日期：2026-08-09
-- 替代：ADR-0002 中关于退役/重命名 `viewcompose-overlay-android` 的部分
+- 替代：ADR-0002 与 ADR-0003 中关于退役/重命名 `viewcompose-overlay-android` 的部分
 
 ## 背景
 

@@ -49,7 +49,6 @@ val modulePackageRoots = mapOf(
 val forbiddenLegacyPackageRoots = setOf(
     "com.viewcompose.widget.core",
     "com.viewcompose.widget.constraintlayout",
-    "com.viewcompose.overlay.android",
 )
 
 val kotlinJvmModules = setOf(

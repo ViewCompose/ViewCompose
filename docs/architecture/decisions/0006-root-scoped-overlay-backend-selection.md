@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-09
-- Supersedes: the `viewcompose-overlay-android` retirement/rename portion of ADR-0002
+- Supersedes: the `viewcompose-overlay-android` retirement/rename portions of ADR-0002 and ADR-0003
 
 ## Context
 
