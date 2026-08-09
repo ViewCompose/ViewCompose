@@ -89,14 +89,14 @@ class DemoDesignSystemVerificationUiTest {
                 label = "phase5-overlay-rounded-reference",
                 metadata = "suite=multi-design-phase5\ndesignSystem=rounded-reference\nsnapshot=root+lazy+overlay\n",
             )
-            device.findObject(By.text("Switch overlay to cut-contrast")).click()
+            device.findObject(By.text("Switch overlay to cupertino-pressure")).click()
             waitForUiIdle()
             SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MS)
             waitForUiIdle()
             assertTrue(
-                "Expected restored overlay to capture cut-contrast locals",
+                "Expected restored overlay to capture cupertino-pressure locals",
                 device.wait(
-                    Until.hasObject(By.text("Overlay system: cut-contrast")),
+                    Until.hasObject(By.text("Overlay system: cupertino-pressure")),
                     OVERLAY_TIMEOUT_MS,
                 ),
             )
@@ -105,19 +105,19 @@ class DemoDesignSystemVerificationUiTest {
                 !device.hasObject(By.text("Overlay system: rounded-reference")),
             )
             captureEvidence(
-                label = "phase5-overlay-cut-contrast",
-                metadata = "suite=multi-design-phase5\ndesignSystem=cut-contrast\nsnapshot=root+lazy+overlay\n",
+                label = "phase5-overlay-cupertino-pressure",
+                metadata = "suite=multi-design-phase5\ndesignSystem=cupertino-pressure\nsnapshot=root+lazy+overlay\n",
             )
 
             scenario.onActivity { activity ->
                 assertEquals(
-                    "cut-contrast · Cut contrast",
+                    "cupertino-pressure · Cupertino pressure",
                     activity.requireTextViewByTestTagVisible(
                         DemoTestTags.DESIGN_SYSTEM_IDENTITY,
                     ).text.toString(),
                 )
                 assertEquals(
-                    "Lazy system: cut-contrast",
+                    "Lazy system: cupertino-pressure",
                     activity.requireTextViewByTestTagVisible(
                         DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY,
                     ).text.toString(),
@@ -133,7 +133,7 @@ class DemoDesignSystemVerificationUiTest {
             assertTrue(
                 "Expected new-session dialog dismissal",
                 device.wait(
-                    Until.gone(By.text("Overlay system: cut-contrast")),
+                    Until.gone(By.text("Overlay system: cupertino-pressure")),
                     OVERLAY_TIMEOUT_MS,
                 ),
             )
@@ -141,9 +141,12 @@ class DemoDesignSystemVerificationUiTest {
     }
 
     @Test
-    fun fiveComponentSlice_exportsAttributionAndPreservesBehaviorAcrossMatrix() {
+    fun designSystemPressureSlice_exportsAttributionAndPreservesBehaviorAcrossMatrix() {
         resetPublicEvidenceDirectory()
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val requestedKind = InstrumentationRegistry.getArguments()
+            .getString("designSystemKind")
+            ?.let(DemoDesignSystemKind::fromId)
         val cases = listOf(
             FixtureCase(DemoDesignSystemKind.CutContrast, dark = false, rtl = false, fontScale = 1f),
             FixtureCase(
@@ -159,7 +162,20 @@ class DemoDesignSystemVerificationUiTest {
                 rtl = false,
                 fontScale = 2f,
             ),
-        )
+            FixtureCase(
+                DemoDesignSystemKind.CupertinoPressure,
+                dark = false,
+                rtl = false,
+                fontScale = 1f,
+            ),
+            FixtureCase(
+                DemoDesignSystemKind.CupertinoPressure,
+                dark = true,
+                rtl = true,
+                fontScale = 1.3f,
+                reducedMotion = true,
+            ),
+        ).filter { fixture -> requestedKind == null || fixture.kind == requestedKind }
 
         cases.forEach { fixture ->
             val intent = DemoDesignSystemVerificationActivity.newIntent(
@@ -222,6 +238,7 @@ class DemoDesignSystemVerificationUiTest {
                         DemoTestTags.DESIGN_SYSTEM_SWITCH_DISABLED,
                         DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD,
                         DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD_ERROR,
+                        DemoTestTags.DESIGN_SYSTEM_SEGMENTED,
                         DemoTestTags.DESIGN_SYSTEM_NAVIGATION,
                     ).forEach { tag ->
                         val view = activity.requireViewByTestTagVisible(tag)
@@ -294,6 +311,8 @@ class DemoDesignSystemVerificationUiTest {
                     assertEquals(3, navigation.childCountOrZero())
                     val middleItem = (navigation as ViewGroup).getChildAt(1)
                     assertTrue("Expected the middle navigation item to handle selection", middleItem.performClick())
+                    activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SEGMENTED)
+                    activity.clickTextView("Week")
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
@@ -313,6 +332,12 @@ class DemoDesignSystemVerificationUiTest {
                         "Selected: Search",
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
+                        ).text.toString(),
+                    )
+                    assertEquals(
+                        "Segment: Week",
+                        activity.requireTextViewByTestTagVisible(
+                            DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS,
                         ).text.toString(),
                     )
                 }
@@ -336,6 +361,12 @@ class DemoDesignSystemVerificationUiTest {
                         "Selected: Search",
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.DESIGN_SYSTEM_NAVIGATION_STATUS,
+                        ).text.toString(),
+                    )
+                    assertEquals(
+                        "Segment: Week",
+                        activity.requireTextViewByTestTagVisible(
+                            DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS,
                         ).text.toString(),
                     )
                     val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_TEXT_FIELD)
@@ -383,10 +414,10 @@ class DemoDesignSystemVerificationUiTest {
     private fun FixtureCase.metadata(activity: DemoDesignSystemVerificationActivity): String {
         val layoutDirection = if (rtl) "rtl" else "ltr"
         return buildString {
-            appendLine("suite=multi-design-five-component-v1")
+            appendLine("suite=multi-design-system-pressure-v2")
             appendLine("designSystem=${kind.id}")
             appendLine("tokenSource=demo-design-system/${kind.id}")
-            appendLine("recipeIdentity=${kind.id}/five-component-v1")
+            appendLine("recipeIdentity=${kind.id}/pressure-v2")
             appendLine("mode=${if (dark) "dark" else "light"}")
             appendLine("reducedMotion=$reducedMotion")
             appendLine("api=${Build.VERSION.SDK_INT}")
@@ -394,12 +425,24 @@ class DemoDesignSystemVerificationUiTest {
             appendLine("fontScale=$fontScale")
             appendLine("layoutDirection=$layoutDirection")
             appendLine("densityDpi=${activity.resources.displayMetrics.densityDpi}")
-            appendLine("button=Exact:BasicButton")
-            appendLine("surface=Exact:BasicSurface")
+            val sharedPrimitiveOutcome = if (kind == DemoDesignSystemKind.CupertinoPressure) {
+                "Equivalent"
+            } else {
+                "Exact"
+            }
+            appendLine("button=$sharedPrimitiveOutcome:BasicButton")
+            appendLine("surface=$sharedPrimitiveOutcome:BasicSurface")
             appendLine("switch=Equivalent:owned-composite")
             appendLine("textField=Equivalent:native-edit-core")
             appendLine("navigation=Equivalent:owned-composite")
-            appendLine("backdropBlur=Degraded:tinted-surface")
+            if (kind == DemoDesignSystemKind.CupertinoPressure) {
+                appendLine("segmentedControl=Equivalent:owned-composite")
+                appendLine("continuousCorners=Exact:framework-path")
+                appendLine("shapeMorph=Degraded:discrete-endpoint")
+                appendLine("backdropBlur=Degraded:tinted-translucent-surface")
+            } else {
+                appendLine("backdropBlur=Degraded:tinted-surface")
+            }
         }
     }
 

@@ -30,10 +30,16 @@ class DesignSystemVerticalSliceBenchmark {
     fun roundedReferenceInitialBuild() = initialBuild(ROUNDED_REFERENCE)
 
     @Test
+    fun cupertinoPressureInitialBuild() = initialBuild(CUPERTINO_PRESSURE)
+
+    @Test
     fun cutContrastPatchOnlyUpdate() = patchOnlyUpdate(CUT_CONTRAST)
 
     @Test
     fun roundedReferencePatchOnlyUpdate() = patchOnlyUpdate(ROUNDED_REFERENCE)
+
+    @Test
+    fun cupertinoPressurePatchOnlyUpdate() = patchOnlyUpdate(CUPERTINO_PRESSURE)
 
     @Test
     fun cutContrastScrollAndDraw() = scrollAndDraw(CUT_CONTRAST)
@@ -42,10 +48,16 @@ class DesignSystemVerticalSliceBenchmark {
     fun roundedReferenceScrollAndDraw() = scrollAndDraw(ROUNDED_REFERENCE)
 
     @Test
+    fun cupertinoPressureScrollAndDraw() = scrollAndDraw(CUPERTINO_PRESSURE)
+
+    @Test
     fun cutContrastActiveAnimation() = activeAnimation(CUT_CONTRAST)
 
     @Test
     fun roundedReferenceActiveAnimation() = activeAnimation(ROUNDED_REFERENCE)
+
+    @Test
+    fun cupertinoPressureActiveAnimation() = activeAnimation(CUPERTINO_PRESSURE)
 
     private fun initialBuild(kind: String) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
@@ -105,6 +117,7 @@ class DesignSystemVerticalSliceBenchmark {
 
     private companion object {
         const val CUT_CONTRAST = "cut-contrast"
+        const val CUPERTINO_PRESSURE = "cupertino-pressure"
         const val ROUNDED_REFERENCE = "rounded-reference"
     }
 }

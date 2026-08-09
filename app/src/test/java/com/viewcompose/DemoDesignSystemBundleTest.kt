@@ -32,6 +32,28 @@ class DemoDesignSystemBundleTest {
     }
 
     @Test
+    fun `Cupertino pressure fixture uses continuous geometry and explicit effect fallbacks`() {
+        val bundle = DemoDesignSystemBundles.resolve(
+            kind = DemoDesignSystemKind.CupertinoPressure,
+            dark = false,
+            reducedMotionEnabled = false,
+        )
+
+        assertEquals(UiCornerFamily.Continuous, bundle.recipes.action.shape.topStart.family)
+        assertEquals(UiCornerFamily.Continuous, bundle.recipes.surface.shape.topStart.family)
+        assertEquals(DemoControlPlacement.Trailing, bundle.recipes.switch.placement)
+        assertEquals(false, bundle.recipes.navigation.indicatorVisible)
+        assertEquals(UiCornerFamily.Continuous, bundle.recipes.segmented.containerShape.topStart.family)
+        assertTrue(bundle.conformance.any { item -> item.component == "SegmentedControl" })
+        assertTrue(
+            bundle.conformance.any { item ->
+                item.component == "Shape morph" && item.fallback == "discrete endpoint"
+            },
+        )
+        assertEquals("tinted translucent surface", bundle.conformance.last().fallback)
+    }
+
+    @Test
     fun `dark bundles keep identity while resolving separate tokens`() {
         DemoDesignSystemKind.entries.forEach { kind ->
             val light = DemoDesignSystemBundles.resolve(kind, dark = false, reducedMotionEnabled = false)

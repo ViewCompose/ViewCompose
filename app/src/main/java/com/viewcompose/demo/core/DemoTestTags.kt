@@ -35,6 +35,8 @@ internal object DemoTestTags {
     const val DESIGN_SYSTEM_TEXT_FIELD_ERROR = "design_system_text_field_error"
     const val DESIGN_SYSTEM_NAVIGATION = "design_system_navigation"
     const val DESIGN_SYSTEM_NAVIGATION_STATUS = "design_system_navigation_status"
+    const val DESIGN_SYSTEM_SEGMENTED = "design_system_segmented"
+    const val DESIGN_SYSTEM_SEGMENTED_STATUS = "design_system_segmented_status"
     const val ONE_UI_7_ROOT = "one_ui_7_root"
     const val ONE_UI_7_IDENTITY = "one_ui_7_identity"
     const val ONE_UI_7_BUTTON = "one_ui_7_button"

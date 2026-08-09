@@ -26,23 +26,34 @@ import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
 
-/** Renders the internal five-component design-system slice with screenshot-readable attribution. */
+/** Renders the internal design-system pressure slice with screenshot-readable attribution. */
 internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
     onReplaceDesignSystem: (DemoDesignSystemKind) -> Unit,
 ) {
     val bundle = DemoDesignSystem
     val nextKind = when (bundle.kind) {
-        DemoDesignSystemKind.RoundedReference -> DemoDesignSystemKind.CutContrast
+        DemoDesignSystemKind.RoundedReference -> DemoDesignSystemKind.CupertinoPressure
         DemoDesignSystemKind.CutContrast -> DemoDesignSystemKind.RoundedReference
+        DemoDesignSystemKind.CupertinoPressure -> DemoDesignSystemKind.CutContrast
     }
     val checked = rememberSaveable(key = "design-system-switch") { mutableStateOf(true) }
     val selectedIndex = rememberSaveable(key = "design-system-navigation") { mutableStateOf(0) }
+    val selectedSegment = rememberSaveable(key = "design-system-segmented") { mutableStateOf(0) }
     val buttonClicks = rememberSaveable(key = "design-system-button-clicks") { mutableStateOf(0) }
     val dialogVisible = rememberSaveable(key = "design-system-dialog-visible") { mutableStateOf(false) }
     val field = rememberTextFieldState("Ada")
     val errorField = rememberTextFieldState("")
     LazyColumn(
-        items = listOf("identity", "switching", "button", "surface", "switch", "textfield", "navigation"),
+        items = listOf(
+            "identity",
+            "switching",
+            "button",
+            "surface",
+            "switch",
+            "textfield",
+            "segmented",
+            "navigation",
+        ),
         key = { section -> section },
         modifier = Modifier
             .fillMaxSize()
@@ -186,6 +197,25 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                 )
             }
 
+            "segmented" -> Column(
+                spacing = 10.dp,
+                modifier = Modifier.fillMaxWidth().margin(top = 18.dp),
+            ) {
+                DemoDesignSectionTitle("SegmentedControl · design-system composite")
+                DemoDesignSegmentedControl(
+                    labels = listOf("Day", "Week", "Month"),
+                    selectedIndex = selectedSegment.value,
+                    onItemSelected = { selectedSegment.value = it },
+                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_SEGMENTED),
+                )
+                Text(
+                    text = "Segment: ${listOf("Day", "Week", "Month")[selectedSegment.value]}",
+                    color = Theme.colors.onSurfaceVariant,
+                    style = Theme.typography.bodySmall,
+                    modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_SEGMENTED_STATUS),
+                )
+            }
+
             else -> Column(
                 spacing = 10.dp,
                 modifier = Modifier.fillMaxWidth().margin(top = 18.dp, bottom = 28.dp),
@@ -256,10 +286,10 @@ private fun UiTreeBuilder.DemoDesignSystemIdentitySection(bundle: DemoDesignSyst
         DiagnosticFactGroup(
             title = "Screenshot identity",
             facts = listOf(
-                DiagnosticFact("Fixture", "multi-design-five-component-v1"),
+                DiagnosticFact("Fixture", "multi-design-system-pressure-v2"),
                 DiagnosticFact("Design system", "${bundle.kind.id} · ${bundle.kind.label}"),
                 DiagnosticFact("Token source", "demo-design-system/${bundle.kind.id}"),
-                DiagnosticFact("Recipe identity", "${bundle.kind.id}/five-component-v1"),
+                DiagnosticFact("Recipe identity", "${bundle.kind.id}/pressure-v2"),
                 DiagnosticFact("Mode", if (bundle.tokens.metadata.isDark == true) "Dark" else "Light"),
                 DiagnosticFact("Reduced motion", bundle.reducedMotionEnabled.toString()),
                 DiagnosticFact("Font scale", Environment.density.fontScale.toString()),
@@ -267,7 +297,7 @@ private fun UiTreeBuilder.DemoDesignSystemIdentitySection(bundle: DemoDesignSyst
                 DiagnosticFact("Shape", bundle.tokens.shapes.medium.demoLabel()),
                 DiagnosticFact("Primary", bundle.tokens.colors.primary.asColorHex()),
                 DiagnosticFact("Surface", bundle.tokens.colors.surface.asColorHex()),
-                DiagnosticFact("Capability", "continuous-path=yes; backdrop-blur=tinted-surface"),
+                DiagnosticFact("Capability", bundle.capabilitySummary()),
             ),
             valueTagsByLabel = mapOf(
                 "Design system" to DemoTestTags.DESIGN_SYSTEM_IDENTITY,
@@ -288,6 +318,15 @@ private fun UiTreeBuilder.DemoDesignSystemIdentitySection(bundle: DemoDesignSyst
                 )
             },
         )
+    }
+}
+
+private fun DemoDesignSystemBundle.capabilitySummary(): String {
+    return if (kind == DemoDesignSystemKind.CupertinoPressure) {
+        "continuous-path=exact; shape-morph=discrete-endpoint; " +
+            "backdrop-blur=tinted-translucent-surface"
+    } else {
+        "continuous-path=yes; backdrop-blur=tinted-surface"
     }
 }
 

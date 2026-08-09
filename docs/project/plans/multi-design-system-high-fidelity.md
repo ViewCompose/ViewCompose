@@ -2,12 +2,12 @@
 
 ## Status
 
-Active. Phases 0 through 6 are implemented on `codex/multi-design-system-foundation`. The internal
-five-component slice now exercises two visually distinct design-system bundles through shared
-Basic primitives and design-system-owned composites. Its behavior and screenshot matrix passes on
-API 24, 31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain
-non-representative for release performance acceptance; physical-device and Samsung visual
-acceptance remain release-owner gates rather than reasons to broaden the architecture. The public
+Active. Phases 0 through 7 are implemented on `codex/multi-design-system-foundation`. The internal
+pressure slice now exercises three visually distinct design-system bundles through shared Basic
+primitives and design-system-owned composites. Its behavior and screenshot matrix pass on API 24,
+31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain non-representative
+for release performance acceptance; physical-device and Samsung visual acceptance remain
+release-owner gates rather than reasons to broaden the architecture. The public
 `viewcompose-oneui7` artifact now supplies a deliberately bounded five-component alpha without
 adding Samsung policy to UI Foundation, Android Renderer, or the default Material aggregate.
 
@@ -18,10 +18,10 @@ guide, and owning module manuals before this plan is archived.
 
 Last verified: 2026-08-09.
 
-Next action: complete the Phase 7 internal Cupertino structural pressure test. Keep it non-public,
-exercise continuous corners, segmented navigation, switch structure, typography, translucency,
-motion, and explicit fallbacks, and do not introduce Cupertino fields into generic theme tokens or
-Android Renderer.
+Next action: complete release-owner Pixel and physical Samsung acceptance, run formal
+physical-device benchmarks, and publish the bounded One UI 7 alpha through Maven. The release
+workflow must archive this plan only after every linked changeset is included and immediately
+before Maven upload.
 
 ## Maven release changesets
 
@@ -588,7 +588,8 @@ must state the supported component set and alpha stability.
 
 ## Phase 7: Cupertino pressure test and advanced effects
 
-Status: pending Phase 6.
+Status: complete for the internal pressure fixture and API 24, 31, 35, and 36 emulator evidence.
+No Cupertino artifact or public API is planned from this phase.
 
 Use a Cupertino-inspired system as a structural pressure test, not a promise of Apple-platform
 behavior on Android. It should challenge navigation structure, segmented controls, switches,
@@ -607,6 +608,37 @@ Keep criteria:
 - effect fallback preserves contrast and produces stable screenshots;
 - any snapshot-backed backdrop strategy has explicit invalidation, memory, privacy, and scroll
   performance bounds.
+
+### Phase 7 implementation decision and evidence
+
+- The retained fixture is Cupertino-inspired and internal to `app`; it is a structural pressure
+  test, not an Apple-platform compatibility claim, artifact, or public API promise. It introduces
+  no Cupertino identity or component field into `UiThemeTokens`, UI Contract, or Android Renderer.
+- Its token and recipe bundle deliberately differs in palette, typography, sizing, continuous
+  corners, spring motion, navigation treatment, and translucent surfaces. Button and Surface use
+  shared Basic primitives; Switch, NavigationBar, and SegmentedControl remain design-system-owned
+  composites; TextField keeps the native Android editing core.
+- Conformance and fallback metadata are screenshot-visible. Continuous paths are retained as an
+  exact generic renderer capability, incompatible shape transitions use a discrete endpoint, and
+  backdrop blur uses a contrast-safe tinted translucent Surface.
+- Snapshot-backed backdrop capture was not retained. The phase produced no bounded evidence for
+  invalidation, memory, privacy, or scroll behavior that would justify its complexity. The
+  translucent fallback proves the ordering and diagnostics contract without expanding renderer
+  state or weakening the rollback boundary.
+- Arbitrary shape morph was also not retained. Existing compatible interpolation remains generic;
+  unrelated paths resolve to the documented discrete/static endpoint.
+- API 35 runs cover the full pressure matrix, root/session replacement, lazy content, overlays,
+  saved state, component behavior, and deterministic screenshot export. Targeted Cupertino runs
+  on API 24, 31, and 36 cover Light/LTR/1.0 plus Dark/RTL/1.3/reduced-motion fixtures. All 18
+  cross-version screenshots and the API 35 full-matrix screenshots were visually inspected.
+- The RTL matrix exposed a logical-versus-physical Switch thumb offset above the renderer. The
+  component-owned calculation was corrected for both cut-contrast and Cupertino bundles without a
+  renderer design-system branch.
+- API 35 emulator macrobenchmark smoke runs completed for cold initial build and active Switch
+  animation. The single-iteration observations were 305.6 ms time to initial display and 32.0 ms
+  frame CPU P50 across eight animation frames. These values prove reproducible instrumentation
+  only; emulator numbers are not release thresholds and require physical-device comparison before
+  publication claims.
 
 ## Testing and evidence matrix
 
@@ -693,7 +725,7 @@ This plan is complete only when:
 
 1. the recipe/theme/renderer boundaries are durable architecture documentation and automated
    guards;
-2. the five-component internal slice passes the declared visual, behavioral, accessibility,
+2. the internal pressure slice passes the declared visual, behavioral, accessibility,
    lifecycle, fallback, and performance matrix;
 3. one public non-Material design-system slice ships through Maven with correct dependency and API
    documentation;

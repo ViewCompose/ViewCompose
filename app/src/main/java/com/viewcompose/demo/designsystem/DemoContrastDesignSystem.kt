@@ -58,6 +58,7 @@ internal enum class DemoDesignSystemKind(
 ) {
     RoundedReference("rounded-reference", "Rounded reference"),
     CutContrast("cut-contrast", "Cut contrast"),
+    CupertinoPressure("cupertino-pressure", "Cupertino pressure"),
     ;
 
     companion object {
@@ -160,6 +161,20 @@ internal data class DemoNavigationRecipe(
     val height: UiDp,
     val iconSize: UiDp,
     val selectedOnlyLabels: Boolean,
+    val indicatorVisible: Boolean,
+    val selectedLabelColor: Int,
+    val stateLayers: UiStateLayerColors,
+)
+
+internal data class DemoSegmentedRecipe(
+    val containerColor: Int,
+    val selectedContainerColor: Int,
+    val selectedContentColor: Int,
+    val unselectedContentColor: Int,
+    val containerShape: UiShape,
+    val itemShape: UiShape,
+    val height: UiDp,
+    val borderColor: Int,
     val stateLayers: UiStateLayerColors,
 )
 
@@ -169,6 +184,7 @@ internal data class DemoComponentRecipes(
     val switch: DemoSwitchRecipe,
     val textField: DemoTextFieldRecipe,
     val navigation: DemoNavigationRecipe,
+    val segmented: DemoSegmentedRecipe,
 )
 
 internal data class DemoDesignSystemBundle(
@@ -207,6 +223,7 @@ internal object DemoDesignSystemBundles {
         val tokens = when (kind) {
             DemoDesignSystemKind.RoundedReference -> roundedTokens(base, dark)
             DemoDesignSystemKind.CutContrast -> cutTokens(base, dark)
+            DemoDesignSystemKind.CupertinoPressure -> cupertinoTokens(base, dark)
         }
         return DemoDesignSystemBundle(
             kind = kind,
@@ -214,19 +231,61 @@ internal object DemoDesignSystemBundles {
             recipes = recipes(kind, tokens.colors),
             motion = motion(kind),
             reducedMotionEnabled = reducedMotionEnabled,
-            conformance = listOf(
-                DemoComponentConformance("Button", DemoConformanceOutcome.Exact, "BasicButton"),
-                DemoComponentConformance("Surface/Card", DemoConformanceOutcome.Exact, "BasicSurface"),
-                DemoComponentConformance("Switch", DemoConformanceOutcome.Equivalent, "owned composite"),
-                DemoComponentConformance("TextField", DemoConformanceOutcome.Equivalent, "native edit core"),
-                DemoComponentConformance("NavigationBar", DemoConformanceOutcome.Equivalent, "owned composite"),
-                DemoComponentConformance(
-                    "Backdrop blur",
-                    DemoConformanceOutcome.Degraded,
-                    "capability policy",
-                    "tinted surface",
-                ),
-            ),
+            conformance = buildList {
+                val sharedPrimitiveOutcome = if (kind == DemoDesignSystemKind.CupertinoPressure) {
+                    DemoConformanceOutcome.Equivalent
+                } else {
+                    DemoConformanceOutcome.Exact
+                }
+                add(DemoComponentConformance("Button", sharedPrimitiveOutcome, "BasicButton"))
+                add(DemoComponentConformance("Surface/Card", sharedPrimitiveOutcome, "BasicSurface"))
+                add(DemoComponentConformance("Switch", DemoConformanceOutcome.Equivalent, "owned composite"))
+                add(DemoComponentConformance("TextField", DemoConformanceOutcome.Equivalent, "native edit core"))
+                add(
+                    DemoComponentConformance(
+                        "NavigationBar",
+                        DemoConformanceOutcome.Equivalent,
+                        "owned composite",
+                    ),
+                )
+                if (kind == DemoDesignSystemKind.CupertinoPressure) {
+                    add(
+                        DemoComponentConformance(
+                            "SegmentedControl",
+                            DemoConformanceOutcome.Equivalent,
+                            "owned composite",
+                        ),
+                    )
+                    add(
+                        DemoComponentConformance(
+                            "Continuous corners",
+                            DemoConformanceOutcome.Exact,
+                            "framework Path",
+                            "rounded rectangle",
+                        ),
+                    )
+                    add(
+                        DemoComponentConformance(
+                            "Shape morph",
+                            DemoConformanceOutcome.Degraded,
+                            "semantic motion",
+                            "discrete endpoint",
+                        ),
+                    )
+                }
+                add(
+                    DemoComponentConformance(
+                        "Backdrop blur",
+                        DemoConformanceOutcome.Degraded,
+                        "capability policy",
+                        if (kind == DemoDesignSystemKind.CupertinoPressure) {
+                            "tinted translucent surface"
+                        } else {
+                            "tinted surface"
+                        },
+                    ),
+                )
+            },
         )
     }
 
@@ -304,17 +363,79 @@ internal object DemoDesignSystemBundles {
         )
     }
 
+    private fun cupertinoTokens(base: UiThemeTokens, dark: Boolean): UiThemeTokens {
+        val colors = if (dark) {
+            base.colors.copy(
+                background = 0xFF000000.toInt(),
+                surface = 0xE61C1C1E.toInt(),
+                surfaceContainer = 0xD92C2C2E.toInt(),
+                surfaceContainerHigh = 0xE63A3A3C.toInt(),
+                onSurface = 0xFFF5F5F7.toInt(),
+                onSurfaceVariant = 0xFFAEAEB2.toInt(),
+                primary = 0xFF0A84FF.toInt(),
+                onPrimary = 0xFFFFFFFF.toInt(),
+                primaryContainer = 0xCC0A84FF.toInt(),
+                onPrimaryContainer = 0xFFFFFFFF.toInt(),
+                outline = 0xFF48484A.toInt(),
+                outlineVariant = 0xFF38383A.toInt(),
+            )
+        } else {
+            base.colors.copy(
+                background = 0xFFF2F2F7.toInt(),
+                surface = 0xE6FFFFFF.toInt(),
+                surfaceContainer = 0xD9E9E9EE.toInt(),
+                surfaceContainerHigh = 0xE6D1D1D6.toInt(),
+                onSurface = 0xFF1C1C1E.toInt(),
+                onSurfaceVariant = 0xFF636366.toInt(),
+                primary = 0xFF007AFF.toInt(),
+                onPrimary = 0xFFFFFFFF.toInt(),
+                primaryContainer = 0xCC007AFF.toInt(),
+                onPrimaryContainer = 0xFFFFFFFF.toInt(),
+                outline = 0xFFC6C6C8.toInt(),
+                outlineVariant = 0xFFD1D1D6.toInt(),
+            )
+        }
+        return base.copy(
+            colors = colors,
+            shapes = UiShapes(
+                extraSmall = UiShape.continuous(6.dp),
+                small = UiShape.continuous(10.dp),
+                medium = UiShape.continuous(16.dp),
+                large = UiShape.continuous(22.dp),
+                extraLarge = UiShape.continuous(28.dp),
+                full = UiShape.roundedRelative(0.5f),
+            ),
+        )
+    }
+
     private fun recipes(
         kind: DemoDesignSystemKind,
         colors: UiColors,
     ): DemoComponentRecipes {
         val cut = kind == DemoDesignSystemKind.CutContrast
-        val actionShape = if (cut) UiShape.cut(10.dp) else UiShape.roundedRelative(0.5f)
-        val surfaceShape = if (cut) UiShape.cut(18.dp) else UiShape.rounded(20.dp)
+        val cupertino = kind == DemoDesignSystemKind.CupertinoPressure
+        val actionShape = when {
+            cut -> UiShape.cut(10.dp)
+            cupertino -> UiShape.continuous(14.dp)
+            else -> UiShape.roundedRelative(0.5f)
+        }
+        val surfaceShape = when {
+            cut -> UiShape.cut(18.dp)
+            cupertino -> UiShape.continuous(22.dp)
+            else -> UiShape.rounded(20.dp)
+        }
         val trackShape = if (cut) UiShape.cut(6.dp) else UiShape.roundedRelative(0.5f)
         val thumbShape = if (cut) UiShape.cut(3.dp) else UiShape.roundedRelative(0.5f)
-        val textShape = if (cut) UiShape.cut(10.dp) else UiShape.rounded(12.dp)
-        val navShape = if (cut) UiShape.cut(12.dp) else UiShape.rounded(20.dp)
+        val textShape = when {
+            cut -> UiShape.cut(10.dp)
+            cupertino -> UiShape.continuous(12.dp)
+            else -> UiShape.rounded(12.dp)
+        }
+        val navShape = when {
+            cut -> UiShape.cut(12.dp)
+            cupertino -> UiShape.continuous(18.dp)
+            else -> UiShape.rounded(20.dp)
+        }
         val indicatorShape = if (cut) UiShape.cut(5.dp) else UiShape.roundedRelative(0.5f)
         val onSurfaceLayers = stateLayers(colors.onSurface)
         return DemoComponentRecipes(
@@ -327,11 +448,20 @@ internal object DemoDesignSystemBundles {
                 borderWidth = if (cut) 2.dp else 0.dp,
                 shape = actionShape,
                 minimumHeight = if (cut) 52.dp else 48.dp,
-                visualHeight = if (cut) 52.dp else 40.dp,
-                horizontalPadding = if (cut) 28.dp else 24.dp,
+                visualHeight = when {
+                    cut -> 52.dp
+                    cupertino -> 48.dp
+                    else -> 40.dp
+                },
+                horizontalPadding = when {
+                    cut -> 28.dp
+                    cupertino -> 20.dp
+                    else -> 24.dp
+                },
                 textStyle = UiTextStyle(
-                    fontSizeSp = if (cut) 16.sp else 14.sp,
-                    fontWeight = if (cut) 700 else 600,
+                    fontSizeSp = if (cupertino) 17.sp else if (cut) 16.sp else 14.sp,
+                    fontWeight = if (cupertino) 600 else if (cut) 700 else 600,
+                    lineHeightSp = if (cupertino) 22.sp else 20.sp,
                 ),
                 stateLayers = stateLayers(colors.onPrimary),
             ),
@@ -339,14 +469,14 @@ internal object DemoDesignSystemBundles {
                 containerColor = colors.surface,
                 contentColor = colors.onSurface,
                 borderColor = if (cut) colors.primary else colors.outline,
-                borderWidth = if (cut) 2.dp else 1.dp,
+                borderWidth = if (cut) 2.dp else if (cupertino) 0.dp else 1.dp,
                 shape = surfaceShape,
                 stateLayers = onSurfaceLayers,
             ),
             switch = DemoSwitchRecipe(
-                placement = if (cut) DemoControlPlacement.Trailing else DemoControlPlacement.Leading,
+                placement = if (cut || cupertino) DemoControlPlacement.Trailing else DemoControlPlacement.Leading,
                 checkedTrackColor = colors.primary,
-                uncheckedTrackColor = colors.surfaceContainer,
+                uncheckedTrackColor = if (cupertino) colors.surfaceContainerHigh else colors.surfaceContainer,
                 disabledTrackColor = colors.surfaceContainer,
                 checkedThumbColor = colors.onPrimary,
                 uncheckedThumbColor = if (cut) colors.primary else colors.onSurfaceVariant,
@@ -355,55 +485,84 @@ internal object DemoDesignSystemBundles {
                 disabledLabelColor = colors.onSurfaceVariant,
                 trackShape = trackShape,
                 thumbShape = thumbShape,
-                trackWidth = if (cut) 52.dp else 44.dp,
-                trackHeight = if (cut) 28.dp else 26.dp,
+                trackWidth = when {
+                    cut -> 52.dp
+                    cupertino -> 51.dp
+                    else -> 44.dp
+                },
+                trackHeight = if (cupertino) 31.dp else if (cut) 28.dp else 26.dp,
                 trackPadding = if (cut) 4.dp else 3.dp,
-                thumbSize = 20.dp,
-                labelSpacing = if (cut) 16.dp else 12.dp,
+                thumbSize = if (cupertino) 25.dp else 20.dp,
+                labelSpacing = if (cut || cupertino) 16.dp else 12.dp,
                 stateLayers = onSurfaceLayers,
             ),
             textField = DemoTextFieldRecipe(
                 stackedLabel = !cut,
-                containerColor = colors.surface,
+                containerColor = if (cupertino) colors.surfaceContainer else colors.surface,
                 errorContainerColor = colors.surfaceContainer,
                 textColor = colors.onSurface,
                 hintColor = colors.onSurfaceVariant,
                 labelColor = colors.primary,
                 errorColor = colors.error,
                 borderColor = colors.outline,
-                borderWidth = if (cut) 2.dp else 1.dp,
+                borderWidth = if (cut) 2.dp else if (cupertino) 0.dp else 1.dp,
                 errorBorderWidth = if (cut) 3.dp else 2.dp,
                 shape = textShape,
-                minimumHeight = if (cut) 56.dp else 52.dp,
+                minimumHeight = if (cut || cupertino) 56.dp else 52.dp,
                 horizontalPadding = if (cut) 20.dp else 16.dp,
                 verticalPadding = if (cut) 14.dp else 12.dp,
                 textStyle = UiTextStyle(
-                    fontSizeSp = if (cut) 17.sp else 16.sp,
+                    fontSizeSp = if (cut || cupertino) 17.sp else 16.sp,
                     lineHeightSp = 24.sp,
                 ),
-                labelStyle = UiTextStyle(fontSizeSp = 13.sp, fontWeight = 650, lineHeightSp = 18.sp),
+                labelStyle = UiTextStyle(
+                    fontSizeSp = if (cupertino) 15.sp else 13.sp,
+                    fontWeight = if (cupertino) 600 else 650,
+                    lineHeightSp = 20.sp,
+                ),
                 supportingStyle = UiTextStyle(fontSizeSp = 12.sp, lineHeightSp = 16.sp),
             ),
             navigation = DemoNavigationRecipe(
-                containerColor = colors.surfaceContainer,
+                containerColor = if (cupertino) colors.surface else colors.surfaceContainer,
                 containerShape = navShape,
-                selectedColor = colors.onPrimary,
+                selectedColor = if (cupertino) colors.primary else colors.onPrimary,
                 unselectedColor = colors.onSurfaceVariant,
                 indicatorColor = colors.primary,
                 indicatorShape = indicatorShape,
-                height = if (cut) 76.dp else 82.dp,
-                iconSize = if (cut) 22.dp else 24.dp,
+                height = when {
+                    cut -> 76.dp
+                    cupertino -> 64.dp
+                    else -> 82.dp
+                },
+                iconSize = if (cut || cupertino) 22.dp else 24.dp,
                 selectedOnlyLabels = cut,
+                indicatorVisible = !cupertino,
+                selectedLabelColor = colors.primary,
+                stateLayers = onSurfaceLayers,
+            ),
+            segmented = DemoSegmentedRecipe(
+                containerColor = if (cupertino) colors.surfaceContainer else colors.surface,
+                selectedContainerColor = if (cupertino) colors.surface else colors.primaryContainer,
+                selectedContentColor = if (cupertino) colors.onSurface else colors.onPrimaryContainer,
+                unselectedContentColor = colors.onSurfaceVariant,
+                containerShape = if (cupertino) UiShape.continuous(10.dp) else navShape,
+                itemShape = if (cupertino) UiShape.continuous(8.dp) else indicatorShape,
+                height = 44.dp,
+                borderColor = colors.outline,
                 stateLayers = onSurfaceLayers,
             ),
         )
     }
 
     private fun motion(kind: DemoDesignSystemKind): MotionScheme {
-        val spatial = if (kind == DemoDesignSystemKind.CutContrast) {
-            tween(durationMillis = 180)
-        } else {
-            spring(durationMillis = 320, dampingRatio = 0.85f, stiffness = 260f)
+        val spatial = when (kind) {
+            DemoDesignSystemKind.CutContrast -> tween(durationMillis = 180)
+            DemoDesignSystemKind.CupertinoPressure -> {
+                spring(durationMillis = 360, dampingRatio = 0.92f, stiffness = 300f)
+            }
+            DemoDesignSystemKind.RoundedReference -> {
+                spring(durationMillis = 320, dampingRatio = 0.85f, stiffness = 260f)
+            }
         }
         return MotionScheme(
             fastEffects = tween(durationMillis = 90),
@@ -516,8 +675,13 @@ internal fun UiTreeBuilder.DemoDesignSwitch(
         reducedMotionEnabled = bundle.reducedMotionEnabled,
         essential = true,
     )
+    val thumbOffsetTarget = when {
+        !checked -> UiDp.Zero
+        Environment.layoutDirection == UiLayoutDirection.Rtl -> UiDp.Zero - travel
+        else -> travel
+    }
     val thumbOffset = animateDpAsState(
-        targetValue = if (checked) travel else UiDp.Zero,
+        targetValue = thumbOffsetTarget,
         animationSpec = spatialSpec,
     ).value
     val trackColor = animateColorAsState(trackColorTarget, effectSpec).value
@@ -678,7 +842,11 @@ internal fun UiTreeBuilder.DemoDesignNavigationBar(
                     BasicSurface(
                         style = BasicSurfaceStyle(
                             fill = Brush.SolidColor(
-                                if (selected) recipe.indicatorColor else 0x00000000,
+                                if (selected && recipe.indicatorVisible) {
+                                    recipe.indicatorColor
+                                } else {
+                                    0x00000000
+                                },
                             ),
                             shape = recipe.indicatorShape,
                             clipContent = true,
@@ -697,11 +865,79 @@ internal fun UiTreeBuilder.DemoDesignNavigationBar(
                     if (!recipe.selectedOnlyLabels || selected) {
                         Text(
                             text = item.label,
-                            color = if (selected) recipe.indicatorColor else recipe.unselectedColor,
+                            color = if (selected) recipe.selectedLabelColor else recipe.unselectedColor,
                             style = UiTextStyle(fontSizeSp = 12.sp, fontWeight = 600),
                             maxLines = 1,
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+internal fun UiTreeBuilder.DemoDesignSegmentedControl(
+    labels: List<String>,
+    selectedIndex: Int,
+    onItemSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    require(labels.size in 2..5) { "DemoDesignSegmentedControl requires between 2 and 5 labels." }
+    require(selectedIndex in labels.indices) { "Selected index must reference a segment." }
+    val recipe = DemoDesignSystem.recipes.segmented
+    BasicSurface(
+        style = BasicSurfaceStyle(
+            fill = Brush.SolidColor(recipe.containerColor),
+            shape = recipe.containerShape,
+            borderWidth = 1.dp,
+            borderColor = recipe.borderColor,
+            clipContent = true,
+        ),
+        contentColor = recipe.unselectedContentColor,
+        minimumHeight = recipe.height,
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = BoxAlignment.Center,
+    ) {
+        Row(
+            arrangement = MainAxisArrangement.SpaceEvenly,
+            verticalAlignment = VerticalAlignment.Center,
+            modifier = Modifier.fillMaxWidth().padding(2.dp),
+        ) {
+            labels.forEachIndexed { index, label ->
+                val selected = index == selectedIndex
+                BasicSurface(
+                    style = BasicSurfaceStyle(
+                        fill = Brush.SolidColor(
+                            if (selected) recipe.selectedContainerColor else 0x00000000,
+                        ),
+                        shape = recipe.itemShape,
+                        clipContent = true,
+                    ),
+                    contentColor = if (selected) {
+                        recipe.selectedContentColor
+                    } else {
+                        recipe.unselectedContentColor
+                    },
+                    onClick = { onItemSelected(index) },
+                    stateLayerColors = recipe.stateLayers,
+                    minimumHeight = 40.dp,
+                    role = SemanticsRole.Tab,
+                    modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {
+                        role = SemanticsRole.Tab
+                        this.selected = selected
+                    },
+                    contentAlignment = BoxAlignment.Center,
+                ) {
+                    Text(
+                        text = label,
+                        color = if (selected) {
+                            recipe.selectedContentColor
+                        } else {
+                            recipe.unselectedContentColor
+                        },
+                        style = UiTextStyle(fontSizeSp = 13.sp, fontWeight = 600, lineHeightSp = 18.sp),
+                        maxLines = 1,
+                    )
                 }
             }
         }
