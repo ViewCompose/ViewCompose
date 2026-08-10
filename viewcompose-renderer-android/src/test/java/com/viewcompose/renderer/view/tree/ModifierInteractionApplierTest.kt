@@ -10,12 +10,15 @@ import com.viewcompose.ui.unit.dp
  */
 
 import android.view.View
+import com.viewcompose.graphics.core.Brush
 import com.viewcompose.renderer.R
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import com.viewcompose.renderer.decoration.DecorationChildDrawingOrder
 import com.viewcompose.renderer.decoration.RecordingDecorationBackend
 import com.viewcompose.renderer.modifier.resolve
+import com.viewcompose.renderer.view.shape.UiShapeDrawable
 import com.viewcompose.ui.graphics.UiShadow
+import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.clickable
@@ -28,10 +31,14 @@ import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
+import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -122,6 +129,25 @@ class ModifierInteractionApplierTest {
         ViewModifierApplier.applyModifier(view, changedSurfaceNode, defaultRippleColor = 0)
 
         assertNotSame(firstBackground, view.background)
+    }
+
+    @Test
+    fun `surface fill and clip changes rebuild the native surface`() {
+        val view = View(RuntimeEnvironment.getApplication())
+        val firstNode = surfaceNode(fillColor = 0xFF112233.toInt(), clipContent = true)
+        val secondNode = surfaceNode(fillColor = 0xFF445566.toInt(), clipContent = false)
+
+        ViewModifierApplier.applyModifier(view, firstNode, defaultRippleColor = 0)
+        val firstBackground = view.background as UiShapeDrawable
+        assertEquals(0xFF112233.toInt(), firstBackground.currentFillColor)
+        assertTrue(view.clipToOutline)
+
+        ViewModifierApplier.applyModifier(view, secondNode, defaultRippleColor = 0)
+        val secondBackground = view.background as UiShapeDrawable
+
+        assertNotSame(firstBackground, secondBackground)
+        assertEquals(0xFF445566.toInt(), secondBackground.currentFillColor)
+        assertFalse(view.clipToOutline)
     }
 
     @Test
@@ -226,6 +252,21 @@ class ModifierInteractionApplierTest {
             type = NodeType.Box,
             spec = EmptyNodeSpec,
             modifier = modifier,
+        )
+    }
+
+    private fun surfaceNode(
+        fillColor: Int,
+        clipContent: Boolean,
+    ): VNode {
+        return VNode(
+            type = NodeType.Surface,
+            spec = SurfaceNodeProps(
+                contentAlignment = BoxAlignment.Center,
+                fill = Brush.SolidColor(fillColor),
+                shape = UiShape.cut(8.dp),
+                clipContent = clipContent,
+            ),
         )
     }
 }

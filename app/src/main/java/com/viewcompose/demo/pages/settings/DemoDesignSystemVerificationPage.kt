@@ -4,6 +4,7 @@ import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Dialog
 import com.viewcompose.ui.foundation.Environment
+import com.viewcompose.ui.foundation.FlowRow
 import com.viewcompose.ui.foundation.LazyColumn
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Text
@@ -76,7 +77,11 @@ internal fun UiTreeBuilder.DemoDesignSystemVerificationPage(
                     style = Theme.typography.bodyMedium,
                     modifier = Modifier.testTag(DemoTestTags.DESIGN_SYSTEM_LAZY_IDENTITY),
                 )
-                Row(spacing = 10.dp, verticalAlignment = VerticalAlignment.Center) {
+                FlowRow(
+                    horizontalSpacing = 10.dp,
+                    verticalSpacing = 10.dp,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     DemoDesignButton(
                         text = "Switch to ${nextKind.id}",
                         onClick = { onReplaceDesignSystem(nextKind) },

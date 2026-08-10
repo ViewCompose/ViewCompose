@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Establish neutral multi-design foundations for components, motion, interaction, accessibility, hosts, overlays, and provenance; add Material 3 and One UI 7 components and overlay adapters; optimize Box construction and alignment updates.",
+  "summary": "Establish neutral multi-design foundations for components, motion, interaction, accessibility, hosts, overlays, and provenance; add Material 3 and One UI 7 adapters; optimize Box updates and refresh reused surface fill and clipping.",
   "changes": [
     { "artifact": "viewcompose-animation-core", "impact": "feature" },
     { "artifact": "viewcompose-animation", "impact": "feature" },

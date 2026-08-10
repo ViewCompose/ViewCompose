@@ -28,7 +28,10 @@ class DemoDesignSystemBundleTest {
         assertEquals(UiCornerFamily.Cut, cut.recipes.action.shape.topStart.family)
         assertNotEquals(rounded.recipes.action.minimumHeight, cut.recipes.action.minimumHeight)
         assertNotEquals(rounded.recipes.switch.placement, cut.recipes.switch.placement)
-        assertNotEquals(rounded.recipes.navigation.selectedOnlyLabels, cut.recipes.navigation.selectedOnlyLabels)
+        assertNotEquals(
+            rounded.recipes.navigation.containerShape.topStart.family,
+            cut.recipes.navigation.containerShape.topStart.family,
+        )
     }
 
     @Test

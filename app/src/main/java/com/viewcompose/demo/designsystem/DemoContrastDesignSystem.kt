@@ -1,7 +1,8 @@
 package com.viewcompose
 
 import com.viewcompose.animation.animateColorAsState
-import com.viewcompose.animation.animateDpAsState
+import com.viewcompose.animation.rememberAnimatable
+import com.viewcompose.animation.core.AnimationConverters
 import com.viewcompose.animation.core.MotionRole
 import com.viewcompose.animation.core.MotionScheme
 import com.viewcompose.animation.core.ReducedMotionBehavior
@@ -11,6 +12,7 @@ import com.viewcompose.animation.core.tween
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.gesture.rememberToggleDragState
 import com.viewcompose.gesture.toggleDraggable
+import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.ui.foundation.BasicButton
 import com.viewcompose.ui.foundation.BasicButtonStyle
@@ -21,6 +23,7 @@ import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Column
 import com.viewcompose.ui.foundation.Environment
 import com.viewcompose.ui.foundation.Icon
+import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.Row
 import com.viewcompose.ui.foundation.Text
@@ -30,6 +33,7 @@ import com.viewcompose.ui.foundation.UiShapes
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiThemeTokens
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.remember
 import com.viewcompose.ui.foundation.uiLocalOf
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
@@ -41,11 +45,15 @@ import com.viewcompose.ui.modifier.SemanticsCollectionInfo
 import com.viewcompose.ui.modifier.SemanticsCollectionItemInfo
 import com.viewcompose.ui.modifier.SemanticsCollectionSelectionMode
 import com.viewcompose.ui.modifier.SemanticsRole
+import com.viewcompose.ui.modifier.backgroundColor
+import com.viewcompose.ui.modifier.clip
+import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.offset
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.semantics
+import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.size
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
@@ -540,7 +548,7 @@ internal object DemoDesignSystemBundles {
                     else -> 82.dp
                 },
                 iconSize = if (cut || cupertino) 22.dp else 24.dp,
-                selectedOnlyLabels = cut,
+                selectedOnlyLabels = false,
                 indicatorVisible = !cupertino,
                 selectedLabelColor = colors.primary,
                 stateLayers = onSurfaceLayers,
@@ -680,29 +688,47 @@ internal fun UiTreeBuilder.DemoDesignSwitch(
         reducedMotionEnabled = bundle.reducedMotionEnabled,
         essential = true,
     )
-    val thumbOffsetTarget = when {
-        !checked -> UiDp.Zero
-        Environment.layoutDirection == UiLayoutDirection.Rtl -> UiDp.Zero - travel
-        else -> travel
+    val checkedOffset = if (Environment.layoutDirection == UiLayoutDirection.Rtl) {
+        UiDp.Zero - travel
+    } else {
+        travel
     }
-    val checkedAnchorOffsetPx = Environment.density.toPx(
-        if (Environment.layoutDirection == UiLayoutDirection.Rtl) UiDp.Zero - travel else travel,
-    )
+    val checkedAnchorOffsetPx = Environment.density.toPx(checkedOffset)
     val dragState = rememberToggleDragState(
         checked = checked,
         checkedAnchorOffsetPx = checkedAnchorOffsetPx,
         onCheckedChange = onCheckedChange,
     )
-    val idleThumbOffset = animateDpAsState(
-        targetValue = thumbOffsetTarget,
-        animationSpec = spatialSpec,
-    ).value
-    val thumbOffset = if (dragState.isDragging.value) {
-        val direction = if (checkedAnchorOffsetPx < 0f) -1f else 1f
-        UiDp(travel.value * dragState.progress.value * direction)
-    } else {
-        idleThumbOffset
+    val targetProgress = if (checked) 1f else 0f
+    val animatedProgress = rememberAnimatable(
+        initialValue = targetProgress,
+        converter = AnimationConverters.Float,
+    )
+    val isDragging = dragState.isDragging.value
+    val completion = dragState.lastCompletion.value
+    val appliedCompletionId = remember { mutableStateOf(0L) }
+    LaunchedEffect(isDragging, checked, completion?.completionId) {
+        if (isDragging) {
+            animatedProgress.stop()
+        } else {
+            if (completion != null && appliedCompletionId.value != completion.completionId) {
+                animatedProgress.snapTo(completion.startProgress)
+                appliedCompletionId.value = completion.completionId
+            }
+            animatedProgress.animateTo(
+                targetValue = targetProgress,
+                animationSpec = spatialSpec,
+            )
+        }
     }
+    val visualProgress = when {
+        isDragging -> dragState.progress.value
+        completion != null && appliedCompletionId.value != completion.completionId -> {
+            completion.startProgress
+        }
+        else -> animatedProgress.value
+    }
+    val thumbOffset = checkedOffset * visualProgress
     val trackColor = animateColorAsState(trackColorTarget, effectSpec).value
     val thumbColor = animateColorAsState(thumbColorTarget, effectSpec).value
     val controlIsFirst = when (recipe.placement) {
@@ -829,13 +855,18 @@ internal fun UiTreeBuilder.DemoDesignNavigationBar(
     Row(
         arrangement = MainAxisArrangement.SpaceEvenly,
         verticalAlignment = VerticalAlignment.Center,
-        modifier = modifier.fillMaxWidth().semantics {
-            collectionInfo = SemanticsCollectionInfo(
-                rowCount = 1,
-                columnCount = items.size,
-                selectionMode = SemanticsCollectionSelectionMode.Single,
-            )
-        },
+        modifier = modifier
+            .fillMaxWidth()
+            .backgroundColor(recipe.containerColor)
+            .shape(recipe.containerShape)
+            .clip()
+            .semantics {
+                collectionInfo = SemanticsCollectionInfo(
+                    rowCount = 1,
+                    columnCount = items.size,
+                    selectionMode = SemanticsCollectionSelectionMode.Single,
+                )
+            },
     ) {
         val indexedItems = items.withIndex().let { values ->
             if (Environment.layoutDirection == UiLayoutDirection.Rtl) values.reversed() else values
@@ -844,15 +875,15 @@ internal fun UiTreeBuilder.DemoDesignNavigationBar(
             val selected = index == selectedIndex
             BasicSurface(
                 style = BasicSurfaceStyle(
-                    fill = Brush.SolidColor(recipe.containerColor),
-                    shape = recipe.containerShape,
-                    clipContent = true,
+                    fill = Brush.SolidColor(0x00000000),
+                    shape = UiShape.rounded(0.dp),
                 ),
                 contentColor = if (selected) recipe.selectedColor else recipe.unselectedColor,
                 onClick = { onItemSelected(index) },
                 stateLayerColors = recipe.stateLayers,
                 minimumHeight = recipe.height,
                 role = SemanticsRole.Tab,
+                key = item.key,
                 modifier = Modifier
                     .weight(1f)
                     .semantics(mergeDescendants = true) {
@@ -920,8 +951,6 @@ internal fun UiTreeBuilder.DemoDesignSegmentedControl(
         style = BasicSurfaceStyle(
             fill = Brush.SolidColor(recipe.containerColor),
             shape = recipe.containerShape,
-            borderWidth = 1.dp,
-            borderColor = recipe.borderColor,
             clipContent = true,
         ),
         contentColor = recipe.unselectedContentColor,
@@ -959,6 +988,7 @@ internal fun UiTreeBuilder.DemoDesignSegmentedControl(
                     stateLayerColors = recipe.stateLayers,
                     minimumHeight = 40.dp,
                     role = SemanticsRole.Tab,
+                    key = label,
                     modifier = Modifier.weight(1f).semantics(mergeDescendants = true) {
                         role = SemanticsRole.Tab
                         this.selected = selected
@@ -982,6 +1012,16 @@ internal fun UiTreeBuilder.DemoDesignSegmentedControl(
                 }
             }
         }
+        BasicSurface(
+            style = BasicSurfaceStyle(
+                fill = Brush.SolidColor(0x00000000),
+                shape = recipe.containerShape,
+                borderWidth = 1.dp,
+                borderColor = recipe.borderColor,
+            ),
+            contentColor = recipe.unselectedContentColor,
+            modifier = Modifier.fillMaxSize(),
+        ) {}
     }
 }
 

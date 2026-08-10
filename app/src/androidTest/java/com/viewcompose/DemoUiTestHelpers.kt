@@ -264,7 +264,13 @@ internal fun Activity.clickByTestTag(tag: String) {
  * Injects real down/up touch events at the center of the tagged View.
  */
 internal fun Activity.tapByTestTag(tag: String) {
-    val view = requireViewByTestTagVisible(tag)
+    tapView(requireViewByTestTagVisible(tag))
+}
+
+/**
+ * Injects real down/up touch events at the center of the supplied View.
+ */
+internal fun Activity.tapView(view: View) {
     val location = IntArray(2)
     view.getLocationOnScreen(location)
     val x = location[0] + view.width * 0.5f
@@ -284,6 +290,18 @@ internal fun Activity.tapByTestTag(tag: String) {
         x = x,
         y = y,
     )
+}
+
+/**
+ * Injects a real tap into the clickable parent hosting the exact text.
+ */
+internal fun Activity.tapTextView(text: String) {
+    var current: View? = requireTextView(text)
+    while (current != null && !current.isClickable) {
+        current = current.parent as? View
+    }
+    assertNotNull("Expected clickable host for text: $text", current)
+    tapView(requireNotNull(current))
 }
 
 /**

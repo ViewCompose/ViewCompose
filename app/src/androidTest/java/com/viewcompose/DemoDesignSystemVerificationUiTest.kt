@@ -329,9 +329,9 @@ class DemoDesignSystemVerificationUiTest {
                     val navigation = activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_NAVIGATION)
                     assertEquals(3, navigation.childCountOrZero())
                     val middleItem = (navigation as ViewGroup).getChildAt(1)
-                    assertTrue("Expected the middle navigation item to handle selection", middleItem.performClick())
+                    activity.tapView(middleItem)
                     activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_SEGMENTED)
-                    activity.clickTextView("Week")
+                    activity.tapTextView("Week")
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
