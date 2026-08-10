@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: f808faad9ef3ac48e861dab7d5f433dd2762fe3ce9abf22511674ea75fb64dae
+translation_source_hash: 8866cd0498423f9d52792e9030d2d59e53058b7872afdd2e3f61a7c81a7add50
 translation_status: current
 ---
 
@@ -154,11 +154,18 @@ translation_status: current
 
 1. `SnapshotReader` 负责批量读取 Android / AppCompat / Material 主题字段。
 2. `ThemeTokenMapper` 负责把平台字段映射到框架 token，并处理 fallback。
-3. bridge 不直接产出组件级默认值，不绕过 `Defaults` 层。
-4. `viewcompose-android` 的 `ComponentActivity/Fragment.setUiContent` 默认解析并提供 Material 3 Theme；根容器、框架原生 View、`AndroidView` 与 Overlay 共用同一个解析上下文。
-5. `setUiContent` 默认在平台支持时套用 Material 动态色；可通过 `Material3DynamicColorPolicy.Disabled` 显式关闭。底层直接组合时，使用 `viewcompose-material3` 的 `Material3ThemeBridge.resolveContext(...)` 与 `Material3Theme(...)`。
+3. Bridge 只产出语义 Token。Material 具名组件从该快照派生私有强类型 Recipe；通用 Foundation
+   组件与 Renderer 都不会按 Material 身份分支。
+4. `viewcompose-material3-android` 的 `ComponentActivity/Fragment.setMaterial3UiContent` 会显式
+   解析并提供 Material 3 Theme；根容器、框架原生 View、`AndroidView` 与 Overlay 共用同一个
+   解析 Context。
+5. `setMaterial3UiContent` 默认在平台支持时套用 Material 动态色；可通过
+   `Material3DynamicColorPolicy.Disabled` 显式关闭。底层直接组合时，使用
+   `viewcompose-material3` 的 `Material3ThemeBridge.resolveContext(...)` 与 `Material3Theme(...)`。
 6. 组合内使用 Android 主题时会监听配置变化并重新读取 token；离开组合后注销回调，`metadata.revision` 随刷新递增。
-7. 运行时调用 `setTheme/applyStyle` 后，可把 `Material3ThemeRefreshController` 传给 `setUiContent`，再在主线程调用 `refresh()`；控制器会重新解析动态色上下文并触发主题子树刷新。
+7. 运行时调用 `setTheme/applyStyle` 后，可把 `Material3ThemeRefreshController` 传给
+   `setMaterial3UiContent`，再在主线程调用 `refresh()`；控制器会重新解析动态色 Context 并触发
+   主题子树刷新。
 
 当前 bridge 覆盖矩阵：
 
@@ -205,9 +212,25 @@ translation_status: current
 
 不做：
 
-1. 在 bridge 层写组件业务默认值
-2. 在 bridge 层引入组件级条件分支
+1. 在 Bridge 层写应用组件默认值或通用组件策略
+2. 在 Token Mapper 或通用 Renderer 中引入组件级条件分支
 3. 为了“看起来全覆盖”而猜测性映射控件尺寸
+
+具名组件与来源诊断契约：
+
+1. `Material3Theme` 在同一个同步作用域内提供 Token 快照、私有 `material3-pressure-v1`
+   Recipe 集与 `UiDesignSystemAttribution`。
+2. `Material3Surface`、`Material3Card`、`Material3Button`、`Material3Switch`、
+   `Material3TextField` 与 `Material3NavigationBar` 是受控的第一方压力切片。API 归 Material
+   所有；执行层使用中立 Basic Primitive、保留的原生行为或中立自定义 View，不会在下层增加
+   Material 分支。
+3. `UiThemeMetadata.provenance.sourceId` 会标识 `android-xml`、`android-dynamic` 或具名静态
+   生产者。已映射 Android 值报告 Android 来源，静态回退报告 `FrameworkDefault`，
+   `UiThemeOverride` 只把实际替换的 Token 家族标成 `Override`。
+4. `DesignSystemDiagnostics.current` 会报告设计系统身份、Recipe 集身份、Backend、一致性、能力
+   路径与回退证据；它是诊断数据，不是 Recipe Registry。
+5. 设置页主题矩阵使用刻意不同的 Android XML、Material 静态值和应用覆盖配色与形状。截图测试
+   直接读取生产来源与归属值，并分别使用身份、组件和 Navigation 锚点。
 
 实现约束：
 
@@ -221,7 +244,7 @@ translation_status: current
 ```kotlin
 val themeRefreshController = Material3ThemeRefreshController()
 
-setUiContent(themeRefreshController = themeRefreshController) {
+setMaterial3UiContent(themeRefreshController = themeRefreshController) {
     // content
 }
 
@@ -229,7 +252,37 @@ setTheme(R.style.AppTheme_Alternate)
 themeRefreshController.refresh()
 ```
 
-## 6. 与组件和 Modifier 的边界
+## 6. One UI 7 Alpha Design System 边界
+
+`viewcompose-oneui7` 是显式选择的替代 Design System 产物，不会替换标准 Material 聚合入口。
+它提供静态 Light/Dark `UiThemeTokens`，以及限定五组件 Alpha 所需的 Recipe 和自有组合组件。
+
+```kotlin
+setUiContent {
+    OneUi7Theme(tokens = OneUi7ThemeDefaults.light()) {
+        OneUi7Button(text = "Continue", onClick = { continueFlow() })
+    }
+}
+```
+
+这条边界有意不同于 Material Bridge：
+
+1. `OneUi7ThemeDefaults` 不读取 Android 或 Samsung Resource，其中数值是 ViewCompose 对固定
+   One UI 7 公开指南的解释。
+2. `OneUi7Theme` 安装一份完整、不可变的 Foundation Token 与私有 Recipe 快照。
+3. Button 与 Surface 使用共享 Basic Primitive；结构不同时，Switch、TextField 装饰和纯文字
+   NavigationBar 仍由 Design System 自有组合组件实现。
+4. Android Renderer 只接收已解析的通用 Node，不判断 One UI 身份。
+5. 运行时切换使用新 Provider 替换根与 Session，不修改全局 Design System 对象。
+6. 中立 `viewcompose-android` Host 不安装设计系统；应用显式选择 `viewcompose-oneui7` 时不会继承
+   Material 根 Context。
+7. 静态快照报告 `viewcompose-oneui7/static` 与 `FrameworkDefault` 来源；
+   `DesignSystemDiagnostics.current` 会导出与截图证据相同的五家族 Recipe、Backend 与一致性归属。
+
+支持范围、一致性标签、降级和发布限制见
+[One UI 7 五组件 Alpha 模块手册](../modules/viewcompose-oneui7/README.md)。
+
+## 7. 与组件和 Modifier 的边界
 
 1. 主题负责默认值来源
 2. 组件参数负责语义表达
@@ -240,7 +293,7 @@ themeRefreshController.refresh()
 - [Modifier 模型](../architecture/modifier.md)
 - [NodeSpec 模型](../architecture/node-spec.md)
 
-## 7. 新增主题能力的必经清单
+## 8. 新增主题能力的必经清单
 
 新增主题字段或覆盖能力时，至少完成：
 
@@ -250,9 +303,11 @@ themeRefreshController.refresh()
 4. demo 验证：Light/Dark + 局部覆盖场景
 5. 测试补齐：单测或 instrumentation 至少覆盖一种回归路径
 
-当前主题语义的权威 demo 验证入口为 `Diagnostics -> 主题诊断`。`Foundations` 中的 theme/overrides/typography 页面继续保留为教学与示例入口，不承担最终人工回归口径。
+设计 Token 的权威验收路径为 `设置 -> 主题与 Token 验证`，再选择 Android XML、Material 静态
+或应用覆盖 Fixture。`Diagnostics -> 主题诊断` 继续作为完整 Token 浏览器；`Foundations` 中的
+Theme/Override/Typography 页面保留为教学示例，不承担最终人工回归口径。
 
-## 8. 当前阶段重点
+## 9. 当前阶段重点
 
 1. 保持主题模型稳定，不回退到“组件全量 token 预计算”。
 2. 动态色、完整 15 角色排版、完整绝对形状映射与配置生命周期已落地；继续补多窗口/厂商主题

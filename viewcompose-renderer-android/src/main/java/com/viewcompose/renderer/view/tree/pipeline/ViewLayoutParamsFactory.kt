@@ -132,11 +132,18 @@ internal object ViewLayoutParamsFactory {
                 }
             }
 
-            is DeclarativeBoxLayout -> FrameLayout.LayoutParams(width, height).applyLayoutParams(
-                margin = margin,
-                node = node,
-            ) {
-                gravity = boxAlign?.alignment?.toGravity() ?: DeclarativeBoxLayout.UNSET_GRAVITY
+            is DeclarativeBoxLayout -> {
+                val inheritsContentGravity = boxAlign == null
+                DeclarativeBoxLayout.LayoutParams(
+                    width = width,
+                    height = height,
+                    inheritsContentGravity = inheritsContentGravity,
+                ).applyLayoutParams(
+                    margin = margin,
+                    node = node,
+                ) {
+                    gravity = boxAlign?.alignment?.toGravity() ?: parent.contentGravity
+                }
             }
 
             is DeclarativeConstraintLayout -> ConstraintLayout.LayoutParams(width, height).applyLayoutParams(

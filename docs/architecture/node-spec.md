@@ -29,7 +29,19 @@ For historical context, see
 2. General visual and interaction decoration belongs in `Modifier`.
 3. Theme defaults are resolved through `Theme -> Defaults` and injected into `NodeSpec/Modifier`.
 
-## 4. New-node checklist
+## 4. Resolved surface boundary
+
+`NodeType.Surface` pairs with `SurfaceNodeProps`, not the general `BoxNodeProps`. A design-system
+component resolves its brush, shape, border, interaction colors, effective dimensions, optional
+visual height, and clipping policy before emission. The Android Renderer executes those values
+without receiving design-system identity or semantic token roles.
+
+General caller modifiers remain ordered after the resolved surface. A caller background, border,
+corner, or shape replaces the component-provided visual surface and uses the complete effective
+bounds. Exact shadows and elevation may be supplied by the Basic component as ordinary ordered
+modifier contracts because the renderer already executes them generically.
+
+## 5. New-node checklist
 
 Every new first-party node must include:
 
@@ -39,7 +51,7 @@ Every new first-party node must include:
 4. unit coverage for stable structure, field changes, and interaction changes;
 5. a Demo verification path and instrumentation where required.
 
-## 5. Application and third-party extension path
+## 6. Application and third-party extension path
 
 Extensions must also remain spec-only:
 
@@ -47,13 +59,13 @@ Extensions must also remain spec-only:
 2. define custom binder/patch behavior;
 3. never pass semantics through a dynamic map.
 
-## 6. Regression prevention
+## 7. Regression prevention
 
 1. Unit tests cover strict `requireSpec<T>()` reads and failure diagnostics.
 2. Static guard tests scan framework production source and reject a returning `Props` system.
 3. Architecture and workflow reviews treat NodeSpec-only as a required checkpoint.
 
-## 7. Related documents
+## 8. Related documents
 
 1. [Architecture overview](overview.md)
 2. [Development workflow](../project/workflow.md)

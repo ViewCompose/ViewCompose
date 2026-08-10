@@ -7,8 +7,8 @@ renderer-independent session coordinator that connects a declarative tree to hos
 container, engine, focus, scheduling, logging, and tracing contracts.
 
 Use it directly when authoring reusable ViewCompose components, custom hosts, design-system
-adapters, or overlay backends. Android applications normally receive it through
-`viewcompose-android`, which supplies the standard engine and Material 3 adapter.
+adapters, or overlay backends. Android applications normally receive it through the neutral
+`viewcompose-android` aggregate or the named `viewcompose-material3-android` aggregate.
 
 This module does not implement View reconciliation, own Activity or Fragment lifecycle, present
 platform dialogs and popups, perform image decoding, or provide optional animation, gesture, graphics,
@@ -62,10 +62,32 @@ by a later renderer or child render session.
   tiers; shapes support extra-small, small, medium, large, extra-large, and full roles.
   `UiInteractionTokens` supplies generic pressed, focused, and hovered opacities. Design-system
   adapters provide their concrete values.
+- `UiTokenProvenance` is the Q2 non-visual source snapshot attached to `UiThemeMetadata`. Exact
+  paths such as `colors.primary` inherit a family source when no exact entry exists, allowing
+  diagnostics to distinguish framework defaults, Android theme or dynamic mapping, named static
+  tokens, and application overrides without changing visual resolution.
+- `UiDesignSystemAttribution`, `UiComponentAttribution`, and `UiIntegrationAttribution` are bounded Q2 evidence snapshots, not a
+  recipe registry. `DesignSystemAttributionProvider` is the Q3 scope used by named systems to
+  publish recipe identity, neutral backend, integration transport/presenter, conformance,
+  capability path, and fallback;
+  `DesignSystemDiagnostics.current` reads that same local in eager or captured delayed content.
 - `UiButtonSizing` keeps the effective minimum target height separate from the visible surface
   height. Neutral and existing custom themes preserve their previous rendering because each visual
   height defaults to its corresponding effective height; a design-system adapter may opt into a
   smaller centered surface without shrinking the View or accessibility bounds.
+- `UiSwitchSizing` is the Q2, design-system-neutral visible-geometry contract for a composed
+  Switch track, thumb, track inset, and label spacing. It deliberately does not own the effective
+  target; the compiled `switchSizingTokenSample` keeps a compact visual track inside an independent
+  `minimumInteractiveHeight` policy.
+- `BasicSurface` is a Q3 design-system-neutral primitive. Its Q2 `BasicSurfaceStyle` accepts a
+  resolved solid or gradient brush, logical shape, border, clipping, elevation, and exact shadows;
+  it also separates minimum effective bounds from an optional centered visual height. Design
+  systems select those values before emission, while the Android Renderer receives only a neutral
+  `SurfaceNodeProps` snapshot. The compiled `basicSurfaceSample` demonstrates the contract.
+- `BasicButton` is a Q3 action composite over `BasicSurface`, Row, Text, and Icon. Its Q2
+  `BasicButtonStyle` contains only resolved geometry, typography, content, and interaction values.
+  It emits no native Button node, while the existing `Button` API keeps that compatibility path.
+  The compiled `basicButtonSample` demonstrates a continuous-corner action.
 - `UiControlSizing.minimumInteractiveHeight` is the design-system-neutral effective-height policy
   used by Checkbox, RadioButton, Switch, and Slider. Its neutral default is zero, preserving native
   intrinsic measurement. A design system may supply a positive minimum; the component applies it
@@ -128,7 +150,8 @@ Because the current line is alpha, the documentation site intentionally does not
   roll that tree back.
 - Overlay requests are declarative and scoped by render-session id plus request key. Omitting a
   previously committed request dismisses it. Platform presentation requires
-  `viewcompose-overlay-material3-android` or a custom `OverlayHost`.
+  `viewcompose-overlay-android`, a named adapter such as
+  `viewcompose-overlay-material3-android`, or a custom `OverlayHost`.
 - Lazy collection keys must remain stable and unique. Reuse, prefetch, and motion policies are
   renderer hints; they must not be used as business state.
 - Image components keep source identity and request options in the `NodeSpec`. A loader is looked up
@@ -171,6 +194,11 @@ source defaults but are a binary change for precompiled direct constructors and 
 destructuring. `Button` resolves both heights into `ButtonNodeProps`; custom renderers must honor
 that contract or deliberately document that their visual and effective bounds remain identical.
 
+`UiSwitchSizing` is a Q2 immutable value contract added to `UiControlSizing` with a source default.
+It is a binary change for precompiled direct constructors and exhaustive destructuring. Design
+recipes consume the resolved geometry; the neutral Android Renderer receives no One UI or other
+named design-system branch.
+
 `UiControlSizing.minimumInteractiveHeight` is another Q2 immutable value field with a source
 default and the same binary-compatibility consequence for precompiled direct constructors and
 exhaustive destructuring. Checkbox, RadioButton, Switch, and Slider are Q3 component APIs: they
@@ -187,3 +215,21 @@ state-layer parameters are Q3 component API changes. Source callers receive sema
 defaults, and Button callers that explicitly supplied the former `rippleColor` retain a dedicated
 compatibility overload; precompiled default-argument call sites must be rebuilt for this alpha
 release.
+
+`BasicSurfaceStyle` is a Q2 resolved-value contract and `BasicSurface` is a Q3 component API.
+`BasicSurface` appends caller modifiers after its resolved style and behavior: caller surface
+modifiers replace the default visual surface, caller elevation wins, and caller shadows follow
+the style shadows. `Surface` now resolves its existing defaults through this primitive, preserving
+its public source API while changing the concrete `NodeType.Surface` spec to `SurfaceNodeProps`.
+
+`BasicButtonStyle` is a Q2 resolved-value contract and `BasicButton` is a Q3 composite API. It is
+additive and does not change the existing `Button` signature or native renderer behavior. The
+internal contrast fixture now consumes this production primitive, proving two independent action
+recipes without adding design-system vocabulary to UI Foundation.
+
+`UiTokenProvenance`, `UiDesignSystemAttribution`, and `UiComponentAttribution` are Q2 immutable
+diagnostic contracts. `DesignSystemAttributionProvider` is a Q3 provider API. Adding provenance to
+`UiThemeMetadata` has a source default but changes the binary constructor/copy/component surface,
+so precompiled direct callers must rebuild. The contracts contain stable identities and resolved
+evidence only; they do not authorize recipes, factories, or named design-system branches in UI
+Foundation or Renderer.

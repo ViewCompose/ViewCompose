@@ -148,7 +148,9 @@ internal object InputNodePatchApplier {
         if (previous.enabled != next.enabled) {
             view.isEnabled = next.enabled
         }
-        if (previous.checked != next.checked) {
+        if (previous.checked != next.checked && view.isChecked != next.checked) {
+            // A native CompoundButton commits user input before the controlled callback returns.
+            // Avoid restarting its in-flight thumb animation when caller state accepts that value.
             view.isChecked = next.checked
         }
         if (previous.controlColor != next.controlColor ||

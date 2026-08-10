@@ -14,6 +14,11 @@ class UiShapeTest {
     @Test
     fun `uniform absolute shape exposes size`() {
         assertEquals(18.dp, UiShape.rounded(18.dp).uniformAbsoluteSizeOrNull)
+        assertEquals(20.dp, UiShape.continuous(20.dp).uniformAbsoluteSizeOrNull)
+        assertEquals(
+            UiCornerFamily.Continuous,
+            UiShape.continuous(20.dp).topStart.family,
+        )
         assertNull(UiShape.roundedRelative(0.5f).uniformAbsoluteSizeOrNull)
     }
 

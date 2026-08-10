@@ -132,15 +132,16 @@ ownership are required review items.
 3. Default host Local injection belongs to the `viewcompose-host-android` bridge and is not
    duplicated in those modules.
 
-### 5.3 Service-provider-first assembly
+### 5.3 Root-scoped integration assembly
 
-Use an SPI for optional overlay, host, and decoration assembly. Reflection is a separately reviewed
-last resort.
+Normal application roots select integrations explicitly. SPI discovery is reserved for low-level
+neutral extensions, and reflection is a separately reviewed last resort.
 
-1. Default overlay assembly uses `AndroidOverlayHostFactoryProvider + ServiceLoader`, never a new
-   `Class.forName` primary path.
-2. `viewcompose-overlay-material3-android` registers through `META-INF/services`; absence falls back to an
-   observable stable no-op.
+1. Activity, Fragment, navigation, and named design-system roots construct their root-scoped
+   overlay host explicitly; classpath order may not select a design system.
+2. `AndroidOverlayHostFactoryProvider + ServiceLoader` remains only for custom low-level hosts and
+   discovers exactly one neutral `viewcompose-overlay-android` provider. Material and One UI
+   adapters register no whole-host provider.
 3. Optional decoration uses `AndroidViewDecorationBackend + ServiceLoader`; renderer and host do
    not depend on the shadow implementation, and absence is a no-op.
 4. Temporary reflection includes architecture documentation, contract tests, and a removal plan.
@@ -231,11 +232,12 @@ last resort.
    published runtime dependency, and no `viewcompose-*` module depends on `app`.
 3. UI Foundation production sources cannot import Renderer, AndroidX, or Material APIs. UI Contract
    production sources cannot import `android.*` or `androidx.*`.
-4. `ComponentActivity/Fragment.setUiContent` lives in `viewcompose-android`; `renderInto` and
+4. Neutral `ComponentActivity/Fragment.setUiContent` lives in `viewcompose-android`; named
+   `setMaterial3UiContent` lives in `viewcompose-material3-android`; `renderInto` and
    `AndroidView/nativeView` remain in the low-level `viewcompose-host-android` engine.
-5. Material theme policy lives in `viewcompose-material3`, and Material-backed presentation lives
-   only in explicitly named integrations. UI Foundation, Renderer Android, and Host Android cannot
-   import or depend on Material Components.
+5. Material theme policy lives in `viewcompose-material3`, while Material Activity/Fragment and
+   presentation wiring lives only in explicitly named integrations. UI Foundation, Renderer
+   Android, Host Android, and the neutral Android aggregate cannot import or depend on Material.
 6. `verifyModuleDependencyBoundaries` and `verifyDesignSystemIsolation` in `qaQuick` are
    non-waivable gates. Guard tests enforce these boundaries; review convention alone is
    insufficient.

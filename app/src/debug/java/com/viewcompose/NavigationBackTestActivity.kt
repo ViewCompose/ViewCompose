@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.SavedStateHandle
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
@@ -136,7 +136,7 @@ class NavigationBackTestActivity : AppCompatActivity() {
                 }
             },
         )
-        setUiContent(
+        setMaterial3UiContent(
             debug = true,
             debugTag = "NavigationBackDeviceTest",
         ) {

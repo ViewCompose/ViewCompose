@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import com.viewcompose.material3.Material3ThemeDefaults
+import com.viewcompose.material3.Material3Reference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotEquals
@@ -26,6 +27,63 @@ import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
 class Material3TouchTargetBaselineUiTest {
+    @Test
+    fun namedMaterial3Switch_preservesNativeTapAndDragBehavior() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val intent = Material3DefaultThemeActivity.newIntent(
+            context = context,
+            source = DemoThemeSource.Material3Defaults,
+        )
+        launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ).centerInsideOwningRecyclerView()
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val switch = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ) as android.widget.Switch
+                assertTrue(switch.isChecked)
+                activity.tapByTestTag(DemoTestTags.MATERIAL3_NAMED_SWITCH)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val switch = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ) as android.widget.Switch
+                assertTrue(!switch.isChecked)
+            }
+            var thumbX = 0
+            var thumbY = 0
+            scenario.onActivity { activity ->
+                val switch = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ) as android.widget.Switch
+                val location = IntArray(2).also(switch::getLocationOnScreen)
+                val thumbBounds = requireNotNull(switch.thumbDrawable).bounds
+                thumbX = location[0] + thumbBounds.centerX()
+                thumbY = location[1] + thumbBounds.centerY()
+            }
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).swipe(
+                thumbX,
+                thumbY,
+                thumbX + 120,
+                thumbY,
+                8,
+            )
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val switch = activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_NAMED_SWITCH,
+                ) as android.widget.Switch
+                assertTrue(switch.isChecked)
+            }
+        }
+    }
+
     @Test
     fun themeSources_exportDistinctScreenshotIdentityAndTokenRoles() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
@@ -49,6 +107,30 @@ class Material3TouchTargetBaselineUiTest {
                     val modeValue = activity.requireTextViewByTestTagVisible(
                         DemoTestTags.MATERIAL3_THEME_MODE,
                     ).text.toString()
+                    val tokenProducer = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_TOKEN_PRODUCER,
+                    ).text.toString()
+                    val primaryOrigin = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_PRIMARY_ORIGIN,
+                    ).text.toString()
+                    val shapeOrigin = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_SHAPE_ORIGIN,
+                    ).text.toString()
+                    val designSystem = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_DESIGN_SYSTEM,
+                    ).text.toString()
+                    val recipeSet = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_RECIPE_SET,
+                    ).text.toString()
+                    val componentBackends = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_COMPONENT_BACKENDS,
+                    ).text.toString()
+                    val overlayTransport = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_OVERLAY_TRANSPORT,
+                    ).text.toString()
+                    val overlayPresenters = activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_OVERLAY_PRESENTERS,
+                    ).text.toString()
                     val secondaryValue = activity.requireTextViewByTestTagVisible(
                         DemoTestTags.MATERIAL3_THEME_SECONDARY,
                     ).text.toString()
@@ -61,19 +143,64 @@ class Material3TouchTargetBaselineUiTest {
 
                     assertEquals("${source.id} · ${source.label}", sourceValue)
                     assertEquals("Light", modeValue)
+                    assertEquals(Material3Reference.designSystem, designSystem)
+                    assertEquals(Material3Reference.recipeSet, recipeSet)
+                    assertTrue(componentBackends.contains("surface-card:DslComposite/Exact"))
+                    assertTrue(componentBackends.contains("switch:NativeBehavioralCore/Equivalent"))
+                    assertTrue(componentBackends.contains("navigation-bar:NeutralCustomView/Equivalent"))
+                    assertEquals("viewcompose-overlay-android/dialog", overlayTransport)
+                    assertTrue(overlayPresenters.contains("overlay.snackbar:material-components/snackbar/Equivalent"))
+                    assertTrue(
+                        overlayPresenters.contains(
+                            "overlay.modal-bottom-sheet:material-components/bottom-sheet-dialog/Equivalent",
+                        ),
+                    )
                     assertNotEquals(secondaryValue, secondaryContainerValue)
                     assertEquals("DISTINCT", roleCheck)
+                    when (source) {
+                        DemoThemeSource.AndroidXml -> {
+                            assertEquals("viewcompose-material3/android-xml", tokenProducer)
+                            assertEquals("AndroidTheme", primaryOrigin)
+                            assertEquals("FrameworkDefault", shapeOrigin)
+                        }
+                        DemoThemeSource.Material3Defaults -> {
+                            assertEquals("viewcompose-material3/static", tokenProducer)
+                            assertEquals("FrameworkDefault", primaryOrigin)
+                            assertEquals("FrameworkDefault", shapeOrigin)
+                        }
+                        DemoThemeSource.DemoCustom -> {
+                            assertEquals("viewcompose-material3/static", tokenProducer)
+                            assertEquals("Override", primaryOrigin)
+                            assertEquals("Override", shapeOrigin)
+                        }
+                    }
 
                     evidence = buildString {
-                        appendLine("suite=material3-theme-source-matrix-v1")
+                        appendLine("suite=material3-theme-source-matrix-v2")
                         appendLine("source=$sourceValue")
                         appendLine("origin=$originValue")
+                        appendLine("tokenProducer=$tokenProducer")
+                        appendLine("primaryOrigin=$primaryOrigin")
+                        appendLine("shapeOrigin=$shapeOrigin")
+                        appendLine("designSystem=$designSystem")
+                        appendLine("recipeSet=$recipeSet")
+                        appendLine("componentBackends=$componentBackends")
+                        appendLine("overlayTransport=$overlayTransport")
+                        appendLine("overlayPresenters=$overlayPresenters")
                         appendLine("mode=$modeValue")
                         appendLine("secondary=$secondaryValue")
                         appendLine("secondaryContainer=$secondaryContainerValue")
                         appendLine("roleCheck=$roleCheck")
                     }
                 }
+                scenario.onActivity { activity ->
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_TOKEN_PRODUCER,
+                    ).centerInsideOwningRecyclerView()
+                }
+                waitForUiIdle()
+                SystemClock.sleep(SCREENSHOT_ANCHOR_SETTLE_MILLIS)
+                waitForUiIdle()
                 val artifactName = "material3-theme-source-${source.id}-light"
                 val screenshot = captureDeviceScreenshot(
                     name = artifactName,
@@ -83,6 +210,38 @@ class Material3TouchTargetBaselineUiTest {
                     .apply { writeText(evidence) }
                 preserveAfterConnectedTest(screenshot)
                 preserveAfterConnectedTest(metadata)
+                scenario.onActivity { activity ->
+                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_SURFACE)
+                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_CARD)
+                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_BUTTON)
+                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_SWITCH)
+                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_TEXT_FIELD)
+                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_NAMED_NAVIGATION)
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_NAMED_BUTTON,
+                    ).centerInsideOwningRecyclerView()
+                }
+                waitForUiIdle()
+                SystemClock.sleep(SCREENSHOT_ANCHOR_SETTLE_MILLIS)
+                waitForUiIdle()
+                val componentScreenshot = captureDeviceScreenshot(
+                    name = "$artifactName-components",
+                    directoryName = "material3-theme-source-matrix",
+                )
+                preserveAfterConnectedTest(componentScreenshot)
+                scenario.onActivity { activity ->
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_NAMED_TEXT_FIELD,
+                    ).centerInsideOwningRecyclerView()
+                }
+                waitForUiIdle()
+                SystemClock.sleep(SCREENSHOT_ANCHOR_SETTLE_MILLIS)
+                waitForUiIdle()
+                val navigationScreenshot = captureDeviceScreenshot(
+                    name = "$artifactName-components-navigation",
+                    directoryName = "material3-theme-source-matrix",
+                )
+                preserveAfterConnectedTest(navigationScreenshot)
             }
         }
     }
@@ -485,5 +644,6 @@ class Material3TouchTargetBaselineUiTest {
 
     private companion object {
         const val WINDOW_TRANSITION_SETTLE_MILLIS = 750L
+        const val SCREENSHOT_ANCHOR_SETTLE_MILLIS = 300L
     }
 }

@@ -9,7 +9,7 @@ import android.view.WindowManager
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.Lifecycle
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavHostController
@@ -52,7 +52,7 @@ class NavigationAdaptivePaneTestActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onCreate(savedInstanceState)
 
-        setUiContent(
+        setMaterial3UiContent(
             debug = true,
             debugTag = "NavigationAdaptivePaneDeviceTest",
         ) {

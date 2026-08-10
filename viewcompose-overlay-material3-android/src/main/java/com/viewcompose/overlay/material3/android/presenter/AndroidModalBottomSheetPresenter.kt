@@ -8,6 +8,7 @@ import android.widget.FrameLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
+import com.viewcompose.overlay.android.asOverlayRenderContainerHandle
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlayContent
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlayHandle
 import com.viewcompose.ui.foundation.ModalBottomSheetOverlayPresenter
@@ -64,7 +65,7 @@ private class AndroidModalBottomSheetHandle(
     }
     private val defaultNavigationBarColor: Int? = dialog.window?.readNavigationBarColorCompat()
     private val surfaceSession: OverlaySurfaceSession = createOverlaySurfaceSession(
-        container = dialogContainer.asRenderContainerHandle(),
+        container = dialogContainer.asOverlayRenderContainerHandle(),
         content = content.surface,
     )
     private var currentSpec = spec

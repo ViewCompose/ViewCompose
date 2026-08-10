@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-host-lifecycle-and-android-interop.md
-translation_source_hash: 8fb60e576bb9dad7704f838240a005976c5c46c309ebe1b92a2e695f810bc525
+translation_source_hash: 4ff33fb68d410327aef8fa991620b98340132ac314fe36d30dc49a2c12cf68a2
 translation_status: current
 ---
 
@@ -75,7 +75,7 @@ ViewCompose 目标：
 {/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ViewComposeHostSample.kt" region="viewcompose-host" */}
 ```kotlin
 fun ComponentActivity.installViewComposeInteropSample() {
-    setUiContent {
+    setMaterial3UiContent {
         ViewComposeInteropSample()
     }
 }
@@ -102,8 +102,8 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 
 | 概念 | Compose / AndroidX 行为 | ViewCompose 行为 | 状态 | 本地证据与验证说明 |
 | --- | --- | --- | --- | --- |
-| Activity 根宿主 | `ComponentActivity.setContent` 把 Compose 内容安装到 Activity 中，并通过宿主管理 Composition。 | `ComponentActivity.setUiContent` 替换 Activity 内容 View、同步渲染首帧、返回新的根 `ViewGroup`，并把 `RenderSession` 保存在内部注册表中，直到内容被替换或 Activity 销毁。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)中的 Activity 路径和会话注册表；已编译的 [`AndroidEntrySamples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt)。同步首帧和内部持有的会话是 ViewCompose 特有语义。 |
-| Fragment 宿主 | Fragment 中的 `ComposeView` 通常通过 `DisposeOnViewTreeLifecycleDestroyed` 随 Fragment View 树一起释放。 | `Fragment.setUiContent` 为 `onCreateView` 创建并返回根 `ViewGroup`。其内部会话随当前 `viewLifecycleOwner` 释放，但安装到 ViewCompose 内容中的生命周期 owner 目前是 Fragment 实例。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)中的 Fragment 路径和注册表；[`LifecycleBoundDisposerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/test/java/com/viewcompose/android/LifecycleBoundDisposerTest.kt)。安装的 owner 不一致是已知验证缺口。 |
+| Activity 根宿主 | `ComponentActivity.setContent` 把 Compose 内容安装到 Activity 中，并通过宿主管理 Composition。 | 中立 `ComponentActivity.setUiContent` 与具名 Material `setMaterial3UiContent` 都会替换 Activity 内容 View、同步渲染首帧、返回新的根 `ViewGroup`，并把 `RenderSession` 保存在内部注册表中，直到内容被替换或 Activity 销毁。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)、[`Material3AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-material3-android/src/main/java/com/viewcompose/material3/android/Material3AndroidHostBridge.kt)及其可编译样例。同步首帧和内部持有的会话是 ViewCompose 特有语义。 |
+| Fragment 宿主 | Fragment 中的 `ComposeView` 通常通过 `DisposeOnViewTreeLifecycleDestroyed` 随 Fragment View 树一起释放。 | 中立 `Fragment.setUiContent` 与具名 Material `setMaterial3UiContent` 都会为 `onCreateView` 创建并返回根 `ViewGroup`。其内部会话随当前 `viewLifecycleOwner` 释放，但安装到 ViewCompose 内容中的生命周期 owner 目前是 Fragment 实例。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)中的 Fragment 路径和注册表；[`LifecycleBoundDisposerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/test/java/com/viewcompose/android/LifecycleBoundDisposerTest.kt)。安装的 owner 不一致是已知验证缺口。 |
 | 现有 View 层级 | `ComposeView` 提供 Composition 释放策略并发现 ViewTree owner。 | `renderInto` 渲染到指定的 `ViewGroup`；它不提供生命周期、ViewModel、保存状态、环境、主题或帧时钟 owner，并要求显式释放会话。 | Partially supported | [`RenderInto.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt)以及 [`AndroidEntrySamples.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt)中已编译的 `renderIntoSample`。 |
 | 生命周期 owner 传播 | Compose 宿主集成从 Activity、Fragment View 或 ViewTree 解析 AndroidX owner。 | Activity 内容接收 Activity owner。Fragment 内容目前接收 Fragment owner，而会话释放跟随 Fragment View 生命周期。自定义容器不会自动获得 owner。 | Partially supported | [`AndroidHostBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt)、[`LifecycleBoundDisposer.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/LifecycleBoundDisposer.kt)和 [`LifecycleHostGuards.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-android/src/main/java/com/viewcompose/android/LifecycleHostGuards.kt)。 |
 | ViewModel owner 传播 | Lifecycle 2.11 可用 `ViewModelStoreProvider` 为任意 UI 创建子作用域，并继承父级 factory 与 `CreationExtras`。 | 已有 Activity、Fragment、导航 entry 和导航 graph 作用域。任意 ViewCompose UI 子树没有等价的公共 provider，导航 owner 也尚无证据表明会继承所有自定义父级 factory 和 `CreationExtras`。 | Partially supported | [`NavEntryOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt)、[`NavGraphOwner.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt)和 [`NavEntryOwnerTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt)。Lifecycle 2.11 行为仅有官方语义证据。 |
@@ -116,14 +116,14 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 
 ## 选择宿主入口 {/* #choosing-a-host-entry-point */}
 
-当 Activity 或 Fragment 把宿主根内容交给 ViewCompose 管理时，使用 `setUiContent`。
-只有在现有 Android View 层级必须继续拥有容器时，才使用 `renderInto`。后者是更底层的桥接，
-不是 ViewCompose 对 `ComposeView` 的另一种写法：
+当 Activity 或 Fragment 把宿主根内容交给 ViewCompose 管理时，使用中立 `setUiContent` 或具名
+Material `setMaterial3UiContent`。只有在现有 Android View 层级必须继续拥有容器时，才使用
+`renderInto`。后者是更底层的桥接，不是 ViewCompose 对 `ComposeView` 的另一种写法：
 
 | 来源模式 | 目标模式 | 所有权变化 |
 | --- | --- | --- |
-| `ComponentActivity.setContent` | `ComponentActivity.setUiContent` | ViewCompose 拥有内部会话；返回值是已安装的根 `ViewGroup`，不是会话句柄。 |
-| Fragment `ComposeView` | 从 `onCreateView` 返回 `Fragment.setUiContent()` | ViewCompose 拥有内部会话并跟随 Fragment View 生命周期，但请参阅下文的 Fragment owner 验证缺口。 |
+| `ComponentActivity.setContent` | 中立 `ComponentActivity.setUiContent` 或 Material `setMaterial3UiContent` | ViewCompose 拥有内部会话；返回值是已安装的根 `ViewGroup`，不是会话句柄。 |
+| Fragment `ComposeView` | 从 `onCreateView` 返回中立 `Fragment.setUiContent()` 或 Material `setMaterial3UiContent()` | ViewCompose 拥有内部会话并跟随 Fragment View 生命周期，但请参阅下文的 Fragment owner 验证缺口。 |
 | 嵌入式 `ComposeView` | `renderInto(existingViewGroup)` | 调用方负责提供 owner 和执行释放。 |
 
 所有宿主入口都必须针对仍处于 active 状态的宿主调用。渲染是 Android 主线程工作，且入口调用
@@ -131,9 +131,10 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 
 ## Activity 宿主
 
-`ComponentActivity.setUiContent` 把 ViewCompose 内容安装为 Activity 根内容，并提供 Activity
-生命周期与 ViewModel owner、宿主 saveable-state registry、动画上下文、帧时钟、环境和主题
-局部值。再次调用时，会替换并释放之前注册的 Activity 会话。
+`ComponentActivity.setUiContent` 安装中立 ViewCompose 根；具名 `setMaterial3UiContent` 先解析
+Material Context 与 token 快照，再委托相同宿主生命周期。两者都提供 Activity 生命周期与
+ViewModel owner、宿主 saveable-state registry、动画上下文、帧时钟和环境。再次调用任一入口时，
+都会替换并释放之前注册的 Activity 会话。
 
 返回值是已安装的根 `ViewGroup`，而不是内部 `RenderSession`。因此，公共 Activity 宿主不会
 暴露手动渲染、rendering-active 控制或提前释放会话。替换内容或销毁 Activity 时会释放已注册
@@ -141,9 +142,10 @@ private fun UiTreeBuilder.ViewComposeInteropSample() {
 
 ## Fragment 宿主
 
-`Fragment.setUiContent` 创建并返回 Fragment 根 `ViewGroup`；请从 `onCreateView` 调用并返回
-该根节点。当前 `viewLifecycleOwner` 可用时，内部会话注册表会绑定释放。Fragment View 重建
-时会获得新会话，旧 View 会话则在 `onDestroyView` 时释放。
+中立 `Fragment.setUiContent` 与具名 Material `setMaterial3UiContent` 都会创建并返回 Fragment
+根 `ViewGroup`；请从 `onCreateView` 调用所选入口并返回该根节点。当前 `viewLifecycleOwner`
+可用时，内部会话注册表会绑定释放。Fragment View 重建时会获得新会话，旧 View 会话则在
+`onDestroyView` 时释放。
 
 ### 已知验证缺口：Fragment owner 身份
 

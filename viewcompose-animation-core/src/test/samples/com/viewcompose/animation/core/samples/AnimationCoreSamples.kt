@@ -6,6 +6,10 @@ import com.viewcompose.animation.core.AnimationConverters
 import com.viewcompose.animation.core.AnimationSpec
 import com.viewcompose.animation.core.Easing
 import com.viewcompose.animation.core.EasingDefaults
+import com.viewcompose.animation.core.MotionRole
+import com.viewcompose.animation.core.MotionScheme
+import com.viewcompose.animation.core.ReducedMotionBehavior
+import com.viewcompose.animation.core.ReducedMotionPolicy
 import com.viewcompose.animation.core.RepeatMode
 import com.viewcompose.animation.core.TransitionCore
 import com.viewcompose.animation.core.cubicBezier
@@ -36,6 +40,25 @@ fun animationSpecificationsSample(): List<AnimationSpec> {
         staged,
         repeatable(iterations = 2, animation = emphasized, repeatMode = RepeatMode.Reverse),
         infiniteRepeatable(animation = staged),
+    )
+}
+
+/** Resolves a semantic motion role after applying the host's reduced-motion request. */
+fun motionSchemeSample(reducedMotionEnabled: Boolean): AnimationSpec {
+    val scheme = MotionScheme(
+        fastEffects = tween(durationMillis = 100),
+        defaultEffects = tween(durationMillis = 200),
+        fastSpatial = tween(durationMillis = 160),
+        defaultSpatial = tween(durationMillis = 320),
+        expressiveSpatial = spring(durationMillis = 600),
+        reducedMotion = ReducedMotionPolicy(
+            nonEssentialBehavior = ReducedMotionBehavior.Snap,
+        ),
+    )
+    return scheme.resolve(
+        role = MotionRole.ExpressiveSpatial,
+        reducedMotionEnabled = reducedMotionEnabled,
+        essential = true,
     )
 }
 

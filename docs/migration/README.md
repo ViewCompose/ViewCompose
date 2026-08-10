@@ -10,7 +10,7 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-06**
+Last verified: **2026-08-09**
 
 Re-verification owner: **maintainers of the Kernel, UI Foundation, Android Engine, Android
 aggregate, and navigation module families**
@@ -23,7 +23,7 @@ The target is the following independently versioned ViewCompose set:
 | --- | --- | --- |
 | State and composition | `viewcompose-runtime`, `viewcompose-ui-foundation` | runtime `0.1.0-alpha02`; UI Foundation `0.1.0-alpha01` |
 | UI and rendering | `viewcompose-ui-contract`, `viewcompose-renderer-android`, `viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha03`; renderer/ConstraintLayout `0.1.0-alpha01` |
-| Android ownership | `viewcompose-android`, `viewcompose-host-android`, `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx` | aggregate/integrations `0.1.0-alpha01`; host `0.1.0-alpha03` |
+| Android ownership | `viewcompose-android`, `viewcompose-material3-android`, `viewcompose-host-android`, `viewcompose-lifecycle-androidx`, `viewcompose-viewmodel-androidx` | aggregates/integrations `0.1.0-alpha01`; host `0.1.0-alpha03` |
 | Navigation | `viewcompose-navigation-core`, `viewcompose-navigation-android` | core `0.1.0-alpha02`; Android `0.1.0-alpha01` |
 
 The immutable release revisions are recorded in

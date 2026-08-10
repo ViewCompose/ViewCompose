@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: 6cf9c680db7230cc73adb004e8fdf2f129ded0dc164827028a033db110a32d07
+translation_source_hash: 0671382d0e16b254b30b5da94d5c6564bdf8a72d473119029e0304f93f8a3e69
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-06**
+最后验证日期：**2026-08-09**
 
 复核责任人：**Kernel、UI Foundation、Android Engine、Android 聚合层与 navigation 模块族的维护者**
 
@@ -24,7 +24,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 | --- | --- | --- |
 | 状态与组合 | `viewcompose-runtime`、`viewcompose-ui-foundation` | runtime `0.1.0-alpha02`；UI Foundation `0.1.0-alpha01` |
 | UI 与渲染 | `viewcompose-ui-contract`、`viewcompose-renderer-android`、`viewcompose-constraintlayout-androidx` | contract `0.1.0-alpha03`；renderer/ConstraintLayout `0.1.0-alpha01` |
-| Android 所有权 | `viewcompose-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` | 聚合层/集成层 `0.1.0-alpha01`；host `0.1.0-alpha03` |
+| Android 所有权 | `viewcompose-android`、`viewcompose-material3-android`、`viewcompose-host-android`、`viewcompose-lifecycle-androidx`、`viewcompose-viewmodel-androidx` | 聚合层/集成层 `0.1.0-alpha01`；host `0.1.0-alpha03` |
 | 导航 | `viewcompose-navigation-core`、`viewcompose-navigation-android` | core `0.1.0-alpha02`；Android `0.1.0-alpha01` |
 
 不可变的发布源码 revision 记录在

@@ -1,5 +1,13 @@
 package com.viewcompose
 
+import com.viewcompose.material3.Material3Button
+import com.viewcompose.material3.Material3Card
+import com.viewcompose.material3.Material3NavigationBar
+import com.viewcompose.material3.Material3Reference
+import com.viewcompose.material3.Material3Surface
+import com.viewcompose.material3.Material3SurfaceVariant
+import com.viewcompose.material3.Material3Switch
+import com.viewcompose.material3.Material3TextField
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.focus.FocusRequester
 import com.viewcompose.ui.foundation.Box
@@ -9,6 +17,7 @@ import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.Chip
 import com.viewcompose.ui.foundation.Column
+import com.viewcompose.ui.foundation.DesignSystemDiagnostics
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.IconButtonDefaults
 import com.viewcompose.ui.foundation.FloatingActionButton
@@ -25,6 +34,7 @@ import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
+import com.viewcompose.ui.foundation.rememberTextFieldState
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
@@ -45,12 +55,16 @@ import com.viewcompose.ui.unit.dp
 /** Emits one stable component fixture under an explicitly identified theme source. */
 internal fun UiTreeBuilder.Material3DefaultThemePage(source: DemoThemeSource) {
     val defaultButtonClicks = remember { mutableStateOf(0) }
+    val namedSwitchChecked = remember { mutableStateOf(true) }
+    val namedNavigationIndex = remember { mutableStateOf(0) }
+    val namedTextField = rememberTextFieldState("Token source")
     val stateLayerFocusRequester = remember { FocusRequester() }
     val stateLayerSegmentedIndex = remember { mutableStateOf(0) }
     LazyColumn(
         items = listOf(
             "intro",
             "source",
+            "namedPressure",
             "buttons",
             "stateLayers",
             "compact",
@@ -85,6 +99,15 @@ internal fun UiTreeBuilder.Material3DefaultThemePage(source: DemoThemeSource) {
             }
 
             "source" -> ThemeSourceSnapshotSection(source)
+
+            "namedPressure" -> Material3NamedPressureSlice(
+                source = source,
+                switchChecked = namedSwitchChecked.value,
+                onSwitchCheckedChange = { checked -> namedSwitchChecked.value = checked },
+                selectedNavigationIndex = namedNavigationIndex.value,
+                onNavigationSelected = { index -> namedNavigationIndex.value = index },
+                field = namedTextField,
+            )
 
             "buttons" -> Column(
                 spacing = 12.dp,
@@ -288,7 +311,7 @@ private fun com.viewcompose.ui.node.UiStateLayerColors.asStateLayerHex(): String
 private fun UiTreeBuilder.ThemeFixtureBadge(source: DemoThemeSource) {
     val mode = if (Theme.current.metadata.isDark == true) "dark" else "light"
     Text(
-        text = "theme-token-matrix-v1 · ${source.id} · $mode",
+        text = "theme-token-matrix-v2 · ${source.id} · $mode",
         style = Theme.typography.labelSmall,
         color = Theme.colors.onSurfaceVariant,
     )
@@ -297,6 +320,15 @@ private fun UiTreeBuilder.ThemeFixtureBadge(source: DemoThemeSource) {
 private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
     val colors = Theme.colors
     val rolesDistinct = colors.secondary != colors.secondaryContainer
+    val provenance = Theme.current.metadata.provenance
+    val attribution = DesignSystemDiagnostics.current
+    val componentEvidence = attribution?.components?.joinToString(separator = " · ") { component ->
+        "${component.familyId}:${component.backend.name}/${component.conformance.name}"
+    } ?: "unattributed"
+    val overlayEvidence = attribution?.integrations?.joinToString(separator = " · ") { integration ->
+        "${integration.capabilityId}:${integration.presenterId}/${integration.conformance.name}" +
+            if (integration.fallback == "none") "" else "→${integration.fallback}"
+    } ?: "unattributed"
     Column(
         spacing = 12.dp,
         modifier = Modifier.fillMaxWidth().margin(top = 12.dp),
@@ -305,10 +337,21 @@ private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
         DiagnosticFactGroup(
             title = "Screenshot identity",
             facts = listOf(
-                DiagnosticFact("Fixture", "theme-token-matrix-v1"),
+                DiagnosticFact("Fixture", "theme-token-matrix-v2"),
                 DiagnosticFact("Source", "${source.id} · ${source.label}"),
                 DiagnosticFact("Definition", source.description),
                 DiagnosticFact("Metadata origin", Theme.current.metadata.origin.name),
+                DiagnosticFact("Token producer", provenance.sourceId),
+                DiagnosticFact("Primary source", provenance.originOf("colors.primary").name),
+                DiagnosticFact("Shape source", provenance.originOf("shapes.full").name),
+                DiagnosticFact("Design system", attribution?.designSystemId ?: "unattributed"),
+                DiagnosticFact("Recipe set", attribution?.recipeSetId ?: "unattributed"),
+                DiagnosticFact("Component backends", componentEvidence),
+                DiagnosticFact(
+                    "Overlay transport",
+                    attribution?.integration("overlay.dialog")?.transportId ?: "unattributed",
+                ),
+                DiagnosticFact("Overlay presenters", overlayEvidence),
                 DiagnosticFact("Mode", if (Theme.current.metadata.isDark == true) "Dark" else "Light"),
                 DiagnosticFact("Primary", colors.primary.asColorHex()),
                 DiagnosticFact("PrimaryContainer", colors.primaryContainer.asColorHex()),
@@ -322,6 +365,14 @@ private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
             valueTagsByLabel = mapOf(
                 "Source" to DemoTestTags.MATERIAL3_THEME_SOURCE,
                 "Metadata origin" to DemoTestTags.MATERIAL3_THEME_ORIGIN,
+                "Token producer" to DemoTestTags.MATERIAL3_TOKEN_PRODUCER,
+                "Primary source" to DemoTestTags.MATERIAL3_PRIMARY_ORIGIN,
+                "Shape source" to DemoTestTags.MATERIAL3_SHAPE_ORIGIN,
+                "Design system" to DemoTestTags.MATERIAL3_DESIGN_SYSTEM,
+                "Recipe set" to DemoTestTags.MATERIAL3_RECIPE_SET,
+                "Component backends" to DemoTestTags.MATERIAL3_COMPONENT_BACKENDS,
+                "Overlay transport" to DemoTestTags.MATERIAL3_OVERLAY_TRANSPORT,
+                "Overlay presenters" to DemoTestTags.MATERIAL3_OVERLAY_PRESENTERS,
                 "Mode" to DemoTestTags.MATERIAL3_THEME_MODE,
                 "Secondary" to DemoTestTags.MATERIAL3_THEME_SECONDARY,
                 "SecondaryContainer" to DemoTestTags.MATERIAL3_THEME_SECONDARY_CONTAINER,
@@ -344,6 +395,67 @@ private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
                 ThemeSwatch("OnS", colors.onSecondaryContainer),
             ),
         )
+    }
+}
+
+private fun UiTreeBuilder.Material3NamedPressureSlice(
+    source: DemoThemeSource,
+    switchChecked: Boolean,
+    onSwitchCheckedChange: (Boolean) -> Unit,
+    selectedNavigationIndex: Int,
+    onNavigationSelected: (Int) -> Unit,
+    field: com.viewcompose.text.TextFieldState,
+) {
+    Column(
+        spacing = 12.dp,
+        modifier = Modifier.fillMaxWidth().margin(top = 16.dp),
+    ) {
+        Text(text = "Named Material3 pressure slice", style = Theme.typography.titleMedium)
+        Text(
+            text = "固定使用 ${Material3Reference.recipeSet}；以下组件不会经过通用 renderer 的 Material 分支。",
+            style = Theme.typography.bodySmall,
+            color = Theme.colors.onSurfaceVariant,
+        )
+        ThemeFixtureBadge(source)
+        Material3Surface(
+            variant = Material3SurfaceVariant.Container,
+            modifier = Modifier.fillMaxWidth().padding(12.dp)
+                .testTag(DemoTestTags.MATERIAL3_NAMED_SURFACE),
+        ) {
+            Text(text = "Surface · colors.surfaceContainer")
+        }
+        Material3Card(
+            modifier = Modifier.fillMaxWidth().padding(12.dp)
+                .testTag(DemoTestTags.MATERIAL3_NAMED_CARD),
+        ) {
+            Text(text = "Card · shapes.medium")
+        }
+        Material3Button(
+            text = "Material3 Button",
+            onClick = {},
+            modifier = Modifier.testTag(DemoTestTags.MATERIAL3_NAMED_BUTTON),
+        )
+        Material3Switch(
+            text = "Material3 Switch",
+            checked = switchChecked,
+            onCheckedChange = onSwitchCheckedChange,
+            modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.MATERIAL3_NAMED_SWITCH),
+        )
+        Material3TextField(
+            state = field,
+            label = "Material3 TextField",
+            supportingText = "Native Android editing core",
+            modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.MATERIAL3_NAMED_TEXT_FIELD),
+        )
+        Material3NavigationBar(
+            selectedIndex = selectedNavigationIndex,
+            onItemSelected = onNavigationSelected,
+            modifier = Modifier.fillMaxWidth().testTag(DemoTestTags.MATERIAL3_NAMED_NAVIGATION),
+        ) {
+            Item(label = "Home", icon = ImageSource.Resource(R.drawable.demo_media_icon))
+            Item(label = "Search", icon = ImageSource.Resource(R.drawable.demo_media_icon))
+            Item(label = "Profile", icon = ImageSource.Resource(R.drawable.demo_media_icon))
+        }
     }
 }
 

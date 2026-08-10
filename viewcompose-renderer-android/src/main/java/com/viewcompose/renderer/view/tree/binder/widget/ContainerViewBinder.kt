@@ -165,6 +165,10 @@ internal object ContainerViewBinder {
         return ContainerViewSpecReader.readBoxSpec(node)
     }
 
+    fun readSurfaceSpec(node: VNode): BoxSpec {
+        return ContainerViewSpecReader.readSurfaceSpec(node)
+    }
+
     fun readConstraintLayoutSpec(node: VNode): ConstraintLayoutSpec {
         return ContainerViewSpecReader.readConstraintLayoutSpec(node)
     }

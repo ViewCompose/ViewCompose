@@ -14,7 +14,7 @@ host supplies runtime state and widget APIs transitively:
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -31,7 +31,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -47,7 +47,7 @@ class StateTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val count = remember { mutableStateOf(0) }
 
             Column(

@@ -111,10 +111,53 @@ test('unpublished current Dokka is budgeted as an API tree instead of routing ov
       'utf8',
     );
 
-    const result = await verifySiteBudgets({buildDirectory, budgetsPath});
+    const result = await verifySiteBudgets({
+      buildDirectory,
+      budgetsPath,
+      unpublishedArtifacts: new Set(['viewcompose-unreleased']),
+    });
 
     assert.equal(result.apiTreeSizes['viewcompose-unreleased/current'], 2048);
     assert.equal(result.apiVersionSizes['viewcompose-unreleased/current'], undefined);
+    assert.ok(result.apiRoutingOverheadBytes < 1024);
+  } finally {
+    await rm(root, {recursive: true, force: true});
+  }
+});
+
+test('an unpublished current tree remains a tree when the artifact has immutable history', async () => {
+  const {root, buildDirectory, budgetsPath} = await fixture();
+  try {
+    await mkdir(resolve(buildDirectory, 'api/viewcompose-unreleased/1.0.0'), {recursive: true});
+    await mkdir(resolve(buildDirectory, 'api/viewcompose-unreleased/current'), {recursive: true});
+    await writeFile(
+      resolve(buildDirectory, 'api/manifest.json'),
+      `${JSON.stringify([{artifact: 'viewcompose-unreleased', version: '1.0.0'}])}\n`,
+      'utf8',
+    );
+    await writeFile(
+      resolve(buildDirectory, 'api/viewcompose-unreleased/1.0.0/index.html'),
+      'api',
+      'utf8',
+    );
+    await writeFile(
+      resolve(buildDirectory, 'api/viewcompose-unreleased/current/index.html'),
+      'x'.repeat(2048),
+      'utf8',
+    );
+    await writeFile(
+      budgetsPath,
+      `${JSON.stringify({...permissiveBudgets, maxApiRoutingOverheadMiB: 0.001})}\n`,
+      'utf8',
+    );
+
+    const result = await verifySiteBudgets({
+      buildDirectory,
+      budgetsPath,
+      unpublishedArtifacts: new Set(['viewcompose-unreleased']),
+    });
+
+    assert.equal(result.apiTreeSizes['viewcompose-unreleased/current'], 2048);
     assert.ok(result.apiRoutingOverheadBytes < 1024);
   } finally {
     await rm(root, {recursive: true, force: true});

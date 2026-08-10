@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-core/README.md
-translation_source_hash: 8c811d945ccf57b0513200b783afd6e0a796e8d2aa22757418a7e9f936bdce56
+translation_source_hash: 3e9cdaadf0e07ca5b02b8fdbce3f35048f0766bdb6f7c8c1e635034c475e12e4
 translation_status: current
 ---
 
@@ -19,6 +19,8 @@ dependencies {
 
 - 稳定性：**Alpha**。注解源码形态已经建立；工具 Wire Protocol 要求版本完全相等，稳定版前仍可能演进。
 - 平台：JVM 11；协议模型与平台无关。
+- Kotlinx Serialization JSON 是 API 依赖，因为公开协议模型携带 Serialization Metadata，
+  `PreviewProtocolJson` 是受支持的 Wire-format Codec。
 - 打包：Preview Metadata 应放在可调试 Source Set。ViewCompose Preview Gradle Plugin 会从不可调试
   Android Output 中移除它。
 - 边界：该模块不加载 Android View、Layoutlib、Gradle 或 IDE Class。

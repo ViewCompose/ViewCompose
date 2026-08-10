@@ -19,7 +19,7 @@ historical evidence only.
 | --- | --- |
 | Build the first application | [Build your first application](./tutorials/getting-started.md) |
 | Learn one capability | [Capability tutorials](./tutorials/README.md) → choose any topic; chapters have no ordering requirement |
-| Understand the framework | [Architecture overview](./architecture/overview.md) → [Modifier model](./architecture/modifier.md) → [NodeSpec model](./architecture/node-spec.md) |
+| Understand the framework | [Architecture overview](./architecture/overview.md) → [Multi-design-system standard](./architecture/design-systems.md) → [Modifier model](./architecture/modifier.md) → [NodeSpec model](./architecture/node-spec.md) |
 | Migrate from Jetpack Compose | [Compose migration overview](./migration/README.md) → choose the state, layout, host, or navigation path |
 | Choose or maintain a published artifact | [Published module catalog](./modules/README.md) → the owning module manual |
 | Build with a feature | Select the relevant document under [Guides](#guides) |
@@ -33,6 +33,7 @@ historical evidence only.
 Long-lived contracts, boundaries, and runtime semantics:
 
 - [Architecture overview](./architecture/overview.md)
+- [Multi-design-system architecture and integration standard](./architecture/design-systems.md)
 - [Architecture decisions](./architecture/decisions/README.md)
 - [Modifier model](./architecture/modifier.md)
 - [NodeSpec model](./architecture/node-spec.md)

@@ -2,7 +2,7 @@
 title: 使用 Lazy 列表
 sidebar_position: 6
 translation_source: tutorials/lazy-lists.md
-translation_source_hash: bf9fcadec396b21ba1caad65d1f8fd779fceafb3c2554c8ce16ef21192be36eb
+translation_source_hash: 9cb4730f987bb4b32339356b1810c00621650f5a547fe9995d3d1fa7a0e6c756
 translation_status: current
 ---
 
@@ -16,7 +16,7 @@ translation_status: current
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -32,7 +32,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
 import com.viewcompose.ui.modifier.fillMaxWidth
@@ -45,7 +45,7 @@ class LazyListsTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val messages = List(100) { index -> "Message #${index + 1}" }
 
             LazyColumn(

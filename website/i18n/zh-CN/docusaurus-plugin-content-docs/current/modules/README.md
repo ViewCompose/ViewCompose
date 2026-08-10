@@ -1,6 +1,6 @@
 ---
 translation_source: modules/README.md
-translation_source_hash: 73afce8159fed6696c77cde0937d3c868952028788c06c386914a58e5282c3d2
+translation_source_hash: 39019e0ea0dcffe50c1b91017780b612ab0d1eb6401145f422531b6c2322e8eb
 translation_status: current
 ---
 
@@ -23,9 +23,13 @@ translation_status: current
 | `viewcompose-ui-foundation` | UI Foundation | 核心 DSL、组件、token 与 Local 值 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation) |
 | `viewcompose-host-android` | Android Engine | 底层 View 宿主、session、状态与互操作引擎 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-host-android) |
 | `viewcompose-material3` | Design System | Material 3 主题与动态色适配 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-material3) |
-| `viewcompose-android` | Aggregate | 标准 Android 应用入口依赖 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-android) |
+| `viewcompose-material3-android` | Aggregate | 具名 Material 3 Android 应用集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-material3-android) |
+| `viewcompose-oneui7` | Design System | One UI 7 五组件 Alpha Token 与组件集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-oneui7) |
+| `viewcompose-android` | Aggregate | 中立 Android 应用入口依赖 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-android) |
 | `viewcompose-navigation-android` | Integration | Android 导航宿主集成 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-navigation-android) |
+| `viewcompose-overlay-android` | Integration | 不依赖 Material 的 Android Overlay 传输 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-android) |
 | `viewcompose-overlay-material3-android` | Integration | 基于 Material 的 Android 浮层呈现 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-material3-android) |
+| `viewcompose-overlay-oneui7-android` | Integration | 不依赖 Material 的 One UI Snackbar 与底部对话框呈现 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-overlay-oneui7-android) |
 | `viewcompose-image-coil` | 集成 | 基于 Coil 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-coil) |
 | `viewcompose-image-glide` | 集成 | 基于 Glide 的通用图片加载 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-image-glide) |
 | `viewcompose-lifecycle-androidx` | 集成 | 感知生命周期的状态收集 | [可用](https://docs.viewcompose.com/zh-CN/modules/viewcompose-lifecycle-androidx) |

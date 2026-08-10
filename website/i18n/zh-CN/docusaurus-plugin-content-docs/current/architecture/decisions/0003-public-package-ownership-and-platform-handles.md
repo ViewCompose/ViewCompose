@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0003-public-package-ownership-and-platform-handles.md
-translation_source_hash: 6b8ce69e9b5a5b0f1d767ef1dd6f856a14eb1f2d146d663364622ad9a797e8ae
+translation_source_hash: 241904fbf24c06e426d6c576b418cf5b3dfc319aeb30d22d96c94f8e27de1756
 translation_status: current
 ---
 
@@ -8,7 +8,7 @@ translation_status: current
 
 ## 状态与日期
 
-已接受并实现——2026-08-06。
+已接受并实现——2026-08-06。Overlay 包决策已于 2026-08-09 被 ADR-0006 修订。
 
 ## 背景
 
@@ -16,6 +16,10 @@ translation_status: current
 拓扑：`com.viewcompose.widget.core`、`com.viewcompose.widget.constraintlayout` 和泛化的
 `com.viewcompose.overlay.android`。新的应用聚合包还向 `com.viewcompose.host.android` 提供 API，
 导致两个独立发布产物共同拥有一个公开包。
+
+当时通用 Overlay 坐标已经退役，全部 Android Overlay 实现暂时归属 Material。ADR-0006 后续重新
+启用了该坐标与 `com.viewcompose.overlay.android`，由其独占不依赖 Material 的 Android 传输。
+这项修订保持单一 Owner 规则不变，同时纠正 Transport 与 Presenter 的职责拆分。
 
 UI Foundation 还通过 Android `ViewGroup`、`Log`、`Trace` 和具体焦点管理器协调组合。虽然这没有
 产生向上的 Gradle 依赖，却让 Android 执行所有权变得不可见，也违背 UI Foundation/Android
@@ -33,7 +37,8 @@ Engine 边界。ViewCompose 仍以 Android View 为目标；本决策讨论明�
 4. ConstraintLayout 独占 `com.viewcompose.constraintlayout`。Maven 保留 `-androidx` 后缀表达后端，
    源码包不再编码旧 Widget 分类。
 5. Material-backed overlay 独占 `com.viewcompose.overlay.material3.android`，在 artifact 与 package
-   身份中都明确设计系统。
+   身份中都明确设计系统。经 ADR-0006 修订后，重新启用的中立 Transport 独占
+   `com.viewcompose.overlay.android`；两个根包表达不同职责，不共享源码。
 6. Maven artifact 名表达能力及分发/后端；Kotlin package 表达稳定 API 领域。如果后端后缀不区分
    公开语义，就不机械复制到 package。
 7. ViewCompose 以 Android 为目标，因此 UI Foundation 可以包含 Android-only 声明值；但 Session
@@ -57,8 +62,8 @@ Engine 边界。ViewCompose 仍以 Android View 为目标；本决策讨论明�
 ## 影响
 
 - 包迁移会破坏源码兼容，但发生在替代产物首次 Maven 发布之前。
-- Import 现在可以明确区分应用聚合入口、底层 Host、通用 UI、AndroidX ConstraintLayout 集成和
-  Material 3 overlay 后端。
+- Import 现在可以明确区分应用聚合入口、底层 Host、通用 UI、AndroidX ConstraintLayout 集成、
+  中立 Android Overlay Transport 和 Material 3 Overlay Presenter Adapter。
 - 自定义平台安装器除 Render Engine、协程上下文和调度 Runtime 外，还必须提供焦点与诊断适配。
 - UI Foundation 生产源码不再导入 Android Context、View/ViewGroup、Log、Trace 或 LocaleList；
   仍允许窄范围 Android-only 声明类型。
@@ -70,12 +75,13 @@ Engine 边界。ViewCompose 仍以 Android View 为目标；本决策讨论明�
 - `viewcompose-host-android`
 - `viewcompose-android`
 - `viewcompose-constraintlayout-androidx`
+- `viewcompose-overlay-android`
 - `viewcompose-overlay-material3-android`
 - 导入这些公开根包的下游集成、Sample、Preview Host 与编译 API 文档
 
 ## 验证与发布
 
-- `verifyModulePackageRoots` 阻断遗留根包、前缀边界错误、重复 Owner、被其他最长已登记包前缀
+- `verifyModulePackageRoots` 阻断已退役的 Widget 根包、前缀边界错误、重复 Owner、被其他最长已登记包前缀
   认领的声明，以及遗留 Service descriptor。
 - `verifyAndroidModuleNamespaces` 要求 namespace 与根包完全一致，不再使用 override map。
 - `verifyUiFoundationPlatformBoundary` 阻断 UI Foundation 中的 Android 执行与适配 import。
@@ -87,3 +93,5 @@ Engine 边界。ViewCompose 仍以 Android View 为目标；本决策讨论明�
 
 本记录细化但不替代 [ADR-0002](./0002-five-layer-runtime-module-architecture.md)。ADR-0002 定义
 五层运行时职责；本记录定义公开包与平台执行契约如何让这些职责可观察、可执行门禁。
+[ADR-0006](./0006-root-scoped-overlay-backend-selection.md) 只替代本记录中关于退役中立 Overlay 包的
+决定；公开包独占所有权规则保持不变。

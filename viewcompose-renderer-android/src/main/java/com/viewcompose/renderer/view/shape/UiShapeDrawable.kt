@@ -3,13 +3,18 @@ package com.viewcompose.renderer.view.shape
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ColorFilter
+import android.graphics.LinearGradient
 import android.graphics.Outline
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PixelFormat
+import android.graphics.RadialGradient
 import android.graphics.RectF
+import android.graphics.Shader
+import android.graphics.SweepGradient
 import android.graphics.drawable.Drawable
 import android.view.View
+import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.shape.UiCorner
 import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiCornerSize
@@ -31,10 +36,11 @@ internal class UiShapeDrawable(
         color = Color.TRANSPARENT
     }
     private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+    private var currentFill: Brush = Brush.SolidColor(Color.TRANSPARENT)
     internal var currentShape: UiShape = shape ?: UiShape.rounded(UiDp.Zero)
         private set
     internal val currentFillColor: Int
-        get() = fillPaint.color
+        get() = (currentFill as? Brush.SolidColor)?.color ?: Color.TRANSPARENT
 
     fun setShape(shape: UiShape?) {
         val next = shape ?: UiShape.rounded(UiDp.Zero)
@@ -45,8 +51,13 @@ internal class UiShapeDrawable(
     }
 
     fun setFillColor(color: Int) {
-        if (fillPaint.color == color) return
-        fillPaint.color = color
+        setFill(Brush.SolidColor(color))
+    }
+
+    fun setFill(fill: Brush) {
+        if (currentFill == fill) return
+        currentFill = fill
+        rebuildFillPaint()
         invalidateSelf()
     }
 
@@ -60,6 +71,7 @@ internal class UiShapeDrawable(
 
     override fun onBoundsChange(bounds: android.graphics.Rect) {
         rebuildPaths()
+        rebuildFillPaint()
     }
 
     override fun draw(canvas: Canvas) {
@@ -140,6 +152,14 @@ internal class UiShapeDrawable(
                 ),
                 startAngle = -90f,
             )
+            UiCornerFamily.Continuous -> target.cubicTo(
+                frame.right - corner.size + corner.size * ContinuousControl,
+                frame.top,
+                frame.right,
+                frame.top + corner.size * (1f - ContinuousControl),
+                frame.right,
+                frame.top + corner.size,
+            )
             UiCornerFamily.Cut -> target.lineTo(frame.right, frame.top + corner.size)
         }
     }
@@ -155,6 +175,14 @@ internal class UiShapeDrawable(
                     frame.bottom,
                 ),
                 startAngle = 0f,
+            )
+            UiCornerFamily.Continuous -> target.cubicTo(
+                frame.right,
+                frame.bottom - corner.size + corner.size * ContinuousControl,
+                frame.right - corner.size * (1f - ContinuousControl),
+                frame.bottom,
+                frame.right - corner.size,
+                frame.bottom,
             )
             UiCornerFamily.Cut -> target.lineTo(frame.right - corner.size, frame.bottom)
         }
@@ -172,6 +200,14 @@ internal class UiShapeDrawable(
                 ),
                 startAngle = 90f,
             )
+            UiCornerFamily.Continuous -> target.cubicTo(
+                frame.left + corner.size - corner.size * ContinuousControl,
+                frame.bottom,
+                frame.left,
+                frame.bottom - corner.size * (1f - ContinuousControl),
+                frame.left,
+                frame.bottom - corner.size,
+            )
             UiCornerFamily.Cut -> target.lineTo(frame.left, frame.bottom - corner.size)
         }
     }
@@ -188,6 +224,14 @@ internal class UiShapeDrawable(
                 ),
                 startAngle = 180f,
             )
+            UiCornerFamily.Continuous -> target.cubicTo(
+                frame.left,
+                frame.top + corner.size - corner.size * ContinuousControl,
+                frame.left + corner.size * (1f - ContinuousControl),
+                frame.top,
+                frame.left + corner.size,
+                frame.top,
+            )
             UiCornerFamily.Cut -> target.lineTo(frame.left + corner.size, frame.top)
         }
     }
@@ -195,6 +239,79 @@ internal class UiShapeDrawable(
     private fun Path.appendArc(frame: RectF, startAngle: Float) {
         if (frame.width() <= 0f || frame.height() <= 0f) return
         arcTo(frame, startAngle, 90f, false)
+    }
+
+    private fun rebuildFillPaint() {
+        fillPaint.shader = null
+        when (val fill = currentFill) {
+            is Brush.SolidColor -> fillPaint.color = fill.color
+            is Brush.LinearGradient -> {
+                fillPaint.color = Color.WHITE
+                fillPaint.shader = fill.colorStops.toShaderOrNull { colors, positions ->
+                    LinearGradient(
+                        bounds.left + fill.from.x,
+                        bounds.top + fill.from.y,
+                        bounds.left + fill.to.x,
+                        bounds.top + fill.to.y,
+                        colors,
+                        positions,
+                        Shader.TileMode.CLAMP,
+                    )
+                }
+                if (fillPaint.shader == null) {
+                    fillPaint.color = fill.colorStops.lastOrNull()?.color ?: Color.TRANSPARENT
+                }
+            }
+            is Brush.RadialGradient -> {
+                fillPaint.color = Color.WHITE
+                if (fill.radius > 0f && fill.radius.isFinite()) {
+                    fillPaint.shader = fill.colorStops.toShaderOrNull { colors, positions ->
+                        RadialGradient(
+                            bounds.left + fill.center.x,
+                            bounds.top + fill.center.y,
+                            fill.radius,
+                            colors,
+                            positions,
+                            Shader.TileMode.CLAMP,
+                        )
+                    }
+                }
+                if (fillPaint.shader == null) {
+                    fillPaint.color = fill.colorStops.lastOrNull()?.color ?: Color.TRANSPARENT
+                }
+            }
+            is Brush.SweepGradient -> {
+                fillPaint.color = Color.WHITE
+                fillPaint.shader = fill.colorStops.toShaderOrNull { colors, positions ->
+                    SweepGradient(
+                        bounds.left + fill.center.x,
+                        bounds.top + fill.center.y,
+                        colors,
+                        positions,
+                    )
+                }
+                if (fillPaint.shader == null) {
+                    fillPaint.color = fill.colorStops.lastOrNull()?.color ?: Color.TRANSPARENT
+                }
+            }
+        }
+    }
+
+    private inline fun List<com.viewcompose.graphics.core.ColorStop>.toShaderOrNull(
+        create: (IntArray, FloatArray) -> Shader,
+    ): Shader? {
+        if (size < 2) return null
+        val colors = IntArray(size)
+        val positions = FloatArray(size)
+        forEachIndexed { index, stop ->
+            colors[index] = stop.color
+            positions[index] = stop.offset
+        }
+        return create(colors, positions)
+    }
+
+    private companion object {
+        const val ContinuousControl = 0.78f
     }
 }
 

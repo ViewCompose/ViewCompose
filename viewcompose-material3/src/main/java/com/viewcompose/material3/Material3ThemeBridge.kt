@@ -16,6 +16,7 @@ import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiThemeMetadata
 import com.viewcompose.ui.foundation.UiThemeOrigin
 import com.viewcompose.ui.foundation.UiThemeTokens
+import com.viewcompose.ui.foundation.UiTokenProvenance
 import com.viewcompose.ui.foundation.UiTypography
 
 /**
@@ -165,11 +166,7 @@ object Material3ThemeBridge {
         return Material3ThemeTokenMapper.fromSnapshot(
             snapshot = snapshot,
             isDarkMode = isDark,
-        ).copy(
-            metadata = UiThemeMetadata(
-                origin = resolvedTheme.origin,
-                isDark = isDark,
-            ),
+            sourceOrigin = resolvedTheme.origin,
         )
     }
 
@@ -189,6 +186,7 @@ internal object Material3ThemeTokenMapper {
     fun fromSnapshot(
         snapshot: Material3ThemeSnapshot,
         isDarkMode: Boolean = false,
+        sourceOrigin: UiThemeOrigin = UiThemeOrigin.AndroidTheme,
     ): UiThemeTokens {
         val fallback = if (isDarkMode) Material3ThemeDefaults.dark() else Material3ThemeDefaults.light()
         val baseTokens = fromThemeColors(
@@ -317,9 +315,73 @@ internal object Material3ThemeTokenMapper {
                 full = fallback.shapes.full,
             ),
             metadata = UiThemeMetadata(
-                origin = UiThemeOrigin.AndroidTheme,
+                origin = sourceOrigin,
                 isDark = isDarkMode,
+                provenance = material3Provenance(
+                    snapshot = snapshot,
+                    sourceOrigin = sourceOrigin,
+                ),
             ),
+        )
+    }
+
+    private fun material3Provenance(
+        snapshot: Material3ThemeSnapshot,
+        sourceOrigin: UiThemeOrigin,
+    ): UiTokenProvenance {
+        val mapped = linkedMapOf<String, UiThemeOrigin>()
+        fun mapped(path: String, value: Any?) {
+            if (value != null) mapped[path] = sourceOrigin
+        }
+        with(snapshot.colors) {
+            mapped("colors.background", background)
+            mapped("colors.surface", surface)
+            mapped("colors.surfaceVariant", surfaceVariant)
+            mapped("colors.surfaceContainerLow", surfaceContainerLow)
+            mapped("colors.surfaceContainer", surfaceContainer)
+            mapped("colors.surfaceContainerHigh", surfaceContainerHigh)
+            mapped("colors.surfaceContainerHighest", surfaceContainerHighest)
+            mapped("colors.onSurface", onSurface)
+            mapped("colors.onSurfaceVariant", onSurfaceVariant)
+            mapped("colors.primary", primary)
+            mapped("colors.onPrimary", onPrimary)
+            mapped("colors.primaryContainer", primaryContainer)
+            mapped("colors.onPrimaryContainer", onPrimaryContainer)
+            mapped("colors.secondaryContainer", secondaryContainer)
+            mapped("colors.onSecondaryContainer", onSecondaryContainer)
+            mapped("colors.error", error)
+            mapped("colors.errorContainer", errorContainer)
+            mapped("colors.outline", outline)
+            mapped("colors.outlineVariant", outlineVariant)
+            mapped("colors.ripple", ripple)
+            mapped("stateColors.primaryText", primaryText)
+            mapped("stateColors.secondaryText", secondaryText)
+            mapped("stateColors.control", control)
+            mapped("stateColors.controlActivated", controlActivated)
+            mapped("stateColors.controlHighlight", controlHighlight)
+        }
+        with(snapshot.typography) {
+            mapped("typography.bodyMedium", bodyMedium)
+            mapped("typography.bodySmall", bodySmall)
+            mapped("typography.labelLarge", labelLarge)
+            mapped("typography.labelMedium", labelMedium)
+            mapped("typography.labelSmall", labelSmall)
+        }
+        with(snapshot.shapes) {
+            mapped("shapes.extraSmall", extraSmall)
+            mapped("shapes.small", small)
+            mapped("shapes.medium", medium)
+            mapped("shapes.large", large)
+            mapped("shapes.extraLarge", extraLarge)
+        }
+        mapped("overlays.scrimOpacity", snapshot.scrimOpacity)
+        return UiTokenProvenance(
+            sourceId = when (sourceOrigin) {
+                UiThemeOrigin.AndroidDynamicColor -> "viewcompose-material3/android-dynamic"
+                else -> "viewcompose-material3/android-xml"
+            },
+            defaultOrigin = UiThemeOrigin.FrameworkDefault,
+            tokenOrigins = mapped,
         )
     }
 
@@ -448,6 +510,10 @@ internal object Material3ThemeTokenMapper {
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.AndroidTheme,
                 isDark = isDarkMode,
+                provenance = UiTokenProvenance(
+                    sourceId = "viewcompose-material3/android-reader",
+                    defaultOrigin = UiThemeOrigin.AndroidTheme,
+                ),
             ),
         )
     }

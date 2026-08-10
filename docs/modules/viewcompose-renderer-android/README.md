@@ -30,8 +30,11 @@ dependencies {
   dependencies.
 - Android runtime dependencies: AndroidX Core, AppCompat, RecyclerView, ViewPager2,
   ConstraintLayout, and SwipeRefreshLayout. Material Components is not a dependency.
-- Generic surfaces, rounded/cut shapes, and progress indicators use engine-owned Android drawing
+- Generic surfaces, rounded/cut/continuous shapes, and progress indicators use engine-owned Android drawing
   implementations driven by resolved node values.
+- `SurfaceNodeProps` uses one cached `UiShapeDrawable` geometry for solid or gradient fill, border,
+  ripple mask, outline, and optional clipping. Continuous corners use a convex cubic path; stable
+  drawing performs no per-frame Path, shader, drawable, or collection allocation.
 - Engine-owned rounded shapes use circular arcs. Shape borders are centered on a path inset by half
   the stroke width, keeping the complete outline inside its logical drawable bounds even when a
   component centers a shorter visible surface inside a larger target.
@@ -43,6 +46,9 @@ dependencies {
   resolved `UiStateLayerColors` from their NodeSpecs. The engine applies enabled pressed, focused,
   and hovered selector states inside the existing shape mask and visual-surface inset; it does not
   select semantic roles or Material opacity values.
+- Generic collection semantics map to AndroidX accessibility collection metadata. Parent nodes own
+  row/column counts and selection cardinality; child nodes own logical positions and spans while
+  existing `selected` and `heading` semantics remain the single source of item state.
 - Build baseline for this release: Kotlin 2.0.21 and Android Gradle Plugin 8.13.2.
 
 ## Rendering model
@@ -119,8 +125,18 @@ Because the current line is alpha, the documentation site intentionally does not
   otherwise unchanged.
 - Targeted patching and subtree skipping are optimizations. Custom host behavior must not infer
   business state from patch records or diagnostic counters.
+- Gesture dispatch retains an undecided pointer stream until drag recognition. If the stream ends
+  without gesture consumption, the retained target receives one normal click; a recognized drag
+  consumes the stream and suppresses that click.
 - Button surface-inset changes participate in targeted style patching. They must not recreate the
   native View or change its effective measured target.
+- Basic Surface uses the same effective/visual-bound model. A changed surface snapshot performs a
+  neutral rebind of the retained `DeclarativeBoxLayout`; caller background, border, or shape
+  modifiers remove the component-provided visual inset and occupy the full effective bounds.
+- Engine-created Box and Surface containers skip XML attribute parsing. Children without an
+  explicit `BoxScope.align` retain inherited content alignment in their layout parameters, so a
+  content-alignment patch updates only those children instead of rescanning every child during
+  every layout pass; explicitly aligned children remain unchanged.
 - Button and IconButton state-layer changes participate in targeted style patching and rebuild only
   the surface drawable. Interactive Box/Row changes re-run their existing style binding, while
   SegmentedControl rebuilds only segment backgrounds whose selected role changed. Pressed takes
@@ -134,8 +150,14 @@ Because the current line is alpha, the documentation site intentionally does not
 - Native Switch and Slider binding applies every resolved tint with `SRC_IN`, preserving the
   platform or OEM drawable mask. Slider owns active-track, inactive-track, and thumb tint
   independently, and targeted patches update the inactive track without recreating the View.
+  When a controlled callback accepts a native Switch's already-committed value, targeted patching
+  does not assign that same value again, so the platform or OEM thumb transition stays in flight.
   Platform drawable geometry and its built-in coverage remain authoritative until a separate
   tested custom-control contract is accepted.
+- Collection row and column indexes are logical, zero-based positions. The renderer must not
+  reverse them when Android physically lays out descendants in RTL. Selection and heading values
+  are read from the item's existing semantic fields so a component cannot expose contradictory
+  accessibility state through duplicate contracts.
 
 ## Android host and threading rules
 
@@ -181,3 +203,8 @@ The renderer's multi-state path is an implementation of the generic UI Contract 
 Material feature. Custom renderers that adopt `UiStateLayerColors` must preserve its enabled-state
 precedence and transparent inactive behavior; renderers that receive null may continue their
 documented one-color compatibility path.
+
+Custom renderers that consume collection semantics must preserve logical row/column order and map
+item spans, selection, and heading state to equivalent platform accessibility metadata. Renderers
+that do not yet recognize the nullable collection fields may ignore them during the alpha line,
+but their accessibility output will not announce collection position.

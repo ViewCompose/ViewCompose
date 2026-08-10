@@ -2,8 +2,8 @@
 
 `viewcompose-host-android` is the low-level Android View host engine. It installs the renderer,
 owns retained render sessions, schedules invalidations on Choreographer frames, bridges Android
-saved state and environment values, adapts focus/logging/tracing, discovers optional Android
-overlay hosts, and exposes native View, animation, and graphics interop. It deliberately does not
+saved state and environment values, adapts focus/logging/tracing, offers neutral overlay discovery
+for custom low-level hosts, and exposes native View, animation, and graphics interop. It deliberately does not
 own Activity/Fragment convenience entry points, Material theme resolution, Lifecycle locals, or
 ViewModel locals.
 
@@ -15,7 +15,7 @@ APIs without the standard Activity/Fragment integration.
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
 }
 ```
 
@@ -49,8 +49,10 @@ environment, theme, or frame-clock locals. A custom host owns those providers an
 session before abandoning its container. One container must have only one mounted-tree owner.
 
 `AndroidEnvironmentBridge.fromContext(context)` maps density, font scale, locales, and layout
-direction to `UiEnvironmentValues`. `AndroidOverlayHostDefaults.androidOrNoOp(root)` performs the
-optional overlay `ServiceLoader` lookup without moving Android service discovery into UI Foundation.
+direction to `UiEnvironmentValues`. `AndroidOverlayHostDefaults.androidOrNoOp(root)` performs an
+optional neutral-overlay `ServiceLoader` lookup without moving Android service discovery into UI
+Foundation. Zero providers returns no-op; multiple providers fail because classpath order may not
+choose a design system. Standard Activity and Fragment roots use explicit factories instead.
 
 ## Native View transaction contract
 
@@ -92,3 +94,5 @@ The generated reference is available in the
 
 The Activity and Fragment `setUiContent` extensions moved to `viewcompose-android` in the hard-cut
 five-layer architecture. No compatibility facade remains in this low-level artifact.
+Version `0.1.0-alpha04` restricts overlay service discovery to one neutral provider; standard roots
+choose their backend explicitly, and duplicate providers are a configuration error.

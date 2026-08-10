@@ -14,7 +14,7 @@ installed by `viewcompose-host-android`:
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
     implementation("androidx.activity:activity:1.12.4")
     implementation("com.google.android.material:material:1.13.0")
 }
@@ -36,7 +36,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -52,7 +52,7 @@ class ThemingTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             Column(
                 spacing = 12.dp,
                 modifier = Modifier
@@ -74,7 +74,7 @@ class ThemingTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-`setUiContent` reads the Android theme and provides semantic ViewCompose tokens. Read
+`setMaterial3UiContent` reads the Android theme and provides semantic ViewCompose tokens. Read
 `Theme.colors` while building the UI instead of saving resolved color integers. The host refreshes
 the tokens when the configuration changes, including light/dark mode.
 

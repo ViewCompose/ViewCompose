@@ -1,14 +1,14 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 000b3d29f5a1a1161d8bd872103843a0730dffe352fa994d676643944ad7d2e9
+translation_source_hash: 02eb77f6ec685b7205eea7d5709a5a4df215569fcd08a421c88df984f0e79506
 translation_status: current
 ---
 
 # Android 宿主引擎
 
 `viewcompose-host-android` 是底层 Android View 宿主引擎，负责安装 renderer、管理保留式渲染
-会话、按 Choreographer 帧调度失效、桥接 Android 状态与环境值、适配焦点/日志/Trace、发现可选
-Android overlay host，并提供原生 View、动画和图形互操作。
+会话、按 Choreographer 帧调度失效、桥接 Android 状态与环境值、适配焦点/日志/Trace、为自定义
+底层 Host 提供中立 Overlay 发现，并提供原生 View、动画和图形互操作。
 它刻意不包含 Activity/Fragment 便捷入口、Material 主题解析、Lifecycle Local 或 ViewModel Local。
 
 普通应用应优先依赖 [`viewcompose-android`](../viewcompose-android/README.md)。只有构建自定义容器
@@ -18,7 +18,7 @@ Android overlay host，并提供原生 View、动画和图形互操作。
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha03")
+    implementation("com.viewcompose:viewcompose-host-android:0.1.0-alpha04")
 }
 ```
 
@@ -52,7 +52,9 @@ mounted-tree 所有者。
 
 `AndroidEnvironmentBridge.fromContext(context)` 会把 density、font scale、locale 与 layout
 direction 映射为 `UiEnvironmentValues`。`AndroidOverlayHostDefaults.androidOrNoOp(root)` 执行可选
-overlay 的 `ServiceLoader` 查找，Android 服务发现不会回流到 UI Foundation。
+中立 Overlay 的 `ServiceLoader` 查找，Android 服务发现不会回流到 UI Foundation。零个 Provider
+时回退 no-op，多个时因 Classpath 顺序不得选择设计系统而失败。标准 Activity/Fragment Root 使用
+显式 Factory，不走该发现路径。
 
 ## 原生 View 事务契约
 
@@ -93,3 +95,5 @@ AndroidView(
 
 五层架构硬切后，Activity 与 Fragment 的 `setUiContent` 扩展迁移到 `viewcompose-android`，本底层
 模块不保留兼容 facade。
+`0.1.0-alpha04` 把 Overlay Service Discovery 收窄为单个中立 Provider；标准 Root 显式选择
+Backend，重复 Provider 属于配置错误。

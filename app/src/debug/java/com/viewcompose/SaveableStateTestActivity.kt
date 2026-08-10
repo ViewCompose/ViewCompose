@@ -2,7 +2,7 @@ package com.viewcompose
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.testTag
@@ -18,7 +18,7 @@ import com.viewcompose.ui.foundation.rememberSaveable
 class SaveableStateTestActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setUiContent {
+        setMaterial3UiContent {
             val count = rememberSaveable {
                 mutableStateOf(0)
             }

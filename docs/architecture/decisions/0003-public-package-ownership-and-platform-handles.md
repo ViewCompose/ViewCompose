@@ -2,7 +2,8 @@
 
 ## Status and date
 
-Accepted and implemented — 2026-08-06.
+Accepted and implemented — 2026-08-06. The overlay package decision was amended by ADR-0006 on
+2026-08-09.
 
 ## Context
 
@@ -11,6 +12,11 @@ audit found that several Kotlin package roots still expressed the retired module
 `com.viewcompose.widget.core`, `com.viewcompose.widget.constraintlayout`, and the generic
 `com.viewcompose.overlay.android`. The new application aggregate also contributed APIs to
 `com.viewcompose.host.android`, so two independently published artifacts owned one public package.
+
+At that time the generic overlay coordinate was retired and all Android overlay implementation was
+temporarily Material-owned. ADR-0006 later reactivated both the coordinate and
+`com.viewcompose.overlay.android` as the exclusive owner of Material-free Android transport. That
+amendment preserves the one-owner rule while correcting the transport/presenter ownership split.
 
 UI Foundation additionally coordinated composition through Android `ViewGroup`, `Log`, `Trace`,
 and a concrete focus manager. That did not create an upward Gradle dependency, but it made Android
@@ -30,7 +36,9 @@ multiplatform support.
 4. ConstraintLayout owns `com.viewcompose.constraintlayout`. Maven keeps the `-androidx` suffix to
    describe its backend without encoding the retired widget taxonomy in source.
 5. The Material-backed overlay owns `com.viewcompose.overlay.material3.android`, keeping the design
-   system visible in both its artifact and package identity.
+   system visible in both its artifact and package identity. As amended by ADR-0006, the reactivated
+   neutral transport exclusively owns `com.viewcompose.overlay.android`; the two roots describe
+   different responsibilities and do not share source.
 6. Maven artifact names describe capability plus distribution/backend. Kotlin packages describe
    the stable API domain; backend suffixes are not copied mechanically when they do not distinguish
    public semantics.
@@ -65,7 +73,8 @@ multiplatform support.
 - The package migration is source-breaking but happens before the replacement artifacts' first
   Maven release.
 - Imports now reveal whether a caller uses the application aggregate, low-level host, generic UI
-  surface, AndroidX ConstraintLayout integration, or Material 3 overlay backend.
+  surface, AndroidX ConstraintLayout integration, neutral Android overlay transport, or a Material
+  3 overlay presenter adapter.
 - Custom platform installers must provide focus and diagnostics adapters in addition to the render
   engine, coroutine context, and scheduling runtime.
 - UI Foundation no longer imports Android Context, View/ViewGroup, Log, Trace, or LocaleList in
@@ -79,13 +88,14 @@ multiplatform support.
 - `viewcompose-host-android`
 - `viewcompose-android`
 - `viewcompose-constraintlayout-androidx`
+- `viewcompose-overlay-android`
 - `viewcompose-overlay-material3-android`
 - downstream integrations, samples, preview hosts, and compiled API documentation importing those
   public roots
 
 ## Validation and rollout
 
-- `verifyModulePackageRoots` rejects legacy roots, prefix-boundary errors, duplicate owners,
+- `verifyModulePackageRoots` rejects the retired Widget roots, prefix-boundary errors, duplicate owners,
   declarations claimed by a different longest registered package prefix, and legacy service
   descriptors.
 - `verifyAndroidModuleNamespaces` requires exact namespace/root equality with no override map.
@@ -101,4 +111,6 @@ multiplatform support.
 This record refines, and does not supersede,
 [ADR-0002](./0002-five-layer-runtime-module-architecture.md). ADR-0002 defines the five runtime
 responsibilities; this record defines how public packages and platform execution contracts make
-those responsibilities observable and enforceable.
+those responsibilities observable and enforceable. [ADR-0006](./0006-root-scoped-overlay-backend-selection.md)
+supersedes only this record's retirement of the neutral overlay package; exclusive package ownership
+remains unchanged.

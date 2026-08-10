@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavDeepLinkResult
 import com.viewcompose.navigation.NavHostController
 import com.viewcompose.navigation.core.NavStackSetSnapshot
@@ -28,7 +28,7 @@ class SystemNavigationActivity : AppCompatActivity() {
             EXTRA_RENDER_DIAGNOSTICS,
             false,
         )
-        setUiContent(
+        setMaterial3UiContent(
             debug = diagnosticsEnabled,
             debugTag = "SystemNavigationDemo",
             overlayHostFactory = ::AndroidOverlayHost,

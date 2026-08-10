@@ -11,6 +11,10 @@ This document is the **current architecture specification** for `ViewCompose`. I
 
 If an implementation needs to depart from this specification, update this document before changing the code.
 
+The [multi-design-system architecture and integration standard](design-systems.md) is the normative
+policy for theme, recipe, component-backend, and host ownership. Its explicitly listed current
+nonconformance is tracked by the active execution plan and must not be copied into new APIs.
+
 The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.md](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/ARCHITECTURE_FULL_2026-03-06.md).
 
 ## 2. Current baseline (2026-08)
@@ -41,9 +45,13 @@ The historical long-form snapshot is available at [ARCHITECTURE_FULL_2026-03-06.
 | `viewcompose-constraintlayout-androidx` | ConstraintLayout component DSL | Contains only the DSL and scopes; platform rendering remains in renderer. |
 | `viewcompose-renderer-android` | Android View rendering: reconciliation, binders, patches, containers, framework shape drawing, and progress drawing | Consumes portable contracts and contains neither business DSL nor Material widgets. |
 | `viewcompose-host-android` | Low-level Android engine host: `renderInto`, `RenderSession`, native View interop, and render-platform installation | Does not expose Activity/Fragment convenience entry points and does not depend on Material. |
-| `viewcompose-material3` | Material 3 theme snapshot, token mapping, dynamic-color policy, and refresh lifecycle | Owns all Material/AppCompat theme interpretation; UI Foundation and Android Engine do not depend on it. |
-| `viewcompose-android` | Standard Android consumer aggregate and Activity/Fragment `setUiContent` entry points | Aggregates the default engine, UI Foundation, Material 3 theme bridge, Lifecycle, and ViewModel integrations without becoming a dependency of lower layers. |
-| `viewcompose-overlay-material3-android` | Android overlay host and presenters for dialogs, popups, bottom sheets, snackbars, and toasts | Platform implementation only; it does not depend on renderer resources. |
+| `viewcompose-material3` | Material 3 theme snapshot, token mapping, dynamic-color policy, refresh lifecycle, and bounded named component pressure slice | Owns Material/AppCompat theme interpretation plus Material recipes/components; UI Foundation and Android Engine do not depend on it. |
+| `viewcompose-material3-android` | Named Material 3 Android application aggregate and Activity/Fragment host integration | Resolves the Material root Context before View construction, then delegates mounting to the neutral Android aggregate and provides the matching token snapshot. |
+| `viewcompose-oneui7` | Static One UI 7 alpha tokens and the bounded Button, Surface, Switch, TextField, and text-only NavigationBar set | Owns its named recipes and composites; it has no Material dependency and adds no design-system branch to Android Renderer. |
+| `viewcompose-android` | Neutral Android consumer aggregate and Activity/Fragment `setUiContent` entry points | Aggregates the default engine, UI Foundation, Lifecycle, and ViewModel integrations without selecting Material or another design system. An explicit root Context and composition provider establish design policy. |
+| `viewcompose-overlay-android` | Material-free Android overlay transport for dialogs, popups, toasts, nested surfaces, and root/session cleanup | Supplies narrow Snackbar and modal-sheet presenter slots; it never selects or depends on a design system. |
+| `viewcompose-overlay-material3-android` | Material Snackbar and modal-bottom-sheet adapter | Explicitly composes Material presenters with the neutral Android transport and registers no whole-host provider. |
+| `viewcompose-overlay-oneui7-android` | Material-free One UI Snackbar and bottom-dialog adapter | Explicitly composes One UI presenters with the neutral Android transport; it adds no duplicate Activity/Fragment host API. |
 | `viewcompose-image-coil` | Optional image-loading adapter | Implements `UiImageLoader` for Coil 3; it accepts the general source/request contract without feeding Coil concerns back into the renderer core. |
 | `viewcompose-image-glide` | Optional image-loading adapter | Implements `UiImageLoader` for Glide 5 with target-scoped `RequestManager` resolution and application-owned `AppGlideModule` configuration. |
 | `viewcompose-lifecycle-androidx` | Lifecycle-aware collection APIs and lifecycle Local entry points | Does not contain Android View implementations or add host-injection logic. |
@@ -68,15 +76,17 @@ layer when the dependency contract permits it; lower layers never depend on a hi
    System, or Integrations.
 3. **Android Engine** contains renderer-android and host-android. It maps contracts to Android View
    without owning Material design policy or AndroidX feature integrations.
-4. **Design System** contains material3. It may interpret Material/AppCompat themes and supply
-   framework tokens, but Material types and dependencies must not leak into UI Foundation or the
-   Android Engine.
+4. **Design System** contains material3 and oneui7. A design-system module supplies concrete token
+   profiles, resolved recipes, and owned composites without leaking its identity into UI Foundation
+   or Android Engine. Only material3 interprets Material/AppCompat themes; oneui7 uses static,
+   ViewCompose-owned values and has no Material dependency.
 5. **Integrations** contains navigation-android, lifecycle-androidx, viewmodel-androidx,
-   constraintlayout-androidx, overlay-material3-android, image adapters, and shadow-android. A name
+   constraintlayout-androidx, overlay-android, overlay-material3-android, image adapters, and shadow-android. A name
    suffix identifies the external platform or design-system ownership when that distinction affects
    dependencies.
-6. `viewcompose-android` is an aggregate, not a sixth architectural layer. It is the standard app
-   dependency and owns convenience composition roots that intentionally assemble several layers.
+6. `viewcompose-android` and `viewcompose-material3-android` are application aggregates, not a
+   sixth architectural layer. The former is neutral; the latter is the one-dependency Material
+   application path and may depend on the neutral aggregate plus the Material adapter.
 7. Preview, preview worker/runner/Gradle plugin, and benchmark are tooling. Runtime modules must not
    depend on tooling, and no framework module may depend on `app`.
 8. Every new runtime module must be classified into one of the five layers or as an aggregate in the
@@ -90,9 +100,10 @@ layer when the dependency contract permits it; lower layers never depend on a hi
 10. Architectural direction and consumer exposure are separate decisions. An allowed lower-level
    dependency is published as `api` only when its types form part of the public/protected surface or
    the artifact intentionally aggregates that capability; otherwise it remains `implementation`.
-11. `viewcompose-android` is the standard Android application entry point. Lower-level artifacts are
-   documented for advanced consumers who intentionally need their APIs; a minimal app does not list
-   runtime, UI contract, UI Foundation, renderer, host, Lifecycle, or ViewModel separately.
+11. `viewcompose-android` is the neutral Android application entry point and
+   `viewcompose-material3-android` is the standard Material application entry point. Lower-level
+   artifacts are documented for advanced consumers; a minimal app does not list runtime, UI
+   contract, UI Foundation, renderer, host, Lifecycle, or ViewModel separately.
 12. The exact published edges live in
    [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
    and are enforced against Gradle declarations and generated Maven metadata.
@@ -138,7 +149,7 @@ Renderer code is grouped by responsibility instead of flattened into one package
 
 ```mermaid
 flowchart TD
-    A["Business DSL"] --> B["viewcompose-android: setUiContent(...)"]
+    A["Business DSL"] --> B["neutral setUiContent or named setMaterial3UiContent"]
     B --> C["host-android: renderInto(container)"]
     C --> D["RenderSession"]
     D --> E["ComposerLite.composeRoot / runGroup"]
@@ -154,7 +165,10 @@ flowchart TD
 
 ### 4.1 Platform implementation
 
-1. Android Material dialog, popup, toast, and snackbar host implementations live only in `viewcompose-overlay-material3-android`.
+1. Generic Android Dialog, PopupWindow, Toast, anchor observation, and nested overlay containers
+   live only in `viewcompose-overlay-android`. Material Snackbar and modal-sheet presenters live
+   only in `viewcompose-overlay-material3-android`; One UI Snackbar and bottom-dialog presenters
+   live only in `viewcompose-overlay-oneui7-android`.
 2. `viewcompose-ui-foundation` retains renderer-independent declaration contracts and runtime
    composition capabilities behind opaque host-installed platform handles.
 3. Demo-only logic must not flow back into framework modules.
@@ -189,17 +203,46 @@ flowchart TD
 8. Do not reintroduce `Props`, `TypedPropKeys`, `PropKeys`, or `node.props`.
 9. Constraint parent data (`layoutId`, `constrainAs`, and `constrain`) is valid only for ConstraintLayout children; an invalid host must produce a validator warning.
 10. Composite components must transfer complete text styling through `NodeSpec`, including font size, weight, family, letter spacing, line height, and font-padding inclusion.
+11. Foundation tokens, component recipes, and resolved rendering contracts are distinct values.
+    Foundation tokens remain reusable immutable semantics; a design-system module owns its typed
+    recipes and resolves them through shared Basic primitives or its own composites before
+    emitting a design-system-neutral `NodeSpec`.
+12. `BasicSurface` is the shared resolved decoration and interaction boundary. It may transport
+    fill/brush, shape, border, clip, state layer, visual bounds, effective target bounds, shadows,
+    and effects, but it does not select a Material, One UI, Cupertino, or product variant.
+13. Structurally different navigation, text-field decoration, and custom-control arrangements stay
+    in the owning design-system module. Renderer branches on a design-system identity and one
+    universal component-recipe bundle are forbidden.
 
 See [Modifier architecture](modifier.md), [NodeSpec architecture](node-spec.md), and [theming](../guides/theming.md).
+The complete design-system ownership and onboarding rules are in the
+[multi-design-system architecture standard](design-systems.md).
 
 ### 4.3 Host integration
 
-1. Activity and Fragment `setUiContent(...)` entry points live in `viewcompose-android`, do not expose internal `RenderSession`, and dispose it automatically using the Fragment view lifecycle where applicable.
-2. The default overlay factory uses `AndroidOverlayHostDefaults.androidOrNoOp(...)`: Host Android discovers implementations through `AndroidOverlayHostFactoryProvider` and `ServiceLoader`, otherwise it falls back to UI Foundation's no-op host with a diagnostic.
-3. `viewcompose-overlay-material3-android` registers `com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider` through `META-INF/services`; string reflection is forbidden.
+1. Neutral Activity and Fragment `setUiContent(...)` entry points live in `viewcompose-android`;
+   named `setMaterial3UiContent(...)` entry points live in `viewcompose-material3-android`. Neither
+   exposes internal `RenderSession`, and both dispose it automatically using the Fragment view
+   lifecycle where applicable.
+2. Neutral Activity/Fragment and nested navigation roots explicitly construct
+   `viewcompose-overlay-android`; Material roots explicitly construct the Material adapter. Runtime
+   classpath order never selects a design system.
+3. `AndroidOverlayHostDefaults.androidOrNoOp(...)` and `ServiceLoader` remain only for custom
+   low-level hosts. Exactly one neutral provider is permitted; zero providers returns no-op and
+   duplicates fail deterministically. The Material adapter registers no provider.
 4. Public host callbacks expose only UI Foundation diagnostic types; renderer diagnostic types remain internal adapters.
 5. System-bar insets use `Modifier.systemBarsInsetsPadding(...)`, not a global Activity option.
 6. host-android atomically installs the render engine, frame scheduler, composition coroutine context, focus adapter, and logging/tracing adapter through `installRenderSessionPlatform(...)`. UI Foundation coordinates composition against opaque `RenderContainerHandle` values; only Android Engine unwraps them as `ViewGroup`. A session captures one platform snapshot, and missing or duplicate installation fails immediately rather than degrading piecemeal.
+7. Android design-system installation has two distinct boundaries: a named adapter may resolve a
+   themed `Context` and capabilities before View creation, then the composition root provides one
+   immutable token/recipe/motion/capability snapshot. Token provision alone cannot undo attributes
+   consumed by a View constructor.
+8. `viewcompose-host-android` and `viewcompose-android` never select Material or expose Material
+   policy. Material XML/dynamic-color convenience belongs exclusively to the named
+   `viewcompose-material3-android` adapter.
+9. A public general host adapter SPI is deferred until a second context-changing design system
+   proves the same lifecycle contract. Root/session replacement remains the atomic design-system
+   switching boundary.
 
 ### 4.4 Lazy session containers
 
@@ -308,6 +351,12 @@ Use the [session-container checklist](session-containers.md).
 10. `Animatable` normally obtains the frame clock from `rememberAnimatable(...)`; non-composition callers may bind one explicitly.
 11. Gesture policy belongs in gesture-core; renderer must not add parallel axis-lock, slop, or settling branches.
 12. `combinedClickable` participates only when enabled and at least one click, double-click, or long-click callback exists.
+13. `MotionScheme` selects semantic timing and reduced-motion substitution without owning a clock
+    or loop. Composition-owned motion continues through `Animatable`, target-as-state APIs, or
+    `Transition`; component recipes never launch animation work.
+14. Shape transition interpolates only compatible corner family/size representations. Incompatible
+    geometry uses a reported discrete/static fallback; arbitrary Path Morph is not a generic
+    animation contract.
 
 ### 4.14 Graphics
 
@@ -366,9 +415,19 @@ See the [navigation guide](../guides/navigation.md).
 
 1. `ViewTreeRenderer` remains a complexity hotspot; add focused helpers instead of expanding its main class.
 2. The current model combines node-group recomposition with root-level traversal scheduling. Future work should improve group-key diagnostics and fine-grained skip hit rates.
-3. Preserve the five-layer direction: Kernel -> UI Foundation -> Android Engine -> Design System / Integrations, with `viewcompose-android` only as the top-level aggregate.
+3. Preserve the five-layer direction: Kernel -> UI Foundation -> Android Engine -> Design System /
+   Integrations, with neutral and named application aggregates only above those layers.
 4. Lazy session regression covers grid and both pager orientations. Lazy P1 includes structured item DSL, observable layout state, sticky headers, content type/span, prefetch, and boundary behavior.
-5. Activity/Fragment bridges live in `viewcompose-android`; low-level mounting remains in host-android, and Material theme interpretation remains in material3.
+5. Neutral Activity/Fragment bridges live in `viewcompose-android`; low-level mounting remains in
+   host-android, while Material Context resolution and token installation are joined only by the
+   named `viewcompose-material3-android` bridge.
+6. The implicit Material Host gap is closed. Remaining design-system work must converge component
+   recipe ownership and provenance across root, overlay, lazy, and navigation sessions without
+   reopening the neutral dependency boundary.
+7. Component backend ownership is intentionally mixed: preserve native behavioral cores, use
+   design-system-owned DSL composites for named structure, and add neutral custom Views only for a
+   reusable resolved execution semantic. Do not normalize the architecture by mapping every
+   component to either native widgets or custom Views.
 
 ## 6. Required change checklist
 
@@ -388,3 +447,4 @@ See the [project workflow](../project/workflow.md).
 3. [State snapshots](state-snapshots.md)
 4. [Documentation home](../README.md)
 5. [System navigation](../guides/navigation.md)
+6. [Multi-design-system architecture and integration standard](design-systems.md)

@@ -5,7 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavDeepLinkResult
 import com.viewcompose.navigation.NavHost
 import com.viewcompose.navigation.NavResult
@@ -51,7 +51,7 @@ class NavigationDeepLinkTestActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onCreate(savedInstanceState)
 
-        setUiContent(
+        setMaterial3UiContent(
             debug = true,
             debugTag = "NavigationDeepLinkDeviceTest",
         ) {

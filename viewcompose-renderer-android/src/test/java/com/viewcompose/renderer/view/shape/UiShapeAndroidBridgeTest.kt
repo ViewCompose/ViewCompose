@@ -10,6 +10,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.RectF
 import android.view.View
+import com.viewcompose.graphics.core.Brush
+import com.viewcompose.graphics.core.ColorStop
+import com.viewcompose.graphics.core.Offset
 import com.viewcompose.ui.shape.UiCorner
 import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiCornerSize
@@ -115,6 +118,53 @@ class UiShapeDrawableTest {
 
         val cornerAlpha = Color.alpha(next.getPixel(5, 5))
         assertTrue("Expected rebuilt circular corner, alpha=$cornerAlpha", cornerAlpha <= 64)
+    }
+
+    @Test
+    fun `continuous corner keeps center filled and corner outside`() {
+        val bitmap = drawShape(
+            shape = UiShape.continuous(20.dp),
+            width = 80,
+            height = 40,
+        ) { drawable ->
+            drawable.setFillColor(Color.WHITE)
+        }
+
+        assertTrue(Color.alpha(bitmap.getPixel(1, 1)) <= 32)
+        assertEquals(255, Color.alpha(bitmap.getPixel(40, 1)))
+        assertEquals(255, Color.alpha(bitmap.getPixel(40, 20)))
+    }
+
+    @Test
+    fun `gradient fill is cached against drawable bounds and clipped by shape`() {
+        val bitmap = drawShape(
+            shape = UiShape.continuous(12.dp),
+            width = 80,
+            height = 40,
+        ) { drawable ->
+            drawable.setFill(
+                Brush.LinearGradient(
+                    from = Offset(0f, 0f),
+                    to = Offset(80f, 0f),
+                    colorStops = listOf(
+                        ColorStop(0f, Color.RED),
+                        ColorStop(1f, Color.BLUE),
+                    ),
+                ),
+            )
+        }
+
+        val left = bitmap.getPixel(12, 20)
+        val right = bitmap.getPixel(68, 20)
+        assertTrue(
+            "Expected red-dominant left pixel, value=${Integer.toHexString(left)}",
+            Color.red(left) > Color.blue(left),
+        )
+        assertTrue(
+            "Expected blue-dominant right pixel, value=${Integer.toHexString(right)}",
+            Color.blue(right) > Color.red(right),
+        )
+        assertTrue(Color.alpha(bitmap.getPixel(1, 1)) <= 32)
     }
 
     private fun drawShape(

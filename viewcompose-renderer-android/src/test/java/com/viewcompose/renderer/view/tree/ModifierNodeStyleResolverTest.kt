@@ -3,6 +3,7 @@ package com.viewcompose.renderer.view.tree
 import com.viewcompose.ui.unit.sp
 
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.graphics.core.Brush
 
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Modifier Node Style Resolver 行为，防止渲染和 patch 契约在后续重构中回退。
@@ -18,6 +19,7 @@ import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.layout.VerticalAlignment
@@ -139,6 +141,65 @@ class ModifierNodeStyleResolverTest {
             defaultRippleColor = 0xFF00FF00.toInt(),
         )
 
+        assertEquals(VerticalSurfaceInsetsPx.Zero, style.surfaceInsets)
+    }
+
+    @Test
+    fun `basic surface resolves shared geometry target and clip policy`() {
+        val fill = Brush.SolidColor(0xFF112233.toInt())
+        val shape = UiShape.continuous(12.dp)
+        val node = VNode(
+            type = NodeType.Surface,
+            spec = SurfaceNodeProps(
+                contentAlignment = BoxAlignment.Center,
+                fill = fill,
+                shape = shape,
+                borderWidth = 2.dp,
+                borderColor = 0xFF778899.toInt(),
+                minimumWidth = 64.dp,
+                minimumHeight = 48.dp,
+                visualHeight = 40.dp,
+                clipContent = true,
+            ),
+        )
+
+        val style = ModifierNodeStyleResolver.resolveNodeStyle(
+            node = node,
+            resolved = node.modifier.resolve(),
+            defaultRippleColor = 0,
+        )
+        val host = ModifierNodeStyleResolver.resolveHostStyle(node.modifier.resolve(), style)
+
+        assertEquals(fill, style.surfaceFill)
+        assertEquals(shape, style.shape)
+        assertEquals(2, style.borderWidth)
+        assertEquals(64, host.minWidth)
+        assertEquals(48, host.minHeight)
+        assertEquals(VerticalSurfaceInsetsPx(top = 4, bottom = 4), style.surfaceInsets)
+        assertEquals(true, style.clipContent)
+    }
+
+    @Test
+    fun `caller basic surface override expands visual surface to effective bounds`() {
+        val node = VNode(
+            type = NodeType.Surface,
+            spec = SurfaceNodeProps(
+                contentAlignment = BoxAlignment.Center,
+                fill = Brush.SolidColor(0xFF112233.toInt()),
+                shape = UiShape.continuous(12.dp),
+                minimumHeight = 48.dp,
+                visualHeight = 40.dp,
+            ),
+            modifier = Modifier.backgroundColor(0xFF445566.toInt()),
+        )
+
+        val style = ModifierNodeStyleResolver.resolveNodeStyle(
+            node = node,
+            resolved = node.modifier.resolve(),
+            defaultRippleColor = 0,
+        )
+
+        assertEquals(0xFF445566.toInt(), style.backgroundColor)
         assertEquals(VerticalSurfaceInsetsPx.Zero, style.surfaceInsets)
     }
 

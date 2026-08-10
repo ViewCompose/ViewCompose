@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: bcb7771b949e92e511e6f87011069443c365cd1ff4261871d8e9b4f858a85eb9
+translation_source_hash: 785ada637b53c34585e8916dc3892b4a01418a334557bec7c0af4df89928836a
 translation_status: current
 ---
 
@@ -18,15 +18,13 @@ translation_status: current
 
 ## 必需依赖
 
-确认应用可以解析 Maven Central，然后添加标准 Android 聚合包：
+确认应用可以解析 Maven Central，然后添加具名 Material Android 聚合包：
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
 }
 ```
 
@@ -77,7 +75,8 @@ Central 后，它才成为公开安装路径：
 
 | 产物 | 版本 | 引入方式 |
 | --- | --- | --- |
-| `viewcompose-android` | `0.1.0-alpha01` | 应用显式依赖 |
+| `viewcompose-material3-android` | `0.1.0-alpha01` | 应用显式依赖 |
+| `viewcompose-android` | `0.1.0-alpha01` | 传递引入的中立应用聚合模块 |
 | `viewcompose-host-android` | `0.1.0-alpha03` | 传递引入的底层 Engine 依赖 |
 | `viewcompose-runtime` | `0.1.0-alpha02` | 传递引入的基础依赖 |
 | `viewcompose-ui-contract` | `0.1.0-alpha03` | 传递引入的基础依赖 |
@@ -121,7 +120,7 @@ package com.example.counter
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
@@ -140,7 +139,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             CounterScreen()
         }
     }
@@ -171,7 +170,7 @@ internal fun UiTreeBuilder.CounterScreen() {
 
 四部分共同形成完整更新路径：
 
-1. `setUiContent` 安装生命周期感知的 Android 宿主并执行首帧渲染。
+1. `setMaterial3UiContent` 安装生命周期感知的 Android 宿主并执行首帧渲染。
 2. `remember` 在组合位置保留状态对象。
 3. 读取 `count.value` 会让当前组合作用域订阅状态失效。
 4. 按钮写入新值；ViewCompose 重组受影响作用域并 patch 原生 `TextView`，而不是重建 Activity。

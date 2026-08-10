@@ -55,7 +55,15 @@ internal fun UiTreeBuilder.SettingsPage(
     val langIndexState = remember { mutableStateOf(0) }
 
     LazyColumn(
-        items = listOf("theme", "material3-default", "environment", "stats", "debug", "language"),
+        items = listOf(
+            "theme",
+            "material3-default",
+            "design-system",
+            "environment",
+            "stats",
+            "debug",
+            "language",
+        ),
         key = { it },
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
     ) { section ->
@@ -137,6 +145,44 @@ internal fun UiTreeBuilder.SettingsPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SETTINGS_THEME_CUSTOM_ENTRY),
+                )
+            }
+
+            "design-system" -> Column(
+                spacing = 8.dp,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = "多设计系统高保真验证",
+                    style = UiTextStyle(fontSizeSp = 18.sp),
+                    modifier = Modifier.margin(top = 20.dp),
+                )
+                Text(
+                    text = "五组件切片会显示设计系统、Token 来源、Recipe、动效和能力降级，便于截图定位 Material 泄漏或错误回退。",
+                    style = UiTextStyle(fontSizeSp = 12.sp),
+                    color = TextDefaults.secondaryColor(),
+                )
+                Button(
+                    text = "打开多设计系统验证",
+                    onClick = {
+                        root?.context?.startActivity(
+                            DemoDesignSystemVerificationActivity.newIntent(root.context),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SETTINGS_DESIGN_SYSTEM_ENTRY),
+                )
+                Button(
+                    text = "验证 One UI 7 五组件 Alpha",
+                    onClick = {
+                        root?.context?.startActivity(
+                            OneUi7VerificationActivity.newIntent(root.context),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SETTINGS_ONE_UI_7_ENTRY),
                 )
             }
 

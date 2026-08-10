@@ -10,6 +10,7 @@ import android.graphics.drawable.RippleDrawable
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.appcompat.content.res.AppCompatResources
+import com.viewcompose.graphics.core.Brush
 import com.viewcompose.renderer.R
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.renderer.modifier.ResolvedModifiers
@@ -66,13 +67,16 @@ internal object ModifierSurfaceStyleApplier {
             view = view,
             backgroundDrawableResId = nodeStyle.backgroundDrawableResId,
             backgroundColor = nodeStyle.backgroundColor,
+            surfaceFill = nodeStyle.surfaceFill,
             borderWidth = nodeStyle.borderWidth,
             borderColor = nodeStyle.borderColor,
             cornerRadius = nodeStyle.cornerRadius,
             rippleColor = nodeStyle.rippleColor,
             stateLayerColors = nodeStyle.stateLayerColors,
             clickable = nodeStyle.clickable,
-            forceClip = resolved.graphicsLayer?.clip ?: (resolved.clip?.clip ?: false),
+            forceClip = resolved.graphicsLayer?.clip
+                ?: resolved.clip?.clip
+                ?: nodeStyle.clipContent,
             shape = nodeStyle.shape,
             surfaceInsets = nodeStyle.surfaceInsets,
         )
@@ -86,6 +90,7 @@ internal object ModifierSurfaceStyleApplier {
         view: View,
         backgroundDrawableResId: Int?,
         backgroundColor: Int?,
+        surfaceFill: Brush? = null,
         borderWidth: Int,
         borderColor: Int,
         cornerRadius: CornerRadiusModifierElement?,
@@ -106,6 +111,7 @@ internal object ModifierSurfaceStyleApplier {
             ?.let { loadBackgroundDrawable(view, it) }
         val hasCustomSurface = backgroundDrawable != null ||
             backgroundColor != null ||
+            surfaceFill != null ||
             hasShape ||
             legacyHasCorner ||
             borderWidth > 0
@@ -126,7 +132,9 @@ internal object ModifierSurfaceStyleApplier {
                 )
             } else {
                 createBackgroundDrawable(
-                    backgroundColor = backgroundColor ?: Color.TRANSPARENT,
+                    fill = backgroundColor?.let(Brush::SolidColor)
+                        ?: surfaceFill
+                        ?: Brush.SolidColor(Color.TRANSPARENT),
                     borderWidth = borderWidth,
                     borderColor = borderColor,
                     rippleColor = rippleColor,
@@ -180,7 +188,7 @@ internal object ModifierSurfaceStyleApplier {
     }
 
     private fun createBackgroundDrawable(
-        backgroundColor: Int,
+        fill: Brush,
         borderWidth: Int,
         borderColor: Int,
         rippleColor: Int,
@@ -191,7 +199,7 @@ internal object ModifierSurfaceStyleApplier {
         density: UiDensity,
     ): Drawable {
         val content = UiShapeDrawable(shape, layoutDirection, density).apply {
-            setFillColor(backgroundColor)
+            setFill(fill)
             if (borderWidth > 0) {
                 setStroke(borderWidth.toFloat(), borderColor)
             }

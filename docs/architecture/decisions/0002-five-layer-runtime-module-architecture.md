@@ -4,6 +4,11 @@
 
 Accepted and implemented — 2026-08-06.
 
+The aggregate's original implicit Material assembly is superseded by
+[ADR-0005](./0005-design-system-host-and-component-backend-boundary.md):
+`viewcompose-android` is neutral and `viewcompose-material3-android` is the named Material
+application aggregate. The five-layer direction remains in force.
+
 ## Context
 
 ViewCompose originally classified most required runtime artifacts as `foundation` and everything
@@ -38,7 +43,8 @@ Every published runtime artifact belongs to exactly one layer:
 3. **Android Engine** — Android View creation, reconciliation, binding, hosting, scheduling,
    environment adaptation, and explicit Android/AndroidX interop.
 4. **Design System** — concrete visual tokens, theme resolution, component presentation defaults,
-   and design-system-specific platform adaptation. Material 3 is the default implementation.
+   and design-system-specific platform adaptation. Material 3 is a named implementation, not a
+   neutral-host default.
 5. **Integrations** — optional AndroidX or third-party adapters whose removal removes only the
    integrated capability.
 
@@ -72,10 +78,12 @@ use case, lifecycle contract, performance evidence, and architecture decision.
 
 ### 5. Convenience is isolated in an aggregate
 
-`viewcompose-android` is the recommended one-dependency entry point. It intentionally exposes the
-standard Android host, UI Foundation, Material 3, and reviewed AndroidX integrations. Advanced
-consumers may depend on lower artifacts directly. Host and Renderer do not depend upward on the
-aggregate or Design System to make the beginner path convenient.
+`viewcompose-android` is the neutral one-dependency entry point. It intentionally exposes the
+standard Android host, UI Foundation, and reviewed AndroidX integrations without selecting a
+design system. `viewcompose-material3-android` is the named one-dependency Material entry point and
+transitively exposes the neutral aggregate plus `viewcompose-material3`. Advanced consumers may
+depend on lower artifacts directly. Host and Renderer do not depend upward on either aggregate or
+Design System to make the beginner path convenient.
 
 ### 6. Artifact names describe responsibility
 
@@ -92,7 +100,8 @@ that ownership in their artifact names. Superseded coordinates receive no compat
 - `viewcompose-viewmodel` becomes `viewcompose-viewmodel-androidx`.
 - `viewcompose-widget-constraintlayout` becomes `viewcompose-constraintlayout-androidx`.
 - `viewcompose-overlay-android` becomes `viewcompose-overlay-material3-android`.
-- `viewcompose-material3` and `viewcompose-android` are added.
+- `viewcompose-material3`, `viewcompose-android`, and the later superseding
+  `viewcompose-material3-android` named aggregate are added.
 
 Kernel, capability DSL, image integration, shadow, and tooling artifact names that already state
 their responsibility remain unchanged.
@@ -152,8 +161,8 @@ alpha contracts.
 4. Run `verifyDesignSystemIsolation` to prove UI Foundation and Android Engine have no Material
    dependency or import, and keep public Material types out of those classpaths.
 5. Compile and run a base Android host consumer without Material on its dependency graph.
-6. Compile and run a `viewcompose-android` consumer using Material 3 and only the aggregate
-   ViewCompose coordinate.
+6. Compile and run independent one-coordinate consumers for neutral `viewcompose-android` and
+   named Material `viewcompose-material3-android`.
 7. Verify generated Maven metadata matches the reviewed `api`/`implementation` contracts.
 8. Update current architecture, module manuals, tutorials, guides, migration pages, and reviewed
    Chinese mirrors after the implementation topology stabilizes.

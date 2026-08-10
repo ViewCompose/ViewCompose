@@ -1,6 +1,6 @@
 ---
 translation_source: project/roadmap.md
-translation_source_hash: 13b11f35791ea934a05842aa7b9d57d40fcc16811735985b226d3d574a1124b8
+translation_source_hash: 11bb65fd477b4a2fcf280e99cab7420faff5ab18698a8b30b369c9562a0c3121
 translation_status: current
 ---
 
@@ -32,11 +32,14 @@ translation_status: current
 3. `Overlay` 已分层为：
    - session-bound surface：`Dialog`、`Popup`、`ModalBottomSheet`
    - host-driven feedback：`Snackbar`、`Toast`
-4. `:viewcompose-android` 负责 Activity/Fragment 的 `setUiContent`；底层 `:viewcompose-host-android` 引擎负责 `renderInto`、`RenderSession` 与挂载树生命周期
+4. `:viewcompose-android` 负责中立 Activity/Fragment `setUiContent`，`:viewcompose-material3-android`
+   负责具名 `setMaterial3UiContent` Context 适配；底层 `:viewcompose-host-android` 引擎负责
+   `renderInto`、`RenderSession` 与挂载树生命周期，但不选择设计系统
 5. `system bars insets` 已转为组件侧 `Modifier.systemBarsInsetsPadding(...)`
 6. 生命周期与 ViewModel 协作 API 已拆分为 `:viewcompose-lifecycle-androidx` 与 `:viewcompose-viewmodel-androidx`，并统一到新包 `com.viewcompose.lifecycle` / `com.viewcompose.viewmodel`
 7. 重组模型已硬切到 `SlotTable Lite` 节点组级脏区重组（无旧全量重建开关）
-8. 运行时职责按 Kernel、UI Foundation、Android Engine、Design System 与 Integrations 五层划分；`viewcompose-android` 是经审查的应用聚合层，不是第六层
+8. 运行时职责按 Kernel、UI Foundation、Android Engine、Design System 与 Integrations 五层划分；
+   `viewcompose-android` 与 `viewcompose-material3-android` 是经审查的应用聚合层，不是第六层
 9. `viewcompose-runtime` 已硬切为纯 Kotlin/JVM，并补齐 `policy/snapshot/observation/invalidation/composer` 核心测试分支
 10. 宿主公开诊断回调已收口到 core 自有类型（`RenderStats/RenderTreeResult`），host API 不再泄漏 renderer 实现类型
 11. overlay 默认装配已改为 `AndroidOverlayHostFactoryProvider + ServiceLoader`，无实现时稳定回退 no-op（移除反射路径）

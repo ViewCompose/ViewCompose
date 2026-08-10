@@ -1,6 +1,6 @@
 ---
 translation_source: guides/overlays.md
-translation_source_hash: b335839dec107a1fcfb1c42ff0e1c74d6fc78c6b276367c24d82e96eb5702e58
+translation_source_hash: 147ed70a926e9037a0d72d10791fb9462049fc8425b3e120115633023355a8e7
 translation_status: current
 ---
 
@@ -8,6 +8,28 @@ translation_status: current
 
 `Dialog`、`Popup` 和 `ModalBottomSheet` 使用绑定到 Session 的 overlay surface。`Snackbar`
 和 `Toast` 共用宿主持有的瞬态反馈通道，因此即使两者在同一次渲染中声明，顺序也保持确定。
+
+## Backend 选择
+
+`viewcompose-overlay-android` 是中立 Android 传输层，负责 Dialog、PopupWindow、Toast、嵌套
+Overlay Render Session、锚点观察与清理，不依赖 Material。中立 `setUiContent` 与 Android
+Navigation Host 会显式选择它。
+
+`viewcompose-overlay-material3-android` 只增加 Material Snackbar 与 Modal Bottom Sheet
+Presenter。`setMaterial3UiContent` 显式选择该 Adapter；把产物放入 Runtime Classpath 不会改变
+中立或 One UI Root。
+
+`viewcompose-overlay-oneui7-android` 增加不依赖 Material 的 One UI Snackbar 与底部 Dialog
+Presenter。One UI Root 继续使用中立 `setUiContent`，通过 `overlayHostFactory` 构造该 Adapter，
+并把其 `integrationAttribution` 传给 `OneUi7Theme`。由于 One UI 不需要不同的 Root Context，
+这里不会复制一套 One UI Activity/Fragment Host Extension。
+
+自定义底层 Host 可以使用 `AndroidOverlayHostDefaults.androidOrNoOp`，但
+Service Discovery 只接受一个中立 Provider，永远不选择设计系统。
+
+当前设计系统 Attribution 会报告每种 Overlay 的 Transport、Presenter、Conformance 与 Fallback。
+未安装 Adapter 的 One UI Theme 会把 Snackbar 与 Modal Bottom Sheet 报告为 `Unsupported`；显式
+装配 Adapter 后升级为 `Equivalent`，始终不会静默回退 Material。
 
 ## Popup 定位
 

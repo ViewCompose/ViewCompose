@@ -100,6 +100,7 @@ internal object ViewModifierApplier {
             view = view,
             backgroundDrawableResId = resolved?.backgroundDrawableRes?.resId,
             backgroundColor = resolved?.backgroundColor?.color ?: backgroundColor,
+            surfaceFill = null,
             borderWidth = environment.roundToPx(resolved?.border?.width ?: borderWidth),
             borderColor = resolved?.border?.color ?: borderColor,
             cornerRadius = resolved?.cornerRadius,
@@ -245,6 +246,7 @@ internal object ViewModifierApplier {
         val nextStyle = next.nodeStyle
         return previousStyle.backgroundDrawableResId != nextStyle.backgroundDrawableResId ||
             previousStyle.backgroundColor != nextStyle.backgroundColor ||
+            previousStyle.surfaceFill != nextStyle.surfaceFill ||
             previousStyle.borderWidth != nextStyle.borderWidth ||
             previousStyle.borderColor != nextStyle.borderColor ||
             previousStyle.cornerRadius != nextStyle.cornerRadius ||
@@ -253,6 +255,7 @@ internal object ViewModifierApplier {
             previousStyle.stateLayerColors != nextStyle.stateLayerColors ||
             previousStyle.clickable != nextStyle.clickable ||
             previousStyle.surfaceInsets != nextStyle.surfaceInsets ||
+            previousStyle.clipContent != nextStyle.clipContent ||
             previous.resolved.clip != next.resolved.clip ||
             previous.resolved.graphicsLayer?.clip != next.resolved.graphicsLayer?.clip
     }

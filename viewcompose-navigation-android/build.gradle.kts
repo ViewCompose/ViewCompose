@@ -31,6 +31,7 @@ dependencies {
     api(project(":viewcompose-ui-contract"))
     api(project(":viewcompose-ui-foundation"))
     implementation(project(":viewcompose-host-android"))
+    implementation(project(":viewcompose-overlay-android"))
     implementation(project(":viewcompose-lifecycle-androidx"))
     implementation(project(":viewcompose-viewmodel-androidx"))
     implementation(libs.androidx.activity)

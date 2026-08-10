@@ -3,7 +3,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -21,7 +21,7 @@ class RenderDiagnosticsTutorialActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val latestStats = AtomicReference(RenderStats())
-        setUiContent(
+        setMaterial3UiContent(
             debug = true,
             debugTag = "RenderTutorial",
             onRenderStats = latestStats::set,

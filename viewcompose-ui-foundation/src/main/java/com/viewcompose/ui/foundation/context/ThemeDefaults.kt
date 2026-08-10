@@ -66,6 +66,7 @@ object UiControlSizeDefaults {
             menu = UiMenuSizing.default(),
             tooltip = UiTooltipSizing.default(),
             badge = UiBadgeSizing.default(),
+            switch = UiSwitchSizing.default(),
         )
     }
 }
@@ -123,6 +124,10 @@ object UiThemeDefaults {
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.FrameworkDefault,
                 isDark = false,
+                provenance = UiTokenProvenance(
+                    sourceId = "viewcompose-ui-foundation/framework-light",
+                    defaultOrigin = UiThemeOrigin.FrameworkDefault,
+                ),
             ),
         )
     }
@@ -168,6 +173,10 @@ object UiThemeDefaults {
             metadata = UiThemeMetadata(
                 origin = UiThemeOrigin.FrameworkDefault,
                 isDark = true,
+                provenance = UiTokenProvenance(
+                    sourceId = "viewcompose-ui-foundation/framework-dark",
+                    defaultOrigin = UiThemeOrigin.FrameworkDefault,
+                ),
             ),
         )
     }

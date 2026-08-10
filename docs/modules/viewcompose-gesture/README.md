@@ -80,15 +80,44 @@ val modifier = Modifier.anchoredDraggable(
 ```
 
 The modifier synchronously installs its latest anchors into the state on each composition call.
-When the current value still exists, its exact offset is preserved. If it disappears, the nearest
-anchor to the current visual offset becomes current. Raw movement updates an unclamped visual
-offset; completion commits the renderer-selected nearest target. This release settles immediately
-without an animation, so `targetValue` normally changes with `currentValue`.
+When the current value still exists, an active offset survives equivalent anchor reinstallation.
+If the value disappears, the nearest anchor to the current visual offset becomes current. Raw
+movement updates an offset clamped to the installed range. Completion commits the renderer-selected
+nearest target and may report it through `onValueSettled`; cancellation restores the last committed
+anchor before its callback. This release settles immediately without an animation, so `targetValue`
+normally changes with `currentValue`.
 
 `rememberAnchoredDraggableState` reads `initialValue` only when first remembered. Changing the
 argument later does not reset state; call `snapTo` explicitly. Snapping to a value absent from the
 current anchors stores the semantic value and clears the offset until the next anchor reconciliation.
 Anchored dragging accepts horizontal or vertical orientation only.
+
+## Controlled two-state drag
+
+`rememberToggleDragState` and `toggleDraggable` adapt anchored dragging to caller-controlled
+two-state components such as a design-system-owned Switch. The checked anchor is a signed physical
+pixel offset from unchecked zero. Its exposed `progress` stays logical from `0f` unchecked to `1f`
+checked, so callers can use a negative checked offset in RTL without reversing drawing logic.
+
+```kotlin
+val drag = rememberToggleDragState(
+    checked = checked,
+    checkedAnchorOffsetPx = density.toPx(if (rtl) -20.dp else 20.dp),
+    onCheckedChange = onCheckedChange,
+)
+val target = Modifier
+    .clickable { onCheckedChange(!checked) }
+    .toggleDraggable(drag)
+```
+
+The renderer keeps taps available to the click modifier until movement becomes a drag. Accepted
+drags consume completion, settle by position or velocity, and request a replacement state exactly
+once. Components own geometry, density/layout-direction conversion, settled animation, checked
+semantics, and persistence. Use `isDragging` to render follow-finger progress directly and the
+design system's normal motion contract while idle. `lastCompletion` is published synchronously
+before the replacement-state callback and retains the logical progress immediately before normal
+settling or cancellation restored an endpoint. A component uses its per-state sequence and start
+progress to continue the settled animation without briefly jumping to a stale endpoint.
 
 ## Transform gestures
 
@@ -122,7 +151,9 @@ velocity they actually consumed.
 - Recompose with changed lambdas and verify remembered state forwards to the latest callback.
 
 The module suite covers modifier encoding, no-op click declarations, drag and transform forwarding,
-anchored nearest settle, invalid free orientation, priority encoding, and nested-scroll attachment.
+anchored bounds/recomposition/cancellation/settle behavior, controlled LTR/RTL toggle progress,
+pre-endpoint toggle completion snapshots, invalid free orientation, priority encoding, and
+nested-scroll attachment.
 
 ## Related documentation
 

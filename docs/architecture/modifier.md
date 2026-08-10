@@ -42,6 +42,10 @@ across layers.
 14. Advanced `dropShadow(s)` layers draw before node content and `innerShadow(s)` layers draw after
     complete content. Both support ordered layers, independent shapes, blur, spread, offset, and
     color, without coupling to `elevation` or `zIndex`.
+15. `Modifier.semantics` transports design-system-neutral accessibility state. Collection parents
+    expose logical dimensions and selection cardinality; children expose logical positions and
+    spans. RTL changes physical placement, never these indexes, and item `selected`/`heading`
+    values remain single-source properties on the same semantic configuration.
 
 ## 3. API inventory
 
@@ -104,6 +108,7 @@ Current 2026-08 result:
 | `onFocusChanged` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Observe self/descendant focus | Global | Receives `FocusState` |
 | `onPreviewKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Key capture before target | Global | Declarative ancestor to target |
 | `onKeyEvent` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Key bubbling after target | Global | Target to declarative ancestor |
+| `semantics` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Accessibility and testing state | Global | Includes collection dimensions, logical item positions, selection, and heading state |
 | `contentDescription` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Accessibility description | Global | Maps to native semantics |
 | `testTag` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Test locator | Global | UI-test targeting |
 | `overlayAnchor` | `viewcompose-ui-contract` / `com.viewcompose.ui.modifier` | public | Overlay anchor ID | Capability-specific | Popup/Tooltip/Dropdown anchor |

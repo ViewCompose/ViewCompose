@@ -11,7 +11,14 @@ import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import com.viewcompose.renderer.view.tree.ViewLayoutParamsFactory
+import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
+import com.viewcompose.ui.modifier.BoxAlignModifierElement
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -167,6 +174,53 @@ class DeclarativeLayoutInvalidationTest {
 
         view.contentGravity = Gravity.CENTER
         assertTrue(view.isLayoutRequested)
+    }
+
+    @Test
+    fun `box updates inherited gravity without replacing explicit child alignment`() {
+        val context = RuntimeEnvironment.getApplication()
+        val view = DeclarativeBoxLayout(context)
+        val inherited = View(context)
+        val explicit = View(context)
+        val warnings = mutableSetOf<String>()
+        view.addView(
+            inherited,
+            ViewLayoutParamsFactory.createLayoutParams(
+                parent = view,
+                node = VNode(
+                    type = NodeType.Spacer,
+                    spec = EmptyNodeSpec,
+                ),
+                warningTag = "DeclarativeLayoutInvalidationTest",
+                emittedModifierWarnings = warnings,
+            ),
+        )
+        view.addView(
+            explicit,
+            ViewLayoutParamsFactory.createLayoutParams(
+                parent = view,
+                node = VNode(
+                    type = NodeType.Spacer,
+                    spec = EmptyNodeSpec,
+                    modifier = Modifier.then(
+                        BoxAlignModifierElement(BoxAlignment.BottomEnd),
+                    ),
+                ),
+                warningTag = "DeclarativeLayoutInvalidationTest",
+                emittedModifierWarnings = warnings,
+            ),
+        )
+
+        view.contentGravity = Gravity.CENTER
+
+        assertEquals(
+            Gravity.CENTER,
+            (inherited.layoutParams as FrameLayout.LayoutParams).gravity,
+        )
+        assertEquals(
+            Gravity.BOTTOM or Gravity.END,
+            (explicit.layoutParams as FrameLayout.LayoutParams).gravity,
+        )
     }
 
     @Test

@@ -66,6 +66,41 @@ data class UiTextFieldSizing(
 )
 
 /**
+ * Defines the visible geometry of a design-owned Switch composite.
+ *
+ * These values describe only the rendered track, thumb, and label spacing. The effective touch
+ * target remains controlled independently by [UiControlSizing.minimumInteractiveHeight], allowing
+ * a design system to use compact visual geometry without shrinking accessibility bounds. Values
+ * are immutable and are not validated; consuming recipes must clamp impossible travel distances.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.switchSizingTokenSample
+ * @property trackWidth visible width of the switch track
+ * @property trackHeight visible height of the switch track
+ * @property thumbDiameter visible width and height of the circular thumb
+ * @property trackPadding inset between the track edge and the resting thumb
+ * @property labelSpacing spacing between the visible switch and its optional label
+ */
+data class UiSwitchSizing(
+    val trackWidth: UiDp,
+    val trackHeight: UiDp,
+    val thumbDiameter: UiDp,
+    val trackPadding: UiDp,
+    val labelSpacing: UiDp,
+) {
+    /** Creates the framework baseline visible Switch geometry. */
+    companion object {
+        /** Returns a new immutable framework baseline. */
+        fun default(): UiSwitchSizing = UiSwitchSizing(
+            trackWidth = 52.dp,
+            trackHeight = 32.dp,
+            thumbDiameter = 24.dp,
+            trackPadding = 4.dp,
+            labelSpacing = 12.dp,
+        )
+    }
+}
+
+/**
  * Defines compact, medium, and large segmented-control dimensions.
  *
  * @property compactHeight minimum height used by compact controls
@@ -389,6 +424,7 @@ data class UiBadgeSizing(
  * @property menu menu dimensions
  * @property tooltip tooltip dimensions
  * @property badge badge dimensions
+ * @property switch visible Switch track, thumb, and label geometry
  * @property minimumInteractiveHeight minimum effective height for compact interactive controls;
  * zero preserves each native control's intrinsic measurement
  */
@@ -406,5 +442,6 @@ data class UiControlSizing(
     val menu: UiMenuSizing = UiMenuSizing.default(),
     val tooltip: UiTooltipSizing = UiTooltipSizing.default(),
     val badge: UiBadgeSizing = UiBadgeSizing.default(),
+    val switch: UiSwitchSizing = UiSwitchSizing.default(),
     val minimumInteractiveHeight: UiDp = UiDp.Zero,
 )

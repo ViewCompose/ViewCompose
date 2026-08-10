@@ -23,7 +23,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-android"))
+    implementation(project(":viewcompose-material3-android"))
     implementation(project(":viewcompose-navigation-core"))
     implementation(project(":viewcompose-navigation-android"))
 

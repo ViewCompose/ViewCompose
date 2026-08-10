@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 
 /*
  * 测试职责：覆盖 renderer view/tree 中的 Native Listener Binding 行为，防止渲染和 patch 契约在后续重构中回退。
@@ -10,7 +11,9 @@ import com.viewcompose.ui.unit.dp
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.SeekBar
+import android.widget.Switch
 import com.viewcompose.renderer.R
+import com.viewcompose.renderer.view.tree.patch.InputNodePatchApplier
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -20,6 +23,24 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class NativeListenerBindingTest {
+    @Test
+    fun `accepted native switch state is not written back during its running transition`() {
+        val view = CountingSwitch().apply {
+            isChecked = true
+            checkedAssignments = 0
+        }
+        val previous = toggleNodeProps(checked = false)
+        val next = toggleNodeProps(checked = true)
+
+        InputNodePatchApplier.applyTogglePatch(
+            view = view,
+            patch = ToggleNodePatch(previous = previous, next = next),
+        )
+
+        assertEquals(0, view.checkedAssignments)
+        assertEquals(true, view.isChecked)
+    }
+
     @Test
     fun `toggle keeps one native listener and updates its callback`() {
         val view = CheckBox(RuntimeEnvironment.getApplication())
@@ -99,6 +120,17 @@ class NativeListenerBindingTest {
         onCheckedChange = onCheckedChange,
     )
 
+    private fun toggleNodeProps(checked: Boolean) = com.viewcompose.ui.node.spec.ToggleNodeProps(
+        text = "Switch",
+        enabled = true,
+        checked = checked,
+        controlColor = 0xFF000000.toInt(),
+        onCheckedChange = {},
+        textColor = 0xFF000000.toInt(),
+        textSizeSp = 14.sp,
+        rippleColor = 0x33000000,
+    )
+
     private fun sliderSpec(
         min: Int,
         value: Int,
@@ -125,4 +157,13 @@ class NativeListenerBindingTest {
         iconSize = 16,
         onClick = onClick,
     )
+
+    private class CountingSwitch : Switch(RuntimeEnvironment.getApplication()) {
+        var checkedAssignments: Int = 0
+
+        override fun setChecked(checked: Boolean) {
+            checkedAssignments += 1
+            super.setChecked(checked)
+        }
+    }
 }

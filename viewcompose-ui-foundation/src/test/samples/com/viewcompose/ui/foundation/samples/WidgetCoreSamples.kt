@@ -9,13 +9,22 @@ import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.ButtonNodeProps
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
+import com.viewcompose.graphics.core.Brush
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.unit.dp
+import com.viewcompose.ui.unit.sp
 import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.BasicButton
+import com.viewcompose.ui.foundation.BasicButtonStyle
+import com.viewcompose.ui.foundation.BasicSurface
+import com.viewcompose.ui.foundation.BasicSurfaceStyle
 import com.viewcompose.ui.foundation.Checkbox
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.Image
+import com.viewcompose.ui.foundation.InputControlDefaults
 import com.viewcompose.ui.foundation.PopupAlignment
 import com.viewcompose.ui.foundation.PopupBounds
 import com.viewcompose.ui.foundation.PopupOverflowPolicy
@@ -24,7 +33,9 @@ import com.viewcompose.ui.foundation.PopupSize
 import com.viewcompose.ui.foundation.ProvideImageLoader
 import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiStateColor
+import com.viewcompose.ui.foundation.UiSwitchSizing
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.buildVNodeTree
@@ -88,6 +99,91 @@ fun buttonSample() {
     check(spec.minHeight == 48.dp)
     check(spec.visualHeight == 40.dp)
     check(spec.stateLayerColors?.hoveredColor == 0x14FFFFFF)
+}
+
+fun switchSizingTokenSample() {
+    val compactSwitch = UiSwitchSizing(
+        trackWidth = 44.dp,
+        trackHeight = 24.dp,
+        thumbDiameter = 18.dp,
+        trackPadding = 3.dp,
+        labelSpacing = 14.dp,
+    )
+    val tokens = UiThemeDefaults.light().let { defaults ->
+        defaults.copy(
+            controls = defaults.controls.copy(
+                switch = compactSwitch,
+                minimumInteractiveHeight = 48.dp,
+            ),
+        )
+    }
+
+    var resolvedSizing = UiSwitchSizing.default()
+    buildVNodeTree {
+        UiTheme(tokens) {
+            resolvedSizing = InputControlDefaults.switchSizing()
+        }
+    }
+
+    check(resolvedSizing == compactSwitch)
+    check(tokens.controls.minimumInteractiveHeight == 48.dp)
+}
+
+fun basicSurfaceSample() {
+    val node = buildVNodeTree {
+        BasicSurface(
+            style = BasicSurfaceStyle(
+                fill = Brush.SolidColor(0xFF1E4D5A.toInt()),
+                shape = UiShape.continuous(16.dp),
+                borderWidth = 1.dp,
+                borderColor = 0xFF8FD8E8.toInt(),
+                clipContent = true,
+            ),
+            contentColor = 0xFFFFFFFF.toInt(),
+            onClick = {},
+            stateLayerColors = UiStateLayerColors(
+                pressedColor = 0x33FFFFFF,
+                focusedColor = 0x2AFFFFFF,
+                hoveredColor = 0x1FFFFFFF,
+            ),
+            minimumHeight = 48.dp,
+            visualHeight = 40.dp,
+        ) {
+            Text("Open")
+        }
+    }.single()
+
+    val surface = node.spec as SurfaceNodeProps
+    check(surface.minimumHeight == 48.dp)
+    check(surface.visualHeight == 40.dp)
+}
+
+fun basicButtonSample() {
+    val tree = buildVNodeTree {
+        BasicButton(
+            text = "Continue",
+            onClick = {},
+            style = BasicButtonStyle(
+                surface = BasicSurfaceStyle(
+                    fill = Brush.SolidColor(0xFF244C5A.toInt()),
+                    shape = UiShape.continuous(20.dp),
+                    clipContent = true,
+                ),
+                contentColor = 0xFFFFFFFF.toInt(),
+                textStyle = com.viewcompose.ui.foundation.UiTextStyle(fontSizeSp = 14.sp),
+                stateLayerColors = UiStateLayerColors(
+                    pressedColor = 0x33FFFFFF,
+                    focusedColor = 0x2AFFFFFF,
+                    hoveredColor = 0x1FFFFFFF,
+                ),
+                minimumHeight = 48.dp,
+                visualHeight = 40.dp,
+                paddingHorizontal = 16.dp,
+            ),
+        )
+    }
+
+    check(tree.single().type == com.viewcompose.ui.node.NodeType.Surface)
 }
 
 fun compactInputTargetSample() {

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: cd5988e8ba4c8ca31ea984406bfada01cccceeac7834cc0a01165f61270582c5
+translation_source_hash: ec1b427438e44c57b9316117afd8aaa6b1b35abdbb775547d9b18a084f7f3d08
 translation_status: current
 ---
 
@@ -12,7 +12,8 @@ translation_status: current
 调度、日志与 Trace 契约的渲染器无关 Session 协调器。
 
 开发可复用 ViewCompose 组件、自定义宿主、设计系统适配或浮层后端时，可以直接使用本模块。
-Android 应用通常通过 `viewcompose-android` 获得它，同时取得标准引擎与 Material 3 适配。
+Android 应用通常通过中立 `viewcompose-android` 聚合模块或具名
+`viewcompose-material3-android` 聚合模块获得它。
 
 本模块不实现 View 协调，不持有 Activity 或 Fragment 生命周期，不呈现平台 Dialog 和
 Popup，不执行图片解码，也不提供可选的动画、手势、图形、阴影、导航或 ConstraintLayout
@@ -62,9 +63,26 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   完整的 Display、Headline、Title、Body 与 Label 分级；形状支持 Extra Small、Small、Medium、
   Large、Extra Large 与 Full 角色。`UiInteractionTokens` 提供通用按下、聚焦和悬停透明度，
   具体值由设计系统适配器提供。
+- `UiTokenProvenance` 是附着在 `UiThemeMetadata` 上的 Q2 非视觉来源快照。若
+  `colors.primary` 这类精确路径没有独立记录，就继承所在家族来源，因此诊断可以区分框架默认、
+  Android 主题或动态映射、具名静态 Token 与应用 Override，而不改变视觉解析。
+- `UiDesignSystemAttribution`、`UiComponentAttribution` 与 `UiIntegrationAttribution` 是有界 Q2
+  证据快照，不是 Recipe Registry。具名系统通过 Q3 `DesignSystemAttributionProvider` 提供 Recipe
+  身份、中立 Backend、集成 Transport/Presenter、Conformance、能力路径和 Fallback；立即内容与已捕获的延迟内容都可从
+  `DesignSystemDiagnostics.current` 读取同一个 Local。
 - `UiButtonSizing` 把有效最小触控高度与可见 Surface 高度分开。中性主题和现有自定义主题中，
   每个可见高度默认等于对应的有效高度，因此维持原有渲染；设计系统适配器可以选择更小且居中
   的 Surface，而不缩小 View 或无障碍边界。
+- `UiSwitchSizing` 是 Q2、设计系统中立的组合 Switch 可见几何契约，负责 Track、Thumb、Track
+  内缩与 Label 间距。它有意不拥有有效触控目标；编译样例 `switchSizingTokenSample` 展示如何在
+  独立的 `minimumInteractiveHeight` 策略中放置紧凑可见 Track。
+- `BasicSurface` 是 Q3 设计系统中立基础组件。其 Q2 `BasicSurfaceStyle` 接受已经解析的纯色或
+  渐变 Brush、逻辑 Shape、Border、裁剪、Elevation 与精确 Shadow，并把最小有效边界与可选的
+  居中可见高度分开。设计系统在发射前选择这些值，Android Renderer 只接收中立的
+  `SurfaceNodeProps` 快照。编译样例 `basicSurfaceSample` 展示了该契约。
+- `BasicButton` 是建立在 `BasicSurface`、Row、Text 与 Icon 上的 Q3 动作组合。其 Q2
+  `BasicButtonStyle` 只包含已经解析的几何、排版、内容与交互值。它不会发射原生 Button 节点，
+  现有 `Button` API 则继续保留该兼容路径。编译样例 `basicButtonSample` 展示连续圆角动作。
 - `UiControlSizing.minimumInteractiveHeight` 是 Checkbox、RadioButton、Switch 与 Slider 使用的
   设计系统无关有效高度策略。它的中性默认值是零，因此保留原生固有测量。设计系统可以提供
   正的最小值；组件会在调用方 Modifier 之前应用它，所以应用显式指定的精确高度仍具有最终权限。
@@ -116,7 +134,8 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - 组合准备和树渲染失败会保留上一帧。渲染器建立新原生树之后发生的失败，会按已提交帧失败
   报告，无法回滚该原生树。
 - 浮层请求是声明式的，按 Render Session ID 与 Request Key 划分作用域。后续提交省略已有请求
-  就会关闭它。平台呈现需要 `viewcompose-overlay-material3-android` 或自定义 `OverlayHost`。
+  就会关闭它。平台呈现需要 `viewcompose-overlay-android`、
+  `viewcompose-overlay-material3-android` 这类具名 Adapter，或自定义 `OverlayHost`。
 - Lazy 容器 Key 必须稳定且唯一。复用、预取与动效 Policy 是渲染器提示，不能作为业务状态。
 - 图片组件会把 source 身份和请求 options 保存在 `NodeSpec` 中。发射节点时读取 loader，因此
   更换 provider 是明确的渲染输入。渲染器会在启动新工作前替换旧工作，并在节点或 Session 离开
@@ -153,6 +172,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 直接构造调用和穷举解构属于二进制变更。`Button` 会把两类高度都解析进 `ButtonNodeProps`；
 自定义渲染器必须遵守该契约，或明确说明其可见边界与有效边界仍保持一致。
 
+`UiSwitchSizing` 是加入 `UiControlSizing` 的 Q2 不可变值契约，并提供源码默认值。它会改变
+预编译直接构造调用与穷举解构的二进制兼容性。设计 Recipe 消费解析后的几何值；中立 Android
+Renderer 不会因此获得 One UI 或其他具名设计系统分支。
+
 `UiControlSizing.minimumInteractiveHeight` 是另一个 Q2 不可变值字段。它提供源码默认值，但对
 预编译直接构造调用与穷举解构具有相同的二进制兼容影响。Checkbox、RadioButton、Switch 与
 Slider 是 Q3 组件 API：它们先加入解析后的最小目标，再应用调用方 Modifier，从而保留显式的
@@ -165,3 +188,19 @@ Q2 `SliderNodeProps` 快照中；预编译调用方与自定义渲染器必须�
 解构会发生二进制变化。Button 与 IconButton 状态层参数属于 Q3 组件 API 变更。源码调用方会
 获得语义化多状态默认值；曾显式提供旧 `rippleColor` 的 Button 调用方保留专用兼容重载。预编译
 默认参数调用点必须随本次 Alpha 版本重新构建。
+
+`BasicSurfaceStyle` 是 Q2 已解析值契约，`BasicSurface` 是 Q3 组件 API。`BasicSurface` 会在
+已解析样式与行为之后追加调用方 Modifier：调用方 Surface Modifier 替换默认可见 Surface，
+调用方 Elevation 优先，调用方 Shadow 绘制在样式 Shadow 之后。`Surface` 现通过该基础组件
+解析原有默认值，保持公共源码 API，同时把 `NodeType.Surface` 的具体规格改为
+`SurfaceNodeProps`。
+
+`BasicButtonStyle` 是 Q2 已解析值契约，`BasicButton` 是 Q3 组合 API。它属于增量能力，不会改变
+现有 `Button` 签名或原生 Renderer 行为。内部对比夹具现已使用该生产基础组件，证明两套独立
+动作 Recipe，同时不向 UI Foundation 加入设计系统词汇。
+
+`UiTokenProvenance`、`UiDesignSystemAttribution` 与 `UiComponentAttribution` 是 Q2 不可变
+诊断契约，`DesignSystemAttributionProvider` 是 Q3 Provider API。`UiThemeMetadata` 新增的
+Provenance 具有源码默认值，但改变二进制 Constructor、Copy 与 Component Surface，因此预编译
+直接调用方必须重建。这些契约只保存稳定身份与已解析证据，不授权在 UI Foundation 或 Renderer
+中加入 Recipe、Factory 或具名设计系统分支。

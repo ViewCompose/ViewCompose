@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 1a4928b0c10a070b867a07cb3715d2be7ecfc92e0d0ab4ce78cd31e8fe5d5b1c
+translation_source_hash: 84f7fffa3b6065ca322fb569015cc13d2f843dfd6a810f809b68fd31a15a5321
 translation_status: current
 ---
 
@@ -16,6 +16,9 @@ translation_status: current
 4. 变更时必须遵守的约束
 
 如果实现要偏离本文档，必须先更新文档，再改代码。
+
+[多设计系统架构与接入标准](design-systems.md)是 Theme、Recipe、组件 Backend 与 Host 所有权的
+规范性策略。该标准明确列出的当前不符合项由有效执行计划跟踪，不得复制到任何新增 API 中。
 
 历史长版快照见：
 
@@ -48,9 +51,13 @@ translation_status: current
 | `viewcompose-constraintlayout-androidx` | ConstraintLayout 组件 DSL（`ConstraintLayout/createRef(s)/constrainAs/constrain/constraintSet`） | 仅承载约束布局 DSL 与 scope；平台渲染实现仍在 `viewcompose-renderer-android` |
 | `viewcompose-renderer-android` | Android View 渲染实现（reconcile、binder、patch、container、框架 shape/progress 绘制） | 只消费可移植契约，不承载业务 DSL 或 Material 控件 |
 | `viewcompose-host-android` | 底层 Android Engine 宿主（`renderInto/RenderSession`、`AndroidView/nativeView`、渲染平台安装） | 不提供 Activity/Fragment 便捷入口，不依赖 Material |
-| `viewcompose-material3` | Material 3 主题快照、Token 映射、动态颜色策略与刷新生命周期 | 独占 Material/AppCompat 主题解释；UI Foundation 与 Android Engine 不依赖它 |
-| `viewcompose-android` | 标准 Android Consumer 聚合包与 Activity/Fragment `setUiContent` 入口 | 聚合默认 Engine、UI Foundation、Material 3 Theme Bridge、Lifecycle 与 ViewModel 集成，且不被底层反向依赖 |
-| `viewcompose-overlay-material3-android` | Android overlay host/presenter（Dialog/Popup/ModalBottomSheet/Snackbar/Toast） | 只做平台实现，不依赖 renderer 资源 |
+| `viewcompose-material3` | Material 3 主题快照、Token 映射、动态颜色策略、刷新生命周期与受控具名组件压力切片 | 独占 Material/AppCompat 主题解释及 Material Recipe/组件；UI Foundation 与 Android Engine 不依赖它 |
+| `viewcompose-material3-android` | 具名 Material 3 Android 应用聚合与 Activity/Fragment Host 集成 | 在 View 构造前解析 Material 根 Context，再把挂载委托给中立 Android 聚合模块，并提供匹配的 Token 快照 |
+| `viewcompose-oneui7` | 静态 One UI 7 Alpha Token 与限定的 Button、Surface、Switch、TextField、纯文字 NavigationBar 组件集 | 独占其命名 Recipe 与组合组件；不依赖 Material，也不向 Android Renderer 增加 Design System 分支 |
+| `viewcompose-android` | 中立 Android Consumer 聚合包与 Activity/Fragment `setUiContent` 入口 | 聚合默认 Engine、UI Foundation、Lifecycle 与 ViewModel 集成，不选择 Material 或其他设计系统；显式根 Context 与 Composition Provider 决定设计策略 |
+| `viewcompose-overlay-android` | 不依赖 Material 的 Android Overlay 传输，负责 Dialog、Popup、Toast、嵌套 Surface 与 Root/Session 清理 | 提供窄型 Snackbar 与 Modal Sheet Presenter 插槽；不选择或依赖设计系统 |
+| `viewcompose-overlay-material3-android` | Material Snackbar 与 Modal Bottom Sheet Adapter | 把 Material Presenter 显式装配到中立 Android 传输，不注册完整 Host Provider |
+| `viewcompose-overlay-oneui7-android` | 不依赖 Material 的 One UI Snackbar 与底部 Dialog Adapter | 把 One UI Presenter 显式装配到中立 Android 传输，不新增重复的 Activity/Fragment Host API |
 | `viewcompose-image-coil` | 可选图片加载适配器 | 为 Coil 3 实现 `UiImageLoader`，接收通用 source/request 契约，不把 Coil 关注点回流到 renderer 核心 |
 | `viewcompose-image-glide` | 可选图片加载适配器 | 为 Glide 5 实现 `UiImageLoader`，按目标解析 `RequestManager` 并使用应用所有的 `AppGlideModule` 配置 |
 | `viewcompose-lifecycle-androidx` | 生命周期感知的状态收集 API（`collectAsStateWithLifecycle`）与生命周期 Local 对外入口 | 不承载 Android 视图实现；不新增宿主注入逻辑 |
@@ -68,15 +75,18 @@ translation_status: current
 1. **Kernel**：runtime、text-core、ui-contract、navigation-core、animation-core、gesture-core、graphics-core 等纯状态、文本、契约和策略内核。
 2. **UI Foundation**：ui-foundation、animation、gesture、graphics 等渲染器无关公开 UI 面。由于框架以 Android View 为目标，它可以描述 Android-only 声明值，但原生容器访问、宿主适配、日志、Trace 与调度必须由 Android Engine 安装；禁止依赖 Android Engine、Design System 或 Integrations。
 3. **Android Engine**：renderer-android 与 host-android，只负责把契约映射为 Android View，不承载 Material 设计策略或 AndroidX 功能集成。
-4. **Design System**：material3，可读取 Material/AppCompat Theme 并生成框架 Token，但 Material 类型和依赖不得泄漏到 UI Foundation 或 Android Engine。
-5. **Integrations**：navigation-android、lifecycle-androidx、viewmodel-androidx、constraintlayout-androidx、overlay-material3-android、图片适配器与 shadow-android。外部平台或设计系统会影响依赖时，模块名必须用后缀明确归属。
-6. `viewcompose-android` 是聚合包，不是第六层；它是标准应用依赖，并持有有意组装多个层的便捷组合根。
+4. **Design System**：material3 与 oneui7。Design System 模块提供具体 Token Profile、解析后的 Recipe 与自有组合组件，但其身份不得泄漏到 UI Foundation 或 Android Engine。只有 material3 读取 Material/AppCompat Theme；oneui7 使用 ViewCompose 自有静态值且不依赖 Material。
+5. **Integrations**：navigation-android、lifecycle-androidx、viewmodel-androidx、constraintlayout-androidx、overlay-android、overlay-material3-android、图片适配器与 shadow-android。外部平台或设计系统会影响依赖时，模块名必须用后缀明确归属。
+6. `viewcompose-android` 与 `viewcompose-material3-android` 是应用聚合包，不是第六层。前者保持
+   中立；后者是单依赖 Material 应用路径，可以依赖中立聚合模块与 Material 适配器。
 7. preview、preview worker/runner/Gradle plugin 与 benchmark 属于工具层；运行时模块禁止依赖工具层，所有框架模块禁止依赖 `app`。
 8. 新增运行时模块时，必须在同一提交中登记到五层之一或聚合类别；`verifyModuleDependencyBoundaries` 会阻断未分类模块与向上依赖。
 9. `qaQuick` 固定执行 `verifyModuleDependencyBoundaries`、`verifyDesignSystemIsolation`、`verifyUiFoundationPlatformBoundary` 以及 package/namespace 所有权门禁；它们会阻断未分类/向上依赖、UI Foundation 或 Android Engine 中的 Material、UI Foundation 中的 AndroidX 或 Android 执行依赖、遗留根包、公开包多模块共用和 namespace 漂移。不能以 Demo 可以编译、依赖当前恰好存在或 code review 已确认作为跳过门禁的理由。
 10. 架构方向与 Consumer 暴露是两个独立决策。允许的底层依赖只有在其类型进入 public/protected
    API，或当前产物明确聚合该能力时才发布为 `api`；否则保持 `implementation`。
-11. `viewcompose-android` 是标准 Android 应用入口。只有明确使用底层 API 的高级 Consumer 才直接依赖下层产物；最小应用无需分别声明 Runtime、UI Contract、UI Foundation、Renderer、Host、Lifecycle 或 ViewModel。
+11. `viewcompose-android` 是中立 Android 应用入口，`viewcompose-material3-android` 是标准 Material
+    应用入口。只有明确使用底层 API 的高级 Consumer 才直接依赖下层产物；最小应用无需分别声明
+    Runtime、UI Contract、UI Foundation、Renderer、Host、Lifecycle 或 ViewModel。
 12. 精确发布边记录在
    [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)，
    并对 Gradle 声明与生成的 Maven 元数据执行门禁。
@@ -139,7 +149,7 @@ renderer 侧避免“单目录平铺”，按职责拆到二级目录：
 
 ```mermaid
 flowchart TD
-    A["Business DSL"] --> B["viewcompose-android: setUiContent(...)"]
+    A["Business DSL"] --> B["中立 setUiContent 或具名 setMaterial3UiContent"]
     B --> C["host-android: renderInto(container)"]
     C --> D["RenderSession"]
     D --> E["ComposerLite.composeRoot / runGroup"]
@@ -155,7 +165,10 @@ flowchart TD
 
 ### 4.1 平台实现边界
 
-1. Android `Dialog/PopupWindow/Toast/Snackbar` 宿主实现只放 `viewcompose-overlay-material3-android`。
+1. 通用 Android Dialog、PopupWindow、Toast、锚点观察与嵌套 Overlay 容器只放
+   `viewcompose-overlay-android`；Material Snackbar 与 Modal Sheet Presenter 只放
+   `viewcompose-overlay-material3-android`；One UI Snackbar 与底部 Dialog Presenter 只放
+   `viewcompose-overlay-oneui7-android`。
 2. `viewcompose-ui-foundation` 只保留渲染器无关声明契约，以及位于宿主所安装不透明平台 Handle
    之后的 runtime 组合能力。
 3. demo 专用逻辑不回流到框架模块。
@@ -187,22 +200,41 @@ flowchart TD
 8. 禁止新增 `Props/TypedPropKeys/PropKeys/node.props` 动态语义路径。
 9. 约束 parent-data（`layoutId/constrainAs/constrain`）仅允许用于 `ConstraintLayout` 子节点；错误宿主必须输出 validator 警告。
 10. 复合组件内部文本样式必须通过 `NodeSpec` 全量传递（`fontSize/fontWeight/fontFamily/letterSpacing/lineHeight/includeFontPadding`），禁止重新退回“只传 `textSizeSp`”。
+11. Foundation Token、组件 Recipe 与已解析渲染契约是三类独立值。Foundation Token 保持可复用
+    的不可变语义；设计系统模块拥有自己的强类型 Recipe，并在发射设计系统无关 `NodeSpec` 前，
+    通过共享 Basic 原语或自有 Composite 完成解析。
+12. `BasicSurface` 是共享的已解析装饰与交互边界。它可以传递 Fill/Brush、Shape、Border、Clip、
+    State Layer、Visual Bounds、有效 Target Bounds、Shadow 与 Effect，但不选择 Material、One UI、
+    Cupertino 或产品 Variant。
+13. 结构不同的导航、TextField 装饰与自定义 Control 排列保留在所属设计系统模块。禁止 Renderer
+    按设计系统 Identity 分支，也禁止建立一个通用组件 Recipe 大集合。
 
 对应规范：
 
 - [Modifier 模型](modifier.md)
 - [NodeSpec 模型](node-spec.md)
 - [主题指南](../guides/theming.md)
+- [多设计系统架构与接入标准](design-systems.md)
 
 ### 4.3 宿主接入边界
 
-1. `viewcompose-android` 中的 `ComponentActivity.setUiContent(...)` 不暴露内部 `RenderSession` 给页面调用方，并由聚合入口自动管理 `dispose`。
-2. `viewcompose-android` 中的 `Fragment.setUiContent(...)` 是官方入口：不暴露内部 `RenderSession`，并在 `viewLifecycleOwner` 销毁时自动 `dispose`。
-3. `setUiContent` 的默认 `overlayHostFactory` 走 `AndroidOverlayHostDefaults.androidOrNoOp(...)`：Host Android 优先通过 `AndroidOverlayHostFactoryProvider`（`ServiceLoader`）发现 Android 实现；缺失时回退 UI Foundation 的 no-op host 并输出提示。
-4. `viewcompose-overlay-material3-android` 必须通过 `META-INF/services` 注册 `com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider`，禁止回退字符串反射装配（`Class.forName`）。
+1. `viewcompose-android` 提供中立 `ComponentActivity/Fragment.setUiContent(...)`；
+   `viewcompose-material3-android` 提供具名 `setMaterial3UiContent(...)`。它们都不暴露内部
+   `RenderSession`，重复设置内容时会替换旧 Session，并在对应 Lifecycle 销毁时自动 `dispose`。
+3. 中立 Activity/Fragment 与嵌套 Navigation Root 显式构造 `viewcompose-overlay-android`；
+   Material Root 显式构造 Material Adapter。Runtime Classpath 顺序不选择设计系统。
+4. `AndroidOverlayHostDefaults.androidOrNoOp(...)` 与 `ServiceLoader` 只保留给自定义底层 Host。
+   只允许一个中立 Provider；零个时回退 no-op，多个时确定性失败。Material Adapter 不注册 Provider。
 5. host 对外回调 `onRenderStats/onRenderResult` 只能暴露 core 自有诊断类型（`com.viewcompose.ui.foundation.RenderStats/RenderTreeResult`），renderer 诊断类型仅允许出现在 host 内部适配层。
 6. system bars insets 走组件侧 `Modifier.systemBarsInsetsPadding(...)`，不绑死 Activity 全局参数。
 7. `viewcompose-host-android` 必须通过 `installRenderSessionPlatform(...)` 一次性原子注册渲染引擎、帧调度 runtime、组合协程上下文、焦点适配以及日志/Trace 适配；UI Foundation 只面向不透明 `RenderContainerHandle` 协调组合，只有 Android Engine 能把它解包为 `ViewGroup`。`RenderSession` 创建时固定使用同一平台快照，缺失或重复安装立即失败。
+8. Android 设计系统安装有两个独立边界：具名 Adapter 可以在 View 创建前解析 Themed `Context`
+   与 Capability；Composition Root 随后提供一个不可变 Token/Recipe/Motion/Capability 快照。
+   仅提供 Token 无法撤销 View Constructor 已经消费的 Attribute。
+9. `viewcompose-host-android` 与 `viewcompose-android` 不选择 Material，也不暴露 Material Policy；
+   Material XML/Dynamic Color 便捷能力只属于具名 `viewcompose-material3-android` Adapter。
+10. 在第二个会改变 Context 的设计系统证明相同生命周期契约前，通用公开 Host Adapter SPI 继续
+    延后。Root/Session 替换仍是原子设计系统切换边界。
 
 ### 4.4 延迟 session 容器边界
 
@@ -331,6 +363,10 @@ flowchart TD
 13. `AnimatedSizeHost` 收起路径必须避免“子节点先跳到末端尺寸”；子节点布局需跟随 host 当前动画尺寸，保证展开/收起两方向的视觉连续性。
 14. 手势策略新增或修改（axis lock/slop/swipe settle）必须下沉到 `viewcompose-gesture-core`；renderer 禁止新增并行策略分支。
 15. `combinedClickable` 只有在 `enabled=true` 且至少提供一个回调（click/double/long）时才参与仲裁；无回调场景必须视为 no-op 且不消费触摸流。
+16. `MotionScheme` 选择语义时序与减少动效替换，但不拥有 Clock 或 Loop。组合所有的动效继续
+    通过 `Animatable`、Target-as-state API 或 `Transition` 执行；组件 Recipe 不启动动画任务。
+17. Shape 转场只插值兼容的 Corner Family/Size 表示。不兼容几何使用可诊断的离散/静态降级；
+    任意 Path Morph 不属于通用动画契约。
 
 ### 4.15 Graphics 边界
 
@@ -388,9 +424,16 @@ flowchart TD
 
 1. `ViewTreeRenderer` 仍是复杂度热点，新增能力优先拆辅助对象，不继续堆主类。
 2. 当前是“节点组级重组 + 根级遍历调度”模型；后续优化重点是提升组键稳定性诊断与更细粒度跳过命中率。
-3. 后续演进必须维持 Kernel -> UI Foundation -> Android Engine -> Design System / Integrations 的五层方向，`viewcompose-android` 只作为顶层聚合包。
+3. 后续演进必须维持 Kernel -> UI Foundation -> Android Engine -> Design System / Integrations
+   的五层方向，中立与具名应用聚合包只能位于这些层之上。
 4. 延迟 session 容器专项回归已覆盖 `LazyVerticalGrid/HorizontalPager/VerticalPager`；Lazy P1 已补齐结构化 item DSL、完整可观察 layout state、sticky headers、contentType/span、预取和边界能力。
-5. Activity/Fragment Bridge 位于 `viewcompose-android`，底层挂载位于 host-android，Material 主题解释位于 material3；禁止重新混入同一模块。
+5. 中立 Activity/Fragment Bridge 位于 `viewcompose-android`，底层挂载位于 host-android；只有具名
+   `viewcompose-material3-android` Bridge 会连接 Material Context 解析与 Token 安装。
+6. 隐式 Material Host 缺口已关闭。剩余设计系统工作需要收敛根、Overlay、Lazy 与 Navigation
+   Session 的组件 Recipe 所有权和 Provenance，不能重新打开中立依赖边界。
+7. 组件 Backend 所有权允许有意混合：有价值时保留 Native Behavioral Core，具名结构使用设计系统
+   自有 DSL Composite，只有可复用的已解析执行语义才进入中立 Custom View。不得通过把所有组件
+   统一映射成原生 Widget 或 Custom View 来追求表面一致。
 
 ## 6. 变更落地清单（必须执行）
 
@@ -412,3 +455,4 @@ flowchart TD
 3. 状态快照规范：[state-snapshots.md](state-snapshots.md)
 4. 文档入口：[docs/README.md](../README.md)
 5. 系统导航规范：[navigation.md](../guides/navigation.md)
+6. 多设计系统架构与接入标准：[design-systems.md](design-systems.md)

@@ -71,6 +71,23 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
     waitForText(expectedText)
 }
 
+/** Starts the internal multi-design-system fixture through the stable launcher redirect. */
+internal fun MacrobenchmarkScope.startDesignSystemAndWait(kind: String) {
+    prepareBenchmarkUiAutomation()
+    pressHome()
+    startActivityAndWait { intent ->
+        intent.removeExtra("demo_module_key")
+        intent.removeExtra("performance_engine")
+        intent.putExtra("demo_design_system_kind", kind)
+        intent.putExtra("demo_design_system_dark", false)
+        intent.putExtra("demo_design_system_rtl", false)
+        intent.putExtra("demo_design_system_font_scale", 1f)
+        intent.putExtra("demo_design_system_reduced_motion", false)
+        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    }
+    waitForText("Multi-design-system verification")
+}
+
 /**
  * 启动性能对比 Activity 并选择指定引擎与场景。
  * Starts the performance comparison Activity with the requested engine and scenario.
@@ -132,6 +149,14 @@ internal fun MacrobenchmarkScope.startSystemNavigationActivityFromForeground() {
  */
 internal fun MacrobenchmarkScope.waitForText(text: String) {
     device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
+}
+
+/**
+ * 等待指定文本从当前窗口消失。
+ * Waits until the given text disappears from the current window.
+ */
+internal fun MacrobenchmarkScope.waitForTextGone(text: String) {
+    device.wait(Until.gone(By.text(text)), UI_WAIT_TIMEOUT_MS)
 }
 
 /**

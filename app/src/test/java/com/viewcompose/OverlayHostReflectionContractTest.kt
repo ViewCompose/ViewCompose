@@ -6,7 +6,7 @@ package com.viewcompose
  */
 
 import com.viewcompose.host.android.overlay.AndroidOverlayHostFactoryProvider
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.ServiceLoader
 
@@ -18,11 +18,9 @@ class OverlayHostReflectionContractTest {
             AndroidOverlayHostFactoryProvider::class.java.classLoader,
         ).toList()
 
-        assertTrue(
-            "Missing Android overlay host service provider.",
-            providers.any { provider ->
-                provider::class.java.name == "com.viewcompose.overlay.material3.android.host.AndroidOverlayHostFactoryProvider"
-            },
+        assertEquals(
+            listOf("com.viewcompose.overlay.android.AndroidOverlayHostFactoryProvider"),
+            providers.map { provider -> provider::class.java.name },
         )
     }
 }

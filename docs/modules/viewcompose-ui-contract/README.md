@@ -62,6 +62,13 @@ created for the node.
   define explicit renderer attachment boundaries for focus and nested scrolling.
 - `UiStateLayerColors` carries already-resolved pressed, focused, and hovered ARGB values without
   embedding design-system roles or opacity policy in the renderer contract.
+- `SemanticsCollectionInfo` and `SemanticsCollectionItemInfo` are Q3 immutable snapshots for a
+  collection's logical dimensions, selection policy, and child positions. They let custom tabs,
+  navigation, segmented controls, lists, and grids retain platform accessibility position
+  announcements without embedding a design system in the renderer.
+- `SurfaceNodeProps` is the Q2 resolved contract for `NodeType.Surface`. It carries a graphics-core
+  brush, logical shape, border, state layers, effective minimum dimensions, optional centered
+  visual height, and clipping policy without carrying a design-system identity.
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/),
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/),
   and [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -84,6 +91,10 @@ Because the current line is alpha, the documentation site intentionally does not
   `visualHeight` is the requested centered surface height. A renderer must clamp an invalid visual
   height to the effective bounds and must keep explicit application surface modifiers
   authoritative.
+- `SurfaceNodeProps.minimumWidth` and `minimumHeight` define effective layout, input, focus, and
+  semantic bounds. Its nullable `visualHeight` affects only fill, border, ripple, shape outline,
+  and default clipping. Explicit caller surface modifiers remain authoritative and disable that
+  visual inset. Solid and gradient brush coordinates are resolved in local surface pixels.
 - Button, IconButton, Box, Row, and SegmentedControl state layers use
   pressed-before-focused-before-hovered precedence while an enabled target is active; inactive and
   disabled states are transparent. A null `stateLayerColors` preserves the legacy value-only
@@ -95,6 +106,9 @@ Because the current line is alpha, the documentation site intentionally does not
 - Modifier order is semantic. Layout and parent-data collection, visual decoration, input,
   semantics, and drawing phases consume the ordered elements according to their documented phase
   rules; reordering elements may change behavior.
+- Collection semantics use logical indexes. RTL may reverse physical placement but does not change
+  row/column metadata or callback identity. A collection item derives heading and selected metadata
+  from the same `SemanticsConfiguration` fields, avoiding duplicate state ownership.
 - `UiEnvironmentValues` is captured on every VNode subtree. A renderer must use the captured values
   instead of consulting unrelated process-global density, locale, or direction state.
 - `LazyListState`, pager state, focus requesters, and nested-scroll dispatchers attach to one current
@@ -153,3 +167,14 @@ constructor call sites and custom renderers must be rebuilt for the correspondin
 `SegmentedControlNodeProps` preserves source construction and the one-color renderer fallback, but
 it changes their binary constructor contracts. Precompiled direct constructors and custom
 renderers must be rebuilt for the corresponding alpha release.
+
+`SurfaceNodeProps` replaces `BoxNodeProps` for `NodeType.Surface` and is a Q2 immutable snapshot.
+Custom renderers must add the new type/spec pairing and rebuild precompiled callers. Adding
+`UiCornerFamily.Continuous` and `UiShape.continuous` expands the Q2 shape contract; exhaustive enum
+consumers must handle the new family or deliberately select their documented rounded fallback.
+
+`SemanticsCollectionInfo` and `SemanticsCollectionItemInfo` add Q3 platform-neutral collection
+metadata. The nullable additions to `SemanticsConfiguration` change its binary constructor
+contract, so precompiled callers and custom renderers must rebuild. Renderers that support
+accessibility should map the parent collection and child position snapshots together; omitting the
+mapping loses position announcements but must not change layout, input, or selection callbacks.

@@ -1,6 +1,6 @@
 ---
 translation_source: project/documentation-site.md
-translation_source_hash: 86a976159a6a7ee5f633bcea127fe15f511cff445b29732932b7b50654757caf
+translation_source_hash: 06dd6d9695b4b25b7c36ce428c2257b76274eafe56b1c804309c361a398de411
 translation_status: current
 ---
 
@@ -62,6 +62,14 @@ React、navbar、footer 或 sidebar 新增消息 key 时运行 `npm run write-tr
 英文和简体中文都在构建时生成本地全文索引；部署后无需托管服务、凭据、分析或网络请求。
 搜索 UI 文案来自标准 `zh-CN` 消息目录。
 
+单 Locale 搜索索引预算为 5 MiB。加入可搜索的[多设计系统架构标准](../architecture/design-systems.md)、
+ADR-0005 及包含大量证据的
+[有效执行计划](https://docs.viewcompose.com/project/plans/multi-design-system-high-fidelity)后，实测英文
+索引约 4.1 MiB、中文约 4.4 MiB，因此预算首次从 4 MiB 上调。完整 One UI 与 Overlay 架构记录
+以及新增的九份中文镜像进入索引后，完整构建实测英文约 4.4 MiB、中文约 4.7 MiB，因此经审查的
+上限调整为 5 MiB。保持这些架构契约可搜索具有直接读者价值，优先级高于按路径排除。后续提升仍
+必须提供新的测量结果与读者价值说明；普通文档增长不会自动放宽预算。
+
 兼容重定向保留 `/docs`、`/getting-started`、`/compose-migration` 和
 `/migrate-from-compose`，包括 locale 前缀形式。只为明确的历史或推广路由增加重定向，权威
 文档路径仍是唯一真相源。
@@ -75,7 +83,7 @@ Docusaurus 完成各 locale 构建后，受支持的构建入口会删除 `/zh-C
 artifact/version 树与未发布制品的工作树 `current` Dokka 共用 API 树预算，平均上限为
 4.5 MiB，任一单独树不得超过 24 MiB。只有 manifest 与重定向别名使用独立的 1 MiB 路由
 配额。其他上限为 Docusaurus 构建 120 秒、JavaScript 总计 8 MiB/单文件 768 KiB、CSS
-128 KiB、各 locale 搜索索引 4 MiB。门禁也会拒绝任何带 locale 前缀的 API 副本。提高阈值
+128 KiB、各 locale 搜索索引 5 MiB。门禁也会拒绝任何带 locale 前缀的 API 副本。提高阈值
 必须附有读者或发布价值的测量说明。
 
 无障碍检查覆盖站点自有英文与本地化页面，检查文档语言、title/main landmark、标题顺序、

@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: 86d1c0d8f745c491906cca2746e11144672313f8b476de660eb8519316756330
+translation_source_hash: cea2a6e16750dd1834341476fc3af6306192788c4491ac1ac94cdd71878321e7
 translation_status: current
 ---
 
@@ -169,12 +169,15 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 2. `viewModel`/`savedStateHandle` 放在 `:viewcompose-viewmodel-androidx`（`com.viewcompose.viewmodel`）。
 3. 宿主默认 Local 注入由 `viewcompose-host-android` 的 host bridge 负责，不在上述模块重复实现注入逻辑。
 
-## 5.3 服务提供者优先约束（Overlay/Host/Decoration）
+## 5.3 Root 作用域集成装配
 
-扩展装配默认走服务契约（SPI），反射仅作为最后兜底且需单独评审：
+普通应用 Root 显式选择集成。SPI Discovery 只保留给底层中立扩展，反射仅作为最后兜底且需单独评审：
 
-1. overlay 默认装配必须通过 `AndroidOverlayHostFactoryProvider + ServiceLoader`，禁止新增 `Class.forName` 字符串反射主路径。
-2. `viewcompose-overlay-material3-android` 的默认实现必须通过 `META-INF/services` 注册 provider；缺失时行为必须稳定回退 no-op 并可观测日志提示。
+1. Activity、Fragment、Navigation 与具名 Design System Root 显式构造各自 Root 作用域 Overlay
+   Host；Classpath 顺序不得选择设计系统。
+2. `AndroidOverlayHostFactoryProvider + ServiceLoader` 只供自定义底层 Host 使用，并且只发现一个
+   中立 `viewcompose-overlay-android` Provider。Material 与 One UI Adapter 都不注册完整 Host
+   Provider。
 3. 可选 View 装饰后端必须通过 `AndroidViewDecorationBackend + ServiceLoader` 接入；renderer/host 禁止反向依赖具体阴影实现，缺失后端时必须稳定 no-op。
 4. 若确实需要反射（临时兼容场景），必须在同一步补充架构文档与契约测试，并登记移除计划，不得长期保留。
 
@@ -265,11 +268,12 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
    `viewcompose-*` 模块禁止依赖 `app`。
 3. UI Foundation 主源码禁止导入 Renderer、AndroidX 或 Material API；UI Contract 主源码禁止
    导入 `android.*` 或 `androidx.*`。
-4. `ComponentActivity/Fragment.setUiContent` 只位于 `viewcompose-android`；`renderInto` 与
+4. 中立 `ComponentActivity/Fragment.setUiContent` 只位于 `viewcompose-android`；具名
+   `setMaterial3UiContent` 位于 `viewcompose-material3-android`；`renderInto` 与
    `AndroidView/nativeView` 保留在底层 `viewcompose-host-android` Engine。
-5. Material Theme Policy 只位于 `viewcompose-material3`，Material-backed Presentation 只能位于
-   名称明确的 Integration。UI Foundation、Renderer Android 与 Host Android 禁止导入或依赖
-   Material Components。
+5. Material Theme Policy 只位于 `viewcompose-material3`，Material Activity/Fragment 与
+   Presentation 接线只能位于名称明确的 Integration。UI Foundation、Renderer Android、Host
+   Android 与中立 Android 聚合模块禁止导入或依赖 Material。
 6. `qaQuick` 中的 `verifyModuleDependencyBoundaries` 与 `verifyDesignSystemIsolation` 是不可豁免
    硬门禁；禁止只靠 Code Review 口头维持边界。
 7. 公开依赖按 Consumer 暴露而不是实现便利性分类：public/protected 签名类型与明确的入口聚合使用

@@ -74,11 +74,11 @@ Coil image loading, navigation, and ConstraintLayout do not become core requirem
 
 ## Get started
 
-The standard Android dependency is the `viewcompose-android` aggregate. The hard-cut artifact line
-starts at `0.1.0-alpha01`; this source checkout verifies it through the generated local Maven
-repository until that coordinate is released to Maven Central. ViewCompose modules are
-independently versioned, so optional features and platform-neutral cores may have a different
-current version.
+The standard Material Android dependency is the named `viewcompose-material3-android` aggregate.
+Use the neutral `viewcompose-android` aggregate when the application installs One UI or its own
+design tokens. The artifact lines start at `0.1.0-alpha01`; this source checkout verifies them
+through the generated local Maven repository until those coordinates are released to Maven
+Central. ViewCompose modules are independently versioned.
 
 ```kotlin
 repositories {
@@ -86,20 +86,20 @@ repositories {
 }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
 }
 ```
 
-The aggregate exposes runtime, UI contract, UI Foundation, host, Material 3 theme, Lifecycle, and
-ViewModel APIs transitively. Add those lower-level coordinates only when building an integration
-or intentionally using its advanced APIs without the aggregate.
+The named aggregate exposes the neutral host plus Material 3, runtime, UI Foundation, Lifecycle,
+and ViewModel APIs transitively. Add lower-level coordinates only when building an integration or
+intentionally using their advanced APIs without the aggregate.
 
 ```kotlin
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             val count = remember { mutableStateOf(0) }
 
             Column(spacing = 16.dp) {
@@ -140,9 +140,9 @@ See [Publishing](docs/project/publishing.md) for the complete artifact and versi
 | Kernel | `viewcompose-runtime`, `viewcompose-text-core`, `viewcompose-ui-contract`, `*-core` | State, editing, contracts, and platform-neutral policy |
 | UI Foundation | `viewcompose-ui-foundation`, `viewcompose-animation`, `viewcompose-gesture`, `viewcompose-graphics` | Platform-neutral UI and capability DSLs |
 | Android Engine | `viewcompose-renderer-android`, `viewcompose-host-android` | Native View mapping and low-level host sessions |
-| Design System | `viewcompose-material3` | Material 3 theme interpretation and token mapping |
+| Design System | `viewcompose-material3`, `viewcompose-oneui7` | Named design tokens, recipes, and components |
 | Integrations | `viewcompose-*-androidx`, `viewcompose-*-android`, image adapters | AndroidX, Material, decoder, and optional platform integrations |
-| Aggregate | `viewcompose-android` | Standard Android application entry point |
+| Aggregate | `viewcompose-android`, `viewcompose-material3-android` | Neutral and named Material application entry points |
 | Tooling | `viewcompose-preview*`, `viewcompose-benchmark` | Preview, diagnostics, snapshots, and performance testing |
 
 Module versions are intentionally independent. Depending on a feature does not require adopting

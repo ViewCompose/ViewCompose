@@ -9,16 +9,21 @@ import {
   totalBytes,
   websiteRoot,
 } from './site-quality-lib.mjs';
+import {loadDocumentationReleases} from './documentation-releases.mjs';
 
 const MIB = 1024 * 1024;
 const KIB = 1024;
+const repositoryRoot = resolve(websiteRoot, '..');
 
 export async function verifySiteBudgets({
   buildDurationSeconds,
   buildDirectory = buildDir,
   budgetsPath = resolve(websiteRoot, 'site-budgets.json'),
+  unpublishedArtifacts,
 } = {}) {
   const budgets = await readJson(budgetsPath);
+  const configuredUnpublishedArtifacts = unpublishedArtifacts ??
+    (await loadDocumentationReleases(repositoryRoot)).unpublished;
   const allFiles = await collectFiles(buildDirectory);
   const relativePath = (path) => relative(buildDirectory, path).replaceAll('\\', '/');
   const javascriptFiles = allFiles.filter((path) => relativePath(path).startsWith('assets/js/'));
@@ -50,12 +55,14 @@ export async function verifySiteBudgets({
       return {artifact, version, bytes: await totalBytes(files)};
     }),
   );
-  const releasedArtifacts = new Set(apiManifest.map(({artifact}) => artifact));
-  const unpublishedCurrentArtifacts = new Set(
+  const currentApiArtifacts = new Set(
     canonicalApiFiles.flatMap((path) => {
       const match = /^api\/(viewcompose-[a-z0-9-]+)\/current\//u.exec(relativePath(path));
-      return match && !releasedArtifacts.has(match[1]) ? [match[1]] : [];
+      return match ? [match[1]] : [];
     }),
+  );
+  const unpublishedCurrentArtifacts = new Set(
+    [...configuredUnpublishedArtifacts].filter((artifact) => currentApiArtifacts.has(artifact)),
   );
   const unpublishedCurrentApiSizes = await Promise.all(
     [...unpublishedCurrentArtifacts].sort().map(async (artifact) => {

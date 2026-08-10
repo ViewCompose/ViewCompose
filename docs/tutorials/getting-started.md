@@ -15,15 +15,13 @@ also verifies that preview discovery stays connected to the compiled function.
 
 ## Required dependencies
 
-Make sure the application resolves Maven Central, then add the standard Android aggregate:
+Make sure the application resolves Maven Central, then add the named Material Android aggregate:
 
 ```kotlin title="build.gradle.kts"
 repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:0.1.0-alpha01")
-    implementation("androidx.activity:activity:1.12.4")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation("com.viewcompose:viewcompose-material3-android:0.1.0-alpha01")
 }
 ```
 
@@ -76,7 +74,8 @@ released to Maven Central:
 
 | Artifact | Version | How it is supplied |
 | --- | --- | --- |
-| `viewcompose-android` | `0.1.0-alpha01` | Explicit application dependency |
+| `viewcompose-material3-android` | `0.1.0-alpha01` | Explicit application dependency |
+| `viewcompose-android` | `0.1.0-alpha01` | Transitive neutral application aggregate |
 | `viewcompose-host-android` | `0.1.0-alpha03` | Transitive low-level engine dependency |
 | `viewcompose-runtime` | `0.1.0-alpha02` | Transitive foundation dependency |
 | `viewcompose-ui-contract` | `0.1.0-alpha03` | Transitive foundation dependency |
@@ -120,7 +119,7 @@ package com.example.counter
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
@@ -139,7 +138,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent {
+        setMaterial3UiContent {
             CounterScreen()
         }
     }
@@ -170,7 +169,7 @@ internal fun UiTreeBuilder.CounterScreen() {
 
 Four pieces form the complete update path:
 
-1. `setUiContent` installs a lifecycle-aware Android host and performs the first render.
+1. `setMaterial3UiContent` installs a lifecycle-aware Android host and performs the first render.
 2. `remember` retains the state object at its composition position.
 3. reading `count.value` subscribes this composition scope to state invalidation.
 4. the button writes a new value; ViewCompose recomposes the affected scope and patches the native

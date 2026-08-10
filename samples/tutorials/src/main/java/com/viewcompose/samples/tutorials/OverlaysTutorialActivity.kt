@@ -3,7 +3,7 @@ package com.viewcompose.samples.tutorials
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import com.viewcompose.android.setUiContent
+import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
@@ -21,7 +21,7 @@ class OverlaysTutorialActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setUiContent(overlayHostFactory = ::AndroidOverlayHost) {
+        setMaterial3UiContent(overlayHostFactory = ::AndroidOverlayHost) {
             val dialogVisible = remember { mutableStateOf(false) }
 
             Button("Delete item", onClick = { dialogVisible.value = true })

@@ -18,6 +18,7 @@ import com.viewcompose.animation.rememberAnimatable
 import com.viewcompose.animation.rememberInfiniteTransition
 import com.viewcompose.animation.shrinkVertically
 import com.viewcompose.animation.updateTransition
+import com.viewcompose.animation.interpolateUiShape
 import com.viewcompose.animation.core.AnimationConverter
 import com.viewcompose.animation.core.AnimationConverters
 import com.viewcompose.animation.core.RepeatMode
@@ -27,6 +28,7 @@ import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
 import com.viewcompose.runtime.frame.MonotonicFrameClock
 import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.Text
@@ -145,6 +147,15 @@ fun animateContentSizeSample(): Modifier {
     return Modifier.animateContentSize(
         animationSpec = spring(durationMillis = 320),
     )
+}
+
+/** Resolves one frame of a compatible continuous-corner shape transition. */
+fun uiShapeInterpolationSample(progress: Float): UiShape {
+    return interpolateUiShape(
+        start = UiShape.continuous(8.dp),
+        end = UiShape.continuous(24.dp),
+        fraction = progress,
+    ).shape
 }
 
 data class Point(

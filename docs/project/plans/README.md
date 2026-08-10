@@ -4,6 +4,11 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
+- [Multi-design-system and high-fidelity theme](./multi-design-system-high-fidelity.md) — establish
+  immutable foundation-token and typed component-recipe layers, validate them with a deliberately
+  non-Material internal design system, then stage shared primitives, motion, capability fallbacks,
+  root switching, and a first public high-fidelity non-Material design-system slice without adding
+  design-system policy to Android Renderer.
 - [Material 3 design convergence](./material3-design-convergence.md) — complete the standard
   Material 3 token and theme bridge, correct low-risk component defaults, and require baseline,
   accessibility, visual, and rollback evidence before touch-target, TextField, Switch, or Slider

@@ -16,6 +16,8 @@ import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.DividerNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
+import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.shape.UiShape
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -607,17 +609,18 @@ class ThemeTest {
 
         val surface = tree.single()
         val elements = surface.modifier.readModifierElements()
-        val background = elements.last { it is BackgroundColorModifierElement } as BackgroundColorModifierElement
-        val shape = elements.last { it is ShapeModifierElement } as ShapeModifierElement
         val alpha = elements.last { it is AlphaModifierElement } as AlphaModifierElement
-        val spec = surface.spec as BoxNodeProps
+        val spec = surface.spec as SurfaceNodeProps
 
         assertEquals(NodeType.Surface, surface.type)
-        assertEquals(SurfaceDefaults.variantBackgroundColor(), background.color)
-        assertEquals(SurfaceDefaults.shape(), shape.shape)
+        assertEquals(
+            Brush.SolidColor(SurfaceDefaults.variantBackgroundColor()),
+            spec.fill,
+        )
+        assertEquals(SurfaceDefaults.shape(), spec.shape)
         assertEquals(SurfaceDefaults.pressedColor(), spec.rippleColor)
         assertEquals(SurfaceDefaults.disabledAlpha(), alpha.alpha)
-        assertTrue(surface.spec is BoxNodeProps)
+        assertTrue(surface.spec is SurfaceNodeProps)
     }
 
     @Test

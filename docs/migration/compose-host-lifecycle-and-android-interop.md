@@ -71,7 +71,7 @@ ViewCompose target:
 {/* paired-sample source="samples/compose-migration/src/main/java/com/viewcompose/samples/migration/host/ViewComposeHostSample.kt" region="viewcompose-host" */}
 ```kotlin
 fun ComponentActivity.installViewComposeInteropSample() {
-    setUiContent {
+    setMaterial3UiContent {
         ViewComposeInteropSample()
     }
 }
@@ -98,8 +98,8 @@ and **Unsupported**.
 
 | Concept | Compose / AndroidX behavior | ViewCompose behavior | Status | Local evidence and verification note |
 | --- | --- | --- | --- | --- |
-| Activity root host | `ComponentActivity.setContent` installs Compose content into the Activity and owns the Composition through the host. | `ComponentActivity.setUiContent` replaces the Activity content view, renders the first frame synchronously, returns the new root `ViewGroup`, and keeps the `RenderSession` in an internal registry until replacement or Activity destruction. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), Activity path and session registry; compiled [`AndroidEntrySamples.kt`](../../viewcompose-android/src/test/samples/com/viewcompose/android/samples/AndroidEntrySamples.kt). The synchronous first frame and internally owned session are ViewCompose-specific. |
-| Fragment host | A Fragment-hosted `ComposeView` is normally disposed with the Fragment view tree through `DisposeOnViewTreeLifecycleDestroyed`. | `Fragment.setUiContent` creates and returns a root `ViewGroup` for `onCreateView`. Its internal session is disposed with the current `viewLifecycleOwner`, but the lifecycle owner installed into ViewCompose content is currently the Fragment instance. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), Fragment path and registry; [`LifecycleBoundDisposerTest.kt`](../../viewcompose-android/src/test/java/com/viewcompose/android/LifecycleBoundDisposerTest.kt). The installed-owner mismatch is a known verification gap. |
+| Activity root host | `ComponentActivity.setContent` installs Compose content into the Activity and owns the Composition through the host. | Neutral `ComponentActivity.setUiContent` and named Material `setMaterial3UiContent` replace the Activity content view, render the first frame synchronously, return the new root `ViewGroup`, and keep the `RenderSession` in an internal registry until replacement or Activity destruction. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`Material3AndroidHostBridge.kt`](../../viewcompose-material3-android/src/main/java/com/viewcompose/material3/android/Material3AndroidHostBridge.kt), and their compiled samples. The synchronous first frame and internally owned session are ViewCompose-specific. |
+| Fragment host | A Fragment-hosted `ComposeView` is normally disposed with the Fragment view tree through `DisposeOnViewTreeLifecycleDestroyed`. | Neutral `Fragment.setUiContent` and named Material `setMaterial3UiContent` create and return a root `ViewGroup` for `onCreateView`. Their internal session is disposed with the current `viewLifecycleOwner`, but the lifecycle owner installed into ViewCompose content is currently the Fragment instance. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), Fragment path and registry; [`LifecycleBoundDisposerTest.kt`](../../viewcompose-android/src/test/java/com/viewcompose/android/LifecycleBoundDisposerTest.kt). The installed-owner mismatch is a known verification gap. |
 | Existing View hierarchy | `ComposeView` supplies composition disposal strategies and discovers ViewTree owners. | `renderInto` renders into a supplied `ViewGroup`; it supplies no lifecycle, ViewModel, saved-state, environment, theme, or frame-clock owner and requires explicit session disposal. | Partially supported | [`RenderInto.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/RenderInto.kt) and the compiled `renderIntoSample` in [`HostAndroidSamples.kt`](../../viewcompose-host-android/src/test/samples/com/viewcompose/host/android/samples/HostAndroidSamples.kt). |
 | Lifecycle owner propagation | Compose host integrations resolve AndroidX owners from the Activity, Fragment view, or ViewTree. | Activity content receives the Activity owner. Fragment content currently receives the Fragment owner while session disposal follows the Fragment view lifecycle. Custom containers receive no automatic owner. | Partially supported | [`AndroidHostBridge.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/AndroidHostBridge.kt), [`LifecycleBoundDisposer.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/LifecycleBoundDisposer.kt), and [`LifecycleHostGuards.kt`](../../viewcompose-android/src/main/java/com/viewcompose/android/LifecycleHostGuards.kt). |
 | ViewModel owner propagation | Lifecycle 2.11 can create arbitrary child UI scopes with `ViewModelStoreProvider` and can inherit parent factories and `CreationExtras`. | Activity, Fragment, navigation-entry, and navigation-graph scopes exist. There is no equivalent public provider for arbitrary ViewCompose UI subtrees, and navigation owners do not yet have evidence of inheriting every custom parent factory and `CreationExtras`. | Partially supported | [`NavEntryOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavEntryOwner.kt), [`NavGraphOwner.kt`](../../viewcompose-navigation-android/src/main/java/com/viewcompose/navigation/NavGraphOwner.kt), and [`NavEntryOwnerTest.kt`](../../viewcompose-navigation-android/src/test/java/com/viewcompose/navigation/NavEntryOwnerTest.kt). Lifecycle 2.11 behavior is official semantic evidence only. |
@@ -112,14 +112,15 @@ and **Unsupported**.
 
 ## Choosing a host entry point
 
-Use `setUiContent` for an Activity or Fragment that gives ViewCompose ownership of the host's root
-content. Use `renderInto` only when an existing Android View hierarchy must remain the owner of the
-container. The latter is a lower-level bridge, not a ViewCompose spelling of `ComposeView`:
+Use neutral `setUiContent` or named Material `setMaterial3UiContent` for an Activity or Fragment
+that gives ViewCompose ownership of the host's root content. Use `renderInto` only when an existing
+Android View hierarchy must remain the owner of the container. The latter is a lower-level bridge,
+not a ViewCompose spelling of `ComposeView`:
 
 | Source pattern | Target pattern | Ownership change |
 | --- | --- | --- |
-| `ComponentActivity.setContent` | `ComponentActivity.setUiContent` | ViewCompose owns the internal session; the return value is the installed root `ViewGroup`, not a session handle. |
-| Fragment `ComposeView` | Return `Fragment.setUiContent()` from `onCreateView` | ViewCompose owns the internal session and follows the Fragment view lifecycle, but see the Fragment-owner verification gap below. |
+| `ComponentActivity.setContent` | Neutral `ComponentActivity.setUiContent` or Material `setMaterial3UiContent` | ViewCompose owns the internal session; the return value is the installed root `ViewGroup`, not a session handle. |
+| Fragment `ComposeView` | Return neutral `Fragment.setUiContent()` or Material `setMaterial3UiContent()` from `onCreateView` | ViewCompose owns the internal session and follows the Fragment view lifecycle, but see the Fragment-owner verification gap below. |
 | Embedded `ComposeView` | `renderInto(existingViewGroup)` | The caller becomes responsible for owner provision and disposal. |
 
 All host entry points must be called for an active host. Rendering is main-thread Android work, and
@@ -127,10 +128,11 @@ the first ViewCompose frame is committed before the entry-point call returns.
 
 ## Activity hosting
 
-`ComponentActivity.setUiContent` installs ViewCompose content as the Activity root and supplies the
-Activity lifecycle and ViewModel owners, the host saveable-state registry, animation context,
-frame clock, environment, and theme locals. Calling it again replaces and disposes the previously
-registered Activity session.
+`ComponentActivity.setUiContent` installs a neutral ViewCompose root. The named
+`setMaterial3UiContent` resolves a Material context and token snapshot before delegating to the
+same host lifecycle. Both supply the Activity lifecycle and ViewModel owners, the host
+saveable-state registry, animation context, frame clock, and environment. Calling either again
+replaces and disposes the previously registered Activity session.
 
 The returned value is the installed root `ViewGroup`, not the internal `RenderSession`. Public
 Activity hosting therefore does not expose manual renders, rendering-active control, or early
@@ -138,10 +140,11 @@ session disposal. Replacing the content or destroying the Activity disposes the 
 
 ## Fragment hosting
 
-`Fragment.setUiContent` creates and returns the Fragment root `ViewGroup`; call it from
-`onCreateView` and return that root. The internal session registry binds disposal when the current
-`viewLifecycleOwner` becomes available. A recreated Fragment view gets a new session, and the old
-view session is disposed at `onDestroyView`.
+Neutral `Fragment.setUiContent` and named Material `setMaterial3UiContent` create and return the
+Fragment root `ViewGroup`; call the selected entry from `onCreateView` and return that root. The
+internal session registry binds disposal when the current `viewLifecycleOwner` becomes available.
+A recreated Fragment view gets a new session, and the old view session is disposed at
+`onDestroyView`.
 
 ### Known verification gap: Fragment owner identity
 

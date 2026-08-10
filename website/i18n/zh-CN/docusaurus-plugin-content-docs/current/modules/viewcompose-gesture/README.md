@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-gesture/README.md
-translation_source_hash: f736a35a549d0b294f602bc67818a640924afe958e8c0b5fddbb3236e156f56a
+translation_source_hash: 9d41522ea3b4e9d8ed47e5b004d82d6075593833d5382a06fd2066203b6e9ed6
 translation_status: current
 ---
 
@@ -76,14 +76,40 @@ val modifier = Modifier.anchoredDraggable(
 )
 ```
 
-Modifier 每次组合调用都会把最新 Anchors 同步安装进 State。当前值仍存在时保留精确 Offset；消失
-时，最接近当前视觉 Offset 的 Anchor 成为当前值。原始移动更新不受限的视觉 Offset；完成时提交
-Renderer 选择的最近目标。当前版本立即完成 Settle，没有动画，因此 `targetValue` 通常与
-`currentValue` 同时变化。
+Modifier 每次组合调用都会把最新 Anchors 同步安装进 State。当前值仍存在时，等价 Anchor 集合的
+重新安装会保留正在拖动的 Offset；值消失时，最接近当前视觉 Offset 的 Anchor 成为当前值。原始
+移动更新限制在已安装范围内的 Offset。正常结束会提交 Renderer 选择的最近目标，并可通过
+`onValueSettled` 报告；取消会先恢复最后一次已提交 Anchor，再调用取消 Callback。当前版本立即
+完成 Settle，没有动画，因此 `targetValue` 通常与 `currentValue` 同时变化。
 
 `rememberAnchoredDraggableState` 只在首次 Remember 时读取 `initialValue`。之后改变参数不会重置；
 应显式调用 `snapTo`。Snap 到当前 Anchors 不包含的值会保存语义值并清除 Offset，直到下一次
 Anchor 对齐。Anchored Drag 只接受 Horizontal 或 Vertical。
+
+## 受控双状态拖动
+
+`rememberToggleDragState` 与 `toggleDraggable` 会把 Anchored Drag 适配为由调用方持有状态的
+双状态组件，例如 Design System 自有的 Switch。Checked Anchor 是相对于 Unchecked 零点的有符号
+物理像素偏移；对外的 `progress` 始终是从 `0f` Unchecked 到 `1f` Checked 的逻辑进度，因此 RTL
+可以传入负数 Checked 偏移，而绘制逻辑不需要反转。
+
+```kotlin
+val drag = rememberToggleDragState(
+    checked = checked,
+    checkedAnchorOffsetPx = density.toPx(if (rtl) -20.dp else 20.dp),
+    onCheckedChange = onCheckedChange,
+)
+val target = Modifier
+    .clickable { onCheckedChange(!checked) }
+    .toggleDraggable(drag)
+```
+
+移动尚未形成 Drag 时，Renderer 会把 Tap 留给 Click Modifier。已识别的 Drag 会消费结束事件，按
+位置或速度 Settle，并只请求一次替换状态。组件继续拥有几何、Density/Layout Direction 转换、
+Settled 动画、Checked Semantics 与持久化。拖动中使用 `isDragging` 直接绘制 Follow-finger 进度，
+空闲时使用 Design System 自己的 Motion 契约。`lastCompletion` 会在替换状态 Callback 之前同步
+发布，并保留正常 Settle 或取消恢复端点之前的逻辑进度。组件可用其中逐 State 递增的序列号与
+起始进度继续 Settled 动画，避免短暂跳回旧端点。
 
 ## Transform 手势
 
@@ -111,7 +137,8 @@ Post 回调在之后。可选 `NestedScrollDispatcher` 支持应用主动派发�
 - 测试 Nested Scroll 的 Pre 由外到内、Post 由内到外，以及 Renderer 边界的过度消费限制。
 - 用新 Lambda 重组，验证 Remember 的 State 转发到最新回调。
 
-模块测试覆盖 Modifier 编码、无操作点击声明、Drag 与 Transform 转发、Anchored 最近位置收敛、
+模块测试覆盖 Modifier 编码、无操作点击声明、Drag 与 Transform 转发、Anchored
+边界/重组/取消/Settle 行为、受控 LTR/RTL Toggle 进度、Settle 前 Toggle Completion 快照、
 非法 Free 方向、优先级编码和 Nested Scroll 连接。
 
 ## 相关文档

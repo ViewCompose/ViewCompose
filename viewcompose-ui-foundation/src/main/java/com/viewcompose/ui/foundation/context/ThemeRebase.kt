@@ -27,6 +27,18 @@ fun UiThemeTokens.override(
     interactions: UiInteractionTokens? = null,
     overlays: UiOverlays? = null,
 ): UiThemeTokens {
+    val overriddenFamilies = buildSet {
+        if (colors != null) {
+            add("colors")
+            add("stateColors")
+        }
+        if (stateColors != null) add("stateColors")
+        if (typography != null) add("typography")
+        if (shapes != null) add("shapes")
+        if (controls != null) add("controls")
+        if (interactions != null) add("interactions")
+        if (overlays != null) add("overlays")
+    }
     return copy(
         colors = colors ?: this.colors,
         stateColors = stateColors
@@ -37,6 +49,12 @@ fun UiThemeTokens.override(
         controls = controls ?: this.controls,
         interactions = interactions ?: this.interactions,
         overlays = overlays ?: this.overlays,
-        metadata = metadata.copy(origin = UiThemeOrigin.Override),
+        metadata = metadata.copy(
+            origin = UiThemeOrigin.Override,
+            provenance = metadata.provenance.withOrigins(
+                tokenPaths = overriddenFamilies,
+                origin = UiThemeOrigin.Override,
+            ),
+        ),
     )
 }

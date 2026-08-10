@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 2aafd9fe55735a7d13ccbd6c59607e3c6fe69cfe458a2815cae07e2b3d75cdd7
+translation_source_hash: 1ecd99609d7b684b6b7fd5d01bf29953e2fcf187e4c84a37754d07c423e175b4
 translation_status: current
 ---
 
@@ -31,7 +31,10 @@ dependencies {
   Runtime、Text Core、Graphics Core 和 Gesture Core 保持为实现依赖。
 - Android 运行时依赖：AndroidX Core、AppCompat、RecyclerView、ViewPager2、
   ConstraintLayout 与 SwipeRefreshLayout；不依赖 Material Components。
-- 通用 Surface、圆角/切角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
+- 通用 Surface、圆角/切角/连续圆角和进度指示器使用引擎自有 Android 绘制实现，并只消费节点解析值。
+- `SurfaceNodeProps` 使用同一份缓存的 `UiShapeDrawable` 几何来完成纯色或渐变 Fill、Border、
+  Ripple Mask、Outline 与可选裁剪。连续圆角使用凸三次曲线路径；稳定绘制不会逐帧分配 Path、
+  Shader、Drawable 或集合。
 - 引擎自有圆角使用圆弧绘制。Shape 边框会沿向内偏移半个线宽的路径居中绘制，保证轮廓完整落在
   逻辑 Drawable 边界内，包括组件在较大触控目标中居中较短可见 Surface 的情况。
 - Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
@@ -40,6 +43,8 @@ dependencies {
 - Button、IconButton、交互式 Box/Row 组合控件与 SegmentedControl 状态层使用 NodeSpec 中
   已解析的 `UiStateLayerColors`。引擎在现有 Shape 遮罩和可见 Surface 内缩中应用启用态的
   按下、聚焦和悬停选择器，不选择语义角色或 Material 透明度值。
+- 通用集合语义会映射为 AndroidX 无障碍集合元数据。父节点负责行列数量和选择基数，子节点负责
+  逻辑位置和跨度；已有的 `selected` 与 `heading` 语义仍是 item 状态的唯一事实来源。
 - 当前版本构建基线：Kotlin 2.0.21、Android Gradle Plugin 8.13.2。
 
 ## 渲染模型
@@ -108,7 +113,15 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - 只要影响输出的捕获值发生变化，Lazy item 的 `contentToken` 就必须变化。即使 item 语义未变，
   session 回调也会从 next 列表中的原始 item 实例刷新。
 - 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
+- Gesture 分发会保留尚未判定的 Pointer Stream，直到识别出 Drag。若 Stream 结束时没有被 Gesture
+  消费，保留目标会收到一次普通 Click；已识别的 Drag 会消费 Stream 并抑制该 Click。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
+- Basic Surface 使用相同的有效/可见边界模型。Surface 快照变化会对保留的
+  `DeclarativeBoxLayout` 执行中立重绑定；调用方 Background、Border 或 Shape Modifier 会移除
+  组件提供的可见内缩，并占满有效边界。
+- 引擎创建的 Box 与 Surface 容器不执行 XML 属性解析。没有显式 `BoxScope.align` 的子项会在
+  LayoutParams 中保留继承内容对齐标记，因此内容对齐 Patch 只更新这些子项，不再在每次布局时
+  扫描全部子项；显式对齐的子项保持不变。
 - Button 与 IconButton 状态层变化参与定向样式 Patch，只重建 Surface Drawable。交互式
   Box/Row 变化会重新执行现有样式绑定；SegmentedControl 只重建选中角色发生变化的分段背景。
   按下优先于聚焦和悬停，聚焦优先于悬停；多状态路径的非活动态或禁用态保持透明。多状态契约
@@ -118,8 +131,11 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   最终权限；Android Renderer 不解释任何 Material 策略或 Token。
 - 原生 Switch 与 Slider 绑定通过 `SRC_IN` 应用每个已解析 Tint，从而保留平台或 OEM Drawable
   遮罩。Slider 分别持有激活轨道、非激活轨道和 Thumb Tint，定向 Patch 可在不重建 View 的
-  情况下更新非激活轨道。在独立且经过测试的自定义控件契约被接受前，平台 Drawable 几何及其
-  内建覆盖率仍具有最终权限。
+  情况下更新非激活轨道。当受控 Callback 接受原生 Switch 已提交的值时，定向 Patch 不会再次
+  写入相同值，因此平台或 OEM 的 Thumb Transition 可以继续执行。在独立且经过测试的自定义控件
+  契约被接受前，平台 Drawable 几何及其内建覆盖率仍具有最终权限。
+- 集合行列索引是从零开始的逻辑位置。Android 在 RTL 中反向排列后代时，Renderer 不得反转这些
+  索引。选中态和标题态读取 item 已有的语义字段，防止组件通过重复契约暴露相互矛盾的无障碍状态。
 
 ## Android host 与线程规则
 
@@ -159,3 +175,7 @@ mounted node、patch 记录、诊断树对象、不透明 Lazy content token 或
 Renderer 的多状态路径实现通用 UI Contract，并非 Material 功能。采用 `UiStateLayerColors` 的
 自定义 Renderer 必须保留启用态优先级与透明非活动态；收到空值的 Renderer 可以继续使用其已有
 单色兼容路径。
+
+消费集合语义的自定义 Renderer 必须保留逻辑行列顺序，并把 item 跨度、选中态和标题态映射为
+等价的平台无障碍元数据。alpha 阶段尚未识别这些可空集合字段的 Renderer 可以忽略它们，但其
+无障碍输出将无法播报集合位置。

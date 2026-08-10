@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.tree
 
 import android.graphics.Color
+import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.modifier.CornerRadiusModifierElement
 import com.viewcompose.ui.modifier.PaddingModifierElement
 import com.viewcompose.ui.node.UiStateLayerColors
@@ -11,6 +12,7 @@ import com.viewcompose.ui.node.spec.IconButtonNodeProps
 import com.viewcompose.ui.node.spec.RowNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.node.spec.ToggleNodeProps
 import com.viewcompose.ui.node.spec.UiFontFamily
 import com.viewcompose.ui.shape.UiShape
@@ -37,6 +39,7 @@ internal object ModifierNodeStyleResolver {
         return NodeStyle(
             backgroundDrawableResId = resolved.backgroundDrawableRes?.resId,
             backgroundColor = resolved.backgroundColor?.color ?: readNodeBackgroundColor(node),
+            surfaceFill = readNodeSurfaceFill(node),
             borderWidth = node.environment.roundToPx(
                 resolved.border?.width ?: readNodeBorderWidth(node) ?: com.viewcompose.ui.unit.UiDp.Zero,
             ),
@@ -49,7 +52,7 @@ internal object ModifierNodeStyleResolver {
                 resolved.minHeight?.minHeight ?: readNodeMinHeight(node) ?: com.viewcompose.ui.unit.UiDp.Zero,
             ),
             minWidth = node.environment.roundToPx(
-                resolved.minWidth?.minWidth ?: com.viewcompose.ui.unit.UiDp.Zero,
+                resolved.minWidth?.minWidth ?: readNodeMinWidth(node) ?: com.viewcompose.ui.unit.UiDp.Zero,
             ),
             rippleColor = readNodeRippleColor(node) ?: defaultRippleColor,
             stateLayerColors = readNodeStateLayerColors(node),
@@ -62,6 +65,7 @@ internal object ModifierNodeStyleResolver {
             includeFontPadding = readNodeIncludeFontPadding(node),
             clickable = resolved.clickable != null || readNodeClickable(node),
             surfaceInsets = surfaceInsets,
+            clipContent = readNodeClipContent(node),
         )
     }
 
@@ -105,10 +109,14 @@ internal object ModifierNodeStyleResolver {
         else -> null
     }
 
+    private fun readNodeSurfaceFill(node: VNode): Brush? =
+        (node.spec as? SurfaceNodeProps)?.fill
+
     private fun readNodeBorderWidth(node: VNode): com.viewcompose.ui.unit.UiDp? = when (val spec = node.spec) {
         is ButtonNodeProps -> spec.borderWidth
         is TextFieldNodeProps -> spec.borderWidth
         is IconButtonNodeProps -> spec.borderWidth
+        is SurfaceNodeProps -> spec.borderWidth
         else -> null
     }
 
@@ -116,6 +124,7 @@ internal object ModifierNodeStyleResolver {
         is ButtonNodeProps -> spec.borderColor
         is TextFieldNodeProps -> spec.borderColor
         is IconButtonNodeProps -> spec.borderColor
+        is SurfaceNodeProps -> spec.borderColor
         else -> null
     }
 
@@ -123,6 +132,7 @@ internal object ModifierNodeStyleResolver {
         is ButtonNodeProps -> spec.shape
         is TextFieldNodeProps -> spec.shape
         is IconButtonNodeProps -> spec.shape
+        is SurfaceNodeProps -> spec.shape
         else -> null
     }
 
@@ -132,6 +142,7 @@ internal object ModifierNodeStyleResolver {
         is ToggleNodeProps -> spec.rippleColor
         is BoxNodeProps -> spec.rippleColor
         is RowNodeProps -> spec.rippleColor
+        is SurfaceNodeProps -> spec.rippleColor
         else -> null
     }
 
@@ -140,6 +151,7 @@ internal object ModifierNodeStyleResolver {
         is IconButtonNodeProps -> spec.stateLayerColors
         is BoxNodeProps -> spec.stateLayerColors
         is RowNodeProps -> spec.stateLayerColors
+        is SurfaceNodeProps -> spec.stateLayerColors
         else -> null
     }
 
@@ -152,6 +164,12 @@ internal object ModifierNodeStyleResolver {
     private fun readNodeMinHeight(node: VNode): com.viewcompose.ui.unit.UiDp? = when (val spec = node.spec) {
         is ButtonNodeProps -> spec.minHeight
         is TextFieldNodeProps -> spec.minHeight
+        is SurfaceNodeProps -> spec.minimumHeight
+        else -> null
+    }
+
+    private fun readNodeMinWidth(node: VNode): com.viewcompose.ui.unit.UiDp? = when (val spec = node.spec) {
+        is SurfaceNodeProps -> spec.minimumWidth
         else -> null
     }
 
@@ -160,12 +178,23 @@ internal object ModifierNodeStyleResolver {
         resolved: ResolvedModifiers,
     ): VerticalSurfaceInsetsPx {
         if (resolved.hasExplicitSurfaceOverride()) return VerticalSurfaceInsetsPx.Zero
-        val spec = node.spec as? ButtonNodeProps ?: return VerticalSurfaceInsetsPx.Zero
-        return centeredVerticalSurfaceInsets(
-            effectiveHeightPx = node.environment.roundToPx(spec.minHeight),
-            visualHeightPx = node.environment.roundToPx(spec.visualHeight),
-        )
+        return when (val spec = node.spec) {
+            is ButtonNodeProps -> centeredVerticalSurfaceInsets(
+                effectiveHeightPx = node.environment.roundToPx(spec.minHeight),
+                visualHeightPx = node.environment.roundToPx(spec.visualHeight),
+            )
+            is SurfaceNodeProps -> spec.visualHeight?.let { visualHeight ->
+                centeredVerticalSurfaceInsets(
+                    effectiveHeightPx = node.environment.roundToPx(spec.minimumHeight),
+                    visualHeightPx = node.environment.roundToPx(visualHeight),
+                )
+            } ?: VerticalSurfaceInsetsPx.Zero
+            else -> VerticalSurfaceInsetsPx.Zero
+        }
     }
+
+    private fun readNodeClipContent(node: VNode): Boolean =
+        (node.spec as? SurfaceNodeProps)?.clipContent == true
 
     private fun readNodePadding(node: VNode): PaddingModifierElement? = when (val spec = node.spec) {
         is ButtonNodeProps -> PaddingModifierElement(
@@ -247,6 +276,7 @@ internal object ModifierNodeStyleResolver {
 internal data class NodeStyle(
     val backgroundDrawableResId: Int?,
     val backgroundColor: Int?,
+    val surfaceFill: Brush?,
     val borderWidth: Int,
     val borderColor: Int,
     val cornerRadius: CornerRadiusModifierElement?,
@@ -265,6 +295,7 @@ internal data class NodeStyle(
     val includeFontPadding: Boolean?,
     val clickable: Boolean,
     val surfaceInsets: VerticalSurfaceInsetsPx = VerticalSurfaceInsetsPx.Zero,
+    val clipContent: Boolean = false,
 )
 
 /** Pixel insets that center a node's visual surface inside its effective View bounds. */

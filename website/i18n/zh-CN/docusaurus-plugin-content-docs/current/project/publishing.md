@@ -1,6 +1,6 @@
 ---
 translation_source: project/publishing.md
-translation_source_hash: 4b17d4b2c0c32edf5d6bf08777b8fd23c4ba1e044bffdaaeffa9da1d396081e5
+translation_source_hash: 617cc55351852e73d38c6ceb5757f8f8b2549c3e34d9d05dd4cb5245d13d33a4
 translation_status: current
 ---
 
@@ -221,14 +221,15 @@ minor，`breaking` 在 `1.0` 后增加 major、在 `0.x` 增加 minor。预发�
 
 ```kotlin
 dependencies {
-    implementation("com.viewcompose:viewcompose-android:<version-with-this-contract>")
+    implementation("com.viewcompose:viewcompose-material3-android:<version-with-this-contract>")
 }
 ```
 
-`viewcompose-android` 会传递暴露标准 UI Foundation、Android Engine、Material 3 Theme Bridge、
-Lifecycle 与 ViewModel 集成。`viewcompose-host-android` 保留为高级挂载和自定义集成使用的底层
-Engine 产物。业务侧重复声明一个已经传递引入的产物不会产生 Gradle 冲突，但属于冗余；它应表达
-有意直接使用 API，而不是弥补错误的发布元数据。
+`viewcompose-material3-android` 会传递暴露中立 `viewcompose-android` 聚合模块与 Material 3
+适配器。中立聚合模块传递暴露 UI Foundation、Android Engine、Lifecycle 与 ViewModel 集成，且
+不包含 Material。`viewcompose-host-android` 保留为高级挂载和自定义集成使用的底层 Engine 产物。
+业务侧重复声明已传递引入的产物不会产生 Gradle 冲突，但属于冗余；它应表达有意直接使用 API，
+而不是弥补错误的发布元数据。
 
 Feature 产物会暴露编译其公开 API 所需的全部 ViewCompose 模块，包括平台无关 Core：
 
@@ -269,8 +270,9 @@ dependencies {
 [`gradle/viewcompose-dependency-contracts.properties`](https://github.com/ViewCompose/ViewCompose/blob/main/gradle/viewcompose-dependency-contracts.properties)
 是所有登记产物直接 ViewCompose 依赖的机器可读白名单。`verifyViewComposeDependencyContracts`
 会将其与 Gradle 声明对比；本地仓库检查会验证 `api` 生成 Maven compile scope，
-`implementation` 生成 runtime scope。发布消费 Smoke Project 随后使用生成仓库编译最小 Host、
-可选 Feature 与纯 JVM Core 三条路径。这些检查进入发布配置和仓库验证流程；修改依赖边时，必须
+`implementation` 生成 runtime scope。发布消费 Smoke Project 随后使用生成仓库编译中立 Host、
+具名 Material Host、可选 Feature 与纯 JVM Core 四条路径。这些检查进入发布配置和仓库验证流程；
+修改依赖边时，必须
 同步更新契约、所属模块手册与 Release Intent。
 
 仓库内 Maven Sample 只有在同一门禁先把当前 Checkout 发布到 `build/maven-repository`，再通过

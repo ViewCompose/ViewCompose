@@ -21,8 +21,12 @@ val modulePackageRoots = mapOf(
     "viewcompose-ui-foundation" to "com.viewcompose.ui.foundation",
     "viewcompose-host-android" to "com.viewcompose.host.android",
     "viewcompose-material3" to "com.viewcompose.material3",
+    "viewcompose-material3-android" to "com.viewcompose.material3.android",
+    "viewcompose-oneui7" to "com.viewcompose.oneui7",
     "viewcompose-android" to "com.viewcompose.android",
+    "viewcompose-overlay-android" to "com.viewcompose.overlay.android",
     "viewcompose-overlay-material3-android" to "com.viewcompose.overlay.material3.android",
+    "viewcompose-overlay-oneui7-android" to "com.viewcompose.overlay.oneui7.android",
     "viewcompose-image-coil" to "com.viewcompose.image.coil",
     "viewcompose-image-glide" to "com.viewcompose.image.glide",
     "viewcompose-benchmark" to "com.viewcompose.benchmark",
@@ -46,7 +50,6 @@ val modulePackageRoots = mapOf(
 val forbiddenLegacyPackageRoots = setOf(
     "com.viewcompose.widget.core",
     "com.viewcompose.widget.constraintlayout",
-    "com.viewcompose.overlay.android",
 )
 
 val kotlinJvmModules = setOf(
@@ -80,11 +83,15 @@ val runtimeModuleLayers = mapOf(
     "viewcompose-renderer-android" to "android-engine",
     "viewcompose-host-android" to "android-engine",
     "viewcompose-material3" to "design-system",
+    "viewcompose-oneui7" to "design-system",
     "viewcompose-navigation-android" to "integration",
+    "viewcompose-material3-android" to "aggregate",
     "viewcompose-lifecycle-androidx" to "integration",
     "viewcompose-viewmodel-androidx" to "integration",
     "viewcompose-constraintlayout-androidx" to "integration",
+    "viewcompose-overlay-android" to "integration",
     "viewcompose-overlay-material3-android" to "integration",
+    "viewcompose-overlay-oneui7-android" to "integration",
     "viewcompose-image-coil" to "integration",
     "viewcompose-image-glide" to "integration",
     "viewcompose-shadow-android" to "integration",
@@ -97,7 +104,8 @@ val allowedDependencyLayers = mapOf(
     "android-engine" to setOf("kernel", "ui-foundation", "android-engine"),
     "design-system" to setOf("kernel", "ui-foundation"),
     "integration" to setOf("kernel", "ui-foundation", "android-engine", "design-system", "integration"),
-    "aggregate" to setOf("kernel", "ui-foundation", "android-engine", "design-system", "integration"),
+    "aggregate" to
+        setOf("kernel", "ui-foundation", "android-engine", "design-system", "integration", "aggregate"),
 )
 
 // Tooling is downstream of both foundation and optional capabilities and never participates in
@@ -118,6 +126,8 @@ val qaQuickTasks = listOf(
     ":viewcompose-ui-contract:compileKotlin",
     ":viewcompose-host-android:compileDebugKotlin",
     ":viewcompose-material3:compileDebugKotlin",
+    ":viewcompose-material3-android:compileDebugKotlin",
+    ":viewcompose-oneui7:compileDebugKotlin",
     ":viewcompose-android:compileDebugKotlin",
     ":viewcompose-lifecycle-androidx:compileDebugKotlin",
     ":viewcompose-viewmodel-androidx:compileDebugKotlin",
@@ -127,7 +137,9 @@ val qaQuickTasks = listOf(
     ":viewcompose-preview-worker-host:compileKotlin",
     ":viewcompose-renderer-android:compileDebugKotlin",
     ":viewcompose-ui-foundation:compileDebugKotlin",
+    ":viewcompose-overlay-android:compileDebugKotlin",
     ":viewcompose-overlay-material3-android:compileDebugKotlin",
+    ":viewcompose-overlay-oneui7-android:compileDebugKotlin",
     ":viewcompose-image-coil:compileDebugKotlin",
     ":viewcompose-image-glide:compileDebugKotlin",
     ":viewcompose-preview:compileDebugKotlin",
@@ -150,6 +162,8 @@ val qaQuickTasks = listOf(
     ":viewcompose-ui-contract:test",
     ":viewcompose-host-android:testDebugUnitTest",
     ":viewcompose-material3:testDebugUnitTest",
+    ":viewcompose-material3-android:testDebugUnitTest",
+    ":viewcompose-oneui7:testDebugUnitTest",
     ":viewcompose-android:testDebugUnitTest",
     ":viewcompose-lifecycle-androidx:testDebugUnitTest",
     ":viewcompose-viewmodel-androidx:testDebugUnitTest",
@@ -159,7 +173,9 @@ val qaQuickTasks = listOf(
     ":viewcompose-preview-worker-host:test",
     ":viewcompose-renderer-android:testDebugUnitTest",
     ":viewcompose-ui-foundation:testDebugUnitTest",
+    ":viewcompose-overlay-android:testDebugUnitTest",
     ":viewcompose-overlay-material3-android:testDebugUnitTest",
+    ":viewcompose-overlay-oneui7-android:testDebugUnitTest",
     ":viewcompose-image-coil:testDebugUnitTest",
     ":viewcompose-image-glide:testDebugUnitTest",
     ":viewcompose-preview:testDebugUnitTest",
@@ -408,7 +424,7 @@ tasks.register("verifyModuleDependencyBoundaries") {
 tasks.register("verifyDesignSystemIsolation") {
     group = "verification"
     description =
-        "Verify UI Foundation and Android Engine stay independent of Material design policy."
+        "Verify neutral layers and named design-system artifacts remain mutually isolated."
     doLast {
         val violations = mutableListOf<String>()
         val materialFreeModules =
@@ -416,6 +432,7 @@ tasks.register("verifyDesignSystemIsolation") {
                 "viewcompose-ui-foundation",
                 "viewcompose-renderer-android",
                 "viewcompose-host-android",
+                "viewcompose-android",
             )
         val productionConfigurations = setOf("api", "implementation", "compileOnly")
 
@@ -429,6 +446,14 @@ tasks.register("verifyDesignSystemIsolation") {
                         violations +=
                             "$module:$configurationName -> forbidden Material dependency " +
                                 "'${dependency.group}:${dependency.name}'"
+                    }
+                moduleProject.configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.name == "viewcompose-material3" }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> forbidden Material project dependency " +
+                                "'${dependency.name}'"
                     }
             }
 
@@ -448,6 +473,14 @@ tasks.register("verifyDesignSystemIsolation") {
                                             "forbidden Material import '$trimmed'"
                                 }
                                 if (
+                                    module == "viewcompose-android" &&
+                                    "com.viewcompose.material3" in line
+                                ) {
+                                    violations +=
+                                        "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                            "neutral Android aggregate cannot reference Material '$trimmed'"
+                                }
+                                if (
                                     module == "viewcompose-ui-foundation" &&
                                     trimmed.startsWith("import androidx.")
                                 ) {
@@ -459,6 +492,96 @@ tasks.register("verifyDesignSystemIsolation") {
                         }
                     }
             }
+        }
+
+        val namedSystemProjects = setOf("viewcompose-material3", "viewcompose-oneui7")
+        val namedSystemPackages = setOf("com.viewcompose.material3", "com.viewcompose.oneui7")
+        materialFreeModules.forEach { module ->
+            val moduleProject = project(":$module")
+            productionConfigurations.forEach { configurationName ->
+                moduleProject.configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.name in namedSystemProjects }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> neutral module cannot depend on " +
+                                "named design system '${dependency.name}'"
+                    }
+            }
+            val mainDirectory = rootDir.resolve(module).resolve("src/main")
+            if (mainDirectory.exists()) {
+                mainDirectory.walkTopDown()
+                    .filter { file ->
+                        file.isFile && (file.extension == "kt" || file.extension == "java")
+                    }
+                    .forEach { file ->
+                        file.useLines { lines ->
+                            lines.forEachIndexed { index, line ->
+                                val trimmed = line.trimStart()
+                                if (namedSystemPackages.any { prefix ->
+                                        trimmed.startsWith("import $prefix.")
+                                    }
+                                ) {
+                                    violations +=
+                                        "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                            "neutral module cannot import named design system '$trimmed'"
+                                }
+                            }
+                        }
+                    }
+            }
+        }
+
+        mapOf(
+            "viewcompose-material3" to setOf("viewcompose-oneui7"),
+            "viewcompose-oneui7" to setOf("viewcompose-material3"),
+        ).forEach { (module, forbiddenProjects) ->
+            val moduleProject = project(":$module")
+            productionConfigurations.forEach { configurationName ->
+                moduleProject.configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.name in forbiddenProjects }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> named systems cannot depend on " +
+                                "each other ('${dependency.name}')"
+                    }
+            }
+        }
+
+        val oneUiModules = listOf("viewcompose-oneui7", "viewcompose-overlay-oneui7-android")
+        oneUiModules.forEach { module ->
+            productionConfigurations.forEach { configurationName ->
+                project(":$module").configurations.findByName(configurationName)
+                    ?.dependencies
+                    ?.filter { dependency -> dependency.group == "com.google.android.material" }
+                    ?.forEach { dependency ->
+                        violations +=
+                            "$module:$configurationName -> forbidden Material dependency " +
+                                "'${dependency.group}:${dependency.name}'"
+                    }
+            }
+            val oneUiMainDirectory = rootDir.resolve("$module/src/main")
+            if (!oneUiMainDirectory.exists()) {
+                return@forEach
+            }
+            oneUiMainDirectory.walkTopDown()
+                .filter { file -> file.isFile && (file.extension == "kt" || file.extension == "java") }
+                .forEach { file ->
+                    file.useLines { lines ->
+                        lines.forEachIndexed { index, line ->
+                            val trimmed = line.trimStart()
+                            if (
+                                trimmed.startsWith("import com.viewcompose.material3.") ||
+                                trimmed.startsWith("import com.google.android.material.")
+                            ) {
+                                violations +=
+                                    "${file.relativeTo(rootDir)}:${index + 1} -> " +
+                                        "One UI cannot import Material policy '$trimmed'"
+                            }
+                        }
+                    }
+                }
         }
 
         val uiFoundation = project(":viewcompose-ui-foundation")
@@ -986,7 +1109,7 @@ data class TutorialSample(
 )
 
 val tutorialBaseArtifacts =
-    listOf("viewcompose-android")
+    listOf("viewcompose-material3-android")
 
 val tutorialPublishingPropertiesFile =
     rootDir.resolve("gradle/viewcompose-publishing.properties")
@@ -1000,7 +1123,7 @@ val tutorialPublishedVersion = { artifact: String ->
 }
 val tutorialPublishedVersions =
     listOf(
-        "viewcompose-android",
+        "viewcompose-material3-android",
         "viewcompose-navigation-android",
         "viewcompose-overlay-material3-android",
         "viewcompose-animation",
@@ -1668,11 +1791,20 @@ val verifyConnectedAndroidDeviceReady = tasks.register("verifyConnectedAndroidDe
         val isBooted = bootCompleted == "1"
         val isAwake = Regex("(?m)^\\s*mWakefulness=Awake\\s*$").containsMatchIn(powerState) ||
             Regex("(?m)^\\s*mInteractive=true\\s*$").containsMatchIn(powerState)
-        val isKeyguardShowing = listOf(
-            Regex("(?m)^\\s*showingAndNotOccluded=true\\s*$"),
-            Regex("(?m)^\\s*mIsShowing=true\\s*$"),
-            Regex("(?m)^\\s*mKeyguardShowing=true\\s*$"),
-        ).any { pattern -> pattern.containsMatchIn(windowPolicy) }
+        fun readBooleanPolicyField(name: String): Boolean? {
+            return Regex("(?m)^\\s*${Regex.escape(name)}=(true|false)\\s*$")
+                .find(windowPolicy)
+                ?.groupValues
+                ?.get(1)
+                ?.toBooleanStrict()
+        }
+        // Android 7.0 can leave showingAndNotOccluded=true after the launcher is visible while
+        // reporting the authoritative mIsShowing=false. Prefer explicit keyguard state and use
+        // older/version-specific fields only when the stronger signal is absent.
+        val isKeyguardShowing = readBooleanPolicyField("mIsShowing")
+            ?: readBooleanPolicyField("mKeyguardShowing")
+            ?: readBooleanPolicyField("showingAndNotOccluded")
+            ?: false
         val failures = buildList {
             if (!isBooted) add("Android has not completed booting")
             if (!isAwake) add("the display is not awake")

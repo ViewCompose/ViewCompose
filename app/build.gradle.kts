@@ -49,13 +49,15 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-android"))
+    implementation(project(":viewcompose-material3-android"))
     implementation(project(":viewcompose-shadow-android"))
     implementation(project(":viewcompose-constraintlayout-androidx"))
     implementation(project(":viewcompose-animation"))
     implementation(project(":viewcompose-gesture"))
     implementation(project(":viewcompose-graphics"))
     implementation(project(":viewcompose-overlay-material3-android"))
+    implementation(project(":viewcompose-overlay-oneui7-android"))
+    implementation(project(":viewcompose-oneui7"))
     implementation(project(":viewcompose-image-coil"))
     compileOnly(project(":viewcompose-preview-core"))
     debugImplementation(project(":viewcompose-preview"))
