@@ -23,12 +23,81 @@ internal class StudioPreviewSourceResolver(
             null
         }
     }
+
+    fun resolveCandidates(
+        sourceCandidates: List<List<StudioPreviewSourceCallSite>>,
+    ): List<StudioPreviewSourceLocation> {
+        if (sourceCandidates.isEmpty()) return emptyList()
+        return try {
+            ReadAction.computeBlocking<List<StudioPreviewSourceLocation>, RuntimeException> {
+                val scope = GlobalSearchScope.projectScope(project)
+                resolveRuntimeSourceCandidates(sourceCandidates) { fileName ->
+                    FilenameIndex.getVirtualFilesByName(fileName, scope)
+                        .map { file -> file.path }
+                }
+            }
+        } catch (_: IndexNotReadyException) {
+            emptyList()
+        }
+    }
 }
 
 internal fun resolveRuntimeSource(
     callSites: List<StudioPreviewSourceCallSite>,
     findCandidatePaths: (fileName: String) -> List<String>,
 ): StudioPreviewSourceLocation? {
+    return resolveRuntimeSourceCandidate(callSites, findCandidatePaths)?.toLocation()
+}
+
+internal fun resolveRuntimeSourceCandidates(
+    sourceCandidates: List<List<StudioPreviewSourceCallSite>>,
+    findCandidatePaths: (fileName: String) -> List<String>,
+): List<StudioPreviewSourceLocation> {
+    val resolved = sourceCandidates.mapIndexedNotNull { emissionIndex, callSites ->
+        resolveRuntimeSourceCandidate(callSites, findCandidatePaths)?.let { candidate ->
+            ResolvedSourceCandidate(
+                emissionIndex = emissionIndex,
+                callSites = callSites,
+                candidate = candidate,
+            )
+        }
+    }
+    if (resolved.isEmpty()) return emptyList()
+
+    val groups = resolved.groupBy { source -> source.groupKey() }
+    val groupKeysByFrame = resolved
+        .groupBy { source -> source.candidate.callSite.frameIdentity() }
+        .mapValues { (_, sources) -> sources.map(ResolvedSourceCandidate::groupKey).toSet() }
+    val wrapperGroups = buildSet {
+        resolved.forEach { source ->
+            source.callSites
+                .drop(source.candidate.callSiteIndex + 1)
+                .forEach { outerCallSite ->
+                    addAll(groupKeysByFrame[outerCallSite.frameIdentity()].orEmpty())
+                }
+        }
+    }
+    val contentGroups = groups.filterKeys { group -> group !in wrapperGroups }
+        .ifEmpty { groups }
+
+    return contentGroups.entries
+        .sortedWith(
+            compareByDescending<Map.Entry<ResolvedSourceGroupKey, List<ResolvedSourceCandidate>>> {
+                entry -> entry.value.size
+            }.thenBy { entry -> entry.value.minOf(ResolvedSourceCandidate::emissionIndex) },
+        )
+        .map { (_, sources) ->
+            sources.minWith(
+                compareBy<ResolvedSourceCandidate> { source -> source.candidate.callSiteIndex }
+                    .thenBy(ResolvedSourceCandidate::emissionIndex),
+            ).candidate.toLocation()
+        }
+}
+
+private fun resolveRuntimeSourceCandidate(
+    callSites: List<StudioPreviewSourceCallSite>,
+    findCandidatePaths: (fileName: String) -> List<String>,
+): RuntimeSourceCandidate? {
     val candidates = callSites.asSequence()
         .flatMapIndexed { callSiteIndex, callSite ->
             findCandidatePaths(callSite.fileName)
@@ -37,6 +106,7 @@ internal fun resolveRuntimeSource(
                     RuntimeSourceCandidate(
                         callSite = callSite,
                         path = candidatePath,
+                        callSiteIndex = callSiteIndex,
                         score = sourceCandidateScore(
                             callSite = callSite,
                             path = candidatePath,
@@ -57,19 +127,10 @@ internal fun resolveRuntimeSource(
             candidates
         }
     }
-    return eligibleCandidates
-        .maxWithOrNull(
-            compareBy<RuntimeSourceCandidate> { candidate -> candidate.score }
-                .thenByDescending { candidate -> candidate.path },
-        )
-        ?.let { candidate ->
-            StudioPreviewSourceLocation(
-                filePath = candidate.path,
-                line = candidate.callSite.lineNumber,
-                column = 1,
-                symbolName = candidate.callSite.methodName,
-            )
-        }
+    return eligibleCandidates.maxWithOrNull(
+        compareBy<RuntimeSourceCandidate> { candidate -> candidate.score }
+            .thenByDescending { candidate -> candidate.path },
+    )
 }
 
 private fun sourceCandidateScore(
@@ -119,5 +180,51 @@ private fun String.isGeneratedSource(): Boolean {
 private data class RuntimeSourceCandidate(
     val callSite: StudioPreviewSourceCallSite,
     val path: String,
+    val callSiteIndex: Int,
     val score: Int,
 )
+
+private data class ResolvedSourceCandidate(
+    val emissionIndex: Int,
+    val callSites: List<StudioPreviewSourceCallSite>,
+    val candidate: RuntimeSourceCandidate,
+) {
+    fun groupKey(): ResolvedSourceGroupKey {
+        return ResolvedSourceGroupKey(
+            path = candidate.path,
+            methodName = candidate.callSite.normalizedMethodName(),
+        )
+    }
+}
+
+private data class ResolvedSourceGroupKey(
+    val path: String,
+    val methodName: String,
+)
+
+private data class SourceFrameIdentity(
+    val className: String,
+    val methodName: String,
+    val fileName: String,
+)
+
+private fun RuntimeSourceCandidate.toLocation(): StudioPreviewSourceLocation {
+    return StudioPreviewSourceLocation(
+        filePath = path,
+        line = callSite.lineNumber,
+        column = 1,
+        symbolName = callSite.methodName,
+    )
+}
+
+private fun StudioPreviewSourceCallSite.frameIdentity(): SourceFrameIdentity {
+    return SourceFrameIdentity(
+        className = className.substringBefore('$'),
+        methodName = normalizedMethodName(),
+        fileName = fileName,
+    )
+}
+
+private fun StudioPreviewSourceCallSite.normalizedMethodName(): String {
+    return methodName.substringBefore('$')
+}

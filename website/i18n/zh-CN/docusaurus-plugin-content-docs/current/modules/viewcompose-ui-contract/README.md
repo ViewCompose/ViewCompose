@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: b4a1b7993d9be48ab5fefcb918e7e1598ac9232cb071519618ce96de2f8e0b05
+translation_source_hash: 8e7954ff51d0809ca6107aea968d718605dabca5886e45af78c45eb1b12b4ecc
 translation_status: current
 ---
 
@@ -69,6 +69,13 @@ val gap = VNode(
   可以借此保留平台无障碍位置播报，同时不把设计系统写入 Renderer。
 - `SurfaceNodeProps` 是 `NodeType.Surface` 的 Q2 已解析契约。它携带 Graphics Core Brush、
   逻辑 Shape、Border、状态层、有效最小尺寸、可选的居中可见高度和裁剪策略，不携带设计系统标识。
+- `UiNodeTooling.withFirstSourceCapture` 是 Q3 同步工具边界，会报告代码块发出的首个有效节点的
+  由近及远源码调用链。它不同于完整预览捕获，不会分配节点 ID，也不会在已发出的树上保留元数据。
+- `UiNodeTooling.withSourceCandidateCapture` 是对应的 Q3 页面源码工具边界。它会在一次成功的树
+  构建中保留有界的首批与最近源码链，让工具区分共享 Scaffold 外壳和 content DSL，同时不标注
+  VNode 树。
+- `UiSourceSessionContainerHandle` 是 Q2 纯工具用途的 Renderer 容器标记。其 `Host`、`Page` 与
+  `Content` 角色让源码导航把 Pager 目标视为页面边界，又不会让更深的普通 Lazy 行替代所属页面。
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/)、
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/)
   与 [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -108,6 +115,13 @@ val gap = VNode(
   替换或释放时，宿主必须断开旧 Connector。
 - 状态与 Connector 命令按所属渲染器线程封闭。Android 集成使用主线程；除非具体契约另有
   说明，回调都会同步执行。
+- `UiNodeTooling.withFirstSourceCapture` 在每个作用域最多观察一个有效节点，并且最多分配一次
+  堆栈。嵌套作用域各自独立观察。回调在发出节点的线程同步执行；回调失败会在恢复作用域的
+  ThreadLocal 状态后继续抛出。
+- `UiNodeTooling.withSourceCandidateCapture` 最多采样 64 次有效发射并保留 32 条不同调用链。只有
+  代码块成功返回且捕获状态恢复后才会回调；构建失败或没有节点时不会报告候选。
+- `UiSourceSessionRole` 没有渲染或应用状态语义。Host 与 Renderer 只为独立渲染的容器分配它；
+  工具可以跳过 `Content` Session，让页面导航保持准确并限制源码捕获开销。
 - `AndroidViewNodeProps.update` 与 `onReset` 是可重放的事务回调。一次性外部动作应放在
   `onCommit`，资源清理应放在 `onRelease`。
 - 图片加载是可选能力。`UiImageLoader` 由调用方所有，在所属 UI 线程执行，并为已经启动的工作
@@ -162,3 +176,12 @@ Renderer 回退保持不变，但二进制构造契约发生变化。预编译�
 `SemanticsConfiguration` 增加可空字段会改变其二进制构造契约，因此预编译调用方和自定义
 Renderer 必须重新构建。支持无障碍的 Renderer 应同时映射父集合与子项位置快照；缺少映射会
 丢失位置播报，但不得改变布局、输入或选择回调。
+
+`UiNodeTooling.withFirstSourceCapture` 是新增的 Q3 工具 API。它不会改变 VNode 相等性或普通渲染
+元数据，但使用方必须把回调视为同步边界，避免阻塞、重入渲染，或把调用链保留为应用状态。
+
+`UiNodeTooling.withSourceCandidateCapture` 同样是新增的 Q3 工具 API。它不会改变普通 VNode
+身份或元数据；嵌套候选列表及采样边界仅供工具使用，不是应用持久化格式。
+
+`UiSourceSessionContainerHandle` 与 `UiSourceSessionRole` 是新增的 Q2 工具契约。现有
+`RenderContainerHandle` 实现继续有效；缺少该标记时，页面级源码工具必须采用文档化回退或不捕获。

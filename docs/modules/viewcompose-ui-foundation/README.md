@@ -119,6 +119,10 @@ by a later renderer or child render session.
   coordinates composition, renderer reconciliation, native commit effects, overlays, diagnostics,
   failure recovery, and disposal for one opaque `RenderContainerHandle`. Standard applications use
   the public Host Android session returned by `renderInto` rather than constructing this coordinator.
+- `RenderSessionSourceTooling` and `RenderSessionSourceRegistration` form a Q3 optional platform
+  diagnostics contract. They capture one bounded source chain only when the platform opts in and
+  track the active/disposed lifetime of root, lazy-item, and pager-item render sessions. The
+  compiled `renderSessionSourceToolingSample` demonstrates the adapter lifecycle.
 - Overlay specifications and hosts define platform-neutral dialog, popup, bottom-sheet, snackbar,
   and toast identity, placement, queueing, update, and dismissal contracts.
 
@@ -145,6 +149,11 @@ Because the current line is alpha, the documentation site intentionally does not
 - Each `RenderSession` exclusively owns one container, its mounted nodes, composition, coroutine
   scope, and session-scoped overlays. Call `dispose` with the host lifecycle; the session cannot be
   reused afterward.
+- Source tooling is disabled by default. An installed adapter is consulted before initial tree
+  construction, receives bounded source candidates from that successful build, is registered only
+  after a native tree is established, updated by `setRenderingActive`, and disposed with the
+  session. Candidate chains allow a platform to remove shared scaffold callers before navigation.
+  Tooling failures are diagnostic-only and must not become an application rendering dependency.
 - Composition preparation and tree-render failures preserve the previous frame. Failures after a
   renderer has established the new native tree are reported as committed-frame failures and cannot
   roll that tree back.
@@ -183,6 +192,12 @@ retired package alias. Do not persist automatic saveable keys, session identifie
 implementation names, callback instances, tooling metadata, or diagnostics shapes as external
 long-lived data. Custom renderers and hosts must be upgraded with contract changes even when an
 application's component source still compiles.
+
+`RenderSessionPlatformDiagnostics.sourceTooling`, `RenderSessionSourceTooling`, and
+`RenderSessionSourceRegistration` are additive Q3 tooling APIs. Existing platform diagnostics use
+the default `null` adapter and retain their previous behavior. Opted-in custom platforms must keep
+registration state bounded by its render session, consume the bounded candidate-chain list
+synchronously, and perform callbacks on the platform render thread.
 
 The complete `UiTypography` and `UiShapes` value contracts are an alpha-line source and binary
 change. They remain immutable Q2 values with no lifecycle or ownership protocol; direct

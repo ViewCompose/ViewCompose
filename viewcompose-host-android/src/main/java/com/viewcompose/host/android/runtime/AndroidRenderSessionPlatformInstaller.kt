@@ -7,9 +7,15 @@ import android.view.ViewGroup
 import com.viewcompose.ui.focus.FocusDirection
 import com.viewcompose.ui.focus.FocusManager
 import com.viewcompose.ui.foundation.RenderSessionPlatformDiagnostics
+import com.viewcompose.ui.foundation.RenderSessionSourceRegistration
+import com.viewcompose.ui.foundation.RenderSessionSourceTooling
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.nativeContainer
 import com.viewcompose.ui.foundation.installRenderSessionPlatform
+import com.viewcompose.host.android.tooling.AndroidDeviceDslSourceRegistry
+import com.viewcompose.ui.tooling.UiSourceCallSite
+import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
+import com.viewcompose.ui.tooling.UiSourceSessionRole
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.Dispatchers
 
@@ -69,6 +75,8 @@ private class AndroidSessionFocusManager(
 
 /** Android logging and tracing adapter for the platform-neutral session coordinator. */
 private object AndroidRenderSessionDiagnostics : RenderSessionPlatformDiagnostics {
+    override val sourceTooling: RenderSessionSourceTooling = AndroidRenderSessionSourceTooling
+
     override fun debug(tag: String, message: String) {
         Log.d(tag, message)
     }
@@ -91,6 +99,26 @@ private object AndroidRenderSessionDiagnostics : RenderSessionPlatformDiagnostic
         } finally {
             Trace.endSection()
         }
+    }
+}
+
+private object AndroidRenderSessionSourceTooling : RenderSessionSourceTooling {
+    override fun shouldCapture(container: RenderContainerHandle): Boolean {
+        val role = (container as? UiSourceSessionContainerHandle)?.sourceSessionRole
+        if (role != UiSourceSessionRole.Host && role != UiSourceSessionRole.Page) return false
+        val viewGroup = container.nativeContainer as? ViewGroup ?: return false
+        return AndroidDeviceDslSourceRegistry.shouldCapture(viewGroup.context)
+    }
+
+    override fun register(
+        container: RenderContainerHandle,
+        sourceCandidates: List<List<UiSourceCallSite>>,
+    ): RenderSessionSourceRegistration? {
+        val viewGroup = container.nativeContainer as? ViewGroup ?: return null
+        return AndroidDeviceDslSourceRegistry.register(
+            container = viewGroup,
+            sourceCandidates = sourceCandidates,
+        )
     }
 }
 

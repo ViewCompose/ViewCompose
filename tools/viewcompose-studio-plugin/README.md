@@ -36,6 +36,9 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - a lazily initialized, dockable `ViewCompose Preview` tool window;
 - Kotlin gutter markers for direct and source meta-annotated ViewCompose preview functions;
 - project-scoped source selection that opens the matching symbol in the preview tool window;
+- an independent **Locate Device DSL** toolbar and Tools-menu action that opens the ViewCompose DSL
+  currently visible in a debuggable app, with an explicit chooser when several devices or visible
+  page sessions are available, and removes shared scaffold callers in favor of authored content;
 - a project-scoped Gradle Tooling API connection with cancellation, avoiding a new wrapper client
   JVM for every discovery/render operation while keeping Layoutlib in a bounded external worker;
 - controlled Layoutlib worker reuse across compatible refreshes, with fresh application class

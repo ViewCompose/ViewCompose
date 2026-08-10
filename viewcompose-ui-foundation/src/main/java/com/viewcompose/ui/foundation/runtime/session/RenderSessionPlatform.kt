@@ -2,6 +2,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.focus.FocusManager
 import com.viewcompose.ui.node.RenderContainerHandle
+import com.viewcompose.ui.tooling.UiSourceCallSite
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -47,6 +48,18 @@ fun interface RenderSessionFocusManagerFactory {
 
 /** Platform diagnostics used by the composition-to-render session coordinator. */
 interface RenderSessionPlatformDiagnostics {
+    /**
+     * Optional Q3 source-session integration used by development tooling.
+     *
+     * The default is `null`, which performs no source capture. A platform implementation may
+     * return a process-scoped adapter that owns only tooling metadata; application rendering must
+     * not depend on its presence.
+     *
+     * @sample com.viewcompose.ui.foundation.samples.renderSessionSourceToolingSample
+     */
+    val sourceTooling: RenderSessionSourceTooling?
+        get() = null
+
     /** Records optional frame detail enabled by a debug render session. */
     fun debug(tag: String, message: String)
 
@@ -61,6 +74,63 @@ interface RenderSessionPlatformDiagnostics {
         name: String,
         block: () -> T,
     ): T
+}
+
+/**
+ * Q3 platform adapter for tracking the source and visibility lifetime of nested render sessions.
+ *
+ * [shouldCapture] runs before a session's initial tree build. When it returns `true`, the session
+ * captures bounded candidate chains from eligible VNodes and calls [register] only after the frame
+ * establishes a native tree. Candidate chains let tooling distinguish reusable page chrome from
+ * content DSL without retaining node metadata. Lazy-list and pager item sessions use the same path,
+ * allowing platform tooling to prefer the deepest container that is actually visible.
+ *
+ * Implementations must be fast, thread-confined to the platform render thread, and must not retain
+ * [RenderContainerHandle] after the returned [RenderSessionSourceRegistration] is disposed. Tooling
+ * failures are diagnostic-only and must not become application rendering dependencies.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.renderSessionSourceToolingSample
+ */
+interface RenderSessionSourceTooling {
+    /**
+     * Returns whether [container] belongs to a process where source capture is permitted.
+     *
+     * @param container opaque renderer container owned by the candidate session
+     * @return `true` to capture bounded source candidates during the session's initial tree build
+     */
+    fun shouldCapture(container: RenderContainerHandle): Boolean
+
+    /**
+     * Registers one successfully rendered session and its bounded [sourceCandidates].
+     *
+     * @param container opaque renderer container owned by the committed session
+     * @param sourceCandidates emission-ordered candidates whose inner lists are nearest-first chains
+     * @return a lifecycle handle, or `null` when the session should not be reported
+     */
+    fun register(
+        container: RenderContainerHandle,
+        sourceCandidates: List<List<UiSourceCallSite>>,
+    ): RenderSessionSourceRegistration?
+}
+
+/**
+ * Lifecycle handle for a source session registered through [RenderSessionSourceTooling].
+ *
+ * Calls are serialized on the platform render thread. [dispose] is terminal and may be called
+ * during failure cleanup; implementations should make it idempotent.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.renderSessionSourceToolingSample
+ */
+interface RenderSessionSourceRegistration {
+    /**
+     * Updates whether frame-scheduled rendering is active for the owning session.
+     *
+     * @param active whether scheduled invalidation rendering is currently enabled
+     */
+    fun setRenderingActive(active: Boolean)
+
+    /** Removes the owning session and releases all retained tooling state. */
+    fun dispose()
 }
 
 /**

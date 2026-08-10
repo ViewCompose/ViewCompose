@@ -7,6 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 
 class UiNodeToolingTest {
@@ -33,6 +34,123 @@ class UiNodeToolingTest {
                     site.lineNumber > 0
             },
         )
+    }
+
+    @Test
+    fun `first source capture reports one node without attaching metadata`() {
+        val captures = mutableListOf<List<UiSourceCallSite>>()
+        lateinit var first: VNode
+        lateinit var second: VNode
+
+        UiNodeTooling.withFirstSourceCapture(captures::add) {
+            first = createCapturedNode()
+            second = createCapturedNode()
+        }
+
+        assertEquals(1, captures.size)
+        assertTrue(
+            captures.single().any { site ->
+                site.fileName == "UiNodeToolingTest.kt" &&
+                    site.methodName.contains("createCapturedNode")
+            },
+        )
+        assertNull(UiNodeTooling.metadataOf(first))
+        assertNull(UiNodeTooling.metadataOf(second))
+    }
+
+    @Test
+    fun `first source capture is silent when no node is emitted`() {
+        var callbackCount = 0
+
+        val result = UiNodeTooling.withFirstSourceCapture(
+            onSourceCaptured = { callbackCount += 1 },
+        ) {
+            "no-node"
+        }
+
+        assertEquals("no-node", result)
+        assertEquals(0, callbackCount)
+    }
+
+    @Test
+    fun `nested first source captures independently observe their next node`() {
+        var outerCaptures = 0
+        var innerCaptures = 0
+
+        UiNodeTooling.withFirstSourceCapture(onSourceCaptured = { outerCaptures += 1 }) {
+            createCapturedNode()
+            UiNodeTooling.withFirstSourceCapture(onSourceCaptured = { innerCaptures += 1 }) {
+                createCapturedNode()
+                createCapturedNode()
+            }
+        }
+
+        assertEquals(1, outerCaptures)
+        assertEquals(1, innerCaptures)
+    }
+
+    @Test
+    fun `first source capture restores state after callback failure`() {
+        try {
+            UiNodeTooling.withFirstSourceCapture(
+                onSourceCaptured = { error("capture failed") },
+            ) {
+                createCapturedNode()
+            }
+            fail("Expected the capture callback to fail")
+        } catch (expected: IllegalStateException) {
+            assertEquals("capture failed", expected.message)
+        }
+
+        assertNull(UiNodeTooling.metadataOf(createCapturedNode()))
+    }
+
+    @Test
+    fun `source candidate capture retains distinct scaffold and content chains`() {
+        var candidates = emptyList<List<UiSourceCallSite>>()
+        lateinit var scaffoldNode: VNode
+        lateinit var contentNode: VNode
+
+        UiNodeTooling.withSourceCandidateCapture(
+            onSourceCandidatesCaptured = { captured -> candidates = captured },
+        ) {
+            scaffoldNode = createScaffoldCandidateNode()
+            contentNode = createContentCandidateNode()
+        }
+
+        assertTrue(candidates.size >= 2)
+        assertTrue(
+            candidates.any { chain ->
+                chain.any { source -> source.methodName.contains("createScaffoldCandidateNode") }
+            },
+        )
+        assertTrue(
+            candidates.any { chain ->
+                chain.any { source -> source.methodName.contains("createContentCandidateNode") }
+            },
+        )
+        assertNull(UiNodeTooling.metadataOf(scaffoldNode))
+        assertNull(UiNodeTooling.metadataOf(contentNode))
+    }
+
+    @Test
+    fun `source candidate capture is silent when block fails`() {
+        var callbackCount = 0
+
+        try {
+            UiNodeTooling.withSourceCandidateCapture(
+                onSourceCandidatesCaptured = { callbackCount += 1 },
+            ) {
+                createContentCandidateNode()
+                error("tree failed")
+            }
+            fail("Expected tree construction to fail")
+        } catch (expected: IllegalStateException) {
+            assertEquals("tree failed", expected.message)
+        }
+
+        assertEquals(0, callbackCount)
+        assertNull(UiNodeTooling.metadataOf(createCapturedNode()))
     }
 
     @Test
@@ -87,6 +205,10 @@ class UiNodeToolingTest {
     }
 
     private fun createCapturedNode(): VNode = UiNodeTooling.attach(vnode())
+
+    private fun createScaffoldCandidateNode(): VNode = UiNodeTooling.attach(vnode())
+
+    private fun createContentCandidateNode(): VNode = UiNodeTooling.attach(vnode())
 
     private fun vnode(): VNode {
         return VNode(

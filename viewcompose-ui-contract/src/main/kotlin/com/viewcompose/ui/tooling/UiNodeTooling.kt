@@ -42,11 +42,16 @@ data class UiNodeToolingMetadata(
 /**
  * Opt-in source capture used by previews and diagnostics.
  *
- * Normal application rendering pays only one thread-local lookup per emitted node. Stack traces,
- * IDs, and metadata objects are allocated exclusively inside [withSourceCapture].
+ * Normal application rendering pays only one thread-local lookup per emitted node. Stack traces
+ * are allocated only inside [withSourceCapture], [withFirstSourceCapture], or
+ * [withSourceCandidateCapture]; IDs and metadata objects are allocated exclusively inside
+ * [withSourceCapture].
  */
 object UiNodeTooling {
     private val captureDepth = ThreadLocal<Int>()
+    private val firstSourceCaptureScopes = ThreadLocal<MutableList<FirstSourceCaptureScope>>()
+    private val sourceCandidateCaptureScopes =
+        ThreadLocal<MutableList<SourceCandidateCaptureScope>>()
     private val nextNodeId = AtomicLong(1L)
 
     /**
@@ -74,6 +79,87 @@ object UiNodeTooling {
     }
 
     /**
+     * Captures the source chain of the first emitted [VNode] without annotating the complete tree.
+     *
+     * [onSourceCaptured] runs synchronously on the thread that emits the first node whose stack
+     * contains at least one supported source frame. It runs at most once and is not called when
+     * [block] emits no such node. Nested scopes independently observe the first eligible node after
+     * their own entry. A surrounding [withSourceCapture] scope continues to attach normal tooling
+     * metadata.
+     *
+     * This mode allocates at most one stack trace per scope and is intended for page- or
+     * session-level IDE navigation. Exceptions from [onSourceCaptured] propagate from node emission;
+     * the capture scope is still restored before [withFirstSourceCapture] returns or throws.
+     *
+     * @sample com.viewcompose.ui.samples.firstSourceCaptureSample
+     * @param T result type produced by [block]
+     * @param onSourceCaptured callback receiving the nearest-first bounded source chain
+     * @param block computation whose first emitted node supplies the source chain
+     * @return the value produced by [block]
+     */
+    fun <T> withFirstSourceCapture(
+        onSourceCaptured: (List<UiSourceCallSite>) -> Unit,
+        block: () -> T,
+    ): T {
+        val scopes = firstSourceCaptureScopes.get()
+            ?: mutableListOf<FirstSourceCaptureScope>().also(firstSourceCaptureScopes::set)
+        val scope = FirstSourceCaptureScope(onSourceCaptured)
+        scopes += scope
+        return try {
+            block()
+        } finally {
+            scopes.remove(scope)
+            if (scopes.isEmpty()) {
+                firstSourceCaptureScopes.remove()
+            }
+        }
+    }
+
+    /**
+     * Q3 tooling boundary that captures bounded source-chain candidates across one tree build
+     * without annotating its nodes.
+     *
+     * Shared scaffolds commonly emit chrome before invoking their content lambda, so the first
+     * emitted node alone cannot identify the authored page body. This mode samples at most 64
+     * eligible node emissions and retains the first 16 plus the most recent 16 distinct chains.
+     * [onSourceCandidatesCaptured] runs once, after [block] returns successfully and capture state
+     * is restored. It is not called when [block] emits no eligible nodes or throws.
+     *
+     * Nested scopes collect independently. A surrounding [withSourceCapture] scope continues to
+     * attach normal tooling metadata, while this mode itself never mutates a [VNode].
+     *
+     * @sample com.viewcompose.ui.samples.sourceCandidateCaptureSample
+     * @param T result type produced by [block]
+     * @param onSourceCandidatesCaptured callback receiving bounded, emission-ordered source chains
+     * @param block computation whose emitted nodes supply source candidates
+     * @return the value produced by [block]
+     */
+    fun <T> withSourceCandidateCapture(
+        onSourceCandidatesCaptured: (List<List<UiSourceCallSite>>) -> Unit,
+        block: () -> T,
+    ): T {
+        val scopes = sourceCandidateCaptureScopes.get()
+            ?: mutableListOf<SourceCandidateCaptureScope>().also(
+                sourceCandidateCaptureScopes::set,
+            )
+        val scope = SourceCandidateCaptureScope()
+        scopes += scope
+        val result = try {
+            block()
+        } finally {
+            scopes.remove(scope)
+            if (scopes.isEmpty()) {
+                sourceCandidateCaptureScopes.remove()
+            }
+        }
+        val candidates = scope.snapshot()
+        if (candidates.isNotEmpty()) {
+            onSourceCandidatesCaptured(candidates)
+        }
+        return result
+    }
+
+    /**
      * Attaches fresh tooling metadata when capture is active and returns [node] for fluent use.
      *
      * Outside [withSourceCapture], or when no user call site survives filtering, this is a no-op.
@@ -83,9 +169,26 @@ object UiNodeTooling {
      * @return the same [node] instance
      */
     fun attach(node: VNode): VNode {
-        if ((captureDepth.get() ?: 0) == 0) return node
+        val captureMetadata = (captureDepth.get() ?: 0) > 0
+        val pendingFirstCaptures = firstSourceCaptureScopes.get()
+            ?.filterNot(FirstSourceCaptureScope::captured)
+            .orEmpty()
+        val pendingCandidateCaptures = sourceCandidateCaptureScopes.get()
+            ?.filter(SourceCandidateCaptureScope::shouldSample)
+            .orEmpty()
+        if (
+            !captureMetadata &&
+            pendingFirstCaptures.isEmpty() &&
+            pendingCandidateCaptures.isEmpty()
+        ) {
+            return node
+        }
         val callSites = captureCallSites()
         if (callSites.isEmpty()) return node
+        pendingFirstCaptures.forEach { scope -> scope.captured = true }
+        pendingFirstCaptures.forEach { scope -> scope.onSourceCaptured(callSites) }
+        pendingCandidateCaptures.forEach { scope -> scope.record(callSites) }
+        if (!captureMetadata) return node
         node.toolingMetadata = UiNodeToolingMetadata(
             nodeId = "node-${nextNodeId.getAndIncrement().toString(36)}",
             callSites = callSites,
@@ -149,7 +252,16 @@ object UiNodeTooling {
      * @return nearest-first source call sites, limited to 32 entries
      */
     fun captureCallSites(): List<UiSourceCallSite> {
-        if ((captureDepth.get() ?: 0) == 0) return emptyList()
+        val captureMetadata = (captureDepth.get() ?: 0) > 0
+        val hasPendingFirstCapture = firstSourceCaptureScopes.get()
+            ?.any { scope -> !scope.captured }
+            ?: false
+        val hasPendingCandidateCapture = sourceCandidateCaptureScopes.get()
+            ?.any(SourceCandidateCaptureScope::shouldSample)
+            ?: false
+        if (!captureMetadata && !hasPendingFirstCapture && !hasPendingCandidateCapture) {
+            return emptyList()
+        }
         return selectSourceCallSites(Throwable().stackTrace.asSequence())
     }
 
@@ -203,4 +315,43 @@ object UiNodeTooling {
         "com.viewcompose.ui.foundation.ComposerContext"
     private const val RENDER_SESSION_CLASS =
         "com.viewcompose.ui.foundation.RenderSession"
+}
+
+private class FirstSourceCaptureScope(
+    val onSourceCaptured: (List<UiSourceCallSite>) -> Unit,
+) {
+    var captured: Boolean = false
+}
+
+private class SourceCandidateCaptureScope {
+    private val firstCandidates = linkedSetOf<List<UiSourceCallSite>>()
+    private val recentCandidates = linkedSetOf<List<UiSourceCallSite>>()
+    private var sampledEmissions = 0
+
+    fun shouldSample(): Boolean = sampledEmissions < MAX_SAMPLED_EMISSIONS
+
+    fun record(callSites: List<UiSourceCallSite>) {
+        if (!shouldSample()) return
+        sampledEmissions += 1
+        if (callSites in firstCandidates) return
+        if (firstCandidates.size < RETAINED_EDGE_CANDIDATES) {
+            firstCandidates += callSites
+            return
+        }
+        recentCandidates.remove(callSites)
+        recentCandidates += callSites
+        while (recentCandidates.size > RETAINED_EDGE_CANDIDATES) {
+            val oldest = recentCandidates.iterator().next()
+            recentCandidates.remove(oldest)
+        }
+    }
+
+    fun snapshot(): List<List<UiSourceCallSite>> {
+        return (firstCandidates + recentCandidates).distinct()
+    }
+
+    private companion object {
+        const val MAX_SAMPLED_EMISSIONS = 64
+        const val RETAINED_EDGE_CANDIDATES = 16
+    }
 }

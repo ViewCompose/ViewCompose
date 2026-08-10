@@ -31,5 +31,9 @@ class PreviewUiLanguageTest {
             "正在渲染 StaticDemoPreview…",
             chinese.loadingMessage("Rendering StaticDemoPreview…"),
         )
+        assertEquals("Locate Device DSL", english.text("action.locateDeviceDsl"))
+        assertEquals("定位设备当前 DSL", chinese.text("action.locateDeviceDsl"))
+        assertEquals("Physical", english.text("deviceDsl.device.physical"))
+        assertEquals("真机", chinese.text("deviceDsl.device.physical"))
     }
 }

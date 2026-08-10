@@ -68,6 +68,31 @@ private fun BizRootAwarePreview() {
    - `com.viewcompose.preview.catalog.ui.CatalogPreviewsKt`
 2. Use the IDE Preview panel to inspect light/dark, phone/tablet, and component-domain variants.
 
+## Locate a running device DSL
+
+The ViewCompose Android Studio plugin provides a separate **Locate Device DSL** toolbar action and
+Tools-menu entry; it does not share the Preview tool-window icon. To open the DSL for the page
+currently visible on a device:
+
+1. Install and open a debuggable application build that uses the current
+   `viewcompose-host-android` runtime.
+2. Navigate to the ViewCompose page on the device.
+3. Choose **Locate Device DSL** in Android Studio.
+
+One online device is used directly. When multiple phones or emulators are connected, the plugin
+first shows a device chooser with device kind, Android version, and serial number. When a window
+contains multiple equally visible deepest ViewCompose sessions, such as a two-pane layout, a
+second chooser lists the candidate source locations.
+
+The action reads the foreground package and its private debug report through Android Studio's ADB
+connection, validates that the report belongs to a live process, and resolves bounded JVM source
+candidates against the current project. When shared scaffolds emit toolbar or container nodes before
+their content, candidates that reappear as outer callers are removed so navigation prefers the
+content DSL. Independent remaining content sources are shown in the source chooser. The action does
+not use the Preview panel, external storage, a network service, or source-text transfer.
+Non-debuggable builds do not expose the report. If no report is available, keep the intended app in
+the foreground and verify that its debug build uses the current host artifact.
+
 ## Snapshot Regression
 
 Run the module snapshot verification:
