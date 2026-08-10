@@ -14,6 +14,7 @@ import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
+import com.viewcompose.ui.tooling.UiSourceCallSite
 import kotlin.coroutines.EmptyCoroutineContext
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -41,6 +42,7 @@ class RenderSessionFailureTest {
             CoreRenderFrame(mountedNodes = previous)
         }
         engine.disposeFailures = emptyList()
+        NoOpRenderSessionDiagnostics.sourceTooling = null
     }
 
     @After
@@ -75,6 +77,41 @@ class RenderSessionFailureTest {
 
         assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
         assertTrue(session.lastFrameReport?.failures.orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `source tooling follows a successfully rendered session lifecycle`() {
+        val events = mutableListOf<String>()
+        NoOpRenderSessionDiagnostics.sourceTooling = object : RenderSessionSourceTooling {
+            override fun shouldCapture(container: RenderContainerHandle): Boolean = true
+
+            override fun register(
+                container: RenderContainerHandle,
+                sourceCandidates: List<List<UiSourceCallSite>>,
+            ): RenderSessionSourceRegistration {
+                assertTrue(sourceCandidates.isNotEmpty())
+                assertTrue(sourceCandidates.all(List<UiSourceCallSite>::isNotEmpty))
+                events += "registered"
+                return object : RenderSessionSourceRegistration {
+                    override fun setRenderingActive(active: Boolean) {
+                        events += "active=$active"
+                    }
+
+                    override fun dispose() {
+                        events += "disposed"
+                    }
+                }
+            }
+        }
+        session = createSession(failures = mutableListOf()) {
+            Text("Source page")
+        }
+
+        session.render()
+        session.setRenderingActive(false)
+        session.dispose()
+
+        assertEquals(listOf("registered", "active=false", "disposed"), events)
     }
 
     @Test
@@ -279,6 +316,8 @@ class RenderSessionFailureTest {
     }
 
     private object NoOpRenderSessionDiagnostics : RenderSessionPlatformDiagnostics {
+        override var sourceTooling: RenderSessionSourceTooling? = null
+
         override fun debug(tag: String, message: String) = Unit
 
         override fun warning(tag: String, message: String) = Unit

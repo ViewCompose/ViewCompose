@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: c68e8ca43a49bd898e9a42750a21a3015b3fba3ad921bf71d1b381aff2e712f5
+translation_source_hash: be71e061a064189ee1c1554514c24159f60d9374551e6e1567e8139dac9c0ee9
 translation_status: current
 ---
 
@@ -70,6 +70,26 @@ private fun BizRootAwarePreview() {
    - `com.viewcompose.preview.shell.PreviewShellsKt`
    - `com.viewcompose.preview.catalog.ui.CatalogPreviewsKt`
 2. 使用 IDE Preview 面板检查浅色/深色、手机/平板和不同组件领域的变体。
+
+## 定位真机当前 DSL
+
+ViewCompose Android Studio 插件提供独立的 **Locate Device DSL** 工具栏动作与 Tools 菜单入口，
+不与 Preview 工具窗口共用图标。要打开设备当前可见页面的 DSL：
+
+1. 安装并打开使用当前 `viewcompose-host-android` Runtime 的可调试应用。
+2. 在设备上进入目标 ViewCompose 页面。
+3. 在 Android Studio 中选择 **Locate Device DSL**。
+
+只有一台在线设备时会直接使用它。连接多台真机或模拟器时，插件会先弹出设备选择框，显示设备
+类型、Android 版本和序列号。当同一窗口存在多个同样可见且嵌套最深的 ViewCompose 会话（例如
+双栏布局）时，还会显示第二个选择框列出候选源码位置。
+
+该动作通过 Android Studio 的 ADB 连接读取前台应用及其私有 Debug 报告，确认报告属于仍在运行
+的进程，再把有界 JVM 源码候选解析到当前项目。当共享 Scaffold 先于 content 发出工具栏或容器
+节点时，插件会移除在其他候选中重复出现的外层调用方，优先进入 content DSL；仍有多个独立
+content 来源时会显示源码选择框。它不依赖 Preview 面板、外部存储、网络服务，也不会传输源码
+文本。非调试构建不会暴露报告。如果没有可用报告，请让目标应用保持在前台，并确认其 Debug
+构建使用当前 Host 构件。
 
 ## 快照回归
 

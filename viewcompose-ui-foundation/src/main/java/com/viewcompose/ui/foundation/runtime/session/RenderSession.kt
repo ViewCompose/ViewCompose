@@ -39,10 +39,12 @@ class RenderSession(
     private val onRenderFailure: ((RenderFailure) -> Unit)? = null,
 ) {
     private val platform = RenderSessionPlatformProvider.requirePlatform()
+    private val sourceTooling = platform.diagnostics.sourceTooling
     private val overlaySessionId = OverlaySessionId("render-session-${nextSessionId.incrementAndGet()}")
     private val focusManager = platform.focusManagerFactory.create(container)
     private var mountedNodes: List<Any> = emptyList()
     private var disposed: Boolean = false
+    private var sourceRegistration: RenderSessionSourceRegistration? = null
     private val overlayRequestStore = OverlayRequestStore()
     private var requestRender: (() -> Unit)? = null
     private val nextFrameId = AtomicLong(0)
@@ -113,6 +115,11 @@ class RenderSession(
      */
     fun setRenderingActive(active: Boolean) {
         runtime.setRenderingActive(active)
+        sourceRegistration?.let { registration ->
+            runSourceToolingOperation("update source session") {
+                registration.setRenderingActive(active)
+            }
+        }
     }
 
     /**
@@ -136,6 +143,8 @@ class RenderSession(
         var preparedComposition:
             ComposerLite.PreparedComposition<List<com.viewcompose.ui.node.VNode>>? = null
         var tree: List<com.viewcompose.ui.node.VNode> = emptyList()
+        var capturedSourceCandidates =
+            emptyList<List<com.viewcompose.ui.tooling.UiSourceCallSite>>()
         val collectDiagnostics = debug || onRenderStats != null || onRenderResult != null
         val frame = try {
             if (!composer.hasPendingInvalidations()) {
@@ -153,7 +162,20 @@ class RenderSession(
                                 preparedComposition = composer.prepareRoot(
                                     collectDiagnostics = collectDiagnostics,
                                 ) {
-                                    buildVNodeTree(content)
+                                    if (
+                                        sourceRegistration == null &&
+                                        shouldCaptureSource()
+                                    ) {
+                                        UiNodeTooling.withSourceCandidateCapture(
+                                            onSourceCandidatesCaptured = { candidates ->
+                                                capturedSourceCandidates = candidates
+                                            },
+                                        ) {
+                                            buildVNodeTree(content)
+                                        }
+                                    } else {
+                                        buildVNodeTree(content)
+                                    }
                                 }
                                 tree = checkNotNull(preparedComposition).value
                             }
@@ -205,6 +227,14 @@ class RenderSession(
             )
         }
         committedFrameId = frameId
+        if (sourceRegistration == null && capturedSourceCandidates.isNotEmpty()) {
+            runSourceToolingOperation("register source session") {
+                sourceRegistration = sourceTooling?.register(
+                    container = container,
+                    sourceCandidates = capturedSourceCandidates,
+                )
+            }
+        }
         try {
             checkNotNull(preparedComposition).commit()
         } catch (error: Exception) {
@@ -324,6 +354,38 @@ class RenderSession(
         }
         disposeOperation {
             composer.dispose()
+        }
+        sourceRegistration?.let { registration ->
+            disposeOperation { registration.dispose() }
+            sourceRegistration = null
+        }
+    }
+
+    private inline fun runSourceToolingOperation(
+        operation: String,
+        block: () -> Unit,
+    ) {
+        try {
+            block()
+        } catch (error: Exception) {
+            platform.diagnostics.error(
+                debugTag,
+                "Render-session tooling could not $operation.",
+                error,
+            )
+        }
+    }
+
+    private fun shouldCaptureSource(): Boolean {
+        return try {
+            sourceTooling?.shouldCapture(container) == true
+        } catch (error: Exception) {
+            platform.diagnostics.error(
+                debugTag,
+                "Render-session tooling could not evaluate source capture.",
+                error,
+            )
+            false
         }
     }
 

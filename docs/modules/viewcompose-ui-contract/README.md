@@ -69,6 +69,15 @@ created for the node.
 - `SurfaceNodeProps` is the Q2 resolved contract for `NodeType.Surface`. It carries a graphics-core
   brush, logical shape, border, state layers, effective minimum dimensions, optional centered
   visual height, and clipping policy without carrying a design-system identity.
+- `UiNodeTooling.withFirstSourceCapture` is a Q3 synchronous tooling boundary that reports the
+  nearest-first source chain for the first eligible node emitted by a block. Unlike full preview
+  capture, it neither assigns node IDs nor retains metadata on the emitted tree.
+- `UiNodeTooling.withSourceCandidateCapture` is the Q3 page-source counterpart. It retains bounded
+  first and recent source chains across one successful tree build so tooling can distinguish shared
+  scaffold chrome from content DSL without annotating the VNode tree.
+- `UiSourceSessionContainerHandle` is a Q2 tooling-only renderer-container marker. Its `Host`,
+  `Page`, and `Content` roles let source navigation treat pager destinations as page boundaries
+  without allowing a deeper ordinary lazy row to replace its enclosing page.
 - [`ImageSource`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-image-source/),
   [`UiImageRequest`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-request/),
   and [`UiImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-contract/current/com.viewcompose.ui.node.media/-ui-image-loader/)
@@ -116,6 +125,15 @@ Because the current line is alpha, the documentation site intentionally does not
 - State and connector commands are thread-confined to the owning renderer thread. Android
   integrations use the main thread, and callbacks run synchronously unless a concrete contract says
   otherwise.
+- `UiNodeTooling.withFirstSourceCapture` observes at most one eligible node in each scope and
+  allocates at most one stack trace. Nested scopes observe independently. Its callback runs on the
+  emitting thread; callback failures propagate after the scope restores its thread-local state.
+- `UiNodeTooling.withSourceCandidateCapture` samples at most 64 eligible emissions and retains at
+  most 32 distinct chains. Its callback runs only after a successful block returns and after its
+  capture state is restored; failed or empty builds do not report candidates.
+- `UiSourceSessionRole` has no rendering or application-state semantics. Hosts and renderers assign
+  it only to independently rendered containers; tooling may skip `Content` sessions to keep page
+  navigation precise and source-capture overhead bounded.
 - `AndroidViewNodeProps.update` and `onReset` are replay-safe transaction callbacks. External
   one-shot work belongs in `onCommit`; resource cleanup belongs in `onRelease`.
 - Image loading is an optional capability. `UiImageLoader` is caller-owned, runs on the owning UI
@@ -178,3 +196,15 @@ metadata. The nullable additions to `SemanticsConfiguration` change its binary c
 contract, so precompiled callers and custom renderers must rebuild. Renderers that support
 accessibility should map the parent collection and child position snapshots together; omitting the
 mapping loses position announcements but must not change layout, input, or selection callbacks.
+
+`UiNodeTooling.withFirstSourceCapture` is an additive Q3 tooling API. It does not change VNode
+equality or normal-render metadata, but consumers must treat its callback as synchronous and avoid
+blocking, re-entrant rendering, or retaining a call chain as application state.
+
+`UiNodeTooling.withSourceCandidateCapture` is also an additive Q3 tooling API. It preserves normal
+VNode identity and metadata, but its nested candidate list and sampling bounds are tooling input,
+not an application persistence format.
+
+`UiSourceSessionContainerHandle` and `UiSourceSessionRole` are additive Q2 tooling contracts.
+Existing `RenderContainerHandle` implementations remain valid; without the marker, page-level
+source tooling must use its documented fallback or opt out of capture.

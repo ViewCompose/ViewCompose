@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: ec1b427438e44c57b9316117afd8aaa6b1b35abdbb775547d9b18a084f7f3d08
+translation_source_hash: 4ba99b78b8abdcc9b3621f7d8f04e717ba8a8bb774183b1bc3021a6b6b7d76a3
 translation_status: current
 ---
 
@@ -108,6 +108,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
   为一个不透明 `RenderContainerHandle` 协调组合、渲染器协调、原生提交 Effect、浮层、诊断、
   失败恢复与释放。标准应用使用 `renderInto` 返回的 Host Android Session，不直接构造该协调器。
+- `RenderSessionSourceTooling` 与 `RenderSessionSourceRegistration` 组成 Q3 可选平台诊断契约。
+  只有平台主动启用时才捕获一条有限源码调用链，并跟踪 Root、Lazy Item 与 Pager Item Render
+  Session 的活动/释放生命周期。编译样例 `renderSessionSourceToolingSample` 展示其 Adapter 生命周期。
 - 浮层规格与 Host 定义平台无关的 Dialog、Popup、Bottom Sheet、Snackbar 和 Toast 标识、定位、
   排队、更新与关闭契约。
 
@@ -131,6 +134,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   Material 应用会从 `viewcompose-material3` 获得具体比例。
 - 每个 `RenderSession` 独占一个容器、其挂载节点、组合、协程 Scope 与 Session 范围浮层。应随
   宿主生命周期调用 `dispose`；释放后的 Session 不能再次使用。
+- 源码工具默认关闭。已安装的 Adapter 会在首次构建树之前接受检查，接收成功构建产生的有界源码
+  候选，只在原生树建立后注册，由 `setRenderingActive` 更新，并随 Session 释放。候选调用链允许
+  平台在导航前移除共享 Scaffold 调用方。工具失败只属于诊断，不能成为应用渲染依赖。
 - 组合准备和树渲染失败会保留上一帧。渲染器建立新原生树之后发生的失败，会按已提交帧失败
   报告，无法回滚该原生树。
 - 浮层请求是声明式的，按 Render Session ID 与 Request Key 划分作用域。后续提交省略已有请求
@@ -163,6 +169,11 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 不要把自动 Saveable Key、Session 标识、VNode 实现名称、回调实例、工具元数据或诊断结构
 持久化为长期外部数据。即使应用组件源码仍能编译，契约变化也可能要求自定义渲染器与 Host
 同步升级。
+
+`RenderSessionPlatformDiagnostics.sourceTooling`、`RenderSessionSourceTooling` 与
+`RenderSessionSourceRegistration` 是新增的 Q3 工具 API。现有平台诊断使用默认空 Adapter，行为
+不变。主动启用的自定义平台必须让注册状态受所属 Render Session 约束，同步消费有界候选调用链
+列表，并在平台渲染线程调用。
 
 完整 `UiTypography` 与 `UiShapes` 值契约属于 Alpha 版本线的源码和二进制变更。它们仍是不可变、
 不包含生命周期或所有权协议的 Q2 值；直接构造保留源码默认值，但穷举解构、反射以及预编译调用方

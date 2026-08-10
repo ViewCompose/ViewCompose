@@ -130,6 +130,7 @@ repositories {
 dependencies {
     intellijPlatform {
         local(androidStudioHome.absolutePath)
+        bundledPlugin("org.jetbrains.android")
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.gradle")
         bundledPlugin("org.jetbrains.kotlin")
@@ -180,6 +181,8 @@ intellijPlatform {
             Android Studio.</p>
             <ul>
               <li>Navigate between Kotlin DSL source and rendered View nodes.</li>
+              <li>Open the ViewCompose DSL currently visible in a debuggable app on a selected
+              connected Android device.</li>
               <li>Preview light and dark themes, locales, layout directions, densities, font
               scales, and device sizes.</li>
               <li>Inspect native Views, layout diagnostics, VNode structure, composition data,
