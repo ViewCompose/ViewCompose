@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 70fa18550875ff5563e10d581e6bed6ccbbc300f4ee90f28d108027e57a824bd
+translation_source_hash: 1ecd99609d7b684b6b7fd5d01bf29953e2fcf187e4c84a37754d07c423e175b4
 translation_status: current
 ---
 
@@ -119,6 +119,9 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - Basic Surface 使用相同的有效/可见边界模型。Surface 快照变化会对保留的
   `DeclarativeBoxLayout` 执行中立重绑定；调用方 Background、Border 或 Shape Modifier 会移除
   组件提供的可见内缩，并占满有效边界。
+- 引擎创建的 Box 与 Surface 容器不执行 XML 属性解析。没有显式 `BoxScope.align` 的子项会在
+  LayoutParams 中保留继承内容对齐标记，因此内容对齐 Patch 只更新这些子项，不再在每次布局时
+  扫描全部子项；显式对齐的子项保持不变。
 - Button 与 IconButton 状态层变化参与定向样式 Patch，只重建 Surface Drawable。交互式
   Box/Row 变化会重新执行现有样式绑定；SegmentedControl 只重建选中角色发生变化的分段背景。
   按下优先于聚焦和悬停，聚焦优先于悬停；多状态路径的非活动态或禁用态保持透明。多状态契约

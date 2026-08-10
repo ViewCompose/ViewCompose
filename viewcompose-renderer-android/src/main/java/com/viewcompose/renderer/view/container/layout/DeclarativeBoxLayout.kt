@@ -2,7 +2,6 @@ package com.viewcompose.renderer.view.container
 
 import android.content.Context
 import android.graphics.Canvas
-import android.util.AttributeSet
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
@@ -18,20 +17,26 @@ import com.viewcompose.renderer.decoration.ViewDecorationDrawing
  * Applies contentGravity when a child has no gravity and preserves shadow and overflow drawing.
  * It injects contentGravity for children without gravity and keeps shadows/overflow drawing visible.
  */
-internal class DeclarativeBoxLayout @JvmOverloads constructor(
+internal class DeclarativeBoxLayout(
     context: Context,
-    attrs: AttributeSet? = null,
-) : FrameLayout(context, attrs), DecorationDrawingOrderContainer {
+) : FrameLayout(context), DecorationDrawingOrderContainer {
     private val decorationDrawing = ViewDecorationDrawing(this)
 
     companion object {
         const val UNSET_GRAVITY: Int = -1
     }
 
+    internal class LayoutParams(
+        width: Int,
+        height: Int,
+        val inheritsContentGravity: Boolean,
+    ) : FrameLayout.LayoutParams(width, height)
+
     var contentGravity: Int = Gravity.TOP or Gravity.START
         set(value) {
             if (field == value) return
             field = value
+            updateInheritedChildGravity(value)
             requestLayout()
         }
 
@@ -62,7 +67,7 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         super.onViewAdded(child)
         DecorationChildDrawingOrder.onViewAdded(this, child)
         decorationDrawing.onViewAdded(child)
-        applyGravityToChild(child)
+        applyContentGravityOnAttach(child)
     }
 
     override fun onViewRemoved(child: View) {
@@ -95,24 +100,28 @@ internal class DeclarativeBoxLayout @JvmOverloads constructor(
         bottom: Int,
     ) {
         val startNs = LayoutPassTracker.beginTiming()
-        applyGravityToChildren()
         super.onLayout(changed, left, top, right, bottom)
         LayoutPassTracker.recordLayoutSince(javaClass, startNs)
     }
 
-    private fun applyGravityToChildren() {
+    private fun updateInheritedChildGravity(gravity: Int) {
         (0 until childCount).forEach { index ->
-            applyGravityToChild(getChildAt(index))
+            val params = getChildAt(index).layoutParams as? LayoutParams ?: return@forEach
+            if (params.inheritsContentGravity) {
+                params.gravity = gravity
+            }
         }
     }
 
-    private fun applyGravityToChild(
+    private fun applyContentGravityOnAttach(
         child: View,
     ) {
-        val params = child.layoutParams as? LayoutParams ?: return
-        if (params.gravity == UNSET_GRAVITY) {
+        val params = child.layoutParams as? FrameLayout.LayoutParams ?: return
+        if (
+            (params as? LayoutParams)?.inheritsContentGravity == true ||
+            params.gravity == UNSET_GRAVITY
+        ) {
             params.gravity = contentGravity
-            child.layoutParams = params
         }
     }
 }

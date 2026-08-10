@@ -133,6 +133,10 @@ Because the current line is alpha, the documentation site intentionally does not
 - Basic Surface uses the same effective/visual-bound model. A changed surface snapshot performs a
   neutral rebind of the retained `DeclarativeBoxLayout`; caller background, border, or shape
   modifiers remove the component-provided visual inset and occupy the full effective bounds.
+- Engine-created Box and Surface containers skip XML attribute parsing. Children without an
+  explicit `BoxScope.align` retain inherited content alignment in their layout parameters, so a
+  content-alignment patch updates only those children instead of rescanning every child during
+  every layout pass; explicitly aligned children remain unchanged.
 - Button and IconButton state-layer changes participate in targeted style patching and rebuild only
   the surface drawable. Interactive Box/Row changes re-run their existing style binding, while
   SegmentedControl rebuilds only segment backgrounds whose selected role changed. Pressed takes
