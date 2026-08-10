@@ -17,4 +17,26 @@ class PluginCompatibilityContractTest {
             ).containsMatchIn(pluginXml),
         )
     }
+
+    @Test
+    fun `device DSL locator declares Android APIs and a distinct action icon`() {
+        val pluginXml = checkNotNull(
+            javaClass.classLoader.getResourceAsStream("META-INF/plugin.xml"),
+        ).bufferedReader().use { reader -> reader.readText() }
+
+        assertTrue(
+            Regex("""<depends>\s*org\.jetbrains\.android\s*</depends>""")
+                .containsMatchIn(pluginXml),
+        )
+        assertTrue(
+            Regex(
+                """id="com\.viewcompose\.studio\.preview\.LocateDeviceDsl"[\s\S]*?icon="/icons/viewcomposeLocateDeviceDsl\.svg""",
+            ).containsMatchIn(pluginXml),
+        )
+        assertTrue(
+            Regex(
+                """group-id="Android\.MainToolbarRight"""",
+            ).containsMatchIn(pluginXml),
+        )
+    }
 }

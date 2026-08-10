@@ -3,6 +3,8 @@ package com.viewcompose.host.android
 import android.view.ViewGroup
 import com.viewcompose.host.android.runtime.ensureAndroidRenderSessionPlatformInstalled
 import com.viewcompose.ui.node.PlatformRenderContainerHandle
+import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
+import com.viewcompose.ui.tooling.UiSourceSessionRole
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.RenderStats
@@ -58,6 +60,12 @@ class RenderSession internal constructor(
  * state, environment, theme, or frame-clock locals; custom hosts must provide and dispose those
  * services themselves, or use an Activity/Fragment `setUiContent` integration.
  *
+ * In a debuggable application process, the first emitted node contributes one bounded source call
+ * chain to an app-private device-locator report. The report contains source identifiers rather than
+ * source text, follows [RenderSession.setRenderingActive] and [RenderSession.dispose], and is not
+ * created for non-debuggable applications. Initial source capture allocates one stack trace per
+ * session; normal frame rendering remains unchanged.
+ *
  * @sample com.viewcompose.host.android.samples.renderIntoSample
  * @param container Android parent that owns all Views mounted by the returned session
  * @param debug enables render logging and full render-result collection
@@ -81,8 +89,9 @@ fun renderInto(
 ): RenderSession {
     ensureAndroidRenderSessionPlatformInstalled()
     val session = com.viewcompose.ui.foundation.RenderSession(
-        container = object : PlatformRenderContainerHandle {
+        container = object : PlatformRenderContainerHandle, UiSourceSessionContainerHandle {
             override val container: Any = container
+            override val sourceSessionRole: UiSourceSessionRole = UiSourceSessionRole.Host
         },
         content = content,
         debug = debug,
@@ -93,5 +102,5 @@ fun renderInto(
         onRenderFailure = onRenderFailure,
     )
     session.render()
-    return RenderSession(session)
+    return RenderSession(delegate = session)
 }

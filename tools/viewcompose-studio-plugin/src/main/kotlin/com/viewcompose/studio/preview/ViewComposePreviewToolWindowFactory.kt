@@ -110,7 +110,7 @@ class ViewComposePreviewToolWindowFactory : ToolWindowFactory, DumbAware {
     }
 }
 
-private fun Project.navigateToSource(source: StudioPreviewSourceLocation) {
+internal fun Project.navigateToSource(source: StudioPreviewSourceLocation) {
     val path = runCatching { Path.of(source.filePath).toAbsolutePath().normalize() }
         .getOrNull()
         ?: return

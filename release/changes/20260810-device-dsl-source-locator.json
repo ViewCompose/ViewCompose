@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add debug-only Android session source-candidate reporting and an Android Studio action that locates the visible content DSL, including pages wrapped by shared scaffolds, on a selected connected device.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "feature" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
+    { "artifact": "viewcompose-host-android", "impact": "feature" },
+    { "artifact": "viewcompose-renderer-android", "impact": "feature" }
+  ]
+}

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 02eb77f6ec685b7205eea7d5709a5a4df215569fcd08a421c88df984f0e79506
+translation_source_hash: 6423fd3e2a5dee081f80c52376d244874e132a4281f2a83b701ca86a098d321d
 translation_status: current
 ---
 
@@ -56,6 +56,20 @@ direction 映射为 `UiEnvironmentValues`。`AndroidOverlayHostDefaults.androidO
 时回退 no-op，多个时因 Classpath 顺序不得选择设计系统而失败。标准 Activity/Fragment Root 使用
 显式 Factory，不走该发现路径。
 
+## Debug 设备源码报告
+
+在可调试应用中，`renderInto` Root 与被标记为页面边界的嵌套容器（包括 Pager 目标）都会捕获
+首次 DSL 树中的有界源码候选，并在应用私有缓存目录写入一份很小的进程内报告。首批与最近候选
+让 Android Studio 把共享 Scaffold 识别为外层调用方，并优先进入业务 content DSL；普通 Lazy
+内容会被跳过。报告跟踪 Session 是否活动、挂载、实际可见、聚焦及其嵌套深度，工具据此优先
+选择已连接设备当前真正可见的最深层 DSL 页面。释放 Session 时会从报告移除它；
+`setRenderingActive` 会同步更新其候选资格。
+
+每个会话最多采样 64 次有效发射并保留 32 条不同调用链。报告只包含 JVM 类、方法、文件名和
+行号，不包含源码文本、节点树、应用状态或用户数据。工具只能对可调试包通过 `run-as` 读取报告；
+非调试构建不会捕获或写入。报告路径和 JSON 协议属于私有工具实现细节，应用不得把它们作为
+持久化契约使用。
+
 ## 原生 View 事务契约
 
 `AndroidView` 挂载平台 View，同时保留 renderer 的回滚语义：
@@ -97,3 +111,5 @@ AndroidView(
 模块不保留兼容 facade。
 `0.1.0-alpha04` 把 Overlay Service Discovery 收窄为单个中立 Provider；标准 Root 显式选择
 Backend，重复 Provider 属于配置错误。
+仅 Debug 的设备源码报告是 `renderInto` 新增的工具行为：公开签名不变，Release 构建没有额外
+工作；正常释放会话的自定义 Host 无需迁移。

@@ -180,6 +180,74 @@ class StudioPreviewSourceResolverTest {
         assertEquals("/project/app/src/main/java/com/example/GeneratedPreview.kt", source?.filePath)
     }
 
+    @Test
+    fun `candidate resolution removes shared scaffold wrapping authored content`() {
+        val scaffold = callSite(
+            className = "com.example.demo.DemoSubPageScaffoldKt",
+            methodName = "DemoSubPageScaffold",
+            fileName = "DemoSubPageScaffold.kt",
+            lineNumber = 61,
+        )
+        val settings = callSite(
+            className = "com.example.demo.DemoSettingsPageKt",
+            methodName = "SettingsPage",
+            fileName = "DemoSettingsPage.kt",
+            lineNumber = 57,
+        )
+
+        val sources = resolveRuntimeSourceCandidates(
+            sourceCandidates = listOf(
+                listOf(scaffold),
+                listOf(settings, scaffold),
+                listOf(scaffold.copy(lineNumber = 76)),
+            ),
+            findCandidatePaths = { fileName ->
+                when (fileName) {
+                    "DemoSubPageScaffold.kt" -> listOf(
+                        "/project/app/src/main/java/com/example/demo/DemoSubPageScaffold.kt",
+                    )
+                    "DemoSettingsPage.kt" -> listOf(
+                        "/project/app/src/main/java/com/example/demo/DemoSettingsPage.kt",
+                    )
+                    else -> emptyList()
+                }
+            },
+        )
+
+        assertEquals(1, sources.size)
+        assertEquals(
+            "/project/app/src/main/java/com/example/demo/DemoSettingsPage.kt",
+            sources.single().filePath,
+        )
+        assertEquals(57, sources.single().line)
+        assertEquals("SettingsPage", sources.single().symbolName)
+    }
+
+    @Test
+    fun `candidate resolution preserves independent content sources for explicit choice`() {
+        val first = callSite(
+            className = "com.example.demo.FirstPaneKt",
+            methodName = "FirstPane",
+            fileName = "FirstPane.kt",
+            lineNumber = 20,
+        )
+        val second = callSite(
+            className = "com.example.demo.SecondPaneKt",
+            methodName = "SecondPane",
+            fileName = "SecondPane.kt",
+            lineNumber = 30,
+        )
+
+        val sources = resolveRuntimeSourceCandidates(
+            sourceCandidates = listOf(listOf(first), listOf(second)),
+            findCandidatePaths = { fileName ->
+                listOf("/project/app/src/main/java/com/example/demo/$fileName")
+            },
+        )
+
+        assertEquals(listOf("FirstPane", "SecondPane"), sources.map { it.symbolName })
+    }
+
     private fun callSite(
         className: String,
         methodName: String,

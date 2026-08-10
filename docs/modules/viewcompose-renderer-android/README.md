@@ -98,6 +98,9 @@ back safely.
   declarative `zIndex` without wrapping every child in another View.
 - `ViewNodeToolingRegistry` weakly associates mounted Views with source metadata only when tooling
   metadata exists; ordinary rendering retains no extra source objects.
+- Renderer-owned child containers carry a tooling-only `UiSourceSessionRole`: pager destinations
+  are `Page`, while lazy rows and tab items are `Content`. A debuggable Android host can therefore
+  capture page source sessions without paying stack-capture cost for every ordinary lazy item.
 - Image nodes bind `UiImageRequest` to an injected `UiImageLoader` when one is present. The renderer
   stores the disposable handle on the mounted `ImageView`, leaves an equivalent request and its
   loaded drawable untouched, and disposes a changed request before applying its placeholder and
@@ -120,6 +123,9 @@ Because the current line is alpha, the documentation site intentionally does not
   stateful content is therefore a semantic replacement, not a move.
 - Lazy-list precision additionally requires every item to have a unique non-null key. Missing or
   duplicate keys produce `ReloadAll` to protect RecyclerView holder state.
+- Horizontal and vertical pager holders preserve the `Page` source-session role across reuse.
+  RecyclerView rows and tab items remain `Content`; this role does not affect keys, diffing,
+  measurement, visibility, or callbacks.
 - A lazy item's `contentToken` must change whenever captured values that affect output change.
   Session callbacks are refreshed from the exact next item instance even when the semantic item is
   otherwise unchanged.
@@ -198,6 +204,11 @@ diagnostics, tooling association, and decoration-backend contracts. Do not persi
 patch records, diagnostic tree objects, opaque lazy content tokens, or View tags as external data.
 Custom hosts and decoration backends must be upgraded with renderer contract changes even when an
 application's DSL source still compiles.
+
+Adding tooling-only page/content roles to renderer-owned child container handles is an internal
+behavior change over the additive UI Contract marker. Rendering output and public renderer
+signatures are unchanged; custom renderers may adopt the same marker when their child sessions
+represent page boundaries.
 
 The renderer's multi-state path is an implementation of the generic UI Contract rather than a
 Material feature. Custom renderers that adopt `UiStateLayerColors` must preserve its enabled-state

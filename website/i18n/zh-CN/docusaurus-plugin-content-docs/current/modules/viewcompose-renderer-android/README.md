@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 1ecd99609d7b684b6b7fd5d01bf29953e2fcf187e4c84a37754d07c423e175b4
+translation_source_hash: dbba7037f6857d69ab0e467db9dbfb9921630688ed85bde902f9b786135d2250
 translation_status: current
 ---
 
@@ -90,6 +90,9 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   `zIndex`，无需为每个 child 再包一层 View。
 - `ViewNodeToolingRegistry` 仅在工具元数据存在时，以弱引用方式关联 View 与源码信息；普通
   渲染不会额外持有源码对象。
+- Renderer 自有子容器会携带纯工具用途的 `UiSourceSessionRole`：Pager 目标标为 `Page`，Lazy
+  行与 Tab Item 标为 `Content`。可调试 Android Host 因此能捕获页面源码 Session，而无需为每个
+  普通 Lazy Item 支付堆栈捕获成本。
 - 图片节点在存在 loader 时，会把 `UiImageRequest` 绑定到注入的 `UiImageLoader`。渲染器把可
   释放句柄存放在挂载的 `ImageView` 上；等价 request 会保留已有句柄和已加载 drawable。Request
   变化时，渲染器先释放旧工作，再应用 placeholder 并启动替换工作；移除、回滚和 Session 释放
@@ -110,6 +113,8 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   语义替换，而不是 move。
 - Lazy 列表精确差分还要求每个 item 都有唯一且非空的 key。key 缺失或重复时使用
   `ReloadAll`，保护 RecyclerView holder 状态。
+- Horizontal 与 Vertical Pager Holder 会在复用期间保留 `Page` 源码 Session 角色。RecyclerView
+  行与 Tab Item 保持 `Content`；该角色不影响 Key、差分、测量、可见性或回调。
 - 只要影响输出的捕获值发生变化，Lazy item 的 `contentToken` 就必须变化。即使 item 语义未变，
   session 回调也会从 next 列表中的原始 item 实例刷新。
 - 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
@@ -171,6 +176,10 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 原生绑定、诊断、工具关联和装饰后端契约。不要把
 mounted node、patch 记录、诊断树对象、不透明 Lazy content token 或 View tag 作为外部长久
 数据持久化。即使应用 DSL 源码仍能编译，自定义 host 和装饰后端也必须随渲染器契约变化升级。
+
+为 Renderer 自有子容器 Handle 增加纯工具用途的页面/内容角色，是基于新增 UI Contract 标记的
+内部行为变化。渲染输出与公开 Renderer 签名不变；自定义 Renderer 可以在其子 Session 表示页面
+边界时采用同一标记。
 
 Renderer 的多状态路径实现通用 UI Contract，并非 Material 功能。采用 `UiStateLayerColors` 的
 自定义 Renderer 必须保留启用态优先级与透明非活动态；收到空值的 Renderer 可以继续使用其已有
