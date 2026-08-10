@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-overlay-oneui7-android/README.md
-translation_source_hash: fc84cbb15e9839b9e6a7a2650faef653c9309119b8ba3de1dffdc8988928ddef
+translation_source_hash: b3b4d2dd19b2ad116eaa08b2cbefa9fd1e08401120f94886d96a06b4874da73a
 translation_status: current
 ---
 
@@ -16,9 +16,14 @@ ViewCompose 自有的 One UI Snackbar、底部对话框 Presenter 组合起来�
 
 ```kotlin
 dependencies {
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha01")
 }
 ```
+
+下方显式装配会调用 `OneUi7Theme`、`OneUi7ThemeDefaults` 和 One UI 组件，因此应用源码需要直接
+声明 `viewcompose-oneui7`。Overlay Adapter 仍把该模块作为 Runtime 实现依赖，Host 构造函数只暴露
+UI Foundation 的共享 Token 类型；仅使用 Host 默认 Token 快照的代码不需要引用 One UI API。
 
 - 稳定性：**Alpha**。
 - 平台：Android Library，`minSdk 24`、`compileSdk 36`、Java 11 Bytecode。

@@ -10,9 +10,16 @@ ViewCompose-owned One UI Snackbar and bottom-dialog presenters. It does not add 
 
 ```kotlin
 dependencies {
+    implementation("com.viewcompose:viewcompose-oneui7:0.1.0-alpha01")
     implementation("com.viewcompose:viewcompose-overlay-oneui7-android:0.1.0-alpha01")
 }
 ```
+
+The explicit assembly below calls `OneUi7Theme`, `OneUi7ThemeDefaults`, and One UI components, so
+application source declares `viewcompose-oneui7` directly. The overlay adapter keeps that module as
+a runtime implementation dependency and exposes only shared UI Foundation token types from its
+host constructor; code that constructs the host with its default token snapshot does not need to
+name One UI APIs.
 
 - Stability: **Alpha**.
 - Platform: Android library, `minSdk 24`, `compileSdk 36`, and Java 11 bytecode.

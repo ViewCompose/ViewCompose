@@ -19,8 +19,11 @@ dependencies {
 
 - Stability: **Alpha**. Host, transition, and predictive-Back contracts may evolve between alphas.
 - Platform: Android library with a minimum SDK inherited from the repository Android policy.
-- Direct ViewCompose dependencies include Navigation Core, Android Host, Renderer, UI Foundation,
-  lifecycle, ViewModel integration, and the neutral Android overlay transport.
+- API dependencies are Navigation Core, Runtime, UI Contract, and UI Foundation because their
+  route, state, node, and builder types form the public navigation surface.
+- Implementation dependencies are Android Host, Lifecycle, ViewModel integration, and the neutral
+  Android overlay transport. Android Renderer arrives privately through Android Host and is not a
+  direct dependency of this artifact.
 - The artifact transitively supplies `viewcompose-navigation-core`; applications may depend on the
   core artifact alone when they need only the platform-neutral model.
 

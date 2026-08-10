@@ -15,6 +15,8 @@ dependencies {
 - Stability: **Alpha**. Annotation source shape is established; the tooling wire protocol requires
   exact version equality and may advance before stable.
 - Platform: JVM 11; protocol models are platform-neutral.
+- Kotlinx Serialization JSON is an API dependency because public protocol models carry
+  serialization metadata and `PreviewProtocolJson` is the supported wire-format codec.
 - Packaging: apply preview metadata to debuggable source sets. The ViewCompose preview Gradle plugin
   removes it from non-debuggable Android output.
 - Boundary: this module does not load Android Views, Layoutlib, Gradle, or IDE classes.

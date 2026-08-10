@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: 4cc15eeae8782c64d0714e4bd3ae4b8c3a64d83140c7389a51978e212ab1836f
+translation_source_hash: e0fc90967b0c2214a695b0391f25b61d4246d952254c13cef21fa230554fcf86
 translation_status: current
 ---
 
@@ -23,8 +23,10 @@ dependencies {
 
 - 稳定性：**Alpha**。宿主、转场和预测性返回契约在 Alpha 版本之间仍可能演进。
 - 平台：Android 库，最低 SDK 跟随仓库 Android 策略。
-- 直接 ViewCompose 依赖包括 Navigation Core、Android Host、Renderer、UI Foundation、Lifecycle
-  和 ViewModel 集成，以及中立 Android Overlay 传输。
+- API 依赖包括 Navigation Core、Runtime、UI Contract 和 UI Foundation，因为它们的 Route、State、
+  Node 与 Builder 类型构成公开 Navigation API。
+- 实现依赖包括 Android Host、Lifecycle、ViewModel 集成和中立 Android Overlay 传输。Android
+  Renderer 仅通过 Android Host 私有传递，并不是本产物的直接依赖。
 - 该产物会传递引入 `viewcompose-navigation-core`；只需要平台无关模型时可单独依赖 core。
 
 ## Controller 与宿主
