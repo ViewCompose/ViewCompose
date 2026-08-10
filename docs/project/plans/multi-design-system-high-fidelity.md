@@ -2,16 +2,18 @@
 
 ## Status
 
-Active pending release-owner physical-device gates. Phases 0 through 16 are implemented on
+Active pending linked Maven changeset publication and release-time archival. Phases 0 through 17
+are implemented on
 `codex/multi-design-system-foundation`. Phases 13 through 16 converge Android overlay ownership and
 root-level integration without introducing one Activity/Fragment extension family per design
 system. Phase 8 closes
 the retained native-behavior parity gaps exposed by the current design-system-owned controls. The
 internal pressure slice now exercises three visually distinct design-system bundles through shared
 Basic primitives and design-system-owned composites. Its behavior and screenshot matrix pass on
-API 24, 31, 35, and 36 emulators. Emulator benchmark traces are reproducible but remain
-non-representative for release performance acceptance; physical-device and Samsung visual
-acceptance remain release-owner gates rather than reasons to broaden the architecture. The public
+API 24, 31, 35, and 36 emulators. Emulator benchmark traces remain reproducibility evidence rather
+than release performance claims. Release-owner physical acceptance now passes on a Pixel 4 XL API
+33 and a Samsung SM-G991B API 33 for the combined visual suites and the formal five-iteration
+startup, retained-patch, scroll/draw, active-animation, and overlay-lifecycle scenarios. The public
 `viewcompose-oneui7` artifact now supplies a deliberately bounded five-component alpha without
 adding Samsung policy to UI Foundation or Android Renderer.
 
@@ -33,12 +35,11 @@ target architecture and the staged evidence required before public APIs or produ
 behavior are retained. Durable accepted contracts must move into the architecture guide, theme
 guide, and owning module manuals before this plan is archived.
 
-Last verified: 2026-08-09.
+Last verified: 2026-08-10.
 
-Next action: run release-owner physical Pixel/Samsung visual acceptance and formal physical-device
-benchmarks before publishing the linked Maven changeset. These gates are not used to bypass the
-neutral-host or backend boundaries. The release workflow must archive this plan only after every
-linked changeset is included and immediately before Maven upload.
+Next action: include the linked immutable changeset in the intended Maven release, complete the
+final release checks, and archive this plan immediately before Maven upload. The completed physical
+gates do not bypass the neutral-host or backend boundaries.
 
 ## Maven release changesets
 
@@ -457,8 +458,8 @@ morph path independently if it does not improve fidelity or performance.
 
 ## Phase 4: Five-component high-fidelity vertical slice
 
-Status: complete for implementation and representative emulator evidence. Physical Pixel/Samsung
-visual acceptance and physical-device performance thresholds remain release gates.
+Status: complete for implementation, emulator coverage, physical Pixel/Samsung visual acceptance,
+and formal physical-device performance thresholds.
 
 Implement the internal contrast design system across Button, Switch, TextField, NavigationBar, and
 Surface/Card. This phase proves the architecture before a public non-Material artifact exists.
@@ -504,9 +505,31 @@ into every component to protect sunk cost.
   API 24, 31, and 36 compatibility captures were also inspected. The 2.0x pass found and corrected
   missing explicit multi-line line heights in the diagnostic fixture.
 - Macrobenchmark coverage records initial build, patch-only update, scroll/draw, and active
-  animation for both bundles. A one-iteration API 35 emulator smoke trace passes, but emulator frame
-  timing is intentionally not compared with Phase 0 budgets. The formal five-iteration and physical
-  performance runs remain release-owner gates.
+  animation for all three bundles. A one-iteration API 35 emulator smoke trace passes, but emulator
+  frame timing is intentionally not compared with Phase 0 budgets.
+- On 2026-08-10, `DemoDesignSystemVerificationUiTest` and `OneUi7VerificationUiTest` pass all seven
+  tests on both a Pixel 4 XL API 33 and Samsung SM-G991B API 33. The light/LTR, dark/RTL, font-scale,
+  component-state, root/overlay replacement, Snackbar, and bottom-dialog captures were inspected on
+  both devices without accepting a clipped, blank, stale, or mixed-attribution frame.
+- Formal physical macrobenchmarks use five clean iterations per scenario. Short retained patches
+  repeat 24 equivalent updates, the active-animation trace remains open through the terminal spring
+  frame, and the overlay scenario repeats show/dismiss before one root-scoped replacement. Samsung
+  scenario-isolated reruns remove ordering and thermal bias; every accepted run starts at thermal
+  status 0. All applicable comparisons pass
+  [`benchmark_policy.json`](../../../tools/performance/benchmark_policy.json): run-level P50
+  coefficient of variation at most `0.15`, frame P50/P95 regression limits, and heap/anonymous-RSS
+  limits.
+
+| Physical device | Scenario | Rounded reference | Cut contrast | Cupertino pressure | Result |
+| --- | --- | ---: | ---: | ---: | --- |
+| Pixel 4 XL API 33 | Initial display median | `251.54 ms` | `258.40 ms` | `253.83 ms` | Pass |
+| Samsung SM-G991B API 33 | Initial display median | `254.82 ms` | `240.60 ms` | `244.27 ms` | Pass |
+| Pixel 4 XL API 33 | Retained patch CPU P50/P95 | `3.81/6.00 ms` | `2.99/5.16 ms` | `3.47/5.38 ms` | Pass |
+| Samsung SM-G991B API 33 | Retained patch CPU P50/P95 | `7.98/17.79 ms` | `5.94/11.92 ms` | `7.41/15.34 ms` | Pass |
+| Pixel 4 XL API 33 | Scroll/draw CPU P50/P95 | `3.92/8.97 ms` | `3.46/9.28 ms` | `3.62/6.99 ms` | Pass |
+| Samsung SM-G991B API 33 | Scroll/draw CPU P50/P95 | `3.93/6.96 ms` | `3.85/7.39 ms` | `3.02/6.91 ms` | Pass |
+| Pixel 4 XL API 33 | Active-animation CPU P50/P95 | `7.93/9.50 ms` | `6.94/8.45 ms` | `7.73/9.86 ms` | Pass |
+| Samsung SM-G991B API 33 | Active-animation CPU P50/P95 | `10.06/20.44 ms` | `7.44/11.07 ms` | `7.49/21.96 ms` | Pass |
 
 ## Phase 5: Host resolution, switching, overlays, and system UI
 
@@ -559,8 +582,8 @@ Keep criteria:
 
 ## Phase 6: First public non-Material design system
 
-Status: complete for implementation and API 35 emulator evidence. Pixel and physical Samsung
-screenshot acceptance plus Maven publication remain release-owner gates.
+Status: complete for implementation, API 35 emulator evidence, and Pixel/physical-Samsung
+screenshot acceptance. Maven publication remains the release-owner gate.
 
 One UI is the preferred first public target because it exercises Android-native interaction,
 large-title/density/shape differences, and Samsung device validation without making backdrop blur a
@@ -597,8 +620,8 @@ must state the supported component set and alpha stability.
 - Backdrop blur and shape morph are outside the public alpha surface. The documented fallback is a
   contrast-safe tinted Surface and a discrete/static shape endpoint; neither optional effect can
   alter content, input, semantics, or layout.
-- Physical Samsung acceptance remains mandatory before the first Maven upload. This external gate
-  prevents a release claim, but does not justify moving Samsung/OEM policy into shared layers.
+- Physical Samsung acceptance completed on 2026-08-10 before the first Maven upload. The accepted
+  external evidence does not justify moving Samsung/OEM policy into shared layers.
 
 ## Phase 7: Cupertino pressure test and advanced effects
 
@@ -651,8 +674,8 @@ Keep criteria:
 - API 35 emulator macrobenchmark smoke runs completed for cold initial build and active Switch
   animation. The single-iteration observations were 305.6 ms time to initial display and 32.0 ms
   frame CPU P50 across eight animation frames. These values prove reproducible instrumentation
-  only; emulator numbers are not release thresholds and require physical-device comparison before
-  publication claims.
+  only; the required physical-device comparison completed on 2026-08-10 and is recorded in the
+  Phase 4 evidence table.
 
 ## Phase 8: Native-behavior parity foundation
 
@@ -923,8 +946,9 @@ Ordered work:
   `6175/44496/88064 KiB` to `6479/45828/88448 KiB` (`+4.9%/+3.0%/+0.4%`), while CPU frame P50
   improved from `52.57 ms` to `34.65 ms`. Initial-display timing remains informational because its
   coefficient of variation is `0.57`, above the accepted `0.20` threshold.
-- Physical Pixel and Samsung acceptance remains a release-owner gate. The development keep gate
-  uses the available emulator as requested and does not claim physical-device or OEM conformance.
+- Physical Pixel and Samsung acceptance completed on 2026-08-10. The earlier development keep
+  decision remains based on emulator evidence and is not retroactively presented as physical-device
+  or OEM conformance.
 
 ### Phase 10 keep gate
 
@@ -1207,9 +1231,9 @@ regresses. Never restore Material discovery as the neutral default.
 
 ## Phase 16: Overlay design provenance and cross-system acceptance
 
-Status: complete for implementation, Maven consumers, the emulator matrix, and representative
-screenshot inspection. Physical Pixel/Samsung visual acceptance and formal physical-device
-performance thresholds remain release-owner gates.
+Status: complete for implementation, Maven consumers, the emulator matrix, representative
+screenshot inspection, physical Pixel/Samsung visual acceptance, and formal physical-device
+performance thresholds.
 
 Goal: prove that delayed overlay content and platform presenter selection report one coherent
 design-system owner, while keeping unsupported alpha capabilities honest.
@@ -1249,7 +1273,14 @@ Verification evidence recorded on 2026-08-09:
   The observed run contained 68 frames with 7,836 KB maximum Java heap and 52,136 KB maximum
   anonymous RSS. These emulator values are reproducibility evidence only, not release thresholds;
   Phase 13 had no valid overlay-specific physical-device before metric, so formal comparative
-  performance acceptance remains intentionally open until the release-owner device run.
+  performance acceptance remained intentionally open until the release-owner device run.
+- The 2026-08-10 physical overlay run uses five iterations, with five same-owner show/dismiss
+  repeats followed by one root-scoped overlay replacement in each iteration. Pixel records CPU
+  frame P50/P95 `2.47/5.80 ms`, run-P50 coefficient of variation `0.029`, median per-run maximum
+  Java heap `18,860 KiB`, and median per-run maximum anonymous RSS `72,974 KiB`. Samsung records
+  `10.08/87.05 ms`, coefficient of variation `0.054`, `12,850 KiB`, and `68,116 KiB`. Both runs
+  pass functional and stability gates. No regression percentage is claimed because Phase 13 has
+  no valid physical overlay baseline.
 
 Keep gate:
 
@@ -1268,8 +1299,7 @@ hidden behind optimistic conformance.
 
 Status: implementation retained. Focused JVM/Android tests, API 35 emulator visual acceptance,
 local Maven publication/consumer verification, `qaQuick`, and the bilingual website production
-build pass. Physical Samsung visual acceptance remains a pre-release OEM-fidelity gate, not an
-implementation blocker.
+build pass. Physical Samsung visual acceptance passes as the pre-release OEM-fidelity gate.
 
 Goal: correct high-value One UI 7 mismatches that the public Samsung guidance can support, make
 every interpreted token genuinely overrideable, and add One UI overlay presentation without a
@@ -1304,7 +1334,8 @@ Ordered implementation:
    the active adapter's `integrationAttribution` into the theme so diagnostics describe runtime
    truth instead of classpath capability.
 6. Add Light/LTR/1.0 and Dark/RTL/1.3 demo evidence for components, Snackbar, and bottom dialog;
-   retain the physical Samsung acceptance gate before claiming OEM fidelity.
+   require physical Samsung acceptance before claiming OEM fidelity. That gate completed on
+   2026-08-10.
 
 Keep gate:
 
@@ -1322,6 +1353,9 @@ Recorded validation:
 
 - Pixel 9a API 35 emulator: four One UI verification tests pass in Light/LTR/1.0 and
   Dark/RTL/1.3; component, Switch drag, Snackbar, and bottom-dialog screenshots were inspected;
+- Samsung SM-G991B API 33: the combined release-owner visual run passes seven of seven tests; the
+  One UI Light/LTR/1.0 and Dark/RTL/1.3 component, Switch drag, Snackbar, and bottom-dialog
+  screenshots were inspected on-device without clipping or Material presenter fallback;
 - instrumentation measures the Switch as a `44dp × 24dp` visual track with an `18dp` thumb inside
   a target of at least `48dp`, while a focused presenter test guards the Snackbar radius as half of
   its actual rendered height for both one-line and taller content;

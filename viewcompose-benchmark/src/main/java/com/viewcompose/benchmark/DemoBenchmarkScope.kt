@@ -4,8 +4,10 @@ import android.os.SystemClock
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Configurator
+import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 
 /**
  * 启动 demo 首页并等待目录锚点出现。
@@ -148,7 +150,8 @@ internal fun MacrobenchmarkScope.startSystemNavigationActivityFromForeground() {
  * Waits until the given text appears.
  */
 internal fun MacrobenchmarkScope.waitForText(text: String) {
-    device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
+    val found = device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
+    assertTrue("Expected to find text: $text", found)
 }
 
 /**
@@ -156,7 +159,8 @@ internal fun MacrobenchmarkScope.waitForText(text: String) {
  * Waits until the given text disappears from the current window.
  */
 internal fun MacrobenchmarkScope.waitForTextGone(text: String) {
-    device.wait(Until.gone(By.text(text)), UI_WAIT_TIMEOUT_MS)
+    val gone = device.wait(Until.gone(By.text(text)), UI_WAIT_TIMEOUT_MS)
+    assertTrue("Expected text to disappear: $text", gone)
 }
 
 /**
@@ -166,24 +170,22 @@ internal fun MacrobenchmarkScope.waitForTextGone(text: String) {
 internal fun MacrobenchmarkScope.scrollUntilText(
     text: String,
     maxSwipes: Int = 10,
-) {
+): UiObject2 {
     repeat(maxSwipes + 1) { attempt ->
-        if (device.hasObject(By.text(text))) {
-            return
-        }
+        findVisibleTextNode(text)?.let { node -> return node }
         if (attempt < maxSwipes) {
-            swipePageUp()
+            swipePageUpForTextSearch()
         }
     }
     // 向下查找失败后回滚向上查找，覆盖锚点已在上方的情况。
     // If scrolling down fails, scroll back up to cover anchors above the current viewport.
-    repeat(maxSwipes * 2) { attempt ->
-        if (device.hasObject(By.text(text))) {
-            return
-        }
-        swipePageDown()
+    repeat(maxSwipes * 2) {
+        findVisibleTextNode(text)?.let { node -> return node }
+        swipePageDownForTextSearch()
     }
-    waitForText(text)
+    val node = findVisibleTextNode(text)
+    assertNotNull("Expected to scroll text into the visible viewport: $text", node)
+    return node!!
 }
 
 /**
@@ -191,11 +193,62 @@ internal fun MacrobenchmarkScope.scrollUntilText(
  * Finds and clicks a text node, then waits for UiAutomator idle.
  */
 internal fun MacrobenchmarkScope.clickText(text: String) {
-    scrollUntilText(text)
-    val node = device.findObject(By.text(text))
-    assertNotNull("Expected to find text: $text", node)
-    node!!.click()
+    val node = scrollUntilText(text)
+    tapTextTarget(node)
     device.waitForIdle()
+}
+
+/**
+ * Waits for a text node that must already be in the viewport, clicks it, and then waits for idle.
+ *
+ * This keeps overlay interactions stable while the accessibility tree is being replaced during
+ * window entry or Activity recreation.
+ */
+internal fun MacrobenchmarkScope.clickVisibleText(text: String) {
+    device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
+    val node = findVisibleTextNode(text)
+    assertNotNull("Expected to find visible text: $text", node)
+    tapTextTarget(node!!)
+    device.waitForIdle()
+}
+
+private fun MacrobenchmarkScope.findVisibleTextNode(text: String): UiObject2? {
+    val node = device.findObject(By.text(text)) ?: return null
+    val bounds = node.visibleBounds
+    val centerY = bounds.centerY()
+    val safeTop = (device.displayHeight * 0.08f).toInt()
+    val safeBottom = (device.displayHeight * 0.90f).toInt()
+    return node.takeIf {
+        bounds.width() > 0 &&
+            bounds.height() > 0 &&
+            centerY in safeTop..safeBottom
+    }
+}
+
+private fun MacrobenchmarkScope.swipePageUpForTextSearch() {
+    val width = device.displayWidth
+    val height = device.displayHeight
+    device.swipe(
+        width / 2,
+        (height * 0.78f).toInt(),
+        width / 2,
+        (height * 0.22f).toInt(),
+        80,
+    )
+    SystemClock.sleep(TEXT_SEARCH_SCROLL_SETTLE_MILLIS)
+}
+
+private fun MacrobenchmarkScope.swipePageDownForTextSearch() {
+    val width = device.displayWidth
+    val height = device.displayHeight
+    device.swipe(
+        width / 2,
+        (height * 0.22f).toInt(),
+        width / 2,
+        (height * 0.78f).toInt(),
+        80,
+    )
+    SystemClock.sleep(TEXT_SEARCH_SCROLL_SETTLE_MILLIS)
 }
 
 /**
@@ -205,7 +258,78 @@ internal fun MacrobenchmarkScope.clickText(text: String) {
 internal fun MacrobenchmarkScope.clickVisibleTextWithoutIdle(text: String) {
     val node = device.findObject(By.text(text))
     assertNotNull("Expected to find visible text: $text", node)
-    node!!.click()
+    tapTextTarget(node!!)
+}
+
+/** Clicks the visible checkable control without waiting for UiAutomator idle. */
+internal fun MacrobenchmarkScope.clickVisibleCheckableControlWithoutIdle() {
+    val node = device.findObjects(By.checkable(true))
+        .firstOrNull { candidate ->
+            candidate.isClickable &&
+                hasVisibleBoundsInSafeViewport(candidate)
+        }
+    assertNotNull("Expected to find a visible checkable control", node)
+    tapTarget(node!!, "checkable control")
+}
+
+private fun MacrobenchmarkScope.tapTextTarget(node: UiObject2) {
+    val target = clickableTargetFor(node)
+    tapTarget(target, "text: ${node.text}")
+}
+
+private fun MacrobenchmarkScope.tapTarget(
+    target: UiObject2,
+    description: String,
+) {
+    val bounds = target.visibleBounds
+    assertTrue(
+        "Expected a visible click target for $description",
+        bounds.width() > 0 && bounds.height() > 0,
+    )
+    // A coordinate tap avoids OEM accessibility-action differences once the real surface is known.
+    assertTrue(
+        "Expected UiAutomator to inject the click for $description",
+        device.click(bounds.centerX(), bounds.centerY()),
+    )
+}
+
+private fun MacrobenchmarkScope.hasVisibleBoundsInSafeViewport(candidate: UiObject2): Boolean {
+    val bounds = candidate.visibleBounds
+    val centerY = bounds.centerY()
+    val safeTop = (device.displayHeight * 0.08f).toInt()
+    val safeBottom = (device.displayHeight * 0.90f).toInt()
+    return bounds.width() > 0 && bounds.height() > 0 && centerY in safeTop..safeBottom
+}
+
+private fun MacrobenchmarkScope.clickableTargetFor(node: UiObject2): UiObject2 {
+    node.clickableAncestorOrNull()?.let { target -> return target }
+
+    // Some Samsung builds expose a widget's text and clickable surface as overlapping siblings.
+    // Prefer the smallest clickable surface containing the text center so UiAutomator dispatches
+    // the action to the real control instead of the non-clickable label.
+    val textBounds = node.visibleBounds
+    val centerX = textBounds.centerX()
+    val centerY = textBounds.centerY()
+    return device.findObjects(By.clickable(true))
+        .asSequence()
+        .map { candidate -> candidate to candidate.visibleBounds }
+        .filter { (_, bounds) ->
+            bounds.width() > 0 &&
+                bounds.height() > 0 &&
+                bounds.contains(centerX, centerY)
+        }
+        .minByOrNull { (_, bounds) -> bounds.width().toLong() * bounds.height() }
+        ?.first
+        ?: node
+}
+
+private fun UiObject2.clickableAncestorOrNull(): UiObject2? {
+    var candidate: UiObject2? = this
+    while (candidate != null) {
+        if (candidate.isClickable) return candidate
+        candidate = candidate.parent
+    }
+    return null
 }
 
 /**
@@ -347,3 +471,4 @@ internal fun MacrobenchmarkScope.swipeTabStripLeft() {
  * Fixed wait duration used by navigation motion benchmarks.
  */
 private const val NAVIGATION_MOTION_WAIT_MILLIS = 650L
+private const val TEXT_SEARCH_SCROLL_SETTLE_MILLIS = 100L

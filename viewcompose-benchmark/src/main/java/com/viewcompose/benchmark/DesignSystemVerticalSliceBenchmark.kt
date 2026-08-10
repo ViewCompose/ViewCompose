@@ -1,5 +1,6 @@
 package com.viewcompose.benchmark
 
+import android.os.SystemClock
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.FrameTimingMetric
@@ -93,10 +94,16 @@ class DesignSystemVerticalSliceBenchmark {
         setupBlock = {
             startDesignSystemAndWait(kind)
             scrollUntilText("Confirm")
+            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
         },
     ) {
-        clickText("Confirm")
-        waitForText("Button clicks: 1")
+        // A single retained patch can complete without enough frame slices for Perfetto to report
+        // stable run-level percentiles. Repeat the same patch workload inside each iteration so the
+        // metric still isolates retained updates while producing a representative frame sample.
+        repeat(PATCH_UPDATES_PER_ITERATION) { updateIndex ->
+            clickVisibleText("Confirm")
+            waitForText("Button clicks: ${updateIndex + 1}")
+        }
     }
 
     private fun scrollAndDraw(kind: String) = benchmarkRule.measureRepeated(
@@ -124,10 +131,16 @@ class DesignSystemVerticalSliceBenchmark {
         setupBlock = {
             startDesignSystemAndWait(kind)
             scrollUntilText("Synchronize workspace")
+            scrollUntilText("Checked: true")
+            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
         },
     ) {
-        clickVisibleTextWithoutIdle("Synchronize workspace")
+        clickVisibleCheckableControlWithoutIdle()
         waitForText("Checked: false")
+        // The logical checked state changes before the visual spring completes. Keep the measured
+        // trace open through the terminal frame so one representative user transition supplies the
+        // whole animation workload instead of only its first frame.
+        SystemClock.sleep(ACTIVE_ANIMATION_SETTLE_MILLIS)
     }
 
     private fun overlayLifecycle(
@@ -144,13 +157,26 @@ class DesignSystemVerticalSliceBenchmark {
         startupMode = StartupMode.WARM,
         setupBlock = {
             startDesignSystemAndWait(initialKind)
+            scrollUntilText("Open dialog")
+            // UiAutomator idle waits are disabled for OEM stability, so let the page gesture settle
+            // before the measured overlay lifecycle begins.
+            SystemClock.sleep(SCROLL_SETTLE_MILLIS)
         },
     ) {
-        clickText("Open dialog")
+        // One overlay lifecycle yields too few frame slices on some OEM devices for stable
+        // run-level percentiles. Repeat show and dismiss without changing the page position, then
+        // use the final lifecycle for the representative root-scoped overlay replacement.
+        repeat(OVERLAY_SHOW_DISMISS_REPEATS_PER_ITERATION) {
+            clickVisibleText("Open dialog")
+            waitForText("Overlay system: $initialKind")
+            clickVisibleText("Close coherent dialog")
+            waitForTextGone("Overlay system: $initialKind")
+        }
+        clickVisibleText("Open dialog")
         waitForText("Overlay system: $initialKind")
-        clickText("Switch overlay to $replacementKind")
+        clickVisibleText("Switch overlay to $replacementKind")
         waitForText("Overlay system: $replacementKind")
-        clickText("Close coherent dialog")
+        clickVisibleText("Close coherent dialog")
         waitForTextGone("Overlay system: $replacementKind")
     }
 
@@ -168,3 +194,8 @@ private fun designSystemIterations(): Int {
         ?.takeIf { value -> value > 0 }
         ?: DEFAULT_ITERATIONS
 }
+
+private const val SCROLL_SETTLE_MILLIS = 2_000L
+private const val ACTIVE_ANIMATION_SETTLE_MILLIS = 600L
+private const val PATCH_UPDATES_PER_ITERATION = 24
+private const val OVERLAY_SHOW_DISMISS_REPEATS_PER_ITERATION = 5
