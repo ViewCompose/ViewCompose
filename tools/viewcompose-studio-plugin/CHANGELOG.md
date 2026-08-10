@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add an independent **Locate Device DSL** toolbar and Tools-menu action for opening the
+  ViewCompose source currently visible in a debuggable app.
+- Show a device chooser when multiple Android devices are online and a source chooser for
+  equally visible multi-pane DSL sessions.
+- Resolve bounded source candidates so shared scaffold chrome does not hide the content DSL.
+
 ## 1.0.1 — 2026-08-03
 
 ### Fixed

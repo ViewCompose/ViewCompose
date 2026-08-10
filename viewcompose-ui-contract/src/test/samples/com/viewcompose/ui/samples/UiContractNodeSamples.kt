@@ -21,6 +21,11 @@ import com.viewcompose.ui.node.UiImageTarget
 import com.viewcompose.ui.node.UiImageTransition
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
+import com.viewcompose.ui.tooling.UiNodeTooling
+import com.viewcompose.ui.tooling.UiSourceCallSite
+import com.viewcompose.ui.tooling.UiSourceSessionContainerHandle
+import com.viewcompose.ui.tooling.UiSourceSessionRole
+import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import java.io.File
@@ -36,6 +41,60 @@ fun vNodeModelSample() {
     check(spacer.type == NodeType.Spacer)
     check(spacer.key == "content-gap")
     check(spacer.children.isEmpty())
+}
+
+/** Captures one source chain for session-level tooling without annotating every node. */
+fun firstSourceCaptureSample() {
+    var capturedSource: List<UiSourceCallSite> = emptyList()
+
+    UiNodeTooling.withFirstSourceCapture(
+        onSourceCaptured = { source -> capturedSource = source },
+    ) {
+        UiNodeTooling.attach(
+            VNode(
+                type = NodeType.Text,
+                spec = EmptyNodeSpec,
+            ),
+        )
+    }
+
+    check(capturedSource.isNotEmpty())
+}
+
+/** Captures bounded source candidates when reusable chrome emits nodes before page content. */
+fun sourceCandidateCaptureSample() {
+    var sourceCandidates: List<List<UiSourceCallSite>> = emptyList()
+
+    UiNodeTooling.withSourceCandidateCapture(
+        onSourceCandidatesCaptured = { candidates -> sourceCandidates = candidates },
+    ) {
+        UiNodeTooling.attach(
+            VNode(
+                type = NodeType.Column,
+                spec = EmptyNodeSpec,
+            ),
+        )
+        UiNodeTooling.attach(
+            VNode(
+                type = NodeType.Text,
+                spec = EmptyNodeSpec,
+            ),
+        )
+    }
+
+    check(sourceCandidates.isNotEmpty())
+    check(sourceCandidates.all(List<UiSourceCallSite>::isNotEmpty))
+}
+
+fun sourceSessionContainerHandleSample() {
+    val pageContainer = object :
+        PlatformRenderContainerHandle,
+        UiSourceSessionContainerHandle {
+        override val container: Any = Any()
+        override val sourceSessionRole: UiSourceSessionRole = UiSourceSessionRole.Page
+    }
+
+    check(pageContainer.sourceSessionRole == UiSourceSessionRole.Page)
 }
 
 /** Demonstrates parent collection metadata and one selected logical child position. */

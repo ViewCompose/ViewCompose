@@ -54,6 +54,24 @@ optional neutral-overlay `ServiceLoader` lookup without moving Android service d
 Foundation. Zero providers returns no-op; multiple providers fail because classpath order may not
 choose a design system. Standard Activity and Fragment roots use explicit factories instead.
 
+## Debug device source reporting
+
+In a debuggable application, the `renderInto` root and nested containers classified as page
+boundaries, including pager destinations, each capture bounded source candidates from their initial
+DSL tree and publish a small process-local report under the application's private cache directory.
+The first and recent candidates allow Android Studio to recognize a shared scaffold as an outer
+caller and prefer the authored content DSL. Ordinary lazy content is skipped. The report tracks
+active, attached, actually visible, focused, and nested sessions so tooling can prefer the deepest
+DSL page currently visible on a connected device. Disposing a session removes it from the report;
+`setRenderingActive` updates its eligibility.
+
+Capture samples at most 64 eligible emissions per session and retains at most 32 distinct chains.
+The report contains JVM class, method, filename, and line information, but no source text, node
+tree, application state, or user data. It is accessible to tooling through `run-as` only for a
+debuggable package. Non-debuggable builds do not capture or write this report. The report path and
+JSON protocol are private tooling details and must not be used as an application persistence
+contract.
+
 ## Native View transaction contract
 
 `AndroidView` mounts a platform View without weakening renderer rollback semantics:
@@ -96,3 +114,6 @@ The Activity and Fragment `setUiContent` extensions moved to `viewcompose-androi
 five-layer architecture. No compatibility facade remains in this low-level artifact.
 Version `0.1.0-alpha04` restricts overlay service discovery to one neutral provider; standard roots
 choose their backend explicitly, and duplicate providers are a configuration error.
+Debug-only device source reporting is an additive `renderInto` tooling behavior: its public
+signature is unchanged, release builds do no extra work, and custom hosts that dispose sessions
+normally require no migration.
