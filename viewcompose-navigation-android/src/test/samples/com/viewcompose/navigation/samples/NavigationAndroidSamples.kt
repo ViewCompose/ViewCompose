@@ -11,7 +11,11 @@ import com.viewcompose.navigation.NavTransitionSpec
 import com.viewcompose.navigation.rememberNavHostController
 import com.viewcompose.navigation.core.NavRoute
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiTheme
+import com.viewcompose.ui.foundation.UiThemeTokens
 import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.runtime.MutableState
 
 fun navHostControllerSample(controller: NavHostController) {
     when (val result = controller.navigate(NavRoute("details"))) {
@@ -31,6 +35,17 @@ fun UiTreeBuilder.rememberedNavHostSample() {
             "home" -> Text("Home")
             "details" -> Text("Details")
             else -> error("Unknown route ${entry.route.name}")
+        }
+    }
+}
+
+fun UiTreeBuilder.retainedDestinationThemeSample(
+    controller: NavHostController,
+    applicationTheme: MutableState<UiThemeTokens>,
+) {
+    UiTheme(tokens = applicationTheme.value) {
+        NavHost(controller = controller) { entry ->
+            Text("${entry.route.name}: dark=${Theme.current.metadata.isDark}")
         }
     }
 }

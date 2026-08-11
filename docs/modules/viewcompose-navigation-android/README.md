@@ -49,9 +49,11 @@ main-thread APIs and require attachment so the core transaction, destination ren
 lifecycle, and native View hierarchy share one commit boundary.
 
 `NavHost` creates one retained child render session per destination. Hidden stack entries keep their
-session and owners but pause frame-driven rendering. When they become visible, they render against
-the latest captured environment without synchronously recomposing every retained page after each
-command.
+session and owners but pause frame-driven rendering. The host updates their captured environment
+without eagerly rendering every retained page. Immediately before a retained destination newly
+enters the visible pane set through pop, stack selection/history, predictive Back, or adaptive-pane
+expansion, that same session renders against the latest environment. Newly prepared destinations
+are not rendered twice.
 
 Change `contentKey` when destination content closes over non-observable values. Observable state
 invalidates its owning destination session directly. Changing `key`, controller identity, lifecycle
@@ -111,6 +113,10 @@ Before commit, candidate sessions and owners are removed and the core transactio
 commit, the host keeps committed state and reports the effect failure rather than pretending that
 the previous stack is still authoritative.
 
+A retained-page render that fails before reveal is reported as `DestinationRefresh` with
+`stackCommitted = false`. The previous stack, pane scene, visible Views, owners, and sessions remain
+authoritative; predictive previews and pane expansion are not published.
+
 Pass `onFailure` to `NavHost` for application logging, fallback, or tests. An unhandled failure is
 surfaced as `NavHostException` with the original cause, failed entry, and renderer frame report.
 
@@ -168,9 +174,9 @@ frame.
 three newest entries when each pane can retain the configured minimum width. `paneSpacingDp` is
 deducted before deciding how many panes fit.
 
-Width changes reuse the committed back stack, destination sessions, and owners. They recalculate
-only the pane scene and native child bounds. Layout direction maps primary-to-tertiary roles to the
-correct physical order for LTR and RTL.
+Width changes reuse the committed back stack, destination sessions, and owners. They refresh only
+retained entries newly admitted to the pane scene before recalculating native child bounds. Layout
+direction maps primary-to-tertiary roles to the correct physical order for LTR and RTL.
 
 ## Deep links and retained stacks
 

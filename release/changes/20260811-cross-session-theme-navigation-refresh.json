@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "summary": "Refresh retained Android navigation destinations with the latest inherited environment before pop, stack selection, predictive Back, or adaptive-pane reveal, while preserving the committed scene on refresh failure.",
+  "changes": [
+    { "artifact": "viewcompose-navigation-android", "impact": "fix" }
+  ],
+  "ignored": []
+}

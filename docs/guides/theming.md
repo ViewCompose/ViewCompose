@@ -270,6 +270,27 @@ setTheme(R.style.AppTheme_Alternate)
 themeRefreshController.refresh()
 ```
 
+### 5.1 Application-owned mode across Activity roots
+
+Each `setUiContent` or `setMaterial3UiContent` Activity owns an independent root `RenderSession`.
+Those sessions do not share remembered values, but they may observe the same application-owned
+`MutableState` or equivalent observable store. Put the user's Light/Dark/System choice in that
+application state, read it directly from every Activity root, and derive each root's tokens from the
+observed value. A change made in a secondary Activity then invalidates the first Activity's separate
+session without either Activity owning or addressing the other session.
+
+Keep ownership boundaries explicit:
+
+1. Theme preference and persistence are application policy, not a framework singleton.
+2. System mode resolves configuration from each root Context; explicit modes may share one
+   deterministic token producer.
+3. `Context.setTheme` or `applyStyle` mutates that Context's resources. It does not replace the
+   application theme source or notify unrelated Activity sessions; refresh or recreate that host
+   when imperative Android resources change.
+4. A nested `NavHost` captures the latest inherited theme environment. Hidden retained destinations
+   are refreshed with that environment before pop, stack selection/history, predictive Back, or
+   pane expansion makes them visible.
+
 ## 6. One UI 7 alpha design-system boundary
 
 `viewcompose-oneui7` is an explicit alternative design-system artifact rather than a replacement

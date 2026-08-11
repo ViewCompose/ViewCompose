@@ -58,7 +58,10 @@ internal class NavHostRuntime private constructor(
             Unit
         },
         onBackStarted = { event ->
-            coordinator.beginBackPreview(event)?.id
+            coordinator.beginBackPreview(
+                event = event,
+                onDestinationRefreshFailure = ::publishPassiveNavigationFailure,
+            )?.id
         },
         onBackProgressed = { previewId, event ->
             coordinator.updateBackPreview(previewId, event)
@@ -103,9 +106,11 @@ internal class NavHostRuntime private constructor(
         val previousConfig = committedConfig
         transitionSpecHolder.value = config.transitionSpec
         committedConfig = config
-        applyPanePolicy(config.panePolicy)
         when (coordinator.state) {
-            NavHostCoordinatorState.Detached -> attach(config)
+            NavHostCoordinatorState.Detached -> {
+                applyPanePolicy(config.panePolicy)
+                attach(config)
+            }
             NavHostCoordinatorState.Attached -> {
                 coordinator.updateRenderEnvironment(
                     localSnapshot = config.localSnapshot,
@@ -117,6 +122,7 @@ internal class NavHostRuntime private constructor(
                 ) {
                     refresh(config)
                 }
+                applyPanePolicy(config.panePolicy)
             }
             NavHostCoordinatorState.Attaching -> {
                 error("NavHost cannot commit configuration while attachment is still running.")
@@ -161,6 +167,24 @@ internal class NavHostRuntime private constructor(
             committedConfig?.onFailure?.invoke(publicResult.failure)
         }
         return publicResult
+    }
+
+    private fun publishPassiveNavigationFailure(
+        failure: NavHostDestinationRefreshFailure,
+    ) {
+        val config = checkNotNull(committedConfig) {
+            "An attached NavHost must have a committed configuration."
+        }
+        deliverFailure(
+            failure = NavFailure(
+                phase = NavFailurePhase.DestinationRefresh,
+                failedEntry = failure.failedEntry,
+                frameReport = failure.frameReport,
+                cause = failure.cause,
+                stackCommitted = false,
+            ),
+            config = config,
+        )
     }
 
     override fun saveState(): NavHostRestorableState {
@@ -294,14 +318,21 @@ internal class NavHostRuntime private constructor(
         widthPixels: Int = hostView.width,
     ) {
         val density = hostView.resources.displayMetrics.density
-        hostView.paneSpacingPixels = policy.resolveSpacingPixels(density)
+        var refreshFailed = false
         coordinator.updatePaneStrategy(
             strategy = policy.strategy,
             maxPaneCount = policy.resolvePaneCount(
                 widthPixels = widthPixels,
                 density = density,
             ),
+            onDestinationRefreshFailure = { failure ->
+                refreshFailed = true
+                publishPassiveNavigationFailure(failure)
+            },
         )
+        if (!refreshFailed) {
+            hostView.paneSpacingPixels = policy.resolveSpacingPixels(density)
+        }
     }
 
     companion object {

@@ -2,7 +2,8 @@
 
 ## Status
 
-Active. Planning is complete and implementation has not started.
+Active. The plan is landed, the Demo and navigation implementation are complete, and repository
+validation is in progress.
 
 This plan owns the bounded correction for application theme changes that cross Activity root
 sessions and retained `NavHost` destination sessions. It remains canonical English-only under the
@@ -12,12 +13,12 @@ file moves to `docs/archive/`.
 
 Last verified: 2026-08-11.
 
-Next action: land this plan and its index entry as an independent documentation commit, then
-implement the shared Demo theme source before changing navigation behavior.
+Next action: validate documentation and release intent, run the full repository gates, then record
+device/manual evidence before archiving the plan.
 
 ## Maven release changesets
 
-- None. Implementation has not started, so this plan owns no publication-relevant Changeset yet.
+- `release/changes/20260811-cross-session-theme-navigation-refresh.json`
 
 ## Objective
 
@@ -222,11 +223,15 @@ preflight blocker and do not mark the plan complete.
 
 ## Documentation and API impact
 
-The navigation change modifies published behavior without adding or changing a public/protected
-signature. Its documentation classification is:
+The navigation change modifies the high-risk `NavHost` behavioral contract without adding or
+changing a public/protected signature. Its documentation classification is:
 
-- public API Q level: no new or changed symbol, so no Q assignment or compiled API sample is
-  required;
+- public API Q level: `NavHost` remains Q3 because it crosses Android host/session boundaries,
+  owns retained resources, participates in transactions, and exposes failure callbacks;
+- applicable contract fields: behavior and ordering, inherited environment state, retained owner
+  lifecycle/identity, callback timing, rollback/failure, Android host boundaries, and eager-render
+  performance limits;
+- canonical KDoc and the compiled `retainedDestinationThemeSample` describe the changed contract;
 - behavior/default/lifecycle row: update navigation guide and owning module manual in both active
   locales;
 - architecture consistency: correct current navigation/session statements that promise refresh
@@ -257,6 +262,11 @@ This plan is complete only when:
 | Date | Revision | Phase | Command or evidence | Result | Decision and next action |
 | --- | --- | --- | --- | --- | --- |
 | 2026-08-11 | Working tree | Planning baseline | CodeGraph impact analysis; source/document review; focused Material and navigation unit tests | Baseline confirmed; tests passed; implementation/document mismatch recorded | Land this plan, then begin Phase 1 |
+| 2026-08-11 | `b21bcb4b` | Plan landing | Independent plan and plan-index commit | Passed `verifyDocumentationStructure` | Implement the application-owned Demo theme source |
+| 2026-08-11 | `e2fecfa5` | Demo implementation | Shared observable theme state, secondary Activity, stable tags, connected-device test | App Kotlin, Android-test Kotlin, and unit-test compilation passed | Implement retained-destination pre-presentation refresh |
+| 2026-08-11 | Working tree | Navigation implementation | Programmatic pop, stack selection, predictive Back, and adaptive-pane focused coordinator/driver tests | Focused test group passed | Complete documentation, release intent, and repository gates |
+| 2026-08-11 | Working tree | Repository validation | Full navigation, Material theme, and app unit tests; `verifyDocumentationStructure`; `verifyViewComposeReleaseIntent`; `qaQuick` | All passed; compiled Q3 sample and locale freshness verified | Run connected-device validation |
+| 2026-08-11 | Working tree | Connected-device validation | `qaFull` on unlocked Android 13 SM-G991B; isolated `secondaryActivityThemeSwitch_refreshesOriginalActivitySession` rerun | New cross-Activity test passed twice, including the 95-test run; aggregate `qaFull` failed because 15 unrelated UI/device tests outside the changed paths failed | Keep plan active and record the aggregate device-suite failures for separate triage |
 
 ## Decision history
 

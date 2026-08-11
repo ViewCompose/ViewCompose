@@ -20,8 +20,13 @@ import com.viewcompose.navigation.core.NavRootBackBehavior
 import com.viewcompose.navigation.core.NavStackConfiguration
 import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavStackSpec
+import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiLocalSnapshot
+import com.viewcompose.ui.foundation.UiLocals
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.captureUiLocalSnapshot
+import com.viewcompose.ui.foundation.uiLocalOf
 import java.util.ArrayDeque
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -234,7 +239,32 @@ class TransactionalNavHostCoordinatorTest {
     }
 
     @Test
-    fun `pop reuses retained page without a synchronous destination refresh`() {
+    fun `pop refreshes retained page with the latest local snapshot before reveal`() {
+        val renderedThemes = mutableMapOf<String, MutableList<String>>()
+        val content: NavDestinationContent = { entry ->
+            renderedThemes.getOrPut(entry.route.name, ::mutableListOf) +=
+                UiLocals.current(TestThemeLocal)
+            Text(entry.route.name)
+        }
+        attach(
+            localSnapshot = themeSnapshot("light"),
+            content = content,
+        )
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        coordinator.updateRenderEnvironment(
+            localSnapshot = themeSnapshot("dark"),
+            content = content,
+        )
+
+        val committed = coordinator.navigate(NavCommand.Pop)
+
+        assertTrue(committed is NavHostNavigationResult.Committed)
+        assertEquals("dark", renderedThemes.getValue("home").last())
+        assertEquals(listOf("home"), coordinator.routeNames())
+    }
+
+    @Test
+    fun `pop refresh failure preserves the committed stack and visible page`() {
         var failHomeRefresh = false
         attach { entry ->
             if (entry.route.name == "home" && failHomeRefresh) {
@@ -246,12 +276,23 @@ class TransactionalNavHostCoordinatorTest {
         val details = coordinator.snapshot.top
         failHomeRefresh = true
 
-        val committed = coordinator.navigate(NavCommand.Pop)
+        val home = coordinator.snapshot.entries.first()
+        val homeSession = checkNotNull(sessionStore.sessionOrNull(home.id))
+        val detailsSession = checkNotNull(sessionStore.sessionOrNull(details.id))
 
-        assertTrue(committed is NavHostNavigationResult.Committed)
-        assertEquals(listOf("home"), coordinator.routeNames())
-        assertNull(sessionStore.sessionOrNull(details.id))
-        assertNull(ownerStore.ownerOrNull(details.id))
+        val failed = coordinator.navigate(NavCommand.Pop)
+
+        assertTrue(failed is NavHostNavigationResult.Failed)
+        failed as NavHostNavigationResult.Failed
+        assertEquals(NavHostFailurePhase.DestinationRefresh, failed.phase)
+        assertSame(home, failed.failedEntry)
+        assertFalse(failed.stackCommitted)
+        assertEquals(listOf("home", "details"), coordinator.routeNames())
+        assertSame(homeSession, sessionStore.sessionOrNull(home.id))
+        assertSame(detailsSession, sessionStore.sessionOrNull(details.id))
+        assertEquals(View.GONE, homeSession.container.visibility)
+        assertEquals(View.VISIBLE, detailsSession.container.visibility)
+        assertEquals(NavHostCoordinatorState.Attached, coordinator.state)
     }
 
     @Test
@@ -410,7 +451,7 @@ class TransactionalNavHostCoordinatorTest {
     }
 
     @Test
-    fun `tab switch reuses retained target without a synchronous destination refresh`() {
+    fun `tab switch refresh failure preserves active stack and retained sessions`() {
         configureMultiStackCoordinator()
         var failSearch = false
         attach { entry ->
@@ -426,16 +467,45 @@ class TransactionalNavHostCoordinatorTest {
 
         val result = coordinator.navigate(NavCommand.SelectStack(SearchStack))
 
-        assertTrue(result is NavHostNavigationResult.Committed)
-        assertEquals(SearchStack, controller.stackStateSnapshot().activeStackId)
-        assertSame(searchRoot, coordinator.snapshot.top)
+        assertTrue(result is NavHostNavigationResult.Failed)
+        result as NavHostNavigationResult.Failed
+        assertEquals(NavHostFailurePhase.DestinationRefresh, result.phase)
+        assertSame(searchRoot, result.failedEntry)
+        assertFalse(result.stackCommitted)
+        assertEquals(HomeStack, controller.stackStateSnapshot().activeStackId)
+        assertSame(homeRoot, coordinator.snapshot.top)
         assertSame(searchSession, sessionStore.sessionOrNull(searchRoot.id))
-        assertEquals(View.GONE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
-        assertEquals(View.VISIBLE, searchSession.container.visibility)
+        assertEquals(View.VISIBLE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
+        assertEquals(View.GONE, searchSession.container.visibility)
         assertEquals(
-            NavEntryLifecycleState.Resumed,
+            NavEntryLifecycleState.Created,
             checkNotNull(ownerStore.ownerOrNull(searchRoot.id)).entryLifecycleState,
         )
+    }
+
+    @Test
+    fun `tab switch refreshes retained target with latest local snapshot`() {
+        configureMultiStackCoordinator()
+        val renderedThemes = mutableMapOf<String, MutableList<String>>()
+        val content: NavDestinationContent = { entry ->
+            renderedThemes.getOrPut(entry.route.name, ::mutableListOf) +=
+                UiLocals.current(TestThemeLocal)
+            Text(entry.route.name)
+        }
+        attach(
+            localSnapshot = themeSnapshot("light"),
+            content = content,
+        )
+        coordinator.updateRenderEnvironment(
+            localSnapshot = themeSnapshot("dark"),
+            content = content,
+        )
+
+        val result = coordinator.navigate(NavCommand.SelectStack(SearchStack))
+
+        assertTrue(result is NavHostNavigationResult.Committed)
+        assertEquals(SearchStack, controller.stackStateSnapshot().activeStackId)
+        assertEquals("dark", renderedThemes.getValue("search").last())
     }
 
     @Test
@@ -469,6 +539,38 @@ class TransactionalNavHostCoordinatorTest {
         assertTrue(controller.stackStateSnapshot().selectionHistory.isEmpty())
         assertEquals(View.VISIBLE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
         assertEquals(View.GONE, checkNotNull(sessionStore.sessionOrNull(searchRoot.id)).container.visibility)
+    }
+
+    @Test
+    fun `predictive back refresh failure keeps committed scene and reports the destination`() {
+        configureMultiStackCoordinator(
+            rootBackBehavior = NavRootBackBehavior.PreviousStack,
+        )
+        var failHomeRefresh = false
+        attach { entry ->
+            if (failHomeRefresh && entry.route.name == "home") {
+                error("home refresh failed")
+            }
+            Text(entry.route.name)
+        }
+        coordinator.navigate(NavCommand.SelectStack(SearchStack))
+        val homeRoot = controller.stackSnapshot(HomeStack).top
+        val searchRoot = controller.snapshot().top
+        var refreshFailure: NavHostDestinationRefreshFailure? = null
+        failHomeRefresh = true
+
+        val preview = coordinator.beginBackPreview(
+            event = backEvent(progress = 0f),
+            onDestinationRefreshFailure = { failure -> refreshFailure = failure },
+        )
+
+        assertNull(preview)
+        assertNull(coordinator.activeBackPreview)
+        assertSame(homeRoot, checkNotNull(refreshFailure).failedEntry)
+        assertEquals(SearchStack, controller.stackStateSnapshot().activeStackId)
+        assertEquals(View.VISIBLE, checkNotNull(sessionStore.sessionOrNull(searchRoot.id)).container.visibility)
+        assertEquals(View.GONE, checkNotNull(sessionStore.sessionOrNull(homeRoot.id)).container.visibility)
+        assertEquals(NavHostCoordinatorState.Attached, coordinator.state)
     }
 
     private fun configureMultiStackCoordinator(
@@ -521,12 +623,21 @@ class TransactionalNavHostCoordinatorTest {
     }
 
     private fun attach(
+        localSnapshot: UiLocalSnapshot = captureUiLocalSnapshot(),
         content: NavDestinationContent = { entry -> Text(entry.route.name) },
     ): NavHostAttachmentResult {
         return coordinator.attach(
-            localSnapshot = captureUiLocalSnapshot(),
+            localSnapshot = localSnapshot,
             content = content,
         )
+    }
+
+    private fun themeSnapshot(theme: String): UiLocalSnapshot {
+        var snapshot: UiLocalSnapshot? = null
+        UiTreeBuilder().ProvideLocal(TestThemeLocal, theme) {
+            snapshot = captureUiLocalSnapshot()
+        }
+        return checkNotNull(snapshot)
     }
 
     private fun TransactionalNavHostCoordinator.routeNames(): List<String> {
@@ -534,6 +645,7 @@ class TransactionalNavHostCoordinatorTest {
     }
 
     private companion object {
+        val TestThemeLocal = uiLocalOf(debugName = "NavigationTestTheme") { "system" }
         val HomeStack = NavStackId("home")
         val SearchStack = NavStackId("search")
     }

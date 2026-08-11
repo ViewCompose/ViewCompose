@@ -83,14 +83,17 @@ the entry owner or container.
 - render a candidate destination before publishing the new stack
 - commit stack and lifecycle state only after successful candidate render
 - roll back the candidate session when rendering fails
+- refresh retained destinations before they newly enter a visible pane scene
 - retain outgoing and incoming sessions during transitions
 - serialize re-entrant navigation commands on the main thread
 
 The internal `TransactionalNavHostCoordinator` now owns the settled-state transaction boundary.
-It attaches the initial stack, executes `push/pop/replaceTop/reset`, refreshes a page before it is
-revealed by `pop`, applies host lifecycle caps, and serializes navigation requested while another
-page is rendering. A destination render failure rolls back the pure back-stack transaction and
-discards commands emitted by that failed candidate.
+It attaches the initial stack, executes `push/pop/replaceTop/reset`, applies host lifecycle caps,
+and serializes navigation requested while another page is rendering. Before pop, retained-stack
+selection/history, predictive Back, or adaptive-pane expansion newly exposes a retained page, the
+coordinator renders that same session with the latest captured Local snapshot and destination
+content. A destination render failure rolls back the pure back-stack transaction, preserves the
+previous visible scene, and discards commands emitted by the failed operation.
 
 The coordinator also owns transition retention. After the stack commits, it publishes immutable
 before/after pane scenes plus retained entries, their visibility union, and layer order. Every
@@ -184,14 +187,15 @@ out without changing any stack.
 Ordinary Back executes a transactional `Pop` or `PopStackHistory` command from the same controller.
 Predictive Back adds a preview phase before that command:
 
-1. gesture start exposes the current top and either its previous destination or the previous stack's
-   top without changing the committed stack set;
+1. gesture start refreshes the incoming retained destination, then exposes it with the current top
+   without changing the committed stack set;
 2. every destination in the committed before-scene remains interactive and `RESUMED`, while
    destinations visible only in the after-scene remain `STARTED`;
 3. progress updates only the native View transition driver;
 4. cancellation resets View properties, visibility, and lifecycle to the committed snapshot;
-5. completion refreshes the revealed destination, commits the prepared Back command, and continues
-   the remaining motion through the normal transition-retention protocol.
+5. completion refreshes the incoming destination again against the latest environment, commits the
+   prepared Back command, and continues the remaining motion through the normal transition-retention
+   protocol.
 
 A programmatic navigation command redirects an active preview before preparing its own transaction.
 Host detachment, callback disablement, and host destruction cancel the preview and restore a settled
@@ -408,8 +412,8 @@ that stack's root and does not alter other stacks.
 Selection history is stable, excludes the active stack, and is saved with the complete stack set.
 With `PreviousStack`, system and predictive Back at a stack root reveal and commit the newest
 history target; once history is empty, Back delegates to the enclosing host. A failed destination
-render, failed stack switch, or cancelled predictive preview preserves the previously committed
-selection, histories, sessions, and owners.
+render or retained-page refresh, failed stack switch, or cancelled predictive preview preserves the
+previously committed selection, histories, sessions, owners, and visible scene.
 
 The pure-core, Robolectric/public-host, and Android process-death suites cover stack isolation,
 reselection, transaction rollback, inactive lifecycle ownership, ordinary and predictive Back, and
@@ -464,8 +468,10 @@ NavHost(
 
 Width changes republish only placement and lifecycle effects over the same committed entries.
 They do not create another stack, replace destination containers, or recreate lifecycle, ViewModel,
-SavedState, or saveable-state owners. Every settled pane is interactive and `RESUMED`; retained
-entries outside the pane scene are hidden and `CREATED`.
+SavedState, or saveable-state owners. A retained entry newly admitted by pane expansion renders with
+the latest environment before its View becomes visible; failure keeps the previous pane scene.
+Every settled pane is interactive and `RESUMED`; retained entries outside the pane scene are hidden
+and `CREATED`.
 
 Navigation and predictive Back carry both before/after pane scenes. Their visibility union remains
 attached through the terminal transition, while the native View driver animates only entries that
