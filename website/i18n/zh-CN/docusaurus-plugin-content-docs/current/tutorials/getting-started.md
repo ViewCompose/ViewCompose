@@ -2,7 +2,7 @@
 title: 构建第一个应用
 sidebar_position: 1
 translation_source: tutorials/getting-started.md
-translation_source_hash: 785ada637b53c34585e8916dc3892b4a01418a334557bec7c0af4df89928836a
+translation_source_hash: 5b9353a975af119e2f2635e9dc0dc42339b3152ffba258410a971a14c3b6f311
 translation_status: current
 ---
 
@@ -52,6 +52,11 @@ dependencies {
     )
 }
 ```
+
+这些预览配置只会建立原生渲染链路，不会安装 Android Studio 界面。打开预览前，请进入
+`Settings | Plugins | Marketplace`，搜索并安装 `ViewCompose Preview`；如果 IDE 提示，请重启
+Android Studio。IDE 插件与 `id("com.viewcompose.preview")` 是两项独立安装；当前 Marketplace
+版本线为 `1.0.1`，支持 Android Studio `261.*` Build Family。
 
 ## 将要构建的内容
 
@@ -210,7 +215,8 @@ fun UiTreeBuilder.CounterPreview() {
 }
 ```
 
-使用 ViewCompose Studio 插件打开 `CounterPreview.kt`，即可查看两种变体。原生静态 runner
+从 Android Studio Marketplace 安装 `ViewCompose Preview` 后，打开 `CounterPreview.kt` 并点击
+预览 Gutter 图标，或打开 `ViewCompose Preview` 工具窗口，即可查看两种变体。原生静态 Runner
 直接执行参与编译的 DSL 函数，因此 Activity 与 Preview 不会演变成两套页面实现。可以运行：
 
 ```bash

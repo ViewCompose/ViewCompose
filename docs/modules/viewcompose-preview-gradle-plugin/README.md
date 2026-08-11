@@ -23,6 +23,17 @@ dependencies {
 - Production boundary: non-debuggable variants retain no direct or composed ViewCompose preview
   annotations in project bytecode.
 
+## Android Studio companion plugin
+
+The Gradle plugin configures discovery and rendering but does not install an Android Studio user
+interface. For interactive previews, separately open **Settings | Plugins | Marketplace**, search
+for `ViewCompose Preview`, and install it. The IDE plugin supplies gutter actions, the preview tool
+window and gallery, incremental refresh, source navigation, and diagnostics; it then invokes the
+tasks and artifacts provided by this Gradle plugin.
+
+The IDE and Gradle plugins are independently versioned. See [ViewCompose Preview](../../tooling/preview.md)
+for the complete module dependencies, supported Android Studio line, and first preview entry.
+
 ## Variant integration
 
 The plugin may be applied before or after the Android plugin. It configures a project once when an
