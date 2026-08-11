@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-gradle-plugin/README.md
-translation_source_hash: bbe092f16fad335871f4799844794dbe0630e42e38c3033a1d213ebe974ec25c
+translation_source_hash: d323815474c695434d764a0eceb129582ab2e6e1e19af840ef2cd3982faa2368
 translation_status: current
 ---
 
@@ -26,6 +26,16 @@ dependencies {
 - 构建要求：Android Gradle Plugin 8.9 线；Render 使用 JDK 17+。
 - 范围：Android Application 与 Library Project。
 - 生产边界：不可调试 Variant 的 Project Bytecode 不保留直接或组合的 ViewCompose Preview Annotation。
+
+## Android Studio 配套插件
+
+Gradle 插件负责配置 Discovery 与 Render，但不会安装 Android Studio 界面。使用交互式预览时，
+还需要单独进入 `Settings | Plugins | Marketplace`，搜索并安装 `ViewCompose Preview`。IDE 插件
+提供 Gutter Action、预览工具窗口与 Gallery、增量刷新、源码导航和诊断，再调用本 Gradle 插件
+提供的 Task 与 Artifact。
+
+IDE 插件与 Gradle 插件独立版本化。完整模块依赖、支持的 Android Studio 版本线和第一个预览
+入口请参阅 [ViewCompose 预览](../../tooling/preview.md)。
 
 ## Variant 集成
 

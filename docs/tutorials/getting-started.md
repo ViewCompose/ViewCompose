@@ -51,6 +51,12 @@ dependencies {
 }
 ```
 
+These preview entries configure the native render pipeline but do not install its Android Studio
+interface. Before opening the preview, go to **Settings | Plugins | Marketplace**, search for
+`ViewCompose Preview`, and install it. Restart Android Studio if prompted. The IDE plugin is a
+separate installation from `id("com.viewcompose.preview")`; the current Marketplace line is `1.0.1`
+for Android Studio build family `261.*`.
+
 ## What you will build
 
 The application contains one Activity and one declarative tree:
@@ -213,9 +219,11 @@ fun UiTreeBuilder.CounterPreview() {
 }
 ```
 
-Open `CounterPreview.kt` with the ViewCompose Studio plugin to inspect both variants. The native
-static runner uses the compiled DSL function, so the Activity and preview cannot drift into two
-separate screen implementations. Verify discovery locally with:
+After installing `ViewCompose Preview` from the Android Studio Marketplace, open
+`CounterPreview.kt` and click its preview gutter icon, or open the `ViewCompose Preview` tool
+window, to inspect both variants. The native static runner uses the compiled DSL function, so the
+Activity and preview cannot drift into two separate screen implementations. Verify discovery
+locally with:
 
 ```bash
 ./gradlew :samples:counter:verifyCounterPreview

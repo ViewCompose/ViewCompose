@@ -1,28 +1,136 @@
 # ViewCompose Preview
 
-The `viewcompose-preview` module provides two development-time preview paths:
+The recommended ViewCompose preview path is the first-party native static-preview toolchain. It
+renders the application's compiled ViewCompose DSL as Android Views through Layoutlib, without
+requiring Compose in the application module. The Compose Preview bridge remains available as an
+optional adapter for projects that already use Compose tooling.
 
-- Android Studio Compose Preview renders ViewCompose DSL through `ViewComposePreviewHost`.
-- Paparazzi snapshot regression consumes the same `PreviewCatalog`, avoiding separate Preview and
-  screenshot definitions.
+## How the native preview toolchain fits together
 
-## Application integration (recommended)
+| Piece | Responsibility |
+| --- | --- |
+| `com.viewcompose.preview` Gradle plugin | Discovers compiled preview entries, prepares Android variant inputs, and starts rendering tasks. |
+| `viewcompose-preview-core` | Supplies `@ViewComposePreview`, configuration models, and the shared preview protocol on the debug classpath. |
+| `viewcompose-preview-worker-host` and `viewcompose-preview-runner` | Run Layoutlib and application render code outside Android Studio, producing PNG and structured diagnostic artifacts. |
+| `ViewCompose Preview` Android Studio plugin | Adds gutter actions, the preview tool window and gallery, incremental refresh, source navigation, and diagnostic inspection. |
 
-Production-facing previews belong in the consuming application module and call the public
-`:viewcompose-preview` APIs directly:
+The Gradle plugin and Android Studio plugin are separate installations. Adding Maven dependencies
+and `id("com.viewcompose.preview")` configures the build side only; it does not install the IDE user
+interface.
 
-- `com.viewcompose.preview.ViewComposePreview`
-- `com.viewcompose.preview.ViewComposePreviewWithRoot` (for pages that require the root
-  `ViewGroup` while building)
-- `com.viewcompose.preview.ViewComposePreviewOptions`
-- `com.viewcompose.preview.ViewComposePreviewTheme`
+## Install native static preview
 
-The consuming module—not `:viewcompose-preview`—enables Compose:
+### 1. Configure the Android module
+
+Apply the preview Gradle plugin and keep its artifacts on debug or tooling-only configurations:
+
+```kotlin title="build.gradle.kts"
+plugins {
+    id("com.viewcompose.preview") version "0.1.0-alpha02"
+}
+
+dependencies {
+    debugImplementation("com.viewcompose:viewcompose-preview-core:0.1.0-alpha02")
+    add(
+        "viewComposePreviewWorkerHost",
+        "com.viewcompose:viewcompose-preview-worker-host:0.1.0-alpha02",
+    )
+    add(
+        "viewComposePreviewRunner",
+        "com.viewcompose:viewcompose-preview-runner:0.1.0-alpha03",
+    )
+}
+```
+
+These are the versions verified together by the current preview sample. ViewCompose artifacts are
+independently versioned; consult the [published module catalog](../modules/README.md) before mixing
+other versions. Basic native previews do not require the Compose compiler plugin, Compose
+`buildFeatures`, or the `viewcompose-preview` bridge artifact.
+
+### 2. Install the Android Studio plugin
+
+In Android Studio, open **Settings | Plugins | Marketplace**, search for `ViewCompose Preview`, and
+install it. Restart Android Studio if prompted. This IDE installation is required to get the
+`ViewCompose Preview` tool window, gutter render actions, gallery, source navigation, incremental
+refresh, and diagnostics.
+
+The current Marketplace line is `1.0.1` and is advertised for Android Studio build family `261.*`.
+The IDE plugin is versioned independently from the Maven artifacts and Gradle plugin.
+
+### 3. Declare a preview entry
+
+Annotate a public top-level DSL function. The compiled function must accept only the
+`UiTreeBuilder` receiver and return `Unit`. This entry is copied from the compiled counter sample:
+
+```kotlin title="CounterPreview.kt"
+package com.viewcompose.samples.counter
+
+import com.viewcompose.preview.tooling.PreviewTheme
+import com.viewcompose.preview.tooling.ViewComposePreview
+import com.viewcompose.ui.foundation.UiTreeBuilder
+
+@ViewComposePreview(
+    name = "Counter · Light",
+    group = "Samples/Getting started",
+)
+@ViewComposePreview(
+    name = "Counter · Dark",
+    group = "Samples/Getting started",
+    theme = PreviewTheme.Dark,
+)
+fun UiTreeBuilder.CounterPreview() {
+    CounterScreen()
+}
+```
+
+`@ViewComposePreview` is repeatable and may also be used through source-visible custom
+meta-annotations. Configuration can describe theme, locale, layout direction, density, font scale,
+viewport, and API level. Keep the preview entry and preview-only theme providers in a debug or
+dedicated preview source set when they are not needed by application runtime code.
+
+### 4. Render in Android Studio
+
+Sync the project, open the Kotlin file, and click the ViewCompose preview gutter icon beside the
+annotated function. You can also open **View | Tool Windows | ViewCompose Preview** and use the
+gallery to select an entry. The plugin invokes the Gradle discovery and render pipeline, then shows
+the native Android View result and its configurations.
+
+While the tool window is visible, saving a source-only change uses the incremental refresh path.
+Use the full-update action after changing signatures, resources, the manifest, or dependencies.
+The inspection panels expose the native View tree, VNode structure, layout bounds, composition and
+patch activity, phase timings, and source-aware diagnostics. Application code and Layoutlib execute
+in bounded worker processes rather than inside the Android Studio process.
+
+## Application theme fidelity
+
+The native runner resolves Android resource qualifiers and ViewCompose environment values from the
+preview configuration. If the default Android theme bridge is insufficient, implement
+`PreviewThemeProvider` and mark one provider with `@ViewComposePreviewThemeProvider`. The provider
+must return a matching themed Android `Context` and `UiThemeTokens` so native Views and the DSL use
+one coherent theme.
+
+The provider API is supplied by the debug-scoped `viewcompose-preview` artifact:
 
 ```kotlin
+dependencies {
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
+}
+```
+
+See the [Preview Integration module](../modules/viewcompose-preview/README.md) for the provider
+contract and lifecycle rules.
+
+## Compose Preview bridge (optional)
+
+Use the Compose bridge only when an existing Compose Preview surface is useful to the project. It
+embeds ViewCompose in Compose through `AndroidView`; it is not the recommended native preview path
+and does not replace the ViewCompose plugin's gallery, source navigation, application-theme
+provider, static artifacts, or structured diagnostics.
+
+The consuming module enables Compose and adds the bridge on a development-only classpath:
+
+```kotlin title="build.gradle.kts (optional Compose bridge)"
 plugins {
-    alias(libs.plugins.android.library) // or android.application
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -33,46 +141,32 @@ android {
 }
 
 dependencies {
-    implementation(project(":viewcompose-preview"))
+    debugImplementation("com.viewcompose:viewcompose-preview:0.1.0-alpha03")
 }
 ```
 
-Application preview example:
+Then wrap the DSL with `ViewComposePreview` or `ViewComposePreviewWithRoot` from
+`com.viewcompose.preview`:
 
 ```kotlin
-@Preview(name = "Biz Light", showBackground = true, widthDp = 411, heightDp = 891)
+@Preview
 @Composable
-private fun BizLightPreview() {
-    ViewComposePreview(
-        options = ViewComposePreviewOptions(theme = ViewComposePreviewTheme.Light),
-    ) {
-        // Build the application DSL here.
-    }
-}
-
-@Preview(name = "Biz Root-Aware", showBackground = true, widthDp = 411, heightDp = 891)
-@Composable
-private fun BizRootAwarePreview() {
-    ViewComposePreviewWithRoot(
-        options = ViewComposePreviewOptions(theme = ViewComposePreviewTheme.Dark),
-    ) { root ->
-        // Use root when the page DSL requires the host ViewGroup.
+fun composePreviewBridgeSample() {
+    ViewComposePreview {
+        Text("ViewCompose")
     }
 }
 ```
 
-## Studio Preview
-
-1. Open either entry point from the `viewcompose-preview` module in Android Studio:
-   - `com.viewcompose.preview.shell.PreviewShellsKt`
-   - `com.viewcompose.preview.catalog.ui.CatalogPreviewsKt`
-2. Use the IDE Preview panel to inspect light/dark, phone/tablet, and component-domain variants.
+This bridge entry is covered by the compiled `viewcompose-preview` API sample. The bridge uses
+`UiThemeDefaults` and Compose Preview lifecycle semantics. Choose the native static runner when
+production-theme fidelity or the ViewCompose diagnostic pipeline matters.
 
 ## Locate a running device DSL
 
-The ViewCompose Android Studio plugin provides a separate **Locate Device DSL** toolbar action and
-Tools-menu entry; it does not share the Preview tool-window icon. To open the DSL for the page
-currently visible on a device:
+The `ViewCompose Preview` Android Studio plugin also provides a separate **Locate Device DSL**
+toolbar action and Tools-menu entry; it does not share the preview tool-window icon. To open the DSL
+for the page currently visible on a device:
 
 1. Install and open a debuggable application build that uses the current
    `viewcompose-host-android` runtime.
@@ -89,11 +183,11 @@ connection, validates that the report belongs to a live process, and resolves bo
 candidates against the current project. When shared scaffolds emit toolbar or container nodes before
 their content, candidates that reappear as outer callers are removed so navigation prefers the
 content DSL. Independent remaining content sources are shown in the source chooser. The action does
-not use the Preview panel, external storage, a network service, or source-text transfer.
+not use the preview panel, external storage, a network service, or source-text transfer.
 Non-debuggable builds do not expose the report. If no report is available, keep the intended app in
 the foreground and verify that its debug build uses the current host artifact.
 
-## Snapshot Regression
+## Snapshot regression
 
 Run the module snapshot verification:
 
@@ -126,3 +220,11 @@ regression or review and record an intentional baseline instead.
 
 Preview scenes use static content to model overlays instead of creating real window layers. The
 actual behavior of dialogs, popups, and bottom sheets is covered by instrumentation tests.
+
+## Related documentation
+
+- [Preview Core module](../modules/viewcompose-preview-core/README.md)
+- [Preview Gradle Plugin module](../modules/viewcompose-preview-gradle-plugin/README.md)
+- [Preview Runner module](../modules/viewcompose-preview-runner/README.md)
+- [Preview Worker Host module](../modules/viewcompose-preview-worker-host/README.md)
+- [Preview Integration module](../modules/viewcompose-preview/README.md)
