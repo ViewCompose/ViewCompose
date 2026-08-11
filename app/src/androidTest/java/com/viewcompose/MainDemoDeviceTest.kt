@@ -80,6 +80,52 @@ class MainDemoDeviceTest {
     }
 
     @Test
+    fun secondaryActivityThemeSwitch_refreshesOriginalActivitySession() {
+        launchDemoActivity(MainActivity::class.java, themeMode = DemoThemeMode.Light).use { scenario ->
+            waitForUiIdle()
+            clickDeviceText("设置")
+            scenario.onActivity { activity ->
+                val status = activity.requireTextViewByTestTagVisible(DemoTestTags.SETTINGS_THEME_STATUS)
+                assertTrue(status.text.toString().contains(DemoThemeMode.Light.name))
+                assertEquals(DemoThemeTokens.light.colors.onSurfaceVariant, status.currentTextColor)
+            }
+
+            val instrumentation = InstrumentationRegistry.getInstrumentation()
+            val monitor = instrumentation.addMonitor(
+                ThemeSwitchActivity::class.java.name,
+                null,
+                false,
+            )
+            try {
+                scenario.onActivity { activity ->
+                    activity.clickByTestTag(DemoTestTags.SETTINGS_CROSS_ACTIVITY_THEME_ENTRY)
+                }
+                val secondary = instrumentation.waitForMonitorWithTimeout(monitor, 5_000)
+                assertNotNull("Expected ThemeSwitchActivity to launch", secondary)
+
+                clickDeviceText("Dark")
+                instrumentation.runOnMainSync {
+                    val status = checkNotNull(secondary)
+                        .requireTextViewByTestTagVisible(DemoTestTags.THEME_SWITCH_SECONDARY_STATUS)
+                    assertTrue(status.text.toString().contains(DemoThemeMode.Dark.name))
+                    assertEquals(DemoThemeTokens.dark.colors.onSurface, status.currentTextColor)
+                    secondary.clickByTestTag(DemoTestTags.THEME_SWITCH_SECONDARY_RETURN)
+                }
+                waitForUiIdle()
+
+                scenario.onActivity { activity ->
+                    val status = activity.requireTextViewByTestTagVisible(DemoTestTags.SETTINGS_THEME_STATUS)
+                    assertEquals(DemoThemeMode.Dark, DemoThemeSession.mode)
+                    assertTrue(status.text.toString().contains(DemoThemeMode.Dark.name))
+                    assertEquals(DemoThemeTokens.dark.colors.onSurfaceVariant, status.currentTextColor)
+                }
+            } finally {
+                instrumentation.removeMonitor(monitor)
+            }
+        }
+    }
+
+    @Test
     fun catalogLaunchAndThemeSwitch_keepMainDemoUsable() {
         launchDemoActivity(MainActivity::class.java, themeMode = DemoThemeMode.System).use { scenario ->
             waitForUiIdle()

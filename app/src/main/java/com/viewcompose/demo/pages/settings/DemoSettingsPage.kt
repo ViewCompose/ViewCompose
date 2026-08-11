@@ -77,16 +77,33 @@ internal fun UiTreeBuilder.SettingsPage(
                     style = UiTextStyle(fontSizeSp = 18.sp),
                     modifier = Modifier.margin(top = 16.dp, bottom = 8.dp),
                 )
+                Text(
+                    text = "当前主题: ${themeModeState.value.name}",
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SETTINGS_THEME_STATUS),
+                )
                 SegmentedControl(
                     items = listOf("System", "Light", "Dark"),
                     selectedIndex = themeModeState.value.ordinal,
                     onSelectionChange = { index ->
-                        val mode = DemoThemeMode.entries[index]
-                        DemoThemeSession.mode = mode
-                        themeModeState.value = mode
+                        themeModeState.value = DemoThemeMode.entries[index]
                     },
                     size = SegmentedControlSize.Medium,
                     modifier = Modifier.fillMaxWidth(),
+                )
+                Button(
+                    text = "在二级 Activity 切换主题",
+                    onClick = {
+                        root?.context?.startActivity(
+                            ThemeSwitchActivity.newIntent(root.context),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(top = 8.dp)
+                        .testTag(DemoTestTags.SETTINGS_CROSS_ACTIVITY_THEME_ENTRY),
                 )
             }
 
