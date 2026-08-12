@@ -23,6 +23,8 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+    sourceSets["test"].java.srcDir("src/test/samples")
 }
 
 dependencies {

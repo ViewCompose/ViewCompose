@@ -29,10 +29,14 @@ import com.viewcompose.ui.foundation.captureUiLocalSnapshot
  * recreating their lifecycle, ViewModel, or saved-state owners.
  *
  * [contentKey] must change when destination content or inherited locals depend on a non-observable
- * parent value. Observable state invalidates destination sessions directly, so ordinary navigation
- * and state changes do not synchronously refresh every retained page.
+ * parent value. Observable state invalidates active destination sessions directly. Hidden retained
+ * destinations keep the latest captured environment and render synchronously before a pop, stack
+ * selection, predictive-Back preview, or pane expansion makes them visible; the host keeps the
+ * previous stack and scene when that refresh fails. Ordinary state changes never refresh every
+ * hidden retained page eagerly.
  *
  * @sample com.viewcompose.navigation.samples.rememberedNavHostSample
+ * @sample com.viewcompose.navigation.samples.retainedDestinationThemeSample
  * @param controller stable controller mounted exclusively by this host
  * @param modifier layout modifier applied after the host's required fill constraint
  * @param transitionSpec visual policy for committed and predictive-Back transitions
@@ -44,7 +48,7 @@ import com.viewcompose.ui.foundation.captureUiLocalSnapshot
  * @param overlayHostFactory creates destination overlay support for the native host container
  * @param onFailure optional failure handler; unhandled failures throw [NavHostException]
  * @param key application identity component that can force a new native host
- * @param content destination renderer receiving each visible [NavEntry]
+ * @param content destination renderer receiving each prepared or refreshed [NavEntry]
  * @throws IllegalStateException when no lifecycle owner is provided
  */
 fun UiTreeBuilder.NavHost(

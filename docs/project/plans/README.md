@@ -4,6 +4,10 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
+- [Cross-session theme propagation](./cross-session-theme-propagation.md) — make one observable
+  application theme choice converge across independent Activity roots, add a secondary-Activity
+  switch-and-return Demo, and refresh retained NavHost destinations with the latest Local snapshot
+  before they become visible without recreating their owners or sessions.
 - [Multi-design-system and high-fidelity theme](./multi-design-system-high-fidelity.md) — establish
   immutable foundation-token and typed component-recipe layers, validate them with a deliberately
   non-Material internal design system, then stage shared primitives, motion, capability fallbacks,

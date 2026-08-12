@@ -103,3 +103,10 @@ internal data class NavHostRefreshResult(
         .filterValues { report -> report?.status != RenderFrameStatus.Committed }
         .keys
 }
+
+/** Failure produced while synchronously refreshing a retained page before it becomes visible. */
+internal data class NavHostDestinationRefreshFailure(
+    val failedEntry: NavEntry?,
+    val frameReport: RenderFrameReport?,
+    val cause: Throwable?,
+)

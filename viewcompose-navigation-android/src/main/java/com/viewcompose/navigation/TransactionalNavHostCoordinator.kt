@@ -18,6 +18,7 @@ import com.viewcompose.navigation.core.NavTransaction
 import com.viewcompose.navigation.core.NavTransactionStatus
 import com.viewcompose.navigation.core.calculateValidated
 import com.viewcompose.ui.foundation.RenderFrameReport
+import com.viewcompose.ui.foundation.RenderFrameStatus
 import com.viewcompose.ui.foundation.UiLocalSnapshot
 import java.util.ArrayDeque
 
@@ -168,6 +169,7 @@ internal class TransactionalNavHostCoordinator(
     fun updatePaneStrategy(
         strategy: NavPaneStrategy,
         maxPaneCount: Int,
+        onDestinationRefreshFailure: (NavHostDestinationRefreshFailure) -> Unit = {},
     ): NavPaneScene {
         requireMainThread()
         check(state != NavHostCoordinatorState.Destroyed) {
@@ -192,14 +194,27 @@ internal class TransactionalNavHostCoordinator(
         executing = true
         val previousStrategy = paneStrategy
         val previousMaxPaneCount = this.maxPaneCount
-        return try {
+        val previousScene = calculatePaneScene(snapshot)
+        var destinationRefreshFailure: NavHostDestinationRefreshFailure? = null
+        val result = try {
             redirectActiveBackPreview(preserveVisualState = false)
             redirectActiveTransition(preserveVisualState = false)
-            paneStrategy = strategy
-            this.maxPaneCount = maxPaneCount
-            applySettledState(snapshot, scene)
-            drainQueuedCommandsWhileExecuting()
-            scene
+            val failure = refreshNewlyVisibleDestinations(
+                beforeScene = previousScene,
+                afterScene = scene,
+                retainedEntries = controller.retainedEntries(),
+            )
+            if (failure == null) {
+                paneStrategy = strategy
+                this.maxPaneCount = maxPaneCount
+                applySettledState(snapshot, scene)
+                drainQueuedCommandsWhileExecuting()
+                scene
+            } else {
+                destinationRefreshFailure = failure
+                queuedCommands.clear()
+                previousScene
+            }
         } catch (throwable: Throwable) {
             paneStrategy = previousStrategy
             this.maxPaneCount = previousMaxPaneCount
@@ -212,6 +227,8 @@ internal class TransactionalNavHostCoordinator(
         } finally {
             executing = false
         }
+        destinationRefreshFailure?.let(onDestinationRefreshFailure)
+        return result
     }
 
     @MainThread
@@ -233,7 +250,10 @@ internal class TransactionalNavHostCoordinator(
     }
 
     @MainThread
-    fun beginBackPreview(event: NavHostBackEvent): NavHostBackPreview? {
+    fun beginBackPreview(
+        event: NavHostBackEvent,
+        onDestinationRefreshFailure: (NavHostDestinationRefreshFailure) -> Unit = {},
+    ): NavHostBackPreview? {
         requireMainThread()
         check(state == NavHostCoordinatorState.Attached) {
             "Predictive back requires an attached host; current=$state."
@@ -242,7 +262,8 @@ internal class TransactionalNavHostCoordinator(
             "Predictive back cannot start during another host operation."
         }
         executing = true
-        return try {
+        var destinationRefreshFailure: NavHostDestinationRefreshFailure? = null
+        val result = try {
             redirectActiveBackPreview(preserveVisualState = false)
             redirectActiveTransition(preserveVisualState = false)
             val currentSnapshot = controller.snapshot()
@@ -288,43 +309,56 @@ internal class TransactionalNavHostCoordinator(
             }
             val beforeScene = calculatePaneScene(currentSnapshot)
             val afterScene = calculatePaneScene(afterSnapshot)
-            // Preview builds only a visual afterSnapshot; the pure stack commits in commitBackPreview.
-            val preview = NavHostBackPreview(
-                id = NavHostBackPreviewId(++nextBackPreviewId),
-                command = command,
-                snapshot = currentSnapshot,
-                outgoingEntry = currentSnapshot.top,
-                incomingEntry = incomingEntry,
+            val failure = refreshNewlyVisibleDestinations(
                 beforeScene = beforeScene,
                 afterScene = afterScene,
                 retainedEntries = retainedEntries,
-                visibleEntryIds = unionSceneEntryIds(beforeScene, afterScene),
-                layerOrder = retainedEntries.map(NavEntry::id),
             )
-            val active = ActiveNavHostBackPreview(preview)
-            activeBackPreviewRecord = active
-            try {
-                applyBackPreviewState(preview)
-                active.handle = transitionDriver.startBackPreview(
-                    preview = preview,
-                    initialEvent = event,
+            if (failure != null) {
+                destinationRefreshFailure = failure
+                queuedCommands.clear()
+                null
+            } else {
+                // Preview builds only a visual afterSnapshot; the pure stack commits later.
+                val preview = NavHostBackPreview(
+                    id = NavHostBackPreviewId(++nextBackPreviewId),
+                    command = command,
+                    snapshot = currentSnapshot,
+                    outgoingEntry = currentSnapshot.top,
+                    incomingEntry = incomingEntry,
+                    beforeScene = beforeScene,
+                    afterScene = afterScene,
+                    retainedEntries = retainedEntries,
+                    visibleEntryIds = unionSceneEntryIds(beforeScene, afterScene),
+                    layerOrder = retainedEntries.map(NavEntry::id),
                 )
-                preview
-            } catch (throwable: Throwable) {
-                if (activeBackPreviewRecord === active) {
-                    activeBackPreviewRecord = null
-                    runCatching { active.handle?.dispose() }
-                        .exceptionOrNull()
-                        ?.let(throwable::addSuppressed)
-                    runCatching { applySettledState(currentSnapshot) }
-                        .exceptionOrNull()
-                        ?.let(throwable::addSuppressed)
+                val active = ActiveNavHostBackPreview(preview)
+                activeBackPreviewRecord = active
+                try {
+                    applyBackPreviewState(preview)
+                    active.handle = transitionDriver.startBackPreview(
+                        preview = preview,
+                        initialEvent = event,
+                    )
+                    preview
+                } catch (throwable: Throwable) {
+                    if (activeBackPreviewRecord === active) {
+                        activeBackPreviewRecord = null
+                        runCatching { active.handle?.dispose() }
+                            .exceptionOrNull()
+                            ?.let(throwable::addSuppressed)
+                        runCatching { applySettledState(currentSnapshot) }
+                            .exceptionOrNull()
+                            ?.let(throwable::addSuppressed)
+                    }
+                    throw throwable
                 }
-                throw throwable
             }
         } finally {
             executing = false
         }
+        destinationRefreshFailure?.let(onDestinationRefreshFailure)
+        return result
     }
 
     @MainThread
@@ -721,6 +755,18 @@ internal class TransactionalNavHostCoordinator(
             checkNotNull(sessionStore.sessionOrNull(revealedEntry.id)) {
                 "Revealed destination ${revealedEntry.id} has no retained page session."
             }
+        }
+
+        val destinationRefreshFailure = refreshNewlyVisibleDestinations(
+            beforeScene = calculatePaneScene(transaction.before),
+            afterScene = calculatePaneScene(transaction.after),
+            retainedEntries = controller.retainedEntries(),
+            excludedEntryIds = addedEntry?.let { setOf(it.id) }.orEmpty(),
+        )
+        if (destinationRefreshFailure != null) {
+            candidate?.let(::rollbackCandidate)
+            rollback(transaction)
+            return destinationRefreshFailure.toNavigationFailure(transaction.command)
         }
 
         if (candidate != null) {
@@ -1126,6 +1172,87 @@ internal class TransactionalNavHostCoordinator(
             command = transaction.command,
             snapshot = controller.snapshot(),
             phase = phase,
+            failedEntry = failedEntry,
+            frameReport = frameReport,
+            cause = cause,
+            stackCommitted = false,
+        )
+    }
+
+    private fun refreshNewlyVisibleDestinations(
+        beforeScene: NavPaneScene,
+        afterScene: NavPaneScene,
+        retainedEntries: List<NavEntry>,
+        excludedEntryIds: Set<NavEntryId> = emptySet(),
+    ): NavHostDestinationRefreshFailure? {
+        val newlyVisibleEntryIds = afterScene.visibleEntryIds - beforeScene.visibleEntryIds -
+            excludedEntryIds
+        if (newlyVisibleEntryIds.isEmpty()) {
+            return null
+        }
+        val entriesById = retainedEntries.associateBy(NavEntry::id)
+        val currentLocalSnapshot = checkNotNull(localSnapshot)
+        val currentContent = checkNotNull(destinationContent)
+        afterScene.panes.forEach { pane ->
+            val entryId = pane.entryId
+            if (entryId !in newlyVisibleEntryIds) {
+                return@forEach
+            }
+            val entry = entriesById[entryId]
+                ?: return destinationRefreshFailure(
+                    failedEntry = null,
+                    cause = IllegalStateException(
+                        "Newly visible destination $entryId is not retained.",
+                    ),
+                )
+            val session = sessionStore.sessionOrNull(entryId)
+                ?: return destinationRefreshFailure(
+                    failedEntry = entry,
+                    cause = IllegalStateException(
+                        "Newly visible destination $entryId has no retained page session.",
+                    ),
+                )
+            val report = runCatching {
+                traceSection("VC.Nav.RefreshDestination") {
+                    session.render(currentLocalSnapshot, currentContent)
+                }
+            }.getOrElse { throwable ->
+                return destinationRefreshFailure(
+                    failedEntry = entry,
+                    frameReport = session.lastFrameReport,
+                    cause = throwable,
+                )
+            }
+            if (report?.status != RenderFrameStatus.Committed) {
+                return destinationRefreshFailure(
+                    failedEntry = entry,
+                    frameReport = report,
+                    cause = report?.failures?.firstOrNull()?.cause,
+                )
+            }
+        }
+        return null
+    }
+
+    private fun destinationRefreshFailure(
+        failedEntry: NavEntry?,
+        frameReport: RenderFrameReport? = null,
+        cause: Throwable?,
+    ): NavHostDestinationRefreshFailure {
+        return NavHostDestinationRefreshFailure(
+            failedEntry = failedEntry,
+            frameReport = frameReport,
+            cause = cause,
+        )
+    }
+
+    private fun NavHostDestinationRefreshFailure.toNavigationFailure(
+        command: NavCommand,
+    ): NavHostNavigationResult.Failed {
+        return NavHostNavigationResult.Failed(
+            command = command,
+            snapshot = controller.snapshot(),
+            phase = NavHostFailurePhase.DestinationRefresh,
             failedEntry = failedEntry,
             frameReport = frameReport,
             cause = cause,

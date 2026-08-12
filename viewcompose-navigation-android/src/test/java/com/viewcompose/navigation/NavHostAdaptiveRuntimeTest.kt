@@ -14,10 +14,16 @@ import com.viewcompose.host.android.overlay.AndroidOverlayHostDefaults
 import com.viewcompose.navigation.core.NavEntryId
 import com.viewcompose.navigation.core.NavEntryIdFactory
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiLocalSnapshot
+import com.viewcompose.ui.foundation.UiLocals
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.captureUiLocalSnapshot
+import com.viewcompose.ui.foundation.uiLocalOf
 import java.util.ArrayDeque
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -102,6 +108,74 @@ class NavHostAdaptiveRuntimeTest {
         }
     }
 
+    @Test
+    fun `committed pane policy refreshes newly visible pages with latest staged environment`() {
+        val fixture = createSinglePaneRuntime()
+        try {
+            measureAndLayout(fixture.runtime.hostView, width = 1_200, height = 600)
+            assertTrue(fixture.controller.navigate(NavRoute("details")) is NavResult.Committed)
+            assertTrue(fixture.controller.navigate(NavRoute("confirmation")) is NavResult.Committed)
+            val renderedThemes = mutableMapOf<String, MutableList<String>>()
+            val expanded = fixture.config.copy(
+                localSnapshot = themeSnapshot("dark"),
+                panePolicy = fixture.config.panePolicy.copy(maxPaneCount = 3),
+                content = { entry ->
+                    renderedThemes.getOrPut(entry.route.name) { mutableListOf() } +=
+                        UiLocals.current(TestThemeLocal)
+                    Text(entry.route.name)
+                },
+            )
+
+            fixture.runtime.stage(expanded)
+            fixture.runtime.commitStaged()
+
+            assertEquals("dark", renderedThemes.getValue("home").last())
+            assertEquals("dark", renderedThemes.getValue("details").last())
+            assertEquals(3, visibleChildCount(fixture.runtime.hostView))
+        } finally {
+            fixture.runtime.destroy()
+        }
+    }
+
+    @Test
+    fun `pane refresh failure reaches runtime handler and keeps previous scene`() {
+        var reportedFailure: NavFailure? = null
+        val fixture = createSinglePaneRuntime(
+            onFailure = { failure -> reportedFailure = failure },
+        )
+        try {
+            measureAndLayout(fixture.runtime.hostView, width = 1_200, height = 600)
+            assertTrue(fixture.controller.navigate(NavRoute("details")) is NavResult.Committed)
+            assertTrue(fixture.controller.navigate(NavRoute("confirmation")) is NavResult.Committed)
+            val expanded = fixture.config.copy(
+                panePolicy = fixture.config.panePolicy.copy(maxPaneCount = 3),
+                content = { entry ->
+                    if (entry.route.name == "home") {
+                        error("home pane refresh failed")
+                    }
+                    Text(entry.route.name)
+                },
+            )
+
+            fixture.runtime.stage(expanded)
+            fixture.runtime.commitStaged()
+
+            assertNotNull(reportedFailure)
+            assertEquals(
+                NavFailurePhase.DestinationRefresh,
+                checkNotNull(reportedFailure).phase,
+            )
+            assertEquals(false, checkNotNull(reportedFailure).stackCommitted)
+            assertEquals(1, visibleChildCount(fixture.runtime.hostView))
+            assertEquals(
+                listOf("home", "details", "confirmation"),
+                fixture.controller.snapshot.entries.map { entry -> entry.route.name },
+            )
+        } finally {
+            fixture.runtime.destroy()
+        }
+    }
+
     private fun measureAndLayout(
         view: View,
         width: Int,
@@ -113,7 +187,70 @@ class NavHostAdaptiveRuntimeTest {
         )
         view.layout(0, 0, width, height)
     }
+
+    private fun createSinglePaneRuntime(
+        onFailure: ((NavFailure) -> Unit)? = null,
+    ): AdaptiveRuntimeFixture {
+        val context = RuntimeEnvironment.getApplication()
+        val entryIds = ArrayDeque(listOf("root", "details", "confirmation"))
+        val controller = createNavHostController(
+            startDestination = NavRoute("home"),
+            entryIdFactory = NavEntryIdFactory {
+                NavEntryId(entryIds.removeFirst())
+            },
+        )
+        val config = NavHostRuntimeConfig(
+            localSnapshot = captureUiLocalSnapshot(),
+            lifecycleOwner = ResumedLifecycleOwner(),
+            transitionSpec = NavTransitionSpec.None,
+            panePolicy = NavPanePolicy(
+                minPaneWidthDp = 100f,
+                maxPaneCount = 1,
+                paneSpacingDp = 8f,
+            ),
+            systemBackEnabled = false,
+            onFailure = onFailure,
+            contentKey = Unit,
+            content = { entry -> Text(entry.route.name) },
+        )
+        val runtime = NavHostRuntime.create(
+            context = context,
+            controller = controller,
+            initialConfig = config,
+            overlayHostFactory = { root: ViewGroup ->
+                AndroidOverlayHostDefaults.androidOrNoOp(root)
+            },
+            debug = false,
+            debugTag = "adaptive-runtime-refresh-test",
+        )
+        runtime.commitStaged()
+        return AdaptiveRuntimeFixture(runtime, controller, config)
+    }
+
+    private fun visibleChildCount(hostView: NavHostView): Int {
+        return (0 until hostView.childCount)
+            .map(hostView::getChildAt)
+            .count { child -> child.visibility == View.VISIBLE }
+    }
+
+    private fun themeSnapshot(theme: String): UiLocalSnapshot {
+        var snapshot: UiLocalSnapshot? = null
+        UiTreeBuilder().ProvideLocal(TestThemeLocal, theme) {
+            snapshot = captureUiLocalSnapshot()
+        }
+        return checkNotNull(snapshot)
+    }
+
+    private companion object {
+        val TestThemeLocal = uiLocalOf(debugName = "AdaptiveRuntimeTestTheme") { "system" }
+    }
 }
+
+private data class AdaptiveRuntimeFixture(
+    val runtime: NavHostRuntime,
+    val controller: NavHostController,
+    val config: NavHostRuntimeConfig,
+)
 
 private class ResumedLifecycleOwner : LifecycleOwner {
     private val registry = LifecycleRegistry(this)

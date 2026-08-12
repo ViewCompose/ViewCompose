@@ -3,7 +3,6 @@ package com.viewcompose
 import android.view.ViewGroup
 import coil3.ImageLoader
 import com.viewcompose.image.coil.CoilImageLoaderAdapter
-import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -34,7 +33,7 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
     title: String,
     content: (UiTreeBuilder) -> Unit,
 ) {
-    val themeModeState = remember { mutableStateOf(DemoThemeSession.mode) }
+    val themeModeState = DemoThemeSession.modeState
     val coilImageLoader = remember {
         ImageLoader.Builder(root.context.applicationContext).build()
     }

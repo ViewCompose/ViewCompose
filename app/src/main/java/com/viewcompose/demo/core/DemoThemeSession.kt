@@ -1,9 +1,19 @@
 package com.viewcompose
 
+import com.viewcompose.runtime.MutableState
+import com.viewcompose.runtime.mutableStateOf
+
 /**
- * 保存 demo 进程内主题模式选择；这是演示会话状态，不写入持久化存储。
- * Stores the in-process demo theme-mode selection; this is session state and is not persisted.
+ * Stores the observable in-process Demo theme choice shared by independent Activity sessions.
+ *
+ * This remains application Demo policy and is intentionally not persisted across process death.
  */
 internal object DemoThemeSession {
-    var mode: DemoThemeMode = DemoThemeMode.System
+    val modeState: MutableState<DemoThemeMode> = mutableStateOf(DemoThemeMode.System)
+
+    var mode: DemoThemeMode
+        get() = modeState.value
+        set(value) {
+            modeState.value = value
+        }
 }

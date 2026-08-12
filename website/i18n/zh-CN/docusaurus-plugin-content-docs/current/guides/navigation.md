@@ -1,6 +1,6 @@
 ---
 translation_source: guides/navigation.md
-translation_source_hash: 6e7573952bec62a3098cd92e371b66833e200a5898d56778b72c12cd6f34b0f7
+translation_source_hash: 93129f2059d3587bb4accba321a4b1aeedaaee734016a5568579acd6be30e61c
 translation_status: current
 ---
 
@@ -56,12 +56,15 @@ destination 先渲染到未挂载候选容器。成功候选可隐藏 staged、c
 - 发布新 stack 前渲染候选 destination；
 - 候选成功后才提交 stack 与 lifecycle；
 - 失败时回滚候选 Session；
+- 保留页面新进入可见 pane scene 前先刷新；
 - 转场期间同时保留 outgoing/incoming Session；
 - 主线程串行处理重入命令。
 
 `TransactionalNavHostCoordinator` 拥有 settled-state 事务边界，处理初始 attach、所有 stack
-命令、pop 前揭页刷新、host lifecycle cap 和渲染期间的新命令。失败候选回滚纯 back-stack
-事务，并丢弃该候选发出的命令。
+命令、host lifecycle cap 和渲染期间的新命令。pop、保留 stack 选择或历史、预测性返回、自适应
+pane 扩展新显示保留页面前，coordinator 会让同一个会话先使用最新捕获 Local snapshot 和
+destination 内容完成渲染。刷新失败会回滚纯 back-stack 事务、保留此前可见 scene，并丢弃
+失败操作触发的排队命令。
 
 stack 提交后，coordinator 发布不可变前后 pane scene、保留 entry、可见 union 和层级顺序。
 after-scene 的 destination 可交互且 `RESUMED`；仅转场可见项为 `STARTED`。永久移除 Session
@@ -124,10 +127,11 @@ ANDROID_SERIAL=<device> tools/navigation/validate_android_process_death.sh
 不止 root 时执行 pop；位于 root 时，`PreviousStack` 回到最近选择 stack，否则交给外层 host、
 其他回调或平台 fallback。
 
-普通 Back 与 Predictive Back 共用事务边界。Predictive Back 开始时只预览当前 top 与前一个
-destination/stack，不改变 committed stack；progress 只驱动原生 View；取消恢复 View、可见性
-和 lifecycle；完成先刷新揭页，再提交 Back，并用正常转场协议完成剩余 motion。程序命令会先
-redirect 活跃 preview；host detach、callback 禁用或销毁会取消 preview 并恢复 settled scene。
+普通 Back 与 Predictive Back 共用事务边界。Predictive Back 开始时先刷新 incoming 保留页面，
+再与当前 top 一同预览且不改变 committed stack；progress 只驱动原生 View；取消恢复 View、
+可见性和 lifecycle；完成时会再按最新环境刷新 incoming 页面，然后提交 Back，并用正常转场
+协议完成剩余 motion。程序命令会先 redirect 活跃 preview；host detach、callback 禁用或销毁
+会取消 preview 并恢复 settled scene。
 
 ### Stage 6：设备验证与 P0 合并门禁
 
@@ -242,8 +246,8 @@ val navController = rememberNavHostController(
 
 active stack pane scene 可见、可交互且 `RESUMED`；inactive stack 隐藏并限制为 `CREATED`。
 `Preserve` 恢复离开位置，`PopToRoot` 只销毁当前 stack root 上方 entry。selection history 稳定、
-排除 active stack 并随完整 stack set 保存。失败 render/switch 或取消 preview 都保留此前 committed
-selection、history、Session 与 owner。
+排除 active stack 并随完整 stack set 保存。render 或保留页面刷新失败、stack 切换失败或取消
+preview 都保留此前 committed selection、history、Session、owner 与可见 scene。
 
 ### Stage 9：严格 graph deep link
 
@@ -268,8 +272,9 @@ ANDROID_SERIAL=<device> tools/navigation/validate_android_deep_links.sh
 
 Android `NavPanePolicy` 按宿主宽度、density、最小 pane 宽度、最大数量和间距计算 pane 数。
 默认 `Single`，可选择 `Adaptive` 或自定义策略。宽度变化只更新同一 committed entry 的 placement
-与 lifecycle，不创建第二 stack，不替换 container，也不重建 owner。settled pane 均可交互且
-`RESUMED`，其余保留 entry 隐藏并为 `CREATED`。
+与 lifecycle，不创建第二 stack，不替换 container，也不重建 owner。pane 扩展新纳入的保留 entry
+会在 View 可见前按最新环境渲染；失败时保留此前 pane scene。settled pane 均可交互且 `RESUMED`，
+其余保留 entry 隐藏并为 `CREATED`。
 
 转场携带前后 pane scene 的可见 union，只动画真正进入/离开的 entry，共享 pane 不作为 outgoing。
 RTL 下原生布局对等分配像素余数、间距并镜像 start edge。

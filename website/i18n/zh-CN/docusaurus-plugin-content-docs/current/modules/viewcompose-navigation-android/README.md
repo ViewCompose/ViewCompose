@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-navigation-android/README.md
-translation_source_hash: e0fc90967b0c2214a695b0391f25b61d4246d952254c13cef21fa230554fcf86
+translation_source_hash: 42bc81c22cbeb66cfc06f42df512a411effdce2517be5b0b0461e5eefef5e5f0
 translation_status: current
 ---
 
@@ -50,7 +50,9 @@ fun UiTreeBuilder.AppNavigation() {
 已连接，确保 core 事务、目的地渲染、owner 生命周期和原生 View 层级共用同一个提交边界。
 
 `NavHost` 为每个目的地创建一个保留的子渲染会话。隐藏 entry 会保留会话和 owner，但暂停帧驱动
-渲染；重新可见时使用最新捕获环境渲染，不会在每次命令后同步重组所有保留页面。
+渲染。宿主会更新其捕获环境，但不会立即渲染所有保留页面。保留目的地通过 pop、stack
+选择或历史、预测性返回、自适应 pane 扩展而新进入可见 pane 集合前，同一个会话会先使用最新环境
+完成渲染；新准备的目的地不会重复渲染。
 
 目的地闭包依赖不可观察值时应修改 `contentKey`。可观察状态会直接使所属目的地会话失效。
 `key`、controller identity、lifecycle owner、调试 identity 或 overlay factory 的变化会重建
@@ -101,6 +103,10 @@ Android 宿主保持 navigation core 的两阶段保证：先准备新目的地�
 `NavFailure.stackCommitted` 区分不可逆栈边界前后的失败。提交前失败会移除候选会话和 owner，
 并回滚 core 事务；提交后失败保留已提交状态并报告副作用问题，不会假装旧栈仍是事实来源。
 
+保留页面在显示前刷新失败时，会以 `DestinationRefresh` 和 `stackCommitted = false` 报告。
+此前的 stack、pane scene、可见 View、owner 与会话继续有效，预测性返回 preview 或 pane 扩展
+不会发布。
+
 可向 `NavHost` 传入 `onFailure` 处理日志、降级或测试。未处理失败会抛出 `NavHostException`，
 其中保留原始 cause、失败 entry 和 renderer frame report。
 
@@ -148,8 +154,8 @@ View driver 会先绘制完整起始布局，再开始 motion；只变化 transf
 `NavPanePolicy.Single` 在所有宽度下保持单页面全屏宿主。`Adaptive` 会在每个 pane 都满足最小宽度
 时展示最多三个最新 entry。决定 pane 数之前会扣除 `paneSpacingDp`。
 
-宽度变化会复用已提交返回栈、目的地会话和 owner，只重新计算 pane scene 和原生 child bounds。
-布局方向会把 primary 到 tertiary 映射为 LTR 或 RTL 下正确的物理顺序。
+宽度变化会复用已提交返回栈、目的地会话和 owner，只在重新计算原生 child bounds 前刷新新进入
+pane scene 的保留 entry。布局方向会把 primary 到 tertiary 映射为 LTR 或 RTL 下正确的物理顺序。
 
 ## 深链与保留栈
 

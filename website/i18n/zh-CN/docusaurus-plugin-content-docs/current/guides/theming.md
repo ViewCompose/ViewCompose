@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: 8866cd0498423f9d52792e9030d2d59e53058b7872afdd2e3f61a7c81a7add50
+translation_source_hash: 8e144cb32194c23d0400ec8be5a9fa7de264a483fc06872636249786d8627fc2
 translation_status: current
 ---
 
@@ -251,6 +251,23 @@ setMaterial3UiContent(themeRefreshController = themeRefreshController) {
 setTheme(R.style.AppTheme_Alternate)
 themeRefreshController.refresh()
 ```
+
+### 5.1 跨 Activity 根节点的应用主题模式
+
+每个调用 `setUiContent` 或 `setMaterial3UiContent` 的 Activity 都拥有独立根 `RenderSession`。
+这些 Session 不共享 remembered 值，但可以观察同一份应用自有 `MutableState` 或等价可观察
+Store。应把用户的 Light/Dark/System 选择放在应用状态中，让每个 Activity 根节点直接读取，
+并从观察值派生各自 Token。这样，在二级 Activity 中修改主题会使一级 Activity 的独立 Session
+失效，而两个 Activity 都不需要拥有或定位对方的 Session。
+
+所有权边界应保持明确：
+
+1. 主题偏好与持久化属于应用策略，不由框架全局单例拥有。
+2. System 模式按每个根 Context 的配置解析；显式模式可以共享确定性的 Token 生产器。
+3. `Context.setTheme` 或 `applyStyle` 只修改该 Context 的 Resource，不会替代应用主题状态，也不会
+   通知无关 Activity Session；命令式 Android Resource 变化后，应刷新或重建对应宿主。
+4. 嵌套 `NavHost` 会捕获最新继承主题环境。隐藏的保留 destination 会在 pop、stack 选择或历史、
+   Predictive Back 或 pane 扩展使其可见前，先使用该环境完成刷新。
 
 ## 6. One UI 7 Alpha Design System 边界
 

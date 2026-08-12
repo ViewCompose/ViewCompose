@@ -16,12 +16,18 @@ import com.viewcompose.navigation.core.NavHostLifecycleState
 import com.viewcompose.navigation.core.NavPaneRole
 import com.viewcompose.navigation.core.NavPaneStrategies
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.UiLocalSnapshot
+import com.viewcompose.ui.foundation.UiLocals
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.captureUiLocalSnapshot
+import com.viewcompose.ui.foundation.uiLocalOf
 import java.util.ArrayDeque
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -145,6 +151,14 @@ class AdaptiveNavHostCoordinatorTest {
             session(details),
             session(confirmation),
         )
+        val renderedThemes = mutableMapOf<String, MutableList<String>>()
+        coordinator.updateRenderEnvironment(
+            localSnapshot = themeSnapshot("dark"),
+        ) { entry ->
+            renderedThemes.getOrPut(entry.route.name) { mutableListOf() } +=
+                UiLocals.current(TestThemeLocal)
+            Text(entry.route.name)
+        }
 
         val triple = coordinator.updatePaneStrategy(
             strategy = NavPaneStrategies.BackStack,
@@ -161,6 +175,7 @@ class AdaptiveNavHostCoordinatorTest {
                 lifecycle(entry) == NavEntryLifecycleState.Resumed
             },
         )
+        assertEquals("dark", renderedThemes.getValue("home").last())
 
         val single = coordinator.updatePaneStrategy(
             strategy = NavPaneStrategies.BackStack,
@@ -178,6 +193,40 @@ class AdaptiveNavHostCoordinatorTest {
     }
 
     @Test
+    fun `pane expansion refresh failure preserves the previous scene`() {
+        val root = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("details")))
+        transitionDriver.completeLatest()
+        val details = coordinator.snapshot.top
+        coordinator.navigate(NavCommand.Push(NavRoute("confirmation")))
+        transitionDriver.completeLatest()
+        val confirmation = coordinator.snapshot.top
+        coordinator.updateRenderEnvironment(
+            localSnapshot = captureUiLocalSnapshot(),
+        ) { entry ->
+            if (entry.id == root.id) {
+                error("root refresh failed")
+            }
+            Text(entry.route.name)
+        }
+        var refreshFailure: NavHostDestinationRefreshFailure? = null
+
+        val scene = coordinator.updatePaneStrategy(
+            strategy = NavPaneStrategies.BackStack,
+            maxPaneCount = 3,
+            onDestinationRefreshFailure = { failure -> refreshFailure = failure },
+        )
+
+        assertEquals(listOf(details.id, confirmation.id), scene.panes.map { pane -> pane.entryId })
+        assertSame(root, checkNotNull(refreshFailure).failedEntry)
+        assertEquals(View.GONE, session(root).container.visibility)
+        assertEquals(View.VISIBLE, session(details).container.visibility)
+        assertEquals(View.VISIBLE, session(confirmation).container.visibility)
+        assertEquals(NavEntryLifecycleState.Created, lifecycle(root))
+        assertEquals(NavHostCoordinatorState.Attached, coordinator.state)
+    }
+
+    @Test
     fun `predictive back previews the before and after pane scenes atomically`() {
         val root = coordinator.snapshot.top
         coordinator.navigate(NavCommand.Push(NavRoute("details")))
@@ -186,6 +235,14 @@ class AdaptiveNavHostCoordinatorTest {
         coordinator.navigate(NavCommand.Push(NavRoute("confirmation")))
         transitionDriver.completeLatest()
         val confirmation = coordinator.snapshot.top
+        val renderedThemes = mutableMapOf<String, MutableList<String>>()
+        coordinator.updateRenderEnvironment(
+            localSnapshot = themeSnapshot("dark"),
+        ) { entry ->
+            renderedThemes.getOrPut(entry.route.name) { mutableListOf() } +=
+                UiLocals.current(TestThemeLocal)
+            Text(entry.route.name)
+        }
 
         val preview = checkNotNull(
             coordinator.beginBackPreview(backEvent(progress = 0f)),
@@ -206,6 +263,7 @@ class AdaptiveNavHostCoordinatorTest {
         assertEquals(NavEntryLifecycleState.Started, lifecycle(root))
         assertEquals(NavEntryLifecycleState.Resumed, lifecycle(details))
         assertEquals(NavEntryLifecycleState.Resumed, lifecycle(confirmation))
+        assertEquals("dark", renderedThemes.getValue("home").last())
 
         assertTrue(coordinator.cancelBackPreview(preview.id))
         assertEquals(View.GONE, session(root).container.visibility)
@@ -234,6 +292,14 @@ class AdaptiveNavHostCoordinatorTest {
         return checkNotNull(ownerStore.ownerOrNull(entry.id)).entryLifecycleState
     }
 
+    private fun themeSnapshot(theme: String): UiLocalSnapshot {
+        var snapshot: UiLocalSnapshot? = null
+        UiTreeBuilder().ProvideLocal(TestThemeLocal, theme) {
+            snapshot = captureUiLocalSnapshot()
+        }
+        return checkNotNull(snapshot)
+    }
+
     private fun backEvent(progress: Float): NavHostBackEvent {
         return NavHostBackEvent(
             touchX = 0f,
@@ -242,6 +308,10 @@ class AdaptiveNavHostCoordinatorTest {
             swipeEdge = NavHostBackSwipeEdge.Left,
             frameTimeMillis = 0L,
         )
+    }
+
+    private companion object {
+        val TestThemeLocal = uiLocalOf(debugName = "AdaptiveNavigationTestTheme") { "system" }
     }
 }
 

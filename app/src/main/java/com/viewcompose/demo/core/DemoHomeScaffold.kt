@@ -29,7 +29,7 @@ import com.viewcompose.ui.foundation.rememberSaveable
 internal fun UiTreeBuilder.DemoHomeScaffold(
     root: ViewGroup,
 ) {
-    val themeModeState = remember { mutableStateOf(DemoThemeSession.mode) }
+    val themeModeState = DemoThemeSession.modeState
     val coilImageLoader = remember {
         ImageLoader.Builder(root.context.applicationContext).build()
     }
