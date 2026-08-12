@@ -20,6 +20,12 @@ previous committed effects remain active. An error in the list above occurs afte
 authoritative. It is reported as a committed-frame failure, every independent synchronous operation
 is still attempted, and later rendering can continue.
 
+Synchronous remember-lifecycle and `SideEffect` failures keep the original throwable and add
+bounded suppressed metadata containing effect kind, operation, structural scope, slot, and a
+non-retaining key summary. `RenderFailure` supplies the host frame identifier. Debug render sessions
+also warn when one of these callbacks occupies at least one 16 ms frame; release sessions perform
+no timing work.
+
 ## Choosing an effect
 
 | Need | API | Lifetime |
@@ -84,20 +90,34 @@ Resolve composition-scoped values while declaring the effect and capture the res
 
 ```kotlin
 val theme = Theme.current
-val activity = LocalAndroidHostCapabilities.current.activity
+val window = activity.window
 
-SideEffect(theme, activity) {
-    activity?.applyWindowAppearance(theme)
+SideEffect(theme, window) {
+    window.applyWindowAppearance(theme)
 }
 ```
 
 Do not read `Theme.current`, `Environment`, or another context-only Local for the first time inside
 an effect callback. The provider stack has already returned, and an asynchronous callback may
 outlive it. ViewCompose does not retain and reinstall every Local implicitly. Deferred child
-composition uses the dedicated captured Local snapshot path instead.
+composition uses the dedicated captured Local snapshot path instead. Built-in synchronous and
+coroutine effect scopes reject Local reads with the diagnostic name, even if an unrelated provider
+happens to be active on the callback thread.
 
 Android resources, Activity/Window capabilities, lifecycle ownership, and named design-system
 tokens are separate contracts. Selecting one does not imply the others are present.
+
+## Snapshot state as Flow
+
+`snapshotFlow { query() }` is cold and creates an independent snapshot-read observation for each
+collector. It emits the initial query result, reruns after a read dependency changes, replaces the
+dependency set when conditional reads change, conflates pending invalidations, and suppresses
+structurally equal results. Cancellation or calculation failure detaches every observed state.
+
+The calculation can run more often than it emits and must be idempotent and side-effect-free. It
+runs in the collector coroutine rather than the state-writing thread. Snapshot collections remain
+unsupported; store immutable collections in `MutableState` when a collection value must participate
+in this observation model.
 
 ## Compose comparison boundary
 

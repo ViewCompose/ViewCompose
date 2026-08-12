@@ -6,6 +6,7 @@ package com.viewcompose.ui.foundation
  */
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -47,6 +48,44 @@ class SideEffectTest {
     }
 
     @Test
+    fun `keyed side effect runs only for a new key list`() {
+        val harness = ComposerRuntimeHarness()
+        val events = mutableListOf<String>()
+        var key = 1
+
+        fun render() {
+            harness.render {
+                val current = key
+                SideEffect(current) {
+                    events += "key:$current"
+                }
+            }
+        }
+
+        render()
+        render()
+        key = 2
+        render()
+
+        assertEquals(listOf("key:1", "key:2"), events)
+        harness.dispose()
+    }
+
+    @Test
+    fun `keyed side effect rejects an empty dynamic key list`() {
+        val harness = ComposerRuntimeHarness()
+
+        val error = runCatching {
+            harness.render {
+                SideEffect(*emptyArray()) {}
+            }
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalArgumentException)
+        harness.dispose()
+    }
+
+    @Test
     fun `side effect outside composition fails fast`() {
         val events = mutableListOf<String>()
 
@@ -58,5 +97,44 @@ class SideEffectTest {
         assertTrue(error?.message.orEmpty().contains("SideEffect"))
         assertTrue(error?.message.orEmpty().contains("active ViewCompose composition"))
         assertEquals(emptyList<String>(), events)
+    }
+
+    @Test
+    fun `side effect must capture local values during declaration`() {
+        val harness = ComposerRuntimeHarness()
+
+        val error = runCatching {
+            harness.render {
+                SideEffect {
+                    Theme.current
+                }
+            }
+        }.exceptionOrNull()
+
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("UiLocal 'Theme'"))
+        assertTrue(error?.message.orEmpty().contains("capture"))
+        harness.dispose()
+    }
+
+    @Test
+    fun `side effect can use a theme value captured during declaration`() {
+        val harness = ComposerRuntimeHarness()
+        val expected = UiThemeDefaults.dark()
+        var observed: UiThemeTokens? = null
+
+        harness.render {
+            buildVNodeTree {
+                UiTheme(expected) {
+                    val captured = Theme.current
+                    SideEffect {
+                        observed = captured
+                    }
+                }
+            }
+        }
+
+        assertSame(expected, observed)
+        harness.dispose()
     }
 }

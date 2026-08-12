@@ -79,10 +79,9 @@ fun UiTreeBuilder.Material3Theme(
         val unsubscribe = refreshController?.subscribe {
             manualRevision.value += 1L
         }
-        val disposeEffect: () -> Unit = {
+        onDispose {
             unsubscribe?.invoke()
         }
-        disposeEffect
     }
     val resourceRevision = Environment.resourceRevision
     val tokens = remember(resolvedTheme, resourceRevision, manualRevision.value) {

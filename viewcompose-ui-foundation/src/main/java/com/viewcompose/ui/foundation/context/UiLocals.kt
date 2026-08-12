@@ -51,7 +51,16 @@ fun <T> uiLocalOf(
 
 /** Reads typed local values from the current thread-scoped composition context. */
 object UiLocals {
-    /** Returns the nearest provided [local] value, or evaluates its default factory. */
+    /**
+     * Returns the nearest provided [local] value, or evaluates its default during declaration.
+     *
+     * Built-in effect callback scopes do not reinstall the declaring provider stack. Reading a
+     * Local from such a callback fails with its diagnostic name even if another provider happens
+     * to be active on the callback thread; resolve and capture the value while declaring the effect.
+     *
+     * @param local typed value handle resolved from the current declaration context
+     * @return nearest provided value, or the Local's declaration-time default
+     */
     fun <T> current(local: UiLocal<T>): T = LocalContext.current(local.holder)
 }
 

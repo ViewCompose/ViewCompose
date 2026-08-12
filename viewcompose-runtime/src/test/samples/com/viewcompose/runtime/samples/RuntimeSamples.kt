@@ -7,6 +7,8 @@ import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.derivedStateOf
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.observation.RuntimeObservation
+import com.viewcompose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.Flow
 
 fun mutableStateSample() {
     val count = mutableStateOf(0)
@@ -75,6 +77,15 @@ fun runtimeObservationSample() {
     count.value = 1
     check(invalidated)
     observation.dispose()
+}
+
+/** Observes a derived snapshot query without exposing its mutable inputs. */
+fun snapshotFlowSample(): Flow<String> {
+    val firstName = mutableStateOf("Ada")
+    val lastName = mutableStateOf("Lovelace")
+    return snapshotFlow {
+        "${firstName.value} ${lastName.value}"
+    }
 }
 
 fun composerLiteSample() {

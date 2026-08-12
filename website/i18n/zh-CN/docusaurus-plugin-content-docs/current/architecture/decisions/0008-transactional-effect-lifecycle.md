@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0008-transactional-effect-lifecycle.md
-translation_source_hash: 02523eb1826c755b1db43b4792377297be1ef202a8b9c359fdd7bc4c7a3191ae
+translation_source_hash: 4f7b798ce7083b567bcce39fa43a169fa615df8419803f476f7186f744a441f4
 translation_status: current
 ---
 
@@ -57,8 +57,8 @@ Group、调用点身份、Changed Flag、稳定性推断、Composable 调用限�
    成对 Effect 和 Lifecycle State 观察。保留一个隐藏 Session 不会自动暂停任意 Composition
    Coroutine。
 8. Effect Lambda 在声明期间捕获已经解析的 Local 值。Runtime 不会围绕任意同步或异步工作重新
-   安装整个 Local Stack。若默认值会掩盖错误，Debug 环境下在无有效声明上下文时访问应明确
-   失败；延迟子组合继续使用显式 Local Snapshot。
+   安装整个 Local Stack。被标记的 Effect Callback 不能读取 Local，因而不会误用默认值或线程上
+   恰好活跃的无关 Provider；延迟子组合继续使用显式 Local Snapshot。
 9. Effect API 均为 Q3。KDoc 与可编译样例必须定义 Key 比较、位置身份、阶段顺序、Rollback、
    Cancellation、Dispatcher/线程所有权、Cleanup、失败行为，以及不依赖编译器的结构限制。
 10. ViewCompose 承诺自身测试保护的行为，而不是相同的 Compose 内部实现。固定参数数量的重载

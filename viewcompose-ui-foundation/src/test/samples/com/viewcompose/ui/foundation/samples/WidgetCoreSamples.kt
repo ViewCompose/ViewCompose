@@ -21,10 +21,13 @@ import com.viewcompose.ui.foundation.BasicButtonStyle
 import com.viewcompose.ui.foundation.BasicSurface
 import com.viewcompose.ui.foundation.BasicSurfaceStyle
 import com.viewcompose.ui.foundation.Checkbox
+import com.viewcompose.ui.foundation.CompositionEffectContext
+import com.viewcompose.ui.foundation.DisposableEffect
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.Image
 import com.viewcompose.ui.foundation.InputControlDefaults
+import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.PopupAlignment
 import com.viewcompose.ui.foundation.PopupBounds
 import com.viewcompose.ui.foundation.PopupOverflowPolicy
@@ -32,14 +35,20 @@ import com.viewcompose.ui.foundation.PopupPositioner
 import com.viewcompose.ui.foundation.PopupSize
 import com.viewcompose.ui.foundation.ProvideImageLoader
 import com.viewcompose.ui.foundation.Slider
+import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiSwitchSizing
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeDefaults
+import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.buildVNodeTree
 import com.viewcompose.ui.foundation.createSaveableStateRegistry
+import com.viewcompose.ui.foundation.produceState
+import com.viewcompose.ui.foundation.rememberCoroutineScope
+import com.viewcompose.ui.foundation.rememberUpdatedState
+import kotlinx.coroutines.CoroutineScope
 
 fun themeStateColorSample() {
     val colors = UiStateColor(
@@ -273,4 +282,73 @@ fun imageLoadingSample() {
 
     check(nodes.size == 3)
     check((nodes.first().spec as ImageNodeSpec).imageLoader === loader)
+}
+
+/** Publishes a committed value only when its explicit revision changes. */
+fun UiTreeBuilder.sideEffectSample(
+    revision: Long,
+    publish: (Long) -> Unit,
+) {
+    SideEffect(revision) {
+        publish(revision)
+    }
+}
+
+/** Registers one listener and pairs it with mandatory cleanup. */
+fun UiTreeBuilder.disposableEffectSample(
+    source: Any,
+    subscribe: () -> (() -> Unit),
+) {
+    DisposableEffect(source) {
+        val unsubscribe = subscribe()
+        onDispose(unsubscribe)
+    }
+}
+
+/** Loads suspending data for one request identity. */
+fun UiTreeBuilder.launchedEffectSample(
+    requestId: String,
+    load: suspend CoroutineScope.() -> Unit,
+) {
+    LaunchedEffect(requestId, block = load)
+}
+
+/** Keeps a long-lived subscription pointed at the latest event callback. */
+fun UiTreeBuilder.rememberUpdatedStateSample(
+    source: Any,
+    onEvent: (String) -> Unit,
+    subscribe: ((String) -> Unit) -> (() -> Unit),
+) {
+    val currentOnEvent = rememberUpdatedState(onEvent)
+    DisposableEffect(source) {
+        val unsubscribe = subscribe { value ->
+            currentOnEvent.value(value)
+        }
+        onDispose(unsubscribe)
+    }
+}
+
+/** Exposes a composition-owned scope to an event-binding adapter after commit. */
+fun UiTreeBuilder.rememberCoroutineScopeSample(
+    bind: (CoroutineScope) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    SideEffect(scope) {
+        bind(scope)
+    }
+}
+
+/** Produces observable state from one keyed suspending request. */
+fun UiTreeBuilder.produceStateSample(
+    requestId: String,
+    load: suspend () -> String,
+) = produceState(initialValue = "Loading", requestId) {
+    value = load()
+}
+
+/** Marks a callback owned by a custom effect integration without restoring composition locals. */
+fun compositionEffectContextSample(
+    callback: () -> Unit,
+) {
+    CompositionEffectContext.run(callback)
 }

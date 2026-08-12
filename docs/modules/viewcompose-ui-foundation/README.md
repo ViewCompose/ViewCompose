@@ -112,7 +112,13 @@ by a later renderer or child render session.
   decoder. A subtree may install one `UiImageLoader` or leave it absent for resource-only rendering.
 - [`remember`, `produceState`, and effects](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/)
   integrate the platform-neutral composition runtime with structured coroutines and committed
-  side effects.
+  side effects. `DisposableEffect` and `LaunchedEffect` require keys; disposable setup terminates
+  in `onDispose`. Unkeyed `SideEffect` runs after every successful invocation, while keyed overloads
+  publish only on initial commit and structural key change.
+- `CompositionEffectContext` is the Q3 low-level bridge for optional integration modules that
+  implement additional synchronous or coroutine effect primitives. It marks callbacks so any Local
+  read fails instead of consuming a default or unrelated provider, but never captures or restores a
+  provider stack; ordinary application code uses the standard effect APIs.
 - [`rememberSaveable` and `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-saveable-state-registry/)
   preserve state through composition disposal and host recreation with transactional restoration.
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
@@ -142,6 +148,21 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   its content block returns. Retain state and stable keys instead.
 - `remember` and effects require an active composition. Positional identity follows the structural
   call path; use stable `key` groups and lazy-item keys when content can move.
+- Candidate effect changes are transactional. A failed composition or native tree render starts no
+  candidate work, retains committed subscriptions and jobs, and discards candidate
+  `rememberUpdatedState` publication. After native success, committed-value publication and all
+  outgoing lifecycle callbacks precede incoming lifecycle callbacks, then `SideEffect`, native
+  `AndroidView.onCommit`, overlay, and diagnostics work.
+- `DisposableEffect` setup and cleanup are synchronous and terminal. A throwing setup owns no
+  cleanup and is not retried for equal keys; a throwing cleanup is never invoked again. Independent
+  lifecycle callbacks are still attempted.
+- `LaunchedEffect` inherits the render session coroutine context and requires explicit restart
+  identity. `rememberCoroutineScope` is for event callbacks and owns a normal child Job. Passing a
+  context containing a Job returns a failed scope rather than detaching work from composition.
+- Effect callbacks resolve and capture `Theme`, environment, lifecycle, and host capability values
+  while declaring the effect. Provider stacks are not implicitly restored around callbacks;
+  built-in effect scopes reject Local reads with a named diagnostic even if another provider is
+  active on the callback thread. Debug render sessions warn when synchronous callbacks exceed 16 ms.
 - `rememberSaveable` registers providers only after composition commit. A failed or abandoned
   composition releases its restored claim so a later attempt can still restore the value.
 - `UiTheme` accepts platform-independent tokens. Android resource observation belongs to
@@ -183,6 +204,7 @@ hosts must preserve the same ordering and ownership guarantees.
 
 - [Current architecture and module boundaries](../../architecture/overview.md)
 - [State and snapshot architecture](../../architecture/state-snapshots.md)
+- [Transactional effects and structured work](../../architecture/effects.md)
 - [Node specifications and renderer registration](../../architecture/node-spec.md)
 - [Lazy collection guide](../../guides/lazy-collections.md)
 - [Theme and Android integration](../../guides/theming.md)
@@ -198,6 +220,13 @@ retired package alias. Do not persist automatic saveable keys, session identifie
 implementation names, callback instances, tooling metadata, or diagnostics shapes as external
 long-lived data. Custom renderers and hosts must be upgraded with contract changes even when an
 application's component source still compiles.
+
+The effect-runtime hard cut requires at least one key for `DisposableEffect` and `LaunchedEffect`.
+Disposable setup now returns cleanup only through `DisposableEffectScope.onDispose`; migrate a
+lambda-return cleanup by making `onDispose { ... }` the setup block's final expression. Keyed
+`SideEffect` is an additive ViewCompose change-only publication form. Effect lifecycle, rollback,
+coroutine ownership, and `rememberUpdatedState` publication now follow the transactional contract
+in [Transactional effects and structured work](../../architecture/effects.md).
 
 `RenderSessionPlatformDiagnostics.sourceTooling`, `RenderSessionSourceTooling`, and
 `RenderSessionSourceRegistration` are additive Q3 tooling APIs. Existing platform diagnostics use

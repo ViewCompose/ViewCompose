@@ -83,7 +83,7 @@ internal fun UiTreeBuilder.GesturePage(
     val panYState = remember { mutableStateOf(0f) }
     val transformLogState = remember { mutableStateOf("idle") }
     DisposableEffect(dragTextFrameUpdater) {
-        return@DisposableEffect {
+        onDispose {
             dragTextFrameUpdater.dispose()
         }
     }

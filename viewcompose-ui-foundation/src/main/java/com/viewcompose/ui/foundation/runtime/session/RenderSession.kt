@@ -89,6 +89,12 @@ class RenderSession(
                 )
             }
         },
+        synchronousEffectWarningThresholdNanos = if (debug) {
+            SlowSynchronousEffectWarningNanos
+        } else {
+            null
+        },
+        effectFrameIdProvider = ::lastCommittedFrameId,
     )
     private val runtime = platform.runtimeFactory
         .create(
@@ -486,6 +492,7 @@ class RenderSession(
     }
 
     private companion object {
+        const val SlowSynchronousEffectWarningNanos: Long = 16_000_000L
         val nextSessionId = AtomicLong(0)
     }
 }

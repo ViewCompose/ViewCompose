@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: 0671382d0e16b254b30b5da94d5c6564bdf8a72d473119029e0304f93f8a3e69
+translation_source_hash: fa9f45305a554659583362953822073e0677cf7a28d4637ce48f58c5881b2552
 translation_status: current
 ---
 
@@ -12,7 +12,7 @@ ViewCompose 受到 Compose 启发，但不是 Compose 兼容层。成功迁移�
 生命周期和可观察行为，而不是替换名称相似的函数。在把页面迁移到原生 Android View
 渲染器之前，先用本节识别语义缺口。
 
-最后验证日期：**2026-08-09**
+最后验证日期：**2026-08-12**
 
 复核责任人：**Kernel、UI Foundation、Android Engine、Android 聚合层与 navigation 模块族的维护者**
 
@@ -78,7 +78,7 @@ Kotlin `2.0.21`，声明位置是
 | --- | --- | --- | --- | --- |
 | 状态 | 可变状态、变更策略和读取观察 | **Supported（支持）** | 保留状态所有权；不要依赖 Compose 的回调次数或线程。 | [状态](compose-state-recomposition-and-restoration.md#mutable-state-and-mutation-policies) |
 | 状态 | 派生状态和快照事务 | **Partially supported（部分支持）** | 检查相等结果抑制、嵌套、冲突和线程规则。 | [状态](compose-state-recomposition-and-restoration.md#derived-state-and-invalidation-differences) |
-| 状态 | 快照集合和 `snapshotFlow` | **Unsupported（不支持）** | 使用不可变集合状态或外部所有的可观察流。 | [状态](compose-state-recomposition-and-restoration.md#snapshots-atomic-updates-and-conflicts) |
+| 状态 | 快照集合和 `snapshotFlow` | **Partially supported（部分支持）** | 已提供 `snapshotFlow`；快照集合仍需使用 `MutableState` 中的不可变值。 | [状态](compose-state-recomposition-and-restoration.md#snapshots-atomic-updates-and-conflicts) |
 | 组合 | 编译器生成的重启、稳定性和 strong skipping | **Intentionally different（刻意不同）** | 选择显式 ViewCompose group，并把读取放到最小更新边界。 | [重组](compose-state-recomposition-and-restoration.md#recomposition-without-the-compose-compiler) |
 | 组合 | 位置 remember 和 keyed identity | **Partially supported（部分支持）** | 保持调用顺序稳定；不要依赖普通 keyed 兄弟节点在重排时移动。 | [身份](compose-state-recomposition-and-restoration.md#remembered-identity-keys-and-reordering) |
 | Effect | `SideEffect`、`DisposableEffect`、`LaunchedEffect` 和 `produceState` | **Supported（支持）** | 把外部工作移到已提交 Effect，并显式处理失败清理。 | [Effect](compose-state-recomposition-and-restoration.md#effects-and-committed-frame-boundaries) |

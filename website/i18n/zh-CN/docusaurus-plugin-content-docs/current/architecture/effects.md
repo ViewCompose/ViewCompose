@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/effects.md
-translation_source_hash: 9e9585a9e0b22571273ae1b4a6448116660dc2b67d43e75b5d7745ab2ebc49b6
+translation_source_hash: 8d2d6cba5f0ed92b7dc7118c9029f9c3c09625209560c6695325e2bba1162a35
 translation_status: current
 ---
 
@@ -24,6 +24,11 @@ ViewCompose Effect 把成功的声明式帧连接到命令式工作。它们属�
 原生树提交前发生错误会 Abort 候选。候选 Effect 不会启动，之前已提交的 Effect 继续活跃。上述
 列表中发生的错误表示帧已经成为权威状态。Runtime 会按已提交帧失败报告，仍尝试每个独立同步
 操作，并允许后续渲染继续进行。
+
+同步 Remember 生命周期与 `SideEffect` 失败会保留原始 Throwable，并附加有界 Suppressed
+Metadata，其中包含 Effect Kind、Operation、结构 Scope、Slot 和不持有原 Key 对象的摘要。
+`RenderFailure` 提供 Host Frame ID。Debug Render Session 还会在这些回调占用至少一个 16 ms
+帧时发出警告；Release Session 不执行计时工作。
 
 ## 选择 Effect
 
@@ -83,19 +88,31 @@ Render 不活跃不是 Coroutine Pause 信号。必须在低于 `STARTED` 或 `R
 
 ```kotlin
 val theme = Theme.current
-val activity = LocalAndroidHostCapabilities.current.activity
+val window = activity.window
 
-SideEffect(theme, activity) {
-    activity?.applyWindowAppearance(theme)
+SideEffect(theme, window) {
+    window.applyWindowAppearance(theme)
 }
 ```
 
 不要第一次在 Effect 回调内部读取 `Theme.current`、`Environment` 或其他仅在 Context 中有效的
 Local。此时 Provider Stack 已经返回，异步回调还可能超出其生命周期。ViewCompose 不会隐式
-保留并重新安装每个 Local。延迟子组合会走专用的 Captured Local Snapshot 路径。
+保留并重新安装每个 Local。延迟子组合会走专用的 Captured Local Snapshot 路径。内置同步与
+Coroutine Effect Scope 会使用 Local Diagnostic Name 拒绝 Local 读取，即使回调线程上恰好有
+另一个无关 Provider 处于活跃状态也不会读取它。
 
 Android Resource、Activity/Window Capability、Lifecycle Ownership 与具名 Design System
 Token 是独立契约。选择其中一项不表示其他项一定存在。
+
+## 把 Snapshot State 转换为 Flow
+
+`snapshotFlow { query() }` 是 Cold Flow，并为每个 Collector 创建独立的 Snapshot Read
+Observation。它会发出初始 Query 结果，在读取依赖变化后重新运行，条件读取变化时替换依赖集，
+合并待处理失效，并抑制结构相等的结果。取消或计算失败会从所有已观察 State 分离。
+
+计算运行次数可能多于 Emission 次数，因此必须幂等且无副作用。计算在 Collector Coroutine
+而不是 State Writing Thread 中运行。Snapshot Collection 仍不受支持；集合值需要加入该观察
+模型时，应把不可变集合存入 `MutableState`。
 
 ## Compose 对比边界
 

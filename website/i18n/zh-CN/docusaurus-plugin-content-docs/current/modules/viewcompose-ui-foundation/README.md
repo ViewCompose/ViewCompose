@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: f15bee0a2687a5afdcaf9e7604cfb1365ac46d3bbfb068e37ae1d56bd47c81e5
+translation_source_hash: 1d74723f9e3ec8970010bed387c4f53ded80a37a6c21e33bbc6871c0b1bca071
 translation_status: current
 ---
 
@@ -102,7 +102,12 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   与 `UiImageRequestOptions` 暴露图片语义，但不选择 Coil、Glide 或其他解码器。子树可以安装
   一个 `UiImageLoader`，也可以不安装，让资源图片继续渲染。
 - [`remember`、`produceState` 与 Effect](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/)
-  把平台无关组合 Runtime 与结构化协程和已提交副作用连接起来。
+  把平台无关组合 Runtime 与结构化协程和已提交副作用连接起来。`DisposableEffect` 与
+  `LaunchedEffect` 必须提供 Key，Disposable Setup 必须以 `onDispose` 结束。无 Key 的
+  `SideEffect` 在每次成功调用后运行，带 Key 重载只在首次提交和结构 Key 变化时发布。
+- `CompositionEffectContext` 是 Q3 底层 Bridge，供实现额外同步或 Coroutine Effect Primitive
+  的可选集成模块使用。它会标记 Callback，让任何 Local 读取直接失败，避免消费默认值或无关
+  Provider；它不会捕获或恢复 Provider Stack，普通应用代码应使用标准 Effect API。
 - [`rememberSaveable` 与 `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-saveable-state-registry/)
   通过事务式恢复让状态跨组合释放和宿主重建继续存活。
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
@@ -129,6 +134,19 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
   与稳定 Key。
 - `remember` 与 Effect 需要活跃组合。位置标识跟随结构调用路径；内容可能移动时，应使用稳定
   `key` 分组和 Lazy Item Key。
+- 候选 Effect 变化属于事务。组合或原生 Tree Render 失败不会启动候选工作，会保留已提交的
+  Subscription 与 Job，并丢弃 `rememberUpdatedState` 候选发布。原生提交成功后，Committed
+  Value 发布及全部退出生命周期回调先于进入回调，然后才执行 `SideEffect`、原生
+  `AndroidView.onCommit`、Overlay 与诊断工作。
+- `DisposableEffect` 的 Setup 与 Cleanup 都是同步且终止性的。Setup 抛出时不拥有 Cleanup，
+  相同 Key 不会重试；Cleanup 抛出后不会再次调用。Runtime 仍会尝试其他独立生命周期回调。
+- `LaunchedEffect` 继承 Render Session Coroutine Context，并要求显式重启身份。
+  `rememberCoroutineScope` 用于事件回调并持有普通子 Job。传入包含 Job 的 Context 会返回失败
+  Scope，而不会把工作从组合所有权中分离。
+- Effect 回调应在声明时解析并捕获 `Theme`、Environment、Lifecycle 与 Host Capability。
+  Provider Stack 不会在回调周围被隐式恢复；内置 Effect Scope 会用具名 Local Diagnostic
+  拒绝 Local 读取，即使回调线程上存在另一个 Provider 也不会误读。Debug Render Session 会在
+  同步 Callback 超过 16 ms 时发出警告。
 - `rememberSaveable` 只在组合提交后注册 Provider。组合失败或被放弃时会释放已 Claim 的恢复值，
   让后续尝试仍能恢复它。
 - `UiTheme` 只接收平台无关 Token。Android 资源观察属于 `viewcompose-host-android`；Material
@@ -160,6 +178,7 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
 
 - [当前架构与模块边界](https://docs.viewcompose.com/zh-CN/architecture/overview)
 - [状态与快照架构](https://docs.viewcompose.com/zh-CN/architecture/state-snapshots)
+- [事务式 Effect 与结构化工作](https://docs.viewcompose.com/zh-CN/architecture/effects)
 - [节点规格与渲染器注册](https://docs.viewcompose.com/zh-CN/architecture/node-spec)
 - [Lazy 容器指南](https://docs.viewcompose.com/zh-CN/guides/lazy-collections)
 - [主题与 Android 集成](https://docs.viewcompose.com/zh-CN/guides/theming)
@@ -174,6 +193,13 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
 不要把自动 Saveable Key、Session 标识、VNode 实现名称、回调实例、工具元数据或诊断结构
 持久化为长期外部数据。即使应用组件源码仍能编译，契约变化也可能要求自定义渲染器与 Host
 同步升级。
+
+Effect Runtime 的硬切要求 `DisposableEffect` 与 `LaunchedEffect` 至少提供一个 Key。
+Disposable Setup 现在只能通过 `DisposableEffectScope.onDispose` 返回 Cleanup；迁移旧的
+Lambda-return Cleanup 时，应让 `onDispose { ... }` 成为 Setup Block 的最后一个表达式。带 Key
+的 `SideEffect` 是 ViewCompose 新增的只在变化时发布形式。Effect 生命周期、Rollback、Coroutine
+Ownership 与 `rememberUpdatedState` 发布现在遵循
+[事务式 Effect 与结构化工作](../../architecture/effects.md)中的事务契约。
 
 `RenderSessionPlatformDiagnostics.sourceTooling`、`RenderSessionSourceTooling` 与
 `RenderSessionSourceRegistration` 是新增的 Q3 工具 API。现有平台诊断使用默认空 Adapter，行为

@@ -144,7 +144,7 @@ internal fun InstallGraphicsShadowLifecycle() {
     DisposableEffect("graphics-advanced-shadow") {
         ShadowDecorationLayer.setRenderPolicy(ShadowRenderPolicy.Auto)
         ShadowDecorationLayer.resetBackendDiagnostics()
-        return@DisposableEffect {
+        onDispose {
             ShadowDecorationLayer.setRenderPolicy(ShadowRenderPolicy.Auto)
         }
     }

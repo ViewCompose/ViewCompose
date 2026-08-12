@@ -58,9 +58,9 @@ independent transactional contract would hide rather than solve this boundary.
    effects and lifecycle state observation. Retaining a hidden session does not automatically pause
    arbitrary composition coroutines.
 8. Effect lambdas capture resolved Local values during declaration. The runtime does not reinstall
-   the entire Local stack around arbitrary synchronous or asynchronous work. Debug access outside a
-   valid declaration context fails clearly where a default would conceal misuse; deferred child
-   composition continues to use explicit Local snapshots.
+   the entire Local stack around arbitrary synchronous or asynchronous work. A marked effect
+   callback cannot read a Local and accidentally consume a default or an unrelated provider active
+   on its thread; deferred child composition continues to use explicit Local snapshots.
 9. Effect APIs are Q3. Their KDoc and compiled samples define key comparison, positional identity,
    phase order, rollback, cancellation, dispatcher/thread ownership, cleanup, failure behavior, and
    the compiler-independent structural limitations.

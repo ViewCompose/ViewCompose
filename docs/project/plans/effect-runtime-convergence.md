@@ -2,15 +2,17 @@
 
 ## Status
 
-Accepted for implementation. Architecture and migration contracts are being documented before the
-runtime hard cut. This plan remains active until every focused test, documentation gate, API gate,
-and repository quality gate listed below passes.
+Implementation and migration are complete. Focused runtime, UI Foundation, lifecycle, API,
+documentation, release-intent, sample, and repository quick gates pass. The plan remains active
+because the final `qaFull` acceptance gate is not green: the main Demo instrumentation suite has 15
+failures that reproduce with the same test names and assertions in a clean worktree at the
+pre-implementation revision. The directly affected resource-configuration device test passes.
 
 Last verified: 2026-08-12.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260812-android-resource-environment.json` (combined branch changeset)
 
 ## Objective
 
@@ -34,7 +36,8 @@ of API-shaped helpers. The completed runtime must guarantee that:
 The implementation may change:
 
 - `viewcompose-runtime`: remember-slot lifecycle state, prepared commit/abort behavior, committed
-  value publication, keyed one-shot scheduling support, effect diagnostics, and focused samples;
+  value publication, keyed one-shot scheduling support, `snapshotFlow`, effect diagnostics, and
+  focused samples;
 - `viewcompose-ui-foundation`: `SideEffect`, `DisposableEffect`, `LaunchedEffect`,
   `rememberCoroutineScope`, `rememberUpdatedState`, and `produceState` contracts and implementation;
 - `viewcompose-lifecycle-androidx`: lifecycle-bound effect APIs and lifecycle state observation;
@@ -129,8 +132,8 @@ state and removes its observer on disposal. These APIs are Q3.
 
 Effect callbacks capture resolved values during composition. Reading `Theme.current`,
 `Environment`, or another `UiLocal.current` from a callback after the provider stack has returned is
-not a supported way to recover the declaring environment. Runtime debug checks must fail clearly
-for context-only reads outside an active declaration context where a silent default would hide the
+not a supported way to recover the declaring environment. Marked effect callbacks must fail clearly
+for Local reads so neither a default nor an unrelated provider on the callback thread can hide the
 mistake. Specialized deferred child composition continues to use the existing explicit
 `UiLocalSnapshot` transport.
 
@@ -157,6 +160,8 @@ and are not added to a design-system API.
 5. Add a composer-owned committed-value holder for `rememberUpdatedState` with candidate-thread
    visibility and commit/abort publication.
 6. Remove the independent disposable-effect slot list and queue.
+7. Add cold `snapshotFlow` collection with per-collector read tracking, invalidation conflation,
+   conditional dependency replacement, distinct emission, and cancellation cleanup.
 
 ### Phase 3: Public effect APIs and coroutine ownership
 
@@ -190,6 +195,8 @@ Protect at least these cases at runtime, UI Foundation, lifecycle, and `RenderSe
 - launched coroutine start/cancel/error ownership and remembered-scope child failure;
 - `rememberUpdatedState` visibility before commit, after commit, and after abort, including an
   already-running coroutine reading the holder;
+- `snapshotFlow` initial/distinct emission, invalidation conflation, conditional dependencies,
+  collection cancellation, calculation failure, and observer release;
 - lifecycle stop/start/resume/pause/destroy, key replacement, owner replacement, and composition
   exit; and
 - repeated disposal, callback re-entry attempts, thread confinement, and no retained observers.
@@ -204,6 +211,30 @@ Then run:
 ./gradlew qaQuick
 ./gradlew qaFull
 ```
+
+## Validation record
+
+Verified on 2026-08-12:
+
+- `:viewcompose-runtime:test`, `:viewcompose-ui-foundation:testDebugUnitTest`, and
+  `:viewcompose-lifecycle-androidx:testDebugUnitTest` pass;
+- `auditViewComposeApiDocs` passes for the three affected published modules;
+- `verifyDocumentationStructure`, `verifyViewComposeReleaseIntent`, compiled samples, and
+  `:app:compileDebugKotlin` pass;
+- `qaQuick` passes all 1,615 tasks, including repository unit tests, documentation structure and
+  language gates, API documentation, local publication, release intent, and sample builds;
+- Counter and Tutorials instrumentation suites pass under `qaFull`;
+- `ResourceConfigurationDeviceTest` passes independently on the connected Android 13 device,
+  protecting same-Activity and same-root language, night mode, font scale, density, layout
+  direction, revision, resource-value, and system-bar appearance updates; and
+- the complete main Demo instrumentation suite reports 15 failures. A clean detached worktree at
+  the pre-implementation revision reports the same 15 test names and assertions, establishing that
+  this change introduces no new device-suite failure while not claiming that `qaFull` passes.
+
+## Next action
+
+Restore the pre-existing main Demo instrumentation baseline in its owning work, rerun `qaFull`,
+record the green result here, then move this plan to `docs/archive/` and update both plan indexes.
 
 ## Completion conditions
 

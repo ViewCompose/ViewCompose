@@ -53,6 +53,7 @@ private class ProduceStateScopeImpl<T>(
  * producer and starts a new one while preserving the same state holder. Leaving the composition
  * cancels the producer. Without keys, the producer runs once for the remembered call site.
  *
+ * @sample com.viewcompose.ui.foundation.samples.produceStateSample
  * @param initialValue value exposed before the producer publishes its first result
  * @param keys values that define the producer's restart identity
  * @param producer coroutine that updates [ProduceStateScope.value]

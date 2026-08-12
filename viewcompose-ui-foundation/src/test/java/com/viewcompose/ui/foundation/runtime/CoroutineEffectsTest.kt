@@ -7,9 +7,13 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.runtime.composition.ComposerLite
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -123,22 +127,124 @@ class CoroutineEffectsTest {
     }
 
     @Test
-    fun `remember coroutine scope rejects a detached job`() = runBlocking {
+    fun `remember coroutine scope returns failed scope for a detached job`() = runBlocking {
         val composer = ComposerLite()
+        lateinit var scope: CoroutineScope
 
-        val error = runCatching {
-            ComposerContext.withComposer(
+        ComposerContext.withComposer(
+            composer = composer,
+            coroutineContext = coroutineContext,
+        ) {
+            composer.prepareRoot {
+                scope = rememberCoroutineScope {
+                    Job()
+                }
+            }.commit()
+        }
+
+        var ran = false
+        val child = scope.launch {
+            ran = true
+        }
+        child.join()
+
+        assertFalse(scope.isActive)
+        assertFalse(ran)
+        composer.dispose()
+    }
+
+    @Test
+    fun `child failure cancels remembered scope but not session supervisor`() = runBlocking {
+        val composer = ComposerLite()
+        val sessionJob = SupervisorJob()
+        val failure = CompletableDeferred<Throwable>()
+        val context =
+            sessionJob + Dispatchers.Unconfined + CoroutineExceptionHandler { _, error ->
+                failure.complete(error)
+            }
+        lateinit var scope: CoroutineScope
+
+        ComposerContext.withComposer(
+            composer = composer,
+            coroutineContext = context,
+        ) {
+            composer.prepareRoot {
+                scope = rememberCoroutineScope()
+            }.commit()
+        }
+
+        scope.launch {
+            error("child failed")
+        }.join()
+
+        assertEquals("child failed", failure.await().message)
+        assertFalse(scope.isActive)
+        assertTrue(sessionJob.isActive)
+
+        composer.dispose()
+        sessionJob.cancel()
+    }
+
+    @Test
+    fun `launched effect must capture local values during declaration`() = runBlocking {
+        val composer = ComposerLite()
+        val result = CompletableDeferred<Throwable?>()
+
+        ComposerContext.withComposer(
+            composer = composer,
+            coroutineContext = coroutineContext,
+        ) {
+            composer.prepareRoot {
+                LaunchedEffect(Unit) {
+                    result.complete(runCatching { Theme.current }.exceptionOrNull())
+                }
+            }.commit()
+        }
+
+        val error = result.await()
+        assertTrue(error is IllegalStateException)
+        assertTrue(error?.message.orEmpty().contains("UiLocal 'Theme'"))
+        composer.dispose()
+    }
+
+    @Test
+    fun `running launched effect observes only committed updated state`() = runBlocking {
+        val composer = ComposerLite()
+        val requests = Channel<Unit>(capacity = Channel.RENDEZVOUS)
+        val values = Channel<String>(capacity = Channel.RENDEZVOUS)
+        var input = "initial"
+
+        fun prepare(): ComposerLite.PreparedComposition<Unit> {
+            composer.requestRootRecompose()
+            return ComposerContext.withComposer(
                 composer = composer,
                 coroutineContext = coroutineContext,
             ) {
                 composer.prepareRoot {
-                    rememberCoroutineScope {
-                        Job()
+                    val latest = rememberUpdatedState(input)
+                    LaunchedEffect(Unit) {
+                        for (request in requests) {
+                            values.send(latest.value)
+                        }
                     }
                 }
             }
-        }.exceptionOrNull()
+        }
 
-        assertTrue(error is IllegalArgumentException)
+        prepare().commit()
+        yield()
+
+        input = "candidate"
+        val candidate = prepare()
+        requests.send(Unit)
+        assertEquals("initial", values.receive())
+        candidate.abort()
+
+        input = "committed"
+        prepare().commit()
+        requests.send(Unit)
+        assertEquals("committed", values.receive())
+
+        composer.dispose()
     }
 }

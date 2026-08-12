@@ -74,6 +74,13 @@ internal object LocalContext {
     private val currentValues = ThreadLocal<Map<LocalValue<*>, Any?>>()
 
     fun <T> current(local: LocalValue<T>): T {
+        if (CompositionEffectContext.isActive()) {
+            error(
+                "UiLocal '${local.debugName}' was read from a composition effect after its " +
+                    "declaration context ended. Resolve the value before declaring the effect " +
+                    "and capture it in the callback.",
+            )
+        }
         val values = currentValues.get().orEmpty()
         @Suppress("UNCHECKED_CAST")
         return values[local] as? T ?: local.default()

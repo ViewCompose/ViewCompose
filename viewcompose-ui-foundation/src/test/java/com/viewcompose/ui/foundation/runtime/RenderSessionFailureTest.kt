@@ -7,6 +7,7 @@ package com.viewcompose.ui.foundation
 
 import android.content.Context
 import android.widget.FrameLayout
+import com.viewcompose.runtime.State
 import com.viewcompose.ui.focus.FocusDirection
 import com.viewcompose.ui.focus.FocusManager
 import com.viewcompose.ui.node.PlatformRenderContainerHandle
@@ -77,6 +78,105 @@ class RenderSessionFailureTest {
 
         assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
         assertTrue(session.lastFrameReport?.failures.orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `view tree rollback does not publish remember updated state candidate`() {
+        val failures = mutableListOf<RenderFailure>()
+        var input = "committed"
+        lateinit var holder: State<String>
+        session = createSession(
+            failures = failures,
+            content = {
+                holder = rememberUpdatedState(input)
+            },
+        )
+
+        session.render()
+        assertEquals("committed", holder.value)
+
+        input = "aborted"
+        engine.renderBlock = { _, _ ->
+            error("native render failed")
+        }
+        session.render()
+
+        assertEquals(RenderFrameStatus.RolledBack, session.lastFrameReport?.status)
+        assertEquals("committed", holder.value)
+
+        input = "published"
+        engine.renderBlock = { previous, _ ->
+            CoreRenderFrame(mountedNodes = previous)
+        }
+        session.render()
+
+        assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
+        assertEquals("published", holder.value)
+    }
+
+    @Test
+    fun `effect lifecycle precedes side effect and native commit`() {
+        val failures = mutableListOf<RenderFailure>()
+        val events = mutableListOf<String>()
+        var effectKey = 1
+        val overlayHost = object : OverlayHost {
+            override fun commit(
+                sessionId: OverlaySessionId,
+                requests: List<OverlayRequest>,
+            ) {
+                events += "overlay"
+            }
+
+            override fun clear(sessionId: OverlaySessionId) = Unit
+        }
+        engine.renderBlock = { previous, _ ->
+            CoreRenderFrame(
+                mountedNodes = previous,
+                commitEffects = listOf(
+                    CoreRenderCommitEffect(
+                        operation = RenderFailureOperation.AndroidViewCommit,
+                        nodeKey = "native",
+                        commit = { events += "native" },
+                    ),
+                ),
+            )
+        }
+        session = createSession(
+            failures = failures,
+            overlayHost = overlayHost,
+            content = {
+                val current = effectKey
+                DisposableEffect(current) {
+                    events += "start:$current"
+                    onDispose {
+                        events += "dispose:$current"
+                    }
+                }
+                SideEffect {
+                    events += "side:$current"
+                }
+            },
+        )
+
+        session.render()
+        effectKey = 2
+        session.render()
+
+        assertEquals(
+            listOf(
+                "start:1",
+                "side:1",
+                "native",
+                "overlay",
+                "dispose:1",
+                "start:2",
+                "side:2",
+                "native",
+                "overlay",
+            ),
+            events,
+        )
+        assertTrue(failures.isEmpty())
     }
 
     @Test
@@ -255,6 +355,7 @@ class RenderSessionFailureTest {
 
     private fun createSession(
         failures: MutableList<RenderFailure>,
+        overlayHost: OverlayHost = OverlayHostDefaults.noOp,
         content: UiTreeBuilder.() -> Unit = {},
     ): RenderSession {
         return RenderSession(
@@ -262,6 +363,7 @@ class RenderSessionFailureTest {
                 override val container: Any = FrameLayout(context)
             },
             content = content,
+            overlayHost = overlayHost,
             onRenderFailure = failures::add,
         )
     }

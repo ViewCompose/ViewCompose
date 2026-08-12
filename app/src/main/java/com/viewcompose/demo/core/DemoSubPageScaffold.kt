@@ -39,7 +39,7 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
     }
     val imageLoader = remember { CoilImageLoaderAdapter(coilImageLoader) }
     DisposableEffect(coilImageLoader) {
-        return@DisposableEffect coilImageLoader::shutdown
+        onDispose(coilImageLoader::shutdown)
     }
     val activity = root.context.findAppCompatActivity()
     val themeTokens = DemoThemeTokens.select(

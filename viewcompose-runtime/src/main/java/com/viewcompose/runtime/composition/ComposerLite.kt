@@ -1,7 +1,9 @@
 package com.viewcompose.runtime.composition
 
-import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.runtime.Snapshot
+import com.viewcompose.runtime.State
+import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.runtime.observation.RuntimeObservation
 
 /**
  * Coordinates transactional, group-based incremental composition without compiler-generated flags.
@@ -23,6 +25,10 @@ import com.viewcompose.runtime.Snapshot
  * invalidations before the next composition are coalesced
  * @param localSnapshotInspector optional formatter for opaque local snapshots included in diagnostics
  * @param sourceCallSiteCollector optional collector invoked only when a new scope is created
+ * @param synchronousEffectWarningThresholdNanos optional non-negative duration after which a
+ * synchronous remember-lifecycle or side-effect callback reports through [warningLogger]
+ * @param effectFrameIdProvider optional host callback returning the current frame identifier for
+ * effect failure and slow-callback diagnostics; it is invoked only while dispatching a callback
  */
 class ComposerLite(
     private val slotTable: SlotTable = SlotTable(),
@@ -31,15 +37,29 @@ class ComposerLite(
     private val onInvalidated: (() -> Unit)? = null,
     private val localSnapshotInspector: ((Any?) -> List<CompositionLocalDiagnostic>)? = null,
     private val sourceCallSiteCollector: (() -> List<CompositionSourceCallSite>)? = null,
+    private val synchronousEffectWarningThresholdNanos: Long? = null,
+    private val effectFrameIdProvider: (() -> Long?)? = null,
 ) {
     private val keyStack = mutableListOf<Any?>()
     private val warningKeys = HashSet<String>()
-    private val pendingDisposableEffects = mutableListOf<() -> Unit>()
-    private val pendingSideEffects = mutableListOf<() -> Unit>()
+    private val pendingSideEffects = mutableListOf<PendingSideEffect>()
     private var currentScope: RecomposeScope = slotTable.root
     private var composing: Boolean = false
     private var activeAttempt: CompositionAttempt? = null
     private var explicitRootRequestPending: Boolean = false
+    private var dispatchingCallbacks: Boolean = false
+    private var disposed: Boolean = false
+    @Volatile
+    private var ownerThread: Thread? = null
+
+    init {
+        require(
+            synchronousEffectWarningThresholdNanos == null ||
+                synchronousEffectWarningThresholdNanos >= 0L,
+        ) {
+            "synchronousEffectWarningThresholdNanos must be non-negative when specified."
+        }
+    }
 
     /**
      * Returns whether state-driven scope invalidations are waiting in the queue.
@@ -58,7 +78,10 @@ class ComposerLite(
      *
      * @return invalidated scopes in effective insertion order, excluding covered descendants
      */
-    fun drainInvalidations(): List<RecomposeScope> = invalidationQueue.drainCompacted()
+    fun drainInvalidations(): List<RecomposeScope> {
+        requireOwnerThread("drainInvalidations")
+        return invalidationQueue.drainCompacted()
+    }
 
     /**
      * Marks the root dirty for the next composition attempt.
@@ -69,6 +92,10 @@ class ComposerLite(
      * scheduling decision.
      */
     fun requestRootRecompose() {
+        requireOwnerThread("requestRootRecompose")
+        check(!disposed) {
+            "ComposerLite is disposed and cannot accept a root recomposition request."
+        }
         explicitRootRequestPending = true
         slotTable.root.markDirty()
     }
@@ -77,13 +104,13 @@ class ComposerLite(
      * Composes [block], commits the runtime transaction, and returns its candidate value.
      *
      * This is equivalent to [prepareRoot] followed by [PreparedComposition.commit]. Committed
-     * disposable and one-shot effects remain pending until [commitSideEffects] is called.
+     * one-shot effects remain pending until [commitSideEffects] is called.
      *
      * @param T type of value produced by the root composition
      * @param block root content executed in a consistent read snapshot
      * @return the committed value produced by [block]
-     * @throws IllegalStateException for re-entrant composition or when another prepared composition
-     * has not been committed or aborted
+     * @throws IllegalStateException when the composer is disposed, the caller is not its owner
+     * thread, composition is re-entrant, or another prepared composition remains active
      */
     fun <T> composeRoot(block: () -> T): T {
         val prepared = prepareRoot(block = block)
@@ -103,12 +130,20 @@ class ComposerLite(
      * @param collectDiagnostics whether to record bounded scope decisions for this attempt
      * @param block root content used to prepare the candidate transaction
      * @return an owned prepared composition that MUST be committed or aborted
-     * @throws IllegalStateException for re-entrant composition or an unfinished prepared composition
+     * @throws IllegalStateException when the composer is disposed, the caller is not its owner
+     * thread, composition is re-entrant, or another prepared composition remains active
      */
     fun <T> prepareRoot(
         collectDiagnostics: Boolean = false,
         block: () -> T,
     ): PreparedComposition<T> {
+        requireOwnerThread("prepareRoot")
+        check(!disposed) {
+            "ComposerLite is disposed and cannot compose again."
+        }
+        check(!dispatchingCallbacks) {
+            "Re-entrant composition from a commit or effect callback is not supported."
+        }
         if (composing) {
             error("Re-entrant composeRoot() is not supported.")
         }
@@ -158,6 +193,7 @@ class ComposerLite(
             PreparedComposition(
                 value = result,
                 diagnostics = buildDiagnostics(attempt),
+                isCompleted = { attempt.completed },
                 onCommit = { commitAttempt(attempt) },
                 onAbort = { abortAttempt(attempt) },
             )
@@ -190,7 +226,8 @@ class ComposerLite(
      * @param reuseResult optional predicate returning `true` to retain the previous result instance
      * @param block group body, receiving the opaque scope owned by this composer
      * @return the cached, newly calculated, or explicitly reused group result
-     * @throws IllegalStateException when called outside an active composition attempt
+     * @throws IllegalStateException when called outside the actively executing composition block
+     * or from a thread other than the composer's owner
      */
     fun <T> runGroup(
         signature: Any,
@@ -198,6 +235,7 @@ class ComposerLite(
         reuseResult: ((previous: T, next: T) -> Boolean)? = null,
         block: (RecomposeScope) -> T,
     ): T {
+        val attempt = currentAttempt()
         val parent = currentScope
         val index = parent.childCursor++
         val existing = parent.children.getOrNull(index)
@@ -215,8 +253,8 @@ class ComposerLite(
                     sourceCallSites = sourceCallSiteCollector?.invoke().orEmpty(),
                 ).also { scope ->
                     parent.children += scope
-                    currentAttempt().newScopes += scope
-                    currentAttempt().addReason(
+                    attempt.newScopes += scope
+                    attempt.addReason(
                         scope,
                         if (parent.composed) {
                             RecompositionReason.StructureChanged
@@ -252,15 +290,15 @@ class ComposerLite(
                     sourceCallSites = sourceCallSiteCollector?.invoke().orEmpty(),
                 ).also { scope ->
                     parent.children += scope
-                    currentAttempt().newScopes += scope
-                    currentAttempt().addReason(scope, RecompositionReason.StructureChanged)
+                    attempt.newScopes += scope
+                    attempt.addReason(scope, RecompositionReason.StructureChanged)
                 }
             }
         }
         if (scope.latestInputs != inputs) {
             checkpointScope(scope)
             if (scope.composed) {
-                currentAttempt().addReason(scope, RecompositionReason.InputsChanged)
+                attempt.addReason(scope, RecompositionReason.InputsChanged)
             }
             scope.latestInputs = inputs
             scope.markDirty()
@@ -290,12 +328,14 @@ class ComposerLite(
      * @param keys local keys appended after the active [withKeys] key stack
      * @param calculation factory invoked when the slot cannot be reused
      * @return the committed retained value or the current attempt's candidate value
-     * @throws IllegalStateException when called outside an active composition attempt
+     * @throws IllegalStateException when called outside the actively executing composition block
+     * or from a thread other than the composer's owner
      */
     fun <T> remember(
         keys: List<Any?>,
         calculation: () -> T,
     ): T {
+        currentAttempt()
         val scope = currentScope
         val scopedKeys = keyStack + keys
         val index = scope.rememberCursor++
@@ -308,6 +348,18 @@ class ComposerLite(
         val slot = RecomposeScope.RememberSlot(
             keys = scopedKeys,
             value = value,
+            lifecycle = RecomposeScope.RememberLifecycle(
+                observer = value as? RememberObserver,
+                diagnostic = EffectDiagnostic(
+                    kind = value.rememberDiagnosticKind(),
+                    scopePath = scope.saveablePath,
+                    slot = index,
+                    keySummary = scopedKeys.toEffectKeySummary(),
+                ),
+                warningLogger = warningLogger,
+                warningThresholdNanos = synchronousEffectWarningThresholdNanos,
+                frameIdProvider = effectFrameIdProvider,
+            ),
         )
         if (existing != null) {
             scope.rememberSlots[index] = slot
@@ -318,49 +370,35 @@ class ComposerLite(
     }
 
     /**
-     * Registers a keyed effect in the next positional effect slot of the current scope.
+     * Returns one positional state holder whose candidate value publishes only on commit.
      *
-     * [effect] does not run during composition or [PreparedComposition.commit]. It runs when the host
-     * next calls [commitSideEffects]. Equal combined keys retain the existing effect. Changed keys
-     * dispose the old effect immediately before starting the replacement; leaving composition or
-     * disposing the composer also invokes the active cleanup callback. Aborted candidates never
-     * start and leave the committed effect unchanged.
+     * Reads made by the current composition thread see [newValue] immediately. Readers outside that
+     * candidate, including previously committed effects, continue to see the committed value until
+     * [PreparedComposition.commit]. Abort discards the candidate value. Publication happens before
+     * outgoing or incoming [RememberObserver] callbacks.
      *
-     * @param keys local keys appended after the active [withKeys] key stack
-     * @param effect operation that starts the effect and optionally returns its cleanup callback
+     * This low-level method exists so higher composition integrations can implement an updated-state
+     * API without leaking candidate writes through a global mutable snapshot.
+     *
+     * @param T type of value exposed by the holder
+     * @param newValue value visible to the current candidate and published on commit
+     * @return the stable positional state holder
      * @throws IllegalStateException when called outside an active composition attempt
      */
-    fun disposableEffect(
-        keys: List<Any?>,
-        effect: () -> (() -> Unit)?,
-    ) {
-        val scope = currentScope
-        val scopedKeys = keyStack + keys
-        val index = scope.effectCursor++
-        val existing = scope.effectSlots.getOrNull(index)
-        if (existing != null && existing.keys == scopedKeys) {
-            return
-        }
-        currentAttempt().pendingDisposableEffects += commitEffect@{
-            if (scope.disposed) return@commitEffect
-            val current = scope.effectSlots.getOrNull(index)
-            current?.onDispose?.also { onDispose ->
-                current.onDispose = null
-                onDispose()
-            }
-            val slot = RecomposeScope.DisposableEffectSlot(
-                keys = scopedKeys,
-                onDispose = effect(),
+    fun <T> rememberUpdatedState(newValue: T): State<T> {
+        val holder = remember(keys = emptyList()) {
+            CommitAwareState(
+                composer = this,
+                initialValue = newValue,
             )
-            if (current != null) {
-                scope.effectSlots[index] = slot
-            } else {
-                check(index == scope.effectSlots.size) {
-                    "DisposableEffect slot order changed before commit."
-                }
-                scope.effectSlots += slot
-            }
         }
+        val attempt = currentAttempt()
+        holder.prepare(
+            attempt = attempt,
+            value = newValue,
+        )
+        attempt.pendingStateUpdates += holder
+        return holder
     }
 
     /**
@@ -369,11 +407,26 @@ class ComposerLite(
      * The operation is discarded if the prepared composition aborts and runs when the host next
      * calls [commitSideEffects].
      *
-     * @param effect one-shot operation to execute after committed disposable-effect changes
-     * @throws IllegalStateException when called outside an active composition attempt
+     * @param effect one-shot operation to execute after committed remember lifecycle changes
+     * @throws IllegalStateException when called outside the actively executing composition block
+     * or from a thread other than the composer's owner
      */
     fun sideEffect(effect: () -> Unit) {
-        currentAttempt().pendingSideEffects += effect
+        val attempt = currentAttempt()
+        val scope = currentScope
+        val slot = scope.sideEffectCursor++
+        attempt.pendingSideEffects += PendingSideEffect(
+            effect = effect,
+            diagnostic = EffectDiagnostic(
+                kind = "SideEffect",
+                scopePath = scope.saveablePath,
+                slot = slot,
+                keySummary = keyStack.toEffectKeySummary(),
+            ),
+            warningLogger = warningLogger,
+            warningThresholdNanos = synchronousEffectWarningThresholdNanos,
+            frameIdProvider = effectFrameIdProvider,
+        )
     }
 
     /**
@@ -384,12 +437,11 @@ class ComposerLite(
      * objects MUST keep equal values and stable `hashCode` results across host recreation.
      *
      * @return an opaque key stable for the same structure, slot position, and explicit keys
-     * @throws IllegalStateException when no composition attempt is active
+     * @throws IllegalStateException when called outside the actively executing composition block
+     * or from a thread other than the composer's owner
      */
     fun nextSaveableKey(): String {
-        check(composing) {
-            "Automatic rememberSaveable keys require an active composition."
-        }
+        currentAttempt()
         val slot = currentScope.saveableCursor++
         val explicitKeyHash = stableHash(keyStack)
         return "auto:${currentScope.saveablePath}:$slot:${explicitKeyHash.toUInt().toString(16)}"
@@ -398,30 +450,34 @@ class ComposerLite(
     /**
      * Runs all effect operations queued by committed compositions.
      *
-     * Disposable-effect replacements run before one-shot side effects, each in registration order.
+     * Remember lifecycle callbacks have already completed during [PreparedComposition.commit].
      * Every operation is attempted even after a failure. The queue is cleared before execution, so
-     * failed operations are not retried; the first failure is rethrown with later failures suppressed.
+     * failed operations are not retried; the first failure is rethrown with later failures
+     * suppressed.
+     *
+     * @throws IllegalStateException when called re-entrantly or from a thread other than the
+     * composer's owner
      */
     fun commitSideEffects() {
-        if (pendingDisposableEffects.isEmpty() && pendingSideEffects.isEmpty()) return
-        val disposableOperations = pendingDisposableEffects.toList()
+        requireOwnerThread("commitSideEffects")
+        check(!dispatchingCallbacks) {
+            "Re-entrant side-effect dispatch is not supported."
+        }
+        if (pendingSideEffects.isEmpty()) return
         val sideEffectOperations = pendingSideEffects.toList()
-        pendingDisposableEffects.clear()
         pendingSideEffects.clear()
         val failures = mutableListOf<Throwable>()
-        disposableOperations.forEach { operation ->
-            try {
-                operation()
-            } catch (error: Throwable) {
-                failures += error
+        dispatchingCallbacks = true
+        try {
+            sideEffectOperations.forEach { operation ->
+                try {
+                    operation.run()
+                } catch (error: Throwable) {
+                    failures += error
+                }
             }
-        }
-        sideEffectOperations.forEach { operation ->
-            try {
-                operation()
-            } catch (error: Throwable) {
-                failures += error
-            }
+        } finally {
+            dispatchingCallbacks = false
         }
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
@@ -432,7 +488,7 @@ class ComposerLite(
     /**
      * Runs [block] with [keys] appended to the current positional-key namespace.
      *
-     * The keys affect group signatures, [remember], [disposableEffect], and [nextSaveableKey]. The
+     * The keys affect group signatures, [remember], and [nextSaveableKey]. The
      * previous key stack is restored when [block] returns or throws. An empty list executes [block]
      * without changing the namespace.
      *
@@ -440,11 +496,14 @@ class ComposerLite(
      * @param keys stable values that distinguish this nested composition path
      * @param block synchronous work executed with the extended key namespace
      * @return the value returned by [block]
+     * @throws IllegalStateException when called outside the actively executing composition block
+     * or from a thread other than the composer's owner
      */
     fun <T> withKeys(
         keys: List<Any?>,
         block: () -> T,
     ): T {
+        currentAttempt()
         if (keys.isEmpty()) {
             return block()
         }
@@ -465,8 +524,17 @@ class ComposerLite(
      * An active prepared composition is aborted first. Pending effects that never started are
      * discarded. Cleanup continues after failures and rethrows the first failure with later failures
      * suppressed. Disposal is terminal; the instance MUST NOT be composed again.
+     *
+     * @throws IllegalStateException when called re-entrantly or from a thread other than the
+     * composer's owner
      */
     fun dispose() {
+        requireOwnerThread("dispose")
+        if (disposed) return
+        check(!dispatchingCallbacks) {
+            "ComposerLite cannot be disposed from one of its commit or effect callbacks."
+        }
+        disposed = true
         val failures = mutableListOf<Throwable>()
         activeAttempt?.let { attempt ->
             try {
@@ -475,13 +543,17 @@ class ComposerLite(
                 failures += error
             }
         }
-        pendingDisposableEffects.clear()
         pendingSideEffects.clear()
         invalidationQueue.clear()
+        dispatchingCallbacks = true
         try {
-            slotTable.dispose()
-        } catch (error: Throwable) {
-            failures += error
+            try {
+                slotTable.dispose()
+            } catch (error: Throwable) {
+                failures += error
+            }
+        } finally {
+            dispatchingCallbacks = false
         }
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
@@ -558,18 +630,35 @@ class ComposerLite(
     }
 
     private fun currentAttempt(): CompositionAttempt {
+        requireOwnerThread("composition operation")
+        check(composing) {
+            "Composition operation requires an actively executing composition block."
+        }
         return checkNotNull(activeAttempt) {
             "Composition operation requires an active composition attempt."
         }
     }
 
     private fun commitAttempt(attempt: CompositionAttempt) {
+        requireOwnerThread("commit")
+        check(!dispatchingCallbacks) {
+            "Re-entrant prepared-composition commit is not supported."
+        }
+        dispatchingCallbacks = true
+        try {
+            commitAttemptWhileDispatching(attempt)
+        } finally {
+            dispatchingCallbacks = false
+        }
+    }
+
+    private fun commitAttemptWhileDispatching(attempt: CompositionAttempt) {
         check(activeAttempt === attempt) {
             "Prepared composition is no longer active."
         }
         activeAttempt = null
+        attempt.completed = true
 
-        pendingDisposableEffects += attempt.pendingDisposableEffects
         pendingSideEffects += attempt.pendingSideEffects
         val attachedScopes = attempt.checkpoints.keys
             .filterTo(LinkedHashSet(), ::isAttachedToRoot)
@@ -595,7 +684,9 @@ class ComposerLite(
             }
             !nestedBelowRemovedScope
         }
-        val abandonedNewScopes = attempt.newScopes - attachedNewScopes
+        val abandonedNewScopes = attempt.newScopes.filterTo(LinkedHashSet()) { scope ->
+            scope !in attachedNewScopes
+        }
         val abandonedNewRoots = abandonedNewScopes.filter { scope ->
             scope.parent !in abandonedNewScopes
         }
@@ -613,61 +704,23 @@ class ComposerLite(
             }
         }
 
+        attempt.pendingStateUpdates.forEach { update ->
+            cleanup {
+                update.commit(attempt)
+            }
+        }
+
+        // Dispose replaced committed values before any candidate value becomes active.
         attempt.checkpoints.forEach { (scope, checkpoint) ->
             if (scope.observation !== checkpoint.observation) {
                 checkpoint.observation?.let { observation ->
                     cleanup(observation::dispose)
                 }
             }
-            val attached = scope in attachedScopes
-            val sharedRememberSlots = minOf(
-                checkpoint.rememberSlots.size,
-                scope.rememberSlots.size,
-            )
-            repeat(sharedRememberSlots) { index ->
-                val previous = checkpoint.rememberSlots[index].value
-                val current = scope.rememberSlots[index].value
-                if (previous !== current) {
-                    (previous as? RememberObserver)?.let { observer ->
-                        cleanup(observer::onForgotten)
-                    }
-                    if (attached) {
-                        (current as? RememberObserver)?.let { observer ->
-                            cleanup(observer::onRemembered)
-                        }
-                    }
-                }
-            }
-            checkpoint.rememberSlots
-                .drop(scope.rememberSlots.size)
-                .forEach { slot ->
-                    (slot.value as? RememberObserver)?.let { observer ->
-                        cleanup(observer::onForgotten)
-                    }
-                }
-            if (attached) {
-                scope.rememberSlots
-                    .drop(checkpoint.rememberSlots.size)
-                    .forEach { slot ->
-                        (slot.value as? RememberObserver)?.let { observer ->
-                            cleanup(observer::onRemembered)
-                        }
-                    }
-            }
-            checkpoint.effectSlots
-                .drop(scope.effectSlots.size)
-                .forEach { slot ->
-                    slot.onDispose?.also { onDispose ->
-                        slot.onDispose = null
-                        cleanup(onDispose)
-                    }
-                }
-        }
-
-        attachedNewScopes.forEach { scope ->
-            scope.rememberSlots.forEach { slot ->
-                (slot.value as? RememberObserver)?.let { observer ->
-                    cleanup(observer::onRemembered)
+            checkpoint.rememberSlots.forEachIndexed { index, previousSlot ->
+                val currentSlot = scope.rememberSlots.getOrNull(index)
+                if (currentSlot !== previousSlot) {
+                    cleanup(previousSlot.lifecycle::leave)
                 }
             }
         }
@@ -679,12 +732,42 @@ class ComposerLite(
             cleanup(scope::disposeRecursively)
         }
 
+        // Only values that remain attached after all outgoing cleanup are allowed to enter.
+        attempt.checkpoints.forEach { (scope, checkpoint) ->
+            if (scope !in attachedScopes) return@forEach
+            scope.rememberSlots.forEachIndexed { index, currentSlot ->
+                val previousSlot = checkpoint.rememberSlots.getOrNull(index)
+                if (currentSlot !== previousSlot) {
+                    cleanup(currentSlot.lifecycle::activate)
+                }
+            }
+        }
+        attachedNewScopes.forEach { scope ->
+            scope.rememberSlots.forEach { slot ->
+                cleanup(slot.lifecycle::activate)
+            }
+        }
+
         firstFailure?.let { throw it }
     }
 
     private fun abortAttempt(attempt: CompositionAttempt) {
+        requireOwnerThread("abort")
+        check(!dispatchingCallbacks) {
+            "Re-entrant prepared-composition abort is not supported."
+        }
+        dispatchingCallbacks = true
+        try {
+            abortAttemptWhileDispatching(attempt)
+        } finally {
+            dispatchingCallbacks = false
+        }
+    }
+
+    private fun abortAttemptWhileDispatching(attempt: CompositionAttempt) {
         if (activeAttempt !== attempt) return
         activeAttempt = null
+        attempt.completed = true
         if (attempt.explicitRootRequest) {
             explicitRootRequestPending = true
         }
@@ -708,13 +791,16 @@ class ComposerLite(
             }
         }
 
+        attempt.pendingStateUpdates.forEach { update ->
+            cleanup {
+                update.abort(attempt)
+            }
+        }
         attempt.checkpoints.forEach { (scope, checkpoint) ->
             scope.rememberSlots.forEachIndexed { index, slot ->
-                val previous = checkpoint.rememberSlots.getOrNull(index)?.value
-                if (slot.value !== previous) {
-                    (slot.value as? RememberObserver)?.let { observer ->
-                        cleanup(observer::onAbandoned)
-                    }
+                val previousSlot = checkpoint.rememberSlots.getOrNull(index)
+                if (slot !== previousSlot) {
+                    cleanup(slot.lifecycle::leave)
                 }
             }
         }
@@ -751,6 +837,20 @@ class ComposerLite(
             val parent = current.parent ?: return current === slotTable.root
             if (current !in parent.children) return false
             current = parent
+        }
+    }
+
+    @Synchronized
+    private fun requireOwnerThread(operation: String) {
+        val current = Thread.currentThread()
+        val owner = ownerThread
+        if (owner == null) {
+            ownerThread = current
+            return
+        }
+        check(owner === current) {
+            "ComposerLite.$operation must run on its owner thread '${owner.name}', but was called " +
+                "from '${current.name}'."
         }
     }
 
@@ -867,11 +967,12 @@ class ComposerLite(
         val explicitRootRequest: Boolean,
         val checkpoints: LinkedHashMap<RecomposeScope, RecomposeScope.Checkpoint> = LinkedHashMap(),
         val newScopes: LinkedHashSet<RecomposeScope> = LinkedHashSet(),
-        val pendingDisposableEffects: MutableList<() -> Unit> = mutableListOf(),
-        val pendingSideEffects: MutableList<() -> Unit> = mutableListOf(),
+        val pendingStateUpdates: LinkedHashSet<CommitAwareState<*>> = LinkedHashSet(),
+        val pendingSideEffects: MutableList<PendingSideEffect> = mutableListOf(),
         val recomposedScopes: LinkedHashSet<RecomposeScope> = LinkedHashSet(),
         val skippedScopes: LinkedHashSet<RecomposeScope> = LinkedHashSet(),
         val reasons: LinkedHashMap<RecomposeScope, LinkedHashSet<RecompositionReason>> = LinkedHashMap(),
+        var completed: Boolean = false,
     ) {
         fun addReason(
             scope: RecomposeScope,
@@ -879,6 +980,85 @@ class ComposerLite(
         ) {
             if (!collectDiagnostics) return
             reasons.getOrPut(scope, ::LinkedHashSet) += reason
+        }
+    }
+
+    /** State holder that keeps one candidate update isolated until its owning attempt commits. */
+    private class CommitAwareState<T>(
+        private val composer: ComposerLite,
+        initialValue: T,
+    ) : State<T> {
+        private val committedState = mutableStateOf(initialValue)
+        private var candidateAttempt: CompositionAttempt? = null
+        private var candidateThread: Thread? = null
+        private var candidateValue: Any? = NoCandidate
+
+        override val value: T
+            get() {
+                val committedValue = committedState.value
+                if (
+                    composer.composing &&
+                    composer.activeAttempt === candidateAttempt &&
+                    candidateThread === Thread.currentThread()
+                ) {
+                    @Suppress("UNCHECKED_CAST")
+                    return candidateValue as T
+                }
+                return committedValue
+            }
+
+        fun prepare(
+            attempt: CompositionAttempt,
+            value: T,
+        ) {
+            check(candidateAttempt == null || candidateAttempt === attempt) {
+                "Committed state holder is already owned by another composition attempt."
+            }
+            candidateAttempt = attempt
+            candidateThread = Thread.currentThread()
+            candidateValue = value
+        }
+
+        fun commit(attempt: CompositionAttempt) {
+            if (candidateAttempt !== attempt) return
+            @Suppress("UNCHECKED_CAST")
+            val value = candidateValue as T
+            clearCandidate()
+            committedState.value = value
+        }
+
+        fun abort(attempt: CompositionAttempt) {
+            if (candidateAttempt === attempt) {
+                clearCandidate()
+            }
+        }
+
+        private fun clearCandidate() {
+            candidateAttempt = null
+            candidateThread = null
+            candidateValue = NoCandidate
+        }
+
+        private object NoCandidate
+    }
+
+    /** Owns diagnostic metadata for one committed one-shot callback without retaining its keys. */
+    private class PendingSideEffect(
+        private val effect: () -> Unit,
+        private val diagnostic: EffectDiagnostic,
+        private val warningLogger: ((String) -> Unit)?,
+        private val warningThresholdNanos: Long?,
+        private val frameIdProvider: (() -> Long?)?,
+    ) {
+        fun run() {
+            runSynchronousEffectOperation(
+                diagnostic = diagnostic,
+                operation = "run",
+                warningLogger = warningLogger,
+                warningThresholdNanos = warningThresholdNanos,
+                frameIdProvider = frameIdProvider,
+                block = effect,
+            )
         }
     }
 
@@ -896,38 +1076,35 @@ class ComposerLite(
         val value: T,
         /** Bounded diagnostics captured for this attempt, or an empty summary when disabled. */
         val diagnostics: CompositionDiagnostics,
+        private val isCompleted: () -> Boolean,
         private val onCommit: () -> Unit,
         private val onAbort: () -> Unit,
     ) {
-        private var completed: Boolean = false
-
         /**
-     * Commits scope, observation, and remember changes to the owning composer.
-     *
-     * Lifecycle callback failures propagate after the runtime transaction has become committed;
-     * the transaction cannot be retried or aborted afterward.
-     *
-     * @throws IllegalStateException if this transaction was already committed or aborted, or is
-     * no longer the composer's active transaction
+         * Commits scope, observation, and remember changes to the owning composer.
+         *
+         * Lifecycle callback failures propagate after the runtime transaction has become committed;
+         * the transaction cannot be retried or aborted afterward.
+         *
+         * @throws IllegalStateException if this transaction was already committed or aborted, or is
+         * no longer the composer's active transaction
          */
         fun commit() {
-            check(!completed) {
+            check(!isCompleted()) {
                 "Prepared composition is already completed."
             }
-            completed = true
             onCommit()
         }
 
         /**
-     * Rolls back the candidate scope tree and abandons newly remembered values.
-     *
-     * Aborting an already completed transaction is a no-op. State invalidations and explicit
-     * root requests consumed by the attempt are restored for the next composition. Cleanup callback
-     * failures propagate after rollback has begun and are not retried.
+         * Rolls back the candidate scope tree and abandons newly remembered values.
+         *
+         * Aborting an already completed transaction is a no-op. State invalidations and explicit
+         * root requests consumed by the attempt are restored for the next composition. Cleanup
+         * callback failures propagate after rollback has begun and are not retried.
          */
         fun abort() {
-            if (completed) return
-            completed = true
+            if (isCompleted()) return
             onAbort()
         }
     }

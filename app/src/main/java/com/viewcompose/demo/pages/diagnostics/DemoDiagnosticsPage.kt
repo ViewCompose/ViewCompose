@@ -371,7 +371,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 val renderProbeTickState = remember { mutableStateOf(0) }
                 DisposableEffect(renderProbeKey) {
                     renderProbeTickState.value = renderProbeTickState.value + 1
-                    {}
+                    onDispose {}
                 }
                 val probeHash = "snapshot=${System.identityHashCode(snapshot)} " +
                     "patch=${patchSnapshot?.let { System.identityHashCode(it) } ?: 0} " +

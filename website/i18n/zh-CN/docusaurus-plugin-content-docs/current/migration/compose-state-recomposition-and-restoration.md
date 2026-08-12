@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 963a2a39e207ab2f77b6d180e93f9c0e2d67d14fea3b15f6620c03163f7e5920
+translation_source_hash: 2e240b161f987cf7f2fd00e8bae2dd2c8a6e9370b069de834a20c8d0324dccab
 translation_status: current
 ---
 
@@ -215,8 +215,9 @@ ViewCompose 支持一致性读取快照、自动可变事务、显式可变快�
   `null`”；
 - Compose 不允许在当前只读快照中创建可变快照，而当前 ViewCompose 实现会从当前 Read ID
   派生根可变快照，并未执行这项拒绝检查；
-- 此版本的 ViewCompose 不提供 Compose `SnapshotStateList`、`SnapshotStateMap`、
-  `SnapshotStateSet` 或 `snapshotFlow` 的等价能力。
+- ViewCompose 不提供 Compose `SnapshotStateList`、`SnapshotStateMap` 或 `SnapshotStateSet`。
+  它提供 Cold `snapshotFlow`，支持每个 Collector 独立读取观察、失效合并、条件依赖替换和结构
+  Distinct Emission。计算必须无副作用，并运行在 Collector Coroutine 中。
 
 仓库证据：
 
@@ -225,6 +226,8 @@ ViewCompose 支持一致性读取快照、自动可变事务、显式可变快�
 - [`MutableStateImpl.kt` 第 98–142 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/MutableStateImpl.kt#L98-L142)；
 - [`SnapshotStateTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotStateTest.kt)；
 - [`SnapshotApiTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotApiTest.kt)。
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/SnapshotFlow.kt`；
+- `viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotFlowTest.kt`。
 
 只读快照到可变快照的嵌套差异是根据当前实现推断的，并且没有专门的回归测试。应把它视为迁移
 风险，而不是可以依赖的功能。请用存放在 `MutableState` 中的不可变集合替换 Compose 快照集合，
@@ -248,8 +251,8 @@ Change Flag 的情况下协调位置 Group。Widget 与 Renderer 集成通过
 
 仓库证据：
 
-- [`ComposerLite.kt` 第 6–27、178–318、492–552 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L6-L552)；
-- [`RecomposeScope.kt` 第 39–64、147–180 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/RecomposeScope.kt#L39-L180)；
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`；
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/RecomposeScope.kt`；
 - [`InvalidationQueue.kt` 第 3–76 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/InvalidationQueue.kt#L3-L76)；
 - [`ComposerLiteTest.kt` 第 16–169 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt#L16-L169)；
 - [`SubtreeRecompositionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SubtreeRecompositionTest.kt)；
@@ -278,8 +281,8 @@ Compose 风格的 Keyed Sibling 移动：`runGroup` 首先按兄弟节点索引�
 
 - [`Remember.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Remember.kt)；
 - [`Key.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Key.kt)；
-- [`ComposerLite.kt` 第 178–318、432–460 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L178-L460)；
-- [`ComposerLiteTest.kt` 第 241–262、368–457、481–517 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt#L241-L517)；
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`；
+- `viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt`；
 - [`RememberTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberTest.kt)。
 
 请使用稳定 `key` Scope 隔离分支与 Effect Identity，但条目可以重排时，应使用 Lazy Container
@@ -297,9 +300,10 @@ ViewCompose 支持这些迁移层生命周期，但提交边界由宿主定义�
 
 - 候选 Effect 在组合期间记录；Prepared Composition 中止时会被丢弃；
 - Renderer 建立新的原生树之后，`RenderSession` 提交 Prepared Runtime Composition；
-- Runtime 提交成功时，`LaunchedEffect` 从其 Remembered Observer 启动；
-- 随后，`DisposableEffect` 替换与 `SideEffect` 操作由 `commitSideEffects` 执行；顺序为注册
-  顺序，并且 Disposable 变更先于一次性 Side Effect；
+- Committed `rememberUpdatedState` 值先于生命周期回调发布；
+- 全部退出的 Remembered、Disposable 与 Launched 生命周期先于任何进入生命周期执行；
+- `LaunchedEffect` 与 `DisposableEffect` 在 Runtime Commit 期间从 Remembered Observer 启动；
+- 随后由 `commitSideEffects` 按声明顺序运行 `SideEffect`；
 - 原生提交回调在 Composition Side Effect 之后运行；
 - 离开组合或释放 Session 会取消协程，并执行已经提交的清理。
 
@@ -307,19 +311,21 @@ ViewCompose 支持这些迁移层生命周期，但提交边界由宿主定义�
 
 - [`SideEffect.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/SideEffect.kt)；
 - [`DisposableEffect.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/DisposableEffect.kt)；
-- [`CoroutineEffects.kt` 第 12–102 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/CoroutineEffects.kt#L12-L102)；
-- [`ProduceState.kt` 第 49–80 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/ProduceState.kt#L49-L80)；
-- [`ComposerLite.kt` 第 320–430、566–745 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L320-L745)；
-- [`RenderSession.kt` 第 170–245 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt#L170-L245)；
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/CoroutineEffects.kt`；
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/ProduceState.kt`；
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`；
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt`；
 - [`SideEffectTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SideEffectTest.kt)；
 - [`DisposableEffectTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/DisposableEffectTest.kt)；
 - [`CoroutineEffectsTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/CoroutineEffectsTest.kt)；
-- [`RenderSessionFailureTest.kt` 第 100–153 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt#L100-L153)。
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt`。
 
 Renderer 建立新原生树之后发生的失败会报告为 Committed-frame Failure，不会回滚该原生树。
-因此 Effect 必须只包含提交后工作，并自行处理失败清理。此版本的 `LaunchedEffect` 还要求至少
-一个 Key；其 Dispatcher 与 Parent Job 来自安装的 ViewCompose Host Context，而不是 Compose
-`Recomposer`。
+因此 Effect 必须只包含提交后工作，并自行处理失败清理。此版本的 `DisposableEffect` 与
+`LaunchedEffect` 都要求至少一个 Key。Disposable Setup 必须以 `onDispose { ... }` 结束；旧的
+Lambda-return Cleanup 写法不再接受。ViewCompose 还提供带 Key 的 `SideEffect` 重载用于只在变化
+时发布，而无 Key 重载仍是每次调用都执行的形式。Launched Effect 的 Dispatcher 与 Parent Job
+来自安装的 ViewCompose Host Context，而不是 Compose `Recomposer`。
 
 ## 可保存状态与 Saver 迁移 {/* #saveable-state-and-saver-migration */}
 
@@ -345,7 +351,7 @@ ViewCompose 为**部分支持（Partially supported）**：
 
 - [`RememberSaveable.kt` 第 5–160 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/RememberSaveable.kt#L5-L160)；
 - [`Saver.kt` 第 8–90 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/Saver.kt#L8-L90)；
-- [`ComposerLite.kt` 第 379–396 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L379-L396)；
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`；
 - [`RememberSaveableTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt)；
 - [`WidgetCoreSamples.kt` 中已编译的 Saveable Registry 示例](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt)。
 
@@ -372,7 +378,7 @@ Prepare。其 Registry 使用 Claim Transaction：
 
 - [`SaveableStateRegistry.kt` 第 3–253 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/SaveableStateRegistry.kt#L3-L253)；
 - [`RememberSaveable.kt` 第 76–160 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/RememberSaveable.kt#L76-L160)；
-- [`ComposerLite.kt` 第 616–745 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt#L616-L745)；
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`；
 - [`RememberSaveableTest.kt` 第 39–163 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt#L39-L163)。
 
 自定义 ViewCompose Host Registry 必须实现这套 Claim 协议；Compose 风格的立即消费不能作为
@@ -419,7 +425,7 @@ Recents 移除应用后恢复 Saved Instance State。
 | `mutableStateOf`、Mutation Policy 与读取观察 | **支持（Supported）** | 回调次数与线程遵循 ViewCompose 契约 | [`State.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/State.kt)；[`SnapshotMutationPolicy.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/SnapshotMutationPolicy.kt)；[`RuntimeObservationTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/observation/RuntimeObservationTest.kt) |
 | 惰性依赖派生状态 | **部分支持（Partially supported）** | 没有结果 Policy；不会抑制相等派生结果的失效 | [`DerivedStateImpl.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/DerivedStateImpl.kt)；[`DerivedStateTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/DerivedStateTest.kt) |
 | 读取与可变快照事务 | **部分支持（Partially supported）** | 嵌套/线程规则不同，并有 Nullable Merge 限制 | [`Snapshot.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/Snapshot.kt)；[`SnapshotRuntime.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/snapshot/SnapshotRuntime.kt)；[`SnapshotStateTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotStateTest.kt) |
-| 快照集合与 `snapshotFlow` | **不支持（Unsupported）** | 使用不可变集合状态或外部 Flow Ownership | Runtime 公共 API 与模块手册中没有对应 API |
+| 快照集合与 `snapshotFlow` | **部分支持（Partially supported）** | 支持 `snapshotFlow`，不提供 Snapshot Collection 类型 | `SnapshotFlow.kt`；`SnapshotFlowTest.kt` |
 | 编译器生成的 Restart/Skipping/Stability | **刻意不同（Intentionally different）** | 显式 `runGroup` 与观察到的读取取代 Compose 编译器 Group | [`ComposerLite.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt)；[`ComposerDiagnosticsTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/kotlin/com/viewcompose/runtime/composition/ComposerDiagnosticsTest.kt) |
 | 细粒度失效与干净兄弟节点复用 | **部分支持（Partially supported）** | 依赖显式 Group 边界；没有 Stability 推断 | [`ComposerLiteTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt)；[`SubtreeRecompositionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SubtreeRecompositionTest.kt) |
 | 位置 `remember` | **支持（Supported）** | 结构 Key 及事务化 Commit/Abort | [`Remember.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Remember.kt)；[`ComposerLiteTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt) |
@@ -440,7 +446,8 @@ Recents 移除应用后恢复 Saved Instance State。
    或 Node Group。
 3. 移除基于 Compose Stability 推断、Strong skipping 或自动 Lambda Memoization 的假设。
 4. 审查每个 `derivedStateOf`；相等结果抑制很重要时，添加显式结果比较。
-5. 替换快照集合与 `snapshotFlow`，不要构造名称相似的 Wrapper。
+5. 用 `MutableState` 中的不可变值替换 Snapshot Collection；`snapshotFlow` 只用于明确拥有
+   Collection Lifetime 的无副作用 State 计算。
 6. 保持 `remember` 调用顺序稳定。用 `key` 隔离分支，但不要依赖普通 Keyed Sibling 重排时
    的移动。
 7. 把全部外部工作移入已提交 Effect。Effect 失败属于无法恢复上一棵原生树的 Committed-frame

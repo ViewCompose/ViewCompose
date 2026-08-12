@@ -134,7 +134,7 @@ fun UiTreeBuilder.AndroidResourceEnvironment(
     }
     DisposableEffect(lifecycle) {
         lifecycle.start()
-        lifecycle::close
+        onDispose(lifecycle::close)
     }
     val snapshot = lifecycle.snapshot.value
     ProvideLocal(LocalAndroidResourceContext, context) {

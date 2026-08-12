@@ -2,7 +2,8 @@
 
 `viewcompose-lifecycle-androidx` connects Kotlin `Flow` collection and ViewCompose composition work to
 AndroidX Lifecycle. It provides the lifecycle-owner local installed by Android hosts plus lifecycle-
-aware and composition-only `collectAsState` adapters.
+aware and composition-only `collectAsState` adapters, paired start/resume effects, and observable
+lifecycle state.
 
 ## Artifact and stability
 
@@ -73,6 +74,25 @@ general Flow displays the caller's `initial` value until its first active emissi
 Use the owner overload for normal UI and an explicit `Lifecycle` overload when an infrastructure
 component intentionally has no `LifecycleOwner` object.
 
+## Paired lifecycle effects
+
+`LifecycleStartEffect(key)` and `LifecycleResumeEffect(key)` run synchronous paired work only while
+the nearest or supplied owner is at least `STARTED` or `RESUMED`. Setup begins after a successful
+composition commit. Cleanup runs at the matching down transition, destruction, key or owner
+replacement, composition exit, or session disposal.
+
+Each setup ends with `onStopOrDispose { ... }` or `onPauseOrDispose { ... }`. Keys are mandatory and
+use structural equality. Replacement cleanup completes before replacement setup; an aborted
+candidate neither detaches the committed observer nor starts its replacement. A throwing setup is
+detached and is not retried until identity changes. A throwing cleanup is terminal. These callbacks
+run synchronously on the lifecycle dispatch thread and must not block it. Resolve composition
+locals while declaring the effect; reading a Local from a later lifecycle callback fails with its
+diagnostic name even if an unrelated provider is active on that thread.
+
+`Lifecycle.currentStateAsState()` returns one stable composition-owned holder, observes every state
+transition after commit, reconciles a transition that races initial installation, and removes its
+observer on composition exit.
+
 ## Coroutine context and structured ownership
 
 The optional `context` can choose a dispatcher, coroutine name, or other non-Job element for upstream
@@ -97,6 +117,9 @@ depending on an orphan exception handler.
 | `StateFlow`, nearest or explicit owner | `collectAsStateWithLifecycle(...)` |
 | General `Flow`, nearest or explicit owner | `collectAsStateWithLifecycle(initial, ...)` |
 | No current owner but an explicit lifecycle exists | overload accepting `Lifecycle` |
+| Paired setup/cleanup while started | `LifecycleStartEffect(key) { ... }` |
+| Paired setup/cleanup while resumed | `LifecycleResumeEffect(key) { ... }` |
+| Observe lifecycle state in declarative content | `lifecycle.currentStateAsState()` |
 
 Do not mirror the returned value into a second `MutableState`; reading the returned state already
 participates in runtime observation and invalidates the owning composition scope.
@@ -112,6 +135,7 @@ missing-owner failure, invalid thresholds, and non-overlapping collectors during
 - [Android host module](../viewcompose-host-android/README.md)
 - [UI Foundation module](../viewcompose-ui-foundation/README.md)
 - [Lifecycle and saved-state architecture](../../architecture/lifecycle-and-saved-state.md)
+- [Transactional effects and structured work](../../architecture/effects.md)
 - [Source documentation and API comment standard](../../project/api-documentation-quality.md)
 
 The complete generated reference is available in the
@@ -123,3 +147,8 @@ The `0.1.0-alpha01` line establishes nullable owner lookup, scoped owner provisi
 collector launch, structured cancellation, `repeatOnLifecycle` restart behavior, and retained state
 across inactive periods. Keep flow errors explicit and never pass an independent Job as collection
 context.
+
+`LifecycleStartEffect`, `LifecycleResumeEffect`, and `Lifecycle.currentStateAsState()` are additive
+Q3 lifecycle APIs in this release. Paired effects require at least one explicit key and do not
+replace the existing Flow collection APIs; choose them when the owned work itself, rather than only
+its data collection, must enter and leave with an Android lifecycle threshold.
