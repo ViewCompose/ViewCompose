@@ -89,6 +89,13 @@ wake and unlock the selected device before retrying. Before marking a capability
 `qaFull` normally passes; a missing device or temporary exemption is recorded in the roadmap with
 scope and deadline.
 
+### 4.2 Remote Demo APK
+
+Maintainers can run the `Demo APK` workflow from the GitHub Actions page when an installable build
+is needed away from a development machine. The workflow builds the debug-signed `app` APK from the
+selected Git ref and uploads it with a SHA-256 checksum and build metadata for 14 days.
+The artifact is intended for manual framework verification and is not a release package.
+
 ## 5. Code ownership and placement
 
 Choose the owning module and directory before creating a file. Do not flatten new code into the

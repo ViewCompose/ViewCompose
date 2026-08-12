@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: cea2a6e16750dd1834341476fc3af6306192788c4491ac1ac94cdd71878321e7
+translation_source_hash: fc75f1f66a87984c16bbff4d785d2b1cd5acc383772fed78631c04a4191f908f
 translation_status: current
 ---
 
@@ -119,6 +119,12 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 `ANDROID_SERIAL` 指定设备时只能有一台在线设备、系统已完成启动、屏幕处于唤醒状态且 keyguard
 没有显示。该检查不会绕过安全锁屏；重试前必须唤醒并解锁所选设备。能力标记为“完成”前，默认要求
 `qaFull` 通过；若当前缺设备或存在临时豁免，必须在 roadmap 写明豁免范围和补齐时间。
+
+### 4.2 远程 Demo APK
+
+维护者不在开发电脑旁、但需要可安装构建时，可以从 GitHub Actions 页面运行 `Demo APK` Workflow。
+该流程从所选 Git Ref 构建使用 Debug 签名的 `app` APK，并上传 SHA-256 校验文件和构建元数据，
+保留 14 天。该 Artifact 只用于人工验证框架，不是 Release Package。
 
 ## 5. 新增代码归类原则
 
