@@ -2,8 +2,9 @@
 
 ## Status
 
-Active. The plan is landed, the Demo and navigation implementation are complete, and repository
-validation is in progress.
+Active. The plan is landed, the Demo and navigation implementation are complete, and scoped
+automated and manual validation have passed. The aggregate device suite still has unrelated
+failures recorded below.
 
 This plan owns the bounded correction for application theme changes that cross Activity root
 sessions and retained `NavHost` destination sessions. It remains canonical English-only under the
@@ -11,10 +12,10 @@ documentation-governance policy. When implementation and validation are complete
 contracts move into the active theming, navigation, architecture, and module documents before this
 file moves to `docs/archive/`.
 
-Last verified: 2026-08-11.
+Last verified: 2026-08-12.
 
-Next action: validate documentation and release intent, run the full repository gates, then record
-device/manual evidence before archiving the plan.
+Next action: publish and merge the implementation pull request, then separately triage the
+unrelated aggregate device-suite failures before archiving the plan.
 
 ## Maven release changesets
 
@@ -264,9 +265,10 @@ This plan is complete only when:
 | 2026-08-11 | Working tree | Planning baseline | CodeGraph impact analysis; source/document review; focused Material and navigation unit tests | Baseline confirmed; tests passed; implementation/document mismatch recorded | Land this plan, then begin Phase 1 |
 | 2026-08-11 | `b21bcb4b` | Plan landing | Independent plan and plan-index commit | Passed `verifyDocumentationStructure` | Implement the application-owned Demo theme source |
 | 2026-08-11 | `e2fecfa5` | Demo implementation | Shared observable theme state, secondary Activity, stable tags, connected-device test | App Kotlin, Android-test Kotlin, and unit-test compilation passed | Implement retained-destination pre-presentation refresh |
-| 2026-08-11 | Working tree | Navigation implementation | Programmatic pop, stack selection, predictive Back, and adaptive-pane focused coordinator/driver tests | Focused test group passed | Complete documentation, release intent, and repository gates |
-| 2026-08-11 | Working tree | Repository validation | Full navigation, Material theme, and app unit tests; `verifyDocumentationStructure`; `verifyViewComposeReleaseIntent`; `qaQuick` | All passed; compiled Q3 sample and locale freshness verified | Run connected-device validation |
-| 2026-08-11 | Working tree | Connected-device validation | `qaFull` on unlocked Android 13 SM-G991B; isolated `secondaryActivityThemeSwitch_refreshesOriginalActivitySession` rerun | New cross-Activity test passed twice, including the 95-test run; aggregate `qaFull` failed because 15 unrelated UI/device tests outside the changed paths failed | Keep plan active and record the aggregate device-suite failures for separate triage |
+| 2026-08-11 | `7a9617a0` | Navigation implementation | Programmatic pop, stack selection, predictive Back, and adaptive-pane focused coordinator/driver tests | Focused test group passed | Complete documentation, release intent, and repository gates |
+| 2026-08-11 | `7a9617a0` | Repository validation | Full navigation, Material theme, and app unit tests; `verifyDocumentationStructure`; `verifyViewComposeReleaseIntent`; `qaQuick` | All passed; compiled Q3 sample and locale freshness verified | Run connected-device validation |
+| 2026-08-11 | `7a9617a0` | Connected-device validation | `qaFull` on unlocked Android 13 SM-G991B; isolated `secondaryActivityThemeSwitch_refreshesOriginalActivitySession` rerun | New cross-Activity test passed twice, including the 95-test run; aggregate `qaFull` failed because 15 unrelated UI/device tests outside the changed paths failed | Keep plan active and record the aggregate device-suite failures for separate triage |
+| 2026-08-12 | User-confirmed build | Manual validation | Switch theme in the secondary Activity, return to the primary Activity, and inspect the retained navigation page | Passed; both Activity roots and the revealed retained destination showed the selected theme | Publish the pull request and track it through merge to `main` |
 
 ## Decision history
 
