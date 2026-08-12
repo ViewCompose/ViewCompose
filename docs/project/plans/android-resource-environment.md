@@ -17,8 +17,7 @@ archive this plan only if the connected suites pass and all durable contracts re
 
 ## Maven release changesets
 
-- `release/changes/20260811-cross-session-theme-navigation-refresh.json` (combined with the
-  current branch's retained-navigation release intent because one pull request owns one changeset)
+- `release/changes/20260812-android-resource-environment.json`
 
 ## Objective
 

@@ -1,19 +1,8 @@
 {
   "schemaVersion": 1,
-  "summary": "Add host-owned, configuration-aware Android resource lookup and refresh across design systems, images, previews, retained navigation sessions, and a non-recreating Demo matrix.",
+  "summary": "Refresh retained Android navigation destinations with the latest inherited environment before pop, stack selection, predictive Back, or adaptive-pane reveal, while preserving the committed scene on refresh failure.",
   "changes": [
-    { "artifact": "viewcompose-navigation-android", "impact": "fix" },
-    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
-    { "artifact": "viewcompose-ui-foundation", "impact": "feature" },
-    { "artifact": "viewcompose-host-android", "impact": "feature" },
-    { "artifact": "viewcompose-android", "impact": "breaking" },
-    { "artifact": "viewcompose-renderer-android", "impact": "fix" },
-    { "artifact": "viewcompose-image-coil", "impact": "fix" },
-    { "artifact": "viewcompose-image-glide", "impact": "fix" },
-    { "artifact": "viewcompose-material3", "impact": "breaking" },
-    { "artifact": "viewcompose-material3-android", "impact": "breaking" },
-    { "artifact": "viewcompose-preview-runner", "impact": "fix" },
-    { "artifact": "viewcompose-preview", "impact": "fix" }
+    { "artifact": "viewcompose-navigation-android", "impact": "fix" }
   ],
   "ignored": []
 }
