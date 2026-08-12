@@ -4,6 +4,9 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
+- [Transactional effect runtime convergence](./effect-runtime-convergence.md) — unify remembered,
+  disposable, and coroutine lifecycle state; isolate candidate values; hard-cut effect APIs; and
+  protect commit, rollback, cancellation, ordering, and failure behavior with a complete matrix.
 - [Android resource environment](./android-resource-environment.md) — add composition-aware Android
   resource APIs, host-owned configuration invalidation, design-system-neutral revision propagation,
   retained-session and preview convergence, and a Demo matrix that changes configuration without

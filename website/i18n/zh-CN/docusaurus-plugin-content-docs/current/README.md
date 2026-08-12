@@ -2,7 +2,7 @@
 title: ViewCompose 文档
 slug: /documentation
 translation_source: README.md
-translation_source_hash: 29cbde3927265f94513b953c9cbba5433e123f64d94f05835a7c4310b190e151
+translation_source_hash: 86c0670c53b07d4d6bf6f276e34e3132b738969a5512eba43ddef12abede9a87
 translation_status: current
 ---
 
@@ -38,6 +38,7 @@ GitHub 托管文档站点的内容边界。
 - [Modifier 模型](https://docs.viewcompose.com/architecture/modifier)
 - [NodeSpec 模型](https://docs.viewcompose.com/architecture/node-spec)
 - [状态快照](https://docs.viewcompose.com/architecture/state-snapshots)
+- [事务式 Effect 与结构化工作](./architecture/effects.md)
 - [生命周期和 SavedState](https://docs.viewcompose.com/architecture/lifecycle-and-saved-state)
 - [渲染失败](https://docs.viewcompose.com/architecture/render-failures)
 - [Session 容器](https://docs.viewcompose.com/architecture/session-containers)

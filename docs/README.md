@@ -38,6 +38,7 @@ Long-lived contracts, boundaries, and runtime semantics:
 - [Modifier model](./architecture/modifier.md)
 - [NodeSpec model](./architecture/node-spec.md)
 - [State snapshots](./architecture/state-snapshots.md)
+- [Transactional effects and structured work](./architecture/effects.md)
 - [Lifecycle and SavedState](./architecture/lifecycle-and-saved-state.md)
 - [Render failures](./architecture/render-failures.md)
 - [Session containers](./architecture/session-containers.md)
