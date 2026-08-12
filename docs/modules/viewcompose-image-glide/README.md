@@ -58,6 +58,10 @@ inside, or no-transform request options.
 Default cache and transition policies preserve the application's Glide configuration. Disabled
 memory cache maps to `skipMemoryCache(true)`, disabled disk cache maps to `DiskCacheStrategy.NONE`,
 and explicit `None` or `Crossfade` transitions override the configured default for that request.
+Primary Android resources receive an `ObjectKey` signature containing the captured resource
+revision, so configuration-qualified drawables cannot reuse a stale cache entry. Remote-only
+requests retain Glide's normal model/cache identity; resource fallback changes still restart the
+mounted request through renderer request equality.
 
 The adapter returns a disposable handle that clears the exact Glide target request. The renderer
 disposes it before replacement or mounted-node removal. The adapter does not own the target

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/overview.md
-translation_source_hash: 84f7fffa3b6065ca322fb569015cc13d2f843dfd6a810f809b68fd31a15a5321
+translation_source_hash: e16ef7740bb2badb4e1051b881bbd22c7115c8f66239685a4c6510a01fb9edea
 translation_status: current
 ---
 
@@ -251,18 +251,18 @@ flowchart TD
 
 ### 4.5 Environment 边界
 
-1. 宿主入口（`com.viewcompose.android.setUiContent(...)`）默认自动注入 `UiEnvironment(values = AndroidEnvironmentBridge.fromContext(root.context))`。
+1. 标准 Android Host 入口会从创建 Root 与 Overlay 的同一个稳定 Context 安装 `AndroidResourceEnvironment`。它映射密度、字体比例、语言与方向，提供常用资源查询，并在 Configuration Callback 或显式 Host 刷新后推进 `resourceRevision`；业务代码仍可在局部子树覆盖平台无关环境值。
 2. 业务层允许在局部子树使用 `UiEnvironment(values = ...)` 做覆盖；默认注入不阻断局部覆写。
 3. `viewcompose-renderer-android` 不依赖 `viewcompose-ui-foundation/context/Environment`，只消费 renderer 已解析的 `NodeSpec` 与平台参数。
 4. `viewcompose-renderer-android` 中的 dp/sp 尺寸换算统一走内部工具（`viewcompose-renderer-android/view/DimensionUtils.kt`），容器类禁止私有 `density/dpToPx` 重复实现。
-5. Android 平台环境提取入口固定为 `com.viewcompose.host.android.environment.AndroidEnvironmentBridge`；UI Foundation 只接收解析后的 `UiEnvironmentValues`，新增字段时必须先扩展 Host Android 桥接。
+5. `com.viewcompose.host.android.environment.AndroidEnvironmentBridge` 继续负责 Android 到 Contract 的映射，`com.viewcompose.host.android.resources` 负责挂载期观察与解析；UI Foundation 只接收解析后的 `UiEnvironmentValues`，不导入 Android 资源类型。
 
 ### 4.6 Local 扩展边界
 
 1. 业务侧自定义 token 必须通过统一 Local API：`uiLocalOf`、`UiLocals.current`、`ProvideLocal`、`ProvideLocals`。
 2. `viewcompose-ui-foundation` 内置 Local 也统一走上述 API，不再新增专用 `ProvideXxx` 调用范式。
 3. `viewcompose-renderer-android` 不新增 Local 语义入口；只消费 reconcile 后的 `NodeSpec`。
-4. Local 的 snapshot/restore 必须与延迟容器、overlay 场景一致传播，不允许能力回退。
+4. Local 的 snapshot/restore 必须与 Lazy、Pager、Overlay 和 Navigation Destination 一致传播，包括资源版本，不允许能力回退。
 5. Lifecycle 与 ViewModel 相关 Local 的对外包名固定为 `com.viewcompose.lifecycle` 与 `com.viewcompose.viewmodel`；默认注入由 `viewcompose-android` 的组合根完成。
 
 ### 4.7 SlotTable Lite 重组边界

@@ -166,6 +166,9 @@ class UiImageRequestOptions(
  * @property options common cache, decode, transition, and extension options
  * @property contentScale renderer display scale supplied to the adapter for decode/transform choice
  * @property density captured renderer density used to resolve logical decode dimensions
+ * @property resourceRevision host-scoped invalidation identity for resource-backed source,
+ * placeholder, or error values; loaders should include it in primary resource cache identity and
+ * ignore it for resource-free requests
  */
 data class UiImageRequest(
     val source: ImageSource,
@@ -174,4 +177,5 @@ data class UiImageRequest(
     val options: UiImageRequestOptions = UiImageRequestOptions(),
     val contentScale: ImageContentScale = ImageContentScale.Fit,
     val density: UiDensity = UiDensity.Default,
+    val resourceRevision: Long = 0L,
 )

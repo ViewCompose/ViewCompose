@@ -9,6 +9,7 @@ import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.TabRowNodeProps
 import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
@@ -33,6 +34,17 @@ class LazyContentLocalPropagationTest {
         val second = delayedContentTokens(localValue = "stable")
 
         assertEquals(first, second)
+    }
+
+    @Test
+    fun `delayed content token changes when resource revision changes`() {
+        val first = delayedResourceTokens(resourceRevision = 1L)
+        val second = delayedResourceTokens(resourceRevision = 2L)
+
+        assertEquals(first.size, second.size)
+        first.zip(second).forEach { (previous, next) ->
+            assertNotEquals(previous, next)
+        }
     }
 
     private fun delayedContentTokens(
@@ -76,6 +88,42 @@ class LazyContentLocalPropagationTest {
                 ) {
                     Tab(key = "tab") {
                         Text(UiLocals.current(testLocal))
+                    }
+                }
+            }
+        }
+
+        return listOf(
+            (tree[0].spec as LazyColumnNodeProps).items.single().contentToken,
+            (tree[1].spec as HorizontalPagerNodeProps).pages.single().contentToken,
+            (tree[2].spec as VerticalPagerNodeProps).pages.single().contentToken,
+            (tree[3].spec as TabRowNodeProps).tabs.single().item.contentToken,
+        )
+    }
+
+    private fun delayedResourceTokens(resourceRevision: Long): List<Any?> {
+        val tree = buildVNodeTree {
+            UiEnvironment(
+                values = UiEnvironmentValues(resourceRevision = resourceRevision),
+            ) {
+                LazyColumn {
+                    item(key = "lazy-item", contentToken = "stable-content") {
+                        Text("lazy")
+                    }
+                }
+                HorizontalPager(currentPage = 0, onPageChanged = {}) {
+                    Page(key = "horizontal-page", contentToken = "stable-content") {
+                        Text("pager")
+                    }
+                }
+                VerticalPager(currentPage = 0, onPageChanged = {}) {
+                    Page(key = "vertical-page", contentToken = "stable-content") {
+                        Text("pager")
+                    }
+                }
+                TabRow(selectedIndex = 0, onTabSelected = {}) {
+                    Tab(key = "tab") {
+                        Text("tab")
                     }
                 }
             }

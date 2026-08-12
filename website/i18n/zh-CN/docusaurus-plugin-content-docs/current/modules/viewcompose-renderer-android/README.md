@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: dbba7037f6857d69ab0e467db9dbfb9921630688ed85bde902f9b786135d2250
+translation_source_hash: dfe790ce2cd45cba9bab1183c21e9644a4bab4f54b7b9d4dc5d5062d6d548cf2
 translation_status: current
 ---
 
@@ -143,6 +143,10 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   索引。选中态和标题态读取 item 已有的语义字段，防止组件通过重复契约暴露相互矛盾的无障碍状态。
 
 ## Android host 与线程规则
+
+每个 VNode 绑定都包含捕获的资源版本。版本变化时，即使 NodeSpec 和资源 ID 相等，也会执行正常的
+完整重绑。直接 Drawable/Icon 资源会从节点当前 Context 再次解析；只要 Source、Placeholder、
+Error 或 Fallback 使用资源，规范化图片请求就会把版本传给 Adapter。纯远端请求保留普通请求标识。
 
 - 渲染、释放、View 绑定、Pager 更新和装饰回调都限制在 UI 线程。
 - 一个容器只有一个已挂载树所有者。不得在容器或 render session 之间共享 mounted node。

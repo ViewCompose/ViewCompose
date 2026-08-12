@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 06eeed122f9665ce7a7559157119e5b575f18d1b0507da5cfbdac6566741f1ac
+translation_source_hash: db5fb6e65ad0f5a1c05bc2b081717dfce0dd340928c0b71ff65344a6e85ef76a
 translation_status: current
 ---
 
@@ -91,6 +91,11 @@ val gap = VNode(
 由于当前版本仍为 Alpha，文档站不会提供稳定的 `latest` 别名。
 
 ## 契约与生命周期规则
+
+`UiEnvironmentValues.resourceRevision` 是由 Host 发布、单调递增的失效标识；它不是语义配置模型，
+也不是持久化版本。VNode 会像捕获密度、语言和布局方向一样捕获它，因此限定符变化后，即使整数
+资源 ID 相等，Renderer 仍能重新绑定资源属性。`UiImageRequest.resourceRevision` 会把同一标识传给
+第一方图片 Loader；默认值 `0` 保持非 Android 与自定义 Host 的确定性。
 
 - `VNode.type` 与 `VNode.spec` 是注册表层面的配对。为了保持构造轻量，创建节点时不会验证
   兼容性；渲染器必须确定性地拒绝不支持的配对。

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.viewcompose.host.android.RenderSession
 import com.viewcompose.host.android.renderInto
+import com.viewcompose.host.android.resources.AndroidResourceEnvironment
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
 import com.viewcompose.preview.PreviewThemeResolution
 import com.viewcompose.preview.tooling.PreviewCompositionLocal
@@ -39,7 +40,6 @@ import com.viewcompose.material3.Material3ThemeBridge
 import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
 import com.viewcompose.ui.foundation.RenderFailure
 import com.viewcompose.ui.foundation.RenderTreeResult
-import com.viewcompose.ui.foundation.UiEnvironment
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.viewmodel.ProvideViewModelStoreOwner
 import java.io.Closeable
@@ -151,8 +151,9 @@ object StaticPreviewRenderer {
                 ProvideLifecycleOwner(previewOwner) {
                     ProvideViewModelStoreOwner(previewOwner) {
                         ProvideSaveableStateRegistry(previewOwner.compositionSaveableStateRegistry) {
-                            UiEnvironment(
-                                values = UiEnvironmentValues(
+                            AndroidResourceEnvironment(
+                                context = resolvedPreviewTheme.context,
+                                environmentValues = UiEnvironmentValues(
                                     density = UiDensity(
                                         density = configuration.density,
                                         fontScale = configuration.fontScale,
@@ -163,6 +164,7 @@ object StaticPreviewRenderer {
                                         PreviewLayoutDirection.Rtl -> UiLayoutDirection.Rtl
                                     },
                                 ),
+                                observeConfigurationChanges = false,
                             ) {
                                 UiTheme(
                                     tokens = themeTokens,

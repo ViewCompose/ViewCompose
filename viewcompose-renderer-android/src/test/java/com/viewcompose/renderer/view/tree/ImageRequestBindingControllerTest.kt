@@ -61,6 +61,21 @@ class ImageRequestBindingControllerTest {
     }
 
     @Test
+    fun `changed resource revision restarts an otherwise equal request`() {
+        val loader = RecordingResourceLoader()
+        val first = UiImageRequest(
+            source = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
+            resourceRevision = 1L,
+        )
+
+        ImageRequestBindingController.replace(view, loader, first)
+        ImageRequestBindingController.replace(view, loader, first.copy(resourceRevision = 2L))
+
+        assertEquals(2, loader.startCount)
+        assertEquals(1, loader.disposeCount)
+    }
+
+    @Test
     fun `out of order completion from a disposed request cannot overwrite the newest binding`() {
         val loader = DelayedLoader()
 
@@ -242,6 +257,19 @@ class ImageRequestBindingControllerTest {
                     imageView.contentDescription = "loaded:$key"
                 }
             }
+        }
+    }
+
+    private class RecordingResourceLoader : UiImageLoader {
+        var startCount = 0
+        var disposeCount = 0
+
+        override fun load(
+            target: com.viewcompose.ui.node.UiImageTarget,
+            request: UiImageRequest,
+        ): UiImageLoadHandle {
+            startCount += 1
+            return UiImageLoadHandle { disposeCount += 1 }
         }
     }
 }

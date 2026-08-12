@@ -18,6 +18,7 @@ class EnvironmentTest {
         assertEquals(UiLayoutDirection.Ltr, Environment.layoutDirection)
         assertEquals(listOf("und"), Environment.localeTags)
         assertEquals(1f, Environment.density.density)
+        assertEquals(0L, Environment.resourceRevision)
     }
 
     @Test
@@ -29,22 +30,26 @@ class EnvironmentTest {
             ),
             locales = UiLocaleList.of("zh-CN", "en-US"),
             layoutDirection = UiLayoutDirection.Rtl,
+            resourceRevision = 7L,
         )
         var density = 0f
         var layoutDirection = UiLayoutDirection.Ltr
         var primaryLocale = ""
+        var resourceRevision = 0L
 
         buildVNodeTree {
             UiEnvironment(customValues) {
                 density = Environment.density.density
                 layoutDirection = Environment.layoutDirection
                 primaryLocale = Environment.localeTags.first()
+                resourceRevision = Environment.resourceRevision
             }
         }
 
         assertEquals(2f, density)
         assertEquals(UiLayoutDirection.Rtl, layoutDirection)
         assertEquals("zh-CN", primaryLocale)
+        assertEquals(7L, resourceRevision)
     }
 
     @Test
@@ -56,6 +61,7 @@ class EnvironmentTest {
             ),
             locales = UiLocaleList.of("en-US"),
             layoutDirection = UiLayoutDirection.Rtl,
+            resourceRevision = 11L,
         )
 
         val node = buildVNodeTree {

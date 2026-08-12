@@ -77,6 +77,11 @@ and prevents a node spec from owning a View or Drawable. The renderer copies the
 `UiDensity` into each `UiImageRequest`; adapters must use it when converting `Fixed` decode bounds to
 the physical pixels expected by their decoder.
 
+The renderer also copies the subtree's captured `resourceRevision` when any source, placeholder,
+error, or fallback is resource-backed. Equal integer resource IDs can therefore reload after a
+locale, night, density, or theme-resource change. First-party Coil and Glide adapters include that
+revision in primary resource cache identity while leaving remote-only cache identity unchanged.
+
 ## Lifetime and recycled Views
 
 The renderer runs image binding on the UI thread and stores the returned handle on the mounted

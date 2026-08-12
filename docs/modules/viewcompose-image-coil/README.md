@@ -44,7 +44,10 @@ The supplied Coil `ImageLoader` remains independent from individual View lifecyc
 ## Caching and ownership
 
 Memory cache, disk cache, network behavior, transformations, and URL interpretation are Coil
-policies. This adapter adds no second cache and does not synthesize cache keys. A caller-supplied
+policies. This adapter adds no second cache. For a primary Android resource it supplies a stable
+memory-cache identity containing the captured resource revision, preventing a night/locale/density
+variant from reusing a stale decoded entry. Remote-only requests keep Coil's normal identity; a
+resource placeholder may restart binding without discarding the remote primary cache. A caller-supplied
 `ImageLoader` remains caller-owned and is never shut down by `CoilImageLoaderAdapter`.
 
 Resource IDs are forwarded unchanged. Invalid resources and request failures therefore follow

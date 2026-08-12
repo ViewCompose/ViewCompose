@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: 2410cfb12bb39ace2ae73d1a4fdae99bbcd954168266c61827047d43dd6622dc
+translation_source_hash: c3231767d0778e30f0d8bb4f046b2ccd4cba44c87b163c6040eda9880d90f329
 translation_status: current
 ---
 
@@ -117,6 +117,11 @@ dependencies {
 
 Provider 契约与生命周期规则请参阅
 [Preview Integration 模块](../modules/viewcompose-preview/README.md)。
+
+原生静态 Preview 与 Compose 桥接都会安装应用 Host 使用的同一个
+`AndroidResourceEnvironment`。`stringResource`、`colorResource`、`dimensionResource` 等调用从
+Preview 限定的 Context 解析，因此 Locale、Density、Direction 与 Night Qualifier 会和原生 View
+一致。静态帧关闭 Callback 观察，因为确定性 Configuration 替换由 Preview Descriptor 负责。
 
 ## Compose Preview 桥接（可选补充）
 

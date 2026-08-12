@@ -10,8 +10,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelStoreOwner
 import com.viewcompose.host.android.RenderSession
-import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
 import com.viewcompose.host.android.renderInto
+import com.viewcompose.host.android.resources.AndroidResourceEnvironment
+import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.host.android.runtime.AndroidMonotonicFrameClock
 import com.viewcompose.host.android.viewComposeSaveableStateRegistry
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
@@ -26,9 +27,7 @@ import com.viewcompose.ui.foundation.RenderStats
 import com.viewcompose.ui.foundation.RenderTreeResult
 import com.viewcompose.ui.foundation.RenderFailure
 import com.viewcompose.ui.foundation.LocalRenderResultListener
-import com.viewcompose.ui.foundation.UiEnvironment
 import com.viewcompose.ui.foundation.UiTreeBuilder
-import com.viewcompose.ui.environment.UiEnvironmentValues
 import java.util.WeakHashMap
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
@@ -51,6 +50,10 @@ private val defaultAnimationCoroutineContext: CoroutineContext = Dispatchers.Mai
  * @param debugTag log tag used by debug rendering
  * @param rootContext context used to create the root, native descendants, and default overlays;
  * changing the root design system requires another call with its newly resolved context
+ * @param resourceRefreshController optional host-scoped controller for imperative Android resource
+ * or theme mutations that do not dispatch a configuration change
+ * @param onBeforeResourceRefresh optional advanced callback that updates a stable themed Context
+ * wrapper before the host rereads resources and environment values
  * @param overlayHostFactory creates the overlay host for the new root
  * @param onRenderStats optional callback after every attempted frame
  * @param onRenderResult optional callback for collected render diagnostics
@@ -63,6 +66,8 @@ fun Fragment.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     rootContext: Context = requireContext(),
+    resourceRefreshController: AndroidResourceRefreshController? = null,
+    onBeforeResourceRefresh: (() -> Unit)? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> AndroidOverlayHost(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -75,7 +80,11 @@ fun Fragment.setUiContent(
     )
     FragmentRenderSessionRegistry.clear(this)
     val saveableStateRegistry = viewComposeSaveableStateRegistry(this)
-    val platform = resolveAndroidHostPlatform(rootContext)
+    val platform = resolveAndroidHostPlatform(
+        rootContext = rootContext,
+        resourceRefreshController = resourceRefreshController,
+        onBeforeResourceRefresh = onBeforeResourceRefresh,
+    )
     val root = buildUiContentRoot(
         context = platform.rootContext,
     )
@@ -119,6 +128,10 @@ fun Fragment.setUiContent(
  * @param debugTag log tag used by debug rendering
  * @param rootContext context used to create the root, native descendants, and default overlays;
  * changing the root design system requires another call with its newly resolved context
+ * @param resourceRefreshController optional host-scoped controller for imperative Android resource
+ * or theme mutations that do not dispatch a configuration change
+ * @param onBeforeResourceRefresh optional advanced callback that updates a stable themed Context
+ * wrapper before the host rereads resources and environment values
  * @param overlayHostFactory creates the overlay host for the new root
  * @param onRenderStats optional callback after every attempted frame
  * @param onRenderResult optional callback for collected render diagnostics
@@ -131,6 +144,8 @@ fun ComponentActivity.setUiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     rootContext: Context = this,
+    resourceRefreshController: AndroidResourceRefreshController? = null,
+    onBeforeResourceRefresh: (() -> Unit)? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> AndroidOverlayHost(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -143,7 +158,11 @@ fun ComponentActivity.setUiContent(
     )
     ActivityRenderSessionRegistry.clear(this)
     val saveableStateRegistry = viewComposeSaveableStateRegistry(this)
-    val platform = resolveAndroidHostPlatform(rootContext)
+    val platform = resolveAndroidHostPlatform(
+        rootContext = rootContext,
+        resourceRefreshController = resourceRefreshController,
+        onBeforeResourceRefresh = onBeforeResourceRefresh,
+    )
     val root = buildUiContentRoot(
         context = platform.rootContext,
     )
@@ -188,13 +207,19 @@ private fun buildUiContentRoot(
 /** One immutable platform snapshot shared by root construction and environment provision. */
 private data class ResolvedAndroidHostPlatform(
     val rootContext: Context,
-    val environment: UiEnvironmentValues,
+    val resourceRefreshController: AndroidResourceRefreshController?,
+    val onBeforeResourceRefresh: (() -> Unit)?,
 )
 
-private fun resolveAndroidHostPlatform(rootContext: Context): ResolvedAndroidHostPlatform {
+private fun resolveAndroidHostPlatform(
+    rootContext: Context,
+    resourceRefreshController: AndroidResourceRefreshController?,
+    onBeforeResourceRefresh: (() -> Unit)?,
+): ResolvedAndroidHostPlatform {
     return ResolvedAndroidHostPlatform(
         rootContext = rootContext,
-        environment = AndroidEnvironmentBridge.fromContext(rootContext),
+        resourceRefreshController = resourceRefreshController,
+        onBeforeResourceRefresh = onBeforeResourceRefresh,
     )
 }
 
@@ -214,7 +239,11 @@ private fun UiTreeBuilder.withHostEnvironment(
                 ProvideAnimationCoroutineContext(defaultAnimationCoroutineContext) {
                     ProvideMonotonicFrameClock(defaultMonotonicFrameClock) {
                         ProvideLocal(LocalRenderResultListener, onRenderResult) {
-                            UiEnvironment(values = platform.environment) {
+                            AndroidResourceEnvironment(
+                                context = platform.rootContext,
+                                refreshController = platform.resourceRefreshController,
+                                onBeforeRefresh = platform.onBeforeResourceRefresh,
+                            ) {
                                 content(root)
                             }
                         }

@@ -28,10 +28,11 @@ dependencies {
 ## Theme resolution
 
 `Material3ThemeBridge.resolveContext` creates the stable themed context that must be shared by the
-root View and overlays. `Material3Theme` provides the mapped token snapshot and observes Android
-configuration changes while mounted. Call `Material3ThemeRefreshController.refresh()` on the main
-thread after `Context.setTheme` or another imperative resource mutation that does not emit a
-configuration change.
+root View and overlays. `Material3Theme` provides the mapped token snapshot and consumes the
+design-system-neutral `Environment.resourceRevision`; standard-host configuration observation is
+owned by `viewcompose-host-android`, not Material. `Material3ResolvedTheme.refresh()` refreshes its
+stable wrapper before token mapping. `Material3ThemeRefreshController` remains available only for
+low-level hosts that have not installed the standard Android resource environment.
 
 ```kotlin
 val resolved = Material3ThemeBridge.resolveContext(
@@ -46,7 +47,8 @@ Material3Theme(resolvedTheme = resolved) {
 
 Material applications receive this lifecycle automatically through the named
 `viewcompose-material3-android` integration. Lower-level integrations may continue to resolve the
-Context and install `Material3Theme` explicitly.
+Context and install `Material3Theme` explicitly, but must supply configuration/resource
+invalidation at their host boundary.
 
 `Material3Theme(tokens = ...)` provides the same recipe and diagnostic scope from static tokens
 without reading Android resources. Both overloads export `Material3Reference.recipeSet` plus the

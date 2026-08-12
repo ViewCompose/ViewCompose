@@ -2,7 +2,7 @@
 title: 图片加载
 slug: /guides/image-loading
 translation_source: guides/image-loading.md
-translation_source_hash: 617bba6b0ae1f7e368c3319e681c1da855c2d5c8063e9a33d551404b59293085
+translation_source_hash: b755e96a7b0d7ece51e2ea375a3791f7fd8e383eb94ec8172a90c183d1876832
 translation_status: current
 ---
 
@@ -76,6 +76,11 @@ request 状态：仅当 `source == null` 时由 Renderer 应用，并且不会�
 request 保持可移植，node spec 也不会持有 View 或 Drawable。Renderer 会把子树捕获的
 `UiDensity` 复制到每个 `UiImageRequest`；适配器必须使用它，把 `Fixed` 解码边界转换为解码器
 所需的物理像素。
+
+只要 Source、Placeholder、Error 或 Fallback 使用资源，Renderer 还会复制子树捕获的
+`resourceRevision`。Locale、Night、Density 或主题资源变化后，即使整数资源 ID 相等也能重新加载。
+第一方 Coil 与 Glide Adapter 会把该版本加入 Primary Resource Cache 标识，同时保持纯远端 Cache
+标识不变。
 
 ## 生命周期与回收 View
 

@@ -6,7 +6,6 @@ package com.viewcompose.material3
  */
 
 import android.content.Context
-import android.content.res.Configuration
 import android.view.ContextThemeWrapper
 import com.google.android.material.color.DynamicColors
 import com.viewcompose.ui.shape.UiCornerFamily
@@ -102,23 +101,20 @@ class Material3ThemeLifecycleTest {
     }
 
     @Test
-    fun `configuration refresh advances token revision without retaining callbacks after close`() {
-        val context = themedContext()
-        val lifecycle = Material3ThemeTokenLifecycle(
-            context = context,
+    fun `resolved theme refresh preserves stable context identity`() {
+        val resolvedTheme = Material3ThemeBridge.resolveContext(
+            context = themedContext(),
             dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
         )
+        val stableContext = resolvedTheme.context
 
-        assertEquals(0L, lifecycle.tokens.value.metadata.revision)
-        lifecycle.start()
-        lifecycle.start()
-        lifecycle.onConfigurationChanged(Configuration(context.resources.configuration))
+        resolvedTheme.refresh()
 
-        assertEquals(1L, lifecycle.tokens.value.metadata.revision)
-        assertEquals(UiThemeOrigin.AndroidTheme, lifecycle.tokens.value.metadata.origin)
-
-        lifecycle.close()
-        lifecycle.close()
+        assertEquals(stableContext, resolvedTheme.context)
+        assertEquals(
+            UiThemeOrigin.AndroidTheme,
+            Material3ThemeBridge.fromResolvedTheme(resolvedTheme).metadata.origin,
+        )
     }
 
     private fun themedContext(): Context {

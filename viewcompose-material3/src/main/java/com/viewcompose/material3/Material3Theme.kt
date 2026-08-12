@@ -1,13 +1,10 @@
 package com.viewcompose.material3
 
-import android.content.ComponentCallbacks
-import android.content.Context
-import android.content.res.Configuration
 import android.os.Looper
-import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.foundation.DisposableEffect
 import com.viewcompose.ui.foundation.DesignSystemAttributionProvider
+import com.viewcompose.ui.foundation.Environment
 import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.UiComponentAttribution
 import com.viewcompose.ui.foundation.UiComponentBackend
@@ -19,7 +16,6 @@ import com.viewcompose.ui.foundation.UiThemeTokens
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.uiLocalOf
 import com.viewcompose.ui.foundation.remember
-import java.lang.ref.WeakReference
 
 /**
  * Invalidates active Material 3 theme providers after an imperative Android theme mutation.
@@ -60,8 +56,9 @@ class Material3ThemeRefreshController {
  * The resolved context must also be used to create the tree's Views and overlays so native and
  * declarative surfaces observe the same dynamic-color and configuration state.
  *
- * The provider registers for Android configuration changes while it is composed and unregisters
- * when disposed. An optional refresh controller supports imperative theme mutations.
+ * A standard Android resource environment invalidates this provider after configuration changes.
+ * Low-level hosts that do not install that environment may use [refreshController] for imperative
+ * theme mutations or forward their own configuration callback to it.
  *
  * @sample com.viewcompose.material3.samples.material3ThemeSample
  * @receiver builder receiving the scoped Material 3 tokens
@@ -75,19 +72,30 @@ fun UiTreeBuilder.Material3Theme(
     refreshController: Material3ThemeRefreshController? = null,
     content: UiTreeBuilder.() -> Unit,
 ) {
-    val lifecycle = remember(resolvedTheme) {
-        Material3ThemeTokenLifecycle(resolvedTheme)
+    val manualRevision = remember(refreshController) {
+        mutableStateOf(0L)
     }
-    DisposableEffect(lifecycle, refreshController) {
-        lifecycle.start()
-        val unsubscribe = refreshController?.subscribe(lifecycle::refresh)
+    DisposableEffect(refreshController) {
+        val unsubscribe = refreshController?.subscribe {
+            manualRevision.value += 1L
+        }
         val disposeEffect: () -> Unit = {
             unsubscribe?.invoke()
-            lifecycle.close()
         }
         disposeEffect
     }
-    provideMaterial3Snapshot(tokens = lifecycle.tokens.value, content = content)
+    val resourceRevision = Environment.resourceRevision
+    val tokens = remember(resolvedTheme, resourceRevision, manualRevision.value) {
+        resolvedTheme.refresh()
+        Material3ThemeBridge.fromResolvedTheme(resolvedTheme).let { resolved ->
+            resolved.copy(
+                metadata = resolved.metadata.copy(
+                    revision = resourceRevision + manualRevision.value,
+                ),
+            )
+        }
+    }
+    provideMaterial3Snapshot(tokens = tokens, content = content)
 }
 
 /**
@@ -206,57 +214,3 @@ private val Material3Attribution = UiDesignSystemAttribution(
         ),
     ),
 )
-
-/** Observes Android configuration changes and advances the immutable theme-token revision. */
-@Suppress("DEPRECATION")
-internal class Material3ThemeTokenLifecycle(
-    context: Context,
-    private val dynamicColorPolicy: Material3DynamicColorPolicy,
-    private val resolvedTheme: Material3ResolvedTheme? = null,
-) : ComponentCallbacks {
-    private val contextReference = WeakReference(context)
-    private val callbackContext = context.applicationContext
-    private var started = false
-    private var revision = 0L
-    val tokens: MutableState<UiThemeTokens> = mutableStateOf(readTokens(context))
-
-    constructor(resolvedTheme: Material3ResolvedTheme) : this(
-        context = resolvedTheme.context,
-        dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
-        resolvedTheme = resolvedTheme,
-    )
-
-    fun start() {
-        if (started) return
-        started = true
-        callbackContext.registerComponentCallbacks(this)
-    }
-
-    fun close() {
-        if (!started) return
-        started = false
-        callbackContext.unregisterComponentCallbacks(this)
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) = refresh()
-
-    fun refresh() {
-        val context = contextReference.get() ?: run {
-            close()
-            return
-        }
-        resolvedTheme?.refreshContext()
-        revision += 1
-        val resolved = resolvedTheme?.let(Material3ThemeBridge::fromResolvedTheme)
-            ?: Material3ThemeBridge.fromContext(context, dynamicColorPolicy)
-        tokens.value = resolved.copy(metadata = resolved.metadata.copy(revision = revision))
-    }
-
-    @Suppress("OVERRIDE_DEPRECATION")
-    override fun onLowMemory() = Unit
-
-    private fun readTokens(context: Context): UiThemeTokens {
-        return resolvedTheme?.let(Material3ThemeBridge::fromResolvedTheme)
-            ?: Material3ThemeBridge.fromContext(context, dynamicColorPolicy)
-    }
-}

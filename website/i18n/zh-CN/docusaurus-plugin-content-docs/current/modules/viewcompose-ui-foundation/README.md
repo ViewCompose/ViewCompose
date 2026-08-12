@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 4ba99b78b8abdcc9b3621f7d8f04e717ba8a8bb774183b1bc3021a6b6b7d76a3
+translation_source_hash: f15bee0a2687a5afdcaf9e7604cfb1365ac46d3bbfb068e37ae1d56bd47c81e5
 translation_status: current
 ---
 
@@ -120,14 +120,19 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 
 ## 状态、渲染与生命周期规则
 
+`UiEnvironment` 现在会传递 `resourceRevision`，构建内容时可通过
+`Environment.resourceRevision` 读取当前不可变值。Local 快照会为 Lazy Item、Pager、Overlay 与
+Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Foundation 之外的
+`viewcompose-host-android` 负责，任何具名设计系统都不拥有这个中立 Local。
+
 - `UiTreeBuilder` 是临时记录器。内容块返回后，不要持有它或再次调用捕获的 Builder；应持有状态
   与稳定 Key。
 - `remember` 与 Effect 需要活跃组合。位置标识跟随结构调用路径；内容可能移动时，应使用稳定
   `key` 分组和 Lazy Item Key。
 - `rememberSaveable` 只在组合提交后注册 Provider。组合失败或被放弃时会释放已 Claim 的恢复值，
   让后续尝试仍能恢复它。
-- `UiTheme` 只接收平台无关 Token。Material Android 资源解析、Configuration 观察和主动刷新属于
-  `viewcompose-material3`。
+- `UiTheme` 只接收平台无关 Token。Android 资源观察属于 `viewcompose-host-android`；Material
+  等具名设计系统只负责把 Host 产生的资源版本映射到自己的 Token 刷新策略。
 - 现有三类排版构造仍保持简洁：省略的 Headline 角色从 Title 派生，省略的 Display 角色从
   Headline 派生。现有三级形状构造也继续有效：省略的 Extra Small/Extra Large 分别从
   Small/Large 派生，Full 默认是相对边界的胶囊形。这些只是兼容回退，不是 Material 数值；

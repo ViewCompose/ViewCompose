@@ -257,12 +257,12 @@ Use the [session-container checklist](session-containers.md).
 
 ### 4.5 Environment and Locals
 
-1. Android host entry points map resources with `AndroidEnvironmentBridge.fromContext(root.context)` and inject the resulting values through `UiEnvironment(values = ...)`; business code may override values in a local subtree.
+1. Standard Android host entry points install `AndroidResourceEnvironment` from the same stable Context that creates the root and overlays. It maps density, font scale, locales, and direction, exposes common resource lookups, and advances `resourceRevision` after configuration callbacks or an explicit host refresh; business code may still override platform-neutral values in a local subtree.
 2. Renderer consumes resolved `NodeSpec` and platform values; it does not depend on UI Foundation Environment or Local implementations.
 3. Renderer dp/sp conversion goes through its shared `DimensionUtils.kt`; containers must not duplicate density helpers.
-4. `com.viewcompose.host.android.environment.AndroidEnvironmentBridge` is the only Android environment extraction entry point; UI Foundation accepts only resolved `UiEnvironmentValues`.
+4. `com.viewcompose.host.android.environment.AndroidEnvironmentBridge` remains the Android-to-contract mapper, while `com.viewcompose.host.android.resources` owns mounted observation and resolution. UI Foundation accepts only resolved `UiEnvironmentValues` and never imports Android resource types.
 5. Custom tokens and built-in Locals use `uiLocalOf`, `UiLocals.current`, `ProvideLocal`, and `ProvideLocals`; do not add a new dedicated `ProvideXxx` pattern.
-6. Local snapshot/restore behavior must propagate consistently through lazy containers and overlays.
+6. Local snapshot/restore behavior must propagate consistently through lazy containers, pagers, overlays, and navigation destinations, including resource revisions.
 7. Lifecycle and ViewModel Locals use the public packages `com.viewcompose.lifecycle` and `com.viewcompose.viewmodel`, while the `viewcompose-android` composition root performs default injection.
 
 ### 4.6 SlotTable Lite recomposition

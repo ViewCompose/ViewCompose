@@ -60,7 +60,20 @@ class Material3ResolvedTheme internal constructor(
     var origin: UiThemeOrigin = initialOrigin
         private set
 
-    internal fun refreshContext() {
+    /**
+     * Refreshes the stable wrapper from its source Context without changing [context] identity.
+     *
+     * Named Android hosts call this before publishing a new resource environment snapshot.
+     * Low-level hosts call it on the Android main thread before resolving tokens after an
+     * imperative source-theme or configuration mutation.
+     *
+     * @sample com.viewcompose.material3.samples.material3ResolvedThemeRefreshSample
+     * @throws IllegalStateException when called off the Android main thread
+     */
+    fun refresh() {
+        check(android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+            "Material3ResolvedTheme.refresh() must be called on the Android main thread."
+        }
         val resolved = resolveAndroidThemeContext(
             context = sourceContext,
             dynamicColorPolicy = dynamicColorPolicy,

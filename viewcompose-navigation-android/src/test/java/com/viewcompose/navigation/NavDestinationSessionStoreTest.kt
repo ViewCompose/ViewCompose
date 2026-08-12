@@ -22,11 +22,14 @@ import com.viewcompose.ui.foundation.LocalSaveableStateRegistry
 import com.viewcompose.ui.foundation.ProvideLocal
 import com.viewcompose.ui.foundation.RenderFrameStatus
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Environment
+import com.viewcompose.ui.foundation.UiEnvironment
 import com.viewcompose.ui.foundation.UiLocalSnapshot
 import com.viewcompose.ui.foundation.UiLocals
 import com.viewcompose.ui.foundation.buildVNodeTree
 import com.viewcompose.ui.foundation.captureUiLocalSnapshot
 import com.viewcompose.ui.foundation.uiLocalOf
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -339,6 +342,32 @@ class NavDestinationSessionStoreTest {
     }
 
     @Test
+    fun `committed page receives a new resource revision without recreating its session`() {
+        val firstSnapshot = captureEnvironmentSnapshot(resourceRevision = 1L)
+        val secondSnapshot = captureEnvironmentSnapshot(resourceRevision = 2L)
+        val observedRevisions = mutableListOf<Long>()
+        val entry = entry("resource-refresh", "resource-refresh")
+        val candidate = sessionStore.prepare(
+            entry = entry,
+            localSnapshot = firstSnapshot,
+            hostLifecycleState = NavHostLifecycleState.Created,
+        ) {
+            observedRevisions += Environment.resourceRevision
+            Text("Initial resource")
+        }.readyCandidate()
+        candidate.stage()
+        val session = candidate.commit()
+
+        session.render(secondSnapshot) {
+            observedRevisions += Environment.resourceRevision
+            Text("Updated resource")
+        }
+
+        assertEquals(listOf(1L, 2L), observedRevisions)
+        assertSame(session, sessionStore.sessionOrNull(entry.id))
+    }
+
+    @Test
     fun `staged candidate rollback detaches view disposes session and destroys owner`() {
         val entry = entry("candidate", "details")
         val candidate = sessionStore.prepare(
@@ -469,6 +498,16 @@ class NavDestinationSessionStoreTest {
         var snapshot: UiLocalSnapshot? = null
         buildVNodeTree {
             ProvideLocal(local, value) {
+                snapshot = captureUiLocalSnapshot()
+            }
+        }
+        return checkNotNull(snapshot)
+    }
+
+    private fun captureEnvironmentSnapshot(resourceRevision: Long): UiLocalSnapshot {
+        var snapshot: UiLocalSnapshot? = null
+        buildVNodeTree {
+            UiEnvironment(UiEnvironmentValues(resourceRevision = resourceRevision)) {
                 snapshot = captureUiLocalSnapshot()
             }
         }

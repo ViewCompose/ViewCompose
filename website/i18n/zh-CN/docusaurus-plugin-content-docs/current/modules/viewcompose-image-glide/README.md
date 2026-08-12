@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-glide/README.md
-translation_source_hash: a367f05cf9cf3ff43c0383083e24e9bbf39579121ae743ffc45c502a000d8796
+translation_source_hash: ed9438fe4d206a4d0a1512ae7dcd25f954b3d1ea02e3d3d8e5d7edb1b425b095
 translation_status: current
 ---
 
@@ -60,6 +60,9 @@ Renderer 解析。适配器只接受包装 Android `ImageView` 的 Renderer Targ
 默认缓存与过渡策略会保留应用的 Glide 配置。禁用内存缓存映射为
 `skipMemoryCache(true)`，禁用磁盘缓存映射为 `DiskCacheStrategy.NONE`，显式的 `None` 或
 `Crossfade` 会覆盖当前请求已配置的默认过渡。
+Primary Android Resource 会获得包含捕获资源版本的 `ObjectKey` Signature，Configuration 限定的
+Drawable 不会复用旧 Cache。纯远端请求保留 Glide 普通的 Model/Cache 标识；Resource Fallback
+变化仍会通过 Renderer 的请求相等性重启当前请求。
 
 适配器返回的可释放句柄会清理对应 Glide target request。Renderer 会在替换请求或移除挂载节点
 前释放它。适配器不拥有目标 `ImageView`、Glide singleton、应用缓存或 `AppGlideModule`。

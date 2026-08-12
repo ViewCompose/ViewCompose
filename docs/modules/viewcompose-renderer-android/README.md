@@ -167,6 +167,12 @@ Because the current line is alpha, the documentation site intentionally does not
 
 ## Android host and threading rules
 
+Every VNode binding includes its captured resource revision. A revision change therefore performs
+a normal full rebind even when the NodeSpec and resource IDs compare equal. Direct drawable/icon
+resources resolve again from the node's current Context, and normalized image requests carry the
+revision to adapters when a source, placeholder, error, or fallback is resource-backed. Remote-only
+requests retain their ordinary request identity.
+
 - Render, disposal, View binding, pager updates, and decoration callbacks are UI-thread confined.
 - One container has one mounted-tree owner. Do not share mounted nodes between containers or render
   sessions.

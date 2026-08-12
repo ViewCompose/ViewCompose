@@ -133,14 +133,20 @@ Because the current line is alpha, the documentation site intentionally does not
 
 ## State, rendering, and lifecycle rules
 
+`UiEnvironment` now transports `resourceRevision`; `Environment.resourceRevision` exposes the
+current immutable value while building content. Local snapshots preserve it for lazy items,
+pagers, overlays, and navigation destinations. Android resource resolution and observation remain
+outside UI Foundation in `viewcompose-host-android`; no named design system owns this neutral Local.
+
 - A `UiTreeBuilder` is an ephemeral recorder. Do not retain it or invoke a captured builder after
   its content block returns. Retain state and stable keys instead.
 - `remember` and effects require an active composition. Positional identity follows the structural
   call path; use stable `key` groups and lazy-item keys when content can move.
 - `rememberSaveable` registers providers only after composition commit. A failed or abandoned
   composition releases its restored claim so a later attempt can still restore the value.
-- `UiTheme` accepts platform-independent tokens. Material Android resource resolution belongs to
-  `viewcompose-material3`, including configuration observation and explicit refresh.
+- `UiTheme` accepts platform-independent tokens. Android resource observation belongs to
+  `viewcompose-host-android`; a named design system such as Material maps the resulting host
+  revision into its own token refresh policy.
 - Existing three-family typography construction remains concise: omitted headline roles derive
   from title roles and omitted display roles derive from headlines. Existing three-tier shape
   construction also remains valid: omitted extra-small/extra-large roles derive from small/large,

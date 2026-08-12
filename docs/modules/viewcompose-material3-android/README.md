@@ -43,11 +43,14 @@ provides the matching immutable token snapshot. The default
 `Material3DynamicColorPolicy.UseIfAvailable` follows supported Android dynamic color. Pass
 `Disabled` for deterministic XML-theme output.
 
-Use `Material3ThemeRefreshController` after an imperative `Context.setTheme` mutation that does
-not recreate the Activity or dispatch configuration change. Configuration changes are observed
-while the provider is mounted. Repeating `setMaterial3UiContent` disposes the old render session
-and reconstructs the root; use that path when changing to a design system with another root
-Context rather than patching only tokens on existing Views.
+The named host installs the neutral Android resource environment and refreshes the Material stable
+wrapper before publishing each resource revision. Pass `rootContext` plus a host-scoped
+`AndroidResourceRefreshController` when an application locale/theme wrapper mutation does not
+recreate the Activity or dispatch a configuration callback. Ordinary resources, environment
+values, and Material tokens then update from the same revision. Repeating
+`setMaterial3UiContent` disposes the old render session and reconstructs the root; use that path
+when changing to a design system or constructor-sensitive Context rather than patching only tokens
+on existing Views.
 
 The default overlay factory explicitly constructs the Material adapter. Material behavior is not
 selected through `ServiceLoader`, so another design-system root cannot receive Material Snackbar or

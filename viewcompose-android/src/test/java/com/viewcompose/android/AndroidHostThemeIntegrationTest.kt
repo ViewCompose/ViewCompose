@@ -9,6 +9,8 @@ package com.viewcompose.android
 import android.content.Context
 import android.content.MutableContextWrapper
 import android.os.Bundle
+import android.os.LocaleList
+import android.content.res.Configuration
 import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -16,6 +18,8 @@ import androidx.activity.ComponentActivity
 import com.viewcompose.android.test.R as TestR
 import com.viewcompose.oneui7.OneUi7Theme
 import com.viewcompose.oneui7.OneUi7ThemeDefaults
+import com.viewcompose.host.android.resources.AndroidResourceRefreshController
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.OverlayHostDefaults
 import com.viewcompose.ui.foundation.Theme
@@ -30,6 +34,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [24, 31, 35])
@@ -106,6 +111,48 @@ class AndroidHostThemeIntegrationTest {
         assertFalse(root.context is MutableContextWrapper)
         assertSame(root.context, root.getChildAt(0).context)
         assertEquals(OneUi7ThemeDefaults.light(), capturedTokens)
+    }
+
+    @Test
+    fun `neutral host refreshes Android resources without reinstalling content`() {
+        val activity = Robolectric.buildActivity(NeutralHostActivity::class.java)
+            .setup()
+            .get()
+        val englishContext = activity.createConfigurationContext(
+            Configuration(activity.resources.configuration).apply {
+                setLocales(LocaleList(Locale.forLanguageTag("en-US")))
+            },
+        )
+        val chineseContext = activity.createConfigurationContext(
+            Configuration(activity.resources.configuration).apply {
+                setLocales(LocaleList(Locale.forLanguageTag("zh-CN")))
+            },
+        )
+        val stableContext = MutableContextWrapper(englishContext)
+        val refreshController = AndroidResourceRefreshController()
+        var pendingContext: Context? = null
+        var title = ""
+
+        val root = activity.setUiContent(
+            rootContext = stableContext,
+            resourceRefreshController = refreshController,
+            onBeforeResourceRefresh = {
+                pendingContext?.let(stableContext::setBaseContext)
+            },
+        ) {
+            title = stringResource(TestR.string.resource_host_title)
+            Button(text = title)
+        }
+
+        val originalButton = root.getChildAt(0)
+        assertEquals("Resource host", title)
+
+        pendingContext = chineseContext
+        refreshController.refresh()
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+
+        assertEquals("资源 Host", title)
+        assertSame(originalButton, root.getChildAt(0))
     }
 }
 

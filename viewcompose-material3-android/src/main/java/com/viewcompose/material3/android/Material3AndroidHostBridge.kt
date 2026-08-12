@@ -1,5 +1,6 @@
 package com.viewcompose.material3.android
 
+import android.content.Context
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.fragment.app.Fragment
@@ -7,7 +8,7 @@ import com.viewcompose.android.setUiContent as setNeutralUiContent
 import com.viewcompose.material3.Material3DynamicColorPolicy
 import com.viewcompose.material3.Material3Theme
 import com.viewcompose.material3.Material3ThemeBridge
-import com.viewcompose.material3.Material3ThemeRefreshController
+import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost as Material3AndroidOverlayHost
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.RenderFailure
@@ -26,7 +27,9 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * @param debug enables render diagnostics and logging
  * @param debugTag log tag used by debug rendering
  * @param dynamicColorPolicy policy selecting Android dynamic-color context resolution
- * @param themeRefreshController optional controller for imperative theme-resource mutations
+ * @param rootContext source Context used to resolve the stable Material root Context
+ * @param resourceRefreshController optional unified controller for imperative resource or theme
+ * mutations that do not dispatch a configuration change
  * @param overlayHostFactory creates the overlay host for the resolved Material root
  * @param onRenderStats optional callback after every attempted frame
  * @param onRenderResult optional callback for collected render diagnostics
@@ -39,7 +42,8 @@ fun Fragment.setMaterial3UiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     dynamicColorPolicy: Material3DynamicColorPolicy = Material3DynamicColorPolicy.UseIfAvailable,
-    themeRefreshController: Material3ThemeRefreshController? = null,
+    rootContext: Context = requireContext(),
+    resourceRefreshController: AndroidResourceRefreshController? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> Material3AndroidOverlayHost(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -47,11 +51,13 @@ fun Fragment.setMaterial3UiContent(
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
     val resolvedTheme = Material3ThemeBridge.resolveContext(
-        context = requireContext(),
+        context = rootContext,
         dynamicColorPolicy = dynamicColorPolicy,
     )
     return setNeutralUiContent(
         rootContext = resolvedTheme.context,
+        resourceRefreshController = resourceRefreshController,
+        onBeforeResourceRefresh = resolvedTheme::refresh,
         debug = debug,
         debugTag = debugTag,
         overlayHostFactory = overlayHostFactory,
@@ -61,7 +67,6 @@ fun Fragment.setMaterial3UiContent(
     ) { root ->
         Material3Theme(
             resolvedTheme = resolvedTheme,
-            refreshController = themeRefreshController,
         ) {
             content(root)
         }
@@ -79,7 +84,9 @@ fun Fragment.setMaterial3UiContent(
  * @param debug enables render diagnostics and logging
  * @param debugTag log tag used by debug rendering
  * @param dynamicColorPolicy policy selecting Android dynamic-color context resolution
- * @param themeRefreshController optional controller for imperative theme-resource mutations
+ * @param rootContext source Context used to resolve the stable Material root Context
+ * @param resourceRefreshController optional unified controller for imperative resource or theme
+ * mutations that do not dispatch a configuration change
  * @param overlayHostFactory creates the overlay host for the resolved Material root
  * @param onRenderStats optional callback after every attempted frame
  * @param onRenderResult optional callback for collected render diagnostics
@@ -92,7 +99,8 @@ fun ComponentActivity.setMaterial3UiContent(
     debug: Boolean = false,
     debugTag: String = "ViewCompose",
     dynamicColorPolicy: Material3DynamicColorPolicy = Material3DynamicColorPolicy.UseIfAvailable,
-    themeRefreshController: Material3ThemeRefreshController? = null,
+    rootContext: Context = this,
+    resourceRefreshController: AndroidResourceRefreshController? = null,
     overlayHostFactory: (ViewGroup) -> OverlayHost = { root -> Material3AndroidOverlayHost(root) },
     onRenderStats: ((RenderStats) -> Unit)? = null,
     onRenderResult: ((RenderTreeResult) -> Unit)? = null,
@@ -100,11 +108,13 @@ fun ComponentActivity.setMaterial3UiContent(
     content: UiTreeBuilder.(ViewGroup) -> Unit,
 ): ViewGroup {
     val resolvedTheme = Material3ThemeBridge.resolveContext(
-        context = this,
+        context = rootContext,
         dynamicColorPolicy = dynamicColorPolicy,
     )
     return setNeutralUiContent(
         rootContext = resolvedTheme.context,
+        resourceRefreshController = resourceRefreshController,
+        onBeforeResourceRefresh = resolvedTheme::refresh,
         debug = debug,
         debugTag = debugTag,
         overlayHostFactory = overlayHostFactory,
@@ -114,7 +124,6 @@ fun ComponentActivity.setMaterial3UiContent(
     ) { root ->
         Material3Theme(
             resolvedTheme = resolvedTheme,
-            refreshController = themeRefreshController,
         ) {
             content(root)
         }

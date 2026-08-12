@@ -7,6 +7,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.environment.UiEnvironmentValues
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
@@ -34,6 +35,21 @@ class OverlaySurfaceSessionTest {
         assertEquals(NodeType.Text, nodes.single().type)
         val textSpec = nodes.single().spec as TextNodeProps
         assertEquals("captured-value", textSpec.document.text)
+    }
+
+    @Test
+    fun `captured overlay content keeps the current resource revision`() {
+        lateinit var captured: OverlaySurfaceContent
+
+        buildVNodeTree {
+            UiEnvironment(UiEnvironmentValues(resourceRevision = 23L)) {
+                captured = captureOverlaySurfaceContent {
+                    Text("Overlay resource")
+                }
+            }
+        }
+
+        assertEquals(23L, captured.buildNodes().single().environment.resourceRevision)
     }
 
     private class RecordingOverlayHost : OverlayHost {

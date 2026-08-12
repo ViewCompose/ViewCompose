@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3-android/README.md
-translation_source_hash: 4b3d2c6e792d057ea562a13b3f8a81442f0d675a763fe2cf5bdefb8766d7c6c0
+translation_source_hash: 63103951eee55df40bd1a369f6cc24473dace9e9d8f10c7e2d0ac8056d636d4f
 translation_status: current
 ---
 
@@ -47,10 +47,11 @@ class MainActivity : ComponentActivity() {
 快照。默认的 `Material3DynamicColorPolicy.UseIfAvailable` 会在 Android 支持时跟随动态色；需要
 确定性 XML 主题输出时传入 `Disabled`。
 
-主动调用 `Context.setTheme` 且没有重建 Activity 或触发配置变化后，使用
-`Material3ThemeRefreshController` 刷新。Provider 挂载期间会观察配置变化。重复调用
-`setMaterial3UiContent` 会释放旧 Render Session 并重建根节点；切换到根 Context 不同的设计系统
-时必须走该路径，不能只在旧 View 上替换 Token。
+具名 Host 会安装中立 Android 资源环境，并在发布每个资源版本前刷新 Material 稳定 Wrapper。应用
+Locale/主题 Wrapper 修改没有重建 Activity 或触发 Configuration Callback 时，传入 `rootContext`
+与 Host 范围的 `AndroidResourceRefreshController`。普通资源、环境值与 Material Token 随后从同一
+版本更新。重复调用 `setMaterial3UiContent` 会释放旧 Render Session 并重建根节点；切换设计系统或
+构造期敏感 Context 时必须走该路径，不能只在旧 View 上替换 Token。
 
 默认 Overlay Factory 会显式构造 Material Adapter。Material 行为不通过 `ServiceLoader` 选择，
 因此应用其他位置存在本聚合包时，另一个设计系统 Root 也不会意外获得 Material Snackbar 或

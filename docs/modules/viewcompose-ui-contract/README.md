@@ -95,6 +95,12 @@ Because the current line is alpha, the documentation site intentionally does not
 
 ## Contract and lifecycle rules
 
+`UiEnvironmentValues.resourceRevision` is a host-published, monotonic invalidation identity. It is
+not a semantic configuration model or persisted version. VNodes capture it with density, locales,
+and layout direction so a renderer can rebind resource-backed properties whose integer IDs remain
+equal after a qualifier change. `UiImageRequest.resourceRevision` carries the same identity through
+first-party image loaders; its zero default preserves deterministic non-Android/custom hosts.
+
 - `VNode.type` and `VNode.spec` are a registry-level pair. Construction is intentionally cheap and
   does not validate compatibility; a renderer must reject an unsupported pair deterministically.
 - A node specification is an immutable render snapshot. Callbacks may capture mutable application

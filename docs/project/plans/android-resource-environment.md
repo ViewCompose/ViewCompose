@@ -2,8 +2,9 @@
 
 ## Status
 
-Active. ADR-0007 is accepted and this plan is the implementation source of truth until the durable
-architecture, API, module, guide, Demo, and validation contracts are complete.
+Implementation complete; final connected validation blocked. ADR-0007 is accepted, the
+implementation and durable documentation are landed in the isolated worktree, and this plan
+remains the source of truth until the connected-device gate completes.
 
 This plan is canonical English-only under the documentation-governance policy. Durable public
 behavior will move into active architecture, guide, migration, tooling, and module documentation
@@ -11,12 +12,13 @@ before this file moves to `docs/archive/`.
 
 Last verified: 2026-08-12.
 
-Next action: land and validate this documentation baseline, then implement Phase 1 without changing
-the current development worktree.
+Next action: wake and manually unlock connected device `RFCR301L2JN`, rerun `./gradlew qaFull`, and
+archive this plan only if the connected suites pass and all durable contracts remain current.
 
 ## Maven release changesets
 
-- None.
+- `release/changes/20260811-cross-session-theme-navigation-refresh.json` (combined with the
+  current branch's retained-navigation release intent because one pull request owns one changeset)
 
 ## Objective
 
@@ -229,8 +231,9 @@ Verified from commit `08bb5f7179a8533950762283b046396e90ba25cb` on 2026-08-12:
 5. Add test tags and instrumentation that changes every supported axis without recreating the
    verification Activity, then asserts existing Text/native View identity where appropriate and
    updated resource evidence.
-6. Add a manual path that also covers a lazy item, pager page, overlay, and retained navigation
-   destination so delayed-session propagation is visible.
+6. Keep the Demo evidence inside a lazy session and protect pager/lazy token updates, overlay
+   snapshots, and retained navigation destinations with focused automated tests so delayed-session
+   propagation cannot depend on manual inspection.
 
 ### Phase 6: Durable documentation, release intent, and gates
 
@@ -264,6 +267,25 @@ Verified from commit `08bb5f7179a8533950762283b046396e90ba25cb` on 2026-08-12:
 
 Exact task names will be verified against Gradle before execution; unavailable aggregate tasks will
 be replaced by the owning module's declared test task and recorded here.
+
+Completed focused validation on 2026-08-12:
+
+- the UI contract, UI Foundation, Host Android, neutral Android host, Renderer, Coil, Glide,
+  Material, Material Android host, Preview Runner, Preview, and Navigation focused JVM/Robolectric
+  tasks passed;
+- `:app:compileDebugKotlin` and `:app:compileDebugAndroidTestKotlin` passed; and
+- `ResourceConfigurationDeviceTest` passed on a connected Samsung SM-G991B running Android 13,
+  preserving Activity/root identity across locale, night, font-scale, density, and RTL changes.
+- the strict API documentation audits for all 11 affected published modules passed;
+- `./gradlew verifyViewComposeReleaseIntent qaQuick` passed 1,615 tasks, including published-module
+  tests, local publication, API documentation, and compiled tutorial/sample verification;
+- website type checking, language placement, translation freshness, and both locale static builds
+  passed; the final route verifier then reported the clean worktree's pre-existing absence of
+  generated historical/current API pages; and
+- `./gradlew qaFull` reached the connected-device preflight after its cached `qaQuick` dependency,
+  but the preflight correctly refused to bypass the Samsung device's secure keyguard. No connected
+  suite ran during that attempt; the focused resource-configuration device test above remains the
+  completed device evidence for this change.
 
 ### API and documentation gates
 

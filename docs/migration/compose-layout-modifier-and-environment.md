@@ -301,10 +301,14 @@ defines `LocalDensity`, `LocalLayoutDirection`, and locale-related locals.
 ViewCompose captures an immutable `UiEnvironmentValues` on every emitted VNode. It contains:
 
 - `UiDensity`, including density and font scale;
-- an ordered `UiLocaleList`; and
-- `UiLayoutDirection`.
+- an ordered `UiLocaleList`;
+- `UiLayoutDirection`; and
+- a host-owned `resourceRevision` used to rebind equal Android resource IDs after configuration or
+  imperative resource changes.
 
-The snapshot contract explicitly requires a new tree after a platform configuration change; see
+The snapshot contract requires a new tree after a platform configuration change. Standard Android
+hosts schedule that tree automatically through their resource environment; custom hosts must
+publish a new environment explicitly. See
 [`UiEnvironmentValues.kt`](../../viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/environment/UiEnvironmentValues.kt),
 lines 92–112. The Android bridge reads resources and configuration in
 [`AndroidEnvironmentBridge.kt`](../../viewcompose-host-android/src/main/java/com/viewcompose/host/android/environment/AndroidEnvironmentBridge.kt),
