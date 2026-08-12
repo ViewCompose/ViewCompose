@@ -1,9 +1,6 @@
 package com.viewcompose.renderer.view.lazy.session
 
-/**
- * Tracks RecyclerView holder binding, attachment, and recycling state.
- * Tracks RecyclerView holder bound, attached, and recycled state.
- */
+/** Tracks RecyclerView holder binding, attachment, and recycling state. */
 internal class LazyHolderRegistry<T : Any>(
     private val onDispose: (T) -> Unit,
 ) {
@@ -37,7 +34,9 @@ internal class LazyHolderRegistry<T : Any>(
         attachedHolders.clear()
     }
 
-    fun forEachBound(action: (T) -> Unit) {
-        boundHolders.toList().forEach(action)
+    fun forEachAttached(action: (T) -> Unit) {
+        attachedHolders.toList().forEach(action)
     }
+
+    fun isAttached(holder: T): Boolean = holder in attachedHolders
 }

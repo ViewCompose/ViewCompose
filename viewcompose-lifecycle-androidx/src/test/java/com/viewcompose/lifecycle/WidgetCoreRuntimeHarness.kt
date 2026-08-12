@@ -9,6 +9,8 @@ import com.viewcompose.runtime.State
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.buildVNodeTree
+import com.viewcompose.ui.node.VNode
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import kotlinx.coroutines.Dispatchers
 
@@ -37,6 +39,21 @@ internal class WidgetCoreRuntimeHarness {
         }
     }
 
+    fun prepareTree(
+        block: UiTreeBuilder.() -> Unit,
+    ): ComposerLite.PreparedComposition<List<VNode>> {
+        composer.requestRootRecompose()
+        return inComposerContext {
+            composer.prepareRoot {
+                buildVNodeTree(block)
+            }
+        }
+    }
+
+    fun commitSideEffects() {
+        composer.commitSideEffects()
+    }
+
     fun dispose() {
         composer.dispose()
     }
@@ -47,18 +64,28 @@ internal class WidgetCoreRuntimeHarness {
         if (!composer.hasPendingInvalidations()) {
             composer.requestRootRecompose()
         }
-        val callback = object : kotlin.jvm.functions.Function0<T> {
-            override fun invoke(): T = composer.composeRoot(block)
+        val result = inComposerContext {
+            composer.composeRoot(block)
         }
-        @Suppress("UNCHECKED_CAST")
-        val result = withComposer.invoke(
-            composerContextInstance,
-            composer,
-            Dispatchers.Unconfined,
-            callback,
-        ) as T
         composer.commitSideEffects()
         return result
+    }
+
+    private fun <T> inComposerContext(block: () -> T): T {
+        val callback = object : kotlin.jvm.functions.Function0<T> {
+            override fun invoke(): T = block()
+        }
+        return try {
+            @Suppress("UNCHECKED_CAST")
+            withComposer.invoke(
+                composerContextInstance,
+                composer,
+                Dispatchers.Unconfined,
+                callback,
+            ) as T
+        } catch (error: InvocationTargetException) {
+            throw error.targetException
+        }
     }
 
     private fun Class<*>.findMethodPrefix(

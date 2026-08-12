@@ -1,86 +1,136 @@
 package com.viewcompose.renderer.view.lazy.session
 
+import com.viewcompose.renderer.reconcile.LazyListChangePayload
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
-import com.viewcompose.renderer.reconcile.LazyListChangePayload
 
-/**
- * Manages the child render-session lifecycle for one lazy item.
- * Manages the lifecycle of the inner render session for one lazy item.
- */
+/** Manages the child render-session lifecycle and submission revisions for one retained item. */
 internal class LazyItemSessionController(
     private val createSession: (LazyListItem) -> LazyListItemSession,
     private val clearContainer: () -> Unit,
 ) {
+    private data class Candidate(
+        val item: LazyListItem,
+        val payload: Any?,
+        val submissionRevision: Long,
+    )
+
     private var currentKey: Any? = null
     private var currentContentToken: Any? = null
+    private var committedRevision = Long.MIN_VALUE
+    private var nextImplicitRevision = 0L
+    private var candidate: Candidate? = null
     private var session: LazyListItemSession? = null
 
     fun bind(
         item: LazyListItem,
         payload: Any? = null,
+        submissionRevision: Long = nextImplicitSubmissionRevision(),
     ) {
-        val shouldRender = when {
-            session == null || currentKey != item.key -> {
-                // A key change means the holder now represents another item; dispose its old session and clear the container.
-                // A key change means the holder now represents a different item, so release the old session and clear the container.
-                session?.dispose()
-                clearContainer()
-                val newSession = createSession(item)
-                session = newSession
-                currentKey = item.key
-                currentContentToken = item.contentToken
-                item.sessionUpdater?.invoke(newSession)
-                true
-            }
+        if (submissionRevision <= committedRevision) return
+        apply(
+            item = item,
+            payload = payload,
+        )
+        committedRevision = submissionRevision
+        candidate = null
+    }
 
-            payload is LazyListChangePayload.ContentTokenChanged -> {
-                // A DiffUtil payload changes content but not identity, so retain the session and refresh it through the updater.
-                // DiffUtil payload only means content token changed; reuse the session but refresh it through updater.
-                applyContentTokenUpdate(item)
-                true
-            }
-
-            currentContentToken == item.contentToken -> {
-                session?.let { currentSession ->
-                    item.sessionUpdater?.invoke(currentSession)
-                }
-                false
-            }
-
-            else -> {
-                applyContentTokenUpdate(item)
-                true
-            }
+    fun stage(
+        item: LazyListItem,
+        payload: Any? = null,
+        submissionRevision: Long,
+    ) {
+        if (submissionRevision <= committedRevision) return
+        val currentCandidate = candidate
+        if (currentCandidate == null || submissionRevision >= currentCandidate.submissionRevision) {
+            candidate = Candidate(
+                item = item,
+                payload = payload,
+                submissionRevision = submissionRevision,
+            )
         }
-        if (shouldRender) {
-            session?.render()
+    }
+
+    fun commit(submissionRevision: Long) {
+        val pending = candidate ?: return
+        if (pending.submissionRevision != submissionRevision) return
+        bind(
+            item = pending.item,
+            payload = pending.payload,
+            submissionRevision = pending.submissionRevision,
+        )
+    }
+
+    fun discard(submissionRevision: Long) {
+        if (candidate?.submissionRevision == submissionRevision) {
+            candidate = null
         }
     }
 
     fun recycle() {
-        // Dispose on holder recycling so off-screen items cannot retain Views or captured closures.
-        // Release the session when the holder is recycled so off-screen items do not retain Views or closures.
         session?.dispose()
         session = null
+        candidate = null
         currentKey = null
         currentContentToken = null
+        committedRevision = Long.MIN_VALUE
         clearContainer()
     }
 
-    private fun applyContentTokenUpdate(item: LazyListItem) {
+    private fun apply(
+        item: LazyListItem,
+        payload: Any?,
+    ) {
         val currentSession = session
-        if (currentSession != null && item.sessionUpdater != null) {
-            val updater = item.sessionUpdater
-            if (updater != null) {
-                updater(currentSession)
+        when {
+            currentSession == null || currentKey != item.key -> {
+                replaceSession(item)
             }
+
+            payload is LazyListChangePayload.ContentTokenChanged ||
+                currentContentToken != item.contentToken -> {
+                updateOrReplaceSession(item, currentSession)
+            }
+
+            item.sessionUpdater != null -> {
+                checkNotNull(item.sessionUpdater).invoke(currentSession)
+            }
+
+            else -> {
+                // Without an updater, a new committed submission can only install the latest
+                // content factory by replacing the retained session.
+                replaceSession(item)
+            }
+        }
+        session?.render()
+    }
+
+    private fun updateOrReplaceSession(
+        item: LazyListItem,
+        currentSession: LazyListItemSession,
+    ) {
+        val updater = item.sessionUpdater
+        if (updater != null) {
+            updater(currentSession)
             currentContentToken = item.contentToken
         } else {
-            currentSession?.dispose()
-            clearContainer()
-            session = createSession(item)
-            currentContentToken = item.contentToken
+            replaceSession(item)
         }
+    }
+
+    private fun replaceSession(item: LazyListItem) {
+        session?.dispose()
+        clearContainer()
+        val newSession = createSession(item)
+        session = newSession
+        currentKey = item.key
+        currentContentToken = item.contentToken
+        item.sessionUpdater?.invoke(newSession)
+    }
+
+    private fun nextImplicitSubmissionRevision(): Long {
+        nextImplicitRevision = maxOf(nextImplicitRevision + 1L, committedRevision + 1L)
+        return nextImplicitRevision
     }
 }

@@ -105,6 +105,31 @@ class CoilImageLoaderAdapterTest {
     }
 
     @Test
+    fun `resource cache identity changes with revision but remote identity stays loader owned`() {
+        val adapter = CoilImageLoaderAdapter(ImageLoader.Builder(context).build())
+
+        assertEquals(
+            "viewcompose-resource:${android.R.drawable.ic_menu_gallery}:7",
+            adapter.resourceCacheIdentity(
+                UiImageRequest(
+                    source = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
+                    resourceRevision = 7L,
+                ),
+            ),
+        )
+        assertEquals(
+            null,
+            adapter.resourceCacheIdentity(
+                UiImageRequest(
+                    source = ImageSource.Url("https://example.com/a.png"),
+                    placeholder = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
+                    resourceRevision = 7L,
+                ),
+            ),
+        )
+    }
+
+    @Test
     fun `load returns idempotent handle without shutting down caller loader`() {
         val recordingImageLoader = RecordingImageLoader(context)
         val adapter = CoilImageLoaderAdapter(recordingImageLoader)

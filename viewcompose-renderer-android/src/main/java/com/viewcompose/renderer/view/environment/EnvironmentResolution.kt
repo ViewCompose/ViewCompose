@@ -3,6 +3,7 @@ package com.viewcompose.renderer.view
 import android.view.View
 import com.viewcompose.renderer.R
 import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.unit.UiDimension
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.unit.UiSp
@@ -34,7 +35,11 @@ internal data class PaddingPx(
     val top: Int,
     val right: Int,
     val bottom: Int,
-)
+) {
+    companion object {
+        val Zero = PaddingPx(0, 0, 0, 0)
+    }
+}
 
 internal data class CornerRadiiPx(
     val topStart: Int,
@@ -56,10 +61,14 @@ internal fun UiEnvironmentValues.resolve(value: PaddingModifierElement): Padding
 }
 
 internal fun UiEnvironmentValues.resolvePadding(value: LazyContentPadding): PaddingPx {
+    val (left, right) = when (layoutDirection) {
+        UiLayoutDirection.Ltr -> value.start to value.end
+        UiLayoutDirection.Rtl -> value.end to value.start
+    }
     return PaddingPx(
-        left = roundToPx(value.start),
+        left = roundToPx(left),
         top = roundToPx(value.top),
-        right = roundToPx(value.end),
+        right = roundToPx(right),
         bottom = roundToPx(value.bottom),
     )
 }

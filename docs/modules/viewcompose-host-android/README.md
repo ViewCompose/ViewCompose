@@ -54,6 +54,19 @@ optional neutral-overlay `ServiceLoader` lookup without moving Android service d
 Foundation. Zero providers returns no-op; multiple providers fail because classpath order may not
 choose a design system. Standard Activity and Fragment roots use explicit factories instead.
 
+Custom hosts that need Android resources install `AndroidResourceEnvironment(context)`. Inside the
+provider, content can call `stringResource`, formatted strings, `pluralStringResource`,
+`colorResource`, logical or pixel dimension lookups, boolean/integer lookups, and string/integer
+array lookups. `LocalAndroidContext.current` and `LocalAndroidResources.current` are bounded escape
+hatches for uncommon APIs; access without the provider fails with an installation error.
+
+The provider observes Android configuration callbacks, republishes density, font scale, locales,
+direction, and a monotonic resource revision, and unregisters with the mounted composition. Use one
+host-scoped `AndroidResourceRefreshController` after replacing a stable Context wrapper or another
+imperative resource mutation that emits no callback. Calls, callbacks, and disposal are main-thread
+work. Resource results are synchronous snapshots; do not retain provider-owned Context or Resources
+beyond the session.
+
 ## Debug device source reporting
 
 In a debuggable application, the `renderInto` root and nested containers classified as page

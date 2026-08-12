@@ -174,11 +174,13 @@ Responsibilities:
 5. `setMaterial3UiContent` applies Material dynamic color when supported unless
    `Material3DynamicColorPolicy.Disabled` is selected. A direct low-level composition uses
    `Material3ThemeBridge.resolveContext(...)` and `Material3Theme(...)` from `viewcompose-material3`.
-6. An Android-backed theme used in composition observes configuration changes and rereads tokens;
-   callbacks are removed when it leaves composition, and `metadata.revision` increments on refresh.
-7. After runtime `setTheme/applyStyle`, pass a `Material3ThemeRefreshController` to
-   `setMaterial3UiContent` and call `refresh()` on the main thread. The controller resolves the
-   dynamic-color context again and refreshes the themed subtree.
+6. The neutral Android host observes configuration changes. An Android-backed Material theme
+   consumes `Environment.resourceRevision`, refreshes its stable wrapper, rereads tokens, and does
+   not register a parallel standard-host callback.
+7. After an application-owned locale/theme wrapper mutation that emits no configuration callback,
+   pass an `AndroidResourceRefreshController` to `setMaterial3UiContent` and call `refresh()` on the
+   main thread. `Material3ThemeRefreshController` remains a low-level compatibility path for custom
+   hosts without the standard resource environment.
 
 Current bridge matrix:
 

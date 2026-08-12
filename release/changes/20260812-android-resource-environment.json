@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "summary": "Add configuration-aware Android resources and a transactional effect runtime, commit retained lazy and pager submissions after their parent frame, and reconcile newly built value-equal child subtrees.",
+  "changes": [
+    { "artifact": "viewcompose-runtime", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-host-android", "impact": "feature" },
+    { "artifact": "viewcompose-lifecycle-androidx", "impact": "feature" },
+    { "artifact": "viewcompose-android", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" },
+    { "artifact": "viewcompose-image-coil", "impact": "fix" },
+    { "artifact": "viewcompose-image-glide", "impact": "fix" },
+    { "artifact": "viewcompose-material3", "impact": "breaking" },
+    { "artifact": "viewcompose-material3-android", "impact": "breaking" },
+    { "artifact": "viewcompose-preview-runner", "impact": "fix" },
+    { "artifact": "viewcompose-preview", "impact": "fix" }
+  ],
+  "ignored": []
+}

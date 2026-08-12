@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: 129fb84621cec7e97fbad3e63baea1c95f1bcbe560127a0ccc3696e9eee4c5df
+translation_source_hash: a83b4f5b8c2e3641b4bc81045f570769975551019292c30311848325063d6c9a
 translation_status: current
 ---
 
@@ -59,6 +59,10 @@ ViewCompose 提供两条互补路径：
 桥接会记住一个 Android 根节点和渲染会话。仅内容发生 Compose 重组时复用会话并请求一次新的
 ViewCompose 渲染；主题、调试配置、Overlay 后端或容器变化时重建会话；离开 Compose 组合时释放。
 内容不能移除根节点，也不能在组合之外持有它。
+
+桥接会从创建原生 View 的同一个 Container Context 安装 `AndroidResourceEnvironment`。Android 资源
+查询函数因此会解析当前 Compose Preview 配置，Configuration Callback 也会推进普通 Android Host
+使用的同一资源版本，而不是进入 Preview 专用解析器。
 
 `ViewComposePreviewOptions` 只选择亮/暗 `UiThemeDefaults` 和可选渲染诊断。它刻意保持精简；静态
 预览配置矩阵由 preview-core 负责。

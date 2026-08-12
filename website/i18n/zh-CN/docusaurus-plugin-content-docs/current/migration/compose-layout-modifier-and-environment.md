@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: 575dfee6219d0b1027c7ba23b2797653b384397fde52b3f250ecf47db5cf77b6
+translation_source_hash: ed7dd2ca78ff3768028b0ca64433ca63cd1cededf2575ed4df288ee8263b2a2c
 translation_status: current
 ---
 
@@ -289,9 +289,12 @@ ViewCompose 会在每个发出的 VNode 上捕获不可变 `UiEnvironmentValues`
 
 - `UiDensity`，包括 density 和 font scale；
 - 有序 `UiLocaleList`；
-- `UiLayoutDirection`。
+- `UiLayoutDirection`；
+- Host 所有的 `resourceRevision`，用于在 Configuration 或主动资源变化后重新绑定相等的 Android
+  资源 ID。
 
-快照契约明确要求平台配置变化后生成新树；参见固定 revision 的
+快照契约要求平台 Configuration 变化后生成新树。标准 Android Host 会通过资源环境自动调度新树；
+自定义 Host 必须显式发布新环境。参见固定 revision 的
 [`UiEnvironmentValues.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-ui-contract/src/main/kotlin/com/viewcompose/ui/environment/UiEnvironmentValues.kt)
 第 92–112 行。Android bridge 在
 [`AndroidEnvironmentBridge.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-host-android/src/main/java/com/viewcompose/host/android/environment/AndroidEnvironmentBridge.kt)

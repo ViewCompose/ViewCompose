@@ -1,6 +1,6 @@
 ---
 translation_source: guides/theming.md
-translation_source_hash: 8e144cb32194c23d0400ec8be5a9fa7de264a483fc06872636249786d8627fc2
+translation_source_hash: b8a1376482924b965cd21a46cc7459419d238c6ea6e9c14a41715eaa9cc6e26f
 translation_status: current
 ---
 
@@ -162,10 +162,12 @@ translation_status: current
 5. `setMaterial3UiContent` 默认在平台支持时套用 Material 动态色；可通过
    `Material3DynamicColorPolicy.Disabled` 显式关闭。底层直接组合时，使用
    `viewcompose-material3` 的 `Material3ThemeBridge.resolveContext(...)` 与 `Material3Theme(...)`。
-6. 组合内使用 Android 主题时会监听配置变化并重新读取 token；离开组合后注销回调，`metadata.revision` 随刷新递增。
-7. 运行时调用 `setTheme/applyStyle` 后，可把 `Material3ThemeRefreshController` 传给
-   `setMaterial3UiContent`，再在主线程调用 `refresh()`；控制器会重新解析动态色 Context 并触发
-   主题子树刷新。
+6. 中立 Android Host 负责观察 Configuration 变化。Android-backed Material Theme 消费
+   `Environment.resourceRevision`，刷新稳定 Wrapper 并重新读取 Token，不在标准 Host 下注册并行
+   Callback。
+7. 应用 Locale/主题 Wrapper 修改没有产生 Configuration Callback 时，把
+   `AndroidResourceRefreshController` 传给 `setMaterial3UiContent` 并在主线程调用 `refresh()`。
+   `Material3ThemeRefreshController` 只保留给没有标准资源环境的底层自定义 Host。
 
 当前 bridge 覆盖矩阵：
 

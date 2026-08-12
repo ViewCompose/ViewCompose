@@ -1,6 +1,5 @@
 package com.viewcompose
 
-import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.SystemClock
@@ -192,11 +191,11 @@ class NavigationBackDeviceTest {
                 val details = activity.destinationContainer(NavigationBackTestActivity.DETAILS_ROUTE)
                 assertEquals(
                     255,
-                    Color.alpha((checkNotNull(home.background) as ColorDrawable).color),
+                    resolvedViewBackgroundAlpha(home),
                 )
                 assertEquals(
                     255,
-                    Color.alpha((checkNotNull(details.background) as ColorDrawable).color),
+                    resolvedViewBackgroundAlpha(details),
                 )
             }
 

@@ -39,6 +39,11 @@ fun material3ThemeRefreshSample(controller: Material3ThemeRefreshController) {
     controller.refresh()
 }
 
+fun material3ResolvedThemeRefreshSample(resolvedTheme: Material3ResolvedTheme) {
+    resolvedTheme.refresh()
+    Material3ThemeBridge.fromResolvedTheme(resolvedTheme)
+}
+
 fun UiTreeBuilder.material3ComponentsSample() {
     Material3Theme {
         val fieldState = rememberTextFieldState("Material")

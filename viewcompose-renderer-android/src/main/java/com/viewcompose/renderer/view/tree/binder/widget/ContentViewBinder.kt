@@ -260,13 +260,16 @@ internal object ContentViewBinder {
         applyTypeface(view, fontWeight, fontFamily)
         val originalLetterSpacing = view.getTag(R.id.viewcompose_original_letter_spacing) as? Float ?: 0f
         view.letterSpacing = letterSpacingEm ?: originalLetterSpacing
-        val originalLineHeight = view.getTag(R.id.viewcompose_original_line_height) as? Int ?: view.lineHeight
+        includeFontPadding?.let { view.includeFontPadding = it }
         if (lineHeightPx != null) {
             TextViewCompat.setLineHeight(view, lineHeightPx)
         } else {
-            TextViewCompat.setLineHeight(view, originalLineHeight)
+            val originalLineSpacingExtra =
+                view.getTag(R.id.viewcompose_original_line_spacing_extra) as? Float ?: 0f
+            val originalLineSpacingMultiplier =
+                view.getTag(R.id.viewcompose_original_line_spacing_multiplier) as? Float ?: 1f
+            view.setLineSpacing(originalLineSpacingExtra, originalLineSpacingMultiplier)
         }
-        includeFontPadding?.let { view.includeFontPadding = it }
     }
 
     private fun ensureOriginalTextAppearanceCached(view: TextView): Typeface {
@@ -277,7 +280,8 @@ internal object ContentViewBinder {
         val originalTypeface = view.typeface ?: Typeface.DEFAULT
         view.setTag(R.id.viewcompose_original_typeface, originalTypeface)
         view.setTag(R.id.viewcompose_original_letter_spacing, view.letterSpacing)
-        view.setTag(R.id.viewcompose_original_line_height, view.lineHeight)
+        view.setTag(R.id.viewcompose_original_line_spacing_extra, view.lineSpacingExtra)
+        view.setTag(R.id.viewcompose_original_line_spacing_multiplier, view.lineSpacingMultiplier)
         return originalTypeface
     }
 

@@ -2,12 +2,17 @@ package com.viewcompose
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Rect
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.ColorStateListDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.LayerDrawable
 import android.graphics.drawable.RippleDrawable
+import android.os.Build
 import android.os.SystemClock
 import android.view.Choreographer
 import android.view.MotionEvent
@@ -179,6 +184,44 @@ internal fun Activity.requireTextView(text: String): TextView {
 }
 
 /**
+ * Finds an exact TextView, scrolling visible RecyclerViews until its attached item is visible.
+ */
+internal fun Activity.requireTextViewVisible(
+    text: String,
+    maxScrollAttempts: Int = 24,
+): TextView {
+    val root = findViewById<ViewGroup>(android.R.id.content)
+    fun visibleTextView(): TextView? {
+        return findTextViewsByText(root, text).firstOrNull(::isViewVisible)
+    }
+
+    visibleTextView()?.let { return it }
+    findRecyclerViews(root)
+        .filter { recyclerView -> recyclerView.isShown && recyclerView.height > 0 }
+        .forEach { recyclerView ->
+            val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
+            fun scrollUntilVisible(direction: Int): TextView? {
+                repeat(maxScrollAttempts) {
+                    visibleTextView()?.let { return it }
+                    if (!recyclerView.canScrollVertically(direction)) {
+                        return null
+                    }
+                    recyclerView.scrollBy(0, direction * delta)
+                }
+                return visibleTextView()
+            }
+
+            scrollUntilVisible(direction = 1)?.let { return it }
+            scrollUntilVisible(direction = -1)?.let { return it }
+        }
+
+    val view = findTextViewsByText(root, text).firstOrNull(::isViewVisible)
+    assertNotNull("Expected to find visible TextView with text: $text", view)
+    assertViewFullyVisible(view!!)
+    return view
+}
+
+/**
  * 通过 ViewCompose testTag 查找可见 View。
  * Finds a visible View by ViewCompose testTag.
  */
@@ -204,7 +247,7 @@ internal fun Activity.requireViewByTestTagVisible(
 ): View {
     val root = findViewById<ViewGroup>(android.R.id.content)
     fun visibleTaggedView(): View? {
-        return findViewByTestTag(root, tag)?.takeIf(::isViewVisible)
+        return findViewsByTestTag(root, tag).firstOrNull(::isViewVisible)
     }
 
     visibleTaggedView()?.let { return it }
@@ -227,7 +270,7 @@ internal fun Activity.requireViewByTestTagVisible(
             scrollUntilVisible(direction = -1)?.let { return it }
         }
 
-    val view = findViewByTestTag(root, tag)
+    val view = findViewsByTestTag(root, tag).firstOrNull(::isViewVisible)
     assertNotNull("Expected to find view with testTag: $tag", view)
     assertViewFullyVisible(view!!)
     return view
@@ -483,6 +526,16 @@ internal fun Activity.clickTextView(text: String) {
     current!!.performClick()
 }
 
+/** Clicks an exact TextView after scrolling its owning RecyclerView item into the viewport. */
+internal fun Activity.clickTextViewVisible(text: String) {
+    var current: View? = requireTextViewVisible(text)
+    while (current != null && !current.isClickable) {
+        current = current.parent as? View
+    }
+    assertNotNull("Expected clickable host for visible text: $text", current)
+    assertTrue("Expected click to be handled for visible text: $text", current!!.performClick())
+}
+
 /**
  * 按 contentDescription 查找 View，找不到时直接失败。
  * Finds a View by contentDescription and fails fast when missing.
@@ -675,6 +728,23 @@ internal fun findTextViewByText(root: View, text: String): TextView? {
     return null
 }
 
+private fun findTextViewsByText(
+    root: View,
+    text: String,
+): List<TextView> {
+    val matches = mutableListOf<TextView>()
+    fun collect(view: View) {
+        if (view is TextView && view.text?.toString() == text) {
+            matches += view
+        }
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) collect(view.getChildAt(index))
+        }
+    }
+    collect(root)
+    return matches
+}
+
 /**
  * 深度优先查找 contentDescription 匹配的 View。
  * Finds a View with matching contentDescription using depth-first traversal.
@@ -711,6 +781,23 @@ internal fun findViewByTestTag(root: View, tag: String): View? {
         }
     }
     return null
+}
+
+private fun findViewsByTestTag(
+    root: View,
+    tag: String,
+): List<View> {
+    val matches = mutableListOf<View>()
+    fun collect(view: View) {
+        if (view.getTag(RendererR.id.viewcompose_test_tag) == tag) {
+            matches += view
+        }
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) collect(view.getChildAt(index))
+        }
+    }
+    collect(root)
+    return matches
 }
 
 private fun findFirstRecyclerView(root: View): RecyclerView? {
@@ -771,7 +858,10 @@ private fun isViewVisible(view: View): Boolean {
  */
 internal fun assertViewBackgroundColor(view: View, expectedColor: Int) {
     val actual = resolveDrawableColor(view.background)
-    assertNotNull("Expected background drawable color for ${view.javaClass.simpleName}", actual)
+    assertNotNull(
+        "Expected a deterministic fill color for ${view.background?.javaClass?.name}",
+        actual,
+    )
     assertEquals(
         "Expected background color to match theme token",
         expectedColor,
@@ -786,6 +876,12 @@ internal fun assertViewBackgroundColor(view: View, expectedColor: Int) {
 private fun resolveDrawableColor(drawable: Drawable?): Int? {
     return when (drawable) {
         null -> null
+        is ColorDrawable -> drawable.color
+        is ColorStateListDrawable -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            drawable.colorStateList.defaultColor
+        } else {
+            null
+        }
         is RippleDrawable -> {
             resolveDrawableColor(drawable.getDrawable(0))
                 ?: resolveDrawableColor(drawable.findDrawableByLayerId(android.R.id.mask))
@@ -802,6 +898,34 @@ private fun resolveDrawableColor(drawable: Drawable?): Int? {
         }
         is MaterialShapeDrawable -> drawable.fillColor?.defaultColor
         is GradientDrawable -> drawable.color?.defaultColor
-        else -> null
+        else -> resolveDrawableCenterColor(drawable)
     }
+}
+
+/** Resolves one center pixel without allocating or scanning a view-sized bitmap. */
+private fun resolveDrawableCenterColor(drawable: Drawable): Int {
+    val originalBounds = Rect(drawable.bounds)
+    val needsTemporaryBounds = originalBounds.isEmpty
+    if (needsTemporaryBounds) {
+        drawable.setBounds(0, 0, 3, 3)
+    }
+    val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+    return try {
+        val bounds = drawable.bounds
+        Canvas(bitmap).apply {
+            translate(-bounds.exactCenterX() + 0.5f, -bounds.exactCenterY() + 0.5f)
+            drawable.draw(this)
+        }
+        bitmap.getPixel(0, 0)
+    } finally {
+        bitmap.recycle()
+        if (needsTemporaryBounds) {
+            drawable.bounds = originalBounds
+        }
+    }
+}
+
+/** Returns the alpha channel of a deterministically resolved background fill color. */
+internal fun resolvedViewBackgroundAlpha(view: View): Int? {
+    return resolveDrawableColor(view.background)?.let(android.graphics.Color::alpha)
 }

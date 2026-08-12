@@ -11,8 +11,8 @@ import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
+import com.viewcompose.host.android.resources.AndroidResourceRefreshController
 import com.viewcompose.material3.Material3DynamicColorPolicy
-import com.viewcompose.material3.Material3ThemeRefreshController
 import com.viewcompose.material3.android.test.R as TestR
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.OverlayHostDefaults
@@ -64,12 +64,12 @@ class Material3AndroidHostIntegrationTest {
         val activity = Robolectric.buildActivity(Material3HostActivity::class.java)
             .setup()
             .get()
-        val refreshController = Material3ThemeRefreshController()
+        val refreshController = AndroidResourceRefreshController()
         var capturedTokens: UiThemeTokens? = null
 
         activity.setMaterial3UiContent(
             dynamicColorPolicy = Material3DynamicColorPolicy.Disabled,
-            themeRefreshController = refreshController,
+            resourceRefreshController = refreshController,
             overlayHostFactory = { OverlayHostDefaults.noOp },
         ) {
             capturedTokens = Theme.current

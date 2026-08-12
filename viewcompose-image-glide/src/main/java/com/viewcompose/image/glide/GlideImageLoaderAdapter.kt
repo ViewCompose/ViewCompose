@@ -8,6 +8,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestManager
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.signature.ObjectKey
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target as GlideTarget
@@ -77,6 +78,7 @@ class GlideImageLoaderAdapter : UiImageLoader {
     internal fun mapSourceForTest(source: ImageSource): Any = source.toGlideModel()
 
     private fun RequestOptions.applyCommonOptions(request: UiImageRequest): RequestOptions {
+        resourceCacheIdentity(request)?.let { identity -> signature(ObjectKey(identity)) }
         when (val decodeSize = request.options.decodeSize) {
             com.viewcompose.ui.node.UiImageDecodeSize.Target -> Unit
             com.viewcompose.ui.node.UiImageDecodeSize.Original -> {
@@ -118,6 +120,11 @@ class GlideImageLoaderAdapter : UiImageLoader {
             is ImageSource.File -> file
             is ImageSource.Model -> value
         }
+    }
+
+    internal fun resourceCacheIdentity(request: UiImageRequest): String? {
+        val source = request.source as? ImageSource.Resource ?: return null
+        return "viewcompose-resource:${source.resId}:${request.resourceRevision}"
     }
 
     private class GlideLoadHandle(

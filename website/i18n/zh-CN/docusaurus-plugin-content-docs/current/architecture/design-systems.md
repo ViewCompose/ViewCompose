@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/design-systems.md
-translation_source_hash: 82787bce0653015e951ffecf622f2b873bb113ea5b91a1c54d886903ce481e07
+translation_source_hash: 72ce3af0d54c552074c19823d7223013d958a2a1cf448bd9311b7ace0a88a8f8
 translation_status: current
 ---
 
@@ -187,6 +187,10 @@ Configuration、Dynamic Color Policy 与平台 Capability。这是平台集成�
 中立 Host Kernel 接收已经解析的平台环境。它不选择 Material，不暴露 Material Policy 类型，也
 不会静默地把所有 Root 包进 Material Context。
 
+Root 构造后，Configuration 观察与常用资源解析由中立 Android Host 负责。它发布唯一资源版本，供
+普通资源、环境值、资源图片、延迟 Session 与全部具名设计系统共享。具名 Adapter 可以在发布前
+刷新自己的稳定 Themed Context，但不得在标准 Host 下另行安装 Configuration Observer。
+
 ### 7.2 阶段 B：Composition 策略提供
 
 在 Composition Root 内，选定设计系统提供一个包含 Token、Recipe、Motion、Capability/fallback
@@ -223,6 +227,8 @@ Activity/Fragment Extension。
 - 第一次拆分使用内部显式组装，不立即公开通用 Host Plugin SPI。只有第二个设计系统也需要改变
   Android Context 构造并证明相同生命周期契约后，才评估公开 SPI。
 - 即使一个便捷函数替调用方完成两个阶段，Context 解析与 Composition Provision 仍是两个契约。
+- 主动 Locale/主题资源修改使用中立、Host 范围的 `AndroidResourceRefreshController`；具名设计系统
+  消费其产生的版本。Root 设计系统或构造期敏感 Context 变化仍需重建 Root。
 
 ## 8. Material 3 策略
 

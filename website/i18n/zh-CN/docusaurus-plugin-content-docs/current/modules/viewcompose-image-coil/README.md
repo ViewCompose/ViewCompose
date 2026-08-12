@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-image-coil/README.md
-translation_source_hash: cfe0ffdb2f2b0ed65ccb2d610df3bd8385c9422dd419338693773a944076f27a
+translation_source_hash: a8976785491532d8bbd1311da7d2773e2364945fafc7c3748aafd7b0efa3a441
 translation_status: current
 ---
 
@@ -45,7 +45,9 @@ dependencies {
 ## 缓存与所有权
 
 内存缓存、磁盘缓存、网络行为、Transformation 与 URL 解释都属于 Coil 策略。适配器不会增加第二层
-缓存，也不会合成 Cache Key。调用方传入的 `ImageLoader` 仍归调用方所有，
+缓存。Primary 为 Android Resource 时，会提供包含捕获资源版本的稳定 Memory Cache 标识，避免
+Night/Locale/Density 变体复用旧解码项。纯远端请求保留 Coil 的普通标识；Resource Placeholder
+可以触发重绑，但不会丢弃远端 Primary Cache。调用方传入的 `ImageLoader` 仍归调用方所有，
 `CoilImageLoaderAdapter` 永远不会关闭它。
 
 资源 ID 会原样转发。无效资源与请求失败遵循 Android 和 Coil 的普通 Error 行为。

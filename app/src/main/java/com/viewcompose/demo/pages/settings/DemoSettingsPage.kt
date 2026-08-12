@@ -52,7 +52,6 @@ internal fun UiTreeBuilder.SettingsPage(
     root: ViewGroup?,
 ) {
     val debugModeState = remember { mutableStateOf(true) }
-    val langIndexState = remember { mutableStateOf(0) }
 
     LazyColumn(
         items = listOf(
@@ -62,7 +61,7 @@ internal fun UiTreeBuilder.SettingsPage(
             "environment",
             "stats",
             "debug",
-            "language",
+            "resource-configuration",
         ),
         key = { it },
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -273,24 +272,28 @@ internal fun UiTreeBuilder.SettingsPage(
                 )
             }
 
-            "language" -> Column(
+            "resource-configuration" -> Column(
                 spacing = 0.dp,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = "语言切换",
+                    text = "资源与配置验证",
                     style = UiTextStyle(fontSizeSp = 18.sp),
                     modifier = Modifier.margin(top = 20.dp, bottom = 8.dp),
                 )
-                SegmentedControl(
-                    items = listOf("中文", "English"),
-                    selectedIndex = langIndexState.value,
-                    onSelectionChange = { langIndexState.value = it },
-                    size = SegmentedControlSize.Medium,
-                    modifier = Modifier.fillMaxWidth(),
+                Button(
+                    text = "验证语言、深浅色、字号、密度与 RTL",
+                    onClick = {
+                        root?.context?.startActivity(
+                            ResourceConfigurationActivity.newIntent(root.context),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(DemoTestTags.SETTINGS_RESOURCE_CONFIGURATION_ENTRY),
                 )
                 Text(
-                    text = "语言切换功能暂未实现",
+                    text = "切换由 Android Resources 与统一资源环境驱动，不依赖页面级语言 MutableState，也不重建 Activity。",
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.margin(top = 4.dp),

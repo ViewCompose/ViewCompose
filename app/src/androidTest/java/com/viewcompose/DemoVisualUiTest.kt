@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.material.shape.MaterialShapeDrawable
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -75,25 +74,34 @@ class DemoVisualUiTest {
         launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
-                val itemA = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                val toggle = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
+                val itemA = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
                 assertViewFullyVisible(toggle)
                 assertTrue(itemA.text.toString().contains("Lazy 项 A"))
                 activity.clickByTestTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
             }
             waitForUiIdle()
+            val switchedToAlternate = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
+                activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                    .text
+                    .toString()
+                    .contains("（替代）")
+            }
+            assertTrue("Expected visible LazyColumn item to refresh its alternate label", switchedToAlternate)
             scenario.onActivity { activity ->
-                val itemA = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                val itemA = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
                 assertViewFullyVisible(itemA)
-                assertTrue(itemA.text.toString().contains("（替代）"))
                 activity.clickByTestTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
             }
             waitForUiIdle()
+            val switchedToPrimary = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
+                val text = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A).text.toString()
+                text.contains("Lazy 项 A") && !text.contains("（替代）")
+            }
+            assertTrue("Expected visible LazyColumn item to restore its primary label", switchedToPrimary)
             scenario.onActivity { activity ->
-                val itemA = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                val itemA = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
                 assertViewFullyVisible(itemA)
-                assertTrue(itemA.text.toString().contains("Lazy 项 A"))
-                assertTrue(!itemA.text.toString().contains("（替代）"))
             }
         }
     }
@@ -143,9 +151,9 @@ class DemoVisualUiTest {
                 val drawablePreferred = activity.requireViewByTestTagVisible(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_SAMPLE)
                 assertViewFullyVisible(colorOnly)
                 assertViewFullyVisible(drawablePreferred)
-                assertTrue(
-                    "Expected color-only sample to use MaterialShapeDrawable background",
-                    colorOnly.background is MaterialShapeDrawable,
+                assertViewBackgroundColor(
+                    view = colorOnly,
+                    expectedColor = DemoThemeTokens.light.colors.error,
                 )
                 assertTrue("Expected drawable sample to use layered drawable background", drawablePreferred.background is LayerDrawable)
                 assertFalse("Expected color-only sample to keep non-clipped outline by default", colorOnly.clipToOutline)
@@ -300,30 +308,29 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun inputSearch_focusSearchBar_doesNotAutoScrollList() {
+    fun inputSearch_focusSearchBar_scrollsOnlyEnoughToRevealInput() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             InputActivity::class.java,
         ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
         launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            assertFocusActionKeepsRecyclerAnchor(
+            assertFocusActionRevealsInput(
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_SEARCH_PRIMARY,
-                maxOffsetDeltaDp = 8,
             )
         }
     }
 
     @Test
-    fun inputSearch_focusScrollableColumnSearch_doesNotAutoScrollList() {
+    fun inputSearch_focusScrollableColumnSearch_scrollsOnlyEnoughToRevealInput() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             InputActivity::class.java,
         ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
         launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            assertFocusActionKeepsRecyclerAnchor(
+            assertFocusActionRevealsInput(
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_FOCUS_SCROLLABLE_SEARCH,
             )
@@ -331,14 +338,14 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun inputSearch_focusVerticalPagerSearch_doesNotAutoScrollList() {
+    fun inputSearch_focusVerticalPagerSearch_scrollsOnlyEnoughToRevealInput() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             InputActivity::class.java,
         ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
         launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            assertFocusActionKeepsRecyclerAnchor(
+            assertFocusActionRevealsInput(
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH,
             )
@@ -346,14 +353,14 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun inputSearch_focusPullRefreshSearch_doesNotAutoScrollList() {
+    fun inputSearch_focusPullRefreshSearch_scrollsOnlyEnoughToRevealInput() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             InputActivity::class.java,
         ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
         launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            assertFocusActionKeepsRecyclerAnchor(
+            assertFocusActionRevealsInput(
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH,
             )
@@ -762,7 +769,9 @@ class DemoVisualUiTest {
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
             }
-            clickDeviceText("搜索")
+            scenario.onActivity { activity ->
+                activity.clickTextViewVisible("搜索")
+            }
             waitForUiIdle()
             captureDeviceScreenshot("navigation-navbar-selection-light")
             scenario.onActivity { activity ->
@@ -1223,25 +1232,33 @@ class DemoVisualUiTest {
                     tag = DemoTestTags.GESTURE_DRAG_TARGET,
                     deltaX = 180f,
                 )
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
                 activity.dragByTestTag(
                     tag = DemoTestTags.GESTURE_SWIPE_TARGET,
                     deltaX = 200f,
                 )
             }
             waitForUiIdle()
+            var rightAnchorSnapshot = ""
             val movedToRightAnchor = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val dragAfterText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_DRAG_VALUE).text.toString()
-                val swipeAfterText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
-                val swipeTargetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
-                val swipeOffsetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
+                val dragAfterText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_DRAG_VALUE).text.toString()
+                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
+                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
+                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val dragAfter = extractFirstFloat(dragAfterText) ?: dragBefore
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                rightAnchorSnapshot = "$dragAfterText, $swipeAfterText, $swipeTargetText, $swipeOffsetText"
                 abs(dragAfter - dragBefore) >= 12f &&
                     swipeAfterText.contains("Right") &&
                     swipeTargetText.contains("Right") &&
                     offset >= 60f
             }
-            assertTrue("Expected drag and swipe summaries to move to right anchor", movedToRightAnchor)
+            assertTrue(
+                "Expected drag and swipe summaries to move to right anchor; after=[$rightAnchorSnapshot]",
+                movedToRightAnchor,
+            )
             scenario.onActivity { activity ->
                 activity.dragByTestTag(
                     tag = DemoTestTags.GESTURE_SWIPE_TARGET,
@@ -1251,9 +1268,9 @@ class DemoVisualUiTest {
             waitForUiIdle()
             var centerAnchorSnapshot = ""
             val movedToCenterAnchor = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val swipeAfterText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
-                val swipeTargetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
-                val swipeOffsetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
+                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
+                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
+                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
                 centerAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
                 swipeAfterText.contains("Center") &&
@@ -1274,9 +1291,9 @@ class DemoVisualUiTest {
             waitForUiIdle()
             var leftAnchorSnapshot = ""
             val movedToLeftAnchor = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val swipeAfterText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
-                val swipeTargetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
-                val swipeOffsetText = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
+                val swipeAfterText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_VALUE).text.toString()
+                val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
+                val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
                 leftAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
                 swipeAfterText.contains("Left") && swipeTargetText.contains("Left") && offset <= -60f
@@ -1533,17 +1550,16 @@ class DemoVisualUiTest {
         val rotation: Float,
     )
 
-    private fun assertFocusActionKeepsRecyclerAnchor(
+    private fun assertFocusActionRevealsInput(
         scenario: ActivityScenario<InputActivity>,
         tag: String,
-        maxOffsetDeltaDp: Int = 12,
     ) {
         var beforeAnchor: RecyclerViewportAnchor? = null
-        var maxOffsetDeltaPx = maxOffsetDeltaDp
+        var beforeVisibleHeight = 0
         scenario.onActivity { activity ->
-            activity.requireViewByTestTagVisible(tag)
+            val inputHost = activity.requireViewByTestTagVisible(tag)
             beforeAnchor = activity.readFirstRecyclerAnchor()
-            maxOffsetDeltaPx = (maxOffsetDeltaDp * activity.resources.displayMetrics.density).toInt()
+            beforeVisibleHeight = Rect().also(inputHost::getGlobalVisibleRect).height()
             activity.focusInputByTestTag(tag)
         }
         waitForUiIdle()
@@ -1554,9 +1570,18 @@ class DemoVisualUiTest {
             val before = beforeAnchor!!
             val after = afterAnchor!!
             assertEquals(before.position, after.position)
+            val focusedHost = activity.requireViewByTestTagVisible(tag)
+            val focusedInput = focusedHost.findFocus()
+            assertNotNull("Expected tagged input to retain focus: $tag", focusedInput)
             assertTrue(
-                "Expected focus action to avoid noticeable auto-scroll, before=$before, after=$after, tag=$tag",
-                abs(before.offset - after.offset) <= maxOffsetDeltaPx,
+                "Expected focused descendant to remain a visible text editor: $tag",
+                focusedInput!!.onCheckIsTextEditor() && isViewVisible(focusedInput),
+            )
+            val visibleHeight = Rect().also(focusedHost::getGlobalVisibleRect).height()
+            assertEquals("Expected the complete focused host height to be visible: $tag", focusedHost.height, visibleHeight)
+            assertTrue(
+                "Expected focus follow to preserve or improve input visibility: $tag",
+                visibleHeight >= beforeVisibleHeight,
             )
         }
     }

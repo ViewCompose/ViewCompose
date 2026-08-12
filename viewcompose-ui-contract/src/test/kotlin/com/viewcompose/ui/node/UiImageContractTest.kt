@@ -138,6 +138,18 @@ class UiImageContractTest {
         assertEquals(1, disposeCount)
     }
 
+    @Test
+    fun `resource revision participates in normalized request identity`() {
+        val first = UiImageRequest(
+            source = ImageSource.Resource(1),
+            resourceRevision = 3L,
+        )
+        val second = first.copy(resourceRevision = 4L)
+
+        assertNotEquals(first, second)
+        assertEquals(0L, UiImageRequest(source = ImageSource.Resource(1)).resourceRevision)
+    }
+
     private data class Payload(val label: String)
 
     private class TestExtension(

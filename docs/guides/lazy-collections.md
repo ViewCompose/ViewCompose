@@ -101,6 +101,12 @@ structured model.
 The pinned sticky copy is not registered as a second accessibility node. The ordinary list header
 remains the semantic source, avoiding duplicate TalkBack announcements.
 
+`contentPadding` is logical and resolves start/end from the collection's captured layout
+direction. It is added to physical `Modifier.padding` and the selected system-bar or IME inset
+edges. The renderer retains this composite padding across native
+View reuse and full environment rebinds, so a locale, direction, font-scale, density, or resource
+revision change cannot temporarily expose content under a system bar or erase the list gutter.
+
 ## 5. Invariants
 
 1. Collection keys are non-null and unique within a container.
@@ -110,6 +116,8 @@ remains the semantic source, avoiding duplicate TalkBack announcements.
 5. Rebinding the same RecyclerView connector must not reset the scroll anchor.
 6. Save/restore persists the first visible index and offset only.
 7. Item sessions are disposed when holders, pinned headers, or containers are released.
+8. Collection, modifier, and inset padding contributions have one renderer-owned native value and
+   must survive both targeted patches and full environment rebinds.
 
 ## 6. Deliberate non-goals
 

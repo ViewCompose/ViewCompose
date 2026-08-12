@@ -129,6 +129,7 @@ internal object PagerViewBinder {
     fun bindHorizontalPager(
         view: DeclarativeHorizontalPagerLayout,
         spec: HorizontalPagerSpec,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         view.applyRecyclerDefaults(
             sharePool = spec.reusePolicy.sharePool,
@@ -145,12 +146,14 @@ internal object PagerViewBinder {
             offscreenPageLimit = spec.offscreenPageLimit,
             pagerState = spec.pagerState,
             userScrollEnabled = spec.userScrollEnabled,
+            submission = submission,
         )
     }
 
     fun bindTabRow(
         view: DeclarativeTabRowLayout,
         spec: TabRowSpec,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         view.bind(
             tabs = spec.tabs,
@@ -171,12 +174,14 @@ internal object PagerViewBinder {
             itemPaddingHorizontal = spec.itemPaddingHorizontal,
             itemPaddingVertical = spec.itemPaddingVertical,
             minItemWidth = spec.minItemWidth,
+            submission = submission,
         )
     }
 
     fun bindVerticalPager(
         view: DeclarativeVerticalPagerLayout,
         spec: VerticalPagerSpec,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         view.applyRecyclerDefaults(
             sharePool = spec.reusePolicy.sharePool,
@@ -194,6 +199,7 @@ internal object PagerViewBinder {
             offscreenPageLimit = spec.offscreenPageLimit,
             pagerState = spec.pagerState,
             userScrollEnabled = spec.userScrollEnabled,
+            submission = submission,
         )
     }
 

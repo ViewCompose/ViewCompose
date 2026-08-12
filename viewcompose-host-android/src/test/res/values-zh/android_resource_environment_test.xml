@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="resource_title">资源标题</string>
+    <string name="resource_formatted">数量：%1$d</string>
+    <plurals name="resource_items">
+        <item quantity="other">%1$d 项</item>
+    </plurals>
+    <string-array name="resource_strings">
+        <item>甲</item>
+        <item>乙</item>
+    </string-array>
+</resources>

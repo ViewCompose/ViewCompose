@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
 
 - Lifecycle and ViewModel owners;
 - Android-backed saveable state;
-- density, locale, layout direction, and Android context environment values;
+- density, font scale, locale, layout direction, Android resource access, and a resource revision;
 - the animation coroutine context and Choreographer frame clock; and
 - the neutral Android overlay transport, with an injectable replacement factory.
 
@@ -59,6 +59,14 @@ pass it to `rootContext`. Switching between root design systems must call `setUi
 the new Context and token provider so Views are reconstructed under one coherent platform/theme
 snapshot. Repeated calls dispose the previous session. Fragment sessions follow the current View
 lifecycle; Activity sessions end when the Activity is destroyed.
+
+The standard roots automatically install `AndroidResourceEnvironment`, so content may use the
+lookup functions from `com.viewcompose.host.android.resources` without a page-owned invalidation
+state. Configuration callbacks refresh ordinary resources and environment values. For an
+application locale/theme wrapper mutation that emits no callback, pass one
+`AndroidResourceRefreshController` to `setUiContent`, replace the stable `rootContext` resources,
+then call `refresh()`. Constructor-sensitive Context or design-system changes still require another
+`setUiContent` call and root reconstruction.
 
 ## Dependency rule
 

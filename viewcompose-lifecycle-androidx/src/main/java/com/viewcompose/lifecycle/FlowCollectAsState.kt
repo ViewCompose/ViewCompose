@@ -192,7 +192,7 @@ private fun requireStructuredContext(context: CoroutineContext) {
     }
 }
 
-private fun currentLifecycleOwnerOrThrow(): LifecycleOwner {
+internal fun currentLifecycleOwnerOrThrow(): LifecycleOwner {
     return requireNotNull(LocalLifecycleOwner.current) {
         "No LifecycleOwner found. Use ComponentActivity/Fragment.setUiContent " +
             "or wrap with ProvideLifecycleOwner."

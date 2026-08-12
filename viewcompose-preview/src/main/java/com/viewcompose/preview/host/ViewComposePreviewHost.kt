@@ -9,12 +9,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.viewcompose.host.android.RenderSession
-import com.viewcompose.host.android.environment.AndroidEnvironmentBridge
 import com.viewcompose.host.android.renderInto
+import com.viewcompose.host.android.resources.AndroidResourceEnvironment
 import com.viewcompose.preview.tooling.PreviewTheme
 import com.viewcompose.ui.foundation.OverlayHost
 import com.viewcompose.ui.foundation.OverlayHostDefaults
-import com.viewcompose.ui.foundation.UiEnvironment
 import com.viewcompose.ui.foundation.UiTheme
 import com.viewcompose.ui.foundation.UiThemeDefaults
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -27,9 +26,10 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * [overlayHost], or the Android container disposes and recreates the session. Disposal of the
  * Compose effect always disposes the active session.
  *
- * [themeMode] installs `UiThemeDefaults` and [UiEnvironment] derives Android values from the host
- * context. This low-level bridge does not call an application `PreviewThemeProvider` and therefore
- * should not be used as the source of production-theme screenshot truth.
+ * [themeMode] installs `UiThemeDefaults` and [AndroidResourceEnvironment] derives Android values
+ * and resource lookups from the host context. This low-level bridge does not call an application
+ * `PreviewThemeProvider` and therefore should not be used as the source of production-theme
+ * screenshot truth.
  *
  * @param modifier Compose modifier applied to the `AndroidView`
  * @param themeMode default light or dark ViewCompose tokens
@@ -70,7 +70,7 @@ fun ViewComposePreviewHost(
                     themeMode = themeMode,
                 ),
                 content = {
-                    UiEnvironment(values = AndroidEnvironmentBridge.fromContext(container.context)) {
+                    AndroidResourceEnvironment(context = container.context) {
                         UiTheme(
                             tokens = when (themeMode) {
                                 PreviewTheme.Light -> UiThemeDefaults.light()

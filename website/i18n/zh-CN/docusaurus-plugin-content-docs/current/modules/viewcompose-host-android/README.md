@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 6423fd3e2a5dee081f80c52376d244874e132a4281f2a83b701ca86a098d321d
+translation_source_hash: 82e89ad8748c8487f2906850d14facc101bed09b5bdb1c977a343676e7eb26f1
 translation_status: current
 ---
 
@@ -55,6 +55,17 @@ direction 映射为 `UiEnvironmentValues`。`AndroidOverlayHostDefaults.androidO
 中立 Overlay 的 `ServiceLoader` 查找，Android 服务发现不会回流到 UI Foundation。零个 Provider
 时回退 no-op，多个时因 Classpath 顺序不得选择设计系统而失败。标准 Activity/Fragment Root 使用
 显式 Factory，不走该发现路径。
+
+需要 Android 资源的自定义 Host 应安装 `AndroidResourceEnvironment(context)`。Provider 内的内容
+可以调用 `stringResource`、格式化字符串、`pluralStringResource`、`colorResource`、逻辑/像素尺寸、
+Boolean/Integer 以及字符串/整数数组查询。`LocalAndroidContext.current` 与
+`LocalAndroidResources.current` 是非常用 API 的受限逃生口；没有 Provider 时会抛出包含安装方式的
+错误。
+
+Provider 在挂载期间观察 Android Configuration Callback，重新发布密度、字体比例、语言、方向与
+单调递增的资源版本，并随组合释放注销。稳定 Context Wrapper 被替换，或其他主动资源修改没有产生
+Callback 时，每个 Host 使用一个 `AndroidResourceRefreshController`。调用、Callback 与释放都属于
+主线程；资源结果是同步快照，不得在 Session 之外持有 Provider 的 Context 或 Resources。
 
 ## Debug 设备源码报告
 

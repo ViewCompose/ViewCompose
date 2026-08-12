@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-material3/README.md
-translation_source_hash: d03536d71a0c3464a5bb58245baaba4cc76ff110d5a42113fee8fcc67e500350
+translation_source_hash: ae28e42b3bb80b5a55b5da80667b6b04b4fe3ae981e281b3c4605022d43a5cc0
 translation_status: current
 ---
 
@@ -33,9 +33,11 @@ dependencies {
 ## 主题解析
 
 `Material3ThemeBridge.resolveContext` 创建根 View 与 Overlay 必须共享的稳定主题 Context。
-`Material3Theme` 提供映射后的 token，并在挂载期间观察 Android 配置变化。调用
-`Context.setTheme` 等不会触发配置变化的主动资源修改后，应在主线程调用
-`Material3ThemeRefreshController.refresh()`。
+`Material3Theme` 提供映射后的 Token，并消费设计系统中立的
+`Environment.resourceRevision`；标准 Host 的 Configuration 观察属于
+`viewcompose-host-android`，不属于 Material。`Material3ResolvedTheme.refresh()` 会在 Token 映射前
+刷新稳定 Wrapper。`Material3ThemeRefreshController` 只保留给尚未安装标准 Android 资源环境的底层
+Host。
 
 ```kotlin
 val resolved = Material3ThemeBridge.resolveContext(
@@ -49,7 +51,7 @@ Material3Theme(resolvedTheme = resolved) {
 ```
 
 Material 应用通过具名的 `viewcompose-material3-android` 集成自动获得这套生命周期。底层集成仍可
-自行解析 Context 并显式安装 `Material3Theme`。
+自行解析 Context 并显式安装 `Material3Theme`，但必须在 Host 边界提供 Configuration/资源失效。
 
 `Material3Theme(tokens = ...)` 可以从静态 Token 提供同一套 Recipe 与诊断作用域，而不读取
 Android 资源。两个重载都会通过 `DesignSystemDiagnostics` 导出

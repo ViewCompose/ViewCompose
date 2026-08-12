@@ -18,7 +18,6 @@ class RecomposeScope internal constructor(
 ) {
     internal val children: MutableList<RecomposeScope> = mutableListOf()
     internal val rememberSlots: MutableList<RememberSlot> = mutableListOf()
-    internal val effectSlots: MutableList<DisposableEffectSlot> = mutableListOf()
     internal var observation: Observation? = null
     internal var cachedResult: Any? = Unset
     @Volatile
@@ -32,7 +31,7 @@ class RecomposeScope internal constructor(
     internal var latestInputs: Any? = NoInputs
     internal var childCursor: Int = 0
     internal var rememberCursor: Int = 0
-    internal var effectCursor: Int = 0
+    internal var sideEffectCursor: Int = 0
     internal var saveableCursor: Int = 0
     private val invalidationVersion = AtomicLong(0L)
 
@@ -41,7 +40,7 @@ class RecomposeScope internal constructor(
         composing = true
         childCursor = 0
         rememberCursor = 0
-        effectCursor = 0
+        sideEffectCursor = 0
         saveableCursor = 0
     }
 
@@ -50,13 +49,10 @@ class RecomposeScope internal constructor(
         composing = false
     }
 
-    /** Removes child, effect, and remember slots not visited by the current pass. */
+    /** Removes child and remember slots not visited by the current pass. */
     internal fun trimAfterCompose() {
         while (children.size > childCursor) {
             children.removeAt(children.lastIndex)
-        }
-        while (effectSlots.size > effectCursor) {
-            effectSlots.removeAt(effectSlots.lastIndex)
         }
         while (rememberSlots.size > rememberCursor) {
             rememberSlots.removeAt(rememberSlots.lastIndex)
@@ -79,16 +75,8 @@ class RecomposeScope internal constructor(
             cleanup(currentObservation::dispose)
         }
         observation = null
-        effectSlots.forEach { slot ->
-            slot.onDispose?.let { onDispose ->
-                cleanup(onDispose)
-            }
-        }
-        effectSlots.clear()
         rememberSlots.forEach { slot ->
-            (slot.value as? RememberObserver)?.let { observer ->
-                cleanup(observer::onForgotten)
-            }
+            cleanup(slot.lifecycle::leave)
         }
         rememberSlots.clear()
         children.forEach { child ->
@@ -122,11 +110,8 @@ class RecomposeScope internal constructor(
             cleanup(currentObservation::dispose)
         }
         observation = null
-        effectSlots.clear()
         rememberSlots.forEach { slot ->
-            (slot.value as? RememberObserver)?.let { observer ->
-                cleanup(observer::onAbandoned)
-            }
+            cleanup(slot.lifecycle::leave)
         }
         rememberSlots.clear()
         children.forEach { child ->
@@ -202,19 +187,85 @@ class RecomposeScope internal constructor(
     }
 
     internal data class RememberSlot(
-        var keys: List<Any?>,
-        var value: Any?,
+        val keys: List<Any?>,
+        val value: Any?,
+        val lifecycle: RememberLifecycle,
     )
 
-    internal data class DisposableEffectSlot(
-        var keys: List<Any?>,
-        var onDispose: (() -> Unit)?,
-    )
+    /**
+     * Owns the exactly-once lifecycle state for one remembered value.
+     *
+     * State changes happen before user callbacks so a throwing callback cannot be retried by a
+     * later structural cleanup path.
+     */
+    internal class RememberLifecycle(
+        private val observer: RememberObserver?,
+        private val diagnostic: EffectDiagnostic,
+        private val warningLogger: ((String) -> Unit)?,
+        private val warningThresholdNanos: Long?,
+        private val frameIdProvider: (() -> Long?)?,
+    ) {
+        private var state: State = State.Pending
+
+        fun activate() {
+            if (state != State.Pending) return
+            state = State.Active
+            observer?.let { currentObserver ->
+                runSynchronousEffectOperation(
+                    diagnostic = diagnostic,
+                    operation = "remember",
+                    warningLogger = warningLogger,
+                    warningThresholdNanos = warningThresholdNanos,
+                    frameIdProvider = frameIdProvider,
+                    block = currentObserver::onRemembered,
+                )
+            }
+        }
+
+        fun leave() {
+            when (state) {
+                State.Pending -> {
+                    state = State.Terminal
+                    observer?.let { currentObserver ->
+                        runSynchronousEffectOperation(
+                            diagnostic = diagnostic,
+                            operation = "abandon",
+                            warningLogger = warningLogger,
+                            warningThresholdNanos = warningThresholdNanos,
+                            frameIdProvider = frameIdProvider,
+                            block = currentObserver::onAbandoned,
+                        )
+                    }
+                }
+
+                State.Active -> {
+                    state = State.Terminal
+                    observer?.let { currentObserver ->
+                        runSynchronousEffectOperation(
+                            diagnostic = diagnostic,
+                            operation = "forget",
+                            warningLogger = warningLogger,
+                            warningThresholdNanos = warningThresholdNanos,
+                            frameIdProvider = frameIdProvider,
+                            block = currentObserver::onForgotten,
+                        )
+                    }
+                }
+
+                State.Terminal -> Unit
+            }
+        }
+
+        private enum class State {
+            Pending,
+            Active,
+            Terminal,
+        }
+    }
 
     internal data class Checkpoint(
         val children: List<RecomposeScope>,
         val rememberSlots: List<RememberSlot>,
-        val effectSlots: List<DisposableEffectSlot>,
         val observation: Observation?,
         val cachedResult: Any?,
         val dirty: Boolean,
@@ -224,7 +275,7 @@ class RecomposeScope internal constructor(
         val latestInputs: Any?,
         val childCursor: Int,
         val rememberCursor: Int,
-        val effectCursor: Int,
+        val sideEffectCursor: Int,
         val saveableCursor: Int,
         val invalidationVersion: Long,
     )
@@ -233,7 +284,6 @@ class RecomposeScope internal constructor(
     internal fun checkpoint(): Checkpoint = Checkpoint(
         children = children.toList(),
         rememberSlots = rememberSlots.toList(),
-        effectSlots = effectSlots.toList(),
         observation = observation,
         cachedResult = cachedResult,
         dirty = dirty,
@@ -243,7 +293,7 @@ class RecomposeScope internal constructor(
         latestInputs = latestInputs,
         childCursor = childCursor,
         rememberCursor = rememberCursor,
-        effectCursor = effectCursor,
+        sideEffectCursor = sideEffectCursor,
         saveableCursor = saveableCursor,
         invalidationVersion = currentInvalidationVersion(),
     )
@@ -254,8 +304,6 @@ class RecomposeScope internal constructor(
         children += checkpoint.children
         rememberSlots.clear()
         rememberSlots += checkpoint.rememberSlots
-        effectSlots.clear()
-        effectSlots += checkpoint.effectSlots
         observation = checkpoint.observation
         cachedResult = checkpoint.cachedResult
         dirty = checkpoint.dirty
@@ -265,7 +313,7 @@ class RecomposeScope internal constructor(
         latestInputs = checkpoint.latestInputs
         childCursor = checkpoint.childCursor
         rememberCursor = checkpoint.rememberCursor
-        effectCursor = checkpoint.effectCursor
+        sideEffectCursor = checkpoint.sideEffectCursor
         saveableCursor = checkpoint.saveableCursor
         restoreInvalidationVersion(checkpoint.invalidationVersion)
     }

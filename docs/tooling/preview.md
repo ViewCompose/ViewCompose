@@ -120,6 +120,12 @@ dependencies {
 See the [Preview Integration module](../modules/viewcompose-preview/README.md) for the provider
 contract and lifecycle rules.
 
+Both native static preview and the Compose bridge install the same `AndroidResourceEnvironment`
+used by application hosts. Calls such as `stringResource`, `colorResource`, and
+`dimensionResource` resolve from the preview-qualified Context, so locale, density, direction, and
+night qualifiers agree with native Views. Static frames disable callback observation because the
+preview descriptor owns deterministic configuration replacement.
+
 ## Compose Preview bridge (optional)
 
 Use the Compose bridge only when an existing Compose Preview surface is useful to the project. It

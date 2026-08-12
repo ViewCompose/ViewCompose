@@ -6,6 +6,7 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.ui.tooling.UiSourceSessionRole
 import com.viewcompose.renderer.reconcile.LazyListDiff
@@ -15,6 +16,7 @@ import com.viewcompose.ui.state.PagerConnector
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
@@ -87,6 +89,7 @@ internal class DeclarativeHorizontalPagerLayout(
         offscreenPageLimit: Int,
         pagerState: PagerState?,
         userScrollEnabled: Boolean,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         this.onPageChanged = onPageChanged
         if (this.pagerState !== pagerState) {
@@ -102,21 +105,20 @@ internal class DeclarativeHorizontalPagerLayout(
         )
         viewPager.offscreenPageLimit = offscreenPageLimit.coerceAtLeast(1)
         viewPager.isUserInputEnabled = userScrollEnabled
-        adapter.submitPages(pages)
-        val resolvedPage = if (pages.isEmpty()) {
-            return
-        } else {
-            currentPage.coerceIn(0, pages.lastIndex)
+        submission.publish {
+            if (!adapter.submitPages(pages, submission.revision)) return@publish
+            if (pages.isEmpty()) return@publish
+            val resolvedPage = currentPage.coerceIn(0, pages.lastIndex)
+            if (viewPager.currentItem != resolvedPage) {
+                suppressCallback = true
+                viewPager.setCurrentItem(resolvedPage, false)
+                suppressCallback = false
+            }
+            pagerState?.updateFromPager(
+                currentPage = viewPager.currentItem,
+                pageOffset = 0f,
+            )
         }
-        if (viewPager.currentItem != resolvedPage) {
-            suppressCallback = true
-            viewPager.setCurrentItem(resolvedPage, false)
-            suppressCallback = false
-        }
-        pagerState?.updateFromPager(
-            currentPage = viewPager.currentItem,
-            pageOffset = 0f,
-        )
     }
 
     fun dispose() {
@@ -157,6 +159,12 @@ internal class DeclarativeHorizontalPagerLayout(
  */
 internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerViewHolder>() {
     private var pages: List<LazyListItem> = emptyList()
+    private var keyCounts: Map<Any, Int> = emptyMap()
+    private val stableIds = linkedMapOf<Any, Long>()
+    private val viewTypes = linkedMapOf<Pair<LazyListItemKind, Any?>, Int>()
+    private var nextStableId = 0L
+    private var nextViewType = 1
+    private var currentSubmissionRevision = 0L
     private val holderRegistry = LazyHolderRegistry<HorizontalPagerViewHolder> { holder ->
         holder.recycle()
     }
@@ -198,6 +206,8 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
     override fun onViewAttachedToWindow(holder: HorizontalPagerViewHolder) {
         super.onViewAttachedToWindow(holder)
         holderRegistry.onAttached(holder)
+        holder.activate(currentSubmissionRevision)
+        refreshHolder(holder, currentSubmissionRevision)
     }
 
     override fun onViewDetachedFromWindow(holder: HorizontalPagerViewHolder) {
@@ -211,35 +221,68 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
 
     override fun getItemCount(): Int = pages.size
 
-    override fun getItemId(position: Int): Long {
-        val key = pages[position].key
-        return key?.hashCode()?.toLong() ?: position.toLong()
+    override fun getItemViewType(position: Int): Int {
+        val page = pages[position]
+        return viewTypes.getOrPut(page.kind to page.contentType) { nextViewType++ }
     }
 
-    fun submitPages(newPages: List<LazyListItem>) {
+    override fun getItemId(position: Int): Long {
+        val key = pages[position].key ?: return Long.MIN_VALUE + position
+        if (keyCounts[key] != 1) return Long.MIN_VALUE + position
+        return stableIds.getOrPut(key) { nextStableId++ }
+    }
+
+    fun submitPages(
+        newPages: List<LazyListItem>,
+        submissionRevision: Long? = null,
+    ): Boolean {
+        val revision = submissionRevision ?: (currentSubmissionRevision + 1L)
+        if (revision <= currentSubmissionRevision) return false
+        val previousKeyCounts = keyCounts
         val result = LazyListDiff.calculate(
             previous = this.pages,
             next = newPages,
         )
         this.pages = result.items
+        keyCounts = pages.mapNotNull(LazyListItem::key).groupingBy { key -> key }.eachCount()
+        stableIds.keys.retainAll(keyCounts.keys)
+        currentSubmissionRevision = revision
         if (result.diffResult != null) {
             result.diffResult.dispatchUpdatesTo(this)
         } else {
             notifyDataSetChanged()
         }
-        if (result.updates.isEmpty()) {
-            holderRegistry.forEachBound { holder ->
-                val position = holder.bindingAdapterPosition
-                if (position != RecyclerView.NO_POSITION && position < this.pages.size) {
-                    holder.bind(this.pages[position])
+        holderRegistry.forEachAttached { holder ->
+            val key = holder.boundPageKey
+            val position = if (key != null) {
+                if (previousKeyCounts[key] != 1 || keyCounts[key] != 1) {
+                    return@forEachAttached
+                }
+                pages.indexOfFirst { page -> page.key == key }
+            } else {
+                holder.boundPagePosition
+            }
+            if (position in pages.indices) {
+                val nextPage = pages[position]
+                if (
+                    holder.boundContentType == nextPage.contentType &&
+                    holder.boundPageKind == nextPage.kind
+                ) {
+                    holder.bind(
+                        item = nextPage,
+                        submissionRevision = revision,
+                        position = position,
+                    )
                 }
             }
         }
+        return true
     }
 
     fun disposeAll() {
         holderRegistry.disposeAll()
         pages = emptyList()
+        keyCounts = emptyMap()
         notifyDataSetChanged()
     }
 
@@ -252,6 +295,30 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
         holder.bind(
             item = pages[position],
             payload = payload,
+            submissionRevision = currentSubmissionRevision,
+            position = position,
+            active = holderRegistry.isAttached(holder),
+        )
+    }
+
+    private fun refreshHolder(
+        holder: HorizontalPagerViewHolder,
+        submissionRevision: Long,
+    ) {
+        val key = holder.boundPageKey
+        val position = when {
+            key != null && keyCounts[key] == 1 -> pages.indexOfFirst { page -> page.key == key }
+            key == null -> holder.boundPagePosition
+            else -> return
+        }
+        if (position !in pages.indices) return
+        val nextPage = pages[position]
+        if (holder.boundContentType != nextPage.contentType || holder.boundPageKind != nextPage.kind) return
+        holder.bind(
+            item = nextPage,
+            submissionRevision = submissionRevision,
+            position = position,
+            active = true,
         )
     }
 }
@@ -263,6 +330,14 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
 internal class HorizontalPagerViewHolder(
     private val container: FrameLayout,
 ) : RecyclerView.ViewHolder(container) {
+    var boundPageKey: Any? = null
+        private set
+    var boundPagePosition: Int = RecyclerView.NO_POSITION
+        private set
+    var boundContentType: Any? = null
+        private set
+    var boundPageKind: LazyListItemKind? = null
+        private set
     private val controller = LazyItemSessionController(
         createSession = { item ->
             item.sessionFactory.create(
@@ -275,14 +350,30 @@ internal class HorizontalPagerViewHolder(
     fun bind(
         item: LazyListItem,
         payload: Any? = null,
+        submissionRevision: Long,
+        position: Int,
+        active: Boolean = true,
     ) {
-        controller.bind(
-            item = item,
-            payload = payload,
-        )
+        boundPageKey = item.key
+        boundPagePosition = position
+        boundContentType = item.contentType
+        boundPageKind = item.kind
+        if (active) {
+            controller.bind(item, payload, submissionRevision)
+        } else {
+            controller.stage(item, payload, submissionRevision)
+        }
     }
 
     fun recycle() {
+        boundPageKey = null
+        boundPagePosition = RecyclerView.NO_POSITION
+        boundContentType = null
+        boundPageKind = null
         controller.recycle()
+    }
+
+    fun activate(submissionRevision: Long) {
+        controller.commit(submissionRevision)
     }
 }

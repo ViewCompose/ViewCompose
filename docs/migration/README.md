@@ -10,7 +10,7 @@ migration preserves ownership, lifecycle, and observable behavior rather than re
 named functions. Use this section to identify semantic gaps before moving a screen to the native
 Android View renderer.
 
-Last verified: **2026-08-09**
+Last verified: **2026-08-12**
 
 Re-verification owner: **maintainers of the Kernel, UI Foundation, Android Engine, Android
 aggregate, and navigation module families**
@@ -79,7 +79,7 @@ evidence. Status terms have one meaning across all pages:
 | --- | --- | --- | --- | --- |
 | State | Mutable state, mutation policies, and read observation | **Supported** | Preserve state ownership; do not depend on Compose callback counts or threads. | [State](compose-state-recomposition-and-restoration.md#mutable-state-and-mutation-policies) |
 | State | Derived state and snapshot transactions | **Partially supported** | Review equal-result suppression, nesting, conflicts, and thread rules. | [State](compose-state-recomposition-and-restoration.md#derived-state-and-invalidation-differences) |
-| State | Snapshot collections and `snapshotFlow` | **Unsupported** | Use immutable collection state or an externally owned observable stream. | [State](compose-state-recomposition-and-restoration.md#snapshots-atomic-updates-and-conflicts) |
+| State | Snapshot collections and `snapshotFlow` | **Partially supported** | `snapshotFlow` is available; snapshot collections still use immutable values in `MutableState`. | [State](compose-state-recomposition-and-restoration.md#snapshots-atomic-updates-and-conflicts) |
 | Composition | Compiler-generated restart, stability, and strong skipping | **Intentionally different** | Choose explicit ViewCompose groups and place reads at the smallest update boundary. | [Recomposition](compose-state-recomposition-and-restoration.md#recomposition-without-the-compose-compiler) |
 | Composition | Positional remember and keyed identity | **Partially supported** | Keep call order stable and do not rely on ordinary keyed-sibling movement during reorder. | [Identity](compose-state-recomposition-and-restoration.md#remembered-identity-keys-and-reordering) |
 | Effects | `SideEffect`, `DisposableEffect`, `LaunchedEffect`, and `produceState` | **Supported** | Move external work to committed effects and make failure cleanup explicit. | [Effects](compose-state-recomposition-and-restoration.md#effects-and-committed-frame-boundaries) |

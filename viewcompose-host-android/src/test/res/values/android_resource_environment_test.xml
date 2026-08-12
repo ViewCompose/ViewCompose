@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="resource_title">Resource title</string>
+    <string name="resource_formatted">Count: %1$d</string>
+    <plurals name="resource_items">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <color name="resource_color">#FF336699</color>
+    <dimen name="resource_dimension">12dp</dimen>
+    <bool name="resource_boolean">true</bool>
+    <integer name="resource_integer">3</integer>
+    <string-array name="resource_strings">
+        <item>alpha</item>
+        <item>beta</item>
+    </string-array>
+    <integer-array name="resource_integers">
+        <item>2</item>
+        <item>4</item>
+    </integer-array>
+</resources>

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview-runner/README.md
-translation_source_hash: d6685d5e48b41988b5bc71d4c321031f2b7809f734d23ae468dc0db5211f4711
+translation_source_hash: dd9c013cfe19e19b263c62c13b682194342d3449f8cd3b571657fada840c92f0
 translation_status: current
 ---
 
@@ -40,8 +40,9 @@ Gradle 和 Studio 不会读取到只写了一部分的产物。响应会记录�
 ## 配置与主题一致性
 
 `PreviewAndroidContextFactory` 把 density、字体比例、视口尺寸、语言、布局方向和亮/暗模式同步到
-Android 资源配置。渲染器同时把相同值安装到 `UiEnvironment`，使原生 View、资源限定符、Android View
-互操作和 DSL 使用同一份配置。
+Android 资源配置。Renderer 会把相同值安装到关闭观察的 `AndroidResourceEnvironment`，使原生
+View、资源查询函数、限定符、Android View 互操作和 DSL 使用同一份确定性配置。静态帧由 Preview
+Descriptor 负责替换，不会由运行时 Configuration Callback 修改。
 
 当描述符指定 `PreviewThemeProvider` 时，其 Context 和 `UiThemeTokens` 是权威结果。否则 Android 主题
 桥接会在关闭动态色的前提下解析配置 Context，使 Studio、Gradle 与 CI 的结果可复现。请求指定 API

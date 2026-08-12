@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: dbba7037f6857d69ab0e467db9dbfb9921630688ed85bde902f9b786135d2250
+translation_source_hash: 697bcb9c0805df9a7db77223d96cf078c8dbc4f0fa1f88e0eec411eb085a7777
 translation_status: current
 ---
 
@@ -115,9 +115,19 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   `ReloadAll`，保护 RecyclerView holder 状态。
 - Horizontal 与 Vertical Pager Holder 会在复用期间保留 `Page` 源码 Session 角色。RecyclerView
   行与 Tab Item 保持 `Content`；该角色不影响 Key、差分、测量、可见性或回调。
-- 只要影响输出的捕获值发生变化，Lazy item 的 `contentToken` 就必须变化。即使 item 语义未变，
-  session 回调也会从 next 列表中的原始 item 实例刷新。
-- 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
+- Lazy item 的 `contentToken` 控制语义差分 Payload，而不是决定可见的保留 Session 能否渲染。
+  新发射的不可变 item 快照会建立一个单调递增的提交；父级 composition 提交后，Renderer 才安装
+  next item 的准确闭包，并让每个已 attach Session 渲染一次，即使 Token 相等也一样。父级回滚、
+  RecyclerView 延迟重复 Payload 以及回调对象复用都不会产生额外子渲染。
+- Lazy 与 Pager 的主动刷新仅面向已 attach holder。detach 缓存 holder 不运行子 composition 或
+  effect，并在再次 attach 时接收最新已提交修订。key 缺失或重复时走保守 reload；Renderer 不会
+  用 first-match key 查询解析有歧义的 holder。
+- Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
+  `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一的 holder，无 key 缓存页则保留位置
+  归属，直到 RecyclerView 派发替换 bind。
+- 定向 patch 和子树跳过只是优化。只有每个直接 child 都是组合所复用的完全相同 VNode 实例时，
+  才能跳过完整原生子树；新构建但值相等的 child 仍需调和，因为嵌套 Session 回调可能已变化。
+  自定义 host 不得从 patch 记录或诊断计数推断业务状态。
 - Gesture 分发会保留尚未判定的 Pointer Stream，直到识别出 Drag。若 Stream 结束时没有被 Gesture
   消费，保留目标会收到一次普通 Click；已识别的 Drag 会消费 Stream 并抑制该 Click。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。
@@ -143,6 +153,18 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   索引。选中态和标题态读取 item 已有的语义字段，防止组件通过重复契约暴露相互矛盾的无障碍状态。
 
 ## Android host 与线程规则
+
+每个 VNode 绑定都包含捕获的资源版本。版本变化时，即使 NodeSpec 和资源 ID 相等，也会执行正常的
+完整重绑。直接 Drawable/Icon 资源会从节点当前 Context 再次解析；只要 Source、Placeholder、
+Error 或 Fallback 使用资源，规范化图片请求就会把版本传给 Adapter。纯远端请求保留普通请求标识。
+
+文本节点未显式设置 `lineHeightSp` 时，会保留原生 View 的行距参数，而不是复用在旧字号下捕获的
+固定像素行高。因此，自然行高会在 View 复用和环境重绑期间随已解析字体、字号与字体缩放变化；
+显式 `lineHeightSp` 仍具有最终权限。
+
+对于 Lazy 集合，Renderer 统一持有一份合成后的原生 Padding：逻辑 `contentPadding`、物理
+`Modifier.padding` 与选定的系统栏/IME Insets 按边相加。逻辑 start/end 会根据捕获的布局方向
+解析；资源或配置重绑期间会保留最近一次平台 Insets 快照，直到 Android 分发更新值。
 
 - 渲染、释放、View 绑定、Pager 更新和装饰回调都限制在 UI 线程。
 - 一个容器只有一个已挂载树所有者。不得在容器或 render session 之间共享 mounted node。

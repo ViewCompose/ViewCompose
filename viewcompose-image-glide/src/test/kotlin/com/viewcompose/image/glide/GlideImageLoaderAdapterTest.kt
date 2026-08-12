@@ -142,6 +142,31 @@ class GlideImageLoaderAdapterTest {
     }
 
     @Test
+    fun `resource cache identity changes with revision but remote identity stays loader owned`() {
+        val adapter = GlideImageLoaderAdapter()
+
+        assertEquals(
+            "viewcompose-resource:${android.R.drawable.ic_menu_gallery}:9",
+            adapter.resourceCacheIdentity(
+                UiImageRequest(
+                    source = ImageSource.Resource(android.R.drawable.ic_menu_gallery),
+                    resourceRevision = 9L,
+                ),
+            ),
+        )
+        assertEquals(
+            null,
+            adapter.resourceCacheIdentity(
+                UiImageRequest(
+                    source = ImageSource.Url("https://example.com/a.png"),
+                    error = ImageSource.Resource(android.R.drawable.stat_notify_error),
+                    resourceRevision = 9L,
+                ),
+            ),
+        )
+    }
+
+    @Test
     fun `load returns a repeatably clearable handle`() {
         val adapter = GlideImageLoaderAdapter()
         val imageView = ImageView(context)

@@ -126,11 +126,22 @@ Because the current line is alpha, the documentation site intentionally does not
 - Horizontal and vertical pager holders preserve the `Page` source-session role across reuse.
   RecyclerView rows and tab items remain `Content`; this role does not affect keys, diffing,
   measurement, visibility, or callbacks.
-- A lazy item's `contentToken` must change whenever captured values that affect output change.
-  Session callbacks are refreshed from the exact next item instance even when the semantic item is
-  otherwise unchanged.
-- Targeted patching and subtree skipping are optimizations. Custom host behavior must not infer
-  business state from patch records or diagnostic counters.
+- A lazy item's `contentToken` controls semantic diff payloads, not whether a visible retained
+  session may render. A newly emitted immutable item snapshot creates one monotonic submission;
+  after the parent composition commits, the renderer installs the exact next closure and renders
+  each attached session once even when the token is equal. Parent rollback, delayed duplicate
+  RecyclerView payloads, and callback-object reuse cannot create an extra child render.
+- Proactive lazy and pager refresh is limited to attached holders. Detached cached holders stage
+  no child composition or effects and receive the latest committed submission when reattached.
+  Missing or duplicate keys use the conservative reload path; the renderer never resolves an
+  ambiguous holder through first-match key lookup.
+- Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
+  incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned holders, and
+  unkeyed cached pages retain position ownership until RecyclerView supplies a replacement bind.
+- Targeted patching and subtree skipping are optimizations. A complete native subtree is skipped
+  only when every direct child is the exact VNode instance reused by composition; newly built,
+  value-equal children still reconcile because nested session callbacks may have changed. Custom
+  host behavior must not infer business state from patch records or diagnostic counters.
 - Gesture dispatch retains an undecided pointer stream until drag recognition. If the stream ends
   without gesture consumption, the retained target receives one normal click; a recognized drag
   consumes the stream and suppresses that click.
@@ -166,6 +177,22 @@ Because the current line is alpha, the documentation site intentionally does not
   accessibility state through duplicate contracts.
 
 ## Android host and threading rules
+
+Every VNode binding includes its captured resource revision. A revision change therefore performs
+a normal full rebind even when the NodeSpec and resource IDs compare equal. Direct drawable/icon
+resources resolve again from the node's current Context, and normalized image requests carry the
+revision to adapters when a source, placeholder, error, or fallback is resource-backed. Remote-only
+requests retain their ordinary request identity.
+
+Text nodes with no explicit `lineHeightSp` retain the native View's line-spacing parameters rather
+than a pixel line height captured at an earlier text size. Their natural line height therefore
+tracks the resolved typeface, text size, and font scale across reuse and environment rebinds. An
+explicit `lineHeightSp` remains authoritative.
+
+For lazy collections, the renderer owns one composite native padding value: logical `contentPadding`,
+physical `Modifier.padding`, and selected system-bar/IME insets are additive. Logical start/end
+values resolve against the captured layout direction, and a resource or configuration rebind must
+retain the last delivered inset snapshot until Android dispatches a newer one.
 
 - Render, disposal, View binding, pager updates, and decoration callbacks are UI-thread confined.
 - One container has one mounted-tree owner. Do not share mounted nodes between containers or render

@@ -9,6 +9,8 @@ import com.viewcompose.ui.modifier.semantics
 import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.node.ImageContentScale
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageCachePolicy
@@ -29,6 +31,40 @@ import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.unit.UiDensity
 import com.viewcompose.ui.unit.dp
 import java.io.File
+
+fun lazyListItemSessionUpdateSample() {
+    val session = object : LazyListItemSession {
+        var installedLabel = ""
+        var renderCount = 0
+
+        override fun render() {
+            renderCount += 1
+        }
+
+        override fun dispose() = Unit
+    }
+    val initial = LazyListItem(
+        key = "account",
+        contentToken = "row-v1",
+        sessionFactory = { session },
+        sessionUpdater = { retained ->
+            check(retained === session)
+            session.installedLabel = "Initial"
+        },
+    )
+    val refreshed = LazyListItem(
+        key = "account",
+        contentToken = "row-v1",
+        sessionFactory = { session },
+        sessionUpdater = { session.installedLabel = "Updated" },
+    )
+
+    check(initial == refreshed)
+    refreshed.sessionUpdater?.invoke(session)
+    session.render()
+    check(session.installedLabel == "Updated")
+    check(session.renderCount == 1)
+}
 
 fun vNodeModelSample() {
     val spacer = VNode(

@@ -55,7 +55,9 @@ by a later renderer or child render session.
 ## Principal APIs
 
 - [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-ui-tree-builder/)
-  and its component functions build declarative node trees without creating Android Views.
+  and its component functions build declarative node trees without creating Android Views. Its Q3
+  low-level `emit` boundary treats child-content closure identity as a recomposition input; the
+  compiled `emittedContentClosureSample` demonstrates direct custom-node construction.
 - [`Theme` and `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
   expose immutable color, typography, shape, sizing, interaction, and overlay tokens without
   choosing a design system. Typography supports all display, headline, title, body, and label
@@ -112,7 +114,13 @@ by a later renderer or child render session.
   decoder. A subtree may install one `UiImageLoader` or leave it absent for resource-only rendering.
 - [`remember`, `produceState`, and effects](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/)
   integrate the platform-neutral composition runtime with structured coroutines and committed
-  side effects.
+  side effects. `DisposableEffect` and `LaunchedEffect` require keys; disposable setup terminates
+  in `onDispose`. Unkeyed `SideEffect` runs after every successful invocation, while keyed overloads
+  publish only on initial commit and structural key change.
+- `CompositionEffectContext` is the Q3 low-level bridge for optional integration modules that
+  implement additional synchronous or coroutine effect primitives. It marks callbacks so any Local
+  read fails instead of consuming a default or unrelated provider, but never captures or restores a
+  provider stack; ordinary application code uses the standard effect APIs.
 - [`rememberSaveable` and `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-saveable-state-registry/)
   preserve state through composition disposal and host recreation with transactional restoration.
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
@@ -133,14 +141,42 @@ Because the current line is alpha, the documentation site intentionally does not
 
 ## State, rendering, and lifecycle rules
 
+`UiEnvironment` now transports `resourceRevision`; `Environment.resourceRevision` exposes the
+current immutable value while building content. Local snapshots preserve it for lazy items,
+pagers, overlays, and navigation destinations. Android resource resolution and observation remain
+outside UI Foundation in `viewcompose-host-android`; no named design system owns this neutral Local.
+
 - A `UiTreeBuilder` is an ephemeral recorder. Do not retain it or invoke a captured builder after
   its content block returns. Retain state and stable keys instead.
+- ViewCompose has no compiler transform that can infer every ordinary captured Kotlin value. A
+  newly installed emitted-content closure therefore rebuilds that group even when the node spec is
+  value-equal; only the exact retained closure may reuse a clean child result. This favors correct
+  captured values and child-session callbacks over an unsafe value-equality subtree skip.
+- Collection item snapshots, rather than their callback object identities, delimit logical child
+  submissions. Rebuilding a value-equal item therefore invalidates its collection group even when
+  a caller deliberately reuses the same session factory or updater instance.
 - `remember` and effects require an active composition. Positional identity follows the structural
   call path; use stable `key` groups and lazy-item keys when content can move.
+- Candidate effect changes are transactional. A failed composition or native tree render starts no
+  candidate work, retains committed subscriptions and jobs, and discards candidate
+  `rememberUpdatedState` publication. After native success, committed-value publication and all
+  outgoing lifecycle callbacks precede incoming lifecycle callbacks, then `SideEffect`, native
+  `AndroidView.onCommit`, overlay, and diagnostics work.
+- `DisposableEffect` setup and cleanup are synchronous and terminal. A throwing setup owns no
+  cleanup and is not retried for equal keys; a throwing cleanup is never invoked again. Independent
+  lifecycle callbacks are still attempted.
+- `LaunchedEffect` inherits the render session coroutine context and requires explicit restart
+  identity. `rememberCoroutineScope` is for event callbacks and owns a normal child Job. Passing a
+  context containing a Job returns a failed scope rather than detaching work from composition.
+- Effect callbacks resolve and capture `Theme`, environment, lifecycle, and host capability values
+  while declaring the effect. Provider stacks are not implicitly restored around callbacks;
+  built-in effect scopes reject Local reads with a named diagnostic even if another provider is
+  active on the callback thread. Debug render sessions warn when synchronous callbacks exceed 16 ms.
 - `rememberSaveable` registers providers only after composition commit. A failed or abandoned
   composition releases its restored claim so a later attempt can still restore the value.
-- `UiTheme` accepts platform-independent tokens. Material Android resource resolution belongs to
-  `viewcompose-material3`, including configuration observation and explicit refresh.
+- `UiTheme` accepts platform-independent tokens. Android resource observation belongs to
+  `viewcompose-host-android`; a named design system such as Material maps the resulting host
+  revision into its own token refresh policy.
 - Existing three-family typography construction remains concise: omitted headline roles derive
   from title roles and omitted display roles derive from headlines. Existing three-tier shape
   construction also remains valid: omitted extra-small/extra-large roles derive from small/large,
@@ -177,6 +213,7 @@ hosts must preserve the same ordering and ownership guarantees.
 
 - [Current architecture and module boundaries](../../architecture/overview.md)
 - [State and snapshot architecture](../../architecture/state-snapshots.md)
+- [Transactional effects and structured work](../../architecture/effects.md)
 - [Node specifications and renderer registration](../../architecture/node-spec.md)
 - [Lazy collection guide](../../guides/lazy-collections.md)
 - [Theme and Android integration](../../guides/theming.md)
@@ -192,6 +229,13 @@ retired package alias. Do not persist automatic saveable keys, session identifie
 implementation names, callback instances, tooling metadata, or diagnostics shapes as external
 long-lived data. Custom renderers and hosts must be upgraded with contract changes even when an
 application's component source still compiles.
+
+The effect-runtime hard cut requires at least one key for `DisposableEffect` and `LaunchedEffect`.
+Disposable setup now returns cleanup only through `DisposableEffectScope.onDispose`; migrate a
+lambda-return cleanup by making `onDispose { ... }` the setup block's final expression. Keyed
+`SideEffect` is an additive ViewCompose change-only publication form. Effect lifecycle, rollback,
+coroutine ownership, and `rememberUpdatedState` publication now follow the transactional contract
+in [Transactional effects and structured work](../../architecture/effects.md).
 
 `RenderSessionPlatformDiagnostics.sourceTooling`, `RenderSessionSourceTooling`, and
 `RenderSessionSourceRegistration` are additive Q3 tooling APIs. Existing platform diagnostics use

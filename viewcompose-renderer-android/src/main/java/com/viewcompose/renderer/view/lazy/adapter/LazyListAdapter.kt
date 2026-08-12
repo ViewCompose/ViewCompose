@@ -14,7 +14,9 @@ import com.viewcompose.renderer.reconcile.LazyListIdentityInspector
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
+import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
+import com.viewcompose.ui.state.LazyListState
 
 /**
  * RecyclerView adapter shared by LazyColumn, LazyRow, and lazy grids.
@@ -36,6 +38,7 @@ internal class LazyListAdapter(
     )
 
     private var items: List<LazyListItem> = emptyList()
+    private var keyCounts: Map<Any, Int> = emptyMap()
     // The registry tracks holder lifecycle across attach, detach, recycle, and dispose entry points.
     // Holder lifetimes are tracked centrally by the registry across attach, detach, recycle, and dispose paths.
     private val holderRegistry = LazyHolderRegistry<LazyListViewHolder> { holder ->
@@ -48,6 +51,8 @@ internal class LazyListAdapter(
     private var nextStableId = 0L
     private var nextViewType = 1
     private var itemsVersion = 0L
+    private var currentSubmissionRevision = 0L
+    private var listState: LazyListState? = null
     private var stickyHeaderDisposer: (() -> Unit)? = null
 
     init {
@@ -104,6 +109,8 @@ internal class LazyListAdapter(
     override fun onViewAttachedToWindow(holder: LazyListViewHolder) {
         super.onViewAttachedToWindow(holder)
         holderRegistry.onAttached(holder)
+        holder.activate(currentSubmissionRevision)
+        refreshHolder(holder, currentSubmissionRevision)
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -132,6 +139,7 @@ internal class LazyListAdapter(
 
     override fun getItemId(position: Int): Long {
         val key = items[position].key ?: return Long.MIN_VALUE + position
+        if (keyCounts[key] != 1) return Long.MIN_VALUE + position
         return stableIds.getOrPut(key) { nextStableId++ }
     }
 
@@ -168,7 +176,12 @@ internal class LazyListAdapter(
         position: Int,
     ): LazyListViewHolder {
         return onCreateViewHolder(parent, getItemViewType(position)).also { holder ->
-            holder.bind(items[position])
+            holder.bind(
+                item = items[position],
+                submissionRevision = currentSubmissionRevision,
+                position = position,
+                active = true,
+            )
         }
     }
 
@@ -176,7 +189,12 @@ internal class LazyListAdapter(
         holder: LazyListViewHolder,
         position: Int,
     ) {
-        holder.bind(items[position])
+        holder.bind(
+            item = items[position],
+            submissionRevision = currentSubmissionRevision,
+            position = position,
+            active = true,
+        )
     }
 
     fun recycleDetachedHolder(holder: LazyListViewHolder) {
@@ -187,10 +205,16 @@ internal class LazyListAdapter(
         stickyHeaderDisposer = disposer
     }
 
-    fun submitItems(items: List<LazyListItem>) {
+    fun submitItems(
+        items: List<LazyListItem>,
+        submissionRevision: Long? = null,
+    ): Boolean {
         warnAboutIdentityIssues(items)
+        val previousItems = this.items
+        val revision = submissionRevision ?: (currentSubmissionRevision + 1L)
+        if (revision <= currentSubmissionRevision) return false
         val result = LazyListDiff.calculate(
-            previous = this.items,
+            previous = previousItems,
             next = items,
         )
         // Preserve the first visible-item anchor when diffing falls back, reducing jumps after notifyDataSetChanged.
@@ -201,6 +225,12 @@ internal class LazyListAdapter(
             null
         }
         this.items = result.items
+        keyCounts = result.items
+            .mapNotNull(LazyListItem::key)
+            .groupingBy { key -> key }
+            .eachCount()
+        stableIds.keys.retainAll(keyCounts.keys)
+        currentSubmissionRevision = revision
         itemsVersion += 1
         if (result.diffResult != null) {
             result.diffResult.dispatchUpdatesTo(this)
@@ -208,16 +238,83 @@ internal class LazyListAdapter(
             notifyDataSetChanged()
             restoreScrollAnchor(reloadAnchor)
         }
-        if (result.updates.isEmpty()) {
-            // Rebind visible holders even when structure is stable so external state reaches item content.
-            // When structure is unchanged, still rebind visible holders so external state changes reach item content.
-            holderRegistry.forEachBound { holder ->
-                val position = holder.bindingAdapterPosition
-                if (position != RecyclerView.NO_POSITION && position < this.items.size) {
-                    holder.bind(this.items[position])
-                }
-            }
+        refreshAttachedHolders(previousItems, revision)
+        return true
+    }
+
+    fun bindState(
+        recyclerView: RecyclerView,
+        state: LazyListState?,
+        mainAxisItemSpacing: Int,
+    ) {
+        if (listState !== state) {
+            listState?.attach(null)
+            listState = state
         }
+        listState?.attach(
+            UiLazyListConnector(
+                recyclerView = recyclerView,
+                mainAxisItemSpacing = mainAxisItemSpacing,
+            ),
+        )
+    }
+
+    private fun refreshAttachedHolders(
+        previousItems: List<LazyListItem>,
+        submissionRevision: Long,
+    ) {
+        val previousKeyCounts = previousItems
+            .mapNotNull(LazyListItem::key)
+            .groupingBy { key -> key }
+            .eachCount()
+        holderRegistry.forEachAttached { holder ->
+            val boundKey = holder.boundItemKey
+            val position = if (boundKey != null) {
+                if (previousKeyCounts[boundKey] != 1 || keyCounts[boundKey] != 1) {
+                    return@forEachAttached
+                }
+                items.indexOfFirst { item -> item.key == boundKey }
+            } else {
+                holder.boundItemPosition
+            }
+            if (position !in items.indices) return@forEachAttached
+            val nextItem = items[position]
+            if (
+                holder.boundContentType != nextItem.contentType ||
+                holder.boundItemKind != nextItem.kind
+            ) {
+                // RecyclerView must replace structurally incompatible holders through its queued
+                // change notification; rebinding the old holder would violate contentType reuse.
+                return@forEachAttached
+            }
+            holder.bind(
+                nextItem,
+                submissionRevision = submissionRevision,
+                position = position,
+                active = true,
+            )
+        }
+    }
+
+    private fun refreshHolder(
+        holder: LazyListViewHolder,
+        submissionRevision: Long,
+    ) {
+        val boundKey = holder.boundItemKey
+        val position = when {
+            boundKey != null && keyCounts[boundKey] == 1 -> items.indexOfFirst { item -> item.key == boundKey }
+            boundKey == null -> holder.boundItemPosition
+            else -> return
+        }
+        if (position !in items.indices) return
+        val nextItem = items[position]
+        if (holder.boundContentType != nextItem.contentType || holder.boundItemKind != nextItem.kind) return
+        holder.bind(
+            nextItem,
+            submissionRevision = submissionRevision,
+            position = position,
+            active = true,
+        )
     }
 
     private fun warnAboutIdentityIssues(items: List<LazyListItem>) {
@@ -240,7 +337,10 @@ internal class LazyListAdapter(
         stickyHeaderDisposer = null
         disposeStickyHeader?.invoke()
         holderRegistry.disposeAll()
+        listState?.attach(null)
+        listState = null
         items = emptyList()
+        keyCounts = emptyMap()
         itemsVersion += 1
     }
 
@@ -254,6 +354,9 @@ internal class LazyListAdapter(
         holder.bind(
             item = items[position],
             payload = payload,
+            submissionRevision = currentSubmissionRevision,
+            position = position,
+            active = holderRegistry.isAttached(holder),
         )
     }
 
@@ -393,6 +496,15 @@ internal class LazyListSpacingDecoration(
 internal class LazyListViewHolder(
     private val container: FrameLayout,
 ) : RecyclerView.ViewHolder(container) {
+    var boundItemKey: Any? = null
+        private set
+    var boundItemPosition: Int = RecyclerView.NO_POSITION
+        private set
+    var boundContentType: Any? = null
+        private set
+    var boundItemKind: LazyListItemKind? = null
+        private set
+
     private val controller = LazyItemSessionController(
         createSession = { item ->
             item.sessionFactory.create(container.asRenderContainerHandle())
@@ -403,14 +515,38 @@ internal class LazyListViewHolder(
     fun bind(
         item: LazyListItem,
         payload: Any? = null,
+        submissionRevision: Long,
+        position: Int,
+        active: Boolean,
     ) {
-        controller.bind(
-            item = item,
-            payload = payload,
-        )
+        boundItemKey = item.key
+        boundItemPosition = position
+        boundContentType = item.contentType
+        boundItemKind = item.kind
+        if (active) {
+            controller.bind(
+                item = item,
+                payload = payload,
+                submissionRevision = submissionRevision,
+            )
+        } else {
+            controller.stage(
+                item = item,
+                payload = payload,
+                submissionRevision = submissionRevision,
+            )
+        }
     }
 
     fun recycle() {
+        boundItemKey = null
+        boundItemPosition = RecyclerView.NO_POSITION
+        boundContentType = null
+        boundItemKind = null
         controller.recycle()
+    }
+
+    fun activate(submissionRevision: Long) {
+        controller.commit(submissionRevision)
     }
 }

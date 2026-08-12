@@ -94,20 +94,25 @@ class UiLocaleList private constructor(
  *
  * Values are snapshots taken while the declarative tree is built. A renderer must use this
  * captured environment for unit conversion, locale-sensitive behavior, and logical direction;
- * later platform configuration changes require a new tree to update existing nodes.
+ * later platform configuration changes require a new tree to update existing nodes. A host may
+ * advance [resourceRevision] to invalidate resource-backed bindings whose integer resource IDs
+ * remain equal across configuration or theme changes.
  *
  * @property density density and font scale used at the renderer boundary
  * @property locales ordered locale preferences for the subtree
  * @property layoutDirection logical direction used to resolve start/end semantics
+ * @property resourceRevision host-scoped resource invalidation identity; this value is monotonic
+ * within one mounted host and must not be persisted or compared across hosts
  */
 data class UiEnvironmentValues(
     val density: UiDensity = UiDensity.Default,
     val locales: UiLocaleList = UiLocaleList.Undetermined,
     val layoutDirection: UiLayoutDirection = UiLayoutDirection.Ltr,
+    val resourceRevision: Long = 0L,
 ) {
     /** Provides the environment used when no host-specific values are installed. */
     companion object {
-        /** Unit density, undetermined locale, and left-to-right layout defaults. */
+        /** Unit density, undetermined locale, left-to-right layout, and zero resource revision. */
         val Default = UiEnvironmentValues()
     }
 }

@@ -60,6 +60,12 @@ created for the node.
   captures density, locale tags, and logical layout direction for a subtree.
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   and pager state bridge platform scrolling to observable runtime state.
+- `LazyListItem` is the Q3 renderer-neutral item/session contract. `contentToken` drives semantic
+  collection diffing, while callback identity is deliberately excluded from value equality and
+  submission identity. A renderer treats each newly submitted immutable item snapshot as a logical
+  revision, installs its exact updater only after the parent frame commits, and renders an active
+  retained session at most once for that revision. The compiled
+  `lazyListItemSessionUpdateSample` demonstrates equal-token closure replacement.
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.
@@ -95,6 +101,12 @@ Because the current line is alpha, the documentation site intentionally does not
 
 ## Contract and lifecycle rules
 
+`UiEnvironmentValues.resourceRevision` is a host-published, monotonic invalidation identity. It is
+not a semantic configuration model or persisted version. VNodes capture it with density, locales,
+and layout direction so a renderer can rebind resource-backed properties whose integer IDs remain
+equal after a qualifier change. `UiImageRequest.resourceRevision` carries the same identity through
+first-party image loaders; its zero default preserves deterministic non-Android/custom hosts.
+
 - `VNode.type` and `VNode.spec` are a registry-level pair. Construction is intentionally cheap and
   does not validate compatibility; a renderer must reject an unsupported pair deterministically.
 - A node specification is an immutable render snapshot. Callbacks may capture mutable application
@@ -129,6 +141,10 @@ Because the current line is alpha, the documentation site intentionally does not
   instead of consulting unrelated process-global density, locale, or direction state.
 - `LazyListState`, pager state, focus requesters, and nested-scroll dispatchers attach to one current
   renderer connector. Hosts must detach old connectors during replacement or disposal.
+- A renderer retaining a `LazyListItem` session must install the latest `sessionUpdater` whenever a
+  parent refresh reaches that bound item, even when `contentToken` is equal. It must render that new
+  updater once, while duplicate delivery of the exact same updater and token must not repeat a
+  logical render or its effects.
 - State and connector commands are thread-confined to the owning renderer thread. Android
   integrations use the main thread, and callbacks run synchronously unless a concrete contract says
   otherwise.

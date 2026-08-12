@@ -216,6 +216,7 @@ class MediaViewBinderTest {
             imageLoader = loader,
             requestOptions = UiImageRequestOptions(),
             density = UiDensity.Default,
+            resourceRevision = 0L,
         )
     }
 

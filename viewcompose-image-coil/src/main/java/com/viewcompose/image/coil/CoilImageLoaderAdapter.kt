@@ -67,6 +67,7 @@ class CoilImageLoaderAdapter(
             .data(request.source.toCoilData())
             .target(imageView)
             .apply {
+                resourceCacheIdentity(request)?.let(::memoryCacheKey)
                 request.placeholder?.let { placeholder(it.resId) }
                 request.error?.let { error(it.resId) }
                 val decodeSize = request.options.decodeSize
@@ -104,6 +105,11 @@ class CoilImageLoaderAdapter(
             is ImageSource.File -> file
             is ImageSource.Model -> value
         }
+    }
+
+    internal fun resourceCacheIdentity(request: UiImageRequest): String? {
+        val source = request.source as? ImageSource.Resource ?: return null
+        return "viewcompose-resource:${source.resId}:${request.resourceRevision}"
     }
 
     private fun ImageContentScale.toCoilScale(): Scale {

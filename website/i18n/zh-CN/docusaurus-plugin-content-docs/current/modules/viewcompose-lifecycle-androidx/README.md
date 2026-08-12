@@ -1,14 +1,14 @@
 ---
 translation_source: modules/viewcompose-lifecycle-androidx/README.md
-translation_source_hash: 01e2b2e84a6ad0d5c20d2f3ccb880a51db030c856d99f4bd9be8e0453f666d5c
+translation_source_hash: 405c7a975d29227693cb542bef7430f770979c8fdecafbdc5c4f4118737a8f2e
 translation_status: current
 ---
 
 # AndroidX Lifecycle 集成
 
 `viewcompose-lifecycle-androidx` 把 Kotlin `Flow` 收集及 ViewCompose 组合工作连接到 AndroidX
-Lifecycle。它提供 Android 宿主安装的 LifecycleOwner Local，以及感知生命周期和仅感知组合
-生命周期的 `collectAsState` 适配器。
+Lifecycle。它提供 Android 宿主安装的 LifecycleOwner Local、感知生命周期和仅感知组合
+生命周期的 `collectAsState` 适配器、成对 Start/Resume Effect，以及可观察 Lifecycle State。
 
 ## 产物与稳定性
 
@@ -74,6 +74,22 @@ fun UiTreeBuilder.Profile(model: ProfileModel) {
 普通 UI 使用 Owner 重载；基础设施组件有意不持有 `LifecycleOwner` 时，使用显式 `Lifecycle`
 重载。
 
+## 成对 Lifecycle Effect
+
+`LifecycleStartEffect(key)` 与 `LifecycleResumeEffect(key)` 只在最近或指定 Owner 至少处于
+`STARTED` 或 `RESUMED` 时运行成对同步工作。Setup 在组合成功提交后开始；Cleanup 在对应下降
+转换、Destroy、Key 或 Owner 替换、离开组合或释放 Session 时执行。
+
+每个 Setup 必须以 `onStopOrDispose { ... }` 或 `onPauseOrDispose { ... }` 结束。Key 是强制的，
+并使用结构相等性。替换 Cleanup 会先于替换 Setup 完成；Abort 候选不会分离已提交 Observer，
+也不会启动替换对象。Setup 抛出会分离该 Observer，并在身份变化前不再重试；Cleanup 抛出后
+进入终态。这些回调同步运行在 Lifecycle Dispatch Thread，不得阻塞。Composition Local 必须在
+声明 Effect 时解析；后续 Lifecycle Callback 读取 Local 时，会用 Local Diagnostic Name 失败，
+即使该线程上恰好有另一个无关 Provider 处于活跃状态也不会读取它。
+
+`Lifecycle.currentStateAsState()` 返回稳定、归组合所有的 Holder；它在 Commit 后观察每次状态
+转换，协调首次安装期间竞态的转换，并在离开组合时移除 Observer。
+
 ## Coroutine Context 与结构化 Ownership
 
 可选 `context` 可选择 Dispatcher、CoroutineName 或其他非 Job 元素。传入 `Job`（包括
@@ -96,6 +112,9 @@ Flow identity、Lifecycle identity、活跃阈值和 Context 共同构成 produc
 | `StateFlow`，最近或显式 Owner | `collectAsStateWithLifecycle(...)` |
 | 普通 `Flow`，最近或显式 Owner | `collectAsStateWithLifecycle(initial, ...)` |
 | 没有当前 Owner，但存在显式 Lifecycle | 接收 `Lifecycle` 的重载 |
+| 在 Started 期间执行成对 Setup/Cleanup | `LifecycleStartEffect(key) { ... }` |
+| 在 Resumed 期间执行成对 Setup/Cleanup | `LifecycleResumeEffect(key) { ... }` |
+| 在声明式内容中观察 Lifecycle State | `lifecycle.currentStateAsState()` |
 
 不要把返回值再镜像到第二个 `MutableState`；读取返回 State 已经会参与 runtime observation，
 并使所属组合 Scope 失效。
@@ -111,6 +130,7 @@ Flow identity、Lifecycle identity、活跃阈值和 Context 共同构成 produc
 - [Android host 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-host-android)
 - [UI Foundation 模块](https://docs.viewcompose.com/zh-CN/modules/viewcompose-ui-foundation)
 - [生命周期与 Saved State 架构](https://docs.viewcompose.com/zh-CN/architecture/lifecycle-and-saved-state)
+- [事务式 Effect 与结构化工作](https://docs.viewcompose.com/zh-CN/architecture/effects)
 - [源码文档与 API 注释规范](https://docs.viewcompose.com/zh-CN/project/api-documentation-quality)
 
 完整生成式参考位于
@@ -121,3 +141,8 @@ Flow identity、Lifecycle identity、活跃阈值和 Context 共同构成 produc
 `0.1.0-alpha01` 建立了 nullable Owner 查询、Scoped Owner 提供、感知 commit 的 collector 启动、
 结构化取消、`repeatOnLifecycle` 重启行为，以及不活跃期间保留 State。Flow 错误应显式建模，
 收集 Context 中绝不能传入独立 Job。
+
+`LifecycleStartEffect`、`LifecycleResumeEffect` 与 `Lifecycle.currentStateAsState()` 是本版本新增的
+Q3 Lifecycle API。成对 Effect 至少要求一个显式 Key，且不会替代现有 Flow Collection API；
+当被拥有的工作本身（而不只是数据收集）必须随 Android Lifecycle Threshold 进入和退出时，
+应选择这些 API。

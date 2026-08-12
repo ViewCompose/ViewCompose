@@ -62,6 +62,11 @@ the session and request another ViewCompose render. Theme, debug configuration, 
 container changes recreate the session. Leaving the Compose composition disposes it. Content must
 not remove or retain the bridge-owned root.
 
+The bridge installs `AndroidResourceEnvironment` from the same container Context used to create
+native Views. Android resource lookup functions therefore resolve the active Compose-preview
+configuration, and configuration callbacks advance the same revision used by ordinary Android
+hosts rather than a preview-only resolver.
+
 `ViewComposePreviewOptions` selects light or dark `UiThemeDefaults` and optional render diagnostics.
 These options are intentionally small; static-preview configuration matrices belong to preview-core.
 

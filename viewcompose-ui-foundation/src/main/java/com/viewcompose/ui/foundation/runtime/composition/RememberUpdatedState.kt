@@ -1,18 +1,22 @@
 package com.viewcompose.ui.foundation
 
 import com.viewcompose.runtime.State
-import com.viewcompose.runtime.mutableStateOf
 
 /**
- * Returns a stable State reference while writing the latest value on every composition.
+ * Returns a stable state holder that publishes [newValue] only when the candidate frame commits.
+ *
+ * The current composition sees its candidate value immediately. Previously committed effects keep
+ * reading the committed value until commit, and abort discards the candidate. Publication happens
+ * before outgoing and incoming effect lifecycle callbacks, allowing a long-lived effect to use the
+ * latest callback without restarting for callback identity changes.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.rememberUpdatedStateSample
+ * @param T type of value retained by the holder
+ * @param newValue candidate value for this composition attempt
+ * @return the stable positional state holder
  */
 fun <T> rememberUpdatedState(
     newValue: T,
-): State<T> {
-    val state = remember {
-        mutableStateOf(newValue)
-    }
-    // DisposableEffect starts in the commit phase after this composition snapshot closes, so effect callbacks observe this value.
-    state.value = newValue
-    return state
-}
+): State<T> = ComposerContext
+    .requireCurrentComposer("rememberUpdatedState")
+    .rememberUpdatedState(newValue)

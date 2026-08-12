@@ -19,8 +19,8 @@ class LazyItemSessionControllerTest {
         val controller = createController(events)
         val item = item(key = "A", contentToken = 1)
 
-        controller.bind(item)
-        controller.bind(item)
+        controller.bind(item, submissionRevision = 1L)
+        controller.bind(item, submissionRevision = 1L)
 
         assertEquals(
             listOf("clear", "create:A:1", "render:A:1"),
@@ -29,7 +29,7 @@ class LazyItemSessionControllerTest {
     }
 
     @Test
-    fun `refreshes existing session updater when key and content token are unchanged`() {
+    fun `refreshes and renders existing session when key and content token are unchanged`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
 
@@ -59,6 +59,152 @@ class LazyItemSessionControllerTest {
                 "update:A:1:first",
                 "render:A:1:first",
                 "update:A:1:second",
+                "render:A:1:second",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `renders a reused updater once for each submission revision`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        val updater: (LazyListItemSession) -> Unit = { session ->
+            (session as RecordingSession).updateLabel("A:1")
+        }
+        val item = item(
+            key = "A",
+            contentToken = 1,
+            sessionUpdater = updater,
+        )
+
+        controller.bind(item, submissionRevision = 1L)
+        controller.bind(item, submissionRevision = 2L)
+
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "update:A:1",
+                "render:A:1",
+                "update:A:1",
+                "render:A:1",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `ignores a delayed duplicate bind from the same submission revision`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        val item = item(
+            key = "A",
+            contentToken = 1,
+            sessionUpdater = { session ->
+                (session as RecordingSession).updateLabel("A:1")
+            },
+        )
+
+        controller.bind(item, submissionRevision = 7L)
+        controller.bind(
+            item = item,
+            payload = com.viewcompose.renderer.reconcile.LazyListChangePayload.ContentTokenChanged(
+                previous = 0,
+                next = 1,
+            ),
+            submissionRevision = 7L,
+        )
+
+        assertEquals(
+            listOf("clear", "create:A:1", "update:A:1", "render:A:1"),
+            events,
+        )
+    }
+
+    @Test
+    fun `staged submission does not update or render until committed`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        controller.bind(
+            item = item(
+                key = "A",
+                contentToken = 1,
+                sessionUpdater = { session ->
+                    (session as RecordingSession).updateLabel("old")
+                },
+            ),
+            submissionRevision = 1L,
+        )
+
+        controller.stage(
+            item = item(
+                key = "A",
+                contentToken = 1,
+                sessionUpdater = { session ->
+                    (session as RecordingSession).updateLabel("new")
+                },
+            ),
+            submissionRevision = 2L,
+        )
+
+        assertEquals(
+            listOf("clear", "create:A:1", "update:old", "render:old"),
+            events,
+        )
+        controller.commit(submissionRevision = 2L)
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "update:old",
+                "render:old",
+                "update:new",
+                "render:new",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `discard removes staged submission without touching committed child`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        controller.bind(item(key = "A", contentToken = 1), submissionRevision = 1L)
+        controller.stage(item(key = "B", contentToken = 2), submissionRevision = 2L)
+
+        controller.discard(submissionRevision = 2L)
+
+        assertEquals(listOf("clear", "create:A:1", "render:A:1"), events)
+    }
+
+    @Test
+    fun `replaces equal token session when updater is absent and factory changes`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        val first = item(
+            key = "A",
+            contentToken = 1,
+            sessionFactory = LazyListItemSessionFactory { error("first") },
+        )
+        val second = item(
+            key = "A",
+            contentToken = 1,
+            sessionFactory = LazyListItemSessionFactory { error("second") },
+        )
+
+        controller.bind(first)
+        controller.bind(second)
+
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "render:A:1",
+                "dispose:A:1",
+                "clear",
+                "create:A:1",
+                "render:A:1",
             ),
             events,
         )
@@ -162,14 +308,15 @@ class LazyItemSessionControllerTest {
     private fun item(
         key: Any?,
         contentToken: Any?,
+        sessionFactory: LazyListItemSessionFactory = LazyListItemSessionFactory { _ ->
+            error("sessionFactory should not be used in controller tests")
+        },
         sessionUpdater: ((LazyListItemSession) -> Unit)? = null,
     ): LazyListItem {
         return LazyListItem(
             key = key,
             contentToken = contentToken,
-            sessionFactory = LazyListItemSessionFactory { _ ->
-                error("sessionFactory should not be used in controller tests")
-            },
+            sessionFactory = sessionFactory,
             sessionUpdater = sessionUpdater,
         )
     }

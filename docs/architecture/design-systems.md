@@ -204,6 +204,12 @@ new token values.
 The neutral host kernel accepts an already resolved platform environment. It does not choose
 Material, expose Material policy types, or silently wrap every root in a Material context.
 
+After construction, the neutral Android host owns configuration observation and common resource
+resolution. It publishes one resource revision shared by ordinary resources, environment values,
+resource-backed images, delayed sessions, and every named design system. A named adapter may
+refresh its stable themed Context before publication, but it must not install a parallel standard-
+host configuration observer.
+
 ### 7.2 Phase B: composition policy provision
 
 Inside the composition root, the chosen design system provides one immutable snapshot of tokens,
@@ -247,6 +253,9 @@ Context before View construction.
   context construction and proves the same lifecycle contract.
 - Context resolution and composition provision are separate contracts even when one convenience
   function performs both for callers.
+- Imperative locale/theme resource mutations use the neutral host-scoped
+  `AndroidResourceRefreshController`; named design systems consume the resulting revision. Root
+  design-system or constructor-sensitive Context changes still reconstruct the root.
 
 ## 8. Material 3 policy
 

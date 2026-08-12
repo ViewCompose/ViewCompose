@@ -233,8 +233,10 @@ This area is still **Partially supported**, rather than fully equivalent:
 - Compose rejects creation of a mutable snapshot from a current read-only snapshot, while the
   current ViewCompose implementation derives a root mutable snapshot from the current read ID and
   does not perform that rejection;
-- ViewCompose does not provide Compose `SnapshotStateList`, `SnapshotStateMap`, `SnapshotStateSet`,
-  or `snapshotFlow` equivalents in this release.
+- ViewCompose does not provide Compose `SnapshotStateList`, `SnapshotStateMap`, or
+  `SnapshotStateSet`. It does provide a cold `snapshotFlow` with per-collector read observation,
+  conflated invalidations, conditional dependency replacement, and structural distinct emission.
+  Its calculation must remain side-effect-free and runs in the collector coroutine.
 
 Repository evidence:
 
@@ -244,7 +246,9 @@ Repository evidence:
 - `viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/MutableStateImpl.kt`,
   lines 98-142;
 - `viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotStateTest.kt`;
-- `viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotApiTest.kt`.
+- `viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotApiTest.kt`;
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/state/SnapshotFlow.kt`;
+- `viewcompose-runtime/src/test/java/com/viewcompose/runtime/SnapshotFlowTest.kt`.
 
 The read-only-to-mutable nesting difference is inferred from the current implementation and lacks a
 dedicated regression test. Treat it as a migration risk, not as a feature to depend on. Replace
@@ -272,10 +276,8 @@ memoization, or automatic composable-function restart boundary.
 
 Repository evidence:
 
-- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
-  lines 6-27, 178-318, and 492-552;
-- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/RecomposeScope.kt`,
-  lines 39-64 and 147-180;
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`;
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/RecomposeScope.kt`;
 - `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/InvalidationQueue.kt`,
   lines 3-76;
 - `viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt`,
@@ -309,10 +311,8 @@ Repository evidence:
 
 - `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Remember.kt`;
 - `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Key.kt`;
-- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
-  lines 178-318 and 432-460;
-- `viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt`,
-  lines 241-262, 368-457, and 481-517;
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`;
+- `viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt`;
 - `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberTest.kt`.
 
 Use stable `key` scopes to isolate branches and effect identity, but use a lazy container's item-key
@@ -333,9 +333,10 @@ ViewCompose supports these migration-level lifecycles, with a host-specific comm
   aborts;
 - after the renderer establishes the new native tree, `RenderSession` commits the prepared runtime
   composition;
-- `LaunchedEffect` starts from its remembered observer when that runtime commit succeeds;
-- `DisposableEffect` replacements and `SideEffect` operations then run from
-  `commitSideEffects`, in registration order with disposable changes before one-shot side effects;
+- committed `rememberUpdatedState` values publish before lifecycle callbacks;
+- every outgoing remembered, disposable, and launched lifecycle runs before any incoming one;
+- `LaunchedEffect` and `DisposableEffect` start from remembered observers during runtime commit;
+- `SideEffect` operations then run from `commitSideEffects` in declaration order;
 - native commit callbacks run after composition side effects;
 - leaving composition or disposing the session cancels coroutines and runs committed cleanup.
 
@@ -343,25 +344,23 @@ Repository evidence:
 
 - `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/SideEffect.kt`;
 - `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/DisposableEffect.kt`;
-- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/CoroutineEffects.kt`,
-  lines 12-102;
-- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/ProduceState.kt`,
-  lines 49-80;
-- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
-  lines 320-430 and 566-745;
-- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt`,
-  lines 170-245;
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/CoroutineEffects.kt`;
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/ProduceState.kt`;
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`;
+- `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt`;
 - `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SideEffectTest.kt`;
 - `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/DisposableEffectTest.kt`;
 - `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/CoroutineEffectsTest.kt`;
-- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt`,
-  lines 100-153.
+- `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt`.
 
 Failures after the renderer establishes the new native tree are reported as committed-frame
 failures and do not roll that tree back. Effects must therefore contain only post-commit work and
-must handle their own failure cleanup. `LaunchedEffect` also requires at least one key in this
-release, and its dispatcher and parent job come from the installed ViewCompose host context rather
-than a Compose `Recomposer`.
+must handle their own failure cleanup. `DisposableEffect` and `LaunchedEffect` require at least one
+key in this release. Disposable setup must finish with `onDispose { ... }`; the former lambda-return
+cleanup shape is not accepted. ViewCompose also provides keyed `SideEffect` overloads for
+change-only publication, while the unkeyed overload remains the every-invocation form. A launched
+effect's dispatcher and parent job come from the installed ViewCompose host context rather than a
+Compose `Recomposer`.
 
 ## Saveable state and Saver migration
 
@@ -390,8 +389,7 @@ Repository evidence:
   lines 5-160;
 - `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/Saver.kt`,
   lines 8-90;
-- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
-  lines 379-396;
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`;
 - `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt`;
 - compiled saveable-registry sample in
   `viewcompose-ui-foundation/src/test/samples/com/viewcompose/ui/foundation/samples/WidgetCoreSamples.kt`.
@@ -423,8 +421,7 @@ Repository evidence:
   lines 3-253;
 - `viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/RememberSaveable.kt`,
   lines 76-160;
-- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`,
-  lines 616-745;
+- `viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt`;
 - `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt`,
   lines 39-163.
 
@@ -479,7 +476,7 @@ recents.
 | `mutableStateOf`, mutation policies, and read observation | **Supported** | Callback counts and threads are ViewCompose contracts | `State.kt`; `SnapshotMutationPolicy.kt`; `RuntimeObservationTest.kt` |
 | Lazy dependency-derived state | **Partially supported** | No result policy; equal derived results are not suppressed | `DerivedStateImpl.kt`; `DerivedStateTest.kt` |
 | Read and mutable snapshot transactions | **Partially supported** | Different nesting/thread rules and nullable merge limitation | `Snapshot.kt`; `SnapshotRuntime.kt`; `SnapshotStateTest.kt` |
-| Snapshot collections and `snapshotFlow` | **Unsupported** | Use immutable collection state or external Flow ownership | Runtime public API and module manual contain no corresponding API |
+| Snapshot collections and `snapshotFlow` | **Partially supported** | `snapshotFlow` is supported; snapshot collection types are not | `SnapshotFlow.kt`; `SnapshotFlowTest.kt` |
 | Compiler-generated restart/skipping/stability | **Intentionally different** | Explicit `runGroup` and observed reads replace Compose compiler groups | `ComposerLite.kt`; `ComposerDiagnosticsTest.kt` |
 | Fine-grained invalidation and clean-sibling reuse | **Partially supported** | Depends on explicit group boundaries; no stability inference | `ComposerLiteTest.kt`; `SubtreeRecompositionTest.kt` |
 | Positional `remember` | **Supported** | Structural keys and transactional commit/abort | `Remember.kt`; `ComposerLiteTest.kt` |
@@ -503,7 +500,8 @@ Before replacing a Compose stateful subtree:
    memoization.
 4. Review every `derivedStateOf`; add an explicit result comparison when equal-result suppression
    matters.
-5. Replace snapshot collections and `snapshotFlow` instead of inventing similarly named wrappers.
+5. Replace snapshot collections with immutable values in `MutableState`; use `snapshotFlow` only
+   for side-effect-free state calculations whose collection lifetime is explicitly owned.
 6. Keep `remember` call order stable. Use `key` for branch isolation, but do not rely on ordinary
    keyed sibling movement across reorder.
 7. Move all external work into committed effects. Treat an effect failure as a committed-frame

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="resource_configuration_title">Android resource environment</string>
+    <string name="resource_configuration_description">Every control replaces the stable host context resources and advances one unified resource revision.</string>
+    <string name="resource_configuration_greeting">Hello, %1$s</string>
+    <string name="resource_configuration_language_action">Switch language</string>
+    <string name="resource_configuration_night_action">Toggle light / dark resources</string>
+    <string name="resource_configuration_font_action">Toggle 1.0 / 1.3 font scale</string>
+    <string name="resource_configuration_density_action">Toggle baseline / 1.25× density</string>
+    <string name="resource_configuration_direction_action">Toggle LTR / RTL direction</string>
+    <string name="resource_configuration_image_description">Configuration-qualified resource image</string>
+    <plurals name="resource_configuration_items">
+        <item quantity="one">%1$d resource value</item>
+        <item quantity="other">%1$d resource values</item>
+    </plurals>
+    <color name="resource_configuration_accent">#FF1565C0</color>
+    <dimen name="resource_configuration_spacing">16dp</dimen>
+    <bool name="resource_configuration_night_value">false</bool>
+    <integer name="resource_configuration_answer">42</integer>
+    <string-array name="resource_configuration_labels">
+        <item>alpha</item>
+        <item>beta</item>
+    </string-array>
+    <integer-array name="resource_configuration_numbers">
+        <item>3</item>
+        <item>5</item>
+        <item>8</item>
+    </integer-array>
+</resources>

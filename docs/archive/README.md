@@ -26,6 +26,8 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `android-resource-environment.md` | Android 资源 API、宿主配置失效、设计系统中立的修订传播、保留 Session 与 Preview 收敛已经闭环；事务式子 Session 修复及 Demo 96 项真机回归、仓库 `qaFull` 全部通过 |
+| `effect-runtime-convergence.md` | 事务式 Remember/Effect 生命周期、候选回滚、协程所有权、Lifecycle Effect、公共 API 硬切与完整测试矩阵已经闭环；Demo 96 项设备回归及仓库 `qaFull` 全部通过 |
 | `maven-dependency-contract-convergence.md` | AndroidX 风格依赖暴露契约、Host-only 消费验证、Maven 元数据门禁和模块治理标准已经完成；Central 发布与发布后文档切换移交正式发布流程，BOM 在具备独立版本兼容性证据前继续延期 |
 | `image-loading-pipeline-generalization.md` | 通用图片源协议、Renderer 请求生命周期、Coil/Glide 适配、迁移与发布登记已经完成；已记录并接受最终真机重跑受锁屏设备限制的历史证据 |
 | `DOCUMENT_LANGUAGE_CONSISTENCY_2026-08.md` | 67 篇有效公共手写文档已实现完整中英文镜像，12 篇错位权威源、33 个英文中文页标题和 14 个缺失镜像已收口，并加入语言、覆盖与指纹硬门禁 |

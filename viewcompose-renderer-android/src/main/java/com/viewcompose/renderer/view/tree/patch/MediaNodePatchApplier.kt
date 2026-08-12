@@ -9,6 +9,7 @@ import com.viewcompose.renderer.view.tree.MediaViewBinder
 import com.viewcompose.renderer.view.tree.ViewModifierApplier
 import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.roundToPx
+import com.viewcompose.ui.node.ImageSource
 
 /**
  * Targeted patch applier for media nodes.
@@ -59,6 +60,11 @@ internal object MediaNodePatchApplier {
                     imageLoader = next.imageLoader,
                     requestOptions = next.requestOptions,
                     density = view.requireUiEnvironment().density,
+                    resourceRevision = view.requireUiEnvironment().resourceRevision.takeIf {
+                        next.source is ImageSource.Resource ||
+                            next.placeholder != null ||
+                            next.error != null
+                    } ?: 0L,
                 ),
             )
         }
@@ -107,6 +113,11 @@ internal object MediaNodePatchApplier {
                     imageLoader = next.imageLoader,
                     requestOptions = next.requestOptions,
                     density = view.requireUiEnvironment().density,
+                    resourceRevision = view.requireUiEnvironment().resourceRevision.takeIf {
+                        next.source is ImageSource.Resource ||
+                            next.placeholder != null ||
+                            next.error != null
+                    } ?: 0L,
                 ),
             )
         }

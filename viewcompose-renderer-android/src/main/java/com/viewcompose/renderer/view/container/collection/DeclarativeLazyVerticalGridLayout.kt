@@ -16,7 +16,9 @@ import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import android.view.MotionEvent
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.renderer.view.tree.ModifierInsetsApplier
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
+import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
 
 /**
  * Android rendering container for LazyVerticalGrid.
@@ -67,6 +69,7 @@ internal class DeclarativeLazyVerticalGridLayout(
         reverseLayout: Boolean,
         userScrollEnabled: Boolean,
         prefetchPolicy: LazyLayoutPrefetchPolicy,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         val lm = layoutManager as? LazyGridLayoutManager
         if (
@@ -90,27 +93,26 @@ internal class DeclarativeLazyVerticalGridLayout(
         setItemViewCacheSize(prefetchPolicy.itemViewCacheSize)
         this.userScrollEnabled = userScrollEnabled
         updateSpacingDecoration(horizontalSpacing, verticalSpacing, spanCount)
-        setPaddingRelative(
-            contentPadding.left,
-            contentPadding.top,
-            contentPadding.right,
-            contentPadding.bottom,
-        )
+        ModifierInsetsApplier.applyLazyContentPadding(this, contentPadding)
         clipToPadding =
             contentPadding.left == 0 && contentPadding.top == 0 &&
                 contentPadding.right == 0 && contentPadding.bottom == 0
-        gridAdapter.submitItems(items)
-        LazyStickyHeaderDecoration.update(this, gridAdapter)
-        if (listState !== state) {
-            listState?.attach(null)
-            listState = state
+        submission.publish {
+            gridAdapter.submitItems(items, submission.revision)
+            LazyStickyHeaderDecoration.update(this, gridAdapter)
         }
-        listState?.attach(
-            UiLazyListConnector(
-                recyclerView = this,
-                mainAxisItemSpacing = verticalSpacing,
-            ),
-        )
+        submission.publish {
+            if (listState !== state) {
+                listState?.attach(null)
+                listState = state
+            }
+            listState?.attach(
+                UiLazyListConnector(
+                    recyclerView = this,
+                    mainAxisItemSpacing = verticalSpacing,
+                ),
+            )
+        }
     }
 
     fun dispose() {

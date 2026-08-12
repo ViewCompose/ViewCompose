@@ -35,7 +35,20 @@ val LocalLayoutDirection = uiLocalOf(
     defaultFactory = { UiLayoutDirection.Ltr },
 )
 
-/** Exposes density, locales, and layout direction for the current composition scope. */
+/**
+ * Current host-scoped resource invalidation identity.
+ *
+ * Android hosts advance this value after resource-affecting configuration or imperative refresh
+ * events. It participates in emitted VNode environment equality so resource IDs can be rebound
+ * even when their integer values remain unchanged. The value is not a persisted version and has
+ * no ordering meaning across independent render hosts.
+ */
+val LocalResourceRevision = uiLocalOf(
+    debugName = "Environment.ResourceRevision",
+    defaultFactory = { 0L },
+)
+
+/** Exposes density, locales, layout direction, and resource revision for the current scope. */
 object Environment {
     /** Current logical density and font scale. */
     val density: UiDensity
@@ -53,12 +66,22 @@ object Environment {
     val layoutDirection: UiLayoutDirection
         get() = UiLocals.current(LocalLayoutDirection)
 
+    /**
+     * Current host-scoped resource invalidation identity.
+     *
+     * A changed value means resource-backed output must be resolved again. It does not identify a
+     * particular Android `Configuration` and must not be persisted or compared across hosts.
+     */
+    val resourceRevision: Long
+        get() = UiLocals.current(LocalResourceRevision)
+
     /** Immutable aggregate snapshot of the current environment values. */
     val values: UiEnvironmentValues
         get() = UiEnvironmentValues(
             density = density,
             locales = locales,
             layoutDirection = layoutDirection,
+            resourceRevision = resourceRevision,
         )
 }
 
@@ -67,7 +90,7 @@ object Environment {
  *
  * When [values] is absent, the deterministic [UiEnvironmentDefaults] snapshot is used. Android
  * hosts map platform resources into [UiEnvironmentValues] before entering this boundary. Nested
- * providers restore all three previous locals after [content] returns.
+ * providers restore all previous locals after [content] returns.
  *
  * @param values explicit platform-neutral environment snapshot
  */
@@ -80,6 +103,7 @@ fun UiTreeBuilder.UiEnvironment(
         LocalDensity provides resolvedValues.density,
         LocalLocales provides resolvedValues.locales,
         LocalLayoutDirection provides resolvedValues.layoutDirection,
+        LocalResourceRevision provides resolvedValues.resourceRevision,
     ) {
         content()
     }

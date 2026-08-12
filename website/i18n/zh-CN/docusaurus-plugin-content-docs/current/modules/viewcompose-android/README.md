@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-android/README.md
-translation_source_hash: 96984cfa925d35717248bc75fbbc1409d00c82298055d88d98856b969ff99e91
+translation_source_hash: d2516ab6827fa52599cb19818d5ec35a36abae2ac56677d34296d16e6000582e
 translation_status: current
 ---
 
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
 - Lifecycle 与 ViewModel Owner；
 - Android 状态保存；
-- 密度、Locale、布局方向与 Android Context 环境值；
+- 密度、字体比例、Locale、布局方向、Android 资源访问与资源版本；
 - 动画协程上下文与 Choreographer 帧时钟；
 - 中立 Android Overlay 传输，以及可替换的 Factory。
 
@@ -62,6 +62,12 @@ Context，并由根节点、原生子 View 与默认 Overlay 共同使用。
 系统时必须使用新的 Context 与 Token Provider 再次调用 `setUiContent`，使 View 在同一份平台/主题
 快照下重建。重复调用会释放旧 Session；Fragment Session 跟随当前 View Lifecycle，Activity
 Session 在 Activity 销毁时结束。
+
+标准 Root 会自动安装 `AndroidResourceEnvironment`，因此内容可以直接使用
+`com.viewcompose.host.android.resources` 中的查询函数，不需要页面自有的失效状态。Configuration
+Callback 会刷新普通资源与环境值。应用 Locale/主题 Wrapper 修改没有产生 Callback 时，把同一个
+`AndroidResourceRefreshController` 传给 `setUiContent`，替换稳定 `rootContext` 的资源后调用
+`refresh()`。构造期敏感的 Context 或设计系统变化仍需再次调用 `setUiContent` 并重建 Root。
 
 ## 依赖规则
 

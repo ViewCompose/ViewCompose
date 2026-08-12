@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 06eeed122f9665ce7a7559157119e5b575f18d1b0507da5cfbdac6566741f1ac
+translation_source_hash: f4c567695e7eaa98e068de3fc011c0f6ea03a34ccc093ec6f58f64b99d60300b
 translation_status: current
 ---
 
@@ -62,6 +62,10 @@ val gap = VNode(
   捕获子树的密度、语言标签与逻辑布局方向。
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   与 Pager 状态把平台滚动能力桥接到可观察的 Runtime 状态。
+- `LazyListItem` 是 Q3、渲染器中立的 Item/Session 契约。`contentToken` 驱动集合语义差分，回调
+  身份则有意排除在值相等判断与提交身份之外。Renderer 把每个新提交的不可变 item 快照视为一个
+  逻辑修订，只在父帧提交后安装其准确 updater，并保证 active 的保留 Session 对该修订最多渲染
+  一次。编译样例 `lazyListItemSessionUpdateSample` 展示等 Token 的闭包替换。
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。
@@ -92,6 +96,11 @@ val gap = VNode(
 
 ## 契约与生命周期规则
 
+`UiEnvironmentValues.resourceRevision` 是由 Host 发布、单调递增的失效标识；它不是语义配置模型，
+也不是持久化版本。VNode 会像捕获密度、语言和布局方向一样捕获它，因此限定符变化后，即使整数
+资源 ID 相等，Renderer 仍能重新绑定资源属性。`UiImageRequest.resourceRevision` 会把同一标识传给
+第一方图片 Loader；默认值 `0` 保持非 Android 与自定义 Host 的确定性。
+
 - `VNode.type` 与 `VNode.spec` 是注册表层面的配对。为了保持构造轻量，创建节点时不会验证
   兼容性；渲染器必须确定性地拒绝不支持的配对。
 - 节点规格是不可变渲染快照。回调可以捕获可变应用状态，但规格本身不能充当原生对象持有者。
@@ -119,6 +128,9 @@ val gap = VNode(
   全局密度、语言或方向状态。
 - `LazyListState`、Pager 状态、焦点请求器与嵌套滚动分发器只连接一个当前渲染器 Connector。
   替换或释放时，宿主必须断开旧 Connector。
+- Renderer 保留 `LazyListItem` Session 时，只要父级刷新到达已绑定 Item，就必须安装最新的
+  `sessionUpdater`，即使 `contentToken` 相等也一样。新 updater 必须准确渲染一次，而同一个
+  updater 与 Token 的重复投递不能重复一次逻辑渲染或其 Effect。
 - 状态与 Connector 命令按所属渲染器线程封闭。Android 集成使用主线程；除非具体契约另有
   说明，回调都会同步执行。
 - `UiNodeTooling.withFirstSourceCapture` 在每个作用域最多观察一个有效节点，并且最多分配一次

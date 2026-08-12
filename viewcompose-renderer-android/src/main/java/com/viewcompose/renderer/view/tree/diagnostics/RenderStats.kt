@@ -116,7 +116,7 @@ data class NodeTypeBindingStats(
  * @property warnings non-fatal structural and performance diagnostics
  * @property tree platform-independent diagnostic tree, empty when diagnostics were disabled
  * @property patches ordered reconciliation records, empty when diagnostics were disabled
- * @property commitEffects Android View lifecycle callbacks scheduled and attempted after commit
+ * @property commitEffects native work deferred for the owning composition's commit phase
  * @property commitFailures isolated errors thrown by commit effects or deferred disposal
  */
 data class RenderTreeResult(
@@ -206,9 +206,9 @@ enum class RenderPatchOperation {
 }
 
 /**
- * Deferred Android View lifecycle callback executed after structural commit.
+ * Native work deferred until the owning composition reaches its commit phase.
  *
- * @property operation lifecycle operation represented by the callback
+ * @property operation failure classification represented by the callback
  * @property nodeKey declarative identity used for diagnostics, if supplied
  * @property commit single-use UI-thread callback owned and invoked by the render transaction
  */

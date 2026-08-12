@@ -42,8 +42,9 @@ snapshot-export timings.
 
 `PreviewAndroidContextFactory` mirrors density, font scale, viewport dimensions, locales, layout
 direction, and light/dark mode into Android resources. The renderer installs the same values in
-`UiEnvironment`, keeping native Views, resource qualifiers, Android View interop, and the DSL on one
-configuration.
+`AndroidResourceEnvironment` with observation disabled, keeping native Views, resource lookup
+functions, qualifiers, Android View interop, and the DSL on one deterministic configuration. The
+preview descriptor owns replacement; no runtime configuration callback mutates a static frame.
 
 When a descriptor names a `PreviewThemeProvider`, its context and `UiThemeTokens` are authoritative.
 Otherwise the Android theme bridge resolves the configured context with dynamic color disabled,

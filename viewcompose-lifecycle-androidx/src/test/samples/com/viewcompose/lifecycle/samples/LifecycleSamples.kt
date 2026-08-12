@@ -3,8 +3,11 @@ package com.viewcompose.lifecycle.samples
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.viewcompose.lifecycle.ProvideLifecycleOwner
+import com.viewcompose.lifecycle.LifecycleResumeEffect
+import com.viewcompose.lifecycle.LifecycleStartEffect
 import com.viewcompose.lifecycle.collectAsState
 import com.viewcompose.lifecycle.collectAsStateWithLifecycle
+import com.viewcompose.lifecycle.currentStateAsState
 import com.viewcompose.runtime.State
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import kotlinx.coroutines.flow.Flow
@@ -54,3 +57,34 @@ fun UiTreeBuilder.provideLifecycleOwnerSample(
     }
     return state
 }
+
+/** Starts and stops a synchronous tracker with the supplied Android lifecycle. */
+fun UiTreeBuilder.lifecycleStartEffectSample(
+    owner: LifecycleOwner,
+    trackerId: String,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+) {
+    LifecycleStartEffect(trackerId, lifecycleOwner = owner) {
+        onStart()
+        onStopOrDispose(onStop)
+    }
+}
+
+/** Acquires and releases foreground-only work with resumed lifecycle state. */
+fun UiTreeBuilder.lifecycleResumeEffectSample(
+    owner: LifecycleOwner,
+    requestId: String,
+    onResume: () -> Unit,
+    onPause: () -> Unit,
+) {
+    LifecycleResumeEffect(requestId, lifecycleOwner = owner) {
+        onResume()
+        onPauseOrDispose(onPause)
+    }
+}
+
+/** Exposes the latest lifecycle state as ViewCompose observable state. */
+fun UiTreeBuilder.lifecycleCurrentStateSample(
+    owner: LifecycleOwner,
+): State<Lifecycle.State> = owner.lifecycle.currentStateAsState()
