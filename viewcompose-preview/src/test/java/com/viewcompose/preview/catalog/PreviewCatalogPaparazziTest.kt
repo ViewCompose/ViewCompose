@@ -48,9 +48,9 @@ class PreviewCatalogPaparazziTest {
         environment = previewEnvironment,
         deviceConfig = DeviceConfig.PIXEL_5.copy(softButtons = false),
         theme = "android:Theme.Material.Light.NoActionBar",
-        // Native editable-text glyph and elevation-shadow rasterization differ slightly between
-        // macOS and Linux. Keep this narrow enough to catch layout, color, and structure changes.
-        maxPercentDifference = 0.20,
+        // Native font metrics, glyphs, and elevation shadows differ slightly between macOS and
+        // Linux. Keep this narrow enough to catch layout, color, and structure changes.
+        maxPercentDifference = 0.60,
     )
 
     @get:Rule
