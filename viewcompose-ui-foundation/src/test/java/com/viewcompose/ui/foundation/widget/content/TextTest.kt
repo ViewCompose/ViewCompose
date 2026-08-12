@@ -72,7 +72,7 @@ class TextTest {
         val spec = tree.single().spec as TextNodeProps
 
         assertEquals(document, spec.document)
-        assertEquals("Rich text", spec.text)
+        assertEquals("Rich text", spec.document.text)
         assertEquals(1, spec.document.spanStyles.size)
     }
 }

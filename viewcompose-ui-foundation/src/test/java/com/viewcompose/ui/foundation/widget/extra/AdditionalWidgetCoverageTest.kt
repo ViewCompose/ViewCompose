@@ -63,7 +63,7 @@ class AdditionalWidgetCoverageTest {
             ),
             spec.stateLayerColors,
         )
-        assertTrue(textChildren.any { it.text == "Sync" })
+        assertTrue(textChildren.any { it.document.text == "Sync" })
         assertTrue(node.children.size >= 2)
     }
 
@@ -152,10 +152,10 @@ class AdditionalWidgetCoverageTest {
 
         assertEquals(NodeType.Column, root.type)
         assertEquals(3, root.children.size)
-        assertTrue(textChildren.any { it.text == "Top" })
-        assertTrue(textChildren.any { it.text == "Body" })
-        assertTrue(textChildren.any { it.text == "Fab" })
-        assertTrue(textChildren.any { it.text == "Bottom" })
+        assertTrue(textChildren.any { it.document.text == "Top" })
+        assertTrue(textChildren.any { it.document.text == "Body" })
+        assertTrue(textChildren.any { it.document.text == "Fab" })
+        assertTrue(textChildren.any { it.document.text == "Bottom" })
     }
 
     @Test

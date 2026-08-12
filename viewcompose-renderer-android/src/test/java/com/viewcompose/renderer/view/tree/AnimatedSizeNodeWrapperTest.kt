@@ -1,5 +1,6 @@
 package com.viewcompose.renderer.view.tree
 
+import com.viewcompose.text.TextDocument
 import com.viewcompose.ui.unit.sp
 
 import com.viewcompose.ui.unit.dp
@@ -105,7 +106,7 @@ class AnimatedSizeNodeWrapperTest {
         return VNode(
             type = NodeType.Text,
             spec = TextNodeProps(
-                text = "demo",
+                document = TextDocument.plain("demo"),
                 maxLines = 1,
                 overflow = TextOverflow.Clip,
                 textAlign = TextAlign.Start,

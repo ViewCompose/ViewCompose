@@ -29,7 +29,24 @@ For historical context, see
 2. General visual and interaction decoration belongs in `Modifier`.
 3. Theme defaults are resolved through `Theme -> Defaults` and injected into `NodeSpec/Modifier`.
 
-## 4. Resolved surface boundary
+## 4. Value admissibility boundary
+
+`NodeSpec` values participate in VNode equality, patch planning, subtree skipping, diagnostics, and
+failed-render rollback. Semantic payloads must therefore be immutable, structurally comparable,
+and platform-neutral. Do not retain Android framework objects or mutable interface types merely
+because a native View setter accepts them.
+
+Text follows this rule explicitly:
+
+1. `TextNodeProps` has one authoritative `TextDocument` for both plain and rich text.
+2. `ButtonNodeProps` and `ToggleNodeProps` use nullable `String` labels.
+3. Android `CharSequence`, `Spanned`, `Spannable`, and `Editable` values exist only in renderer
+   interop code and are converted at the final native binding or input boundary.
+
+This split prevents mutable spans and identity-based platform values from making an unchanged VNode
+compare differently or a changed value compare equal for the wrong reason.
+
+## 5. Resolved surface boundary
 
 `NodeType.Surface` pairs with `SurfaceNodeProps`, not the general `BoxNodeProps`. A design-system
 component resolves its brush, shape, border, interaction colors, effective dimensions, optional
@@ -41,17 +58,18 @@ corner, or shape replaces the component-provided visual surface and uses the com
 bounds. Exact shadows and elevation may be supplied by the Basic component as ordinary ordered
 modifier contracts because the renderer already executes them generically.
 
-## 5. New-node checklist
+## 6. New-node checklist
 
 Every new first-party node must include:
 
 1. a node-specific `NodeSpec`;
-2. DSL parameters mapped to that `NodeSpec`, with modifier metadata where necessary;
-3. corresponding renderer binder and patch behavior;
-4. unit coverage for stable structure, field changes, and interaction changes;
-5. a Demo verification path and instrumentation where required.
+2. immutable, structurally comparable, platform-neutral semantic fields;
+3. DSL parameters mapped to that `NodeSpec`, with modifier metadata where necessary;
+4. corresponding renderer binder and patch behavior;
+5. unit coverage for stable structure, field changes, and interaction changes;
+6. a Demo verification path and instrumentation where required.
 
-## 6. Application and third-party extension path
+## 7. Application and third-party extension path
 
 Extensions must also remain spec-only:
 
@@ -59,13 +77,13 @@ Extensions must also remain spec-only:
 2. define custom binder/patch behavior;
 3. never pass semantics through a dynamic map.
 
-## 7. Regression prevention
+## 8. Regression prevention
 
 1. Unit tests cover strict `requireSpec<T>()` reads and failure diagnostics.
 2. Static guard tests scan framework production source and reject a returning `Props` system.
 3. Architecture and workflow reviews treat NodeSpec-only as a required checkpoint.
 
-## 8. Related documents
+## 9. Related documents
 
 1. [Architecture overview](overview.md)
 2. [Development workflow](../project/workflow.md)

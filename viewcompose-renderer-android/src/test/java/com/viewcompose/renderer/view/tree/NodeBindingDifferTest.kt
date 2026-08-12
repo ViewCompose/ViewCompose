@@ -10,6 +10,7 @@ import com.viewcompose.ui.unit.UiDp
  * Test responsibility: covers Node Binding Differ behavior in renderer view/tree and guards render and patch contracts against regressions.
  */
 
+import com.viewcompose.text.TextDocument
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.ui.environment.UiEnvironmentValues
@@ -74,7 +75,7 @@ class NodeBindingDifferTest {
                 VNode(
                     type = NodeType.Text,
                     spec = TextNodeProps(
-                        text = "child-1",
+                        document = TextDocument.plain("child-1"),
                         maxLines = 1,
                         overflow = com.viewcompose.ui.node.TextOverflow.Clip,
                         textAlign = com.viewcompose.ui.node.TextAlign.Start,
@@ -89,7 +90,7 @@ class NodeBindingDifferTest {
                 VNode(
                     type = NodeType.Text,
                     spec = TextNodeProps(
-                        text = "child-2",
+                        document = TextDocument.plain("child-2"),
                         maxLines = 1,
                         overflow = com.viewcompose.ui.node.TextOverflow.Clip,
                         textAlign = com.viewcompose.ui.node.TextAlign.Start,
@@ -533,7 +534,7 @@ class NodeBindingDifferTest {
         return VNode(
             type = NodeType.Text,
             spec = TextNodeProps(
-                text = text,
+                document = TextDocument.plain(text),
                 maxLines = 1,
                 overflow = com.viewcompose.ui.node.TextOverflow.Clip,
                 textAlign = com.viewcompose.ui.node.TextAlign.Start,

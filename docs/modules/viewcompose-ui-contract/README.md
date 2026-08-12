@@ -51,6 +51,9 @@ created for the node.
   define immutable tree content and renderer dispatch.
 - [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   and its concrete property snapshots define the supported renderer inputs.
+- `TextNodeProps` carries one authoritative `TextDocument`; `ButtonNodeProps` and
+  `ToggleNodeProps` carry nullable plain `String` labels. Mutable or platform-specific
+  `CharSequence` implementations are converted only at a platform renderer boundary.
 - [`Modifier`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.modifier/-modifier/)
   carries ordered layout, drawing, interaction, semantics, focus, and parent-data elements.
 - [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
@@ -96,6 +99,10 @@ Because the current line is alpha, the documentation site intentionally does not
   does not validate compatibility; a renderer must reject an unsupported pair deterministically.
 - A node specification is an immutable render snapshot. Callbacks may capture mutable application
   state, but the spec itself must not be used as a native-object owner.
+- Text content has one representation per specification. `TextNodeProps.document` owns both plain
+  and rich content, while button and toggle labels are plain immutable strings. Android renderers
+  may create a `Spannable` or another `CharSequence` immediately before native View binding, but
+  must not retain that platform value in a VNode or use it for structural equality.
 - `ButtonNodeProps.minHeight` is the effective minimum View and semantic target height, while
   `visualHeight` is the requested centered surface height. A renderer must clamp an invalid visual
   height to the effective bounds and must keep explicit application surface modifiers
@@ -208,3 +215,12 @@ not an application persistence format.
 `UiSourceSessionContainerHandle` and `UiSourceSessionRole` are additive Q2 tooling contracts.
 Existing `RenderContainerHandle` implementations remain valid; without the marker, page-level
 source tooling must use its documented fallback or opt out of capture.
+
+The text-bearing NodeSpec family now enforces immutable, platform-neutral payloads. Direct
+`TextNodeProps` callers must replace `text = label` with
+`document = TextDocument.plain(label)`; rich text continues to pass its existing `TextDocument`.
+`ButtonNodeProps.text` and `ToggleNodeProps.text` narrow from `CharSequence?` to `String?`.
+The public `Text`, `RichText`, `Button`, `Checkbox`, `RadioButton`, and `Switch` DSL signatures and
+rendered behavior are unchanged. This is a source- and binary-breaking Q2 snapshot-contract change
+for direct NodeSpec constructors and custom renderers, which must rebuild and perform any Android
+`CharSequence` conversion at their final native binding boundary.

@@ -198,7 +198,7 @@ class DialogOverlayHostTest {
             content: DialogOverlayContent,
         ): DialogOverlayHandle {
             val textNode = content.surface.buildNodes().single()
-            val message = (textNode.spec as? TextNodeProps)?.text?.toString() ?: ""
+            val message = (textNode.spec as? TextNodeProps)?.document?.text ?: ""
             events += "show:${entryId.sessionId.value}:${entryId.requestKey}:$message"
             return RecordingDialogHandle(
                 entryId = entryId,
@@ -216,7 +216,7 @@ class DialogOverlayHostTest {
             content: DialogOverlayContent,
         ) {
             val textNode = content.surface.buildNodes().single()
-            val message = (textNode.spec as? TextNodeProps)?.text?.toString() ?: ""
+            val message = (textNode.spec as? TextNodeProps)?.document?.text ?: ""
             events += "update:${entryId.sessionId.value}:${entryId.requestKey}:$message"
         }
 

@@ -5,6 +5,7 @@ package com.viewcompose.ui.foundation
  * Test responsibility: covers Subtree Recomposition behavior in widget-core runtime and guards DSL, state, or theme contracts against regressions.
  */
 
+import com.viewcompose.text.TextDocument
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.environment.UiLayoutDirection
@@ -93,7 +94,7 @@ class SubtreeRecompositionTest {
         val updated = compose()
         val rightSpec = updated[1].spec as TextNodeProps
 
-        assertEquals("root-R2", rightSpec.text)
+        assertEquals("root-R2", rightSpec.document.text)
     }
 
     @Test
@@ -273,12 +274,12 @@ class SubtreeRecompositionTest {
         val second = compose()
 
         assertNotSame(first, second)
-        assertEquals("second", (second.spec as TextNodeProps).text)
+        assertEquals("second", (second.spec as TextNodeProps).document.text)
     }
 
     private fun textSpec(text: String): TextNodeProps {
         return TextNodeProps(
-            text = text,
+            document = TextDocument.plain(text),
             maxLines = 1,
             overflow = TextOverflow.Clip,
             textAlign = TextAlign.Start,

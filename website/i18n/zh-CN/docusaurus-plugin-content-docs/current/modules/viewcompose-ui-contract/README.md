@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 8e7954ff51d0809ca6107aea968d718605dabca5886e45af78c45eb1b12b4ecc
+translation_source_hash: 06eeed122f9665ce7a7559157119e5b575f18d1b0507da5cfbdac6566741f1ac
 translation_status: current
 ---
 
@@ -53,6 +53,9 @@ val gap = VNode(
   定义不可变树内容与渲染器分派。
 - [`NodeSpec`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.node.spec/-node-spec/)
   及其具体属性快照定义渲染器支持的输入。
+- `TextNodeProps` 只携带一份权威 `TextDocument`；`ButtonNodeProps` 与 `ToggleNodeProps`
+  携带可空的纯文本 `String` 标签。可变或平台特有的 `CharSequence` 实现只在平台 Renderer
+  边界转换。
 - [`Modifier`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.modifier/-modifier/)
   携带有序的布局、绘制、交互、语义、焦点与 Parent Data 元素。
 - [`UiEnvironmentValues`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.environment/-ui-environment-values/)
@@ -92,6 +95,9 @@ val gap = VNode(
 - `VNode.type` 与 `VNode.spec` 是注册表层面的配对。为了保持构造轻量，创建节点时不会验证
   兼容性；渲染器必须确定性地拒绝不支持的配对。
 - 节点规格是不可变渲染快照。回调可以捕获可变应用状态，但规格本身不能充当原生对象持有者。
+- 每个文本规格只允许一种内容表示。`TextNodeProps.document` 同时承载纯文本和富文本，Button
+  与 Toggle 标签则使用不可变纯文本字符串。Android Renderer 可以在原生 View 绑定前即时创建
+  `Spannable` 或其他 `CharSequence`，但不得把该平台值保存在 VNode 中，也不得用它参与结构相等判断。
 - `ButtonNodeProps.minHeight` 表示有效的最小 View 与语义触控高度，`visualHeight` 表示请求的
   居中 Surface 高度。渲染器必须把非法可见高度限制在有效边界内，并保证应用显式 Surface
   Modifier 的优先级。
@@ -185,3 +191,11 @@ Renderer 必须重新构建。支持无障碍的 Renderer 应同时映射父集�
 
 `UiSourceSessionContainerHandle` 与 `UiSourceSessionRole` 是新增的 Q2 工具契约。现有
 `RenderContainerHandle` 实现继续有效；缺少该标记时，页面级源码工具必须采用文档化回退或不捕获。
+
+承载文本的 NodeSpec 系列现在强制使用不可变、平台无关的 payload。直接构造
+`TextNodeProps` 的调用方必须把 `text = label` 替换为
+`document = TextDocument.plain(label)`；富文本继续传入已有 `TextDocument`。
+`ButtonNodeProps.text` 与 `ToggleNodeProps.text` 从 `CharSequence?` 收紧为 `String?`。
+公开 `Text`、`RichText`、`Button`、`Checkbox`、`RadioButton` 与 `Switch` DSL 的签名和渲染
+行为保持不变。对于直接 NodeSpec 构造方和自定义 Renderer，这属于源码与二进制不兼容的 Q2
+快照契约变更；它们必须重新构建，并把所有 Android `CharSequence` 转换放到最终原生绑定边界。

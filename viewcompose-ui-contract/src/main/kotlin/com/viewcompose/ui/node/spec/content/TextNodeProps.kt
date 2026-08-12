@@ -9,11 +9,12 @@ import com.viewcompose.ui.unit.UiSp
 /**
  * Immutable renderer properties shared by plain-text and rich-text nodes.
  *
- * [document] is authoritative for rich rendering. [text] remains the plain compatibility value and
- * initializes [document] by default; callers supplying both should keep their visible content
- * aligned.
+ * [document] is the single text-content snapshot. Plain text uses [TextDocument.plain], while
+ * styled text supplies its immutable spans, paragraphs, and inline attachments through the same
+ * model. Platform `CharSequence` values belong at renderer interop boundaries and are not retained
+ * by this specification.
  *
- * @property text plain text value, or `null` for empty text
+ * @property document structured text, paragraph, span, and inline-content snapshot
  * @property maxLines maximum laid-out line count
  * @property overflow behavior when content exceeds [maxLines] or the available bounds
  * @property textAlign logical horizontal alignment
@@ -25,10 +26,9 @@ import com.viewcompose.ui.unit.UiSp
  * @property lineHeightSp optional line height
  * @property includeFontPadding whether platform font top and bottom padding is included
  * @property textDecoration default text decoration
- * @property document structured text, paragraph, span, and inline-content model
  */
 data class TextNodeProps(
-    val text: CharSequence?,
+    val document: TextDocument,
     val maxLines: Int,
     val overflow: TextOverflow,
     val textAlign: TextAlign,
@@ -40,7 +40,6 @@ data class TextNodeProps(
     val lineHeightSp: UiSp? = null,
     val includeFontPadding: Boolean = false,
     val textDecoration: TextDecoration = TextDecoration.None,
-    val document: TextDocument = TextDocument.plain(text?.toString().orEmpty()),
 ) : NodeSpec
 
 /** Platform-neutral marker for a renderer-compatible font-family value. */

@@ -4,6 +4,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.viewcompose.renderer.view.tree.ViewTreeRenderer
+import com.viewcompose.text.TextDocument
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.NativeViewElement
 import com.viewcompose.ui.node.NodeType
@@ -123,7 +124,7 @@ class AndroidInteropRenderingUiTest {
         return VNode(
             type = NodeType.Text,
             spec = TextNodeProps(
-                text = text,
+                document = TextDocument.plain(text),
                 maxLines = 1,
                 overflow = TextOverflow.Clip,
                 textAlign = TextAlign.Start,
