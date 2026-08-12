@@ -16,6 +16,7 @@ import android.widget.TextView
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import com.viewcompose.renderer.decoration.RecordingDecorationBackend
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
+import com.viewcompose.text.TextDocument
 import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
@@ -533,7 +534,7 @@ class ViewTreeRenderTransactionTest {
             type = NodeType.Text,
             key = "environment-text",
             spec = TextNodeProps(
-                text = "Environment",
+                document = TextDocument.plain("Environment"),
                 maxLines = 1,
                 overflow = com.viewcompose.ui.node.TextOverflow.Clip,
                 textAlign = com.viewcompose.ui.node.TextAlign.Start,

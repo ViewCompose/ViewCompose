@@ -33,7 +33,7 @@ class OverlaySurfaceSessionTest {
         assertEquals(1, nodes.size)
         assertEquals(NodeType.Text, nodes.single().type)
         val textSpec = nodes.single().spec as TextNodeProps
-        assertEquals("captured-value", textSpec.text)
+        assertEquals("captured-value", textSpec.document.text)
     }
 
     private class RecordingOverlayHost : OverlayHost {
@@ -45,4 +45,3 @@ class OverlaySurfaceSessionTest {
         override fun clear(sessionId: OverlaySessionId) = Unit
     }
 }
-

@@ -186,10 +186,10 @@ class ExperimentalComponentRecipesTest {
         assertEquals(listOf(NodeType.Text, NodeType.TextField, NodeType.Text), rounded.children.map { it.type })
         assertEquals(listOf(NodeType.TextField, NodeType.Text), cut.children.map { it.type })
         assertTrue(rounded.flatten().filter { it.type == NodeType.Text }
-            .map { (it.spec as TextNodeProps).text.toString() }
+            .map { (it.spec as TextNodeProps).document.text }
             .contains("Account"))
         assertFalse(cut.flatten().filter { it.type == NodeType.Text }
-            .map { (it.spec as TextNodeProps).text.toString() }
+            .map { (it.spec as TextNodeProps).document.text }
             .contains("Account"))
         assertEquals("Name", roundedSpec.placeholder)
         assertEquals("Name", cutSpec.placeholder)
@@ -251,7 +251,7 @@ class ExperimentalComponentRecipesTest {
         }
         val visibleLabels = composed.flatten()
             .filter { node -> node.type == NodeType.Text }
-            .map { node -> (node.spec as TextNodeProps).text.toString() }
+            .map { node -> (node.spec as TextNodeProps).document.text }
         assertEquals(listOf("Search"), visibleLabels)
     }
 

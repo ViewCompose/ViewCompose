@@ -5,7 +5,7 @@ import com.viewcompose.ui.unit.UiSp
 /**
  * Immutable renderer properties shared by checkbox, radio, switch, and toggle nodes.
  *
- * @property text optional visible label
+ * @property text immutable plain-text label, or `null` for no label
  * @property enabled whether the control accepts input
  * @property checked externally controlled selected state
  * @property controlColor default control color
@@ -24,7 +24,7 @@ import com.viewcompose.ui.unit.UiSp
  * @property rippleColor pressed-state ripple color
  */
 data class ToggleNodeProps(
-    val text: CharSequence?,
+    val text: String?,
     val enabled: Boolean,
     val checked: Boolean,
     val controlColor: Int,

@@ -9,7 +9,7 @@ import com.viewcompose.ui.unit.UiSp
 /**
  * Immutable renderer properties for a text button.
  *
- * @property text visible label, or `null` for no label
+ * @property text immutable plain-text label, or `null` for no label
  * @property enabled whether the button accepts input and exposes an enabled semantic state
  * @property onClick callback invoked for an accepted click, or `null` for no action
  * @property textColor label color
@@ -38,7 +38,7 @@ import com.viewcompose.ui.unit.UiSp
  * single-color [rippleColor] compatibility behavior
  */
 data class ButtonNodeProps(
-    val text: CharSequence?,
+    val text: String?,
     val enabled: Boolean,
     val onClick: (() -> Unit)?,
     val textColor: Int,

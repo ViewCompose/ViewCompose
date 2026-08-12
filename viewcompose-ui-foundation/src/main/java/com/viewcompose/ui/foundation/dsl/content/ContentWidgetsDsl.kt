@@ -33,7 +33,7 @@ fun UiTreeBuilder.Text(
         type = NodeType.Text,
         key = key,
         spec = TextNodeProps(
-            text = text,
+            document = TextDocument.plain(text),
             maxLines = maxLines,
             overflow = overflow,
             textAlign = textAlign,
@@ -45,7 +45,6 @@ fun UiTreeBuilder.Text(
             lineHeightSp = style.lineHeightSp,
             includeFontPadding = style.includeFontPadding,
             textDecoration = textDecoration,
-            document = TextDocument.plain(text),
         ),
         modifier = modifier,
     )
@@ -69,7 +68,7 @@ fun UiTreeBuilder.RichText(
         type = NodeType.Text,
         key = key,
         spec = TextNodeProps(
-            text = document.text,
+            document = document,
             maxLines = maxLines,
             overflow = overflow,
             textAlign = textAlign,
@@ -81,7 +80,6 @@ fun UiTreeBuilder.RichText(
             lineHeightSp = style.lineHeightSp,
             includeFontPadding = style.includeFontPadding,
             textDecoration = textDecoration,
-            document = document,
         ),
         modifier = modifier,
     )

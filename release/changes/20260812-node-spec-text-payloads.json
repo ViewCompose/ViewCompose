@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "summary": "Restrict text-bearing NodeSpec payloads to immutable platform-neutral text models while preserving the public DSL behavior.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "fix" }
+  ],
+  "ignored": []
+}

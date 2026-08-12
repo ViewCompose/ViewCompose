@@ -198,7 +198,7 @@ class ModalBottomSheetOverlayHostTest {
             content: ModalBottomSheetOverlayContent,
         ): ModalBottomSheetOverlayHandle {
             val textNode = content.surface.buildNodes().single()
-            val message = (textNode.spec as? TextNodeProps)?.text?.toString() ?: ""
+            val message = (textNode.spec as? TextNodeProps)?.document?.text ?: ""
             events += "show:${entryId.sessionId.value}:${entryId.requestKey}:$message"
             return RecordingBottomSheetHandle(entryId, events)
         }
@@ -213,7 +213,7 @@ class ModalBottomSheetOverlayHostTest {
             content: ModalBottomSheetOverlayContent,
         ) {
             val textNode = content.surface.buildNodes().single()
-            val message = (textNode.spec as? TextNodeProps)?.text?.toString() ?: ""
+            val message = (textNode.spec as? TextNodeProps)?.document?.text ?: ""
             events += "update:${entryId.sessionId.value}:${entryId.requestKey}:$message"
         }
 

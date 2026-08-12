@@ -72,8 +72,8 @@ class TextFieldTest {
         assertEquals(NodeType.TextField, node.type)
         assertEquals(TextFieldValue("hello"), spec.value)
         assertEquals("Type here", spec.placeholder)
-        assertTrue(collectTextNodes(root).any { it.text == "Display name" })
-        assertTrue(collectTextNodes(root).any { it.text == "Shown in profile" })
+        assertTrue(collectTextNodes(root).any { it.document.text == "Display name" })
+        assertTrue(collectTextNodes(root).any { it.document.text == "Shown in profile" })
         assertEquals(true, spec.singleLine)
         assertEquals(TextFieldType.Text, spec.keyboardOptions.keyboardType)
         assertEquals(3, spec.maxLines)
@@ -107,8 +107,8 @@ class TextFieldTest {
 
         assertEquals(NodeType.TextField, node.type)
         assertEquals(TextFieldType.Password, spec.keyboardOptions.keyboardType)
-        assertTrue(collectTextNodes(tree.single()).any { it.text == "Password" })
-        assertTrue(collectTextNodes(tree.single()).any { it.text == "At least 8 characters" })
+        assertTrue(collectTextNodes(tree.single()).any { it.document.text == "Password" })
+        assertTrue(collectTextNodes(tree.single()).any { it.document.text == "At least 8 characters" })
         assertTrue(spec.singleLine)
     }
 
@@ -136,8 +136,8 @@ class TextFieldTest {
         assertEquals(4, spec.minLines)
         assertEquals(6, spec.maxLines)
         assertEquals(TextFieldImeAction.Done, spec.keyboardOptions.imeAction)
-        assertTrue(collectTextNodes(tree.single()).any { it.text == "Bio" })
-        assertTrue(collectTextNodes(tree.single()).any { it.text == "Visible to collaborators" })
+        assertTrue(collectTextNodes(tree.single()).any { it.document.text == "Bio" })
+        assertTrue(collectTextNodes(tree.single()).any { it.document.text == "Visible to collaborators" })
     }
 
     @Test
