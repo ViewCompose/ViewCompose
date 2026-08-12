@@ -71,6 +71,7 @@ class ResourceConfigurationActivity : AppCompatActivity() {
             ResourceConfigurationPage(
                 root = root,
                 controller = configurationController,
+                hostActivity = this@ResourceConfigurationActivity,
             )
         }
     }
@@ -161,6 +162,7 @@ internal class DemoResourceConfigurationController(
 private fun UiTreeBuilder.ResourceConfigurationPage(
     root: ViewGroup,
     controller: DemoResourceConfigurationController,
+    hostActivity: AppCompatActivity,
 ) {
     val resources = LocalAndroidResources.current
     val configuration = resources.configuration
@@ -196,8 +198,9 @@ private fun UiTreeBuilder.ResourceConfigurationPage(
         append(integerArrayResource(R.array.resource_configuration_numbers).joinToString())
     }
 
+    val currentTheme = Theme.current
     SideEffect {
-        root.context.findAppCompatActivity()?.applyDemoThemeWindowAppearance(Theme.current)
+        hostActivity.applyDemoThemeWindowAppearance(currentTheme)
     }
     LazyColumn(
         items = listOf("header", "controls", "facts", "resources", "image"),
