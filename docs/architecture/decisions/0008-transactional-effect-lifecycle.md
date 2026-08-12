@@ -126,7 +126,7 @@ work uses the lifecycle integration APIs.
 ## Validation and rollout
 
 Implementation was completed under the archived
-[transactional effect runtime convergence plan](../../archive/effect-runtime-convergence.md).
+[transactional effect runtime convergence plan](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/effect-runtime-convergence.md).
 Retention requires failure-injection tests for every lifecycle transition and phase, public API
 samples, first-party migration, module and Compose-migration documentation, Chinese mirrors,
 immutable release changesets, and the repository's quick and full quality gates.

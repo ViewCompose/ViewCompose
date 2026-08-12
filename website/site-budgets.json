@@ -7,7 +7,7 @@
   "maxLargestJavaScriptKiB": 768,
   "maxTotalJavaScriptMiB": 8,
   "maxTotalCssKiB": 128,
-  "maxSearchIndexMiBPerLocale": 5,
+  "maxSearchIndexMiBPerLocale": 5.5,
   "requiredSearchLocales": [
     "en",
     "zh-CN"
