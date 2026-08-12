@@ -5,6 +5,7 @@ import org.junit.Test
 class UiContractStateSamplesTest {
     @Test
     fun documentedStateAndInteractionSamplesExecuteSuccessfully() {
+        lazyListItemSessionUpdateSample()
         modifierChainSample()
         nestedScrollDispatcherSample()
         focusRequesterSample()

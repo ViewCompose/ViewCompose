@@ -3,10 +3,12 @@ package com.viewcompose.ui.node
 /**
  * Describes one keyed, lazily rendered collection item and its child-session lifecycle.
  *
- * [contentToken] is the semantic version of rendered content and must change when captured values
- * that affect output change. Equality deliberately excludes [sessionFactory] and [sessionUpdater]:
- * an equal token lets the renderer retain a bound item while refreshing its latest closures.
+ * [contentToken] is the semantic version used by collection diffing. Equality deliberately
+ * excludes [sessionFactory] and [sessionUpdater]: an equal token lets the renderer retain a bound
+ * item while installing and rendering its latest closure when a parent refresh reaches that item.
  * Renderers create, update, render, and dispose sessions on their owning UI thread.
+ *
+ * @sample com.viewcompose.ui.samples.lazyListItemSessionUpdateSample
  *
  * @property key optional semantic identity used for item reconciliation
  * @property contentToken semantic content version compared during diffing

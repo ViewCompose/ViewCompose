@@ -96,6 +96,12 @@ class Material3TouchTargetBaselineUiTest {
                 waitForUiIdle()
                 SystemClock.sleep(WINDOW_TRANSITION_SETTLE_MILLIS)
                 waitForUiIdle()
+                scenario.onActivity { activity ->
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
+                    ).centerInsideOwningRecyclerView()
+                }
+                waitForUiIdle()
                 var evidence = ""
                 scenario.onActivity { activity ->
                     val sourceValue = activity.requireTextViewByTestTagVisible(
@@ -266,9 +272,11 @@ class Material3TouchTargetBaselineUiTest {
                 assertNotNull("Expected default Material3 theme validation Activity", launched)
                 launched?.let { activity ->
                     waitForUiIdle()
-                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_ROOT)
-                    activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
-                    activity.finish()
+                    instrumentation.runOnMainSync {
+                        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_ROOT)
+                        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
+                        activity.finish()
+                    }
                 }
             } finally {
                 instrumentation.removeMonitor(monitor)
@@ -282,6 +290,12 @@ class Material3TouchTargetBaselineUiTest {
             val context = ApplicationProvider.getApplicationContext<android.content.Context>()
             val intent = Material3DefaultThemeActivity.newIntent(context, fontScale)
             launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
+                    ).centerInsideOwningRecyclerView()
+                }
                 waitForUiIdle()
                 var evidence = ""
                 var touchX = 0
@@ -312,10 +326,6 @@ class Material3TouchTargetBaselineUiTest {
                         assertEquals(48, (inputSemanticBounds.height() / density).roundToInt())
                     }
 
-                    val location = IntArray(2).also(button::getLocationOnScreen)
-                    touchX = location[0] + button.width / 2
-                    touchY = location[1] + density.roundToInt()
-
                     val tags = listOf(
                         DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
                         DemoTestTags.MATERIAL3_DEFAULT_ICON_BUTTON,
@@ -339,6 +349,19 @@ class Material3TouchTargetBaselineUiTest {
                         val view = activity.requireViewByTestTagVisible(tag)
                         assertTrue("Expected measured control for $tag", view.width > 0 && view.height > 0)
                     }
+                }
+                scenario.onActivity { activity ->
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.MATERIAL3_DEFAULT_BUTTON,
+                    ).centerInsideOwningRecyclerView()
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    val button = activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
+                    val density = activity.resources.displayMetrics.density
+                    val location = IntArray(2).also(button::getLocationOnScreen)
+                    touchX = location[0] + button.width / 2
+                    touchY = location[1] + density.roundToInt()
                 }
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).click(touchX, touchY)
                 waitForUiIdle()

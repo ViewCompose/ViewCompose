@@ -126,11 +126,14 @@ Because the current line is alpha, the documentation site intentionally does not
 - Horizontal and vertical pager holders preserve the `Page` source-session role across reuse.
   RecyclerView rows and tab items remain `Content`; this role does not affect keys, diffing,
   measurement, visibility, or callbacks.
-- A lazy item's `contentToken` must change whenever captured values that affect output change.
-  Session callbacks are refreshed from the exact next item instance even when the semantic item is
-  otherwise unchanged.
-- Targeted patching and subtree skipping are optimizations. Custom host behavior must not infer
-  business state from patch records or diagnostic counters.
+- A lazy item's `contentToken` controls semantic diff payloads, not whether a visible retained
+  session may render. Parent refreshes install the exact next item's latest closure and immediately
+  render the visible session even when the token is equal, preventing stable-key list and pager
+  content from retaining an obsolete parent snapshot.
+- Targeted patching and subtree skipping are optimizations. A complete native subtree is skipped
+  only when every direct child is the exact VNode instance reused by composition; newly built,
+  value-equal children still reconcile because nested session callbacks may have changed. Custom
+  host behavior must not infer business state from patch records or diagnostic counters.
 - Gesture dispatch retains an undecided pointer stream until drag recognition. If the stream ends
   without gesture consumption, the retained target receives one normal click; a recognized drag
   consumes the stream and suppresses that click.

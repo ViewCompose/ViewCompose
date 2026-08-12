@@ -191,6 +191,71 @@ class SubtreeRecompositionTest {
     }
 
     @Test
+    fun `changed emitted content closure refreshes ordinary captures and side effect once`() {
+        val composer = ComposerLite()
+        var label = "first"
+        var sideEffectRuns = 0
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        emit(
+                            type = NodeType.Box,
+                            spec = BoxNodeProps(
+                                contentAlignment = BoxAlignment.TopStart,
+                            ),
+                        ) {
+                            Text(label)
+                            SideEffect { sideEffectRuns += 1 }
+                        }
+                    }.single()
+                }.also {
+                    composer.commitSideEffects()
+                }
+            }
+
+        val first = compose()
+        label = "second"
+        val second = compose()
+
+        assertEquals("first", (first.children.single().spec as TextNodeProps).document.text)
+        assertEquals("second", (second.children.single().spec as TextNodeProps).document.text)
+        assertEquals(2, sideEffectRuns)
+        assertNotSame(first, second)
+    }
+
+    @Test
+    fun `stable emitted content closure keeps container subtree reusable`() {
+        val composer = ComposerLite()
+        val stableContent: UiTreeBuilder.() -> Unit = {
+            Text("stable")
+        }
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        emit(
+                            type = NodeType.Box,
+                            spec = BoxNodeProps(
+                                contentAlignment = BoxAlignment.TopStart,
+                            ),
+                            content = stableContent,
+                        )
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        val second = compose()
+
+        assertSame(first, second)
+    }
+
+    @Test
     fun `image vnode refreshes when equal loaders have different identities`() {
         val composer = ComposerLite()
         var loader: UiImageLoader = EqualLoader("first")

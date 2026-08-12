@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 998eb0f0ccfd85c1753b5f64dd48a903ffcae00302b1f7ac319e0883d2231461
+translation_source_hash: be96dadbc72bd0cbd164982ca020c7e8890e414c7de9a60cb4d38fe46d99099c
 translation_status: current
 ---
 
@@ -115,9 +115,12 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   `ReloadAll`，保护 RecyclerView holder 状态。
 - Horizontal 与 Vertical Pager Holder 会在复用期间保留 `Page` 源码 Session 角色。RecyclerView
   行与 Tab Item 保持 `Content`；该角色不影响 Key、差分、测量、可见性或回调。
-- 只要影响输出的捕获值发生变化，Lazy item 的 `contentToken` 就必须变化。即使 item 语义未变，
-  session 回调也会从 next 列表中的原始 item 实例刷新。
-- 定向 patch 和子树跳过只是优化。自定义 host 不得从 patch 记录或诊断计数推断业务状态。
+- Lazy item 的 `contentToken` 控制语义差分 Payload，而不是决定可见的保留 Session 能否渲染。
+  父级刷新会安装 next item 的最新闭包；即使 Token 相等，也会立即渲染可见 Session，避免稳定
+  Key 的列表或 Pager 内容继续持有过期的父级快照。
+- 定向 patch 和子树跳过只是优化。只有每个直接 child 都是组合所复用的完全相同 VNode 实例时，
+  才能跳过完整原生子树；新构建但值相等的 child 仍需调和，因为嵌套 Session 回调可能已变化。
+  自定义 host 不得从 patch 记录或诊断计数推断业务状态。
 - Gesture 分发会保留尚未判定的 Pointer Stream，直到识别出 Drag。若 Stream 结束时没有被 Gesture
   消费，保留目标会收到一次普通 Click；已识别的 Drag 会消费 Stream 并抑制该 Click。
 - Button Surface 内缩变化会参与定向样式 Patch，不得因此重建原生 View 或改变其有效测量目标。

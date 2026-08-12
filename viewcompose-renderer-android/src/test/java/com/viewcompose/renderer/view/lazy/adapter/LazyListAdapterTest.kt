@@ -11,6 +11,8 @@ import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.renderer.reconcile.LazyListChangePayload
+import android.widget.FrameLayout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -18,6 +20,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -99,6 +102,62 @@ class LazyListAdapterTest {
         assertEquals(3, adapter.findStickyHeaderPosition(adapter.itemCount - 1))
     }
 
+    @Test
+    fun `stable closure refresh renders a manually bound holder without an adapter position`() {
+        val context = RuntimeEnvironment.getApplication()
+        val parent = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        adapter.submitItems(listOf(recordingItem("first", events)))
+        val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+
+        adapter.submitItems(listOf(recordingItem("second", events)))
+
+        assertEquals(
+            listOf("update:first", "render:first", "update:second", "render:second"),
+            events,
+        )
+    }
+
+    @Test
+    fun `content refresh is synchronous and queued payload does not render it twice`() {
+        val context = RuntimeEnvironment.getApplication()
+        val parent = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        adapter.submitItems(listOf(recordingItem("first", events, contentToken = 1)))
+        val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+
+        adapter.submitItems(listOf(recordingItem("second", events, contentToken = 2)))
+        adapter.onBindViewHolder(
+            holder,
+            0,
+            mutableListOf(LazyListChangePayload.ContentTokenChanged(previous = 1, next = 2)),
+        )
+
+        assertEquals(
+            listOf("update:first", "render:first", "update:second", "render:second"),
+            events,
+        )
+    }
+
+    @Test
+    fun `content type change waits for RecyclerView to replace incompatible holder`() {
+        val context = RuntimeEnvironment.getApplication()
+        val parent = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        adapter.submitItems(listOf(recordingItem("first", events, contentType = "row")))
+        val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+
+        adapter.submitItems(listOf(recordingItem("second", events, contentType = "card")))
+
+        assertEquals(listOf("update:first", "render:first"), events)
+    }
+
     private fun item(
         key: Any,
         contentType: Any? = null,
@@ -116,6 +175,38 @@ class LazyListAdapterTest {
                 }
             },
         )
+    }
+
+    private fun recordingItem(
+        label: String,
+        events: MutableList<String>,
+        contentToken: Any? = "stable",
+        contentType: Any? = null,
+    ): LazyListItem {
+        return LazyListItem(
+            key = "stable",
+            contentToken = contentToken,
+            contentType = contentType,
+            sessionFactory = LazyListItemSessionFactory {
+                RecordingSession(events)
+            },
+            sessionUpdater = { session ->
+                (session as RecordingSession).label = label
+                events += "update:$label"
+            },
+        )
+    }
+
+    private class RecordingSession(
+        private val events: MutableList<String>,
+    ) : LazyListItemSession {
+        var label: String = ""
+
+        override fun render() {
+            events += "render:$label"
+        }
+
+        override fun dispose() = Unit
     }
 
     private data class CollidingKey(

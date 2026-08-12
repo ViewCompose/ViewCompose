@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0008-transactional-effect-lifecycle.md
-translation_source_hash: 4f7b798ce7083b567bcce39fa43a169fa615df8419803f476f7186f744a441f4
+translation_source_hash: 65e605a82b82128e5c87c9698dbe3b6127f2a57db4fd4433e5ae24588dd2e2f5
 translation_status: current
 ---
 
@@ -116,7 +116,7 @@ Context。显式值捕获与专用 Local Snapshot 可以让所有权保持可见
 
 ## 验证与落地
 
-实现遵循有效的
-[事务式 Effect Runtime 收敛计划](https://docs.viewcompose.com/project/plans/effect-runtime-convergence)。
+实现已按照归档的
+[事务式 Effect Runtime 收敛计划](https://docs.viewcompose.com/archive/effect-runtime-convergence)完成。
 保留该决策要求：覆盖每个生命周期转换和阶段的故障注入测试、公开 API 样例、第一方迁移、模块与
 Compose 迁移文档、中文镜像、不可变 Release Changeset，以及仓库 Quick/Full 质量门禁。

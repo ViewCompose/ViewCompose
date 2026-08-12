@@ -29,7 +29,7 @@ class LazyItemSessionControllerTest {
     }
 
     @Test
-    fun `refreshes existing session updater when key and content token are unchanged`() {
+    fun `refreshes and renders existing session when key and content token are unchanged`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
 
@@ -59,6 +59,61 @@ class LazyItemSessionControllerTest {
                 "update:A:1:first",
                 "render:A:1:first",
                 "update:A:1:second",
+                "render:A:1:second",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `does not render the same updater instance twice`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        val updater: (LazyListItemSession) -> Unit = { session ->
+            (session as RecordingSession).updateLabel("A:1")
+        }
+        val item = item(
+            key = "A",
+            contentToken = 1,
+            sessionUpdater = updater,
+        )
+
+        controller.bind(item)
+        controller.bind(item)
+
+        assertEquals(
+            listOf("clear", "create:A:1", "update:A:1", "render:A:1"),
+            events,
+        )
+    }
+
+    @Test
+    fun `replaces equal token session when updater is absent and factory changes`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        val first = item(
+            key = "A",
+            contentToken = 1,
+            sessionFactory = LazyListItemSessionFactory { error("first") },
+        )
+        val second = item(
+            key = "A",
+            contentToken = 1,
+            sessionFactory = LazyListItemSessionFactory { error("second") },
+        )
+
+        controller.bind(first)
+        controller.bind(second)
+
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "render:A:1",
+                "dispose:A:1",
+                "clear",
+                "create:A:1",
+                "render:A:1",
             ),
             events,
         )
@@ -162,14 +217,15 @@ class LazyItemSessionControllerTest {
     private fun item(
         key: Any?,
         contentToken: Any?,
+        sessionFactory: LazyListItemSessionFactory = LazyListItemSessionFactory { _ ->
+            error("sessionFactory should not be used in controller tests")
+        },
         sessionUpdater: ((LazyListItemSession) -> Unit)? = null,
     ): LazyListItem {
         return LazyListItem(
             key = key,
             contentToken = contentToken,
-            sessionFactory = LazyListItemSessionFactory { _ ->
-                error("sessionFactory should not be used in controller tests")
-            },
+            sessionFactory = sessionFactory,
             sessionUpdater = sessionUpdater,
         )
     }

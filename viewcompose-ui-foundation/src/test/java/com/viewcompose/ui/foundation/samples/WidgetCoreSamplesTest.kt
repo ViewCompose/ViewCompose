@@ -5,6 +5,7 @@ import org.junit.Test
 class WidgetCoreSamplesTest {
     @Test
     fun `documentation samples remain executable`() {
+        emittedContentClosureSample()
         themeStateColorSample()
         themeProviderSample()
         designSystemAttributionSample()

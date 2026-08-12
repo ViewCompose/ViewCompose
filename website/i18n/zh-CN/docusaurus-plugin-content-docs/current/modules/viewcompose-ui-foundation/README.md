@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 1d74723f9e3ec8970010bed387c4f53ded80a37a6c21e33bbc6871c0b1bca071
+translation_source_hash: 2631182f2b8c8701d69edde69a3d75e294c42904788189311d80f8504f966446
 translation_status: current
 ---
 
@@ -57,7 +57,8 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 ## 主要 API
 
 - [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-ui-tree-builder/)
-  及其组件函数构建声明式节点树，不会创建 Android View。
+  及其组件函数构建声明式节点树，不会创建 Android View。其 Q3 底层 `emit` 边界把子内容闭包
+  身份作为重组输入；编译样例 `emittedContentClosureSample` 展示直接构建自定义节点的方式。
 - [`Theme` 与 `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
   暴露不可变的颜色、排版、形状、尺寸、交互与浮层 Token，但不选择具体设计系统。排版支持
   完整的 Display、Headline、Title、Body 与 Label 分级；形状支持 Extra Small、Small、Medium、
@@ -132,6 +133,9 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
 
 - `UiTreeBuilder` 是临时记录器。内容块返回后，不要持有它或再次调用捕获的 Builder；应持有状态
   与稳定 Key。
+- ViewCompose 没有编译器转换，无法推断所有普通 Kotlin 捕获值。因此，新安装的发射内容闭包
+  即使节点规格值相等也会重建该 Group；只有完全相同且被保留的闭包才能复用未失效的子结果。
+  这项规则优先保证捕获值与子 Session 回调正确，不采用不安全的值相等子树跳过。
 - `remember` 与 Effect 需要活跃组合。位置标识跟随结构调用路径；内容可能移动时，应使用稳定
   `key` 分组和 Lazy Item Key。
 - 候选 Effect 变化属于事务。组合或原生 Tree Render 失败不会启动候选工作，会保留已提交的

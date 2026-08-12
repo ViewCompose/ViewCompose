@@ -26,7 +26,7 @@ class WidgetShowcaseUiTest {
         launchDemoActivity(WidgetShowcaseActivity::class.java).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickTextView("Checkbox")
+                activity.clickTextViewVisible("Checkbox")
             }
             waitForUiIdle()
             scenario.onActivity { activity ->

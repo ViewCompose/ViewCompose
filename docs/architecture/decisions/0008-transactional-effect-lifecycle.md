@@ -125,8 +125,8 @@ work uses the lifecycle integration APIs.
 
 ## Validation and rollout
 
-Implementation follows the active
-[transactional effect runtime convergence plan](../../project/plans/effect-runtime-convergence.md).
+Implementation was completed under the archived
+[transactional effect runtime convergence plan](../../archive/effect-runtime-convergence.md).
 Retention requires failure-injection tests for every lifecycle transition and phase, public API
 samples, first-party migration, module and Compose-migration documentation, Chinese mirrors,
 immutable release changesets, and the repository's quick and full quality gates.

@@ -60,6 +60,10 @@ created for the node.
   captures density, locale tags, and logical layout direction for a subtree.
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   and pager state bridge platform scrolling to observable runtime state.
+- `LazyListItem` is the Q3 renderer-neutral item/session contract. `contentToken` drives semantic
+  collection diffing, while callback identity is deliberately excluded from value equality; a
+  parent refresh still installs and renders the exact next updater in a retained visible session.
+  The compiled `lazyListItemSessionUpdateSample` demonstrates equal-token closure replacement.
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.
@@ -135,6 +139,10 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   instead of consulting unrelated process-global density, locale, or direction state.
 - `LazyListState`, pager state, focus requesters, and nested-scroll dispatchers attach to one current
   renderer connector. Hosts must detach old connectors during replacement or disposal.
+- A renderer retaining a `LazyListItem` session must install the latest `sessionUpdater` whenever a
+  parent refresh reaches that bound item, even when `contentToken` is equal. It must render that new
+  updater once, while duplicate delivery of the exact same updater and token must not repeat a
+  logical render or its effects.
 - State and connector commands are thread-confined to the owning renderer thread. Android
   integrations use the main thread, and callbacks run synchronously unless a concrete contract says
   otherwise.

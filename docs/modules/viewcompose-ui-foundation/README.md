@@ -55,7 +55,9 @@ by a later renderer or child render session.
 ## Principal APIs
 
 - [`UiTreeBuilder`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-ui-tree-builder/)
-  and its component functions build declarative node trees without creating Android Views.
+  and its component functions build declarative node trees without creating Android Views. Its Q3
+  low-level `emit` boundary treats child-content closure identity as a recomposition input; the
+  compiled `emittedContentClosureSample` demonstrates direct custom-node construction.
 - [`Theme` and `UiTheme`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-theme/)
   expose immutable color, typography, shape, sizing, interaction, and overlay tokens without
   choosing a design system. Typography supports all display, headline, title, body, and label
@@ -146,6 +148,10 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
 
 - A `UiTreeBuilder` is an ephemeral recorder. Do not retain it or invoke a captured builder after
   its content block returns. Retain state and stable keys instead.
+- ViewCompose has no compiler transform that can infer every ordinary captured Kotlin value. A
+  newly installed emitted-content closure therefore rebuilds that group even when the node spec is
+  value-equal; only the exact retained closure may reuse a clean child result. This favors correct
+  captured values and child-session callbacks over an unsafe value-equality subtree skip.
 - `remember` and effects require an active composition. Positional identity follows the structural
   call path; use stable `key` groups and lazy-item keys when content can move.
 - Candidate effect changes are transactional. A failed composition or native tree render starts no

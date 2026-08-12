@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Add configuration-aware Android resources and a transactional effect runtime with keyed lifecycle APIs, commit-safe updated state, lifecycle-paired work, and snapshotFlow.",
+  "summary": "Add configuration-aware Android resources and a transactional effect runtime, refresh retained lazy and pager sessions from new parent closures, and reconcile newly built value-equal child subtrees.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "breaking" },
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },

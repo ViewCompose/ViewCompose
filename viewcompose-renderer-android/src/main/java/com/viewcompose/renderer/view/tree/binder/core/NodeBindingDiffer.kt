@@ -49,7 +49,7 @@ internal object NodeBindingDiffer {
             return if (modifierChanged) {
                 NodeBindingPlan.Rebind
             } else {
-                if (previous.children == next.children) {
+                if (previous.children.hasSameElementReferences(next.children)) {
                     NodeBindingPlan.SkipSubtree
                 } else {
                     NodeBindingPlan.SkipSelfOnly
@@ -131,5 +131,12 @@ internal object NodeBindingDiffer {
             if (previous.sessionUpdater !== current.sessionUpdater) return true
         }
         return false
+    }
+
+    private fun List<VNode>.hasSameElementReferences(next: List<VNode>): Boolean {
+        // Value equality can hide changed nested session callbacks. Only composer-produced
+        // reference reuse proves that reconciling the complete child subtree is unnecessary.
+        if (size != next.size) return false
+        return indices.all { index -> this[index] === next[index] }
     }
 }

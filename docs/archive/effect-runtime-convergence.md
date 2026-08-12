@@ -2,11 +2,10 @@
 
 ## Status
 
-Implementation and migration are complete. Focused runtime, UI Foundation, lifecycle, API,
-documentation, release-intent, sample, and repository quick gates pass. The plan remains active
-because the final `qaFull` acceptance gate is not green: the main Demo instrumentation suite has 15
-failures that reproduce with the same test names and assertions in a clean worktree at the
-pre-implementation revision. The directly affected resource-configuration device test passes.
+Completed. The transactional effect runtime, public API hard cut, lifecycle integration,
+diagnostics, migration, samples, and documentation are implemented. The pre-existing 15-failure
+Demo instrumentation baseline was repaired through framework correctness fixes and robust device
+assertions; the complete repository `qaFull` gate is green.
 
 Last verified: 2026-08-12.
 
@@ -227,14 +226,17 @@ Verified on 2026-08-12:
 - `ResourceConfigurationDeviceTest` passes independently on the connected Android 13 device,
   protecting same-Activity and same-root language, night mode, font scale, density, layout
   direction, revision, resource-value, and system-bar appearance updates; and
-- the complete main Demo instrumentation suite reports 15 failures. A clean detached worktree at
-  the pre-implementation revision reports the same 15 test names and assertions, establishing that
-  this change introduces no new device-suite failure while not claiming that `qaFull` passes.
+- the complete main Demo instrumentation suite passes all 96 tests with zero failures and zero
+  skips; retained lazy/pager closure refresh, composition content identity, and reference-safe
+  renderer subtree skipping have focused regression coverage; and
+- `qaFull` passes all 1,756 tasks, including the 96-test Demo suite, the 1-test Counter suite, and
+  the 2-test Tutorials suite on the connected Android 13 device.
 
-## Next action
+## Completion outcome
 
-Restore the pre-existing main Demo instrumentation baseline in its owning work, rerun `qaFull`,
-record the green result here, then move this plan to `docs/archive/` and update both plan indexes.
+All completion conditions are satisfied. Durable behavior is recorded in the effect architecture,
+module manuals, API comments, compiled samples, and release changeset. This plan is retained as
+historical evidence under `docs/archive/`.
 
 ## Completion conditions
 

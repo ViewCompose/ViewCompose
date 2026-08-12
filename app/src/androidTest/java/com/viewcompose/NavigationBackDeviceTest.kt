@@ -192,11 +192,11 @@ class NavigationBackDeviceTest {
                 val details = activity.destinationContainer(NavigationBackTestActivity.DETAILS_ROUTE)
                 assertEquals(
                     255,
-                    Color.alpha((checkNotNull(home.background) as ColorDrawable).color),
+                    checkNotNull(home.background).alpha,
                 )
                 assertEquals(
                     255,
-                    Color.alpha((checkNotNull(details.background) as ColorDrawable).color),
+                    checkNotNull(details.background).alpha,
                 )
             }
 

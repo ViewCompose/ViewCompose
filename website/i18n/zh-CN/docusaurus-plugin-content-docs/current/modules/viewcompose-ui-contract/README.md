@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: db5fb6e65ad0f5a1c05bc2b081717dfce0dd340928c0b71ff65344a6e85ef76a
+translation_source_hash: 66e35d8f75fe5455ed3422c3a7df0dc3b4c0992a7f6d84bd553a3366d65fa8a3
 translation_status: current
 ---
 
@@ -62,6 +62,9 @@ val gap = VNode(
   捕获子树的密度、语言标签与逻辑布局方向。
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   与 Pager 状态把平台滚动能力桥接到可观察的 Runtime 状态。
+- `LazyListItem` 是 Q3、渲染器中立的 Item/Session 契约。`contentToken` 驱动集合语义差分，回调
+  身份则有意排除在值相等判断之外；父级刷新仍会在可见的保留 Session 中安装并渲染 next item
+  的准确 updater。编译样例 `lazyListItemSessionUpdateSample` 展示等 Token 的闭包替换。
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。
@@ -124,6 +127,9 @@ val gap = VNode(
   全局密度、语言或方向状态。
 - `LazyListState`、Pager 状态、焦点请求器与嵌套滚动分发器只连接一个当前渲染器 Connector。
   替换或释放时，宿主必须断开旧 Connector。
+- Renderer 保留 `LazyListItem` Session 时，只要父级刷新到达已绑定 Item，就必须安装最新的
+  `sessionUpdater`，即使 `contentToken` 相等也一样。新 updater 必须准确渲染一次，而同一个
+  updater 与 Token 的重复投递不能重复一次逻辑渲染或其 Effect。
 - 状态与 Connector 命令按所属渲染器线程封闭。Android 集成使用主线程；除非具体契约另有
   说明，回调都会同步执行。
 - `UiNodeTooling.withFirstSourceCapture` 在每个作用域最多观察一个有效节点，并且最多分配一次

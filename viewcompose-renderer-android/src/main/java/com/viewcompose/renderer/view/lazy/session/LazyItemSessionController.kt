@@ -2,18 +2,18 @@ package com.viewcompose.renderer.view.lazy.session
 
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.renderer.reconcile.LazyListChangePayload
 
-/**
- * Manages the child render-session lifecycle for one lazy item.
- * Manages the lifecycle of the inner render session for one lazy item.
- */
+/** Manages the child render-session lifecycle for one lazy item. */
 internal class LazyItemSessionController(
     private val createSession: (LazyListItem) -> LazyListItemSession,
     private val clearContainer: () -> Unit,
 ) {
     private var currentKey: Any? = null
     private var currentContentToken: Any? = null
+    private var currentSessionFactory: LazyListItemSessionFactory? = null
+    private var currentSessionUpdater: ((LazyListItemSession) -> Unit)? = null
     private var session: LazyListItemSession? = null
 
     fun bind(
@@ -22,7 +22,6 @@ internal class LazyItemSessionController(
     ) {
         val shouldRender = when {
             session == null || currentKey != item.key -> {
-                // A key change means the holder now represents another item; dispose its old session and clear the container.
                 // A key change means the holder now represents a different item, so release the old session and clear the container.
                 session?.dispose()
                 clearContainer()
@@ -30,22 +29,43 @@ internal class LazyItemSessionController(
                 session = newSession
                 currentKey = item.key
                 currentContentToken = item.contentToken
+                currentSessionFactory = item.sessionFactory
                 item.sessionUpdater?.invoke(newSession)
+                currentSessionUpdater = item.sessionUpdater
                 true
             }
 
+            currentContentToken == item.contentToken &&
+                currentSessionUpdater === item.sessionUpdater &&
+                (item.sessionUpdater != null || currentSessionFactory === item.sessionFactory) -> {
+                // RecyclerView may deliver the queued payload after submitItems already refreshed
+                // this exact item instance. Do not render the same closure twice: SideEffect and
+                // native commit callbacks must still run once per logical child render.
+                currentSessionFactory = item.sessionFactory
+                false
+            }
+
             payload is LazyListChangePayload.ContentTokenChanged -> {
-                // A DiffUtil payload changes content but not identity, so retain the session and refresh it through the updater.
                 // DiffUtil payload only means content token changed; reuse the session but refresh it through updater.
                 applyContentTokenUpdate(item)
                 true
             }
 
             currentContentToken == item.contentToken -> {
-                session?.let { currentSession ->
-                    item.sessionUpdater?.invoke(currentSession)
+                val currentSession = session
+                val updater = item.sessionUpdater
+                if (currentSession != null && updater != null) {
+                    // Equal semantic tokens preserve identity, but the parent composition may have
+                    // supplied a new closure that captures changed state. Install and render that
+                    // closure so a visible retained item cannot display a stale parent snapshot.
+                    updater(currentSession)
+                    currentSessionFactory = item.sessionFactory
+                    currentSessionUpdater = updater
+                    true
+                } else {
+                    replaceSession(item)
+                    true
                 }
-                false
             }
 
             else -> {
@@ -59,12 +79,13 @@ internal class LazyItemSessionController(
     }
 
     fun recycle() {
-        // Dispose on holder recycling so off-screen items cannot retain Views or captured closures.
         // Release the session when the holder is recycled so off-screen items do not retain Views or closures.
         session?.dispose()
         session = null
         currentKey = null
         currentContentToken = null
+        currentSessionFactory = null
+        currentSessionUpdater = null
         clearContainer()
     }
 
@@ -76,11 +97,19 @@ internal class LazyItemSessionController(
                 updater(currentSession)
             }
             currentContentToken = item.contentToken
+            currentSessionFactory = item.sessionFactory
+            currentSessionUpdater = item.sessionUpdater
         } else {
-            currentSession?.dispose()
-            clearContainer()
-            session = createSession(item)
-            currentContentToken = item.contentToken
+            replaceSession(item)
         }
+    }
+
+    private fun replaceSession(item: LazyListItem) {
+        session?.dispose()
+        clearContainer()
+        session = createSession(item)
+        currentContentToken = item.contentToken
+        currentSessionFactory = item.sessionFactory
+        currentSessionUpdater = item.sessionUpdater
     }
 }

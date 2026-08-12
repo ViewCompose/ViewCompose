@@ -113,6 +113,32 @@ class NodeBindingDifferTest {
     }
 
     @Test
+    fun `continues into value equal child nodes with different identities`() {
+        val previousChild = textNode(text = "stable")
+        val nextChild = textNode(text = "stable")
+        val previous = VNode(
+            type = NodeType.Column,
+            spec = ColumnNodeProps(
+                spacing = UiDp.Zero,
+                arrangement = com.viewcompose.ui.layout.MainAxisArrangement.Start,
+                horizontalAlignment = com.viewcompose.ui.layout.HorizontalAlignment.Start,
+            ),
+            children = listOf(previousChild),
+        )
+        val next = VNode(
+            type = NodeType.Column,
+            spec = ColumnNodeProps(
+                spacing = UiDp.Zero,
+                arrangement = com.viewcompose.ui.layout.MainAxisArrangement.Start,
+                horizontalAlignment = com.viewcompose.ui.layout.HorizontalAlignment.Start,
+            ),
+            children = listOf(nextChild),
+        )
+
+        assertSame(NodeBindingPlan.SkipSelfOnly, NodeBindingDiffer.plan(previous, next))
+    }
+
+    @Test
     fun `returns subtree skip when equivalent modifier chains are rebuilt`() {
         val previous = textNode(
             text = "stable",

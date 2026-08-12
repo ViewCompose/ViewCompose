@@ -189,8 +189,9 @@ internal class LazyListAdapter(
 
     fun submitItems(items: List<LazyListItem>) {
         warnAboutIdentityIssues(items)
+        val previousItems = this.items
         val result = LazyListDiff.calculate(
-            previous = this.items,
+            previous = previousItems,
             next = items,
         )
         // Preserve the first visible-item anchor when diffing falls back, reducing jumps after notifyDataSetChanged.
@@ -202,21 +203,39 @@ internal class LazyListAdapter(
         }
         this.items = result.items
         itemsVersion += 1
+        refreshBoundHolders(previousItems)
         if (result.diffResult != null) {
             result.diffResult.dispatchUpdatesTo(this)
         } else {
             notifyDataSetChanged()
             restoreScrollAnchor(reloadAnchor)
         }
-        if (result.updates.isEmpty()) {
-            // Rebind visible holders even when structure is stable so external state reaches item content.
-            // When structure is unchanged, still rebind visible holders so external state changes reach item content.
-            holderRegistry.forEachBound { holder ->
-                val position = holder.bindingAdapterPosition
-                if (position != RecyclerView.NO_POSITION && position < this.items.size) {
-                    holder.bind(this.items[position])
-                }
+    }
+
+    private fun refreshBoundHolders(previousItems: List<LazyListItem>) {
+        holderRegistry.forEachBound { holder ->
+            val boundKey = holder.boundItemKey
+            val position = if (boundKey != null) {
+                items.indexOfFirst { item -> item.key == boundKey }
+            } else {
+                holder.bindingAdapterPosition
             }
+            if (position !in items.indices) return@forEachBound
+            val nextItem = items[position]
+            val previousItem = if (boundKey != null) {
+                previousItems.firstOrNull { item -> item.key == boundKey }
+            } else {
+                previousItems.getOrNull(position)
+            }
+            if (
+                previousItem != null &&
+                (previousItem.contentType != nextItem.contentType || previousItem.kind != nextItem.kind)
+            ) {
+                // RecyclerView must replace structurally incompatible holders through its queued
+                // change notification; rebinding the old holder would violate contentType reuse.
+                return@forEachBound
+            }
+            holder.bind(nextItem)
         }
     }
 
@@ -393,6 +412,9 @@ internal class LazyListSpacingDecoration(
 internal class LazyListViewHolder(
     private val container: FrameLayout,
 ) : RecyclerView.ViewHolder(container) {
+    var boundItemKey: Any? = null
+        private set
+
     private val controller = LazyItemSessionController(
         createSession = { item ->
             item.sessionFactory.create(container.asRenderContainerHandle())
@@ -404,6 +426,7 @@ internal class LazyListViewHolder(
         item: LazyListItem,
         payload: Any? = null,
     ) {
+        boundItemKey = item.key
         controller.bind(
             item = item,
             payload = payload,
@@ -411,6 +434,7 @@ internal class LazyListViewHolder(
     }
 
     fun recycle() {
+        boundItemKey = null
         controller.recycle()
     }
 }

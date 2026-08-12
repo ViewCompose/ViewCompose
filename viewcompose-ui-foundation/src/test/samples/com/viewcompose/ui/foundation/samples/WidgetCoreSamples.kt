@@ -1,7 +1,9 @@
 package com.viewcompose.ui.foundation.samples
 
 import com.viewcompose.ui.environment.UiLayoutDirection
+import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiImageDecodeSize
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
@@ -9,6 +11,7 @@ import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.ButtonNodeProps
+import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.shape.UiShape
@@ -49,6 +52,23 @@ import com.viewcompose.ui.foundation.produceState
 import com.viewcompose.ui.foundation.rememberCoroutineScope
 import com.viewcompose.ui.foundation.rememberUpdatedState
 import kotlinx.coroutines.CoroutineScope
+
+fun emittedContentClosureSample() {
+    val status = "Ready"
+    val node = buildVNodeTree {
+        emit(
+            type = NodeType.Box,
+            key = "status-container",
+            spec = BoxNodeProps(contentAlignment = BoxAlignment.Center),
+        ) {
+            Text(status)
+        }
+    }.single()
+
+    check(node.type == NodeType.Box)
+    check(node.key == "status-container")
+    check(node.children.single().type == NodeType.Text)
+}
 
 fun themeStateColorSample() {
     val colors = UiStateColor(
