@@ -61,9 +61,11 @@ created for the node.
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   and pager state bridge platform scrolling to observable runtime state.
 - `LazyListItem` is the Q3 renderer-neutral item/session contract. `contentToken` drives semantic
-  collection diffing, while callback identity is deliberately excluded from value equality; a
-  parent refresh still installs and renders the exact next updater in a retained visible session.
-  The compiled `lazyListItemSessionUpdateSample` demonstrates equal-token closure replacement.
+  collection diffing, while callback identity is deliberately excluded from value equality and
+  submission identity. A renderer treats each newly submitted immutable item snapshot as a logical
+  revision, installs its exact updater only after the parent frame commits, and renders an active
+  retained session at most once for that revision. The compiled
+  `lazyListItemSessionUpdateSample` demonstrates equal-token closure replacement.
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.

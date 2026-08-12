@@ -308,14 +308,14 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun inputSearch_focusSearchBar_keepsInputVisibleWithoutChangingFirstItem() {
+    fun inputSearch_focusSearchBar_scrollsOnlyEnoughToRevealInput() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             InputActivity::class.java,
         ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
         launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            assertFocusActionKeepsRecyclerItem(
+            assertFocusActionRevealsInput(
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_SEARCH_PRIMARY,
             )
@@ -323,14 +323,14 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun inputSearch_focusScrollableColumnSearch_keepsInputVisibleWithoutChangingFirstItem() {
+    fun inputSearch_focusScrollableColumnSearch_scrollsOnlyEnoughToRevealInput() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             InputActivity::class.java,
         ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
         launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            assertFocusActionKeepsRecyclerItem(
+            assertFocusActionRevealsInput(
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_FOCUS_SCROLLABLE_SEARCH,
             )
@@ -338,14 +338,14 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun inputSearch_focusVerticalPagerSearch_keepsInputVisibleWithoutChangingFirstItem() {
+    fun inputSearch_focusVerticalPagerSearch_scrollsOnlyEnoughToRevealInput() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             InputActivity::class.java,
         ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
         launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            assertFocusActionKeepsRecyclerItem(
+            assertFocusActionRevealsInput(
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_FOCUS_VERTICAL_PAGER_SEARCH,
             )
@@ -353,14 +353,14 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun inputSearch_focusPullRefreshSearch_keepsInputVisibleWithoutChangingFirstItem() {
+    fun inputSearch_focusPullRefreshSearch_scrollsOnlyEnoughToRevealInput() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             InputActivity::class.java,
         ).putExtra(EXTRA_INPUT_PAGE_INDEX, 3)
         launchDemoActivity<InputActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            assertFocusActionKeepsRecyclerItem(
+            assertFocusActionRevealsInput(
                 scenario = scenario,
                 tag = DemoTestTags.INPUT_FOCUS_PULL_REFRESH_SEARCH,
             )
@@ -1550,17 +1550,16 @@ class DemoVisualUiTest {
         val rotation: Float,
     )
 
-    private fun assertFocusActionKeepsRecyclerItem(
+    private fun assertFocusActionRevealsInput(
         scenario: ActivityScenario<InputActivity>,
         tag: String,
     ) {
         var beforeAnchor: RecyclerViewportAnchor? = null
+        var beforeVisibleHeight = 0
         scenario.onActivity { activity ->
-            activity.requireViewByTestTagVisible(tag)
-        }
-        waitForUiIdle()
-        scenario.onActivity { activity ->
+            val inputHost = activity.requireViewByTestTagVisible(tag)
             beforeAnchor = activity.readFirstRecyclerAnchor()
+            beforeVisibleHeight = Rect().also(inputHost::getGlobalVisibleRect).height()
             activity.focusInputByTestTag(tag)
         }
         waitForUiIdle()
@@ -1577,6 +1576,12 @@ class DemoVisualUiTest {
             assertTrue(
                 "Expected focused descendant to remain a visible text editor: $tag",
                 focusedInput!!.onCheckIsTextEditor() && isViewVisible(focusedInput),
+            )
+            val visibleHeight = Rect().also(focusedHost::getGlobalVisibleRect).height()
+            assertEquals("Expected the complete focused host height to be visible: $tag", focusedHost.height, visibleHeight)
+            assertTrue(
+                "Expected focus follow to preserve or improve input visibility: $tag",
+                visibleHeight >= beforeVisibleHeight,
             )
         }
     }

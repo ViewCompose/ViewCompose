@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0007-host-owned-android-resource-environment.md
-translation_source_hash: 53613bfb728b9119d2cede79181670ba94c047ad005684bb3a60444156f0455f
+translation_source_hash: 4df4f5f2398ddc08d5488a084ad4b639effdb0fd19fc0c0fbe79fd53a8e98422
 translation_status: current
 ---
 
@@ -135,7 +135,7 @@ Preview 配置；进程全局 Context 也会破坏 Root/Session 所有权。
 ## 验证与发布
 
 实现遵循当前有效的
-[Android 资源环境计划](https://docs.viewcompose.com/project/plans/android-resource-environment)。
+[Android 资源环境计划](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/android-resource-environment.md)。
 保留该方案要求完成资源查询和生命周期顺序的聚焦单元测试、Renderer/图片修订测试、延迟 Session
 传播测试、Preview 测试、覆盖不重建配置变化的 Demo 仪器化测试、API 文档审计、双语言文档门禁，
 以及仓库快速/完整质量门禁。

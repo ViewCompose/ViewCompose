@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "summary": "Add configuration-aware Android resources and a transactional effect runtime, refresh retained lazy and pager sessions from new parent closures, and reconcile newly built value-equal child subtrees.",
+  "summary": "Add configuration-aware Android resources and a transactional effect runtime, commit retained lazy and pager submissions after their parent frame, and reconcile newly built value-equal child subtrees.",
   "changes": [
     { "artifact": "viewcompose-runtime", "impact": "breaking" },
     { "artifact": "viewcompose-ui-contract", "impact": "breaking" },

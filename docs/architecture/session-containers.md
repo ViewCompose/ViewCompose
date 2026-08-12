@@ -35,19 +35,35 @@ Every delayed-session container must satisfy these constraints:
 6. A `Change` update prefers the payload path instead of an unconditional full-change signal.
 7. When unusable keys force `ReloadAll`, preserve the current scroll anchor where possible instead
    of jumping the collection to the top after an interaction.
-8. Focusing an input must not cause an automatic list jump unless scrolling was requested
-   explicitly.
+8. Focusing an input must not cause an unrelated list jump. When the container's focus-follow
+   policy is enabled, it may scroll only enough to reveal the focused editor while preserving the
+   logical item anchor.
+9. A parent collection submission is one monotonic child-session revision. Its retained-child
+   updates publish only from the parent render frame's commit effects, after composition commit;
+   parent rollback discards them without running child composition or effects.
+10. Callback identity is not a revision. The renderer submits newly emitted immutable item/page
+    snapshots and suppresses only duplicate platform binds for the same submission revision.
+11. Proactive refresh is limited to attached or independently presented holders. Detached cached
+    holders stage the latest revision and render it on attach; ambiguous duplicate keys never use
+    first-match lookup to guess ownership.
+12. Pager stable IDs are collision-free for unique keys, and native view types partition
+    structurally incompatible `contentType`/kind pairs. Unkeyed cached pages retain position
+    ownership; keyed moves resolve only through a unique key in both snapshots.
 
 ## 4. Required scenarios
 
-Every container covers at least these six cases:
+Every container covers at least these eight cases:
 
-1. Stable structure, changed closure: visible content updates immediately while `key` is unchanged.
+1. Stable structure, changed closure: visible content updates after the successful parent commit
+   while `key` is unchanged.
 2. Stable structure, changed local context: theme, Local, or environment changes become visible.
 3. Changed `contentToken`: reuse or controlled recreation follows the documented semantics.
 4. Keyed reorder: ordering is correct and state does not move between items.
-5. Detach/attach/recycle: no leaks and no state loss.
-6. Empty-diff refresh: a bound holder still refreshes when `updates.isEmpty()`.
+5. Detach/attach/recycle: detached caches run no child effects, attach presents the latest
+   committed revision, and recycle leaks no state.
+6. Empty-diff refresh: an attached holder still refreshes once for the committed submission.
+7. Failed parent frame: retained child update/render/effects do not run.
+8. Missing or duplicate keys: conservative reload avoids guessed holder identity.
 
 ## 5. Current test mapping (2026-08)
 
@@ -56,6 +72,9 @@ Foundation unit tests:
 1. [LazyListDiffTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/reconcile/LazyListDiffTest.kt)
 2. [LazyHolderRegistryTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyHolderRegistryTest.kt)
 3. [LazyItemSessionControllerTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/LazyItemSessionControllerTest.kt)
+4. [LazyListAdapterTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/lazy/adapter/LazyListAdapterTest.kt)
+5. [ViewTreeRenderTransactionTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/tree/ViewTreeRenderTransactionTest.kt)
+6. [PagerAdapterTest.kt](../../viewcompose-renderer-android/src/test/java/com/viewcompose/renderer/view/container/PagerAdapterTest.kt)
 
 Covered special cases:
 
@@ -87,6 +106,12 @@ Current baseline notes:
 4. Since 2026-07-26, a back-stack commit occurs only after candidate first render or revealed-page
    refresh succeeds. Reentrant commands created by a failed candidate do not leak into the old
    stack.
+5. Since 2026-08-12, lazy, pager, and tab child submissions join the parent commit-effect boundary.
+   Attached holders render once per explicit submission revision; detached caches and rolled-back
+   parent frames run no child render or effects.
+6. Pager moves proactively refresh attached uniquely keyed pages after commit. Hash-colliding keys
+   keep distinct stable IDs, and unkeyed detached pages resolve the committed snapshot by their
+   bound position when reattached.
 
 ## 6. New-container workflow
 
@@ -94,7 +119,7 @@ Adding a delayed-session container requires all of the following:
 
 1. register the container in [the architecture overview](overview.md);
 2. add it to this checklist with a test mapping;
-3. add a unit case for at least `diff empty but closure changed`;
+3. add unit cases for `diff empty but closure changed`, parent rollback, and detached-holder attach;
 4. add real Activity instrumentation;
 5. confirm that render/layout diagnostics expose the behavior.
 
@@ -103,6 +128,7 @@ Adding a delayed-session container requires all of the following:
 For stale text, misplaced state, or an outdated page, investigate in this order:
 
 1. determine whether the content is inside a delayed-session container;
-2. determine whether the diff retained the latest item/page instance;
-3. determine whether the bound holder refreshes on the empty-diff path;
-4. only then inspect the Demo application code.
+2. determine whether a parent commit effect published the latest item/page submission revision;
+3. determine whether the holder was attached, detached-cached, or ambiguously keyed;
+4. determine whether the holder rendered that revision exactly once;
+5. only then inspect the Demo application code.

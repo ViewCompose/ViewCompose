@@ -14,6 +14,9 @@ import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextAlign
 import com.viewcompose.ui.node.TextOverflow
 import com.viewcompose.ui.node.ImageSource
+import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.UiImageLoadHandle
 import com.viewcompose.ui.node.UiImageLoader
 import com.viewcompose.ui.node.UiImageRequest
@@ -21,7 +24,9 @@ import com.viewcompose.ui.node.UiImageTarget
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ImageNodeSpec
+import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
+import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.unit.UiDensity
@@ -188,6 +193,57 @@ class SubtreeRecompositionTest {
         val second = compose()
 
         assertNotSame(first, second)
+    }
+
+    @Test
+    fun `new collection item snapshot invalidates a value-equal node with reused callbacks`() {
+        val composer = ComposerLite()
+        val factory = LazyListItemSessionFactory {
+            object : LazyListItemSession {
+                override fun render() = Unit
+
+                override fun dispose() = Unit
+            }
+        }
+        val updater: (LazyListItemSession) -> Unit = {}
+        var item = LazyListItem(
+            key = "item",
+            contentToken = "stable",
+            sessionFactory = factory,
+            sessionUpdater = updater,
+        )
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.requestRootRecompose()
+                composer.composeRoot {
+                    buildVNodeTree {
+                        emit(
+                            type = NodeType.LazyColumn,
+                            spec = LazyColumnNodeProps(
+                                contentPadding = LazyContentPadding(),
+                                spacing = com.viewcompose.ui.unit.UiDp.Zero,
+                                items = listOf(item),
+                            ),
+                        )
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        item = LazyListItem(
+            key = "item",
+            contentToken = "stable",
+            sessionFactory = factory,
+            sessionUpdater = updater,
+        )
+        val second = compose()
+
+        assertNotSame(first, second)
+        assertNotSame(
+            (first.spec as LazyColumnNodeProps).items.single(),
+            (second.spec as LazyColumnNodeProps).items.single(),
+        )
     }
 
     @Test

@@ -33,6 +33,7 @@ import com.viewcompose.renderer.view.tree.LazyColumnNodePatch
 import com.viewcompose.renderer.view.tree.LazyRowNodePatch
 import com.viewcompose.renderer.view.tree.LazyVerticalGridNodePatch
 import com.viewcompose.renderer.view.tree.NavigationBarNodePatch
+import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
 import com.viewcompose.renderer.view.tree.PagerViewBinder
 import com.viewcompose.renderer.view.tree.PullToRefreshNodePatch
 import com.viewcompose.renderer.view.tree.RowNodePatch
@@ -47,7 +48,6 @@ import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.focus.ScrollableFocusFollowLayoutMonitor
 import com.viewcompose.renderer.view.lazy.reuse.FrameworkRecyclerViewDefaults
-import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 import com.viewcompose.renderer.view.requireUiEnvironment
 import com.viewcompose.renderer.view.resolvePadding
 import com.viewcompose.renderer.view.roundToPx
@@ -161,6 +161,7 @@ internal object ContainerNodePatchApplier {
     fun applyLazyColumnPatch(
         view: RecyclerView,
         patch: LazyColumnNodePatch,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         val previous = patch.previous
         val next = patch.next
@@ -204,31 +205,33 @@ internal object ContainerNodePatchApplier {
                 LinearLayoutManager.VERTICAL,
             )
         }
-        if (previous.items != next.items || previous.items.hasSessionIdentityChange(next.items)) {
-            // Commit equal items when factory or updater references change so captured closures refresh.
-            // Submit even when item equality matches but session factory/updater references changed, preserving refreshed closures.
+        if (previous.items != next.items || previous.items.hasNewSnapshots(next.items)) {
+            // New immutable item snapshots form one explicit child-session submission even when
+            // their semantic diff tokens remain equal.
             val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
                 view.adapter = it
             }
-            adapter.submitItems(next.items)
-            LazyStickyHeaderDecoration.update(view, adapter)
+            submission.publish {
+                adapter.submitItems(next.items, submission.revision)
+                LazyStickyHeaderDecoration.update(view, adapter)
+            }
         }
-        if (previous.state !== next.state) {
-            // Disconnect the old connector before replacing state so it cannot keep driving this RecyclerView.
-            // Detach the old connector when state object changes so stale state cannot drive the current RecyclerView.
-            previous.state?.attach(null)
+        val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
+            view.adapter = it
         }
-        next.state?.attach(
-            UiLazyListConnector(
+        submission.publish {
+            adapter.bindState(
                 recyclerView = view,
+                state = next.state,
                 mainAxisItemSpacing = environment.roundToPx(next.spacing),
-            ),
-        )
+            )
+        }
     }
 
     fun applyLazyRowPatch(
         view: RecyclerView,
         patch: LazyRowNodePatch,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         val previous = patch.previous
         val next = patch.next
@@ -270,23 +273,27 @@ internal object ContainerNodePatchApplier {
                 LinearLayoutManager.HORIZONTAL,
             )
         }
-        if (previous.items != next.items || previous.items.hasSessionIdentityChange(next.items)) {
+        if (previous.items != next.items || previous.items.hasNewSnapshots(next.items)) {
             val adapter = view.adapter as? LazyListAdapter
                 ?: LazyListAdapter(LinearLayoutManager.HORIZONTAL).also {
                     view.adapter = it
                 }
-            adapter.submitItems(next.items)
-            LazyStickyHeaderDecoration.update(view, adapter)
+            submission.publish {
+                adapter.submitItems(next.items, submission.revision)
+                LazyStickyHeaderDecoration.update(view, adapter)
+            }
         }
-        if (previous.state !== next.state) {
-            previous.state?.attach(null)
-        }
-        next.state?.attach(
-            UiLazyListConnector(
+        val adapter = view.adapter as? LazyListAdapter
+            ?: LazyListAdapter(LinearLayoutManager.HORIZONTAL).also {
+                view.adapter = it
+            }
+        submission.publish {
+            adapter.bindState(
                 recyclerView = view,
+                state = next.state,
                 mainAxisItemSpacing = environment.roundToPx(next.spacing),
-            ),
-        )
+            )
+        }
     }
 
     fun applySegmentedControlPatch(
@@ -436,6 +443,7 @@ internal object ContainerNodePatchApplier {
     fun applyHorizontalPagerPatch(
         view: DeclarativeHorizontalPagerLayout,
         patch: HorizontalPagerNodePatch,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         PagerViewBinder.bindHorizontalPager(
             view = view,
@@ -449,12 +457,14 @@ internal object ContainerNodePatchApplier {
                 reusePolicy = patch.next.reusePolicy,
                 motionPolicy = patch.next.motionPolicy,
             ),
+            submission = submission,
         )
     }
 
     fun applyTabRowPatch(
         view: DeclarativeTabRowLayout,
         patch: TabRowNodePatch,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         val environment = view.requireUiEnvironment()
         PagerViewBinder.bindTabRow(
@@ -479,12 +489,14 @@ internal object ContainerNodePatchApplier {
                 itemPaddingVertical = environment.roundToPx(patch.next.itemPaddingVertical),
                 minItemWidth = environment.roundToPx(patch.next.minItemWidth),
             ),
+            submission = submission,
         )
     }
 
     fun applyVerticalPagerPatch(
         view: DeclarativeVerticalPagerLayout,
         patch: VerticalPagerNodePatch,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         PagerViewBinder.bindVerticalPager(
             view = view,
@@ -499,12 +511,14 @@ internal object ContainerNodePatchApplier {
                 motionPolicy = patch.next.motionPolicy,
                 focusFollowKeyboard = patch.next.focusFollowKeyboard,
             ),
+            submission = submission,
         )
     }
 
     fun applyLazyVerticalGridPatch(
         view: DeclarativeLazyVerticalGridLayout,
         patch: LazyVerticalGridNodePatch,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         val environment = view.requireUiEnvironment()
         CollectionViewBinder.bindLazyVerticalGrid(
@@ -523,6 +537,7 @@ internal object ContainerNodePatchApplier {
                 motionPolicy = patch.next.motionPolicy,
                 focusFollowKeyboard = patch.next.focusFollowKeyboard,
             ),
+            submission = submission,
         )
     }
 
@@ -543,15 +558,10 @@ internal object ContainerNodePatchApplier {
         }
     }
 
-    private fun List<LazyListItem>.hasSessionIdentityChange(next: List<LazyListItem>): Boolean {
-        // Lazy item content is driven by session factories and updaters, so reference changes may alter visible output.
-        // Lazy item content is driven by session factories/updaters; reference changes mean visible content may change.
+    private fun List<LazyListItem>.hasNewSnapshots(next: List<LazyListItem>): Boolean {
         if (size != next.size) return true
         for (index in indices) {
-            val previous = this[index]
-            val current = next[index]
-            if (previous.sessionFactory !== current.sessionFactory) return true
-            if (previous.sessionUpdater !== current.sessionUpdater) return true
+            if (this[index] !== next[index]) return true
         }
         return false
     }

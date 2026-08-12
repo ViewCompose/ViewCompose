@@ -858,57 +858,15 @@ private fun isViewVisible(view: View): Boolean {
  */
 internal fun assertViewBackgroundColor(view: View, expectedColor: Int) {
     val actual = resolveDrawableColor(view.background)
-    if (actual != null) {
-        assertEquals(
-            "Expected background color to match theme token",
-            expectedColor,
-            actual,
-        )
-        return
-    }
-    assertTrue(
-        "Expected rendered ${view.background?.javaClass?.name} background to contain " +
-            "theme color ${Integer.toHexString(expectedColor)}",
-        drawableContainsColor(
-            drawable = view.background,
-            width = view.width,
-            height = view.height,
-            expectedColor = expectedColor,
-        ),
+    assertNotNull(
+        "Expected a deterministic fill color for ${view.background?.javaClass?.name}",
+        actual,
     )
-}
-
-private fun drawableContainsColor(
-    drawable: Drawable?,
-    width: Int,
-    height: Int,
-    expectedColor: Int,
-): Boolean {
-    if (drawable == null || width <= 0 || height <= 0) return false
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val previousBounds = Rect(drawable.bounds)
-    return try {
-        drawable.setBounds(0, 0, width, height)
-        drawable.draw(Canvas(bitmap))
-        val expectedAlpha = android.graphics.Color.alpha(expectedColor)
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                val pixel = bitmap.getPixel(x, y)
-                if (
-                    android.graphics.Color.alpha(pixel) == expectedAlpha &&
-                    android.graphics.Color.red(pixel) == android.graphics.Color.red(expectedColor) &&
-                    android.graphics.Color.green(pixel) == android.graphics.Color.green(expectedColor) &&
-                    android.graphics.Color.blue(pixel) == android.graphics.Color.blue(expectedColor)
-                ) {
-                    return true
-                }
-            }
-        }
-        false
-    } finally {
-        drawable.bounds = previousBounds
-        bitmap.recycle()
-    }
+    assertEquals(
+        "Expected background color to match theme token",
+        expectedColor,
+        actual,
+    )
 }
 
 /**
@@ -940,6 +898,34 @@ private fun resolveDrawableColor(drawable: Drawable?): Int? {
         }
         is MaterialShapeDrawable -> drawable.fillColor?.defaultColor
         is GradientDrawable -> drawable.color?.defaultColor
-        else -> null
+        else -> resolveDrawableCenterColor(drawable)
     }
+}
+
+/** Resolves one center pixel without allocating or scanning a view-sized bitmap. */
+private fun resolveDrawableCenterColor(drawable: Drawable): Int {
+    val originalBounds = Rect(drawable.bounds)
+    val needsTemporaryBounds = originalBounds.isEmpty
+    if (needsTemporaryBounds) {
+        drawable.setBounds(0, 0, 3, 3)
+    }
+    val bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+    return try {
+        val bounds = drawable.bounds
+        Canvas(bitmap).apply {
+            translate(-bounds.exactCenterX() + 0.5f, -bounds.exactCenterY() + 0.5f)
+            drawable.draw(this)
+        }
+        bitmap.getPixel(0, 0)
+    } finally {
+        bitmap.recycle()
+        if (needsTemporaryBounds) {
+            drawable.bounds = originalBounds
+        }
+    }
+}
+
+/** Returns the alpha channel of a deterministically resolved background fill color. */
+internal fun resolvedViewBackgroundAlpha(view: View): Int? {
+    return resolveDrawableColor(view.background)?.let(android.graphics.Color::alpha)
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 2631182f2b8c8701d69edde69a3d75e294c42904788189311d80f8504f966446
+translation_source_hash: d798189a8e52d3cba0e5f48864f7242522c47f7cf3befb97ea3bd4c24cf3ef3b
 translation_status: current
 ---
 
@@ -136,6 +136,8 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
 - ViewCompose 没有编译器转换，无法推断所有普通 Kotlin 捕获值。因此，新安装的发射内容闭包
   即使节点规格值相等也会重建该 Group；只有完全相同且被保留的闭包才能复用未失效的子结果。
   这项规则优先保证捕获值与子 Session 回调正确，不采用不安全的值相等子树跳过。
+- 集合 item 快照而不是回调对象身份划分逻辑子提交。因此，即使调用方有意复用同一个 Session
+  Factory 或 Updater 实例，新建的值相等 item 仍会使所属集合 Group 失效。
 - `remember` 与 Effect 需要活跃组合。位置标识跟随结构调用路径；内容可能移动时，应使用稳定
   `key` 分组和 Lazy Item Key。
 - 候选 Effect 变化属于事务。组合或原生 Tree Render 失败不会启动候选工作，会保留已提交的

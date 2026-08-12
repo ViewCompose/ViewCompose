@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: be96dadbc72bd0cbd164982ca020c7e8890e414c7de9a60cb4d38fe46d99099c
+translation_source_hash: 697bcb9c0805df9a7db77223d96cf078c8dbc4f0fa1f88e0eec411eb085a7777
 translation_status: current
 ---
 
@@ -116,8 +116,15 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - Horizontal 与 Vertical Pager Holder 会在复用期间保留 `Page` 源码 Session 角色。RecyclerView
   行与 Tab Item 保持 `Content`；该角色不影响 Key、差分、测量、可见性或回调。
 - Lazy item 的 `contentToken` 控制语义差分 Payload，而不是决定可见的保留 Session 能否渲染。
-  父级刷新会安装 next item 的最新闭包；即使 Token 相等，也会立即渲染可见 Session，避免稳定
-  Key 的列表或 Pager 内容继续持有过期的父级快照。
+  新发射的不可变 item 快照会建立一个单调递增的提交；父级 composition 提交后，Renderer 才安装
+  next item 的准确闭包，并让每个已 attach Session 渲染一次，即使 Token 相等也一样。父级回滚、
+  RecyclerView 延迟重复 Payload 以及回调对象复用都不会产生额外子渲染。
+- Lazy 与 Pager 的主动刷新仅面向已 attach holder。detach 缓存 holder 不运行子 composition 或
+  effect，并在再次 attach 时接收最新已提交修订。key 缺失或重复时走保守 reload；Renderer 不会
+  用 first-match key 查询解析有歧义的 holder。
+- Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
+  `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一的 holder，无 key 缓存页则保留位置
+  归属，直到 RecyclerView 派发替换 bind。
 - 定向 patch 和子树跳过只是优化。只有每个直接 child 都是组合所复用的完全相同 VNode 实例时，
   才能跳过完整原生子树；新构建但值相等的 child 仍需调和，因为嵌套 Session 回调可能已变化。
   自定义 host 不得从 patch 记录或诊断计数推断业务状态。

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 66e35d8f75fe5455ed3422c3a7df0dc3b4c0992a7f6d84bd553a3366d65fa8a3
+translation_source_hash: f4c567695e7eaa98e068de3fc011c0f6ea03a34ccc093ec6f58f64b99d60300b
 translation_status: current
 ---
 
@@ -63,8 +63,9 @@ val gap = VNode(
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   与 Pager 状态把平台滚动能力桥接到可观察的 Runtime 状态。
 - `LazyListItem` 是 Q3、渲染器中立的 Item/Session 契约。`contentToken` 驱动集合语义差分，回调
-  身份则有意排除在值相等判断之外；父级刷新仍会在可见的保留 Session 中安装并渲染 next item
-  的准确 updater。编译样例 `lazyListItemSessionUpdateSample` 展示等 Token 的闭包替换。
+  身份则有意排除在值相等判断与提交身份之外。Renderer 把每个新提交的不可变 item 快照视为一个
+  逻辑修订，只在父帧提交后安装其准确 updater，并保证 active 的保留 Session 对该修订最多渲染
+  一次。编译样例 `lazyListItemSessionUpdateSample` 展示等 Token 的闭包替换。
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。

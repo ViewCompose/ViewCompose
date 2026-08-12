@@ -15,6 +15,7 @@ import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
 /**
@@ -55,6 +56,7 @@ internal class DeclarativeTabRowLayout(
     private var containerColorState: Int? = null
 
     private val controllers = mutableListOf<LazyItemSessionController>()
+    private var currentSubmissionRevision = 0L
 
     init {
         isHorizontalScrollBarEnabled = false
@@ -112,6 +114,7 @@ internal class DeclarativeTabRowLayout(
         itemPaddingHorizontal: Int,
         itemPaddingVertical: Int,
         minItemWidth: Int,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         val itemContainerStyleChanged =
             this.rippleColor != rippleColor ||
@@ -157,19 +160,26 @@ internal class DeclarativeTabRowLayout(
             selectedIndex.coerceIn(0, tabs.lastIndex)
         }
         val selectedChanged = this.selectedIndex != resolvedSelectedIndex
-        val tabsRebuilt = updateTabs(
-            newTabs = tabs,
-            forceRebuild = itemContainerStyleChanged,
-        )
-        this.tabs = tabs
         this.selectedIndex = resolvedSelectedIndex
+
+        submission.publish {
+            if (submission.revision > currentSubmissionRevision) {
+                currentSubmissionRevision = submission.revision
+                val tabsRebuilt = updateTabs(
+                    newTabs = tabs,
+                    forceRebuild = itemContainerStyleChanged,
+                    submissionRevision = submission.revision,
+                )
+                this.tabs = tabs
+                if (selectedChanged || tabsRebuilt || itemLayoutStyleChanged) {
+                    scrollToSelectedTab(animate = true)
+                }
+            }
+        }
 
         observePagerState(pagerState)
         if (this.pagerState == null) {
             tabContainer.updateIndicatorPosition(this.selectedIndex, 0f)
-        }
-        if (selectedChanged || tabsRebuilt || itemLayoutStyleChanged) {
-            scrollToSelectedTab(animate = true)
         }
     }
 
@@ -186,24 +196,31 @@ internal class DeclarativeTabRowLayout(
     private fun updateTabs(
         newTabs: List<TabRowTab>,
         forceRebuild: Boolean,
+        submissionRevision: Long,
     ): Boolean {
         val needsRebuild = forceRebuild ||
             newTabs.size != controllers.size ||
             newTabs.zip(tabs).any { (a, b) -> a.item.key != b.item.key }
 
         if (needsRebuild) {
-            rebuildTabs(newTabs)
+            rebuildTabs(newTabs, submissionRevision)
         } else {
             // Reuse the existing tab container and rebind only selection and content payloads that may have changed.
             // Reuse existing tab containers and only rebind potentially changed selection/content payloads.
             newTabs.forEachIndexed { index, tab ->
-                controllers.getOrNull(index)?.bind(tab.item)
+                controllers.getOrNull(index)?.bind(
+                    item = tab.item,
+                    submissionRevision = submissionRevision,
+                )
             }
         }
         return needsRebuild
     }
 
-    private fun rebuildTabs(newTabs: List<TabRowTab>) {
+    private fun rebuildTabs(
+        newTabs: List<TabRowTab>,
+        submissionRevision: Long,
+    ) {
         // Dispose old sessions before rebuilding structure so old Views stop receiving updates.
         // Dispose old sessions before rebuilding structure so stale views stop receiving updates.
         controllers.forEach { it.recycle() }
@@ -237,7 +254,10 @@ internal class DeclarativeTabRowLayout(
                 },
                 clearContainer = itemContainer::removeAllViews,
             )
-            controller.bind(tab.item)
+            controller.bind(
+                item = tab.item,
+                submissionRevision = submissionRevision,
+            )
             controllers.add(controller)
             tabContainer.addView(itemContainer)
         }

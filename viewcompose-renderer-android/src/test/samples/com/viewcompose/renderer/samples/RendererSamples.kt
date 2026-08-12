@@ -81,17 +81,21 @@ fun renderIntoViewGroupSample(
     container: ViewGroup,
     nextNodes: List<VNode>,
 ) {
-    var mounted = ViewTreeRenderer.renderInto(
+    val initial = ViewTreeRenderer.renderInto(
         container = container,
         previous = emptyList(),
         nodes = nextNodes,
-    ).mountedNodes
+    )
+    initial.commitEffects.forEach { effect -> effect.commit() }
+    var mounted = initial.mountedNodes
 
-    mounted = ViewTreeRenderer.renderInto(
+    val updated = ViewTreeRenderer.renderInto(
         container = container,
         previous = mounted,
         nodes = nextNodes,
-    ).mountedNodes
+    )
+    updated.commitEffects.forEach { effect -> effect.commit() }
+    mounted = updated.mountedNodes
 
     ViewTreeRenderer.disposeMounted(container, mounted)
 }

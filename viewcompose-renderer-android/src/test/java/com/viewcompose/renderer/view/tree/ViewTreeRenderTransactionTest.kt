@@ -35,6 +35,9 @@ import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.shape
 import com.viewcompose.ui.modifier.systemBarsInsetsPadding
 import com.viewcompose.ui.node.NodeType
+import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyListItemSession
+import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.policy.LazyContentPadding
@@ -452,6 +455,84 @@ class ViewTreeRenderTransactionTest {
     }
 
     @Test
+    fun `retained lazy child publishes latest closure only from parent commit effect`() {
+        val container = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(lazySessionNode(label = "old", events = events)),
+        )
+        initial.commitEffects.forEach { effect -> effect.commit() }
+        val recyclerView = initial.mountedNodes.single().view as RecyclerView
+        val adapter = recyclerView.adapter as com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
+        val holder = adapter.onCreateViewHolder(recyclerView, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+        assertEquals(listOf("update:old", "render:old"), events)
+
+        val candidate = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = initial.mountedNodes,
+            nodes = listOf(lazySessionNode(label = "new", events = events)),
+        )
+
+        assertEquals(
+            "Child composition must remain unchanged until the parent frame commits.",
+            listOf("update:old", "render:old"),
+            events,
+        )
+        candidate.commitEffects.forEach { effect -> effect.commit() }
+        assertEquals(
+            listOf("update:old", "render:old", "update:new", "render:new"),
+            events,
+        )
+    }
+
+    @Test
+    fun `failed parent frame discards retained lazy child submission`() {
+        val container = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val initial = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                lazySessionNode(label = "old", events = events),
+                androidNode(key = "failure", value = "stable"),
+            ),
+        )
+        initial.commitEffects.forEach { effect -> effect.commit() }
+        val recyclerView = initial.mountedNodes.first().view as RecyclerView
+        val adapter = recyclerView.adapter as com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
+        val holder = adapter.onCreateViewHolder(recyclerView, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+        assertEquals(listOf("update:old", "render:old"), events)
+
+        val error = runCatching {
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = initial.mountedNodes,
+                nodes = listOf(
+                    lazySessionNode(label = "new", events = events),
+                    androidNode(
+                        key = "failure",
+                        value = "broken",
+                        failUpdate = true,
+                    ),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertAndroidViewUpdateFailure(error)
+        assertEquals(
+            "A rolled-back parent frame must not update or render its retained child session.",
+            listOf("update:old", "render:old"),
+            events,
+        )
+    }
+
+    @Test
     fun `removed nodes release only after a successful frame`() {
         val container = FrameLayout(context)
         var releases = 0
@@ -735,6 +816,45 @@ class ViewTreeRenderTransactionTest {
                 resourceRevision = resourceRevision,
             ),
         )
+    }
+
+    private fun lazySessionNode(
+        label: String,
+        events: MutableList<String>,
+    ): VNode {
+        return VNode(
+            type = NodeType.LazyColumn,
+            key = "lazy-session",
+            spec = LazyColumnNodeProps(
+                contentPadding = LazyContentPadding(),
+                spacing = 0.dp,
+                items = listOf(
+                    LazyListItem(
+                        key = "item",
+                        contentToken = "stable",
+                        sessionFactory = LazyListItemSessionFactory {
+                            TransactionRecordingSession(events)
+                        },
+                        sessionUpdater = { session ->
+                            (session as TransactionRecordingSession).label = label
+                            events += "update:$label"
+                        },
+                    ),
+                ),
+            ),
+        )
+    }
+
+    private class TransactionRecordingSession(
+        private val events: MutableList<String>,
+    ) : LazyListItemSession {
+        var label: String = ""
+
+        override fun render() {
+            events += "render:$label"
+        }
+
+        override fun dispose() = Unit
     }
 
     private fun textFieldNode(

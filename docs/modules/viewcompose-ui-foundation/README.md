@@ -152,6 +152,9 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   newly installed emitted-content closure therefore rebuilds that group even when the node spec is
   value-equal; only the exact retained closure may reuse a clean child result. This favors correct
   captured values and child-session callbacks over an unsafe value-equality subtree skip.
+- Collection item snapshots, rather than their callback object identities, delimit logical child
+  submissions. Rebuilding a value-equal item therefore invalidates its collection group even when
+  a caller deliberately reuses the same session factory or updater instance.
 - `remember` and effects require an active composition. Positional identity follows the structural
   call path; use stable `key` groups and lazy-item keys when content can move.
 - Candidate effect changes are transactional. A failed composition or native tree render starts no

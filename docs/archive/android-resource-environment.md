@@ -2,9 +2,11 @@
 
 ## Status
 
-Implementation complete; final connected validation blocked. ADR-0007 is accepted, the
-implementation and durable documentation are landed in the isolated worktree, and this plan
-remains the source of truth until the connected-device gate completes.
+Completed. Android resource resolution, host-owned invalidation, configuration-aware retained
+sessions, preview convergence, and the Demo verification matrix are implemented. The corrective
+review also moved lazy, pager, and tab child submissions behind the parent composition commit,
+replaced callback identity with explicit logical revisions, and restored deterministic color,
+opacity, and focus-follow assertions.
 
 This plan is canonical English-only under the documentation-governance policy. Durable public
 behavior will move into active architecture, guide, migration, tooling, and module documentation
@@ -12,8 +14,8 @@ before this file moves to `docs/archive/`.
 
 Last verified: 2026-08-12.
 
-Next action: wake and manually unlock connected device `RFCR301L2JN`, rerun `./gradlew qaFull`, and
-archive this plan only if the connected suites pass and all durable contracts remain current.
+Durable contracts are recorded in active architecture and module manuals. This completed plan is
+retained only as implementation and validation history.
 
 ## Maven release changesets
 
@@ -246,6 +248,29 @@ Verified from commit `08bb5f7179a8533950762283b046396e90ba25cb` on 2026-08-12:
 5. Run API documentation audits, both-locale documentation checks, focused unit/instrumentation
    tests, `qaQuick`, and `qaFull` before moving durable conclusions and archiving this plan.
 
+### Phase 7: Corrective retained-session transaction and Demo contracts
+
+1. Treat each parent collection submission as an explicit monotonic revision. A retained child
+   renders at most once for that revision; callback-object identity is not observable state and is
+   never used as the logical revision.
+2. Stage lazy-list, pager, and tab-row child updates while the parent View tree is patching. Publish
+   them only from the render frame's commit effects, after the parent composition commits; discard
+   staged work on rollback so a failed parent frame cannot run child composition or effects.
+3. Refresh only holders that are attached or otherwise actively presented. Resolve keyed holders
+   by an unambiguous key and position-owned holders by their current position; duplicate keys use
+   the conservative reload path instead of guessing identity.
+4. Apply the same committed-submission rule to pager moves and content-only updates, including
+   updates whose diff also contains structural operations.
+5. Replace full-bitmap drawable probing with wrapper-aware resolution and a bounded one-pixel
+   fallback, and assert rendered opacity rather than mutable `Drawable.alpha` metadata.
+6. Restore the semantic focus-follow contract for every configuration axis. With
+   `focusFollowKeyboard = true`, allow only the minimal scroll needed to reveal the focused editor;
+   assert stable item identity plus complete host and editor visibility instead of encoding the
+   incorrect assumption that focus must preserve an exact pixel offset.
+7. Add failure-injection and regression tests for parent rollback, delayed RecyclerView callbacks,
+   duplicate or absent keys, detached cached holders, pager moves, opacity, drawable qualifiers,
+   and focus-follow visibility before rerunning `qaQuick` and `qaFull`.
+
 ## Validation
 
 ### Focused JVM/Robolectric tests
@@ -267,7 +292,7 @@ Verified from commit `08bb5f7179a8533950762283b046396e90ba25cb` on 2026-08-12:
 Exact task names will be verified against Gradle before execution; unavailable aggregate tasks will
 be replaced by the owning module's declared test task and recorded here.
 
-Completed focused validation on 2026-08-12:
+Final validation completed on 2026-08-12:
 
 - the UI contract, UI Foundation, Host Android, neutral Android host, Renderer, Coil, Glide,
   Material, Material Android host, Preview Runner, Preview, and Navigation focused JVM/Robolectric
@@ -278,13 +303,18 @@ Completed focused validation on 2026-08-12:
 - the strict API documentation audits for all 11 affected published modules passed;
 - `./gradlew verifyViewComposeReleaseIntent qaQuick` passed 1,615 tasks, including published-module
   tests, local publication, API documentation, and compiled tutorial/sample verification;
-- website type checking, language placement, translation freshness, and both locale static builds
-  passed; the final route verifier then reported the clean worktree's pre-existing absence of
-  generated historical/current API pages; and
-- `./gradlew qaFull` reached the connected-device preflight after its cached `qaQuick` dependency,
-  but the preflight correctly refused to bypass the Samsung device's secure keyguard. No connected
-  suite ran during that attempt; the focused resource-configuration device test above remains the
-  completed device evidence for this change.
+- website type checking, language placement, translation freshness, both locale static builds, and
+  documentation structure verification passed;
+- retained-session unit regressions passed for parent rollback, monotonic submission revisions,
+  stable callback reuse, delayed platform binds, duplicate and absent keys, detached holders,
+  pager moves, stable-ID hash collisions, and native view-type partitioning;
+- focused Demo regressions passed for rendered background color and opacity, navigation push/pop,
+  and focus-follow behavior across scrollable, lazy-list, pager, and pull-to-refresh containers;
+- the complete Demo connected suite passed 96 of 96 tests on an unlocked Samsung SM-G991B running
+  Android 13; and
+- `./gradlew qaFull` passed 1,756 tasks, including repository publication and documentation gates,
+  all JVM/Robolectric suites, the 96-test Demo suite, the one-test Counter suite, and the two-test
+  Tutorials suite.
 
 ### API and documentation gates
 

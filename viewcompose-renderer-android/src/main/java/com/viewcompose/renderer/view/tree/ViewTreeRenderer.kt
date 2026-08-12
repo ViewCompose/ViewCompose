@@ -13,7 +13,8 @@ import com.viewcompose.renderer.reconcile.ReconcileNode
  *
  * Calls are UI-thread confined. The caller owns the host and must pass the exact mounted-node list
  * returned by its previous successful render. Structural and binding mutations are rolled back when
- * preparation fails; deferred lifecycle callbacks run only after the new View tree commits.
+ * preparation fails. [renderInto] returns deferred native work for its caller to execute only after
+ * the owning composition commits.
  */
 object ViewTreeRenderer {
     private const val DEFAULT_RIPPLE_COLOR: Int = 0x22000000
@@ -67,9 +68,10 @@ object ViewTreeRenderer {
      * Reconciles [nodes] into [container] and commits one new mounted-tree snapshot.
      *
      * View structure changes enter a transaction first. A preparation failure restores the previous
-     * structure and is rethrown. After structural commit, deferred lifecycle callbacks are isolated:
-     * their errors are reported in [RenderTreeResult.commitFailures] and do not roll back the visible
-     * tree. [onReconcile] runs last with the committed result and may re-enter application code.
+     * structure and is rethrown. After structural commit, [RenderTreeResult.commitEffects] contains
+     * native work that a host must execute once, after its composition commit. Failures already
+     * reported in [RenderTreeResult.commitFailures] do not roll back the visible tree. [onReconcile]
+     * runs last with the committed result and may re-enter application code.
      *
      * @sample com.viewcompose.renderer.samples.renderIntoViewGroupSample
      * @param container exclusive ViewGroup host for this mounted tree
@@ -77,7 +79,7 @@ object ViewTreeRenderer {
      * @param nodes next immutable declarative root snapshot
      * @param collectDiagnostics whether to collect statistics, structure, patch, and warning snapshots
      * @param onReconcile optional callback invoked on the UI thread after commit and cleanup
-     * @return committed mounted roots, reconciliation plan, diagnostics, effects, and isolated failures
+     * @return committed mounted roots, reconciliation plan, diagnostics, deferred effects, and isolated failures
      * @throws Throwable when reconciliation or platform mutation fails before structural commit
      */
     fun renderInto(

@@ -167,6 +167,7 @@ internal object ViewTreePatchPipeline {
                     node = checkpoint.vnode,
                     defaultRippleColor = defaultRippleColor,
                     resolved = checkpoint.vnode.modifier.resolve(),
+                    bindingMode = NodeBindingMode.Rollback,
                 )
                 checkpoint.mountedNode.view.layoutParams = checkpoint.layoutParams
             }
@@ -374,7 +375,8 @@ internal object ViewTreePatchPipeline {
                             node = patch.nextVNode,
                             defaultRippleColor = defaultRippleColor,
                             resolved = checkNotNull(preparedPatch.nextResolved),
-                        )
+                            bindingMode = NodeBindingMode.Deferred,
+                        )?.let(transaction.commitEffects::add)
                         scheduleAndroidViewCommit(
                             transaction = transaction,
                             view = mountedNode.view,
@@ -397,7 +399,9 @@ internal object ViewTreePatchPipeline {
                         NodeViewBinderRegistry.applyPatch(
                             view = mountedNode.view,
                             patch = bindingPlan.patch,
-                        )
+                            mode = NodeBindingMode.Deferred,
+                            nodeKey = patch.nextVNode.key,
+                        )?.let(transaction.commitEffects::add)
                         if (bindingPlan.modifierChanged) {
                             ModifierInteractionApplier.applyNativeViewConfigs(
                                 view = mountedNode.view,
@@ -563,7 +567,8 @@ internal object ViewTreePatchPipeline {
             node = node,
             defaultRippleColor = defaultRippleColor,
             resolved = resolved,
-        )
+            bindingMode = NodeBindingMode.Deferred,
+        )?.let(transaction.commitEffects::add)
         scheduleAndroidViewCommit(
             transaction = transaction,
             view = view,
@@ -669,12 +674,14 @@ internal object ViewTreePatchPipeline {
         node: VNode,
         defaultRippleColor: Int,
         resolved: ResolvedModifiers,
-    ) {
-        ViewModifierApplier.bindView(
+        bindingMode: NodeBindingMode = NodeBindingMode.Immediate,
+    ): RenderTreeCommitEffect? {
+        return ViewModifierApplier.bindView(
             view = view,
             node = node,
             defaultRippleColor = defaultRippleColor,
             resolved = resolved,
+            bindingMode = bindingMode,
         )
     }
 

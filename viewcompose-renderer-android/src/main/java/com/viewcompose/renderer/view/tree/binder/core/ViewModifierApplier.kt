@@ -28,15 +28,21 @@ internal object ViewModifierApplier {
         node: VNode,
         defaultRippleColor: Int,
         resolved: ResolvedModifiers = node.modifier.resolve(),
-    ) {
+        bindingMode: NodeBindingMode = NodeBindingMode.Immediate,
+    ): RenderTreeCommitEffect? {
         applyModifier(
             view = view,
             node = node,
             defaultRippleColor = defaultRippleColor,
             resolved = resolved,
         )
-        NodeViewBinderRegistry.bind(view, node)
+        val commitEffect = NodeViewBinderRegistry.bind(
+            view = view,
+            node = node,
+            mode = bindingMode,
+        )
         ModifierInteractionApplier.applyNativeViewConfigs(view, node)
+        return commitEffect
     }
 
     private fun applyEnvironment(

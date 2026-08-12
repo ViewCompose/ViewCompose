@@ -21,7 +21,6 @@ import com.viewcompose.ui.state.LazyListState
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.renderer.view.lazy.adapter.LazyListAdapter
 import com.viewcompose.renderer.view.lazy.adapter.LazyStickyHeaderDecoration
-import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.renderer.view.resolvePadding
 import com.viewcompose.renderer.view.roundToPx
@@ -86,6 +85,7 @@ internal object CollectionViewBinder {
     fun bindLazyColumn(
         view: RecyclerView,
         spec: LazyColumnSpec,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         FrameworkRecyclerViewDefaults.applyLazyColumnDefaults(
             recyclerView = view,
@@ -111,19 +111,23 @@ internal object CollectionViewBinder {
         }
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.VERTICAL)
-        adapter.submitItems(spec.items)
-        LazyStickyHeaderDecoration.update(view, adapter)
-        spec.state?.attach(
-            UiLazyListConnector(
+        submission.publish {
+            adapter.submitItems(spec.items, submission.revision)
+            LazyStickyHeaderDecoration.update(view, adapter)
+        }
+        submission.publish {
+            adapter.bindState(
                 recyclerView = view,
+                state = spec.state,
                 mainAxisItemSpacing = spec.spacing,
-            ),
-        )
+            )
+        }
     }
 
     fun bindLazyRow(
         view: RecyclerView,
         spec: LazyColumnSpec,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         FrameworkRecyclerViewDefaults.applyLazyRowDefaults(
             recyclerView = view,
@@ -150,14 +154,17 @@ internal object CollectionViewBinder {
             }
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.HORIZONTAL)
-        adapter.submitItems(spec.items)
-        LazyStickyHeaderDecoration.update(view, adapter)
-        spec.state?.attach(
-            UiLazyListConnector(
+        submission.publish {
+            adapter.submitItems(spec.items, submission.revision)
+            LazyStickyHeaderDecoration.update(view, adapter)
+        }
+        submission.publish {
+            adapter.bindState(
                 recyclerView = view,
+                state = spec.state,
                 mainAxisItemSpacing = spec.spacing,
-            ),
-        )
+            )
+        }
     }
 
     fun bindNavigationBar(
@@ -190,6 +197,7 @@ internal object CollectionViewBinder {
     fun bindLazyVerticalGrid(
         view: DeclarativeLazyVerticalGridLayout,
         spec: LazyVerticalGridSpec,
+        submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         view.applyRecyclerDefaults(
             sharePool = spec.reusePolicy.sharePool,
@@ -210,6 +218,7 @@ internal object CollectionViewBinder {
             reverseLayout = spec.reverseLayout,
             userScrollEnabled = spec.userScrollEnabled,
             prefetchPolicy = spec.prefetchPolicy,
+            submission = submission,
         )
     }
 

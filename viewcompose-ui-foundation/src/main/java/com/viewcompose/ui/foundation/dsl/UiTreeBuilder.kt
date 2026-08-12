@@ -288,27 +288,27 @@ private fun hasSameReferenceIdentity(
         }
 
         previous is LazyColumnNodeProps && next is LazyColumnNodeProps -> {
-            previous.items.hasSameSessionIdentity(next.items)
+            previous.items.hasSameSessionSnapshots(next.items)
         }
 
         previous is LazyRowNodeProps && next is LazyRowNodeProps -> {
-            previous.items.hasSameSessionIdentity(next.items)
+            previous.items.hasSameSessionSnapshots(next.items)
         }
 
         previous is LazyVerticalGridNodeProps && next is LazyVerticalGridNodeProps -> {
-            previous.items.hasSameSessionIdentity(next.items)
+            previous.items.hasSameSessionSnapshots(next.items)
         }
 
         previous is HorizontalPagerNodeProps && next is HorizontalPagerNodeProps -> {
-            previous.pages.hasSameSessionIdentity(next.pages)
+            previous.pages.hasSameSessionSnapshots(next.pages)
         }
 
         previous is VerticalPagerNodeProps && next is VerticalPagerNodeProps -> {
-            previous.pages.hasSameSessionIdentity(next.pages)
+            previous.pages.hasSameSessionSnapshots(next.pages)
         }
 
         previous is TabRowNodeProps && next is TabRowNodeProps -> {
-            previous.tabs.hasSameTabSessionIdentity(next.tabs)
+            previous.tabs.hasSameTabSessionSnapshots(next.tabs)
         }
 
         else -> true
@@ -316,22 +316,14 @@ private fun hasSameReferenceIdentity(
 }
 
 /**
- * Compares whether lazy item session factories and updaters keep the same references.
+ * Reuses collection specs only when they retain the exact immutable item snapshots.
  */
-private fun List<LazyListItem>.hasSameSessionIdentity(other: List<LazyListItem>): Boolean {
+private fun List<LazyListItem>.hasSameSessionSnapshots(other: List<LazyListItem>): Boolean {
     if (size != other.size) return false
-    return indices.all { index ->
-        this[index].sessionFactory === other[index].sessionFactory &&
-            this[index].sessionUpdater === other[index].sessionUpdater
-    }
+    return indices.all { index -> this[index] === other[index] }
 }
 
-private fun List<TabRowTab>.hasSameTabSessionIdentity(other: List<TabRowTab>): Boolean {
+private fun List<TabRowTab>.hasSameTabSessionSnapshots(other: List<TabRowTab>): Boolean {
     if (size != other.size) return false
-    return indices.all { index ->
-        val previous = this[index].item
-        val next = other[index].item
-        previous.sessionFactory === next.sessionFactory &&
-            previous.sessionUpdater === next.sessionUpdater
-    }
+    return indices.all { index -> this[index].item === other[index].item }
 }

@@ -156,8 +156,8 @@ constructor-sensitive Context identity changes.
 
 ## Validation and rollout
 
-Implementation follows the active
-[Android resource environment plan](../../project/plans/android-resource-environment.md). Retention
+Implementation history is retained in the archived
+[Android resource environment plan](../../archive/android-resource-environment.md). Retention
 requires focused unit tests for lookup and lifecycle ordering, renderer/image revision tests,
 delayed-session propagation tests, preview tests, Demo instrumentation covering non-recreating
 configuration changes, API documentation audits, both-locale documentation gates, and the

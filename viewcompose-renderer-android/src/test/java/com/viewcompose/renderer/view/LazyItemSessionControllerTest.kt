@@ -19,8 +19,8 @@ class LazyItemSessionControllerTest {
         val controller = createController(events)
         val item = item(key = "A", contentToken = 1)
 
-        controller.bind(item)
-        controller.bind(item)
+        controller.bind(item, submissionRevision = 1L)
+        controller.bind(item, submissionRevision = 1L)
 
         assertEquals(
             listOf("clear", "create:A:1", "render:A:1"),
@@ -66,7 +66,7 @@ class LazyItemSessionControllerTest {
     }
 
     @Test
-    fun `does not render the same updater instance twice`() {
+    fun `renders a reused updater once for each submission revision`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
         val updater: (LazyListItemSession) -> Unit = { session ->
@@ -78,13 +78,104 @@ class LazyItemSessionControllerTest {
             sessionUpdater = updater,
         )
 
-        controller.bind(item)
-        controller.bind(item)
+        controller.bind(item, submissionRevision = 1L)
+        controller.bind(item, submissionRevision = 2L)
+
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "update:A:1",
+                "render:A:1",
+                "update:A:1",
+                "render:A:1",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `ignores a delayed duplicate bind from the same submission revision`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        val item = item(
+            key = "A",
+            contentToken = 1,
+            sessionUpdater = { session ->
+                (session as RecordingSession).updateLabel("A:1")
+            },
+        )
+
+        controller.bind(item, submissionRevision = 7L)
+        controller.bind(
+            item = item,
+            payload = com.viewcompose.renderer.reconcile.LazyListChangePayload.ContentTokenChanged(
+                previous = 0,
+                next = 1,
+            ),
+            submissionRevision = 7L,
+        )
 
         assertEquals(
             listOf("clear", "create:A:1", "update:A:1", "render:A:1"),
             events,
         )
+    }
+
+    @Test
+    fun `staged submission does not update or render until committed`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        controller.bind(
+            item = item(
+                key = "A",
+                contentToken = 1,
+                sessionUpdater = { session ->
+                    (session as RecordingSession).updateLabel("old")
+                },
+            ),
+            submissionRevision = 1L,
+        )
+
+        controller.stage(
+            item = item(
+                key = "A",
+                contentToken = 1,
+                sessionUpdater = { session ->
+                    (session as RecordingSession).updateLabel("new")
+                },
+            ),
+            submissionRevision = 2L,
+        )
+
+        assertEquals(
+            listOf("clear", "create:A:1", "update:old", "render:old"),
+            events,
+        )
+        controller.commit(submissionRevision = 2L)
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "update:old",
+                "render:old",
+                "update:new",
+                "render:new",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `discard removes staged submission without touching committed child`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+        controller.bind(item(key = "A", contentToken = 1), submissionRevision = 1L)
+        controller.stage(item(key = "B", contentToken = 2), submissionRevision = 2L)
+
+        controller.discard(submissionRevision = 2L)
+
+        assertEquals(listOf("clear", "create:A:1", "render:A:1"), events)
     }
 
     @Test

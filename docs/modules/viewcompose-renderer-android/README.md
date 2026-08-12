@@ -127,9 +127,17 @@ Because the current line is alpha, the documentation site intentionally does not
   RecyclerView rows and tab items remain `Content`; this role does not affect keys, diffing,
   measurement, visibility, or callbacks.
 - A lazy item's `contentToken` controls semantic diff payloads, not whether a visible retained
-  session may render. Parent refreshes install the exact next item's latest closure and immediately
-  render the visible session even when the token is equal, preventing stable-key list and pager
-  content from retaining an obsolete parent snapshot.
+  session may render. A newly emitted immutable item snapshot creates one monotonic submission;
+  after the parent composition commits, the renderer installs the exact next closure and renders
+  each attached session once even when the token is equal. Parent rollback, delayed duplicate
+  RecyclerView payloads, and callback-object reuse cannot create an extra child render.
+- Proactive lazy and pager refresh is limited to attached holders. Detached cached holders stage
+  no child composition or effects and receive the latest committed submission when reattached.
+  Missing or duplicate keys use the conservative reload path; the renderer never resolves an
+  ambiguous holder through first-match key lookup.
+- Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
+  incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned holders, and
+  unkeyed cached pages retain position ownership until RecyclerView supplies a replacement bind.
 - Targeted patching and subtree skipping are optimizations. A complete native subtree is skipped
   only when every direct child is the exact VNode instance reused by composition; newly built,
   value-equal children still reconcile because nested session callbacks may have changed. Custom

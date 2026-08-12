@@ -21,7 +21,7 @@ internal object NodeBinderDescriptors {
      */
     fun bindersByType(): Map<NodeType, BindBlock> = all.associateByUnique(
         keySelector = { it.nodeType },
-        valueSelector = { it.bind },
+            valueSelector = { it.bind },
         duplicateMessage = { "Duplicate binder descriptor for NodeType: $it" },
     )
 

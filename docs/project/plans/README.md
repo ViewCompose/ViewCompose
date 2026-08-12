@@ -4,10 +4,6 @@ This directory contains multi-step work that is currently active and must surviv
 
 ## Active plans
 
-- [Android resource environment](./android-resource-environment.md) — add composition-aware Android
-  resource APIs, host-owned configuration invalidation, design-system-neutral revision propagation,
-  retained-session and preview convergence, and a Demo matrix that changes configuration without
-  per-page invalidation state.
 - [Cross-session theme propagation](./cross-session-theme-propagation.md) — make one observable
   application theme choice converge across independent Activity roots, add a secondary-Activity
   switch-and-return Demo, and refresh retained NavHost destinations with the latest Local snapshot

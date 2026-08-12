@@ -103,16 +103,23 @@ class LazyListAdapterTest {
     }
 
     @Test
-    fun `stable closure refresh renders a manually bound holder without an adapter position`() {
+    fun `new submission revision refreshes an attached holder with a stable updater instance`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
         val adapter = LazyListAdapter()
-        adapter.submitItems(listOf(recordingItem("first", events)))
+        val label = arrayOf("first")
+        val updater: (LazyListItemSession) -> Unit = { session ->
+            (session as RecordingSession).label = label.single()
+            events += "update:${label.single()}"
+        }
+        adapter.submitItems(listOf(recordingItem(events = events, sessionUpdater = updater)))
         val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
         adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
 
-        adapter.submitItems(listOf(recordingItem("second", events)))
+        label[0] = "second"
+        adapter.submitItems(listOf(recordingItem(events = events, sessionUpdater = updater)))
 
         assertEquals(
             listOf("update:first", "render:first", "update:second", "render:second"),
@@ -129,6 +136,7 @@ class LazyListAdapterTest {
         adapter.submitItems(listOf(recordingItem("first", events, contentToken = 1)))
         val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
         adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
 
         adapter.submitItems(listOf(recordingItem("second", events, contentToken = 2)))
         adapter.onBindViewHolder(
@@ -144,6 +152,65 @@ class LazyListAdapterTest {
     }
 
     @Test
+    fun `detached cached holder does not render a new submission until reattached`() {
+        val context = RuntimeEnvironment.getApplication()
+        val parent = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        adapter.submitItems(listOf(recordingItem("first", events)))
+        val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+        adapter.onViewDetachedFromWindow(holder)
+
+        adapter.submitItems(listOf(recordingItem("second", events)))
+
+        assertEquals(listOf("update:first", "render:first"), events)
+        adapter.onViewAttachedToWindow(holder)
+        assertEquals(
+            listOf("update:first", "render:first", "update:second", "render:second"),
+            events,
+        )
+    }
+
+    @Test
+    fun `duplicate keys never guess which attached holder owns the next item`() {
+        val context = RuntimeEnvironment.getApplication()
+        val parent = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        adapter.submitItems(
+            listOf(
+                recordingItem("first-A", events, key = "duplicate"),
+                recordingItem("first-B", events, key = "duplicate"),
+            ),
+        )
+        val firstHolder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        val secondHolder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(1))
+        adapter.onBindViewHolder(firstHolder, 0)
+        adapter.onBindViewHolder(secondHolder, 1)
+        adapter.onViewAttachedToWindow(firstHolder)
+        adapter.onViewAttachedToWindow(secondHolder)
+
+        adapter.submitItems(
+            listOf(
+                recordingItem("second-A", events, key = "duplicate"),
+                recordingItem("second-B", events, key = "duplicate"),
+            ),
+        )
+
+        assertEquals(
+            listOf(
+                "update:first-A",
+                "render:first-A",
+                "update:first-B",
+                "render:first-B",
+            ),
+            events,
+        )
+    }
+
+    @Test
     fun `content type change waits for RecyclerView to replace incompatible holder`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
@@ -152,6 +219,7 @@ class LazyListAdapterTest {
         adapter.submitItems(listOf(recordingItem("first", events, contentType = "row")))
         val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
         adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
 
         adapter.submitItems(listOf(recordingItem("second", events, contentType = "card")))
 
@@ -180,11 +248,12 @@ class LazyListAdapterTest {
     private fun recordingItem(
         label: String,
         events: MutableList<String>,
+        key: Any? = "stable",
         contentToken: Any? = "stable",
         contentType: Any? = null,
     ): LazyListItem {
         return LazyListItem(
-            key = "stable",
+            key = key,
             contentToken = contentToken,
             contentType = contentType,
             sessionFactory = LazyListItemSessionFactory {
@@ -194,6 +263,18 @@ class LazyListAdapterTest {
                 (session as RecordingSession).label = label
                 events += "update:$label"
             },
+        )
+    }
+
+    private fun recordingItem(
+        events: MutableList<String>,
+        sessionUpdater: (LazyListItemSession) -> Unit,
+    ): LazyListItem {
+        return LazyListItem(
+            key = "stable",
+            contentToken = "stable",
+            sessionFactory = LazyListItemSessionFactory { RecordingSession(events) },
+            sessionUpdater = sessionUpdater,
         )
     }
 

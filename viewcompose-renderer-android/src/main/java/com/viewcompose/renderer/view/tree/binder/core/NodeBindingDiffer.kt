@@ -43,7 +43,7 @@ internal object NodeBindingDiffer {
         val modifierChanged = previous.modifier != next.modifier
         val prevSpec = previous.spec
         val nextSpec = next.spec
-        val sessionContentChanged = hasSessionBackedContentChange(prevSpec, nextSpec)
+        val sessionContentChanged = hasSessionSubmissionChange(prevSpec, nextSpec)
         val imageLoaderChanged = hasImageLoaderIdentityChange(prevSpec, nextSpec)
         if (prevSpec == nextSpec && !sessionContentChanged && !imageLoaderChanged) {
             return if (modifierChanged) {
@@ -94,41 +94,35 @@ internal object NodeBindingDiffer {
             previous.imageLoader !== next.imageLoader
     }
 
-    private fun hasSessionBackedContentChange(
+    private fun hasSessionSubmissionChange(
         previous: NodeSpec,
         next: NodeSpec,
     ): Boolean {
-        // Lazy, pager, and tab content retains session factories and updaters; reference changes require updates even when equal.
-        // lazy/pager/tab content owns session factories/updaters; reference changes require updates even when equals matches.
+        // A newly built immutable item snapshot is the submission signal. Callback identity is an
+        // implementation detail and must not decide whether a child session renders.
         return when {
-            previous is LazyColumnNodeProps && next is LazyColumnNodeProps -> previous.items.hasSessionIdentityChange(next.items)
-            previous is LazyRowNodeProps && next is LazyRowNodeProps -> previous.items.hasSessionIdentityChange(next.items)
-            previous is LazyVerticalGridNodeProps && next is LazyVerticalGridNodeProps -> previous.items.hasSessionIdentityChange(next.items)
-            previous is HorizontalPagerNodeProps && next is HorizontalPagerNodeProps -> previous.pages.hasSessionIdentityChange(next.pages)
-            previous is VerticalPagerNodeProps && next is VerticalPagerNodeProps -> previous.pages.hasSessionIdentityChange(next.pages)
-            previous is TabRowNodeProps && next is TabRowNodeProps -> previous.tabs.hasTabSessionIdentityChange(next.tabs)
+            previous is LazyColumnNodeProps && next is LazyColumnNodeProps -> previous.items.hasNewSnapshots(next.items)
+            previous is LazyRowNodeProps && next is LazyRowNodeProps -> previous.items.hasNewSnapshots(next.items)
+            previous is LazyVerticalGridNodeProps && next is LazyVerticalGridNodeProps -> previous.items.hasNewSnapshots(next.items)
+            previous is HorizontalPagerNodeProps && next is HorizontalPagerNodeProps -> previous.pages.hasNewSnapshots(next.pages)
+            previous is VerticalPagerNodeProps && next is VerticalPagerNodeProps -> previous.pages.hasNewSnapshots(next.pages)
+            previous is TabRowNodeProps && next is TabRowNodeProps -> previous.tabs.hasNewTabSnapshots(next.tabs)
             else -> false
         }
     }
 
-    private fun List<LazyListItem>.hasSessionIdentityChange(next: List<LazyListItem>): Boolean {
+    private fun List<LazyListItem>.hasNewSnapshots(next: List<LazyListItem>): Boolean {
         if (size != next.size) return true
         for (index in indices) {
-            val previous = this[index]
-            val current = next[index]
-            if (previous.sessionFactory !== current.sessionFactory) return true
-            if (previous.sessionUpdater !== current.sessionUpdater) return true
+            if (this[index] !== next[index]) return true
         }
         return false
     }
 
-    private fun List<TabRowTab>.hasTabSessionIdentityChange(next: List<TabRowTab>): Boolean {
+    private fun List<TabRowTab>.hasNewTabSnapshots(next: List<TabRowTab>): Boolean {
         if (size != next.size) return true
         for (index in indices) {
-            val previous = this[index].item
-            val current = next[index].item
-            if (previous.sessionFactory !== current.sessionFactory) return true
-            if (previous.sessionUpdater !== current.sessionUpdater) return true
+            if (this[index].item !== next[index].item) return true
         }
         return false
     }
