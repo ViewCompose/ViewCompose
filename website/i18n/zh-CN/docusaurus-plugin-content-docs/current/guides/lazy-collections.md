@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: 0a98a9eef3e93d74a6c15933c3299dc577f580671c1f6e9b8b68efc7d16c6f00
+translation_source_hash: 8cfca1986d5c5585db8a2612447cc72f5366897074339100e6edb582b902d682
 translation_status: current
 ---
 
@@ -96,6 +96,11 @@ sticky header 占满整行。均质数据便捷重载同样要求稳定 key，�
 
 pinned 副本不登记为第二个无障碍节点，普通列表 header 仍是语义源，避免 TalkBack 重复播报。
 
+`contentPadding` 使用逻辑方向，并从集合捕获的布局方向解析 start/end。它会与物理
+`Modifier.padding` 及选定的系统栏或 IME Insets 边相加。Renderer 会在
+原生 View 复用与完整环境重绑期间保留这份合成 Padding，因此语言、方向、字体缩放、密度或资源
+版本变化不会让内容短暂进入系统栏区域，也不会清除列表留白。
+
 ## 5. 不变量
 
 1. 容器内 key 非空且唯一，并在重排时持续标识同一逻辑 item。
@@ -104,6 +109,8 @@ pinned 副本不登记为第二个无障碍节点，普通列表 header 仍是�
 4. 对同一 RecyclerView connector 的重新绑定不得重置滚动锚点。
 5. 保存恢复只持久化首个可见 index 与偏移。
 6. holder、pinned header 或容器释放时必须销毁对应 item Session。
+7. 集合、Modifier 与 Insets 的 Padding 贡献由 Renderer 合成为唯一原生值，并在定向 Patch 与
+   完整环境重绑期间保持稳定。
 
 ## 6. 明确不包含的能力
 

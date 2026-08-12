@@ -16,6 +16,7 @@ import com.viewcompose.renderer.view.PaddingPx
 import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import android.view.MotionEvent
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
+import com.viewcompose.renderer.view.tree.ModifierInsetsApplier
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 
 /**
@@ -90,12 +91,7 @@ internal class DeclarativeLazyVerticalGridLayout(
         setItemViewCacheSize(prefetchPolicy.itemViewCacheSize)
         this.userScrollEnabled = userScrollEnabled
         updateSpacingDecoration(horizontalSpacing, verticalSpacing, spanCount)
-        setPaddingRelative(
-            contentPadding.left,
-            contentPadding.top,
-            contentPadding.right,
-            contentPadding.bottom,
-        )
+        ModifierInsetsApplier.applyLazyContentPadding(this, contentPadding)
         clipToPadding =
             contentPadding.left == 0 && contentPadding.top == 0 &&
                 contentPadding.right == 0 && contentPadding.bottom == 0

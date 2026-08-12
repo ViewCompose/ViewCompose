@@ -23,15 +23,35 @@ internal object ModifierInsetsApplier {
         hostPadding: PaddingPx?,
     ) {
         if (hasWindowInsetsPadding) return
-        if (hostPadding == null) {
-            view.setPadding(0, 0, 0, 0)
+        val base = hostPadding ?: PaddingPx.Zero
+        val content = view.lazyContentPadding()
+        view.applyPadding(
+            left = base.left + content.left,
+            top = base.top + content.top,
+            right = base.right + content.right,
+            bottom = base.bottom + content.bottom,
+        )
+    }
+
+    /** Updates the scroll-content contribution without overwriting modifier or inset padding. */
+    fun applyLazyContentPadding(
+        view: View,
+        contentPadding: PaddingPx,
+    ) {
+        val previousContent = view.lazyContentPadding()
+        view.setTag(R.id.viewcompose_lazy_content_padding, contentPadding)
+        val state = view.getTag(
+            R.id.viewcompose_system_bars_padding_state,
+        ) as? WindowInsetsPaddingState
+        if (state != null) {
+            state.applyTo(view)
             return
         }
-        view.setPadding(
-            hostPadding.left,
-            hostPadding.top,
-            hostPadding.right,
-            hostPadding.bottom,
+        view.applyPadding(
+            left = view.paddingLeft - previousContent.left + contentPadding.left,
+            top = view.paddingTop - previousContent.top + contentPadding.top,
+            right = view.paddingRight - previousContent.right + contentPadding.right,
+            bottom = view.paddingBottom - previousContent.bottom + contentPadding.bottom,
         )
     }
 
@@ -50,7 +70,11 @@ internal object ModifierInsetsApplier {
             // When modifiers are removed, restore recorded base padding and uninstall the listener.
             val state = view.getTag(R.id.viewcompose_system_bars_padding_state) as? WindowInsetsPaddingState
             if (state != null) {
-                view.setPadding(state.baseLeft, state.baseTop, state.baseRight, state.baseBottom)
+                state.appliedLeft = 0
+                state.appliedTop = 0
+                state.appliedRight = 0
+                state.appliedBottom = 0
+                state.applyTo(view)
                 view.setTag(R.id.viewcompose_system_bars_padding_state, null)
             }
             ViewCompat.setOnApplyWindowInsetsListener(view, null)
@@ -67,11 +91,17 @@ internal object ModifierInsetsApplier {
             state.baseRight = basePadding.right
             state.baseBottom = basePadding.bottom
         } else {
-            state.baseLeft = view.paddingLeft - state.appliedLeft
-            state.baseTop = view.paddingTop - state.appliedTop
-            state.baseRight = view.paddingRight - state.appliedRight
-            state.baseBottom = view.paddingBottom - state.appliedBottom
+            val content = view.lazyContentPadding()
+            state.baseLeft = view.paddingLeft - state.appliedLeft - content.left
+            state.baseTop = view.paddingTop - state.appliedTop - content.top
+            state.baseRight = view.paddingRight - state.appliedRight - content.right
+            state.baseBottom = view.paddingBottom - state.appliedBottom - content.bottom
         }
+
+        // A full node rebind may run after insets were already delivered. Reapply the retained
+        // snapshot immediately so a child binder cannot expose an unpadded frame until the next
+        // platform insets dispatch.
+        state.applyTo(view)
 
         ViewCompat.setOnApplyWindowInsetsListener(view) { target, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -88,12 +118,7 @@ internal object ModifierInsetsApplier {
             state.appliedBottom =
                 (if (systemBarsModifier?.bottom == true) systemBars.bottom else 0) +
                 (if (imeModifier?.bottom == true) ime.bottom else 0)
-            target.setPadding(
-                state.baseLeft + state.appliedLeft,
-                state.baseTop + state.appliedTop,
-                state.baseRight + state.appliedRight,
-                state.baseBottom + state.appliedBottom,
-            )
+            state.applyTo(target)
             insets
         }
         view.requestApplyInsetsWhenAttached()
@@ -125,5 +150,35 @@ internal object ModifierInsetsApplier {
         var appliedTop: Int = 0,
         var appliedRight: Int = 0,
         var appliedBottom: Int = 0,
-    )
+    ) {
+        fun applyTo(view: View) {
+            val content = view.lazyContentPadding()
+            view.applyPadding(
+                left = baseLeft + content.left + appliedLeft,
+                top = baseTop + content.top + appliedTop,
+                right = baseRight + content.right + appliedRight,
+                bottom = baseBottom + content.bottom + appliedBottom,
+            )
+        }
+    }
+
+    private fun View.lazyContentPadding(): PaddingPx {
+        return getTag(R.id.viewcompose_lazy_content_padding) as? PaddingPx ?: PaddingPx.Zero
+    }
+
+    private fun View.applyPadding(
+        left: Int,
+        top: Int,
+        right: Int,
+        bottom: Int,
+    ) {
+        if (
+            paddingLeft != left ||
+            paddingTop != top ||
+            paddingRight != right ||
+            paddingBottom != bottom
+        ) {
+            setPadding(left, top, right, bottom)
+        }
+    }
 }

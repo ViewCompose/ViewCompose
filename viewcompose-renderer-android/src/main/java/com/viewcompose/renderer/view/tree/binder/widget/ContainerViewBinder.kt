@@ -193,19 +193,7 @@ internal object ContainerViewBinder {
         recyclerView: RecyclerView,
         padding: PaddingPx,
     ) {
-        if (
-            recyclerView.paddingStart != padding.left ||
-            recyclerView.paddingTop != padding.top ||
-            recyclerView.paddingEnd != padding.right ||
-            recyclerView.paddingBottom != padding.bottom
-        ) {
-            recyclerView.setPaddingRelative(
-                padding.left,
-                padding.top,
-                padding.right,
-                padding.bottom,
-            )
-        }
+        ModifierInsetsApplier.applyLazyContentPadding(recyclerView, padding)
         val shouldClipToPadding =
             padding.left == 0 && padding.top == 0 && padding.right == 0 && padding.bottom == 0
         if (recyclerView.clipToPadding != shouldClipToPadding) {

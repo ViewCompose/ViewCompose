@@ -17,7 +17,9 @@
     <item name="viewcompose_constraint_item_spec" type="id" />
     <item name="viewcompose_original_typeface" type="id" />
     <item name="viewcompose_original_letter_spacing" type="id" />
-    <item name="viewcompose_original_line_height" type="id" />
+    <item name="viewcompose_original_line_spacing_extra" type="id" />
+    <item name="viewcompose_original_line_spacing_multiplier" type="id" />
+    <item name="viewcompose_lazy_content_padding" type="id" />
     <item name="viewcompose_transform_origin" type="id" />
     <item name="viewcompose_transform_origin_listener" type="id" />
     <item name="viewcompose_system_bars_padding_state" type="id" />

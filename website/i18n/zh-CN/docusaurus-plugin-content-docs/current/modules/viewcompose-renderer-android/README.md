@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: dfe790ce2cd45cba9bab1183c21e9644a4bab4f54b7b9d4dc5d5062d6d548cf2
+translation_source_hash: 998eb0f0ccfd85c1753b5f64dd48a903ffcae00302b1f7ac319e0883d2231461
 translation_status: current
 ---
 
@@ -147,6 +147,14 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 每个 VNode 绑定都包含捕获的资源版本。版本变化时，即使 NodeSpec 和资源 ID 相等，也会执行正常的
 完整重绑。直接 Drawable/Icon 资源会从节点当前 Context 再次解析；只要 Source、Placeholder、
 Error 或 Fallback 使用资源，规范化图片请求就会把版本传给 Adapter。纯远端请求保留普通请求标识。
+
+文本节点未显式设置 `lineHeightSp` 时，会保留原生 View 的行距参数，而不是复用在旧字号下捕获的
+固定像素行高。因此，自然行高会在 View 复用和环境重绑期间随已解析字体、字号与字体缩放变化；
+显式 `lineHeightSp` 仍具有最终权限。
+
+对于 Lazy 集合，Renderer 统一持有一份合成后的原生 Padding：逻辑 `contentPadding`、物理
+`Modifier.padding` 与选定的系统栏/IME Insets 按边相加。逻辑 start/end 会根据捕获的布局方向
+解析；资源或配置重绑期间会保留最近一次平台 Insets 快照，直到 Android 分发更新值。
 
 - 渲染、释放、View 绑定、Pager 更新和装饰回调都限制在 UI 线程。
 - 一个容器只有一个已挂载树所有者。不得在容器或 render session 之间共享 mounted node。

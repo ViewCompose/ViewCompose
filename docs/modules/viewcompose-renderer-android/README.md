@@ -173,6 +173,16 @@ resources resolve again from the node's current Context, and normalized image re
 revision to adapters when a source, placeholder, error, or fallback is resource-backed. Remote-only
 requests retain their ordinary request identity.
 
+Text nodes with no explicit `lineHeightSp` retain the native View's line-spacing parameters rather
+than a pixel line height captured at an earlier text size. Their natural line height therefore
+tracks the resolved typeface, text size, and font scale across reuse and environment rebinds. An
+explicit `lineHeightSp` remains authoritative.
+
+For lazy collections, the renderer owns one composite native padding value: logical `contentPadding`,
+physical `Modifier.padding`, and selected system-bar/IME insets are additive. Logical start/end
+values resolve against the captured layout direction, and a resource or configuration rebind must
+retain the last delivered inset snapshot until Android dispatches a newer one.
+
 - Render, disposal, View binding, pager updates, and decoration callbacks are UI-thread confined.
 - One container has one mounted-tree owner. Do not share mounted nodes between containers or render
   sessions.

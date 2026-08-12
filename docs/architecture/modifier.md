@@ -46,6 +46,10 @@ across layers.
     expose logical dimensions and selection cardinality; children expose logical positions and
     spans. RTL changes physical placement, never these indexes, and item `selected`/`heading`
     values remain single-source properties on the same semantic configuration.
+16. Native View padding has one renderer owner. Container-specific content padding, resolved
+    `Modifier.padding`, and selected system-bar/IME inset edges are composed before writing the
+    View; binders must not overwrite another layer's contribution during a patch or environment
+    rebind.
 
 ## 3. API inventory
 

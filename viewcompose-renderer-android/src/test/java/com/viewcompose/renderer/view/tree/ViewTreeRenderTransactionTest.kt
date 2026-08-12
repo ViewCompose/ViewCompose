@@ -13,6 +13,10 @@ import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.RecyclerView
 import com.viewcompose.renderer.decoration.AndroidViewDecorationRuntime
 import com.viewcompose.renderer.decoration.RecordingDecorationBackend
 import com.viewcompose.renderer.view.shape.UiShapeDrawable
@@ -21,19 +25,25 @@ import com.viewcompose.text.TextFieldState
 import com.viewcompose.text.TextFieldValue
 import com.viewcompose.text.TextRange
 import com.viewcompose.ui.environment.UiEnvironmentValues
+import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.HorizontalAlignment
 import com.viewcompose.ui.layout.MainAxisArrangement
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.innerShadow
+import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.shape
+import com.viewcompose.ui.modifier.systemBarsInsetsPadding
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.TextFieldKeyboardOptions
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.policy.LazyContentPadding
 import com.viewcompose.ui.node.spec.AndroidViewNodeProps
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.node.spec.ColumnNodeProps
+import com.viewcompose.ui.node.spec.LazyColumnNodeProps
+import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.TextNodeProps
 import com.viewcompose.ui.node.spec.TextFieldNodeProps
 import com.viewcompose.ui.shape.UiShape
@@ -90,6 +100,139 @@ class ViewTreeRenderTransactionTest {
 
         assertSame(textView, container.getChildAt(0))
         assertEquals(45f, textView.textSize, 0.01f)
+    }
+
+    @Test
+    @Config(sdk = [27])
+    fun `implicit line height follows scaled font metrics`() {
+        val container = FrameLayout(context)
+
+        ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                environmentTextNode(
+                    density = 3f,
+                    fontScale = 1.3f,
+                    text = "Android resource\nenvironment",
+                    maxLines = 2,
+                    textSizeSp = 24,
+                ),
+            ),
+        )
+
+        val textView = container.getChildAt(0) as TextView
+        val fontMetricsHeight = textView.paint.fontMetricsInt.run { descent - ascent }
+        assertTrue(
+            "implicit line height must not install negative line spacing",
+            textView.lineSpacingExtra >= 0f,
+        )
+        assertTrue(
+            "implicit line height ${textView.lineHeight}px must fit ${fontMetricsHeight}px font metrics",
+            textView.lineHeight >= fontMetricsHeight,
+        )
+    }
+
+    @Test
+    fun `removing explicit line height restores the native line spacing baseline`() {
+        val textView = TextView(context).apply {
+            setLineSpacing(6f, 1.2f)
+        }
+
+        ContentViewBinder.applyTextAppearance(
+            view = textView,
+            textSizePx = 72f,
+            lineHeightPx = 96,
+        )
+        assertEquals(96, textView.lineHeight)
+
+        ContentViewBinder.applyTextAppearance(
+            view = textView,
+            lineHeightPx = null,
+        )
+
+        assertEquals(6f, textView.lineSpacingExtra, 0.01f)
+        assertEquals(1.2f, textView.lineSpacingMultiplier, 0.01f)
+    }
+
+    @Test
+    fun `lazy content modifier and system bar padding survive environment rebind`() {
+        for (nodeType in listOf(NodeType.LazyColumn, NodeType.LazyVerticalGrid)) {
+            val container = FrameLayout(context)
+            val first = ViewTreeRenderer.renderInto(
+                container = container,
+                previous = emptyList(),
+                nodes = listOf(
+                    lazyCollectionEnvironmentNode(
+                        nodeType = nodeType,
+                        resourceRevision = 1L,
+                    ),
+                ),
+            )
+            val recyclerView = container.getChildAt(0) as RecyclerView
+            val systemBars = Insets.of(2, 24, 4, 6)
+            ViewCompat.dispatchApplyWindowInsets(
+                recyclerView,
+                WindowInsetsCompat.Builder()
+                    .setInsets(WindowInsetsCompat.Type.systemBars(), systemBars)
+                    .build(),
+            )
+
+            assertEquals(21, recyclerView.paddingLeft)
+            assertEquals(29, recyclerView.paddingTop)
+            assertEquals(27, recyclerView.paddingRight)
+            assertEquals(17, recyclerView.paddingBottom)
+
+            ViewTreeRenderer.renderInto(
+                container = container,
+                previous = first.mountedNodes,
+                nodes = listOf(
+                    lazyCollectionEnvironmentNode(
+                        nodeType = nodeType,
+                        resourceRevision = 2L,
+                    ),
+                ),
+            )
+
+            assertSame(recyclerView, container.getChildAt(0))
+            assertEquals(21, recyclerView.paddingLeft)
+            assertEquals(29, recyclerView.paddingTop)
+            assertEquals(27, recyclerView.paddingRight)
+            assertEquals(17, recyclerView.paddingBottom)
+        }
+    }
+
+    @Test
+    fun `lazy logical content padding follows direction changes`() {
+        val container = FrameLayout(context)
+        val first = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                lazyCollectionEnvironmentNode(
+                    resourceRevision = 1L,
+                    layoutDirection = UiLayoutDirection.Ltr,
+                ),
+            ),
+        )
+        val recyclerView = container.getChildAt(0) as RecyclerView
+        assertEquals(19, recyclerView.paddingLeft)
+        assertEquals(23, recyclerView.paddingRight)
+
+        ViewTreeRenderer.renderInto(
+            container = container,
+            previous = first.mountedNodes,
+            nodes = listOf(
+                lazyCollectionEnvironmentNode(
+                    resourceRevision = 2L,
+                    layoutDirection = UiLayoutDirection.Rtl,
+                ),
+            ),
+        )
+
+        assertSame(recyclerView, container.getChildAt(0))
+        assertEquals(23, recyclerView.paddingLeft)
+        assertEquals(19, recyclerView.paddingRight)
     }
 
     @Test
@@ -529,23 +672,67 @@ class ViewTreeRenderTransactionTest {
     private fun environmentTextNode(
         density: Float,
         fontScale: Float,
+        text: String = "Environment",
+        maxLines: Int = 1,
+        textSizeSp: Int = 10,
     ): VNode {
         return VNode(
             type = NodeType.Text,
             key = "environment-text",
             spec = TextNodeProps(
-                document = TextDocument.plain("Environment"),
-                maxLines = 1,
+                document = TextDocument.plain(text),
+                maxLines = maxLines,
                 overflow = com.viewcompose.ui.node.TextOverflow.Clip,
                 textAlign = com.viewcompose.ui.node.TextAlign.Start,
                 textColor = 0xFF000000.toInt(),
-                textSizeSp = 10.sp,
+                textSizeSp = textSizeSp.sp,
             ),
             environment = UiEnvironmentValues.Default.copy(
                 density = UiDensity(
                     density = density,
                     fontScale = fontScale,
                 ),
+            ),
+        )
+    }
+
+    private fun lazyCollectionEnvironmentNode(
+        nodeType: NodeType = NodeType.LazyColumn,
+        resourceRevision: Long,
+        layoutDirection: UiLayoutDirection = UiLayoutDirection.Ltr,
+    ): VNode {
+        val contentPadding = LazyContentPadding(
+            start = 3.dp,
+            top = 5.dp,
+            end = 7.dp,
+            bottom = 11.dp,
+        )
+        return VNode(
+            type = nodeType,
+            key = "environment-$nodeType",
+            modifier = Modifier
+                .systemBarsInsetsPadding()
+                .padding(horizontal = 16.dp),
+            spec = when (nodeType) {
+                NodeType.LazyColumn -> LazyColumnNodeProps(
+                    contentPadding = contentPadding,
+                    spacing = 0.dp,
+                    items = emptyList(),
+                )
+                NodeType.LazyVerticalGrid -> LazyVerticalGridNodeProps(
+                    spanCount = 2,
+                    contentPadding = contentPadding,
+                    horizontalSpacing = 0.dp,
+                    verticalSpacing = 0.dp,
+                    items = emptyList(),
+                    state = null,
+                )
+                else -> error("Unsupported lazy collection node type: $nodeType")
+            },
+            environment = UiEnvironmentValues.Default.copy(
+                density = UiDensity(density = 1f, fontScale = 1f),
+                layoutDirection = layoutDirection,
+                resourceRevision = resourceRevision,
             ),
         )
     }

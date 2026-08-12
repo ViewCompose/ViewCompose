@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/modifier.md
-translation_source_hash: 4c01c19f9655b5dd82e05f81163eb46bea66b1181fb2d47fa3e4689b124cd96a
+translation_source_hash: 83fce7ff5b775c7d4f05c326c78462fb142eecb82c4e69e3f27c9b9fbceeee32
 translation_status: current
 ---
 
@@ -29,6 +29,9 @@ translation_status: current
 13. 统一嵌套滚动协议已接入：`Modifier.nestedScroll(connection, dispatcher)` 通过透明宿主映射 AndroidX nested-scrolling parent/child 链，覆盖 pre/post scroll、pre/post fling、Lazy/Pager/普通滚动容器与自定义 drag/transform pan
 14. 高级阴影已接入：`dropShadow/dropShadows` 绘制在节点内容之前，`innerShadow/innerShadows` 绘制在完整内容之后；均支持有序多层、独立 shape、blur/spread/offset/color，并与 `elevation/zIndex` 解耦
 15. `Modifier.semantics` 承载设计系统中立的无障碍状态。集合父节点声明逻辑维度与选择基数，子节点声明逻辑位置与跨度；RTL 只改变物理排列，不改变这些索引，item 的 `selected`/`heading` 仍由同一语义配置中的唯一字段表达
+16. 原生 View Padding 只有一个 Renderer 所有者。容器专属 Content Padding、已解析的
+    `Modifier.padding` 与选定的系统栏/IME Insets 边会先合成再写入 View；Binder 不得在 Patch
+    或环境重绑期间覆盖其他层的贡献。
 
 ## 3. API 清单（全量扫描）
 
