@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: 25d9a004c5afecc69edf100bd716d2c5d7c155eb286479303119a29958036b0b
+translation_source_hash: 141b9f6e2e232019adda792c5762082600830035e327ea9f5462985e88f5ea9c
 translation_status: current
 ---
 
@@ -17,6 +17,7 @@ translation_status: current
 - [ADR-0004：设计系统解析边界](./0004-design-system-resolution-boundary.md)
 - [ADR-0005：设计系统 Host 与组件 Backend 边界](./0005-design-system-host-and-component-backend-boundary.md)
 - [ADR-0006：Root 作用域 Overlay Backend 选择](./0006-root-scoped-overlay-backend-selection.md)
+- [ADR-0007：Host 所有的 Android 资源环境](./0007-host-owned-android-resource-environment.md)
 
 ## 规则
 

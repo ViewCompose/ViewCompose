@@ -12,6 +12,7 @@ architecture pages describe how the system works now.
 - [ADR-0004: Design-system resolution boundary](./0004-design-system-resolution-boundary.md)
 - [ADR-0005: Design-system host and component backend boundary](./0005-design-system-host-and-component-backend-boundary.md)
 - [ADR-0006: Root-scoped overlay backend selection](./0006-root-scoped-overlay-backend-selection.md)
+- [ADR-0007: Host-owned Android resource environment](./0007-host-owned-android-resource-environment.md)
 
 ## Rules
 
