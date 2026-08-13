@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 697bcb9c0805df9a7db77223d96cf078c8dbc4f0fa1f88e0eec411eb085a7777
+translation_source_hash: dba30c2309000fbc6f9a5dc5cac008bc91ec633c78612e6ba1a85d49d76dc96d
 translation_status: current
 ---
 
@@ -35,6 +35,9 @@ dependencies {
 - `SurfaceNodeProps` 使用同一份缓存的 `UiShapeDrawable` 几何来完成纯色或渐变 Fill、Border、
   Ripple Mask、Outline 与可选裁剪。连续圆角使用凸三次曲线路径；稳定绘制不会逐帧分配 Path、
   Shader、Drawable 或集合。
+- 四角半径一致的 Rounded Rectangle 使用 Android 原生圆角矩形绘制和 Outline 操作。非对称圆角、
+  Continuous Corner 与 Cut Corner 仍使用缓存的通用 Path，因此这个常见滚动快路径不会收窄 Shape、
+  Gradient、Border、Ripple Mask 或裁剪行为。
 - 引擎自有圆角使用圆弧绘制。Shape 边框会沿向内偏移半个线宽的路径居中绘制，保证轮廓完整落在
   逻辑 Drawable 边界内，包括组件在较大触控目标中居中较短可见 Surface 的情况。
 - Button 可以请求比有效 View 触控目标更短的可见 Surface。引擎会在 View 内居中其背景、边框、
@@ -122,6 +125,9 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - Lazy 与 Pager 的主动刷新仅面向已 attach holder。detach 缓存 holder 不运行子 composition 或
   effect，并在再次 attach 时接收最新已提交修订。key 缺失或重复时走保守 reload；Renderer 不会
   用 first-match key 查询解析有歧义的 holder。
+- Lazy Adapter 会为每个已接受提交建立一次唯一 Key 位置索引。已 attach 或重新 attach 的 Holder
+  因而无需扫描 item 列表即可解析稳定 Key；已经提交当前 Revision 的 Holder 也会跳过冗余 attach
+  工作。
 - Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
   `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一的 holder，无 key 缓存页则保留位置
   归属，直到 RecyclerView 派发替换 bind。

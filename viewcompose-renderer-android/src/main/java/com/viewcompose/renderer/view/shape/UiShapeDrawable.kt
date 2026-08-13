@@ -31,6 +31,10 @@ internal class UiShapeDrawable(
 ) : Drawable() {
     private val fillPath = Path()
     private val strokePath = Path()
+    private val fillFrame = RectF()
+    private val strokeFrame = RectF()
+    private var fillRoundRectRadius: Float? = null
+    private var strokeRoundRectRadius: Float? = null
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         color = Color.TRANSPARENT
@@ -76,15 +80,30 @@ internal class UiShapeDrawable(
 
     override fun draw(canvas: Canvas) {
         if (fillPath.isEmpty) rebuildPaths()
-        canvas.drawPath(fillPath, fillPaint)
+        val fillRadius = fillRoundRectRadius
+        if (fillRadius != null) {
+            canvas.drawRoundRect(fillFrame, fillRadius, fillRadius, fillPaint)
+        } else {
+            canvas.drawPath(fillPath, fillPaint)
+        }
         if (strokePaint.strokeWidth > 0f && Color.alpha(strokePaint.color) > 0) {
-            canvas.drawPath(strokePath, strokePaint)
+            val strokeRadius = strokeRoundRectRadius
+            if (strokeRadius != null) {
+                canvas.drawRoundRect(strokeFrame, strokeRadius, strokeRadius, strokePaint)
+            } else {
+                canvas.drawPath(strokePath, strokePaint)
+            }
         }
     }
 
     override fun getOutline(outline: Outline) {
         if (fillPath.isEmpty) rebuildPaths()
-        if (!fillPath.isEmpty) outline.setConvexPath(fillPath)
+        val fillRadius = fillRoundRectRadius
+        if (fillRadius != null) {
+            outline.setRoundRect(bounds, fillRadius)
+        } else if (!fillPath.isEmpty) {
+            outline.setConvexPath(fillPath)
+        }
     }
 
     override fun setAlpha(alpha: Int) {
@@ -107,23 +126,29 @@ internal class UiShapeDrawable(
     private fun rebuildPaths() {
         fillPath.reset()
         strokePath.reset()
+        fillRoundRectRadius = null
+        strokeRoundRectRadius = null
+        fillFrame.setEmpty()
+        strokeFrame.setEmpty()
         if (bounds.isEmpty) return
-        val fillFrame = RectF(bounds)
+        fillFrame.set(bounds)
         val fillCorners = currentShape.resolveCorners(layoutDirection, density, fillFrame)
+        fillRoundRectRadius = fillCorners.uniformRoundedRadiusOrNull()
         rebuildPath(fillPath, fillFrame, fillCorners)
 
         if (strokePaint.strokeWidth <= 0f) return
         val maximumInset = min(fillFrame.width(), fillFrame.height()) / 2f
         val strokeInset = (strokePaint.strokeWidth / 2f).coerceAtMost(maximumInset)
-        val strokeFrame = RectF(fillFrame).apply {
-            inset(strokeInset, strokeInset)
-        }
+        strokeFrame.set(fillFrame)
+        strokeFrame.inset(strokeInset, strokeInset)
         if (strokeFrame.isEmpty) return
         val maximumStrokeCorner = min(strokeFrame.width(), strokeFrame.height()) / 2f
+        val strokeCorners = fillCorners.inset(strokeInset, maximumStrokeCorner)
+        strokeRoundRectRadius = strokeCorners.uniformRoundedRadiusOrNull()
         rebuildPath(
             target = strokePath,
             frame = strokeFrame,
-            corners = fillCorners.inset(strokeInset, maximumStrokeCorner),
+            corners = strokeCorners,
         )
     }
 
@@ -323,6 +348,19 @@ internal data class ResolvedCorners(
     val bottomRight: ResolvedCorner,
     val bottomLeft: ResolvedCorner,
 )
+
+private fun ResolvedCorners.uniformRoundedRadiusOrNull(): Float? {
+    val radius = topLeft.size
+    return radius.takeIf {
+        topLeft.family == UiCornerFamily.Rounded &&
+            topRight.family == UiCornerFamily.Rounded &&
+            bottomRight.family == UiCornerFamily.Rounded &&
+            bottomLeft.family == UiCornerFamily.Rounded &&
+            topRight.size == radius &&
+            bottomRight.size == radius &&
+            bottomLeft.size == radius
+    }
+}
 
 private fun ResolvedCorners.inset(amount: Float, maximum: Float): ResolvedCorners {
     fun ResolvedCorner.insetCorner(): ResolvedCorner {

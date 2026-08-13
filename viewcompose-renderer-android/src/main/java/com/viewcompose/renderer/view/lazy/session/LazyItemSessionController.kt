@@ -62,6 +62,8 @@ internal class LazyItemSessionController(
         )
     }
 
+    fun hasCommitted(submissionRevision: Long): Boolean = submissionRevision <= committedRevision
+
     fun discard(submissionRevision: Long) {
         if (candidate?.submissionRevision == submissionRevision) {
             candidate = null
