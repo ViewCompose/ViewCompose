@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 82e89ad8748c8487f2906850d14facc101bed09b5bdb1c977a343676e7eb26f1
+translation_source_hash: d2db3b936674c52ba866be6e4d4c0726733ef9c5317a6049ac5025bb9ca4b4ff
 translation_status: current
 ---
 
@@ -67,19 +67,18 @@ Provider 在挂载期间观察 Android Configuration Callback，重新发布密�
 Callback 时，每个 Host 使用一个 `AndroidResourceRefreshController`。调用、Callback 与释放都属于
 主线程；资源结果是同步快照，不得在 Session 之外持有 Provider 的 Context 或 Resources。
 
-## Debug 设备源码报告
+## 可选源码检查边界
 
-在可调试应用中，`renderInto` Root 与被标记为页面边界的嵌套容器（包括 Pager 目标）都会捕获
-首次 DSL 树中的有界源码候选，并在应用私有缓存目录写入一份很小的进程内报告。首批与最近候选
-让 Android Studio 把共享 Scaffold 识别为外层调用方，并优先进入业务 content DSL；普通 Lazy
-内容会被跳过。报告跟踪 Session 是否活动、挂载、实际可见、聚焦及其嵌套深度，工具据此优先
-选择已连接设备当前真正可见的最深层 DSL 页面。释放 Session 时会从报告移除它；
-`setRenderingActive` 会同步更新其候选资格。
+Host 会对中立的 `RenderSessionSourceTooling` 端口执行一次进程级 `ServiceLoader` 查找。没有
+Provider 是正常的生产配置，并稳定表现为 no-op。发现多个 Provider 或查找失败时会禁用源码检查并
+记录诊断，不会改变渲染。Host 不包含设备定位协议、Android Component、报告写入器、View Tree
+Listener 或持续检查生命周期。
 
-每个会话最多采样 64 次有效发射并保留 32 条不同调用链。报告只包含 JVM 类、方法、文件名和
-行号，不包含源码文本、节点树、应用状态或用户数据。工具只能对可调试包通过 `run-as` 读取报告；
-非调试构建不会捕获或写入。报告路径和 JSON 协议属于私有工具实现细节，应用不得把它们作为
-持久化契约使用。
+真机 DSL 导航由下游可选制品 `viewcompose-preview` 实现。要启用该功能，应通过
+`debugImplementation` 引入它。该制品存在于可调试进程时，可以通过中立端口保留首次成功
+Host/Page Frame 中的有界源码候选。只有 Android Studio 发出显式请求后，才会检查实时可见性并写入
+私有报告。滚动、布局、Rendering Active 变化与 Session 释放都不会发布报告。此所有权遵循
+[ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)。
 
 ## 原生 View 事务契约
 
@@ -122,5 +121,6 @@ AndroidView(
 模块不保留兼容 facade。
 `0.1.0-alpha04` 把 Overlay Service Discovery 收窄为单个中立 Provider；标准 Root 显式选择
 Backend，重复 Provider 属于配置错误。
-仅 Debug 的设备源码报告是 `renderInto` 新增的工具行为：公开签名不变，Release 构建没有额外
-工作；正常释放会话的自定义 Host 无需迁移。
+设备源码检查已移出本制品。`renderInto` 签名不变；自定义平台可以继续使用默认 `null` 端口。
+需要 `Locate Device DSL` 的应用应在 Debug 配置中保留 `viewcompose-preview`，Release 构建不会
+携带定位实现。

@@ -58,4 +58,5 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.paparazzi)
+    testImplementation(libs.robolectric)
 }

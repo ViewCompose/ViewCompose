@@ -241,7 +241,10 @@ in [Transactional effects and structured work](../../architecture/effects.md).
 `RenderSessionSourceRegistration` are additive Q3 tooling APIs. Existing platform diagnostics use
 the default `null` adapter and retain their previous behavior. Opted-in custom platforms must keep
 registration state bounded by its render session, consume the bounded candidate-chain list
-synchronously, and perform callbacks on the platform render thread.
+synchronously, and perform callbacks on the platform render thread. Registration is passive: it
+may retain a weak container reference but cannot install recurring scroll, global-layout, draw,
+touch, frame, or recomposition observers. Live inspection requires an explicit tooling request as
+defined by [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md).
 
 The complete `UiTypography` and `UiShapes` value contracts are an alpha-line source and binary
 change. They remain immutable Q2 values with no lifecycle or ownership protocol; direct

@@ -421,6 +421,110 @@ tasks.register("verifyModuleDependencyBoundaries") {
     }
 }
 
+tasks.register("verifyDevelopmentToolingIsolation") {
+    group = "verification"
+    description =
+        "Verify concrete application-process tooling stays downstream and inactive on runtime hot paths."
+    doLast {
+        val violations = mutableListOf<String>()
+        val toolingTextExtensions = setOf("", "kt", "java", "xml", "json", "properties", "txt")
+        val concreteToolingMarkers = listOf(
+            "DeviceDslSource",
+            "device-dsl-source",
+            "ViewCompose-DeviceDslSource",
+        )
+        val prohibitedToolingHotPathMarkers = listOf(
+            "ViewTreeObserver.OnScrollChangedListener",
+            "ViewTreeObserver.OnGlobalLayoutListener",
+            "ViewTreeObserver.OnDrawListener",
+            "ViewTreeObserver.OnPreDrawListener",
+            "View.OnLayoutChangeListener",
+            "View.OnTouchListener",
+            "Choreographer.FrameCallback",
+            "RecyclerView.OnScrollListener",
+            "addOnScrollChangedListener",
+            "addOnScrollListener",
+            "addOnGlobalLayoutListener",
+            "addOnDrawListener",
+            "addOnPreDrawListener",
+            "addOnLayoutChangeListener",
+            "setOnTouchListener",
+            "postFrameCallback",
+        )
+
+        runtimeModuleLayers.keys.sorted().forEach { module ->
+            val mainDirectory = rootDir.resolve(module).resolve("src/main")
+            if (!mainDirectory.exists()) return@forEach
+            mainDirectory.walkTopDown()
+                .filter { file -> file.isFile && file.extension in toolingTextExtensions }
+                .forEach { file ->
+                    val content = file.readText()
+                    concreteToolingMarkers
+                        .filter(content::contains)
+                        .forEach { marker ->
+                            violations +=
+                                "${file.relativeTo(rootDir).invariantSeparatorsPath} -> concrete " +
+                                    "tooling marker '$marker' is forbidden in runtime production source"
+                        }
+                }
+        }
+
+        toolingModules.sorted().forEach { module ->
+            val mainDirectory = rootDir.resolve(module).resolve("src/main")
+            if (!mainDirectory.exists()) return@forEach
+            mainDirectory.walkTopDown()
+                .filter { file -> file.isFile && file.extension in toolingTextExtensions }
+                .forEach { file ->
+                    val content = file.readText()
+                    prohibitedToolingHotPathMarkers
+                        .filter(content::contains)
+                        .forEach { marker ->
+                            violations +=
+                                "${file.relativeTo(rootDir).invariantSeparatorsPath} -> tooling hot-path " +
+                                    "listener '$marker' requires an ADR-backed allowlist and benchmark"
+                        }
+                }
+        }
+
+        val appBuild = rootDir.resolve("app/build.gradle.kts").readText()
+        val previewProjectPattern = Regex(
+            """(?m)^\s*(implementation|api|releaseImplementation)\s*\(\s*project\(\s*\":viewcompose-preview\"""",
+        )
+        previewProjectPattern.findAll(appBuild).forEach { match ->
+            violations +=
+                "app/build.gradle.kts -> viewcompose-preview must be debug/test scoped, found " +
+                    "${match.groupValues[1]}"
+        }
+
+        val releaseRuntime = project(":app").configurations.getByName("releaseRuntimeClasspath")
+        val releaseComponents = releaseRuntime.incoming.resolutionResult.allComponents
+            .map { component -> component.id.displayName }
+        toolingModules
+            .filterNot { module -> module == "viewcompose-benchmark" }
+            .sorted()
+            .forEach { toolingModule ->
+                releaseComponents
+                    .filter { component ->
+                        component == "project :$toolingModule" ||
+                            component.contains(":$toolingModule:")
+                    }
+                    .forEach { component ->
+                        violations +=
+                            "app releaseRuntimeClasspath -> forbidden tooling component '$component'"
+                    }
+            }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Development-tooling isolation verification failed:")
+                    violations.distinct().sorted().forEach { appendLine("- $it") }
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyDesignSystemIsolation") {
     group = "verification"
     description =
@@ -1673,6 +1777,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyModulePackageRoots")
     dependsOn("verifyAndroidModuleNamespaces")
     dependsOn("verifyModuleDependencyBoundaries")
+    dependsOn("verifyDevelopmentToolingIsolation")
     dependsOn("verifyDesignSystemIsolation")
     dependsOn("verifyUiFoundationPlatformBoundary")
     dependsOn("verifyDocumentationStructure")

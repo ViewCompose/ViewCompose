@@ -148,6 +148,9 @@ first-party image loaders; its zero default preserves deterministic non-Android/
 - State and connector commands are thread-confined to the owning renderer thread. Android
   integrations use the main thread, and callbacks run synchronously unless a concrete contract says
   otherwise.
+- Outside every tooling capture scope, VNode emission performs one atomic inactive check and does
+  not read tooling ThreadLocals or allocate a stack trace. Active capture keeps the documented
+  synchronous, bounded behavior below.
 - `UiNodeTooling.withFirstSourceCapture` observes at most one eligible node in each scope and
   allocates at most one stack trace. Nested scopes observe independently. Its callback runs on the
   emitting thread; callback failures propagate after the scope restores its thread-local state.

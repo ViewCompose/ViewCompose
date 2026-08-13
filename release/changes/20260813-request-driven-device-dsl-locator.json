@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "summary": "Isolate running-device DSL inspection in the optional preview artifact and replace continuous Host scroll/layout reporting with one nonce-matched response per explicit IDE request.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "fix" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "fix" },
+    { "artifact": "viewcompose-host-android", "impact": "fix" },
+    { "artifact": "viewcompose-preview", "impact": "fix" }
+  ],
+  "ignored": []
+}

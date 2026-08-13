@@ -55,14 +55,20 @@ class DeviceDslAdbBridgeTest {
                 command.startsWith("dumpsys activity") ->
                     "topResumedActivity=ActivityRecord{a u0 com.example.app/.MainActivity t3}"
                 command == "pidof com.example.app" -> "4242 4243"
-                command.startsWith("run-as com.example.app") -> validReportJson()
+                command.startsWith("am broadcast") -> "Broadcast completed: result=0"
+                command.startsWith("run-as com.example.app") -> validReportJson(REQUEST_ID)
                 else -> error("Unexpected command: $command")
             }
         }
 
-        val report = readDeviceDslSourceReport(device)
+        val report = readDeviceDslSourceReport(
+            device = device,
+            requestIdFactory = { REQUEST_ID },
+            sleep = {},
+        )
 
         assertEquals("com.example.app", report.packageName)
+        assertTrue(commands.any { command -> command.contains("--es request_id $REQUEST_ID") })
         assertTrue(commands.last().endsWith(DEVICE_DSL_SOURCE_REPORT_PATH))
     }
 
@@ -73,12 +79,19 @@ class DeviceDslAdbBridgeTest {
                 command.startsWith("dumpsys activity") ->
                     "topResumedActivity=ActivityRecord{a u0 com.example.app/.MainActivity t3}"
                 command == "pidof com.example.app" -> "9000"
-                command.startsWith("run-as com.example.app") -> validReportJson()
+                command.startsWith("am broadcast") -> "Broadcast completed: result=0"
+                command.startsWith("run-as com.example.app") -> validReportJson(REQUEST_ID)
                 else -> error("Unexpected command: $command")
             }
         }
 
-        val failure = runCatching { readDeviceDslSourceReport(device) }.exceptionOrNull()
+        val failure = runCatching {
+            readDeviceDslSourceReport(
+                device = device,
+                requestIdFactory = { REQUEST_ID },
+                sleep = {},
+            )
+        }.exceptionOrNull()
 
         assertEquals(
             DeviceDslLocateFailureReason.StaleReport,
@@ -96,15 +109,111 @@ class DeviceDslAdbBridgeTest {
         )
     }
 
-    private fun validReportJson(): String {
+    @Test
+    fun `rejects a stale response nonce`() {
+        var currentNanos = 0L
+        val device = fakeDevice { command ->
+            when {
+                command.startsWith("dumpsys activity") ->
+                    "topResumedActivity=ActivityRecord{a u0 com.example.app/.MainActivity t3}"
+                command == "pidof com.example.app" -> "4242"
+                command.startsWith("am broadcast") -> "Broadcast completed: result=0"
+                command.startsWith("run-as com.example.app") -> validReportJson(STALE_REQUEST_ID)
+                else -> error("Unexpected command: $command")
+            }
+        }
+
+        val failure = runCatching {
+            readDeviceDslSourceReport(
+                device = device,
+                requestIdFactory = { REQUEST_ID },
+                sleep = { millis -> currentNanos += millis * 1_000_000L },
+                nanoTime = { currentNanos },
+            )
+        }.exceptionOrNull()
+
+        assertEquals(
+            DeviceDslLocateFailureReason.StaleReport,
+            (failure as DeviceDslLocateFailure).reason,
+        )
+    }
+
+    @Test
+    fun `polls past a stale response and accepts the matching nonce`() {
+        var reportReads = 0
+        var currentNanos = 0L
+        val device = fakeDevice { command ->
+            when {
+                command.startsWith("dumpsys activity") ->
+                    "topResumedActivity=ActivityRecord{a u0 com.example.app/.MainActivity t3}"
+                command == "pidof com.example.app" -> "4242"
+                command.startsWith("am broadcast") -> "Broadcast completed: result=0"
+                command.startsWith("run-as com.example.app") -> {
+                    reportReads += 1
+                    validReportJson(
+                        if (reportReads == 1) STALE_REQUEST_ID else REQUEST_ID,
+                    )
+                }
+                else -> error("Unexpected command: $command")
+            }
+        }
+
+        val report = readDeviceDslSourceReport(
+            device = device,
+            requestIdFactory = { REQUEST_ID },
+            sleep = { millis -> currentNanos += millis * 1_000_000L },
+            nanoTime = { currentNanos },
+        )
+
+        assertEquals(REQUEST_ID, report.requestId)
+        assertEquals(2, reportReads)
+    }
+
+    @Test
+    fun `times out when the optional device receiver is absent`() {
+        var currentNanos = 0L
+        val device = fakeDevice { command ->
+            when {
+                command.startsWith("dumpsys activity") ->
+                    "topResumedActivity=ActivityRecord{a u0 com.example.app/.MainActivity t3}"
+                command == "pidof com.example.app" -> "4242"
+                command.startsWith("am broadcast") -> "Broadcast completed: result=0"
+                command.startsWith("run-as com.example.app") ->
+                    "cat: $DEVICE_DSL_SOURCE_REPORT_PATH: No such file or directory"
+                else -> error("Unexpected command: $command")
+            }
+        }
+
+        val failure = runCatching {
+            readDeviceDslSourceReport(
+                device = device,
+                requestIdFactory = { REQUEST_ID },
+                sleep = { millis -> currentNanos += millis * 1_000_000L },
+                nanoTime = { currentNanos },
+            )
+        }.exceptionOrNull()
+
+        assertEquals(
+            DeviceDslLocateFailureReason.ReportUnavailable,
+            (failure as DeviceDslLocateFailure).reason,
+        )
+    }
+
+    private fun validReportJson(requestId: String): String {
         return """
             {
               "protocolVersion": $DEVICE_DSL_SOURCE_PROTOCOL_VERSION,
+              "requestId": "$requestId",
               "packageName": "com.example.app",
               "processId": 4242,
               "generatedAtEpochMillis": 123456,
               "sessions": []
             }
         """.trimIndent()
+    }
+
+    private companion object {
+        const val REQUEST_ID = "0123456789abcdef0123456789abcdef"
+        const val STALE_REQUEST_ID = "fedcba9876543210fedcba9876543210"
     }
 }

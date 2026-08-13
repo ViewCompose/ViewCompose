@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-preview/README.md
-translation_source_hash: a83b4f5b8c2e3641b4bc81045f570769975551019292c30311848325063d6c9a
+translation_source_hash: 85683305ce1290bcdc00d78d29a952381bb3b5eafbc1dbd00c88472713e277ce
 translation_status: current
 ---
 
@@ -37,6 +37,22 @@ ViewCompose 提供两条互补路径：
 
 两个同名 API 位于不同包：静态注解在 `com.viewcompose.preview.tooling`，Compose 桥接函数在
 `com.viewcompose.preview`。
+
+## 真机 DSL 定位
+
+这个可选制品还负责 Android Studio `Locate Device DSL` 动作的应用进程侧实现。在可调试进程中，
+它提供中立的 Host 源码检查服务，并为符合条件的 Host/Page Session 保留有界源码候选。它不会观察
+滚动、全局布局、绘制、触摸、Frame 或重组，也不会持续发布报告。
+
+开发者点击该动作时，Android Studio 会发出一条受 `DUMP` 权限保护且带 32 字符 Nonce 的请求。
+Receiver 在主线程对当前弱引用持有的 Session View 采样一次，随后按需在后台序列化，并将一份有界
+响应原子写入应用私有缓存。IDE 只接受 Nonce、前台包名与存活进程均匹配的响应。报告仅包含 JVM
+源码标识与 View 候选资格，不包含源码文本、VNode Tree、应用状态或用户数据。无效请求、服务缺失、
+写入失败和 Session 释放都不能导致应用渲染失败。
+
+本制品应只放在 `debugImplementation`、测试或专用 Tooling 配置中。除可调试进程与显式 IDE 请求
+外，制品存在是启用功能所需的第三道门。零运行时持续开销与性能契约见
+[ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)。
 
 ## 应用主题 Provider
 
@@ -87,6 +103,8 @@ ViewCompose 渲染；主题、调试配置、Overlay 后端或容器变化时重
 - 合并前运行 `qaPreview`。只有审阅渲染图片及其差异报告后才能录制变更基准；原因不明的差异属于
   回归，不能当作基准更新。
 - Renderer 或 Provider 异常应作为预览失败暴露，不能用占位 UI 隐藏。
+- 设备定位器变更必须证明空闲滚动期间写入次数为零、每个有效请求只产生一个响应、陈旧 Nonce 会被
+  拒绝，且 Release Classpath 不包含定位器。
 
 ## 相关文档
 
@@ -102,3 +120,5 @@ ViewCompose 渲染；主题、调试配置、Overlay 后端或容器变化时重
 
 `0.1.0-alpha03` 建立了原生/DSL 一致主题解析、可保留的 Compose 桥接会话、显式根节点访问重载，以及
 共享目录/快照覆盖模型。静态预览协议兼容性仍由 preview-core 统一管理。
+真机 DSL 定位器现在改为按请求运行，并完全归属于这个可选制品；Android Host 只保留中立的可空
+检查端口。
