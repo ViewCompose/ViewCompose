@@ -152,6 +152,23 @@ class LazyListAdapterTest {
     }
 
     @Test
+    fun `reattaching a holder at its committed revision does not render again`() {
+        val context = RuntimeEnvironment.getApplication()
+        val parent = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        adapter.submitItems(listOf(recordingItem("first", events)))
+        val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+
+        adapter.onViewDetachedFromWindow(holder)
+        adapter.onViewAttachedToWindow(holder)
+
+        assertEquals(listOf("update:first", "render:first"), events)
+    }
+
+    @Test
     fun `detached cached holder does not render a new submission until reattached`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
@@ -171,6 +188,34 @@ class LazyListAdapterTest {
             listOf("update:first", "render:first", "update:second", "render:second"),
             events,
         )
+    }
+
+    @Test
+    fun `reattach resolves a unique key without scanning the item list`() {
+        val context = RuntimeEnvironment.getApplication()
+        val parent = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val keys = List(512) { index -> CountingKey(index) }
+        val adapter = LazyListAdapter()
+        adapter.submitItems(keys.map { key -> recordingItem("first", events, key = key) })
+        val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+        adapter.onViewDetachedFromWindow(holder)
+        adapter.submitItems(keys.asReversed().map { key -> recordingItem("second", events, key = key) })
+        CountingKey.equalityChecks = 0
+
+        adapter.onViewAttachedToWindow(holder)
+
+        assertTrue(
+            "Expected indexed key lookup, equalityChecks=${CountingKey.equalityChecks}",
+            CountingKey.equalityChecks <= 1,
+        )
+        assertEquals(
+            listOf("update:first", "render:first", "update:second", "render:second"),
+            events,
+        )
+        assertEquals(keys.lastIndex, holder.boundItemPosition)
     }
 
     @Test
@@ -294,5 +339,21 @@ class LazyListAdapterTest {
         val value: String,
     ) {
         override fun hashCode(): Int = 1
+    }
+
+    private class CountingKey(
+        private val value: Int,
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            equalityChecks += 1
+            return other is CountingKey && value == other.value
+        }
+
+        override fun hashCode(): Int = value
+
+        companion object {
+            var equalityChecks: Int = 0
+        }
     }
 }

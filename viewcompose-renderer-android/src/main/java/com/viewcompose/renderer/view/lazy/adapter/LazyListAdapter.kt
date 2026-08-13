@@ -37,8 +37,13 @@ internal class LazyListAdapter(
         val offset: Int,
     )
 
+    private data class KeyIndex(
+        val counts: Map<Any, Int>,
+        val uniquePositions: Map<Any, Int>,
+    )
+
     private var items: List<LazyListItem> = emptyList()
-    private var keyCounts: Map<Any, Int> = emptyMap()
+    private var keyIndex = KeyIndex(emptyMap(), emptyMap())
     // The registry tracks holder lifecycle across attach, detach, recycle, and dispose entry points.
     // Holder lifetimes are tracked centrally by the registry across attach, detach, recycle, and dispose paths.
     private val holderRegistry = LazyHolderRegistry<LazyListViewHolder> { holder ->
@@ -109,8 +114,11 @@ internal class LazyListAdapter(
     override fun onViewAttachedToWindow(holder: LazyListViewHolder) {
         super.onViewAttachedToWindow(holder)
         holderRegistry.onAttached(holder)
-        holder.activate(currentSubmissionRevision)
-        refreshHolder(holder, currentSubmissionRevision)
+        // A staged or already-current holder has installed this exact submission. Rebinding here
+        // would only revisit key lookup and the controller's duplicate-revision gate.
+        if (!holder.activate(currentSubmissionRevision)) {
+            refreshHolder(holder, currentSubmissionRevision)
+        }
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
@@ -139,7 +147,7 @@ internal class LazyListAdapter(
 
     override fun getItemId(position: Int): Long {
         val key = items[position].key ?: return Long.MIN_VALUE + position
-        if (keyCounts[key] != 1) return Long.MIN_VALUE + position
+        if (keyIndex.uniquePositions[key] == null) return Long.MIN_VALUE + position
         return stableIds.getOrPut(key) { nextStableId++ }
     }
 
@@ -211,6 +219,7 @@ internal class LazyListAdapter(
     ): Boolean {
         warnAboutIdentityIssues(items)
         val previousItems = this.items
+        val previousKeyCounts = keyIndex.counts
         val revision = submissionRevision ?: (currentSubmissionRevision + 1L)
         if (revision <= currentSubmissionRevision) return false
         val result = LazyListDiff.calculate(
@@ -225,11 +234,8 @@ internal class LazyListAdapter(
             null
         }
         this.items = result.items
-        keyCounts = result.items
-            .mapNotNull(LazyListItem::key)
-            .groupingBy { key -> key }
-            .eachCount()
-        stableIds.keys.retainAll(keyCounts.keys)
+        keyIndex = buildKeyIndex(result.items)
+        stableIds.keys.retainAll(keyIndex.counts.keys)
         currentSubmissionRevision = revision
         itemsVersion += 1
         if (result.diffResult != null) {
@@ -238,7 +244,7 @@ internal class LazyListAdapter(
             notifyDataSetChanged()
             restoreScrollAnchor(reloadAnchor)
         }
-        refreshAttachedHolders(previousItems, revision)
+        refreshAttachedHolders(previousKeyCounts, revision)
         return true
     }
 
@@ -260,20 +266,16 @@ internal class LazyListAdapter(
     }
 
     private fun refreshAttachedHolders(
-        previousItems: List<LazyListItem>,
+        previousKeyCounts: Map<Any, Int>,
         submissionRevision: Long,
     ) {
-        val previousKeyCounts = previousItems
-            .mapNotNull(LazyListItem::key)
-            .groupingBy { key -> key }
-            .eachCount()
         holderRegistry.forEachAttached { holder ->
             val boundKey = holder.boundItemKey
             val position = if (boundKey != null) {
-                if (previousKeyCounts[boundKey] != 1 || keyCounts[boundKey] != 1) {
+                if (previousKeyCounts[boundKey] != 1) {
                     return@forEachAttached
                 }
-                items.indexOfFirst { item -> item.key == boundKey }
+                keyIndex.uniquePositions[boundKey] ?: return@forEachAttached
             } else {
                 holder.boundItemPosition
             }
@@ -301,10 +303,10 @@ internal class LazyListAdapter(
         submissionRevision: Long,
     ) {
         val boundKey = holder.boundItemKey
-        val position = when {
-            boundKey != null && keyCounts[boundKey] == 1 -> items.indexOfFirst { item -> item.key == boundKey }
-            boundKey == null -> holder.boundItemPosition
-            else -> return
+        val position = if (boundKey != null) {
+            keyIndex.uniquePositions[boundKey] ?: return
+        } else {
+            holder.boundItemPosition
         }
         if (position !in items.indices) return
         val nextItem = items[position]
@@ -340,8 +342,24 @@ internal class LazyListAdapter(
         listState?.attach(null)
         listState = null
         items = emptyList()
-        keyCounts = emptyMap()
+        keyIndex = KeyIndex(emptyMap(), emptyMap())
         itemsVersion += 1
+    }
+
+    private fun buildKeyIndex(items: List<LazyListItem>): KeyIndex {
+        val counts = HashMap<Any, Int>(items.size)
+        val uniquePositions = HashMap<Any, Int>(items.size)
+        items.forEachIndexed { position, item ->
+            val key = item.key ?: return@forEachIndexed
+            val nextCount = (counts[key] ?: 0) + 1
+            counts[key] = nextCount
+            if (nextCount == 1) {
+                uniquePositions[key] = position
+            } else {
+                uniquePositions.remove(key)
+            }
+        }
+        return KeyIndex(counts, uniquePositions)
     }
 
     private fun bindHolder(
@@ -546,7 +564,8 @@ internal class LazyListViewHolder(
         controller.recycle()
     }
 
-    fun activate(submissionRevision: Long) {
+    fun activate(submissionRevision: Long): Boolean {
         controller.commit(submissionRevision)
+        return controller.hasCommitted(submissionRevision)
     }
 }

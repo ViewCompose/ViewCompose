@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: b09010598f4f7783b585afac7f2bfd57896f139b0b95db0a32174fb2b11e1da8
+translation_source_hash: dba30c2309000fbc6f9a5dc5cac008bc91ec633c78612e6ba1a85d49d76dc96d
 translation_status: current
 ---
 
@@ -125,6 +125,9 @@ ViewTreeRenderer.disposeMounted(container, mounted)
 - Lazy 与 Pager 的主动刷新仅面向已 attach holder。detach 缓存 holder 不运行子 composition 或
   effect，并在再次 attach 时接收最新已提交修订。key 缺失或重复时走保守 reload；Renderer 不会
   用 first-match key 查询解析有歧义的 holder。
+- Lazy Adapter 会为每个已接受提交建立一次唯一 Key 位置索引。已 attach 或重新 attach 的 Holder
+  因而无需扫描 item 列表即可解析稳定 Key；已经提交当前 Revision 的 Holder 也会跳过冗余 attach
+  工作。
 - Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
   `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一的 holder，无 key 缓存页则保留位置
   归属，直到 RecyclerView 派发替换 bind。

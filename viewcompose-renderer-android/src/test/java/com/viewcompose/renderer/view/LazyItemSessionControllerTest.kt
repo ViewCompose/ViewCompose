@@ -10,6 +10,8 @@ import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LazyItemSessionControllerTest {
@@ -164,6 +166,21 @@ class LazyItemSessionControllerTest {
             ),
             events,
         )
+    }
+
+    @Test
+    fun `reports whether the requested revision is committed`() {
+        val controller = createController(mutableListOf())
+
+        assertFalse(controller.hasCommitted(submissionRevision = 1L))
+        controller.commit(submissionRevision = 1L)
+        assertFalse(controller.hasCommitted(submissionRevision = 1L))
+        controller.stage(item(key = "A", contentToken = 1), submissionRevision = 1L)
+        controller.commit(submissionRevision = 2L)
+        assertFalse(controller.hasCommitted(submissionRevision = 1L))
+        controller.commit(submissionRevision = 1L)
+        assertTrue(controller.hasCommitted(submissionRevision = 1L))
+        assertFalse(controller.hasCommitted(submissionRevision = 2L))
     }
 
     @Test

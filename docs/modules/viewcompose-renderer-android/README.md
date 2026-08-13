@@ -138,6 +138,9 @@ Because the current line is alpha, the documentation site intentionally does not
   no child composition or effects and receive the latest committed submission when reattached.
   Missing or duplicate keys use the conservative reload path; the renderer never resolves an
   ambiguous holder through first-match key lookup.
+- The lazy adapter builds one unique-key position index per accepted submission. Attached and
+  reattached holders therefore resolve stable keys without scanning the item list, while a holder
+  that already committed the current revision skips redundant attach work.
 - Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
   incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned holders, and
   unkeyed cached pages retain position ownership until RecyclerView supplies a replacement bind.
