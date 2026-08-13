@@ -67,32 +67,15 @@ import com.viewcompose.ui.foundation.rememberTextFieldState
 import com.viewcompose.ui.unit.sp
 import com.viewcompose.runtime.mutableStateOf
 
-internal val DIAGNOSTICS_THEME_SECTION_KEYS = listOf(
-    "theme_snapshot_core",
-    "theme_snapshot_palette",
-    "theme_snapshot_sizing",
-    "theme_surface",
-    "theme_action",
-    "theme_input",
-    "theme_navigation",
-    "theme_shape_size",
-)
-
-internal fun UiTreeBuilder.DiagnosticsThemeSection(
-    root: ViewGroup?,
-    section: String,
-) {
-    when (section) {
-        "theme_snapshot_core" -> DiagnosticsThemeSnapshotCoreSection(root)
-        "theme_snapshot_palette" -> DiagnosticsThemeSnapshotPaletteSection()
-        "theme_snapshot_sizing" -> DiagnosticsThemeSnapshotSizingSection()
-        "theme_surface" -> DiagnosticsThemeSurfaceSection()
-        "theme_action" -> DiagnosticsThemeActionSection()
-        "theme_input" -> DiagnosticsThemeInputSection()
-        "theme_navigation" -> DiagnosticsThemeNavigationSection()
-        "theme_shape_size" -> DiagnosticsThemeShapeSizeSection()
-        else -> error("Unknown diagnostics theme section: $section")
-    }
+internal fun UiTreeBuilder.DiagnosticsThemeSections(root: ViewGroup?) {
+    DiagnosticsThemeSnapshotCoreSection(root)
+    DiagnosticsThemeSnapshotPaletteSection()
+    DiagnosticsThemeSnapshotSizingSection()
+    DiagnosticsThemeSurfaceSection()
+    DiagnosticsThemeActionSection()
+    DiagnosticsThemeInputSection()
+    DiagnosticsThemeNavigationSection()
+    DiagnosticsThemeShapeSizeSection()
 }
 
 private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) {

@@ -247,8 +247,8 @@ class LazyListAdapterTest {
         assertEquals(
             listOf(
                 "update:first-A",
-                "render:first-A",
                 "update:first-B",
+                "render:first-A",
                 "render:first-B",
             ),
             events,

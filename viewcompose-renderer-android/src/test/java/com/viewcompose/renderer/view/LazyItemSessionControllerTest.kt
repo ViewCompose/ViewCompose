@@ -16,6 +16,96 @@ import org.junit.Test
 
 class LazyItemSessionControllerTest {
     @Test
+    fun `prepare builds candidate and commit activates it without active render`() {
+        val events = mutableListOf<String>()
+        val controller = createLifecycleController(events)
+        val item = item(
+            key = "A",
+            contentToken = 1,
+            sessionUpdater = { session ->
+                (session as LifecycleRecordingSession).updateLabel("prepared")
+            },
+        )
+
+        controller.prepare(item, submissionRevision = 4L)
+
+        assertEquals(
+            listOf("clear", "create:A:1", "update:prepared", "prepare:prepared"),
+            events,
+        )
+        assertFalse(controller.hasCommitted(4L))
+
+        controller.commit(4L)
+
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "update:prepared",
+                "prepare:prepared",
+                "activate:prepared",
+            ),
+            events,
+        )
+        assertTrue(controller.hasCommitted(4L))
+    }
+
+    @Test
+    fun `duplicate detached bind prepares and activates one candidate`() {
+        val events = mutableListOf<String>()
+        val controller = createLifecycleController(events)
+        val item = item(key = "A", contentToken = 1)
+
+        controller.prepare(item, submissionRevision = 3L)
+        controller.prepare(item, submissionRevision = 3L)
+        controller.commit(3L)
+        controller.commit(3L)
+
+        assertEquals(
+            listOf("clear", "create:A:1", "prepare:A:1", "activate:A:1"),
+            events,
+        )
+    }
+
+    @Test
+    fun `newer detached revision replaces and disposes prepared candidate`() {
+        val events = mutableListOf<String>()
+        val controller = createLifecycleController(events)
+
+        controller.prepare(item(key = "A", contentToken = 1), submissionRevision = 1L)
+        controller.prepare(item(key = "B", contentToken = 2), submissionRevision = 2L)
+        controller.commit(2L)
+
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "prepare:A:1",
+                "dispose:A:1",
+                "clear",
+                "create:B:2",
+                "prepare:B:2",
+                "activate:B:2",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `recycle before attach disposes prepared candidate without activation`() {
+        val events = mutableListOf<String>()
+        val controller = createLifecycleController(events)
+
+        controller.prepare(item(key = "A", contentToken = 1), submissionRevision = 1L)
+        controller.recycle()
+
+        assertEquals(
+            listOf("clear", "create:A:1", "prepare:A:1", "dispose:A:1", "clear"),
+            events,
+        )
+    }
+
+    @Test
     fun `reuses session when key and content token are unchanged`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
@@ -322,6 +412,20 @@ class LazyItemSessionControllerTest {
         )
     }
 
+    private fun createLifecycleController(
+        events: MutableList<String>,
+    ): LazyItemSessionController {
+        return LazyItemSessionController(
+            createSession = { item ->
+                LifecycleRecordingSession(
+                    label = "${item.key}:${item.contentToken}",
+                    events = events,
+                )
+            },
+            clearContainer = { events += "clear" },
+        )
+    }
+
     private fun item(
         key: Any?,
         contentToken: Any?,
@@ -357,6 +461,36 @@ class LazyItemSessionControllerTest {
         fun updateLabel(
             label: String,
         ) {
+            this.label = label
+            events += "update:$label"
+        }
+    }
+
+    private class LifecycleRecordingSession(
+        private var label: String,
+        private val events: MutableList<String>,
+    ) : LazyListItemSession {
+        init {
+            events += "create:$label"
+        }
+
+        override fun prepare() {
+            events += "prepare:$label"
+        }
+
+        override fun activate() {
+            events += "activate:$label"
+        }
+
+        override fun render() {
+            events += "render:$label"
+        }
+
+        override fun dispose() {
+            events += "dispose:$label"
+        }
+
+        fun updateLabel(label: String) {
             this.label = label
             events += "update:$label"
         }

@@ -12,6 +12,8 @@
     "architecture/decisions/0007-host-owned-android-resource-environment.md",
     "architecture/decisions/0008-transactional-effect-lifecycle.md",
     "architecture/decisions/0009-development-tooling-isolation.md",
+    "architecture/decisions/0010-hierarchical-saveable-state-ownership.md",
+    "architecture/decisions/0011-prefetched-session-activation-boundary.md",
     "architecture/decisions/README.md",
     "architecture/design-systems.md",
     "architecture/effects.md",

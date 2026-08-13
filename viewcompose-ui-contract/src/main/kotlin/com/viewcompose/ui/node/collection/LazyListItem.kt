@@ -6,9 +6,10 @@ package com.viewcompose.ui.node
  * [contentToken] is the semantic version used by collection diffing. Equality deliberately
  * excludes [sessionFactory] and [sessionUpdater]. A parent submission containing a different item
  * instance creates one logical renderer revision for that item; callback object identity does not.
- * After the parent render commits, a renderer may retain an active bound session, install the latest
- * captured content, and render that revision at most once. Renderers create, update, render, and
- * dispose sessions on their owning UI thread.
+ * After the parent render commits, a renderer may prepare a detached holder without committing its
+ * child work, activate it when presented, then retain the active bound session, install the latest
+ * captured content, and render that revision at most once. Renderers prepare, activate, update,
+ * render, and dispose sessions on their owning UI thread.
  *
  * @sample com.viewcompose.ui.samples.lazyListItemSessionUpdateSample
  *
@@ -83,16 +84,52 @@ fun interface LazyListItemSessionFactory {
 }
 
 /**
- * Defines rendering and disposal operations for one mounted lazy-item child tree.
+ * Defines preparation, activation, rendering, and disposal for one lazy-item child tree.
  *
- * The renderer calls [render] zero or more times and calls [dispose] once when it permanently
- * releases the item container. Implementations must keep both operations on the owning UI thread.
+ * This is a Q3 lifecycle contract. A renderer may call [prepare] once while the holder is detached,
+ * then calls [activate] at most once before any later [render] calls. Preparation is speculative:
+ * it must not publish remember activation, user effects, native commit callbacks, overlays, or
+ * committed-frame diagnostics. [activate] makes the prepared content externally observable, and
+ * [render] applies later committed submissions to that active session. The renderer calls [dispose]
+ * once when it permanently releases the item container; disposal must also be safe before
+ * activation. Every operation is confined to the owning UI thread and must not re-enter rendering.
+ *
+ * Implementations that do not support speculative native-tree construction can inherit the
+ * defaults: [prepare] does nothing and [activate] performs the initial [render]. Implementations
+ * that override [prepare] must also override [activate] to commit that exact candidate or rebuild
+ * current content when the candidate became stale.
+ *
+ * @sample com.viewcompose.ui.samples.lazyListItemSessionUpdateSample
  */
 interface LazyListItemSession {
-    /** Renders the latest content installed for this item into its container. */
+    /**
+     * Optionally prepares the latest installed content without publishing committed work.
+     *
+     * The default performs no work. A custom implementation may allocate and bind a candidate
+     * native tree, but must retain all commit-bound callbacks until [activate]. Failure propagates
+     * to the renderer, which may retry through activation or dispose the session.
+     */
+    fun prepare() = Unit
+
+    /**
+     * Activates this session and publishes its first committed frame.
+     *
+     * The default calls [render], preserving existing session implementations. An optimized
+     * implementation commits a valid prepared candidate without rebuilding it. This operation is
+     * called at most once and only after an optional [prepare].
+     */
+    fun activate() {
+        render()
+    }
+
+    /** Renders the latest installed content into an already active item container. */
     fun render()
 
-    /** Releases observations, child views, and container references owned by this session. */
+    /**
+     * Releases observations, candidate or active child views, and owned container references.
+     *
+     * Disposal is terminal and must be idempotent whether or not [activate] ran.
+     */
     fun dispose()
 }
 

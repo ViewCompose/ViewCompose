@@ -8,11 +8,16 @@ package com.viewcompose.ui.foundation
 import android.content.Context
 import android.widget.FrameLayout
 import com.viewcompose.runtime.State
+import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.focus.FocusDirection
 import com.viewcompose.ui.focus.FocusManager
 import com.viewcompose.ui.node.PlatformRenderContainerHandle
 import com.viewcompose.ui.node.RenderContainerHandle
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.spec.LazyColumnNodeProps
+import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
+import com.viewcompose.ui.node.spec.TabRowNodeProps
+import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.tooling.UiSourceCallSite
@@ -44,6 +49,7 @@ class RenderSessionFailureTest {
         }
         engine.disposeFailures = emptyList()
         NoOpRenderSessionDiagnostics.sourceTooling = null
+        NoOpRenderSessionDiagnostics.errors.clear()
     }
 
     @After
@@ -51,6 +57,170 @@ class RenderSessionFailureTest {
         if (::session.isInitialized) {
             session.dispose()
         }
+    }
+
+    @Test
+    fun `prepared frame defers all commit work until activation`() {
+        val failures = mutableListOf<RenderFailure>()
+        val events = mutableListOf<String>()
+        var nativeRenderCount = 0
+        val overlayHost = object : OverlayHost {
+            override fun commit(
+                sessionId: OverlaySessionId,
+                requests: List<OverlayRequest>,
+            ) {
+                events += "overlay"
+            }
+
+            override fun clear(sessionId: OverlaySessionId) = Unit
+        }
+        engine.renderBlock = { previous, _ ->
+            nativeRenderCount += 1
+            CoreRenderFrame(
+                mountedNodes = previous,
+                commitEffects = listOf(
+                    CoreRenderCommitEffect(
+                        operation = RenderFailureOperation.AndroidViewCommit,
+                        nodeKey = "native",
+                        commit = { events += "native" },
+                    ),
+                ),
+            )
+        }
+        session = createSession(
+            failures = failures,
+            overlayHost = overlayHost,
+            content = {
+                DisposableEffect("prepared") {
+                    events += "remember"
+                    onDispose { events += "dispose" }
+                }
+                SideEffect { events += "side" }
+            },
+        )
+
+        session.prepareForActivation()
+
+        assertEquals(1, nativeRenderCount)
+        assertTrue(events.isEmpty())
+        assertEquals(null, session.lastFrameReport)
+
+        session.activatePrepared()
+
+        assertEquals(1, nativeRenderCount)
+        assertEquals(listOf("remember", "side", "native", "overlay"), events)
+        assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
+        assertTrue(failures.isEmpty())
+    }
+
+    @Test
+    fun `prepared frame defers saveable provider registration until activation`() {
+        val failures = mutableListOf<RenderFailure>()
+        val registry = createSaveableStateRegistry()
+        session = createSession(failures = failures) {
+            ProvideSaveableStateRegistry(registry) {
+                val preparedValue: String = rememberSaveable(
+                    key = "prepared-field",
+                    saver = Saver(
+                        save = { value -> value },
+                        restore = { value -> value },
+                    ),
+                ) {
+                    "prepared-value"
+                }
+                check(preparedValue.isNotEmpty())
+            }
+        }
+
+        session.prepareForActivation()
+        val competingEntry = registry.registerProvider("user:prepared-field") {
+            "competing-value"
+        }
+        competingEntry.unregister()
+
+        session.activatePrepared()
+
+        assertEquals("prepared-value", registry.performSave()["user:prepared-field"])
+        assertTrue(failures.isEmpty())
+    }
+
+    @Test
+    fun `state invalidation before activation discards stale prepared effects`() {
+        val failures = mutableListOf<RenderFailure>()
+        val events = mutableListOf<String>()
+        val value = mutableStateOf("first")
+        var nativeRenderCount = 0
+        engine.renderBlock = { previous, _ ->
+            nativeRenderCount += 1
+            CoreRenderFrame(
+                mountedNodes = previous,
+                commitEffects = listOf(
+                    CoreRenderCommitEffect(
+                        operation = RenderFailureOperation.AndroidViewCommit,
+                        nodeKey = "native",
+                        commit = { events += "native:${value.value}" },
+                    ),
+                ),
+            )
+        }
+        session = createSession(
+            failures = failures,
+            content = {
+                val current = value.value
+                DisposableEffect(current) {
+                    events += "remember:$current"
+                    onDispose { events += "dispose:$current" }
+                }
+                SideEffect { events += "side:$current" }
+            },
+        )
+
+        session.prepareForActivation()
+        value.value = "second"
+        session.activatePrepared()
+
+        assertEquals(2, nativeRenderCount)
+        assertEquals(
+            listOf("remember:second", "side:second", "native:second"),
+            events,
+        )
+        assertTrue(events.none { event -> "first" in event })
+        assertTrue(failures.isEmpty())
+    }
+
+    @Test
+    fun `disposing prepared frame never activates candidate work`() {
+        val failures = mutableListOf<RenderFailure>()
+        val events = mutableListOf<String>()
+        engine.renderBlock = { previous, _ ->
+            CoreRenderFrame(
+                mountedNodes = previous,
+                commitEffects = listOf(
+                    CoreRenderCommitEffect(
+                        operation = RenderFailureOperation.AndroidViewCommit,
+                        nodeKey = "native",
+                        commit = { events += "native" },
+                    ),
+                ),
+            )
+        }
+        session = createSession(
+            failures = failures,
+            content = {
+                DisposableEffect("prepared") {
+                    events += "remember"
+                    onDispose { events += "dispose" }
+                }
+                SideEffect { events += "side" }
+            },
+        )
+
+        session.prepareForActivation()
+        session.dispose()
+
+        assertTrue(events.isEmpty())
+        assertEquals(null, session.lastFrameReport)
+        assertTrue(failures.isEmpty())
     }
 
     @Test
@@ -353,6 +523,176 @@ class RenderSessionFailureTest {
         )
     }
 
+    @Test
+    fun `lazy child render sessions isolate equal saveable keys during commit`() {
+        val registry = createSaveableStateRegistry()
+        var rootNodes = emptyList<VNode>()
+        engine.renderBlock = { previous, nodes ->
+            if (nodes.singleOrNull()?.spec is LazyColumnNodeProps) {
+                rootNodes = nodes
+            }
+            CoreRenderFrame(mountedNodes = previous)
+        }
+        NoOpRenderSessionDiagnostics.errors.clear()
+        session = createSession(failures = mutableListOf()) {
+            ProvideSaveableStateRegistry(registry) {
+                LazyColumn {
+                    listOf("first", "second").forEach { itemKey ->
+                        item(key = itemKey) {
+                            rememberTextFieldState(initialText = "$itemKey-auto")
+                            val explicitState = rememberSaveable(key = "shared-field") {
+                                mutableStateOf("$itemKey-explicit")
+                            }
+                            Text(explicitState.value)
+                        }
+                    }
+                }
+            }
+        }
+
+        session.render()
+        val items = (rootNodes.single().spec as LazyColumnNodeProps).items
+        val childSessions = items.map { item ->
+            item.sessionFactory.create(
+                object : PlatformRenderContainerHandle {
+                    override val container: Any = FrameLayout(context)
+                },
+            )
+        }
+        childSessions.forEach { it.render() }
+
+        assertTrue(
+            NoOpRenderSessionDiagnostics.errors.none { (_, cause) ->
+                cause?.message.orEmpty().contains("already registered")
+            },
+        )
+        val savedText = registry.performSave().toString()
+        assertTrue(savedText, savedText.contains("first-auto"))
+        assertTrue(savedText, savedText.contains("second-auto"))
+        assertTrue(savedText, savedText.contains("first-explicit"))
+        assertTrue(savedText, savedText.contains("second-explicit"))
+        childSessions.forEach { it.dispose() }
+    }
+
+    @Test
+    fun `pager and tab child sessions receive independent saveable registries`() {
+        val registry = createSaveableStateRegistry()
+        var rootNodes = emptyList<VNode>()
+        engine.renderBlock = { previous, nodes ->
+            if (nodes.size == 3) {
+                rootNodes = nodes
+            }
+            CoreRenderFrame(mountedNodes = previous)
+        }
+        session = createSession(failures = mutableListOf()) {
+            ProvideSaveableStateRegistry(registry) {
+                HorizontalPager(currentPage = 0, onPageChanged = {}) {
+                    Page { saveableChildContent("horizontal-0") }
+                    Page { saveableChildContent("horizontal-1") }
+                }
+                VerticalPager(currentPage = 0, onPageChanged = {}) {
+                    Page(key = "first") { saveableChildContent("vertical-0") }
+                    Page(key = "second") { saveableChildContent("vertical-1") }
+                }
+                TabRow(selectedIndex = 0, onTabSelected = {}) {
+                    Tab(key = "first") { saveableChildContent("tab-0") }
+                    Tab(key = "second") { saveableChildContent("tab-1") }
+                }
+            }
+        }
+
+        session.render()
+        val childItems = buildList {
+            addAll((rootNodes[0].spec as HorizontalPagerNodeProps).pages)
+            addAll((rootNodes[1].spec as VerticalPagerNodeProps).pages)
+            addAll((rootNodes[2].spec as TabRowNodeProps).tabs.map { it.item })
+        }
+        val childSessions = childItems.map { item ->
+            item.sessionFactory.create(childContainer())
+        }
+        childSessions.forEach { it.render() }
+
+        assertTrue(
+            NoOpRenderSessionDiagnostics.errors.none { (_, cause) ->
+                cause?.message.orEmpty().contains("already registered")
+            },
+        )
+        val savedText = registry.performSave().toString()
+        listOf(
+            "horizontal-0",
+            "horizontal-1",
+            "vertical-0",
+            "vertical-1",
+            "tab-0",
+            "tab-1",
+        ).forEach { value ->
+            assertTrue(savedText, savedText.contains(value))
+        }
+        childSessions.forEach { it.dispose() }
+    }
+
+    @Test
+    fun `overlay surface sessions isolate equal saveable keys`() {
+        val registry = createSaveableStateRegistry()
+        val capturedRequests = mutableListOf<OverlayRequest>()
+        session = createSession(
+            failures = mutableListOf(),
+            overlayHost = object : OverlayHost {
+                override fun commit(
+                    sessionId: OverlaySessionId,
+                    requests: List<OverlayRequest>,
+                ) {
+                    capturedRequests.clear()
+                    capturedRequests.addAll(requests)
+                }
+
+                override fun clear(sessionId: OverlaySessionId) = Unit
+            },
+        ) {
+            ProvideSaveableStateRegistry(registry) {
+                Dialog(visible = true, requestKey = "first") {
+                    saveableChildContent("dialog-first")
+                }
+                Dialog(visible = true, requestKey = "second") {
+                    saveableChildContent("dialog-second")
+                }
+            }
+        }
+
+        session.render()
+        val surfaceSessions = capturedRequests.toList().map { request ->
+            val content = request.contentToken as DialogOverlayContent
+            createOverlaySurfaceSession(
+                container = childContainer(),
+                content = content.surface,
+            )
+        }
+
+        assertTrue(
+            NoOpRenderSessionDiagnostics.errors.none { (_, cause) ->
+                cause?.message.orEmpty().contains("already registered")
+            },
+        )
+        val savedText = registry.performSave().toString()
+        assertTrue(savedText, savedText.contains("dialog-first"))
+        assertTrue(savedText, savedText.contains("dialog-second"))
+        surfaceSessions.forEach(OverlaySurfaceSession::dispose)
+    }
+
+    private fun UiTreeBuilder.saveableChildContent(value: String) {
+        rememberTextFieldState(initialText = "$value-auto")
+        val explicitState = rememberSaveable(key = "shared-field") {
+            mutableStateOf("$value-explicit")
+        }
+        Text(explicitState.value)
+    }
+
+    private fun childContainer(): PlatformRenderContainerHandle {
+        return object : PlatformRenderContainerHandle {
+            override val container: Any = FrameLayout(context)
+        }
+    }
+
     private fun createSession(
         failures: MutableList<RenderFailure>,
         overlayHost: OverlayHost = OverlayHostDefaults.noOp,
@@ -419,12 +759,15 @@ class RenderSessionFailureTest {
 
     private object NoOpRenderSessionDiagnostics : RenderSessionPlatformDiagnostics {
         override var sourceTooling: RenderSessionSourceTooling? = null
+        val errors = mutableListOf<Pair<String, Throwable?>>()
 
         override fun debug(tag: String, message: String) = Unit
 
         override fun warning(tag: String, message: String) = Unit
 
-        override fun error(tag: String, message: String, cause: Throwable) = Unit
+        override fun error(tag: String, message: String, cause: Throwable) {
+            errors += message to cause
+        }
 
         override fun <T> trace(name: String, block: () -> T): T = block()
     }

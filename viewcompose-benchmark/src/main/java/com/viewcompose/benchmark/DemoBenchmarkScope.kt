@@ -73,6 +73,16 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
     waitForText(expectedText)
 }
 
+/** Starts the Diagnostics Theme page directly so long-fling measurements include its full fixture. */
+internal fun MacrobenchmarkScope.startDiagnosticsThemeAndWait() {
+    startDemoActivityAndWait(
+        moduleKey = "diagnostics",
+        expectedText = "Diagnostics",
+        extras = mapOf("page" to 1),
+    )
+    waitForText("Theme Snapshot")
+}
+
 /** Starts the internal multi-design-system fixture through the stable launcher redirect. */
 internal fun MacrobenchmarkScope.startDesignSystemAndWait(kind: String) {
     prepareBenchmarkUiAutomation()
@@ -152,6 +162,11 @@ internal fun MacrobenchmarkScope.startSystemNavigationActivityFromForeground() {
 internal fun MacrobenchmarkScope.waitForText(text: String) {
     val found = device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
     assertTrue("Expected to find text: $text", found)
+}
+
+/** Asserts that a text node is inside the visible safe viewport without scrolling to it. */
+internal fun MacrobenchmarkScope.assertVisibleText(text: String) {
+    assertNotNull("Expected visible text: $text", findVisibleTextNode(text))
 }
 
 /**
@@ -437,6 +452,38 @@ internal fun MacrobenchmarkScope.swipePageDown() {
 }
 
 /**
+ * Performs a forceful short-duration swipe and lets Android continue the resulting fling.
+ *
+ * This intentionally models a user throwing a long document rather than dragging one viewport.
+ */
+internal fun MacrobenchmarkScope.flingPageUp() {
+    val width = device.displayWidth
+    val height = device.displayHeight
+    device.swipe(
+        width / 2,
+        (height * 0.86f).toInt(),
+        width / 2,
+        (height * 0.12f).toInt(),
+        4,
+    )
+    SystemClock.sleep(LONG_FLING_SETTLE_MILLIS)
+}
+
+/** Performs the reverse forceful fling used to traverse a long document back toward its top. */
+internal fun MacrobenchmarkScope.flingPageDown() {
+    val width = device.displayWidth
+    val height = device.displayHeight
+    device.swipe(
+        width / 2,
+        (height * 0.12f).toInt(),
+        width / 2,
+        (height * 0.86f).toInt(),
+        4,
+    )
+    SystemClock.sleep(LONG_FLING_SETTLE_MILLIS)
+}
+
+/**
  * 多次向下滚动，把页面尽量回到顶部。
  * Repeatedly swipes down to move the page close to the top.
  */
@@ -472,3 +519,4 @@ internal fun MacrobenchmarkScope.swipeTabStripLeft() {
  */
 private const val NAVIGATION_MOTION_WAIT_MILLIS = 650L
 private const val TEXT_SEARCH_SCROLL_SETTLE_MILLIS = 100L
+private const val LONG_FLING_SETTLE_MILLIS = 1_200L

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: a75b8dd5c54fdcd53a1eac2669b2eca12477bf047d62fff6d7ae486fe1df73f9
+translation_source_hash: 45313b4b6f3feaa93d2036df1d5ca98f624b2e90b64cca15319b26a84a0c6646
 translation_status: current
 ---
 
@@ -155,6 +155,13 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
   同步 Callback 超过 16 ms 时发出警告。
 - `rememberSaveable` 只在组合提交后注册 Provider。组合失败或被放弃时会释放已 Claim 的恢复值，
   让后续尝试仍能恢复它。
+- 延迟子组合不会共享 Host Registry 的扁平 Provider Key 命名空间。Lazy、Pager、Tab 与 Overlay
+  容器按逻辑 Key Remember 分层子 Registry，在回收期间保留状态，并在 Keyed Reorder 时恢复且
+  不串状态。并发视觉副本不拥有持久化权，不能覆盖逻辑子项的持久化状态。
+- 从未激活的 Lazy 子 Session 可以为 RecyclerView Prefetch 保留 Prepared Composition 与已经构建
+  的原生树。它与正常帧使用同一 Transaction，因此 Remember 激活、用户 Effect、原生 Commit
+  Callback、Overlay 和诊断都会推迟到 Attach。State 失效会在 Activate 前放弃过期候选；Active
+  缓存 Session 会保持生命周期直到 Recycle，不把 Viewport Detach 当作 Stop。
 - `UiTheme` 只接收平台无关 Token。Android 资源观察属于 `viewcompose-host-android`；Material
   等具名设计系统只负责把 Host 产生的资源版本映射到自己的 Token 刷新策略。
 - 现有三类排版构造仍保持简洁：省略的 Headline 角色从 Title 派生，省略的 Display 角色从
@@ -199,6 +206,12 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
 不要把自动 Saveable Key、Session 标识、VNode 实现名称、回调实例、工具元数据或诊断结构
 持久化为长期外部数据。即使应用组件源码仍能编译，契约变化也可能要求自定义渲染器与 Host
 同步升级。
+
+子组合 Saveable 所有权是
+[ADR-0010](https://docs.viewcompose.com/zh-CN/architecture/decisions/0010-hierarchical-saveable-state-ownership)
+定义的硬修正。缺陷扁平 Registry 命名空间写入的历史子项值无法安全识别逻辑 Owner，因此不做
+迁移；根组合显式 Saved Key 与 Android Host Bundle 格式保持不变。每个延迟 Container Holder
+会占用父结构 Scope 的一个自动 Saveable Slot，因此调用方不能把生成的自动 Key 当作持久兼容面。
 
 Effect Runtime 的硬切要求 `DisposableEffect` 与 `LaunchedEffect` 至少提供一个 Key。
 Disposable Setup 现在只能通过 `DisposableEffectScope.onDispose` 返回 Cleanup；迁移旧的

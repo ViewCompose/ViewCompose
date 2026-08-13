@@ -13,6 +13,7 @@ class WidgetCoreSamplesTest {
         compactInputTargetSample()
         popupPositioningSample()
         saveableStateRegistrySample()
+        scopedRememberSaveableSample()
         imageLoadingSample()
     }
 }

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "summary": "Harden delayed child sessions with hierarchical saveable ownership and effect-safe RecyclerView prefetch activation.",
+  "changes": [
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "fix" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "ignored": []
+}

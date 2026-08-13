@@ -74,7 +74,7 @@ internal fun UiTreeBuilder.PreviewDiagnosticsGaps() {
 internal fun diagnosticsPageItems(selectedPage: Int): List<String> {
     return DIAGNOSTICS_COMMON_PAGE_ITEMS + when (selectedPage) {
         0 -> listOf("benchmark", "runtime", "verify")
-        1 -> DIAGNOSTICS_THEME_SECTION_KEYS + "theme_verify"
+        1 -> listOf("theme", "theme_verify")
         2 -> listOf("renderer_actions", "renderer", "verify")
         else -> listOf("gaps", "verify")
     }
@@ -287,10 +287,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 }
             }
 
-            in DIAGNOSTICS_THEME_SECTION_KEYS -> DiagnosticsThemeSection(
-                root = root,
-                section = section,
-            )
+            "theme" -> DiagnosticsThemeSections(root)
 
             "renderer_actions" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,

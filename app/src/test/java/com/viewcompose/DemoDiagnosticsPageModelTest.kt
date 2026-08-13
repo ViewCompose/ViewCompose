@@ -6,8 +6,6 @@ package com.viewcompose
  */
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DemoDiagnosticsPageModelTest {
@@ -22,12 +20,12 @@ class DemoDiagnosticsPageModelTest {
     }
 
     @Test
-    fun `theme diagnostics exposes granular lazy items instead of one eager subtree`() {
+    fun `theme diagnostics keeps its coherent static fixture in one lazy item`() {
         val items = diagnosticsPageItems(selectedPage = 1)
 
-        assertFalse("theme" in items)
-        assertTrue(items.containsAll(DIAGNOSTICS_THEME_SECTION_KEYS))
-        assertEquals(items.size, items.distinct().size)
-        assertEquals("theme_verify", items.last())
+        assertEquals(
+            listOf("page", "page_filter", "theme", "theme_verify"),
+            items,
+        )
     }
 }

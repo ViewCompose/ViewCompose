@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 6a4991be9b38eed1416b502cd37b96d361b724f5b26e9f830f5b0a8c9a3f6e80
+translation_source_hash: 265676e29c9b78f222cffc535d6ed1812906ba9fcba290d50fac5bf56753a93c
 translation_status: current
 ---
 
@@ -35,8 +35,10 @@ translation_status: current
 1. diff 为空时，不能回退到旧 item/page 实例
 2. 已绑定 holder/session 必须有“无结构变化刷新”路径
 3. `localSnapshot`、主题、环境、父层闭包在 update 路径重新注入
-4. 创建路径和更新路径都能驱动 `RenderSession.render()`
-5. `dispose/recycle` 语义与 holder 生命周期对齐
+4. 延迟创建路径可以 Prepare 原生子树，但只有 Activate 或 Active Update 才能跨越子 Composition/
+   Effect Commit 边界
+5. `activate` 最多一次；后续 `render` 应用 Active Submission，`dispose/recycle` 语义与 Holder
+   生命周期对齐
 6. `Change` 更新优先走 payload 通道，避免无条件全量变更通知
 7. key 不可用回退 `ReloadAll` 时，应尽量保持当前滚动锚点，避免交互后列表跳顶
 8. 输入控件获取焦点时，不得触发无关的列表跳位。容器启用焦点跟随策略后，只能滚动到足以完整
@@ -46,10 +48,17 @@ translation_status: current
    或 effect
 10. 回调对象身份不是修订。Renderer 提交新发射的不可变 item/page 快照，只抑制同一提交修订下
     平台重复派发的 bind
-11. 主动刷新仅面向已 attach 或独立展示的 holder。已 detach 的缓存 holder 只暂存最新修订并在
-    attach 时渲染；重复 key 存在歧义时，绝不能通过 first-match 查询猜测 holder 归属
+11. Detach 且从未激活的 Holder 可以 Prepare 已由父级提交的 Submission，但不得运行 Remember
+    激活、Effect、原生 Commit Callback、Overlay 或已提交帧诊断。Activate 会提交有效候选而不重建。
+    已 Active 的 Detach Holder 只暂存最新修订并在 Reattach 时渲染；重复 Key 存在歧义时，绝不能
+    通过 First Match 查询猜测 Holder 归属
 12. Pager 对唯一 key 使用无碰撞稳定 ID，并按 `contentType`/kind 组合划分结构不兼容的原生
     View Type。无 key 缓存页保留位置归属；带 key 的移动只有在前后快照中 key 均唯一时才解析
+13. 每个独立组合的 Item/Page 都必须接收由父组合 Holder 和稳定逻辑 Key 持有的子
+    `SaveableStateRegistry`。回收会保留该 Registry 的 Saved Map，重排跟随 Key，嵌套容器递归
+    应用同一层级
+14. Renderer 并发创建的 Presentation 副本可以恢复逻辑 Owner 当前的 Saveable Snapshot，但不得
+    为相同逻辑 Key 注册第二个持久化 Owner
 
 ## 4. 必测场景
 
@@ -59,10 +68,13 @@ translation_status: current
 2. 结构稳定、局部上下文变化：主题/local/environment 更新可见
 3. `contentToken` 变化：复用或受控重建语义符合预期
 4. keyed reorder：顺序正确、状态不串位
-5. detach/attach/recycle：detach 缓存不运行子 effect，attach 展示最新已提交修订，recycle 不泄漏状态
+5. prepare/attach/detach/recycle：从未激活的缓存不运行子 Commit 工作，Attach 展示最新已提交修订，
+   Active Detach 不重启生命周期工作，Recycle 不泄漏状态
 6. 空 diff 刷新：已 attach holder 对每个已提交修订只刷新一次
 7. 父帧失败：保留子项的 update/render/effect 均不运行
 8. key 缺失或重复：保守 reload，不猜测 holder 身份
+9. 可保存状态所有权：兄弟项 Local Key 不冲突，Keyed 回收恢复不串状态，Presentation 副本不能
+   覆盖逻辑 Owner
 
 ## 5. 当前测试映射（2026-08）
 
@@ -103,6 +115,10 @@ translation_status: current
    已 attach holder 对每个显式提交修订只渲染一次；detach 缓存与回滚父帧不会运行子 render/effect。
 6. Pager 移动会在提交后主动刷新已 attach 且 key 唯一的页面。Hash 冲突 key 仍保持不同稳定 ID；
    无 key 的 detach 页面在再次 attach 时按已绑定位置解析已提交快照。
+7. 基线更新（2026-08-13）：从未激活的 Lazy Holder 使用 Prepared → Active → Disposed 协议。
+   RecyclerView Prefetch 可以在 Attach 前构建 Composition 与原生树，而既有 Transaction 会推迟
+   Remember 激活、Effect、原生 Commit 工作、Overlay 与诊断。被观察 State 变化会在 Activate 前
+   使候选失效。
 
 ## 6. 新容器接入流程
 

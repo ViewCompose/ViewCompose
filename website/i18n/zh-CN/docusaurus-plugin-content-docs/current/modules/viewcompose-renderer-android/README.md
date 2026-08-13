@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: dba30c2309000fbc6f9a5dc5cac008bc91ec633c78612e6ba1a85d49d76dc96d
+translation_source_hash: c59695979bd09fbd3da3a6332b1163c5d75e3f403d99431043af52553f11d99e
 translation_status: current
 ---
 
@@ -122,9 +122,11 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   新发射的不可变 item 快照会建立一个单调递增的提交；父级 composition 提交后，Renderer 才安装
   next item 的准确闭包，并让每个已 attach Session 渲染一次，即使 Token 相等也一样。父级回滚、
   RecyclerView 延迟重复 Payload 以及回调对象复用都不会产生额外子渲染。
-- Lazy 与 Pager 的主动刷新仅面向已 attach holder。detach 缓存 holder 不运行子 composition 或
-  effect，并在再次 attach 时接收最新已提交修订。key 缺失或重复时走保守 reload；Renderer 不会
-  用 first-match key 查询解析有歧义的 holder。
+- Detach 且从未 Activate 的 Lazy Holder 可以在 RecyclerView Prefetch 中 Prepare 子 Composition
+  与原生 View 树，但不会提交 Remember Lifecycle、Effect、原生 Commit 工作、Overlay 或诊断。
+  首次 Attach 会直接 Activate 有效 Prepared Frame；如果被观察 State 已变化，则改为渲染当前
+  状态。Active 的 Detach Holder 会暂存新 Submission 并在 Reattach 时渲染。Key 缺失或重复时
+  使用保守 Reload 路径；Renderer 绝不会通过 First Match Key 查询解析有歧义 Holder。
 - Lazy Adapter 会为每个已接受提交建立一次唯一 Key 位置索引。已 attach 或重新 attach 的 Holder
   因而无需扫描 item 列表即可解析稳定 Key；已经提交当前 Revision 的 Holder 也会跳过冗余 attach
   工作。
@@ -176,6 +178,9 @@ Error 或 Fallback 使用资源，规范化图片请求就会把版本传给 Ada
 - 一个容器只有一个已挂载树所有者。不得在容器或 render session 之间共享 mounted node。
 - `collectDiagnostics = false` 会省略结构、patch、warning 和详细绑定快照；性能敏感且不消费
   诊断的路径应关闭它。
+- Lazy Prefetch 工作受 RecyclerView Deadline 控制。它可以把 Composition 与 View 创建提前到
+  Attach 帧之前，但不能保证每个 Item 都完成 Prepare；没有回收价值的连贯静态 Fixture 不应拆成
+  多个昂贵独立 Session。
 - `LayoutPassTracker` 是进程级可选能力。它会为受监控过程增加单调时钟读取和同步聚合开销，
   应用于有限时间的诊断，而不是持续生产遥测。
 - `AndroidViewDecorationRuntime.install` 是进程级操作。应在应用初始化时安装后端；现有 View

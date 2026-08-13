@@ -6,8 +6,12 @@ import com.viewcompose.runtime.composition.RememberObserver
  * Remembers [init]'s result and saves it through the current host registry.
  *
  * [inputs] reset the remembered value when they change but do not become part of its saved
- * representation. A non-null [key] must be unique among active calls in the registry. Without an
- * installed registry this behaves like [remember]. Use the [Saver] overload for domain objects.
+ * representation. A non-null [key] must be unique among active calls in the current logical
+ * composition scope. Framework-owned lazy items, Pager pages, tabs, and overlay surfaces each
+ * receive an isolated child scope. Without an installed registry this behaves like [remember].
+ * Use the [Saver] overload for domain objects.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.scopedRememberSaveableSample
  */
 fun <T> rememberSaveable(
     vararg inputs: Any?,

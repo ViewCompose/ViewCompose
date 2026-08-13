@@ -23,3 +23,12 @@ fun UiTreeBuilder.ProvideSaveableStateRegistry(
         content = content,
     )
 }
+
+/** Returns a copy that installs [registry] for one delayed child composition. */
+internal fun LocalSnapshot.withSaveableStateRegistry(
+    registry: SaveableStateRegistry?,
+): LocalSnapshot {
+    return copy(
+        values = values + (LocalSaveableStateRegistryValue.holder to registry),
+    )
+}

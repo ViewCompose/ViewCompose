@@ -98,8 +98,22 @@ structured model.
 | item cache size | RecyclerView item-view cache |
 | layout state | scroll, layout, and adapter observers feeding `LazyListState` |
 
+A detached holder that has never been presented can use RecyclerView prefetch to compose and build
+its Android View tree. This produces a prepared candidate, not a committed child frame. Remember
+activation, `SideEffect`, `DisposableEffect`, `LaunchedEffect`, native `AndroidView.onCommit`,
+overlays, and committed diagnostics wait for first attachment. If observed state changes before
+attachment, the stale candidate is abandoned and activation renders current state. A session that
+already activated remains active through ordinary RecyclerView cache detach and is disposed when
+the holder is recycled or the container is released.
+
 The pinned sticky copy is not registered as a second accessibility node. The ordinary list header
 remains the semantic source, avoiding duplicate TalkBack announcements.
+
+Each logical item key also owns a child saveable-state registry. Item-local automatic and explicit
+`rememberSaveable` keys can therefore repeat in sibling rows. Detaching or recycling a holder
+retains the logical item's saved map, and reattaching or reordering restores it by item key. A
+detached pinned-header copy is a non-owning presentation replica: it may start from the owner's
+current snapshot but cannot overwrite the header's persisted state.
 
 `contentPadding` is logical and resolves start/end from the collection's captured layout
 direction. It is added to physical `Modifier.padding` and the selected system-bar or IME inset
@@ -118,6 +132,10 @@ revision change cannot temporarily expose content under a system bar or erase th
 7. Item sessions are disposed when holders, pinned headers, or containers are released.
 8. Collection, modifier, and inset padding contributions have one renderer-owned native value and
    must survive both targeted patches and full environment rebinds.
+9. Item saveable state is scoped by the container and stable logical key; duplicate providers are
+   rejected only within one logical item scope.
+10. Prefetch preparation is externally silent and never marks a child submission committed;
+    activation and later active renders preserve the normal transactional effect order.
 
 ## 6. Deliberate non-goals
 

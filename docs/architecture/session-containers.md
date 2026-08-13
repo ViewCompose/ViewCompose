@@ -30,8 +30,10 @@ Every delayed-session container must satisfy these constraints:
 1. An empty diff must not fall back to an old item or page instance.
 2. A bound holder/session must have a refresh path when structure does not change.
 3. The update path reinjects `localSnapshot`, theme, environment, and the latest parent closure.
-4. Both create and update paths can drive `RenderSession.render()`.
-5. `dispose/recycle` semantics align with holder lifetime.
+4. A delayed create path may prepare a native child tree, but only activation or an active update
+   can cross the child composition/effect commit boundary.
+5. `activate` happens at most once; later `render` operations apply active submissions, and
+   `dispose/recycle` semantics align with holder lifetime.
 6. A `Change` update prefers the payload path instead of an unconditional full-change signal.
 7. When unusable keys force `ReloadAll`, preserve the current scroll anchor where possible instead
    of jumping the collection to the top after an interaction.
@@ -43,12 +45,19 @@ Every delayed-session container must satisfy these constraints:
    parent rollback discards them without running child composition or effects.
 10. Callback identity is not a revision. The renderer submits newly emitted immutable item/page
     snapshots and suppresses only duplicate platform binds for the same submission revision.
-11. Proactive refresh is limited to attached or independently presented holders. Detached cached
-    holders stage the latest revision and render it on attach; ambiguous duplicate keys never use
+11. A detached, never-activated holder may prepare a committed parent submission without running
+    remember activation, effects, native commit callbacks, overlays, or committed diagnostics.
+    Activation commits a valid candidate without rebuilding it. An already-active detached holder
+    stages the latest revision and renders it on reattach; ambiguous duplicate keys never use
     first-match lookup to guess ownership.
 12. Pager stable IDs are collision-free for unique keys, and native view types partition
     structurally incompatible `contentType`/kind pairs. Unkeyed cached pages retain position
     ownership; keyed moves resolve only through a unique key in both snapshots.
+13. Every independently composed item/page receives a child `SaveableStateRegistry` owned by a
+    parent-composition holder and its stable logical key. Recycling retains that registry's saved
+    map, reordering follows the key, and nested containers repeat the hierarchy.
+14. A renderer-created concurrent presentation replica may restore the logical owner's current
+    saveable snapshot but must not register a second persistence owner for the same logical key.
 
 ## 4. Required scenarios
 
@@ -59,11 +68,14 @@ Every container covers at least these eight cases:
 2. Stable structure, changed local context: theme, Local, or environment changes become visible.
 3. Changed `contentToken`: reuse or controlled recreation follows the documented semantics.
 4. Keyed reorder: ordering is correct and state does not move between items.
-5. Detach/attach/recycle: detached caches run no child effects, attach presents the latest
-   committed revision, and recycle leaks no state.
+5. Prepare/attach/detach/recycle: a never-activated cache runs no child commit work, attach presents
+   the latest committed revision, active detach does not restart lifecycle work, and recycle leaks
+   no state.
 6. Empty-diff refresh: an attached holder still refreshes once for the committed submission.
 7. Failed parent frame: retained child update/render/effects do not run.
 8. Missing or duplicate keys: conservative reload avoids guessed holder identity.
+9. Saveable-state ownership: sibling local keys do not collide, keyed recycling/restoration does
+   not move state, and presentation replicas cannot overwrite the logical owner.
 
 ## 5. Current test mapping (2026-08)
 
@@ -112,6 +124,10 @@ Current baseline notes:
 6. Pager moves proactively refresh attached uniquely keyed pages after commit. Hash-colliding keys
    keep distinct stable IDs, and unkeyed detached pages resolve the committed snapshot by their
    bound position when reattached.
+7. Since 2026-08-13, a never-activated lazy holder uses the Prepared → Active → Disposed protocol.
+   RecyclerView prefetch can build its composition and native tree before attachment, while the
+   existing transaction defers remember activation, effects, native commit work, overlays, and
+   diagnostics. An observed state change invalidates the candidate before activation.
 
 ## 6. New-container workflow
 

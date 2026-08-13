@@ -9,8 +9,9 @@ Core principles:
 
 1. An uncommitted composition must not permanently consume restored values.
 2. A host save during composition preparation must not lose values that are currently claimed.
-3. A Flow has at most one active collector while the lifecycle changes rapidly.
-4. A destroyed host cannot create a new render session or SavedState binding.
+3. Independent child compositions must not share one flat provider-key namespace.
+4. A Flow has at most one active collector while the lifecycle changes rapidly.
+5. A destroyed host cannot create a new render session or SavedState binding.
 
 ## 2. Host lifecycle
 
@@ -65,7 +66,36 @@ Changing the inputs to `rememberSaveable(inputs...)` still means an intentional 
 holder leaves only during commit, the new holder takes over the provider synchronously, and the
 replacement value is what is eventually saved.
 
-## 5. Android Bundle boundary
+## 5. Child-composition ownership
+
+The host registry is the root persistence boundary, not a global key namespace for every nested
+`RenderSession`. Framework containers that create delayed child compositions remember a state
+holder in their parent composition. The holder provides one child registry per stable lazy-item,
+Pager-page, tab, or overlay-surface identity.
+
+Automatic and explicit `rememberSaveable` keys are local to the receiving child registry. Nested
+containers create another holder inside that registry, so ownership follows the composition tree:
+
+```text
+host owner
+└── container holder
+    ├── logical item A registry
+    │   └── nested container holder
+    └── logical item B registry
+```
+
+Recycling closes an item registry lease and retains its saved map in the holder; reattaching the
+same logical key restores it. A keyed reorder therefore moves the logical state with the key rather
+than with the View holder position. A concurrent renderer-created presentation replica may restore
+the owner's current snapshot, but it is not a second persistence owner.
+
+The holder itself is saved through the parent registry's normal transaction. A failed parent frame
+cannot publish candidate child ownership, and a failed child frame retains the child's previous
+providers and restored claims. See
+[ADR-0010](./decisions/0010-hierarchical-saveable-state-ownership.md) for the hard-cut rationale and
+compatibility boundary.
+
+## 6. Android Bundle boundary
 
 The Android host saves:
 
@@ -81,7 +111,7 @@ restored.
 Transient system sessions are not SavedState. IME composition, undo history, in-progress gestures,
 and animations are not restored.
 
-## 6. Verification
+## 7. Verification
 
 Core regression coverage includes:
 
@@ -90,4 +120,6 @@ Core regression coverage includes:
 3. host saving while a claim is in flight;
 4. collector serialization during rapid lifecycle stop/restart;
 5. destroyed owners;
-6. unknown Bundle versions and isolation of one corrupt entry.
+6. sibling and nested child compositions using identical automatic and explicit keys;
+7. keyed child recycling, reorder, host recreation, and concurrent presentation replicas;
+8. unknown Bundle versions and isolation of one corrupt entry.
