@@ -10,6 +10,11 @@
   equally visible multi-pane DSL sessions.
 - Resolve bounded source candidates so shared scaffold chrome does not hide the content DSL.
 
+### Fixed
+
+- Request the running-device DSL snapshot only when the action is invoked, validate a one-use nonce,
+  and avoid requiring continuous scroll/layout report publication in the application process.
+
 ## 1.0.1 — 2026-08-03
 
 ### Fixed

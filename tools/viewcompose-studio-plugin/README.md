@@ -38,7 +38,8 @@ The installable ZIP is written to `build/distributions/`. The plugin currently p
 - project-scoped source selection that opens the matching symbol in the preview tool window;
 - an independent **Locate Device DSL** toolbar and Tools-menu action that opens the ViewCompose DSL
   currently visible in a debuggable app, with an explicit chooser when several devices or visible
-  page sessions are available, and removes shared scaffold callers in favor of authored content;
+  page sessions are available, removes shared scaffold callers in favor of authored content, and
+  uses a one-use nonce request instead of consuming a continuously refreshed runtime report;
 - a project-scoped Gradle Tooling API connection with cancellation, avoiding a new wrapper client
   JVM for every discovery/render operation while keeping Layoutlib in a bounded external worker;
 - controlled Layoutlib worker reuse across compatible refreshes, with fresh application class

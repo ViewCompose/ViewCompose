@@ -174,8 +174,8 @@ The `ViewCompose Preview` Android Studio plugin also provides a separate **Locat
 toolbar action and Tools-menu entry; it does not share the preview tool-window icon. To open the DSL
 for the page currently visible on a device:
 
-1. Install and open a debuggable application build that uses the current
-   `viewcompose-host-android` runtime.
+1. Add `viewcompose-preview` with `debugImplementation`, then install and open that debuggable
+   application build.
 2. Navigate to the ViewCompose page on the device.
 3. Choose **Locate Device DSL** in Android Studio.
 
@@ -184,14 +184,19 @@ first shows a device chooser with device kind, Android version, and serial numbe
 contains multiple equally visible deepest ViewCompose sessions, such as a two-pane layout, a
 second chooser lists the candidate source locations.
 
-The action reads the foreground package and its private debug report through Android Studio's ADB
-connection, validates that the report belongs to a live process, and resolves bounded JVM source
-candidates against the current project. When shared scaffolds emit toolbar or container nodes before
-their content, candidates that reappear as outer callers are removed so navigation prefers the
-content DSL. Independent remaining content sources are shown in the source chooser. The action does
-not use the preview panel, external storage, a network service, or source-text transfer.
-Non-debuggable builds do not expose the report. If no report is available, keep the intended app in
-the foreground and verify that its debug build uses the current host artifact.
+The action finds the foreground package, creates a one-use nonce, and sends an explicit ADB request
+to the `viewcompose-preview` debug receiver. The process samples current session visibility once and
+writes one private response; the IDE accepts it only when the nonce, package, and live process all
+match. Scroll and layout never refresh the response. Bounded JVM source candidates are then resolved
+against the current project. When shared scaffolds emit toolbar or container nodes before their
+content, candidates that reappear as outer callers are removed so navigation prefers the content
+DSL. Independent remaining content sources are shown in the source chooser.
+
+The receiver requires Android's `DUMP` permission held by ADB shell, and the process independently
+verifies that the application is debuggable. The action does not use the preview panel, external
+storage, a network service, continuous View listeners, or source-text transfer. Non-debuggable
+builds reject requests. If no response is available, keep the intended app in the foreground and
+verify that its debug build includes the current `viewcompose-preview` artifact.
 
 ## Snapshot regression
 

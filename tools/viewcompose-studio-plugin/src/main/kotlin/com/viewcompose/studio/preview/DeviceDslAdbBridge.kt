@@ -5,6 +5,7 @@ import com.android.ddmlib.IDevice
 import com.android.tools.idea.adb.AdbService
 import com.intellij.openapi.project.Project
 import java.util.concurrent.TimeUnit
+import java.util.UUID
 
 internal data class StudioAndroidDevice(
     val serialNumber: String,
@@ -55,6 +56,9 @@ internal class DeviceDslAdbBridge(
 
 internal fun readDeviceDslSourceReport(
     device: StudioAndroidDevice,
+    requestIdFactory: () -> String = ::newDeviceDslSourceRequestId,
+    sleep: (Long) -> Unit = Thread::sleep,
+    nanoTime: () -> Long = System::nanoTime,
 ): StudioDeviceDslSourceReport {
     val foregroundPackage = parseForegroundPackage(
         activityDump = device.shell("dumpsys activity activities"),
@@ -67,21 +71,47 @@ internal fun readDeviceDslSourceReport(
     if (processIds.isEmpty()) {
         throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.StaleReport)
     }
-    val reportText = device.shell(
-        "run-as $foregroundPackage cat $DEVICE_DSL_SOURCE_REPORT_PATH",
-    )
-    val report = runCatching { parseDeviceDslSourceReport(reportText) }
-        .getOrElse {
-            throw DeviceDslLocateFailure(
-                reason = DeviceDslLocateFailureReason.ReportUnavailable,
-                cause = it,
-            )
-        }
-    if (report.packageName != foregroundPackage || report.processId !in processIds) {
-        throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.StaleReport)
+    val requestId = requestIdFactory()
+    require(requestId.matches(DEVICE_DSL_SOURCE_REQUEST_ID)) {
+        "Device DSL source request ID must be a 32-character lowercase hexadecimal nonce."
     }
-    return report
+    val requestStartedAtNanos = nanoTime()
+    device.shell(
+        "am broadcast --user current -a $DEVICE_DSL_SOURCE_REQUEST_ACTION " +
+            "-p $foregroundPackage --es $DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA $requestId",
+    )
+    var lastFailure: Throwable? = null
+    var observedStaleResponse = false
+    while (nanoTime() - requestStartedAtNanos < RESPONSE_POLL_TIMEOUT_NANOS) {
+        val reportText = device.shell(
+            "run-as $foregroundPackage cat $DEVICE_DSL_SOURCE_REPORT_PATH",
+        )
+        val report = runCatching { parseDeviceDslSourceReport(reportText) }
+            .onFailure { error -> lastFailure = error }
+            .getOrNull()
+        if (report != null) {
+            if (report.requestId != requestId) {
+                observedStaleResponse = true
+            } else {
+                if (report.packageName != foregroundPackage || report.processId !in processIds) {
+                    throw DeviceDslLocateFailure(DeviceDslLocateFailureReason.StaleReport)
+                }
+                return report
+            }
+        }
+        sleep(RESPONSE_POLL_INTERVAL_MILLIS)
+    }
+    throw DeviceDslLocateFailure(
+        reason = if (observedStaleResponse) {
+            DeviceDslLocateFailureReason.StaleReport
+        } else {
+            DeviceDslLocateFailureReason.ReportUnavailable
+        },
+        cause = lastFailure,
+    )
 }
+
+private fun newDeviceDslSourceRequestId(): String = UUID.randomUUID().toString().replace("-", "")
 
 internal fun parseForegroundPackage(
     activityDump: String,
@@ -143,6 +173,7 @@ private val COMPONENT_PATTERN = Regex(
 private val ANDROID_PACKAGE_NAME = Regex(
     "[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z0-9_]+)+",
 )
+private val DEVICE_DSL_SOURCE_REQUEST_ID = Regex("[a-f0-9]{32}")
 private val ACTIVITY_FOREGROUND_MARKERS = listOf(
     "topResumedActivity=",
     "mResumedActivity:",
@@ -154,3 +185,5 @@ private val WINDOW_FOREGROUND_MARKERS = listOf(
 )
 private const val ADB_BRIDGE_TIMEOUT_SECONDS = 15L
 private const val SHELL_TIMEOUT_SECONDS = 10L
+private const val RESPONSE_POLL_INTERVAL_MILLIS = 50L
+private const val RESPONSE_POLL_TIMEOUT_NANOS = 5_000_000_000L

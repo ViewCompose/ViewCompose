@@ -67,23 +67,21 @@ imperative resource mutation that emits no callback. Calls, callbacks, and dispo
 work. Resource results are synchronous snapshots; do not retain provider-owned Context or Resources
 beyond the session.
 
-## Debug device source reporting
+## Optional source-inspection boundary
 
-In a debuggable application, the `renderInto` root and nested containers classified as page
-boundaries, including pager destinations, each capture bounded source candidates from their initial
-DSL tree and publish a small process-local report under the application's private cache directory.
-The first and recent candidates allow Android Studio to recognize a shared scaffold as an outer
-caller and prefer the authored content DSL. Ordinary lazy content is skipped. The report tracks
-active, attached, actually visible, focused, and nested sessions so tooling can prefer the deepest
-DSL page currently visible on a connected device. Disposing a session removes it from the report;
-`setRenderingActive` updates its eligibility.
+The Host performs one process-local `ServiceLoader` lookup for the neutral
+`RenderSessionSourceTooling` port. No provider is the normal production configuration and is a
+stable no-op. Ambiguous or failed discovery disables source inspection and logs a diagnostic rather
+than changing rendering. The Host contains no device-locator protocol, Android component, report
+writer, View-tree listener, or recurring inspection lifecycle.
 
-Capture samples at most 64 eligible emissions per session and retains at most 32 distinct chains.
-The report contains JVM class, method, filename, and line information, but no source text, node
-tree, application state, or user data. It is accessible to tooling through `run-as` only for a
-debuggable package. Non-debuggable builds do not capture or write this report. The report path and
-JSON protocol are private tooling details and must not be used as an application persistence
-contract.
+Running-device DSL navigation is implemented downstream by the optional `viewcompose-preview`
+artifact. Add it with `debugImplementation` to enable the feature. When present in a debuggable
+process, it may retain bounded source candidates from the first successful Host/Page frame through
+the neutral port. Live visibility is inspected and a private report is written only after Android
+Studio sends an explicit request. Scroll, layout, rendering-active changes, and session disposal do
+not publish reports. This ownership follows
+[ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md).
 
 ## Native View transaction contract
 
@@ -127,6 +125,7 @@ The Activity and Fragment `setUiContent` extensions moved to `viewcompose-androi
 five-layer architecture. No compatibility facade remains in this low-level artifact.
 Version `0.1.0-alpha04` restricts overlay service discovery to one neutral provider; standard roots
 choose their backend explicitly, and duplicate providers are a configuration error.
-Debug-only device source reporting is an additive `renderInto` tooling behavior: its public
-signature is unchanged, release builds do no extra work, and custom hosts that dispose sessions
-normally require no migration.
+Device source inspection moved out of this artifact. `renderInto` signatures are unchanged; custom
+platforms may keep the default `null` port. Applications that use **Locate Device DSL** retain
+`viewcompose-preview` in a debug configuration, while release builds carry no locator
+implementation.

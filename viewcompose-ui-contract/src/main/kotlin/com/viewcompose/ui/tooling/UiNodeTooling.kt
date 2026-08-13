@@ -42,12 +42,14 @@ data class UiNodeToolingMetadata(
 /**
  * Opt-in source capture used by previews and diagnostics.
  *
- * Normal application rendering pays only one thread-local lookup per emitted node. Stack traces
+ * Normal application rendering pays one atomic inactive check per emitted node. Thread-local state
+ * is read only while any capture scope is active in the process. Stack traces
  * are allocated only inside [withSourceCapture], [withFirstSourceCapture], or
  * [withSourceCandidateCapture]; IDs and metadata objects are allocated exclusively inside
  * [withSourceCapture].
  */
 object UiNodeTooling {
+    private val activeCaptureScopes = java.util.concurrent.atomic.AtomicInteger(0)
     private val captureDepth = ThreadLocal<Int>()
     private val firstSourceCaptureScopes = ThreadLocal<MutableList<FirstSourceCaptureScope>>()
     private val sourceCandidateCaptureScopes =
@@ -67,6 +69,7 @@ object UiNodeTooling {
     fun <T> withSourceCapture(block: () -> T): T {
         val previousDepth = captureDepth.get() ?: 0
         captureDepth.set(previousDepth + 1)
+        activeCaptureScopes.incrementAndGet()
         return try {
             block()
         } finally {
@@ -75,6 +78,7 @@ object UiNodeTooling {
             } else {
                 captureDepth.set(previousDepth)
             }
+            activeCaptureScopes.decrementAndGet()
         }
     }
 
@@ -105,6 +109,7 @@ object UiNodeTooling {
             ?: mutableListOf<FirstSourceCaptureScope>().also(firstSourceCaptureScopes::set)
         val scope = FirstSourceCaptureScope(onSourceCaptured)
         scopes += scope
+        activeCaptureScopes.incrementAndGet()
         return try {
             block()
         } finally {
@@ -112,6 +117,7 @@ object UiNodeTooling {
             if (scopes.isEmpty()) {
                 firstSourceCaptureScopes.remove()
             }
+            activeCaptureScopes.decrementAndGet()
         }
     }
 
@@ -144,6 +150,7 @@ object UiNodeTooling {
             )
         val scope = SourceCandidateCaptureScope()
         scopes += scope
+        activeCaptureScopes.incrementAndGet()
         val result = try {
             block()
         } finally {
@@ -151,6 +158,7 @@ object UiNodeTooling {
             if (scopes.isEmpty()) {
                 sourceCandidateCaptureScopes.remove()
             }
+            activeCaptureScopes.decrementAndGet()
         }
         val candidates = scope.snapshot()
         if (candidates.isNotEmpty()) {
@@ -169,6 +177,7 @@ object UiNodeTooling {
      * @return the same [node] instance
      */
     fun attach(node: VNode): VNode {
+        if (activeCaptureScopes.get() == 0) return node
         val captureMetadata = (captureDepth.get() ?: 0) > 0
         val pendingFirstCaptures = firstSourceCaptureScopes.get()
             ?.filterNot(FirstSourceCaptureScope::captured)
@@ -252,6 +261,7 @@ object UiNodeTooling {
      * @return nearest-first source call sites, limited to 32 entries
      */
     fun captureCallSites(): List<UiSourceCallSite> {
+        if (activeCaptureScopes.get() == 0) return emptyList()
         val captureMetadata = (captureDepth.get() ?: 0) > 0
         val hasPendingFirstCapture = firstSourceCaptureScopes.get()
             ?.any { scope -> !scope.captured }

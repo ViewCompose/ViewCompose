@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: d798189a8e52d3cba0e5f48864f7242522c47f7cf3befb97ea3bd4c24cf3ef3b
+translation_source_hash: a75b8dd5c54fdcd53a1eac2669b2eca12477bf047d62fff6d7ae486fe1df73f9
 translation_status: current
 ---
 
@@ -210,7 +210,9 @@ Ownership 与 `rememberUpdatedState` 发布现在遵循
 `RenderSessionPlatformDiagnostics.sourceTooling`、`RenderSessionSourceTooling` 与
 `RenderSessionSourceRegistration` 是新增的 Q3 工具 API。现有平台诊断使用默认空 Adapter，行为
 不变。主动启用的自定义平台必须让注册状态受所属 Render Session 约束，同步消费有界候选调用链
-列表，并在平台渲染线程调用。
+列表，并在平台渲染线程调用。注册必须保持被动：可以弱引用容器，但不能安装持续的滚动、全局布局、
+绘制、触摸、Frame 或重组观察器。实时检查必须由
+[ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md)定义的显式工具请求触发。
 
 完整 `UiTypography` 与 `UiShapes` 值契约属于 Alpha 版本线的源码和二进制变更。它们仍是不可变、
 不包含生命周期或所有权协议的 Q2 值；直接构造保留源码默认值，但穷举解构、反射以及预编译调用方

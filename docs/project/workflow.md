@@ -269,7 +269,32 @@ neutral extensions, and reflection is a separately reviewed last resort.
     generated POM. After publication, repeat the installation verification from a clean checkout
     without the generated repository.
 
-### 5.12 One package root per module
+### 5.12 Development tooling isolation
+
+Development tooling that can execute inside an application process follows
+[ADR-0009](../architecture/decisions/0009-development-tooling-isolation.md):
+
+1. Concrete preview, inspector, source-navigation, and IDE transport implementations live only in
+   modules classified as Tooling. Runtime modules may expose nullable neutral ports but cannot own
+   a concrete tooling protocol, report writer, request receiver, or IDE lifecycle.
+2. Activation requires all three conditions: optional tooling artifact present, debuggable process,
+   and a valid explicit tool request. Never interpret `debuggable` as permission for continuous
+   observation.
+3. Inactive tooling installs no listener on scroll, global layout, draw, touch, animation frame, or
+   recomposition; performs no View traversal, stack capture, serialization, or file I/O; and owns no
+   eagerly started worker. Any narrowly justified exception needs an ADR, allowlist entry, and
+   same-device benchmark evidence.
+4. Prefer one nonce-bearing request and one response snapshot over continuously refreshed reports.
+   Validate nonce, process, package, size bounds, lifecycle cleanup, stale response rejection, and
+   failure isolation in deterministic tests.
+5. Runtime changes run `verifyDevelopmentToolingIsolation`. Tooling that observes a hot path also
+   compares the same debug build, device, workload, refresh rate, and thermal state. Idle scrolling
+   must produce zero tooling writes.
+6. Pull requests explicitly answer whether application-process tooling code changed, why runtime
+   ownership remains neutral, how release classpath exclusion is proven, and what inactive-path
+   evidence was collected.
+
+### 5.13 One package root per module
 
 1. Each module has one package prefix across main, test, and androidTest.
 2. Android namespace matches that root, except the documented ui-contract exception.
@@ -277,14 +302,14 @@ neutral extensions, and reflection is a separately reviewed last resort.
    `com.viewcompose.viewmodel` in their owning modules.
 4. `verifyModulePackageRoots` and `verifyAndroidModuleNamespaces` are non-waivable `qaQuick` gates.
 
-### 5.13 Runtime purity and coverage
+### 5.14 Runtime purity and coverage
 
 1. runtime remains a Kotlin/JVM module.
 2. runtime production source cannot import Android/AndroidX or depend on `androidx.core.ktx`.
 3. `verifyRuntimePurity` blocks violations in `qaQuick`.
 4. Policy, snapshot, observation, invalidation, and composer branch changes add unit tests.
 
-### 5.14 Host session and diagnostics
+### 5.15 Host session and diagnostics
 
 1. Android frame clock and dispatcher implementation lives in host-android; UI Foundation retains
    only the `RenderSessionRuntime` contract/provider.
@@ -294,7 +319,7 @@ neutral extensions, and reflection is a separately reviewed last resort.
    platform implementation directly.
 4. Guards cover renderer-type leakage and provider-missing no-op fallback.
 
-### 5.15 Modifier and container policy
+### 5.16 Modifier and container policy
 
 1. ui-contract Modifier contains globally stable semantics, never a policy meaningful to only one
    container.
@@ -302,7 +327,7 @@ neutral extensions, and reflection is a separately reviewed last resort.
    by the renderer.
 3. A new policy includes DSL-to-NodeSpec and renderer bind/patch tests.
 
-### 5.16 Developer Preview
+### 5.17 Developer Preview
 
 1. preview-core contains annotations, deterministic configuration, and version protocol without
    Android/AndroidX imports.
@@ -316,7 +341,7 @@ neutral extensions, and reflection is a separately reviewed last resort.
    `protocolVersion/requestId`.
 8. Preview overlays are static simulations; real windows are instrumentation concerns.
 
-### 5.17 Animation and gestures
+### 5.18 Animation and gestures
 
 1. Animation ownership is animation-core, animation DSL, and host-android interop. Gesture ownership
    is gesture-core policy, gesture DSL, and renderer Android adaptation.
@@ -336,7 +361,7 @@ neutral extensions, and reflection is a separately reviewed last resort.
     thresholds and events only.
 14. Enabled `combinedClickable` with no callbacks remains a no-op and does not consume input.
 
-### 5.18 ConstraintLayout
+### 5.19 ConstraintLayout
 
 1. DSL/scope lives in widget-constraintlayout; renderer maps to Android ConstraintLayout.
 2. `layoutId/constrainAs/constrain` is parent data; a wrong parent emits
@@ -349,7 +374,7 @@ neutral extensions, and reflection is a separately reviewed last resort.
 8. New min/max/percent/constrained, baseline extension, or circle semantics add DSL emission and
    renderer application assertions.
 
-### 5.19 Graphics
+### 5.20 Graphics
 
 1. graphics-core contains platform-neutral models and commands without Android/AndroidX.
 2. graphics contains Canvas and drawing DSL without Android Canvas execution.

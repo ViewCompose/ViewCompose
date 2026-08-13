@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: f4c567695e7eaa98e068de3fc011c0f6ea03a34ccc093ec6f58f64b99d60300b
+translation_source_hash: a40c816dedf7871bb16424a75f25bfaa1d0f55d36a77f811dfb473275de88a77
 translation_status: current
 ---
 
@@ -133,6 +133,8 @@ val gap = VNode(
   updater 与 Token 的重复投递不能重复一次逻辑渲染或其 Effect。
 - 状态与 Connector 命令按所属渲染器线程封闭。Android 集成使用主线程；除非具体契约另有
   说明，回调都会同步执行。
+- 不存在任何工具捕获 Scope 时，每次 VNode 发射只执行一次 Atomic 非活动检查，不读取工具
+  ThreadLocal，也不分配 Stack Trace。捕获激活后继续遵守下述同步且有界的行为。
 - `UiNodeTooling.withFirstSourceCapture` 在每个作用域最多观察一个有效节点，并且最多分配一次
   堆栈。嵌套作用域各自独立观察。回调在发出节点的线程同步执行；回调失败会在恢复作用域的
   ThreadLocal 状态后继续抛出。

@@ -7,10 +7,14 @@ import java.io.StringReader
 import java.nio.charset.StandardCharsets
 
 internal const val DEVICE_DSL_SOURCE_REPORT_PATH =
-    "cache/viewcompose/device-dsl-source-v2.json"
-internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 2
+    "cache/viewcompose/device-dsl-source-v3.json"
+internal const val DEVICE_DSL_SOURCE_REQUEST_ACTION =
+    "com.viewcompose.preview.action.REQUEST_DEVICE_DSL_SOURCE"
+internal const val DEVICE_DSL_SOURCE_REQUEST_ID_EXTRA = "request_id"
+internal const val DEVICE_DSL_SOURCE_PROTOCOL_VERSION = 3
 
 internal data class StudioDeviceDslSourceReport(
+    val requestId: String,
     val packageName: String,
     val processId: Int,
     val generatedAtEpochMillis: Long,
@@ -73,6 +77,7 @@ internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceRepo
             )
         }
     return StudioDeviceDslSourceReport(
+        requestId = root.requiredRequestId("requestId"),
         packageName = root.requiredBoundedString("packageName"),
         processId = root.requiredInt("processId"),
         generatedAtEpochMillis = root.requiredLong("generatedAtEpochMillis"),
@@ -81,6 +86,17 @@ internal fun parseDeviceDslSourceReport(json: String): StudioDeviceDslSourceRepo
         require(report.processId > 0) { "Device DSL source process ID must be positive." }
         require(report.generatedAtEpochMillis > 0) {
             "Device DSL source report timestamp must be positive."
+        }
+    }
+}
+
+private fun JsonObject.requiredRequestId(name: String): String {
+    return requiredBoundedString(name).also { requestId ->
+        require(
+            requestId.length == REQUEST_ID_LENGTH &&
+                requestId.all { character -> character in 'a'..'f' || character in '0'..'9' },
+        ) {
+            "Device DSL source field '$name' must be a 32-character lowercase hexadecimal nonce."
         }
     }
 }
@@ -153,3 +169,4 @@ private const val MAX_REPORTED_SESSIONS = 64
 private const val MAX_SOURCE_CANDIDATES = 32
 private const val MAX_SOURCE_CALL_SITES_PER_CANDIDATE = 24
 private const val MAX_STRING_LENGTH = 1024
+private const val REQUEST_ID_LENGTH = 32

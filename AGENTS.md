@@ -33,6 +33,10 @@ These rules apply to AI-assisted work in this repository:
     or compiled API samples must add one immutable `release/changes/<unique>.json` file. Classify
     each detected artifact as `breaking`, `feature`, `fix`, or explicitly ignored with a concrete
     reason. Never hand-write `dependency`; release planning derives reverse-dependency propagation.
+14. Application-process development tooling follows
+    [`ADR-0009`](docs/architecture/decisions/0009-development-tooling-isolation.md): concrete tooling
+    lives downstream, activation requires artifact + debuggable process + explicit request, and the
+    inactive path cannot own recurring hot-path work. Run `./gradlew verifyDevelopmentToolingIsolation`.
 
 If an active document conflicts with code or tests, verify the implementation and correct the
 document rather than creating a parallel explanation.

@@ -56,6 +56,9 @@ For historical analysis, see
 22. Advanced shadows have independent bounded outer/inner raster caches. Translation, scale,
     rotation, and alpha reuse rasters. `ShadowPerformanceComparisonBenchmark` covers 1,000-item Lazy
     and complex-layout scrolling/mutation with Compose as the same-run noise control.
+23. Application-process development tooling follows a zero-recurring-work contract. The optional
+    running-device DSL locator performs no report write or live View inspection during scrolling;
+    one explicit nonce-bearing IDE request produces one bounded snapshot and response.
 
 ### 2.2 Release benchmark entry points
 
@@ -176,6 +179,25 @@ SlotTable Lite and subtree recomposition are on the main path and `qaQuick` pass
 gate status remains recorded in the [roadmap](../project/roadmap.md) rather than inferred from an old
 local `qaFull` run.
 
+### 2.4 Debug tooling regression gate
+
+Release macrobenchmarks cannot detect costs that exist only in debuggable builds. Any tooling that
+executes in an application process therefore adds a same-device debug comparison for every hot path
+it can observe. Hold device model, system build, application commit, workload, refresh rate, power
+mode, and thermal state constant. Record frame CPU P50/P95 and a tooling-operation counter.
+
+The default acceptance rule is conjunctive: P50 fails only when it regresses by more than both 5%
+and 0.3 ms; P95 fails only when it regresses by more than both 10% and 0.8 ms. Idle scrolling must
+record exactly zero tooling report writes. A deliberately invoked inspection request is measured
+separately and cannot be amortized into the idle result.
+
+The 2026-08-13 locator incident is the reference failure: on Samsung SM-G991B / Android 13 with
+SurfaceFlinger active at 60 Hz, the Demo home-list frame CPU P50 moved from approximately 5--7 ms
+to 11--12 ms after continuous scroll/layout publication entered `viewcompose-host-android`;
+removing the scroll publication restored approximately 7 ms. The architectural correction moved
+the implementation to the optional `viewcompose-preview` artifact and made publication
+request-driven.
+
 ## 3. Performance gate metrics
 
 Every performance change evaluates at least:
@@ -217,6 +239,9 @@ rebound/skipped, and key layout-pass counts.
     normalized gate.
 16. Large or per-frame blur/spread/RenderEffect paths define memory and off-screen budgets before
     entering a default list or transition.
+17. Application-process tooling cannot attach recurring listeners to scroll, global layout, draw,
+    touch, animation-frame, or recomposition hot paths. A justified continuous observer requires a
+    new ADR, an explicit static-gate allowlist, and same-device Debug benchmark evidence.
 
 ## 5. Anti-patterns
 

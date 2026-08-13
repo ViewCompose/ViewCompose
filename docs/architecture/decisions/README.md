@@ -14,6 +14,7 @@ architecture pages describe how the system works now.
 - [ADR-0006: Root-scoped overlay backend selection](./0006-root-scoped-overlay-backend-selection.md)
 - [ADR-0007: Host-owned Android resource environment](./0007-host-owned-android-resource-environment.md)
 - [ADR-0008: Transactional effect lifecycle](./0008-transactional-effect-lifecycle.md)
+- [ADR-0009: Development tooling isolation and request-driven inspection](./0009-development-tooling-isolation.md)
 
 ## Rules
 

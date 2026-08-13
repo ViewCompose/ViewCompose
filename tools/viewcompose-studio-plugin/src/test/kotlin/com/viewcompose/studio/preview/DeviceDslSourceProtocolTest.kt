@@ -17,6 +17,7 @@ class DeviceDslSourceProtocolTest {
         )
 
         assertEquals("com.example.app", report.packageName)
+        assertEquals(REQUEST_ID, report.requestId)
         assertEquals(4242, report.processId)
         assertEquals(2, report.sessions.size)
         assertEquals(
@@ -76,6 +77,7 @@ class DeviceDslSourceProtocolTest {
         return """
             {
               "protocolVersion": $protocolVersion,
+              "requestId": "$REQUEST_ID",
               "packageName": "com.example.app",
               "processId": 4242,
               "generatedAtEpochMillis": 123456,
@@ -110,5 +112,9 @@ class DeviceDslSourceProtocolTest {
               }]
             }
         """.trimIndent()
+    }
+
+    private companion object {
+        const val REQUEST_ID = "0123456789abcdef0123456789abcdef"
     }
 }

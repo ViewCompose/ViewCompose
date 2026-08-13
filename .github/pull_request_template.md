@@ -38,6 +38,16 @@ Localization impact:
 - Does this change public behavior, dependencies, compatibility, defaults, or lifecycle semantics?
 - If users must act, where is the migration path documented?
 
+## Application-process tooling impact
+
+- [ ] No application-process development tooling changed
+- [ ] Concrete implementation remains in a Tooling module and runtime ownership is neutral
+- [ ] Activation requires optional artifact + debuggable process + explicit request
+- [ ] Inactive-path tests prove zero recurring listener, traversal, serialization, and report writes
+- [ ] Release classpath exclusion and any required same-device Debug benchmark are recorded
+
+Evidence or no-impact rationale:
+
 ## Maven release intent
 
 - [ ] Added one immutable `release/changes/<unique>.json` file for every changed published artifact

@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/preview.md
-translation_source_hash: c3231767d0778e30f0d8bb4f046b2ccd4cba44c87b163c6040eda9880d90f329
+translation_source_hash: 187f9aa8f5e82705ee198251c0b97a50f57ab1a76c681431d91f174c1a37e0d0
 translation_status: current
 ---
 
@@ -169,7 +169,7 @@ Compose Preview Lifecycle Semantics。需要生产主题一致性或 ViewCompose
 `ViewCompose Preview` Android Studio 插件还提供独立的 `Locate Device DSL` 工具栏动作与
 Tools 菜单入口，不与预览工具窗口共用图标。要打开设备当前可见页面的 DSL：
 
-1. 安装并打开使用当前 `viewcompose-host-android` Runtime 的可调试应用。
+1. 通过 `debugImplementation` 引入 `viewcompose-preview`，然后安装并打开该可调试应用。
 2. 在设备上进入目标 ViewCompose 页面。
 3. 在 Android Studio 中选择 `Locate Device DSL`。
 
@@ -177,12 +177,16 @@ Tools 菜单入口，不与预览工具窗口共用图标。要打开设备当�
 类型、Android 版本和序列号。当同一窗口存在多个同样可见且嵌套最深的 ViewCompose 会话（例如
 双栏布局）时，还会显示第二个选择框列出候选源码位置。
 
-该动作通过 Android Studio 的 ADB 连接读取前台应用及其私有 Debug 报告，确认报告属于仍在运行
-的进程，再把有界 JVM 源码候选解析到当前项目。当共享 Scaffold 先于 Content 发出工具栏或容器
-节点时，插件会移除在其他候选中重复出现的外层调用方，优先进入 Content DSL；仍有多个独立
-Content 来源时会显示源码选择框。它不依赖预览面板、外部存储、网络服务，也不会传输源码文本。
-非调试构建不会暴露报告。如果没有可用报告，请让目标应用保持在前台，并确认其 Debug 构建使用
-当前 Host 产物。
+该动作先查找前台包名、生成一次性 Nonce，再通过 ADB 向 `viewcompose-preview` Debug Receiver
+发送显式请求。进程只采样一次当前 Session 可见性并写入一份私有响应；IDE 仅在 Nonce、包名和
+存活进程都匹配时才接受它。滚动与布局不会刷新响应。随后插件把有界 JVM 源码候选解析到当前项目。
+当共享 Scaffold 先于 Content 发出工具栏或容器节点时，插件会移除在其他候选中重复出现的外层
+调用方，优先进入 Content DSL；仍有多个独立 Content 来源时会显示源码选择框。
+
+Receiver 要求 ADB Shell 持有的 Android `DUMP` 权限，进程还会独立确认应用可调试。该动作不依赖
+预览面板、外部存储、网络服务、持续 View Listener，也不会传输源码文本。非调试构建会拒绝请求。
+如果没有可用响应，请让目标应用保持在前台，并确认 Debug 构建包含当前 `viewcompose-preview`
+制品。
 
 ## 快照回归
 

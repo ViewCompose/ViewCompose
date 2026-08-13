@@ -85,9 +85,12 @@ interface RenderSessionPlatformDiagnostics {
  * content DSL without retaining node metadata. Lazy-list and pager item sessions use the same path,
  * allowing platform tooling to prefer the deepest container that is actually visible.
  *
- * Implementations must be fast, thread-confined to the platform render thread, and must not retain
- * [RenderContainerHandle] after the returned [RenderSessionSourceRegistration] is disposed. Tooling
- * failures are diagnostic-only and must not become application rendering dependencies.
+ * Implementations must be optional, fast, and thread-confined to the platform render thread. They
+ * may retain a weak container reference until the returned [RenderSessionSourceRegistration] is
+ * disposed, but registration itself stays passive: it cannot install listeners on scroll, global
+ * layout, draw, touch, animation-frame, or recomposition paths. Live inspection is initiated by an
+ * explicit tooling request. Tooling failures are diagnostic-only and must not become application
+ * rendering dependencies.
  *
  * @sample com.viewcompose.ui.foundation.samples.renderSessionSourceToolingSample
  */

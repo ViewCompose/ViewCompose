@@ -36,6 +36,26 @@ ViewCompose supports two complementary paths:
 The similarly named APIs live in different packages: the static annotation is in
 `com.viewcompose.preview.tooling`; the Compose bridge function is in `com.viewcompose.preview`.
 
+## Running-device DSL locator
+
+This optional artifact also owns the application-process half of Android Studio's **Locate Device
+DSL** action. In a debuggable process it supplies the neutral Host source-inspection service and
+retains bounded source candidates for eligible Host and Page sessions. It does not observe scroll,
+global layout, draw, touch, frames, or recomposition and does not continuously publish a report.
+
+When the developer clicks the action, Android Studio sends one `DUMP`-permission-protected request
+with a 32-character nonce. The receiver samples current weakly held session Views once on the main
+thread, then lazily serializes and atomically writes one bounded response in the application's
+private cache. The IDE accepts only a response with the matching nonce, foreground package, and
+live process. The report contains JVM source identity and View eligibility only; it contains no
+source text, VNode tree, application state, or user data. Invalid requests, missing services,
+writer failures, and session disposal cannot fail application rendering.
+
+Keep this artifact in `debugImplementation`, test, or a dedicated tooling configuration. It is the
+artifact-presence gate required in addition to a debuggable process and an explicit IDE request.
+See [ADR-0009](../../architecture/decisions/0009-development-tooling-isolation.md) for the zero-pay
+runtime and performance contract.
+
 ## Application theme provider
 
 Implement `PreviewThemeProvider` and mark exactly one implementation in a previewed module with
@@ -93,6 +113,8 @@ in the demo and user-facing documentation.
 - Run `qaPreview` before merge. Record a changed baseline only after reviewing the rendered image
   and its difference report; an unexplained mismatch is a regression, not a baseline update.
 - Treat renderer or provider exceptions as preview failures; do not hide them with placeholder UI.
+- Device-locator changes must prove zero writes during idle scrolling, one response per valid
+  request, stale-nonce rejection, and release-classpath exclusion.
 
 ## Related documentation
 
@@ -109,3 +131,5 @@ The complete generated reference is available in the
 The `0.1.0-alpha03` line establishes the coherent native/DSL theme resolution, retained Compose
 bridge session, explicit root-access overload, and shared catalog/snapshot coverage model. Static
 preview protocol compatibility remains owned by preview-core.
+The running-device DSL locator is now request-driven and owned entirely by this optional artifact;
+the Android Host retains only its neutral nullable inspection port.
