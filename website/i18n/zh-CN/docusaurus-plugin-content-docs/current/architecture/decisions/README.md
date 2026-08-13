@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: 7bc6c9b3e132e7da46f7c2c6db7dbffa1c0c17b366ed5d87e9ef7d6c1c74d30b
+translation_source_hash: 6e3f5dad498b96d65991aa43a50800de15fa9d913a16c8e80fd242ce92fdfab9
 translation_status: current
 ---
 
@@ -19,6 +19,7 @@ translation_status: current
 - [ADR-0006：Root 作用域 Overlay Backend 选择](./0006-root-scoped-overlay-backend-selection.md)
 - [ADR-0007：Host 所有的 Android 资源环境](./0007-host-owned-android-resource-environment.md)
 - [ADR-0008：事务式 Effect 生命周期](./0008-transactional-effect-lifecycle.md)
+- [ADR-0009：开发工具隔离与按请求检查](./0009-development-tooling-isolation.md)
 
 ## 规则
 

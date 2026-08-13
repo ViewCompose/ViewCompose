@@ -1,6 +1,6 @@
 ---
 translation_source: tooling/performance.md
-translation_source_hash: 870ce335886a82d15334e747a8d0c357510debe99b52508d49373c9fa1b127d3
+translation_source_hash: 9903a2a87e9f3f069cc68be3aeae209edfa0fd918727aa082148556723755514
 translation_status: current
 ---
 
@@ -45,6 +45,8 @@ translation_status: current
 20. 复杂布局对比使用同一份 18 卡片仪表盘模型，分别运行 ViewCompose `ScrollableColumn` 与 Compose `Column.verticalScroll`；全部子树一次挂载，覆盖深层嵌套滚动、全卡片字段更新和条件详情子树变更。
 21. 两组对照均采集帧耗时与最大 heap/RSS；`compare_macrobenchmarks.py` 自动生成 Markdown/JSON 配对报告，并支持以 Compose 为同次运行控制组的归一化回归门禁。
 22. 高级阴影建立独立有界外/内栅格缓存，平移/缩放/旋转/alpha 重绘复用同一栅格；`ShadowPerformanceComparisonBenchmark` 覆盖 1000 项 Lazy 与复杂布局的滚动/变更，并用 Compose 作为同轮设备波动控制组。
+23. 应用进程内开发工具遵守“零持续工作”契约。可选的真机 DSL 定位器在滚动期间不写报告、也不
+    检查实时 View；一次带 Nonce 的显式 IDE 请求只产生一次有界快照与响应。
 
 ### 2.2 发布态基准入口
 
@@ -151,6 +153,22 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
    - 容器刷新语义稳定
 3. 基线更新（2026-03-08）：`SlotTable Lite` + 子树级重组已接入主链路，`qaQuick` 通过；`qaFull` 结果按当前设备门禁状态在 roadmap 持续登记。
 
+### 2.4 Debug Tooling 回归门禁
+
+Release Macrobenchmark 无法发现只存在于可调试构建中的开销。因此，任何在应用进程中执行的
+Tooling 都必须为它可能观察的每条热路径增加同设备 Debug 对照。设备型号、系统 Build、应用
+Commit、Workload、刷新率、电源模式与温度状态必须保持一致，并记录 Frame CPU P50/P95 与工具操作
+计数器。
+
+默认验收规则为组合条件：P50 只有在同时超过 5% 和 0.3 ms 时失败；P95 只有在同时超过 10% 和
+0.8 ms 时失败。空闲滚动期间工具报告写入次数必须严格为零。开发者主动触发的检查请求应单独测量，
+不能摊入空闲结果。
+
+2026-08-13 的定位器事故是参考失败：在 Samsung SM-G991B / Android 13、SurfaceFlinger 活动模式为
+60 Hz 时，持续滚动/布局报告进入 `viewcompose-host-android` 后，Demo 首页列表 Frame CPU P50 从约
+5--7 ms 上升到 11--12 ms；仅移除滚动发布即可恢复到约 7 ms。架构修正把实现移入可选
+`viewcompose-preview` 制品，并把发布改为按请求触发。
+
 ## 3. 性能门禁指标
 
 每次性能相关改动，至少关注下面 4 类成本：
@@ -184,6 +202,9 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 14. 节点仅发生 translation/scale/rotation/alpha 变化时必须复用已有阴影栅格；blur/spread/shape/尺寸变化才允许重建。
 15. 阴影后端默认策略的任何调整都必须提供同设备、同构建、同工作负载的多轮配对数据，并通过 Compose 归一化门禁。
 16. 大尺寸、逐帧 blur/spread 或 RenderEffect 路径必须先定义内存/离屏预算；预算落地前不得进入默认列表或转场路径。
+17. 应用进程 Tooling 禁止在滚动、全局布局、绘制、触摸、Animation Frame 或重组热路径安装持续
+    Listener。确需持续观察时，必须新增 ADR、显式静态门禁 Allowlist 与同设备 Debug Benchmark
+    证据。
 
 ## 5. 反模式清单
 

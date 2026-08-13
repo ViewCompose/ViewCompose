@@ -1,6 +1,6 @@
 ---
 translation_source: project/workflow.md
-translation_source_hash: fc75f1f66a87984c16bbff4d785d2b1cd5acc383772fed78631c04a4191f908f
+translation_source_hash: d323ad2d9dc8787491c2ee98cf26a786a03c547698c43df19af655378b5ee4e1
 translation_status: current
 ---
 
@@ -266,7 +266,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 5. `NodeBinder*.kt` 源码必须放在 `view/tree/binder/core/descriptor/`，禁止平铺回 `core/` 根目录。
 6. 若目录结构回退，必须在同一提交恢复目录收敛并补结构守卫测试。
 
-## 5.10 模块依赖边界约束
+## 5.11 模块依赖边界约束
 
 1. 每个运行时模块必须且只能登记为 Kernel、UI Foundation、Android Engine、Design System、
    Integration 或显式 Consumer Aggregate；Tooling 单独登记。
@@ -297,7 +297,27 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
     `build/maven-repository`，再消费生成 POM 时，才能使用新坐标。发布后必须在没有生成仓库的
     干净 Checkout 中再次验证安装路径。
 
-## 5.11 模块单包根约束
+## 5.12 开发工具隔离
+
+可在应用进程内执行的开发工具遵循
+[ADR-0009](../architecture/decisions/0009-development-tooling-isolation.md)：
+
+1. 具体 Preview、Inspector、源码导航与 IDE Transport 实现只能位于 Tooling 模块。Runtime 模块
+   可以暴露可空中立端口，但不能持有具体 Tooling 协议、Report Writer、Request Receiver 或 IDE
+   生命周期。
+2. 激活必须同时满足：可选 Tooling 制品存在、进程可调试、收到有效显式请求。禁止把
+   `debuggable` 解释为持续观察许可。
+3. 非活动 Tooling 不得在滚动、全局布局、绘制、触摸、Animation Frame 或重组安装 Listener；不得
+   执行 View Traversal、Stack Capture、序列化或文件 I/O；不得持有提前启动的 Worker。任何狭窄
+   例外都需要 ADR、Allowlist 与同设备 Benchmark 证据。
+4. 优先使用一个带 Nonce 的请求与一份响应 Snapshot，不维护持续刷新的报告。确定性测试必须验证
+   Nonce、进程、包名、大小上限、生命周期清理、陈旧响应拒绝与失败隔离。
+5. Runtime 变更运行 `verifyDevelopmentToolingIsolation`。观察热路径的 Tooling 还必须对比相同
+   Debug Build、设备、Workload、刷新率和温度状态；空闲滚动期间 Tooling 写入次数必须为零。
+6. PR 必须明确说明应用进程 Tooling 是否变化、Runtime 所有权为何仍中立、如何证明 Release
+   Classpath 排除，以及收集了哪些非活动路径证据。
+
+## 5.13 模块单包根约束
 
 涉及新增模块、包路径重构或文件迁移时，必须遵守：
 
@@ -306,7 +326,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 3. lifecycle/viewmodel 对外包名固定为 `com.viewcompose.lifecycle` 与 `com.viewcompose.viewmodel`，并且源码必须放在各自模块。
 4. `qaQuick` 中的 `verifyModulePackageRoots` 与 `verifyAndroidModuleNamespaces` 为硬门禁，任何违规不得豁免合并。
 
-## 5.12 Runtime 纯度与测试覆盖约束
+## 5.14 Runtime 纯度与测试覆盖约束
 
 涉及 `viewcompose-runtime` 的改动，必须遵守：
 
@@ -315,7 +335,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 3. `qaQuick` 中的 `verifyRuntimePurity` 为硬门禁，违规必须阻断合并。
 4. runtime 关键分支（policy/snapshot/observation/invalidation/composer）变更必须同步补单测，禁止只改实现不补回归。
 
-## 5.13 Host 会话与诊断边界约束
+## 5.15 Host 会话与诊断边界约束
 
 涉及 `RenderSession`、host 诊断回调或会话创建路径改动时，必须遵守：
 
@@ -324,7 +344,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 3. lazy item 子会话与 overlay surface 子会话必须通过会话契约创建，禁止直接 new 平台具体实现类。
 4. 相关重构必须补边界守卫测试，至少覆盖“禁止 renderer 类型泄漏到 host public API”与“provider 缺失回退 no-op”两条路径。
 
-## 5.14 Modifier 与容器策略边界
+## 5.16 Modifier 与容器策略边界
 
 涉及 `Modifier` 或容器策略（reuse/motion/focus follow）相关改动时，必须遵守：
 
@@ -332,7 +352,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 2. 容器策略必须进入容器 DSL 参数与 `NodeSpec`（`reusePolicy/motionPolicy/focusFollowKeyboard`），renderer 直接读取 spec 应用，不再走 modifier 提取链路。
 3. 若新增策略类型，必须同轮补齐 DSL->NodeSpec 映射测试与 renderer bind/patch 生效测试。
 
-## 5.15 开发预览约束
+## 5.17 开发预览约束
 
 涉及组件新增、组件行为调整或视觉语义调整时，必须同步维护开发预览资产：
 
@@ -345,7 +365,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 7. preview worker 和 IDE 插件只允许通过带 `protocolVersion/requestId` 的结构化数据协议通信。
 8. overlay 在 preview 场景只允许静态模拟，真实弹窗行为回归必须落在 instrumentation。
 
-## 5.16 动画与手势约束
+## 5.18 动画与手势约束
 
 涉及动画/手势能力新增或改造时，必须遵守：
 
@@ -364,7 +384,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 13. 手势策略算法（axis lock / transform slop / swipe settle）变更必须改在 `:viewcompose-gesture-core`，renderer 仅允许阈值采集与事件分发适配。
 14. `combinedClickable` 在 `enabled=true` 但无回调时必须保持 no-op，不得消费触摸流；语义变更必须补回归测试。
 
-## 5.17 ConstraintLayout 约束
+## 5.19 ConstraintLayout 约束
 
 涉及 `ConstraintLayout` 能力新增或改造时，必须遵守：
 
@@ -377,7 +397,7 @@ PR 必须列出同步更新的 KDoc/Javadoc、模块文档或跨模块文档。�
 7. chain `weights` 与 `referencedIds` 数量不一致时必须 fail-fast（DSL）并在 renderer 输出一次可定位 warning。
 8. 约束新增 `min/max/percent/constrained`、`baselineToTop/baselineToBottom`、`circle` 语义时，必须同轮补齐 DSL 发射断言与 renderer 应用断言。
 
-## 5.18 Graphics 分层与绘制语义约束
+## 5.20 Graphics 分层与绘制语义约束
 
 涉及 graphics 能力新增或改造时，必须遵守：
 
