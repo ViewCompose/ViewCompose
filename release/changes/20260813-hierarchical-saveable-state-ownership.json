@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "summary": "Isolate saveable state for delayed child compositions across recycling, reordering, nesting, overlays, and host recreation.",
+  "changes": [
+    { "artifact": "viewcompose-ui-foundation", "impact": "fix" }
+  ],
+  "ignored": []
+}

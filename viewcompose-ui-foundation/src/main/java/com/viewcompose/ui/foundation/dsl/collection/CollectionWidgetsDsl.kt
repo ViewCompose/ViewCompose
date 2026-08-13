@@ -77,7 +77,10 @@ fun UiTreeBuilder.LazyColumn(
     modifier: Modifier = Modifier,
     content: LazyListScope.() -> Unit,
 ) {
-    val collector = LazyItemCollector(LocalContext.snapshot())
+    val collector = LazyItemCollector(
+        localSnapshot = LocalContext.snapshot(),
+        saveableStateHolder = rememberSaveableStateHolder(),
+    )
     LazyListScope(
         collector = collector,
         stickyHeadersAllowed = true,
@@ -153,7 +156,10 @@ fun UiTreeBuilder.LazyRow(
     modifier: Modifier = Modifier,
     content: LazyListScope.() -> Unit,
 ) {
-    val collector = LazyItemCollector(LocalContext.snapshot())
+    val collector = LazyItemCollector(
+        localSnapshot = LocalContext.snapshot(),
+        saveableStateHolder = rememberSaveableStateHolder(),
+    )
     LazyListScope(
         collector = collector,
         stickyHeadersAllowed = false,
@@ -240,7 +246,10 @@ fun UiTreeBuilder.LazyVerticalGrid(
     content: LazyGridScope.() -> Unit,
 ) {
     require(spanCount > 0) { "spanCount must be greater than zero." }
-    val collector = LazyItemCollector(LocalContext.snapshot())
+    val collector = LazyItemCollector(
+        localSnapshot = LocalContext.snapshot(),
+        saveableStateHolder = rememberSaveableStateHolder(),
+    )
     LazyGridScope(collector).content()
     emit(
         type = NodeType.LazyVerticalGrid,
@@ -306,7 +315,12 @@ fun UiTreeBuilder.HorizontalPager(
 ) {
     val builtPages = HorizontalPagerScope().apply(pages).build()
     val localSnapshot = LocalContext.snapshot()
-    val resolvedPages = builtPages.map { page ->
+    val saveableStateHolder = rememberSaveableStateHolder()
+    val saveableStateKeys = resolveDelayedChildSaveableStateKeys(
+        builtPages.map(HorizontalPagerPage::key),
+    )
+    val resolvedPages = builtPages.mapIndexed { index, page ->
+        val saveableStateKey = saveableStateKeys[index]
         LazyListItem(
             key = page.key,
             contentToken = capturedLazyContentToken(
@@ -317,6 +331,8 @@ fun UiTreeBuilder.HorizontalPager(
                 WidgetLazyListItemSession(
                     container = container,
                     localSnapshot = localSnapshot,
+                    saveableStateHolder = saveableStateHolder,
+                    saveableStateKey = saveableStateKey,
                     content = page.content,
                 )
             },
@@ -327,6 +343,12 @@ fun UiTreeBuilder.HorizontalPager(
                 )
             },
         )
+    }
+    saveableStateHolder?.let { holder ->
+        val committedKeys = saveableStateKeys.toSet()
+        SideEffect {
+            holder.retainKeys(committedKeys)
+        }
     }
     emit(
         type = NodeType.HorizontalPager,
@@ -374,7 +396,12 @@ fun UiTreeBuilder.VerticalPager(
 ) {
     val builtPages = HorizontalPagerScope().apply(pages).build()
     val localSnapshot = LocalContext.snapshot()
-    val resolvedPages = builtPages.map { page ->
+    val saveableStateHolder = rememberSaveableStateHolder()
+    val saveableStateKeys = resolveDelayedChildSaveableStateKeys(
+        builtPages.map(HorizontalPagerPage::key),
+    )
+    val resolvedPages = builtPages.mapIndexed { index, page ->
+        val saveableStateKey = saveableStateKeys[index]
         LazyListItem(
             key = page.key,
             contentToken = capturedLazyContentToken(
@@ -385,6 +412,8 @@ fun UiTreeBuilder.VerticalPager(
                 WidgetLazyListItemSession(
                     container = container,
                     localSnapshot = localSnapshot,
+                    saveableStateHolder = saveableStateHolder,
+                    saveableStateKey = saveableStateKey,
                     content = page.content,
                 )
             },
@@ -395,6 +424,12 @@ fun UiTreeBuilder.VerticalPager(
                 )
             },
         )
+    }
+    saveableStateHolder?.let { holder ->
+        val committedKeys = saveableStateKeys.toSet()
+        SideEffect {
+            holder.retainKeys(committedKeys)
+        }
     }
     emit(
         type = NodeType.VerticalPager,
@@ -466,6 +501,10 @@ fun UiTreeBuilder.TabRow(
 ) {
     val builtTabs = TabRowScope().apply(tabs).build()
     val localSnapshot = LocalContext.snapshot()
+    val saveableStateHolder = rememberSaveableStateHolder()
+    val saveableStateKeys = resolveDelayedChildSaveableStateKeys(
+        builtTabs.map(TabRowTabEntry::key),
+    )
     val resolvedTabs = builtTabs.mapIndexed { index, entry ->
         val selected = index == selectedIndex
         TabRowTab(
@@ -479,6 +518,8 @@ fun UiTreeBuilder.TabRow(
                     WidgetLazyListItemSession(
                         container = container,
                         localSnapshot = localSnapshot,
+                        saveableStateHolder = saveableStateHolder,
+                        saveableStateKey = saveableStateKeys[index],
                         content = { entry.content(this, selected) },
                     )
                 },
@@ -490,6 +531,12 @@ fun UiTreeBuilder.TabRow(
                 },
             ),
         )
+    }
+    saveableStateHolder?.let { holder ->
+        val committedKeys = saveableStateKeys.toSet()
+        SideEffect {
+            holder.retainKeys(committedKeys)
+        }
     }
     emit(
         type = NodeType.TabRow,
@@ -525,3 +572,23 @@ internal data class TabRowTabEntry(
     val key: Any,
     val content: UiTreeBuilder.(selected: Boolean) -> Unit,
 )
+
+/**
+ * Keeps unique explicit identities across reorders and gives ambiguous or unkeyed children an
+ * exact position identity. The structured list remains host-saveable without hashing user keys.
+ */
+private fun resolveDelayedChildSaveableStateKeys(keys: List<Any?>): List<Any> {
+    val counts = keys.filterNotNull().groupingBy { it }.eachCount()
+    return keys.mapIndexed { index, key ->
+        if (key != null && counts[key] == 1) {
+            listOf(DELAYED_CHILD_KEY_MARKER, DELAYED_CHILD_EXPLICIT_KEY, key)
+        } else {
+            listOf(DELAYED_CHILD_KEY_MARKER, DELAYED_CHILD_POSITION_KEY, index)
+        }
+    }
+}
+
+private const val DELAYED_CHILD_KEY_MARKER =
+    "com.viewcompose.ui.foundation.dsl.collection.DelayedChildSaveableStateKey"
+private const val DELAYED_CHILD_EXPLICIT_KEY = 1
+private const val DELAYED_CHILD_POSITION_KEY = 2

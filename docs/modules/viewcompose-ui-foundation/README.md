@@ -174,6 +174,10 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   active on the callback thread. Debug render sessions warn when synchronous callbacks exceed 16 ms.
 - `rememberSaveable` registers providers only after composition commit. A failed or abandoned
   composition releases its restored claim so a later attempt can still restore the value.
+- Delayed child compositions do not share the host registry's flat provider-key namespace. Lazy,
+  Pager, tab, and overlay containers remember hierarchical child registries by logical key, retain
+  them across recycling, and restore them without moving state across keyed reorders. Concurrent
+  visual replicas are non-owning and cannot overwrite the logical child's persisted state.
 - `UiTheme` accepts platform-independent tokens. Android resource observation belongs to
   `viewcompose-host-android`; a named design system such as Material maps the resulting host
   revision into its own token refresh policy.
@@ -229,6 +233,14 @@ retired package alias. Do not persist automatic saveable keys, session identifie
 implementation names, callback instances, tooling metadata, or diagnostics shapes as external
 long-lived data. Custom renderers and hosts must be upgraded with contract changes even when an
 application's component source still compiles.
+
+Child-composition saveable ownership is a hard correction described by
+[ADR-0010](../../architecture/decisions/0010-hierarchical-saveable-state-ownership.md). Historical
+child values written through the defective flat registry namespace are not migrated because their
+logical owner cannot be recovered safely. Root-composition saved keys and the Android host Bundle
+format remain unchanged for explicit keys. Each delayed container holder occupies one automatic
+saveable slot in its parent structural scope, so callers must not treat generated automatic keys as
+a persistence compatibility surface.
 
 The effect-runtime hard cut requires at least one key for `DisposableEffect` and `LaunchedEffect`.
 Disposable setup now returns cleanup only through `DisposableEffectScope.onDispose`; migrate a

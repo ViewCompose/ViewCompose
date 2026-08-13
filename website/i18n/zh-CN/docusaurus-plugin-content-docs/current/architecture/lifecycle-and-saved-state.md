@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/lifecycle-and-saved-state.md
-translation_source_hash: 3c6fba53a79dd7136d5a2c0084c73f1ed8d37a4e5d2b9c6c9295f6608298120f
+translation_source_hash: 878903b802cf85a6ce2968d5bd79c0a0e0b6344e3c83c841fce70f4e17707286
 translation_status: current
 ---
 
@@ -14,8 +14,9 @@ translation_status: current
 
 1. 未提交的组合不能永久消费恢复值。
 2. 宿主保存发生在组合准备期间，也不能丢失已 claim 的值。
-3. 生命周期快速切换时，同一个 Flow 最多只有一个活跃 collector。
-4. 已销毁宿主不能创建新的渲染会话或 SavedState 绑定。
+3. 独立子组合不能共享一个扁平 Provider Key 命名空间。
+4. 生命周期快速切换时，同一个 Flow 最多只有一个活跃 collector。
+5. 已销毁宿主不能创建新的渲染会话或 SavedState 绑定。
 
 ## 2. 宿主生命周期
 
@@ -62,7 +63,32 @@ Activity/Fragment 便利 API。生命周期感知收集与 ViewModel 访问继�
 `rememberSaveable(inputs...)` 的 input 变化仍表示有意重置：旧 holder 只在提交阶段
 退出，新 holder 同步接管 provider，最终保存替换后的值。
 
-## 5. Android Bundle 边界
+## 5. 子组合所有权
+
+Host Registry 是根持久化边界，不是所有嵌套 `RenderSession` 的全局 Key 命名空间。创建延迟子组合
+的框架容器会在父组合中 Remember 一个 State Holder。Holder 按稳定 Lazy Item、Pager Page、Tab
+或 Overlay Surface 身份分别提供子 Registry。
+
+自动与显式 `rememberSaveable` Key 只在收到的子 Registry 内有效。嵌套容器会在该 Registry 内继续
+创建 Holder，因此所有权跟随组合树：
+
+```text
+host owner
+└── container holder
+    ├── logical item A registry
+    │   └── nested container holder
+    └── logical item B registry
+```
+
+回收会关闭 Item Registry Lease，并在 Holder 中保留其 Saved Map；相同逻辑 Key 再次 Attach 时
+恢复。Keyed Reorder 因而让逻辑状态跟随 Key，而不是跟随 View Holder 位置。Renderer 并发创建的
+Presentation 副本可以恢复 Owner 当前 Snapshot，但不会成为第二个持久化 Owner。
+
+Holder 本身通过父 Registry 的常规事务保存。失败父帧不能发布候选子所有权；失败子帧会保留此前
+的 Provider 与恢复值 Claim。硬切原因与兼容边界参见
+[ADR-0010](./decisions/0010-hierarchical-saveable-state-ownership.md)。
+
+## 6. Android Bundle 边界
 
 Android host 保存：
 
@@ -76,7 +102,7 @@ Android host 保存：
 
 瞬时系统会话不属于 SavedState：IME composition、撤销历史、进行中的手势和动画不会恢复。
 
-## 6. 验证
+## 7. 验证
 
 核心回归覆盖：
 
@@ -85,4 +111,6 @@ Android host 保存：
 3. in-flight claim 期间宿主保存
 4. 快速生命周期停止/重启的 collector 串行性
 5. destroyed owner
-6. 未知 Bundle 版本和单 entry 损坏隔离
+6. 使用相同自动与显式 Key 的兄弟和嵌套子组合
+7. Keyed 子项回收、重排、Host 重建与并发 Presentation 副本
+8. 未知 Bundle 版本和单 entry 损坏隔离

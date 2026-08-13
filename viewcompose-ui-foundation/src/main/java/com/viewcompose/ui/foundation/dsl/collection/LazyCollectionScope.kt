@@ -149,6 +149,7 @@ class LazyGridScope internal constructor(
  */
 internal class LazyItemCollector(
     private val localSnapshot: LocalSnapshot,
+    private val saveableStateHolder: SaveableStateHolder?,
 ) {
     private val keys = linkedSetOf<Any>()
     private val items = mutableListOf<LazyListItem>()
@@ -178,6 +179,8 @@ internal class LazyItemCollector(
                 WidgetLazyListItemSession(
                     container = container,
                     localSnapshot = localSnapshot,
+                    saveableStateHolder = saveableStateHolder,
+                    saveableStateKey = key,
                     content = content,
                 )
             },
@@ -190,5 +193,13 @@ internal class LazyItemCollector(
         )
     }
 
-    fun build(): List<LazyListItem> = items.toList()
+    fun build(): List<LazyListItem> {
+        saveableStateHolder?.let { holder ->
+            val committedKeys = keys.toSet()
+            SideEffect {
+                holder.retainKeys(committedKeys)
+            }
+        }
+        return items.toList()
+    }
 }

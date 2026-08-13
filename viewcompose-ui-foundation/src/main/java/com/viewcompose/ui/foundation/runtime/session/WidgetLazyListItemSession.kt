@@ -30,9 +30,12 @@ internal fun capturedLazyContentToken(
 internal class WidgetLazyListItemSession(
     container: RenderContainerHandle,
     localSnapshot: LocalSnapshot,
+    saveableStateHolder: SaveableStateHolder?,
+    saveableStateKey: Any,
     content: UiTreeBuilder.() -> Unit,
 ) : LazyListItemSession {
-    private var capturedLocals = localSnapshot
+    private val saveableStateLease = saveableStateHolder?.acquire(saveableStateKey)
+    private var capturedLocals = localSnapshot.withChildSaveableStateRegistry()
     private var renderContent = content
     private var diagnosticsListener = resolveDiagnosticsListener(localSnapshot)
     private val session = RenderSession(
@@ -53,14 +56,18 @@ internal class WidgetLazyListItemSession(
     }
 
     override fun dispose() {
-        session.dispose()
+        try {
+            session.dispose()
+        } finally {
+            saveableStateLease?.close()
+        }
     }
 
     fun updateContent(
         localSnapshot: LocalSnapshot,
         content: UiTreeBuilder.() -> Unit,
     ) {
-        capturedLocals = localSnapshot
+        capturedLocals = localSnapshot.withChildSaveableStateRegistry()
         renderContent = content
         // Keep the previously resolved listener if this snapshot does not carry it.
         // This avoids accidentally dropping diagnostics callbacks during partial recomposition paths.
@@ -72,5 +79,9 @@ internal class WidgetLazyListItemSession(
     ): ((RenderTreeResult) -> Unit)? {
         @Suppress("UNCHECKED_CAST")
         return snapshot.values[LocalRenderResultListener.holder] as? ((RenderTreeResult) -> Unit)
+    }
+
+    private fun LocalSnapshot.withChildSaveableStateRegistry(): LocalSnapshot {
+        return withSaveableStateRegistry(saveableStateLease?.registry)
     }
 }

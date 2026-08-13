@@ -49,6 +49,11 @@ Every delayed-session container must satisfy these constraints:
 12. Pager stable IDs are collision-free for unique keys, and native view types partition
     structurally incompatible `contentType`/kind pairs. Unkeyed cached pages retain position
     ownership; keyed moves resolve only through a unique key in both snapshots.
+13. Every independently composed item/page receives a child `SaveableStateRegistry` owned by a
+    parent-composition holder and its stable logical key. Recycling retains that registry's saved
+    map, reordering follows the key, and nested containers repeat the hierarchy.
+14. A renderer-created concurrent presentation replica may restore the logical owner's current
+    saveable snapshot but must not register a second persistence owner for the same logical key.
 
 ## 4. Required scenarios
 
@@ -64,6 +69,8 @@ Every container covers at least these eight cases:
 6. Empty-diff refresh: an attached holder still refreshes once for the committed submission.
 7. Failed parent frame: retained child update/render/effects do not run.
 8. Missing or duplicate keys: conservative reload avoids guessed holder identity.
+9. Saveable-state ownership: sibling local keys do not collide, keyed recycling/restoration does
+   not move state, and presentation replicas cannot overwrite the logical owner.
 
 ## 5. Current test mapping (2026-08)
 

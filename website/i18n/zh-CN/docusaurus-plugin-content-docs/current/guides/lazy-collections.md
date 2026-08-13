@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: 8cfca1986d5c5585db8a2612447cc72f5366897074339100e6edb582b902d682
+translation_source_hash: 2af23f61bd7f76ff273e1ce49d984e6f0e10bc288bfe36941fb20c554acd2663
 translation_status: current
 ---
 
@@ -96,6 +96,11 @@ sticky header 占满整行。均质数据便捷重载同样要求稳定 key，�
 
 pinned 副本不登记为第二个无障碍节点，普通列表 header 仍是语义源，避免 TalkBack 重复播报。
 
+每个逻辑 Item Key 同时持有一个子 Saveable State Registry，因此兄弟 Row 可以重复使用 Item 内的
+自动或显式 `rememberSaveable` Key。Holder Detach 或回收会保留逻辑 Item 的 Saved Map，重新
+Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥有持久化权的 Presentation
+副本：它可以从 Owner 当前 Snapshot 初始化，但不能覆盖 Header 的持久化状态。
+
 `contentPadding` 使用逻辑方向，并从集合捕获的布局方向解析 start/end。它会与物理
 `Modifier.padding` 及选定的系统栏或 IME Insets 边相加。Renderer 会在
 原生 View 复用与完整环境重绑期间保留这份合成 Padding，因此语言、方向、字体缩放、密度或资源
@@ -111,6 +116,8 @@ pinned 副本不登记为第二个无障碍节点，普通列表 header 仍是�
 6. holder、pinned header 或容器释放时必须销毁对应 item Session。
 7. 集合、Modifier 与 Insets 的 Padding 贡献由 Renderer 合成为唯一原生值，并在定向 Patch 与
    完整环境重绑期间保持稳定。
+8. Item Saveable State 按容器与稳定逻辑 Key 划分 Scope；重复 Provider 只在同一逻辑 Item Scope
+   内被拒绝。
 
 ## 6. 明确不包含的能力
 

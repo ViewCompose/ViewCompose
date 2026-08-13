@@ -151,9 +151,18 @@ fun UiTreeBuilder.Dialog(
     onDismissRequest: (() -> Unit)? = null,
     content: UiTreeBuilder.() -> Unit,
 ) {
+    val saveableStateHolder = rememberSaveableStateHolder()
     if (!visible) {
         return
     }
+    val saveableStateKey = overlaySaveableStateKey(
+        type = OverlayType.Dialog,
+        requestKey = requestKey,
+    )
+    retainOverlaySaveableStateKey(
+        holder = saveableStateHolder,
+        key = saveableStateKey,
+    )
     // Overlay content is captured during the current render session to avoid using an invalid builder later.
     submitOverlayRequest(
         OverlayRequest(
@@ -167,7 +176,11 @@ fun UiTreeBuilder.Dialog(
                 onDismissRequest = onDismissRequest,
             ),
             contentToken = DialogOverlayContent(
-                surface = captureOverlaySurfaceContent(content),
+                surface = captureOverlaySurfaceContent(
+                    content = content,
+                    saveableStateHolder = saveableStateHolder,
+                    saveableStateKey = saveableStateKey.takeIf { saveableStateHolder != null },
+                ),
             ),
         ),
     )
@@ -192,9 +205,18 @@ fun UiTreeBuilder.Popup(
     onDismissRequest: (() -> Unit)? = null,
     content: UiTreeBuilder.() -> Unit,
 ) {
+    val saveableStateHolder = rememberSaveableStateHolder()
     if (!visible) {
         return
     }
+    val saveableStateKey = overlaySaveableStateKey(
+        type = OverlayType.Popup,
+        requestKey = requestKey,
+    )
+    retainOverlaySaveableStateKey(
+        holder = saveableStateHolder,
+        key = saveableStateKey,
+    )
     // Popup uses requestKey for identity so the overlay host can update the same surface request.
     submitOverlayRequest(
         OverlayRequest(
@@ -212,7 +234,11 @@ fun UiTreeBuilder.Popup(
                 onDismissRequest = onDismissRequest,
             ),
             contentToken = PopupOverlayContent(
-                surface = captureOverlaySurfaceContent(content),
+                surface = captureOverlaySurfaceContent(
+                    content = content,
+                    saveableStateHolder = saveableStateHolder,
+                    saveableStateKey = saveableStateKey.takeIf { saveableStateHolder != null },
+                ),
             ),
         ),
     )
@@ -234,9 +260,18 @@ fun UiTreeBuilder.ModalBottomSheet(
     onDismissRequest: (() -> Unit)? = null,
     content: UiTreeBuilder.() -> Unit,
 ) {
+    val saveableStateHolder = rememberSaveableStateHolder()
     if (!visible) {
         return
     }
+    val saveableStateKey = overlaySaveableStateKey(
+        type = OverlayType.ModalBottomSheet,
+        requestKey = requestKey,
+    )
+    retainOverlaySaveableStateKey(
+        holder = saveableStateHolder,
+        key = saveableStateKey,
+    )
     submitOverlayRequest(
         OverlayRequest(
             key = requestKey,
@@ -250,8 +285,29 @@ fun UiTreeBuilder.ModalBottomSheet(
                 onDismissRequest = onDismissRequest,
             ),
             contentToken = ModalBottomSheetOverlayContent(
-                surface = captureOverlaySurfaceContent(content),
+                surface = captureOverlaySurfaceContent(
+                    content = content,
+                    saveableStateHolder = saveableStateHolder,
+                    saveableStateKey = saveableStateKey.takeIf { saveableStateHolder != null },
+                ),
             ),
         ),
     )
+}
+
+private fun overlaySaveableStateKey(
+    type: OverlayType,
+    requestKey: String,
+): String {
+    return "${type.name}:${requestKey.length}:$requestKey"
+}
+
+private fun retainOverlaySaveableStateKey(
+    holder: SaveableStateHolder?,
+    key: String,
+) {
+    holder ?: return
+    SideEffect {
+        holder.retainKeys(setOf(key))
+    }
 }

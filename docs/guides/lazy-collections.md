@@ -101,6 +101,12 @@ structured model.
 The pinned sticky copy is not registered as a second accessibility node. The ordinary list header
 remains the semantic source, avoiding duplicate TalkBack announcements.
 
+Each logical item key also owns a child saveable-state registry. Item-local automatic and explicit
+`rememberSaveable` keys can therefore repeat in sibling rows. Detaching or recycling a holder
+retains the logical item's saved map, and reattaching or reordering restores it by item key. A
+detached pinned-header copy is a non-owning presentation replica: it may start from the owner's
+current snapshot but cannot overwrite the header's persisted state.
+
 `contentPadding` is logical and resolves start/end from the collection's captured layout
 direction. It is added to physical `Modifier.padding` and the selected system-bar or IME inset
 edges. The renderer retains this composite padding across native
@@ -118,6 +124,8 @@ revision change cannot temporarily expose content under a system bar or erase th
 7. Item sessions are disposed when holders, pinned headers, or containers are released.
 8. Collection, modifier, and inset padding contributions have one renderer-owned native value and
    must survive both targeted patches and full environment rebinds.
+9. Item saveable state is scoped by the container and stable logical key; duplicate providers are
+   rejected only within one logical item scope.
 
 ## 6. Deliberate non-goals
 

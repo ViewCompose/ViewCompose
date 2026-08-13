@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: 6e3f5dad498b96d65991aa43a50800de15fa9d913a16c8e80fd242ce92fdfab9
+translation_source_hash: cb9f6b2f7c2d7c59745849f0e3709410524750d09ca0d3117ecc81ad70844a48
 translation_status: current
 ---
 
@@ -20,6 +20,7 @@ translation_status: current
 - [ADR-0007：Host 所有的 Android 资源环境](./0007-host-owned-android-resource-environment.md)
 - [ADR-0008：事务式 Effect 生命周期](./0008-transactional-effect-lifecycle.md)
 - [ADR-0009：开发工具隔离与按请求检查](./0009-development-tooling-isolation.md)
+- [ADR-0010：分层可保存状态所有权](./0010-hierarchical-saveable-state-ownership.md)
 
 ## 规则
 

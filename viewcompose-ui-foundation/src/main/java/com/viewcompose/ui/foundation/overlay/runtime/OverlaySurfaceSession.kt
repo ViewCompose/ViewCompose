@@ -9,10 +9,16 @@ import com.viewcompose.ui.node.VNode
 class OverlaySurfaceContent internal constructor(
     private val localSnapshot: LocalSnapshot,
     private val overlayHost: OverlayHost,
+    private val saveableStateHolder: SaveableStateHolder?,
+    private val saveableStateKey: Any?,
     private val content: UiTreeBuilder.() -> Unit,
 ) {
-    internal fun renderInto(builder: UiTreeBuilder) {
-        LocalContext.withSnapshot(localSnapshot) {
+    internal fun renderInto(
+        builder: UiTreeBuilder,
+        saveableStateRegistry: SaveableStateRegistry?,
+    ) {
+        val resolvedSnapshot = localSnapshot.withSaveableStateRegistry(saveableStateRegistry)
+        LocalContext.withSnapshot(resolvedSnapshot) {
             with(builder) {
                 content()
             }
@@ -28,6 +34,16 @@ class OverlaySurfaceContent internal constructor(
     }
 
     internal fun overlayHost(): OverlayHost = overlayHost
+
+    internal fun acquireSaveableState(): SaveableStateRegistryLease? {
+        val holder = saveableStateHolder ?: return null
+        return holder.acquire(requireNotNull(saveableStateKey))
+    }
+
+    internal fun hasSameSaveableStateScope(other: OverlaySurfaceContent): Boolean {
+        return saveableStateHolder === other.saveableStateHolder &&
+            saveableStateKey == other.saveableStateKey
+    }
 }
 
 /**
@@ -38,11 +54,15 @@ class OverlaySurfaceSession internal constructor(
     initialContent: OverlaySurfaceContent,
 ) {
     private var currentContent = initialContent
+    private val saveableStateLease = initialContent.acquireSaveableState()
     private val overlayHostDelegate = MutableOverlayHost(initialContent.overlayHost())
     private val renderSession = RenderSession(
         container = container,
         content = {
-            currentContent.renderInto(this)
+            currentContent.renderInto(
+                builder = this,
+                saveableStateRegistry = saveableStateLease?.registry,
+            )
         },
         overlayHost = overlayHostDelegate,
     )
@@ -55,6 +75,9 @@ class OverlaySurfaceSession internal constructor(
      * Updates overlay content and renders synchronously to avoid stale locals or stale overlay host.
      */
     fun update(content: OverlaySurfaceContent) {
+        check(currentContent.hasSameSaveableStateScope(content)) {
+            "An overlay surface cannot change saveable-state ownership while its session is active."
+        }
         currentContent = content
         overlayHostDelegate.delegate = content.overlayHost()
         renderImmediately()
@@ -64,7 +87,11 @@ class OverlaySurfaceSession internal constructor(
      * Disposes the overlay surface session.
      */
     fun dispose() {
-        renderSession.dispose()
+        try {
+            renderSession.dispose()
+        } finally {
+            saveableStateLease?.close()
+        }
     }
 
     private fun renderImmediately() {
@@ -77,11 +104,18 @@ class OverlaySurfaceSession internal constructor(
  * Captures current locals and overlay host to create overlay content that can render later.
  */
 internal fun captureOverlaySurfaceContent(
+    saveableStateHolder: SaveableStateHolder? = null,
+    saveableStateKey: Any? = null,
     content: UiTreeBuilder.() -> Unit,
 ): OverlaySurfaceContent {
+    require((saveableStateHolder == null) == (saveableStateKey == null)) {
+        "Overlay saveable-state holder and key must be supplied together."
+    }
     return OverlaySurfaceContent(
         localSnapshot = LocalContext.snapshot(),
         overlayHost = OverlayHostContext.current,
+        saveableStateHolder = saveableStateHolder,
+        saveableStateKey = saveableStateKey,
         content = content,
     )
 }

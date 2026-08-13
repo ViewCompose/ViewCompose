@@ -1,7 +1,46 @@
 package com.viewcompose.ui.foundation.samples
 
+import com.viewcompose.graphics.core.Brush
+import com.viewcompose.runtime.mutableStateOf
+import com.viewcompose.ui.foundation.BasicButton
+import com.viewcompose.ui.foundation.BasicButtonStyle
+import com.viewcompose.ui.foundation.BasicSurface
+import com.viewcompose.ui.foundation.BasicSurfaceStyle
+import com.viewcompose.ui.foundation.Button
+import com.viewcompose.ui.foundation.Checkbox
+import com.viewcompose.ui.foundation.CompositionEffectContext
+import com.viewcompose.ui.foundation.DisposableEffect
+import com.viewcompose.ui.foundation.Icon
+import com.viewcompose.ui.foundation.IconButton
+import com.viewcompose.ui.foundation.Image
+import com.viewcompose.ui.foundation.InputControlDefaults
+import com.viewcompose.ui.foundation.LaunchedEffect
+import com.viewcompose.ui.foundation.LazyColumn
+import com.viewcompose.ui.foundation.PopupAlignment
+import com.viewcompose.ui.foundation.PopupBounds
+import com.viewcompose.ui.foundation.PopupOverflowPolicy
+import com.viewcompose.ui.foundation.PopupPositioner
+import com.viewcompose.ui.foundation.PopupSize
+import com.viewcompose.ui.foundation.ProvideImageLoader
+import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
+import com.viewcompose.ui.foundation.SideEffect
+import com.viewcompose.ui.foundation.Slider
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.Theme
+import com.viewcompose.ui.foundation.UiStateColor
+import com.viewcompose.ui.foundation.UiSwitchSizing
+import com.viewcompose.ui.foundation.UiTheme
+import com.viewcompose.ui.foundation.UiThemeDefaults
+import com.viewcompose.ui.foundation.UiTreeBuilder
+import com.viewcompose.ui.foundation.buildVNodeTree
+import com.viewcompose.ui.foundation.createSaveableStateRegistry
+import com.viewcompose.ui.foundation.produceState
+import com.viewcompose.ui.foundation.rememberCoroutineScope
+import com.viewcompose.ui.foundation.rememberSaveable
+import com.viewcompose.ui.foundation.rememberUpdatedState
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.layout.BoxAlignment
+import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.UiImageDecodeSize
@@ -13,44 +52,9 @@ import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
-import com.viewcompose.graphics.core.Brush
 import com.viewcompose.ui.shape.UiShape
-import com.viewcompose.ui.modifier.MinHeightModifierElement
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
-import com.viewcompose.ui.foundation.Button
-import com.viewcompose.ui.foundation.BasicButton
-import com.viewcompose.ui.foundation.BasicButtonStyle
-import com.viewcompose.ui.foundation.BasicSurface
-import com.viewcompose.ui.foundation.BasicSurfaceStyle
-import com.viewcompose.ui.foundation.Checkbox
-import com.viewcompose.ui.foundation.CompositionEffectContext
-import com.viewcompose.ui.foundation.DisposableEffect
-import com.viewcompose.ui.foundation.Icon
-import com.viewcompose.ui.foundation.IconButton
-import com.viewcompose.ui.foundation.Image
-import com.viewcompose.ui.foundation.InputControlDefaults
-import com.viewcompose.ui.foundation.LaunchedEffect
-import com.viewcompose.ui.foundation.PopupAlignment
-import com.viewcompose.ui.foundation.PopupBounds
-import com.viewcompose.ui.foundation.PopupOverflowPolicy
-import com.viewcompose.ui.foundation.PopupPositioner
-import com.viewcompose.ui.foundation.PopupSize
-import com.viewcompose.ui.foundation.ProvideImageLoader
-import com.viewcompose.ui.foundation.Slider
-import com.viewcompose.ui.foundation.SideEffect
-import com.viewcompose.ui.foundation.Theme
-import com.viewcompose.ui.foundation.Text
-import com.viewcompose.ui.foundation.UiStateColor
-import com.viewcompose.ui.foundation.UiSwitchSizing
-import com.viewcompose.ui.foundation.UiTheme
-import com.viewcompose.ui.foundation.UiThemeDefaults
-import com.viewcompose.ui.foundation.UiTreeBuilder
-import com.viewcompose.ui.foundation.buildVNodeTree
-import com.viewcompose.ui.foundation.createSaveableStateRegistry
-import com.viewcompose.ui.foundation.produceState
-import com.viewcompose.ui.foundation.rememberCoroutineScope
-import com.viewcompose.ui.foundation.rememberUpdatedState
 import kotlinx.coroutines.CoroutineScope
 
 fun emittedContentClosureSample() {
@@ -270,6 +274,25 @@ fun saveableStateRegistrySample() {
     counter = 5
     check(registry.performSave()["counter"] == 5)
     entry.unregister()
+}
+
+fun scopedRememberSaveableSample() {
+    val registry = createSaveableStateRegistry()
+    buildVNodeTree {
+        ProvideSaveableStateRegistry(registry) {
+            LazyColumn {
+                items(
+                    items = listOf("inbox", "archive"),
+                    key = { mailbox -> mailbox },
+                ) { mailbox ->
+                    val expanded = rememberSaveable(key = "expanded") {
+                        mutableStateOf(false)
+                    }
+                    Text("$mailbox expanded=${expanded.value}")
+                }
+            }
+        }
+    }
 }
 
 fun imageLoadingSample() {

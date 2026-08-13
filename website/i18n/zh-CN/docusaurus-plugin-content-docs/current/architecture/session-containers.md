@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 6a4991be9b38eed1416b502cd37b96d361b724f5b26e9f830f5b0a8c9a3f6e80
+translation_source_hash: f77d939dbc3f8ecbf07b0dc2f7c7613c9b66c5cd4b1049b52bb7c5589548dc61
 translation_status: current
 ---
 
@@ -50,6 +50,11 @@ translation_status: current
     attach 时渲染；重复 key 存在歧义时，绝不能通过 first-match 查询猜测 holder 归属
 12. Pager 对唯一 key 使用无碰撞稳定 ID，并按 `contentType`/kind 组合划分结构不兼容的原生
     View Type。无 key 缓存页保留位置归属；带 key 的移动只有在前后快照中 key 均唯一时才解析
+13. 每个独立组合的 Item/Page 都必须接收由父组合 Holder 和稳定逻辑 Key 持有的子
+    `SaveableStateRegistry`。回收会保留该 Registry 的 Saved Map，重排跟随 Key，嵌套容器递归
+    应用同一层级
+14. Renderer 并发创建的 Presentation 副本可以恢复逻辑 Owner 当前的 Saveable Snapshot，但不得
+    为相同逻辑 Key 注册第二个持久化 Owner
 
 ## 4. 必测场景
 
@@ -63,6 +68,8 @@ translation_status: current
 6. 空 diff 刷新：已 attach holder 对每个已提交修订只刷新一次
 7. 父帧失败：保留子项的 update/render/effect 均不运行
 8. key 缺失或重复：保守 reload，不猜测 holder 身份
+9. 可保存状态所有权：兄弟项 Local Key 不冲突，Keyed 回收恢复不串状态，Presentation 副本不能
+   覆盖逻辑 Owner
 
 ## 5. 当前测试映射（2026-08）
 
