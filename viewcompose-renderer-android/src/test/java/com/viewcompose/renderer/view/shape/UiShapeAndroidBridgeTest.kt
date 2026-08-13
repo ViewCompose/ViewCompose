@@ -8,6 +8,10 @@ package com.viewcompose.renderer.view.shape
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Outline
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
 import android.view.View
 import com.viewcompose.graphics.core.Brush
@@ -77,6 +81,82 @@ class UiShapeDrawableTest {
         val cornerAlpha = Color.alpha(bitmap.getPixel(5, 5))
         assertTrue("Expected circular corner coverage, alpha=$cornerAlpha", cornerAlpha <= 64)
         assertEquals(255, Color.alpha(bitmap.getPixel(40, 1)))
+    }
+
+    @Test
+    fun `uniform rounded shape uses native round rect draw and outline`() {
+        val drawable = UiShapeDrawable(
+            shape = UiShape.rounded(12.dp),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            density = UiDensity.Default,
+        ).apply {
+            setBounds(0, 0, 80, 40)
+            setFillColor(Color.WHITE)
+        }
+        val canvas = RecordingCanvas()
+
+        drawable.draw(canvas)
+        val outline = Outline()
+        drawable.getOutline(outline)
+
+        assertEquals(1, canvas.roundRects.size)
+        assertEquals(0, canvas.pathDrawCount)
+        assertEquals(RectF(0f, 0f, 80f, 40f), canvas.roundRects.single().frame)
+        assertEquals(12f, canvas.roundRects.single().radius, 0.001f)
+        assertEquals(12f, outline.radius, 0.001f)
+        assertEquals(Rect(0, 0, 80, 40), Rect().also { assertTrue(outline.getRect(it)) })
+    }
+
+    @Test
+    fun `non uniform and continuous shapes keep the generic path`() {
+        val nonUniform = UiShapeDrawable(
+            shape = shape,
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            density = UiDensity.Default,
+        ).apply {
+            setBounds(0, 0, 80, 40)
+            setFillColor(Color.WHITE)
+        }
+        val continuous = UiShapeDrawable(
+            shape = UiShape.continuous(12.dp),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            density = UiDensity.Default,
+        ).apply {
+            setBounds(0, 0, 80, 40)
+            setFillColor(Color.WHITE)
+        }
+        val canvas = RecordingCanvas()
+
+        nonUniform.draw(canvas)
+        continuous.draw(canvas)
+
+        assertEquals(0, canvas.roundRects.size)
+        assertEquals(2, canvas.pathDrawCount)
+    }
+
+    @Test
+    fun `uniform rounded stroke uses inset native round rect geometry`() {
+        val drawable = UiShapeDrawable(
+            shape = UiShape.roundedRelative(0.5f),
+            layoutDirection = View.LAYOUT_DIRECTION_LTR,
+            density = UiDensity.Default,
+        ).apply {
+            setBounds(0, 0, 80, 40)
+            setFillColor(Color.WHITE)
+            setStroke(width = 4f, color = Color.BLACK)
+        }
+        val canvas = RecordingCanvas()
+
+        drawable.draw(canvas)
+
+        assertEquals(2, canvas.roundRects.size)
+        assertEquals(0, canvas.pathDrawCount)
+        assertEquals(RectF(0f, 0f, 80f, 40f), canvas.roundRects[0].frame)
+        assertEquals(20f, canvas.roundRects[0].radius, 0.001f)
+        assertEquals(Paint.Style.FILL, canvas.roundRects[0].style)
+        assertEquals(RectF(2f, 2f, 78f, 38f), canvas.roundRects[1].frame)
+        assertEquals(18f, canvas.roundRects[1].radius, 0.001f)
+        assertEquals(Paint.Style.STROKE, canvas.roundRects[1].style)
     }
 
     @Test
@@ -185,4 +265,24 @@ class UiShapeDrawableTest {
             drawable.draw(Canvas(bitmap))
         }
     }
+
+    private class RecordingCanvas : Canvas() {
+        val roundRects = mutableListOf<RoundRectDraw>()
+        var pathDrawCount: Int = 0
+
+        override fun drawRoundRect(rect: RectF, rx: Float, ry: Float, paint: Paint) {
+            assertEquals(rx, ry, 0.001f)
+            roundRects += RoundRectDraw(RectF(rect), rx, paint.style)
+        }
+
+        override fun drawPath(path: Path, paint: Paint) {
+            pathDrawCount += 1
+        }
+    }
+
+    private data class RoundRectDraw(
+        val frame: RectF,
+        val radius: Float,
+        val style: Paint.Style,
+    )
 }

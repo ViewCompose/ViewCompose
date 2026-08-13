@@ -35,6 +35,9 @@ dependencies {
 - `SurfaceNodeProps` uses one cached `UiShapeDrawable` geometry for solid or gradient fill, border,
   ripple mask, outline, and optional clipping. Continuous corners use a convex cubic path; stable
   drawing performs no per-frame Path, shader, drawable, or collection allocation.
+- Uniform rounded rectangles use Android's native round-rectangle draw and outline operations.
+  Non-uniform rounded, continuous, and cut corners retain the cached generic path, so this common
+  scrolling fast path does not narrow shape, gradient, border, ripple-mask, or clipping behavior.
 - Engine-owned rounded shapes use circular arcs. Shape borders are centered on a path inset by half
   the stroke width, keeping the complete outline inside its logical drawable bounds even when a
   component centers a shorter visible surface inside a larger target.

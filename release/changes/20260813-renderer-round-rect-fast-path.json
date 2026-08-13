@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "summary": "Restore common rounded-surface scrolling performance with native Android round-rectangle drawing while preserving general shape rendering.",
+  "changes": [
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" }
+  ],
+  "ignored": []
+}
