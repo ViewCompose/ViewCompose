@@ -134,10 +134,13 @@ Because the current line is alpha, the documentation site intentionally does not
   after the parent composition commits, the renderer installs the exact next closure and renders
   each attached session once even when the token is equal. Parent rollback, delayed duplicate
   RecyclerView payloads, and callback-object reuse cannot create an extra child render.
-- Proactive lazy and pager refresh is limited to attached holders. Detached cached holders stage
-  no child composition or effects and receive the latest committed submission when reattached.
-  Missing or duplicate keys use the conservative reload path; the renderer never resolves an
-  ambiguous holder through first-match key lookup.
+- A detached lazy holder that has never activated may prepare its child composition and native
+  View tree under RecyclerView prefetch, but it does not commit remember lifecycle, effects,
+  native commit work, overlays, or diagnostics. First attachment activates a valid prepared frame
+  without rebuilding it; an observed state change causes a current-state render instead. An active
+  detached holder stages a newer submission and renders it on reattach. Missing or duplicate keys
+  use the conservative reload path; the renderer never resolves an ambiguous holder through
+  first-match key lookup.
 - The lazy adapter builds one unique-key position index per accepted submission. Attached and
   reattached holders therefore resolve stable keys without scanning the item list, while a holder
   that already committed the current revision skips redundant attach work.
@@ -205,6 +208,9 @@ retain the last delivered inset snapshot until Android dispatches a newer one.
   sessions.
 - `collectDiagnostics = false` omits structure, patch, warning, and detailed binding snapshots; use
   it on performance-sensitive paths that do not consume diagnostics.
+- Lazy prefetch work is deadline-controlled by RecyclerView. It can shift composition and View
+  construction ahead of an attach frame but cannot guarantee every item is prepared; coherent
+  static fixtures should not be split into expensive independent sessions without recycling value.
 - `LayoutPassTracker` is process-local and opt-in. It adds monotonic clock reads and synchronized
   aggregation to instrumented passes, so use it for bounded diagnostics rather than continuous
   production telemetry.

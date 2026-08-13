@@ -194,6 +194,27 @@ class DemoInteractionBenchmark {
     }
 
     @Test
+    fun diagnosticsThemeLongFlingToBottomAndBack() = benchmarkRule.measureRepeated(
+        packageName = TARGET_PACKAGE,
+        metrics = listOf(FrameTimingMetric()),
+        compilationMode = CompilationMode.Partial(),
+        iterations = DEFAULT_ITERATIONS,
+        startupMode = StartupMode.WARM,
+        setupBlock = {
+            startDiagnosticsThemeAndWait()
+        },
+    ) {
+        repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
+            flingPageUp()
+        }
+        assertVisibleText("Expected")
+        repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
+            flingPageDown()
+        }
+        assertVisibleText("Chapter Pages")
+    }
+
+    @Test
     fun interopBenchmarkAnchor() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
@@ -282,3 +303,5 @@ class DemoInteractionBenchmark {
         )
     }
 }
+
+private const val DIAGNOSTICS_THEME_FLING_COUNT = 8

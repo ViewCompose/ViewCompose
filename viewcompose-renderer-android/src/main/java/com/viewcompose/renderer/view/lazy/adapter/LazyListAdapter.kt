@@ -548,7 +548,7 @@ internal class LazyListViewHolder(
                 submissionRevision = submissionRevision,
             )
         } else {
-            controller.stage(
+            controller.prepare(
                 item = item,
                 payload = payload,
                 submissionRevision = submissionRevision,

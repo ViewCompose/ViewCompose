@@ -49,6 +49,9 @@ class RenderSession(
     private var requestRender: (() -> Unit)? = null
     private val nextFrameId = AtomicLong(0)
     @Volatile
+    private var awaitingActivation: Boolean = false
+    private var preparedFrame: PreparedRenderFrame? = null
+    @Volatile
     private var committedFrameId: Long? = null
 
     /** Most recently reported failure, including asynchronous and disposal failures. */
@@ -77,7 +80,11 @@ class RenderSession(
     )
     private val composer = ComposerLite(
         warningLogger = { message -> platform.diagnostics.warning(debugTag, message) },
-        onInvalidated = { requestRender?.invoke() },
+        onInvalidated = {
+            if (!awaitingActivation) {
+                requestRender?.invoke()
+            }
+        },
         localSnapshotInspector = LocalContext::describeSnapshot,
         sourceCallSiteCollector = {
             UiNodeTooling.captureCallSites().map { source ->
@@ -113,6 +120,34 @@ class RenderSession(
         runtime.render()
     }
 
+    /** Builds an initial native tree while retaining the composition commit boundary. */
+    internal fun prepareForActivation() {
+        if (disposed || committedFrameId != null || preparedFrame != null) return
+        awaitingActivation = true
+        preparedFrame = prepareFrame()
+        if (preparedFrame == null) {
+            awaitingActivation = false
+        }
+    }
+
+    /** Commits a valid prepared tree, or rebuilds when observed state changed before attachment. */
+    internal fun activatePrepared() {
+        if (disposed) return
+        val pending = preparedFrame
+        preparedFrame = null
+        awaitingActivation = false
+        if (pending == null) {
+            runtime.render()
+            return
+        }
+        if (composer.hasPendingInvalidations()) {
+            abortPreparedFrame(pending)
+            runtime.render()
+            return
+        }
+        commitFrame(pending)
+    }
+
     /**
      * Enables or suspends frame-driven rendering for a retained surface.
      *
@@ -143,6 +178,17 @@ class RenderSession(
      */
     private fun renderNow() {
         if (disposed) return
+        preparedFrame?.let { pending ->
+            preparedFrame = null
+            awaitingActivation = false
+            abortPreparedFrame(pending)
+        }
+        prepareFrame()?.let(::commitFrame)
+    }
+
+    /** Prepares composition and the native tree without crossing the commit boundary. */
+    private fun prepareFrame(): PreparedRenderFrame? {
+        if (disposed) return null
         val frameId = nextFrameId.incrementAndGet()
         val frameFailures = mutableListOf<RenderFailure>()
         var failurePhase = RenderFailurePhase.CompositionPrepare
@@ -216,11 +262,29 @@ class RenderSession(
                 status = RenderFrameStatus.RolledBack,
                 failures = frameFailures.toList(),
             )
-            return
+            return null
         }
 
-        // Once the renderer has produced the mounted tree, later failures report FrameCommitted and do not roll back the native tree.
         mountedNodes = frame.mountedNodes
+        return PreparedRenderFrame(
+            frameId = frameId,
+            frameFailures = frameFailures,
+            composition = checkNotNull(preparedComposition),
+            tree = tree,
+            sourceCandidates = capturedSourceCandidates,
+            frame = frame,
+        )
+    }
+
+    /** Crosses the single composition/native/effect commit boundary for a prepared frame. */
+    private fun commitFrame(prepared: PreparedRenderFrame) {
+        val frameId = prepared.frameId
+        val frameFailures = prepared.frameFailures
+        val composition = prepared.composition
+        val tree = prepared.tree
+        val frame = prepared.frame
+
+        // Once the renderer has produced the mounted tree, later failures report FrameCommitted and do not roll back the native tree.
         frame.commitFailures.forEach { failure ->
             reportFailure(
                 frameId = frameId,
@@ -233,16 +297,16 @@ class RenderSession(
             )
         }
         committedFrameId = frameId
-        if (sourceRegistration == null && capturedSourceCandidates.isNotEmpty()) {
+        if (sourceRegistration == null && prepared.sourceCandidates.isNotEmpty()) {
             runSourceToolingOperation("register source session") {
                 sourceRegistration = sourceTooling?.register(
                     container = container,
-                    sourceCandidates = capturedSourceCandidates,
+                    sourceCandidates = prepared.sourceCandidates,
                 )
             }
         }
         try {
-            checkNotNull(preparedComposition).commit()
+            composition.commit()
         } catch (error: Exception) {
             reportFailure(
                 frameId = frameId,
@@ -308,7 +372,7 @@ class RenderSession(
             ) {
                 onRenderResult?.invoke(
                     result.copy(
-                        composition = checkNotNull(preparedComposition).diagnostics,
+                        composition = composition.diagnostics,
                     ),
                 )
             }
@@ -320,6 +384,20 @@ class RenderSession(
         )
     }
 
+    /** Aborts a speculative composition while retaining its native tree as the next diff input. */
+    private fun abortPreparedFrame(prepared: PreparedRenderFrame) {
+        try {
+            prepared.composition.abort()
+        } catch (error: Exception) {
+            reportFailure(
+                frameId = prepared.frameId,
+                phase = RenderFailurePhase.CompositionPrepare,
+                recovery = RenderFailureRecovery.PreviousFrameRestored,
+                error = error,
+            )
+        }
+    }
+
     /**
      * Disposes the session synchronously, attempting every cleanup step and reporting failures independently.
      */
@@ -327,6 +405,8 @@ class RenderSession(
         if (disposed) return
         disposed = true
         requestRender = null
+        preparedFrame = null
+        awaitingActivation = false
         disposeOperation {
             compositionCoroutineScope.cancel()
         }
@@ -495,4 +575,13 @@ class RenderSession(
         const val SlowSynchronousEffectWarningNanos: Long = 16_000_000L
         val nextSessionId = AtomicLong(0)
     }
+
+    private data class PreparedRenderFrame(
+        val frameId: Long,
+        val frameFailures: MutableList<RenderFailure>,
+        val composition: ComposerLite.PreparedComposition<List<com.viewcompose.ui.node.VNode>>,
+        val tree: List<com.viewcompose.ui.node.VNode>,
+        val sourceCandidates: List<List<com.viewcompose.ui.tooling.UiSourceCallSite>>,
+        val frame: CoreRenderFrame,
+    )
 }

@@ -60,6 +60,170 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `prepared frame defers all commit work until activation`() {
+        val failures = mutableListOf<RenderFailure>()
+        val events = mutableListOf<String>()
+        var nativeRenderCount = 0
+        val overlayHost = object : OverlayHost {
+            override fun commit(
+                sessionId: OverlaySessionId,
+                requests: List<OverlayRequest>,
+            ) {
+                events += "overlay"
+            }
+
+            override fun clear(sessionId: OverlaySessionId) = Unit
+        }
+        engine.renderBlock = { previous, _ ->
+            nativeRenderCount += 1
+            CoreRenderFrame(
+                mountedNodes = previous,
+                commitEffects = listOf(
+                    CoreRenderCommitEffect(
+                        operation = RenderFailureOperation.AndroidViewCommit,
+                        nodeKey = "native",
+                        commit = { events += "native" },
+                    ),
+                ),
+            )
+        }
+        session = createSession(
+            failures = failures,
+            overlayHost = overlayHost,
+            content = {
+                DisposableEffect("prepared") {
+                    events += "remember"
+                    onDispose { events += "dispose" }
+                }
+                SideEffect { events += "side" }
+            },
+        )
+
+        session.prepareForActivation()
+
+        assertEquals(1, nativeRenderCount)
+        assertTrue(events.isEmpty())
+        assertEquals(null, session.lastFrameReport)
+
+        session.activatePrepared()
+
+        assertEquals(1, nativeRenderCount)
+        assertEquals(listOf("remember", "side", "native", "overlay"), events)
+        assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
+        assertTrue(failures.isEmpty())
+    }
+
+    @Test
+    fun `prepared frame defers saveable provider registration until activation`() {
+        val failures = mutableListOf<RenderFailure>()
+        val registry = createSaveableStateRegistry()
+        session = createSession(failures = failures) {
+            ProvideSaveableStateRegistry(registry) {
+                val preparedValue: String = rememberSaveable(
+                    key = "prepared-field",
+                    saver = Saver(
+                        save = { value -> value },
+                        restore = { value -> value },
+                    ),
+                ) {
+                    "prepared-value"
+                }
+                check(preparedValue.isNotEmpty())
+            }
+        }
+
+        session.prepareForActivation()
+        val competingEntry = registry.registerProvider("user:prepared-field") {
+            "competing-value"
+        }
+        competingEntry.unregister()
+
+        session.activatePrepared()
+
+        assertEquals("prepared-value", registry.performSave()["user:prepared-field"])
+        assertTrue(failures.isEmpty())
+    }
+
+    @Test
+    fun `state invalidation before activation discards stale prepared effects`() {
+        val failures = mutableListOf<RenderFailure>()
+        val events = mutableListOf<String>()
+        val value = mutableStateOf("first")
+        var nativeRenderCount = 0
+        engine.renderBlock = { previous, _ ->
+            nativeRenderCount += 1
+            CoreRenderFrame(
+                mountedNodes = previous,
+                commitEffects = listOf(
+                    CoreRenderCommitEffect(
+                        operation = RenderFailureOperation.AndroidViewCommit,
+                        nodeKey = "native",
+                        commit = { events += "native:${value.value}" },
+                    ),
+                ),
+            )
+        }
+        session = createSession(
+            failures = failures,
+            content = {
+                val current = value.value
+                DisposableEffect(current) {
+                    events += "remember:$current"
+                    onDispose { events += "dispose:$current" }
+                }
+                SideEffect { events += "side:$current" }
+            },
+        )
+
+        session.prepareForActivation()
+        value.value = "second"
+        session.activatePrepared()
+
+        assertEquals(2, nativeRenderCount)
+        assertEquals(
+            listOf("remember:second", "side:second", "native:second"),
+            events,
+        )
+        assertTrue(events.none { event -> "first" in event })
+        assertTrue(failures.isEmpty())
+    }
+
+    @Test
+    fun `disposing prepared frame never activates candidate work`() {
+        val failures = mutableListOf<RenderFailure>()
+        val events = mutableListOf<String>()
+        engine.renderBlock = { previous, _ ->
+            CoreRenderFrame(
+                mountedNodes = previous,
+                commitEffects = listOf(
+                    CoreRenderCommitEffect(
+                        operation = RenderFailureOperation.AndroidViewCommit,
+                        nodeKey = "native",
+                        commit = { events += "native" },
+                    ),
+                ),
+            )
+        }
+        session = createSession(
+            failures = failures,
+            content = {
+                DisposableEffect("prepared") {
+                    events += "remember"
+                    onDispose { events += "dispose" }
+                }
+                SideEffect { events += "side" }
+            },
+        )
+
+        session.prepareForActivation()
+        session.dispose()
+
+        assertTrue(events.isEmpty())
+        assertEquals(null, session.lastFrameReport)
+        assertTrue(failures.isEmpty())
+    }
+
+    @Test
     fun `composition failure reports rollback and a later frame can commit`() {
         val failures = mutableListOf<RenderFailure>()
         var failComposition = true

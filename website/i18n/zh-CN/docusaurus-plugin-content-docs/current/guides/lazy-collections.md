@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: 2af23f61bd7f76ff273e1ce49d984e6f0e10bc288bfe36941fb20c554acd2663
+translation_source_hash: f8c6e5120f55bbb82745898715d76c2fe02488e73547fac4193cf0f276555f1d
 translation_status: current
 ---
 
@@ -94,6 +94,13 @@ sticky header 占满整行。均质数据便捷重载同样要求稳定 key，�
 | item 缓存大小 | RecyclerView item-view cache |
 | 布局状态 | scroll、layout 和 adapter observer 推送给 `LazyListState` |
 
+Detach 且从未展示的 Holder 可以借助 RecyclerView Prefetch 组合并构建 Android View 树。这只是
+Prepared Candidate，不是已提交子帧。Remember 激活、`SideEffect`、`DisposableEffect`、
+`LaunchedEffect`、原生 `AndroidView.onCommit`、Overlay 与已提交诊断都会等到首次 Attach。
+如果被观察 State 在 Attach 前变化，过期候选会被放弃，Activate 会渲染当前状态。已经激活的
+Session 在普通 RecyclerView Cache Detach 期间继续保持 Active，并在 Holder Recycle 或 Container
+释放时 Dispose。
+
 pinned 副本不登记为第二个无障碍节点，普通列表 header 仍是语义源，避免 TalkBack 重复播报。
 
 每个逻辑 Item Key 同时持有一个子 Saveable State Registry，因此兄弟 Row 可以重复使用 Item 内的
@@ -118,6 +125,8 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
    完整环境重绑期间保持稳定。
 8. Item Saveable State 按容器与稳定逻辑 Key 划分 Scope；重复 Provider 只在同一逻辑 Item Scope
    内被拒绝。
+9. Prefetch Prepare 对外静默，不会把子 Submission 标记为 Committed；Activate 与后续 Active
+   Render 保持正常事务式 Effect 顺序。
 
 ## 6. 明确不包含的能力
 

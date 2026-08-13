@@ -21,6 +21,8 @@ internal class LazyItemSessionController(
     private var nextImplicitRevision = 0L
     private var candidate: Candidate? = null
     private var session: LazyListItemSession? = null
+    private var preparedRevision = Long.MIN_VALUE
+    private var active = false
 
     fun bind(
         item: LazyListItem,
@@ -28,12 +30,36 @@ internal class LazyItemSessionController(
         submissionRevision: Long = nextImplicitSubmissionRevision(),
     ) {
         if (submissionRevision <= committedRevision) return
-        apply(
-            item = item,
-            payload = payload,
-        )
+        val canActivatePrepared = !active &&
+            preparedRevision == submissionRevision &&
+            currentKey == item.key &&
+            currentContentToken == item.contentToken
+        if (canActivatePrepared) {
+            checkNotNull(session).activate()
+        } else {
+            if (!active && session != null) {
+                releaseSessionForReplacement()
+            }
+            applyActive(item = item, payload = payload)
+        }
+        active = true
         committedRevision = submissionRevision
+        preparedRevision = Long.MIN_VALUE
         candidate = null
+    }
+
+    fun prepare(
+        item: LazyListItem,
+        payload: Any? = null,
+        submissionRevision: Long,
+    ) {
+        if (!stageCandidate(item, payload, submissionRevision)) return
+        if (active || preparedRevision == submissionRevision) return
+
+        releaseSessionForReplacement()
+        replaceSession(item)
+        checkNotNull(session).prepare()
+        preparedRevision = submissionRevision
     }
 
     fun stage(
@@ -41,15 +67,7 @@ internal class LazyItemSessionController(
         payload: Any? = null,
         submissionRevision: Long,
     ) {
-        if (submissionRevision <= committedRevision) return
-        val currentCandidate = candidate
-        if (currentCandidate == null || submissionRevision >= currentCandidate.submissionRevision) {
-            candidate = Candidate(
-                item = item,
-                payload = payload,
-                submissionRevision = submissionRevision,
-            )
-        }
+        stageCandidate(item, payload, submissionRevision)
     }
 
     fun commit(submissionRevision: Long) {
@@ -67,27 +85,28 @@ internal class LazyItemSessionController(
     fun discard(submissionRevision: Long) {
         if (candidate?.submissionRevision == submissionRevision) {
             candidate = null
+            if (!active && preparedRevision == submissionRevision) {
+                disposeSession()
+            }
         }
     }
 
     fun recycle() {
-        session?.dispose()
-        session = null
+        disposeSession()
         candidate = null
-        currentKey = null
-        currentContentToken = null
         committedRevision = Long.MIN_VALUE
-        clearContainer()
+        active = false
     }
 
-    private fun apply(
+    private fun applyActive(
         item: LazyListItem,
         payload: Any?,
     ) {
         val currentSession = session
-        when {
+        val replaced = when {
             currentSession == null || currentKey != item.key -> {
                 replaceSession(item)
+                true
             }
 
             payload is LazyListChangePayload.ContentTokenChanged ||
@@ -97,27 +116,35 @@ internal class LazyItemSessionController(
 
             item.sessionUpdater != null -> {
                 checkNotNull(item.sessionUpdater).invoke(currentSession)
+                false
             }
 
             else -> {
                 // Without an updater, a new committed submission can only install the latest
                 // content factory by replacing the retained session.
                 replaceSession(item)
+                true
             }
         }
-        session?.render()
+        if (replaced) {
+            checkNotNull(session).activate()
+        } else {
+            checkNotNull(session).render()
+        }
     }
 
     private fun updateOrReplaceSession(
         item: LazyListItem,
         currentSession: LazyListItemSession,
-    ) {
+    ): Boolean {
         val updater = item.sessionUpdater
         if (updater != null) {
             updater(currentSession)
             currentContentToken = item.contentToken
+            return false
         } else {
             replaceSession(item)
+            return true
         }
     }
 
@@ -129,6 +156,43 @@ internal class LazyItemSessionController(
         currentKey = item.key
         currentContentToken = item.contentToken
         item.sessionUpdater?.invoke(newSession)
+    }
+
+    private fun disposeSession() {
+        session?.dispose()
+        session = null
+        currentKey = null
+        currentContentToken = null
+        preparedRevision = Long.MIN_VALUE
+        clearContainer()
+    }
+
+    private fun releaseSessionForReplacement() {
+        session?.dispose()
+        session = null
+        currentKey = null
+        currentContentToken = null
+        preparedRevision = Long.MIN_VALUE
+    }
+
+    private fun stageCandidate(
+        item: LazyListItem,
+        payload: Any?,
+        submissionRevision: Long,
+    ): Boolean {
+        if (submissionRevision <= committedRevision) return false
+        val currentCandidate = candidate
+        if (currentCandidate != null) {
+            if (submissionRevision <= currentCandidate.submissionRevision) {
+                return false
+            }
+        }
+        candidate = Candidate(
+            item = item,
+            payload = payload,
+            submissionRevision = submissionRevision,
+        )
+        return true
     }
 
     private fun nextImplicitSubmissionRevision(): Long {

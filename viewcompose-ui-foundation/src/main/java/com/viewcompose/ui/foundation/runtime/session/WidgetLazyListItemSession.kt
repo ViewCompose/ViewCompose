@@ -50,6 +50,14 @@ internal class WidgetLazyListItemSession(
         },
     )
 
+    override fun prepare() {
+        session.prepareForActivation()
+    }
+
+    override fun activate() {
+        session.activatePrepared()
+    }
+
     override fun render() {
         // Lazy item session bind path must keep immediate render semantics.
         session.render()

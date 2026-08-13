@@ -178,6 +178,11 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   Pager, tab, and overlay containers remember hierarchical child registries by logical key, retain
   them across recycling, and restore them without moving state across keyed reorders. Concurrent
   visual replicas are non-owning and cannot overwrite the logical child's persisted state.
+- A never-activated lazy child session may retain a prepared composition and already-built native
+  tree for RecyclerView prefetch. It uses the same transaction as a normal frame, so remember
+  activation, user effects, native commit callbacks, overlays, and diagnostics remain deferred
+  until attachment. State invalidation abandons the stale candidate before activation; an active
+  cached session keeps its lifecycle until recycle rather than treating viewport detach as stop.
 - `UiTheme` accepts platform-independent tokens. Android resource observation belongs to
   `viewcompose-host-android`; a named design system such as Material maps the resulting host
   revision into its own token refresh policy.

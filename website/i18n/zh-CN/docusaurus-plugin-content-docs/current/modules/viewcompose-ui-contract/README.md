@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: a40c816dedf7871bb16424a75f25bfaa1d0f55d36a77f811dfb473275de88a77
+translation_source_hash: 8a58336d861fb90530d592fd754dec87a626811dd2f64bc502ca90bdec7816b1
 translation_status: current
 ---
 
@@ -64,8 +64,10 @@ val gap = VNode(
   与 Pager 状态把平台滚动能力桥接到可观察的 Runtime 状态。
 - `LazyListItem` 是 Q3、渲染器中立的 Item/Session 契约。`contentToken` 驱动集合语义差分，回调
   身份则有意排除在值相等判断与提交身份之外。Renderer 把每个新提交的不可变 item 快照视为一个
-  逻辑修订，只在父帧提交后安装其准确 updater，并保证 active 的保留 Session 对该修订最多渲染
-  一次。编译样例 `lazyListItemSessionUpdateSample` 展示等 Token 的闭包替换。
+  逻辑修订，只在父帧提交后安装其准确 Updater，并保证 Active 的保留 Session 对该修订最多渲染
+  一次。其 Q3 `prepare` → `activate` → `render` → `dispose` 协议允许 Renderer 在展示前构建对外
+  静默的候选；不预构建的自定义 Session 通过默认方法保持源码兼容。编译样例
+  `lazyListItemSessionUpdateSample` 展示 Prepare 与等 Token 闭包替换。
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。
@@ -155,7 +157,8 @@ val gap = VNode(
   扩展类型；加载行为变化时，调用方必须更新 key。
 
 集合预取、原生缓存规模、动效与共享池参数是渲染器优化提示，而不是语义状态。平台可以限制或
-忽略不支持的优化，但不能因此改变声明内容。
+忽略不支持的优化，但不能因此改变声明内容。Prefetch Prepare 不能发布已提交工作；即使平台忽略
+该优化，首次 Activate 仍是生命周期边界。
 
 ## 相关文档
 
@@ -174,6 +177,10 @@ val gap = VNode(
 `NodeSpec` 或 Modifier 元素也可能要求渲染器同步升级。自定义渲染器应对未知契约明确失败，
 也不应把枚举序号、密封子类型名称、工具元数据、原生 View 标识或回调实例持久化为长期外部
 数据。
+
+新增 `LazyListItemSession.prepare` 与 `activate` 是 Q3 生命周期硬切。Kotlin 源码实现可以继承安全
+默认值，但接口 JVM 形状已经变化，因此预编译自定义 Session 与 Renderer 必须重新构建。覆写
+Prepare 来构建原生内容时，必须推迟全部 Commit Bound Callback，并支持 Activate 前 Dispose。
 
 新增 `ButtonNodeProps.visualHeight` 属于 Q2 不可变快照契约变更。源码默认值等于 `minHeight`，
 但预编译的构造调用点和自定义渲染器仍必须随对应 Alpha 版本重新构建。

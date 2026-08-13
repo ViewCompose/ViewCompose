@@ -35,9 +35,21 @@ import java.io.File
 fun lazyListItemSessionUpdateSample() {
     val session = object : LazyListItemSession {
         var installedLabel = ""
+        var prepared = false
+        var activated = false
         var renderCount = 0
 
+        override fun prepare() {
+            prepared = true
+        }
+
+        override fun activate() {
+            check(prepared)
+            activated = true
+        }
+
         override fun render() {
+            check(activated)
             renderCount += 1
         }
 
@@ -60,6 +72,10 @@ fun lazyListItemSessionUpdateSample() {
     )
 
     check(initial == refreshed)
+    initial.sessionUpdater?.invoke(session)
+    session.prepare()
+    check(session.renderCount == 0)
+    session.activate()
     refreshed.sessionUpdater?.invoke(session)
     session.render()
     check(session.installedLabel == "Updated")

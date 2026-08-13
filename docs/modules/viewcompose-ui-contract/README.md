@@ -64,8 +64,11 @@ created for the node.
   collection diffing, while callback identity is deliberately excluded from value equality and
   submission identity. A renderer treats each newly submitted immutable item snapshot as a logical
   revision, installs its exact updater only after the parent frame commits, and renders an active
-  retained session at most once for that revision. The compiled
-  `lazyListItemSessionUpdateSample` demonstrates equal-token closure replacement.
+  retained session at most once for that revision. Its Q3 `prepare` → `activate` → `render` →
+  `dispose` protocol lets renderers build an externally silent candidate before presentation;
+  default methods preserve source compatibility for custom sessions that do not prebuild. The
+  compiled `lazyListItemSessionUpdateSample` demonstrates preparation and equal-token closure
+  replacement.
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.
@@ -177,7 +180,8 @@ first-party image loaders; its zero default preserves deterministic non-Android/
 
 Collection prefetch, native cache sizing, motion, and shared-pool values are renderer hints rather
 than semantic state. A platform may clamp or ignore an unsupported optimization without changing
-the declared content.
+the declared content. Prefetch preparation cannot publish committed work; first activation remains
+the lifecycle boundary even when a platform ignores the optimization.
 
 ## Related documentation
 
@@ -197,6 +201,11 @@ concrete `NodeSpec`, or a modifier element can require a renderer update even wh
 source remains unchanged. Custom renderers should fail clearly for unknown contracts and should not
 persist enum ordinals, sealed-subtype names, tooling metadata, native view identities, or callback
 instances as long-lived external data.
+
+Adding `LazyListItemSession.prepare` and `activate` is a Q3 lifecycle hard cut. Kotlin source
+implementations inherit safe defaults, but the interface JVM shape changes, so precompiled custom
+sessions and renderers must be rebuilt. An override that prepares native content must keep all
+commit-bound callbacks deferred and support disposal before activation.
 
 Adding `ButtonNodeProps.visualHeight` is a Q2 immutable snapshot-contract change. The source default
 equals `minHeight`, but precompiled constructor call sites and custom renderers must be rebuilt for
