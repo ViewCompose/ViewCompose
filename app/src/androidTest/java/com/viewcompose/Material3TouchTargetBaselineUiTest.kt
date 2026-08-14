@@ -253,38 +253,6 @@ class Material3TouchTargetBaselineUiTest {
     }
 
     @Test
-    fun settingsEntry_opensDefaultMaterial3ThemeWithoutDemoTokens() {
-        launchDemoActivity(MainActivity::class.java, DemoThemeMode.Light).use { scenario ->
-            clickDeviceText("设置")
-            val instrumentation = InstrumentationRegistry.getInstrumentation()
-            val monitor = instrumentation.addMonitor(
-                Material3DefaultThemeActivity::class.java.name,
-                null,
-                false,
-            )
-            try {
-                scenario.onActivity { activity ->
-                    activity.requireViewByTestTagVisible(DemoTestTags.SETTINGS_THEME_XML_ENTRY)
-                    activity.requireViewByTestTagVisible(DemoTestTags.SETTINGS_THEME_CUSTOM_ENTRY)
-                    activity.clickByTestTag(DemoTestTags.SETTINGS_MATERIAL3_DEFAULT_ENTRY)
-                }
-                val launched = instrumentation.waitForMonitorWithTimeout(monitor, 5_000)
-                assertNotNull("Expected default Material3 theme validation Activity", launched)
-                launched?.let { activity ->
-                    waitForUiIdle()
-                    instrumentation.runOnMainSync {
-                        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_ROOT)
-                        activity.requireViewByTestTagVisible(DemoTestTags.MATERIAL3_DEFAULT_BUTTON)
-                        activity.finish()
-                    }
-                }
-            } finally {
-                instrumentation.removeMonitor(monitor)
-            }
-        }
-    }
-
-    @Test
     fun material3Defaults_separateVisualAndEffectiveBoundsAtSupportedFontScales() {
         listOf(1f, 1.3f).forEach { fontScale ->
             val context = ApplicationProvider.getApplicationContext<android.content.Context>()

@@ -18,4 +18,54 @@
     <string name="demo_scenario_performance_list_summary">ViewCompose 与 Compose 对等的键控列表变更和滚动负载。</string>
 
     <string name="resource_configuration_reset_action">重置环境</string>
+
+    <string name="demo_catalog_title">验证场景</string>
+    <string name="demo_catalog_ready">场景目录已就绪</string>
+    <string name="demo_catalog_search_placeholder">搜索标题、摘要或场景 ID</string>
+    <string name="demo_catalog_filters">筛选</string>
+    <string name="demo_catalog_filters_active">筛选 · %1$d</string>
+    <string name="demo_catalog_clear_filters">清除</string>
+    <string name="demo_catalog_all_categories">全部领域</string>
+    <string name="demo_catalog_all_kinds">全部类型</string>
+    <string name="demo_catalog_results">%1$d 个可执行场景</string>
+    <string name="demo_catalog_empty">没有符合当前搜索和筛选条件的场景。</string>
+    <string name="demo_catalog_open">打开</string>
+    <string name="demo_catalog_environment">环境</string>
+    <string name="demo_catalog_build_info">构建信息</string>
+    <string name="demo_catalog_category_runtime">运行时与状态</string>
+    <string name="demo_catalog_category_rendering">渲染与布局</string>
+    <string name="demo_catalog_category_collections">集合与复用</string>
+    <string name="demo_catalog_category_input">输入与交互</string>
+    <string name="demo_catalog_category_android">Android 集成</string>
+    <string name="demo_catalog_category_navigation">导航与生命周期</string>
+    <string name="demo_catalog_category_design">设计系统与视觉行为</string>
+    <string name="demo_catalog_category_performance">性能对比</string>
+    <string name="demo_catalog_kind_manual">人工</string>
+    <string name="demo_catalog_kind_visual">视觉</string>
+    <string name="demo_catalog_kind_benchmark">基准</string>
+
+    <string name="demo_environment_title">环境</string>
+    <string name="demo_environment_theme">主题</string>
+    <string name="demo_environment_theme_system">跟随系统</string>
+    <string name="demo_environment_theme_light">浅色</string>
+    <string name="demo_environment_theme_dark">深色</string>
+    <string name="demo_environment_runtime">当前运行环境</string>
+    <string name="demo_environment_locale">区域设置</string>
+    <string name="demo_environment_direction">布局方向</string>
+    <string name="demo_environment_density">密度</string>
+    <string name="demo_environment_font_scale">字号缩放</string>
+    <string name="demo_environment_animator_scale">动画缩放</string>
+    <string name="demo_environment_resource_scenario">打开资源配置场景</string>
+    <string name="demo_environment_cross_activity">打开跨 Activity 主题验证</string>
+    <string name="demo_environment_scope_note">主题是应用级控制；语言、方向、字号与密度继续隔离在资源场景内，避免 benchmark 设置泄漏到其他场景。</string>
+
+    <string name="demo_build_info_title">构建信息</string>
+    <string name="demo_build_package">包名</string>
+    <string name="demo_build_version">版本</string>
+    <string name="demo_build_variant">构建变体</string>
+    <string name="demo_build_debuggable">可调试</string>
+    <string name="demo_build_non_debuggable">不可调试</string>
+    <string name="demo_build_sdk">Android SDK</string>
+    <string name="demo_build_device">设备</string>
+    <string name="demo_build_scenarios">已注册场景</string>
 </resources>

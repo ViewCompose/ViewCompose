@@ -12,8 +12,9 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * demo 应用入口 Activity。
  * Entry Activity for the demo app.
  *
- * 普通启动展示首页；带 benchmark 或模块 extra 的启动会被转发到对应 Activity。
- * Normal launches show the home page; benchmark or module extras are forwarded to the matching Activity.
+ * 普通启动展示场景目录；严格场景与专用 benchmark extra 会转发到声明的宿主。
+ * Normal launches show the scenario catalog; strict scenario and dedicated benchmark extras are
+ * forwarded to their declared hosts.
  */
 class MainActivity : DemoRenderActivity() {
     override val demoTitle: String = "ViewCompose Demo"
@@ -41,13 +42,7 @@ class MainActivity : DemoRenderActivity() {
                 intent?.extras?.let(::putExtras)
             }
         }
-        val moduleKey = intent?.getStringExtra(EXTRA_DEMO_MODULE_KEY)
-        val targetActivity = moduleKey?.let(::findDemoModuleByKey)?.activityClass
-        return targetActivity?.let {
-            Intent(this, it).apply {
-                intent?.extras?.let(::putExtras)
-            }
-        }
+        return null
     }
 
     override fun UiTreeBuilder.buildRootScaffold(root: ViewGroup) {

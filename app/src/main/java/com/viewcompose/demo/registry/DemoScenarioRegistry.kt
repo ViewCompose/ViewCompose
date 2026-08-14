@@ -16,6 +16,7 @@ import com.viewcompose.demo.contract.DemoScenarioCategory
 import com.viewcompose.demo.contract.DemoScenarioId
 import com.viewcompose.demo.contract.DemoScenarioRoute
 import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.contract.DemoVerificationKind
 import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
 import com.viewcompose.performance.EXTRA_PERFORMANCE_ENGINE
 import com.viewcompose.performance.EXTRA_PERFORMANCE_SCENARIO
@@ -38,6 +39,7 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_runtime_state_title,
             summaryRes = R.string.demo_scenario_runtime_state_summary,
             host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
             route = DemoScenarioRoute(
                 activityClass = StateActivity::class.java,
                 extras = mapOf("state_page_index" to DemoRouteExtra.IntValue(0)),
@@ -59,6 +61,7 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_runtime_view_patch_title,
             summaryRes = R.string.demo_scenario_runtime_view_patch_summary,
             host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
             route = DemoScenarioRoute(
                 activityClass = StateActivity::class.java,
                 extras = mapOf("state_page_index" to DemoRouteExtra.IntValue(2)),
@@ -80,6 +83,7 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_environment_resources_title,
             summaryRes = R.string.demo_scenario_environment_resources_summary,
             host = DemoHostPolicy.Dedicated,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
             route = DemoScenarioRoute(ResourceConfigurationActivity::class.java),
             mutable = true,
             ids = TargetIds(
@@ -97,6 +101,7 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_overlay_dialog_title,
             summaryRes = R.string.demo_scenario_overlay_dialog_summary,
             host = DemoHostPolicy.Overlay,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
             route = DemoScenarioRoute(
                 activityClass = FeedbackActivity::class.java,
                 extras = mapOf("feedback_page_index" to DemoRouteExtra.IntValue(1)),
@@ -117,6 +122,7 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_navigation_system_title,
             summaryRes = R.string.demo_scenario_navigation_system_summary,
             host = DemoHostPolicy.SystemNavigation,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
             route = DemoScenarioRoute(SystemNavigationActivity::class.java),
             mutable = true,
             ids = TargetIds(
@@ -135,6 +141,7 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_performance_list_title,
             summaryRes = R.string.demo_scenario_performance_list_summary,
             host = DemoHostPolicy.Benchmark,
+            verificationKinds = setOf(DemoVerificationKind.Benchmark),
             route = DemoScenarioRoute(
                 activityClass = PerformanceComparisonActivity::class.java,
                 extras = mapOf(
@@ -190,6 +197,9 @@ internal object DemoScenarioRegistry {
         specs.forEach { spec ->
             require(spec.titleRes != 0 && spec.summaryRes != 0) {
                 "${spec.id} is missing display resources"
+            }
+            require(spec.verificationKinds.isNotEmpty()) {
+                "${spec.id} has no verification kind"
             }
             val targets = spec.automation.targets
             require(spec.automation[DemoAutomationRole.Root] != null) {
@@ -264,6 +274,7 @@ internal object DemoScenarioRegistry {
         titleRes: Int,
         summaryRes: Int,
         host: DemoHostPolicy,
+        verificationKinds: Set<DemoVerificationKind>,
         route: DemoScenarioRoute,
         mutable: Boolean,
         ids: TargetIds,
@@ -283,6 +294,7 @@ internal object DemoScenarioRegistry {
             titleRes = titleRes,
             summaryRes = summaryRes,
             host = host,
+            verificationKinds = verificationKinds,
             route = route,
             automation = DemoAutomationContract.create(
                 id,

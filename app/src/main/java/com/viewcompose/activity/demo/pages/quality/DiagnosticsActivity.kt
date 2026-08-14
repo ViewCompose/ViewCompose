@@ -8,8 +8,8 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.foundation.remember
 
 /**
- * Diagnostics chapter 的 Activity 入口，集中展示运行时、主题、renderer 和缺口追踪信息。
- * Activity entry for the Diagnostics chapter, surfacing runtime, theme, renderer, and gap-tracking information.
+ * Diagnostics chapter 的 Activity 入口，集中展示运行时、主题和 renderer 信息。
+ * Activity entry for the Diagnostics chapter, surfacing runtime, theme, and renderer information.
  */
 class DiagnosticsActivity : DemoRenderActivity() {
     override val demoTitle: String = "Diagnostics"
@@ -43,8 +43,6 @@ class DiagnosticsActivity : DemoRenderActivity() {
         const val PAGE_RUNTIME = 0
         const val PAGE_THEME = 1
         const val PAGE_RENDERER = 2
-        const val PAGE_GAPS = 3
-
         /**
          * 构建诊断页专用 Intent，允许测试直接跳转到指定诊断页并触发 renderer 快照刷新。
          * Builds a Diagnostics Intent so tests can jump to a target page and optionally refresh renderer snapshots.

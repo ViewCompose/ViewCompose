@@ -76,6 +76,12 @@
             android:name=".ResourceConfigurationActivity"
             android:exported="false" />
         <activity
+            android:name=".DemoEnvironmentActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DemoBuildInfoActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

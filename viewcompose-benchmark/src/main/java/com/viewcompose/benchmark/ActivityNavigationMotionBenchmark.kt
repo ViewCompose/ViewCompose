@@ -58,12 +58,11 @@ class ActivityNavigationMotionBenchmark {
         ) {
             device.pressBack()
             waitForNavigationMotion()
-            waitForText(DEMO_HOME_TEXT)
+            waitForScenarioTarget("catalog", DemoTargetRole.Ready)
         }
 
     private companion object {
         const val NAVIGATION_SCENARIO = "navigation.system"
-        const val DEMO_HOME_TEXT = "已实现模块"
         const val ITERATIONS_ARGUMENT = "activityNavigationMotionIterations"
         const val PROFILE_WARMUP_ITERATIONS = 3
 

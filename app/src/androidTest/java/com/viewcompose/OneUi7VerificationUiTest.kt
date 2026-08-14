@@ -341,30 +341,6 @@ class OneUi7VerificationUiTest {
         }
     }
 
-    @Test
-    fun settingsEntry_opensOneUi7AlphaFixture() {
-        launchDemoActivity(MainActivity::class.java, DemoThemeMode.Light).use { scenario ->
-            scenario.onActivity { activity -> activity.clickTextView("设置") }
-            waitForUiIdle()
-            val instrumentation = InstrumentationRegistry.getInstrumentation()
-            val monitor = instrumentation.addMonitor(
-                OneUi7VerificationActivity::class.java.name,
-                null,
-                false,
-            )
-            try {
-                scenario.onActivity { activity ->
-                    activity.clickByTestTag(DemoTestTags.SETTINGS_ONE_UI_7_ENTRY)
-                }
-                val launched = instrumentation.waitForMonitorWithTimeout(monitor, 5_000)
-                assertNotNull("Expected One UI 7 alpha verification Activity", launched)
-                launched?.finish()
-            } finally {
-                instrumentation.removeMonitor(monitor)
-            }
-        }
-    }
-
     private fun FixtureCase.metadata(productionMetadata: String): String = buildString {
         appendLine("suite=one-ui-7-five-component-alpha")
         appendLine("reference=One UI 7")

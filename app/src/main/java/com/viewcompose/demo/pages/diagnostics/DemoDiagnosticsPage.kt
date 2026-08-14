@@ -71,20 +71,11 @@ internal fun UiTreeBuilder.PreviewDiagnosticsRenderer() {
     )
 }
 
-@ViewComposePreview(name = "Diagnostics · Gaps", group = "Demo/Pages")
-internal fun UiTreeBuilder.PreviewDiagnosticsGaps() {
-    DiagnosticsPage(
-        root = null,
-        selectedPageState = mutableStateOf(3),
-    )
-}
-
 internal fun diagnosticsPageItems(selectedPage: Int): List<String> {
     return DIAGNOSTICS_COMMON_PAGE_ITEMS + when (selectedPage) {
         0 -> listOf("benchmark", "runtime", "verify")
         1 -> DIAGNOSTICS_THEME_PAGE_ITEMS + "theme_verify"
-        2 -> DIAGNOSTICS_RENDERER_PAGE_ITEMS + "verify"
-        else -> listOf("gaps", "verify")
+        else -> DIAGNOSTICS_RENDERER_PAGE_ITEMS + "verify"
     }
 }
 
@@ -191,12 +182,12 @@ internal fun UiTreeBuilder.DiagnosticsPage(
         when (section) {
             "page" -> ChapterPageOverviewSection(
                 title = "诊断",
-                goal = "将 demo 变为运行时 locals、主题 token 消费、渲染器 patch 和框架已知缺口的手动回归控制台。",
-                modules = listOf("debug logging", "theme diagnostics", "renderer", "roadmap gaps"),
+                goal = "将 demo 变为运行时 locals、主题 token 消费和渲染器 patch 的手动回归控制台。",
+                modules = listOf("debug logging", "theme diagnostics", "renderer"),
             )
 
             "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("运行时", "主题", "渲染器", "缺口"),
+                pages = listOf("运行时", "主题", "渲染器"),
                 selectedIndex = selectedPageState.value,
                 onSelectionChange = { selectedPageState.value = it },
             )
@@ -255,8 +246,6 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     title = "运行时数据",
                     facts = listOf(
                         DiagnosticFact("调试日志", "已启用 (ViewComposeSample)"),
-                        DiagnosticFact("可用模块", "${AVAILABLE_DEMO_MODULES.size}"),
-                        DiagnosticFact("规划模块", "${PLANNED_DEMO_MODULES.size}"),
                         DiagnosticFact("区域设置", Environment.localeTags.firstOrNull() ?: "und"),
                         DiagnosticFact("布局方向", Environment.layoutDirection.name),
                         DiagnosticFact("密度", "${"%.2f".format(Locale.US, Environment.density.density)}x"),
@@ -605,35 +594,6 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         "打开 Layouts / Collections 压力页，观察日志中 VNode tree 与 Reconcile 摘要是否稳定。",
                         "切换章节并返回，确认 debug 日志仍持续输出到 ViewComposeSample。",
                         "遇到视觉 bug 时，先用这里的渲染模型判断问题更像 layout、list diff 还是 local 传播。",
-                    ),
-                )
-            }
-
-            "gaps" -> ScenarioSection(
-                kind = ScenarioKind.Guide,
-                title = "已知缺口",
-                subtitle = "这些缺口有意保持可见，以便诊断章节引导后续框架工作。",
-            ) {
-                ChecklistGroup(
-                    title = "检查",
-                    items = listOf(
-                        "树/Patch/Local/重组原因已可浏览；尚无点击节点后在真实 View 上高亮边界。",
-                        "当前快照按 RenderSession 展示；尚无跨父 session 与 lazy 子 session 的关联图。",
-                    ),
-                )
-                ChecklistGroup(
-                    title = "性能",
-                    items = listOf(
-                        "尚无帧耗时覆盖层",
-                        "已有 measure/layout 计数与 patch 明细；尚无逐节点 diff/绑定耗时。",
-                    ),
-                )
-                ChecklistGroup(
-                    title = "测试钩子",
-                    items = listOf(
-                        "尚无语义树抽象",
-                        "尚无场景回放工具",
-                        "尚无截图/回归仪表盘",
                     ),
                 )
             }

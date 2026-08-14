@@ -44,12 +44,19 @@ internal enum class DemoHostPolicy {
     Benchmark,
 }
 
+internal enum class DemoVerificationKind {
+    Manual,
+    Visual,
+    Benchmark,
+}
+
 internal enum class DemoAutomationRole(
     val wireValue: String,
 ) {
     Root("root"),
     Ready("ready"),
     PrimaryAction("primary_action"),
+    SecondaryAction("secondary_action"),
     Reset("reset"),
     State("state"),
     Target("target"),
@@ -142,6 +149,7 @@ internal data class DemoScenarioSpec(
     @StringRes val titleRes: Int,
     @StringRes val summaryRes: Int,
     val host: DemoHostPolicy,
+    val verificationKinds: Set<DemoVerificationKind>,
     val route: DemoScenarioRoute,
     val automation: DemoAutomationContract,
     val mutable: Boolean,

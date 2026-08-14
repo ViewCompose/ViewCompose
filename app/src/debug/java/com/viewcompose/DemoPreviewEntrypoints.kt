@@ -61,7 +61,7 @@ private fun DemoPreviewCatalogPageDarkPreview() {
             theme = PreviewTheme.Dark,
             debugTag = "DemoPreviewChapterDark",
         ),
-    ) { root ->
-        DemoCatalogPage(root)
+    ) {
+        DemoCatalogPage(onLaunch = {})
     }
 }

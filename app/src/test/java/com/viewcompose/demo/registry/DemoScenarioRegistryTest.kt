@@ -9,6 +9,7 @@ import com.viewcompose.demo.contract.DemoAutomationContract
 import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoBenchmarkContract
 import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoVerificationKind
 import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.NativeViewElement
@@ -95,6 +96,12 @@ class DemoScenarioRegistryTest {
         )
         assertThrows(IllegalArgumentException::class.java) {
             DemoScenarioRegistry.validate(listOf(invalidWorkload))
+        }
+
+        assertThrows(IllegalArgumentException::class.java) {
+            DemoScenarioRegistry.validate(
+                listOf(source.copy(verificationKinds = emptySet<DemoVerificationKind>())),
+            )
         }
     }
 

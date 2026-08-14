@@ -7,6 +7,7 @@ package com.viewcompose
 internal object DemoTestTags {
     const val HOME_NAVIGATION_BAR = "home_navigation_bar"
     const val SETTINGS_THEME_STATUS = "settings_theme_status"
+    const val SETTINGS_THEME_CONTROL = "settings_theme_control"
     const val SETTINGS_CROSS_ACTIVITY_THEME_ENTRY = "settings_cross_activity_theme_entry"
     const val THEME_SWITCH_SECONDARY_STATUS = "theme_switch_secondary_status"
     const val THEME_SWITCH_SECONDARY_CONTROL = "theme_switch_secondary_control"

@@ -399,37 +399,6 @@ class DemoDesignSystemVerificationUiTest {
         }
     }
 
-    @Test
-    fun settingsEntry_opensInternalDesignSystemFixture() {
-        launchDemoActivity(MainActivity::class.java, DemoThemeMode.Light).use { scenario ->
-            scenario.onActivity { activity ->
-                activity.clickTextView("设置")
-            }
-            waitForUiIdle()
-            val instrumentation = InstrumentationRegistry.getInstrumentation()
-            val monitor = instrumentation.addMonitor(
-                DemoDesignSystemVerificationActivity::class.java.name,
-                null,
-                false,
-            )
-            try {
-                scenario.onActivity { activity ->
-                    activity.requireViewByTestTagVisible(DemoTestTags.SETTINGS_DESIGN_SYSTEM_ENTRY)
-                    activity.clickByTestTag(DemoTestTags.SETTINGS_DESIGN_SYSTEM_ENTRY)
-                }
-                val launched = instrumentation.waitForMonitorWithTimeout(monitor, 5_000)
-                assertNotNull("Expected multi-design-system verification Activity", launched)
-                launched?.let { activity ->
-                    waitForUiIdle()
-                    activity.requireViewByTestTagVisible(DemoTestTags.DESIGN_SYSTEM_ROOT)
-                    activity.finish()
-                }
-            } finally {
-                instrumentation.removeMonitor(monitor)
-            }
-        }
-    }
-
     private fun FixtureCase.metadata(activity: DemoDesignSystemVerificationActivity): String {
         val layoutDirection = if (rtl) "rtl" else "ltr"
         return buildString {

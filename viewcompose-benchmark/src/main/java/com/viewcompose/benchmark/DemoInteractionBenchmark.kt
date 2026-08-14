@@ -49,8 +49,10 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startCatalogAndWait()
-            waitForText("已实现模块")
+            startDemoActivityAndWait(
+                moduleKey = "environment",
+                expectedText = "Environment",
+            )
             waitForText("Light")
             waitForText("Dark")
         },

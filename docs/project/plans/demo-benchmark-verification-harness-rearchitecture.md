@@ -2,8 +2,8 @@
 
 ## Status
 
-Active. Phase 0 inventory and workload freeze and Phase 1 contract and automation spine are
-complete. Phase 2 host and catalog hard cut is next.
+Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, and Phase 2
+host and catalog hard cut are complete. Phase 3 localization and content hard cut is next.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: replace the top-level pager and module catalog with the executable scenario catalog,
-then remove roadmap, About, planned-module, and gap content from the runtime Demo.
+Next action: migrate Demo-owned visible copy to canonical English and Simplified Chinese resources,
+then add parity, formatting, hard-coded-copy, and cross-locale selector gates.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -529,7 +529,7 @@ measurement semantics do not change without a workload revision.
 | --- | --- | --- | --- |
 | 0. Inventory and freeze | Completed | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
 | 1. Contract and automation spine | Completed | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
-| 2. Host and catalog hard cut | Not started | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
+| 2. Host and catalog hard cut | Completed | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
 | 3. Localization and content policy | Not started | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
 | 4. Scenario migration | Not started | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
 | 5. Benchmark rebaseline | Not started | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
@@ -597,6 +597,21 @@ page and all planning/module statistics.
 Keep the current stable launcher component for external benchmark tooling. Validate that launcher
 redirect adds no measured frame after the scenario host begins and leaves no empty Activity in the
 task stack.
+
+Completed on 2026-08-14. The root `HorizontalPager`, bottom navigation, `DemoModule` inventory,
+About, placeholder, and diagnostics-gap surfaces were removed. The validated scenario registry now
+drives one searchable and filterable executable catalog; global theme/runtime facts and generated
+package/build facts live in separate toolbar panels. `MainActivity` accepts strict scenario IDs and
+no longer owns a module-key adapter. The remaining module-key bridge is confined to legacy
+Macrobenchmark test code until Phase 4 migrates those workloads.
+
+Registry and catalog-filter unit tests, AndroidTest and Macrobenchmark compilation, and the
+visible-copy selector gate pass. On the Samsung SM-G991B running Android 13, seven black-box tests
+verified catalog recreation, both toolbar panels, theme propagation across independent sessions,
+strict catalog launch, every pilot host class, resource-ID readiness, and a foreground task history
+containing the scenario host but no launcher shell. Visual inspection of the installed default-
+English catalog confirmed that the first executable scenario and its launch action remain in the
+initial viewport without the removed project-management content.
 
 ## Phase 3: Localization and content hard cut
 

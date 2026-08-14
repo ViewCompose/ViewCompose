@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <item name="demo_catalog_root" type="id" />
+    <item name="demo_catalog_ready" type="id" />
+    <item name="demo_catalog_primary_action" type="id" />
+    <item name="demo_catalog_secondary_action" type="id" />
+    <item name="demo_catalog_state" type="id" />
+    <item name="demo_catalog_target" type="id" />
     <item name="demo_runtime_state_root" type="id" />
     <item name="demo_runtime_state_ready" type="id" />
     <item name="demo_runtime_state_primary_action" type="id" />

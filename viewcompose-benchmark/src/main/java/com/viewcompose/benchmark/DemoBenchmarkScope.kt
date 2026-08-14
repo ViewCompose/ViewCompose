@@ -16,6 +16,7 @@ internal enum class DemoTargetRole(
     Root("root"),
     Ready("ready"),
     PrimaryAction("primary_action"),
+    SecondaryAction("secondary_action"),
     Reset("reset"),
     State("state"),
     Target("target"),
@@ -132,7 +133,7 @@ internal fun MacrobenchmarkScope.startDemoAndWait() {
     prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait()
-    device.wait(Until.hasObject(By.text("已实现模块")), UI_WAIT_TIMEOUT_MS)
+    waitForScenarioTarget("catalog", DemoTargetRole.Ready)
 }
 
 /**
@@ -141,19 +142,8 @@ internal fun MacrobenchmarkScope.startDemoAndWait() {
  */
 internal fun MacrobenchmarkScope.startCatalogAndWait() {
     startDemoAndWait()
-    if (!device.wait(Until.hasObject(By.text("Capability Modules")), 1_000)) {
-        val backNode = device.findObject(By.text("Back to catalog"))
-        if (backNode != null) {
-            backNode.click()
-            device.waitForIdle()
-        } else {
-            device.pressBack()
-            device.waitForIdle()
-        }
-    }
-    waitForText("Capability Modules")
     scrollToPageTop()
-    waitForText("Capability Modules")
+    waitForScenarioTarget("catalog", DemoTargetRole.Ready)
 }
 
 /**
@@ -171,6 +161,7 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
         // 清理上一次测试写入的业务 extra，同时保留 benchmark 框架需要的系统 extra。
         // Clear app-specific extras from previous test methods while preserving framework extras.
         intent.removeExtra("demo_module_key")
+        intent.removeExtra("demo_scenario_id")
         intent.removeExtra("state_page_index")
         intent.removeExtra("performance_engine")
         intent.removeExtra("performance_scenario")
@@ -182,10 +173,23 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
         } else {
             intent.flags = intent.flags and android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK.inv()
         }
-        intent.putExtra("demo_module_key", moduleKey)
+        intent.setClassName(TARGET_PACKAGE, legacyBenchmarkActivityClass(moduleKey))
         extras.forEach { (key, value) -> intent.putExtra(key, value) }
     }
     waitForText(expectedText)
+}
+
+/** Temporary benchmark-only bridge removed when Phase 4 assigns these fixtures strict IDs. */
+private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (moduleKey) {
+    "environment" -> "com.viewcompose.DemoEnvironmentActivity"
+    "foundations" -> "com.viewcompose.FoundationsActivity"
+    "state" -> "com.viewcompose.StateActivity"
+    "layouts" -> "com.viewcompose.LayoutsActivity"
+    "input" -> "com.viewcompose.InputActivity"
+    "collections" -> "com.viewcompose.CollectionsActivity"
+    "interop" -> "com.viewcompose.InteropActivity"
+    "diagnostics" -> "com.viewcompose.DiagnosticsActivity"
+    else -> error("Unknown legacy benchmark module: $moduleKey")
 }
 
 /** Starts the Diagnostics Theme page directly so long-fling measurements include its full fixture. */

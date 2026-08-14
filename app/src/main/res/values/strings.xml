@@ -17,4 +17,54 @@
     <string name="demo_scenario_performance_list_summary">Paired keyed-list mutation and scroll workload.</string>
 
     <string name="resource_configuration_reset_action">Reset environment</string>
+
+    <string name="demo_catalog_title">Verification scenarios</string>
+    <string name="demo_catalog_ready">Scenario catalog ready</string>
+    <string name="demo_catalog_search_placeholder">Search title, summary, or scenario ID</string>
+    <string name="demo_catalog_filters">Filters</string>
+    <string name="demo_catalog_filters_active">Filters · %1$d</string>
+    <string name="demo_catalog_clear_filters">Clear</string>
+    <string name="demo_catalog_all_categories">All domains</string>
+    <string name="demo_catalog_all_kinds">All kinds</string>
+    <string name="demo_catalog_results">%1$d executable scenarios</string>
+    <string name="demo_catalog_empty">No scenario matches the current query and filters.</string>
+    <string name="demo_catalog_open">Open</string>
+    <string name="demo_catalog_environment">Environment</string>
+    <string name="demo_catalog_build_info">Build information</string>
+    <string name="demo_catalog_category_runtime">Runtime and state</string>
+    <string name="demo_catalog_category_rendering">Rendering and layout</string>
+    <string name="demo_catalog_category_collections">Collections and reuse</string>
+    <string name="demo_catalog_category_input">Input and interaction</string>
+    <string name="demo_catalog_category_android">Android integration</string>
+    <string name="demo_catalog_category_navigation">Navigation and lifecycle</string>
+    <string name="demo_catalog_category_design">Design systems and visual behavior</string>
+    <string name="demo_catalog_category_performance">Performance comparisons</string>
+    <string name="demo_catalog_kind_manual">Manual</string>
+    <string name="demo_catalog_kind_visual">Visual</string>
+    <string name="demo_catalog_kind_benchmark">Benchmark</string>
+
+    <string name="demo_environment_title">Environment</string>
+    <string name="demo_environment_theme">Theme</string>
+    <string name="demo_environment_theme_system">System</string>
+    <string name="demo_environment_theme_light">Light</string>
+    <string name="demo_environment_theme_dark">Dark</string>
+    <string name="demo_environment_runtime">Current runtime environment</string>
+    <string name="demo_environment_locale">Locale</string>
+    <string name="demo_environment_direction">Layout direction</string>
+    <string name="demo_environment_density">Density</string>
+    <string name="demo_environment_font_scale">Font scale</string>
+    <string name="demo_environment_animator_scale">Animator scale</string>
+    <string name="demo_environment_resource_scenario">Open resource configuration scenario</string>
+    <string name="demo_environment_cross_activity">Open cross-Activity theme check</string>
+    <string name="demo_environment_scope_note">Theme is an app-wide control. Locale, direction, font scale, and density remain isolated in the resource scenario so benchmark setup cannot leak into unrelated scenarios.</string>
+
+    <string name="demo_build_info_title">Build information</string>
+    <string name="demo_build_package">Package</string>
+    <string name="demo_build_version">Version</string>
+    <string name="demo_build_variant">Variant</string>
+    <string name="demo_build_debuggable">Debuggable</string>
+    <string name="demo_build_non_debuggable">Non-debuggable</string>
+    <string name="demo_build_sdk">Android SDK</string>
+    <string name="demo_build_device">Device</string>
+    <string name="demo_build_scenarios">Registered scenarios</string>
 </resources>
