@@ -55,14 +55,14 @@ SCENARIOS = (
 # Report rows may split one fixture into several measured actions, but every row must retain the
 # owning scenario identity and workload revision so unlike workloads cannot be compared silently.
 SCENARIO_CONTRACTS = {
-    "list_scroll": ("performance.list", 2),
-    "list_mutation": ("performance.list", 2),
-    "complex_layout_scroll": ("performance.complex-layout", 2),
-    "complex_layout_update": ("performance.complex-layout", 2),
-    "shadow_list_scroll": ("performance.shadow-list", 1),
-    "shadow_list_mutation": ("performance.shadow-list", 1),
-    "shadow_complex_layout_scroll": ("performance.shadow-complex-layout", 1),
-    "shadow_complex_layout_update": ("performance.shadow-complex-layout", 1),
+    "list_scroll": ("performance.list", 3),
+    "list_mutation": ("performance.list", 3),
+    "complex_layout_scroll": ("performance.complex-layout", 3),
+    "complex_layout_update": ("performance.complex-layout", 3),
+    "shadow_list_scroll": ("performance.shadow-list", 2),
+    "shadow_list_mutation": ("performance.shadow-list", 2),
+    "shadow_complex_layout_scroll": ("performance.shadow-complex-layout", 2),
+    "shadow_complex_layout_update": ("performance.shadow-complex-layout", 2),
 }
 
 SAMPLED_METRICS = ("frameDurationCpuMs", "frameOverrunMs")
@@ -234,16 +234,22 @@ def load_current_result(value: str | Path) -> tuple[Path, dict[str, Any]]:
 
     results = [(candidate, load_json(candidate)) for candidate in candidates]
     expected_context = context_identity(results[0][1])
+    observed_cpu_locked: set[bool] = set()
     merged_entries: list[dict[str, Any]] = []
     owners: dict[str, Path] = {}
     for candidate, result in results:
         actual_context = context_identity(result)
-        if actual_context != expected_context:
+        mismatches = context_mismatches(expected_context, actual_context)
+        if mismatches:
             raise ValueError(
                 "Split current benchmark contexts differ: "
+                f"{', '.join(mismatches)}; "
                 f"{results[0][0]}={expected_context!r}, "
                 f"{candidate}={actual_context!r}",
             )
+        for value in actual_context.get("cpuLockedSnapshots", []):
+            if isinstance(value, bool):
+                observed_cpu_locked.add(value)
         entries = result.get("benchmarks")
         if not isinstance(entries, list):
             raise ValueError(f"Macrobenchmark result has no benchmarks array: {candidate}")
@@ -262,6 +268,7 @@ def load_current_result(value: str | Path) -> tuple[Path, dict[str, Any]]:
 
     merged = dict(results[0][1])
     merged["benchmarks"] = merged_entries
+    merged["viewcomposeCpuLockedSnapshots"] = sorted(observed_cpu_locked)
     return path, merged
 
 
@@ -486,26 +493,65 @@ def context_identity(result: dict[str, Any]) -> dict[str, Any]:
 
     context = result.get("context", {})
     if isinstance(context, dict) and "build" not in context:
+        cpu_locked = context.get("cpuLocked")
+        snapshots = context.get("cpuLockedSnapshots", [cpu_locked])
         return {
             "brand": context.get("brand"),
             "model": context.get("model"),
             "fingerprint": context.get("fingerprint"),
             "sdk": context.get("sdk"),
-            "cpuLocked": context.get("cpuLocked"),
+            "cpuLocked": cpu_locked,
+            "cpuLockedSnapshots": snapshots,
             "cpuMaxFreqHz": context.get("cpuMaxFreqHz"),
             "compilationMode": context.get("compilationMode"),
+            "clockPolicy": context.get("clockPolicy"),
         }
     build = context.get("build", {})
     version = build.get("version", {})
+    cpu_locked = context.get("cpuLocked")
+    payload = context.get("payload", {})
+    clock_policy = payload.get("clockPolicy") if isinstance(payload, dict) else None
+    snapshots = result.get("viewcomposeCpuLockedSnapshots", [cpu_locked])
     return {
         "brand": build.get("brand"),
         "model": build.get("model"),
         "fingerprint": build.get("fingerprint"),
         "sdk": version.get("sdk"),
-        "cpuLocked": context.get("cpuLocked"),
+        "cpuLocked": cpu_locked,
+        "cpuLockedSnapshots": snapshots,
         "cpuMaxFreqHz": context.get("cpuMaxFreqHz"),
         "compilationMode": context.get("compilationMode"),
+        "clockPolicy": clock_policy,
     }
+
+
+def context_mismatches(
+    expected: dict[str, Any],
+    actual: dict[str, Any],
+) -> list[str]:
+    """比较可复现的设备/编译/时钟协议，而不是瞬态 AndroidX 锁频快照。
+    Compares reproducible device, compilation, and clock policy rather than a transient snapshot.
+
+    AndroidX reads ``scaling_min_freq`` while the instrumentation process starts. OEM launch
+    boosting can therefore alternate ``cpuLocked`` on one unlocked consumer device. A caller may
+    opt into the explicit, host-verified clock protocol carried in BenchmarkData payload. Legacy
+    results without that protocol retain the strict ``cpuLocked`` comparison.
+    """
+
+    keys = ("brand", "model", "fingerprint", "sdk", "cpuMaxFreqHz", "compilationMode")
+    mismatches = [
+        key
+        for key in keys
+        if expected.get(key) != actual.get(key)
+    ]
+    expected_policy = expected.get("clockPolicy")
+    actual_policy = actual.get("clockPolicy")
+    if expected_policy is not None or actual_policy is not None:
+        if expected_policy != actual_policy:
+            mismatches.append("clockPolicy")
+    elif expected.get("cpuLocked") != actual.get("cpuLocked"):
+        mismatches.append("cpuLocked")
+    return mismatches
 
 
 def revisioned_baseline_comparisons(result: dict[str, Any]) -> list[Comparison]:
@@ -542,12 +588,7 @@ def require_matching_context(
 
     current_identity = context_identity(current)
     baseline_identity = context_identity(baseline)
-    keys = ("model", "fingerprint", "sdk", "cpuLocked", "compilationMode")
-    mismatches = [
-        key
-        for key in keys
-        if current_identity.get(key) != baseline_identity.get(key)
-    ]
+    mismatches = context_mismatches(baseline_identity, current_identity)
     if mismatches:
         detail = ", ".join(
             f"{key}={baseline_identity.get(key)!r}->{current_identity.get(key)!r}"
@@ -683,7 +724,8 @@ def render_markdown(
         f"- Current: `{current_path}`",
         f"- Device: `{context.get('brand')} {context.get('model')}`",
         f"- SDK: `{context.get('sdk')}`",
-        f"- CPU locked: `{context.get('cpuLocked')}`",
+        f"- Clock policy: `{context.get('clockPolicy') or 'androidx-cpu-lock-snapshot'}`",
+        f"- AndroidX CPU locked snapshots: `{context.get('cpuLockedSnapshots')}`",
         f"- Compilation mode: `{context.get('compilationMode')}`",
     ]
     if baseline_path is not None:

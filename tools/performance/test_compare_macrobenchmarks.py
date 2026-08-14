@@ -9,6 +9,7 @@ from contextlib import redirect_stdout
 from dataclasses import asdict, replace
 from io import StringIO
 from pathlib import Path
+from typing import Optional
 
 import compare_macrobenchmarks as comparison
 
@@ -57,6 +58,8 @@ def result(
     viewcompose_multiplier: float = 1.0,
     compose_multiplier: float = 1.0,
     fingerprint: str = "device/build",
+    cpu_locked: bool = True,
+    clock_policy: Optional[str] = None,
 ) -> dict:
     """构造包含所有配对场景的 Macrobenchmark 结果。
     Builds a Macrobenchmark result containing all paired scenarios.
@@ -88,9 +91,10 @@ def result(
                 "fingerprint": fingerprint,
                 "version": {"sdk": 36},
             },
-            "cpuLocked": True,
+            "cpuLocked": cpu_locked,
             "cpuMaxFreqHz": 1,
             "compilationMode": "run-from-apk",
+            "payload": {} if clock_policy is None else {"clockPolicy": clock_policy},
         },
         "benchmarks": entries,
     }
@@ -128,7 +132,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         self.assertEqual(2.0, list_scroll.compose)
         self.assertEqual(100.0, list_scroll.relative_percent)
         self.assertEqual("performance.list", list_scroll.scenario_id)
-        self.assertEqual(2, list_scroll.workload_revision)
+        self.assertEqual(3, list_scroll.workload_revision)
         self.assertTrue(
             any(item.scenario == "shadow_list_scroll" for item in comparisons),
         )
@@ -226,6 +230,60 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "contexts differ"):
                 comparison.load_current_result(root)
+
+    def test_merges_transient_cpu_lock_snapshots_under_explicit_clock_policy(self) -> None:
+        first = result(cpu_locked=False, clock_policy="unlocked-dvfs-preflight-v1")
+        first["benchmarks"] = first["benchmarks"][:1]
+        second = result(cpu_locked=True, clock_policy="unlocked-dvfs-preflight-v1")
+        second["benchmarks"] = second["benchmarks"][1:2]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "first-benchmarkData.json").write_text(
+                json.dumps(first),
+                encoding="utf-8",
+            )
+            (root / "second-benchmarkData.json").write_text(
+                json.dumps(second),
+                encoding="utf-8",
+            )
+
+            _, merged = comparison.load_current_result(root)
+
+        identity = comparison.context_identity(merged)
+        self.assertEqual("unlocked-dvfs-preflight-v1", identity["clockPolicy"])
+        self.assertEqual([False, True], identity["cpuLockedSnapshots"])
+
+    def test_rejects_transient_cpu_lock_mismatch_without_clock_policy(self) -> None:
+        first = result(cpu_locked=False)
+        first["benchmarks"] = first["benchmarks"][:1]
+        second = result(cpu_locked=True)
+        second["benchmarks"] = second["benchmarks"][1:2]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "first-benchmarkData.json").write_text(
+                json.dumps(first),
+                encoding="utf-8",
+            )
+            (root / "second-benchmarkData.json").write_text(
+                json.dumps(second),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "cpuLocked"):
+                comparison.load_current_result(root)
+
+    def test_rejects_explicit_clock_policy_mismatch(self) -> None:
+        first = comparison.context_identity(
+            result(clock_policy="unlocked-dvfs-preflight-v1"),
+        )
+        second = comparison.context_identity(
+            result(clock_policy="locked-clocks-v1"),
+        )
+
+        self.assertEqual(
+            ["clockPolicy"],
+            comparison.context_mismatches(first, second),
+        )
 
     def test_rejects_partial_scenario_without_compose_control(self) -> None:
         partial = result()
@@ -347,7 +405,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
 
             self.assertEqual(0, exit_code)
             self.assertIn(
-                "performance.list@2",
+                "performance.list@3",
                 markdown.read_text(encoding="utf-8"),
             )
             summary = json.loads(json_output.read_text(encoding="utf-8"))

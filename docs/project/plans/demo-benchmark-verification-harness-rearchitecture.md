@@ -4,7 +4,8 @@
 
 Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, Phase 2 host
 and catalog hard cut, Phase 3 localization and content hard cut, and Phase 4 scenario migration are
-complete. Phase 5 benchmark rebaseline is next.
+complete. Phase 5 benchmark rebaseline is in progress; release, renderer diagnostics, list revision
+3, and complex-layout revision 3 replacement baselines are accepted.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
@@ -13,7 +14,7 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: execute the Phase 5 same-device benchmark rebaseline.
+Next action: complete the Phase 5 diagnostics-theme and collection-stress interaction baselines.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -534,7 +535,7 @@ measurement semantics do not change without a workload revision.
 | 2. Host and catalog hard cut | Completed | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
 | 3. Localization and content policy | Completed | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
 | 4. Scenario migration | Completed | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
-| 5. Benchmark rebaseline | Not started | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
+| 5. Benchmark rebaseline | In progress | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
 | 6. Cleanup and Runtime-plan unlock | Not started | Old route/tag/section infrastructure removed; durable docs updated | Completion criteria pass, this plan is archived, then the Runtime/Patch plan is re-audited against the new baseline. |
 
 ## Phase 0: Inventory and contract freeze
@@ -1021,9 +1022,31 @@ ending at `SEVERE` is rejected regardless of its apparent variance.
 
 Paired ViewCompose/Compose methods are also isolated from ordering heat: each method starts from the
 same accepted thermal state and cools independently. The report tool deterministically merges their
-raw JSON only when device, OS, CPU-lock, and compilation identities match, and rejects duplicate
-method names. This preserves one revisioned paired report without making the second engine inherit
-the first engine's heat.
+raw JSON only when device, OS, clock-policy, and compilation identities match, and rejects duplicate
+method names. Legacy input without an explicit clock policy still requires matching AndroidX
+`cpuLocked` snapshots. This preserves one revisioned paired report without making the second engine
+inherit the first engine's heat.
+
+The batch installs its APKs once, then starts each cooled method directly through the already
+installed instrumentation runner. This ordering is part of the protocol, not an operator
+convenience: AndroidX snapshots `cpuLocked` during instrumentation-process initialization, while an
+OEM package-install or wake boost may temporarily raise `scaling_min_freq` and produce a false
+locked classification. Normal minimum frequencies and the accepted thermal state are verified
+before every method. The verified consumer-device runner writes
+`clockPolicy=unlocked-dvfs-preflight-v1` into the AndroidX benchmark payload. Compatibility uses that
+durable policy instead of the racy launch-time boolean, while the report preserves every raw
+`cpuLocked` snapshot and exposes mixed observations. A missing or different policy still fails
+closed; report generation never rewrites captured context.
+
+The launch boost also affected the measured workload itself: two independently cooled Compose
+complex-layout scroll samples made their first iteration roughly 40% faster than the following four
+and failed the stability gate. An initial 1.5-second settling trial still left the first
+complex-layout update iteration at `4.20 ms` versus `5.70`-`6.89 ms` for later iterations, producing
+CV `0.170`. Every paired performance setup therefore waits a conservative 5 seconds after the target
+is ready, outside the measured block. Because this changes the timing contract, list and complex
+layout advance to revision 3; both shadow comparison scenarios advance to revision 2. Revision 2
+list results and partial complex-layout results are retained only as rejected preflight evidence and
+are not accepted as replacement baselines.
 
 For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
 it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
@@ -1157,6 +1180,10 @@ the retired Demo layout.
 | 2026-08-15 | Phase 5 renderer-diagnostics stability preflight | The revision 2 one-refresh workload ended below `SEVERE` but produced frame CPU run-P50 CV `0.372`; it also did not await reset completion. The result was rejected, and revision 3 measures eight complete refresh/reset cycles per iteration. |
 | 2026-08-15 | Phase 5 renderer-diagnostics revision 3 and report audit | Five clean runs ended below `SEVERE`; frame CPU P50/P95 were 6.944/14.326 ms with run-P50 CV `0.140`. Signed frame overrun crossed zero, proving CV invalid for that metric; the report retains overrun values and regression gates but limits CV stability to positive ratio-scale frame CPU duration. |
 | 2026-08-15 | Phase 5 comparison-workload stability preflight | The revision 1 Compose list mutation used one mutate/reset cycle and produced frame CPU run-P50 CV `0.291`; the result and all scenario-level revision 1 list measurements were retired. List mutation and complex-layout update now execute eight complete cycles, and both scenario contracts advance to revision 2 before rebaseline. |
+| 2026-08-15 | Phase 5 installed-runner protocol and list revision 2 preflight | Per-method Gradle installation transiently raised OEM CPU minimum frequencies and made AndroidX report `cpuLocked=true` for two otherwise unlocked runs. Installing once, cooling, verifying normal minimum frequencies, and invoking the installed runner produced four same-context `cpuLocked=false` results. All list frame-CPU run-P50 CV values were `0.108` or lower, but the batch remained provisional until the later launch-boost audit rejected revision 2. |
+| 2026-08-15 | Phase 5 launch-boost isolation audit | Two cooled Compose complex-layout scroll samples began with frame-CPU run-P50 near `3.14 ms`, followed by four runs near `5.0`-`5.44 ms`; CV remained above `0.19`. A 1.5-second trial still left complex-layout update at CV `0.170`, so the shared paired-performance setup now includes an unmeasured 5-second post-launch settling window. List and complex-layout contracts advance to revision 3, shadow comparisons to revision 2, and the previously provisional revision 2 list report is rejected. |
+| 2026-08-15 | Phase 5 explicit clock-policy gate | AndroidX `cpuLocked` alternated on the same non-rooted device because instrumentation launch boosting transiently raised `scaling_min_freq`. Formal runs now persist `clockPolicy=unlocked-dvfs-preflight-v1`; the report compares that host-verified policy, exposes all raw lock snapshots, and retains strict snapshot matching for legacy input. Sixteen report-tool tests pass. |
+| 2026-08-15 | Phase 5 list and complex-layout replacement baselines | Five-iteration, per-method-cooled revision 3 batches passed the `0.15` stability gate. List scroll/mutation ViewCompose run-P50 CV values were `0.041/0.009` versus Compose `0.072/0.034`; complex-layout scroll/update values were `0.011/0.079` versus `0.037/0.082`. The owning performance specification records the accepted P50/P95 values. |
 
 ## Decision history
 

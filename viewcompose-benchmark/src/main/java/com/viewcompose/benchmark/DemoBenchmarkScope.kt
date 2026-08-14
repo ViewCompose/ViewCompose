@@ -274,6 +274,10 @@ internal fun MacrobenchmarkScope.startPerformanceScenarioAndWait(
         }
     }
     waitForScenarioTarget(scenarioId, DemoTargetRole.Target)
+    // OEM launch boosting can otherwise leak into the first measured gesture or mutation and make
+    // the first iteration materially faster than the rest. Setup is outside the measured block, so
+    // wait for the launch-frequency floor to expire before every performance iteration.
+    SystemClock.sleep(PERFORMANCE_LAUNCH_BOOST_SETTLE_MILLIS)
 }
 
 /**
@@ -364,6 +368,8 @@ private fun MacrobenchmarkScope.prepareBenchmarkUiAutomation() {
     // Benchmarks already use explicit text conditions and fixed motion windows, so idle timeout is disabled.
     Configurator.getInstance().setWaitForIdleTimeout(0L)
 }
+
+private const val PERFORMANCE_LAUNCH_BOOST_SETTLE_MILLIS = 5_000L
 
 /**
  * 执行一页向上滚动手势。
