@@ -102,6 +102,7 @@ class DemoScenarioAutomationUiTest {
             "design.material3-custom",
             "design.bundle-material3",
             "design.bundle-contrast",
+            "design.oneui7",
             "performance.list",
         ).forEach { scenarioId ->
             launchScenario(scenarioId)
@@ -358,6 +359,30 @@ class DemoScenarioAutomationUiTest {
                     waitForTargetText(scenarioId, initial),
                 )
             }
+        }
+    }
+
+    @Test
+    fun oneUi7FixturePublishesDeterministicActionAndFullSessionReset() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            val scenarioId = "design.oneui7"
+            launchScenario(scenarioId)
+            val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+            requireTarget(scenarioId, "primary_action").click()
+            assertNotEquals(
+                "$scenarioId action must publish state",
+                initial,
+                waitForTargetTextChange(scenarioId, initial),
+            )
+
+            requireTarget(scenarioId, "reset").click()
+            assertEquals(
+                "$scenarioId reset must recreate the initial One UI Session",
+                initial,
+                waitForTargetText(scenarioId, initial),
+            )
         }
     }
 

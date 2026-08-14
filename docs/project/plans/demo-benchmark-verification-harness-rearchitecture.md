@@ -10,11 +10,10 @@ Automated validation owns the primary information architecture. Human verificati
 supported secondary workflow, but explanatory copy must not displace the fixture, become a
 selector contract, or enter a measured benchmark hierarchy.
 
-Last verified: 2026-08-14.
+Last verified: 2026-08-15.
 
-Next action: complete the fourth-risk group with One UI verification, then begin the retained
-component visual/showcase scenarios while reducing the remaining text-selector debt with each
-direct scenario slice.
+Next action: begin the retained component visual/showcase scenarios while reducing the remaining
+text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -855,6 +854,23 @@ SM-G991B Android 13 reference device, both bundles passed the action/full-reset 
 and Simplified Chinese, the five-case light/dark, LTR/RTL, font-scale, reduced-motion, native-input,
 accessibility, recreation, and screenshot matrix passed, root/lazy/overlay replacement coherence
 passed, and the registry-wide host-role sweep passed.
+
+One UI 7 verification now has one strict direct fixture, `design.oneui7`.
+`OneUi7VerificationActivity` requires that immutable scenario identity, so direct launches can no
+longer bypass the registry contract. The page retains the independent One UI five-component and
+overlay-presenter semantics rather than inheriting Material assumptions. Scenario roles own its
+root, ready, primary and secondary actions, state, reset, and visual targets; app resource IDs own
+the bottom-sheet content and actions. The existing presenter accessibility descriptions remain
+framework-owned window identities, while app-visible navigation and overlay copy is no longer an
+automation selector. Reset advances both the parent composition generation and every lazy-item
+key, recreating button, Switch, text-field, navigation, Snackbar, and bottom-sheet state instead of
+leaving independent item Sessions alive. Paired resources cover the complete fixture, and the
+hard-coded-copy gate owns both the page and dedicated Activity. The guarded visible-text selector
+baseline fell by four usages, and obsolete launcher/root/action/state tags were removed. This
+fixture has no Macrobenchmark owner, so no workload revision was added. On the Samsung SM-G991B
+Android 13 reference device, the bilingual action/full-reset contract, the complete light/dark,
+LTR/RTL, 1.0/1.3 font-scale, Switch drag, navigation accessibility, Snackbar, bottom-sheet, and
+screenshot evidence matrix, and the registry-wide host-role sweep passed.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

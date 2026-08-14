@@ -18,6 +18,7 @@ import com.viewcompose.StateActivity
 import com.viewcompose.SystemNavigationActivity
 import com.viewcompose.Material3DefaultThemeActivity
 import com.viewcompose.DemoDesignSystemVerificationActivity
+import com.viewcompose.OneUi7VerificationActivity
 import com.viewcompose.demo.contract.DemoAutomationContract
 import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoBenchmarkContract
@@ -85,6 +86,7 @@ internal object DemoScenarioIds {
     val DesignMaterial3Custom = DemoScenarioId("design.material3-custom")
     val DesignBundleMaterial3 = DemoScenarioId("design.bundle-material3")
     val DesignBundleContrast = DemoScenarioId("design.bundle-contrast")
+    val DesignOneUi7 = DemoScenarioId("design.oneui7")
     val PerformanceList = DemoScenarioId("performance.list")
 }
 
@@ -931,6 +933,29 @@ internal object DemoScenarioRegistry {
             state = R.id.demo_design_bundle_contrast_state,
             target = R.id.demo_design_bundle_contrast_target,
             secondaryTarget = R.id.demo_design_bundle_contrast_secondary_target,
+        ),
+        scenario(
+            id = DemoScenarioIds.DesignOneUi7,
+            category = DemoScenarioCategory.DesignSystems,
+            titleRes = R.string.demo_scenario_design_one_ui7_title,
+            summaryRes = R.string.demo_scenario_design_one_ui7_summary,
+            host = DemoHostPolicy.Dedicated,
+            verificationKinds = setOf(
+                DemoVerificationKind.Manual,
+                DemoVerificationKind.Visual,
+            ),
+            route = DemoScenarioRoute(OneUi7VerificationActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_design_oneui7_root,
+                ready = R.id.demo_design_oneui7_ready,
+                primaryAction = R.id.demo_design_oneui7_primary_action,
+                secondaryAction = R.id.demo_design_oneui7_secondary_action,
+                reset = R.id.demo_design_oneui7_reset,
+                state = R.id.demo_design_oneui7_state,
+                target = R.id.demo_design_oneui7_target,
+                secondaryTarget = R.id.demo_design_oneui7_secondary_target,
+            ),
         ),
         scenario(
             id = DemoScenarioIds.PerformanceList,

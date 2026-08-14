@@ -205,6 +205,5 @@
     <string name="demo_activity_material3_theme_title">Theme and token verification</string>
     <string name="demo_activity_preview_title">Preview</string>
     <string name="demo_activity_graphics_title">Graphics</string>
-    <string name="demo_activity_one_ui_title">One UI 7 five-component alpha</string>
     <string name="demo_activity_material3_visual_baseline_title">Material 3 visual baseline</string>
 </resources>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_design_one_ui7_title">设计系统 · One UI 7</string>
+    <string name="demo_scenario_design_one_ui7_summary">验证独立的 One UI 7 五组件切片及其显式 Overlay Presenter。</string>
+    <string name="demo_activity_one_ui_title">One UI 7 五组件 Alpha</string>
+    <string name="demo_one_ui7_ready">One UI 7 夹具已就绪</string>
+    <string name="demo_one_ui7_title">One UI 7 五组件 Alpha</string>
+    <string name="demo_one_ui7_summary">锁定三星公开设计指南，由 ViewCompose 拥有解析后的 Token 与组件配方。</string>
+    <string name="demo_one_ui7_reset">重置夹具</string>
+
+    <string name="demo_one_ui7_screenshot_identity">截图身份</string>
+    <string name="demo_one_ui7_fact_reference">参考标准</string>
+    <string name="demo_one_ui7_fact_component_set">组件集</string>
+    <string name="demo_one_ui7_fact_token_source">Token 来源</string>
+    <string name="demo_one_ui7_fact_primary_source">Primary 来源</string>
+    <string name="demo_one_ui7_fact_design_system">设计系统</string>
+    <string name="demo_one_ui7_fact_recipe_set">配方集</string>
+    <string name="demo_one_ui7_fact_component_backends">组件后端</string>
+    <string name="demo_one_ui7_fact_overlay_transport">Overlay 传输层</string>
+    <string name="demo_one_ui7_fact_overlay_presenters">Overlay Presenter</string>
+    <string name="demo_one_ui7_fact_mode">模式</string>
+    <string name="demo_one_ui7_fact_font_scale">字体缩放</string>
+    <string name="demo_one_ui7_fact_direction">方向</string>
+    <string name="demo_one_ui7_fact_primary">Primary</string>
+    <string name="demo_one_ui7_fact_surface">Surface</string>
+    <string name="demo_one_ui7_mode_light">浅色</string>
+    <string name="demo_one_ui7_mode_dark">深色</string>
+    <string name="demo_one_ui7_unattributed">未归属</string>
+
+    <string name="demo_one_ui7_conformance">一致性</string>
+    <string name="demo_one_ui7_component_button">按钮</string>
+    <string name="demo_one_ui7_component_surface">Surface/Card</string>
+    <string name="demo_one_ui7_component_switch">开关</string>
+    <string name="demo_one_ui7_component_text_field">文本字段</string>
+    <string name="demo_one_ui7_component_navigation">导航</string>
+    <string name="demo_one_ui7_component_backdrop_blur">背景模糊</string>
+    <string name="demo_one_ui7_conformance_button">等价 · 共享 BasicButton</string>
+    <string name="demo_one_ui7_conformance_surface">等价 · 共享 BasicSurface</string>
+    <string name="demo_one_ui7_conformance_switch">等价 · 自有组合控件</string>
+    <string name="demo_one_ui7_conformance_text_field">等价 · 原生编辑核心</string>
+    <string name="demo_one_ui7_conformance_navigation">等价 · 纯文本 Tab</string>
+    <string name="demo_one_ui7_conformance_backdrop_blur">降级 · 着色 Surface</string>
+
+    <string name="demo_one_ui7_buttons">按钮</string>
+    <string name="demo_one_ui7_continue">继续</string>
+    <string name="demo_one_ui7_later">稍后</string>
+    <string name="demo_one_ui7_flat_action">扁平操作</string>
+    <string name="demo_one_ui7_button_status">按钮点击次数：%1$d</string>
+    <string name="demo_one_ui7_surface_section">Surface/Card</string>
+    <string name="demo_one_ui7_connected_devices">已连接设备</string>
+    <string name="demo_one_ui7_surface_summary">共享 BasicSurface；渲染器中没有 One UI 分支。</string>
+    <string name="demo_one_ui7_switch_section">开关</string>
+    <string name="demo_one_ui7_sync_devices">同步设备</string>
+    <string name="demo_one_ui7_checked_status">选中：%1$s</string>
+    <string name="demo_one_ui7_text_field_section">文本字段</string>
+    <string name="demo_one_ui7_account_name">账户名称</string>
+    <string name="demo_one_ui7_account_initial_value">Galaxy</string>
+    <string name="demo_one_ui7_name_placeholder">姓名</string>
+    <string name="demo_one_ui7_text_field_support">保持 Android 原生编辑、选区和 IME 行为。</string>
+    <string name="demo_one_ui7_navigation_section">纯文本导航</string>
+    <string name="demo_one_ui7_home">首页</string>
+    <string name="demo_one_ui7_search">搜索</string>
+    <string name="demo_one_ui7_profile">个人</string>
+    <string name="demo_one_ui7_selected_status">已选择：%1$s</string>
+    <string name="demo_one_ui7_overlays">One UI Overlay</string>
+    <string name="demo_one_ui7_overlay_summary">中立 Android 传输层与显式 One UI Presenter。</string>
+    <string name="demo_one_ui7_show_snackbar">显示 Snackbar</string>
+    <string name="demo_one_ui7_show_sheet">显示底部面板</string>
+    <string name="demo_one_ui7_snackbar_message">One UI Overlay Presenter 已激活</string>
+    <string name="demo_one_ui7_snackbar_done">完成</string>
+    <string name="demo_one_ui7_sheet_summary">该底部对话框由 One UI Adapter 渲染，不依赖 Material Components。</string>
+    <string name="demo_one_ui7_close">关闭</string>
+</resources>

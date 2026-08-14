@@ -206,6 +206,5 @@
     <string name="demo_activity_material3_theme_title">主题与 Token 验证</string>
     <string name="demo_activity_preview_title">预览</string>
     <string name="demo_activity_graphics_title">图形</string>
-    <string name="demo_activity_one_ui_title">One UI 7 五组件 Alpha</string>
     <string name="demo_activity_material3_visual_baseline_title">Material 3 视觉基线</string>
 </resources>

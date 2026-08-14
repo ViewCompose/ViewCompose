@@ -9,6 +9,8 @@ import com.viewcompose.android.setUiContent
 import com.viewcompose.oneui7.OneUi7Theme
 import com.viewcompose.oneui7.OneUi7ThemeDefaults
 import com.viewcompose.overlay.oneui7.android.host.AndroidOverlayHost
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.ui.environment.UiEnvironmentValues
 import com.viewcompose.ui.environment.UiLayoutDirection
 import com.viewcompose.ui.environment.UiLocaleList
@@ -26,6 +28,9 @@ class OneUi7VerificationActivity : DemoRenderActivity() {
     private var overlayIntegrations: List<UiIntegrationAttribution> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        require(currentScenario()?.id == DemoScenarioIds.DesignOneUi7) {
+            "OneUi7VerificationActivity requires ${DemoScenarioIds.DesignOneUi7.value}"
+        }
         val dark = intent?.getBooleanExtra(EXTRA_DARK, false) ?: false
         super.onCreate(savedInstanceState)
         WindowCompat.getInsetsController(window, window.decorView).apply {
@@ -71,7 +76,9 @@ class OneUi7VerificationActivity : DemoRenderActivity() {
                 tokens = resolvedTokens,
                 integrations = overlayIntegrations,
             ) {
-                DemoOneUi7VerificationPage()
+                DemoOneUi7VerificationPage(
+                    scenario = checkNotNull(currentScenario()),
+                )
             }
         }
     }
@@ -86,7 +93,10 @@ class OneUi7VerificationActivity : DemoRenderActivity() {
             dark: Boolean = false,
             rtl: Boolean = false,
             fontScale: Float = 1f,
-        ): Intent = Intent(context, OneUi7VerificationActivity::class.java)
+        ): Intent = DemoScenarioRegistry.createLaunchIntent(
+            context,
+            DemoScenarioRegistry.require(DemoScenarioIds.DesignOneUi7.value),
+        )
             .putExtra(EXTRA_DARK, dark)
             .putExtra(EXTRA_RTL, rtl)
             .putExtra(EXTRA_FONT_SCALE, fontScale)

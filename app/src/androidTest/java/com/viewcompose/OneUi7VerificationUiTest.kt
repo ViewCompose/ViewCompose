@@ -13,6 +13,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import androidx.recyclerview.widget.RecyclerView
+import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.oneui7.OneUi7Reference
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -51,7 +52,7 @@ class OneUi7VerificationUiTest {
                     )
                     assertEquals(
                         if (fixture.rtl) View.LAYOUT_DIRECTION_RTL else View.LAYOUT_DIRECTION_LTR,
-                        activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_ROOT).layoutDirection,
+                        activity.requireScenarioTarget(DemoAutomationRole.Root).layoutDirection,
                     )
                     val tokenProducer = activity.requireTextViewByTestTagVisible(
                         DemoTestTags.ONE_UI_7_TOKEN_PRODUCER,
@@ -113,20 +114,19 @@ class OneUi7VerificationUiTest {
                 )
 
                 scenario.onActivity { activity ->
-                    activity.clickByTestTag(DemoTestTags.ONE_UI_7_BUTTON)
+                    activity.clickScenarioTarget(DemoAutomationRole.PrimaryAction)
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Button clicks: 1",
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_BUTTON_STATUS)
-                            .text.toString(),
+                        activity.getString(R.string.demo_one_ui7_button_status, 1),
+                        activity.requireScenarioText(DemoAutomationRole.State),
                     )
                     activity.scrollFixtureToPosition(SWITCH_POSITION)
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
-                    val switchRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH)
+                    val switchRoot = activity.requireScenarioTarget(DemoAutomationRole.SecondaryAction)
                     val density = activity.resources.displayMetrics.density
                     val trackWidth = (44f * density).roundToInt()
                     val trackHeight = (24f * density).roundToInt()
@@ -143,35 +143,32 @@ class OneUi7VerificationUiTest {
                             view.width == thumbDiameter && view.height == thumbDiameter
                         },
                     )
-                    activity.tapByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
+                    activity.tapByTestTag(activity.scenarioTag(DemoAutomationRole.SecondaryAction))
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Checked: false",
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
-                            .text.toString(),
+                        activity.getString(R.string.demo_one_ui7_checked_status, false),
+                        activity.requireScenarioText(DemoAutomationRole.SecondaryTarget),
                     )
                     activity.dragByTestTag(
-                        tag = DemoTestTags.ONE_UI_7_SWITCH,
+                        tag = activity.scenarioTag(DemoAutomationRole.SecondaryAction),
                         deltaX = if (fixture.rtl) -120f else 120f,
                     )
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Checked: true",
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
-                            .text.toString(),
+                        activity.getString(R.string.demo_one_ui7_checked_status, true),
+                        activity.requireScenarioText(DemoAutomationRole.SecondaryTarget),
                     )
                 }
                 SystemClock.sleep(INTERACTION_STABILITY_MILLIS)
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Checked: true",
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
-                            .text.toString(),
+                        activity.getString(R.string.demo_one_ui7_checked_status, true),
+                        activity.requireScenarioText(DemoAutomationRole.SecondaryTarget),
                     )
                 }
                 captureEvidence(
@@ -185,7 +182,10 @@ class OneUi7VerificationUiTest {
                 scenario.onActivity { activity ->
                     val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_TEXT_FIELD)
                     val editText = requireNotNull(findDescendant(fieldRoot, EditText::class.java))
-                    assertEquals("Galaxy", editText.text.toString())
+                    assertEquals(
+                        activity.getString(R.string.demo_one_ui7_account_initial_value),
+                        editText.text.toString(),
+                    )
                     assertNotNull(editText.onCreateInputConnection(android.view.inputmethod.EditorInfo()))
                     activity.scrollFixtureToPosition(NAVIGATION_POSITION)
                 }
@@ -195,17 +195,18 @@ class OneUi7VerificationUiTest {
                 }
 
                 val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-                assertTrue(
-                    "Expected visible text-only Search destination",
-                    device.wait(Until.hasObject(By.text("Search")), UI_TIMEOUT_MILLIS),
-                )
-                scenario.onActivity { activity -> activity.clickTextView("Search") }
+                scenario.onActivity { activity ->
+                    activity.clickTextView(activity.getString(R.string.demo_one_ui7_search))
+                }
                 waitForUiIdle()
                 SystemClock.sleep(WINDOW_SETTLE_MILLIS)
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Selected: Search",
+                        activity.getString(
+                            R.string.demo_one_ui7_selected_status,
+                            activity.getString(R.string.demo_one_ui7_search),
+                        ),
                         activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_NAVIGATION_STATUS)
                             .text.toString(),
                     )
@@ -222,15 +223,18 @@ class OneUi7VerificationUiTest {
                 scenario.onActivity { activity ->
                     activity.clickByTestTag(DemoTestTags.ONE_UI_7_SNACKBAR_ACTION)
                 }
-                assertTrue(
-                    "Expected One UI Snackbar presenter",
-                    device.wait(Until.hasObject(By.desc("One UI Snackbar")), UI_TIMEOUT_MILLIS),
+                val snackbar = device.wait(
+                    Until.findObject(By.desc("One UI Snackbar")),
+                    UI_TIMEOUT_MILLIS,
                 )
+                assertNotNull("Expected One UI Snackbar presenter", snackbar)
                 captureEvidence(
                     label = "one-ui7-${fixture.label}-snackbar",
                     metadata = fixture.metadata(productionMetadata),
                 )
-                device.findObject(By.text("Done")).click()
+                val snackbarAction = requireNotNull(snackbar).findObject(By.clickable(true))
+                assertNotNull("Expected One UI Snackbar action", snackbarAction)
+                requireNotNull(snackbarAction).click()
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     activity.clickByTestTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
@@ -239,12 +243,19 @@ class OneUi7VerificationUiTest {
                     "Expected One UI bottom-sheet presenter",
                     device.wait(Until.hasObject(By.desc("One UI Bottom Sheet")), UI_TIMEOUT_MILLIS),
                 )
-                assertTrue(device.hasObject(By.text("Connected devices")))
+                assertTrue(
+                    device.wait(
+                        Until.hasObject(By.res(TARGET_PACKAGE, SHEET_CONTENT_RESOURCE)),
+                        UI_TIMEOUT_MILLIS,
+                    ),
+                )
                 captureEvidence(
                     label = "one-ui7-${fixture.label}-bottom-sheet",
                     metadata = fixture.metadata(productionMetadata),
                 )
-                device.findObject(By.text("Close")).click()
+                requireNotNull(
+                    device.findObject(By.res(TARGET_PACKAGE, SHEET_DISMISS_RESOURCE)),
+                ).click()
                 waitForUiIdle()
             }
         }
@@ -268,21 +279,19 @@ class OneUi7VerificationUiTest {
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Checked: true",
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
-                            .text.toString(),
+                        activity.getString(R.string.demo_one_ui7_checked_status, true),
+                        activity.requireScenarioText(DemoAutomationRole.SecondaryTarget),
                     )
-                    activity.tapByTestTag(DemoTestTags.ONE_UI_7_SWITCH)
+                    activity.tapByTestTag(activity.scenarioTag(DemoAutomationRole.SecondaryAction))
                 }
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Checked: false",
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
-                            .text.toString(),
+                        activity.getString(R.string.demo_one_ui7_checked_status, false),
+                        activity.requireScenarioText(DemoAutomationRole.SecondaryTarget),
                     )
                     activity.dragByTestTag(
-                        tag = DemoTestTags.ONE_UI_7_SWITCH,
+                        tag = activity.scenarioTag(DemoAutomationRole.SecondaryAction),
                         deltaX = if (rtl) -120f else 120f,
                     )
                 }
@@ -291,11 +300,116 @@ class OneUi7VerificationUiTest {
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Checked: true",
-                        activity.requireTextViewByTestTagVisible(DemoTestTags.ONE_UI_7_SWITCH_STATUS)
-                            .text.toString(),
+                        activity.getString(R.string.demo_one_ui7_checked_status, true),
+                        activity.requireScenarioText(DemoAutomationRole.SecondaryTarget),
                     )
                 }
+            }
+        }
+    }
+
+    @Test
+    fun resetRecreatesEveryLazyItemSessionAndDisposesActiveOverlays() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        launchDemoActivity<OneUi7VerificationActivity>(
+            OneUi7VerificationActivity.newIntent(context),
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.clickScenarioTarget(DemoAutomationRole.PrimaryAction)
+                activity.scrollFixtureToPosition(SWITCH_POSITION)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.tapByTestTag(activity.scenarioTag(DemoAutomationRole.SecondaryAction))
+                activity.scrollFixtureToPosition(TEXT_FIELD_POSITION)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_TEXT_FIELD)
+                requireNotNull(findDescendant(fieldRoot, EditText::class.java)).setText("Changed")
+                activity.scrollFixtureToPosition(NAVIGATION_POSITION)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.clickTextView(activity.getString(R.string.demo_one_ui7_search))
+                activity.scrollFixtureToPosition(OVERLAY_POSITION)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.clickByTestTag(DemoTestTags.ONE_UI_7_SNACKBAR_ACTION)
+            }
+            assertTrue(
+                device.wait(Until.hasObject(By.desc("One UI Snackbar")), UI_TIMEOUT_MILLIS),
+            )
+
+            scenario.onActivity { activity -> activity.scrollFixtureToPosition(IDENTITY_POSITION) }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.clickScenarioTarget(DemoAutomationRole.Reset)
+            }
+            waitForUiIdle()
+            assertTrue(
+                "Reset must dispose the active One UI Snackbar",
+                device.wait(Until.gone(By.desc("One UI Snackbar")), UI_TIMEOUT_MILLIS),
+            )
+
+            scenario.onActivity { activity -> activity.scrollFixtureToPosition(OVERLAY_POSITION) }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.clickByTestTag(DemoTestTags.ONE_UI_7_BOTTOM_SHEET_ACTION)
+            }
+            assertTrue(
+                device.wait(Until.hasObject(By.desc("One UI Bottom Sheet")), UI_TIMEOUT_MILLIS),
+            )
+
+            scenario.onActivity { activity -> activity.scrollFixtureToPosition(IDENTITY_POSITION) }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                activity.clickScenarioTarget(DemoAutomationRole.Reset)
+            }
+            waitForUiIdle()
+            assertTrue(
+                "Reset must dispose the active One UI bottom sheet",
+                device.wait(Until.gone(By.desc("One UI Bottom Sheet")), UI_TIMEOUT_MILLIS),
+            )
+            scenario.onActivity { activity ->
+                assertEquals(
+                    activity.getString(R.string.demo_one_ui7_button_status, 0),
+                    activity.requireScenarioText(DemoAutomationRole.State),
+                )
+                activity.scrollFixtureToPosition(SWITCH_POSITION)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertEquals(
+                    activity.getString(R.string.demo_one_ui7_checked_status, true),
+                    activity.requireScenarioText(DemoAutomationRole.SecondaryTarget),
+                )
+                activity.scrollFixtureToPosition(TEXT_FIELD_POSITION)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val fieldRoot = activity.requireViewByTestTagVisible(DemoTestTags.ONE_UI_7_TEXT_FIELD)
+                val field = requireNotNull(findDescendant(fieldRoot, EditText::class.java))
+                assertEquals(
+                    activity.getString(R.string.demo_one_ui7_account_initial_value),
+                    field.text.toString(),
+                )
+                activity.scrollFixtureToPosition(NAVIGATION_POSITION)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertEquals(
+                    activity.getString(
+                        R.string.demo_one_ui7_selected_status,
+                        activity.getString(R.string.demo_one_ui7_home),
+                    ),
+                    activity.requireTextViewByTestTagVisible(
+                        DemoTestTags.ONE_UI_7_NAVIGATION_STATUS,
+                    ).text.toString(),
+                )
             }
         }
     }
@@ -400,6 +514,22 @@ class OneUi7VerificationUiTest {
         collect(this@descendantViews)
     }
 
+    private fun OneUi7VerificationActivity.scenarioTag(
+        role: DemoAutomationRole,
+    ): String = checkNotNull(currentScenario()).automation.require(role).testTag
+
+    private fun OneUi7VerificationActivity.requireScenarioTarget(
+        role: DemoAutomationRole,
+    ): View = requireViewByTestTagVisible(scenarioTag(role))
+
+    private fun OneUi7VerificationActivity.requireScenarioText(
+        role: DemoAutomationRole,
+    ): String = requireTextViewByTestTagVisible(scenarioTag(role)).text.toString()
+
+    private fun OneUi7VerificationActivity.clickScenarioTarget(
+        role: DemoAutomationRole,
+    ) = clickByTestTag(scenarioTag(role))
+
     private fun android.app.Activity.scrollFixtureToPosition(position: Int) {
         val root = findViewById<ViewGroup>(android.R.id.content)
         requireNotNull(findDescendant(root, RecyclerView::class.java)).scrollToPosition(position)
@@ -418,9 +548,13 @@ class OneUi7VerificationUiTest {
         const val UI_TIMEOUT_MILLIS = 5_000L
         const val PRIVATE_OUTPUT_DIRECTORY = "one-ui7-alpha"
         const val PUBLIC_OUTPUT_DIRECTORY = "viewcompose-one-ui7-alpha"
-        const val SWITCH_POSITION = 3
-        const val TEXT_FIELD_POSITION = 4
-        const val NAVIGATION_POSITION = 5
-        const val OVERLAY_POSITION = 6
+        const val TARGET_PACKAGE = "com.gzq.uiframework"
+        const val SHEET_CONTENT_RESOURCE = "demo_oneui7_sheet_content"
+        const val SHEET_DISMISS_RESOURCE = "demo_oneui7_sheet_dismiss"
+        const val IDENTITY_POSITION = 0
+        const val SWITCH_POSITION = 2
+        const val TEXT_FIELD_POSITION = 3
+        const val NAVIGATION_POSITION = 4
+        const val OVERLAY_POSITION = 5
     }
 }

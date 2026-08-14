@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_design_one_ui7_title">Design system · One UI 7</string>
+    <string name="demo_scenario_design_one_ui7_summary">Verify the independent One UI 7 five-component slice and its explicit overlay presenters.</string>
+    <string name="demo_activity_one_ui_title">One UI 7 five-component alpha</string>
+    <string name="demo_one_ui7_ready">One UI 7 fixture ready</string>
+    <string name="demo_one_ui7_title">One UI 7 five-component alpha</string>
+    <string name="demo_one_ui7_summary">Public Samsung guidance is pinned while ViewCompose owns the interpreted tokens and component recipes.</string>
+    <string name="demo_one_ui7_reset">Reset fixture</string>
+
+    <string name="demo_one_ui7_screenshot_identity">Screenshot identity</string>
+    <string name="demo_one_ui7_fact_reference">Reference</string>
+    <string name="demo_one_ui7_fact_component_set">Component set</string>
+    <string name="demo_one_ui7_fact_token_source">Token source</string>
+    <string name="demo_one_ui7_fact_primary_source">Primary source</string>
+    <string name="demo_one_ui7_fact_design_system">Design system</string>
+    <string name="demo_one_ui7_fact_recipe_set">Recipe set</string>
+    <string name="demo_one_ui7_fact_component_backends">Component backends</string>
+    <string name="demo_one_ui7_fact_overlay_transport">Overlay transport</string>
+    <string name="demo_one_ui7_fact_overlay_presenters">Overlay presenters</string>
+    <string name="demo_one_ui7_fact_mode">Mode</string>
+    <string name="demo_one_ui7_fact_font_scale">Font scale</string>
+    <string name="demo_one_ui7_fact_direction">Direction</string>
+    <string name="demo_one_ui7_fact_primary">Primary</string>
+    <string name="demo_one_ui7_fact_surface">Surface</string>
+    <string name="demo_one_ui7_mode_light">Light</string>
+    <string name="demo_one_ui7_mode_dark">Dark</string>
+    <string name="demo_one_ui7_unattributed">Unattributed</string>
+
+    <string name="demo_one_ui7_conformance">Conformance</string>
+    <string name="demo_one_ui7_component_button">Button</string>
+    <string name="demo_one_ui7_component_surface">Surface/Card</string>
+    <string name="demo_one_ui7_component_switch">Switch</string>
+    <string name="demo_one_ui7_component_text_field">TextField</string>
+    <string name="demo_one_ui7_component_navigation">Navigation</string>
+    <string name="demo_one_ui7_component_backdrop_blur">Backdrop blur</string>
+    <string name="demo_one_ui7_conformance_button">Equivalent · shared BasicButton</string>
+    <string name="demo_one_ui7_conformance_surface">Equivalent · shared BasicSurface</string>
+    <string name="demo_one_ui7_conformance_switch">Equivalent · owned composite</string>
+    <string name="demo_one_ui7_conformance_text_field">Equivalent · native edit core</string>
+    <string name="demo_one_ui7_conformance_navigation">Equivalent · text-only tabs</string>
+    <string name="demo_one_ui7_conformance_backdrop_blur">Degraded · tinted surface</string>
+
+    <string name="demo_one_ui7_buttons">Buttons</string>
+    <string name="demo_one_ui7_continue">Continue</string>
+    <string name="demo_one_ui7_later">Later</string>
+    <string name="demo_one_ui7_flat_action">Flat action</string>
+    <string name="demo_one_ui7_button_status">Button clicks: %1$d</string>
+    <string name="demo_one_ui7_surface_section">Surface/Card</string>
+    <string name="demo_one_ui7_connected_devices">Connected devices</string>
+    <string name="demo_one_ui7_surface_summary">Shared BasicSurface; the renderer has no One UI branch.</string>
+    <string name="demo_one_ui7_switch_section">Switch</string>
+    <string name="demo_one_ui7_sync_devices">Sync devices</string>
+    <string name="demo_one_ui7_checked_status">Checked: %1$s</string>
+    <string name="demo_one_ui7_text_field_section">Text field</string>
+    <string name="demo_one_ui7_account_name">Account name</string>
+    <string name="demo_one_ui7_account_initial_value">Galaxy</string>
+    <string name="demo_one_ui7_name_placeholder">Name</string>
+    <string name="demo_one_ui7_text_field_support">Native Android editing, selection, and IME.</string>
+    <string name="demo_one_ui7_navigation_section">Text-only navigation</string>
+    <string name="demo_one_ui7_home">Home</string>
+    <string name="demo_one_ui7_search">Search</string>
+    <string name="demo_one_ui7_profile">Profile</string>
+    <string name="demo_one_ui7_selected_status">Selected: %1$s</string>
+    <string name="demo_one_ui7_overlays">One UI overlays</string>
+    <string name="demo_one_ui7_overlay_summary">Neutral Android transport with explicit One UI presenters.</string>
+    <string name="demo_one_ui7_show_snackbar">Show snackbar</string>
+    <string name="demo_one_ui7_show_sheet">Show sheet</string>
+    <string name="demo_one_ui7_snackbar_message">One UI overlay presenter is active</string>
+    <string name="demo_one_ui7_snackbar_done">Done</string>
+    <string name="demo_one_ui7_sheet_summary">This bottom dialog is rendered by the One UI adapter without Material Components.</string>
+    <string name="demo_one_ui7_close">Close</string>
+</resources>
