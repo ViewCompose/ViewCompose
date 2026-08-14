@@ -269,7 +269,8 @@ internal fun MacrobenchmarkScope.startSystemNavigationAndWait() {
  */
 internal fun MacrobenchmarkScope.startSystemNavigationActivityFromForeground() {
     device.executeShellCommand(
-        "am start -W -n $TARGET_PACKAGE/com.viewcompose.SystemNavigationActivity",
+        "am start -W -n $TARGET_PACKAGE/com.viewcompose.SystemNavigationActivity " +
+            "--es demo_scenario_id navigation.system",
     )
 }
 

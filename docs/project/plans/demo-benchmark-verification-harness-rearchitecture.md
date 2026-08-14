@@ -12,8 +12,9 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: continue the third-risk group with overlays, navigation, and lifecycle-specific hosts
-while reducing the remaining text-selector debt with each direct scenario slice.
+Next action: begin the fourth-risk group with Material 3, custom-token, multi-design-system, and
+One UI verification while reducing the remaining text-selector debt with each direct scenario
+slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -804,6 +805,21 @@ hard-coded-copy gate owns the Feedback directory. No workload revision was creat
 former page only displayed a benchmark-shaped callout and had no Macrobenchmark owner. On the
 Samsung SM-G991B Android 13 reference device, three focused overlay flows, the English and
 Simplified Chinese action-reset contract, and the registry-wide root/ready sweep passed.
+
+The dedicated `navigation.system` fixture now requires its strict scenario identity for ordinary
+launches; only an external `ACTION_VIEW` deep link may bind the sole owned scenario implicitly.
+The first lazy item owns localized state plus deterministic Push and full-Session Reset roles, and
+the old visible manual checklist and `adb` command were removed. Navigation events, result
+summaries, and deep-link outcomes are stored as semantic values rather than translated strings, so
+an in-process locale change cannot freeze old-language state. Reset advances a generation key and
+recreates the controller, entry and graph owners, saveable state, and ViewModels instead of merely
+popping the active stack. This host and hierarchy change advances the navigation motion workload
+revision from 1 to 2. The hard-coded-copy gate owns both system-navigation source files and the
+dedicated Activity while leaving the separate Navigation-components showcase for the fifth-risk
+group. On the Samsung SM-G991B Android 13 reference device, the bilingual action/reset contract,
+all three focused independent-stack, deep-link, recreation, and owner-lifetime tests, and the
+registry host-role sweep passed. The automation text reader also now reacquires a role node after
+an intentional full-Session reset instead of assuming that an old `UiObject2` remains valid.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

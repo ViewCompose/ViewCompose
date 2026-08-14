@@ -1,11 +1,12 @@
 package com.viewcompose
 
-import com.viewcompose.demo.automation.demoAutomationTarget
-import com.viewcompose.demo.contract.DemoAutomationRole
-import com.viewcompose.demo.contract.DemoScenarioSpec
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.lifecycle.LocalLifecycleOwner
 import com.viewcompose.lifecycle.collectAsStateWithLifecycle
 import com.viewcompose.navigation.LocalNavGraphOwnerScope
@@ -15,17 +16,12 @@ import com.viewcompose.navigation.core.NavDeepLinkLaunchMode
 import com.viewcompose.navigation.core.NavEntry
 import com.viewcompose.navigation.core.NavLaunchMode
 import com.viewcompose.navigation.core.NavRoute
+import com.viewcompose.navigation.core.NavStackId
 import com.viewcompose.navigation.core.NavStackSelectionMode
+import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.navigation.core.NavValue
 import com.viewcompose.runtime.MutableState
 import com.viewcompose.runtime.mutableStateOf
-import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.modifier.fillMaxSize
-import com.viewcompose.ui.modifier.fillMaxWidth
-import com.viewcompose.ui.modifier.margin
-import com.viewcompose.ui.modifier.testTag
-import com.viewcompose.viewmodel.savedStateHandle
-import com.viewcompose.viewmodel.viewModel
 import com.viewcompose.ui.foundation.Button
 import com.viewcompose.ui.foundation.ButtonVariant
 import com.viewcompose.ui.foundation.Column
@@ -34,10 +30,17 @@ import com.viewcompose.ui.foundation.Text
 import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
-import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.produceState
 import com.viewcompose.ui.foundation.rememberSaveable
+import com.viewcompose.ui.modifier.Modifier
+import com.viewcompose.ui.modifier.fillMaxSize
+import com.viewcompose.ui.modifier.fillMaxWidth
+import com.viewcompose.ui.modifier.margin
+import com.viewcompose.ui.modifier.testTag
+import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.unit.sp
+import com.viewcompose.viewmodel.savedStateHandle
+import com.viewcompose.viewmodel.viewModel
 import java.util.concurrent.atomic.AtomicInteger
 
 internal fun UiTreeBuilder.SystemNavigationDestinationPage(
@@ -46,9 +49,10 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
     adaptivePanes: MutableState<Boolean>,
     systemBackEnabled: MutableState<Boolean>,
     motionEnabled: MutableState<Boolean>,
-    lastEvent: MutableState<String>,
-    externalDeepLinkOutcome: MutableState<String>,
+    lastEvent: MutableState<SystemNavigationEvent>,
+    externalDeepLinkOutcome: MutableState<SystemNavigationDeepLinkOutcome>,
     scenario: DemoScenarioSpec? = null,
+    onReset: () -> Unit,
 ) {
     val saveableCounter = rememberSaveable(key = "system-navigation-entry-counter") {
         mutableStateOf(0)
@@ -60,7 +64,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
     val entryViewModel = viewModel<SystemNavigationEntryViewModel>()
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState = if (lifecycleOwner == null) {
-        "NONE"
+        stringResource(R.string.demo_system_nav_lifecycle_none)
     } else {
         produceState(
             initialValue = lifecycleOwner.lifecycle.currentState,
@@ -78,6 +82,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
     }
     val stackState = controller.navigationState.value
     val sections = listOf(
+        "automation",
         "status",
         "state",
         "actions",
@@ -87,36 +92,85 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
 
     val sectionContent: UiTreeBuilder.(String) -> Unit = { section ->
         when (section) {
-            "status" -> DemoSection(
-                title = SystemNavigationDemoModel.routeLabel(entry.route.name),
-                subtitle = "真实 NavHost destination；每个页面由独立 Lifecycle、ViewModelStore 与 SavedStateRegistry 管理。",
+            "automation" -> ScenarioSection(
+                kind = ScenarioKind.Benchmark,
+                title = stringResource(R.string.demo_system_nav_fixture_title),
+                subtitle = stringResource(R.string.demo_system_nav_fixture_summary),
             ) {
                 Text(
-                    text = "route=${entry.route.name} · entry=${entry.id.value.take(8)} · lifecycle=$lifecycleState",
+                    text = stringResource(
+                        R.string.demo_system_nav_recent_event,
+                        systemNavigationEventText(lastEvent.value),
+                    ),
+                    color = TextDefaults.secondaryColor(),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                )
+                Button(
+                    text = stringResource(R.string.demo_system_nav_push),
+                    onClick = {
+                        lastEvent.value = controller
+                            .navigate(
+                                route = nextRoute(
+                                    stackState.activeStackId,
+                                    stackState.activeStack.entries.size,
+                                ),
+                                launchMode = NavLaunchMode.Standard,
+                            )
+                            .toDemoEvent(SystemNavigationAction.Push)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                )
+                Button(
+                    text = stringResource(R.string.demo_system_nav_reset_fixture),
+                    variant = ButtonVariant.Text,
+                    onClick = onReset,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                )
+            }
+
+            "status" -> DemoSection(
+                title = stringResource(SystemNavigationDemoModel.routeLabelRes(entry.route.name)),
+                subtitle = stringResource(R.string.demo_system_nav_status_summary),
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.demo_system_nav_status_route,
+                        entry.route.name,
+                        entry.id.value.take(8),
+                        lifecycleState,
+                    ),
                     modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_STATUS),
                 )
                 Text(
-                    text = "arguments=${entry.route.arguments.toReadableText()}",
+                    text = stringResource(
+                        R.string.demo_system_nav_status_arguments,
+                        entry.route.arguments.toReadableText(),
+                    ),
                     color = TextDefaults.secondaryColor(),
                 )
                 Text(
-                    text = "graph=${entry.graphEntries.joinToString(" → ") { graph -> "${graph.route.name}#${graph.id.value.take(6)}" }}",
+                    text = stringResource(
+                        R.string.demo_system_nav_status_graph,
+                        entry.graphEntries.joinToString(" → ") { graph ->
+                            "${graph.route.name}#${graph.id.value.take(6)}"
+                        },
+                    ),
                     color = TextDefaults.secondaryColor(),
                 )
                 Text(
-                    text = stackState.toReadableText(),
+                    text = stackSnapshotText(stackState),
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
                 )
                 Text(
-                    text = "最近操作：${lastEvent.value}",
-                    color = TextDefaults.secondaryColor(),
-                    modifier = Modifier
-                        .testTag(DemoTestTags.SYSTEM_NAV_LAST_EVENT)
-                        .scenarioTarget(scenario, DemoAutomationRole.State),
-                )
-                Text(
-                    text = externalDeepLinkOutcome.value,
+                    text = systemNavigationDeepLinkText(
+                        externalDeepLinkOutcome.value,
+                        sourceRes = R.string.demo_system_nav_source_external,
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_EXTERNAL_DEEP_LINK),
                 )
@@ -124,24 +178,28 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
 
             "state" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "页面所有权与状态恢复",
-                subtitle = "分别观察 rememberSaveable、SavedStateHandle、ViewModel 和父图共享状态。",
+                title = stringResource(R.string.demo_system_nav_state_title),
+                subtitle = stringResource(R.string.demo_system_nav_state_summary),
             ) {
                 Text(
-                    text = "rememberSaveable=${saveableCounter.value} · " +
-                        "SavedStateHandle=${handleCounter.value} · " +
-                        "ViewModel#${entryViewModel.instanceId}=${entryViewModel.counter.value}",
+                    text = stringResource(
+                        R.string.demo_system_nav_counter_state,
+                        saveableCounter.value,
+                        handleCounter.value,
+                        entryViewModel.instanceId,
+                        entryViewModel.counter.value,
+                    ),
                     modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_COUNTER_STATUS),
                 )
                 Button(
-                    text = "rememberSaveable +1",
+                    text = stringResource(R.string.demo_system_nav_increment_saveable),
                     onClick = { saveableCounter.value += 1 },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SYSTEM_NAV_SAVEABLE_INCREMENT),
                 )
                 Button(
-                    text = "SavedStateHandle +1",
+                    text = stringResource(R.string.demo_system_nav_increment_handle),
                     variant = ButtonVariant.Outlined,
                     onClick = {
                         savedStateHandle["counter"] = handleCounter.value + 1
@@ -151,7 +209,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                         .testTag(DemoTestTags.SYSTEM_NAV_HANDLE_INCREMENT),
                 )
                 Button(
-                    text = "ViewModel +1",
+                    text = stringResource(R.string.demo_system_nav_increment_view_model),
                     variant = ButtonVariant.Outlined,
                     onClick = entryViewModel::increment,
                     modifier = Modifier
@@ -159,101 +217,69 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                         .testTag(DemoTestTags.SYSTEM_NAV_VIEW_MODEL_INCREMENT),
                 )
                 GraphOwnerStateBlock()
-                Text(
-                    text = "验证方式：切换 Tab/压栈后，数值与 ViewModel 实例应保持；旋转后 entry/graph ID 和所有可保存数值保持，ViewModel 实例 ID 可更新。Pop 后重新进入应获得新 entry。",
-                    style = UiTextStyle(fontSizeSp = 12.sp),
-                    color = TextDefaults.secondaryColor(),
-                )
             }
 
             "actions" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "事务化栈操作",
-                subtitle = "Push、SingleTop、Pop、ReplaceTop、Reset 都经过同一准备/提交/回滚管线。",
+                title = stringResource(R.string.demo_system_nav_actions_title),
+                subtitle = stringResource(R.string.demo_system_nav_actions_summary),
             ) {
                 Button(
-                    text = "Push 下一页面",
-                    onClick = {
-                        lastEvent.value = controller
-                            .navigate(
-                                route = nextRoute(stackState.activeStackId, stackState.activeStack.entries.size),
-                                launchMode = NavLaunchMode.Standard,
-                            )
-                            .toDemoDescription("Push")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_PUSH)
-                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
-                )
-                Button(
-                    text = "SingleTop 当前页面",
+                    text = stringResource(R.string.demo_system_nav_single_top),
                     variant = ButtonVariant.Outlined,
                     onClick = {
                         lastEvent.value = controller
                             .navigate(entry.route, NavLaunchMode.SingleTop)
-                            .toDemoDescription("SingleTop")
+                            .toDemoEvent(SystemNavigationAction.SingleTop)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SYSTEM_NAV_SINGLE_TOP),
                 )
                 Button(
-                    text = "Pop",
+                    text = stringResource(R.string.demo_system_nav_pop),
                     variant = ButtonVariant.Outlined,
                     onClick = {
                         lastEvent.value = controller
                             .popBackStack()
-                            .toDemoDescription("Pop")
+                            .toDemoEvent(SystemNavigationAction.Pop)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SYSTEM_NAV_POP),
                 )
                 Button(
-                    text = "ReplaceTop 为验收页",
+                    text = stringResource(R.string.demo_system_nav_replace_top),
                     variant = ButtonVariant.Outlined,
                     onClick = {
                         lastEvent.value = controller
                             .replaceTop(NavRoute(SystemNavigationDemoModel.ReplacementRoute))
-                            .toDemoDescription("ReplaceTop")
+                            .toDemoEvent(SystemNavigationAction.ReplaceTop)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SYSTEM_NAV_REPLACE),
                 )
-                Button(
-                    text = "Reset 当前 Tab",
-                    variant = ButtonVariant.Text,
-                    onClick = {
-                        lastEvent.value = controller
-                            .reset(SystemNavigationDemoModel.rootRoute(stackState.activeStackId))
-                            .toDemoDescription("Reset")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_RESET)
-                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
-                )
             }
 
             "route-actions" -> RouteSpecificActions(
                 controller = controller,
-                entry = entry,
                 lastEvent = lastEvent,
             )
 
             else -> ScenarioSection(
                 kind = ScenarioKind.Stress,
-                title = "平台、Tab 与自适应能力",
-                subtitle = "覆盖独立返回栈、PreviousStack Back、predictive Back、动态窗格和宿主配置更新。",
+                title = stringResource(R.string.demo_system_nav_capabilities_title),
+                subtitle = stringResource(R.string.demo_system_nav_capabilities_summary),
             ) {
                 Button(
-                    text = "准备三窗格样例（当前 Tab）",
+                    text = stringResource(R.string.demo_system_nav_seed_adaptive),
                     onClick = {
-                        lastEvent.value = seedAdaptiveStack(
-                            controller = controller,
-                            stackId = stackState.activeStackId,
+                        lastEvent.value = SystemNavigationEvent.AdaptiveStackSeeded(
+                            seedAdaptiveStack(
+                                controller = controller,
+                                stackId = stackState.activeStackId,
+                            ),
                         )
                     },
                     modifier = Modifier
@@ -261,52 +287,63 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                         .testTag(DemoTestTags.SYSTEM_NAV_SEED_ADAPTIVE),
                 )
                 Button(
-                    text = if (adaptivePanes.value) {
-                        "自适应窗格：开（点击切为单窗格）"
-                    } else {
-                        "自适应窗格：关（点击启用）"
-                    },
+                    text = stringResource(
+                        if (adaptivePanes.value) {
+                            R.string.demo_system_nav_adaptive_on
+                        } else {
+                            R.string.demo_system_nav_adaptive_off
+                        },
+                    ),
                     onClick = {
                         adaptivePanes.value = !adaptivePanes.value
-                        lastEvent.value = "窗格策略切换为 " +
-                            if (adaptivePanes.value) "Adaptive" else "Single"
+                        lastEvent.value = SystemNavigationEvent.PanePolicyChanged(
+                            adaptive = adaptivePanes.value,
+                        )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SYSTEM_NAV_ADAPTIVE_TOGGLE),
                 )
                 Button(
-                    text = if (motionEnabled.value) {
-                        "转场动画：开（点击关闭）"
-                    } else {
-                        "转场动画：关（点击开启）"
-                    },
+                    text = stringResource(
+                        if (motionEnabled.value) {
+                            R.string.demo_system_nav_motion_on
+                        } else {
+                            R.string.demo_system_nav_motion_off
+                        },
+                    ),
                     variant = ButtonVariant.Outlined,
                     onClick = {
                         motionEnabled.value = !motionEnabled.value
-                        lastEvent.value = "转场动画 ${if (motionEnabled.value) "开启" else "关闭"}"
+                        lastEvent.value = SystemNavigationEvent.MotionChanged(
+                            enabled = motionEnabled.value,
+                        )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SYSTEM_NAV_MOTION_TOGGLE),
                 )
                 Button(
-                    text = if (systemBackEnabled.value) {
-                        "系统 Back：由 NavHost 接管"
-                    } else {
-                        "系统 Back：已禁用（点击恢复）"
-                    },
+                    text = stringResource(
+                        if (systemBackEnabled.value) {
+                            R.string.demo_system_nav_back_on
+                        } else {
+                            R.string.demo_system_nav_back_off
+                        },
+                    ),
                     variant = ButtonVariant.Outlined,
                     onClick = {
                         systemBackEnabled.value = !systemBackEnabled.value
-                        lastEvent.value = "systemBackEnabled=${systemBackEnabled.value}"
+                        lastEvent.value = SystemNavigationEvent.SystemBackChanged(
+                            enabled = systemBackEnabled.value,
+                        )
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SYSTEM_NAV_BACK_TOGGLE),
                 )
                 Button(
-                    text = "账户 Tab：切换并 PopToRoot",
+                    text = stringResource(R.string.demo_system_nav_account_pop_root),
                     variant = ButtonVariant.Outlined,
                     onClick = {
                         lastEvent.value = controller
@@ -314,21 +351,11 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                                 stackId = SystemNavigationDemoModel.AccountStack,
                                 selectionMode = NavStackSelectionMode.PopToRoot,
                             )
-                            .toDemoDescription("账户 PopToRoot")
+                            .toDemoEvent(SystemNavigationAction.AccountPopToRoot)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(DemoTestTags.SYSTEM_NAV_ACCOUNT_POP_ROOT),
-                )
-                ChecklistGroup(
-                    title = "人工验收路径",
-                    items = listOf(
-                        "三个底部 Tab 分别 Push 页面，来回切换后确认各自返回栈和计数独立保留。",
-                        "在 Tab 根页面按系统 Back，应按 selectionHistory 返回上一个 Tab；历史耗尽后才退出 Activity。",
-                        "Android 13+ 从屏幕边缘慢滑，确认 predictive Back 进度、取消和提交动画。",
-                        "横屏且自适应开启时，最近 2~3 个 entry 应成为并列原生 View；返回和旋转不重建 owner。",
-                        "关闭系统 Back 后按返回会委托 Activity，因此请先完成其它验收。",
-                    ),
                 )
             }
         }
@@ -342,9 +369,21 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
             item(
                 key = section,
                 contentRevision = when (section) {
-                    "status" -> Triple(section, lifecycleState, stackState)
+                    "automation" -> listOf(section, stackState, lastEvent.value)
+                    "status" -> listOf(
+                        section,
+                        lifecycleState,
+                        stackState,
+                        externalDeepLinkOutcome.value,
+                    )
                     "actions" -> section to stackState
-                    "capabilities" -> section to stackState.activeStackId
+                    "capabilities" -> listOf(
+                        section,
+                        stackState.activeStackId,
+                        adaptivePanes.value,
+                        motionEnabled.value,
+                        systemBackEnabled.value,
+                    )
                     else -> section
                 },
             ) {
@@ -366,7 +405,7 @@ private fun UiTreeBuilder.GraphOwnerStateBlock() {
     val graphScope = LocalNavGraphOwnerScope.current
     val graphEntry = graphScope?.entries?.lastOrNull()
     if (graphEntry == null) {
-        Text(text = "当前 destination 没有图 owner。")
+        Text(text = stringResource(R.string.demo_system_nav_no_graph_owner))
         return
     }
     ProvideNavGraphOwner(graphEntry.route.name) {
@@ -381,14 +420,18 @@ private fun UiTreeBuilder.GraphOwnerStateBlock() {
                 .margin(top = 4.dp),
         ) {
             Text(
-                text = "父图共享：${graphEntry.route.name}#" +
-                    "${graphEntry.id.value.take(6)} · counter=${graphCounter.value}",
+                text = stringResource(
+                    R.string.demo_system_nav_graph_state,
+                    graphEntry.route.name,
+                    graphEntry.id.value.take(6),
+                    graphCounter.value,
+                ),
                 style = UiTextStyle(fontSizeSp = 13.sp),
                 color = TextDefaults.secondaryColor(),
                 modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_GRAPH_STATUS),
             )
             Button(
-                text = "父图共享状态 +1",
+                text = stringResource(R.string.demo_system_nav_increment_graph),
                 variant = ButtonVariant.Text,
                 onClick = { graphHandle["counter"] = graphCounter.value + 1 },
                 modifier = Modifier
@@ -401,33 +444,32 @@ private fun UiTreeBuilder.GraphOwnerStateBlock() {
 
 private fun UiTreeBuilder.RouteSpecificActions(
     controller: NavHostController,
-    entry: NavEntry,
-    lastEvent: MutableState<String>,
+    lastEvent: MutableState<SystemNavigationEvent>,
 ) {
     when (controller.activeStackId) {
         SystemNavigationDemoModel.HomeStack -> ScenarioSection(
             kind = ScenarioKind.Core,
-            title = "嵌套 Checkout 图",
-            subtitle = "进入图路由会解析 startDestination，并为 cart/receipt 共享一个 checkout 图 owner。",
+            title = stringResource(R.string.demo_system_nav_checkout_title),
+            subtitle = stringResource(R.string.demo_system_nav_checkout_summary),
         ) {
             Button(
-                text = "进入 Checkout 图",
+                text = stringResource(R.string.demo_system_nav_enter_checkout),
                 onClick = {
                     lastEvent.value = controller
                         .navigate(NavRoute(SystemNavigationDemoModel.CheckoutGraphRoute))
-                        .toDemoDescription("进入 Checkout")
+                        .toDemoEvent(SystemNavigationAction.EnterCheckout)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag(DemoTestTags.SYSTEM_NAV_ENTER_GRAPH),
             )
             Button(
-                text = "前往 Receipt",
+                text = stringResource(R.string.demo_system_nav_open_receipt),
                 variant = ButtonVariant.Outlined,
                 onClick = {
                     lastEvent.value = controller
                         .navigate(NavRoute(SystemNavigationDemoModel.ReceiptRoute))
-                        .toDemoDescription("打开 Receipt")
+                        .toDemoEvent(SystemNavigationAction.OpenReceipt)
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -435,77 +477,74 @@ private fun UiTreeBuilder.RouteSpecificActions(
 
         SystemNavigationDemoModel.DiscoverStack -> ScenarioSection(
             kind = ScenarioKind.Stress,
-            title = "严格 Deep Link",
-            subtitle = "URI 只匹配图中 allowlist；参数按声明类型解析，切栈与目标栈更新原子提交。",
+            title = stringResource(R.string.demo_system_nav_deep_link_title),
+            subtitle = stringResource(R.string.demo_system_nav_deep_link_summary),
         ) {
             DeepLinkButton(
-                text = "合法 Search · Reset",
+                text = stringResource(R.string.demo_system_nav_deep_link_valid_reset),
                 tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_VALID,
             ) {
-                lastEvent.value = controller
-                    .navigateDeepLink(SystemNavigationDemoModel.SearchDeepLink)
-                    .toDemoDescription()
+                lastEvent.value = SystemNavigationEvent.DeepLink(
+                    controller.navigateDeepLink(SystemNavigationDemoModel.SearchDeepLink)
+                        .toDemoOutcome(),
+                )
             }
             DeepLinkButton(
-                text = "合法 Search · Push",
+                text = stringResource(R.string.demo_system_nav_deep_link_valid_push),
                 tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_PUSH,
             ) {
-                lastEvent.value = controller
-                    .navigateDeepLink(
+                lastEvent.value = SystemNavigationEvent.DeepLink(
+                    controller.navigateDeepLink(
                         uri = SystemNavigationDemoModel.SearchDeepLink,
                         launchMode = NavDeepLinkLaunchMode.Push,
-                    )
-                    .toDemoDescription()
+                    ).toDemoOutcome(),
+                )
             }
             DeepLinkButton(
-                text = "非法 Int 参数（应拒绝）",
+                text = stringResource(R.string.demo_system_nav_deep_link_invalid),
                 tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_INVALID,
             ) {
-                lastEvent.value = controller
-                    .navigateDeepLink(SystemNavigationDemoModel.InvalidSearchDeepLink)
-                    .toDemoDescription()
+                lastEvent.value = SystemNavigationEvent.DeepLink(
+                    controller.navigateDeepLink(SystemNavigationDemoModel.InvalidSearchDeepLink)
+                        .toDemoOutcome(),
+                )
             }
             DeepLinkButton(
-                text = "未注册 URI（应 NoMatch）",
+                text = stringResource(R.string.demo_system_nav_deep_link_no_match),
                 tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_NO_MATCH,
             ) {
-                lastEvent.value = controller
-                    .navigateDeepLink(SystemNavigationDemoModel.NoMatchDeepLink)
-                    .toDemoDescription()
+                lastEvent.value = SystemNavigationEvent.DeepLink(
+                    controller.navigateDeepLink(SystemNavigationDemoModel.NoMatchDeepLink)
+                        .toDemoOutcome(),
+                )
             }
         }
 
         else -> ScenarioSection(
             kind = ScenarioKind.Guide,
-            title = "账户图与原生 Intent",
-            subtitle = "账户目标共享 account-graph owner；ACTION_VIEW Intent 进入同一严格 Deep Link 事务。",
+            title = stringResource(R.string.demo_system_nav_account_title),
+            subtitle = stringResource(R.string.demo_system_nav_account_summary),
         ) {
             DeepLinkButton(
-                text = "Security Deep Link · ReplaceTop",
+                text = stringResource(R.string.demo_system_nav_security_deep_link),
                 tag = DemoTestTags.SYSTEM_NAV_DEEP_LINK_SECURITY,
             ) {
-                lastEvent.value = controller
-                    .navigateDeepLink(
+                lastEvent.value = SystemNavigationEvent.DeepLink(
+                    controller.navigateDeepLink(
                         uri = SystemNavigationDemoModel.SecurityDeepLink,
                         launchMode = NavDeepLinkLaunchMode.ReplaceTop,
-                    )
-                    .toDemoDescription()
+                    ).toDemoOutcome(),
+                )
             }
             Button(
-                text = "打开账户设置",
+                text = stringResource(R.string.demo_system_nav_open_settings),
                 variant = ButtonVariant.Outlined,
                 onClick = {
                     lastEvent.value = controller
                         .navigate(NavRoute(SystemNavigationDemoModel.SettingsRoute))
-                        .toDemoDescription("打开设置")
+                        .toDemoEvent(SystemNavigationAction.OpenSettings)
                 },
                 modifier = Modifier.fillMaxWidth(),
-            )
-            Text(
-                text = "外部验证：adb shell am start -a android.intent.action.VIEW " +
-                    "-d '${SystemNavigationDemoModel.SecurityDeepLink}' com.gzq.uiframework",
-                style = UiTextStyle(fontSizeSp = 12.sp),
-                color = TextDefaults.secondaryColor(),
             )
         }
     }
@@ -527,38 +566,36 @@ private fun UiTreeBuilder.DeepLinkButton(
 }
 
 private fun nextRoute(
-    stackId: com.viewcompose.navigation.core.NavStackId,
+    stackId: NavStackId,
     stackSize: Int,
-): NavRoute {
-    return when (stackId) {
-        SystemNavigationDemoModel.HomeStack -> NavRoute(
-            name = SystemNavigationDemoModel.HomeDetailRoute,
-            arguments = mapOf(
-                SystemNavigationDemoModel.ItemIdArgument to NavValue.IntValue(stackSize),
-            ),
-        )
+): NavRoute = when (stackId) {
+    SystemNavigationDemoModel.HomeStack -> NavRoute(
+        name = SystemNavigationDemoModel.HomeDetailRoute,
+        arguments = mapOf(
+            SystemNavigationDemoModel.ItemIdArgument to NavValue.IntValue(stackSize),
+        ),
+    )
 
-        SystemNavigationDemoModel.DiscoverStack -> NavRoute(
-            name = SystemNavigationDemoModel.SearchResultRoute,
-            arguments = mapOf(
-                SystemNavigationDemoModel.QueryArgument to NavValue.Text("manual"),
-                SystemNavigationDemoModel.PageArgument to NavValue.IntValue(stackSize),
-            ),
-        )
+    SystemNavigationDemoModel.DiscoverStack -> NavRoute(
+        name = SystemNavigationDemoModel.SearchResultRoute,
+        arguments = mapOf(
+            SystemNavigationDemoModel.QueryArgument to NavValue.Text(MANUAL_QUERY),
+            SystemNavigationDemoModel.PageArgument to NavValue.IntValue(stackSize),
+        ),
+    )
 
-        else -> NavRoute(
-            name = SystemNavigationDemoModel.SecurityRoute,
-            arguments = mapOf(
-                SystemNavigationDemoModel.UserIdArgument to NavValue.LongValue(1000L + stackSize),
-            ),
-        )
-    }
+    else -> NavRoute(
+        name = SystemNavigationDemoModel.SecurityRoute,
+        arguments = mapOf(
+            SystemNavigationDemoModel.UserIdArgument to NavValue.LongValue(1000L + stackSize),
+        ),
+    )
 }
 
 private fun seedAdaptiveStack(
     controller: NavHostController,
-    stackId: com.viewcompose.navigation.core.NavStackId,
-): String {
+    stackId: NavStackId,
+): List<SystemNavigationResultSummary> {
     val destinations = when (stackId) {
         SystemNavigationDemoModel.HomeStack -> listOf(
             NavRoute(
@@ -574,14 +611,14 @@ private fun seedAdaptiveStack(
             NavRoute(
                 name = SystemNavigationDemoModel.SearchResultRoute,
                 arguments = mapOf(
-                    SystemNavigationDemoModel.QueryArgument to NavValue.Text("pane-secondary"),
+                    SystemNavigationDemoModel.QueryArgument to NavValue.Text(PANE_SECONDARY_QUERY),
                     SystemNavigationDemoModel.PageArgument to NavValue.IntValue(1),
                 ),
             ),
             NavRoute(
                 name = SystemNavigationDemoModel.SearchResultRoute,
                 arguments = mapOf(
-                    SystemNavigationDemoModel.QueryArgument to NavValue.Text("pane-primary"),
+                    SystemNavigationDemoModel.QueryArgument to NavValue.Text(PANE_PRIMARY_QUERY),
                     SystemNavigationDemoModel.PageArgument to NavValue.IntValue(2),
                 ),
             ),
@@ -597,49 +634,186 @@ private fun seedAdaptiveStack(
             NavRoute(SystemNavigationDemoModel.SettingsRoute),
         )
     }
-    val results = buildList {
-        add(controller.reset(SystemNavigationDemoModel.rootRoute(stackId)))
+    return buildList {
+        add(controller.reset(SystemNavigationDemoModel.rootRoute(stackId)).toDemoSummary())
         destinations.forEach { route ->
-            add(controller.navigate(route, NavLaunchMode.Standard))
+            add(controller.navigate(route, NavLaunchMode.Standard).toDemoSummary())
         }
     }
-    return "三窗格样例：" + results.joinToString(" / ") { result ->
-        result.toDemoDescription()
+}
+
+private fun UiTreeBuilder.systemNavigationEventText(event: SystemNavigationEvent): String =
+    when (event) {
+        SystemNavigationEvent.Waiting -> stringResource(R.string.demo_system_nav_event_waiting)
+        is SystemNavigationEvent.Result -> systemNavigationResultText(
+            result = event.result,
+            action = systemNavigationActionText(event.action, event.detail),
+        )
+        is SystemNavigationEvent.DeepLink -> systemNavigationDeepLinkText(
+            outcome = event.outcome,
+            sourceRes = R.string.demo_system_nav_source_internal,
+        )
+        is SystemNavigationEvent.HostFailure -> stringResource(
+            R.string.demo_system_nav_event_host_failure,
+            event.phase,
+            event.route,
+            event.stackCommitted,
+        )
+        is SystemNavigationEvent.PanePolicyChanged -> stringResource(
+            if (event.adaptive) {
+                R.string.demo_system_nav_event_pane_adaptive
+            } else {
+                R.string.demo_system_nav_event_pane_single
+            },
+        )
+        is SystemNavigationEvent.MotionChanged -> stringResource(
+            if (event.enabled) {
+                R.string.demo_system_nav_event_motion_enabled
+            } else {
+                R.string.demo_system_nav_event_motion_disabled
+            },
+        )
+        is SystemNavigationEvent.SystemBackChanged -> stringResource(
+            if (event.enabled) {
+                R.string.demo_system_nav_event_back_enabled
+            } else {
+                R.string.demo_system_nav_event_back_disabled
+            },
+        )
+        is SystemNavigationEvent.AdaptiveStackSeeded -> stringResource(
+            R.string.demo_system_nav_event_seeded,
+            event.results.joinToString(" / ") { result ->
+                systemNavigationResultText(result)
+            },
+        )
+    }
+
+private fun UiTreeBuilder.systemNavigationActionText(
+    action: SystemNavigationAction,
+    detail: String?,
+): String = when (action) {
+    SystemNavigationAction.SwitchStack -> {
+        val stack = SystemNavigationDemoModel.StackIds.single { it.value == detail }
+        stringResource(
+            R.string.demo_system_nav_action_switch,
+            stringResource(SystemNavigationDemoModel.stackLabelRes(stack)),
+        )
+    }
+    SystemNavigationAction.Push -> stringResource(R.string.demo_system_nav_action_push)
+    SystemNavigationAction.SingleTop -> stringResource(R.string.demo_system_nav_action_single_top)
+    SystemNavigationAction.Pop -> stringResource(R.string.demo_system_nav_action_pop)
+    SystemNavigationAction.ReplaceTop -> stringResource(R.string.demo_system_nav_action_replace_top)
+    SystemNavigationAction.EnterCheckout -> stringResource(R.string.demo_system_nav_action_checkout)
+    SystemNavigationAction.OpenReceipt -> stringResource(R.string.demo_system_nav_action_receipt)
+    SystemNavigationAction.AccountPopToRoot -> stringResource(R.string.demo_system_nav_action_account_root)
+    SystemNavigationAction.OpenSettings -> stringResource(R.string.demo_system_nav_action_settings)
+}
+
+private fun UiTreeBuilder.systemNavigationResultText(
+    result: SystemNavigationResultSummary,
+    action: String? = null,
+): String {
+    val detail = when (result) {
+        is SystemNavigationResultSummary.Committed -> stringResource(
+            R.string.demo_system_nav_result_committed_detail,
+            result.previousRoute,
+            result.nextRoute,
+        )
+        is SystemNavigationResultSummary.NoChange -> stringResource(
+            R.string.demo_system_nav_result_no_change_detail,
+            result.reason,
+        )
+        SystemNavigationResultSummary.Queued -> stringResource(
+            R.string.demo_system_nav_result_queued_detail,
+        )
+        is SystemNavigationResultSummary.Failed -> stringResource(
+            R.string.demo_system_nav_result_failed_detail,
+            result.phase,
+        )
+    }
+    return action?.let {
+        stringResource(R.string.demo_system_nav_result_with_action, it, detail)
+    } ?: detail
+}
+
+private fun UiTreeBuilder.systemNavigationDeepLinkText(
+    outcome: SystemNavigationDeepLinkOutcome,
+    sourceRes: Int,
+): String {
+    val source = stringResource(sourceRes)
+    return when (outcome) {
+        SystemNavigationDeepLinkOutcome.None -> stringResource(
+            R.string.demo_system_nav_deep_link_none,
+            source,
+        )
+        SystemNavigationDeepLinkOutcome.ControllerUnavailable -> stringResource(
+            R.string.demo_system_nav_deep_link_controller_unavailable,
+            source,
+        )
+        is SystemNavigationDeepLinkOutcome.Navigated -> stringResource(
+            R.string.demo_system_nav_deep_link_navigated,
+            source,
+            outcome.uriPattern,
+            outcome.route,
+            systemNavigationResultText(outcome.result),
+        )
+        SystemNavigationDeepLinkOutcome.NoMatch -> stringResource(
+            R.string.demo_system_nav_deep_link_no_match_result,
+            source,
+        )
+        is SystemNavigationDeepLinkOutcome.Rejected -> outcome.argumentName?.let { argument ->
+            stringResource(
+                R.string.demo_system_nav_deep_link_rejected_argument,
+                source,
+                outcome.reason,
+                argument,
+            )
+        } ?: stringResource(
+            R.string.demo_system_nav_deep_link_rejected,
+            source,
+            outcome.reason,
+        )
+        SystemNavigationDeepLinkOutcome.Unsupported -> stringResource(
+            R.string.demo_system_nav_deep_link_unsupported,
+            source,
+        )
     }
 }
 
 private fun Map<String, NavValue>.toReadableText(): String {
-    if (isEmpty()) {
-        return "{}"
-    }
+    if (isEmpty()) return "{}"
     return entries.joinToString(prefix = "{", postfix = "}") { (name, value) ->
         "$name=${value.toReadableText()}"
     }
 }
 
-private fun NavValue.toReadableText(): String {
-    return when (this) {
-        NavValue.Null -> "null"
-        is NavValue.Text -> value
-        is NavValue.IntValue -> value.toString()
-        is NavValue.LongValue -> value.toString()
-        is NavValue.BooleanValue -> value.toString()
-        is NavValue.FloatValue -> value.toString()
-        is NavValue.DoubleValue -> value.toString()
-    }
+private fun NavValue.toReadableText(): String = when (this) {
+    NavValue.Null -> "null"
+    is NavValue.Text -> value
+    is NavValue.IntValue -> value.toString()
+    is NavValue.LongValue -> value.toString()
+    is NavValue.BooleanValue -> value.toString()
+    is NavValue.FloatValue -> value.toString()
+    is NavValue.DoubleValue -> value.toString()
 }
 
-private fun com.viewcompose.navigation.core.NavStackSetSnapshot.toReadableText(): String {
+private fun UiTreeBuilder.stackSnapshotText(snapshot: NavStackSetSnapshot): String {
+    val missing = stringResource(R.string.demo_system_nav_stack_missing)
     val stackText = SystemNavigationDemoModel.StackIds.joinToString(" · ") { stackId ->
-        val routes = this[stackId]
+        val routes = snapshot[stackId]
             ?.entries
             ?.joinToString("→") { entry -> entry.route.name }
-            ?: "missing"
+            ?: missing
         "${stackId.value}=[$routes]"
     }
-    val history = selectionHistory.joinToString("→") { stackId -> stackId.value }
-        .ifEmpty { "empty" }
-    return "active=${activeStackId.value} · history=$history\n$stackText"
+    val history = snapshot.selectionHistory.joinToString("→") { stackId -> stackId.value }
+        .ifEmpty { stringResource(R.string.demo_system_nav_history_empty) }
+    return stringResource(
+        R.string.demo_system_nav_stack_snapshot,
+        snapshot.activeStackId.value,
+        history,
+        stackText,
+    )
 }
 
 internal class SystemNavigationEntryViewModel(
@@ -658,3 +832,7 @@ internal class SystemNavigationEntryViewModel(
         val nextInstanceId = AtomicInteger(0)
     }
 }
+
+private const val MANUAL_QUERY = "manual"
+private const val PANE_SECONDARY_QUERY = "pane-secondary"
+private const val PANE_PRIMARY_QUERY = "pane-primary"

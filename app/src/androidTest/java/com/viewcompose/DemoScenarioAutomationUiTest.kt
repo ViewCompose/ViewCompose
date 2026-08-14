@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.junit.After
@@ -275,6 +276,30 @@ class DemoScenarioAutomationUiTest {
     }
 
     @Test
+    fun systemNavigationFixturePublishesDeterministicActionAndFullSessionReset() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            val scenarioId = "navigation.system"
+            launchScenario(scenarioId)
+            val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+            requireTarget(scenarioId, "primary_action").click()
+            assertNotEquals(
+                "$scenarioId action must publish state",
+                initial,
+                waitForTargetTextChange(scenarioId, initial),
+            )
+
+            requireTarget(scenarioId, "reset").click()
+            assertEquals(
+                "$scenarioId reset must recreate the initial navigation Session",
+                initial,
+                waitForTargetText(scenarioId, initial),
+            )
+        }
+    }
+
+    @Test
     fun strictLauncherRedirectLeavesOnlyTheScenarioHostInTheForegroundTask() {
         launchScenario("runtime.state")
         requireTarget("runtime.state", "ready")
@@ -325,12 +350,12 @@ class DemoScenarioAutomationUiTest {
         previous: String,
     ): String {
         val deadline = SystemClock.uptimeMillis() + TARGET_TIMEOUT_MS
-        var current = requireTarget(scenarioId, "state").text.orEmpty()
-        while (current == previous && SystemClock.uptimeMillis() < deadline) {
+        var current = readTargetText(scenarioId)
+        while ((current == null || current == previous) && SystemClock.uptimeMillis() < deadline) {
             SystemClock.sleep(16L)
-            current = requireTarget(scenarioId, "state").text.orEmpty()
+            current = readTargetText(scenarioId)
         }
-        return current
+        return current.orEmpty()
     }
 
     private fun waitForTargetText(
@@ -338,13 +363,21 @@ class DemoScenarioAutomationUiTest {
         expected: String,
     ): String {
         val deadline = SystemClock.uptimeMillis() + TARGET_TIMEOUT_MS
-        var current = requireTarget(scenarioId, "state").text.orEmpty()
+        var current = readTargetText(scenarioId)
         while (current != expected && SystemClock.uptimeMillis() < deadline) {
             SystemClock.sleep(16L)
-            current = requireTarget(scenarioId, "state").text.orEmpty()
+            current = readTargetText(scenarioId)
         }
-        return current
+        return current.orEmpty()
     }
+
+    private fun readTargetText(scenarioId: String): String? =
+        try {
+            requireTarget(scenarioId, "state").text.orEmpty()
+        } catch (_: StaleObjectException) {
+            // A full fixture reset intentionally replaces the exposed View node.
+            null
+        }
 
     private fun localizedString(
         languageTag: String,

@@ -864,7 +864,7 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_navigation_system_state,
                 target = R.id.demo_navigation_system_target,
             ),
-            benchmarkRevision = 1,
+            benchmarkRevision = 2,
         ),
         scenario(
             id = DemoScenarioIds.PerformanceList,

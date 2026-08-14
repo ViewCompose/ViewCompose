@@ -735,6 +735,15 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/modifiers"),
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/interop"),
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/feedback"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/navigation/DemoSystemNavigationPage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/navigation/DemoSystemNavigationDestination.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/interaction/SystemNavigationActivity.kt",
+            ),
         )
         val visibleLiteral = Regex(
             """(?:\b(?:text|title|subtitle|label|supportingText|placeholder|""" +

@@ -5,8 +5,8 @@ import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.viewcompose.demo.registry.DemoScenarioRegistry
+import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.material3.android.setMaterial3UiContent
-import com.viewcompose.navigation.NavDeepLinkResult
 import com.viewcompose.navigation.NavHostController
 import com.viewcompose.navigation.core.NavStackSetSnapshot
 import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
@@ -19,7 +19,9 @@ import com.viewcompose.runtime.mutableStateOf
  * retained stacks, lifecycle, saved state, ViewModels, Back, and adaptive panes belong to NavHost.
  */
 class SystemNavigationActivity : AppCompatActivity() {
-    private val externalDeepLinkOutcome = mutableStateOf("尚未接收外部 Deep Link")
+    private val externalDeepLinkOutcome = mutableStateOf<SystemNavigationDeepLinkOutcome>(
+        SystemNavigationDeepLinkOutcome.None,
+    )
     private var navController: NavHostController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +32,14 @@ class SystemNavigationActivity : AppCompatActivity() {
             false,
         )
         val scenario = DemoScenarioRegistry.fromIntent(intent)
+            ?: if (intent.action == Intent.ACTION_VIEW) {
+                DemoScenarioRegistry.require(DemoScenarioIds.NavigationSystem.value)
+            } else {
+                error("SystemNavigationActivity requires the navigation.system scenario")
+            }
+        check(scenario.id == DemoScenarioIds.NavigationSystem) {
+            "SystemNavigationActivity does not support ${scenario.id}"
+        }
         setMaterial3UiContent(
             debug = diagnosticsEnabled,
             debugTag = "SystemNavigationDemo",
@@ -64,7 +74,8 @@ class SystemNavigationActivity : AppCompatActivity() {
 
     internal fun controllerForTest(): NavHostController = checkNotNull(navController)
 
-    internal fun externalDeepLinkOutcomeForTest(): String = externalDeepLinkOutcome.value
+    internal fun externalDeepLinkOutcomeForTest(): SystemNavigationDeepLinkOutcome =
+        externalDeepLinkOutcome.value
 
     private fun dispatchDeepLinkWhenReady(
         intent: Intent,
@@ -79,35 +90,19 @@ class SystemNavigationActivity : AppCompatActivity() {
                 if (attempt < MAX_CONTROLLER_WAIT_ATTEMPTS) {
                     dispatchDeepLinkWhenReady(intent, attempt + 1)
                 } else {
-                    externalDeepLinkOutcome.value = "外部 Deep Link 失败：NavHost 尚未就绪"
+                    externalDeepLinkOutcome.value =
+                        SystemNavigationDeepLinkOutcome.ControllerUnavailable
                 }
                 return@post
             }
             externalDeepLinkOutcome.value = controller
                 .navigateDeepLink(intent)
-                .toDemoDescription(prefix = "外部")
+                .toDemoOutcome()
         }
     }
 
     private companion object {
         const val MAX_CONTROLLER_WAIT_ATTEMPTS = 10
         const val EXTRA_RENDER_DIAGNOSTICS = "system_navigation_render_diagnostics"
-    }
-}
-
-internal fun NavDeepLinkResult.toDemoDescription(prefix: String = "页内"): String {
-    return when (this) {
-        is NavDeepLinkResult.Navigated -> {
-            "$prefix Deep Link：${match.deepLink.uriPattern} → " +
-                "${match.route} · ${navigationResult.toDemoDescription()}"
-        }
-
-        NavDeepLinkResult.NoMatch -> "$prefix Deep Link：未匹配，导航状态未改变"
-        is NavDeepLinkResult.Rejected -> {
-            "$prefix Deep Link：已拒绝 ${rejection.reason}" +
-                (rejection.argumentName?.let { "（参数 $it）" } ?: "")
-        }
-
-        NavDeepLinkResult.Unsupported -> "$prefix Deep Link：当前控制器未安装图"
     }
 }

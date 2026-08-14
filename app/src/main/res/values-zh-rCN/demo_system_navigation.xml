@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_system_nav_window_title">系统导航 · %1$s</string>
+    <string name="demo_system_nav_toolbar_title">系统导航 · %1$s</string>
+    <string name="demo_system_nav_exit_description">退出系统导航 Demo</string>
+    <string name="demo_system_nav_stack_home">首页</string>
+    <string name="demo_system_nav_stack_discover">发现</string>
+    <string name="demo_system_nav_stack_account">账户</string>
+    <string name="demo_system_nav_route_home">首页总览</string>
+    <string name="demo_system_nav_route_home_detail">首页详情</string>
+    <string name="demo_system_nav_route_cart">Checkout · Cart</string>
+    <string name="demo_system_nav_route_receipt">Checkout · Receipt</string>
+    <string name="demo_system_nav_route_discover">发现</string>
+    <string name="demo_system_nav_route_search_result">搜索结果</string>
+    <string name="demo_system_nav_route_profile">账户资料</string>
+    <string name="demo_system_nav_route_security">安全设置</string>
+    <string name="demo_system_nav_route_settings">账户设置</string>
+    <string name="demo_system_nav_route_replacement">ReplaceTop 验收页</string>
+
+    <string name="demo_system_nav_fixture_title">导航事务场景</string>
+    <string name="demo_system_nav_fixture_summary">将主 Push、可观察结果和完整 Session 重置固定在首个场景块中。</string>
+    <string name="demo_system_nav_recent_event">最近操作：%1$s</string>
+    <string name="demo_system_nav_push">Push 下一页面</string>
+    <string name="demo_system_nav_reset_fixture">重置全部栈与 owner</string>
+
+    <string name="demo_system_nav_status_summary">真实 NavHost destination；每个页面拥有独立 Lifecycle、ViewModelStore 与 SavedStateRegistry。</string>
+    <string name="demo_system_nav_status_route">route=%1$s · entry=%2$s · lifecycle=%3$s</string>
+    <string name="demo_system_nav_status_arguments">arguments=%1$s</string>
+    <string name="demo_system_nav_status_graph">graph=%1$s</string>
+    <string name="demo_system_nav_stack_snapshot">active=%1$s · history=%2$s\n%3$s</string>
+    <string name="demo_system_nav_stack_missing">缺失</string>
+    <string name="demo_system_nav_history_empty">空</string>
+    <string name="demo_system_nav_lifecycle_none">无</string>
+
+    <string name="demo_system_nav_state_title">页面所有权与状态恢复</string>
+    <string name="demo_system_nav_state_summary">分别观察 rememberSaveable、SavedStateHandle、ViewModel 和父图共享状态。</string>
+    <string name="demo_system_nav_counter_state">rememberSaveable=%1$d · SavedStateHandle=%2$d · ViewModel#%3$d=%4$d</string>
+    <string name="demo_system_nav_increment_saveable">rememberSaveable +1</string>
+    <string name="demo_system_nav_increment_handle">SavedStateHandle +1</string>
+    <string name="demo_system_nav_increment_view_model">ViewModel +1</string>
+    <string name="demo_system_nav_no_graph_owner">当前 destination 没有图 owner。</string>
+    <string name="demo_system_nav_graph_state">父图共享：%1$s#%2$s · counter=%3$d</string>
+    <string name="demo_system_nav_increment_graph">父图共享状态 +1</string>
+
+    <string name="demo_system_nav_actions_title">事务化栈操作</string>
+    <string name="demo_system_nav_actions_summary">SingleTop、Pop 和 ReplaceTop 共用准备、提交与回滚管线。</string>
+    <string name="demo_system_nav_single_top">SingleTop 当前页面</string>
+    <string name="demo_system_nav_pop">Pop</string>
+    <string name="demo_system_nav_replace_top">ReplaceTop 为验收页</string>
+
+    <string name="demo_system_nav_capabilities_title">平台、栈与自适应窗格</string>
+    <string name="demo_system_nav_capabilities_summary">覆盖独立返回栈、PreviousStack Back、predictive Back、动态窗格和宿主更新。</string>
+    <string name="demo_system_nav_seed_adaptive">准备当前栈三窗格样例</string>
+    <string name="demo_system_nav_adaptive_on">自适应窗格：开（切为单窗格）</string>
+    <string name="demo_system_nav_adaptive_off">自适应窗格：关（启用）</string>
+    <string name="demo_system_nav_motion_on">转场动画：开（关闭）</string>
+    <string name="demo_system_nav_motion_off">转场动画：关（开启）</string>
+    <string name="demo_system_nav_back_on">系统 Back：由 NavHost 接管</string>
+    <string name="demo_system_nav_back_off">系统 Back：已禁用（恢复）</string>
+    <string name="demo_system_nav_account_pop_root">账户栈：切换并 PopToRoot</string>
+
+    <string name="demo_system_nav_checkout_title">嵌套 Checkout 图</string>
+    <string name="demo_system_nav_checkout_summary">进入图路由会解析 startDestination，并为 cart 与 receipt 共享 checkout 图 owner。</string>
+    <string name="demo_system_nav_enter_checkout">进入 Checkout 图</string>
+    <string name="demo_system_nav_open_receipt">前往 Receipt</string>
+    <string name="demo_system_nav_deep_link_title">严格 Deep Link</string>
+    <string name="demo_system_nav_deep_link_summary">URI 只匹配图中 allowlist；声明的参数类型与目标栈更新会原子提交。</string>
+    <string name="demo_system_nav_deep_link_valid_reset">合法 Search · Reset</string>
+    <string name="demo_system_nav_deep_link_valid_push">合法 Search · Push</string>
+    <string name="demo_system_nav_deep_link_invalid">非法 Int 参数（拒绝）</string>
+    <string name="demo_system_nav_deep_link_no_match">未注册 URI（NoMatch）</string>
+    <string name="demo_system_nav_account_title">账户图与原生 Intent</string>
+    <string name="demo_system_nav_account_summary">账户目标共享 account-graph owner；ACTION_VIEW 进入同一严格 Deep Link 事务。</string>
+    <string name="demo_system_nav_security_deep_link">Security Deep Link · ReplaceTop</string>
+    <string name="demo_system_nav_open_settings">打开账户设置</string>
+
+    <string name="demo_system_nav_event_waiting">等待操作</string>
+    <string name="demo_system_nav_event_host_failure">导航失败：%1$s · route=%2$s · committed=%3$b</string>
+    <string name="demo_system_nav_event_pane_adaptive">窗格策略切换为 Adaptive</string>
+    <string name="demo_system_nav_event_pane_single">窗格策略切换为 Single</string>
+    <string name="demo_system_nav_event_motion_enabled">转场动画已开启</string>
+    <string name="demo_system_nav_event_motion_disabled">转场动画已关闭</string>
+    <string name="demo_system_nav_event_back_enabled">系统 Back 接管已开启</string>
+    <string name="demo_system_nav_event_back_disabled">系统 Back 接管已关闭</string>
+    <string name="demo_system_nav_event_seeded">三窗格样例：%1$s</string>
+    <string name="demo_system_nav_action_switch">切换到 %1$s</string>
+    <string name="demo_system_nav_action_push">Push</string>
+    <string name="demo_system_nav_action_single_top">SingleTop</string>
+    <string name="demo_system_nav_action_pop">Pop</string>
+    <string name="demo_system_nav_action_replace_top">ReplaceTop</string>
+    <string name="demo_system_nav_action_checkout">进入 Checkout</string>
+    <string name="demo_system_nav_action_receipt">打开 Receipt</string>
+    <string name="demo_system_nav_action_account_root">账户 PopToRoot</string>
+    <string name="demo_system_nav_action_settings">打开设置</string>
+    <string name="demo_system_nav_result_with_action">%1$s：%2$s</string>
+    <string name="demo_system_nav_result_committed_detail">已提交 · %1$s → %2$s</string>
+    <string name="demo_system_nav_result_no_change_detail">无变化 · %1$s</string>
+    <string name="demo_system_nav_result_queued_detail">已排队</string>
+    <string name="demo_system_nav_result_failed_detail">失败 · %1$s</string>
+
+    <string name="demo_system_nav_source_internal">页内</string>
+    <string name="demo_system_nav_source_external">外部</string>
+    <string name="demo_system_nav_deep_link_none">%1$s Deep Link：尚未接收</string>
+    <string name="demo_system_nav_deep_link_controller_unavailable">%1$s Deep Link 失败：NavHost 尚未就绪</string>
+    <string name="demo_system_nav_deep_link_navigated">%1$s Deep Link：%2$s → %3$s · %4$s</string>
+    <string name="demo_system_nav_deep_link_no_match_result">%1$s Deep Link：未匹配，导航状态未改变</string>
+    <string name="demo_system_nav_deep_link_rejected">%1$s Deep Link：已拒绝 %2$s</string>
+    <string name="demo_system_nav_deep_link_rejected_argument">%1$s Deep Link：已拒绝 %2$s（参数 %3$s）</string>
+    <string name="demo_system_nav_deep_link_unsupported">%1$s Deep Link：当前控制器未安装图</string>
+</resources>
