@@ -51,7 +51,9 @@ Snapshot.withMutableSnapshot {
 - [`Snapshot` and `MutableSnapshot`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/-snapshot/)
   provide consistent reads and atomic buffered writes with conflict reporting.
 - [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
-  turns state reads into an explicit invalidation subscription.
+  is the Q3 explicit invalidation subscription for state reads. One successful global apply calls
+  each affected observation at most once on the applying thread, even when several dependencies
+  changed; separate applies remain separate opportunities.
 - [`snapshotFlow`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/snapshot-flow.html)
   creates a cold Flow that tracks snapshot reads per collector, conflates invalidations, replaces
   conditional dependencies, and emits structurally distinct calculated values.
@@ -74,8 +76,10 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   Kotlin `use` when a read snapshot is no longer needed.
 - A `MutableSnapshot` is either applied or abandoned, then disposed. A failed conflict apply leaves
   its destination unchanged and may be retried; a successful apply is terminal.
-- An `Observation` owns subscriptions to every state read during collection. Dispose it to prevent
-  the observed states from retaining that subscription.
+- An `Observation` owns subscriptions to every state read during collection. One successful global
+  apply invalidates it at most once, with stable first-observed delivery order across affected
+  observations. Dispose it to prevent the observed states from retaining that subscription; a
+  callback already racing with disposal may finish.
 - Each `snapshotFlow` collector owns an independent read observation. Cancellation and calculation
   failure release it; the calculation is side-effect-free and may run more often than it emits.
 - `ComposerLite` and derived-state instances are intended for thread-confined use. Hosts serialize

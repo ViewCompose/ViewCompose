@@ -97,7 +97,9 @@ LaunchedEffect(command) {
 Every `animateTo`, `snapTo`, and `stop` call is a mutation. A newer mutation from another coroutine
 job cancels the old job, and stale frames are rejected by mutation identity. `animateTo` retargets
 from the last accepted value. `snapTo` publishes immediately; `stop` preserves the current value.
-Cancellation and failures leave the latest sample and reset the target to it.
+Cancellation and failures leave the latest sample and reset the target to it. The Q3 `Animatable`
+contract publishes target/running mutation start together, and publishes the retained target/idle
+completion together; frame samples remain independent value commits.
 
 `rememberAnimatable` uses `initialValue` only when an instance is first created. Changing the
 converter creates a new instance; changing only `initialValue` does not reset it. The current frame
@@ -127,7 +129,10 @@ val height = transition.animateDp(
 The first composition is settled at the initial target. Each channel freezes its current sample and
 new target when a later segment begins and registers its duration. The longest channel decides when
 `currentState` commits `targetState`; shorter channels remain at their endpoint. Retargeting cancels
-the old frame effect and starts each existing channel from its latest sampled value.
+the old frame effect and starts each existing channel from its latest sampled value. The Q3
+`Transition` publishes its logical state, target, running flag, segment identity, endpoints, and
+play time in one snapshot transaction per target or frame update. `MutableTransitionState` mirrors
+its framework-owned current/target/idle tuple through the same atomic boundary.
 
 Channel factories currently receive no segment object; they provide one specification per channel
 and map logical state to `Float`, `Int`, packed ARGB, or `UiDp`. The label is captured for future

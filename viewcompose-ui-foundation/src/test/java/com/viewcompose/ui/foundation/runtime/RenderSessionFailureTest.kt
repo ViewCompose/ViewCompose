@@ -24,6 +24,7 @@ import com.viewcompose.ui.tooling.UiSourceCallSite
 import kotlin.coroutines.EmptyCoroutineContext
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -303,6 +304,29 @@ class RenderSessionFailureTest {
         failComposition = false
         assertEquals(true, itemSession.render())
 
+        itemSession.dispose()
+    }
+
+    @Test
+    fun `delayed item session preserves an explicitly provided nullable local`() {
+        val nullable = uiLocalOf<String?>(debugName = "DelayedNullableLocal") { "default" }
+        lateinit var captured: LocalSnapshot
+        var observed: String? = "unset"
+        LocalContext.provide(nullable.holder, null) {
+            captured = LocalContext.snapshot()
+        }
+        val itemSession = WidgetLazyListItemSession(
+            container = childContainer(),
+            localSnapshot = captured,
+            saveableStateHolder = null,
+            saveableStateKey = "nullable-item",
+            content = {
+                observed = UiLocals.current(nullable)
+            },
+        )
+
+        assertTrue(itemSession.render())
+        assertNull(observed)
         itemSession.dispose()
     }
 

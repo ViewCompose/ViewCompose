@@ -6,6 +6,8 @@ package com.viewcompose.ui.foundation
  */
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LocalValueTest {
@@ -68,5 +70,59 @@ class LocalValueTest {
 
         assertEquals(42, result)
         assertEquals("default", LocalContext.current(local))
+    }
+
+    @Test
+    fun `provided null overrides a non-null default across nested and batch providers`() {
+        val nullable = uiLocalOf<String?>(debugName = "NullableLocal") { "default" }
+        val marker = uiLocalOf(debugName = "MarkerLocal") { "outside" }
+        val values = mutableListOf<String?>()
+
+        buildVNodeTree {
+            values += UiLocals.current(nullable)
+            ProvideLocal(nullable, null) {
+                values += UiLocals.current(nullable)
+                ProvideLocal(nullable, "inner") {
+                    values += UiLocals.current(nullable)
+                }
+                values += UiLocals.current(nullable)
+            }
+            ProvideLocals(
+                nullable provides null,
+                marker provides "inside",
+            ) {
+                values += UiLocals.current(nullable)
+                values += UiLocals.current(marker)
+            }
+            values += UiLocals.current(nullable)
+        }
+
+        assertEquals(
+            listOf("default", null, "inner", null, null, "inside", "default"),
+            values,
+        )
+    }
+
+    @Test
+    fun `nullable public snapshot restores null and restores caller after failure`() {
+        val nullable = uiLocalOf<String?>(debugName = "NullableSnapshotLocal") { "default" }
+        lateinit var snapshot: UiLocalSnapshot
+
+        buildVNodeTree {
+            ProvideLocal(nullable, null) {
+                snapshot = captureUiLocalSnapshot()
+            }
+        }
+
+        assertNull(withUiLocalSnapshot(snapshot) { UiLocals.current(nullable) })
+        val failure = runCatching {
+            withUiLocalSnapshot(snapshot) {
+                assertNull(UiLocals.current(nullable))
+                error("expected failure")
+            }
+        }.exceptionOrNull()
+
+        assertTrue(failure is IllegalStateException)
+        assertEquals("default", UiLocals.current(nullable))
     }
 }

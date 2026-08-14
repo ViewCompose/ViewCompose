@@ -1,6 +1,7 @@
 package com.viewcompose.text
 
 import com.viewcompose.runtime.MutableState
+import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.mutableStateOf
 
 /**
@@ -9,7 +10,9 @@ import com.viewcompose.runtime.mutableStateOf
  * Reads participate in the ViewCompose snapshot runtime. Edit transactions and history stacks are
  * thread-confined and should be accessed from the owning UI thread. Programmatic document changes
  * become individual undo units. A sequence of IME composition updates is coalesced into one undo
- * unit when composition commits.
+ * unit when composition commits. Each edit, undo, or redo publishes the complete value and
+ * undo/redo availability in one snapshot transaction, so observers never receive a committed text
+ * value paired with stale history availability.
  *
  * @sample com.viewcompose.text.samples.textFieldStateSample
  * @param initialValue first committed editable snapshot
@@ -136,9 +139,12 @@ class TextFieldState(
         if (undoStack.isEmpty()) return false
         val current = valueState.value.withoutComposition()
         redoStack.addLast(current)
-        valueState.value = undoStack.removeLast().withoutComposition()
+        val restored = undoStack.removeLast().withoutComposition()
         compositionBase = null
-        notifyHistoryChanged()
+        Snapshot.withMutableSnapshot {
+            valueState.value = restored
+            notifyHistoryChanged()
+        }
         return true
     }
 
@@ -147,9 +153,12 @@ class TextFieldState(
         if (redoStack.isEmpty()) return false
         val current = valueState.value.withoutComposition()
         pushUndo(current)
-        valueState.value = redoStack.removeLast().withoutComposition()
+        val restored = redoStack.removeLast().withoutComposition()
         compositionBase = null
-        notifyHistoryChanged()
+        Snapshot.withMutableSnapshot {
+            valueState.value = restored
+            notifyHistoryChanged()
+        }
         return true
     }
 
@@ -171,9 +180,13 @@ class TextFieldState(
         if (current.document != next.document) {
             pushUndo(current.withoutComposition())
             redoStack.clear()
-            notifyHistoryChanged()
+            Snapshot.withMutableSnapshot {
+                notifyHistoryChanged()
+                valueState.value = next
+            }
+        } else {
+            valueState.value = next
         }
-        valueState.value = next
     }
 
     private fun commitInputValue(
@@ -186,6 +199,7 @@ class TextFieldState(
             return
         }
 
+        var historyChanged = false
         when {
             current.composition == null && next.composition != null -> {
                 // Capture the pre-composition baseline so the final IME commit is one undo unit.
@@ -198,17 +212,24 @@ class TextFieldState(
                 if (base.document != next.document) {
                     pushUndo(base)
                     redoStack.clear()
-                    notifyHistoryChanged()
+                    historyChanged = true
                 }
             }
 
             current.composition == null && next.composition == null -> {
                 pushUndo(current.withoutComposition())
                 redoStack.clear()
-                notifyHistoryChanged()
+                historyChanged = true
             }
         }
-        valueState.value = next
+        if (historyChanged) {
+            Snapshot.withMutableSnapshot {
+                notifyHistoryChanged()
+                valueState.value = next
+            }
+        } else {
+            valueState.value = next
+        }
     }
 
     private fun pushUndo(value: TextFieldValue) {

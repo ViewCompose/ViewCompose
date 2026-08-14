@@ -8,6 +8,7 @@ import com.viewcompose.animation.core.animationDurationNanos
 import com.viewcompose.animation.core.sampleAnimationValue
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.State
+import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.unit.UiDp
 import com.viewcompose.ui.foundation.LaunchedEffect
@@ -27,7 +28,9 @@ import kotlinx.coroutines.withContext
  * channels settle at their own terminal values while the segment continues.
  *
  * Retargeting preserves each existing channel's latest sampled value as its new start. The object is
- * composition-owned, is not thread-safe, and does not expose imperative time control.
+ * composition-owned, is not thread-safe, and does not expose imperative time control. Each target
+ * or frame update publishes current state, target state, running state, segment identity, time, and
+ * endpoints in one snapshot transaction, so observers never receive a committed mixed segment.
  *
  * @param S logical endpoint state mapped to channel target values
  */
@@ -103,13 +106,15 @@ class Transition<S> internal constructor(
     internal fun runtimeSegmentVersion(): Long = core.segmentVersion
 
     private fun syncFromCore() {
-        currentStateHolder.value = core.currentState
-        targetStateHolder.value = core.targetState
-        runningHolder.value = core.isRunning
-        segmentVersionHolder.value = core.segmentVersion
-        playTimeNanosHolder.value = core.playTimeNanos
-        segmentInitialStateHolder.value = core.segmentInitialState
-        segmentTargetStateHolder.value = core.segmentTargetState
+        Snapshot.withMutableSnapshot {
+            currentStateHolder.value = core.currentState
+            targetStateHolder.value = core.targetState
+            runningHolder.value = core.isRunning
+            segmentVersionHolder.value = core.segmentVersion
+            playTimeNanosHolder.value = core.playTimeNanos
+            segmentInitialStateHolder.value = core.segmentInitialState
+            segmentTargetStateHolder.value = core.segmentTargetState
+        }
     }
 
     private class ChannelState<T>(

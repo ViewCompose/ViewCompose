@@ -68,15 +68,19 @@ fun snapshotMutationPolicySample() {
 
 fun runtimeObservationSample() {
     val count = mutableStateOf(0)
-    var invalidated = false
+    val enabled = mutableStateOf(false)
+    var invalidations = 0
     val (_, observation) = RuntimeObservation.observeReads(
-        onInvalidated = { invalidated = true },
+        onInvalidated = { invalidations += 1 },
     ) {
-        count.value
+        count.value to enabled.value
     }
 
-    count.value = 1
-    check(invalidated)
+    Snapshot.withMutableSnapshot {
+        count.value = 1
+        enabled.value = true
+    }
+    check(invalidations == 1)
     observation.dispose()
 }
 

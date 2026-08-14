@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 616d8d1d8e198c4ea0a3ccb9701ac6f48052643206e3e42938669669c27bc65b
+translation_source_hash: 21af49f781496eea705da82095817759b250c5413d07c217830221cac6587df5
 translation_status: current
 ---
 
@@ -98,7 +98,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   因此切换选中项时也会切换交互角色；静态或禁用组合控件保持空的多状态契约。
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   与各类 Local Provider 为密度、语言、布局方向、内容颜色、文本样式、图片加载、焦点、帧时钟
-  和宿主能力划定作用域。
+  和宿主能力划定作用域。`UiLocals.current` 是 Q2 作用域查询：Binding 缺失时计算默认值；
+  可空 Local 显式提供的 `null` 会在嵌套、批量 Provider、Snapshot 与延迟 Child Session 中始终
+  保持 `null`。
 - `Image`、`Icon`、[`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/current/com.viewcompose.ui.foundation/-provide-image-loader.html)
   与 `UiImageRequestOptions` 暴露图片语义，但不选择 Coil、Glide 或其他解码器。子树可以安装
   一个 `UiImageLoader`，也可以不安装，让资源图片继续渲染。
@@ -134,6 +136,9 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
 `Environment.resourceRevision` 读取当前不可变值。Local 快照会为 Lazy Item、Pager、Overlay 与
 Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Foundation 之外的
 `viewcompose-host-android` 负责，任何具名设计系统都不拥有这个中立 Local。
+
+Local Binding 是否存在与值是否可空相互独立。只有当前 Snapshot 中完全没有该 Local 的条目时
+才会执行默认值；显式提供的 `null` 不会回退到默认值。
 
 - `UiTreeBuilder` 是临时记录器。内容块返回后，不要持有它或再次调用捕获的 Builder；应持有状态
   与稳定 Key。

@@ -53,13 +53,16 @@ fun <T> uiLocalOf(
 object UiLocals {
     /**
      * Returns the nearest provided [local] value, or evaluates its default during declaration.
+     * Presence and nullability are distinct: explicitly providing `null` for a nullable Local
+     * returns `null` and never falls through to a non-null default.
      *
      * Built-in effect callback scopes do not reinstall the declaring provider stack. Reading a
      * Local from such a callback fails with its diagnostic name even if another provider happens
      * to be active on the callback thread; resolve and capture the value while declaring the effect.
      *
      * @param local typed value handle resolved from the current declaration context
-     * @return nearest provided value, or the Local's declaration-time default
+     * @return nearest provided value, including an explicitly provided `null`, or the Local's
+     * declaration-time default when no binding is present
      */
     fun <T> current(local: UiLocal<T>): T = LocalContext.current(local.holder)
 }

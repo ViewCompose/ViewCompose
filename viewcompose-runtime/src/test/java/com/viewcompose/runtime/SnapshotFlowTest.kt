@@ -51,6 +51,29 @@ class SnapshotFlowTest {
     }
 
     @Test
+    fun `multi-state transaction produces one recalculation opportunity`() = runBlocking {
+        val first = mutableStateOf(0)
+        val second = mutableStateOf(0)
+        var calculations = 0
+        val values = async(Dispatchers.Unconfined) {
+            snapshotFlow {
+                calculations += 1
+                first.value to second.value
+            }
+                .take(2)
+                .toList()
+        }
+
+        Snapshot.withMutableSnapshot {
+            first.value = 1
+            second.value = 2
+        }
+
+        assertEquals(listOf(0 to 0, 1 to 2), values.await())
+        assertEquals(2, calculations)
+    }
+
+    @Test
     fun `replaces conditional dependencies after each calculation`() = runBlocking {
         val selectFirst = mutableStateOf(true)
         val first = mutableStateOf("first")

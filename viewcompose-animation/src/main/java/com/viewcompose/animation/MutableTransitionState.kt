@@ -1,5 +1,6 @@
 package com.viewcompose.animation
 
+import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.mutableStateOf
 
 /**
@@ -8,7 +9,9 @@ import com.viewcompose.runtime.mutableStateOf
  * Callers write [targetState]. [AnimatedVisibility] mirrors its internal transition into
  * [currentState] and [isIdle] while this object is supplied to the state overload. The object does
  * not run an animation by itself and is not saveable automatically; remember or otherwise retain it
- * for the lifetime whose transition status must be observed.
+ * for the lifetime whose transition status must be observed. The consuming framework publishes its
+ * current, target, and idle mirror in one snapshot transaction; a caller write to [targetState]
+ * remains an independent request.
  *
  * State is backed by the ViewCompose snapshot system. UI-facing reads and writes should follow the
  * owning composition's thread policy.
@@ -58,4 +61,17 @@ class MutableTransitionState<S>(
         internal set(value) {
             idleHolder.value = value
         }
+
+    /** Publishes one framework-owned transition mirror without exposing a mixed committed tuple. */
+    internal fun syncFromTransition(
+        currentState: S,
+        targetState: S,
+        isIdle: Boolean,
+    ) {
+        Snapshot.withMutableSnapshot {
+            currentStateHolder.value = currentState
+            targetStateHolder.value = targetState
+            idleHolder.value = isIdle
+        }
+    }
 }

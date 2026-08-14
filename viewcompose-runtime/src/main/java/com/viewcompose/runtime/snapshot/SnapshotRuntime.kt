@@ -209,7 +209,7 @@ internal object SnapshotRuntime {
         var conflicts = 0
         val resolvedWrites = LinkedHashMap<SnapshotStateObject, Any?>()
         val changedStates = mutableListOf<SnapshotStateObject>()
-        val invalidations = mutableListOf<Observation>()
+        val invalidations = LinkedHashSet<Observation>()
         synchronized(runtimeLock) {
             val appliedGlobalId = globalSnapshotId
             for ((state, currentValue) in snapshot.writes) {

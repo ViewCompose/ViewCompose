@@ -1,6 +1,7 @@
 package com.viewcompose.gesture
 
 import com.viewcompose.runtime.State
+import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.gesture.TransformDelta
 import com.viewcompose.ui.foundation.remember
@@ -197,7 +198,10 @@ fun <T> draggableAnchorsOf(vararg anchors: Pair<Float, T>): DraggableAnchors<T> 
  * Movement is clamped to the installed anchor range. Recomposition with an equivalent anchor set
  * preserves an active drag, while cancellation restores the last committed value. Until the first
  * modifier supplies anchors, [currentOffsetPx] is `null`. The exposed [State] objects are stable
- * and invalidate readers when their values change.
+ * and invalidate readers when their values change. Each snap, delta, settle, cancellation, or
+ * anchor-reconciliation operation publishes its semantic value, target, offset, and dragging flag
+ * in one snapshot transaction, so readers never receive a committed mixed gesture state. Mutations
+ * are not thread-safe and must remain serialized on the owning UI thread.
  *
  * @sample com.viewcompose.gesture.samples.anchoredDragState
  */
@@ -240,10 +244,12 @@ class AnchoredDraggableState<T> internal constructor(
      * offset becomes `null`; a later anchor update reconciles it to an exact or nearest anchor.
      */
     fun snapTo(target: T) {
-        draggingState.value = false
-        currentState.value = target
-        targetState.value = target
-        currentOffsetState.value = anchors?.offsetOf(target)
+        Snapshot.withMutableSnapshot {
+            draggingState.value = false
+            currentState.value = target
+            targetState.value = target
+            currentOffsetState.value = anchors?.offsetOf(target)
+        }
     }
 
     internal fun updateAnchors(newAnchors: DraggableAnchors<T>) {
@@ -255,19 +261,23 @@ class AnchoredDraggableState<T> internal constructor(
         anchors = newAnchors
         val currentMappedOffset = newAnchors.offsetOf(currentState.value)
         if (currentMappedOffset != null) {
-            draggingState.value = false
-            currentOffsetState.value = currentMappedOffset
-            targetState.value = currentState.value
+            Snapshot.withMutableSnapshot {
+                draggingState.value = false
+                currentOffsetState.value = currentMappedOffset
+                targetState.value = currentState.value
+            }
             return
         }
         // If the current value disappears from anchors, snap to the nearest offset to avoid dangling state.
         val nearest = newAnchors.nearest(
             offsetPx = currentOffsetState.value ?: newAnchors.firstOffsetPx,
         )
-        currentState.value = nearest.value
-        targetState.value = nearest.value
-        currentOffsetState.value = nearest.offsetPx
-        draggingState.value = false
+        Snapshot.withMutableSnapshot {
+            currentState.value = nearest.value
+            targetState.value = nearest.value
+            currentOffsetState.value = nearest.offsetPx
+            draggingState.value = false
+        }
     }
 
     internal fun dispatchRawDelta(delta: Float) {
@@ -276,28 +286,34 @@ class AnchoredDraggableState<T> internal constructor(
         val base = currentOffsetState.value
             ?: activeAnchors.offsetOf(currentState.value)
             ?: activeAnchors.firstOffsetPx
-        draggingState.value = true
-        currentOffsetState.value = (base + delta).coerceIn(
-            activeAnchors.firstOffsetPx,
-            activeAnchors.lastOffsetPx,
-        )
+        Snapshot.withMutableSnapshot {
+            draggingState.value = true
+            currentOffsetState.value = (base + delta).coerceIn(
+                activeAnchors.firstOffsetPx,
+                activeAnchors.lastOffsetPx,
+            )
+        }
     }
 
     internal fun settleToOffset(offsetPx: Float) {
         val activeAnchors = anchors ?: return
         lastCompletionStartOffsetPx = currentOffsetState.value
         val nearest = activeAnchors.nearest(offsetPx)
-        draggingState.value = false
-        currentState.value = nearest.value
-        targetState.value = nearest.value
-        currentOffsetState.value = nearest.offsetPx
+        Snapshot.withMutableSnapshot {
+            draggingState.value = false
+            currentState.value = nearest.value
+            targetState.value = nearest.value
+            currentOffsetState.value = nearest.offsetPx
+        }
     }
 
     internal fun cancelDrag() {
         lastCompletionStartOffsetPx = currentOffsetState.value
-        draggingState.value = false
-        targetState.value = currentState.value
-        currentOffsetState.value = anchors?.offsetOf(currentState.value)
+        Snapshot.withMutableSnapshot {
+            draggingState.value = false
+            targetState.value = currentState.value
+            currentOffsetState.value = anchors?.offsetOf(currentState.value)
+        }
     }
 }
 

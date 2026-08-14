@@ -339,7 +339,9 @@ Compose distinguishes tracked `compositionLocalOf` reads from broad
 
 ViewCompose `UiLocal` is a typed handle into a thread-scoped immutable map used while a VNode tree is
 built. `ProvideLocal` installs a value for a nested block and restores the prior map afterward.
-`ProvideLocals` performs the same operation for multiple bindings. The implementation is in
+`ProvideLocals` performs the same operation for multiple bindings. Binding presence is distinct
+from nullability: an explicitly provided `null` for a nullable Local overrides a non-null default
+and survives capture, restore, and delayed child-session propagation. The implementation is in
 [`UiLocals.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/UiLocals.kt),
 lines 3–103, and
 [`LocalValue.kt`](../../viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/LocalValue.kt),

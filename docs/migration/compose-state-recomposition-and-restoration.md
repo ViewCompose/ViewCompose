@@ -175,9 +175,10 @@ Repository evidence:
 - compiled samples in
   `viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt`.
 
-One multi-state commit may invoke one `RuntimeObservation` callback for each changed observed state.
-The composition invalidation queue coalesces repeated dirty scopes, but application code must not
-depend on callback-count equivalence with Compose.
+One successful global apply invokes an affected `RuntimeObservation` at most once on the applying
+thread, even when several observed states changed. Separate applies remain separate callback
+opportunities; ViewCompose does not debounce observations across transactions, frames, or time.
+This is a ViewCompose callback contract, not a promise of callback-count equivalence with Compose.
 
 ## Derived state and invalidation differences
 

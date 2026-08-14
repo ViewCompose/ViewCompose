@@ -108,7 +108,9 @@ by a later renderer or child render session.
   role. Passive and disabled composites keep a null multi-state contract.
 - [`UiEnvironment`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-environment/)
   and the local-provider APIs scope density, locales, layout direction, content color, text style,
-  image loading, focus, frame clock, and host capabilities.
+  image loading, focus, frame clock, and host capabilities. `UiLocals.current` is a Q2 scoped lookup:
+  an absent binding evaluates its default, while an explicitly provided `null` for a nullable Local
+  remains `null` through nesting, batch providers, snapshots, and delayed child sessions.
 - `Image`, `Icon`, [`ProvideImageLoader`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/current/com.viewcompose.ui.foundation/-provide-image-loader.html),
   and `UiImageRequestOptions` expose image semantics without selecting Coil, Glide, or another
   decoder. A subtree may install one `UiImageLoader` or leave it absent for resource-only rendering.
@@ -150,6 +152,9 @@ Because the current line is alpha, the documentation site intentionally does not
 current immutable value while building content. Local snapshots preserve it for lazy items,
 pagers, overlays, and navigation destinations. Android resource resolution and observation remain
 outside UI Foundation in `viewcompose-host-android`; no named design system owns this neutral Local.
+
+Local binding presence is independent of value nullability. Defaults run only when the current
+snapshot has no entry for that Local; they are not a fallback for an explicitly provided `null`.
 
 - A `UiTreeBuilder` is an ephemeral recorder. Do not retain it or invoke a captured builder after
   its content block returns. Retain state and stable keys instead.

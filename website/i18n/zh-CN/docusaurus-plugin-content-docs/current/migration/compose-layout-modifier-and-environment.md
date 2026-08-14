@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-layout-modifier-and-environment.md
-translation_source_hash: ed7dd2ca78ff3768028b0ca64433ca63cd1cededf2575ed4df288ee8263b2a2c
+translation_source_hash: 3d881f37bad0355ed13d593d8b64f624828df87d5415df1cbf0dbdde8c9a88a0
 translation_status: current
 ---
 
@@ -324,7 +324,8 @@ Compose 区分会追踪读取的 `compositionLocalOf` 与宽粒度的 `staticCom
 
 ViewCompose `UiLocal` 是一个类型化句柄，指向构建 VNode 树时使用的线程作用域不可变 map。
 `ProvideLocal` 为嵌套 block 安装值，block 结束后恢复之前的 map。`ProvideLocals` 为多个绑定
-执行相同操作。实现位于固定 revision 的
+执行相同操作。Binding 是否存在与值是否可空相互独立：可空 Local 显式提供的 `null` 会覆盖
+非空默认值，并在 Capture、Restore 与延迟 Child Session 传播中保持不变。实现位于固定 revision 的
 [`UiLocals.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/UiLocals.kt)
 第 3–103 行，以及
 [`LocalValue.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/context/LocalValue.kt)

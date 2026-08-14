@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 644869b2deb959f2435eae2abe5092b7709f5eb4d73171254091eb323d440126
+translation_source_hash: 7b09658272c4e9188b796effb48be3ef01fcf54a090928494e5e378bbb4f5b0c
 translation_status: current
 ---
 
@@ -55,7 +55,8 @@ Snapshot.withMutableSnapshot {
 - [`Snapshot` 与 `MutableSnapshot`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/-snapshot/)
   提供一致性读取、带冲突报告的原子缓冲写入。
 - [`RuntimeObservation`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime.observation/-runtime-observation/)
-  将状态读取转化为显式失效订阅。
+  是把状态读取转化为显式失效订阅的 Q3 API。一次成功的全局 Apply 最多在 Apply 线程调用每个
+  受影响 Observation 一次，即使多个依赖同时变化；不同 Apply 仍是不同的通知机会。
 - [`snapshotFlow`](https://docs.viewcompose.com/api/viewcompose-runtime/0.1.0-alpha02/viewcompose-runtime/com.viewcompose.runtime/snapshot-flow.html)
   创建 Cold Flow；它会为每个 Collector 跟踪 Snapshot 读取、合并失效、替换条件依赖，并只发出
   结构不相等的计算结果。
@@ -75,8 +76,9 @@ Snapshot.withMutableSnapshot {
 - `Snapshot` 在释放前会固定保留历史记录。读取快照不再使用时，必须调用 `close`、`dispose`
   或 Kotlin `use`。
 - `MutableSnapshot` 应在应用或放弃后释放。冲突失败不会改变目标，可以重试；成功应用是终态。
-- `Observation` 拥有收集期间读取的全部状态订阅。不再需要失效通知时应将其释放，避免状态继续
-  持有该订阅。
+- `Observation` 拥有收集期间读取的全部状态订阅。一次成功的全局 Apply 最多使其失效一次，
+  多个受影响 Observation 按首次观察的稳定顺序交付。不再需要通知时应将其释放，避免状态继续
+  持有订阅；已经与释放形成竞态并开始的 Callback 可以执行完成。
 - 每个 `snapshotFlow` Collector 拥有独立的读取观察。取消或计算失败会将其释放；计算必须无
   副作用，并且运行次数可能多于发出值的次数。
 - `ComposerLite` 与派生状态实例按线程封闭设计。宿主负责串行化组合、prepared

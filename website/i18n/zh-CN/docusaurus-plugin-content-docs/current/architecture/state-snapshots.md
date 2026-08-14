@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/state-snapshots.md
-translation_source_hash: bebfba26a47a9f6643f463a4e7e32f3b1e6f6e6d78087bdd41405b9236826604
+translation_source_hash: 0aac656ee00e4ed9624a4c70a8ca50174577dc3d5617e2b4ad24fd64b76a1ff7
 translation_status: current
 ---
 
@@ -44,6 +44,11 @@ translation_status: current
 4. 读快照隔离：`Snapshot.takeSnapshot().enter { ... }` 始终读取该快照可见版本，不受后续全局提交影响。
 5. `ComposerLite` 每轮 compose 在一致性读快照中执行；同一轮内读取结果不漂移。
 6. Runtime 跟踪活动 snapshot 的 `readId`；提交时保留活动读者所需版本，snapshot 释放后裁剪不再可见的历史记录。
+7. 一次成功的全局 Apply 会按稳定顺序去重受影响的 `Observation`，并在释放 Runtime 与 State
+   Lock 后，最多在 Apply 线程调用每个 Observation 一次。不同 Apply 不会合并；冲突或无操作
+   Apply 不发送失效通知。
+8. 构成一个公开逻辑元组的框架字段必须使用一次现有 Mutable Snapshot Transaction。
+   `synchronized` 等 Writer 串行化手段不能让多个独立 Commit 对 Snapshot Reader 原子可见。
 
 ## 4. 并发与冲突约束
 
@@ -58,6 +63,8 @@ translation_status: current
 2. 新状态容器若接入 `RuntimeObservation`，必须实现 snapshot 可见性语义。
 3. 修改策略或冲突语义时，必须同步补齐并发事务单测与 compose 一致性单测。
 4. `Snapshot`/`MutableSnapshot` 使用完成后必须调用 `dispose()` 或通过 `use` 关闭，避免长期保留历史版本。
+5. 新增多个框架可观察字段时，必须先判断它们是一个 Invariant 还是独立事件。只把同一 Invariant
+   的写入放进 `Snapshot.withMutableSnapshot`，并用失效 Callback 读取完整元组进行测试。
 
 ## 6. 关联文档
 

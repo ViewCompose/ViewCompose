@@ -11,12 +11,67 @@ import com.viewcompose.animation.core.EasingDefaults
 import com.viewcompose.animation.core.tween
 import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.composition.ComposerLite
+import com.viewcompose.runtime.observation.RuntimeObservation
 import com.viewcompose.ui.foundation.ComposerContext
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TransitionTest {
+    @Test
+    fun `transition mirrors publish one complete logical segment`() {
+        val transition = Transition(
+            initialState = false,
+            label = "atomic",
+        )
+        val published = mutableListOf<TransitionSnapshot>()
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = { published += transition.snapshot() },
+        ) {
+            transition.snapshot()
+        }
+
+        transition.updateTarget(true)
+
+        assertEquals(
+            listOf(
+                TransitionSnapshot(
+                    current = false,
+                    target = true,
+                    running = true,
+                    version = 1L,
+                    playTimeNanos = 0L,
+                    segmentInitial = false,
+                    segmentTarget = true,
+                ),
+            ),
+            published,
+        )
+        observation.dispose()
+    }
+
+    @Test
+    fun `mutable transition state mirrors current target and idle atomically`() {
+        val state = MutableTransitionState(initialState = false)
+        val published = mutableListOf<Triple<Boolean, Boolean, Boolean>>()
+        val (_, observation) = RuntimeObservation.observeReads(
+            onInvalidated = {
+                published += Triple(state.currentState, state.targetState, state.isIdle)
+            },
+        ) {
+            Triple(state.currentState, state.targetState, state.isIdle)
+        }
+
+        state.syncFromTransition(
+            currentState = false,
+            targetState = true,
+            isIdle = false,
+        )
+
+        assertEquals(listOf(Triple(false, true, false)), published)
+        observation.dispose()
+    }
+
     @Test
     fun `multiple channels can register duration inside one composition snapshot`() {
         val transition = Transition(
@@ -113,4 +168,26 @@ class TransitionTest {
             composer.dispose()
         }
     }
+
+    private fun Transition<Boolean>.snapshot(): TransitionSnapshot {
+        return TransitionSnapshot(
+            current = currentState,
+            target = targetState,
+            running = isRunning,
+            version = segmentVersion,
+            playTimeNanos = playTimeNanos,
+            segmentInitial = segmentInitialState,
+            segmentTarget = segmentTargetState,
+        )
+    }
+
+    private data class TransitionSnapshot(
+        val current: Boolean,
+        val target: Boolean,
+        val running: Boolean,
+        val version: Long,
+        val playTimeNanos: Long,
+        val segmentInitial: Boolean,
+        val segmentTarget: Boolean,
+    )
 }

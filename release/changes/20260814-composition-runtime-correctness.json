@@ -1,13 +1,16 @@
 {
   "schemaVersion": 1,
-  "summary": "Harden remember activation recovery, keyed scope identity, render-session terminal behavior, and Fragment View-lifecycle ownership.",
+  "summary": "Harden composition identity and host lifecycles, correct nullable Local lookup, and publish related runtime state atomically.",
   "changes": [
-    { "artifact": "viewcompose-runtime", "impact": "fix" },
+    { "artifact": "viewcompose-runtime", "impact": "breaking" },
     { "artifact": "viewcompose-ui-contract", "impact": "fix" },
     { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
     { "artifact": "viewcompose-host-android", "impact": "breaking" },
     { "artifact": "viewcompose-lifecycle-androidx", "impact": "fix" },
-    { "artifact": "viewcompose-android", "impact": "breaking" }
+    { "artifact": "viewcompose-android", "impact": "breaking" },
+    { "artifact": "viewcompose-animation", "impact": "fix" },
+    { "artifact": "viewcompose-gesture", "impact": "fix" },
+    { "artifact": "viewcompose-text-core", "impact": "fix" }
   ],
   "ignored": []
 }

@@ -83,7 +83,11 @@ internal object LocalContext {
         }
         val values = currentValues.get().orEmpty()
         @Suppress("UNCHECKED_CAST")
-        return values[local] as? T ?: local.default()
+        return if (values.containsKey(local)) {
+            values[local] as T
+        } else {
+            local.default()
+        }
     }
 
     fun <T> provide(

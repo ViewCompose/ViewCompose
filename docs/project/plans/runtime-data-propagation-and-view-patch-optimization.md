@@ -2,32 +2,27 @@
 
 ## Status
 
-Active after a 2026-08-14 implementation and necessity re-audit. The retained plan now owns two
-proven runtime correctness gaps and two bounded Android View/runtime allocation optimizations. It no
-longer treats a broad diagnostics system, a shared frame scheduler, or general Compose parity as
-prerequisites.
+Active after a 2026-08-14 implementation and necessity re-audit. Phases 0 and 1 are implemented:
+nullable Local lookup is correct, framework-owned logical tuples publish atomically, and one global
+Snapshot Apply invalidates each affected Observation at most once. The remaining active work is two
+bounded Android View/runtime allocation experiments gated by the replacement Demo baseline. The
+plan no longer treats a broad diagnostics system, a shared frame scheduler, or general Compose
+parity as prerequisites.
 
-No production slice or Maven changeset is currently owned by this plan. The old statement that all
-related work was unstarted is obsolete: later work independently added `snapshotFlow`,
+The old statement that all related work was unstarted is obsolete: later work independently added `snapshotFlow`,
 configuration-aware Android resources, resource and environment revisions, transactional effects,
 deferred child-session activation, and the logical-session/physical-tree collection reuse model.
 Those capabilities are audited as current foundations below, not repeated as unfinished phases.
 
 Last verified: 2026-08-14.
 
-Next action: add the Phase 0 focused correctness reproductions. Nullable Local lookup and atomic
-publication of framework-owned state may proceed without a Demo performance baseline. Do not begin
-modifier-only binding or LocalSnapshot allocation work until the replacement scenario and workload
-revision baseline from the
+Next action: execute the replacement scenario and workload-revision baseline from the
 [Demo benchmark and verification harness rearchitecture plan](./demo-benchmark-verification-harness-rearchitecture.md)
-exists.
+before beginning modifier-only binding or LocalSnapshot allocation work.
 
 ## Maven release changesets
 
-- None.
-
-The first production slice selected from this plan must add and list its immutable
-`release/changes/*.json` file before implementation is considered complete.
+- `release/changes/20260814-runtime-data-propagation-correctness.json`
 
 ## Objective
 
@@ -128,9 +123,9 @@ diagnostics UI, theme-system policy, or new resource APIs.
 | Resource and environment propagation | Android resource APIs, host revision publication, VNode environment equality, and delayed-session refresh exist. | Implemented independently. | Treat as current input to renderer and item revision decisions. Do not reopen resource architecture here. |
 | Collection Session and native-tree reuse | Lazy/Pager separate logical identity from bounded physical reuse; TabRow is eager keyed content. | Implemented independently. | Preserve the current architecture; no Session merging or tab scheduler work. |
 | Renderer transactions and diagnostics | Targeted spec patches, rollback, reset/release, aggregate stats, patch records, and frame failure data exist. | Implemented foundation. | Reuse focused counters and tests; do not build the original general correlation subsystem. |
-| Nullable Local lookup | A present `null` falls through to the default; no focused nullable Local test exists. | P0 correctness: an existing generic API returns the wrong value. | Required focused fix. |
-| Atomic related-state publication | Transition, Animatable, and anchored drag expose tuples whose fields currently commit separately. | P0 correctness: readers can observe a committed mixed tuple; repeated automatic applies are secondary cost. | Required, using the existing Snapshot transaction boundary only around proven invariants. |
-| One-apply observation delivery | The same `Observation` can receive duplicate callbacks from one successful apply, and current KDoc promises per-changed-state delivery. | P1 contract simplification and deterministic hot-path reduction, not a standalone correctness fix. | Hard-cut to at-most-once per successful apply only with explicit public contract, sample, and compatibility updates. |
+| Nullable Local lookup | Presence-aware lookup, nesting, batch providers, public snapshot restoration, exceptional restore, and a delayed item Session are tested. | P0 correctness was required because the generic API returned the wrong value. | Implemented: an explicit `null` now overrides the default. |
+| Atomic related-state publication | Transition, Animatable, MutableTransitionState, anchored drag, and TextFieldState tuple tests now read only complete committed states. | P0 correctness: readers previously could observe a committed mixed tuple; repeated automatic applies were secondary cost. | Implemented with the existing Snapshot transaction boundary only around proven invariants. |
+| One-apply observation delivery | Focused tests cover multi-state apply, separate applies, callback thread, conflict/no-op apply, disposal race, and `snapshotFlow`. | P1 contract simplification and deterministic hot-path reduction. | Implemented as a hard cut to at-most-once per successful global apply, with public KDoc, compiled sample, module, architecture, and migration updates. |
 | Modifier-only Android View binding | Modifier-only changes currently force a full NodeSpec bind and unconditional LayoutParams rebuild. | P1 concrete redundancy, but end-to-end value and rollback shape still require the replacement benchmark. | Retain as a benchmark-gated experiment; keep only the smallest plan that reuses existing modifier-family comparison. |
 | LocalSnapshot wrapper identity | Every capture creates a wrapper although the installed map is immutable for that scope. | P1 low-risk allocation experiment after a valid workload baseline. | Retain the `ThreadLocal<LocalSnapshot>` identity-reuse experiment; require deterministic allocation reduction and no regression. |
 | Shared frame scheduler | Sessions register separate callbacks, but callbacks only dispatch independent render work and no evidence identifies registration as material. | Not currently necessary; high lifecycle, reentrancy, failure-isolation, and process-global retention cost. | Remove from this plan. A future trace showing material callback cost requires a separate plan and ADR-level ownership review. |
@@ -179,7 +174,7 @@ Per-session scheduling, copy-on-provider Maps, fresh composition observations, l
 and conservative environment rebind remain the default while no stable representative workload
 shows that their cost is material.
 
-## Phase 0: Focused reproductions and contract freeze
+## Phase 0: Focused reproductions and contract freeze — completed
 
 Phase 0 is a correctness-test gate, not a diagnostics phase. Add the smallest executable evidence
 for:
@@ -205,11 +200,26 @@ Contract freeze:
   global apply while separate applies remain separate opportunities; and
 - `synchronized` protects writer arbitration but never substitutes for Snapshot read consistency.
 
-Phase 0 completes when the current failures are executable, the affected public API Q levels and
-contract fields are recorded, and the first production changeset is registered. No cross-session
-trace chain or Demo page is required.
+Phase 0 completed with focused executable tests, Q3 classifications for `RuntimeObservation`,
+`Transition`, `Animatable`, `MutableTransitionState`, `AnchoredDraggableState`, and
+`TextFieldState`, a Q2 classification for `UiLocals.current`, and the registered production
+changeset. No cross-session trace chain or Demo page was required.
 
-## Phase 1: Runtime and Local correctness hard cut
+### Framework-owned adjacent-write inventory
+
+| Area | Adjacent publication | Classification and retained action |
+| --- | --- | --- |
+| Animation | `Transition` mirrors seven segment fields. | One logical segment invariant; grouped in one transaction. |
+| Animation | `Animatable` publishes target/running at start and retained target/idle at end; frame samples update value. | Start and end are separate logical boundaries and are each atomic; frame samples remain independent events. |
+| Animation | `MutableTransitionState` mirrors current/target/idle; target is also caller writable. | Framework mirror is one invariant and is atomic; a caller target write remains an independent request. |
+| Animation | Target-as-state, InfiniteTransition, and AnimatedContent update one state per channel or content identity. | Independent single-value events; no grouping added. |
+| Gesture | `AnchoredDraggableState` publishes semantic value, target, offset, and dragging. | One gesture-state invariant per snap/delta/settle/cancel/reconciliation; grouped. |
+| Gesture | `ToggleDragCompletion` publishes one immutable completion object. | Already one aggregate value; no grouping needed. |
+| Text | `TextFieldState` publishes `TextFieldValue` plus the observable history version backing `canUndo`/`canRedo`. | One edit/undo/redo invariant; grouped. |
+| Navigation | `NavHostController` publishes one immutable aggregate stack snapshot; transition specification is a separate rendering input. | Already aggregate or semantically independent; no grouping needed. |
+| Session | `produceState` publishes one value; RenderSession lifecycle fields are a thread-confined state machine rather than independently observable Snapshot fields. | No multi-State public invariant; no grouping added. |
+
+## Phase 1: Runtime and Local correctness hard cut — completed
 
 ### Nullable Local lookup
 
@@ -233,16 +243,16 @@ apply publishes none of the grouped fields and schedules no render.
 ### One-apply observation delivery
 
 After the related-state tests pass, change invalidation accumulation to stable unique Observation
-delivery outside runtime and state locks. This is a public behavior change because current KDoc
-describes one callback per changed observed state. Before implementation, assign the API's Q level
-and update canonical KDoc, compiled samples, runtime module documentation, migration guidance, and
-tests in the same slice.
+delivery outside runtime and state locks. This is a public behavior change because the previous
+KDoc described one callback per changed observed state. Before implementation, assign the API's Q
+level and update canonical KDoc, compiled samples, runtime module documentation, migration
+guidance, and tests in the same slice.
 
 Do not debounce across applies, frames, or time. Do not reuse Observation dependency sets.
 
-Phase 1 completes when focused runtime, animation, gesture, Local, delayed-session, and
-`snapshotFlow` tests pass, the public contracts are aligned, and aggregate quality gates show no
-regression.
+Phase 1 completed after focused runtime, animation, gesture, text, Local, delayed-session, and
+`snapshotFlow` tests passed and public contracts were aligned. Repository-wide gates are recorded
+in the evidence ledger for the retained revision.
 
 ## Performance implementation gate
 
@@ -395,6 +405,7 @@ This plan is complete when all of the following are true:
 | 2026-08-14 | Current working tree | Current source, tests, architecture, module documentation, and post-2026-08-05 change history audited | Confirmed nullable Local and related-state atomicity defects; confirmed modifier-only rebind and per-node LocalSnapshot allocation; removed shared scheduling and broad diagnostics from the active sequence. |
 | 2026-08-14 | Current working tree | `snapshotFlow`, configuration-aware resources, resource/environment revisions, transactional effects, delayed-session activation, and collection ownership/reuse evidence | Marked these as independently implemented foundations rather than unfinished Runtime/Patch work. |
 | 2026-08-14 | Current working tree | Demo benchmark and automation audit | Performance experiments blocked on direct scenario IDs and explicit workload revisions; correctness work remains unblocked. |
+| 2026-08-14 | Current working tree | Focused RuntimeObservation, nullable Local/delayed Session, Transition, Animatable, MutableTransitionState, anchored drag, TextFieldState, and snapshotFlow tests | Phase 0 and Phase 1 correctness hard cut implemented; modifier-only Patch and LocalSnapshot experiments remain gated by the replacement Demo baseline. |
 
 ## Decision history
 

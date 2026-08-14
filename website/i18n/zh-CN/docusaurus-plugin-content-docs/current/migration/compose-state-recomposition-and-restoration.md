@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 835be82a0c2b54cf9bcb974b4317b74d102a81c9c02a9ff535a6c3f4ac63acbb
+translation_source_hash: ee07ee26d7b21155c27c9584a51ce793d80d469f318a13d2696995a77b4cec25
 translation_status: current
 ---
 
@@ -168,8 +168,9 @@ ViewCompose 提供相同的迁移层模型：
 - [`RuntimeObservationTest.kt` 第 18–122 行](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/observation/RuntimeObservationTest.kt#L18-L122)；
 - [`RuntimeSamples.kt` 中的已编译示例](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/samples/com/viewcompose/runtime/samples/RuntimeSamples.kt)。
 
-一次多状态提交可能针对每个发生变化且被观察的状态分别调用一次 `RuntimeObservation` 回调。
-组合失效队列会合并重复的脏 Scope，但应用代码不得依赖其回调次数与 Compose 等价。
+一次成功的全局 Apply 最多在 Apply 线程调用受影响的 `RuntimeObservation` 一次，即使多个被观察
+State 同时变化。不同 Apply 仍是不同的 Callback 机会；ViewCompose 不会跨 Transaction、Frame
+或时间合并 Observation。这是 ViewCompose 自身的 Callback 契约，不代表与 Compose 的调用次数等价。
 
 ## 派生状态与失效差异 {/* #derived-state-and-invalidation-differences */}
 
