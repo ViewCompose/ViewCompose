@@ -122,8 +122,12 @@
     <string name="demo_scenario_environment_resources_summary">Locale, night mode, direction, font scale, and density propagation.</string>
     <string name="demo_scenario_interop_android_view_title">Android View interop</string>
     <string name="demo_scenario_interop_android_view_summary">Native View updates and theme-local propagation inside a stable declarative tree.</string>
+    <string name="demo_scenario_overlay_transient_title">Transient overlays</string>
+    <string name="demo_scenario_overlay_transient_summary">Dialog, popup, snackbar, and toast request lifecycles.</string>
     <string name="demo_scenario_overlay_dialog_title">Dialog overlay</string>
     <string name="demo_scenario_overlay_dialog_summary">Overlay creation, dismissal, and host lifecycle.</string>
+    <string name="demo_scenario_overlay_menu_title">Menu and tooltip overlays</string>
+    <string name="demo_scenario_overlay_menu_summary">Anchored dropdown-menu and non-focusable tooltip behavior.</string>
     <string name="demo_scenario_navigation_system_title">Android system navigation</string>
     <string name="demo_scenario_navigation_system_summary">Destination ownership, independent stacks, deep links, and system Back.</string>
     <string name="demo_scenario_performance_list_title">List performance</string>

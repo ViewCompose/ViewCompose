@@ -46,7 +46,13 @@ class DemoCatalogFilterTest {
     @Test
     fun `category and verification filters compose deterministically`() {
         assertEquals(
-            listOf("environment.resources", "interop.android-view", "overlay.dialog"),
+            listOf(
+                "environment.resources",
+                "interop.android-view",
+                "overlay.transient",
+                "overlay.dialog",
+                "overlay.menu",
+            ),
             filterDemoScenarios(
                 scenarios = scenarios,
                 query = "",

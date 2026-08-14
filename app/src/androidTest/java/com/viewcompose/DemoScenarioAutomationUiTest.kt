@@ -92,7 +92,9 @@ class DemoScenarioAutomationUiTest {
             "layout.constraint",
             "environment.resources",
             "interop.android-view",
+            "overlay.transient",
             "overlay.dialog",
+            "overlay.menu",
             "navigation.system",
             "performance.list",
         ).forEach { scenarioId ->
@@ -228,6 +230,46 @@ class DemoScenarioAutomationUiTest {
                 "$scenarioId reset must restore initial state",
                 initial,
                 waitForTargetText(scenarioId, initial),
+            )
+        }
+    }
+
+    @Test
+    fun overlayFixturesPublishDeterministicActionAndResetState() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            listOf(
+                "overlay.transient",
+                "overlay.dialog",
+            ).forEach { scenarioId ->
+                launchScenario(scenarioId)
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+                requireTarget(scenarioId, "primary_action").click()
+                requireTarget(scenarioId, "target")
+
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId reset must restore initial state",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
+
+            val menuScenarioId = "overlay.menu"
+            launchScenario(menuScenarioId)
+            val initial = requireTarget(menuScenarioId, "state").text.orEmpty()
+            requireTarget(menuScenarioId, "primary_action").click()
+            assertNotEquals(
+                "$menuScenarioId action must publish state",
+                initial,
+                waitForTargetTextChange(menuScenarioId, initial),
+            )
+            requireTarget(menuScenarioId, "reset").click()
+            assertEquals(
+                "$menuScenarioId reset must restore initial state",
+                initial,
+                waitForTargetText(menuScenarioId, initial),
             )
         }
     }

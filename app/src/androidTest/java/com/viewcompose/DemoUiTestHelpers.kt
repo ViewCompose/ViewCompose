@@ -245,6 +245,33 @@ internal fun assertDeviceTextVisible(text: String) {
     assertTrue("Expected visible height > 0 for device text: $text", bounds.height() > 0)
 }
 
+/** Returns a visible device node addressed by an app-owned Android resource ID. */
+internal fun requireDeviceResourceId(@IdRes id: Int): androidx.test.uiautomator.UiObject2 {
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val context = instrumentation.targetContext
+    val resourceName = context.resources.getResourceEntryName(id)
+    val target = UiDevice.getInstance(instrumentation).wait(
+        Until.findObject(By.res(context.packageName, resourceName)),
+        5_000,
+    )
+    assertNotNull("Expected device resource target: $resourceName", target)
+    return requireNotNull(target)
+}
+
+/** Clicks an app-owned device resource target, including targets hosted in overlay windows. */
+internal fun clickDeviceResourceId(@IdRes id: Int) {
+    requireDeviceResourceId(id).click()
+    waitForUiIdle()
+}
+
+/** Asserts that an app-owned device resource target has non-empty visible bounds. */
+internal fun assertDeviceResourceIdVisible(@IdRes id: Int) {
+    val target = requireDeviceResourceId(id)
+    val bounds = target.visibleBounds
+    assertTrue("Expected visible width > 0 for resource ID: $id", bounds.width() > 0)
+    assertTrue("Expected visible height > 0 for resource ID: $id", bounds.height() > 0)
+}
+
 /**
  * 使用设备级可滚动容器把文本滚入视口。
  * Scrolls a text target into view through a device-level scrollable container.

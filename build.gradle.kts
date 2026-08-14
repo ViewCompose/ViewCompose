@@ -540,7 +540,6 @@ tasks.register("verifyDemoAutomationSelectors") {
         val legacySelectorBaseline = mapOf(
             "app/src/androidTest/java/com/viewcompose/DemoDesignSystemVerificationUiTest.kt" to 6,
             "app/src/androidTest/java/com/viewcompose/DemoUiTestHelpers.kt" to 6,
-            "app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt" to 2,
             "app/src/androidTest/java/com/viewcompose/OneUi7VerificationUiTest.kt" to 4,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ComplexLayoutPerformanceComparisonBenchmark.kt" to 3,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 19,
@@ -735,6 +734,7 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             ),
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/modifiers"),
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/interop"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/feedback"),
         )
         val visibleLiteral = Regex(
             """(?:\b(?:text|title|subtitle|label|supportingText|placeholder|""" +

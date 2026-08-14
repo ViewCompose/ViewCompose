@@ -273,12 +273,30 @@
     <item name="demo_interop_android_view_target" type="id" />
     <item name="demo_interop_android_view_secondary_target" type="id" />
 
+    <item name="demo_overlay_transient_root" type="id" />
+    <item name="demo_overlay_transient_ready" type="id" />
+    <item name="demo_overlay_transient_primary_action" type="id" />
+    <item name="demo_overlay_transient_secondary_action" type="id" />
+    <item name="demo_overlay_transient_reset" type="id" />
+    <item name="demo_overlay_transient_state" type="id" />
+    <item name="demo_overlay_transient_target" type="id" />
+    <item name="demo_overlay_transient_secondary_target" type="id" />
+
     <item name="demo_overlay_dialog_root" type="id" />
     <item name="demo_overlay_dialog_ready" type="id" />
     <item name="demo_overlay_dialog_primary_action" type="id" />
+    <item name="demo_overlay_dialog_secondary_action" type="id" />
     <item name="demo_overlay_dialog_reset" type="id" />
     <item name="demo_overlay_dialog_state" type="id" />
     <item name="demo_overlay_dialog_target" type="id" />
+
+    <item name="demo_overlay_menu_root" type="id" />
+    <item name="demo_overlay_menu_ready" type="id" />
+    <item name="demo_overlay_menu_primary_action" type="id" />
+    <item name="demo_overlay_menu_secondary_action" type="id" />
+    <item name="demo_overlay_menu_reset" type="id" />
+    <item name="demo_overlay_menu_state" type="id" />
+    <item name="demo_overlay_menu_target" type="id" />
 
     <item name="demo_navigation_system_root" type="id" />
     <item name="demo_navigation_system_ready" type="id" />

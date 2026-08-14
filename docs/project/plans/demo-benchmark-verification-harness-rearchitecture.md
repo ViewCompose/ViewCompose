@@ -790,6 +790,21 @@ reference device, two renderer lifecycle regressions, the in-place state/theme f
 English and Simplified Chinese action-reset contract, and the registry-wide root/ready sweep
 passed.
 
+The Overlay domain now has three strict direct fixtures: `overlay.transient`, `overlay.dialog`,
+and `overlay.menu`. `FeedbackActivity` requires immutable scenario identity; the chapter page
+index, local page switcher, filter controls, benchmark-route claim, verification checklist, and
+aggregate state object were deleted. Each route creates only the state and overlay requests it
+owns, so an inactive dialog, menu, tooltip, Snackbar, Toast, or popup no longer participates in
+another route's Session. Modal fixtures expose their `target` and deterministic `reset` inside the
+overlay window because Android correctly hides the obscured Activity window from black-box
+accessibility queries; non-modal menu state remains observable in the host. All automation now
+uses app-owned resource IDs, removing the final two guarded visible-text selectors from the
+Feedback tests and all legacy Feedback tags. Paired resources cover the complete domain, and the
+hard-coded-copy gate owns the Feedback directory. No workload revision was created because the
+former page only displayed a benchmark-shaped callout and had no Macrobenchmark owner. On the
+Samsung SM-G991B Android 13 reference device, three focused overlay flows, the English and
+Simplified Chinese action-reset contract, and the registry-wide root/ready sweep passed.
+
 ## Phase 5: Benchmark rebaseline and acceptance
 
 Build the release-like target, run the revised scenarios on the same device and thermal policy,

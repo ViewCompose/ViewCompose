@@ -358,61 +358,110 @@ class DemoVisualUiTest {
 
     @Test
     fun feedbackPage_triggersTransientFlows() {
-        launchDemoActivity(FeedbackActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            FeedbackActivity::class.java,
+            "overlay.transient",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_SNACKBAR)
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_TOAST)
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_DIALOG)
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_POPUP)
+                activity.clickScenarioViewById(R.id.demo_overlay_transient_secondary_action)
             }
             waitForUiIdle()
+            assertDeviceResourceIdVisible(R.id.demo_overlay_transient_secondary_target)
+            clickDeviceResourceId(R.id.demo_overlay_transient_secondary_target)
+            scenario.onActivity { activity ->
+                activity.clickScenarioViewById(R.id.demo_overlay_transient_primary_action)
+            }
+            waitForUiIdle()
+            assertDeviceResourceIdVisible(R.id.demo_overlay_transient_target)
+            assertDeviceResourceIdVisible(R.id.demo_overlay_transient_reset)
             captureDeviceScreenshot("feedback-transient-light")
             scenario.onActivity { activity ->
-                val dialogCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_DIALOG_COUNT)
-                val popupCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_POPUP_COUNT)
-                val toastCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_TOAST_COUNT)
-                assertViewFullyVisible(dialogCount)
-                assertViewFullyVisible(popupCount)
-                assertViewFullyVisible(toastCount)
-                assertEquals(1, extractCount(dialogCount.text.toString()))
-                assertEquals(1, extractCount(popupCount.text.toString()))
-                assertEquals(1, extractCount(toastCount.text.toString()))
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_RESET)
+                val state = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_transient_state,
+                )
+                assertEquals(
+                    activity.getString(R.string.demo_feedback_transient_state, 1, 1, 1, 1),
+                    state.text.toString(),
+                )
             }
+            clickDeviceResourceId(R.id.demo_overlay_transient_reset)
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val dialogCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_DIALOG_COUNT)
-                val popupCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_POPUP_COUNT)
-                val toastCount = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_TOAST_COUNT)
-                val lastEvent = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_LAST_EVENT)
-                assertEquals(0, extractCount(dialogCount.text.toString()))
-                assertEquals(0, extractCount(popupCount.text.toString()))
-                assertEquals(0, extractCount(toastCount.text.toString()))
-                assertTrue(lastEvent.text.toString().contains("空闲"))
+                val state = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_transient_state,
+                )
+                assertEquals(
+                    activity.getString(R.string.demo_feedback_transient_state, 0, 0, 0, 0),
+                    state.text.toString(),
+                )
             }
         }
     }
 
     @Test
     fun feedbackPage_modalBottomSheet_showAndDismissFlow() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             FeedbackActivity::class.java,
-        ).putExtra(EXTRA_FEEDBACK_PAGE_INDEX, 1)
-        launchDemoActivity<FeedbackActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "overlay.dialog",
+        ).use { scenario ->
             waitForUiIdle()
+            var initial = ""
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.FEEDBACK_SHOW_BOTTOM_SHEET)
+                initial = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_dialog_state,
+                ).text.toString()
+                activity.clickScenarioViewById(R.id.demo_overlay_dialog_primary_action)
             }
             waitForUiIdle()
-            assertDeviceTextVisible("底部弹窗")
+            assertDeviceResourceIdVisible(R.id.demo_overlay_dialog_target)
+            assertDeviceResourceIdVisible(R.id.demo_overlay_dialog_reset)
             captureDeviceScreenshot("feedback-bottom-sheet-light")
-            clickDeviceText("关闭")
+            clickDeviceResourceId(R.id.demo_overlay_dialog_reset)
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val lastEvent = activity.requireTextViewByTestTag(DemoTestTags.FEEDBACK_LAST_EVENT)
-                assertTrue(lastEvent.text.toString().contains("BottomSheet 关闭"))
+                assertEquals(
+                    initial,
+                    activity.requireScenarioViewById<TextView>(
+                        R.id.demo_overlay_dialog_state,
+                    ).text.toString(),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun feedbackPage_menuSelectionAndResetFlow() {
+        launchDemoScenarioActivity(
+            FeedbackActivity::class.java,
+            "overlay.menu",
+        ).use { scenario ->
+            waitForUiIdle()
+            var initial = ""
+            scenario.onActivity { activity ->
+                initial = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_menu_state,
+                ).text.toString()
+                activity.clickScenarioViewById(R.id.demo_overlay_menu_secondary_action)
+            }
+            waitForUiIdle()
+            assertDeviceResourceIdVisible(R.id.demo_overlay_menu_target)
+            clickDeviceResourceId(R.id.demo_overlay_menu_target)
+            scenario.onActivity { activity ->
+                val state = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_overlay_menu_state,
+                ).text.toString()
+                assertNotEquals(initial, state)
+                activity.clickScenarioViewById(R.id.demo_overlay_menu_reset)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                assertEquals(
+                    initial,
+                    activity.requireScenarioViewById<TextView>(
+                        R.id.demo_overlay_menu_state,
+                    ).text.toString(),
+                )
             }
         }
     }

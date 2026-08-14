@@ -123,8 +123,12 @@
     <string name="demo_scenario_environment_resources_summary">验证语言、夜间模式、方向、字号与密度传播。</string>
     <string name="demo_scenario_interop_android_view_title">Android View 互操作</string>
     <string name="demo_scenario_interop_android_view_summary">验证稳定声明式树中的原生 View 更新和主题 Local 传播。</string>
+    <string name="demo_scenario_overlay_transient_title">瞬态浮层</string>
+    <string name="demo_scenario_overlay_transient_summary">验证 Dialog、Popup、Snackbar 和 Toast 的请求生命周期。</string>
     <string name="demo_scenario_overlay_dialog_title">对话框浮层</string>
     <string name="demo_scenario_overlay_dialog_summary">验证浮层创建、关闭与宿主生命周期。</string>
+    <string name="demo_scenario_overlay_menu_title">菜单与提示浮层</string>
+    <string name="demo_scenario_overlay_menu_summary">验证锚定下拉菜单和非聚焦 Tooltip 行为。</string>
     <string name="demo_scenario_navigation_system_title">Android 系统导航</string>
     <string name="demo_scenario_navigation_system_summary">验证页面所有权、独立返回栈、深链与系统返回。</string>
     <string name="demo_scenario_performance_list_title">列表性能</string>

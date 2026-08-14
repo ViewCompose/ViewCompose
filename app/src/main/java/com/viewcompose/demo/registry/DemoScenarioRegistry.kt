@@ -74,7 +74,9 @@ internal object DemoScenarioIds {
     val LayoutConstraint = DemoScenarioId("layout.constraint")
     val EnvironmentResources = DemoScenarioId("environment.resources")
     val InteropAndroidView = DemoScenarioId("interop.android-view")
+    val OverlayTransient = DemoScenarioId("overlay.transient")
     val OverlayDialog = DemoScenarioId("overlay.dialog")
+    val OverlayMenu = DemoScenarioId("overlay.menu")
     val NavigationSystem = DemoScenarioId("navigation.system")
     val PerformanceList = DemoScenarioId("performance.list")
 }
@@ -788,24 +790,61 @@ internal object DemoScenarioRegistry {
             benchmarkRevision = 2,
         ),
         scenario(
+            id = DemoScenarioIds.OverlayTransient,
+            category = DemoScenarioCategory.AndroidIntegration,
+            titleRes = R.string.demo_scenario_overlay_transient_title,
+            summaryRes = R.string.demo_scenario_overlay_transient_summary,
+            host = DemoHostPolicy.Overlay,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(FeedbackActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_overlay_transient_root,
+                ready = R.id.demo_overlay_transient_ready,
+                primaryAction = R.id.demo_overlay_transient_primary_action,
+                secondaryAction = R.id.demo_overlay_transient_secondary_action,
+                reset = R.id.demo_overlay_transient_reset,
+                state = R.id.demo_overlay_transient_state,
+                target = R.id.demo_overlay_transient_target,
+                secondaryTarget = R.id.demo_overlay_transient_secondary_target,
+            ),
+        ),
+        scenario(
             id = DemoScenarioIds.OverlayDialog,
             category = DemoScenarioCategory.AndroidIntegration,
             titleRes = R.string.demo_scenario_overlay_dialog_title,
             summaryRes = R.string.demo_scenario_overlay_dialog_summary,
             host = DemoHostPolicy.Overlay,
             verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
-            route = DemoScenarioRoute(
-                activityClass = FeedbackActivity::class.java,
-                extras = mapOf("feedback_page_index" to DemoRouteExtra.IntValue(1)),
-            ),
+            route = DemoScenarioRoute(FeedbackActivity::class.java),
             mutable = true,
             ids = TargetIds(
                 root = R.id.demo_overlay_dialog_root,
                 ready = R.id.demo_overlay_dialog_ready,
                 primaryAction = R.id.demo_overlay_dialog_primary_action,
+                secondaryAction = R.id.demo_overlay_dialog_secondary_action,
                 reset = R.id.demo_overlay_dialog_reset,
                 state = R.id.demo_overlay_dialog_state,
                 target = R.id.demo_overlay_dialog_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.OverlayMenu,
+            category = DemoScenarioCategory.AndroidIntegration,
+            titleRes = R.string.demo_scenario_overlay_menu_title,
+            summaryRes = R.string.demo_scenario_overlay_menu_summary,
+            host = DemoHostPolicy.Overlay,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(FeedbackActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_overlay_menu_root,
+                ready = R.id.demo_overlay_menu_ready,
+                primaryAction = R.id.demo_overlay_menu_primary_action,
+                secondaryAction = R.id.demo_overlay_menu_secondary_action,
+                reset = R.id.demo_overlay_menu_reset,
+                state = R.id.demo_overlay_menu_state,
+                target = R.id.demo_overlay_menu_target,
             ),
         ),
         scenario(
