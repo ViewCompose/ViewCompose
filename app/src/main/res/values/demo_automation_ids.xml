@@ -264,6 +264,16 @@
     <item name="demo_environment_resources_reset" type="id" />
     <item name="demo_environment_resources_state" type="id" />
     <item name="demo_environment_resources_target" type="id" />
+    <item name="demo_environment_cross_activity_theme_root" type="id" />
+    <item name="demo_environment_cross_activity_theme_ready" type="id" />
+    <item name="demo_environment_cross_activity_theme_primary_action" type="id" />
+    <item name="demo_environment_cross_activity_theme_secondary_action" type="id" />
+    <item name="demo_environment_cross_activity_theme_reset" type="id" />
+    <item name="demo_environment_cross_activity_theme_state" type="id" />
+    <item name="demo_environment_cross_activity_theme_target" type="id" />
+    <item name="demo_cross_activity_theme_secondary_state" type="id" />
+    <item name="demo_cross_activity_theme_secondary_action" type="id" />
+    <item name="demo_cross_activity_theme_secondary_return" type="id" />
 
     <item name="demo_interop_android_view_root" type="id" />
     <item name="demo_interop_android_view_ready" type="id" />

@@ -540,7 +540,6 @@ tasks.register("verifyDemoAutomationSelectors") {
         val legacySelectorBaseline = mapOf(
             "app/src/androidTest/java/com/viewcompose/DemoUiTestHelpers.kt" to 6,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 17,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 4,
         )
         val sourceRoots = listOf(
             rootDir.resolve("app/src/androidTest"),
@@ -774,6 +773,9 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/foundations"),
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/activity/demo/pages/core/FoundationsActivity.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/quality/ThemeSwitchActivity.kt",
             ),
             rootDir.resolve("app/src/main/java/com/viewcompose/performance"),
             rootDir.resolve(

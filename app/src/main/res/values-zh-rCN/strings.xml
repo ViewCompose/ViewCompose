@@ -122,6 +122,8 @@
     <string name="demo_scenario_layout_constraint_summary">验证约束锚点、尺寸、链、ConstraintSet 与虚拟辅助对象。</string>
     <string name="demo_scenario_environment_resources_title">Android 资源环境</string>
     <string name="demo_scenario_environment_resources_summary">验证语言、夜间模式、方向、字号与密度传播。</string>
+    <string name="demo_scenario_environment_cross_activity_theme_title">跨 Activity 主题传播</string>
+    <string name="demo_scenario_environment_cross_activity_theme_summary">验证独立 Activity 渲染会话共享同一份应用主题状态。</string>
     <string name="demo_scenario_interop_android_view_title">Android View 互操作</string>
     <string name="demo_scenario_interop_android_view_summary">验证稳定声明式树中的原生 View 更新和主题 Local 传播。</string>
     <string name="demo_scenario_overlay_transient_title">瞬态浮层</string>
@@ -208,6 +210,16 @@
     <string name="demo_activity_layouts_title">布局</string>
     <string name="demo_activity_design_system_title">多设计系统验证</string>
     <string name="demo_activity_theme_switch_title">跨 Activity 主题切换</string>
+    <string name="demo_activity_theme_switch_secondary_title">独立主题会话</string>
+    <string name="demo_cross_activity_theme_primary_state">主 Activity 主题：%1$s</string>
+    <string name="demo_cross_activity_theme_secondary_state">次 Activity 主题：%1$s</string>
+    <string name="demo_cross_activity_theme_goal">切换应用主题后打开独立 Activity，验证两个渲染会话观察到相同的 token 与系统栏外观。</string>
+    <string name="demo_cross_activity_theme_secondary_goal">此 Activity 拥有独立渲染会话，并观察同一份应用主题状态。</string>
+    <string name="demo_cross_activity_theme_toggle_primary">在主 Activity 切换主题</string>
+    <string name="demo_cross_activity_theme_open_secondary">打开独立 Activity</string>
+    <string name="demo_cross_activity_theme_toggle_secondary">在次 Activity 切换主题</string>
+    <string name="demo_cross_activity_theme_reset">重置为浅色</string>
+    <string name="demo_cross_activity_theme_return">应用并返回</string>
     <string name="demo_activity_diagnostics_title">诊断</string>
     <string name="demo_activity_material3_theme_title">主题与 Token 验证</string>
     <string name="demo_activity_graphics_title">图形</string>

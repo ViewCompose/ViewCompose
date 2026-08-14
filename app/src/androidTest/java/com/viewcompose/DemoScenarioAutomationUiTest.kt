@@ -92,6 +92,7 @@ class DemoScenarioAutomationUiTest {
             "layout.scroll",
             "layout.constraint",
             "environment.resources",
+            "environment.cross-activity-theme",
             "interop.android-view",
             "overlay.transient",
             "overlay.dialog",
@@ -156,6 +157,47 @@ class DemoScenarioAutomationUiTest {
                     waitForTargetText(scenarioId, initial),
                 )
             }
+        }
+    }
+
+    @Test
+    fun crossActivityThemeFixturePublishesDeterministicStateAcrossIndependentSessions() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            val scenarioId = "environment.cross-activity-theme"
+            launchScenario(scenarioId)
+            val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+            requireTarget(scenarioId, "primary_action").click()
+            assertNotEquals(
+                "$scenarioId action must publish state",
+                initial,
+                waitForTargetTextChange(scenarioId, initial),
+            )
+            requireTarget(scenarioId, "reset").click()
+            assertEquals(initial, waitForTargetText(scenarioId, initial))
+
+            requireTarget(scenarioId, "secondary_action").click()
+            val secondaryInitial = requireResource(
+                "demo_cross_activity_theme_secondary_state",
+            ).text.orEmpty()
+            requireResource("demo_cross_activity_theme_secondary_action").click()
+            assertNotEquals(
+                "$scenarioId secondary action must publish state",
+                secondaryInitial,
+                waitForResourceTextChange(
+                    resourceName = "demo_cross_activity_theme_secondary_state",
+                    previous = secondaryInitial,
+                ),
+            )
+            requireResource("demo_cross_activity_theme_secondary_return").click()
+            assertNotEquals(
+                "$scenarioId primary Session must observe the secondary change",
+                initial,
+                waitForTargetTextChange(scenarioId, initial),
+            )
+            requireTarget(scenarioId, "reset").click()
+            assertEquals(initial, waitForTargetText(scenarioId, initial))
         }
     }
 
@@ -604,6 +646,28 @@ class DemoScenarioAutomationUiTest {
         )
         assertNotNull("Missing $scenarioId/$role", target)
         return requireNotNull(target)
+    }
+
+    private fun requireResource(resourceName: String): androidx.test.uiautomator.UiObject2 {
+        val target = device.wait(
+            Until.findObject(By.res(TARGET_PACKAGE, resourceName)),
+            TARGET_TIMEOUT_MS,
+        )
+        assertNotNull("Missing resource target: $resourceName", target)
+        return requireNotNull(target)
+    }
+
+    private fun waitForResourceTextChange(
+        resourceName: String,
+        previous: String,
+    ): String {
+        val deadline = SystemClock.uptimeMillis() + TARGET_TIMEOUT_MS
+        var current = requireResource(resourceName).text.orEmpty()
+        while (current == previous && SystemClock.uptimeMillis() < deadline) {
+            SystemClock.sleep(16L)
+            current = requireResource(resourceName).text.orEmpty()
+        }
+        return current
     }
 
     private fun waitForTargetTextChange(

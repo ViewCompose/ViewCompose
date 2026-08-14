@@ -121,6 +121,8 @@
     <string name="demo_scenario_layout_constraint_summary">Constraint anchors, dimensions, chains, sets, and virtual helpers.</string>
     <string name="demo_scenario_environment_resources_title">Android resource environment</string>
     <string name="demo_scenario_environment_resources_summary">Locale, night mode, direction, font scale, and density propagation.</string>
+    <string name="demo_scenario_environment_cross_activity_theme_title">Cross-Activity theme propagation</string>
+    <string name="demo_scenario_environment_cross_activity_theme_summary">Verify one application theme state across independent Activity render sessions.</string>
     <string name="demo_scenario_interop_android_view_title">Android View interop</string>
     <string name="demo_scenario_interop_android_view_summary">Native View updates and theme-local propagation inside a stable declarative tree.</string>
     <string name="demo_scenario_overlay_transient_title">Transient overlays</string>
@@ -207,6 +209,16 @@
     <string name="demo_activity_layouts_title">Layouts</string>
     <string name="demo_activity_design_system_title">Multi-design-system verification</string>
     <string name="demo_activity_theme_switch_title">Cross-Activity theme switching</string>
+    <string name="demo_activity_theme_switch_secondary_title">Independent theme session</string>
+    <string name="demo_cross_activity_theme_primary_state">Primary Activity theme: %1$s</string>
+    <string name="demo_cross_activity_theme_secondary_state">Secondary Activity theme: %1$s</string>
+    <string name="demo_cross_activity_theme_goal">Toggle the application theme, then open the independent Activity and verify that both render sessions observe the same tokens and system-bar appearance.</string>
+    <string name="demo_cross_activity_theme_secondary_goal">This Activity owns a separate render session and observes the same application theme state.</string>
+    <string name="demo_cross_activity_theme_toggle_primary">Toggle theme in primary Activity</string>
+    <string name="demo_cross_activity_theme_open_secondary">Open independent Activity</string>
+    <string name="demo_cross_activity_theme_toggle_secondary">Toggle theme in secondary Activity</string>
+    <string name="demo_cross_activity_theme_reset">Reset to light</string>
+    <string name="demo_cross_activity_theme_return">Apply and return</string>
     <string name="demo_activity_diagnostics_title">Diagnostics</string>
     <string name="demo_activity_material3_theme_title">Theme and token verification</string>
     <string name="demo_activity_graphics_title">Graphics</string>

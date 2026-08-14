@@ -128,11 +128,14 @@ private fun UiTreeBuilder.DemoEnvironmentPage(root: ViewGroup) {
                 Button(
                     text = stringResource(R.string.demo_environment_cross_activity),
                     onClick = {
-                        root.context.startActivity(ThemeSwitchActivity.newIntent(root.context))
+                        val scenario = DemoScenarioRegistry.require(
+                            DemoScenarioIds.EnvironmentCrossActivityTheme.value,
+                        )
+                        root.context.startActivity(
+                            DemoScenarioRegistry.createLaunchIntent(root.context, scenario),
+                        )
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag(DemoTestTags.SETTINGS_CROSS_ACTIVITY_THEME_ENTRY),
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
                     text = stringResource(R.string.demo_environment_scope_note),

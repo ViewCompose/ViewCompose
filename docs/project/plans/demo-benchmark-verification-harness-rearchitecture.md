@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: audit the remaining cross-Activity environment identity and legacy selector debt
-before Phase 5 rebaseline.
+Next action: remove the remaining legacy visible-text selector and module-route debt before Phase 5
+rebaseline.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -975,6 +975,18 @@ through the same package-qualified `By.res(package, name)` contract as an Androi
 Compose fixtures now derive the fully qualified resource name from the scenario-owned `R.id`, so
 both engines expose one identical black-box selector. The registry-wide root/ready sweep, including
 all four default ViewCompose performance routes, passed after this correction.
+
+Cross-Activity theme propagation is now owned by the strict
+`environment.cross-activity-theme` Dedicated scenario instead of an unregistered secondary page.
+The fixture starts from deterministic Light state, exposes resource-backed primary action,
+secondary-Activity action, state, target, and reset roles, and restores the caller's application
+theme when the scenario finishes. The second Activity owns an independent render Session and its
+own Android resource targets, so the device contract verifies propagation in both directions
+rather than inferring it from one Activity. All visible copy is paired English and Simplified
+Chinese resources. The old `themeSwitch` Macrobenchmark is intentionally retired: it measured
+translated controls inside the general Environment page, did not launch a second Activity, and
+was never a frozen framework workload. On the Samsung SM-G991B Android 13 reference device, the
+focused lifecycle/appearance test and the bilingual black-box action/reset test both passed.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

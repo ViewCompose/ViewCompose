@@ -20,6 +20,7 @@ import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
 import com.viewcompose.SystemNavigationActivity
+import com.viewcompose.ThemeSwitchActivity
 import com.viewcompose.Material3DefaultThemeActivity
 import com.viewcompose.DemoDesignSystemVerificationActivity
 import com.viewcompose.OneUi7VerificationActivity
@@ -80,6 +81,7 @@ internal object DemoScenarioIds {
     val LayoutScroll = DemoScenarioId("layout.scroll")
     val LayoutConstraint = DemoScenarioId("layout.constraint")
     val EnvironmentResources = DemoScenarioId("environment.resources")
+    val EnvironmentCrossActivityTheme = DemoScenarioId("environment.cross-activity-theme")
     val InteropAndroidView = DemoScenarioId("interop.android-view")
     val OverlayTransient = DemoScenarioId("overlay.transient")
     val OverlayDialog = DemoScenarioId("overlay.dialog")
@@ -795,6 +797,25 @@ internal object DemoScenarioRegistry {
                 reset = R.id.demo_environment_resources_reset,
                 state = R.id.demo_environment_resources_state,
                 target = R.id.demo_environment_resources_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.EnvironmentCrossActivityTheme,
+            category = DemoScenarioCategory.AndroidIntegration,
+            titleRes = R.string.demo_scenario_environment_cross_activity_theme_title,
+            summaryRes = R.string.demo_scenario_environment_cross_activity_theme_summary,
+            host = DemoHostPolicy.Dedicated,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(ThemeSwitchActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_environment_cross_activity_theme_root,
+                ready = R.id.demo_environment_cross_activity_theme_ready,
+                primaryAction = R.id.demo_environment_cross_activity_theme_primary_action,
+                secondaryAction = R.id.demo_environment_cross_activity_theme_secondary_action,
+                reset = R.id.demo_environment_cross_activity_theme_reset,
+                state = R.id.demo_environment_cross_activity_theme_state,
+                target = R.id.demo_environment_cross_activity_theme_target,
             ),
         ),
         scenario(

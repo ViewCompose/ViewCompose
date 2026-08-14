@@ -22,28 +22,6 @@ class DemoInteractionBenchmark {
     val benchmarkRule = MacrobenchmarkRule()
 
     @Test
-    fun themeSwitch() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "environment",
-                expectedText = "Environment",
-            )
-            waitForText("Light")
-            waitForText("Dark")
-        },
-    ) {
-        clickText("Dark")
-        waitForText("Dark")
-        clickText("Light")
-        waitForText("Light")
-    }
-
-    @Test
     fun layoutsBenchmarkAnchor() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),

@@ -48,6 +48,7 @@ class DemoCatalogFilterTest {
         assertEquals(
             listOf(
                 "environment.resources",
+                "environment.cross-activity-theme",
                 "interop.android-view",
                 "overlay.transient",
                 "overlay.dialog",

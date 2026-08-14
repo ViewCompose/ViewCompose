@@ -100,48 +100,64 @@ class MainDemoDeviceTest {
     }
 
     @Test
-    fun secondaryActivityThemeSwitch_refreshesEnvironmentSession() {
-        launchDemoActivity(
-            DemoEnvironmentActivity::class.java,
-            themeMode = DemoThemeMode.Light,
+    fun crossActivityThemeScenario_refreshesBothSessionsAndRestoresCallerTheme() {
+        launchDemoScenarioActivity(
+            activityClass = ThemeSwitchActivity::class.java,
+            scenarioId = "environment.cross-activity-theme",
+            themeMode = DemoThemeMode.Dark,
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertTheme(activity, DemoThemeMode.Light)
+                assertTheme(activity, DemoThemeMode.Light, statusTestTag = null)
+                activity.requireVisibleView(R.id.demo_environment_cross_activity_theme_state)
             }
 
             val instrumentation = InstrumentationRegistry.getInstrumentation()
             val monitor = instrumentation.addMonitor(
-                ThemeSwitchActivity::class.java.name,
+                ThemeSwitchSecondaryActivity::class.java.name,
                 null,
                 false,
             )
             try {
                 scenario.onActivity { activity ->
-                    activity.clickByTestTag(DemoTestTags.SETTINGS_CROSS_ACTIVITY_THEME_ENTRY)
+                    activity.clickView(
+                        R.id.demo_environment_cross_activity_theme_secondary_action,
+                    )
                 }
                 val secondary = instrumentation.waitForMonitorWithTimeout(monitor, 5_000)
-                assertNotNull("Expected ThemeSwitchActivity to launch", secondary)
+                assertNotNull("Expected the independent theme Activity", secondary)
                 waitForUiIdle()
 
                 instrumentation.runOnMainSync {
                     val secondaryActivity = checkNotNull(secondary)
-                    secondaryActivity.clickSegment(
-                        DemoTestTags.THEME_SWITCH_SECONDARY_CONTROL,
-                        index = 2,
+                    assertTheme(secondaryActivity, DemoThemeMode.Light, statusTestTag = null)
+                    secondaryActivity.requireVisibleView(
+                        R.id.demo_cross_activity_theme_secondary_state,
                     )
-                    secondaryActivity.clickByTestTag(DemoTestTags.THEME_SWITCH_SECONDARY_RETURN)
+                    secondaryActivity.clickView(R.id.demo_cross_activity_theme_secondary_action)
+                }
+                waitForUiIdle()
+                instrumentation.runOnMainSync {
+                    val secondaryActivity = checkNotNull(secondary)
+                    assertTheme(secondaryActivity, DemoThemeMode.Dark, statusTestTag = null)
+                    secondaryActivity.clickView(R.id.demo_cross_activity_theme_secondary_return)
                 }
                 waitForUiIdle()
 
                 scenario.onActivity { activity ->
                     assertEquals(DemoThemeMode.Dark, DemoThemeSession.mode)
-                    assertTheme(activity, DemoThemeMode.Dark)
+                    assertTheme(activity, DemoThemeMode.Dark, statusTestTag = null)
+                    activity.clickView(R.id.demo_environment_cross_activity_theme_reset)
+                }
+                waitForUiIdle()
+                scenario.onActivity { activity ->
+                    assertTheme(activity, DemoThemeMode.Light, statusTestTag = null)
                 }
             } finally {
                 instrumentation.removeMonitor(monitor)
             }
         }
+        assertEquals(DemoThemeMode.Dark, DemoThemeSession.mode)
     }
 
     @Test
@@ -171,14 +187,17 @@ class MainDemoDeviceTest {
     private fun assertTheme(
         activity: Activity,
         mode: DemoThemeMode,
+        statusTestTag: String? = DemoTestTags.SETTINGS_THEME_STATUS,
     ) {
         val expected = DemoThemeTokens.select(
             mode = mode,
             isSystemDark = DemoThemeTokens.isSystemDark(activity),
         )
-        val status = activity.requireTextViewByTestTagVisible(DemoTestTags.SETTINGS_THEME_STATUS)
-        assertTrue(status.text.toString().contains(mode.name))
-        assertEquals(expected.colors.onSurfaceVariant, status.currentTextColor)
+        statusTestTag?.let { tag ->
+            val status = activity.requireTextViewByTestTagVisible(tag)
+            assertTrue(status.text.toString().contains(mode.name))
+            assertEquals(expected.colors.onSurfaceVariant, status.currentTextColor)
+        }
         val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         val isDark = expected.metadata.isDark == true
         assertEquals(!isDark, controller.isAppearanceLightStatusBars)
