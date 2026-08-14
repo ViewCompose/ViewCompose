@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: continue the fifth-risk group with the retained `widget.*` visual/showcase scenarios
-while reducing the remaining text-selector debt with each direct scenario slice.
+Next action: migrate the remaining Foundations and Preview owners, then audit the unresolved
+performance-comparison scenarios against the replacement fixture baseline.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -136,7 +136,7 @@ replacing that black-box selector contract would make the benchmark suite unstab
 | Settings | Theme, resource, Material 3, custom-token, and multi-design-system verification are mixed into one long settings document. | Separate global environment controls from independently launchable verification scenarios. |
 | About | Hard-coded module names, DSL counts, Modifier counts, Defaults counts, NodeType counts, and placeholder version/link values can become stale without a code failure. | Remove architecture/statistics content. Show generated build identity only when useful to reproduce a run. |
 | State | The benchmark controls are reachable, but route prose and a stable-target checklist consume most of the first screen; the actual state/effect fixture starts below it. | Keep action, reset, state, and result first; route metadata belongs to the scenario contract, not visible UI. |
-| Widget showcase | The catalog is relatively compact, but each entry is still a human-oriented description and automation must select a visible component name. | Retain human browsing while giving every component/property fixture a direct stable scenario route. |
+| Widget showcase | The catalog is relatively compact, but each entry is still a human-oriented description and automation must select a visible component name. | Remove the nested chooser; assign each detail to its existing owning fixture and create direct routes only for uncovered component families. |
 | Performance comparison / List | The dedicated Activity already has a compact ready marker, mutation/reset actions, and the measured list in the first viewport, with no general Demo shell. | Preserve this isolation pattern and add locale-independent machine targets plus workload revision. |
 
 ### Structural findings
@@ -201,14 +201,15 @@ new launch contract.
 | Material 3 verification | Android XML, static baseline, custom tokens | Split by declared source | `design.material3-xml`, `design.material3-static`, `design.material3-custom` |
 | Multi-design-system verification | Material 3 and contrast bundles | Split by bundle | `design.bundle-material3`, `design.bundle-contrast` |
 | One UI 7 verification | Five-component slice | Retain dedicated design-system host | `design.oneui7` |
-| Widget showcase | Each of the 20 widget keys | Split; catalog-only chooser is removed | `widget.<widget-key>` |
+| Widget showcase | 20 legacy widget keys | Remove the chooser and deduplicate by owning fixture; retain only uncovered component families | `component.button`, `component.icon-button`, `component.segmented-control`, `component.divider`, `component.progress` |
 | Performance comparison | List, complex layout, shadow list, shadow complex layout | Retain isolated host; engine and shadow policy remain workload dimensions | `performance.list`, `performance.complex-layout`, `performance.shadow-list`, `performance.shadow-complex-layout` |
 
-The retained widget keys are `text`, `image`, `divider`, `button`, `icon-button`,
-`segmented-control`, `chip`, `fab`, `text-field`, `text-field-variants`, `checkbox`, `switch`,
-`radio-button`, `slider`, `search-bar`, `linear-progress`, `circular-progress`, `badge`,
-`list-item`, and `card`. Their wire IDs use hyphens even where the retired implementation used
-underscores internally.
+The original 20-key widget list was corrected during implementation after fixture ownership was
+available. Text and Image belong to `foundations.typography` and `foundations.media`; text fields,
+selection controls, and SearchBar belong to `input.*`; Chip, FAB, Badge, ListItem, and Card belong
+to the existing action-component fixtures. The six uncovered legacy details become five strict
+component scenarios because linear and circular progress are two presentations of one progress
+state contract. The retired chooser and all duplicate detail pages have no compatibility route.
 
 ### Existing automation ownership
 
@@ -905,6 +906,22 @@ revision was added. On the Samsung SM-G991B Android 13 reference device, all thr
 the English and Simplified Chinese action/full-reset contract, the NavigationBar selection
 regression and component-family smoke tests passed, visual inspection confirmed a non-overlapping
 Scaffold hierarchy, and the registry-wide host-role sweep passed.
+
+The legacy WidgetShowcase audit corrected an over-specified frozen inventory rather than creating
+20 duplicate routes. Fourteen detail pages were already fully owned by Foundations, Input, or the
+action-component fixtures. The remaining Divider, Button, IconButton, SegmentedControl, and paired
+linear/circular Progress coverage now uses five strict `component.*` scenarios under
+`ComponentShowcaseActivity`; the chooser, back row, translated-name navigation, and all seven old
+section files were deleted. Button, IconButton, SegmentedControl, and Progress expose real action,
+state, target, and full-Session reset roles. Divider is intentionally immutable and publishes only
+root, ready, and visual target rather than synthetic state. Paired resources cover the entire new
+domain, and the hard-coded-copy gate owns both the page and Activity. The former Checkbox detail
+touch regression now launches `input.selection` and uses its owning resource target. None of these
+visual fixtures has a Macrobenchmark owner, so no workload revision was added. On the Samsung
+SM-G991B Android 13 reference device, the four mutable fixtures passed their English and
+Simplified Chinese action/full-reset contract, all five visual targets and the SegmentedControl and
+Checkbox native interaction regressions passed, the Button matrix was visually inspected, and the
+registry-wide host-role sweep passed.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

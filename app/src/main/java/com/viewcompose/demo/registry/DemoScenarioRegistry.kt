@@ -8,6 +8,7 @@ import com.viewcompose.FeedbackActivity
 import com.viewcompose.GesturesActivity
 import com.viewcompose.GraphicsActivity
 import com.viewcompose.CollectionsActivity
+import com.viewcompose.ComponentShowcaseActivity
 import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.LayoutsActivity
 import com.viewcompose.ModifiersActivity
@@ -96,6 +97,11 @@ internal object DemoScenarioIds {
     val ComponentAppBars = DemoScenarioId("component.app-bars")
     val ComponentNavigationBar = DemoScenarioId("component.navigation-bar")
     val ComponentScaffold = DemoScenarioId("component.scaffold")
+    val ComponentButton = DemoScenarioId("component.button")
+    val ComponentIconButton = DemoScenarioId("component.icon-button")
+    val ComponentSegmentedControl = DemoScenarioId("component.segmented-control")
+    val ComponentDivider = DemoScenarioId("component.divider")
+    val ComponentProgress = DemoScenarioId("component.progress")
     val PerformanceList = DemoScenarioId("performance.list")
 }
 
@@ -1043,6 +1049,65 @@ internal object DemoScenarioRegistry {
             state = R.id.demo_component_scaffold_state,
             target = R.id.demo_component_scaffold_target,
         ),
+        componentShowcaseScenario(
+            id = DemoScenarioIds.ComponentButton,
+            titleRes = R.string.demo_scenario_component_button_title,
+            summaryRes = R.string.demo_scenario_component_button_summary,
+            root = R.id.demo_component_button_root,
+            ready = R.id.demo_component_button_ready,
+            primaryAction = R.id.demo_component_button_primary_action,
+            reset = R.id.demo_component_button_reset,
+            state = R.id.demo_component_button_state,
+            target = R.id.demo_component_button_target,
+        ),
+        componentShowcaseScenario(
+            id = DemoScenarioIds.ComponentIconButton,
+            titleRes = R.string.demo_scenario_component_icon_button_title,
+            summaryRes = R.string.demo_scenario_component_icon_button_summary,
+            root = R.id.demo_component_icon_button_root,
+            ready = R.id.demo_component_icon_button_ready,
+            primaryAction = R.id.demo_component_icon_button_primary_action,
+            reset = R.id.demo_component_icon_button_reset,
+            state = R.id.demo_component_icon_button_state,
+            target = R.id.demo_component_icon_button_target,
+        ),
+        componentShowcaseScenario(
+            id = DemoScenarioIds.ComponentSegmentedControl,
+            titleRes = R.string.demo_scenario_component_segmented_control_title,
+            summaryRes = R.string.demo_scenario_component_segmented_control_summary,
+            root = R.id.demo_component_segmented_control_root,
+            ready = R.id.demo_component_segmented_control_ready,
+            primaryAction = R.id.demo_component_segmented_control_primary_action,
+            reset = R.id.demo_component_segmented_control_reset,
+            state = R.id.demo_component_segmented_control_state,
+            target = R.id.demo_component_segmented_control_target,
+        ),
+        scenario(
+            id = DemoScenarioIds.ComponentDivider,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_component_divider_title,
+            summaryRes = R.string.demo_scenario_component_divider_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(ComponentShowcaseActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_component_divider_root,
+                ready = R.id.demo_component_divider_ready,
+                target = R.id.demo_component_divider_target,
+            ),
+        ),
+        componentShowcaseScenario(
+            id = DemoScenarioIds.ComponentProgress,
+            titleRes = R.string.demo_scenario_component_progress_title,
+            summaryRes = R.string.demo_scenario_component_progress_summary,
+            root = R.id.demo_component_progress_root,
+            ready = R.id.demo_component_progress_ready,
+            primaryAction = R.id.demo_component_progress_primary_action,
+            reset = R.id.demo_component_progress_reset,
+            state = R.id.demo_component_progress_state,
+            target = R.id.demo_component_progress_target,
+        ),
         scenario(
             id = DemoScenarioIds.PerformanceList,
             category = DemoScenarioCategory.Performance,
@@ -1256,6 +1321,35 @@ internal object DemoScenarioRegistry {
         host = DemoHostPolicy.SharedFixture,
         verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
         route = DemoScenarioRoute(NavigationActivity::class.java),
+        mutable = true,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            primaryAction = primaryAction,
+            reset = reset,
+            state = state,
+            target = target,
+        ),
+    )
+
+    private fun componentShowcaseScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        root: Int,
+        ready: Int,
+        primaryAction: Int,
+        reset: Int,
+        state: Int,
+        target: Int,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.Rendering,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.SharedFixture,
+        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+        route = DemoScenarioRoute(ComponentShowcaseActivity::class.java),
         mutable = true,
         ids = TargetIds(
             root = root,

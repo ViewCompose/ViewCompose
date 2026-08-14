@@ -201,7 +201,6 @@
     <string name="demo_activity_layouts_title">Layouts</string>
     <string name="demo_activity_design_system_title">Multi-design-system verification</string>
     <string name="demo_activity_theme_switch_title">Cross-Activity theme switching</string>
-    <string name="demo_activity_widget_showcase_title">Widget showcase</string>
     <string name="demo_activity_diagnostics_title">Diagnostics</string>
     <string name="demo_activity_material3_theme_title">Theme and token verification</string>
     <string name="demo_activity_preview_title">Preview</string>

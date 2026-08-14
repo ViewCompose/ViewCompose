@@ -407,6 +407,38 @@
     <item name="demo_component_scaffold_state" type="id" />
     <item name="demo_component_scaffold_target" type="id" />
 
+    <item name="demo_component_button_root" type="id" />
+    <item name="demo_component_button_ready" type="id" />
+    <item name="demo_component_button_primary_action" type="id" />
+    <item name="demo_component_button_reset" type="id" />
+    <item name="demo_component_button_state" type="id" />
+    <item name="demo_component_button_target" type="id" />
+
+    <item name="demo_component_icon_button_root" type="id" />
+    <item name="demo_component_icon_button_ready" type="id" />
+    <item name="demo_component_icon_button_primary_action" type="id" />
+    <item name="demo_component_icon_button_reset" type="id" />
+    <item name="demo_component_icon_button_state" type="id" />
+    <item name="demo_component_icon_button_target" type="id" />
+
+    <item name="demo_component_segmented_control_root" type="id" />
+    <item name="demo_component_segmented_control_ready" type="id" />
+    <item name="demo_component_segmented_control_primary_action" type="id" />
+    <item name="demo_component_segmented_control_reset" type="id" />
+    <item name="demo_component_segmented_control_state" type="id" />
+    <item name="demo_component_segmented_control_target" type="id" />
+
+    <item name="demo_component_divider_root" type="id" />
+    <item name="demo_component_divider_ready" type="id" />
+    <item name="demo_component_divider_target" type="id" />
+
+    <item name="demo_component_progress_root" type="id" />
+    <item name="demo_component_progress_ready" type="id" />
+    <item name="demo_component_progress_primary_action" type="id" />
+    <item name="demo_component_progress_reset" type="id" />
+    <item name="demo_component_progress_state" type="id" />
+    <item name="demo_component_progress_target" type="id" />
+
     <item name="demo_design_system_dialog_open" type="id" />
     <item name="demo_design_system_dialog_state" type="id" />
     <item name="demo_design_system_dialog_switch" type="id" />
