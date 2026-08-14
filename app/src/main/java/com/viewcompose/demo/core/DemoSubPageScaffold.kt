@@ -115,6 +115,21 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
                                     scenario.automation.require(DemoAutomationRole.Ready),
                                 ),
                         )
+                        if (scenario.benchmark != null && !scenario.mutable) {
+                            Text(
+                                text = stringResource(
+                                    R.string.demo_scenario_workload_revision_format,
+                                    scenario.benchmark.workloadRevision,
+                                ),
+                                color = TextDefaults.secondaryColor(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp)
+                                    .demoAutomationTarget(
+                                        scenario.automation.require(DemoAutomationRole.State),
+                                    ),
+                            )
+                        }
                     }
                     content(this)
                 }

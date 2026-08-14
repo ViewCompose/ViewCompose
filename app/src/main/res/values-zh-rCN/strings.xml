@@ -3,6 +3,7 @@
     <string name="app_name">ViewCompose</string>
     <string name="demo_back">返回</string>
     <string name="demo_scenario_ready_format">%1$s · 工作负载 r%2$d · 已就绪</string>
+    <string name="demo_scenario_workload_revision_format">工作负载修订 %1$d</string>
     <string name="demo_theme_mode_system_dark">跟随系统（深色）</string>
     <string name="demo_theme_mode_system_light">跟随系统（浅色）</string>
     <string name="demo_theme_mode_light">浅色</string>
@@ -42,6 +43,12 @@
     <string name="demo_scenario_runtime_state_summary">验证状态观察、派生、副作用与确定性变更。</string>
     <string name="demo_scenario_runtime_view_patch_title">Android View Patch</string>
     <string name="demo_scenario_runtime_view_patch_summary">集中验证文本、输入、选择、布局与分页器 Patch 负载。</string>
+    <string name="demo_scenario_diagnostics_runtime_title">运行时诊断</string>
+    <string name="demo_scenario_diagnostics_runtime_summary">检查当前环境、主题 Token 与局部环境覆盖。</string>
+    <string name="demo_scenario_diagnostics_theme_title">主题诊断</string>
+    <string name="demo_scenario_diagnostics_theme_summary">长列表检查语义色、形状、尺寸与组件基线。</string>
+    <string name="demo_scenario_diagnostics_renderer_title">渲染器诊断</string>
+    <string name="demo_scenario_diagnostics_renderer_summary">可刷新的渲染、Patch、重组、树与布局快照。</string>
     <string name="demo_scenario_environment_resources_title">Android 资源环境</string>
     <string name="demo_scenario_environment_resources_summary">验证语言、夜间模式、方向、字号与密度传播。</string>
     <string name="demo_scenario_overlay_dialog_title">对话框浮层</string>

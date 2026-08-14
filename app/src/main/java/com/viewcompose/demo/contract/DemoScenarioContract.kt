@@ -60,6 +60,7 @@ internal enum class DemoAutomationRole(
     Reset("reset"),
     State("state"),
     Target("target"),
+    SecondaryTarget("secondary_target"),
 }
 
 internal data class DemoAutomationTarget(

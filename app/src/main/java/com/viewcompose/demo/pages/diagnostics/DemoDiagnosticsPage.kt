@@ -2,6 +2,10 @@ package com.viewcompose
 
 import android.view.Choreographer
 import android.view.ViewGroup
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -26,19 +30,16 @@ import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.RenderTreeNode
 import com.viewcompose.ui.foundation.UiEnvironment
-import com.viewcompose.ui.foundation.UiTextStyle
 import com.viewcompose.ui.foundation.UiTreeBuilder
 import com.viewcompose.ui.unit.dp
 import com.viewcompose.ui.foundation.remember
-import com.viewcompose.ui.unit.sp
 import com.viewcompose.runtime.MutableState
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 private const val SNAPSHOT_STABLE_FRAME_THRESHOLD = 2
-private val DIAGNOSTICS_COMMON_PAGE_ITEMS = listOf("page", "page_filter")
-private val DIAGNOSTICS_RENDERER_PAGE_ITEMS = listOf(
+internal val DIAGNOSTICS_RENDERER_PAGE_ITEMS = listOf(
     "renderer_actions",
     "renderer_probe",
     "renderer_snapshots",
@@ -71,17 +72,20 @@ internal fun UiTreeBuilder.PreviewDiagnosticsRenderer() {
     )
 }
 
-internal fun diagnosticsPageItems(selectedPage: Int): List<String> {
-    return DIAGNOSTICS_COMMON_PAGE_ITEMS + when (selectedPage) {
-        0 -> listOf("benchmark", "runtime", "verify")
-        1 -> DIAGNOSTICS_THEME_PAGE_ITEMS + "theme_verify"
-        else -> DIAGNOSTICS_RENDERER_PAGE_ITEMS + "verify"
+internal fun diagnosticsPageItems(
+    selectedPage: Int,
+): List<String> {
+    return when (selectedPage) {
+        0 -> listOf("runtime")
+        1 -> DIAGNOSTICS_THEME_PAGE_ITEMS
+        else -> DIAGNOSTICS_RENDERER_PAGE_ITEMS
     }
 }
 
 internal fun UiTreeBuilder.DiagnosticsPage(
     root: ViewGroup?,
     selectedPageState: MutableState<Int>,
+    scenario: DemoScenarioSpec? = null,
     autoRefreshOnEnter: Boolean = false,
     entryHint: String? = null,
 ) {
@@ -91,7 +95,6 @@ internal fun UiTreeBuilder.DiagnosticsPage(
     val snapshotRefreshVersionState = remember { mutableStateOf(0) }
     val snapshotFollowUntilStableState = remember { mutableStateOf(autoRefreshOnEnter) }
     val snapshotStableFrameCountState = remember { mutableStateOf(0) }
-    val benchmarkRefreshCountState = remember { mutableStateOf(0) }
     val renderSnapshotState = remember { mutableStateOf(DemoRenderDiagnosticsStore.latestSnapshot()) }
     val patchSnapshotState = remember { mutableStateOf(DemoRenderDiagnosticsStore.latestPatchActiveSnapshot()) }
     val layoutSnapshotState = remember { mutableStateOf(LayoutPassTracker.snapshot()) }
@@ -180,87 +183,52 @@ internal fun UiTreeBuilder.DiagnosticsPage(
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "诊断",
-                goal = "将 demo 变为运行时 locals、主题 token 消费和渲染器 patch 的手动回归控制台。",
-                modules = listOf("debug logging", "theme diagnostics", "renderer"),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("运行时", "主题", "渲染器"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
-            "benchmark" -> ScenarioSection(
-                kind = ScenarioKind.Benchmark,
-                title = "Diagnostics Benchmark 锚点",
-                subtitle = "此区块固定在默认的运行时页面，让 benchmark 控件始终保持在首屏可见。",
-            ) {
-                Text(
-                    text = "诊断刷新次数 ${benchmarkRefreshCountState.value}",
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-                Button(
-                    text = "刷新 Diagnostics Benchmark",
-                    onClick = {
-                        benchmarkRefreshCountState.value = benchmarkRefreshCountState.value + 1
-                        snapshotRefreshRequestTokenState.value = snapshotRefreshRequestTokenState.value + 1
-                        snapshotFollowUntilStableState.value = true
-                        snapshotStableFrameCountState.value = 0
-                        pendingSnapshotRefreshState.value = true
-                    },
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-                Button(
-                    text = "重置 Diagnostics Benchmark",
-                    onClick = {
-                        benchmarkRefreshCountState.value = 0
-                        snapshotRefreshRequestTokenState.value = snapshotRefreshRequestTokenState.value + 1
-                        snapshotFollowUntilStableState.value = true
-                        snapshotStableFrameCountState.value = 0
-                        pendingSnapshotRefreshState.value = true
-                    },
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-                BenchmarkRouteCallout(
-                    route = "Launcher -> MainActivity(extra=diagnostics) -> Diagnostics -> Diagnostics Benchmark Anchor",
-                    stableTargets = listOf(
-                        "Refresh Diagnostics Benchmark",
-                        "Reset Diagnostics Benchmark",
-                    ),
-                )
-                Text(
-                    text = "稳定路径: launcher -> diagnostics module -> benchmark anchor",
-                    style = UiTextStyle(fontSizeSp = 12.sp),
-                    color = TextDefaults.secondaryColor(),
-                )
-            }
-
             "runtime" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "运行时快照",
-                subtitle = "此章节将成为状态失效、local 传播和副作用边界的手动检查入口。",
+                title = stringResource(R.string.demo_diagnostics_runtime_snapshot_title),
+                subtitle = stringResource(R.string.demo_diagnostics_runtime_snapshot_summary),
+                modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Target),
             ) {
                 DiagnosticFactGroup(
-                    title = "运行时数据",
+                    title = stringResource(R.string.demo_diagnostics_runtime_data),
                     facts = listOf(
-                        DiagnosticFact("调试日志", "已启用 (ViewComposeSample)"),
-                        DiagnosticFact("区域设置", Environment.localeTags.firstOrNull() ?: "und"),
-                        DiagnosticFact("布局方向", Environment.layoutDirection.name),
-                        DiagnosticFact("密度", "${"%.2f".format(Locale.US, Environment.density.density)}x"),
-                        DiagnosticFact("图片加载器", "Coil 集成已在 demo 中启用"),
+                        DiagnosticFact(
+                            stringResource(R.string.demo_diagnostics_debug_logging),
+                            stringResource(R.string.demo_diagnostics_debug_logging_enabled),
+                        ),
+                        DiagnosticFact(
+                            stringResource(R.string.demo_diagnostics_locale),
+                            Environment.localeTags.firstOrNull() ?: "und",
+                        ),
+                        DiagnosticFact(
+                            stringResource(R.string.demo_diagnostics_layout_direction),
+                            Environment.layoutDirection.name,
+                        ),
+                        DiagnosticFact(
+                            stringResource(R.string.demo_diagnostics_density),
+                            stringResource(
+                                R.string.demo_diagnostics_density_format,
+                                Environment.density.density,
+                            ),
+                        ),
+                        DiagnosticFact(
+                            stringResource(R.string.demo_diagnostics_image_loader),
+                            stringResource(R.string.demo_diagnostics_image_loader_coil),
+                        ),
                     ),
                 )
                 DiagnosticFactGroup(
-                    title = "主题 Token",
+                    title = stringResource(R.string.demo_diagnostics_theme_tokens),
                     facts = listOf(
                         DiagnosticFact("Background", Theme.colors.background.asColorHex()),
                         DiagnosticFact("Surface", Theme.colors.surface.asColorHex()),
                         DiagnosticFact("Primary", Theme.colors.primary.asColorHex()),
                         DiagnosticFact("Secondary", Theme.colors.secondary.asColorHex()),
                         DiagnosticFact("Pressed", (0x22000000 or (Theme.colors.onSurface and 0x00FFFFFF)).asColorHex()),
-                        DiagnosticFact("Card shape", Theme.shapes.medium.demoLabel()),
+                        DiagnosticFact(
+                            stringResource(R.string.demo_diagnostics_card_shape),
+                            Theme.shapes.medium.demoLabel(),
+                        ),
                     ),
                 )
                 UiEnvironment(
@@ -274,22 +242,45 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     ),
                 ) {
                     DiagnosticFactGroup(
-                        title = "局部环境覆盖示例",
+                        title = stringResource(R.string.demo_diagnostics_local_environment),
                         facts = listOf(
-                            DiagnosticFact("示例 density", "${"%.2f".format(Locale.US, Environment.density.density)}x"),
-                            DiagnosticFact("示例 locale", Environment.localeTags.firstOrNull() ?: "und"),
-                            DiagnosticFact("示例 direction", Environment.layoutDirection.name),
+                            DiagnosticFact(
+                                stringResource(R.string.demo_diagnostics_sample_density),
+                                stringResource(
+                                    R.string.demo_diagnostics_density_format,
+                                    Environment.density.density,
+                                ),
+                            ),
+                            DiagnosticFact(
+                                stringResource(R.string.demo_diagnostics_sample_locale),
+                                Environment.localeTags.firstOrNull() ?: "und",
+                            ),
+                            DiagnosticFact(
+                                stringResource(R.string.demo_diagnostics_sample_direction),
+                                Environment.layoutDirection.name,
+                            ),
                         ),
                     )
                 }
             }
 
-            in DIAGNOSTICS_THEME_PAGE_ITEMS -> DiagnosticsThemeSection(section, root)
+            in DIAGNOSTICS_THEME_PAGE_ITEMS -> DiagnosticsThemeSection(
+                section = section,
+                root = root,
+                firstModifier = Modifier.scenarioTarget(
+                    scenario,
+                    DemoAutomationRole.Target,
+                ),
+                lastModifier = Modifier.scenarioTarget(
+                    scenario,
+                    DemoAutomationRole.SecondaryTarget,
+                ),
+            )
 
             "renderer_actions" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
-                title = "渲染器操作",
-                subtitle = "将手动探针放在顶部附近，使诊断刷新在反复测试和 benchmark 运行中易于触达。",
+                title = stringResource(R.string.demo_diagnostics_renderer_actions_title),
+                subtitle = stringResource(R.string.demo_diagnostics_renderer_actions_summary),
             ) {
                 if (!entryHint.isNullOrBlank()) {
                     Text(
@@ -299,14 +290,18 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     )
                 }
                 Text(
-                    text = "快照刷新序号: ${snapshotRefreshVersionState.value}",
+                    text = stringResource(
+                        R.string.demo_diagnostics_snapshot_revision,
+                        snapshotRefreshVersionState.value,
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 8.dp)
-                        .testTag(DemoTestTags.DIAGNOSTICS_RENDER_REFRESH_SEQUENCE),
+                        .testTag(DemoTestTags.DIAGNOSTICS_RENDER_REFRESH_SEQUENCE)
+                        .scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
-                    text = "刷新渲染器快照",
+                    text = stringResource(R.string.demo_diagnostics_refresh_renderer),
                     onClick = {
                         snapshotRefreshRequestTokenState.value = snapshotRefreshRequestTokenState.value + 1
                         snapshotFollowUntilStableState.value = true
@@ -315,16 +310,17 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     },
                     modifier = Modifier
                         .padding(bottom = 8.dp)
-                        .testTag(DemoTestTags.DIAGNOSTICS_RENDERER_REFRESH),
+                        .testTag(DemoTestTags.DIAGNOSTICS_RENDERER_REFRESH)
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 )
                 if (pendingSnapshotRefreshState.value) {
                     Text(
-                        text = "正在捕获渲染器快照…",
+                        text = stringResource(R.string.demo_diagnostics_capturing_renderer),
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
                 }
                 Button(
-                    text = "重置布局计数器",
+                    text = stringResource(R.string.demo_diagnostics_reset_layout_counters),
                     onClick = {
                         LayoutPassTracker.start()
                         snapshotRefreshRequestTokenState.value = snapshotRefreshRequestTokenState.value + 1
@@ -332,18 +328,21 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         snapshotStableFrameCountState.value = 0
                         pendingSnapshotRefreshState.value = true
                     },
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
                 )
             }
 
             "renderer_probe" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "渲染器重组探针",
-                subtitle = "优先显示 patch/rebind/skip 的轻量探针，详细快照按后续条目延迟创建。",
+                title = stringResource(R.string.demo_diagnostics_renderer_probe_title),
+                subtitle = stringResource(R.string.demo_diagnostics_renderer_probe_summary),
+                modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Target),
             ) {
                 if (!entryHint.isNullOrBlank()) {
                     Text(
-                        text = "提示: 请优先查看“最近 Patch-Active 快照”中的 patched/rebound/skipped。",
+                        text = stringResource(R.string.demo_diagnostics_renderer_probe_hint),
                         color = TextDefaults.secondaryColor(),
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
@@ -351,7 +350,9 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 val snapshot = renderSnapshotState.value
                 val patchSnapshot = patchSnapshotState.value
                 val layoutSnapshot = layoutSnapshotState.value
-                val patchCapturedAt = patchSnapshot?.updatedAtMillis?.formatDiagnosticsTime() ?: "尚未捕获"
+                val notCaptured = stringResource(R.string.demo_diagnostics_not_captured)
+                val patchCapturedAt = patchSnapshot?.updatedAtMillis?.formatDiagnosticsTime(notCaptured)
+                    ?: notCaptured
                 val patchPatchedCount = patchSnapshot?.stats?.patchedNodes ?: 0
                 val renderProbeKey = listOf(
                     snapshotRefreshVersionState.value,
@@ -371,94 +372,117 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     "patch=${patchSnapshot?.let { System.identityHashCode(it) } ?: 0} " +
                     "layout=${System.identityHashCode(layoutSnapshot)}"
                 Text(
-                    text = "渲染次数(探针): ${snapshot.renderCount}",
+                    text = stringResource(
+                        R.string.demo_diagnostics_probe_render_count,
+                        snapshot.renderCount,
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 4.dp)
                         .testTag(DemoTestTags.DIAGNOSTICS_RENDER_COUNT),
                 )
                 Text(
-                    text = "更新时间(探针): ${snapshot.updatedAtMillis.formatDiagnosticsTime()}",
+                    text = stringResource(
+                        R.string.demo_diagnostics_probe_updated_at,
+                        snapshot.updatedAtMillis.formatDiagnosticsTime(notCaptured),
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 8.dp)
                         .testTag(DemoTestTags.DIAGNOSTICS_RENDER_UPDATED_AT),
                 )
                 Text(
-                    text = "Patch-active patched(探针): $patchPatchedCount",
+                    text = stringResource(
+                        R.string.demo_diagnostics_probe_patched,
+                        patchPatchedCount,
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 4.dp)
                         .testTag(DemoTestTags.DIAGNOSTICS_PATCH_ACTIVE_PATCHED),
                 )
                 Text(
-                    text = "Patch-active 捕获时间(探针): $patchCapturedAt",
+                    text = stringResource(
+                        R.string.demo_diagnostics_probe_captured_at,
+                        patchCapturedAt,
+                    ),
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(bottom = 8.dp)
                         .testTag(DemoTestTags.DIAGNOSTICS_PATCH_ACTIVE_CAPTURED_AT),
                 )
                 DiagnosticFactGroup(
-                    title = "关键重组探针（优先看这里）",
+                    title = stringResource(R.string.demo_diagnostics_key_probe),
                     facts = listOf(
-                        DiagnosticFact("探针 Key", renderProbeKey),
-                        DiagnosticFact("探针 Tick", renderProbeTickState.value.toString()),
-                        DiagnosticFact("对象 Hash", probeHash),
-                        DiagnosticFact("最近回调历史", snapshotHistorySummaryState.value),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_probe_key), renderProbeKey),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_probe_tick), renderProbeTickState.value.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_object_hash), probeHash),
+                        DiagnosticFact(
+                            stringResource(R.string.demo_diagnostics_recent_history),
+                            snapshotHistorySummaryState.value.ifEmpty {
+                                stringResource(R.string.demo_diagnostics_none)
+                            },
+                        ),
                     ),
                     valueTagsByLabel = mapOf(
-                        "探针 Key" to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_KEY,
-                        "探针 Tick" to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_TICK,
-                        "对象 Hash" to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_HASH,
-                        "最近回调历史" to DemoTestTags.DIAGNOSTICS_RENDER_HISTORY,
+                        stringResource(R.string.demo_diagnostics_probe_key) to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_KEY,
+                        stringResource(R.string.demo_diagnostics_probe_tick) to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_TICK,
+                        stringResource(R.string.demo_diagnostics_object_hash) to DemoTestTags.DIAGNOSTICS_RENDER_PROBE_HASH,
+                        stringResource(R.string.demo_diagnostics_recent_history) to DemoTestTags.DIAGNOSTICS_RENDER_HISTORY,
                     ),
                 )
             }
 
             "renderer_snapshots" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "渲染器快照",
-                subtitle = "展示最近的完整帧与 Patch-Active 帧统计。",
+                title = stringResource(R.string.demo_diagnostics_renderer_snapshots_title),
+                subtitle = stringResource(R.string.demo_diagnostics_renderer_snapshots_summary),
             ) {
                 val snapshot = renderSnapshotState.value
                 val patchSnapshot = patchSnapshotState.value
-                val patchCapturedAt = patchSnapshot?.updatedAtMillis?.formatDiagnosticsTime() ?: "尚未捕获"
+                val notCaptured = stringResource(R.string.demo_diagnostics_not_captured)
+                val patchCapturedAt = patchSnapshot?.updatedAtMillis?.formatDiagnosticsTime(notCaptured)
+                    ?: notCaptured
                 val patchPatchedCount = patchSnapshot?.stats?.patchedNodes ?: 0
                 DiagnosticFactGroup(
-                    title = "最近渲染快照（只用于辅助阅读）",
+                    title = stringResource(R.string.demo_diagnostics_latest_render_snapshot),
                     facts = listOf(
-                        DiagnosticFact("快照序号", snapshotRefreshVersionState.value.toString()),
-                        DiagnosticFact("渲染次数", snapshot.renderCount.toString()),
-                        DiagnosticFact("更新时间", snapshot.updatedAtMillis.formatDiagnosticsTime()),
-                        DiagnosticFact("插入", snapshot.stats.inserts.toString()),
-                        DiagnosticFact("复用", snapshot.stats.reuses.toString()),
-                        DiagnosticFact("移除", snapshot.stats.removals.toString()),
-                        DiagnosticFact("已 Patch", snapshot.stats.patchedNodes.toString()),
-                        DiagnosticFact("已重绑", snapshot.stats.reboundNodes.toString()),
-                        DiagnosticFact("已跳过", snapshot.stats.skippedBindings.toString()),
-                        DiagnosticFact("子树跳过", snapshot.stats.skippedSubtrees.toString()),
-                        DiagnosticFact("VNode 数量", snapshot.structure.vnodeCount.toString()),
-                        DiagnosticFact("已挂载数量", snapshot.structure.mountedNodeCount.toString()),
-                        DiagnosticFact("VNode 深度", snapshot.structure.maxVNodeDepth.toString()),
-                        DiagnosticFact("挂载深度", snapshot.structure.maxMountedDepth.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_snapshot_revision_label), snapshotRefreshVersionState.value.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_render_count), snapshot.renderCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_updated_at), snapshot.updatedAtMillis.formatDiagnosticsTime(notCaptured)),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_inserts), snapshot.stats.inserts.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_reuses), snapshot.stats.reuses.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_removals), snapshot.stats.removals.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_patched), snapshot.stats.patchedNodes.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_rebound), snapshot.stats.reboundNodes.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_skipped), snapshot.stats.skippedBindings.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_subtrees_skipped), snapshot.stats.skippedSubtrees.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_vnode_count), snapshot.structure.vnodeCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_mounted_count), snapshot.structure.mountedNodeCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_vnode_depth), snapshot.structure.maxVNodeDepth.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_mounted_depth), snapshot.structure.maxMountedDepth.toString()),
                     ),
                 )
                 DiagnosticFactGroup(
-                    title = "最近 Patch-Active 快照（只用于辅助阅读）",
+                    title = stringResource(R.string.demo_diagnostics_latest_patch_snapshot),
                     facts = listOf(
-                        DiagnosticFact("捕获时间", patchCapturedAt),
-                        DiagnosticFact("已 Patch", patchPatchedCount.toString()),
-                        DiagnosticFact("已重绑", patchSnapshot?.stats?.reboundNodes?.toString() ?: "0"),
-                        DiagnosticFact("已跳过", patchSnapshot?.stats?.skippedBindings?.toString() ?: "0"),
-                        DiagnosticFact("子树跳过", patchSnapshot?.stats?.skippedSubtrees?.toString() ?: "0"),
-                        DiagnosticFact("挂载深度", patchSnapshot?.structure?.maxMountedDepth?.toString() ?: "0"),
-                        DiagnosticFact("警告", patchSnapshot?.warnings?.joinToString() ?: "无"),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_captured_at), patchCapturedAt),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_patched), patchPatchedCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_rebound), patchSnapshot?.stats?.reboundNodes?.toString() ?: "0"),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_skipped), patchSnapshot?.stats?.skippedBindings?.toString() ?: "0"),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_subtrees_skipped), patchSnapshot?.stats?.skippedSubtrees?.toString() ?: "0"),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_mounted_depth), patchSnapshot?.structure?.maxMountedDepth?.toString() ?: "0"),
+                        DiagnosticFact(
+                            stringResource(R.string.demo_diagnostics_warnings),
+                            patchSnapshot?.warnings?.joinToString()
+                                ?: stringResource(R.string.demo_diagnostics_none),
+                        ),
                     ),
                 )
                 val bindingsByType = patchSnapshot?.stats?.bindingsByType
                 if (bindingsByType != null && bindingsByType.isNotEmpty()) {
                     DiagnosticFactGroup(
-                        title = "按节点类型的绑定明细",
+                        title = stringResource(R.string.demo_diagnostics_bindings_by_node_type),
                         facts = bindingsByType.entries
                             .sortedByDescending { it.value.patched + it.value.rebound }
                             .map { (type, stats) ->
@@ -474,15 +498,15 @@ internal fun UiTreeBuilder.DiagnosticsPage(
 
             "renderer_tree" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "渲染树与 Patch 时间线",
-                subtitle = "仅在滚动到此条目时创建树和时间线诊断内容。",
+                title = stringResource(R.string.demo_diagnostics_render_tree_title),
+                subtitle = stringResource(R.string.demo_diagnostics_render_tree_summary),
             ) {
                 val snapshot = renderSnapshotState.value
                 val patchSnapshot = patchSnapshotState.value
                 val inspectorSnapshot = patchSnapshot ?: snapshot
                 if (inspectorSnapshot.patches.isNotEmpty()) {
                     DiagnosticFactGroup(
-                        title = "Patch 时间线（最新在后）",
+                        title = stringResource(R.string.demo_diagnostics_patch_timeline),
                         facts = inspectorSnapshot.patches
                             .takeLast(16)
                             .mapIndexed { index, patch ->
@@ -499,7 +523,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 val treeFacts = flattenRenderTree(inspectorSnapshot.tree).take(24)
                 if (treeFacts.isNotEmpty()) {
                     DiagnosticFactGroup(
-                        title = "Render Tree（前 24 个节点）",
+                        title = stringResource(R.string.demo_diagnostics_render_tree_first_nodes),
                         facts = treeFacts,
                     )
                 }
@@ -507,26 +531,26 @@ internal fun UiTreeBuilder.DiagnosticsPage(
 
             "renderer_composition" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "重组与 Local",
-                subtitle = "检查失效范围、重组原因以及捕获的 CompositionLocal。",
+                title = stringResource(R.string.demo_diagnostics_composition_title),
+                subtitle = stringResource(R.string.demo_diagnostics_composition_summary),
             ) {
                 val snapshot = renderSnapshotState.value
                 val patchSnapshot = patchSnapshotState.value
                 val inspectorSnapshot = patchSnapshot ?: snapshot
                 val composition = inspectorSnapshot.composition
                 DiagnosticFactGroup(
-                    title = "重组原因",
+                    title = stringResource(R.string.demo_diagnostics_recomposition_reasons),
                     facts = listOf(
-                        DiagnosticFact("失效 scope", composition.invalidatedScopeCount.toString()),
-                        DiagnosticFact("已重组 scope", composition.recomposedScopeCount.toString()),
-                        DiagnosticFact("已跳过 scope", composition.skippedScopeCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_invalidated_scopes), composition.invalidatedScopeCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_recomposed_scopes), composition.recomposedScopeCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_skipped_scopes), composition.skippedScopeCount.toString()),
                     ) + composition.scopes
                         .filter { scope -> scope.recomposed || scope.reasons.isNotEmpty() }
                         .take(12)
                         .map { scope ->
                             DiagnosticFact(
                                 scope.path,
-                                "${scope.reasons.joinToString().ifEmpty { "Dirty" }} · " +
+                                "${scope.reasons.joinToString().ifEmpty { stringResource(R.string.demo_diagnostics_dirty) }} · " +
                                     "${scope.signature} · recomposed=${scope.recomposed}",
                             )
                         },
@@ -544,7 +568,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                     .take(16)
                 if (localFacts.isNotEmpty()) {
                     DiagnosticFactGroup(
-                        title = "CompositionLocal 浏览器",
+                        title = stringResource(R.string.demo_diagnostics_composition_local_browser),
                         facts = localFacts,
                     )
                 }
@@ -552,17 +576,17 @@ internal fun UiTreeBuilder.DiagnosticsPage(
 
             "renderer_layout" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "布局与渲染模型",
-                subtitle = "汇总布局采样、当前渲染模型和手动验证路径。",
+                title = stringResource(R.string.demo_diagnostics_layout_title),
+                subtitle = stringResource(R.string.demo_diagnostics_layout_summary),
             ) {
                 val layoutSnapshot = layoutSnapshotState.value
                 DiagnosticFactGroup(
-                    title = "布局 Pass 计数器",
+                    title = stringResource(R.string.demo_diagnostics_layout_pass_counters),
                     facts = listOf(
-                        DiagnosticFact("总 measure 次数", layoutSnapshot.totalMeasureCount.toString()),
-                        DiagnosticFact("总 layout 次数", layoutSnapshot.totalLayoutCount.toString()),
-                        DiagnosticFact("measure 耗时", layoutSnapshot.totalMeasureNs.formatNsAsMs()),
-                        DiagnosticFact("layout 耗时", layoutSnapshot.totalLayoutNs.formatNsAsMs()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_total_measure_count), layoutSnapshot.totalMeasureCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_total_layout_count), layoutSnapshot.totalLayoutCount.toString()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_measure_duration), layoutSnapshot.totalMeasureNs.formatNsAsMs()),
+                        DiagnosticFact(stringResource(R.string.demo_diagnostics_layout_duration), layoutSnapshot.totalLayoutNs.formatNsAsMs()),
                     ) + layoutSnapshot.entries
                         .take(6)
                         .map { entry ->
@@ -573,63 +597,24 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                             )
                         },
                 )
-                DiagnosticFactGroup(
-                    title = "当前渲染模型",
-                    facts = listOf(
-                        DiagnosticFact("渲染根", "单根 RenderSession"),
-                        DiagnosticFact("更新模型", "根重渲染 + 基于 key 的已挂载复用"),
-                        DiagnosticFact("懒容器", "逐项懒 session"),
-                        DiagnosticFact("顶部导航", "TabRow + HorizontalPager via ViewPager2 + RecyclerView"),
-                        DiagnosticFact("Local 传播", "跨懒容器和 pager session 捕获"),
-                        DiagnosticFact("可视检查器", "Render Tree + Patch + Local + 重组原因"),
-                    ),
-                )
-                ChecklistGroup(
-                    title = "手动探针",
-                    items = listOf(
-                        "先看“关键重组探针”：刷新后探针 Tick 应增长，最近回调历史应追加新的 rN/pN 片段。",
-                        "进入 State -> Patch Stress 做几次切换，再返回这里点击刷新，确认最近回调历史和 Patch-active patched 都增长。",
-                        "点击重置布局计数器后进入 Layouts / Input / Foundations，再回来刷新，确认布局 Pass 计数器主要由自定义容器增长。",
-                        "切到 Layouts 或 Collections 压力页后再回来，确认挂载深度和 VNode 深度会跟随复杂场景变化。",
-                        "打开 Layouts / Collections 压力页，观察日志中 VNode tree 与 Reconcile 摘要是否稳定。",
-                        "切换章节并返回，确认 debug 日志仍持续输出到 ViewComposeSample。",
-                        "遇到视觉 bug 时，先用这里的渲染模型判断问题更像 layout、list diff 还是 local 传播。",
-                    ),
-                )
             }
 
-            "theme_verify" -> DiagnosticsThemeVerificationSection()
-
-            else -> VerificationNotesSection(
-                what = "在假设视觉 bug 属于 widget、layout 或 runtime 层之前，诊断应是首先检查的地方。",
-                howToVerify = listOf(
-                    "切换 theme mode 与章节，确认运行时快照始终反映当前 environment。",
-                    "在 State -> Patch Stress 执行几次更新后，返回渲染器页点击刷新，确认 patched/skipped 不再始终为 0。",
-                    "点击重置布局计数器，再进入一个复杂章节操作后返回，确认布局 Pass 计数器出现新的 measure/layout 增长。",
-                    "对比不同章节后刷新，确认热点排序会把更贵的容器排到前面，而不是只按次数排。",
-                    "切到层级更复杂的章节后再次刷新，确认渲染器页能看到 VNode/mounted 深度。",
-                    "在出现渲染问题时，对照这里列出的缺口判断是已知缺口还是新回归。",
-                    "结合日志观察 renderer 行为，并确认诊断页面描述与当前实现一致。",
-                ),
-                expected = listOf(
-                    "该章节能快速告诉你当前框架还缺什么。",
-                    "环境信息和主题信息不会在章节切换后失真。",
-                    "渲染器页可以拿到最近一次 render 的统计快照和最近一次 patch-active 快照。",
-                    "渲染器页可以看到自定义容器的 measure/layout 次数和累计耗时。",
-                    "诊断会持续作为后续 inspector 的落点。",
-                ),
-                relatedGaps = listOf(
-                    "检查器当前是手动快照，还没有节点高亮和跨 session 关联图。",
-                    "还没有 deepest path、完整 frame timeline 和每节点耗时。",
-                ),
-            )
+            else -> error("Unknown diagnostics section: $section")
         }
     }
 }
 
-private fun Long.formatDiagnosticsTime(): String {
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
+}
+
+private fun Long.formatDiagnosticsTime(notCaptured: String): String {
     if (this <= 0L) {
-        return "尚未捕获"
+        return notCaptured
     }
     return SimpleDateFormat("HH:mm:ss.SSS", Locale.US).format(Date(this))
 }
@@ -639,7 +624,7 @@ private fun buildRenderHistorySummary(): String {
         .recentSnapshots()
         .take(6)
     if (recent.isEmpty()) {
-        return "无"
+        return ""
     }
     return recent.joinToString(separator = " -> ") { snapshot ->
         "r${snapshot.renderCount}/p${snapshot.stats.patchedNodes}"

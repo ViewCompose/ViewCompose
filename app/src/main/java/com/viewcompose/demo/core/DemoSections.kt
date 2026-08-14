@@ -106,11 +106,13 @@ internal fun UiTreeBuilder.ScenarioSection(
     kind: ScenarioKind,
     title: String,
     subtitle: String,
+    modifier: Modifier = Modifier,
     content: UiTreeBuilder.() -> Unit,
 ) {
     DemoSection(
         title = title,
         subtitle = subtitle,
+        modifier = modifier,
     ) {
         Text(
             text = stringResource(
@@ -165,6 +167,7 @@ internal fun UiTreeBuilder.BenchmarkRouteCallout(
 internal fun UiTreeBuilder.DemoSection(
     title: String,
     subtitle: String,
+    modifier: Modifier = Modifier,
     content: UiTreeBuilder.() -> Unit,
 ) {
     Surface(
@@ -172,7 +175,8 @@ internal fun UiTreeBuilder.DemoSection(
         modifier = Modifier
             .fillMaxWidth()
             .margin(bottom = 12.dp)
-            .padding(16.dp),
+            .padding(16.dp)
+            .then(modifier),
     ) {
         Column(
             spacing = 8.dp,

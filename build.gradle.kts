@@ -543,8 +543,8 @@ tasks.register("verifyDemoAutomationSelectors") {
             "app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt" to 2,
             "app/src/androidTest/java/com/viewcompose/OneUi7VerificationUiTest.kt" to 4,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ComplexLayoutPerformanceComparisonBenchmark.kt" to 3,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 20,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 39,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 19,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 35,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DesignSystemVerticalSliceBenchmark.kt" to 17,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ShadowPerformanceComparisonBenchmark.kt" to 3,
         )
@@ -705,6 +705,9 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             rootDir.resolve("app/src/main/java/com/viewcompose/demo/registry"),
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/demo/pages/state/DemoStatePage.kt",
+            ),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/diagnostics/DemoDiagnosticsPage.kt",
             ),
         )
         val visibleLiteral = Regex(

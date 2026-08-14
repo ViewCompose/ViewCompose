@@ -181,18 +181,17 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "diagnostics",
-                expectedText = "Diagnostics",
-            )
-            scrollUntilText("Refresh Diagnostics Benchmark")
-            scrollUntilText("Reset Diagnostics Benchmark")
+            startDemoScenarioAndWait("diagnostics.renderer")
         },
     ) {
-        clickText("Refresh Diagnostics Benchmark")
-        waitForText("Diagnostics refresh count 1")
-        clickText("Reset Diagnostics Benchmark")
-        waitForText("Diagnostics refresh count 0")
+        val before = scenarioTargetText("diagnostics.renderer", DemoTargetRole.State)
+        clickScenarioTarget("diagnostics.renderer", DemoTargetRole.PrimaryAction)
+        waitForScenarioTargetTextChange(
+            "diagnostics.renderer",
+            DemoTargetRole.State,
+            before,
+        )
+        clickScenarioTarget("diagnostics.renderer", DemoTargetRole.Reset)
     }
 
     @Test
@@ -209,37 +208,11 @@ class DemoInteractionBenchmark {
         repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
             flingPageUp()
         }
-        assertVisibleText("Expected")
+        waitForScenarioTarget("diagnostics.theme", DemoTargetRole.SecondaryTarget)
         repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
             flingPageDown()
         }
-        assertVisibleText("Chapter Pages")
-    }
-
-    @Test
-    fun diagnosticsTabSwitchThenImmediateLongFling() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startDiagnosticsThemeAndWait()
-        },
-    ) {
-        listOf("渲染器", "缺口", "主题").forEach { tab ->
-            clickChapterTab(tab, waitForIdle = false)
-            // The first forceful gesture intentionally overlaps the tab's initial mount and layout.
-            flingPageUp()
-            repeat(DIAGNOSTICS_THEME_FLING_COUNT - 1) {
-                flingPageUp()
-            }
-            assertVisibleText("Expected")
-            repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
-                flingPageDown()
-            }
-            assertVisibleText("Chapter Pages")
-        }
+        waitForScenarioTarget("diagnostics.theme", DemoTargetRole.Target)
     }
 
     @Test
@@ -325,10 +298,7 @@ class DemoInteractionBenchmark {
             waitForText("Advance State Benchmark 1")
         },
     ) {
-        startDemoActivityAndWait(
-            moduleKey = "diagnostics",
-            expectedText = "Diagnostics",
-        )
+        startDemoScenarioAndWait("diagnostics.renderer")
     }
 }
 

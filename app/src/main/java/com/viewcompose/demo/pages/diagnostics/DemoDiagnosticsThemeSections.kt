@@ -82,21 +82,26 @@ internal val DIAGNOSTICS_THEME_PAGE_ITEMS = listOf(
 internal fun UiTreeBuilder.DiagnosticsThemeSection(
     section: String,
     root: ViewGroup?,
+    firstModifier: Modifier = Modifier,
+    lastModifier: Modifier = Modifier,
 ) {
     when (section) {
-        "theme_snapshot_core" -> DiagnosticsThemeSnapshotCoreSection(root)
+        "theme_snapshot_core" -> DiagnosticsThemeSnapshotCoreSection(root, firstModifier)
         "theme_snapshot_palette" -> DiagnosticsThemeSnapshotPaletteSection()
         "theme_snapshot_sizing" -> DiagnosticsThemeSnapshotSizingSection()
         "theme_surface" -> DiagnosticsThemeSurfaceSection()
         "theme_action" -> DiagnosticsThemeActionSection()
         "theme_input" -> DiagnosticsThemeInputSection()
         "theme_navigation" -> DiagnosticsThemeNavigationSection()
-        "theme_shape_size" -> DiagnosticsThemeShapeSizeSection()
+        "theme_shape_size" -> DiagnosticsThemeShapeSizeSection(lastModifier)
         else -> error("Unknown diagnostics theme section: $section")
     }
 }
 
-private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) {
+private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(
+    root: ViewGroup?,
+    modifier: Modifier,
+) {
     val modeLabel = root?.context?.let { context ->
         DemoThemeTokens.modeLabel(DemoThemeSession.mode, context)
     } ?: stringResource(
@@ -109,6 +114,7 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) 
         kind = ScenarioKind.Core,
         title = "Theme Snapshot",
         subtitle = "集中查看当前模式和最常用的语义色，作为后续组件视觉诊断的基线。",
+        modifier = modifier,
     ) {
         DiagnosticFactGroup(
             title = "当前主题基线",
@@ -570,7 +576,7 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
     }
 }
 
-private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
+private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection(modifier: Modifier) {
     val compactFieldState = rememberTextFieldState(
         "Compact / Medium / Large use Theme.controls.textField.*",
     )
@@ -581,6 +587,7 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
         kind = ScenarioKind.Visual,
         title = "Shape / Size 诊断",
         subtitle = "通过同组件不同尺寸和不同 radius tier，对照当前 theme 的 shape / control sizing 是否真的进入默认值。",
+        modifier = modifier,
     ) {
         Row(
             spacing = 8.dp,
@@ -651,33 +658,6 @@ private fun UiTreeBuilder.DiagnosticsThemeShapeSizeSection() {
             modifier = Modifier.fillMaxWidth(),
         )
     }
-}
-
-@ViewComposePreview(name = "Diagnostics · Theme verification", group = "Demo/Sections")
-internal fun UiTreeBuilder.DiagnosticsThemeVerificationSection() {
-    VerificationNotesSection(
-        what = "该页是 Theme token 实际消费的权威人工回归入口，目标不是看数值对不对，而是确认 token 最终确实驱动了关键组件默认值。",
-        howToVerify = listOf(
-            "本页固定验证 demo-custom 来源；依次切换 Light / Dark / System，确认 Source 不变而 Mode、Theme Snapshot 和组件视觉一起变化。",
-            "如需区分 Android XML、Material3 静态基线和 Demo 自定义 Token，进入设置页的三个独立验证入口，对照相同 fixture 与截图来源标识。",
-            "先看 Surface 家族，确认 Default/Variant surface、ListItem、TopAppBar 的前景文字都保持可读，OutlinedCard 边框跟随 outline。",
-            "看 Action 家族，确认 Primary/Secondary/Tonal/Outlined/Text 五种按钮的强调层级明显不同，FAB 和 Extended FAB 跟随当前主题。",
-            "看 Input / Selection 家族，确认错误态 TextField 与普通 TextField 的 container、text、hint 有明显语义差异，SearchBar 使用较大圆角与较高 control sizing。",
-            "看 Navigation / Collection 家族，确认 NavigationBar 与 SegmentedControl 的 selected/unselected 对比稳定，badge 与 indicator 不会和背景融在一起。",
-            "看 Shape / Size 诊断，确认 small/medium/large radius 探针和 Button/TextField/SegmentedControl/SearchBar 的尺寸都与当前 theme token 一致。",
-            "再到 Feedback / Input / Navigation 页面抽查真实功能页，确认这里定义的主题语义没有在 live 页面里回退。",
-        ),
-        expected = listOf(
-            "Theme Snapshot 是诊断基线，组件视觉与 token 变化保持同向。",
-            "surface/content、outline、inverse、errorContainer 等语义都能从样本中直接看出来，而不是只能靠读代码确认。",
-            "shape tier 和 control sizing 不再停留在 token 定义层，而是能从真实组件高度、圆角、间距中直接观察到。",
-            "真实功能页中的 Dialog / Popup / BottomSheet、SearchBar、NavigationBar / SegmentedControl 与此页口径一致。",
-        ),
-        relatedGaps = listOf(
-            "主题来源矩阵只覆盖稳定的代表性组件，不扩展成所有状态组合的全量 golden 图集。",
-            "overlay 真实主题验证继续依赖既有功能页，不在本页重复堆叠完整交互。",
-        ),
-    )
 }
 
 private fun UiTreeBuilder.MenuVisualSample() {

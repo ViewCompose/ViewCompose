@@ -531,7 +531,7 @@ measurement semantics do not change without a workload revision.
 | 1. Contract and automation spine | Completed | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
 | 2. Host and catalog hard cut | Completed | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
 | 3. Localization and content policy | In progress | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
-| 4. Scenario migration | Not started | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
+| 4. Scenario migration | In progress | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
 | 5. Benchmark rebaseline | Not started | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
 | 6. Cleanup and Runtime-plan unlock | Not started | Old route/tag/section infrastructure removed; durable docs updated | Completion criteria pass, this plan is archived, then the Runtime/Patch plan is re-audited against the new baseline. |
 
@@ -657,6 +657,19 @@ callers migrate. Retain a small reusable guide presentation only for localized h
 
 Do not preserve a chapter tab merely to reduce diff size. A hard cut is preferred when direct
 scenario identity produces a simpler and more reliable model.
+
+In progress on 2026-08-14. `diagnostics.runtime`, `diagnostics.theme`, and
+`diagnostics.renderer` now have strict registry identities, direct Activity routes, and
+scenario-owned root, ready, state/action where applicable, and fixture-boundary targets. The
+Diagnostics chapter overview, page switcher, benchmark route callout, copied renderer-model
+description, manual-probe checklist, and verification/gaps branches were deleted rather than
+translated or retained behind a compatibility mode. The theme long-fling workload now launches
+the direct scenario and synchronizes against first/last Android resource IDs; its hierarchy change
+advances the workload revision from 1 to 2. The obsolete tab-switch workload was removed because
+chapter tabs no longer exist in the target information architecture. Runtime and renderer visible
+copy now use paired locale resources, and the renderer refresh tests plus strict-route device tests
+pass on the reference device. Theme-fixture copy remains the next localization slice before the
+Diagnostics domain enters the complete hard-coded-copy gate.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

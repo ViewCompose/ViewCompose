@@ -2,6 +2,7 @@
     <string name="app_name">ViewCompose</string>
     <string name="demo_back">Back</string>
     <string name="demo_scenario_ready_format">%1$s · workload r%2$d · ready</string>
+    <string name="demo_scenario_workload_revision_format">Workload revision %1$d</string>
     <string name="demo_theme_mode_system_dark">System (Dark)</string>
     <string name="demo_theme_mode_system_light">System (Light)</string>
     <string name="demo_theme_mode_light">Light</string>
@@ -41,6 +42,12 @@
     <string name="demo_scenario_runtime_state_summary">State observation, derivation, effects, and deterministic mutation.</string>
     <string name="demo_scenario_runtime_view_patch_title">Android View patch</string>
     <string name="demo_scenario_runtime_view_patch_summary">Focused text, input, selection, layout, and pager patch workload.</string>
+    <string name="demo_scenario_diagnostics_runtime_title">Runtime diagnostics</string>
+    <string name="demo_scenario_diagnostics_runtime_summary">Current environment, theme tokens, and local environment overrides.</string>
+    <string name="demo_scenario_diagnostics_theme_title">Theme diagnostics</string>
+    <string name="demo_scenario_diagnostics_theme_summary">Long-scroll semantic color, shape, sizing, and component baseline.</string>
+    <string name="demo_scenario_diagnostics_renderer_title">Renderer diagnostics</string>
+    <string name="demo_scenario_diagnostics_renderer_summary">Refreshable render, patch, composition, tree, and layout snapshots.</string>
     <string name="demo_scenario_environment_resources_title">Android resource environment</string>
     <string name="demo_scenario_environment_resources_summary">Locale, night mode, direction, font scale, and density propagation.</string>
     <string name="demo_scenario_overlay_dialog_title">Dialog overlay</string>

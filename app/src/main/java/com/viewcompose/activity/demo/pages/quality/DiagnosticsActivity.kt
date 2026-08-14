@@ -29,6 +29,7 @@ class DiagnosticsActivity : DemoRenderActivity() {
             DiagnosticsPage(
                 root = root,
                 selectedPageState = selectedPageState,
+                scenario = currentScenario(),
                 autoRefreshOnEnter = autoRefreshRendererSnapshot,
                 entryHint = entryHint,
             )
@@ -36,7 +37,7 @@ class DiagnosticsActivity : DemoRenderActivity() {
     }
 
     companion object {
-        private const val EXTRA_PAGE = "page"
+        internal const val EXTRA_PAGE = "page"
         private const val EXTRA_AUTO_REFRESH_RENDERER_SNAPSHOT = "auto_refresh_renderer_snapshot"
         private const val EXTRA_ENTRY_HINT = "entry_hint"
 

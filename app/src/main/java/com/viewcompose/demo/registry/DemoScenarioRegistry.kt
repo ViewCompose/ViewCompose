@@ -3,6 +3,7 @@ package com.viewcompose.demo.registry
 import android.content.Context
 import android.content.Intent
 import com.viewcompose.FeedbackActivity
+import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
@@ -25,6 +26,9 @@ import com.viewcompose.performance.PerformanceComparisonActivity
 internal object DemoScenarioIds {
     val RuntimeState = DemoScenarioId("runtime.state")
     val RuntimeViewPatch = DemoScenarioId("runtime.view-patch")
+    val DiagnosticsRuntime = DemoScenarioId("diagnostics.runtime")
+    val DiagnosticsTheme = DemoScenarioId("diagnostics.theme")
+    val DiagnosticsRenderer = DemoScenarioId("diagnostics.renderer")
     val EnvironmentResources = DemoScenarioId("environment.resources")
     val OverlayDialog = DemoScenarioId("overlay.dialog")
     val NavigationSystem = DemoScenarioId("navigation.system")
@@ -76,6 +80,80 @@ internal object DemoScenarioRegistry {
                 target = R.id.demo_runtime_view_patch_target,
             ),
             benchmarkRevision = 1,
+        ),
+        scenario(
+            id = DemoScenarioIds.DiagnosticsRuntime,
+            category = DemoScenarioCategory.Runtime,
+            titleRes = R.string.demo_scenario_diagnostics_runtime_title,
+            summaryRes = R.string.demo_scenario_diagnostics_runtime_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual),
+            route = DemoScenarioRoute(
+                activityClass = DiagnosticsActivity::class.java,
+                extras = mapOf(
+                    DiagnosticsActivity.EXTRA_PAGE to
+                        DemoRouteExtra.IntValue(DiagnosticsActivity.PAGE_RUNTIME),
+                ),
+            ),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_diagnostics_runtime_root,
+                ready = R.id.demo_diagnostics_runtime_ready,
+                target = R.id.demo_diagnostics_runtime_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.DiagnosticsTheme,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_diagnostics_theme_title,
+            summaryRes = R.string.demo_scenario_diagnostics_theme_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(
+                DemoVerificationKind.Manual,
+                DemoVerificationKind.Visual,
+                DemoVerificationKind.Benchmark,
+            ),
+            route = DemoScenarioRoute(
+                activityClass = DiagnosticsActivity::class.java,
+                extras = mapOf(
+                    DiagnosticsActivity.EXTRA_PAGE to
+                        DemoRouteExtra.IntValue(DiagnosticsActivity.PAGE_THEME),
+                ),
+            ),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_diagnostics_theme_root,
+                ready = R.id.demo_diagnostics_theme_ready,
+                state = R.id.demo_diagnostics_theme_state,
+                target = R.id.demo_diagnostics_theme_target,
+                secondaryTarget = R.id.demo_diagnostics_theme_secondary_target,
+            ),
+            benchmarkRevision = 2,
+            benchmarkActions = listOf(DemoAutomationRole.Target),
+        ),
+        scenario(
+            id = DemoScenarioIds.DiagnosticsRenderer,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_diagnostics_renderer_title,
+            summaryRes = R.string.demo_scenario_diagnostics_renderer_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual),
+            route = DemoScenarioRoute(
+                activityClass = DiagnosticsActivity::class.java,
+                extras = mapOf(
+                    DiagnosticsActivity.EXTRA_PAGE to
+                        DemoRouteExtra.IntValue(DiagnosticsActivity.PAGE_RENDERER),
+                ),
+            ),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_diagnostics_renderer_root,
+                ready = R.id.demo_diagnostics_renderer_ready,
+                primaryAction = R.id.demo_diagnostics_renderer_primary_action,
+                reset = R.id.demo_diagnostics_renderer_reset,
+                state = R.id.demo_diagnostics_renderer_state,
+                target = R.id.demo_diagnostics_renderer_target,
+            ),
         ),
         scenario(
             id = DemoScenarioIds.EnvironmentResources,
@@ -262,10 +340,11 @@ internal object DemoScenarioRegistry {
     private data class TargetIds(
         val root: Int,
         val ready: Int,
-        val primaryAction: Int,
-        val reset: Int,
-        val state: Int,
-        val target: Int,
+        val primaryAction: Int? = null,
+        val reset: Int? = null,
+        val state: Int? = null,
+        val target: Int? = null,
+        val secondaryTarget: Int? = null,
     )
 
     private fun scenario(
@@ -279,6 +358,7 @@ internal object DemoScenarioRegistry {
         mutable: Boolean,
         ids: TargetIds,
         benchmarkRevision: Int? = null,
+        benchmarkActions: List<DemoAutomationRole>? = null,
     ): DemoScenarioSpec {
         fun target(
             role: DemoAutomationRole,
@@ -288,6 +368,15 @@ internal object DemoScenarioRegistry {
             return Triple(role, androidViewId, resourceName)
         }
 
+        val targets = buildList {
+            add(target(DemoAutomationRole.Root, ids.root))
+            add(target(DemoAutomationRole.Ready, ids.ready))
+            ids.primaryAction?.let { add(target(DemoAutomationRole.PrimaryAction, it)) }
+            ids.reset?.let { add(target(DemoAutomationRole.Reset, it)) }
+            ids.state?.let { add(target(DemoAutomationRole.State, it)) }
+            ids.target?.let { add(target(DemoAutomationRole.Target, it)) }
+            ids.secondaryTarget?.let { add(target(DemoAutomationRole.SecondaryTarget, it)) }
+        }
         return DemoScenarioSpec(
             id = id,
             category = category,
@@ -296,20 +385,12 @@ internal object DemoScenarioRegistry {
             host = host,
             verificationKinds = verificationKinds,
             route = route,
-            automation = DemoAutomationContract.create(
-                id,
-                target(DemoAutomationRole.Root, ids.root),
-                target(DemoAutomationRole.Ready, ids.ready),
-                target(DemoAutomationRole.PrimaryAction, ids.primaryAction),
-                target(DemoAutomationRole.Reset, ids.reset),
-                target(DemoAutomationRole.State, ids.state),
-                target(DemoAutomationRole.Target, ids.target),
-            ),
+            automation = DemoAutomationContract.create(id, *targets.toTypedArray()),
             mutable = mutable,
             benchmark = benchmarkRevision?.let { revision ->
                 DemoBenchmarkContract(
                     workloadRevision = revision,
-                    actionSequence = listOf(
+                    actionSequence = benchmarkActions ?: listOf(
                         DemoAutomationRole.PrimaryAction,
                         DemoAutomationRole.Reset,
                     ),

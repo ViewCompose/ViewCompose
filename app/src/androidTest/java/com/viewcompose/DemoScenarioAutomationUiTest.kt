@@ -49,6 +49,9 @@ class DemoScenarioAutomationUiTest {
     fun ordinaryDedicatedOverlayNavigationAndBenchmarkHostsExposeRoleTargets() {
         listOf(
             "runtime.state",
+            "diagnostics.runtime",
+            "diagnostics.theme",
+            "diagnostics.renderer",
             "environment.resources",
             "overlay.dialog",
             "navigation.system",

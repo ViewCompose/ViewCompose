@@ -20,6 +20,7 @@ internal enum class DemoTargetRole(
     Reset("reset"),
     State("state"),
     Target("target"),
+    SecondaryTarget("secondary_target"),
 }
 
 /** Starts one strict scenario and waits for its locale-independent ready resource. */
@@ -194,12 +195,8 @@ private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (modu
 
 /** Starts the Diagnostics Theme page directly so long-fling measurements include its full fixture. */
 internal fun MacrobenchmarkScope.startDiagnosticsThemeAndWait() {
-    startDemoActivityAndWait(
-        moduleKey = "diagnostics",
-        expectedText = "Diagnostics",
-        extras = mapOf("page" to 1),
-    )
-    waitForText("Theme Snapshot")
+    startDemoScenarioAndWait("diagnostics.theme")
+    waitForScenarioTarget("diagnostics.theme", DemoTargetRole.Target)
 }
 
 /** Starts the internal multi-design-system fixture through the stable launcher redirect. */

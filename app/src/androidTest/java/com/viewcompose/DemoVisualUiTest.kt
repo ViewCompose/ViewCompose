@@ -1517,7 +1517,9 @@ class DemoVisualUiTest {
                     DemoTestTags.DIAGNOSTICS_PATCH_ACTIVE_CAPTURED_AT,
                 ).text.toString()
                 val patched = extractCount(patchedText)
-                patched > 0 && !capturedAtText.contains("尚未捕获")
+                patched > 0 && !capturedAtText.contains(
+                    activity.getString(R.string.demo_diagnostics_not_captured),
+                )
             }
             assertTrue(
                 "Expected state patch stress updates to appear in diagnostics patch-active snapshot probes.",
