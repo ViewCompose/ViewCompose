@@ -61,6 +61,14 @@
     <string name="demo_scenario_gesture_drag_swipe_summary">验证水平拖拽、可确定的三锚点停靠与重置。</string>
     <string name="demo_scenario_gesture_transform_title">变换手势</string>
     <string name="demo_scenario_gesture_transform_summary">验证双指缩放、平移、旋转及可确定的变换状态。</string>
+    <string name="demo_scenario_graphics_drawing_title">Canvas 与绘制修饰符</string>
+    <string name="demo_scenario_graphics_drawing_summary">验证图元、路径、混合、绘制顺序和缓存命令。</string>
+    <string name="demo_scenario_graphics_outer_shadow_title">外阴影</string>
+    <string name="demo_scenario_graphics_outer_shadow_summary">验证单层、多层、扩展和跟随形状的外阴影绘制。</string>
+    <string name="demo_scenario_graphics_inner_shadow_title">内阴影</string>
+    <string name="demo_scenario_graphics_inner_shadow_summary">验证多层内阴影及其输入和手势透明性。</string>
+    <string name="demo_scenario_graphics_shadow_list_title">阴影列表诊断</string>
+    <string name="demo_scenario_graphics_shadow_list_summary">使用 1,000 行懒加载场景验证缓存复用和后端诊断。</string>
     <string name="demo_scenario_diagnostics_runtime_title">运行时诊断</string>
     <string name="demo_scenario_diagnostics_runtime_summary">检查当前环境、主题 Token 与局部环境覆盖。</string>
     <string name="demo_scenario_diagnostics_theme_title">主题诊断</string>

@@ -60,6 +60,14 @@
     <string name="demo_scenario_gesture_drag_swipe_summary">Horizontal drag plus deterministic three-anchor settling and reset.</string>
     <string name="demo_scenario_gesture_transform_title">Transform gesture</string>
     <string name="demo_scenario_gesture_transform_summary">Two-pointer scale, pan, rotation, and deterministic transform state.</string>
+    <string name="demo_scenario_graphics_drawing_title">Canvas and draw modifiers</string>
+    <string name="demo_scenario_graphics_drawing_summary">Primitives, paths, blending, draw order, and cached commands.</string>
+    <string name="demo_scenario_graphics_outer_shadow_title">Outer shadows</string>
+    <string name="demo_scenario_graphics_outer_shadow_summary">Single, layered, spread, and shape-aware outer-shadow rendering.</string>
+    <string name="demo_scenario_graphics_inner_shadow_title">Inner shadows</string>
+    <string name="demo_scenario_graphics_inner_shadow_summary">Layered inner shadows with input and gesture transparency.</string>
+    <string name="demo_scenario_graphics_shadow_list_title">Shadow list diagnostics</string>
+    <string name="demo_scenario_graphics_shadow_list_summary">A 1,000-row lazy fixture for cache reuse and backend diagnostics.</string>
     <string name="demo_scenario_diagnostics_runtime_title">Runtime diagnostics</string>
     <string name="demo_scenario_diagnostics_runtime_summary">Current environment, theme tokens, and local environment overrides.</string>
     <string name="demo_scenario_diagnostics_theme_title">Theme diagnostics</string>

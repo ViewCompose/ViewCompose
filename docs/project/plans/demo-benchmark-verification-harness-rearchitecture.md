@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: continue the second-risk group with Graphics, Animation, and Modifiers while reducing
-the remaining text-selector debt with each direct scenario slice.
+Next action: continue the second-risk group with Animation and Modifiers while reducing the
+remaining text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -730,6 +730,20 @@ SM-G991B Android 13 reference device, all five registry automation tests passed,
 three gesture action-reset contracts in English and Simplified Chinese, followed by four focused
 real-input tests for pointer consumption, tap fallback, drag/anchor settling, and two-pointer
 transform.
+
+The Graphics domain now has four strict direct fixtures: `graphics.drawing`,
+`graphics.outer-shadow`, `graphics.inner-shadow`, and `graphics.shadow-list`. `GraphicsActivity`
+requires immutable scenario identity; the chapter overview, page switcher, verification copy, and
+`graphics_page_index` contract were deleted. Drawing state, inner-shadow interaction state, shadow
+backend lifecycle, diagnostics, and the 1,000-row lazy workload now exist only in their owning
+fixture. The lazy fixture retains stable keys and one shared lazy-row content type without mounting
+the drawing or interactive shadow Sessions. Mutable fixtures publish deterministic action, state,
+target, and reset roles; cache counters remain visible diagnostics but are deliberately excluded
+from the reset identity because they are process-level observations. Paired resources cover all
+visible copy, including Canvas labels resolved during composition before draw callbacks, and the
+hard-coded-copy gate now owns both Graphics source files. Focused device evidence covers all three
+advanced-shadow behaviors and both drawing-control paths, while the strict cross-locale automation
+contract covers drawing, inner shadow, and shadow diagnostics.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

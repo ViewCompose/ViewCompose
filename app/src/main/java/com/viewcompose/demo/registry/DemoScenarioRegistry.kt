@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import com.viewcompose.FeedbackActivity
 import com.viewcompose.GesturesActivity
+import com.viewcompose.GraphicsActivity
 import com.viewcompose.CollectionsActivity
 import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.LayoutsActivity
@@ -39,6 +40,10 @@ internal object DemoScenarioIds {
     val GestureTap = DemoScenarioId("gesture.tap")
     val GestureDragSwipe = DemoScenarioId("gesture.drag-swipe")
     val GestureTransform = DemoScenarioId("gesture.transform")
+    val GraphicsDrawing = DemoScenarioId("graphics.drawing")
+    val GraphicsOuterShadow = DemoScenarioId("graphics.outer-shadow")
+    val GraphicsInnerShadow = DemoScenarioId("graphics.inner-shadow")
+    val GraphicsShadowList = DemoScenarioId("graphics.shadow-list")
     val DiagnosticsRuntime = DemoScenarioId("diagnostics.runtime")
     val DiagnosticsTheme = DemoScenarioId("diagnostics.theme")
     val DiagnosticsRenderer = DemoScenarioId("diagnostics.renderer")
@@ -265,6 +270,76 @@ internal object DemoScenarioRegistry {
                 reset = R.id.demo_gesture_transform_reset,
                 state = R.id.demo_gesture_transform_state,
                 target = R.id.demo_gesture_transform_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.GraphicsDrawing,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_graphics_drawing_title,
+            summaryRes = R.string.demo_scenario_graphics_drawing_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(GraphicsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_graphics_drawing_root,
+                ready = R.id.demo_graphics_drawing_ready,
+                primaryAction = R.id.demo_graphics_drawing_primary_action,
+                reset = R.id.demo_graphics_drawing_reset,
+                state = R.id.demo_graphics_drawing_state,
+                target = R.id.demo_graphics_drawing_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.GraphicsOuterShadow,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_graphics_outer_shadow_title,
+            summaryRes = R.string.demo_scenario_graphics_outer_shadow_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(GraphicsActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_graphics_outer_shadow_root,
+                ready = R.id.demo_graphics_outer_shadow_ready,
+                target = R.id.demo_graphics_outer_shadow_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.GraphicsInnerShadow,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_graphics_inner_shadow_title,
+            summaryRes = R.string.demo_scenario_graphics_inner_shadow_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(GraphicsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_graphics_inner_shadow_root,
+                ready = R.id.demo_graphics_inner_shadow_ready,
+                primaryAction = R.id.demo_graphics_inner_shadow_primary_action,
+                reset = R.id.demo_graphics_inner_shadow_reset,
+                state = R.id.demo_graphics_inner_shadow_state,
+                target = R.id.demo_graphics_inner_shadow_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.GraphicsShadowList,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_graphics_shadow_list_title,
+            summaryRes = R.string.demo_scenario_graphics_shadow_list_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(GraphicsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_graphics_shadow_list_root,
+                ready = R.id.demo_graphics_shadow_list_ready,
+                primaryAction = R.id.demo_graphics_shadow_list_primary_action,
+                secondaryAction = R.id.demo_graphics_shadow_list_secondary_action,
+                reset = R.id.demo_graphics_shadow_list_reset,
+                state = R.id.demo_graphics_shadow_list_state,
+                target = R.id.demo_graphics_shadow_list_target,
             ),
         ),
         scenario(

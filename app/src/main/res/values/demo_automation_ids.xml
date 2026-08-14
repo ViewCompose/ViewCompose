@@ -86,6 +86,32 @@
     <item name="demo_gesture_transform_state" type="id" />
     <item name="demo_gesture_transform_target" type="id" />
 
+    <item name="demo_graphics_drawing_root" type="id" />
+    <item name="demo_graphics_drawing_ready" type="id" />
+    <item name="demo_graphics_drawing_primary_action" type="id" />
+    <item name="demo_graphics_drawing_reset" type="id" />
+    <item name="demo_graphics_drawing_state" type="id" />
+    <item name="demo_graphics_drawing_target" type="id" />
+
+    <item name="demo_graphics_outer_shadow_root" type="id" />
+    <item name="demo_graphics_outer_shadow_ready" type="id" />
+    <item name="demo_graphics_outer_shadow_target" type="id" />
+
+    <item name="demo_graphics_inner_shadow_root" type="id" />
+    <item name="demo_graphics_inner_shadow_ready" type="id" />
+    <item name="demo_graphics_inner_shadow_primary_action" type="id" />
+    <item name="demo_graphics_inner_shadow_reset" type="id" />
+    <item name="demo_graphics_inner_shadow_state" type="id" />
+    <item name="demo_graphics_inner_shadow_target" type="id" />
+
+    <item name="demo_graphics_shadow_list_root" type="id" />
+    <item name="demo_graphics_shadow_list_ready" type="id" />
+    <item name="demo_graphics_shadow_list_primary_action" type="id" />
+    <item name="demo_graphics_shadow_list_secondary_action" type="id" />
+    <item name="demo_graphics_shadow_list_reset" type="id" />
+    <item name="demo_graphics_shadow_list_state" type="id" />
+    <item name="demo_graphics_shadow_list_target" type="id" />
+
     <item name="demo_diagnostics_runtime_root" type="id" />
     <item name="demo_diagnostics_runtime_ready" type="id" />
     <item name="demo_diagnostics_runtime_target" type="id" />

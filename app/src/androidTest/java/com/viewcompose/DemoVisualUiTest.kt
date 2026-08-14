@@ -1509,11 +1509,16 @@ class DemoVisualUiTest {
 
     @Test
     fun graphicsPage_blendAndDrawContentToggles_updateStatuses() {
-        launchDemoActivity(GraphicsActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GraphicsActivity::class.java,
+            scenarioId = "graphics.drawing",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("graphics-core-light")
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_PRIMITIVES_CANVAS))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewByIdVisible<View>(R.id.demo_graphics_drawing_target),
+                )
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_PATH_CLIP_CANVAS))
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_BLEND_CANVAS))
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_DRAW_CONTENT_CANVAS))
@@ -1524,15 +1529,24 @@ class DemoVisualUiTest {
             scenario.onActivity { activity ->
                 val blendStatus = activity.requireTextViewByTestTag(DemoTestTags.GRAPHICS_BLEND_STATUS).text.toString()
                 val drawStatus = activity.requireTextViewByTestTag(DemoTestTags.GRAPHICS_DRAW_CONTENT_STATUS).text.toString()
-                assertTrue("Expected blend status to switch to Multiply", blendStatus.contains("Multiply"))
-                assertTrue("Expected drawWithContent status to report intercepted content", drawStatus.contains("拦截内容"))
+                assertEquals(
+                    activity.getString(R.string.demo_graphics_blend_status_multiply),
+                    blendStatus,
+                )
+                assertEquals(
+                    activity.getString(R.string.demo_graphics_draw_status_hidden),
+                    drawStatus,
+                )
             }
         }
     }
 
     @Test
     fun graphicsPage_cacheControls_updateCacheStatusText() {
-        launchDemoActivity(GraphicsActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GraphicsActivity::class.java,
+            scenarioId = "graphics.drawing",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_CACHE_CANVAS))

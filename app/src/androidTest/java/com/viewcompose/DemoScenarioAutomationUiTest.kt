@@ -61,6 +61,10 @@ class DemoScenarioAutomationUiTest {
             "gesture.tap",
             "gesture.drag-swipe",
             "gesture.transform",
+            "graphics.drawing",
+            "graphics.outer-shadow",
+            "graphics.inner-shadow",
+            "graphics.shadow-list",
             "diagnostics.runtime",
             "diagnostics.theme",
             "diagnostics.renderer",
@@ -124,6 +128,32 @@ class DemoScenarioAutomationUiTest {
                 "gesture.tap",
                 "gesture.drag-swipe",
                 "gesture.transform",
+            ).forEach { scenarioId ->
+                launchScenario(scenarioId)
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+                requireTarget(scenarioId, "primary_action").click()
+                val changed = waitForTargetTextChange(scenarioId, initial)
+                assertNotEquals("$scenarioId action must publish state", initial, changed)
+
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId reset must restore initial state",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun graphicsFixturesPublishDeterministicActionAndResetState() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            listOf(
+                "graphics.drawing",
+                "graphics.inner-shadow",
+                "graphics.shadow-list",
             ).forEach { scenarioId ->
                 launchScenario(scenarioId)
                 val initial = requireTarget(scenarioId, "state").text.orEmpty()

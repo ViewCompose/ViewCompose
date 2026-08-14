@@ -1,7 +1,5 @@
 package com.viewcompose
 
-import android.content.Intent
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.viewcompose.shadow.android.ShadowDecorationLayer
 import org.junit.Assert.assertEquals
@@ -14,11 +12,11 @@ import org.junit.runner.RunWith
 class AdvancedShadowDemoDeviceTest {
     @Test
     fun outerShadowPage_installsSingleAndOrderedMultiLayerSpecs() {
-        launchGraphicsPage(GRAPHICS_PAGE_OUTER_SHADOWS).use { scenario ->
+        launchGraphicsScenario("graphics.outer-shadow").use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val single = activity.requireViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_OUTER_SINGLE,
+                val single = activity.requireScenarioViewByIdVisible<android.view.View>(
+                    R.id.demo_graphics_outer_shadow_target,
                 )
                 val multi = activity.requireViewByTestTagVisible(
                     DemoTestTags.GRAPHICS_SHADOW_OUTER_MULTI,
@@ -41,11 +39,11 @@ class AdvancedShadowDemoDeviceTest {
 
     @Test
     fun innerShadowPage_keepsForegroundDecorationInputTransparent() {
-        launchGraphicsPage(GRAPHICS_PAGE_INNER_SHADOWS).use { scenario ->
+        launchGraphicsScenario("graphics.inner-shadow").use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val single = activity.requireViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_INNER_SINGLE,
+                val single = activity.requireScenarioViewByIdVisible<android.view.View>(
+                    R.id.demo_graphics_inner_shadow_target,
                 )
                 val multi = activity.requireViewByTestTagVisible(
                     DemoTestTags.GRAPHICS_SHADOW_INNER_MULTI,
@@ -55,14 +53,17 @@ class AdvancedShadowDemoDeviceTest {
 
                 activity.requireViewByTestTagVisible(DemoTestTags.GRAPHICS_SHADOW_INNER_FIELD)
                     .requestFocus()
-                activity.clickByTestTag(DemoTestTags.GRAPHICS_SHADOW_INNER_CLICK_BUTTON)
+                activity.clickScenarioViewById(R.id.demo_graphics_inner_shadow_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val count = activity.requireTextViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_INNER_CLICK_COUNT,
+                val count = activity.requireScenarioViewByIdVisible<android.widget.TextView>(
+                    R.id.demo_graphics_inner_shadow_state,
                 )
-                assertEquals("点击次数 1", count.text.toString())
+                assertEquals(
+                    activity.getString(R.string.demo_graphics_inner_click_count, 1),
+                    count.text.toString(),
+                )
             }
         }
     }
@@ -71,10 +72,10 @@ class AdvancedShadowDemoDeviceTest {
     fun diagnosticsPage_drawsLazyShadowAndReportsExactAutoBackend() {
         ShadowDecorationLayer.clearCache()
         ShadowDecorationLayer.resetBackendDiagnostics()
-        launchGraphicsPage(GRAPHICS_PAGE_SHADOW_DIAGNOSTICS).use { scenario ->
+        launchGraphicsScenario("graphics.shadow-list").use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.GRAPHICS_SHADOW_DIAGNOSTICS_REFRESH)
+                activity.clickScenarioViewById(R.id.demo_graphics_shadow_list_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
@@ -94,8 +95,8 @@ class AdvancedShadowDemoDeviceTest {
             }
             var hitsBeforeRepeatDraw = 0L
             scenario.onActivity { activity ->
-                val lazyFirst = activity.requireViewByTestTagVisible(
-                    DemoTestTags.GRAPHICS_SHADOW_LAZY_FIRST,
+                val lazyFirst = activity.requireScenarioViewByIdVisible<android.view.View>(
+                    R.id.demo_graphics_shadow_list_target,
                 )
                 assertEquals(2, ShadowDecorationLayer.specOrNull(lazyFirst)?.layerCount)
                 hitsBeforeRepeatDraw = ShadowDecorationLayer.cacheStats().hits
@@ -110,11 +111,9 @@ class AdvancedShadowDemoDeviceTest {
         }
     }
 
-    private fun launchGraphicsPage(page: Int) = launchDemoActivity<GraphicsActivity>(
-        Intent(
-            ApplicationProvider.getApplicationContext(),
-            GraphicsActivity::class.java,
-        ).putExtra(GraphicsActivity.EXTRA_GRAPHICS_PAGE_INDEX, page),
+    private fun launchGraphicsScenario(scenarioId: String) = launchDemoScenarioActivity(
+        activityClass = GraphicsActivity::class.java,
+        scenarioId = scenarioId,
         themeMode = DemoThemeMode.Light,
     )
 }
