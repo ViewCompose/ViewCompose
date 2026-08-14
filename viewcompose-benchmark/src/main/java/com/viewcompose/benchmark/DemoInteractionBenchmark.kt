@@ -246,22 +246,6 @@ class DemoInteractionBenchmark {
         waitForScenarioTargetTextChange("runtime.view-patch", DemoTargetRole.State, second)
     }
 
-    @Test
-    fun diagnosticsRefreshAfterPatch() = benchmarkRule.measureRepeated(
-        packageName = TARGET_PACKAGE,
-        metrics = listOf(FrameTimingMetric()),
-        compilationMode = CompilationMode.Partial(),
-        iterations = DEFAULT_ITERATIONS,
-        startupMode = StartupMode.WARM,
-        setupBlock = {
-            startDemoScenarioAndWait("runtime.state")
-            val initial = scenarioTargetText("runtime.state", DemoTargetRole.State)
-            clickScenarioTarget("runtime.state", DemoTargetRole.PrimaryAction)
-            waitForScenarioTargetTextChange("runtime.state", DemoTargetRole.State, initial)
-        },
-    ) {
-        startDemoScenarioAndWait("diagnostics.renderer")
-    }
 }
 
 private const val DIAGNOSTICS_THEME_FLING_COUNT = 8

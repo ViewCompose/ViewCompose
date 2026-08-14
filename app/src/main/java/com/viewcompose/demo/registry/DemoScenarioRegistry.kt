@@ -253,7 +253,10 @@ internal object DemoScenarioRegistry {
             titleRes = R.string.demo_scenario_input_derived_summary_title,
             summaryRes = R.string.demo_scenario_input_derived_summary_summary,
             host = DemoHostPolicy.SharedFixture,
-            verificationKinds = setOf(DemoVerificationKind.Manual),
+            verificationKinds = setOf(
+                DemoVerificationKind.Manual,
+                DemoVerificationKind.Benchmark,
+            ),
             route = DemoScenarioRoute(InputActivity::class.java),
             mutable = true,
             ids = TargetIds(
@@ -562,6 +565,7 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_diagnostics_renderer_state,
                 target = R.id.demo_diagnostics_renderer_target,
             ),
+            benchmarkRevision = 2,
         ),
         scenario(
             id = DemoScenarioIds.CollectionControls,

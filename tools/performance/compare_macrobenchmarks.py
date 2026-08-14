@@ -52,6 +52,19 @@ SCENARIOS = (
     ),
 )
 
+# Report rows may split one fixture into several measured actions, but every row must retain the
+# owning scenario identity and workload revision so unlike workloads cannot be compared silently.
+SCENARIO_CONTRACTS = {
+    "list_scroll": ("performance.list", 1),
+    "list_mutation": ("performance.list", 1),
+    "complex_layout_scroll": ("performance.complex-layout", 1),
+    "complex_layout_update": ("performance.complex-layout", 1),
+    "shadow_list_scroll": ("performance.shadow-list", 1),
+    "shadow_list_mutation": ("performance.shadow-list", 1),
+    "shadow_complex_layout_scroll": ("performance.shadow-complex-layout", 1),
+    "shadow_complex_layout_update": ("performance.shadow-complex-layout", 1),
+}
+
 SAMPLED_METRICS = ("frameDurationCpuMs", "frameOverrunMs")
 SAMPLED_PERCENTILES = ("P50", "P95")
 MEMORY_METRICS = ("memoryHeapSizeMaxKb", "memoryRssAnonMaxKb")
@@ -64,6 +77,8 @@ class Comparison:
     """
 
     scenario: str
+    scenario_id: str
+    workload_revision: int
     metric: str
     statistic: str
     viewcompose: float
@@ -79,6 +94,8 @@ class Stability:
     """
 
     scenario: str
+    scenario_id: str
+    workload_revision: int
     engine: str
     metric: str
     statistic: str
@@ -93,6 +110,8 @@ class Regression:
     """
 
     scenario: str
+    scenario_id: str
+    workload_revision: int
     metric: str
     statistic: str
     current: float
@@ -298,11 +317,14 @@ def create_comparison(
 
     if viewcompose is None or compose is None:
         return None
+    scenario_id, workload_revision = SCENARIO_CONTRACTS[scenario]
     relative_percent = None
     if compose > 0 and metric != "frameOverrunMs":
         relative_percent = (viewcompose / compose - 1.0) * 100.0
     return Comparison(
         scenario=scenario,
+        scenario_id=scenario_id,
+        workload_revision=workload_revision,
         metric=metric,
         statistic=statistic,
         viewcompose=viewcompose,
@@ -355,6 +377,7 @@ def build_stability(
 
     stability: list[Stability] = []
     for scenario, viewcompose_name, compose_name in available_scenarios(entries):
+        scenario_id, workload_revision = SCENARIO_CONTRACTS[scenario]
         for engine, benchmark_name in (
             ("ViewCompose", viewcompose_name),
             ("Compose", compose_name),
@@ -378,6 +401,8 @@ def build_stability(
                 stability.append(
                     Stability(
                         scenario=scenario,
+                        scenario_id=scenario_id,
+                        workload_revision=workload_revision,
                         engine=engine,
                         metric=metric,
                         statistic="run-P50",
@@ -397,6 +422,16 @@ def context_identity(result: dict[str, Any]) -> dict[str, Any]:
     """
 
     context = result.get("context", {})
+    if isinstance(context, dict) and "build" not in context:
+        return {
+            "brand": context.get("brand"),
+            "model": context.get("model"),
+            "fingerprint": context.get("fingerprint"),
+            "sdk": context.get("sdk"),
+            "cpuLocked": context.get("cpuLocked"),
+            "cpuMaxFreqHz": context.get("cpuMaxFreqHz"),
+            "compilationMode": context.get("compilationMode"),
+        }
     build = context.get("build", {})
     version = build.get("version", {})
     return {
@@ -408,6 +443,30 @@ def context_identity(result: dict[str, Any]) -> dict[str, Any]:
         "cpuMaxFreqHz": context.get("cpuMaxFreqHz"),
         "compilationMode": context.get("compilationMode"),
     }
+
+
+def revisioned_baseline_comparisons(result: dict[str, Any]) -> list[Comparison]:
+    """Loads comparisons from a report that preserved scenario IDs and workload revisions."""
+
+    entries = result.get("comparisons")
+    if not isinstance(entries, list):
+        raise ValueError(
+            "Baseline must be a revisioned compose-comparison.json report, not raw "
+            "benchmarkData.json.",
+        )
+    comparisons: list[Comparison] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise ValueError("Baseline report contains an invalid comparison entry.")
+        try:
+            comparisons.append(Comparison(**entry))
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                "Baseline report comparison is missing revisioned workload metadata.",
+            ) from error
+    if not comparisons:
+        raise ValueError("Baseline report contains no comparisons.")
+    return comparisons
 
 
 def require_matching_context(
@@ -473,6 +532,17 @@ def build_regressions(
             baseline_value = baseline_index.get(index_key)
             if current_value is None or baseline_value is None:
                 continue
+            if (
+                current_value.scenario_id != baseline_value.scenario_id
+                or current_value.workload_revision
+                != baseline_value.workload_revision
+            ):
+                raise ValueError(
+                    "Cannot compare different workload contracts for "
+                    f"{scenario}: "
+                    f"{baseline_value.scenario_id}@{baseline_value.workload_revision} -> "
+                    f"{current_value.scenario_id}@{current_value.workload_revision}",
+                )
             raw_percent = percentage_change(
                 current_value.viewcompose,
                 baseline_value.viewcompose,
@@ -497,6 +567,8 @@ def build_regressions(
             regressions.append(
                 Regression(
                     scenario=scenario,
+                    scenario_id=current_value.scenario_id,
+                    workload_revision=current_value.workload_revision,
                     metric=metric,
                     statistic=statistic,
                     current=current_value.viewcompose,
@@ -558,8 +630,8 @@ def render_markdown(
             "",
             "## Paired results",
             "",
-            "| Scenario | Metric | Stat | ViewCompose | Compose | Delta | Relative |",
-            "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+            "| Workload | Action | Metric | Stat | ViewCompose | Compose | Delta | Relative |",
+            "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
         ],
     )
     for comparison in comparisons:
@@ -570,6 +642,7 @@ def render_markdown(
         )
         lines.append(
             "| "
+            f"{comparison.scenario_id}@{comparison.workload_revision} | "
             f"{comparison.scenario} | {comparison.metric} | {comparison.statistic} | "
             f"{comparison.viewcompose:.3f} | {comparison.compose:.3f} | "
             f"{comparison.delta:+.3f} | {relative} |",
@@ -579,8 +652,8 @@ def render_markdown(
             "",
             "## Run stability",
             "",
-            "| Scenario | Engine | Metric | CV | Status |",
-            "| --- | --- | --- | ---: | --- |",
+            "| Workload | Action | Engine | Metric | CV | Status |",
+            "| --- | --- | --- | --- | ---: | --- |",
         ],
     )
     for item in stability:
@@ -590,7 +663,8 @@ def render_markdown(
             else f"{item.coefficient_of_variation:.3f}"
         )
         lines.append(
-            f"| {item.scenario} | {item.engine} | {item.metric} | "
+            f"| {item.scenario_id}@{item.workload_revision} | {item.scenario} | "
+            f"{item.engine} | {item.metric} | "
             f"{variation} | {'stable' if item.stable else 'unstable'} |",
         )
     if baseline_path is not None:
@@ -599,13 +673,14 @@ def render_markdown(
                 "",
                 "## Regression gate",
                 "",
-                "| Scenario | Metric | Stat | Raw | Normalized | Delta | Status |",
-                "| --- | --- | ---: | ---: | ---: | ---: | --- |",
+                "| Workload | Action | Metric | Stat | Raw | Normalized | Delta | Status |",
+                "| --- | --- | --- | ---: | ---: | ---: | ---: | --- |",
             ],
         )
         for regression in regressions:
             lines.append(
-                f"| {regression.scenario} | {regression.metric} | "
+                f"| {regression.scenario_id}@{regression.workload_revision} | "
+                f"{regression.scenario} | {regression.metric} | "
                 f"{regression.statistic} | "
                 f"{regression.raw_regression_percent:+.1f}% | "
                 f"{regression.normalized_regression_percent:+.1f}% | "
@@ -658,9 +733,7 @@ def main(argv: list[str] | None = None) -> int:
         baseline_result = load_json(baseline_path)
         if not args.allow_context_mismatch:
             require_matching_context(current_result, baseline_result)
-        baseline_comparisons = build_comparisons(
-            benchmark_entries(baseline_result),
-        )
+        baseline_comparisons = revisioned_baseline_comparisons(baseline_result)
         regressions = build_regressions(
             current=comparisons,
             baseline=baseline_comparisons,

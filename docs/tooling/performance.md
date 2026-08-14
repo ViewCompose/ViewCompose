@@ -95,13 +95,19 @@ Regenerate from an existing result:
   -PbenchmarkResult=/path/to/current-benchmarkData.json
 ```
 
-Compare with a same-device historical baseline and apply the regression gate:
+Compare with a same-device historical baseline and apply the regression gate. The baseline input is
+the previously generated revisioned comparison report, not raw Macrobenchmark JSON:
 
 ```bash
 ./gradlew benchmarkComparisonReport \
   -PbenchmarkResult=/path/to/current-benchmarkData.json \
-  -PbenchmarkBaseline=/path/to/baseline-benchmarkData.json
+  -PbenchmarkBaseline=/path/to/baseline-compose-comparison.json
 ```
+
+Both Markdown and JSON comparison reports identify every row by scenario ID, workload revision,
+and measured action. The gate rejects a baseline row whose scenario identity or workload revision
+differs from the current row. Raw `benchmarkData.json` remains the current-run input, but it is not
+a valid longitudinal baseline because it does not preserve the Demo workload contract.
 
 `ReleaseBaselineBenchmark` is the release authority:
 

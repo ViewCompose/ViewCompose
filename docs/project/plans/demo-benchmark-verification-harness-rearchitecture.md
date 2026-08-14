@@ -996,6 +996,14 @@ of preserving exact legacy counts: any `By.text(...)` or named visible-copy sele
 instrumentation or Macrobenchmark source fails the build. There is no current system, IME, or
 third-party exception requiring an allowlist.
 
+The Phase 5 preflight removed one misleading synthetic workload before accepting any measurements.
+`diagnosticsRefreshAfterPatch` changed state in one Activity and measured launching a different
+Activity, so it neither isolated renderer patching nor owned a frozen scenario contract. The real
+`diagnostics.renderer` interaction remains and now declares Benchmark ownership at workload
+revision 2. Comparative reports now persist scenario ID and workload revision beside each measured
+action; longitudinal gates require the prior revisioned comparison report and reject cross-revision
+rows instead of inferring an old workload revision from current source.
+
 ## Phase 5: Benchmark rebaseline and acceptance
 
 Build the release-like target, run the revised scenarios on the same device and thermal policy,

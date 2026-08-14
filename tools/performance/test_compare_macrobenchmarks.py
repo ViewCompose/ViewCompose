@@ -6,6 +6,7 @@ import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from dataclasses import asdict, replace
 from io import StringIO
 from pathlib import Path
 
@@ -126,6 +127,8 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         self.assertEqual(4.0, list_scroll.viewcompose)
         self.assertEqual(2.0, list_scroll.compose)
         self.assertEqual(100.0, list_scroll.relative_percent)
+        self.assertEqual("performance.list", list_scroll.scenario_id)
+        self.assertEqual(1, list_scroll.workload_revision)
         self.assertTrue(
             any(item.scenario == "shadow_list_scroll" for item in comparisons),
         )
@@ -206,6 +209,45 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
 
         self.assertFalse(any(item.failed for item in regressions))
 
+    def test_rejects_cross_revision_regression_comparison(self) -> None:
+        baseline = comparison.build_comparisons(
+            comparison.benchmark_entries(result()),
+        )
+        current = [
+            replace(item, workload_revision=2)
+            if item.scenario == "list_scroll"
+            else item
+            for item in baseline
+        ]
+
+        with self.assertRaisesRegex(ValueError, "different workload contracts"):
+            comparison.build_regressions(
+                current=current,
+                baseline=baseline,
+                policy=self.policy,
+            )
+
+    def test_revisioned_baseline_report_preserves_workload_contracts(self) -> None:
+        raw = result()
+        baseline_report = {
+            "context": comparison.context_identity(raw),
+            "comparisons": [
+                asdict(item)
+                for item in comparison.build_comparisons(
+                    comparison.benchmark_entries(raw),
+                )
+            ],
+        }
+
+        loaded = comparison.revisioned_baseline_comparisons(baseline_report)
+
+        self.assertTrue(loaded)
+        self.assertTrue(all(item.workload_revision == 1 for item in loaded))
+
+    def test_rejects_unrevisioned_raw_baseline(self) -> None:
+        with self.assertRaisesRegex(ValueError, "revisioned compose-comparison.json"):
+            comparison.revisioned_baseline_comparisons(result())
+
     def test_cli_writes_markdown_and_json_reports(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -230,10 +272,19 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
                 )
 
             self.assertEqual(0, exit_code)
-            self.assertIn("list_scroll", markdown.read_text(encoding="utf-8"))
+            self.assertIn(
+                "performance.list@1",
+                markdown.read_text(encoding="utf-8"),
+            )
+            summary = json.loads(json_output.read_text(encoding="utf-8"))
             self.assertEqual(
                 "NOT_RUN",
-                json.loads(json_output.read_text(encoding="utf-8"))["gateStatus"],
+                summary["gateStatus"],
+            )
+            self.assertEqual(
+                {"performance.list", "performance.complex-layout",
+                 "performance.shadow-list", "performance.shadow-complex-layout"},
+                {item["scenario_id"] for item in summary["comparisons"]},
             )
 
 
