@@ -47,8 +47,13 @@ internal fun UiTreeBuilder.DemoHomeScaffold(
         UiTheme(tokens = themeTokens) {
             val currentTheme = Theme.current
             val catalogTitle = stringResource(R.string.demo_catalog_title)
+            val windowTitle = stringResource(
+                R.string.demo_activity_title_format,
+                catalogTitle,
+                DemoThemeTokens.modeLabel(themeModeState.value, root.context),
+            )
             SideEffect {
-                activity?.title = "$catalogTitle · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
+                activity?.title = windowTitle
                 activity?.applyDemoThemeWindowAppearance(currentTheme)
             }
             Scaffold(

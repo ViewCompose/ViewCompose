@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.material3.Material3Button
 import com.viewcompose.material3.Material3Card
 import com.viewcompose.material3.Material3NavigationBar
@@ -338,8 +339,11 @@ private fun UiTreeBuilder.ThemeSourceSnapshotSection(source: DemoThemeSource) {
             title = "Screenshot identity",
             facts = listOf(
                 DiagnosticFact("Fixture", "theme-token-matrix-v2"),
-                DiagnosticFact("Source", "${source.id} · ${source.label}"),
-                DiagnosticFact("Definition", source.description),
+                DiagnosticFact(
+                    "Source",
+                    "${source.id} · ${stringResource(source.labelRes)}",
+                ),
+                DiagnosticFact("Definition", stringResource(source.descriptionRes)),
                 DiagnosticFact("Metadata origin", Theme.current.metadata.origin.name),
                 DiagnosticFact("Token producer", provenance.sourceId),
                 DiagnosticFact("Primary source", provenance.originOf("colors.primary").name),

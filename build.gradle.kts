@@ -693,6 +693,60 @@ tasks.register("verifyDemoLocalizationResources") {
     }
 }
 
+tasks.register("verifyDemoLocalizedVisibleCopy") {
+    group = "verification"
+    description =
+        "Prevent hard-coded visible copy from returning to Demo source domains already migrated to resources."
+    doLast {
+        val migratedSources = listOf(
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/automation"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/contract"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/core"),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/registry"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/demo/pages/state/DemoStatePage.kt",
+            ),
+        )
+        val visibleLiteral = Regex(
+            """(?:\b(?:text|title|subtitle|label|supportingText|placeholder|""" +
+                """contentDescription|what|goal)\s*=\s*|""" +
+                """\b(?:Text|Button|Chip|SearchBar)\s*\(\s*)\"""",
+        )
+        val violations = migratedSources
+            .flatMap { source ->
+                if (source.isDirectory) {
+                    source.walkTopDown()
+                        .filter { file -> file.isFile && file.extension == "kt" }
+                        .toList()
+                } else {
+                    listOf(source)
+                }
+            }
+            .flatMap { file ->
+                if (!file.exists()) return@flatMap emptyList()
+                val source = file.readText()
+                visibleLiteral.findAll(source).map { match ->
+                    val lineNumber = source.take(match.range.first).count { character ->
+                        character == '\n'
+                    } + 1
+                    val line = source.lineSequence().drop(lineNumber - 1).first().trim()
+                    "${file.relativeTo(rootDir)}:$lineNumber -> $line"
+                }
+                    .toList()
+            }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Demo localized visible-copy verification failed:")
+                    violations.sorted().forEach { violation -> appendLine("- $violation") }
+                    appendLine("Resolve visible copy through Android resources in migrated domains.")
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyDesignSystemIsolation") {
     group = "verification"
     description =
@@ -1948,6 +2002,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyDevelopmentToolingIsolation")
     dependsOn("verifyDemoAutomationSelectors")
     dependsOn("verifyDemoLocalizationResources")
+    dependsOn("verifyDemoLocalizedVisibleCopy")
     dependsOn("verifyDesignSystemIsolation")
     dependsOn("verifyUiFoundationPlatformBoundary")
     dependsOn("verifyDocumentationStructure")

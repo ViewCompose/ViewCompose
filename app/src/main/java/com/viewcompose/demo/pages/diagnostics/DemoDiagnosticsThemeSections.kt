@@ -2,6 +2,7 @@ package com.viewcompose
 
 import com.viewcompose.preview.tooling.ViewComposePreview
 import android.view.ViewGroup
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.layout.VerticalAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.shape
@@ -98,9 +99,11 @@ internal fun UiTreeBuilder.DiagnosticsThemeSection(
 private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) {
     val modeLabel = root?.context?.let { context ->
         DemoThemeTokens.modeLabel(DemoThemeSession.mode, context)
-    } ?: DemoThemeTokens.modeLabel(
-        mode = DemoThemeSession.mode,
-        isSystemDark = false,
+    } ?: stringResource(
+        DemoThemeTokens.modeLabelRes(
+            mode = DemoThemeSession.mode,
+            isSystemDark = false,
+        ),
     )
     ScenarioSection(
         kind = ScenarioKind.Core,
@@ -113,7 +116,8 @@ private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) 
                 DiagnosticFact("Mode", modeLabel),
                 DiagnosticFact(
                     "Source",
-                    "${DemoThemeSource.DemoCustom.id} · ${DemoThemeSource.DemoCustom.label}",
+                    "${DemoThemeSource.DemoCustom.id} · " +
+                        stringResource(DemoThemeSource.DemoCustom.labelRes),
                 ),
                 DiagnosticFact("Metadata origin", Theme.current.metadata.origin.name),
                 DiagnosticFact("Background", Theme.colors.background.asColorHex()),

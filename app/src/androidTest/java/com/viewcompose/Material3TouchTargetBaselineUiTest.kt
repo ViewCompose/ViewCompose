@@ -147,7 +147,10 @@ class Material3TouchTargetBaselineUiTest {
                         DemoTestTags.MATERIAL3_THEME_ROLE_COLLISION,
                     ).text.toString()
 
-                    assertEquals("${source.id} · ${source.label}", sourceValue)
+                    assertEquals(
+                        "${source.id} · ${activity.getString(source.labelRes)}",
+                        sourceValue,
+                    )
                     assertEquals("Light", modeValue)
                     assertEquals(Material3Reference.designSystem, designSystem)
                     assertEquals(Material3Reference.recipeSet, recipeSet)

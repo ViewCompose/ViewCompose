@@ -3,7 +3,7 @@
 ## Status
 
 Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, and Phase 2
-host and catalog hard cut are complete. Phase 3 localization and content hard cut is next.
+host and catalog hard cut are complete. Phase 3 localization and content hard cut is in progress.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: migrate Demo-owned visible copy to canonical English and Simplified Chinese resources,
-then add parity, formatting, hard-coded-copy, and cross-locale selector gates.
+Next action: continue migrating high-risk scenario copy and expand the hard-coded-copy gate with
+each migrated domain before the Phase 4 fixture-first route hard cut.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -530,7 +530,7 @@ measurement semantics do not change without a workload revision.
 | 0. Inventory and freeze | Completed | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
 | 1. Contract and automation spine | Completed | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
 | 2. Host and catalog hard cut | Completed | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
-| 3. Localization and content policy | Not started | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
+| 3. Localization and content policy | In progress | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
 | 4. Scenario migration | Not started | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
 | 5. Benchmark rebaseline | Not started | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
 | 6. Cleanup and Runtime-plan unlock | Not started | Old route/tag/section infrastructure removed; durable docs updated | Completion criteria pass, this plan is archived, then the Runtime/Patch plan is re-audited against the new baseline. |
@@ -629,6 +629,16 @@ Add mechanical gates for:
 
 Stable test data that is intentionally not language must be declared in a small allowlist with a
 reason. The allowlist cannot contain explanatory prose.
+
+In progress on 2026-08-14. Default-English and `values-zh-rCN` resources now have mechanical key,
+selector, plural, and format-signature parity checks. The catalog, shared hosts, scenario contract,
+theme/source labels, Activity titles, resource-configuration fixture, and State fixture resolve
+visible copy through resources. A cross-locale device test verifies that the same scenario-owned
+Android resource ID remains usable after an in-process locale switch without leaking the changed
+locale into later tests. `verifyDemoLocalizedVisibleCopy` prevents direct visible assignments from
+returning to already migrated source domains and expands as each domain is converted; it is not a
+legacy-literal count allowlist. The Samsung SM-G991B Android 13 reference device passed all 97 app
+instrumentation tests after this slice.
 
 ## Phase 4: Scenario migration and page simplification
 

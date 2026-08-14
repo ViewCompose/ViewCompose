@@ -58,6 +58,11 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
             val currentTheme = Theme.current
             val resolvedTitle = stringResource(scenario?.titleRes ?: titleRes)
+            val windowTitle = stringResource(
+                R.string.demo_activity_title_format,
+                resolvedTitle,
+                DemoThemeTokens.modeLabel(themeModeState.value, root.context),
+            )
             val rootModifier = Modifier
                 .fillMaxSize()
                 .systemBarsInsetsPadding()
@@ -70,7 +75,7 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
             SideEffect {
                 // 子页标题展示当前主题模式，帮助手工验收时确认 token 覆盖是否生效。
                 // Sub-page titles include the theme mode so manual QA can confirm token overrides.
-                activity?.title = "$resolvedTitle · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
+                activity?.title = windowTitle
                 activity?.applyDemoThemeWindowAppearance(currentTheme)
             }
             Scaffold(
