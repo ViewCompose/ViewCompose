@@ -168,7 +168,7 @@ class ShadowPerformanceComparisonBenchmark {
             .getString(ITERATIONS_ARGUMENT)
             ?.toIntOrNull()
             ?.takeIf { it > 0 }
-            ?: RELEASE_BASELINE_ITERATIONS
+            ?: FORMAL_INTERACTION_ITERATIONS
     }
 
     private companion object {

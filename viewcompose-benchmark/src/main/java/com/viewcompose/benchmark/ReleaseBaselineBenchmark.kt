@@ -28,7 +28,7 @@ class ReleaseBaselineBenchmark {
         packageName = TARGET_PACKAGE,
         metrics = listOf(StartupTimingMetric()),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = COLD_START_ITERATIONS,
         startupMode = StartupMode.COLD,
     ) {
         startDemoAndWait()
@@ -39,7 +39,7 @@ class ReleaseBaselineBenchmark {
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = FORMAL_INTERACTION_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
             startDemoScenarioAndWait(STATE_PATCH_SCENARIO)

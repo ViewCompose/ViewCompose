@@ -132,7 +132,7 @@ class NavigationMotionBenchmark {
                 .getString(ITERATIONS_ARGUMENT)
                 ?.toIntOrNull()
                 ?.takeIf { it > 0 }
-                ?: RELEASE_BASELINE_ITERATIONS
+                ?: FORMAL_INTERACTION_ITERATIONS
         }
 
         fun navigationMetrics(): List<Metric> = listOf(

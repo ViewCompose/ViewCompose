@@ -114,8 +114,10 @@ a valid longitudinal baseline because it does not preserve the Demo workload con
 1. The target is R8-optimized, resource-shrunk, and non-debuggable.
 2. `CompilationMode.None` isolates ART precompilation benefit and exposes the delivered binary.
 3. Fixed scenarios are cold start and state patch.
-4. A formal physical method uses five clean iterations. Start each method at Android thermal status
-   `NONE` or `LIGHT`, stop and cool between methods, and reject a batch that reaches `SEVERE`.
+4. Formal physical interaction methods use five clean iterations. Cold startup uses ten because its
+   genuine first-run cold-cache variance otherwise lets one sample dominate the stability result.
+   Start each method at Android thermal status `NONE` or `LIGHT`, stop and cool between methods,
+   and reject a batch that reaches `SEVERE`.
 5. Compare results longitudinally only on the same device, system version, iteration protocol, and
    thermal policy.
 

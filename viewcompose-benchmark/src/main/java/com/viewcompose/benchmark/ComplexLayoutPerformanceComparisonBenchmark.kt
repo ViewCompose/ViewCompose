@@ -55,7 +55,7 @@ class ComplexLayoutPerformanceComparisonBenchmark {
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = FORMAL_INTERACTION_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
             startPerformanceScenarioAndWait(
@@ -78,7 +78,7 @@ class ComplexLayoutPerformanceComparisonBenchmark {
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = FORMAL_INTERACTION_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
             startPerformanceScenarioAndWait(

@@ -100,7 +100,8 @@ baseline 必须是上一份带修订信息的对照 JSON，不能直接传入原
 1. target 为 R8 优化、resource shrink、非 debuggable 的 benchmark variant。
 2. `CompilationMode.None` 隔离 ART 预编译收益，直接暴露交付二进制回归。
 3. 固定场景为冷启动和 state patch。
-4. 正式物理基准的每个方法使用 5 次洁净迭代；每个方法开始时 Android 温控等级必须为
+4. 正式物理交互基准使用 5 次洁净迭代；冷启动保留 10 次，因为真实的首轮冷缓存波动
+   会让单个样本支配较小样本集的稳定性判断。每个方法开始时 Android 温控等级必须为
    `NONE` 或 `LIGHT`，方法之间必须停进程并冷却，达到 `SEVERE` 的批次直接作废。
 5. 结果只在同设备、同系统版本、同迭代协议和同温控策略下纵向比较。
 

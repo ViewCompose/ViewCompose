@@ -56,7 +56,7 @@ class ListPerformanceComparisonBenchmark {
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = FORMAL_INTERACTION_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
             startPerformanceScenarioAndWait(PERFORMANCE_LIST_SCENARIO, engine)
@@ -76,7 +76,7 @@ class ListPerformanceComparisonBenchmark {
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
         compilationMode = CompilationMode.None(),
-        iterations = RELEASE_BASELINE_ITERATIONS,
+        iterations = FORMAL_INTERACTION_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
             startPerformanceScenarioAndWait(PERFORMANCE_LIST_SCENARIO, engine)
