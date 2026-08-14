@@ -1,5 +1,8 @@
 package com.viewcompose.performance
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.VerticalAlignment
@@ -28,6 +31,7 @@ import com.viewcompose.ui.foundation.remember
  */
 internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
     shadowsEnabled: Boolean,
+    scenario: DemoScenarioSpec? = null,
 ) {
     val revisionState = remember { mutableStateOf(0) }
     val revision = revisionState.value
@@ -35,7 +39,8 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .backgroundColor(PERFORMANCE_BACKGROUND_COLOR),
+            .backgroundColor(PERFORMANCE_BACKGROUND_COLOR)
+            .scenarioTarget(scenario, DemoAutomationRole.Root),
     ) {
         ListPerformanceHeader(
             engineName = if (shadowsEnabled) {
@@ -50,6 +55,7 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
             onReset = {
                 revisionState.value = 0
             },
+            scenario = scenario,
         )
         LazyColumn(
             items = rows,
@@ -59,7 +65,8 @@ internal fun UiTreeBuilder.ViewComposeListPerformanceScreen(
             spacing = 6.dp,
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(1f)
+                .scenarioTarget(scenario, DemoAutomationRole.Target),
         ) { row ->
             PerformanceListRow(
                 row = row,
@@ -74,6 +81,7 @@ private fun UiTreeBuilder.ListPerformanceHeader(
     revision: Int,
     onMutate: () -> Unit,
     onReset: () -> Unit,
+    scenario: DemoScenarioSpec?,
 ) {
     Column(
         spacing = 8.dp,
@@ -86,10 +94,12 @@ private fun UiTreeBuilder.ListPerformanceHeader(
             text = "$engineName List Ready",
             style = TextDefaults.titleMediumStyle(),
             color = PERFORMANCE_PRIMARY_TEXT_COLOR,
+            modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         Text(
             text = "List revision $revision",
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
+            modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
         )
         Row(
             spacing = 8.dp,
@@ -98,10 +108,15 @@ private fun UiTreeBuilder.ListPerformanceHeader(
             PerformanceAction(
                 text = "Mutate list",
                 onClick = onMutate,
+                modifier = Modifier.scenarioTarget(
+                    scenario,
+                    DemoAutomationRole.PrimaryAction,
+                ),
             )
             PerformanceAction(
                 text = "Reset list",
                 onClick = onReset,
+                modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
             )
         }
     }
@@ -110,11 +125,12 @@ private fun UiTreeBuilder.ListPerformanceHeader(
 private fun UiTreeBuilder.PerformanceAction(
     text: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onClick,
         contentColor = 0xFFFFFFFF.toInt(),
-        modifier = Modifier
+        modifier = modifier
             .backgroundColor(PERFORMANCE_PRIMARY_COLOR)
             .cornerRadius(8.dp)
             .padding(
@@ -127,6 +143,14 @@ private fun UiTreeBuilder.PerformanceAction(
             color = 0xFFFFFFFF.toInt(),
         )
     }
+}
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }
 
 /**

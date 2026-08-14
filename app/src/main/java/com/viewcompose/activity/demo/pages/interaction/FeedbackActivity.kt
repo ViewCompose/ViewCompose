@@ -22,6 +22,7 @@ class FeedbackActivity : DemoRenderActivity() {
     ) {
         builder.FeedbackPage(
             initialPageIndex = intent?.getIntExtra(EXTRA_FEEDBACK_PAGE_INDEX, 0) ?: 0,
+            scenario = currentScenario(),
         )
     }
 }

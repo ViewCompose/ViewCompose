@@ -1,5 +1,8 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxWidth
 import com.viewcompose.ui.modifier.margin
@@ -31,6 +34,7 @@ internal fun UiTreeBuilder.RenderFeedbackSection(
     section: String,
     anchors: FeedbackAnchors,
     state: FeedbackPageState,
+    scenario: DemoScenarioSpec? = null,
 ) {
     when (section) {
         "page" -> ChapterPageOverviewSection(
@@ -195,14 +199,16 @@ internal fun UiTreeBuilder.RenderFeedbackSection(
                 color = TextDefaults.secondaryColor(),
                 modifier = Modifier
                     .margin(bottom = 8.dp)
-                    .testTag(DemoTestTags.FEEDBACK_LAST_EVENT),
+                    .testTag(DemoTestTags.FEEDBACK_LAST_EVENT)
+                    .scenarioTarget(scenario, DemoAutomationRole.State),
             )
             Button(
                 text = "显示 AlertDialog（标准）",
                 onClick = { state.alertDialogVisibleState.value = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .margin(bottom = 8.dp),
+                    .margin(bottom = 8.dp)
+                    .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
             )
             Button(
                 text = "显示 AlertDialog（带图标）",
@@ -210,7 +216,22 @@ internal fun UiTreeBuilder.RenderFeedbackSection(
                 onClick = { state.alertDialogIconVisibleState.value = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .margin(bottom = 12.dp),
+                    .margin(bottom = 12.dp)
+                    .scenarioTarget(scenario, DemoAutomationRole.Target),
+            )
+            Button(
+                text = "重置弹窗",
+                variant = ButtonVariant.Outlined,
+                onClick = {
+                    state.alertDialogVisibleState.value = false
+                    state.alertDialogIconVisibleState.value = false
+                    state.bottomSheetVisibleState.value = false
+                    state.lastEventState.value = "空闲"
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .margin(bottom = 12.dp)
+                    .scenarioTarget(scenario, DemoAutomationRole.Reset),
             )
             Divider(modifier = Modifier.margin(bottom = 12.dp))
             Button(
@@ -282,4 +303,12 @@ internal fun UiTreeBuilder.RenderFeedbackSection(
             ),
         )
     }
+}
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }

@@ -9,6 +9,7 @@ import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertEquals
 import org.junit.runner.RunWith
 
 /**
@@ -25,7 +26,6 @@ class ListPerformanceComparisonBenchmark {
     fun viewComposeListScroll() {
         measureListScroll(
             engine = "viewcompose",
-            expectedText = "ViewCompose List Ready",
         )
     }
 
@@ -33,7 +33,6 @@ class ListPerformanceComparisonBenchmark {
     fun composeListScroll() {
         measureListScroll(
             engine = "compose",
-            expectedText = "Compose List Ready",
         )
     }
 
@@ -41,7 +40,6 @@ class ListPerformanceComparisonBenchmark {
     fun viewComposeListMutation() {
         measureListMutation(
             engine = "viewcompose",
-            expectedText = "ViewCompose List Ready",
         )
     }
 
@@ -49,13 +47,11 @@ class ListPerformanceComparisonBenchmark {
     fun composeListMutation() {
         measureListMutation(
             engine = "compose",
-            expectedText = "Compose List Ready",
         )
     }
 
     private fun measureListScroll(
         engine: String,
-        expectedText: String,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
@@ -63,11 +59,7 @@ class ListPerformanceComparisonBenchmark {
         iterations = RELEASE_BASELINE_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startPerformanceComparisonAndWait(
-                engine = engine,
-                scenario = "list",
-                expectedText = expectedText,
-            )
+            startPerformanceListAndWait(engine)
         },
     ) {
         repeat(4) {
@@ -80,7 +72,6 @@ class ListPerformanceComparisonBenchmark {
 
     private fun measureListMutation(
         engine: String,
-        expectedText: String,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = performanceComparisonMetrics(),
@@ -88,22 +79,39 @@ class ListPerformanceComparisonBenchmark {
         iterations = RELEASE_BASELINE_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startPerformanceComparisonAndWait(
-                engine = engine,
-                scenario = "list",
-                expectedText = expectedText,
-            )
-            waitForText("List revision 0")
+            startPerformanceListAndWait(engine)
         },
     ) {
-        clickText("Mutate list")
-        waitForText("List revision 1")
-        clickText("Reset list")
-        waitForText("List revision 0")
+        val initial = scenarioTargetText(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.State)
+        clickScenarioTarget(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.PrimaryAction)
+        val mutated = waitForScenarioTargetTextChange(
+            PERFORMANCE_LIST_SCENARIO,
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.Reset)
+        val reset = waitForScenarioTargetTextChange(
+            PERFORMANCE_LIST_SCENARIO,
+            DemoTargetRole.State,
+            mutated,
+        )
+        assertEquals(initial, reset)
+    }
+
+    private fun androidx.benchmark.macro.MacrobenchmarkScope.startPerformanceListAndWait(engine: String) {
+        startDemoScenarioAndWait(PERFORMANCE_LIST_SCENARIO) {
+            putExtra("performance_engine", engine)
+            putExtra("performance_scenario", "list")
+        }
+        waitForScenarioTarget(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.Target)
     }
 
     private fun performanceComparisonMetrics() = listOf(
         FrameTimingMetric(),
         MemoryUsageMetric(MemoryUsageMetric.Mode.Max),
     )
+
+    private companion object {
+        const val PERFORMANCE_LIST_SCENARIO = "performance.list"
+    }
 }

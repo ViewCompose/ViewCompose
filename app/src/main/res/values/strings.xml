@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">ViewCompose</string>
+    <string name="demo_back">Back</string>
+    <string name="demo_scenario_ready_format">%1$s · workload r%2$d · ready</string>
+
+    <string name="demo_scenario_runtime_state_title">Runtime state</string>
+    <string name="demo_scenario_runtime_state_summary">State observation, derivation, effects, and deterministic mutation.</string>
+    <string name="demo_scenario_runtime_view_patch_title">Android View patch</string>
+    <string name="demo_scenario_runtime_view_patch_summary">Focused text, input, selection, layout, and pager patch workload.</string>
+    <string name="demo_scenario_environment_resources_title">Android resource environment</string>
+    <string name="demo_scenario_environment_resources_summary">Locale, night mode, direction, font scale, and density propagation.</string>
+    <string name="demo_scenario_overlay_dialog_title">Dialog overlay</string>
+    <string name="demo_scenario_overlay_dialog_summary">Overlay creation, dismissal, and host lifecycle.</string>
+    <string name="demo_scenario_navigation_system_title">Android system navigation</string>
+    <string name="demo_scenario_navigation_system_summary">Destination ownership, independent stacks, deep links, and system Back.</string>
+    <string name="demo_scenario_performance_list_title">List performance</string>
+    <string name="demo_scenario_performance_list_summary">Paired keyed-list mutation and scroll workload.</string>
+
+    <string name="resource_configuration_reset_action">Reset environment</string>
 </resources>

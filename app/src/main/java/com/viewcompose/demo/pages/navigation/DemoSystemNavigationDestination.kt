@@ -1,5 +1,8 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -45,6 +48,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
     motionEnabled: MutableState<Boolean>,
     lastEvent: MutableState<String>,
     externalDeepLinkOutcome: MutableState<String>,
+    scenario: DemoScenarioSpec? = null,
 ) {
     val saveableCounter = rememberSaveable(key = "system-navigation-entry-counter") {
         mutableStateOf(0)
@@ -107,7 +111,9 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                 Text(
                     text = "最近操作：${lastEvent.value}",
                     color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_LAST_EVENT),
+                    modifier = Modifier
+                        .testTag(DemoTestTags.SYSTEM_NAV_LAST_EVENT)
+                        .scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Text(
                     text = externalDeepLinkOutcome.value,
@@ -177,7 +183,8 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_PUSH),
+                        .testTag(DemoTestTags.SYSTEM_NAV_PUSH)
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 )
                 Button(
                     text = "SingleTop 当前页面",
@@ -225,7 +232,8 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.SYSTEM_NAV_RESET),
+                        .testTag(DemoTestTags.SYSTEM_NAV_RESET)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
                 )
             }
 
@@ -344,6 +352,14 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
             }
         }
     }
+}
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }
 
 private fun UiTreeBuilder.GraphOwnerStateBlock() {

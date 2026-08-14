@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.navigation.NavDeepLinkResult
 import com.viewcompose.navigation.NavHostController
@@ -28,6 +29,7 @@ class SystemNavigationActivity : AppCompatActivity() {
             EXTRA_RENDER_DIAGNOSTICS,
             false,
         )
+        val scenario = DemoScenarioRegistry.fromIntent(intent)
         setMaterial3UiContent(
             debug = diagnosticsEnabled,
             debugTag = "SystemNavigationDemo",
@@ -42,6 +44,7 @@ class SystemNavigationActivity : AppCompatActivity() {
                 root = root,
                 externalDeepLinkOutcome = externalDeepLinkOutcome,
                 diagnosticsEnabled = diagnosticsEnabled,
+                scenario = scenario,
                 onControllerReady = { controller -> navController = controller },
                 onExit = ::finish,
             )

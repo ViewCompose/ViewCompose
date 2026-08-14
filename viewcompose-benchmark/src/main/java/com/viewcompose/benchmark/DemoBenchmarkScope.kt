@@ -1,5 +1,6 @@
 package com.viewcompose.benchmark
 
+import android.content.Intent
 import android.os.SystemClock
 import androidx.benchmark.macro.MacrobenchmarkScope
 import androidx.test.uiautomator.By
@@ -8,6 +9,120 @@ import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+
+internal enum class DemoTargetRole(
+    val wireValue: String,
+) {
+    Root("root"),
+    Ready("ready"),
+    PrimaryAction("primary_action"),
+    Reset("reset"),
+    State("state"),
+    Target("target"),
+}
+
+/** Starts one strict scenario and waits for its locale-independent ready resource. */
+internal fun MacrobenchmarkScope.startDemoScenarioAndWait(
+    scenarioId: String,
+    configure: Intent.() -> Unit = {},
+) {
+    prepareBenchmarkUiAutomation()
+    pressHome()
+    startActivityAndWait { intent ->
+        intent.removeExtra("demo_module_key")
+        intent.removeExtra("demo_scenario_id")
+        intent.removeExtra("state_page_index")
+        intent.removeExtra("performance_engine")
+        intent.removeExtra("performance_scenario")
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        intent.putExtra("demo_scenario_id", scenarioId)
+        intent.configure()
+    }
+    waitForScenarioTarget(scenarioId, DemoTargetRole.Ready)
+}
+
+/** Waits for a role target whose Android resource name is derived from the scenario contract. */
+internal fun MacrobenchmarkScope.waitForScenarioTarget(
+    scenarioId: String,
+    role: DemoTargetRole,
+): UiObject2 {
+    val resourceName = scenarioTargetResourceName(scenarioId, role)
+    val target = device.wait(
+        Until.findObject(By.res(TARGET_PACKAGE, resourceName)),
+        UI_WAIT_TIMEOUT_MS,
+    )
+    assertNotNull("Expected scenario target: $scenarioId/${role.wireValue}", target)
+    return target!!
+}
+
+/** Scrolls the current fixture until a locale-independent role target is mounted and visible. */
+internal fun MacrobenchmarkScope.scrollUntilScenarioTarget(
+    scenarioId: String,
+    role: DemoTargetRole,
+    maxSwipes: Int = 10,
+): UiObject2 {
+    val resourceName = scenarioTargetResourceName(scenarioId, role)
+    repeat(maxSwipes + 1) { attempt ->
+        device.findObject(By.res(TARGET_PACKAGE, resourceName))?.let { target ->
+            if (hasVisibleBoundsInSafeViewport(target)) return target
+        }
+        if (attempt < maxSwipes) {
+            swipePageUpForTextSearch()
+        }
+    }
+    val target = device.findObject(By.res(TARGET_PACKAGE, resourceName))
+    assertNotNull("Expected visible scenario target: $scenarioId/${role.wireValue}", target)
+    return target!!
+}
+
+/** Clicks one visible role target without using localized copy. */
+internal fun MacrobenchmarkScope.clickScenarioTarget(
+    scenarioId: String,
+    role: DemoTargetRole,
+    waitForIdle: Boolean = true,
+) {
+    val target = waitForScenarioTarget(scenarioId, role)
+    tapTarget(target, "scenario target: $scenarioId/${role.wireValue}")
+    if (waitForIdle) {
+        device.waitForIdle()
+    }
+}
+
+/** Returns the current machine-target text for change detection without using it as a selector. */
+internal fun MacrobenchmarkScope.scenarioTargetText(
+    scenarioId: String,
+    role: DemoTargetRole,
+): String = waitForScenarioTarget(scenarioId, role).text.orEmpty()
+
+/** Waits until an existing state target publishes a different value. */
+internal fun MacrobenchmarkScope.waitForScenarioTargetTextChange(
+    scenarioId: String,
+    role: DemoTargetRole,
+    previous: String,
+): String {
+    val resourceName = scenarioTargetResourceName(scenarioId, role)
+    val changed = device.wait(
+        Until.findObject(By.res(TARGET_PACKAGE, resourceName)),
+        UI_WAIT_TIMEOUT_MS,
+    )
+    assertNotNull("Expected scenario state target: $scenarioId/${role.wireValue}", changed)
+    val deadline = SystemClock.uptimeMillis() + UI_WAIT_TIMEOUT_MS
+    var current = changed!!.text.orEmpty()
+    while (current == previous && SystemClock.uptimeMillis() < deadline) {
+        SystemClock.sleep(16L)
+        current = device.findObject(By.res(TARGET_PACKAGE, resourceName))?.text.orEmpty()
+    }
+    assertTrue("Expected scenario target text to change: $scenarioId/${role.wireValue}", current != previous)
+    return current
+}
+
+private fun scenarioTargetResourceName(
+    scenarioId: String,
+    role: DemoTargetRole,
+): String {
+    val normalizedId = scenarioId.replace('.', '_').replace('-', '_')
+    return "demo_${normalizedId}_${role.wireValue}"
+}
 
 /**
  * 启动 demo 首页并等待目录锚点出现。
@@ -131,18 +246,7 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
  * Starts the system-navigation acceptance page from the cold entry and waits for its home anchor.
  */
 internal fun MacrobenchmarkScope.startSystemNavigationAndWait() {
-    prepareBenchmarkUiAutomation()
-    pressHome()
-    startActivityAndWait { intent ->
-        intent.setClassName(
-            TARGET_PACKAGE,
-            "com.viewcompose.SystemNavigationActivity",
-        )
-        intent.action = android.content.Intent.ACTION_MAIN
-        intent.data = null
-        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
-    }
-    waitForText("首页总览")
+    startDemoScenarioAndWait("navigation.system")
 }
 
 /**

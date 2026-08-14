@@ -2,6 +2,8 @@ package com.viewcompose
 
 import android.content.Intent
 import android.view.ViewGroup
+import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
+import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.performance.EXTRA_PERFORMANCE_ENGINE
 import com.viewcompose.performance.PerformanceComparisonActivity
 import com.viewcompose.ui.foundation.UiTreeBuilder
@@ -17,6 +19,16 @@ class MainActivity : DemoRenderActivity() {
     override val demoTitle: String = "ViewCompose Demo"
 
     override fun redirectTargetIntent(): Intent? {
+        if (intent?.hasExtra(EXTRA_DEMO_SCENARIO_ID) == true) {
+            val scenario = DemoScenarioRegistry.require(
+                intent?.getStringExtra(EXTRA_DEMO_SCENARIO_ID),
+            )
+            return DemoScenarioRegistry.createLaunchIntent(
+                context = this,
+                scenario = scenario,
+                source = intent,
+            )
+        }
         if (intent?.hasExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND) == true) {
             return Intent(this, DemoDesignSystemVerificationActivity::class.java).apply {
                 intent?.extras?.let(::putExtras)

@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.material3.android.setMaterial3UiContent
 import com.viewcompose.overlay.material3.android.host.AndroidOverlayHost
 import com.viewcompose.material3.Material3DynamicColorPolicy
@@ -26,6 +28,15 @@ abstract class DemoRenderActivity : AppCompatActivity() {
     protected open fun redirectTargetIntent(): Intent? = null
 
     protected abstract val demoTitle: String
+
+    /** Returns the strict direct scenario attached to this host, when launched through the registry. */
+    internal fun currentScenario(): DemoScenarioSpec? {
+        val scenario = DemoScenarioRegistry.fromIntent(intent) ?: return null
+        require(scenario.route.activityClass == javaClass) {
+            "Scenario ${scenario.id} belongs to ${scenario.route.activityClass.name}, not ${javaClass.name}"
+        }
+        return scenario
+    }
 
     /**
      * 构建当前 demo 页面的实际内容。
@@ -68,6 +79,7 @@ abstract class DemoRenderActivity : AppCompatActivity() {
         DemoSubPageScaffold(
             root = root,
             title = demoTitle,
+            scenario = currentScenario(),
         ) { builder ->
             buildDemoContent(root, builder)
         }

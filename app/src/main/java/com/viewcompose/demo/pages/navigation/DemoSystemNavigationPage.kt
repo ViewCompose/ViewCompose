@@ -1,6 +1,9 @@
 package com.viewcompose
 
 import android.view.ViewGroup
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.navigation.NavFailure
 import com.viewcompose.navigation.NavHost
@@ -51,6 +54,7 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
     root: ViewGroup?,
     externalDeepLinkOutcome: MutableState<String>,
     diagnosticsEnabled: Boolean,
+    scenario: DemoScenarioSpec? = null,
     onControllerReady: (NavHostController) -> Unit,
     onExit: () -> Unit,
 ) {
@@ -107,7 +111,9 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
                         )
                         .toDemoDescription("切换到 ${SystemNavigationDemoModel.stackLabel(target)}")
                 },
-                modifier = Modifier.testTag(DemoTestTags.SYSTEM_NAV_TAB_BAR),
+                modifier = Modifier
+                    .testTag(DemoTestTags.SYSTEM_NAV_TAB_BAR)
+                    .scenarioTarget(scenario, DemoAutomationRole.Ready),
             ) {
                 Item(
                     label = "首页",
@@ -126,7 +132,8 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
         modifier = Modifier
             .fillMaxSize()
             .systemBarsInsetsPadding()
-            .backgroundColor(Theme.colors.background),
+            .backgroundColor(Theme.colors.background)
+            .scenarioTarget(scenario, DemoAutomationRole.Root),
     ) {
         NavHost(
             controller = controller,
@@ -148,7 +155,8 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
             },
             modifier = Modifier
                 .fillMaxSize()
-                .testTag(DemoTestTags.SYSTEM_NAV_HOST),
+                .testTag(DemoTestTags.SYSTEM_NAV_HOST)
+                .scenarioTarget(scenario, DemoAutomationRole.Target),
         ) { entry ->
             SystemNavigationDestinationPage(
                 controller = controller,
@@ -158,9 +166,18 @@ internal fun UiTreeBuilder.SystemNavigationDemoPage(
                 motionEnabled = motionEnabled,
                 lastEvent = lastEvent,
                 externalDeepLinkOutcome = externalDeepLinkOutcome,
+                scenario = scenario,
             )
         }
     }
+}
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }
 
 internal object SystemNavigationDemoModel {

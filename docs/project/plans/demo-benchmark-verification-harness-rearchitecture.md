@@ -2,8 +2,8 @@
 
 ## Status
 
-Active. Phase 0 inventory and workload freeze are complete. Phase 1 contract and automation-spine
-implementation is in progress.
+Active. Phase 0 inventory and workload freeze and Phase 1 contract and automation spine are
+complete. Phase 2 host and catalog hard cut is next.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: implement the Phase 1 route and automation-target contracts before changing the
-catalog or fixture layouts.
+Next action: replace the top-level pager and module catalog with the executable scenario catalog,
+then remove roadmap, About, planned-module, and gap content from the runtime Demo.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -528,7 +528,7 @@ measurement semantics do not change without a workload revision.
 | Phase | Status | Primary output | Exit gate |
 | --- | --- | --- | --- |
 | 0. Inventory and freeze | Completed | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
-| 1. Contract and automation spine | In progress | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
+| 1. Contract and automation spine | Completed | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
 | 2. Host and catalog hard cut | Not started | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
 | 3. Localization and content policy | Not started | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
 | 4. Scenario migration | Not started | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
@@ -573,6 +573,14 @@ Migrate pilot instrumentation and Macrobenchmark scripts to `By.res(...)`. Add a
 rejects Demo-owned `By.text(...)`, text-scroll helpers, and direct visible-copy action selectors.
 System UI, IME, and third-party surfaces may use a narrow documented allowlist because the Demo
 does not own their resource IDs.
+
+Completed on 2026-08-14. Six pilot scenarios now cover shared state, dedicated resource,
+overlay, system-navigation, and comparative-performance hosts. Registry tests enforce identity,
+route determinism, resource naming, mutable reset, and workload completeness. The migrated
+instrumentation and Macrobenchmark paths use `By.res(...)`; `verifyDemoAutomationSelectors`
+freezes every remaining visible-copy selector as exact migration debt so new files cannot add one
+and Phase 4 must reduce the baseline. A Samsung SM-G991B running Android 13 passed the black-box
+test that launches and queries all five host classes through `MainActivity` without visible copy.
 
 Phase 1 is a prerequisite for localization. Do not translate the current text-selector protocol
 and then replace it later.

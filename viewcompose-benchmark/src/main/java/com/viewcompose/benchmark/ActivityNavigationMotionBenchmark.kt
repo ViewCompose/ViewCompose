@@ -38,7 +38,7 @@ class ActivityNavigationMotionBenchmark {
         ) {
             startSystemNavigationActivityFromForeground()
             waitForNavigationMotion()
-            waitForText(SYSTEM_NAVIGATION_TEXT)
+            waitForScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.Ready)
         }
 
     @Test
@@ -53,7 +53,7 @@ class ActivityNavigationMotionBenchmark {
                 startDemoAndWait()
                 startSystemNavigationActivityFromForeground()
                 waitForNavigationMotion()
-                waitForText(SYSTEM_NAVIGATION_TEXT)
+                waitForScenarioTarget(NAVIGATION_SCENARIO, DemoTargetRole.Ready)
             },
         ) {
             device.pressBack()
@@ -62,7 +62,7 @@ class ActivityNavigationMotionBenchmark {
         }
 
     private companion object {
-        const val SYSTEM_NAVIGATION_TEXT = "首页总览"
+        const val NAVIGATION_SCENARIO = "navigation.system"
         const val DEMO_HOME_TEXT = "已实现模块"
         const val ITERATIONS_ARGUMENT = "activityNavigationMotionIterations"
         const val PROFILE_WARMUP_ITERATIONS = 3

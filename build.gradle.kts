@@ -525,6 +525,72 @@ tasks.register("verifyDevelopmentToolingIsolation") {
     }
 }
 
+tasks.register("verifyDemoAutomationSelectors") {
+    group = "verification"
+    description =
+        "Prevent new Demo automation from selecting app-owned UI through localized visible copy."
+    doLast {
+        val selectorPattern = Regex(
+            """\b(?:By\.text|waitForText|waitForTextGone|scrollUntilText|clickVisibleText|""" +
+                """tapVisibleText|tapText|scrollTabStripUntilText|assertDeviceTextVisible|""" +
+                """clickDeviceText|waitForDeviceText|findObjectByText)\s*\(""",
+        )
+        // This exact baseline is temporary migration debt. Phase 4 removes Demo-owned entries;
+        // any retained system/IME/third-party selector must move to a narrowly named allowlist.
+        val legacySelectorBaseline = mapOf(
+            "app/src/androidTest/java/com/viewcompose/DemoDesignSystemVerificationUiTest.kt" to 6,
+            "app/src/androidTest/java/com/viewcompose/DemoUiTestHelpers.kt" to 6,
+            "app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt" to 3,
+            "app/src/androidTest/java/com/viewcompose/MainDemoDeviceTest.kt" to 11,
+            "app/src/androidTest/java/com/viewcompose/Material3TouchTargetBaselineUiTest.kt" to 1,
+            "app/src/androidTest/java/com/viewcompose/OneUi7VerificationUiTest.kt" to 4,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ActivityNavigationMotionBenchmark.kt" to 1,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ComplexLayoutPerformanceComparisonBenchmark.kt" to 3,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 25,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 40,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DesignSystemVerticalSliceBenchmark.kt" to 17,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ShadowPerformanceComparisonBenchmark.kt" to 3,
+        )
+        val sourceRoots = listOf(
+            rootDir.resolve("app/src/androidTest"),
+            rootDir.resolve("viewcompose-benchmark/src/main"),
+        )
+        val actualCounts = sourceRoots
+            .flatMap { sourceRoot ->
+                sourceRoot.walkTopDown()
+                    .filter { file -> file.isFile && file.extension == "kt" }
+                    .toList()
+            }
+            .associate { file ->
+                file.relativeTo(rootDir).invariantSeparatorsPath to
+                    selectorPattern.findAll(file.readText()).count()
+            }
+            .filterValues { count -> count > 0 }
+        val violations = (legacySelectorBaseline.keys + actualCounts.keys)
+            .distinct()
+            .sorted()
+            .mapNotNull { path ->
+                val expected = legacySelectorBaseline[path] ?: 0
+                val actual = actualCounts[path] ?: 0
+                if (expected == actual) {
+                    null
+                } else {
+                    "$path -> expected $expected legacy text-selector usages, found $actual"
+                }
+            }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Demo automation selector verification failed:")
+                    violations.forEach { violation -> appendLine("- $violation") }
+                    appendLine("Use scenario-owned Android resource IDs; only reduce the legacy baseline.")
+                },
+            )
+        }
+    }
+}
+
 tasks.register("verifyDesignSystemIsolation") {
     group = "verification"
     description =
@@ -1778,6 +1844,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyAndroidModuleNamespaces")
     dependsOn("verifyModuleDependencyBoundaries")
     dependsOn("verifyDevelopmentToolingIsolation")
+    dependsOn("verifyDemoAutomationSelectors")
     dependsOn("verifyDesignSystemIsolation")
     dependsOn("verifyUiFoundationPlatformBoundary")
     dependsOn("verifyDocumentationStructure")

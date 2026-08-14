@@ -1,5 +1,6 @@
 package com.viewcompose
 
+import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.fillMaxSize
@@ -25,6 +26,7 @@ internal fun UiTreeBuilder.PreviewFeedbackMenu() {
 
 internal fun UiTreeBuilder.FeedbackPage(
     initialPageIndex: Int = 0,
+    scenario: DemoScenarioSpec? = null,
 ) {
     val anchors = FeedbackAnchors(
         popupAnchorId = "feedback_popup_anchor",
@@ -63,6 +65,7 @@ internal fun UiTreeBuilder.FeedbackPage(
             section = section,
             anchors = anchors,
             state = state,
+            scenario = scenario,
         )
     }
 }

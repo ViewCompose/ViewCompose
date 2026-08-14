@@ -2,6 +2,10 @@ package com.viewcompose
 
 import android.view.ViewGroup
 import coil3.ImageLoader
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.image.coil.CoilImageLoaderAdapter
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.backgroundColor
@@ -17,6 +21,8 @@ import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.ProvideImageLoader
 import com.viewcompose.ui.foundation.Scaffold
 import com.viewcompose.ui.foundation.SideEffect
+import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TextDefaults
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.TopAppBar
 import com.viewcompose.ui.foundation.TopAppBarDefaults
@@ -31,6 +37,7 @@ import com.viewcompose.ui.foundation.remember
 internal fun UiTreeBuilder.DemoSubPageScaffold(
     root: ViewGroup,
     title: String,
+    scenario: DemoScenarioSpec? = null,
     content: (UiTreeBuilder) -> Unit,
 ) {
     val themeModeState = DemoThemeSession.modeState
@@ -49,30 +56,37 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
     ProvideImageLoader(imageLoader) {
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
             val currentTheme = Theme.current
+            val resolvedTitle = scenario?.let { stringResource(it.titleRes) } ?: title
+            val rootModifier = Modifier
+                .fillMaxSize()
+                .systemBarsInsetsPadding()
+                .backgroundColor(Theme.colors.background)
+                .let { modifier ->
+                    scenario?.automation?.get(DemoAutomationRole.Root)?.let {
+                        modifier.demoAutomationTarget(it)
+                    } ?: modifier
+                }
             SideEffect {
                 // 子页标题展示当前主题模式，帮助手工验收时确认 token 覆盖是否生效。
                 // Sub-page titles include the theme mode so manual QA can confirm token overrides.
-                activity?.title = "$title · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
+                activity?.title = "$resolvedTitle · ${DemoThemeTokens.modeLabel(themeModeState.value, root.context)}"
                 activity?.applyDemoThemeWindowAppearance(currentTheme)
             }
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = title,
+                        title = resolvedTitle,
                         navigationIcon = {
                             IconButton(
                                 icon = ImageSource.Resource(R.drawable.ic_arrow_back),
-                                contentDescription = "返回",
+                                contentDescription = stringResource(R.string.demo_back),
                                 onClick = { activity?.finish() },
                                 tint = TopAppBarDefaults.titleColor(),
                             )
                         },
                     )
                 },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .systemBarsInsetsPadding()
-                    .backgroundColor(Theme.colors.background),
+                modifier = rootModifier,
             ) {
                 Column(
                     spacing = 0.dp,
@@ -80,6 +94,22 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp),
                 ) {
+                    if (scenario != null) {
+                        Text(
+                            text = stringResource(
+                                R.string.demo_scenario_ready_format,
+                                scenario.id.value,
+                                scenario.benchmark?.workloadRevision ?: 0,
+                            ),
+                            color = TextDefaults.secondaryColor(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .demoAutomationTarget(
+                                    scenario.automation.require(DemoAutomationRole.Ready),
+                                ),
+                        )
+                    }
                     content(this)
                 }
             }

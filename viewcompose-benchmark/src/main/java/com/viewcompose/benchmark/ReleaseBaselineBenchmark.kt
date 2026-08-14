@@ -42,20 +42,32 @@ class ReleaseBaselineBenchmark {
         iterations = RELEASE_BASELINE_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "state",
-                expectedText = "Patch Stress",
-                extras = mapOf("state_page_index" to 2),
-            )
-            waitForText("Advance patch state 0")
-            waitForText("Reset patch state")
+            startDemoScenarioAndWait(STATE_PATCH_SCENARIO)
+            waitForScenarioTarget(STATE_PATCH_SCENARIO, DemoTargetRole.Target)
         },
     ) {
-        clickText("Advance patch state 0")
-        waitForText("Advance patch state 1")
-        clickText("Advance patch state 1")
-        waitForText("Advance patch state 2")
-        clickText("Reset patch state")
-        waitForText("Advance patch state 0")
+        val initial = scenarioTargetText(STATE_PATCH_SCENARIO, DemoTargetRole.State)
+        clickScenarioTarget(STATE_PATCH_SCENARIO, DemoTargetRole.PrimaryAction)
+        val first = waitForScenarioTargetTextChange(
+            STATE_PATCH_SCENARIO,
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget(STATE_PATCH_SCENARIO, DemoTargetRole.PrimaryAction)
+        val second = waitForScenarioTargetTextChange(
+            STATE_PATCH_SCENARIO,
+            DemoTargetRole.State,
+            first,
+        )
+        clickScenarioTarget(STATE_PATCH_SCENARIO, DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange(
+            STATE_PATCH_SCENARIO,
+            DemoTargetRole.State,
+            second,
+        )
+    }
+
+    private companion object {
+        const val STATE_PATCH_SCENARIO = "runtime.view-patch"
     }
 }

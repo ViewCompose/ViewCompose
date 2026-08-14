@@ -25,11 +25,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 
 /**
  * Compose 对照版本的列表性能场景。
@@ -38,13 +43,15 @@ import androidx.compose.ui.unit.sp
 @Composable
 internal fun ComposeListPerformanceScreen(
     shadowsEnabled: Boolean,
+    scenario: DemoScenarioSpec? = null,
 ) {
     var revision by remember { mutableIntStateOf(0) }
     val rows = performanceListRows(revision)
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(PERFORMANCE_BACKGROUND_COLOR)),
+            .background(Color(PERFORMANCE_BACKGROUND_COLOR))
+            .scenarioTarget(scenario, DemoAutomationRole.Root, enableResourceIds = true),
     ) {
         ComposeListPerformanceHeader(
             engineName = if (shadowsEnabled) {
@@ -59,11 +66,13 @@ internal fun ComposeListPerformanceScreen(
             onReset = {
                 revision = 0
             },
+            scenario = scenario,
         )
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(1f)
+                .scenarioTarget(scenario, DemoAutomationRole.Target),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -87,6 +96,7 @@ private fun ComposeListPerformanceHeader(
     revision: Int,
     onMutate: () -> Unit,
     onReset: () -> Unit,
+    scenario: DemoScenarioSpec?,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -100,11 +110,13 @@ private fun ComposeListPerformanceHeader(
             sizeSp = 18,
             weight = FontWeight.SemiBold,
             color = PERFORMANCE_PRIMARY_TEXT_COLOR,
+            modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         PerformanceText(
             text = "List revision $revision",
             sizeSp = 14,
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
+            modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
         )
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -113,10 +125,15 @@ private fun ComposeListPerformanceHeader(
             ComposePerformanceAction(
                 text = "Mutate list",
                 onClick = onMutate,
+                modifier = Modifier.scenarioTarget(
+                    scenario,
+                    DemoAutomationRole.PrimaryAction,
+                ),
             )
             ComposePerformanceAction(
                 text = "Reset list",
                 onClick = onReset,
+                modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
             )
         }
     }
@@ -126,10 +143,11 @@ private fun ComposeListPerformanceHeader(
 private fun ComposePerformanceAction(
     text: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
+        modifier = modifier
             .background(
                 color = Color(PERFORMANCE_PRIMARY_COLOR),
                 shape = RoundedCornerShape(8.dp),
@@ -233,9 +251,11 @@ internal fun PerformanceText(
     sizeSp: Int,
     color: Int,
     weight: FontWeight = FontWeight.Normal,
+    modifier: Modifier = Modifier,
 ) {
     BasicText(
         text = text,
+        modifier = modifier,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         style = TextStyle(
@@ -244,4 +264,18 @@ internal fun PerformanceText(
             fontWeight = weight,
         ),
     )
+}
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+    enableResourceIds: Boolean = false,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    val tagged = testTag(target.resourceName)
+    return if (enableResourceIds) {
+        tagged.semantics { testTagsAsResourceId = true }
+    } else {
+        tagged
+    }
 }

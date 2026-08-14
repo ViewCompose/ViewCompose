@@ -1,5 +1,8 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.Visibility
@@ -64,6 +67,7 @@ internal fun UiTreeBuilder.PreviewStateChecklist() {
 
 internal fun UiTreeBuilder.StatePage(
     initialPageIndex: Int = 0,
+    scenario: DemoScenarioSpec? = null,
     onOpenDiagnostics: () -> Unit,
 ) {
     val benchmarkStepState = remember { mutableStateOf(0) }
@@ -128,13 +132,16 @@ internal fun UiTreeBuilder.StatePage(
             ) {
                 Text(
                     text = "Benchmark 步骤 ${benchmarkStepState.value}",
-                    modifier = Modifier.margin(bottom = 8.dp),
+                    modifier = Modifier
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
                     text = "推进 State Benchmark ${benchmarkStepState.value}",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .margin(bottom = 8.dp),
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     onClick = {
                         benchmarkStepState.value = benchmarkStepState.value + 1
                     },
@@ -143,7 +150,8 @@ internal fun UiTreeBuilder.StatePage(
                     text = "重置 State Benchmark",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .margin(bottom = 8.dp),
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
                     onClick = {
                         benchmarkStepState.value = 0
                     },
@@ -159,6 +167,10 @@ internal fun UiTreeBuilder.StatePage(
                     text = "稳定路径: launcher -> state module -> benchmark anchor",
                     style = UiTextStyle(fontSizeSp = 12.sp),
                     color = TextDefaults.secondaryColor(),
+                    modifier = Modifier.scenarioTarget(
+                        scenario,
+                        DemoAutomationRole.Target,
+                    ),
                 )
             }
 
@@ -271,7 +283,10 @@ internal fun UiTreeBuilder.StatePage(
                 subtitle = "将第一批节点级 patch 目标放在一起驱动，使手动测试和 benchmark 运行命中同一更新路径。",
             ) {
                 val step = patchStepState.value
-                Text(text = "Patch 标题 $step")
+                Text(
+                    text = "Patch 标题 $step",
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                )
                 Text(
                     text = "已 Patch 节点: Text, Button, TextField, SegmentedControl, TabRow, Row, Column, Box, Image",
                     color = TextDefaults.secondaryColor(),
@@ -285,7 +300,9 @@ internal fun UiTreeBuilder.StatePage(
                 ) {
                     Button(
                         text = "推进 Patch 状态 $step",
-                        modifier = Modifier.testTag(DemoTestTags.STATE_PATCH_ADVANCE),
+                        modifier = Modifier
+                            .testTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                            .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                         onClick = {
                             val nextStep = patchStepState.value + 1
                             patchStepState.value = nextStep
@@ -296,6 +313,7 @@ internal fun UiTreeBuilder.StatePage(
                     )
                     Button(
                         text = "重置 Patch 状态",
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
                         onClick = {
                             patchStepState.value = 0
                             patchFieldValueState.setTextAndPlaceCursorAtEnd("value-0")
@@ -320,7 +338,9 @@ internal fun UiTreeBuilder.StatePage(
                     state = patchFieldValueState,
                     label = "已 Patch 字段",
                     supportingText = "当前 Patch 步骤: $step",
-                    modifier = Modifier.margin(bottom = 12.dp),
+                    modifier = Modifier
+                        .margin(bottom = 12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 )
                 SegmentedControl(
                     items = listOf("Alpha", "Beta", "Gamma"),
@@ -568,4 +588,12 @@ internal fun UiTreeBuilder.StatePage(
             )
         }
     }
+}
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier {
+    val target = scenario?.automation?.get(role) ?: return this
+    return demoAutomationTarget(target)
 }

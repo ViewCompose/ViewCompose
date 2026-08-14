@@ -14,6 +14,7 @@ class StateActivity : DemoRenderActivity() {
     ) {
         builder.StatePage(
             initialPageIndex = intent?.getIntExtra(EXTRA_STATE_PAGE_INDEX, 0) ?: 0,
+            scenario = currentScenario(),
             onOpenDiagnostics = {
                 startActivity(
                     DiagnosticsActivity.newIntent(
