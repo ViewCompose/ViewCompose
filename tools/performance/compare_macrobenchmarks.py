@@ -55,10 +55,10 @@ SCENARIOS = (
 # Report rows may split one fixture into several measured actions, but every row must retain the
 # owning scenario identity and workload revision so unlike workloads cannot be compared silently.
 SCENARIO_CONTRACTS = {
-    "list_scroll": ("performance.list", 1),
-    "list_mutation": ("performance.list", 1),
-    "complex_layout_scroll": ("performance.complex-layout", 1),
-    "complex_layout_update": ("performance.complex-layout", 1),
+    "list_scroll": ("performance.list", 2),
+    "list_mutation": ("performance.list", 2),
+    "complex_layout_scroll": ("performance.complex-layout", 2),
+    "complex_layout_update": ("performance.complex-layout", 2),
     "shadow_list_scroll": ("performance.shadow-list", 1),
     "shadow_list_mutation": ("performance.shadow-list", 1),
     "shadow_complex_layout_scroll": ("performance.shadow-complex-layout", 1),

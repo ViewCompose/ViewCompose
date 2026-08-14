@@ -82,20 +82,22 @@ class ListPerformanceComparisonBenchmark {
             startPerformanceScenarioAndWait(PERFORMANCE_LIST_SCENARIO, engine)
         },
     ) {
-        val initial = scenarioTargetText(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.State)
-        clickScenarioTarget(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.PrimaryAction)
-        val mutated = waitForScenarioTargetTextChange(
-            PERFORMANCE_LIST_SCENARIO,
-            DemoTargetRole.State,
-            initial,
-        )
-        clickScenarioTarget(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.Reset)
-        val reset = waitForScenarioTargetTextChange(
-            PERFORMANCE_LIST_SCENARIO,
-            DemoTargetRole.State,
-            mutated,
-        )
-        assertEquals(initial, reset)
+        repeat(PERFORMANCE_MUTATION_CYCLES_PER_ITERATION) {
+            val initial = scenarioTargetText(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.State)
+            clickScenarioTarget(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.PrimaryAction)
+            val mutated = waitForScenarioTargetTextChange(
+                PERFORMANCE_LIST_SCENARIO,
+                DemoTargetRole.State,
+                initial,
+            )
+            clickScenarioTarget(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.Reset)
+            val reset = waitForScenarioTargetTextChange(
+                PERFORMANCE_LIST_SCENARIO,
+                DemoTargetRole.State,
+                mutated,
+            )
+            assertEquals(initial, reset)
+        }
     }
 
     private fun performanceComparisonMetrics() = listOf(
@@ -107,3 +109,5 @@ class ListPerformanceComparisonBenchmark {
         const val PERFORMANCE_LIST_SCENARIO = "performance.list"
     }
 }
+
+private const val PERFORMANCE_MUTATION_CYCLES_PER_ITERATION = 8

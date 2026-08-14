@@ -87,23 +87,25 @@ class ComplexLayoutPerformanceComparisonBenchmark {
             )
         },
     ) {
-        val initial = scenarioTargetText(
-            PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
-            DemoTargetRole.State,
-        )
-        clickScenarioTarget(PERFORMANCE_COMPLEX_LAYOUT_SCENARIO, DemoTargetRole.PrimaryAction)
-        val updated = waitForScenarioTargetTextChange(
-            PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
-            DemoTargetRole.State,
-            initial,
-        )
-        clickScenarioTarget(PERFORMANCE_COMPLEX_LAYOUT_SCENARIO, DemoTargetRole.Reset)
-        val reset = waitForScenarioTargetTextChange(
-            PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
-            DemoTargetRole.State,
-            updated,
-        )
-        org.junit.Assert.assertEquals(initial, reset)
+        repeat(PERFORMANCE_UPDATE_CYCLES_PER_ITERATION) {
+            val initial = scenarioTargetText(
+                PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
+                DemoTargetRole.State,
+            )
+            clickScenarioTarget(PERFORMANCE_COMPLEX_LAYOUT_SCENARIO, DemoTargetRole.PrimaryAction)
+            val updated = waitForScenarioTargetTextChange(
+                PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
+                DemoTargetRole.State,
+                initial,
+            )
+            clickScenarioTarget(PERFORMANCE_COMPLEX_LAYOUT_SCENARIO, DemoTargetRole.Reset)
+            val reset = waitForScenarioTargetTextChange(
+                PERFORMANCE_COMPLEX_LAYOUT_SCENARIO,
+                DemoTargetRole.State,
+                updated,
+            )
+            org.junit.Assert.assertEquals(initial, reset)
+        }
     }
 
     private fun performanceComparisonMetrics() = listOf(
@@ -115,3 +117,5 @@ class ComplexLayoutPerformanceComparisonBenchmark {
         const val PERFORMANCE_COMPLEX_LAYOUT_SCENARIO = "performance.complex-layout"
     }
 }
+
+private const val PERFORMANCE_UPDATE_CYCLES_PER_ITERATION = 8

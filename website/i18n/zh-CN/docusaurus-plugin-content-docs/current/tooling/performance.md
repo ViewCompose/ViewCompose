@@ -115,13 +115,15 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 1. 两个引擎运行在同一个 R8 target 中，排除应用配置、资源和进程环境差异。
 2. 使用 `CompilationMode.None`，避免 ART 预编译掩盖框架交付成本。
 3. `viewComposeListScroll/composeListScroll` 使用相同手势轨迹。
-4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新。
+4. `viewComposeListMutation/composeListMutation` 使用相同的 37 项旋转和每 16 项内容更新；
+   每个测量 iteration 执行 8 个完整 mutation/reset 闭环，确保 run 级帧分布足以进行稳定性门禁。
 5. 对比结论必须来自同一次设备运行；不同设备产生的数据不能横向相除。
 
 复杂布局对照基线是 `ComplexLayoutPerformanceComparisonBenchmark`：
 
 1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` 对比非 Lazy 整树滚动。
-2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并切换条件详情子树。
+2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` 同时更新 18 个卡片的数据，并在
+   每个测量 iteration 中执行 8 个完整 update/reset 闭环来切换条件详情子树。
 3. 两端保持相同的卡片、指标、标签、条件内容数量和嵌套顺序。
 4. 该场景专门观察 ViewGroup 深度、全树 measure/layout 与局部 patch 成本，不用于评价 Lazy 容器。
 

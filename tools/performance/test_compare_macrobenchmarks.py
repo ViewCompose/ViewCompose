@@ -128,7 +128,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         self.assertEqual(2.0, list_scroll.compose)
         self.assertEqual(100.0, list_scroll.relative_percent)
         self.assertEqual("performance.list", list_scroll.scenario_id)
-        self.assertEqual(1, list_scroll.workload_revision)
+        self.assertEqual(2, list_scroll.workload_revision)
         self.assertTrue(
             any(item.scenario == "shadow_list_scroll" for item in comparisons),
         )
@@ -282,7 +282,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             comparison.benchmark_entries(result()),
         )
         current = [
-            replace(item, workload_revision=2)
+            replace(item, workload_revision=item.workload_revision + 1)
             if item.scenario == "list_scroll"
             else item
             for item in baseline
@@ -310,7 +310,13 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
         loaded = comparison.revisioned_baseline_comparisons(baseline_report)
 
         self.assertTrue(loaded)
-        self.assertTrue(all(item.workload_revision == 1 for item in loaded))
+        self.assertTrue(
+            all(
+                item.workload_revision
+                == comparison.SCENARIO_CONTRACTS[item.scenario][1]
+                for item in loaded
+            ),
+        )
 
     def test_rejects_unrevisioned_raw_baseline(self) -> None:
         with self.assertRaisesRegex(ValueError, "revisioned compose-comparison.json"):
@@ -341,7 +347,7 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
 
             self.assertEqual(0, exit_code)
             self.assertIn(
-                "performance.list@1",
+                "performance.list@2",
                 markdown.read_text(encoding="utf-8"),
             )
             summary = json.loads(json_output.read_text(encoding="utf-8"))

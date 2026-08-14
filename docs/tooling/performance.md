@@ -133,14 +133,15 @@ a valid longitudinal baseline because it does not preserve the Demo workload con
 2. `CompilationMode.None` prevents precompilation from hiding framework delivery cost.
 3. `viewComposeListScroll/composeListScroll` use identical gestures.
 4. `viewComposeListMutation/composeListMutation` use the same 37-item rotation and update every
-   sixteenth item.
+   sixteenth item. Each measured iteration executes eight complete mutate/reset cycles so the
+   run-level frame distribution is large enough for the stability gate.
 5. Conclusions come from one device run; never divide results from different devices.
 
 `ComplexLayoutPerformanceComparisonBenchmark` is the complex-tree control:
 
 1. `viewComposeComplexLayoutScroll/composeComplexLayoutScroll` compare non-Lazy whole-tree scroll.
 2. `viewComposeComplexLayoutUpdate/composeComplexLayoutUpdate` update all 18 cards and toggle the
-   conditional detail subtree.
+   conditional detail subtree through eight complete update/reset cycles per measured iteration.
 3. Cards, metrics, labels, conditional counts, and nesting order are equal.
 4. This scenario measures ViewGroup depth, whole-tree measure/layout, and local patches; it does not
    evaluate Lazy containers.
