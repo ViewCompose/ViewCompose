@@ -120,14 +120,24 @@ class DemoInteractionBenchmark {
             startDemoScenarioAndWait("diagnostics.renderer")
         },
     ) {
-        val before = scenarioTargetText("diagnostics.renderer", DemoTargetRole.State)
-        clickScenarioTarget("diagnostics.renderer", DemoTargetRole.PrimaryAction)
-        waitForScenarioTargetTextChange(
-            "diagnostics.renderer",
-            DemoTargetRole.State,
-            before,
-        )
-        clickScenarioTarget("diagnostics.renderer", DemoTargetRole.Reset)
+        repeat(DIAGNOSTICS_RENDERER_CYCLES_PER_ITERATION) {
+            val beforeRefresh = scenarioTargetText(
+                "diagnostics.renderer",
+                DemoTargetRole.State,
+            )
+            clickScenarioTarget("diagnostics.renderer", DemoTargetRole.PrimaryAction)
+            val afterRefresh = waitForScenarioTargetTextChange(
+                "diagnostics.renderer",
+                DemoTargetRole.State,
+                beforeRefresh,
+            )
+            clickScenarioTarget("diagnostics.renderer", DemoTargetRole.Reset)
+            waitForScenarioTargetTextChange(
+                "diagnostics.renderer",
+                DemoTargetRole.State,
+                afterRefresh,
+            )
+        }
     }
 
     @Test
@@ -249,3 +259,4 @@ class DemoInteractionBenchmark {
 }
 
 private const val DIAGNOSTICS_THEME_FLING_COUNT = 8
+private const val DIAGNOSTICS_RENDERER_CYCLES_PER_ITERATION = 8

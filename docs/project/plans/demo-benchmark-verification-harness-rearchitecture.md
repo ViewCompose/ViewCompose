@@ -999,8 +999,10 @@ third-party exception requiring an allowlist.
 The Phase 5 preflight removed one misleading synthetic workload before accepting any measurements.
 `diagnosticsRefreshAfterPatch` changed state in one Activity and measured launching a different
 Activity, so it neither isolated renderer patching nor owned a frozen scenario contract. The real
-`diagnostics.renderer` interaction remains and now declares Benchmark ownership at workload
-revision 2. Comparative reports now persist scenario ID and workload revision beside each measured
+`diagnostics.renderer` interaction remains and declares Benchmark ownership. Its Phase 5 stability
+preflight then advanced the workload to revision 3: one refresh produced too few frames and omitted
+reset completion, so each iteration now measures eight complete refresh-and-reset cycles.
+Comparative reports persist scenario ID and workload revision beside each measured
 action; longitudinal gates require the prior revisioned comparison report and reject cross-revision
 rows instead of inferring an old workload revision from current source.
 
@@ -1146,6 +1148,7 @@ the retired Demo layout.
 | 2026-08-14 | Phase 0 scenario and workload freeze | Classified every module/page/dedicated host and benchmark owner; assigned direct scenario IDs and revision 1 to each retained measured workload. |
 | 2026-08-15 | Phase 5 thermal preflight on SM-G991B / Android 13 | A combined run and an isolated ten-iteration state-patch run both reached Android thermal status `SEVERE`; results were rejected and the formal interaction protocol was hard-cut to five clean iterations with per-method cooldown. |
 | 2026-08-15 | Phase 5 cold-start stability preflight | Five cold starts ended below `SEVERE`, but one 391.95 ms first-run outlier versus four 260–284 ms samples produced CV `0.185`; the batch was rejected and cold startup retained ten iterations independently of the five-iteration interaction protocol. |
+| 2026-08-15 | Phase 5 renderer-diagnostics stability preflight | The revision 2 one-refresh workload ended below `SEVERE` but produced frame CPU run-P50 CV `0.372`; it also did not await reset completion. The result was rejected, and revision 3 measures eight complete refresh/reset cycles per iteration. |
 
 ## Decision history
 

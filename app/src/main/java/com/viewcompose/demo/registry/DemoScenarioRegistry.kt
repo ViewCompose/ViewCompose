@@ -565,7 +565,7 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_diagnostics_renderer_state,
                 target = R.id.demo_diagnostics_renderer_target,
             ),
-            benchmarkRevision = 2,
+            benchmarkRevision = 3,
         ),
         scenario(
             id = DemoScenarioIds.CollectionControls,
