@@ -90,13 +90,16 @@ locale-prefixed static copies such as `/zh-CN/api/**`. Localized pages link to t
 tree, so those copies add storage but no localized content or supported route.
 
 The budget model separates expected release-history growth from regressions. Non-API output is
-limited to 40 MiB. Immutable artifact/version trees and working-tree `current` Dokka for unpublished
-artifacts share the API-tree budget: they may average at most 4.5 MiB and no individual tree may
-exceed 24 MiB. Only manifests and redirect aliases use the separate 1 MiB routing allowance. The
-other ceilings are 120 seconds for the Docusaurus build, 8 MiB total and 768 KiB largest-file for
-JavaScript, 128 KiB for CSS, and 5.5 MiB for each locale's search index. The gate also rejects any
-locale-prefixed API copy. Raise a threshold only with a measured explanation of the reader or
-release value that requires the additional cost.
+limited to 41 MiB. Before the Demo verification-harness plan was added, a clean `main` build already
+measured 39.999791 MiB. Publishing that searchable English plan, its `zh-CN` fallback route, and
+both locale search entries measured 40.427350 MiB, so the reviewed ceiling moved from 40 MiB to
+41 MiB instead of removing reader-value planning evidence. Immutable artifact/version trees and
+working-tree `current` Dokka for unpublished artifacts share the API-tree budget: they may average
+at most 4.5 MiB and no individual tree may exceed 24 MiB. Only manifests and redirect aliases use
+the separate 1 MiB routing allowance. The other ceilings remain 120 seconds for the Docusaurus
+build, 8 MiB total and 768 KiB largest-file for JavaScript, 128 KiB for CSS, and 5.5 MiB for each
+locale's search index. The gate also rejects any locale-prefixed API copy. Raise a threshold only
+with a measured explanation of the reader or release value that requires the additional cost.
 
 The accessibility audit covers the site-owned English and localized pages and checks document
 language, title and main landmarks, heading order, accessible names, image alternatives, table
@@ -203,6 +206,12 @@ identity token.
   verification separately from the documentation build.
 
 ## Last verified
+
+2026-08-14: clean builds of current `main` and the documentation-planning branch measured non-API
+output at 39.999791 MiB and 40.427350 MiB respectively. The reviewed non-API ceiling moved to
+41 MiB so the directly linked Demo verification-harness plan remains searchable in English and
+through its Chinese fallback route. No JavaScript, CSS, search-index, API-tree, routing, or build-time
+threshold changed.
 
 2026-08-06: a clean complete-history build reconstructed 69 immutable artifact versions and built
 9 unpublished `current` API trees from the working source. It passed immutable source-link,

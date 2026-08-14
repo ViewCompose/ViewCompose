@@ -94,8 +94,9 @@ Authoritative current documents:
 - [State snapshot architecture](../../architecture/state-snapshots.md)
 - [Architecture overview](../../architecture/overview.md)
 - [Delayed-session container checklist](../../architecture/session-containers.md)
-- [Host-owned Android resource environment](../../architecture/decisions/0007-host-owned-android-resource-environment.md)
-- [Lazy collection logical and physical ownership](../../architecture/decisions/0012-lazy-collection-logical-and-physical-ownership.md)
+- [Architecture decision index](../../architecture/decisions/README.md), including ADR-0007 for the
+  host-owned Android resource environment and ADR-0012 for lazy collection logical and physical
+  ownership
 - [Performance specification](../../tooling/performance.md)
 - [State and recomposition migration boundary](../../migration/compose-state-recomposition-and-restoration.md)
 - [Layout, Modifier, and environment migration boundary](../../migration/compose-layout-modifier-and-environment.md)
