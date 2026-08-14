@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: migrate the remaining Preview owner, then audit the unresolved
-performance-comparison scenarios against the replacement fixture baseline.
+Next action: audit the unresolved performance-comparison scenarios against the replacement fixture
+baseline.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -188,7 +188,7 @@ new launch contract.
 | Interop | Android View and Local propagation | Retain | `interop.android-view` |
 | Diagnostics | Runtime, Theme, Renderer, 0-2 | Split | `diagnostics.runtime`, `diagnostics.theme`, `diagnostics.renderer` |
 | Diagnostics | Gaps, 3 | Remove roadmap content | None |
-| Preview | Bridge, Overlay mock, Snapshot, 0-2 | Split; preview/snapshot ownership remains explicit | `preview.bridge`, `preview.overlay-mock`, `preview.snapshot` |
+| Preview | Bridge, Overlay mock, Snapshot, 0-2 | Remove the on-device proxies; retain the actual debug bridge entrypoints, PreviewCatalog overlay spec, and `qaPreview` snapshot gate | None |
 | Actions | Card, FAB, Chip, List item, 0-3 | Split | `component.card`, `component.fab`, `component.chip`, `component.list-item` |
 | Modifiers | Visual, Sizing, Accessibility/native View, 0-2 | Split | `modifier.visual`, `modifier.sizing`, `modifier.accessibility` |
 | Gestures | Tap, Drag/swipe, Transform, 0-2 | Split | `gesture.tap`, `gesture.drag-swipe`, `gesture.transform` |
@@ -937,6 +937,18 @@ the complete domain, and the hard-coded-copy gate owns the page and Activity. Th
 Macrobenchmarks were removed rather than rebaselined: one measured an artificial on/off switch,
 and the other measured a module-to-scenario launch that is not a registered workload. Neither had
 a comparable framework behavior to preserve.
+
+The frozen Preview inventory was corrected after tracing the real preview execution paths. The
+three on-device pages were not executable Preview fixtures: Bridge toggled ordinary Activity state,
+Overlay Mock duplicated the `feedback-overlay-static` PreviewCatalog spec, and Snapshot rendered
+only a Gradle command and report path. `PreviewActivity`, its page-index route, all five test tags,
+and the device smoke assertion were therefore deleted instead of publishing misleading
+`preview.*` scenario IDs. The debug Compose-preview light/dark entrypoints and the static-runner
+light/dark entrypoint now render the real `component.button` fixture directly. Overlay ownership
+remains in PreviewCatalog and Paparazzi, while snapshot truth remains the `qaPreview` gate. These
+tooling-only execution paths stay outside the on-device Demo registry because a normal Activity
+cannot validate Compose Preview session retention, Layoutlib configuration, artifact export, or
+Paparazzi baselines.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

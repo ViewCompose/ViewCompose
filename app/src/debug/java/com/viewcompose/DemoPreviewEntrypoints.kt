@@ -25,7 +25,7 @@ private fun DemoPreviewChapterLightPreview() {
             debugTag = "DemoPreviewChapterLight",
         ),
     ) {
-        PreviewPage(initialPageIndex = 0)
+        ComponentShowcasePage(ComponentShowcaseFixture.Button)
     }
 }
 
@@ -43,7 +43,7 @@ private fun DemoPreviewChapterDarkPreview() {
             debugTag = "DemoPreviewChapterDark",
         ),
     ) {
-        PreviewPage(initialPageIndex = 1)
+        ComponentShowcasePage(ComponentShowcaseFixture.Button)
     }
 }
 

@@ -204,7 +204,6 @@
     <string name="demo_activity_theme_switch_title">跨 Activity 主题切换</string>
     <string name="demo_activity_diagnostics_title">诊断</string>
     <string name="demo_activity_material3_theme_title">主题与 Token 验证</string>
-    <string name="demo_activity_preview_title">预览</string>
     <string name="demo_activity_graphics_title">图形</string>
     <string name="demo_activity_material3_visual_baseline_title">Material 3 视觉基线</string>
 </resources>

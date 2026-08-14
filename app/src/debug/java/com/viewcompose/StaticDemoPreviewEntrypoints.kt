@@ -18,5 +18,5 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
     theme = PreviewTheme.Dark,
 )
 fun UiTreeBuilder.StaticDemoPreview() {
-    PreviewPage(initialPageIndex = 0)
+    ComponentShowcasePage(ComponentShowcaseFixture.Button)
 }

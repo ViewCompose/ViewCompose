@@ -280,12 +280,6 @@ internal object DemoTestTags {
     const val SYSTEM_NAV_BACK_TOGGLE = "system_nav_back_toggle"
     const val SYSTEM_NAV_ACCOUNT_POP_ROOT = "system_nav_account_pop_root"
 
-    const val PREVIEW_THEME_TOGGLE = "preview_theme_toggle"
-    const val PREVIEW_DEVICE_TOGGLE = "preview_device_toggle"
-    const val PREVIEW_HOST_SAMPLE = "preview_host_sample"
-    const val PREVIEW_OVERLAY_MOCK = "preview_overlay_mock"
-    const val PREVIEW_SNAPSHOT_CMD = "preview_snapshot_cmd"
-
     const val STATE_PATCH_ADVANCE = "state_patch_advance"
     const val STATE_PATCH_OPEN_DIAGNOSTICS = "state_patch_open_diagnostics"
     const val STATE_PATCH_SEGMENT_SUMMARY = "state_patch_segment_summary"

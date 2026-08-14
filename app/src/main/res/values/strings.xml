@@ -203,7 +203,6 @@
     <string name="demo_activity_theme_switch_title">Cross-Activity theme switching</string>
     <string name="demo_activity_diagnostics_title">Diagnostics</string>
     <string name="demo_activity_material3_theme_title">Theme and token verification</string>
-    <string name="demo_activity_preview_title">Preview</string>
     <string name="demo_activity_graphics_title">Graphics</string>
     <string name="demo_activity_material3_visual_baseline_title">Material 3 visual baseline</string>
 </resources>

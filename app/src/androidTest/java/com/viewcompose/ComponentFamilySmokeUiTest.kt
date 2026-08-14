@@ -1,7 +1,5 @@
 package com.viewcompose
 
-import android.content.Intent
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -104,18 +102,5 @@ class ComponentFamilySmokeUiTest {
                 assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_FLOW_ROW))
             }
         }
-
-        launchDemoActivity<PreviewActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                PreviewActivity::class.java,
-            ).putExtra(EXTRA_PREVIEW_PAGE_INDEX, 0),
-        ).use { scenario ->
-            waitForUiIdle()
-            scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.PREVIEW_HOST_SAMPLE))
-            }
-        }
-
     }
 }
