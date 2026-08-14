@@ -21,7 +21,7 @@ import com.viewcompose.ui.unit.UiDensity
 
 /** Hosts deterministic light, dark, LTR, and RTL evidence for the public One UI 7 alpha slice. */
 class OneUi7VerificationActivity : DemoRenderActivity() {
-    override val demoTitle: String = "One UI 7 five-component alpha"
+    override val demoTitleRes: Int = R.string.demo_activity_one_ui_title
     private lateinit var resolvedTokens: UiThemeTokens
     private var overlayIntegrations: List<UiIntegrationAttribution> = emptyList()
 

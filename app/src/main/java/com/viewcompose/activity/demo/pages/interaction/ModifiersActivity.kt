@@ -14,7 +14,7 @@ internal const val EXTRA_MODIFIERS_PAGE_INDEX = "modifiers_page_index"
  * Activity entry for the Modifiers chapter, showcasing combined background, border, drawing, and interaction modifiers.
  */
 class ModifiersActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Modifiers"
+    override val demoTitleRes: Int = R.string.demo_activity_modifiers_title
 
     override fun buildDemoContent(
         root: ViewGroup,

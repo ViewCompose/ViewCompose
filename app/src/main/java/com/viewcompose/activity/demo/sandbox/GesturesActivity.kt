@@ -14,7 +14,7 @@ internal const val EXTRA_GESTURES_PAGE_INDEX = "gestures_page_index"
  * Activity entry for the Gestures sandbox, isolating demo paths for gesture modifiers and state models.
  */
 class GesturesActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Gestures"
+    override val demoTitleRes: Int = R.string.demo_activity_gestures_title
 
     override fun buildDemoContent(
         root: ViewGroup,

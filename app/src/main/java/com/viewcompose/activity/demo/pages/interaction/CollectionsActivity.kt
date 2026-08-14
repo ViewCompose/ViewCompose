@@ -14,7 +14,7 @@ internal const val EXTRA_COLLECTIONS_PAGE_INDEX = "collections_page_index"
  * Activity entry for the Collections chapter, hosting lazy list, row, grid, and reuse-policy samples.
  */
 class CollectionsActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Collections"
+    override val demoTitleRes: Int = R.string.demo_activity_collections_title
 
     override fun buildDemoContent(
         root: ViewGroup,

@@ -540,7 +540,7 @@ tasks.register("verifyDemoAutomationSelectors") {
         val legacySelectorBaseline = mapOf(
             "app/src/androidTest/java/com/viewcompose/DemoDesignSystemVerificationUiTest.kt" to 6,
             "app/src/androidTest/java/com/viewcompose/DemoUiTestHelpers.kt" to 6,
-            "app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt" to 3,
+            "app/src/androidTest/java/com/viewcompose/DemoVisualUiTest.kt" to 2,
             "app/src/androidTest/java/com/viewcompose/OneUi7VerificationUiTest.kt" to 4,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ComplexLayoutPerformanceComparisonBenchmark.kt" to 3,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 20,
@@ -582,6 +582,111 @@ tasks.register("verifyDemoAutomationSelectors") {
                     appendLine("Demo automation selector verification failed:")
                     violations.forEach { violation -> appendLine("- $violation") }
                     appendLine("Use scenario-owned Android resource IDs; only reduce the legacy baseline.")
+                },
+            )
+        }
+    }
+}
+
+tasks.register("verifyDemoLocalizationResources") {
+    group = "verification"
+    description =
+        "Verify Demo default-English and Simplified-Chinese resource parity and format contracts."
+    doLast {
+        fun readResources(directory: File): Map<String, Map<String, String>> {
+            val parserFactory = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply {
+                isNamespaceAware = false
+                isIgnoringComments = true
+            }
+            return directory.listFiles()
+                .orEmpty()
+                .filter { file -> file.isFile && file.extension == "xml" }
+                .sortedBy { file -> file.name }
+                .flatMap { file ->
+                    val document = parserFactory.newDocumentBuilder().parse(file)
+                    val root = document.documentElement
+                    (0 until root.childNodes.length).mapNotNull { index ->
+                        val element = root.childNodes.item(index) as? org.w3c.dom.Element
+                            ?: return@mapNotNull null
+                        val kind = element.tagName
+                        if (kind !in setOf("string", "plurals", "string-array")) {
+                            return@mapNotNull null
+                        }
+                        val name = element.getAttribute("name")
+                        require(name.isNotBlank()) {
+                            "Missing resource name in ${file.relativeTo(rootDir)}"
+                        }
+                        val values = when (kind) {
+                            "string" -> mapOf("value" to element.textContent.trim())
+                            else -> {
+                                var ordinal = 0
+                                (0 until element.childNodes.length).mapNotNull itemLoop@ { childIndex ->
+                                    val item = element.childNodes.item(childIndex) as? org.w3c.dom.Element
+                                        ?: return@itemLoop null
+                                    if (item.tagName != "item") return@itemLoop null
+                                    val selector = if (kind == "plurals") {
+                                        item.getAttribute("quantity")
+                                    } else {
+                                        (ordinal++).toString()
+                                    }
+                                    selector to item.textContent.trim()
+                                }.toMap()
+                            }
+                        }
+                        "$kind:$name" to values
+                    }
+                }
+                .toMap()
+        }
+
+        val formatPattern = Regex(
+            """%(?:(\d+)\$)?[-#+ 0,(<]*\d*(?:\.\d+)?([a-zA-Z%])""",
+        )
+        fun formatSignature(value: String): List<String> {
+            var implicitIndex = 1
+            return formatPattern.findAll(value).mapNotNull { match ->
+                val conversion = match.groupValues[2]
+                if (conversion == "%") return@mapNotNull null
+                val explicitIndex = match.groupValues[1]
+                val argumentIndex = explicitIndex.ifBlank { (implicitIndex++).toString() }
+                "$argumentIndex:${conversion.lowercase()}"
+            }.toList()
+        }
+
+        val defaultResources = readResources(rootDir.resolve("app/src/main/res/values"))
+        val chineseResources = readResources(rootDir.resolve("app/src/main/res/values-zh-rCN"))
+        val violations = mutableListOf<String>()
+        (defaultResources.keys - chineseResources.keys).sorted().forEach { key ->
+            violations += "$key is missing from values-zh-rCN"
+        }
+        (chineseResources.keys - defaultResources.keys).sorted().forEach { key ->
+            violations += "$key has no canonical default-English resource"
+        }
+        (defaultResources.keys intersect chineseResources.keys).sorted().forEach { key ->
+            val canonical = defaultResources.getValue(key)
+            val localized = chineseResources.getValue(key)
+            if (canonical.keys != localized.keys) {
+                violations +=
+                    "$key selectors differ: default=${canonical.keys.sorted()}, " +
+                        "zh-rCN=${localized.keys.sorted()}"
+                return@forEach
+            }
+            canonical.keys.sorted().forEach { selector ->
+                val canonicalFormat = formatSignature(canonical.getValue(selector))
+                val localizedFormat = formatSignature(localized.getValue(selector))
+                if (canonicalFormat != localizedFormat) {
+                    violations +=
+                        "$key[$selector] format differs: default=$canonicalFormat, " +
+                            "zh-rCN=$localizedFormat"
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            error(
+                buildString {
+                    appendLine("Demo localization resource verification failed:")
+                    violations.forEach { violation -> appendLine("- $violation") }
                 },
             )
         }
@@ -1842,6 +1947,7 @@ tasks.register("qaQuick") {
     dependsOn("verifyModuleDependencyBoundaries")
     dependsOn("verifyDevelopmentToolingIsolation")
     dependsOn("verifyDemoAutomationSelectors")
+    dependsOn("verifyDemoLocalizationResources")
     dependsOn("verifyDesignSystemIsolation")
     dependsOn("verifyUiFoundationPlatformBoundary")
     dependsOn("verifyDocumentationStructure")

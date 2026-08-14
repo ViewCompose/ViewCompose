@@ -14,7 +14,7 @@ internal const val EXTRA_NAVIGATION_PAGE_INDEX = "navigation_page_index"
  * Activity entry for the Navigation chapter, hosting nav bar, graph, saved-state, and back-handling samples.
  */
 class NavigationActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Navigation"
+    override val demoTitleRes: Int = R.string.demo_activity_navigation_title
 
     override fun buildDemoContent(
         root: ViewGroup,

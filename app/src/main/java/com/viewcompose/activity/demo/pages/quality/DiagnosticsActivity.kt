@@ -12,7 +12,7 @@ import com.viewcompose.ui.foundation.remember
  * Activity entry for the Diagnostics chapter, surfacing runtime, theme, and renderer information.
  */
 class DiagnosticsActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Diagnostics"
+    override val demoTitleRes: Int = R.string.demo_activity_diagnostics_title
 
     override fun buildDemoContent(
         root: ViewGroup,

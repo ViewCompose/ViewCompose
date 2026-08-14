@@ -17,7 +17,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * forwarded to their declared hosts.
  */
 class MainActivity : DemoRenderActivity() {
-    override val demoTitle: String = "ViewCompose Demo"
+    override val demoTitleRes: Int = R.string.demo_activity_main_title
 
     override fun redirectTargetIntent(): Intent? {
         if (intent?.hasExtra(EXTRA_DEMO_SCENARIO_ID) == true) {

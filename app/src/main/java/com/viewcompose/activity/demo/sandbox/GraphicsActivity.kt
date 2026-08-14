@@ -8,7 +8,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * Activity entry for the Graphics sandbox, validating Canvas, draw modifiers, and cached drawing pipelines.
  */
 class GraphicsActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Graphics"
+    override val demoTitleRes: Int = R.string.demo_activity_graphics_title
 
     override fun buildDemoContent(
         root: ViewGroup,

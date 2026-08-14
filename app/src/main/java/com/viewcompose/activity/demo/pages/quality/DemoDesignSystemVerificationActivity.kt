@@ -20,7 +20,7 @@ internal const val EXTRA_DEMO_DESIGN_SYSTEM_KIND = "demo_design_system_kind"
 
 /** Hosts the internal multi-design-system fixture under a deterministic configuration. */
 class DemoDesignSystemVerificationActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Multi-design-system verification"
+    override val demoTitleRes: Int = R.string.demo_activity_design_system_title
 
     private val requestedKind: DemoDesignSystemKind
         get() = DemoDesignSystemKind.fromId(intent?.getStringExtra(EXTRA_DEMO_DESIGN_SYSTEM_KIND))

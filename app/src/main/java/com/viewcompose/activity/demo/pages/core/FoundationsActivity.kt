@@ -15,7 +15,7 @@ internal const val EXTRA_FOUNDATIONS_PAGE_INDEX = "foundations_page_index"
  * Activity entry for the Foundations chapter, covering theme, token, icon, and image foundation samples.
  */
 class FoundationsActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Foundations"
+    override val demoTitleRes: Int = R.string.demo_activity_foundations_title
 
     override fun buildDemoContent(
         root: ViewGroup,

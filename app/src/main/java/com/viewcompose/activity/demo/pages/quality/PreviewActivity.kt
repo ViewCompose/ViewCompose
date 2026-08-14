@@ -14,7 +14,7 @@ internal const val EXTRA_PREVIEW_PAGE_INDEX = "preview_page_index"
  * Activity entry for the Preview chapter, validating preview themes, device configuration, and overlay mock cases.
  */
 class PreviewActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Preview"
+    override val demoTitleRes: Int = R.string.demo_activity_preview_title
 
     override fun buildDemoContent(
         root: ViewGroup,

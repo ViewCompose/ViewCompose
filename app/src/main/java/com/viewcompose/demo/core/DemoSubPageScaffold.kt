@@ -1,6 +1,7 @@
 package com.viewcompose
 
 import android.view.ViewGroup
+import androidx.annotation.StringRes
 import coil3.ImageLoader
 import com.viewcompose.demo.automation.demoAutomationTarget
 import com.viewcompose.demo.contract.DemoAutomationRole
@@ -36,7 +37,7 @@ import com.viewcompose.ui.foundation.remember
  */
 internal fun UiTreeBuilder.DemoSubPageScaffold(
     root: ViewGroup,
-    title: String,
+    @StringRes titleRes: Int,
     scenario: DemoScenarioSpec? = null,
     content: (UiTreeBuilder) -> Unit,
 ) {
@@ -56,7 +57,7 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
     ProvideImageLoader(imageLoader) {
         val scaffoldContent: UiTreeBuilder.() -> Unit = {
             val currentTheme = Theme.current
-            val resolvedTitle = scenario?.let { stringResource(it.titleRes) } ?: title
+            val resolvedTitle = stringResource(scenario?.titleRes ?: titleRes)
             val rootModifier = Modifier
                 .fillMaxSize()
                 .systemBarsInsetsPadding()

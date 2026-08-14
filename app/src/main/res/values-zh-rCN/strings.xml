@@ -68,4 +68,27 @@
     <string name="demo_build_sdk">Android SDK</string>
     <string name="demo_build_device">设备</string>
     <string name="demo_build_scenarios">已注册场景</string>
+
+    <string name="demo_activity_main_title">ViewCompose Demo</string>
+    <string name="demo_activity_navigation_title">导航</string>
+    <string name="demo_activity_modifiers_title">修饰符</string>
+    <string name="demo_activity_feedback_title">反馈</string>
+    <string name="demo_activity_collections_title">集合</string>
+    <string name="demo_activity_input_title">输入</string>
+    <string name="demo_activity_foundations_title">基础组件</string>
+    <string name="demo_activity_actions_title">操作组件</string>
+    <string name="demo_activity_state_title">状态</string>
+    <string name="demo_activity_interop_title">Android View 互操作</string>
+    <string name="demo_activity_gestures_title">手势</string>
+    <string name="demo_activity_animation_title">动画</string>
+    <string name="demo_activity_layouts_title">布局</string>
+    <string name="demo_activity_design_system_title">多设计系统验证</string>
+    <string name="demo_activity_theme_switch_title">跨 Activity 主题切换</string>
+    <string name="demo_activity_widget_showcase_title">控件展示</string>
+    <string name="demo_activity_diagnostics_title">诊断</string>
+    <string name="demo_activity_material3_theme_title">主题与 Token 验证</string>
+    <string name="demo_activity_preview_title">预览</string>
+    <string name="demo_activity_graphics_title">图形</string>
+    <string name="demo_activity_one_ui_title">One UI 7 五组件 Alpha</string>
+    <string name="demo_activity_material3_visual_baseline_title">Material 3 视觉基线</string>
 </resources>

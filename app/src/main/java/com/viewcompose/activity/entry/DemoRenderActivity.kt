@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.ViewGroup
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.demo.registry.DemoScenarioRegistry
@@ -27,7 +28,9 @@ abstract class DemoRenderActivity : AppCompatActivity() {
      */
     protected open fun redirectTargetIntent(): Intent? = null
 
-    protected abstract val demoTitle: String
+    /** Default localized title used when this host is not attached to a direct scenario route. */
+    @get:StringRes
+    protected abstract val demoTitleRes: Int
 
     /** Returns the strict direct scenario attached to this host, when launched through the registry. */
     internal fun currentScenario(): DemoScenarioSpec? {
@@ -78,7 +81,7 @@ abstract class DemoRenderActivity : AppCompatActivity() {
     protected open fun UiTreeBuilder.buildRootScaffold(root: ViewGroup) {
         DemoSubPageScaffold(
             root = root,
-            title = demoTitle,
+            titleRes = demoTitleRes,
             scenario = currentScenario(),
         ) { builder ->
             buildDemoContent(root, builder)

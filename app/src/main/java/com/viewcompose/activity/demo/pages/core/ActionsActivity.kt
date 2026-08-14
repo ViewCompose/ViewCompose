@@ -14,7 +14,7 @@ internal const val EXTRA_ACTIONS_PAGE_INDEX = "actions_page_index"
  * Activity entry for the Actions chapter; it only forwards Intent extras to the declarative page.
  */
 class ActionsActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Actions"
+    override val demoTitleRes: Int = R.string.demo_activity_actions_title
 
     override fun buildDemoContent(
         root: ViewGroup,

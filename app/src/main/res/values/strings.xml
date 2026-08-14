@@ -67,4 +67,27 @@
     <string name="demo_build_sdk">Android SDK</string>
     <string name="demo_build_device">Device</string>
     <string name="demo_build_scenarios">Registered scenarios</string>
+
+    <string name="demo_activity_main_title">ViewCompose Demo</string>
+    <string name="demo_activity_navigation_title">Navigation</string>
+    <string name="demo_activity_modifiers_title">Modifiers</string>
+    <string name="demo_activity_feedback_title">Feedback</string>
+    <string name="demo_activity_collections_title">Collections</string>
+    <string name="demo_activity_input_title">Input</string>
+    <string name="demo_activity_foundations_title">Foundations</string>
+    <string name="demo_activity_actions_title">Actions</string>
+    <string name="demo_activity_state_title">State</string>
+    <string name="demo_activity_interop_title">Android View interop</string>
+    <string name="demo_activity_gestures_title">Gestures</string>
+    <string name="demo_activity_animation_title">Animation</string>
+    <string name="demo_activity_layouts_title">Layouts</string>
+    <string name="demo_activity_design_system_title">Multi-design-system verification</string>
+    <string name="demo_activity_theme_switch_title">Cross-Activity theme switching</string>
+    <string name="demo_activity_widget_showcase_title">Widget showcase</string>
+    <string name="demo_activity_diagnostics_title">Diagnostics</string>
+    <string name="demo_activity_material3_theme_title">Theme and token verification</string>
+    <string name="demo_activity_preview_title">Preview</string>
+    <string name="demo_activity_graphics_title">Graphics</string>
+    <string name="demo_activity_one_ui_title">One UI 7 five-component alpha</string>
+    <string name="demo_activity_material3_visual_baseline_title">Material 3 visual baseline</string>
 </resources>

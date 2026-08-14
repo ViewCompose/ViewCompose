@@ -1,24 +1,48 @@
 package com.viewcompose
 
+import android.app.LocaleManager
+import android.os.Build
+import android.os.LocaleList
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.junit.After
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
 class DemoScenarioAutomationUiTest {
     private val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    private val originalLanguageTags = currentApplicationLanguageTags()
 
     @After
     fun stopTarget() {
+        setApplicationLanguageTags(originalLanguageTags)
         device.pressHome()
+    }
+
+    @Test
+    fun catalogAutomationResourceIdsRemainStableAcrossEnglishAndSimplifiedChinese() {
+        listOf(
+            "en" to R.string.demo_catalog_ready,
+            "zh-CN" to R.string.demo_catalog_ready,
+        ).forEach { (languageTag, readyResource) ->
+            setApplicationLanguageTags(languageTag)
+            launchDemoActivity(MainActivity::class.java).use {
+                waitForUiIdle()
+                val ready = requireTarget("catalog", "ready")
+                assertEquals(localizedString(languageTag, readyResource), ready.text)
+            }
+        }
     }
 
     @Test
@@ -71,7 +95,7 @@ class DemoScenarioAutomationUiTest {
     private fun requireTarget(
         scenarioId: String,
         role: String,
-    ) {
+    ): androidx.test.uiautomator.UiObject2 {
         val normalized = scenarioId.replace('.', '_').replace('-', '_')
         val resourceName = "demo_${normalized}_$role"
         val target = device.wait(
@@ -79,6 +103,42 @@ class DemoScenarioAutomationUiTest {
             TARGET_TIMEOUT_MS,
         )
         assertNotNull("Missing $scenarioId/$role", target)
+        return requireNotNull(target)
+    }
+
+    private fun localizedString(
+        languageTag: String,
+        resourceId: Int,
+    ): String {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val configuration = android.content.res.Configuration(context.resources.configuration).apply {
+            setLocale(Locale.forLanguageTag(languageTag))
+        }
+        return context.createConfigurationContext(configuration).getString(resourceId)
+    }
+
+    private fun currentApplicationLanguageTags(): String {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        return if (Build.VERSION.SDK_INT >= 33) {
+            context.getSystemService(LocaleManager::class.java).applicationLocales.toLanguageTags()
+        } else {
+            AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        }
+    }
+
+    private fun setApplicationLanguageTags(languageTags: String) {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val context = instrumentation.targetContext
+        instrumentation.runOnMainSync {
+            if (Build.VERSION.SDK_INT >= 33) {
+                context.getSystemService(LocaleManager::class.java).applicationLocales =
+                    LocaleList.forLanguageTags(languageTags)
+            } else {
+                AppCompatDelegate.setApplicationLocales(
+                    LocaleListCompat.forLanguageTags(languageTags),
+                )
+            }
+        }
     }
 
     private companion object {

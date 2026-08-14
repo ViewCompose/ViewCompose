@@ -8,7 +8,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * Activity entry for the Interop chapter, validating boundaries between ViewCompose and native Android Views.
  */
 class InteropActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Interop"
+    override val demoTitleRes: Int = R.string.demo_activity_interop_title
 
     override fun buildDemoContent(
         root: ViewGroup,

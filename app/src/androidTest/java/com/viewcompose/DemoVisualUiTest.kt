@@ -846,7 +846,9 @@ class DemoVisualUiTest {
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
             }
-            clickDeviceText("详情")
+            scenario.onActivity { activity ->
+                activity.clickByTestTag(DemoTestTags.STATE_PATCH_TAB_DETAILS)
+            }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-tab-selection-light")
             scenario.onActivity { activity ->

@@ -14,7 +14,7 @@ internal const val EXTRA_LAYOUTS_PAGE_INDEX = "layouts_page_index"
  * Activity entry for the Layouts chapter, showcasing linear, scrollable, flow, and constraint layout capabilities.
  */
 class LayoutsActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Layouts"
+    override val demoTitleRes: Int = R.string.demo_activity_layouts_title
 
     override fun buildDemoContent(
         root: ViewGroup,

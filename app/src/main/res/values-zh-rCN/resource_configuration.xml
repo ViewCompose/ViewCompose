@@ -10,6 +10,7 @@
     <string name="resource_configuration_direction_action">切换 LTR / RTL 方向</string>
     <string name="resource_configuration_image_description">配置限定的资源图片</string>
     <plurals name="resource_configuration_items">
+        <item quantity="one">%1$d 个资源值</item>
         <item quantity="other">%1$d 个资源值</item>
     </plurals>
     <string-array name="resource_configuration_labels">

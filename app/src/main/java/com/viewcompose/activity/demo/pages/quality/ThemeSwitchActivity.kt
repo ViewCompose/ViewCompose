@@ -18,7 +18,7 @@ import com.viewcompose.ui.unit.dp
 
 /** Demonstrates one observable application theme choice across two independent Activity sessions. */
 class ThemeSwitchActivity : DemoRenderActivity() {
-    override val demoTitle: String = "跨 Activity 主题切换"
+    override val demoTitleRes: Int = R.string.demo_activity_theme_switch_title
 
     override fun buildDemoContent(
         root: ViewGroup,

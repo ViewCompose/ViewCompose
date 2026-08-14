@@ -20,7 +20,7 @@ internal const val EXTRA_ANIMATION_INFINITE_PULSE = "animation_infinite_pulse"
  * Activity entry for the Animation sandbox, covering visibility, transitions, animation specs, and infinite samples.
  */
 class AnimationActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Animation"
+    override val demoTitleRes: Int = R.string.demo_activity_animation_title
 
     override fun buildDemoContent(
         root: ViewGroup,

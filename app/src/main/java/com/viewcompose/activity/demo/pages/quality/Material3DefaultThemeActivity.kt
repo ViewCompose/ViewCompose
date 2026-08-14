@@ -11,7 +11,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /** Hosts an isolated theme-source fixture for manual and screenshot-based token verification. */
 class Material3DefaultThemeActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Theme and token verification"
+    override val demoTitleRes: Int = R.string.demo_activity_material3_theme_title
 
     private val themeSource: DemoThemeSource
         get() = DemoThemeSource.fromId(intent?.getStringExtra(EXTRA_THEME_SOURCE))

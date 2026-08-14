@@ -6,7 +6,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
 internal const val EXTRA_STATE_PAGE_INDEX = "state_page_index"
 
 class StateActivity : DemoRenderActivity() {
-    override val demoTitle: String = "State"
+    override val demoTitleRes: Int = R.string.demo_activity_state_title
 
     override fun buildDemoContent(
         root: ViewGroup,

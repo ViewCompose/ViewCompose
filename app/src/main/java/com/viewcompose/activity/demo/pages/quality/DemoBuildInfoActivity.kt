@@ -15,8 +15,7 @@ import com.viewcompose.ui.unit.dp
 
 /** Shows facts derived from the running package, device, and executable scenario registry. */
 class DemoBuildInfoActivity : DemoRenderActivity() {
-    override val demoTitle: String
-        get() = getString(R.string.demo_build_info_title)
+    override val demoTitleRes: Int = R.string.demo_build_info_title
 
     override fun buildDemoContent(
         root: ViewGroup,

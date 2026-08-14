@@ -14,7 +14,7 @@ internal const val EXTRA_FEEDBACK_PAGE_INDEX = "feedback_page_index"
  * Activity entry for the Feedback chapter, validating declarative APIs for transient feedback and surface overlays.
  */
 class FeedbackActivity : DemoRenderActivity() {
-    override val demoTitle: String = "Feedback"
+    override val demoTitleRes: Int = R.string.demo_activity_feedback_title
 
     override fun buildDemoContent(
         root: ViewGroup,

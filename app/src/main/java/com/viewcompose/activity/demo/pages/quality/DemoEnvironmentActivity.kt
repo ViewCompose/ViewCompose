@@ -25,8 +25,7 @@ import java.util.Locale
 
 /** Hosts global Demo controls separately from executable verification scenarios. */
 class DemoEnvironmentActivity : DemoRenderActivity() {
-    override val demoTitle: String
-        get() = getString(R.string.demo_environment_title)
+    override val demoTitleRes: Int = R.string.demo_environment_title
 
     override fun buildDemoContent(
         root: ViewGroup,
