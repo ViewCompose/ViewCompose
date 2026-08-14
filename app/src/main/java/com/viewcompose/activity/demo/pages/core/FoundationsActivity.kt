@@ -2,6 +2,8 @@ package com.viewcompose
 
 import android.content.Intent
 import android.view.ViewGroup
+import com.viewcompose.demo.registry.DemoScenarioIds
+import com.viewcompose.demo.registry.DemoScenarioRegistry
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
@@ -24,7 +26,12 @@ class FoundationsActivity : DemoRenderActivity() {
         builder.OverviewPage(
             initialPageIndex = intent?.getIntExtra(EXTRA_FOUNDATIONS_PAGE_INDEX, 0) ?: 0,
         ) { target ->
-            startActivity(Intent(this, target))
+            if (target == CollectionsActivity::class.java) {
+                val scenario = DemoScenarioRegistry.require(DemoScenarioIds.CollectionControls.value)
+                startActivity(DemoScenarioRegistry.createLaunchIntent(this, scenario))
+            } else {
+                startActivity(Intent(this, target))
+            }
         }
     }
 }

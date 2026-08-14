@@ -21,6 +21,8 @@ import android.view.ViewParent
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
+import androidx.annotation.IdRes
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ActivityScenario
@@ -30,8 +32,8 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import androidx.lifecycle.Lifecycle
 import com.google.android.material.shape.MaterialShapeDrawable
+import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
 import com.viewcompose.renderer.R as RendererR
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,6 +67,32 @@ internal fun <A : Activity> launchDemoActivity(
     return ActivityScenario.launch(activityClass).also { scenario ->
         scenario.moveToState(Lifecycle.State.RESUMED)
     }
+}
+
+/** Launches a strict scenario Activity without relying on a legacy page-index extra. */
+internal fun <A : Activity> launchDemoScenarioActivity(
+    activityClass: Class<A>,
+    scenarioId: String,
+    themeMode: DemoThemeMode = DemoThemeMode.Light,
+): ActivityScenario<A> {
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    return launchDemoActivity(
+        intent = Intent(context, activityClass).putExtra(EXTRA_DEMO_SCENARIO_ID, scenarioId),
+        themeMode = themeMode,
+    )
+}
+
+/** Returns a required native view addressed by the scenario-owned Android resource ID bridge. */
+internal fun <V : View> Activity.requireScenarioViewById(@IdRes id: Int): V {
+    val view = findViewById<V>(id)
+    assertNotNull("Expected to find view with resource ID: $id", view)
+    return requireNotNull(view)
+}
+
+/** Clicks a required scenario-owned native resource target on the Activity thread. */
+internal fun Activity.clickScenarioViewById(@IdRes id: Int) {
+    val target = requireScenarioViewById<View>(id)
+    assertTrue("Expected resource target to accept click: $id", target.performClick())
 }
 
 /**

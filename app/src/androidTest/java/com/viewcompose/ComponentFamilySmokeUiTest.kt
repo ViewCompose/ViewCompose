@@ -65,11 +65,9 @@ class ComponentFamilySmokeUiTest {
             }
         }
 
-        launchDemoActivity<CollectionsActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                CollectionsActivity::class.java,
-            ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 4),
+        launchDemoScenarioActivity(
+            activityClass = CollectionsActivity::class.java,
+            scenarioId = "collection.lazy-row",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->

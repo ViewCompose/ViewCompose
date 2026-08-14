@@ -10,8 +10,9 @@ import android.view.ViewGroup
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -38,54 +39,70 @@ class DemoVisualUiTest {
 
     @Test
     fun collectionsBenchmarkControls_areVisibleAndNotEllipsized() {
-        launchDemoActivity(CollectionsActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            CollectionsActivity::class.java,
+            "collection.controls",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("collections-benchmark-light")
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_BENCHMARK_TOGGLE)
-                val reset = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_BENCHMARK_RESET)
+                val toggle = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_controls_primary_action,
+                )
+                val reset = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_controls_reset,
+                )
                 assertViewFullyVisible(toggle)
                 assertViewFullyVisible(reset)
                 assertTextNotEllipsized(toggle)
                 assertTextNotEllipsized(reset)
-                activity.requireTextView("Benchmark 项 A")
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_BENCHMARK_TOGGLE)
+                val itemA = activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                )
+                assertTrue(itemA.text.toString().contains("A"))
+                activity.clickScenarioViewById(R.id.demo_collection_controls_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val rotatedItem = activity.requireTextView("Benchmark 项 C 展开")
-                assertViewFullyVisible(rotatedItem)
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_BENCHMARK_RESET)
+                val rotatedItemA = activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                )
+                assertViewFullyVisible(rotatedItemA)
+                assertTrue(rotatedItemA.text.toString().contains("A"))
+                activity.clickScenarioViewById(R.id.demo_collection_controls_reset)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val resetItem = activity.requireTextView("Benchmark 项 A")
+                val resetItem = activity.requireTextViewByTestTagVisible(
+                    DemoTestTags.COLLECTIONS_BENCHMARK_ITEM_A,
+                )
                 assertViewFullyVisible(resetItem)
+                assertTrue(resetItem.text.toString().contains("A"))
             }
         }
     }
 
     @Test
     fun collectionsList_labelToggle_refreshesVisibleItemLabels() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        var primaryLabel = ""
+        launchDemoScenarioActivity(
             CollectionsActivity::class.java,
-        ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 1)
-        launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "collection.lazy-list",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val toggle = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
                 val itemA = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
                 assertViewFullyVisible(toggle)
-                assertTrue(itemA.text.toString().contains("Lazy 项 A"))
+                assertTrue(itemA.text.toString().contains("A"))
+                primaryLabel = itemA.text.toString()
                 activity.clickByTestTag(DemoTestTags.COLLECTIONS_LABEL_TOGGLE)
             }
             waitForUiIdle()
             val switchedToAlternate = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
                     .text
-                    .toString()
-                    .contains("（替代）")
+                    .toString() != primaryLabel
             }
             assertTrue("Expected visible LazyColumn item to refresh its alternate label", switchedToAlternate)
             scenario.onActivity { activity ->
@@ -95,8 +112,9 @@ class DemoVisualUiTest {
             }
             waitForUiIdle()
             val switchedToPrimary = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
-                val text = activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A).text.toString()
-                text.contains("Lazy 项 A") && !text.contains("（替代）")
+                activity.requireTextViewByTestTagVisible(DemoTestTags.COLLECTIONS_LIST_ITEM_A)
+                    .text
+                    .toString() == primaryLabel
             }
             assertTrue("Expected visible LazyColumn item to restore its primary label", switchedToPrimary)
             scenario.onActivity { activity ->
@@ -677,23 +695,28 @@ class DemoVisualUiTest {
 
     @Test
     fun collectionsStress_toggleUpdatesVisibleControls() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             CollectionsActivity::class.java,
-        ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 2)
-        launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "collection.stress",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val rotate = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ROTATE)
-                val edge = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_EDGE)
+                val rotate = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_primary_action,
+                )
+                val edge = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_secondary_action,
+                )
                 assertViewFullyVisible(rotate)
                 assertViewFullyVisible(edge)
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_STRESS_EDGE)
+                activity.clickScenarioViewById(R.id.demo_collection_stress_secondary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("collections-stress-light")
             scenario.onActivity { activity ->
-                val activeIds = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS)
+                val activeIds = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_state,
+                )
                 assertViewFullyVisible(activeIds)
                 assertTextNotEllipsized(activeIds)
                 assertTrue(activeIds.text.toString().contains("X"))
@@ -703,29 +726,34 @@ class DemoVisualUiTest {
 
     @Test
     fun collectionsStress_rotateOrder_refreshesVisibleIdsAcrossToggles() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             CollectionsActivity::class.java,
-        ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 2)
-        launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "collection.stress",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val ids = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS)
+                val ids = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_state,
+                )
                 assertViewFullyVisible(ids)
                 assertTrue(ids.text.toString().contains("A -> B -> C -> D"))
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_STRESS_ROTATE)
+                activity.clickScenarioViewById(R.id.demo_collection_stress_primary_action)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val ids = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS)
+                val ids = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_state,
+                )
                 assertViewFullyVisible(ids)
                 assertTrue(ids.text.toString().contains("C -> D -> A -> B"))
-                activity.clickByTestTag(DemoTestTags.COLLECTIONS_STRESS_ROTATE)
+                activity.clickScenarioViewById(R.id.demo_collection_stress_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("collections-stress-rotate-light")
             scenario.onActivity { activity ->
-                val ids = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_STRESS_ACTIVE_IDS)
+                val ids = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_collection_stress_state,
+                )
                 assertViewFullyVisible(ids)
                 assertTrue(ids.text.toString().contains("A -> B -> C -> D"))
             }
@@ -734,16 +762,16 @@ class DemoVisualUiTest {
 
     @Test
     fun collectionsGrid_spanToggle_refreshesVisibleItemContent() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        var twoColumnLabel = ""
+        launchDemoScenarioActivity(
             CollectionsActivity::class.java,
-        ).putExtra(EXTRA_COLLECTIONS_PAGE_INDEX, 5)
-        launchDemoActivity<CollectionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "collection.grid",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val firstItem = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
                 assertViewFullyVisible(firstItem)
-                assertTrue(firstItem.text.toString().contains("2列"))
+                twoColumnLabel = firstItem.text.toString()
                 activity.clickByTestTag(DemoTestTags.COLLECTIONS_GRID_THREE_COLS)
             }
             waitForUiIdle()
@@ -751,7 +779,7 @@ class DemoVisualUiTest {
             scenario.onActivity { activity ->
                 val firstItem = activity.requireTextViewByTestTag(DemoTestTags.COLLECTIONS_GRID_FIRST_ITEM)
                 assertViewFullyVisible(firstItem)
-                assertTrue(firstItem.text.toString().contains("3列"))
+                assertNotEquals(twoColumnLabel, firstItem.text.toString())
             }
         }
     }

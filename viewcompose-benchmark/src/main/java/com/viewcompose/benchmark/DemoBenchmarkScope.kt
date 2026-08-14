@@ -187,7 +187,6 @@ private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (modu
     "state" -> "com.viewcompose.StateActivity"
     "layouts" -> "com.viewcompose.LayoutsActivity"
     "input" -> "com.viewcompose.InputActivity"
-    "collections" -> "com.viewcompose.CollectionsActivity"
     "interop" -> "com.viewcompose.InteropActivity"
     "diagnostics" -> "com.viewcompose.DiagnosticsActivity"
     else -> error("Unknown legacy benchmark module: $moduleKey")

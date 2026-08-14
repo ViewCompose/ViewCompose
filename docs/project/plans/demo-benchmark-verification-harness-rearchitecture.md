@@ -670,7 +670,18 @@ chapter tabs no longer exist in the target information architecture. Runtime, re
 visible copy now use paired locale resources. The theme fixture resolves human-facing labels,
 notes, sample values, and accessibility descriptions through resources while keeping framework
 token and API identifiers as stable diagnostic data. The complete Diagnostics domain is in the
-hard-coded-copy gate, and all three strict diagnostics routes pass on the reference device.
+hard-coded-copy gate, and all three strict diagnostics routes pass on the reference device. The
+Collections domain is also fully resource-backed and covered by that gate; localized prose never
+serves as a selector or workload boundary.
+
+All seven retained collection fixtures now have strict `collection.*` identities and direct
+Activity routes. The chapter overview, page switcher, verification checklist, and visible route
+callouts were deleted. Mutable list, stress, grid, and refresh fixtures expose deterministic reset
+roles. The collection-controls interaction and collection-stress mutation workloads use Android
+resource roles and advance to revision 2 because the direct fixture hierarchy replaces the former
+chapter page. The old `collections` Macrobenchmark module bridge has no callers and was removed.
+Nine focused device tests covering strict routes, collection behavior, localization-safe targets,
+and component smoke checks pass on the reference device.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

@@ -137,18 +137,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "collections",
-                expectedText = "Collections",
-            )
-            scrollUntilText("Collections Benchmark A-B-C")
-            scrollUntilText("Reset Collections Benchmark")
+            startDemoScenarioAndWait("collection.controls")
         },
     ) {
-        clickText("Collections Benchmark A-B-C")
-        waitForText("Collections Benchmark C-A-B")
-        clickText("Reset Collections Benchmark")
-        waitForText("Collections Benchmark A-B-C")
+        val initial = scenarioTargetText("collection.controls", DemoTargetRole.State)
+        clickScenarioTarget("collection.controls", DemoTargetRole.PrimaryAction)
+        val changed = waitForScenarioTargetTextChange(
+            "collection.controls",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("collection.controls", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("collection.controls", DemoTargetRole.State, changed)
     }
 
     @Test
@@ -245,15 +245,41 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "collections",
-                expectedText = "Collections",
-            )
+            startDemoScenarioAndWait("collection.stress")
+            waitForScenarioTarget("collection.stress", DemoTargetRole.Target)
         },
     ) {
         swipePageUp()
         swipePageUp()
         swipePageUp()
+    }
+
+    @Test
+    fun collectionsStressMutation() = benchmarkRule.measureRepeated(
+        packageName = TARGET_PACKAGE,
+        metrics = listOf(FrameTimingMetric()),
+        compilationMode = CompilationMode.Partial(),
+        iterations = DEFAULT_ITERATIONS,
+        startupMode = StartupMode.WARM,
+        setupBlock = {
+            startDemoScenarioAndWait("collection.stress")
+        },
+    ) {
+        val initial = scenarioTargetText("collection.stress", DemoTargetRole.State)
+        clickScenarioTarget("collection.stress", DemoTargetRole.PrimaryAction)
+        val rotated = waitForScenarioTargetTextChange(
+            "collection.stress",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("collection.stress", DemoTargetRole.SecondaryAction)
+        val inserted = waitForScenarioTargetTextChange(
+            "collection.stress",
+            DemoTargetRole.State,
+            rotated,
+        )
+        clickScenarioTarget("collection.stress", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("collection.stress", DemoTargetRole.State, inserted)
     }
 
     @Test

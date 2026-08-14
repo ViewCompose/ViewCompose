@@ -3,6 +3,7 @@ package com.viewcompose.demo.registry
 import android.content.Context
 import android.content.Intent
 import com.viewcompose.FeedbackActivity
+import com.viewcompose.CollectionsActivity
 import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
@@ -29,6 +30,13 @@ internal object DemoScenarioIds {
     val DiagnosticsRuntime = DemoScenarioId("diagnostics.runtime")
     val DiagnosticsTheme = DemoScenarioId("diagnostics.theme")
     val DiagnosticsRenderer = DemoScenarioId("diagnostics.renderer")
+    val CollectionControls = DemoScenarioId("collection.controls")
+    val CollectionLazyList = DemoScenarioId("collection.lazy-list")
+    val CollectionStress = DemoScenarioId("collection.stress")
+    val CollectionAndroidView = DemoScenarioId("collection.android-view")
+    val CollectionLazyRow = DemoScenarioId("collection.lazy-row")
+    val CollectionGrid = DemoScenarioId("collection.grid")
+    val CollectionPullRefresh = DemoScenarioId("collection.pull-refresh")
     val EnvironmentResources = DemoScenarioId("environment.resources")
     val OverlayDialog = DemoScenarioId("overlay.dialog")
     val NavigationSystem = DemoScenarioId("navigation.system")
@@ -153,6 +161,123 @@ internal object DemoScenarioRegistry {
                 reset = R.id.demo_diagnostics_renderer_reset,
                 state = R.id.demo_diagnostics_renderer_state,
                 target = R.id.demo_diagnostics_renderer_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionControls,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_controls_title,
+            summaryRes = R.string.demo_scenario_collection_controls_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_collection_controls_root,
+                ready = R.id.demo_collection_controls_ready,
+                primaryAction = R.id.demo_collection_controls_primary_action,
+                reset = R.id.demo_collection_controls_reset,
+                state = R.id.demo_collection_controls_state,
+                target = R.id.demo_collection_controls_target,
+            ),
+            benchmarkRevision = 2,
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionLazyList,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_lazy_list_title,
+            summaryRes = R.string.demo_scenario_collection_lazy_list_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_collection_lazy_list_root,
+                ready = R.id.demo_collection_lazy_list_ready,
+                reset = R.id.demo_collection_lazy_list_reset,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionStress,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_stress_title,
+            summaryRes = R.string.demo_scenario_collection_stress_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_collection_stress_root,
+                ready = R.id.demo_collection_stress_ready,
+                primaryAction = R.id.demo_collection_stress_primary_action,
+                secondaryAction = R.id.demo_collection_stress_secondary_action,
+                reset = R.id.demo_collection_stress_reset,
+                state = R.id.demo_collection_stress_state,
+                target = R.id.demo_collection_stress_target,
+            ),
+            benchmarkRevision = 2,
+            benchmarkActions = listOf(
+                DemoAutomationRole.PrimaryAction,
+                DemoAutomationRole.SecondaryAction,
+                DemoAutomationRole.Reset,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionAndroidView,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_android_view_title,
+            summaryRes = R.string.demo_scenario_collection_android_view_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_collection_android_view_root,
+                ready = R.id.demo_collection_android_view_ready,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionLazyRow,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_lazy_row_title,
+            summaryRes = R.string.demo_scenario_collection_lazy_row_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_collection_lazy_row_root,
+                ready = R.id.demo_collection_lazy_row_ready,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionGrid,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_grid_title,
+            summaryRes = R.string.demo_scenario_collection_grid_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_collection_grid_root,
+                ready = R.id.demo_collection_grid_ready,
+                reset = R.id.demo_collection_grid_reset,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.CollectionPullRefresh,
+            category = DemoScenarioCategory.Collections,
+            titleRes = R.string.demo_scenario_collection_pull_refresh_title,
+            summaryRes = R.string.demo_scenario_collection_pull_refresh_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual),
+            route = DemoScenarioRoute(CollectionsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_collection_pull_refresh_root,
+                ready = R.id.demo_collection_pull_refresh_ready,
+                reset = R.id.demo_collection_pull_refresh_reset,
             ),
         ),
         scenario(
@@ -341,6 +466,7 @@ internal object DemoScenarioRegistry {
         val root: Int,
         val ready: Int,
         val primaryAction: Int? = null,
+        val secondaryAction: Int? = null,
         val reset: Int? = null,
         val state: Int? = null,
         val target: Int? = null,
@@ -372,6 +498,7 @@ internal object DemoScenarioRegistry {
             add(target(DemoAutomationRole.Root, ids.root))
             add(target(DemoAutomationRole.Ready, ids.ready))
             ids.primaryAction?.let { add(target(DemoAutomationRole.PrimaryAction, it)) }
+            ids.secondaryAction?.let { add(target(DemoAutomationRole.SecondaryAction, it)) }
             ids.reset?.let { add(target(DemoAutomationRole.Reset, it)) }
             ids.state?.let { add(target(DemoAutomationRole.State, it)) }
             ids.target?.let { add(target(DemoAutomationRole.Target, it)) }

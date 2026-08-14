@@ -37,6 +37,39 @@
     <item name="demo_diagnostics_renderer_state" type="id" />
     <item name="demo_diagnostics_renderer_target" type="id" />
 
+    <item name="demo_collection_controls_root" type="id" />
+    <item name="demo_collection_controls_ready" type="id" />
+    <item name="demo_collection_controls_primary_action" type="id" />
+    <item name="demo_collection_controls_reset" type="id" />
+    <item name="demo_collection_controls_state" type="id" />
+    <item name="demo_collection_controls_target" type="id" />
+
+    <item name="demo_collection_lazy_list_root" type="id" />
+    <item name="demo_collection_lazy_list_ready" type="id" />
+    <item name="demo_collection_lazy_list_reset" type="id" />
+
+    <item name="demo_collection_stress_root" type="id" />
+    <item name="demo_collection_stress_ready" type="id" />
+    <item name="demo_collection_stress_primary_action" type="id" />
+    <item name="demo_collection_stress_secondary_action" type="id" />
+    <item name="demo_collection_stress_reset" type="id" />
+    <item name="demo_collection_stress_state" type="id" />
+    <item name="demo_collection_stress_target" type="id" />
+
+    <item name="demo_collection_android_view_root" type="id" />
+    <item name="demo_collection_android_view_ready" type="id" />
+
+    <item name="demo_collection_lazy_row_root" type="id" />
+    <item name="demo_collection_lazy_row_ready" type="id" />
+
+    <item name="demo_collection_grid_root" type="id" />
+    <item name="demo_collection_grid_ready" type="id" />
+    <item name="demo_collection_grid_reset" type="id" />
+
+    <item name="demo_collection_pull_refresh_root" type="id" />
+    <item name="demo_collection_pull_refresh_ready" type="id" />
+    <item name="demo_collection_pull_refresh_reset" type="id" />
+
     <item name="demo_environment_resources_root" type="id" />
     <item name="demo_environment_resources_ready" type="id" />
     <item name="demo_environment_resources_primary_action" type="id" />
