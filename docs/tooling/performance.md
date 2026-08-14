@@ -114,7 +114,10 @@ a valid longitudinal baseline because it does not preserve the Demo workload con
 1. The target is R8-optimized, resource-shrunk, and non-debuggable.
 2. `CompilationMode.None` isolates ART precompilation benefit and exposes the delivered binary.
 3. Fixed scenarios are cold start and state patch.
-4. Compare results longitudinally only on the same device, system version, and thermal state.
+4. A formal physical method uses five clean iterations. Start each method at Android thermal status
+   `NONE` or `LIGHT`, stop and cool between methods, and reject a batch that reaches `SEVERE`.
+5. Compare results longitudinally only on the same device, system version, iteration protocol, and
+   thermal policy.
 
 `ListPerformanceComparisonBenchmark` is the Compose list control:
 
@@ -174,6 +177,8 @@ Automated report and regression rules:
    do not fail.
 6. The report computes coefficient of variation across iteration P50 values. A value above `0.15`
    is unstable and must be rerun rather than interpreted.
+7. More repetitions are not automatically stronger evidence: a continuously heating run is
+   invalid even when its aggregate coefficient of variation is below the threshold.
 
 ### 2.3 Current conclusion
 

@@ -88,15 +88,21 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
 ```bash
 ./gradlew benchmarkComparisonReport \
   -PbenchmarkResult=/path/to/current-benchmarkData.json \
-  -PbenchmarkBaseline=/path/to/baseline-benchmarkData.json
+  -PbenchmarkBaseline=/path/to/baseline-compose-comparison.json
 ```
+
+两份 Markdown/JSON 对照报告都按场景 ID、工作负载修订号和动作标识每一行。纵向门禁的
+baseline 必须是上一份带修订信息的对照 JSON，不能直接传入原始 Macrobenchmark JSON；
+工作负载修订号不同的结果会被拒绝比较。
 
 发布态权威基线是 `ReleaseBaselineBenchmark`：
 
 1. target 为 R8 优化、resource shrink、非 debuggable 的 benchmark variant。
 2. `CompilationMode.None` 隔离 ART 预编译收益，直接暴露交付二进制回归。
 3. 固定场景为冷启动和 state patch。
-4. 结果只在同设备、同系统版本、同温控状态下纵向比较。
+4. 正式物理基准的每个方法使用 5 次洁净迭代；每个方法开始时 Android 温控等级必须为
+   `NONE` 或 `LIGHT`，方法之间必须停进程并冷却，达到 `SEVERE` 的批次直接作废。
+5. 结果只在同设备、同系统版本、同迭代协议和同温控策略下纵向比较。
 
 Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 
@@ -143,6 +149,7 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 4. 门禁必须同时满足“ViewCompose 原始指标超过阈值”和“ViewCompose/Compose 归一化比值超过阈值”才失败。
 5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
 6. 报告会计算各 iteration P50 的变异系数；超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。
+7. 迭代更多不等于证据更强；持续升温的批次即使总体变异系数低于阈值也属于无效数据。
 
 ### 2.3 当前结论
 

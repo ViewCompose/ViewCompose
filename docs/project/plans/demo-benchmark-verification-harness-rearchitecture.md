@@ -1009,6 +1009,12 @@ rows instead of inferring an old workload revision from current source.
 Build the release-like target, run the revised scenarios on the same device and thermal policy,
 and produce reports containing scenario ID and workload revision.
 
+The 2026-08-15 preflight invalidated both a monolithic suite run and a ten-iteration isolated
+state-patch run: each moved the Samsung SM-G991B from `LIGHT` to `SEVERE`, while AndroidX recorded
+no thermal sleep. Formal physical methods therefore hard-cut to five clean iterations. Every method
+starts at `NONE` or `LIGHT`; benchmark and target processes are stopped and the screen is turned off
+between methods; any batch ending at `SEVERE` is rejected regardless of its apparent variance.
+
 For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
 it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
 and 0.8 ms. Unstable runs are rerun rather than interpreted. A changed workload revision receives a
@@ -1136,6 +1142,7 @@ the retired Demo layout.
 | 2026-08-14 | Running-device layout/screenshot audit on SM-G991B | Captured catalog, four Diagnostics states, Settings, About, State, widget showcase, and performance-list comparison; findings are recorded in the screen matrix. |
 | 2026-08-14 | Debug APK build | `./gradlew :app:assembleDebug` passed. |
 | 2026-08-14 | Phase 0 scenario and workload freeze | Classified every module/page/dedicated host and benchmark owner; assigned direct scenario IDs and revision 1 to each retained measured workload. |
+| 2026-08-15 | Phase 5 thermal preflight on SM-G991B / Android 13 | A combined run and an isolated ten-iteration state-patch run both reached Android thermal status `SEVERE`; results were rejected and the formal physical protocol was hard-cut to five clean iterations with per-method cooldown. |
 
 ## Decision history
 

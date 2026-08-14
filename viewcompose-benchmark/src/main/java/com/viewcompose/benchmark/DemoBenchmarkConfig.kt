@@ -13,10 +13,14 @@ internal const val TARGET_PACKAGE = "com.gzq.uiframework"
 internal const val DEFAULT_ITERATIONS = 5
 
 /**
- * release baseline benchmark 使用的迭代次数。
- * Iteration count used by release baseline benchmarks.
+ * 正式物理基准使用的洁净迭代次数。
+ * Clean iteration count used by formal physical benchmarks.
+ *
+ * 五次独立测量足以执行 run-P50 稳定性门禁，同时避免参考真机在单个方法内进入严重热降频。
+ * Five independent measurements support the run-P50 stability gate without pushing the reference
+ * device into severe thermal throttling inside one benchmark method.
  */
-internal const val RELEASE_BASELINE_ITERATIONS = 10
+internal const val RELEASE_BASELINE_ITERATIONS = 5
 
 /**
  * UiAutomator 等待关键文本出现的统一超时时间。
