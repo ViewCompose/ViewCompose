@@ -2,8 +2,9 @@
 
 ## Status
 
-Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, and Phase 2
-host and catalog hard cut are complete. Phase 3 localization and content hard cut is in progress.
+Active. Phase 0 inventory and workload freeze, Phase 1 contract and automation spine, Phase 2 host
+and catalog hard cut, Phase 3 localization and content hard cut, and Phase 4 scenario migration are
+complete. Phase 5 benchmark rebaseline is next.
 
 The Demo is being redefined as a deterministic benchmark and framework-verification harness.
 Automated validation owns the primary information architecture. Human verification remains a
@@ -12,8 +13,7 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: remove the remaining legacy visible-text selector and module-route debt before Phase 5
-rebaseline.
+Next action: execute the Phase 5 same-device benchmark rebaseline.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -532,8 +532,8 @@ measurement semantics do not change without a workload revision.
 | 0. Inventory and freeze | Completed | Scenario map, current selector map, current workload revisions, same-device baseline | Every existing automated path has an owner and replacement scenario ID before UI movement. |
 | 1. Contract and automation spine | Completed | Scenario registry, strict direct route, role-based targets, Android resource-ID bridge | Instrumentation and Macrobenchmark can launch/query a pilot scenario without visible text. |
 | 2. Host and catalog hard cut | Completed | Shared/dedicated/benchmark host policies, compact catalog, environment/build panels | Catalog contains executable scenarios only; top-level pager, About, planned modules, and gaps are removed. |
-| 3. Localization and content policy | In progress | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
-| 4. Scenario migration | In progress | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
+| 3. Localization and content policy | Completed | Canonical English and Simplified Chinese resources, hard-coded-copy gate, localized guide model | Both locales pass; selectors and benchmark scripts are unchanged between locales. |
+| 4. Scenario migration | Completed | Fixture-first routes for every retained capability, chapter tabs split or explicitly justified | Primary fixture/action/result are directly reachable; old module/page wrappers have no callers. |
 | 5. Benchmark rebaseline | Not started | Revisioned release/comparison/interaction baselines and reports on the reference device | Same-device results pass the performance policy and record scenario/revision metadata. |
 | 6. Cleanup and Runtime-plan unlock | Not started | Old route/tag/section infrastructure removed; durable docs updated | Completion criteria pass, this plan is archived, then the Runtime/Patch plan is re-audited against the new baseline. |
 
@@ -987,6 +987,14 @@ Chinese resources. The old `themeSwitch` Macrobenchmark is intentionally retired
 translated controls inside the general Environment page, did not launch a second Activity, and
 was never a frozen framework workload. On the Samsung SM-G991B Android 13 reference device, the
 focused lifecycle/appearance test and the bilingual black-box action/reset test both passed.
+
+The Phase 4 selector migration is complete. The final unused module-launch bridge, catalog/chapter
+text helpers, visible-text click/wait/scroll helpers, and their dead app-instrumentation wrappers
+were deleted. Resource-target scrolling remains as a narrowly named helper and no longer shares a
+text-search abstraction. `verifyDemoAutomationSelectors` now enforces a zero-debt contract instead
+of preserving exact legacy counts: any `By.text(...)` or named visible-copy selector in Demo
+instrumentation or Macrobenchmark source fails the build. There is no current system, IME, or
+third-party exception requiring an allowlist.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

@@ -535,12 +535,6 @@ tasks.register("verifyDemoAutomationSelectors") {
                 """tapVisibleText|tapText|scrollTabStripUntilText|assertDeviceTextVisible|""" +
                 """clickDeviceText|waitForDeviceText|findObjectByText)\s*\(""",
         )
-        // This exact baseline is temporary migration debt. Phase 4 removes Demo-owned entries;
-        // any retained system/IME/third-party selector must move to a narrowly named allowlist.
-        val legacySelectorBaseline = mapOf(
-            "app/src/androidTest/java/com/viewcompose/DemoUiTestHelpers.kt" to 6,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 17,
-        )
         val sourceRoots = listOf(
             rootDir.resolve("app/src/androidTest"),
             rootDir.resolve("viewcompose-benchmark/src/main"),
@@ -556,25 +550,15 @@ tasks.register("verifyDemoAutomationSelectors") {
                     selectorPattern.findAll(file.readText()).count()
             }
             .filterValues { count -> count > 0 }
-        val violations = (legacySelectorBaseline.keys + actualCounts.keys)
-            .distinct()
-            .sorted()
-            .mapNotNull { path ->
-                val expected = legacySelectorBaseline[path] ?: 0
-                val actual = actualCounts[path] ?: 0
-                if (expected == actual) {
-                    null
-                } else {
-                    "$path -> expected $expected legacy text-selector usages, found $actual"
-                }
-            }
 
-        if (violations.isNotEmpty()) {
+        if (actualCounts.isNotEmpty()) {
             error(
                 buildString {
                     appendLine("Demo automation selector verification failed:")
-                    violations.forEach { violation -> appendLine("- $violation") }
-                    appendLine("Use scenario-owned Android resource IDs; only reduce the legacy baseline.")
+                    actualCounts.toSortedMap().forEach { (path, count) ->
+                        appendLine("- $path -> found $count visible-text selector usages")
+                    }
+                    appendLine("Use scenario-owned Android resource IDs.")
                 },
             )
         }

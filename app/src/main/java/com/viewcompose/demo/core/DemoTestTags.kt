@@ -106,7 +106,6 @@ internal object DemoTestTags {
     const val MATERIAL3_TARGET_CLIPPED_PARENT = "material3_target_clipped_parent"
     const val MATERIAL3_TARGET_CLIPPED_CHILD = "material3_target_clipped_child"
 
-    fun catalogModuleButton(moduleKey: String): String = "catalog_module_$moduleKey"
 
     const val LAYOUTS_EDGE_WEIGHTED = "layouts_edge_weighted"
     const val LAYOUTS_EDGE_ACTION = "layouts_edge_action"

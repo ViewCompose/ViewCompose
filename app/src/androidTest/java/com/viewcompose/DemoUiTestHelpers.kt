@@ -216,35 +216,6 @@ internal fun captureDeviceScreenshot(
     return output
 }
 
-/**
- * 通过 UiAutomator 点击指定文本。
- * Clicks the given text through UiAutomator.
- */
-internal fun clickDeviceText(text: String) {
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    val node = device.wait(Until.hasObject(By.text(text)), 5_000)
-    assertTrue("Expected device text target: $text", node)
-    val target = device.findObject(By.text(text))
-    assertNotNull("Expected device object for text: $text", target)
-    target!!.click()
-    waitForUiIdle()
-}
-
-/**
- * 断言指定文本在设备可见区域内。
- * Asserts that the given text is visible on the device.
- */
-internal fun assertDeviceTextVisible(text: String) {
-    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    val node = device.wait(Until.hasObject(By.text(text)), 5_000)
-    assertTrue("Expected device text target: $text", node)
-    val target = device.findObject(By.text(text))
-    assertNotNull("Expected visible device object for text: $text", target)
-    val bounds = target!!.visibleBounds
-    assertTrue("Expected visible width > 0 for device text: $text", bounds.width() > 0)
-    assertTrue("Expected visible height > 0 for device text: $text", bounds.height() > 0)
-}
-
 /** Returns a visible device node addressed by an app-owned Android resource ID. */
 internal fun requireDeviceResourceId(@IdRes id: Int): androidx.test.uiautomator.UiObject2 {
     val instrumentation = InstrumentationRegistry.getInstrumentation()

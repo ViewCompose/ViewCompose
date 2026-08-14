@@ -32,7 +32,6 @@ internal fun MacrobenchmarkScope.startDemoScenarioAndWait(
     prepareBenchmarkUiAutomation()
     pressHome()
     startActivityAndWait { intent ->
-        intent.removeExtra("demo_module_key")
         intent.removeExtra("demo_scenario_id")
         intent.removeExtra("performance_engine")
         intent.removeExtra("performance_scenario")
@@ -69,7 +68,7 @@ internal fun MacrobenchmarkScope.scrollUntilScenarioTarget(
             if (hasVisibleBoundsInSafeViewport(target)) return target
         }
         if (attempt < maxSwipes) {
-            swipePageUpForTextSearch()
+            swipePageUpForTargetSearch()
         }
     }
     val target = device.findObject(By.res(TARGET_PACKAGE, resourceName))
@@ -158,7 +157,7 @@ internal fun MacrobenchmarkScope.scrollUntilResourceTarget(
             if (hasVisibleBoundsInSafeViewport(target)) return target
         }
         if (attempt < maxSwipes) {
-            swipePageUpForTextSearch()
+            swipePageUpForTargetSearch()
         }
     }
     val target = device.findObject(By.res(TARGET_PACKAGE, resourceName))
@@ -236,44 +235,6 @@ internal fun MacrobenchmarkScope.startCatalogAndWait() {
     waitForScenarioTarget("catalog", DemoTargetRole.Ready)
 }
 
-/**
- * 启动指定 demo 模块并等待模块内的稳定文本锚点。
- * Starts a specific demo module and waits for a stable in-module text anchor.
- */
-internal fun MacrobenchmarkScope.startDemoActivityAndWait(
-    moduleKey: String,
-    expectedText: String,
-    extras: Map<String, Int> = emptyMap(),
-) {
-    prepareBenchmarkUiAutomation()
-    pressHome()
-    startActivityAndWait { intent ->
-        // 清理上一次测试写入的业务 extra，同时保留 benchmark 框架需要的系统 extra。
-        // Clear app-specific extras from previous test methods while preserving framework extras.
-        intent.removeExtra("demo_module_key")
-        intent.removeExtra("demo_scenario_id")
-        intent.removeExtra("performance_engine")
-        intent.removeExtra("performance_scenario")
-        // 带 extra 时清空任务栈以强制重建；无 extra 时移除标记，避免后续测试继承强清理行为。
-        // With extras, clear the task to force recreation; without extras, remove the flag
-        // so later tests do not inherit aggressive clearing.
-        if (extras.isNotEmpty()) {
-            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        } else {
-            intent.flags = intent.flags and android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK.inv()
-        }
-        intent.setClassName(TARGET_PACKAGE, legacyBenchmarkActivityClass(moduleKey))
-        extras.forEach { (key, value) -> intent.putExtra(key, value) }
-    }
-    waitForText(expectedText)
-}
-
-/** Temporary benchmark-only bridge removed when the remaining environment host gets a strict ID. */
-private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (moduleKey) {
-    "environment" -> "com.viewcompose.DemoEnvironmentActivity"
-    else -> error("Unknown legacy benchmark module: $moduleKey")
-}
-
 /** Starts the Diagnostics Theme page directly so long-fling measurements include its full fixture. */
 internal fun MacrobenchmarkScope.startDiagnosticsThemeAndWait() {
     startDemoScenarioAndWait("diagnostics.theme")
@@ -334,92 +295,7 @@ internal fun MacrobenchmarkScope.startSystemNavigationActivityFromForeground() {
     )
 }
 
-/**
- * 等待指定文本出现。
- * Waits until the given text appears.
- */
-internal fun MacrobenchmarkScope.waitForText(text: String) {
-    val found = device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
-    assertTrue("Expected to find text: $text", found)
-}
-
-/** Asserts that a text node is inside the visible safe viewport without scrolling to it. */
-internal fun MacrobenchmarkScope.assertVisibleText(text: String) {
-    assertNotNull("Expected visible text: $text", findVisibleTextNode(text))
-}
-
-/**
- * 等待指定文本从当前窗口消失。
- * Waits until the given text disappears from the current window.
- */
-internal fun MacrobenchmarkScope.waitForTextGone(text: String) {
-    val gone = device.wait(Until.gone(By.text(text)), UI_WAIT_TIMEOUT_MS)
-    assertTrue("Expected text to disappear: $text", gone)
-}
-
-/**
- * 在页面内上下滑动，直到找到指定文本。
- * Swipes within the page until the given text is found.
- */
-internal fun MacrobenchmarkScope.scrollUntilText(
-    text: String,
-    maxSwipes: Int = 10,
-): UiObject2 {
-    repeat(maxSwipes + 1) { attempt ->
-        findVisibleTextNode(text)?.let { node -> return node }
-        if (attempt < maxSwipes) {
-            swipePageUpForTextSearch()
-        }
-    }
-    // 向下查找失败后回滚向上查找，覆盖锚点已在上方的情况。
-    // If scrolling down fails, scroll back up to cover anchors above the current viewport.
-    repeat(maxSwipes * 2) {
-        findVisibleTextNode(text)?.let { node -> return node }
-        swipePageDownForTextSearch()
-    }
-    val node = findVisibleTextNode(text)
-    assertNotNull("Expected to scroll text into the visible viewport: $text", node)
-    return node!!
-}
-
-/**
- * 查找并点击文本节点，点击后等待 UiAutomator idle。
- * Finds and clicks a text node, then waits for UiAutomator idle.
- */
-internal fun MacrobenchmarkScope.clickText(text: String) {
-    val node = scrollUntilText(text)
-    tapTextTarget(node)
-    device.waitForIdle()
-}
-
-/**
- * Waits for a text node that must already be in the viewport, clicks it, and then waits for idle.
- *
- * This keeps overlay interactions stable while the accessibility tree is being replaced during
- * window entry or Activity recreation.
- */
-internal fun MacrobenchmarkScope.clickVisibleText(text: String) {
-    device.wait(Until.hasObject(By.text(text)), UI_WAIT_TIMEOUT_MS)
-    val node = findVisibleTextNode(text)
-    assertNotNull("Expected to find visible text: $text", node)
-    tapTextTarget(node!!)
-    device.waitForIdle()
-}
-
-private fun MacrobenchmarkScope.findVisibleTextNode(text: String): UiObject2? {
-    val node = device.findObject(By.text(text)) ?: return null
-    val bounds = node.visibleBounds
-    val centerY = bounds.centerY()
-    val safeTop = (device.displayHeight * 0.08f).toInt()
-    val safeBottom = (device.displayHeight * 0.90f).toInt()
-    return node.takeIf {
-        bounds.width() > 0 &&
-            bounds.height() > 0 &&
-            centerY in safeTop..safeBottom
-    }
-}
-
-private fun MacrobenchmarkScope.swipePageUpForTextSearch() {
+private fun MacrobenchmarkScope.swipePageUpForTargetSearch() {
     val width = device.displayWidth
     val height = device.displayHeight
     device.swipe(
@@ -429,30 +305,7 @@ private fun MacrobenchmarkScope.swipePageUpForTextSearch() {
         (height * 0.22f).toInt(),
         80,
     )
-    SystemClock.sleep(TEXT_SEARCH_SCROLL_SETTLE_MILLIS)
-}
-
-private fun MacrobenchmarkScope.swipePageDownForTextSearch() {
-    val width = device.displayWidth
-    val height = device.displayHeight
-    device.swipe(
-        width / 2,
-        (height * 0.22f).toInt(),
-        width / 2,
-        (height * 0.78f).toInt(),
-        80,
-    )
-    SystemClock.sleep(TEXT_SEARCH_SCROLL_SETTLE_MILLIS)
-}
-
-/**
- * 点击当前可见文本节点但不等待 idle，适用于固定时长动效测量。
- * Clicks a visible text node without waiting for idle, for fixed-duration motion measurements.
- */
-internal fun MacrobenchmarkScope.clickVisibleTextWithoutIdle(text: String) {
-    val node = device.findObject(By.text(text))
-    assertNotNull("Expected to find visible text: $text", node)
-    tapTextTarget(node!!)
+    SystemClock.sleep(TARGET_SEARCH_SCROLL_SETTLE_MILLIS)
 }
 
 /** Clicks the visible checkable control without waiting for UiAutomator idle. */
@@ -464,11 +317,6 @@ internal fun MacrobenchmarkScope.clickVisibleCheckableControlWithoutIdle() {
         }
     assertNotNull("Expected to find a visible checkable control", node)
     tapTarget(node!!, "checkable control")
-}
-
-private fun MacrobenchmarkScope.tapTextTarget(node: UiObject2) {
-    val target = clickableTargetFor(node)
-    tapTarget(target, "text: ${node.text}")
 }
 
 private fun MacrobenchmarkScope.tapTarget(
@@ -495,37 +343,6 @@ private fun MacrobenchmarkScope.hasVisibleBoundsInSafeViewport(candidate: UiObje
     return bounds.width() > 0 && bounds.height() > 0 && centerY in safeTop..safeBottom
 }
 
-private fun MacrobenchmarkScope.clickableTargetFor(node: UiObject2): UiObject2 {
-    node.clickableAncestorOrNull()?.let { target -> return target }
-
-    // Some Samsung builds expose a widget's text and clickable surface as overlapping siblings.
-    // Prefer the smallest clickable surface containing the text center so UiAutomator dispatches
-    // the action to the real control instead of the non-clickable label.
-    val textBounds = node.visibleBounds
-    val centerX = textBounds.centerX()
-    val centerY = textBounds.centerY()
-    return device.findObjects(By.clickable(true))
-        .asSequence()
-        .map { candidate -> candidate to candidate.visibleBounds }
-        .filter { (_, bounds) ->
-            bounds.width() > 0 &&
-                bounds.height() > 0 &&
-                bounds.contains(centerX, centerY)
-        }
-        .minByOrNull { (_, bounds) -> bounds.width().toLong() * bounds.height() }
-        ?.first
-        ?: node
-}
-
-private fun UiObject2.clickableAncestorOrNull(): UiObject2? {
-    var candidate: UiObject2? = this
-    while (candidate != null) {
-        if (candidate.isClickable) return candidate
-        candidate = candidate.parent
-    }
-    return null
-}
-
 /**
  * 等待导航动效完成的固定窗口。
  * Fixed wait window for navigation motion completion.
@@ -546,59 +363,6 @@ private fun MacrobenchmarkScope.prepareBenchmarkUiAutomation() {
     // benchmark 已使用显式文本条件和固定动效窗口同步，因此可以关闭隐式 idle timeout。
     // Benchmarks already use explicit text conditions and fixed motion windows, so idle timeout is disabled.
     Configurator.getInstance().setWaitForIdleTimeout(0L)
-}
-
-/**
- * 在目录中打开指定标题的模块。
- * Opens a module with the given title from the catalog.
- */
-internal fun MacrobenchmarkScope.openDemoModule(title: String) {
-    clickText("Open $title")
-}
-
-/**
- * 从模块页面返回目录。
- * Returns from a module page to the catalog.
- */
-internal fun MacrobenchmarkScope.returnToCatalog() {
-    clickText("Back to catalog")
-    waitForText("Capability Modules")
-}
-
-/**
- * 点击章节 tab，必要时先横向滚动 tab strip。
- * Clicks a chapter tab, scrolling the tab strip first if needed.
- */
-internal fun MacrobenchmarkScope.clickChapterTab(
-    text: String,
-    waitForIdle: Boolean = true,
-) {
-    scrollTabStripUntilText(text)
-    val node = device.findObject(By.text(text))
-    assertNotNull("Expected to find chapter tab: $text", node)
-    node!!.click()
-    if (waitForIdle) {
-        device.waitForIdle()
-    }
-}
-
-/**
- * 横向滚动 tab strip 直到指定文本可见。
- * Scrolls the tab strip horizontally until the given text is visible.
- */
-internal fun MacrobenchmarkScope.scrollTabStripUntilText(
-    text: String,
-    maxSwipes: Int = 6,
-) {
-    repeat(maxSwipes + 1) { attempt ->
-        if (device.hasObject(By.text(text))) {
-            return
-        }
-        if (attempt < maxSwipes) {
-            swipeTabStripLeft()
-        }
-    }
-    waitForText(text)
 }
 
 /**
@@ -680,27 +444,9 @@ internal fun MacrobenchmarkScope.scrollToPageTop(
 }
 
 /**
- * 向左滑动章节 tab strip。
- * Swipes the chapter tab strip left.
- */
-internal fun MacrobenchmarkScope.swipeTabStripLeft() {
-    val width = device.displayWidth
-    val height = device.displayHeight
-    val y = (height * 0.32f).toInt()
-    device.swipe(
-        (width * 0.82f).toInt(),
-        y,
-        (width * 0.18f).toInt(),
-        y,
-        16,
-    )
-    device.waitForIdle()
-}
-
-/**
  * 导航动效 benchmark 使用的固定等待时长。
  * Fixed wait duration used by navigation motion benchmarks.
  */
 private const val NAVIGATION_MOTION_WAIT_MILLIS = 650L
-private const val TEXT_SEARCH_SCROLL_SETTLE_MILLIS = 100L
+private const val TARGET_SEARCH_SCROLL_SETTLE_MILLIS = 100L
 private const val LONG_FLING_SETTLE_MILLIS = 1_200L
