@@ -149,7 +149,9 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 3. 历史回归只允许同设备型号、系统 fingerprint、CPU lock 状态和 compilation mode。
 4. 门禁必须同时满足“ViewCompose 原始指标超过阈值”和“ViewCompose/Compose 归一化比值超过阈值”才失败。
 5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
-6. 报告会计算各 iteration P50 的变异系数；超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。
+6. 报告只对严格为正、具备比例尺度的 frame CPU duration 计算各 iteration P50 的变异系数；
+   超过 `0.15` 标记为不稳定，数据应重跑而不是直接形成结论。`frameOverrunMs` 是围绕零点的
+   有符号指标，仍保留结果和回归门禁，但不计算会因均值接近零而失真的 CV。
 7. 迭代更多不等于证据更强；持续升温的批次即使总体变异系数低于阈值也属于无效数据。
 
 ### 2.3 当前结论

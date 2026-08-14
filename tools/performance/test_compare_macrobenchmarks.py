@@ -159,6 +159,17 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             all(item.scenario.startswith("shadow_") for item in stability),
         )
 
+    def test_stability_excludes_signed_frame_overrun(self) -> None:
+        entries = comparison.benchmark_entries(result())
+
+        stability = comparison.build_stability(entries, 0.15)
+
+        self.assertEqual(len(comparison.SCENARIOS) * 2, len(stability))
+        self.assertEqual(
+            {"frameDurationCpuMs"},
+            {item.metric for item in stability},
+        )
+
     def test_rejects_partial_scenario_without_compose_control(self) -> None:
         partial = result()
         partial["benchmarks"] = [

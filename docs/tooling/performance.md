@@ -177,8 +177,10 @@ Automated report and regression rules:
    ratio threshold are exceeded.
 5. Defaults live in `tools/performance/benchmark_policy.json`; changes below the absolute noise floor
    do not fail.
-6. The report computes coefficient of variation across iteration P50 values. A value above `0.15`
-   is unstable and must be rerun rather than interpreted.
+6. The report computes coefficient of variation across iteration P50 values for positive
+   ratio-scale frame CPU duration. A value above `0.15` is unstable and must be rerun rather than
+   interpreted. Signed `frameOverrunMs` remains a reported and gated result, but does not use CV:
+   division by a mean near its meaningful zero would manufacture instability.
 7. More repetitions are not automatically stronger evidence: a continuously heating run is
    invalid even when its aggregate coefficient of variation is below the threshold.
 

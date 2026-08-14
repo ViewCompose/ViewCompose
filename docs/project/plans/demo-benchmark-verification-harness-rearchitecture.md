@@ -1149,6 +1149,7 @@ the retired Demo layout.
 | 2026-08-15 | Phase 5 thermal preflight on SM-G991B / Android 13 | A combined run and an isolated ten-iteration state-patch run both reached Android thermal status `SEVERE`; results were rejected and the formal interaction protocol was hard-cut to five clean iterations with per-method cooldown. |
 | 2026-08-15 | Phase 5 cold-start stability preflight | Five cold starts ended below `SEVERE`, but one 391.95 ms first-run outlier versus four 260–284 ms samples produced CV `0.185`; the batch was rejected and cold startup retained ten iterations independently of the five-iteration interaction protocol. |
 | 2026-08-15 | Phase 5 renderer-diagnostics stability preflight | The revision 2 one-refresh workload ended below `SEVERE` but produced frame CPU run-P50 CV `0.372`; it also did not await reset completion. The result was rejected, and revision 3 measures eight complete refresh/reset cycles per iteration. |
+| 2026-08-15 | Phase 5 renderer-diagnostics revision 3 and report audit | Five clean runs ended below `SEVERE`; frame CPU P50/P95 were 6.944/14.326 ms with run-P50 CV `0.140`. Signed frame overrun crossed zero, proving CV invalid for that metric; the report retains overrun values and regression gates but limits CV stability to positive ratio-scale frame CPU duration. |
 
 ## Decision history
 

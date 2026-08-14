@@ -68,6 +68,10 @@ SCENARIO_CONTRACTS = {
 SAMPLED_METRICS = ("frameDurationCpuMs", "frameOverrunMs")
 SAMPLED_PERCENTILES = ("P50", "P95")
 MEMORY_METRICS = ("memoryHeapSizeMaxKb", "memoryRssAnonMaxKb")
+# Coefficient of variation is meaningful only for ratio-scale metrics with a strictly positive
+# origin. Frame overrun is signed around zero, so its CV can explode as the mean approaches zero
+# even when the underlying frame distribution is stable.
+STABILITY_METRICS = ("frameDurationCpuMs",)
 
 
 @dataclass(frozen=True)
@@ -383,7 +387,7 @@ def build_stability(
             ("Compose", compose_name),
         ):
             entry = entries[benchmark_name]
-            for metric in SAMPLED_METRICS:
+            for metric in STABILITY_METRICS:
                 runs = entry.get("sampledMetrics", {}).get(metric, {}).get("runs", [])
                 if not isinstance(runs, list):
                     continue
