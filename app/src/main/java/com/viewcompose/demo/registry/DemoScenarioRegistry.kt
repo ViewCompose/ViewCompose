@@ -2,6 +2,7 @@ package com.viewcompose.demo.registry
 
 import android.content.Context
 import android.content.Intent
+import com.viewcompose.ActionsActivity
 import com.viewcompose.AnimationActivity
 import com.viewcompose.FeedbackActivity
 import com.viewcompose.GesturesActivity
@@ -87,6 +88,10 @@ internal object DemoScenarioIds {
     val DesignBundleMaterial3 = DemoScenarioId("design.bundle-material3")
     val DesignBundleContrast = DemoScenarioId("design.bundle-contrast")
     val DesignOneUi7 = DemoScenarioId("design.oneui7")
+    val ComponentCard = DemoScenarioId("component.card")
+    val ComponentFab = DemoScenarioId("component.fab")
+    val ComponentChip = DemoScenarioId("component.chip")
+    val ComponentListItem = DemoScenarioId("component.list-item")
     val PerformanceList = DemoScenarioId("performance.list")
 }
 
@@ -957,6 +962,50 @@ internal object DemoScenarioRegistry {
                 secondaryTarget = R.id.demo_design_oneui7_secondary_target,
             ),
         ),
+        actionComponentScenario(
+            id = DemoScenarioIds.ComponentCard,
+            titleRes = R.string.demo_scenario_component_card_title,
+            summaryRes = R.string.demo_scenario_component_card_summary,
+            root = R.id.demo_component_card_root,
+            ready = R.id.demo_component_card_ready,
+            primaryAction = R.id.demo_component_card_primary_action,
+            reset = R.id.demo_component_card_reset,
+            state = R.id.demo_component_card_state,
+            target = R.id.demo_component_card_target,
+        ),
+        actionComponentScenario(
+            id = DemoScenarioIds.ComponentFab,
+            titleRes = R.string.demo_scenario_component_fab_title,
+            summaryRes = R.string.demo_scenario_component_fab_summary,
+            root = R.id.demo_component_fab_root,
+            ready = R.id.demo_component_fab_ready,
+            primaryAction = R.id.demo_component_fab_primary_action,
+            reset = R.id.demo_component_fab_reset,
+            state = R.id.demo_component_fab_state,
+            target = R.id.demo_component_fab_target,
+        ),
+        actionComponentScenario(
+            id = DemoScenarioIds.ComponentChip,
+            titleRes = R.string.demo_scenario_component_chip_title,
+            summaryRes = R.string.demo_scenario_component_chip_summary,
+            root = R.id.demo_component_chip_root,
+            ready = R.id.demo_component_chip_ready,
+            primaryAction = R.id.demo_component_chip_primary_action,
+            reset = R.id.demo_component_chip_reset,
+            state = R.id.demo_component_chip_state,
+            target = R.id.demo_component_chip_target,
+        ),
+        actionComponentScenario(
+            id = DemoScenarioIds.ComponentListItem,
+            titleRes = R.string.demo_scenario_component_list_item_title,
+            summaryRes = R.string.demo_scenario_component_list_item_summary,
+            root = R.id.demo_component_list_item_root,
+            ready = R.id.demo_component_list_item_ready,
+            primaryAction = R.id.demo_component_list_item_primary_action,
+            reset = R.id.demo_component_list_item_reset,
+            state = R.id.demo_component_list_item_state,
+            target = R.id.demo_component_list_item_target,
+        ),
         scenario(
             id = DemoScenarioIds.PerformanceList,
             category = DemoScenarioCategory.Performance,
@@ -1117,6 +1166,35 @@ internal object DemoScenarioRegistry {
             ready = ready,
             primaryAction = primaryAction,
             secondaryAction = secondaryAction,
+            reset = reset,
+            state = state,
+            target = target,
+        ),
+    )
+
+    private fun actionComponentScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        root: Int,
+        ready: Int,
+        primaryAction: Int,
+        reset: Int,
+        state: Int,
+        target: Int,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.Rendering,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.SharedFixture,
+        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+        route = DemoScenarioRoute(ActionsActivity::class.java),
+        mutable = true,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            primaryAction = primaryAction,
             reset = reset,
             state = state,
             target = target,

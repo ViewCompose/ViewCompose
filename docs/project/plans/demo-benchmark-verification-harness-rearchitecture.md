@@ -872,6 +872,24 @@ Android 13 reference device, the bilingual action/full-reset contract, the compl
 LTR/RTL, 1.0/1.3 font-scale, Switch drag, navigation accessibility, Snackbar, bottom-sheet, and
 screenshot evidence matrix, and the registry-wide host-role sweep passed.
 
+The Actions chapter is now four strict component fixtures: `component.card`, `component.fab`,
+`component.chip`, and `component.list-item`. `ActionsActivity` requires one of those immutable
+scenario identities; the page-index extra, chapter switcher, copied module overview, fake benchmark
+anchor, and manual verification checklist were deleted. Each route mounts only its own state and
+component variants. Its first lazy item exposes the real component action, observable state, and a
+full-Session reset; the remaining items retain only the visual variants needed to verify the
+component family. Reset advances both the parent generation and every lazy-item key. Dynamic state
+copy is resolved inside the owning lazy-item Session rather than captured as a parent String, so a
+stable key/revision cannot retain stale state. Paired resources cover all visible and accessibility
+copy, scenario resource roles replace the two legacy Actions tags, and the hard-coded-copy gate
+owns the page and Activity. These fixtures have no Macrobenchmark owner, so no workload revision
+was added. On the Samsung SM-G991B Android 13 reference device, all four routes passed the English
+and Simplified Chinese action/full-reset contract, the elevated-card shadow regression and
+component-family smoke test passed, and the registry-wide host-role sweep passed.
+Shared-host ready markers now show a workload revision only when the scenario owns a real
+`DemoBenchmarkContract`; visual and manual-only scenarios no longer publish the misleading
+`workload r0` label.
+
 ## Phase 5: Benchmark rebaseline and acceptance
 
 Build the release-like target, run the revised scenarios on the same device and thermal policy,

@@ -17,15 +17,17 @@ import org.junit.runner.RunWith
 class ComponentFamilySmokeUiTest {
     @Test
     fun keyComponentFamilies_haveVisibleSmokeAnchors() {
-        launchDemoActivity<ActionsActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                ActionsActivity::class.java,
-            ).putExtra(EXTRA_ACTIONS_PAGE_INDEX, 2),
+        launchDemoScenarioActivity(
+            activityClass = ActionsActivity::class.java,
+            scenarioId = "component.chip",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.ACTIONS_CHIP_FILTER))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewByIdVisible<android.view.View>(
+                        R.id.demo_component_chip_primary_action,
+                    ),
+                )
             }
         }
 

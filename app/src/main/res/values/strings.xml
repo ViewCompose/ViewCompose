@@ -2,6 +2,7 @@
     <string name="app_name">ViewCompose</string>
     <string name="demo_back">Back</string>
     <string name="demo_scenario_ready_format">%1$s · workload r%2$d · ready</string>
+    <string name="demo_scenario_ready_unversioned_format">%1$s · ready</string>
     <string name="demo_scenario_workload_revision_format">Workload revision %1$d</string>
     <string name="demo_theme_mode_system_dark">System (Dark)</string>
     <string name="demo_theme_mode_system_light">System (Light)</string>

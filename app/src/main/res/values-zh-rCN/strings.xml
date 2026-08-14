@@ -3,6 +3,7 @@
     <string name="app_name">ViewCompose</string>
     <string name="demo_back">返回</string>
     <string name="demo_scenario_ready_format">%1$s · 工作负载 r%2$d · 已就绪</string>
+    <string name="demo_scenario_ready_unversioned_format">%1$s · 已就绪</string>
     <string name="demo_scenario_workload_revision_format">工作负载修订 %1$d</string>
     <string name="demo_theme_mode_system_dark">跟随系统（深色）</string>
     <string name="demo_theme_mode_system_light">跟随系统（浅色）</string>

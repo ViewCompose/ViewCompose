@@ -135,25 +135,29 @@ class DemoVisualUiTest {
 
     @Test
     fun actionsElevatedCard_clickKeepsShadowZ() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            ActionsActivity::class.java,
-        ).putExtra(EXTRA_ACTIONS_PAGE_INDEX, 0)
-        launchDemoActivity<ActionsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = ActionsActivity::class.java,
+            scenarioId = "component.card",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             var beforeElevation = 0f
             var beforeZ = 0f
             scenario.onActivity { activity ->
-                val elevatedCard = activity.requireViewByTestTagVisible(DemoTestTags.ACTIONS_ELEVATED_CARD)
+                val elevatedCard = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_component_card_primary_action,
+                )
                 beforeElevation = elevatedCard.elevation
                 beforeZ = elevatedCard.z
                 assertTrue("Expected elevated card elevation > 0 before click", beforeElevation > 0f)
                 assertTrue("Expected elevated card z > 0 before click", beforeZ > 0f)
-                activity.clickByTestTag(DemoTestTags.ACTIONS_ELEVATED_CARD)
+                elevatedCard.performClick()
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val elevatedCard = activity.requireViewByTestTagVisible(DemoTestTags.ACTIONS_ELEVATED_CARD)
+                val elevatedCard = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_component_card_primary_action,
+                )
                 val afterElevation = elevatedCard.elevation
                 val afterZ = elevatedCard.z
                 assertTrue("Expected elevated card elevation > 0 after click", afterElevation > 0f)

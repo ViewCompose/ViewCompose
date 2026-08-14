@@ -759,6 +759,10 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/activity/demo/pages/quality/OneUi7VerificationActivity.kt",
             ),
+            rootDir.resolve("app/src/main/java/com/viewcompose/demo/pages/actions"),
+            rootDir.resolve(
+                "app/src/main/java/com/viewcompose/activity/demo/pages/core/ActionsActivity.kt",
+            ),
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/demo/designsystem/DemoContrastDesignSystem.kt",
             ),

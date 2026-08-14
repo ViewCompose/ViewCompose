@@ -179,8 +179,6 @@ internal object DemoTestTags {
     const val INPUT_FOCUS_PULL_REFRESH_SEARCH = "input_focus_pull_refresh_search"
     const val INPUT_STRESS_ERROR = "input_stress_error"
 
-    const val ACTIONS_CHIP_FILTER = "actions_chip_filter"
-    const val ACTIONS_ELEVATED_CARD = "actions_elevated_card"
 
     const val ANIMATION_VISIBILITY_TOGGLE = "animation_visibility_toggle"
     const val ANIMATION_VISIBILITY_TARGET = "animation_visibility_target"

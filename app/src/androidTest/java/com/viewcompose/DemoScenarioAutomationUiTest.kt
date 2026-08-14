@@ -103,6 +103,10 @@ class DemoScenarioAutomationUiTest {
             "design.bundle-material3",
             "design.bundle-contrast",
             "design.oneui7",
+            "component.card",
+            "component.fab",
+            "component.chip",
+            "component.list-item",
             "performance.list",
         ).forEach { scenarioId ->
             launchScenario(scenarioId)
@@ -383,6 +387,36 @@ class DemoScenarioAutomationUiTest {
                 initial,
                 waitForTargetText(scenarioId, initial),
             )
+        }
+    }
+
+    @Test
+    fun actionComponentFixturesPublishDeterministicActionAndFullSessionReset() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            listOf(
+                "component.card",
+                "component.fab",
+                "component.chip",
+                "component.list-item",
+            ).forEach { scenarioId ->
+                launchScenario(scenarioId)
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+                requireTarget(scenarioId, "primary_action").click()
+                assertNotEquals(
+                    "$scenarioId action must publish state",
+                    initial,
+                    waitForTargetTextChange(scenarioId, initial),
+                )
+
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId reset must recreate the initial component Session",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
         }
     }
 

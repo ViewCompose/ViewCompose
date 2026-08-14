@@ -102,10 +102,15 @@ internal fun UiTreeBuilder.DemoSubPageScaffold(
                 ) {
                     if (scenario != null) {
                         Text(
-                            text = stringResource(
-                                R.string.demo_scenario_ready_format,
+                            text = scenario.benchmark?.let { benchmark ->
+                                stringResource(
+                                    R.string.demo_scenario_ready_format,
+                                    scenario.id.value,
+                                    benchmark.workloadRevision,
+                                )
+                            } ?: stringResource(
+                                R.string.demo_scenario_ready_unversioned_format,
                                 scenario.id.value,
-                                scenario.benchmark?.workloadRevision ?: 0,
                             ),
                             color = TextDefaults.secondaryColor(),
                             modifier = Modifier
