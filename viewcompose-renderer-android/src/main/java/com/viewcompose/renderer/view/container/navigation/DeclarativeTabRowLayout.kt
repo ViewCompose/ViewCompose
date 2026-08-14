@@ -1,43 +1,28 @@
 package com.viewcompose.renderer.view.container
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.RippleDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.HorizontalScrollView
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
-import com.viewcompose.ui.node.collection.TabRowTab
-import com.viewcompose.renderer.interop.asRenderContainerHandle
-import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.ui.state.PagerState
 import com.viewcompose.renderer.view.tree.LayoutPassTracker
 import com.viewcompose.renderer.view.tree.RetainedSessionSubmission
-import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 
-/**
- * Scrollable Android host for TabRow.
- * Scrollable Android host for TabRow.
- *
- * Renders tab content through LazyItemSessionController and interpolates the indicator from PagerState offsets.
- * Tab content is rendered through LazyItemSessionController, while the inner container interpolates the indicator from PagerState offsets.
- */
+/** Scrollable Android host for eager TabRow children and a PagerState-driven indicator. */
 internal class DeclarativeTabRowLayout(
     context: Context,
-) : HorizontalScrollView(context) {
+) : HorizontalScrollView(context), ChildHostViewGroup {
 
     private val tabContainer = TabRowContainer(context)
-    private var tabs: List<TabRowTab> = emptyList()
     private var selectedIndex: Int = 0
-    private var onTabSelected: ((Int) -> Unit)? = null
     private var pagerState: PagerState? = null
     private var pagerStateListener: ((Int, Float) -> Unit)? = null
 
     // Indicator properties.
-    // Indicator props.
     private var indicatorColor: Int = 0
     private var indicatorHeightPx: Int = 0
     private var indicatorCornerRadiusPx: Int = 0
@@ -46,17 +31,13 @@ internal class DeclarativeTabRowLayout(
     private var indicatorFixedWidthPx: Int = 0
 
     // Item layout and interaction properties.
-    // Item layout and interaction props.
-    private var rippleColor: Int = 0
     private var itemSpacingPx: Int = 0
-    private var itemPaddingHorizontalPx: Int = 0
-    private var itemPaddingVerticalPx: Int = 0
     private var minItemWidthPx: Int = 0
     private var equalWidth: Boolean = true
     private var containerColorState: Int? = null
 
-    private val controllers = mutableListOf<LazyItemSessionController>()
-    private var currentSubmissionRevision = 0L
+    override val childHost: ViewGroup
+        get() = tabContainer
 
     init {
         isHorizontalScrollBarEnabled = false
@@ -96,9 +77,7 @@ internal class DeclarativeTabRowLayout(
     }
 
     fun bind(
-        tabs: List<TabRowTab>,
         selectedIndex: Int,
-        onTabSelected: ((Int) -> Unit)?,
         pagerState: PagerState?,
         indicatorColor: Int,
         indicatorHeight: Int,
@@ -116,25 +95,17 @@ internal class DeclarativeTabRowLayout(
         minItemWidth: Int,
         submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
-        val itemContainerStyleChanged =
-            this.rippleColor != rippleColor ||
-                this.itemPaddingHorizontalPx != itemPaddingHorizontal ||
-                this.itemPaddingVerticalPx != itemPaddingVertical
         val itemLayoutStyleChanged =
             this.itemSpacingPx != itemSpacing ||
                 this.minItemWidthPx != minItemWidth ||
                 this.equalWidth != equalWidth
-        this.onTabSelected = onTabSelected
         this.indicatorColor = indicatorColor
         this.indicatorHeightPx = indicatorHeight
         this.indicatorCornerRadiusPx = indicatorCornerRadius
         this.indicatorPosition = indicatorPosition
         this.indicatorWidthMode = indicatorWidthMode
         this.indicatorFixedWidthPx = indicatorFixedWidth
-        this.rippleColor = rippleColor
         this.itemSpacingPx = itemSpacing
-        this.itemPaddingHorizontalPx = itemPaddingHorizontal
-        this.itemPaddingVerticalPx = itemPaddingVertical
         this.minItemWidthPx = minItemWidth
         this.equalWidth = equalWidth
 
@@ -154,26 +125,15 @@ internal class DeclarativeTabRowLayout(
         }
         isScrollEnabled = scrollable
 
-        val resolvedSelectedIndex = if (tabs.isEmpty()) {
-            0
-        } else {
-            selectedIndex.coerceIn(0, tabs.lastIndex)
-        }
+        // The parent is bound before eager child patches are applied. Preserve the requested logical
+        // index here; TabRowContainer clamps it after the children have been laid out.
+        val resolvedSelectedIndex = selectedIndex.coerceAtLeast(0)
         val selectedChanged = this.selectedIndex != resolvedSelectedIndex
         this.selectedIndex = resolvedSelectedIndex
 
         submission.publish {
-            if (submission.revision > currentSubmissionRevision) {
-                currentSubmissionRevision = submission.revision
-                val tabsRebuilt = updateTabs(
-                    newTabs = tabs,
-                    forceRebuild = itemContainerStyleChanged,
-                    submissionRevision = submission.revision,
-                )
-                this.tabs = tabs
-                if (selectedChanged || tabsRebuilt || itemLayoutStyleChanged) {
-                    scrollToSelectedTab(animate = true)
-                }
+            if (selectedChanged || itemLayoutStyleChanged) {
+                scrollToSelectedTab(animate = true)
             }
         }
 
@@ -191,76 +151,6 @@ internal class DeclarativeTabRowLayout(
 
     override fun onTouchEvent(ev: android.view.MotionEvent?): Boolean {
         return if (isScrollEnabled) super.onTouchEvent(ev) else false
-    }
-
-    private fun updateTabs(
-        newTabs: List<TabRowTab>,
-        forceRebuild: Boolean,
-        submissionRevision: Long,
-    ): Boolean {
-        val needsRebuild = forceRebuild ||
-            newTabs.size != controllers.size ||
-            newTabs.zip(tabs).any { (a, b) -> a.item.key != b.item.key }
-
-        if (needsRebuild) {
-            rebuildTabs(newTabs, submissionRevision)
-        } else {
-            // Reuse the existing tab container and rebind only selection and content payloads that may have changed.
-            // Reuse existing tab containers and only rebind potentially changed selection/content payloads.
-            newTabs.forEachIndexed { index, tab ->
-                controllers.getOrNull(index)?.bind(
-                    item = tab.item,
-                    submissionRevision = submissionRevision,
-                )
-            }
-        }
-        return needsRebuild
-    }
-
-    private fun rebuildTabs(
-        newTabs: List<TabRowTab>,
-        submissionRevision: Long,
-    ) {
-        // Dispose old sessions before rebuilding structure so old Views stop receiving updates.
-        // Dispose old sessions before rebuilding structure so stale views stop receiving updates.
-        controllers.forEach { it.recycle() }
-        controllers.clear()
-        tabContainer.removeAllViews()
-
-        newTabs.forEachIndexed { index, tab ->
-            val itemContainer = ViewDecorationHostLayout(context).apply {
-                setPadding(
-                    itemPaddingHorizontalPx, itemPaddingVerticalPx,
-                    itemPaddingHorizontalPx, itemPaddingVerticalPx,
-                )
-                isClickable = true
-                isFocusable = true
-                background = RippleDrawable(
-                    ColorStateList.valueOf(rippleColor),
-                    null,
-                    GradientDrawable().apply {
-                        shape = GradientDrawable.RECTANGLE
-                        setColor(android.graphics.Color.WHITE)
-                    },
-                )
-                setOnClickListener {
-                    onTabSelected?.invoke(index)
-                }
-            }
-
-            val controller = LazyItemSessionController(
-                createSession = { item ->
-                    item.sessionFactory.create(itemContainer.asRenderContainerHandle())
-                },
-                clearContainer = itemContainer::removeAllViews,
-            )
-            controller.bind(
-                item = tab.item,
-                submissionRevision = submissionRevision,
-            )
-            controllers.add(controller)
-            tabContainer.addView(itemContainer)
-        }
     }
 
     private fun observePagerState(newState: PagerState?) {
@@ -308,15 +198,11 @@ internal class DeclarativeTabRowLayout(
         }
         pagerStateListener = null
         pagerState = null
-        controllers.forEach { it.recycle() }
-        controllers.clear()
-        tabContainer.removeAllViews()
     }
 }
 
 /**
  * Internal horizontal container that hosts tab items and draws the indicator.
- * Inner container that hosts tab items horizontally and draws the indicator.
  */
 internal class TabRowContainer(context: Context) : ViewGroup(context) {
 
@@ -464,7 +350,6 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
                 maxHeight = maxOf(maxHeight, child.measuredHeight)
             }
             // Remeasure to a uniform height so differing content heights do not misalign indicators or hit areas.
-            // Re-measure with a uniform height so the indicator and hit targets do not drift across varied content.
             for (i in 0 until count) {
                 val child = getChildAt(i)
                 child.measure(
@@ -492,7 +377,6 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
                 maxHeight = maxOf(maxHeight, child.measuredHeight)
             }
             // Keep a uniform height even with unconstrained label widths so scrollable TabRow height remains stable.
-            // Even with free text widths, keep a uniform height for stable scrollable TabRow rows.
             for (i in 0 until count) {
                 val child = getChildAt(i)
                 child.measure(
@@ -513,7 +397,6 @@ internal class TabRowContainer(context: Context) : ViewGroup(context) {
         }
         if (childCount > 0) {
             // Recalculate from final child bounds so the first frame has a valid indicator.
-            // Recompute the indicator with final child bounds to avoid a blank first-frame indicator.
             updateIndicatorPosition(indicatorCurrentIndex, indicatorCurrentOffset)
         }
     }

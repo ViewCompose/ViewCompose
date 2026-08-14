@@ -70,19 +70,22 @@ data class LazyContentPadding(
  * Configures eager preparation and native view caching for a lazy layout.
  *
  * These values are performance hints. A renderer may clamp or ignore them when its platform does
- * not expose an equivalent capability; they must not affect semantic item content.
+ * not expose an equivalent capability; they must not affect semantic item content. The nested
+ * prefetch count does not authorize unbounded synchronous preparation: a renderer may stage an
+ * unknown or previously expensive type until attachment.
  *
- * @property initialPrefetchItemCount number of items to prepare ahead of the initial viewport
+ * @sample com.viewcompose.ui.samples.collectionPolicySample
+ * @property nestedInitialPrefetchItemCount initial count used only when this list is nested
  * @property itemViewCacheSize number of detached item views retained by the native container
  * @throws IllegalArgumentException if either value is negative
  */
 data class LazyLayoutPrefetchPolicy(
-    val initialPrefetchItemCount: Int = 2,
+    val nestedInitialPrefetchItemCount: Int = 2,
     val itemViewCacheSize: Int = 2,
 ) {
     init {
-        require(initialPrefetchItemCount >= 0) {
-            "initialPrefetchItemCount must be non-negative."
+        require(nestedInitialPrefetchItemCount >= 0) {
+            "nestedInitialPrefetchItemCount must be non-negative."
         }
         require(itemViewCacheSize >= 0) {
             "itemViewCacheSize must be non-negative."

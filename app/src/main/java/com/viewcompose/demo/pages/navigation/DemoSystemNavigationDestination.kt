@@ -333,7 +333,7 @@ internal fun UiTreeBuilder.SystemNavigationDestinationPage(
         sections.forEach { section ->
             item(
                 key = section,
-                contentToken = when (section) {
+                contentRevision = when (section) {
                     "status" -> Triple(section, lifecycleState, stackState)
                     "actions" -> section to stackState
                     "capabilities" -> section to stackState.activeStackId

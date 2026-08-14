@@ -1,18 +1,10 @@
 package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.modifier.Modifier
-import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.VNode
-import com.viewcompose.ui.node.collection.TabRowTab
-import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.ImageNodeSpec
-import com.viewcompose.ui.node.spec.LazyColumnNodeProps
-import com.viewcompose.ui.node.spec.LazyRowNodeProps
-import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.NodeSpec
-import com.viewcompose.ui.node.spec.TabRowNodeProps
-import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 import com.viewcompose.ui.tooling.UiNodeTooling
 
 /**
@@ -46,7 +38,10 @@ open class UiTreeBuilder {
             } else {
                 BoundaryGroupSignature(key)
             },
-            inputs = inputs,
+            inputs = BoundaryInputs(
+                explicit = inputs,
+                environment = parentSnapshot,
+            ),
             reuseResult = List<VNode>::hasSameElementReferences,
         ) { scope ->
             var nextNodes: List<VNode>? = null
@@ -58,6 +53,12 @@ open class UiTreeBuilder {
         }
         children += boundaryNodes
     }
+
+    /** Every restart boundary observes framework locals without requiring caller-owned tokens. */
+    private data class BoundaryInputs(
+        val explicit: List<Any?>,
+        val environment: LocalSnapshot,
+    )
 
     /**
      * Emits one VNode and recursively records its optional child subtree.
@@ -287,43 +288,6 @@ private fun hasSameReferenceIdentity(
             previous.imageLoader === next.imageLoader
         }
 
-        previous is LazyColumnNodeProps && next is LazyColumnNodeProps -> {
-            previous.items.hasSameSessionSnapshots(next.items)
-        }
-
-        previous is LazyRowNodeProps && next is LazyRowNodeProps -> {
-            previous.items.hasSameSessionSnapshots(next.items)
-        }
-
-        previous is LazyVerticalGridNodeProps && next is LazyVerticalGridNodeProps -> {
-            previous.items.hasSameSessionSnapshots(next.items)
-        }
-
-        previous is HorizontalPagerNodeProps && next is HorizontalPagerNodeProps -> {
-            previous.pages.hasSameSessionSnapshots(next.pages)
-        }
-
-        previous is VerticalPagerNodeProps && next is VerticalPagerNodeProps -> {
-            previous.pages.hasSameSessionSnapshots(next.pages)
-        }
-
-        previous is TabRowNodeProps && next is TabRowNodeProps -> {
-            previous.tabs.hasSameTabSessionSnapshots(next.tabs)
-        }
-
         else -> true
     }
-}
-
-/**
- * Reuses collection specs only when they retain the exact immutable item snapshots.
- */
-private fun List<LazyListItem>.hasSameSessionSnapshots(other: List<LazyListItem>): Boolean {
-    if (size != other.size) return false
-    return indices.all { index -> this[index] === other[index] }
-}
-
-private fun List<TabRowTab>.hasSameTabSessionSnapshots(other: List<TabRowTab>): Boolean {
-    if (size != other.size) return false
-    return indices.all { index -> this[index].item === other[index].item }
 }

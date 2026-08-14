@@ -29,7 +29,6 @@ import com.viewcompose.ui.node.NavigationBarItem
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
-import com.viewcompose.ui.node.collection.TabRowTab
 import com.viewcompose.ui.node.spec.BoxNodeProps
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.ColumnNodeProps
@@ -284,17 +283,6 @@ class NodeBindingDifferTest {
     }
 
     @Test
-    fun `patches tab row when tab session closures refresh with stable tokens`() {
-        val previous = tabRowNodeWithSessionNonce(selectedIndex = 0, sessionNonce = "A")
-        val next = tabRowNodeWithSessionNonce(selectedIndex = 0, sessionNonce = "B")
-
-        val plan = NodeBindingDiffer.plan(previous, next)
-
-        assertTrue(plan is NodeBindingPlan.Patch)
-        assertTrue((plan as NodeBindingPlan.Patch).patch is TabRowNodePatch)
-    }
-
-    @Test
     fun `patches lazy column semantic updates`() {
         val previous = lazyColumnNode(spacing = 8.dp)
         val next = lazyColumnNode(spacing = 16.dp)
@@ -328,14 +316,13 @@ class NodeBindingDifferTest {
     }
 
     @Test
-    fun `patches horizontal pager when page session closures refresh with stable tokens`() {
+    fun `skips horizontal pager when only page callback identities change`() {
         val previous = horizontalPagerNodeWithSessionNonce(currentPage = 0, sessionNonce = "A")
         val next = horizontalPagerNodeWithSessionNonce(currentPage = 0, sessionNonce = "B")
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
-        assertTrue(plan is NodeBindingPlan.Patch)
-        assertTrue((plan as NodeBindingPlan.Patch).patch is HorizontalPagerNodePatch)
+        assertTrue(plan is NodeBindingPlan.SkipSubtree)
     }
 
     @Test
@@ -350,14 +337,13 @@ class NodeBindingDifferTest {
     }
 
     @Test
-    fun `patches vertical pager when page session closures refresh with stable tokens`() {
+    fun `skips vertical pager when only page callback identities change`() {
         val previous = verticalPagerNodeWithSessionNonce(currentPage = 0, sessionNonce = "A")
         val next = verticalPagerNodeWithSessionNonce(currentPage = 0, sessionNonce = "B")
 
         val plan = NodeBindingDiffer.plan(previous, next)
 
-        assertTrue(plan is NodeBindingPlan.Patch)
-        assertTrue((plan as NodeBindingPlan.Patch).patch is VerticalPagerNodePatch)
+        assertTrue(plan is NodeBindingPlan.SkipSubtree)
     }
 
     @Test
@@ -786,14 +772,15 @@ class NodeBindingDifferTest {
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = key,
+            contentRevision = key,
             sessionFactory = LazyListItemSessionFactory {
                 object : LazyListItemSession {
-                    override fun render() = Unit
+                    override fun render() = true
 
                     override fun dispose() = Unit
                 }
             },
+            sessionUpdater = {},
         )
     }
 
@@ -803,11 +790,11 @@ class NodeBindingDifferTest {
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = key,
+            contentRevision = key,
             sessionFactory = LazyListItemSessionFactory {
                 sessionNonce.hashCode()
                 object : LazyListItemSession {
-                    override fun render() = Unit
+                    override fun render() = true
 
                     override fun dispose() = Unit
                 }
@@ -1098,12 +1085,7 @@ class NodeBindingDifferTest {
         return VNode(
             type = NodeType.TabRow,
             spec = TabRowNodeProps(
-                tabs = listOf(
-                    TabRowTab(lazyItem("tab-1")),
-                    TabRowTab(lazyItem("tab-2")),
-                ),
                 selectedIndex = selectedIndex,
-                onTabSelected = null,
                 pagerState = null,
                 indicatorColor = 0xFF000000.toInt(),
                 indicatorHeight = 4.dp,
@@ -1124,36 +1106,4 @@ class NodeBindingDifferTest {
         )
     }
 
-    private fun tabRowNodeWithSessionNonce(
-        selectedIndex: Int = 0,
-        sessionNonce: Any,
-    ): VNode {
-        return VNode(
-            type = NodeType.TabRow,
-            spec = TabRowNodeProps(
-                tabs = listOf(
-                    TabRowTab(lazyItemWithSessionNonce("tab-1", sessionNonce)),
-                    TabRowTab(lazyItemWithSessionNonce("tab-2", sessionNonce)),
-                ),
-                selectedIndex = selectedIndex,
-                onTabSelected = null,
-                pagerState = null,
-                indicatorColor = 0xFF000000.toInt(),
-                indicatorHeight = 4.dp,
-                indicatorCornerRadius = 2.dp,
-                indicatorPosition = TabIndicatorPosition.Bottom,
-                indicatorWidthMode = TabIndicatorWidthMode.MatchItem,
-                indicatorFixedWidth = 0.dp,
-                containerColor = 0xFFFFFFFF.toInt(),
-                scrollable = true,
-                equalWidth = false,
-                rippleColor = 0x11000000,
-                itemSpacing = 8.dp,
-                itemPaddingHorizontal = 12.dp,
-                itemPaddingVertical = 8.dp,
-                minItemWidth = 64.dp,
-            ),
-            modifier = Modifier,
-        )
-    }
 }

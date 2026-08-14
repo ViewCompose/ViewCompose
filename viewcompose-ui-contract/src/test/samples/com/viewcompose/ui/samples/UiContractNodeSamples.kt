@@ -22,6 +22,8 @@ import com.viewcompose.ui.node.UiImageRequestOptions
 import com.viewcompose.ui.node.UiImageTarget
 import com.viewcompose.ui.node.UiImageTransition
 import com.viewcompose.ui.node.VNode
+import com.viewcompose.ui.node.policy.CollectionReusePolicy
+import com.viewcompose.ui.node.policy.LazyLayoutPrefetchPolicy
 import com.viewcompose.ui.node.spec.EmptyNodeSpec
 import com.viewcompose.ui.tooling.UiNodeTooling
 import com.viewcompose.ui.tooling.UiSourceCallSite
@@ -43,43 +45,68 @@ fun lazyListItemSessionUpdateSample() {
             prepared = true
         }
 
-        override fun activate() {
+        override fun activate(): Boolean {
             check(prepared)
             activated = true
+            return true
         }
 
-        override fun render() {
+        override fun render(): Boolean {
             check(activated)
             renderCount += 1
+            return true
         }
 
         override fun dispose() = Unit
     }
     val initial = LazyListItem(
         key = "account",
-        contentToken = "row-v1",
+        contentRevision = "row-v1",
         sessionFactory = { session },
         sessionUpdater = { retained ->
             check(retained === session)
             session.installedLabel = "Initial"
         },
     )
-    val refreshed = LazyListItem(
+    val equalSnapshot = LazyListItem(
         key = "account",
-        contentToken = "row-v1",
+        contentRevision = "row-v1",
+        sessionFactory = { session },
+        sessionUpdater = { session.installedLabel = "Ignored until the revision changes" },
+    )
+    val changedSnapshot = LazyListItem(
+        key = "account",
+        contentRevision = "row-v2",
         sessionFactory = { session },
         sessionUpdater = { session.installedLabel = "Updated" },
     )
 
-    check(initial == refreshed)
-    initial.sessionUpdater?.invoke(session)
+    check(initial == equalSnapshot)
+    check(initial != changedSnapshot)
+    initial.sessionUpdater(session)
     session.prepare()
     check(session.renderCount == 0)
     session.activate()
-    refreshed.sessionUpdater?.invoke(session)
+    // A collection controller completely skips equalSnapshot. A changed revision installs the
+    // latest callback and renders only this retained logical session.
+    changedSnapshot.sessionUpdater(session)
     session.render()
     check(session.installedLabel == "Updated")
     check(session.renderCount == 1)
+}
+
+fun collectionPolicySample() {
+    val prefetch = LazyLayoutPrefetchPolicy(
+        nestedInitialPrefetchItemCount = 4,
+        itemViewCacheSize = 4,
+    )
+    val reuse = CollectionReusePolicy(
+        sharePool = true,
+        mountedTreeCacheSize = 2,
+    )
+
+    check(prefetch.nestedInitialPrefetchItemCount == 4)
+    check(reuse.mountedTreeCacheSize == 2)
 }
 
 fun vNodeModelSample() {

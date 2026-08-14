@@ -5,7 +5,13 @@ import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 
 /**
- * Lazy-list content scope that collects item definitions and captures locals from declaration time.
+ * Declares keyed lazy-list entries whose logical sessions are independent from recycled Views.
+ *
+ * Keys must be unique in one scope. Equal key, declared content revision, and framework-captured
+ * environment revision skip item rendering. Changing ordinary captures must therefore be observed
+ * State or participate in the content revision.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
  */
 @UiDslMarker
 class LazyListScope internal constructor(
@@ -13,18 +19,24 @@ class LazyListScope internal constructor(
     private val stickyHeadersAllowed: Boolean,
 ) {
     /**
-     * Adds one lazy item.
+     * Adds one independently versioned lazy item.
+     *
+     * @param key unique logical identity that owns remember, saveable state, and effects
+     * @param contentType physical-tree compatibility class; equal values promise reset-safe structure
+     * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param content declaration evaluated when this logical item session renders
+     * @throws IllegalArgumentException when [key] duplicates another declaration in this scope
      */
     fun item(
         key: Any,
         contentType: Any? = null,
-        contentToken: Any? = key,
+        contentRevision: Any? = key,
         content: UiTreeBuilder.() -> Unit,
     ) {
         collector.add(
             key = key,
             contentType = contentType,
-            contentToken = contentToken,
+            contentRevision = contentRevision,
             kind = LazyListItemKind.Item,
             span = 1,
             content = content,
@@ -32,19 +44,28 @@ class LazyListScope internal constructor(
     }
 
     /**
-     * Adds lazy items from a list.
+     * Adds independently keyed and versioned lazy items from [items].
+     *
+     * @param T application item type
+     * @param items immutable submission iterated in display order
+     * @param key unique logical identity selector
+     * @param contentType physical-tree compatibility selector
+     * @param contentRevision semantic revision selector; immutable values default to themselves
+     * @param itemContent declaration evaluated for the item when its logical session renders
+     * @throws IllegalArgumentException when selected keys are not unique in this scope
      */
     fun <T> items(
         items: List<T>,
         key: (T) -> Any,
         contentType: (T) -> Any? = { null },
+        contentRevision: (T) -> Any? = { it },
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
         items.forEach { item ->
             collector.add(
                 key = key(item),
                 contentType = contentType(item),
-                contentToken = item,
+                contentRevision = contentRevision(item),
                 kind = LazyListItemKind.Item,
                 span = 1,
                 content = { itemContent(item) },
@@ -53,12 +74,18 @@ class LazyListScope internal constructor(
     }
 
     /**
-     * Adds a sticky header; currently supported only by LazyColumn.
+     * Adds one independently versioned sticky header to a vertical list.
+     *
+     * @param key unique logical identity that owns header state and effects
+     * @param contentType physical-tree compatibility class for renderer reuse
+     * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param content declaration evaluated when the header session renders
+     * @throws IllegalArgumentException when used by `LazyRow` or when [key] is duplicated
      */
     fun stickyHeader(
         key: Any,
         contentType: Any? = null,
-        contentToken: Any? = key,
+        contentRevision: Any? = key,
         content: UiTreeBuilder.() -> Unit,
     ) {
         require(stickyHeadersAllowed) {
@@ -67,7 +94,7 @@ class LazyListScope internal constructor(
         collector.add(
             key = key,
             contentType = contentType,
-            contentToken = contentToken,
+            contentRevision = contentRevision,
             kind = LazyListItemKind.StickyHeader,
             span = Int.MAX_VALUE,
             content = content,
@@ -76,26 +103,35 @@ class LazyListScope internal constructor(
 }
 
 /**
- * Lazy-grid content scope with item span support.
+ * Declares keyed lazy-grid entries with spans and separated logical and physical ownership.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.lazyCollectionRevisionSample
  */
 @UiDslMarker
 class LazyGridScope internal constructor(
     private val collector: LazyItemCollector,
 ) {
     /**
-     * Adds one grid item.
+     * Adds one independently versioned grid item.
+     *
+     * @param key unique logical identity that owns remember, saveable state, and effects
+     * @param contentType physical-tree compatibility class for renderer reuse
+     * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param span positive number of columns occupied by the item
+     * @param content declaration evaluated when this logical item session renders
+     * @throws IllegalArgumentException when [key] is duplicated or [span] is not positive
      */
     fun item(
         key: Any,
         contentType: Any? = null,
-        contentToken: Any? = key,
+        contentRevision: Any? = key,
         span: Int = 1,
         content: UiTreeBuilder.() -> Unit,
     ) {
         collector.add(
             key = key,
             contentType = contentType,
-            contentToken = contentToken,
+            contentRevision = contentRevision,
             kind = LazyListItemKind.Item,
             span = span,
             content = content,
@@ -103,12 +139,22 @@ class LazyGridScope internal constructor(
     }
 
     /**
-     * Adds grid items from a list.
+     * Adds independently keyed and versioned grid items from [items].
+     *
+     * @param T application item type
+     * @param items immutable submission iterated in display order
+     * @param key unique logical identity selector
+     * @param contentType physical-tree compatibility selector
+     * @param contentRevision semantic revision selector; immutable values default to themselves
+     * @param span positive column-span selector
+     * @param itemContent declaration evaluated for the item when its logical session renders
+     * @throws IllegalArgumentException when keys are duplicated or a selected span is not positive
      */
     fun <T> items(
         items: List<T>,
         key: (T) -> Any,
         contentType: (T) -> Any? = { null },
+        contentRevision: (T) -> Any? = { it },
         span: (T) -> Int = { 1 },
         itemContent: UiTreeBuilder.(T) -> Unit,
     ) {
@@ -116,7 +162,7 @@ class LazyGridScope internal constructor(
             collector.add(
                 key = key(item),
                 contentType = contentType(item),
-                contentToken = item,
+                contentRevision = contentRevision(item),
                 kind = LazyListItemKind.Item,
                 span = span(item),
                 content = { itemContent(item) },
@@ -125,18 +171,24 @@ class LazyGridScope internal constructor(
     }
 
     /**
-     * Adds a sticky header spanning the full row.
+     * Adds one independently versioned sticky header spanning the full grid row.
+     *
+     * @param key unique logical identity that owns header state and effects
+     * @param contentType physical-tree compatibility class for renderer reuse
+     * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param content declaration evaluated when the header session renders
+     * @throws IllegalArgumentException when [key] duplicates another declaration in this scope
      */
     fun stickyHeader(
         key: Any,
         contentType: Any? = null,
-        contentToken: Any? = key,
+        contentRevision: Any? = key,
         content: UiTreeBuilder.() -> Unit,
     ) {
         collector.add(
             key = key,
             contentType = contentType,
-            contentToken = contentToken,
+            contentRevision = contentRevision,
             kind = LazyListItemKind.StickyHeader,
             span = Int.MAX_VALUE,
             content = content,
@@ -157,7 +209,7 @@ internal class LazyItemCollector(
     fun add(
         key: Any,
         contentType: Any?,
-        contentToken: Any?,
+        contentRevision: Any?,
         kind: LazyListItemKind,
         span: Int,
         content: UiTreeBuilder.() -> Unit,
@@ -168,10 +220,8 @@ internal class LazyItemCollector(
         require(span > 0) { "Lazy item span must be greater than zero." }
         items += LazyListItem(
             key = key,
-            contentToken = capturedLazyContentToken(
-                contentToken = contentToken,
-                localSnapshot = localSnapshot,
-            ),
+            contentRevision = contentRevision,
+            environmentRevision = localSnapshot,
             contentType = contentType,
             kind = kind,
             span = span,
@@ -185,7 +235,7 @@ internal class LazyItemCollector(
                 )
             },
             sessionUpdater = { session ->
-                (session as? WidgetLazyListItemSession)?.updateContent(
+                (session as WidgetLazyListItemSession).updateContent(
                     localSnapshot = localSnapshot,
                     content = content,
                 )

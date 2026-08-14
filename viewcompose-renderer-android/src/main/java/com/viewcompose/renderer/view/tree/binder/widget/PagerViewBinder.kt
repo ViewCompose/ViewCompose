@@ -77,9 +77,7 @@ internal object PagerViewBinder {
     )
 
     data class TabRowSpec(
-        val tabs: List<com.viewcompose.ui.node.collection.TabRowTab>,
         val selectedIndex: Int,
-        val onTabSelected: ((Int) -> Unit)?,
         val pagerState: PagerState?,
         val indicatorColor: Int,
         val indicatorHeight: Int,
@@ -146,6 +144,7 @@ internal object PagerViewBinder {
             offscreenPageLimit = spec.offscreenPageLimit,
             pagerState = spec.pagerState,
             userScrollEnabled = spec.userScrollEnabled,
+            mountedTreeCacheSize = spec.reusePolicy.mountedTreeCacheSize,
             submission = submission,
         )
     }
@@ -156,9 +155,7 @@ internal object PagerViewBinder {
         submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         view.bind(
-            tabs = spec.tabs,
             selectedIndex = spec.selectedIndex,
-            onTabSelected = spec.onTabSelected,
             pagerState = spec.pagerState,
             indicatorColor = spec.indicatorColor,
             indicatorHeight = spec.indicatorHeight,
@@ -199,6 +196,7 @@ internal object PagerViewBinder {
             offscreenPageLimit = spec.offscreenPageLimit,
             pagerState = spec.pagerState,
             userScrollEnabled = spec.userScrollEnabled,
+            mountedTreeCacheSize = spec.reusePolicy.mountedTreeCacheSize,
             submission = submission,
         )
     }
@@ -247,9 +245,7 @@ internal object PagerViewBinder {
     fun readTabRowSpec(node: VNode): TabRowSpec {
         val spec = node.requireSpec<TabRowNodeProps>()
         return TabRowSpec(
-            tabs = spec.tabs,
             selectedIndex = spec.selectedIndex,
-            onTabSelected = spec.onTabSelected,
             pagerState = spec.pagerState,
             indicatorColor = spec.indicatorColor,
             indicatorHeight = node.environment.roundToPx(spec.indicatorHeight),

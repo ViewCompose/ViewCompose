@@ -17,6 +17,7 @@ import com.viewcompose.ui.foundation.CoreRenderEngine
 import com.viewcompose.ui.foundation.CoreRenderCommitEffect
 import com.viewcompose.ui.foundation.CoreRenderCommitFailure
 import com.viewcompose.ui.foundation.CoreRenderFrame
+import com.viewcompose.ui.foundation.CoreReusableRenderTree
 import com.viewcompose.ui.foundation.NodeTypeBindingStats
 import com.viewcompose.ui.foundation.RenderStats
 import com.viewcompose.ui.foundation.RenderStructureStats
@@ -121,6 +122,88 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             androidContainer.setTag(R.id.viewcompose_decoration_render_host, null)
         }
         return failures
+    }
+
+    /**
+     * Resets eligible Android interop nodes and detaches the complete mounted tree from [container].
+     *
+     * This is UI-thread confined. The method returns `null` without detaching when the tree is
+     * empty, owns a nested lazy or pager session, or contains an `AndroidView` without `onReset`.
+     * A successful result transfers physical-tree ownership to the caller; logical composition
+     * state has already been disposed by UI Foundation.
+     *
+     * @param container Android parent that currently owns [mountedNodes]
+     * @param mountedNodes exact opaque roots returned by the preceding successful frame
+     * @return renderer-owned detached tree, or `null` when cross-key reuse is unsafe
+     */
+    override fun detachMountedForReuse(
+        container: RenderContainerHandle,
+        mountedNodes: List<Any>,
+    ): CoreReusableRenderTree? {
+        val androidContainer = container.requireAndroidViewGroup()
+        val renderHost = decorationHostOrNull(androidContainer) ?: androidContainer
+        val nodes = mountedNodes.filterIsInstance<MountedNode>()
+        if (nodes.isEmpty() || !ViewTreeRenderer.detachMountedForReuse(renderHost, nodes)) {
+            return null
+        }
+        if (renderHost !== androidContainer && renderHost.childCount == 0) {
+            androidContainer.removeView(renderHost)
+            androidContainer.setTag(R.id.viewcompose_decoration_render_host, null)
+        }
+        return AndroidReusableRenderTree(nodes)
+    }
+
+    /**
+     * Transfers one compatible detached tree into [container] for a new logical item session.
+     *
+     * The returned nodes are marked for a mandatory full rebind on the new session's first frame;
+     * key equality and ordinary patch skipping cannot preserve the old declaration. A consumed or
+     * foreign tree returns an empty list. Calls are UI-thread confined.
+     *
+     * @param container Android parent that will own the presentation
+     * @param tree detached tree returned by this engine
+     * @return attached opaque roots, or an empty list when ownership cannot be accepted
+     */
+    override fun attachReusableMounted(
+        container: RenderContainerHandle,
+        tree: CoreReusableRenderTree,
+    ): List<Any> {
+        val reusable = tree as? AndroidReusableRenderTree ?: return emptyList()
+        val nodes = reusable.peekNodes() ?: return emptyList()
+        val androidContainer = container.requireAndroidViewGroup()
+        // Reattach through the host required by the detached tree. Attaching decorated roots
+        // directly to the outer container would make the first cross-owner render interpret the
+        // missing synthetic host as a host transition and release the tree before it can rebind.
+        val renderHost = resolveRenderHost(
+            container = androidContainer,
+            previousMountedNodes = emptyList(),
+            nodes = nodes.map(MountedNode::vnode),
+        ).host
+        ViewTreeRenderer.attachReusableMounted(renderHost, nodes)
+        return reusable.takeNodes(expected = nodes).orEmpty()
+    }
+
+    /**
+     * Permanently releases an unadopted detached tree after cache eviction or container disposal.
+     *
+     * Release is consuming and idempotent for the handle. Every root is attempted and structured
+     * native failures are returned in encounter order. Because a cached tree has no logical
+     * `RenderSession`, renderer diagnostics also log release failures without retaining the former
+     * item owner.
+     *
+     * @param tree detached tree previously returned by this engine
+     * @return native release failures; empty for a foreign or already consumed handle
+     */
+    override fun releaseReusableMounted(tree: CoreReusableRenderTree): List<CoreRenderCommitFailure> {
+        val reusable = tree as? AndroidReusableRenderTree ?: return emptyList()
+        val nodes = reusable.takeNodes() ?: return emptyList()
+        return ViewTreeRenderer.releaseReusableMounted(nodes).map { failure ->
+            CoreRenderCommitFailure(
+                operation = failure.operation?.toCoreOperation(),
+                nodeKey = failure.nodeKey,
+                cause = failure.cause,
+            )
+        }
     }
 
     private fun resolveRenderHost(
@@ -296,6 +379,21 @@ class AndroidCoreRenderEngine : CoreRenderEngine {
             AndroidViewOperation.Commit -> RenderFailureOperation.AndroidViewCommit
             AndroidViewOperation.Release -> RenderFailureOperation.AndroidViewRelease
         }
+    }
+}
+
+private class AndroidReusableRenderTree(
+    nodes: List<MountedNode>,
+) : CoreReusableRenderTree {
+    private var nodes: List<MountedNode>? = nodes
+
+    fun peekNodes(): List<MountedNode>? = nodes
+
+    fun takeNodes(expected: List<MountedNode>? = null): List<MountedNode>? {
+        val owned = nodes
+        if (expected != null && owned !== expected) return null
+        nodes = null
+        return owned
     }
 }
 

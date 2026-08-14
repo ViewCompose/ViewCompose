@@ -8,6 +8,7 @@ package com.viewcompose.renderer.view
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
+import com.viewcompose.ui.node.ReusableItemPresentation
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,12 +17,357 @@ import org.junit.Test
 
 class LazyItemSessionControllerTest {
     @Test
+    fun `different key creates a new logical session while transferring only presentation`() {
+        val events = mutableListOf<String>()
+        val presentation = RecordingPresentation(events)
+        var created = 0
+        val controller = LazyItemSessionController(
+            createSession = { item ->
+                ReusableRecordingSession(
+                    label = item.key.toString(),
+                    events = events,
+                    presentation = presentation,
+                ).also { created += 1 }
+            },
+            clearContainer = { events += "clear" },
+        )
+
+        controller.bind(item(key = "A", contentRevision = 1), submissionRevision = 1L)
+        val detached = checkNotNull(controller.detachForReuse())
+        controller.adoptForNextSession(detached)
+        controller.bind(item(key = "B", contentRevision = 1), submissionRevision = 2L)
+
+        assertEquals(2, created)
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A",
+                "render:A",
+                "detach:A",
+                "clear",
+                "clear",
+                "create:B",
+                "adopt:B",
+                "render:B",
+            ),
+            events,
+        )
+        assertFalse(presentation.released)
+    }
+
+    @Test
+    fun `discarding an unadopted presentation releases it exactly once`() {
+        val events = mutableListOf<String>()
+        val presentation = RecordingPresentation(events)
+        val controller = createController(events)
+
+        controller.adoptForNextSession(presentation)
+        controller.recycle()
+        controller.recycle()
+
+        assertEquals(listOf("clear", "release", "clear"), events)
+        assertTrue(presentation.released)
+    }
+
+    @Test
+    fun `presentation rejected by a new session is released immediately`() {
+        val events = mutableListOf<String>()
+        val presentation = RecordingPresentation(events)
+        val controller = createController(events)
+
+        controller.adoptForNextSession(presentation)
+        controller.bind(item(key = "A", contentRevision = 1))
+        controller.recycle()
+
+        assertEquals(
+            listOf("clear", "create:A:1", "release", "render:A:1", "dispose:A:1", "clear"),
+            events,
+        )
+        assertTrue(presentation.released)
+    }
+
+    @Test
+    fun `presentation is released when adoption throws`() {
+        val events = mutableListOf<String>()
+        val presentation = RecordingPresentation(events)
+        val controller = LazyItemSessionController(
+            createSession = {
+                object : LazyListItemSession {
+                    override fun render() = true
+
+                    override fun adoptReusablePresentation(
+                        presentation: ReusableItemPresentation,
+                    ): Boolean = error("adoption failed")
+
+                    override fun dispose() = Unit
+                }
+            },
+            clearContainer = { events += "clear" },
+        )
+
+        controller.adoptForNextSession(presentation)
+        val failure = runCatching {
+            controller.bind(item(key = "A", contentRevision = 1))
+        }.exceptionOrNull()
+
+        assertEquals("adoption failed", failure?.message)
+        assertEquals(listOf("clear", "release", "clear"), events)
+        assertTrue(presentation.released)
+        assertFalse(controller.hasPendingPresentation)
+    }
+
+    @Test
+    fun `failed detach still clears logical ownership and pending presentation`() {
+        val events = mutableListOf<String>()
+        val presentation = RecordingPresentation(events)
+        val controller = LazyItemSessionController(
+            createSession = {
+                object : LazyListItemSession {
+                    override fun render() = true
+
+                    override fun disposeForReuse(): ReusableItemPresentation? {
+                        events += "detach"
+                        error("detach failed")
+                    }
+
+                    override fun dispose() = Unit
+                }
+            },
+            clearContainer = { events += "clear" },
+        )
+        controller.bind(item(key = "A", contentRevision = 1))
+        controller.adoptForNextSession(presentation)
+
+        val failure = runCatching(controller::detachForReuse).exceptionOrNull()
+
+        assertEquals("detach failed", failure?.message)
+        assertEquals(listOf("clear", "detach", "clear", "release"), events)
+        assertFalse(controller.hasPendingPresentation)
+    }
+
+    @Test
+    fun `failed container clear releases the detached presentation and clears ownership`() {
+        val events = mutableListOf<String>()
+        val detached = RecordingPresentation(events)
+        var failClear = false
+        val controller = LazyItemSessionController(
+            createSession = {
+                object : LazyListItemSession {
+                    override fun render() = true
+
+                    override fun disposeForReuse(): ReusableItemPresentation {
+                        events += "detach"
+                        return detached
+                    }
+
+                    override fun dispose() = Unit
+                }
+            },
+            clearContainer = {
+                events += "clear"
+                if (failClear) error("clear failed")
+            },
+        )
+        controller.bind(item(key = "A", contentRevision = 1))
+        failClear = true
+
+        val failure = runCatching(controller::detachForReuse).exceptionOrNull()
+
+        assertEquals("clear failed", failure?.message)
+        assertEquals(listOf("clear", "detach", "clear", "release"), events)
+        assertTrue(detached.released)
+        assertFalse(controller.hasPendingPresentation)
+    }
+
+    @Test
+    fun `failed updater never publishes a partial session and a retry creates a fresh owner`() {
+        val events = mutableListOf<String>()
+        var created = 0
+        var failUpdate = true
+        val controller = LazyItemSessionController(
+            createSession = {
+                RecordingSession("candidate-${++created}", events)
+            },
+            clearContainer = { events += "clear" },
+        )
+        fun candidate() = item(
+            key = "A",
+            contentRevision = 1,
+            sessionUpdater = { session ->
+                events += "update-${(session as RecordingSession).label}"
+                if (failUpdate) error("update failed")
+            },
+        )
+
+        val failure = runCatching { controller.bind(candidate(), submissionRevision = 1L) }
+            .exceptionOrNull()
+        failUpdate = false
+        controller.bind(candidate(), submissionRevision = 1L)
+
+        assertEquals("update failed", failure?.message)
+        assertEquals(2, created)
+        assertEquals(
+            listOf(
+                "clear",
+                "create:candidate-1",
+                "update-candidate-1",
+                "dispose:candidate-1",
+                "clear",
+                "clear",
+                "create:candidate-2",
+                "update-candidate-2",
+                "render:candidate-2",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `failed revision render abandons the mutated session and retries with a fresh owner`() {
+        val events = mutableListOf<String>()
+        var created = 0
+        var failRender = false
+        val controller = LazyItemSessionController(
+            createSession = { item ->
+                FailingRenderSession(
+                    label = "${item.key}:${item.contentRevision}:owner-${++created}",
+                    events = events,
+                    shouldFail = { failRender },
+                )
+            },
+            clearContainer = { events += "clear" },
+        )
+        fun revision(revision: Int) = item(
+            key = "A",
+            contentRevision = revision,
+            sessionUpdater = { session ->
+                (session as FailingRenderSession).update("A:$revision")
+            },
+        )
+
+        controller.bind(revision(1), submissionRevision = 1L)
+        failRender = true
+        val failure = runCatching { controller.bind(revision(2), submissionRevision = 2L) }
+            .exceptionOrNull()
+        failRender = false
+        controller.bind(revision(2), submissionRevision = 2L)
+
+        assertEquals("render failed", failure?.message)
+        assertEquals(2, created)
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1:owner-1",
+                "update:A:1",
+                "render:A:1",
+                "update:A:2",
+                "render:A:2",
+                "dispose:A:2",
+                "clear",
+                "clear",
+                "create:A:2:owner-2",
+                "update:A:2",
+                "render:A:2",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `failed prepared activation is not committed and can retry the candidate`() {
+        val events = mutableListOf<String>()
+        var created = 0
+        var failActivation = true
+        val controller = LazyItemSessionController(
+            createSession = { item ->
+                object : LazyListItemSession {
+                    private val label = "${item.key}:owner-${++created}"
+
+                    init {
+                        events += "create:$label"
+                    }
+
+                    override fun prepare() {
+                        events += "prepare:$label"
+                    }
+
+                    override fun activate(): Boolean {
+                        events += "activate:$label"
+                        if (failActivation) error("activation failed")
+                        return true
+                    }
+
+                    override fun render() = true
+
+                    override fun dispose() {
+                        events += "dispose:$label"
+                    }
+                }
+            },
+            clearContainer = { events += "clear" },
+        )
+        val candidate = item(key = "A", contentRevision = 1)
+
+        controller.prepare(candidate, submissionRevision = 4L)
+        val failure = runCatching { controller.commit(4L) }.exceptionOrNull()
+        assertFalse(controller.hasCommitted(4L))
+        failActivation = false
+        controller.commit(4L)
+
+        assertEquals("activation failed", failure?.message)
+        assertTrue(controller.hasCommitted(4L))
+        assertEquals(2, created)
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:owner-1",
+                "prepare:A:owner-1",
+                "activate:A:owner-1",
+                "dispose:A:owner-1",
+                "clear",
+                "clear",
+                "create:A:owner-2",
+                "activate:A:owner-2",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `rolled back render does not commit revision and retries the retained session`() {
+        val events = mutableListOf<String>()
+        var commitRender = false
+        val controller = LazyItemSessionController(
+            createSession = {
+                object : LazyListItemSession {
+                    override fun render(): Boolean {
+                        events += "render:$commitRender"
+                        return commitRender
+                    }
+
+                    override fun dispose() = Unit
+                }
+            },
+            clearContainer = { events += "clear" },
+        )
+        val item = item(key = "A", contentRevision = 1)
+
+        controller.bind(item, submissionRevision = 8L)
+        assertFalse(controller.hasCommitted(8L))
+        commitRender = true
+        controller.bind(item, submissionRevision = 8L)
+
+        assertTrue(controller.hasCommitted(8L))
+        assertEquals(listOf("clear", "render:false", "render:true"), events)
+    }
+
+    @Test
     fun `prepare builds candidate and commit activates it without active render`() {
         val events = mutableListOf<String>()
         val controller = createLifecycleController(events)
         val item = item(
             key = "A",
-            contentToken = 1,
+            contentRevision = 1,
             sessionUpdater = { session ->
                 (session as LifecycleRecordingSession).updateLabel("prepared")
             },
@@ -54,7 +400,7 @@ class LazyItemSessionControllerTest {
     fun `duplicate detached bind prepares and activates one candidate`() {
         val events = mutableListOf<String>()
         val controller = createLifecycleController(events)
-        val item = item(key = "A", contentToken = 1)
+        val item = item(key = "A", contentRevision = 1)
 
         controller.prepare(item, submissionRevision = 3L)
         controller.prepare(item, submissionRevision = 3L)
@@ -72,8 +418,8 @@ class LazyItemSessionControllerTest {
         val events = mutableListOf<String>()
         val controller = createLifecycleController(events)
 
-        controller.prepare(item(key = "A", contentToken = 1), submissionRevision = 1L)
-        controller.prepare(item(key = "B", contentToken = 2), submissionRevision = 2L)
+        controller.prepare(item(key = "A", contentRevision = 1), submissionRevision = 1L)
+        controller.prepare(item(key = "B", contentRevision = 2), submissionRevision = 2L)
         controller.commit(2L)
 
         assertEquals(
@@ -96,7 +442,7 @@ class LazyItemSessionControllerTest {
         val events = mutableListOf<String>()
         val controller = createLifecycleController(events)
 
-        controller.prepare(item(key = "A", contentToken = 1), submissionRevision = 1L)
+        controller.prepare(item(key = "A", contentRevision = 1), submissionRevision = 1L)
         controller.recycle()
 
         assertEquals(
@@ -106,10 +452,10 @@ class LazyItemSessionControllerTest {
     }
 
     @Test
-    fun `reuses session when key and content token are unchanged`() {
+    fun `reuses session when key and revisions are unchanged`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
-        val item = item(key = "A", contentToken = 1)
+        val item = item(key = "A", contentRevision = 1)
 
         controller.bind(item, submissionRevision = 1L)
         controller.bind(item, submissionRevision = 1L)
@@ -121,14 +467,14 @@ class LazyItemSessionControllerTest {
     }
 
     @Test
-    fun `refreshes and renders existing session when key and content token are unchanged`() {
+    fun `skips a newer updater when key and revisions are unchanged`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
 
         controller.bind(
             item(
                 key = "A",
-                contentToken = 1,
+                contentRevision = 1,
                 sessionUpdater = { session ->
                     (session as RecordingSession).updateLabel("A:1:first")
                 },
@@ -137,7 +483,7 @@ class LazyItemSessionControllerTest {
         controller.bind(
             item(
                 key = "A",
-                contentToken = 1,
+                contentRevision = 1,
                 sessionUpdater = { session ->
                     (session as RecordingSession).updateLabel("A:1:second")
                 },
@@ -150,15 +496,13 @@ class LazyItemSessionControllerTest {
                 "create:A:1",
                 "update:A:1:first",
                 "render:A:1:first",
-                "update:A:1:second",
-                "render:A:1:second",
             ),
             events,
         )
     }
 
     @Test
-    fun `renders a reused updater once for each submission revision`() {
+    fun `submission revision alone never renders a stable logical item`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
         val updater: (LazyListItemSession) -> Unit = { session ->
@@ -166,7 +510,7 @@ class LazyItemSessionControllerTest {
         }
         val item = item(
             key = "A",
-            contentToken = 1,
+            contentRevision = 1,
             sessionUpdater = updater,
         )
 
@@ -179,11 +523,10 @@ class LazyItemSessionControllerTest {
                 "create:A:1",
                 "update:A:1",
                 "render:A:1",
-                "update:A:1",
-                "render:A:1",
             ),
             events,
         )
+        assertTrue(controller.hasCommitted(2L))
     }
 
     @Test
@@ -192,7 +535,7 @@ class LazyItemSessionControllerTest {
         val controller = createController(events)
         val item = item(
             key = "A",
-            contentToken = 1,
+            contentRevision = 1,
             sessionUpdater = { session ->
                 (session as RecordingSession).updateLabel("A:1")
             },
@@ -201,9 +544,11 @@ class LazyItemSessionControllerTest {
         controller.bind(item, submissionRevision = 7L)
         controller.bind(
             item = item,
-            payload = com.viewcompose.renderer.reconcile.LazyListChangePayload.ContentTokenChanged(
-                previous = 0,
-                next = 1,
+            payload = com.viewcompose.renderer.reconcile.LazyListChangePayload.RevisionChanged(
+                previousContent = 0,
+                nextContent = 1,
+                previousEnvironment = null,
+                nextEnvironment = null,
             ),
             submissionRevision = 7L,
         )
@@ -221,7 +566,7 @@ class LazyItemSessionControllerTest {
         controller.bind(
             item = item(
                 key = "A",
-                contentToken = 1,
+                contentRevision = 1,
                 sessionUpdater = { session ->
                     (session as RecordingSession).updateLabel("old")
                 },
@@ -232,7 +577,7 @@ class LazyItemSessionControllerTest {
         controller.stage(
             item = item(
                 key = "A",
-                contentToken = 1,
+                contentRevision = 1,
                 sessionUpdater = { session ->
                     (session as RecordingSession).updateLabel("new")
                 },
@@ -251,8 +596,6 @@ class LazyItemSessionControllerTest {
                 "create:A:1",
                 "update:old",
                 "render:old",
-                "update:new",
-                "render:new",
             ),
             events,
         )
@@ -265,7 +608,7 @@ class LazyItemSessionControllerTest {
         assertFalse(controller.hasCommitted(submissionRevision = 1L))
         controller.commit(submissionRevision = 1L)
         assertFalse(controller.hasCommitted(submissionRevision = 1L))
-        controller.stage(item(key = "A", contentToken = 1), submissionRevision = 1L)
+        controller.stage(item(key = "A", contentRevision = 1), submissionRevision = 1L)
         controller.commit(submissionRevision = 2L)
         assertFalse(controller.hasCommitted(submissionRevision = 1L))
         controller.commit(submissionRevision = 1L)
@@ -277,8 +620,8 @@ class LazyItemSessionControllerTest {
     fun `discard removes staged submission without touching committed child`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
-        controller.bind(item(key = "A", contentToken = 1), submissionRevision = 1L)
-        controller.stage(item(key = "B", contentToken = 2), submissionRevision = 2L)
+        controller.bind(item(key = "A", contentRevision = 1), submissionRevision = 1L)
+        controller.stage(item(key = "B", contentRevision = 2), submissionRevision = 2L)
 
         controller.discard(submissionRevision = 2L)
 
@@ -286,17 +629,17 @@ class LazyItemSessionControllerTest {
     }
 
     @Test
-    fun `replaces equal token session when updater is absent and factory changes`() {
+    fun `ignores factory identity when semantic revisions are equal`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
         val first = item(
             key = "A",
-            contentToken = 1,
+            contentRevision = 1,
             sessionFactory = LazyListItemSessionFactory { error("first") },
         )
         val second = item(
             key = "A",
-            contentToken = 1,
+            contentRevision = 1,
             sessionFactory = LazyListItemSessionFactory { error("second") },
         )
 
@@ -308,9 +651,24 @@ class LazyItemSessionControllerTest {
                 "clear",
                 "create:A:1",
                 "render:A:1",
-                "dispose:A:1",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `retains logical session when content revision changes`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+
+        controller.bind(item(key = "A", contentRevision = 1))
+        controller.bind(item(key = "A", contentRevision = 2))
+
+        assertEquals(
+            listOf(
                 "clear",
                 "create:A:1",
+                "render:A:1",
                 "render:A:1",
             ),
             events,
@@ -318,12 +676,12 @@ class LazyItemSessionControllerTest {
     }
 
     @Test
-    fun `replaces session when content token changes`() {
+    fun `same key with different content type fully replaces logical session`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
 
-        controller.bind(item(key = "A", contentToken = 1))
-        controller.bind(item(key = "A", contentToken = 2))
+        controller.bind(item(key = "A", contentRevision = 1, contentType = "compact"))
+        controller.bind(item(key = "A", contentRevision = 1, contentType = "expanded"))
 
         assertEquals(
             listOf(
@@ -332,22 +690,50 @@ class LazyItemSessionControllerTest {
                 "render:A:1",
                 "dispose:A:1",
                 "clear",
-                "create:A:2",
-                "render:A:2",
+                "create:A:1",
+                "render:A:1",
             ),
             events,
         )
     }
 
     @Test
-    fun `updates existing session when content token changes but key is stable`() {
+    fun `same key with different item kind fully replaces logical session`() {
+        val events = mutableListOf<String>()
+        val controller = createController(events)
+
+        controller.bind(item(key = "A", contentRevision = 1))
+        controller.bind(
+            item(
+                key = "A",
+                contentRevision = 1,
+                kind = com.viewcompose.ui.node.LazyListItemKind.StickyHeader,
+            ),
+        )
+
+        assertEquals(
+            listOf(
+                "clear",
+                "create:A:1",
+                "render:A:1",
+                "dispose:A:1",
+                "clear",
+                "create:A:1",
+                "render:A:1",
+            ),
+            events,
+        )
+    }
+
+    @Test
+    fun `updates existing session when content revision changes but key is stable`() {
         val events = mutableListOf<String>()
         val controller = createController(events)
 
         controller.bind(
             item(
                 key = "A",
-                contentToken = 1,
+                contentRevision = 1,
                 sessionUpdater = { session ->
                     (session as RecordingSession).updateLabel("A:1")
                 },
@@ -356,7 +742,7 @@ class LazyItemSessionControllerTest {
         controller.bind(
             item(
                 key = "A",
-                contentToken = 2,
+                contentRevision = 2,
                 sessionUpdater = { session ->
                     (session as RecordingSession).updateLabel("A:2")
                 },
@@ -381,7 +767,7 @@ class LazyItemSessionControllerTest {
         val events = mutableListOf<String>()
         val controller = createController(events)
 
-        controller.bind(item(key = "A", contentToken = 1))
+        controller.bind(item(key = "A", contentRevision = 1))
         controller.recycle()
 
         assertEquals(
@@ -402,7 +788,7 @@ class LazyItemSessionControllerTest {
         return LazyItemSessionController(
             createSession = { item ->
                 RecordingSession(
-                    label = "${item.key}:${item.contentToken}",
+                    label = "${item.key}:${item.contentRevision}",
                     events = events,
                 )
             },
@@ -418,7 +804,7 @@ class LazyItemSessionControllerTest {
         return LazyItemSessionController(
             createSession = { item ->
                 LifecycleRecordingSession(
-                    label = "${item.key}:${item.contentToken}",
+                    label = "${item.key}:${item.contentRevision}",
                     events = events,
                 )
             },
@@ -427,31 +813,37 @@ class LazyItemSessionControllerTest {
     }
 
     private fun item(
-        key: Any?,
-        contentToken: Any?,
+        key: Any,
+        contentRevision: Any?,
+        contentType: Any? = null,
+        kind: com.viewcompose.ui.node.LazyListItemKind =
+            com.viewcompose.ui.node.LazyListItemKind.Item,
         sessionFactory: LazyListItemSessionFactory = LazyListItemSessionFactory { _ ->
             error("sessionFactory should not be used in controller tests")
         },
-        sessionUpdater: ((LazyListItemSession) -> Unit)? = null,
+        sessionUpdater: (LazyListItemSession) -> Unit = {},
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = contentToken,
+            contentRevision = contentRevision,
+            contentType = contentType,
+            kind = kind,
             sessionFactory = sessionFactory,
             sessionUpdater = sessionUpdater,
         )
     }
 
     private class RecordingSession(
-        private var label: String,
+        var label: String,
         private val events: MutableList<String>,
     ) : LazyListItemSession {
         init {
             events += "create:$label"
         }
 
-        override fun render() {
+        override fun render(): Boolean {
             events += "render:$label"
+            return true
         }
 
         override fun dispose() {
@@ -462,6 +854,31 @@ class LazyItemSessionControllerTest {
             label: String,
         ) {
             this.label = label
+            events += "update:$label"
+        }
+    }
+
+    private class FailingRenderSession(
+        private var label: String,
+        private val events: MutableList<String>,
+        private val shouldFail: () -> Boolean,
+    ) : LazyListItemSession {
+        init {
+            events += "create:$label"
+        }
+
+        override fun render(): Boolean {
+            events += "render:$label"
+            if (shouldFail()) error("render failed")
+            return true
+        }
+
+        override fun dispose() {
+            events += "dispose:$label"
+        }
+
+        fun update(next: String) {
+            label = next
             events += "update:$label"
         }
     }
@@ -478,12 +895,14 @@ class LazyItemSessionControllerTest {
             events += "prepare:$label"
         }
 
-        override fun activate() {
+        override fun activate(): Boolean {
             events += "activate:$label"
+            return true
         }
 
-        override fun render() {
+        override fun render(): Boolean {
             events += "render:$label"
+            return true
         }
 
         override fun dispose() {
@@ -493,6 +912,48 @@ class LazyItemSessionControllerTest {
         fun updateLabel(label: String) {
             this.label = label
             events += "update:$label"
+        }
+    }
+
+    private class ReusableRecordingSession(
+        private val label: String,
+        private val events: MutableList<String>,
+        private val presentation: RecordingPresentation,
+    ) : LazyListItemSession {
+        init {
+            events += "create:$label"
+        }
+
+        override fun render(): Boolean {
+            events += "render:$label"
+            return true
+        }
+
+        override fun disposeForReuse(): ReusableItemPresentation {
+            events += "detach:$label"
+            return presentation
+        }
+
+        override fun adoptReusablePresentation(presentation: ReusableItemPresentation): Boolean {
+            events += "adopt:$label"
+            return presentation === this.presentation
+        }
+
+        override fun dispose() {
+            events += "dispose:$label"
+        }
+    }
+
+    private class RecordingPresentation(
+        private val events: MutableList<String>,
+    ) : ReusableItemPresentation {
+        var released = false
+            private set
+
+        override fun release() {
+            if (released) return
+            released = true
+            events += "release"
         }
     }
 }

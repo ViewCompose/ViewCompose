@@ -60,15 +60,16 @@ created for the node.
   captures density, locale tags, and logical layout direction for a subtree.
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   and pager state bridge platform scrolling to observable runtime state.
-- `LazyListItem` is the Q3 renderer-neutral item/session contract. `contentToken` drives semantic
-  collection diffing, while callback identity is deliberately excluded from value equality and
-  submission identity. A renderer treats each newly submitted immutable item snapshot as a logical
-  revision, installs its exact updater only after the parent frame commits, and renders an active
-  retained session at most once for that revision. Its Q3 `prepare` → `activate` → `render` →
-  `dispose` protocol lets renderers build an externally silent candidate before presentation;
-  default methods preserve source compatibility for custom sessions that do not prebuild. The
-  compiled `lazyListItemSessionUpdateSample` demonstrates preparation and equal-token closure
-  replacement.
+- `LazyListItem` is the Q3 renderer-neutral snapshot/session contract. Logical equality consists of
+  key, `contentType`, caller-owned `contentRevision`, framework-owned `environmentRevision`, kind,
+  and span; callback identity is deliberately excluded. Equal key and revisions skip the session
+  completely. A changed revision updates only that session, while a changed `contentType`
+  terminates the old session and requires a full presentation rebuild. Its Q3 `prepare` → `activate` →
+  `render` → `disposeForReuse`/`dispose` protocol lets renderers build an externally silent
+  candidate, terminate key-owned state, and transfer only a reset physical presentation. The
+  Boolean result from `activate` and `render` advances the semantic revision only after the
+  installed content commits; rollback returns `false` and remains retryable. The compiled
+  `lazyListItemSessionUpdateSample` demonstrates this lifecycle.
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   and [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   define explicit renderer attachment boundaries for focus and nested scrolling.
@@ -144,10 +145,11 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   instead of consulting unrelated process-global density, locale, or direction state.
 - `LazyListState`, pager state, focus requesters, and nested-scroll dispatchers attach to one current
   renderer connector. Hosts must detach old connectors during replacement or disposal.
-- A renderer retaining a `LazyListItem` session must install the latest `sessionUpdater` whenever a
-  parent refresh reaches that bound item, even when `contentToken` is equal. It must render that new
-  updater once, while duplicate delivery of the exact same updater and token must not repeat a
-  logical render or its effects.
+- A renderer retaining a `LazyListItem` session must ignore a newer callback object when key and
+both revisions are equal. When either revision changes, it installs the latest updater and renders
+that logical session until the content reports a successful commit. A different key always creates
+a different logical session; compatible physical presentation may move only after old state and
+effects are disposed.
 - State and connector commands are thread-confined to the owning renderer thread. Android
   integrations use the main thread, and callbacks run synchronously unless a concrete contract says
   otherwise.
@@ -165,6 +167,9 @@ first-party image loaders; its zero default preserves deterministic non-Android/
   navigation precise and source-capture overhead bounded.
 - `AndroidViewNodeProps.update` and `onReset` are replay-safe transaction callbacks. External
   one-shot work belongs in `onCommit`; resource cleanup belongs in `onRelease`.
+- A mounted tree containing `AndroidView` may cross logical keys only when every interop node
+  declares `onReset`. The renderer calls reset after old-session disposal and before new-key bind;
+  final cache eviction calls `onRelease` exactly once.
 - Image loading is an optional capability. `UiImageLoader` is caller-owned, runs on the owning UI
   thread, and returns a handle for the started work. The renderer owns replacing and disposing the
   handle for a mounted image View; a loader must not retain that View after disposal.
@@ -206,6 +211,10 @@ Adding `LazyListItemSession.prepare` and `activate` is a Q3 lifecycle hard cut. 
 implementations inherit safe defaults, but the interface JVM shape changes, so precompiled custom
 sessions and renderers must be rebuilt. An override that prepares native content must keep all
 commit-bound callbacks deferred and support disposal before activation.
+
+Changing `LazyListItemSession.activate` and `render` to return commit success completes that Q3
+hard cut. Custom implementations must return `false` for rolled-back attempts so equal submission
+revisions remain retryable; precompiled sessions and renderers must be rebuilt.
 
 Adding `ButtonNodeProps.visualHeight` is a Q2 immutable snapshot-contract change. The source default
 equals `minHeight`, but precompiled constructor call sites and custom renderers must be rebuilt for

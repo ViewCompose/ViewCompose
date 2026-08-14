@@ -2,27 +2,7 @@ package com.viewcompose.ui.foundation
 
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.RenderContainerHandle
-
-/**
- * Captures a lazy item's content token and key so item sessions can recompose the correct content during reuse.
- */
-internal data class CapturedLazyContentToken(
-    val contentToken: Any?,
-    val localSnapshot: LocalSnapshot,
-)
-
-/**
- * Reads the lazy item token from the current composition; absence means the call site is outside lazy-content capture.
- */
-internal fun capturedLazyContentToken(
-    contentToken: Any?,
-    localSnapshot: LocalSnapshot,
-): CapturedLazyContentToken {
-    return CapturedLazyContentToken(
-        contentToken = contentToken,
-        localSnapshot = localSnapshot,
-    )
-}
+import com.viewcompose.ui.node.ReusableItemPresentation
 
 /**
  * Maintains an isolated composition session for one lazy-list item so scroll reuse does not pollute parent state.
@@ -54,21 +34,31 @@ internal class WidgetLazyListItemSession(
         session.prepareForActivation()
     }
 
-    override fun activate() {
+    override fun activate(): Boolean {
         session.activatePrepared()
+        return session.lastFrameReport?.status == RenderFrameStatus.Committed
     }
 
-    override fun render() {
+    override fun render(): Boolean {
         // Lazy item session bind path must keep immediate render semantics.
         session.render()
+        return session.lastFrameReport?.status == RenderFrameStatus.Committed
     }
 
     override fun dispose() {
-        try {
-            session.dispose()
-        } finally {
+        session.disposeWithLogicalOwnerRelease {
             saveableStateLease?.close()
         }
+    }
+
+    override fun disposeForReuse(): ReusableItemPresentation? {
+        return session.disposeForReuse {
+            saveableStateLease?.close()
+        }
+    }
+
+    override fun adoptReusablePresentation(presentation: ReusableItemPresentation): Boolean {
+        return session.adoptReusablePresentation(presentation)
     }
 
     fun updateContent(
@@ -92,4 +82,5 @@ internal class WidgetLazyListItemSession(
     private fun LocalSnapshot.withChildSaveableStateRegistry(): LocalSnapshot {
         return withSaveableStateRegistry(saveableStateLease?.registry)
     }
+
 }

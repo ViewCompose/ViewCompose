@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/0011-prefetched-session-activation-boundary.md
-translation_source_hash: 5a191e2fe92cf5f61853a103927cfc47aca6810de02344e47386b1008468819b
+translation_source_hash: b51df7ab59c3876e525b40ae265ab165a16748fbfd7e8e44a2789149ef4ff5e5
 translation_status: current
 ---
 
@@ -24,8 +24,9 @@ Observer 会激活，`SideEffect` 与原生 Commit Callback 会执行，Overlay 
 ## 决策
 
 1. `LazyListItemSession` 采用 Q3 三阶段生命周期：可选 `prepare`、一次 `activate`、零次或多次
-   Active `render`，最后是终止性的 `dispose`。默认实现保持现有自定义 Session 源码兼容：
-   `prepare` 不做工作，`activate` 委托给 `render`。
+   Active `render`，最后是终止性的 `dispose`。ADR-0011 采纳时，`prepare` 默认不做工作，
+   `activate` 委托给 `render`。ADR-0012 随后把两个提交操作硬切为返回已安装 Revision 是否提交；
+   自定义 Session 现在必须实现显式 Boolean Commit 契约。
 2. Detach 且从未激活的 RecyclerView Holder 可以调用 `prepare`。标准 Widget Session 会组合候选
    VNode 树并建立原生 View 树，但保留 Prepared Composition Transaction，不执行 Commit。
 3. Prepare 不运行 Remember 激活、`SideEffect`、`DisposableEffect`、`LaunchedEffect`、原生
@@ -45,12 +46,15 @@ Observer 会激活，`SideEffect` 与原生 Commit Callback 会执行，Overlay 
 
 ## 公开 API 与兼容性影响
 
-`LazyListItemSession.prepare` 与 `LazyListItemSession.activate` 是 `viewcompose-ui-contract` 新增的
-Q3 生命周期方法，默认实现保留现有 Session 实现。自定义 Renderer 可以选择支持原生树 Prepare，
+本决策采纳时，`LazyListItemSession.prepare` 与 `LazyListItemSession.activate` 是
+`viewcompose-ui-contract` 新增的 Q3 生命周期方法。自定义 Renderer 可以选择支持原生树 Prepare，
 但 Prepare 必须不产生外部可观察的已提交工作，`dispose` 也必须能在 Activate 前安全调用。
+ADR-0012 随后让 `activate` 与 `render` 返回 Boolean Commit 成功状态；这项有意的硬切保证回滚后
+仍可重试，而不会错误推进 Item Revision。
 
-标准 Android Renderer 与 UI Foundation 集成完整采用该协议。应用 DSL 签名不变，Collection
-Key、`contentToken`、Saveable State 所有权、Effect 顺序与 Activate 后 Render 语义均保持不变。
+标准 Android Renderer 与 UI Foundation 集成完整采用该协议。ADR-0012 后续硬切了 Item Revision、
+逻辑 Session 与物理树的所有权规则；新规则替代本文最初的刷新假设，但保留本文定义的
+Prepared-Activation 边界。
 
 ## 后果
 
@@ -90,6 +94,6 @@ Transaction 才能维持唯一权威 Commit 边界，因此否决。
 2. Activate 前不运行 Remember、Side、原生 Commit、Overlay 或诊断工作；
 3. Prepare 与 Attach 间 State 失效会放弃过期候选；
 4. Replace、重复 Revision、Attach 前 Recycle，以及 Active Detach 后 Reattach；
-5. Key 与 `contentToken` 不变时的刷新语义不变；
+5. ADR-0012 替代后，Key 与 Revision 不变时的行为；
 6. 使用 `FrameTimingMetric` 对 Diagnostics Theme 执行到达列表底部再返回顶部的大力度、长时间
    Fling，而不是只在页面顶部短滑。

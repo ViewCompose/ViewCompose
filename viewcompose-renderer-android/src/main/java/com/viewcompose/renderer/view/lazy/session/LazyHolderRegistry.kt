@@ -27,11 +27,18 @@ internal class LazyHolderRegistry<T : Any>(
     }
 
     fun disposeAll() {
-        boundHolders.toList().forEach { holder ->
-            onDispose(holder)
-        }
+        val ownedHolders = boundHolders.toList()
         boundHolders.clear()
         attachedHolders.clear()
+        var failure: Throwable? = null
+        ownedHolders.forEach { holder ->
+            try {
+                onDispose(holder)
+            } catch (disposeError: Throwable) {
+                if (failure == null) failure = disposeError else failure.addSuppressed(disposeError)
+            }
+        }
+        failure?.let { throw it }
     }
 
     fun forEachAttached(action: (T) -> Unit) {

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "summary": "Hard-cut lazy collections to explicit semantic revisions, key-owned logical sessions, bounded resettable mounted-tree reuse, native pager residency, and eager keyed tabs.",
+  "changes": [
+    { "artifact": "viewcompose-runtime", "impact": "feature" },
+    { "artifact": "viewcompose-ui-contract", "impact": "breaking" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-renderer-android", "impact": "fix" },
+    { "artifact": "viewcompose-host-android", "impact": "fix" }
+  ],
+  "ignored": []
+}

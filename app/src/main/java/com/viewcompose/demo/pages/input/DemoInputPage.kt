@@ -630,7 +630,7 @@ internal fun UiTreeBuilder.InputPage(
                         .height(188.dp)
                         .margin(bottom = 12.dp),
                 ) {
-                    Page(key = "focus-follow-vertical-pager-search", contentToken = "focus-follow-vertical-pager-search") {
+                    Page(key = "focus-follow-vertical-pager-search", contentRevision = "focus-follow-vertical-pager-search") {
                         Column(
                             spacing = 8.dp,
                             modifier = Modifier
@@ -653,7 +653,7 @@ internal fun UiTreeBuilder.InputPage(
                             )
                         }
                     }
-                    Page(key = "focus-follow-vertical-pager-note", contentToken = "focus-follow-vertical-pager-note") {
+                    Page(key = "focus-follow-vertical-pager-note", contentRevision = "focus-follow-vertical-pager-note") {
                         Column(
                             spacing = 8.dp,
                             modifier = Modifier

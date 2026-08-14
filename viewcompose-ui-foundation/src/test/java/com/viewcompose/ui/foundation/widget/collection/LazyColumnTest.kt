@@ -15,6 +15,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LazyColumnTest {
+    private data class MutableRow(
+        val id: String,
+        var version: Int,
+    )
+
     @Test
     fun `lazy column emits content padding and spacing props`() {
         val tree = buildVNodeTree {
@@ -49,7 +54,7 @@ class LazyColumnTest {
             bottom = 16.dp,
         )
         val prefetch = LazyLayoutPrefetchPolicy(
-            initialPrefetchItemCount = 5,
+            nestedInitialPrefetchItemCount = 5,
             itemViewCacheSize = 7,
         )
         val tree = buildVNodeTree {
@@ -103,5 +108,25 @@ class LazyColumnTest {
 
         assertTrue(error is IllegalArgumentException)
         assertTrue(error?.message.orEmpty().contains("Duplicate key"))
+    }
+
+    @Test
+    fun `bulk items expose explicit semantic revision for mutable models`() {
+        val row = MutableRow(id = "row", version = 7)
+        val tree = buildVNodeTree {
+            LazyColumn(
+                items = listOf(row),
+                key = MutableRow::id,
+                contentType = { "row" },
+                contentRevision = MutableRow::version,
+            ) { item ->
+                Text(item.id)
+            }
+        }
+
+        val item = (tree.single().spec as LazyColumnNodeProps).items.single()
+        assertEquals("row", item.key)
+        assertEquals("row", item.contentType)
+        assertEquals(7, item.contentRevision)
     }
 }

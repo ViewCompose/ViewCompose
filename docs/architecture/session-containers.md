@@ -20,15 +20,17 @@ They are therefore high-risk areas for stale content when structure remains unch
 3. `LazyVerticalGrid`
 4. `HorizontalPager`
 5. `VerticalPager`
-6. `TabRow + pager page`, where page content is carried by `LazyListItemSession`
-7. navigation destination pages, where content is carried by `NavDestinationSession`
+6. navigation destination pages, where content is carried by `NavDestinationSession`
+
+`TabRow` is deliberately excluded: its small, resident tab set is rendered as ordinary eager keyed
+children in the parent composition.
 
 ## 3. Hard architecture constraints
 
 Every delayed-session container must satisfy these constraints:
 
 1. An empty diff must not fall back to an old item or page instance.
-2. A bound holder/session must have a refresh path when structure does not change.
+2. Equal key plus content/environment revisions must skip the item session completely.
 3. The update path reinjects `localSnapshot`, theme, environment, and the latest parent closure.
 4. A delayed create path may prepare a native child tree, but only activation or an active update
    can cross the child composition/effect commit boundary.
@@ -43,8 +45,8 @@ Every delayed-session container must satisfy these constraints:
 9. A parent collection submission is one monotonic child-session revision. Its retained-child
    updates publish only from the parent render frame's commit effects, after composition commit;
    parent rollback discards them without running child composition or effects.
-10. Callback identity is not a revision. The renderer submits newly emitted immutable item/page
-    snapshots and suppresses only duplicate platform binds for the same submission revision.
+10. Callback identity is not a revision. A changed ordinary capture must be State or participate in
+    `contentRevision`; callback allocation alone never refreshes content.
 11. A detached, never-activated holder may prepare a committed parent submission without running
     remember activation, effects, native commit callbacks, overlays, or committed diagnostics.
     Activation commits a valid candidate without rebuilding it. An already-active detached holder
@@ -58,24 +60,32 @@ Every delayed-session container must satisfy these constraints:
     map, reordering follows the key, and nested containers repeat the hierarchy.
 14. A renderer-created concurrent presentation replica may restore the logical owner's current
     saveable snapshot but must not register a second persistence owner for the same logical key.
+15. Recycling ends the logical key session before physical reset. Compatible mounted trees live only
+    in a framework-owned, bounded cache with deterministic eviction; native pools retain empty
+    holder shells.
+16. `AndroidView` participates in cross-key reuse only with `onReset`; final eviction calls
+    `onRelease` exactly once.
 
 ## 4. Required scenarios
 
 Every container covers at least these eight cases:
 
-1. Stable structure, changed closure: visible content updates after the successful parent commit
-   while `key` is unchanged.
+1. Stable structure, changed closure but equal revisions: no item render occurs; changing content
+   without State requires an explicit revision change.
 2. Stable structure, changed local context: theme, Local, or environment changes become visible.
-3. Changed `contentToken`: reuse or controlled recreation follows the documented semantics.
+3. Changed `contentRevision`: reuse or controlled recreation follows the documented semantics.
 4. Keyed reorder: ordering is correct and state does not move between items.
 5. Prepare/attach/detach/recycle: a never-activated cache runs no child commit work, attach presents
    the latest committed revision, active detach does not restart lifecycle work, and recycle leaks
    no state.
-6. Empty-diff refresh: an attached holder still refreshes once for the committed submission.
+6. Empty-diff submission: attached holders perform no item render or native patch.
 7. Failed parent frame: retained child update/render/effects do not run.
-8. Missing or duplicate keys: conservative reload avoids guessed holder identity.
+8. Duplicate low-level item keys: conservative reload avoids guessed holder identity; public DSLs
+   reject missing or duplicate keys while building the snapshot.
 9. Saveable-state ownership: sibling local keys do not collide, keyed recycling/restoration does
    not move state, and presentation replicas cannot overwrite the logical owner.
+10. Cross-key physical reuse: old effects dispose before reset, new logical state starts empty,
+    failed rebind cannot call old updater callbacks, and eviction releases exactly once.
 
 ## 5. Current test mapping (2026-08)
 
@@ -92,9 +102,9 @@ Covered special cases:
 
 1. `LazyColumn`: `collectionsStress_toggleUpdatesVisibleControls` (UI)
 2. `LazyVerticalGrid`: `collectionsGrid_spanToggle_refreshesVisibleItemContent` (UI)
-3. `TabRow + HorizontalPager`: `statePatchStress_refreshesStableTabContent` (UI)
-4. `HorizontalPager`: `statePatchStress_horizontalPagerContentUpdatesAcrossAdvances` (UI)
-5. `VerticalPager`: `statePatchStress_verticalPagerContentUpdatesAcrossAdvances` (UI)
+3. `TabRow + HorizontalPager`: eager keyed tab state and pager revision cases (UI)
+4. `HorizontalPager`: `statePatchStress_horizontalPagerContentUpdatesAcrossExplicitRevisions` (UI)
+5. `VerticalPager`: `statePatchStress_verticalPagerContentUpdatesAcrossExplicitRevisions` (UI)
 6. `LazyVerticalGrid/HorizontalPager/VerticalPager`: collection patch cases in
    `NodeBindingDifferTest` (unit)
 7. `LazyColumn`: `collectionsStress_rotateOrder_refreshesVisibleIdsAcrossToggles` (UI)
@@ -118,7 +128,7 @@ Current baseline notes:
 4. Since 2026-07-26, a back-stack commit occurs only after candidate first render or revealed-page
    refresh succeeds. Reentrant commands created by a failed candidate do not leak into the old
    stack.
-5. Since 2026-08-12, lazy, pager, and tab child submissions join the parent commit-effect boundary.
+5. Since 2026-08-12, lazy and pager child submissions join the parent commit-effect boundary.
    Attached holders render once per explicit submission revision; detached caches and rolled-back
    parent frames run no child render or effects.
 6. Pager moves proactively refresh attached uniquely keyed pages after commit. Hash-colliding keys
@@ -128,6 +138,11 @@ Current baseline notes:
    RecyclerView prefetch can build its composition and native tree before attachment, while the
    existing transaction defers remember activation, effects, native commit work, overlays, and
    diagnostics. An observed state change invalidates the candidate before activation.
+8. Since 2026-08-14, item/page snapshots use caller-owned content revision plus framework-owned
+   environment revision. Equal revisions skip child rendering; changed revisions target one item.
+9. Since 2026-08-14, logical sessions and physical mounted trees have separate ownership. TabRow
+   uses eager keyed children; resettable trees may cross lazy keys only through the bounded
+   renderer-owned cache.
 
 ## 6. New-container workflow
 
@@ -135,7 +150,8 @@ Adding a delayed-session container requires all of the following:
 
 1. register the container in [the architecture overview](overview.md);
 2. add it to this checklist with a test mapping;
-3. add unit cases for `diff empty but closure changed`, parent rollback, and detached-holder attach;
+3. add unit cases for equal-revision skip, explicit-revision update, parent rollback, and
+   detached-holder attach;
 4. add real Activity instrumentation;
 5. confirm that render/layout diagnostics expose the behavior.
 

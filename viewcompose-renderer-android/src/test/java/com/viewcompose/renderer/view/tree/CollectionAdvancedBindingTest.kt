@@ -58,7 +58,7 @@ class CollectionAdvancedBindingTest {
                 reverseLayout = true,
                 userScrollEnabled = false,
                 prefetchPolicy = LazyLayoutPrefetchPolicy(
-                    initialPrefetchItemCount = 6,
+                    nestedInitialPrefetchItemCount = 6,
                     itemViewCacheSize = 4,
                 ),
                 reusePolicy = CollectionReusePolicy(),
@@ -95,9 +95,10 @@ class CollectionAdvancedBindingTest {
             reverseLayout = true,
             userScrollEnabled = false,
             prefetchPolicy = LazyLayoutPrefetchPolicy(
-                initialPrefetchItemCount = 5,
+                nestedInitialPrefetchItemCount = 5,
                 itemViewCacheSize = 3,
             ),
+            mountedTreeCacheSize = 2,
         )
 
         val layoutManager = view.layoutManager as GridLayoutManager
@@ -115,14 +116,15 @@ class CollectionAdvancedBindingTest {
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = key,
+            contentRevision = key,
             span = span,
             sessionFactory = LazyListItemSessionFactory {
                 object : LazyListItemSession {
-                    override fun render() = Unit
+                    override fun render() = true
                     override fun dispose() = Unit
                 }
             },
+            sessionUpdater = {},
         )
     }
 }

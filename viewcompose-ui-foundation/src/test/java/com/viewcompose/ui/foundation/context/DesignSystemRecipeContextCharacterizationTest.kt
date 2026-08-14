@@ -106,21 +106,21 @@ class DesignSystemRecipeContextCharacterizationTest {
         val equalValue = first.copy()
         val changed = first.copy(actionHorizontalPadding = 30)
 
-        val firstToken = delayedContentToken(first)
-        val equalToken = delayedContentToken(equalValue)
-        val changedToken = delayedContentToken(changed)
+        val firstToken = delayedContentRevision(first)
+        val equalToken = delayedContentRevision(equalValue)
+        val changedToken = delayedContentRevision(changed)
 
         assertEquals(firstToken, equalToken)
         assertNotEquals(firstToken, changedToken)
     }
 
-    private fun delayedContentToken(recipes: TestComponentRecipes): Any? {
+    private fun delayedContentRevision(recipes: TestComponentRecipes): Any? {
         val tree = buildVNodeTree {
             ProvideLocal(localComponentRecipes, recipes) {
                 LazyColumn {
                     item(
                         key = "recipe-item",
-                        contentToken = "stable-content",
+                        contentRevision = "stable-content",
                     ) {
                         Text(UiLocals.current(localComponentRecipes).identity)
                     }
@@ -128,6 +128,6 @@ class DesignSystemRecipeContextCharacterizationTest {
             }
         }
 
-        return (tree.single().spec as LazyColumnNodeProps).items.single().contentToken
+        return (tree.single().spec as LazyColumnNodeProps).items.single().environmentRevision
     }
 }

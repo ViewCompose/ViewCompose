@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-foundation/README.md
-translation_source_hash: 45313b4b6f3feaa93d2036df1d5ca98f624b2e90b64cca15319b26a84a0c6646
+translation_source_hash: c2dde3f5a27558654fc71a0ee65aaaa58cd0cd81f49a9f916cc4416688211ab6
 translation_status: current
 ---
 
@@ -111,6 +111,10 @@ fun UiTreeBuilder.ProfileSummary(name: String, role: String) {
   Provider；它不会捕获或恢复 Provider Stack，普通应用代码应使用标准 Effect API。
 - [`rememberSaveable` 与 `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-saveable-state-registry/)
   通过事务式恢复让状态跨组合释放和宿主重建继续存活。
+- `LazyColumn`、`LazyRow`、`LazyVerticalGrid` 与 Pager Page 声明使用显式 Q3 Revision 契约。批量
+  Overload 接受 `contentRevision = { model.version }`；普通捕获值必须是可观察 State 或进入该
+  Revision。Pager Page 也声明 `contentType`。`TabRow` 使用父组合中的 Eager Keyed Child，而非
+  Lazy Item Session。
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
   为一个不透明 `RenderContainerHandle` 协调组合、渲染器协调、原生提交 Effect、浮层、诊断、
   失败恢复与释放。标准应用使用 `renderInto` 返回的 Host Android Session，不直接构造该协调器。
@@ -136,8 +140,12 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
 - ViewCompose 没有编译器转换，无法推断所有普通 Kotlin 捕获值。因此，新安装的发射内容闭包
   即使节点规格值相等也会重建该 Group；只有完全相同且被保留的闭包才能复用未失效的子结果。
   这项规则优先保证捕获值与子 Session 回调正确，不采用不安全的值相等子树跳过。
-- 集合 item 快照而不是回调对象身份划分逻辑子提交。因此，即使调用方有意复用同一个 Session
-  Factory 或 Updater 实例，新建的值相等 item 仍会使所属集合 Group 失效。
+- 集合 Item Snapshot 而非 Callback 对象身份划分逻辑子提交。Key 与 Content/Environment Revision
+  相等时不执行 Child Composition 或原生 Patch。变化的非 State 捕获值必须进入
+  `contentRevision`；省略它就承诺该值对当前 Key 保持稳定。
+- Lazy Item 与 Pager 子 Revision 只会在 `activate` 或 `render` 报告已 Commit 帧时推进。组合或
+  原生树 Rollback 会保留逻辑 Session 并重试同一语义 Revision；帧 Commit 后的失败仍可观察，
+  但不会撤销该帧。
 - `remember` 与 Effect 需要活跃组合。位置标识跟随结构调用路径；内容可能移动时，应使用稳定
   `key` 分组和 Lazy Item Key。
 - 候选 Effect 变化属于事务。组合或原生 Tree Render 失败不会启动候选工作，会保留已提交的
@@ -155,13 +163,16 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
   同步 Callback 超过 16 ms 时发出警告。
 - `rememberSaveable` 只在组合提交后注册 Provider。组合失败或被放弃时会释放已 Claim 的恢复值，
   让后续尝试仍能恢复它。
-- 延迟子组合不会共享 Host Registry 的扁平 Provider Key 命名空间。Lazy、Pager、Tab 与 Overlay
-  容器按逻辑 Key Remember 分层子 Registry，在回收期间保留状态，并在 Keyed Reorder 时恢复且
-  不串状态。并发视觉副本不拥有持久化权，不能覆盖逻辑子项的持久化状态。
+- 延迟子组合不会共享 Host Registry 的扁平 Provider Key 命名空间。Lazy、Pager 与 Overlay 按
+  逻辑 Key Remember 分层子 Registry，在回收期间保留状态，并在 Keyed Reorder 时恢复且不串状态。
+  Tab Child 使用父组合的 Keyed Saveable Namespace。并发视觉副本不拥有持久化权，不能覆盖逻辑
+  子项的持久化状态。
 - 从未激活的 Lazy 子 Session 可以为 RecyclerView Prefetch 保留 Prepared Composition 与已经构建
   的原生树。它与正常帧使用同一 Transaction，因此 Remember 激活、用户 Effect、原生 Commit
   Callback、Overlay 和诊断都会推迟到 Attach。State 失效会在 Activate 前放弃过期候选；Active
   缓存 Session 会保持生命周期直到 Recycle，不把 Viewport Detach 当作 Stop。
+- Recycle 会在兼容 Mounted Tree 进入有界 Renderer 缓存前结束逻辑 Key Session。只有可 Reset
+  原生树能跨 Key；淘汰会确定性 Release 原生资源。RecyclerView Pool 只保留空 Holder 外壳。
 - `UiTheme` 只接收平台无关 Token。Android 资源观察属于 `viewcompose-host-android`；Material
   等具名设计系统只负责把 Host 产生的资源版本映射到自己的 Token 刷新策略。
 - 现有三类排版构造仍保持简洁：省略的 Headline 角色从 Title 派生，省略的 Display 角色从
@@ -178,7 +189,9 @@ Navigation Destination 保留该值。Android 资源解析与观察仍由 UI Fou
 - 浮层请求是声明式的，按 Render Session ID 与 Request Key 划分作用域。后续提交省略已有请求
   就会关闭它。平台呈现需要 `viewcompose-overlay-android`、
   `viewcompose-overlay-material3-android` 这类具名 Adapter，或自定义 `OverlayHost`。
-- Lazy 容器 Key 必须稳定且唯一。复用、预取与动效 Policy 是渲染器提示，不能作为业务状态。
+- Lazy 容器 Key 必须稳定且唯一。`contentType` 只能分组结构兼容的原生树，
+  `mountedTreeCacheSize` 限制每个容器保留的 Reset 物理呈现。Prefetch 与 Motion Policy 仍只是
+  Renderer Hint，不能作为业务状态。
 - 图片组件会把 source 身份和请求 options 保存在 `NodeSpec` 中。发射节点时读取 loader，因此
   更换 provider 是明确的渲染输入。渲染器会在启动新工作前替换旧工作，并在节点或 Session 离开
   挂载树时释放旧工作。因此 Resource 也能复用已安装 loader 的解码和变换能力；空 source 会

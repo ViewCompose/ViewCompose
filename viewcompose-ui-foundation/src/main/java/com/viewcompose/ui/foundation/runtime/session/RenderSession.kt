@@ -3,6 +3,7 @@ package com.viewcompose.ui.foundation
 import com.viewcompose.runtime.composition.ComposerLite
 import com.viewcompose.runtime.composition.CompositionSourceCallSite
 import com.viewcompose.ui.node.RenderContainerHandle
+import com.viewcompose.ui.node.ReusableItemPresentation
 import com.viewcompose.ui.node.spec.AndroidViewOperation
 import com.viewcompose.ui.node.spec.AndroidViewOperationException
 import com.viewcompose.ui.tooling.UiNodeTooling
@@ -53,6 +54,10 @@ class RenderSession(
     private var preparedFrame: PreparedRenderFrame? = null
     @Volatile
     private var committedFrameId: Long? = null
+    private var disposalMode: DisposalMode = DisposalMode.Release
+    private var detachedPresentation: CoreReusableItemPresentation? = null
+    private var logicalOwnerRelease: (() -> Unit)? = null
+    private var adoptedUncommittedTree: Boolean = false
 
     /** Most recently reported failure, including asynchronous and disposal failures. */
     @Volatile
@@ -173,6 +178,57 @@ class RenderSession(
         runtime.dispose()
     }
 
+    /** Disposes composition, invokes [releaseOwner], then releases the mounted native tree. */
+    internal fun disposeWithLogicalOwnerRelease(releaseOwner: () -> Unit) {
+        if (disposed) {
+            releaseOwner()
+            return
+        }
+        logicalOwnerRelease = releaseOwner
+        runtime.dispose()
+    }
+
+    /** Terminates logical ownership and returns a reset native tree when the renderer permits it. */
+    internal fun disposeForReuse(releaseOwner: () -> Unit = {}): ReusableItemPresentation? {
+        if (disposed) {
+            releaseOwner()
+            return null
+        }
+        disposalMode = DisposalMode.DetachForReuse
+        logicalOwnerRelease = releaseOwner
+        runtime.dispose()
+        return detachedPresentation
+    }
+
+    /** Installs a detached physical tree before this session produces its first frame. */
+    internal fun adoptReusablePresentation(presentation: ReusableItemPresentation): Boolean {
+        if (disposed || mountedNodes.isNotEmpty() || committedFrameId != null || preparedFrame != null) {
+            return false
+        }
+        val reusable = presentation as? CoreReusableItemPresentation ?: return false
+        val adopted = reusable.takeTree() ?: return false
+        return try {
+            val nodes = platform.renderEngine.attachReusableMounted(container, adopted)
+            if (nodes.isEmpty()) {
+                platform.renderEngine.releaseReusableMounted(adopted)
+                false
+            } else {
+                mountedNodes = nodes
+                adoptedUncommittedTree = true
+                true
+            }
+        } catch (error: Exception) {
+            platform.renderEngine.releaseReusableMounted(adopted)
+            reportFailure(
+                frameId = null,
+                phase = RenderFailurePhase.SessionDispose,
+                recovery = RenderFailureRecovery.SessionDisposed,
+                error = error,
+            )
+            false
+        }
+    }
+
     /**
      * Renders one synchronous frame; failures attempt to roll back the composition attempt and record recovery state.
      */
@@ -250,10 +306,16 @@ class RenderSession(
             } catch (abortError: Throwable) {
                 error.addSuppressed(abortError)
             }
+            val recovery = if (adoptedUncommittedTree) {
+                discardAdoptedUncommittedTree(error)
+                RenderFailureRecovery.FrameUnchanged
+            } else {
+                RenderFailureRecovery.PreviousFrameRestored
+            }
             reportFailure(
                 frameId = frameId,
                 phase = failurePhase,
-                recovery = RenderFailureRecovery.PreviousFrameRestored,
+                recovery = recovery,
                 error = error,
                 frameFailures = frameFailures,
             )
@@ -266,6 +328,7 @@ class RenderSession(
         }
 
         mountedNodes = frame.mountedNodes
+        adoptedUncommittedTree = false
         return PreparedRenderFrame(
             frameId = frameId,
             frameFailures = frameFailures,
@@ -410,11 +473,43 @@ class RenderSession(
         disposeOperation {
             compositionCoroutineScope.cancel()
         }
+        disposeOperation {
+            overlayHost.clear(overlaySessionId)
+        }
+        // Logical ownership ends before any native reset can call application code.
+        disposeOperation {
+            composer.dispose()
+        }
+        val releaseOwner = logicalOwnerRelease
+        logicalOwnerRelease = null
+        releaseOwner?.let { operation ->
+            disposeOperation(operation)
+        }
+        sourceRegistration?.let { registration ->
+            disposeOperation { registration.dispose() }
+            sourceRegistration = null
+        }
         val disposeFailures = try {
-            platform.renderEngine.disposeMounted(
-                container = container,
-                mountedNodes = mountedNodes,
-            )
+            val reusableTree = if (disposalMode == DisposalMode.DetachForReuse) {
+                platform.renderEngine.detachMountedForReuse(
+                    container = container,
+                    mountedNodes = mountedNodes,
+                )
+            } else {
+                null
+            }
+            if (reusableTree != null) {
+                detachedPresentation = CoreReusableItemPresentation(
+                    tree = reusableTree,
+                    releaseTree = platform.renderEngine::releaseReusableMounted,
+                )
+                emptyList()
+            } else {
+                platform.renderEngine.disposeMounted(
+                    container = container,
+                    mountedNodes = mountedNodes,
+                )
+            }
         } catch (error: Exception) {
             reportFailure(
                 frameId = null,
@@ -422,7 +517,15 @@ class RenderSession(
                 recovery = RenderFailureRecovery.SessionDisposed,
                 error = error,
             )
-            emptyList()
+            try {
+                platform.renderEngine.disposeMounted(
+                    container = container,
+                    mountedNodes = mountedNodes,
+                )
+            } catch (releaseError: Exception) {
+                error.addSuppressed(releaseError)
+                emptyList()
+            }
         }
         disposeFailures.forEach { failure ->
             reportFailure(
@@ -435,16 +538,29 @@ class RenderSession(
             )
         }
         mountedNodes = emptyList()
-        disposeOperation {
-            overlayHost.clear(overlaySessionId)
+        adoptedUncommittedTree = false
+    }
+
+    /**
+     * A tree adopted from another item is not a previous frame of this logical session. If the
+     * first composition or native rebind fails, release it instead of exposing or restoring the
+     * old item's declaration and callbacks.
+     */
+    private fun discardAdoptedUncommittedTree(primaryFailure: Exception) {
+        val failures = try {
+            platform.renderEngine.disposeMounted(
+                container = container,
+                mountedNodes = mountedNodes,
+            )
+        } catch (cleanupError: Exception) {
+            primaryFailure.addSuppressed(cleanupError)
+            emptyList()
         }
-        disposeOperation {
-            composer.dispose()
+        failures.forEach { failure ->
+            primaryFailure.addSuppressed(failure.cause)
         }
-        sourceRegistration?.let { registration ->
-            disposeOperation { registration.dispose() }
-            sourceRegistration = null
-        }
+        mountedNodes = emptyList()
+        adoptedUncommittedTree = false
     }
 
     private inline fun runSourceToolingOperation(
@@ -576,6 +692,11 @@ class RenderSession(
         val nextSessionId = AtomicLong(0)
     }
 
+    private enum class DisposalMode {
+        Release,
+        DetachForReuse,
+    }
+
     private data class PreparedRenderFrame(
         val frameId: Long,
         val frameFailures: MutableList<RenderFailure>,
@@ -584,4 +705,23 @@ class RenderSession(
         val sourceCandidates: List<List<com.viewcompose.ui.tooling.UiSourceCallSite>>,
         val frame: CoreRenderFrame,
     )
+}
+
+private class CoreReusableItemPresentation(
+    tree: CoreReusableRenderTree,
+    private val releaseTree: (CoreReusableRenderTree) -> List<CoreRenderCommitFailure>,
+) : ReusableItemPresentation {
+    private var tree: CoreReusableRenderTree? = tree
+
+    fun takeTree(): CoreReusableRenderTree? {
+        val owned = tree
+        tree = null
+        return owned
+    }
+
+    override fun release() {
+        val owned = tree ?: return
+        tree = null
+        releaseTree(owned)
+    }
 }

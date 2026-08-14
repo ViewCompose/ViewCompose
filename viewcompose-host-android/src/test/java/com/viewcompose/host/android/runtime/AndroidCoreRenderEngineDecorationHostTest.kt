@@ -1,5 +1,6 @@
 package com.viewcompose.host.android.runtime
 
+import android.content.Context
 import android.graphics.Canvas
 import android.view.View
 import android.view.ViewGroup
@@ -171,6 +172,84 @@ class AndroidCoreRenderEngineDecorationHostTest {
         assertEquals(0, externalContainer.childCount)
     }
 
+    @Test
+    fun `reusable decorated root attaches through a decoration host before cross owner rebind`() {
+        val firstContainer = FrameLayout(RuntimeEnvironment.getApplication())
+        val secondContainer = FrameLayout(RuntimeEnvironment.getApplication())
+        val engine = AndroidCoreRenderEngine()
+        val decoratedNode = spacerNode(modifier = Modifier.zIndex(1f))
+        val firstFrame = engine.renderInto(
+            container = firstContainer.renderContainerHandle(),
+            previousMountedNodes = emptyList(),
+            nodes = listOf(decoratedNode),
+            collectDiagnostics = false,
+        )
+        val firstHost = firstContainer.getChildAt(0) as ViewDecorationHostLayout
+        val physicalView = firstHost.getChildAt(0)
+
+        val reusable = requireNotNull(
+            engine.detachMountedForReuse(
+                container = firstContainer.renderContainerHandle(),
+                mountedNodes = firstFrame.mountedNodes,
+            ),
+        )
+        val adopted = engine.attachReusableMounted(
+            container = secondContainer.renderContainerHandle(),
+            tree = reusable,
+        )
+
+        assertEquals(0, firstContainer.childCount)
+        val secondHost = secondContainer.getChildAt(0) as ViewDecorationHostLayout
+        assertTrue(physicalView === secondHost.getChildAt(0))
+
+        val rebound = engine.renderInto(
+            container = secondContainer.renderContainerHandle(),
+            previousMountedNodes = adopted,
+            nodes = listOf(decoratedNode),
+            collectDiagnostics = false,
+        )
+
+        assertTrue(physicalView === secondHost.getChildAt(0))
+        engine.disposeMounted(secondContainer.renderContainerHandle(), rebound.mountedNodes)
+        assertEquals(0, secondContainer.childCount)
+    }
+
+    @Test
+    fun `failed reusable attach retains ownership for retry`() {
+        val firstContainer = FrameLayout(RuntimeEnvironment.getApplication())
+        val secondContainer = FrameLayout(RuntimeEnvironment.getApplication())
+        val engine = AndroidCoreRenderEngine()
+        val firstFrame = engine.renderInto(
+            container = firstContainer.renderContainerHandle(),
+            previousMountedNodes = emptyList(),
+            nodes = listOf(spacerNode()),
+            collectDiagnostics = false,
+        )
+        val physicalView = firstContainer.getChildAt(0)
+        val reusable = requireNotNull(
+            engine.detachMountedForReuse(
+                container = firstContainer.renderContainerHandle(),
+                mountedNodes = firstFrame.mountedNodes,
+            ),
+        )
+
+        val failure = runCatching {
+            engine.attachReusableMounted(
+                container = RejectingFrameLayout(RuntimeEnvironment.getApplication()).renderContainerHandle(),
+                tree = reusable,
+            )
+        }.exceptionOrNull()
+        val adopted = engine.attachReusableMounted(
+            container = secondContainer.renderContainerHandle(),
+            tree = reusable,
+        )
+
+        assertTrue(failure is IllegalStateException)
+        assertTrue(adopted.isNotEmpty())
+        assertTrue(physicalView === secondContainer.getChildAt(0))
+        engine.disposeMounted(secondContainer.renderContainerHandle(), adopted)
+    }
+
     private fun spacerNode(modifier: Modifier = Modifier): VNode {
         return VNode(
             type = NodeType.Spacer,
@@ -201,5 +280,12 @@ class AndroidCoreRenderEngineDecorationHostTest {
         override fun drawBehindChild(canvas: Canvas, parent: ViewGroup, child: View) = Unit
 
         override fun drawOverChild(canvas: Canvas, parent: ViewGroup, child: View) = Unit
+    }
+
+    private class RejectingFrameLayout(context: Context) : FrameLayout(context) {
+        override fun onViewAdded(child: View) {
+            super.onViewAdded(child)
+            error("Rejected reusable child")
+        }
     }
 }

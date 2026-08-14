@@ -67,15 +67,32 @@ import com.viewcompose.ui.foundation.rememberTextFieldState
 import com.viewcompose.ui.unit.sp
 import com.viewcompose.runtime.mutableStateOf
 
-internal fun UiTreeBuilder.DiagnosticsThemeSections(root: ViewGroup?) {
-    DiagnosticsThemeSnapshotCoreSection(root)
-    DiagnosticsThemeSnapshotPaletteSection()
-    DiagnosticsThemeSnapshotSizingSection()
-    DiagnosticsThemeSurfaceSection()
-    DiagnosticsThemeActionSection()
-    DiagnosticsThemeInputSection()
-    DiagnosticsThemeNavigationSection()
-    DiagnosticsThemeShapeSizeSection()
+internal val DIAGNOSTICS_THEME_PAGE_ITEMS = listOf(
+    "theme_snapshot_core",
+    "theme_snapshot_palette",
+    "theme_snapshot_sizing",
+    "theme_surface",
+    "theme_action",
+    "theme_input",
+    "theme_navigation",
+    "theme_shape_size",
+)
+
+internal fun UiTreeBuilder.DiagnosticsThemeSection(
+    section: String,
+    root: ViewGroup?,
+) {
+    when (section) {
+        "theme_snapshot_core" -> DiagnosticsThemeSnapshotCoreSection(root)
+        "theme_snapshot_palette" -> DiagnosticsThemeSnapshotPaletteSection()
+        "theme_snapshot_sizing" -> DiagnosticsThemeSnapshotSizingSection()
+        "theme_surface" -> DiagnosticsThemeSurfaceSection()
+        "theme_action" -> DiagnosticsThemeActionSection()
+        "theme_input" -> DiagnosticsThemeInputSection()
+        "theme_navigation" -> DiagnosticsThemeNavigationSection()
+        "theme_shape_size" -> DiagnosticsThemeShapeSizeSection()
+        else -> error("Unknown diagnostics theme section: $section")
+    }
 }
 
 private fun UiTreeBuilder.DiagnosticsThemeSnapshotCoreSection(root: ViewGroup?) {
@@ -533,13 +550,13 @@ private fun UiTreeBuilder.DiagnosticsThemeNavigationSection() {
             onTabSelected = { tabIndexState.value = it },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Tab { selected ->
+            Tab(key = "overview") { selected ->
                 Text(
                     text = if (selected) "Overview" else "概览",
                     modifier = Modifier.padding(12.dp),
                 )
             }
-            Tab { selected ->
+            Tab(key = "theme") { selected ->
                 Text(
                     text = if (selected) "Theme" else "主题",
                     modifier = Modifier.padding(12.dp),

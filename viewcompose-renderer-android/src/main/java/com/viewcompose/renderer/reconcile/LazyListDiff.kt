@@ -50,19 +50,31 @@ sealed interface LazyListUpdate {
     data object ReloadAll : LazyListUpdate
 }
 
-/** Targeted payload delivered when lazy-item identity is stable but its content token changes. */
+/** Targeted payload delivered when lazy-item identity is stable but one semantic revision changes. */
 sealed interface LazyListChangePayload {
     /**
-     * Carries the old and new opaque content tokens for an item with unchanged identity.
+     * Carries old and new content and environment revisions for an item with unchanged identity.
      *
-     * @property previous token from the previous item snapshot
-     * @property next token from the next item snapshot
+     * @property previousContent caller-owned revision from the previous item snapshot
+     * @property nextContent caller-owned revision from the next item snapshot
+     * @property previousEnvironment framework-owned revision from the previous environment
+     * @property nextEnvironment framework-owned revision from the next environment
      */
-    data class ContentTokenChanged(
-        val previous: Any?,
-        val next: Any?,
+    data class RevisionChanged(
+        /** Caller-owned content revision in the preceding snapshot. */
+        val previousContent: Any?,
+        /** Caller-owned content revision in the next snapshot. */
+        val nextContent: Any?,
+        /** Framework-owned environment revision in the preceding snapshot. */
+        val previousEnvironment: Any?,
+        /** Framework-owned environment revision in the next snapshot. */
+        val nextEnvironment: Any?,
     ) : LazyListChangePayload
+
 }
+
+/** Requests physical layout or compatibility work without invalidating logical item content. */
+internal data object LazyListPresentationChangedPayload
 
 /**
  * Complete result of reconciling two lazy-item snapshots.
@@ -80,9 +92,10 @@ data class LazyListDiffResult(
 /**
  * Calculates lazy-list adapter updates from stable item keys.
  *
- * A missing or duplicate key falls back to [LazyListUpdate.ReloadAll], preventing `DiffUtil` from
+ * A duplicate key falls back to [LazyListUpdate.ReloadAll], preventing `DiffUtil` from
  * assigning platform holder state to an ambiguous identity. Content equality includes the complete
- * [LazyListItem]; a changed item receives [LazyListChangePayload.ContentTokenChanged].
+ * [LazyListItem]; revision changes receive [LazyListChangePayload.RevisionChanged], while layout
+ * metadata changes remain physical-only payloads.
  */
 object LazyListDiff {
     /**
@@ -136,10 +149,19 @@ object LazyListDiff {
                 ): Any {
                     val oldItem = previous[oldItemPosition]
                     val newItem = next[newItemPosition]
-                    return LazyListChangePayload.ContentTokenChanged(
-                        previous = oldItem.contentToken,
-                        next = newItem.contentToken,
-                    )
+                    return if (
+                        oldItem.contentRevision != newItem.contentRevision ||
+                        oldItem.environmentRevision != newItem.environmentRevision
+                    ) {
+                        LazyListChangePayload.RevisionChanged(
+                            previousContent = oldItem.contentRevision,
+                            nextContent = newItem.contentRevision,
+                            previousEnvironment = oldItem.environmentRevision,
+                            nextEnvironment = newItem.environmentRevision,
+                        )
+                    } else {
+                        LazyListPresentationChangedPayload
+                    }
                 }
             },
         )

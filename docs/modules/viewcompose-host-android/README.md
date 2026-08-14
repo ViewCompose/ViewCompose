@@ -92,6 +92,7 @@ AndroidView(
     factory = { context -> PlayerView(context) },
     update = { view -> configurePlayer(view as PlayerView, state) },
     key = playerId,
+    onReset = { view -> resetPlayer(view as PlayerView) },
     onCommit = { view -> (view as PlayerView).play() },
     onRelease = { view -> (view as PlayerView).release() },
 )
@@ -99,8 +100,11 @@ AndroidView(
 
 - `factory` runs only for a new native node.
 - `update`, `onReset`, and `Modifier.nativeView` are replay-safe configuration.
+- `onReset` opts the node into mounted-tree reuse across lazy keys. It runs only after the old
+  logical session, effects, and saveable lease have ended and before the new key binds.
 - `onCommit` runs only after the complete View-tree transaction commits.
-- `onRelease` runs once after committed removal or session disposal.
+- `onRelease` runs once after committed removal, non-reusable session disposal, or final reuse-cache
+  eviction. Omitting `onReset` prevents that mounted tree from crossing keys.
 
 ## Saved state, scheduling, and threading
 

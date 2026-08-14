@@ -7,6 +7,7 @@ package com.viewcompose.renderer.view
 
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class LazyHolderRegistryTest {
@@ -60,5 +61,27 @@ class LazyHolderRegistryTest {
             listOf("dispose:holder-A", "dispose:holder-B"),
             events,
         )
+    }
+
+    @Test
+    fun `disposeAll attempts every holder and removes ownership when cleanup fails`() {
+        val events = mutableListOf<String>()
+        val registry = LazyHolderRegistry<String> { holder ->
+            events += "dispose:$holder"
+            if (holder != "holder-C") error("failed:$holder")
+        }
+        registry.onBound("holder-A")
+        registry.onBound("holder-B")
+        registry.onBound("holder-C")
+
+        val failure = assertThrows(IllegalStateException::class.java, registry::disposeAll)
+
+        assertEquals("failed:holder-A", failure.message)
+        assertEquals(listOf("failed:holder-B"), failure.suppressed.map { it.message })
+        assertEquals(
+            listOf("dispose:holder-A", "dispose:holder-B", "dispose:holder-C"),
+            events,
+        )
+        registry.disposeAll()
     }
 }

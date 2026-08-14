@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 87064128c1b8da389645cae855cdacac4fcbe5d8e2aaa34688e80ace5343ac81
+translation_source_hash: 83f6a48bd434a63bcec951b3e3f3222e4d1e6eaa1f6295f44fbefb4f726fa79d
 translation_status: current
 ---
 
@@ -88,6 +88,11 @@ Snapshot.withMutableSnapshot {
   对应渲染树与 Remember 生命周期事务都提交成功后，才调用 `commitSideEffects`。
 - `ComposerLite.rememberUpdatedState` 仅向活跃组合线程暴露候选值，在已提交生命周期回调前
   发布该值，并在 Abort 时丢弃它。
+- `ComposerLite.scopedExplicitSaveableKey` 根据当前结构 Key 路径派生显式
+  `rememberSaveable` Registry Key。Lazy List、Pager 等子 Session 所有者通过此边界隔离恢复
+  状态，因此不同逻辑条目中相同的应用 Key 不会共享状态，物理 Holder 变化也不会改变逻辑所有者。
+  若两个不相等的活跃 Keyed Group 产生相同结构路径 Hash，Runtime 会在注册 Saveable Provider
+  前失败，而不会共享恢复状态；因此自定义 Saveable Key 必须提供稳定且无碰撞的 Hash。
 - Callback 失败会保留原始 Throwable，并附加有界 Effect Kind、Operation、结构 Scope、Slot
   与不持有 Key 对象的 Metadata。Host 可以通过 `ComposerLite` 构造参数选择非负的同步 Callback
   警告阈值。

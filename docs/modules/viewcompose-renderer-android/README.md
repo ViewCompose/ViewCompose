@@ -129,11 +129,13 @@ Because the current line is alpha, the documentation site intentionally does not
 - Horizontal and vertical pager holders preserve the `Page` source-session role across reuse.
   RecyclerView rows and tab items remain `Content`; this role does not affect keys, diffing,
   measurement, visibility, or callbacks.
-- A lazy item's `contentToken` controls semantic diff payloads, not whether a visible retained
-  session may render. A newly emitted immutable item snapshot creates one monotonic submission;
-  after the parent composition commits, the renderer installs the exact next closure and renders
-  each attached session once even when the token is equal. Parent rollback, delayed duplicate
-  RecyclerView payloads, and callback-object reuse cannot create an extra child render.
+- A lazy item's `contentRevision` and framework-captured `environmentRevision` are the only content
+  invalidation inputs after identity and type. Equal key and revisions skip item composition and
+  native patching completely, even when the parent created a new callback object. A changed
+  revision installs the latest closure and renders only that item; callers must use observed State
+  or include every changing ordinary capture in `contentRevision`. A changed `contentType`, even
+  under the same key and revisions, terminates the old child session and performs a full native
+  presentation rebuild.
 - A detached lazy holder that has never activated may prepare its child composition and native
   View tree under RecyclerView prefetch, but it does not commit remember lifecycle, effects,
   native commit work, overlays, or diagnostics. First attachment activates a valid prepared frame
@@ -145,8 +147,9 @@ Because the current line is alpha, the documentation site intentionally does not
   reattached holders therefore resolve stable keys without scanning the item list, while a holder
   that already committed the current revision skips redundant attach work.
 - Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
-  incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned holders, and
-  unkeyed cached pages retain position ownership until RecyclerView supplies a replacement bind.
+  incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned changed holders,
+  and every public page declaration requires a unique stable key. ViewPager2's native default owns
+  offscreen residency unless callers explicitly request a limit.
 - Targeted patching and subtree skipping are optimizations. A complete native subtree is skipped
   only when every direct child is the exact VNode instance reused by composition; newly built,
   value-equal children still reconcile because nested session callbacks may have changed. Custom
@@ -208,9 +211,9 @@ retain the last delivered inset snapshot until Android dispatches a newer one.
   sessions.
 - `collectDiagnostics = false` omits structure, patch, warning, and detailed binding snapshots; use
   it on performance-sensitive paths that do not consume diagnostics.
-- Lazy prefetch work is deadline-controlled by RecyclerView. It can shift composition and View
-  construction ahead of an attach frame but cannot guarantee every item is prepared; coherent
-  static fixtures should not be split into expensive independent sessions without recycling value.
+- Lazy prefetch work is deadline-controlled by RecyclerView. Unknown or previously over-budget
+  content types are staged without synchronous native preparation; observed cheap types may prepare
+  speculatively. This can shift bounded work ahead of attach but cannot guarantee preparation.
 - `LayoutPassTracker` is process-local and opt-in. It adds monotonic clock reads and synchronized
   aggregation to instrumented passes, so use it for bounded diagnostics rather than continuous
   production telemetry.

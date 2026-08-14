@@ -985,6 +985,81 @@ class ComposerLiteTest {
     }
 
     @Test
+    fun `keyed group state follows identity across sibling reorder`() {
+        val composer = ComposerLite()
+        val retained = linkedMapOf<String, Any>()
+
+        fun compose(order: List<String>) {
+            composer.requestRootRecompose()
+            composer.composeRoot {
+                order.forEach { key ->
+                    composer.withKeys(listOf(key)) {
+                        composer.runGroup(signature = "item") {
+                            retained[key] = composer.remember(emptyList()) { Any() }
+                        }
+                    }
+                }
+            }
+        }
+
+        compose(listOf("A", "B", "C"))
+        val first = retained.toMap()
+        compose(listOf("C", "A", "B"))
+
+        assertSame(first.getValue("A"), retained.getValue("A"))
+        assertSame(first.getValue("B"), retained.getValue("B"))
+        assertSame(first.getValue("C"), retained.getValue("C"))
+    }
+
+    @Test
+    fun `explicit saveable namespace is stable across keyed sibling reorder`() {
+        val composer = ComposerLite()
+        val keysByIdentity = linkedMapOf<String, String>()
+
+        fun compose(order: List<String>) {
+            composer.requestRootRecompose()
+            composer.composeRoot {
+                order.forEach { key ->
+                    composer.withKeys(listOf(key)) {
+                        composer.runGroup(signature = "item") {
+                            keysByIdentity[key] = composer.scopedExplicitSaveableKey("field")
+                        }
+                    }
+                }
+            }
+        }
+
+        compose(listOf("A", "B"))
+        val first = keysByIdentity.toMap()
+        compose(listOf("B", "A"))
+
+        assertEquals(first, keysByIdentity)
+        assertEquals(2, keysByIdentity.values.toSet().size)
+    }
+
+    @Test
+    fun `saveable namespace rejects unequal keyed sibling hash collisions`() {
+        val composer = ComposerLite()
+        val first = CollidingKey("first")
+        val second = CollidingKey("second")
+
+        val failure = runCatching {
+            composer.composeRoot {
+                listOf(first, second).forEach { key ->
+                    composer.withKeys(listOf(key)) {
+                        composer.runGroup(signature = "item") {
+                            composer.scopedExplicitSaveableKey("field")
+                        }
+                    }
+                }
+            }
+        }.exceptionOrNull()
+
+        assertTrue(failure is IllegalArgumentException)
+        assertTrue(failure?.message.orEmpty().contains("collision-free hashCode"))
+    }
+
+    @Test
     fun `dispose clears pending invalidations and stops future enqueue`() {
         val state = mutableStateOf(0)
         val composer = ComposerLite()
@@ -1001,5 +1076,11 @@ class ComposerLiteTest {
 
         state.value = 2
         assertTrue(!composer.hasPendingInvalidations())
+    }
+
+    private data class CollidingKey(
+        val value: String,
+    ) {
+        override fun hashCode(): Int = 1
     }
 }

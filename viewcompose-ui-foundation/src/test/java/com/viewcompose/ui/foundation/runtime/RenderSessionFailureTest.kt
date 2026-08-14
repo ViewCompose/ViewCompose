@@ -47,6 +47,7 @@ class RenderSessionFailureTest {
         engine.renderBlock = { previous, _ ->
             CoreRenderFrame(mountedNodes = previous)
         }
+        engine.detachBlock = { _, _ -> null }
         engine.disposeFailures = emptyList()
         NoOpRenderSessionDiagnostics.sourceTooling = null
         NoOpRenderSessionDiagnostics.errors.clear()
@@ -111,6 +112,41 @@ class RenderSessionFailureTest {
         assertEquals(listOf("remember", "side", "native", "overlay"), events)
         assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
         assertTrue(failures.isEmpty())
+    }
+
+    @Test
+    fun `item saveable ownership closes before effects dispose and native reset`() {
+        val events = mutableListOf<String>()
+        val holder = SaveableStateHolder.create(createSaveableStateRegistry())
+        holder.retainKeys(setOf("item"))
+        engine.detachBlock = { _, _ ->
+            events += "reset"
+            object : CoreReusableRenderTree {}
+        }
+        val itemSession = WidgetLazyListItemSession(
+            container = childContainer(),
+            localSnapshot = LocalContext.snapshot(),
+            saveableStateHolder = holder,
+            saveableStateKey = "item",
+            content = {
+                val value = rememberSaveable(
+                    saver = Saver<String, String>(
+                        save = { saved -> events += "save"; saved },
+                        restore = { restored -> restored },
+                    ),
+                ) { "value" }
+                check(value == "value")
+                DisposableEffect(Unit) {
+                    onDispose { events += "effect-dispose" }
+                }
+            },
+        )
+
+        itemSession.render()
+        val presentation = itemSession.disposeForReuse()
+
+        assertEquals(listOf("save", "effect-dispose", "reset"), events)
+        presentation?.release()
     }
 
     @Test
@@ -248,6 +284,26 @@ class RenderSessionFailureTest {
 
         assertEquals(RenderFrameStatus.Committed, session.lastFrameReport?.status)
         assertTrue(session.lastFrameReport?.failures.orEmpty().isEmpty())
+    }
+
+    @Test
+    fun `lazy item session reports rollback without accepting the semantic revision`() {
+        var failComposition = true
+        val itemSession = WidgetLazyListItemSession(
+            container = childContainer(),
+            localSnapshot = LocalContext.snapshot(),
+            saveableStateHolder = null,
+            saveableStateKey = "item",
+            content = {
+                if (failComposition) error("composition failed")
+            },
+        )
+
+        assertEquals(false, itemSession.render())
+        failComposition = false
+        assertEquals(true, itemSession.render())
+
+        itemSession.dispose()
     }
 
     @Test
@@ -562,6 +618,7 @@ class RenderSessionFailureTest {
         childSessions.forEach { it.render() }
 
         assertTrue(
+            NoOpRenderSessionDiagnostics.errors.toString(),
             NoOpRenderSessionDiagnostics.errors.none { (_, cause) ->
                 cause?.message.orEmpty().contains("already registered")
             },
@@ -575,7 +632,7 @@ class RenderSessionFailureTest {
     }
 
     @Test
-    fun `pager and tab child sessions receive independent saveable registries`() {
+    fun `pager child sessions and eager keyed tabs isolate saveable state`() {
         val registry = createSaveableStateRegistry()
         var rootNodes = emptyList<VNode>()
         engine.renderBlock = { previous, nodes ->
@@ -587,8 +644,8 @@ class RenderSessionFailureTest {
         session = createSession(failures = mutableListOf()) {
             ProvideSaveableStateRegistry(registry) {
                 HorizontalPager(currentPage = 0, onPageChanged = {}) {
-                    Page { saveableChildContent("horizontal-0") }
-                    Page { saveableChildContent("horizontal-1") }
+                    Page(key = "first") { saveableChildContent("horizontal-0") }
+                    Page(key = "second") { saveableChildContent("horizontal-1") }
                 }
                 VerticalPager(currentPage = 0, onPageChanged = {}) {
                     Page(key = "first") { saveableChildContent("vertical-0") }
@@ -605,7 +662,6 @@ class RenderSessionFailureTest {
         val childItems = buildList {
             addAll((rootNodes[0].spec as HorizontalPagerNodeProps).pages)
             addAll((rootNodes[1].spec as VerticalPagerNodeProps).pages)
-            addAll((rootNodes[2].spec as TabRowNodeProps).tabs.map { it.item })
         }
         val childSessions = childItems.map { item ->
             item.sessionFactory.create(childContainer())
@@ -613,6 +669,7 @@ class RenderSessionFailureTest {
         childSessions.forEach { it.render() }
 
         assertTrue(
+            NoOpRenderSessionDiagnostics.errors.toString(),
             NoOpRenderSessionDiagnostics.errors.none { (_, cause) ->
                 cause?.message.orEmpty().contains("already registered")
             },
@@ -735,6 +792,10 @@ class RenderSessionFailureTest {
             CoreRenderFrame(mountedNodes = previous)
         }
         var disposeFailures: List<CoreRenderCommitFailure> = emptyList()
+        var detachBlock: (
+            RenderContainerHandle,
+            List<Any>,
+        ) -> CoreReusableRenderTree? = { _, _ -> null }
 
         override fun renderInto(
             container: RenderContainerHandle,
@@ -749,6 +810,11 @@ class RenderSessionFailureTest {
             container: RenderContainerHandle,
             mountedNodes: List<Any>,
         ): List<CoreRenderCommitFailure> = disposeFailures
+
+        override fun detachMountedForReuse(
+            container: RenderContainerHandle,
+            mountedNodes: List<Any>,
+        ): CoreReusableRenderTree? = detachBlock(container, mountedNodes)
     }
 
     private object NoOpFocusManager : FocusManager {

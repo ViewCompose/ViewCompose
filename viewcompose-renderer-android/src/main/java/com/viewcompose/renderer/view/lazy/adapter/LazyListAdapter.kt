@@ -12,19 +12,15 @@ import com.viewcompose.renderer.interop.asRenderContainerHandle
 import com.viewcompose.renderer.reconcile.LazyListDiff
 import com.viewcompose.renderer.reconcile.LazyListIdentityInspector
 import com.viewcompose.renderer.view.lazy.focus.LazyFocusFollowLayoutMonitor
+import com.viewcompose.renderer.view.lazy.reuse.MountedTreeReuseCache
+import com.viewcompose.renderer.view.lazy.reuse.LazyPreparationCostTracker
 import com.viewcompose.renderer.view.lazy.session.LazyHolderRegistry
 import com.viewcompose.renderer.view.lazy.session.LazyItemSessionController
 import com.viewcompose.renderer.view.lazy.state.UiLazyListConnector
 import com.viewcompose.renderer.decoration.ViewDecorationHostLayout
 import com.viewcompose.ui.state.LazyListState
 
-/**
- * RecyclerView adapter shared by LazyColumn, LazyRow, and lazy grids.
- * Shared RecyclerView adapter for LazyColumn, LazyRow, and Grid.
- *
- * Owns item diffing, stable IDs and view types, holder sessions, and detached holders for sticky headers.
- * It handles item diffing, stable ids/view types, holder session lifetime, and detached holder support for sticky headers.
- */
+/** Owns list diffing, physical holders, logical item sessions, and sticky-header presentations. */
 internal class LazyListAdapter(
     private val orientation: Int = LinearLayoutManager.VERTICAL,
 ) : RecyclerView.Adapter<LazyListViewHolder>() {
@@ -44,11 +40,10 @@ internal class LazyListAdapter(
 
     private var items: List<LazyListItem> = emptyList()
     private var keyIndex = KeyIndex(emptyMap(), emptyMap())
-    // The registry tracks holder lifecycle across attach, detach, recycle, and dispose entry points.
-    // Holder lifetimes are tracked centrally by the registry across attach, detach, recycle, and dispose paths.
-    private val holderRegistry = LazyHolderRegistry<LazyListViewHolder> { holder ->
-        holder.recycle()
-    }
+    // The registry centralizes holder lifecycle across attach, detach, recycle, and final disposal.
+    private val mountedTreeCache = MountedTreeReuseCache()
+    private val preparationCosts = LazyPreparationCostTracker()
+    private val holderRegistry = LazyHolderRegistry<LazyListViewHolder>(::recycleHolder)
     private var lastIdentityWarning: String? = null
     private var attachedRecyclerView: RecyclerView? = null
     private val stableIds = linkedMapOf<Any, Long>()
@@ -59,6 +54,7 @@ internal class LazyListAdapter(
     private var currentSubmissionRevision = 0L
     private var listState: LazyListState? = null
     private var stickyHeaderDisposer: (() -> Unit)? = null
+    private var stickyHeaderPositions: IntArray = intArrayOf()
 
     init {
         setHasStableIds(true)
@@ -146,7 +142,7 @@ internal class LazyListAdapter(
     }
 
     override fun getItemId(position: Int): Long {
-        val key = items[position].key ?: return Long.MIN_VALUE + position
+        val key = items[position].key
         if (keyIndex.uniquePositions[key] == null) return Long.MIN_VALUE + position
         return stableIds.getOrPut(key) { nextStableId++ }
     }
@@ -157,22 +153,26 @@ internal class LazyListAdapter(
 
     fun itemSpanAt(position: Int): Int = items.getOrNull(position)?.span ?: 1
 
+    fun configureMountedTreeCache(size: Int) {
+        mountedTreeCache.capacity = size
+    }
+
     fun isStickyHeader(position: Int): Boolean {
         return items.getOrNull(position)?.kind == LazyListItemKind.StickyHeader
     }
 
-    fun hasStickyHeaders(): Boolean = items.any { item ->
-        item.kind == LazyListItemKind.StickyHeader
-    }
+    fun hasStickyHeaders(): Boolean = stickyHeaderPositions.isNotEmpty()
 
     fun findStickyHeaderPosition(itemPosition: Int): Int {
         if (itemPosition < 0 || items.isEmpty()) {
             return RecyclerView.NO_POSITION
         }
-        for (position in itemPosition.coerceAtMost(items.lastIndex) downTo 0) {
-            if (isStickyHeader(position)) {
-                return position
-            }
+        val target = itemPosition.coerceAtMost(items.lastIndex)
+        val insertion = stickyHeaderPositions.binarySearch(target)
+        if (insertion >= 0) return stickyHeaderPositions[insertion]
+        val preceding = -insertion - 2
+        if (preceding >= 0) {
+            return stickyHeaderPositions[preceding]
         }
         return RecyclerView.NO_POSITION
     }
@@ -206,7 +206,7 @@ internal class LazyListAdapter(
     }
 
     fun recycleDetachedHolder(holder: LazyListViewHolder) {
-        holder.recycle()
+        recycleHolder(holder)
     }
 
     fun setStickyHeaderDisposer(disposer: (() -> Unit)?) {
@@ -219,6 +219,7 @@ internal class LazyListAdapter(
     ): Boolean {
         warnAboutIdentityIssues(items)
         val previousItems = this.items
+        if (previousItems == items) return false
         val previousKeyCounts = keyIndex.counts
         val revision = submissionRevision ?: (currentSubmissionRevision + 1L)
         if (revision <= currentSubmissionRevision) return false
@@ -226,7 +227,6 @@ internal class LazyListAdapter(
             previous = previousItems,
             next = items,
         )
-        // Preserve the first visible-item anchor when diffing falls back, reducing jumps after notifyDataSetChanged.
         // When incremental diff is unavailable, preserve the first visible item anchor to reduce jump after notifyDataSetChanged.
         val reloadAnchor = if (result.diffResult == null) {
             captureScrollAnchor()
@@ -235,6 +235,7 @@ internal class LazyListAdapter(
         }
         this.items = result.items
         keyIndex = buildKeyIndex(result.items)
+        stickyHeaderPositions = buildStickyHeaderPositions(result.items)
         stableIds.keys.retainAll(keyIndex.counts.keys)
         currentSubmissionRevision = revision
         itemsVersion += 1
@@ -244,7 +245,14 @@ internal class LazyListAdapter(
             notifyDataSetChanged()
             restoreScrollAnchor(reloadAnchor)
         }
-        refreshAttachedHolders(previousKeyCounts, revision)
+        val reloadAll = result.diffResult == null
+        val changedKeys = if (reloadAll) emptySet() else changedKeys(previousItems, result.items)
+        refreshAttachedHolders(
+            previousKeyCounts = previousKeyCounts,
+            changedKeys = changedKeys,
+            submissionRevision = revision,
+            forceAll = reloadAll,
+        )
         return true
     }
 
@@ -267,15 +275,21 @@ internal class LazyListAdapter(
 
     private fun refreshAttachedHolders(
         previousKeyCounts: Map<Any, Int>,
+        changedKeys: Set<Any>,
         submissionRevision: Long,
+        forceAll: Boolean,
     ) {
         holderRegistry.forEachAttached { holder ->
             val boundKey = holder.boundItemKey
+            if (!forceAll && boundKey !in changedKeys) return@forEachAttached
             val position = if (boundKey != null) {
-                if (previousKeyCounts[boundKey] != 1) {
+                if (previousKeyCounts[boundKey] == 1 && keyIndex.counts[boundKey] == 1) {
+                    keyIndex.uniquePositions[boundKey] ?: return@forEachAttached
+                } else if (forceAll) {
+                    holder.boundItemPosition
+                } else {
                     return@forEachAttached
                 }
-                keyIndex.uniquePositions[boundKey] ?: return@forEachAttached
             } else {
                 holder.boundItemPosition
             }
@@ -295,6 +309,17 @@ internal class LazyListAdapter(
                 position = position,
                 active = true,
             )
+        }
+    }
+
+    private fun changedKeys(
+        previous: List<LazyListItem>,
+        next: List<LazyListItem>,
+    ): Set<Any> {
+        val previousByKey = previous.associateBy(LazyListItem::key)
+        val nextByKey = next.associateBy(LazyListItem::key)
+        return (previousByKey.keys + nextByKey.keys).filterTo(linkedSetOf()) { key ->
+            previousByKey[key] != nextByKey[key]
         }
     }
 
@@ -335,22 +360,43 @@ internal class LazyListAdapter(
     }
 
     fun disposeAll() {
+        var failure: Throwable? = null
         val disposeStickyHeader = stickyHeaderDisposer
         stickyHeaderDisposer = null
-        disposeStickyHeader?.invoke()
-        holderRegistry.disposeAll()
-        listState?.attach(null)
+        try {
+            disposeStickyHeader?.invoke()
+        } catch (disposeError: Throwable) {
+            failure = disposeError
+        }
+        try {
+            holderRegistry.disposeAll()
+        } catch (disposeError: Throwable) {
+            if (failure == null) failure = disposeError else failure.addSuppressed(disposeError)
+        }
+        try {
+            mountedTreeCache.clear()
+        } catch (releaseError: Throwable) {
+            if (failure == null) failure = releaseError else failure.addSuppressed(releaseError)
+        }
+        preparationCosts.clear()
+        try {
+            listState?.attach(null)
+        } catch (detachError: Throwable) {
+            if (failure == null) failure = detachError else failure.addSuppressed(detachError)
+        }
         listState = null
         items = emptyList()
         keyIndex = KeyIndex(emptyMap(), emptyMap())
+        stickyHeaderPositions = intArrayOf()
         itemsVersion += 1
+        failure?.let { throw it }
     }
 
     private fun buildKeyIndex(items: List<LazyListItem>): KeyIndex {
         val counts = HashMap<Any, Int>(items.size)
         val uniquePositions = HashMap<Any, Int>(items.size)
         items.forEachIndexed { position, item ->
-            val key = item.key ?: return@forEachIndexed
+            val key = item.key
             val nextCount = (counts[key] ?: 0) + 1
             counts[key] = nextCount
             if (nextCount == 1) {
@@ -362,6 +408,12 @@ internal class LazyListAdapter(
         return KeyIndex(counts, uniquePositions)
     }
 
+    private fun buildStickyHeaderPositions(items: List<LazyListItem>): IntArray {
+        return items.indices
+            .filter { position -> items[position].kind == LazyListItemKind.StickyHeader }
+            .toIntArray()
+    }
+
     private fun bindHolder(
         holder: LazyListViewHolder,
         position: Int,
@@ -369,13 +421,55 @@ internal class LazyListAdapter(
     ) {
         ensureContainerLayoutParams(holder)
         holderRegistry.onBound(holder)
+        preparePhysicalPresentation(holder, items[position])
+        val item = items[position]
+        val reuseKey = MountedTreeReuseCache.ReuseKey(item.kind, item.contentType)
+        val active = holderRegistry.isAttached(holder)
+        val startedAt = if (active) System.nanoTime() else 0L
         holder.bind(
-            item = items[position],
+            item = item,
             payload = payload,
             submissionRevision = currentSubmissionRevision,
             position = position,
-            active = holderRegistry.isAttached(holder),
+            active = active,
+            prepare = !active && preparationCosts.shouldPrepare(reuseKey),
         )
+        if (active) preparationCosts.record(reuseKey, System.nanoTime() - startedAt)
+    }
+
+    private fun preparePhysicalPresentation(
+        holder: LazyListViewHolder,
+        item: LazyListItem,
+    ) {
+        val nextKey = MountedTreeReuseCache.ReuseKey(item.kind, item.contentType)
+        if (holder.hasBinding && holder.boundItemKey != item.key) {
+            val previousKey = holder.reuseKey()
+            holder.detachForReuse()?.let { presentation ->
+                if (previousKey == nextKey) {
+                    holder.adoptForNextSession(presentation)
+                } else if (previousKey != null) {
+                    mountedTreeCache.offer(previousKey, presentation)
+                } else {
+                    presentation.release()
+                }
+            }
+            holder.clearBinding()
+        }
+        if (!holder.hasBinding && !holder.hasPendingPresentation) {
+            mountedTreeCache.take(nextKey)?.let(holder::adoptForNextSession)
+        }
+    }
+
+    private fun recycleHolder(holder: LazyListViewHolder) {
+        val reuseKey = holder.reuseKey()
+        holder.detachForReuse()?.let { presentation ->
+            if (reuseKey != null) {
+                mountedTreeCache.offer(reuseKey, presentation)
+            } else {
+                presentation.release()
+            }
+        }
+        holder.clearBinding()
     }
 
     private fun ensureContainerLayoutParams(holder: LazyListViewHolder) {
@@ -457,13 +551,7 @@ internal class LazyListAdapter(
     }
 }
 
-/**
- * Linear item-spacing decoration for LazyColumn and LazyRow.
- * Linear spacing decoration for LazyColumn/LazyRow.
- *
- * Adds spacing only before non-first items so list-edge padding semantics remain unchanged.
- * Spacing is added only before non-first items so list edge padding semantics stay unchanged.
- */
+/** Adds main-axis spacing before non-first items without changing list-edge padding. */
 internal class LazyListSpacingDecoration(
     private var spacing: Int,
     private var orientation: Int = LinearLayoutManager.VERTICAL,
@@ -507,13 +595,12 @@ internal class LazyListSpacingDecoration(
     }
 }
 
-/**
- * ViewHolder that binds each lazy item to an isolated render session.
- * ViewHolder for lazy items, binding each item to an isolated render session.
- */
+/** Physical holder shell that delegates logical ownership to an isolated item-session controller. */
 internal class LazyListViewHolder(
     private val container: FrameLayout,
 ) : RecyclerView.ViewHolder(container) {
+    var hasBinding: Boolean = false
+        private set
     var boundItemKey: Any? = null
         private set
     var boundItemPosition: Int = RecyclerView.NO_POSITION
@@ -522,6 +609,8 @@ internal class LazyListViewHolder(
         private set
     var boundItemKind: LazyListItemKind? = null
         private set
+    val hasPendingPresentation: Boolean
+        get() = controller.hasPendingPresentation
 
     private val controller = LazyItemSessionController(
         createSession = { item ->
@@ -536,7 +625,9 @@ internal class LazyListViewHolder(
         submissionRevision: Long,
         position: Int,
         active: Boolean,
+        prepare: Boolean = true,
     ) {
+        hasBinding = true
         boundItemKey = item.key
         boundItemPosition = position
         boundContentType = item.contentType
@@ -547,8 +638,14 @@ internal class LazyListViewHolder(
                 payload = payload,
                 submissionRevision = submissionRevision,
             )
-        } else {
+        } else if (prepare) {
             controller.prepare(
+                item = item,
+                payload = payload,
+                submissionRevision = submissionRevision,
+            )
+        } else {
+            controller.stage(
                 item = item,
                 payload = payload,
                 submissionRevision = submissionRevision,
@@ -557,11 +654,27 @@ internal class LazyListViewHolder(
     }
 
     fun recycle() {
+        controller.recycle()
+        clearBinding()
+    }
+
+    fun detachForReuse() = controller.detachForReuse()
+
+    fun adoptForNextSession(presentation: com.viewcompose.ui.node.ReusableItemPresentation) {
+        controller.adoptForNextSession(presentation)
+    }
+
+    fun reuseKey(): MountedTreeReuseCache.ReuseKey? {
+        val kind = boundItemKind ?: return null
+        return MountedTreeReuseCache.ReuseKey(kind, boundContentType)
+    }
+
+    fun clearBinding() {
+        hasBinding = false
         boundItemKey = null
         boundItemPosition = RecyclerView.NO_POSITION
         boundContentType = null
         boundItemKind = null
-        controller.recycle()
     }
 
     fun activate(submissionRevision: Long): Boolean {

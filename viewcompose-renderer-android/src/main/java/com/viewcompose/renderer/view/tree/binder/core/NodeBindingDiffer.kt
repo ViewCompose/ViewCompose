@@ -1,18 +1,10 @@
 package com.viewcompose.renderer.view.tree
 
-import com.viewcompose.ui.node.LazyListItem
-import com.viewcompose.ui.node.collection.TabRowTab
 import com.viewcompose.ui.node.VNode
 import com.viewcompose.ui.node.spec.BoxNodeProps
-import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
 import com.viewcompose.ui.node.spec.ImageNodeSpec
-import com.viewcompose.ui.node.spec.LazyColumnNodeProps
-import com.viewcompose.ui.node.spec.LazyRowNodeProps
-import com.viewcompose.ui.node.spec.LazyVerticalGridNodeProps
 import com.viewcompose.ui.node.spec.NodeSpec
 import com.viewcompose.ui.node.spec.RowNodeProps
-import com.viewcompose.ui.node.spec.TabRowNodeProps
-import com.viewcompose.ui.node.spec.VerticalPagerNodeProps
 
 /**
  * Compares previous and next VNodes and chooses the smallest valid binding strategy.
@@ -43,9 +35,8 @@ internal object NodeBindingDiffer {
         val modifierChanged = previous.modifier != next.modifier
         val prevSpec = previous.spec
         val nextSpec = next.spec
-        val sessionContentChanged = hasSessionSubmissionChange(prevSpec, nextSpec)
         val imageLoaderChanged = hasImageLoaderIdentityChange(prevSpec, nextSpec)
-        if (prevSpec == nextSpec && !sessionContentChanged && !imageLoaderChanged) {
+        if (prevSpec == nextSpec && !imageLoaderChanged) {
             return if (modifierChanged) {
                 NodeBindingPlan.Rebind
             } else {
@@ -92,39 +83,6 @@ internal object NodeBindingDiffer {
         return previous is ImageNodeSpec &&
             next is ImageNodeSpec &&
             previous.imageLoader !== next.imageLoader
-    }
-
-    private fun hasSessionSubmissionChange(
-        previous: NodeSpec,
-        next: NodeSpec,
-    ): Boolean {
-        // A newly built immutable item snapshot is the submission signal. Callback identity is an
-        // implementation detail and must not decide whether a child session renders.
-        return when {
-            previous is LazyColumnNodeProps && next is LazyColumnNodeProps -> previous.items.hasNewSnapshots(next.items)
-            previous is LazyRowNodeProps && next is LazyRowNodeProps -> previous.items.hasNewSnapshots(next.items)
-            previous is LazyVerticalGridNodeProps && next is LazyVerticalGridNodeProps -> previous.items.hasNewSnapshots(next.items)
-            previous is HorizontalPagerNodeProps && next is HorizontalPagerNodeProps -> previous.pages.hasNewSnapshots(next.pages)
-            previous is VerticalPagerNodeProps && next is VerticalPagerNodeProps -> previous.pages.hasNewSnapshots(next.pages)
-            previous is TabRowNodeProps && next is TabRowNodeProps -> previous.tabs.hasNewTabSnapshots(next.tabs)
-            else -> false
-        }
-    }
-
-    private fun List<LazyListItem>.hasNewSnapshots(next: List<LazyListItem>): Boolean {
-        if (size != next.size) return true
-        for (index in indices) {
-            if (this[index] !== next[index]) return true
-        }
-        return false
-    }
-
-    private fun List<TabRowTab>.hasNewTabSnapshots(next: List<TabRowTab>): Boolean {
-        if (size != next.size) return true
-        for (index in indices) {
-            if (this[index].item !== next[index].item) return true
-        }
-        return false
     }
 
     private fun List<VNode>.hasSameElementReferences(next: List<VNode>): Boolean {

@@ -260,7 +260,7 @@ internal fun UiTreeBuilder.CollectionPage(
                         vertical = 4.dp,
                     ),
                     prefetchPolicy = LazyLayoutPrefetchPolicy(
-                        initialPrefetchItemCount = 4,
+                        nestedInitialPrefetchItemCount = 4,
                         itemViewCacheSize = 4,
                     ),
                     modifier = Modifier

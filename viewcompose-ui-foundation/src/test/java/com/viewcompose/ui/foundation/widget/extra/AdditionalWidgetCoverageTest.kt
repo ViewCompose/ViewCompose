@@ -298,13 +298,15 @@ class AdditionalWidgetCoverageTest {
                 reusePolicy = reusePolicy,
                 motionPolicy = motionPolicy,
             ) {
-                Page(key = "p1") { Text("P1") }
+                Page(key = "p1", contentType = "page") { Text("P1") }
                 Page(key = "p2") { Text("P2") }
             }
         }
         val horizontalSpec = horizontalPagerTree.single().spec as HorizontalPagerNodeProps
         assertEquals(reusePolicy, horizontalSpec.reusePolicy)
         assertEquals(motionPolicy, horizontalSpec.motionPolicy)
+        assertEquals("page", horizontalSpec.pages.first().contentType)
+        assertEquals("p1", horizontalSpec.pages.first().contentRevision)
 
         val verticalPagerTree = buildVNodeTree {
             VerticalPager(

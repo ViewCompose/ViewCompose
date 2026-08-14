@@ -112,3 +112,18 @@ fun composerLiteSample() {
 
     composer.dispose()
 }
+
+fun scopedExplicitSaveableKeySample() {
+    val composer = ComposerLite()
+
+    val registryKey = composer.composeRoot {
+        composer.withKeys(listOf("account-42")) {
+            composer.runGroup(signature = "profile") {
+                composer.scopedExplicitSaveableKey("display-name")
+            }
+        }
+    }
+
+    check(registryKey.endsWith(":display-name"))
+    composer.dispose()
+}

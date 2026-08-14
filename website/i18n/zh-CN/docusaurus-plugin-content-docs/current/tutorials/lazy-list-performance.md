@@ -2,7 +2,7 @@
 title: 调整 Lazy 列表性能
 sidebar_position: 13
 translation_source: tutorials/lazy-list-performance.md
-translation_source_hash: d8bf63c358b0aee5578ba693a093332e8db5327738fa0251deb0f80c65e7d85a
+translation_source_hash: 58c6962e6e186e86285a81e3513df5f0f87a78d499b421641ee4de1f404ff4fd
 translation_status: current
 ---
 
@@ -54,11 +54,15 @@ class LazyListPerformanceTutorialActivity : ComponentActivity() {
                 items = rows,
                 key = { row -> row },
                 contentType = { "text-row" },
+                contentRevision = { row -> row },
                 prefetchPolicy = LazyLayoutPrefetchPolicy(
-                    initialPrefetchItemCount = 4,
+                    nestedInitialPrefetchItemCount = 4,
                     itemViewCacheSize = 4,
                 ),
-                reusePolicy = CollectionReusePolicy(sharePool = true),
+                reusePolicy = CollectionReusePolicy(
+                    sharePool = true,
+                    mountedTreeCacheSize = 2,
+                ),
                 modifier = Modifier.fillMaxSize().padding(16.dp),
             ) { row ->
                 Text(row, modifier = Modifier.fillMaxWidth().padding(8.dp))
@@ -69,8 +73,10 @@ class LazyListPerformanceTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-预取数量与缓存大小只是交给原生集合 renderer 的提示，不改变条目语义。共享池只适用于结构兼容的
-列表，而且复用行仍必须完整 rebind。更大的缓存会消耗更多内存，因此应先测量再调整。
+预取与缓存大小是有界 Renderer Policy，不定义业务状态。共享池只保留空 Holder 外壳；Mounted
+Tree 缓存按 `contentType` 保留已经 Reset 的物理树，并在淘汰时确定性释放。`contentRevision` 会
+定义条目语义：捕获的非 State 值发生变化时，其 Revision 也必须变化。更大的缓存会消耗更多内存，
+因此应先测量再调整。
 
 ## 验证结果
 

@@ -390,12 +390,17 @@ internal fun MacrobenchmarkScope.returnToCatalog() {
  * 点击章节 tab，必要时先横向滚动 tab strip。
  * Clicks a chapter tab, scrolling the tab strip first if needed.
  */
-internal fun MacrobenchmarkScope.clickChapterTab(text: String) {
+internal fun MacrobenchmarkScope.clickChapterTab(
+    text: String,
+    waitForIdle: Boolean = true,
+) {
     scrollTabStripUntilText(text)
     val node = device.findObject(By.text(text))
     assertNotNull("Expected to find chapter tab: $text", node)
     node!!.click()
-    device.waitForIdle()
+    if (waitForIdle) {
+        device.waitForIdle()
+    }
 }
 
 /**

@@ -13,6 +13,7 @@ import com.viewcompose.ui.foundation.DisposableEffect
 import com.viewcompose.ui.foundation.Icon
 import com.viewcompose.ui.foundation.IconButton
 import com.viewcompose.ui.foundation.Image
+import com.viewcompose.ui.foundation.HorizontalPager
 import com.viewcompose.ui.foundation.InputControlDefaults
 import com.viewcompose.ui.foundation.LaunchedEffect
 import com.viewcompose.ui.foundation.LazyColumn
@@ -26,6 +27,7 @@ import com.viewcompose.ui.foundation.ProvideSaveableStateRegistry
 import com.viewcompose.ui.foundation.SideEffect
 import com.viewcompose.ui.foundation.Slider
 import com.viewcompose.ui.foundation.Text
+import com.viewcompose.ui.foundation.TabRow
 import com.viewcompose.ui.foundation.Theme
 import com.viewcompose.ui.foundation.UiStateColor
 import com.viewcompose.ui.foundation.UiSwitchSizing
@@ -51,6 +53,8 @@ import com.viewcompose.ui.node.UiStateLayerColors
 import com.viewcompose.ui.node.spec.ImageNodeSpec
 import com.viewcompose.ui.node.spec.ButtonNodeProps
 import com.viewcompose.ui.node.spec.BoxNodeProps
+import com.viewcompose.ui.node.spec.HorizontalPagerNodeProps
+import com.viewcompose.ui.node.spec.LazyColumnNodeProps
 import com.viewcompose.ui.node.spec.SurfaceNodeProps
 import com.viewcompose.ui.shape.UiShape
 import com.viewcompose.ui.unit.dp
@@ -72,6 +76,51 @@ fun emittedContentClosureSample() {
     check(node.type == NodeType.Box)
     check(node.key == "status-container")
     check(node.children.single().type == NodeType.Text)
+}
+
+private data class RevisionSampleRow(
+    val id: Long,
+    val version: Int,
+    val label: String,
+)
+
+fun lazyCollectionRevisionSample() {
+    val rows = listOf(RevisionSampleRow(id = 7L, version = 3, label = "Ready"))
+    val list = buildVNodeTree {
+        LazyColumn(
+            items = rows,
+            key = RevisionSampleRow::id,
+            contentType = { "status-row" },
+            contentRevision = RevisionSampleRow::version,
+        ) { row ->
+            Text(row.label)
+        }
+    }.single()
+    val item = (list.spec as LazyColumnNodeProps).items.single()
+
+    check(item.key == 7L)
+    check(item.contentType == "status-row")
+    check(item.contentRevision == 3)
+}
+
+fun pagerAndTabIdentitySample() {
+    val tree = buildVNodeTree {
+        HorizontalPager(currentPage = 0, onPageChanged = {}) {
+            Page(key = "account", contentType = "account-page", contentRevision = 4) {
+                Text("Account")
+            }
+        }
+        TabRow(selectedIndex = 0, onTabSelected = {}) {
+            Tab(key = "overview", contentRevision = 2) { selected ->
+                Text(if (selected) "Overview selected" else "Overview")
+            }
+        }
+    }
+    val page = (tree.first().spec as HorizontalPagerNodeProps).pages.single()
+
+    check(page.key == "account")
+    check(page.contentRevision == 4)
+    check(tree.last().children.single().key == "overview")
 }
 
 fun themeStateColorSample() {

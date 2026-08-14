@@ -55,9 +55,10 @@ LazyColumn(
         vertical = 8.dp,
     ),
     prefetchPolicy = LazyLayoutPrefetchPolicy(
-        initialPrefetchItemCount = 4,
+        nestedInitialPrefetchItemCount = 4,
         itemViewCacheSize = 4,
     ),
+    reusePolicy = CollectionReusePolicy(mountedTreeCacheSize = 2),
 ) {
     stickyHeader(
         key = "contacts-header",
@@ -70,6 +71,7 @@ LazyColumn(
         items = contacts,
         key = { contact -> contact.id },
         contentType = { "contact-row" },
+        contentRevision = { contact -> contact.version },
     ) { contact ->
         ContactRow(contact)
     }
@@ -77,7 +79,9 @@ LazyColumn(
 ```
 
 The list scope supports `item`, `items`, and `stickyHeader`. The grid scope supports the same
-structure plus per-item spans; a grid sticky header occupies the full line.
+structure plus per-item spans; a grid sticky header occupies the full line. `contentRevision` is a
+correctness contract, not only a performance hint. A changing value captured by item content must
+be observed State or appear in this revision; equal key and revisions skip item rendering entirely.
 
 The convenience overload for homogeneous data also requires a stable key and delegates to the
 structured model.
@@ -87,24 +91,34 @@ structured model.
 | Contract | Android mapping |
 | --- | --- |
 | stable key | collision-free adapter-local stable ID |
-| content type | RecyclerView view type / recycled pool partition |
+| content type | native compatibility partition for empty holders and reset mounted trees |
+| content revision | caller-owned semantic version used for targeted item invalidation |
 | item span | `GridLayoutManager.SpanSizeLookup` |
 | sticky header | detached session-backed pinned holder + next-header push-off |
 | pointer input on pinned header | transformed dispatch to the pinned holder |
 | asymmetric content padding | relative RecyclerView padding |
 | reverse layout | `LinearLayoutManager/GridLayoutManager.reverseLayout` |
 | user scroll enabled | touch interception gate; programmatic scrolling remains available |
-| initial prefetch count | layout manager initial prefetch |
+| nested initial prefetch count | layout-manager hint used when the list is nested |
 | item cache size | RecyclerView item-view cache |
+| mounted-tree cache size | bounded framework-owned reset-tree cache with deterministic release |
 | layout state | scroll, layout, and adapter observers feeding `LazyListState` |
 
 A detached holder that has never been presented can use RecyclerView prefetch to compose and build
-its Android View tree. This produces a prepared candidate, not a committed child frame. Remember
+its Android View tree only after the renderer has observed that content type within its synchronous
+cost budget. Unknown or expensive types are staged without native preparation. A prepared tree is
+a candidate, not a committed child frame. Remember
 activation, `SideEffect`, `DisposableEffect`, `LaunchedEffect`, native `AndroidView.onCommit`,
 overlays, and committed diagnostics wait for first attachment. If observed state changes before
 attachment, the stale candidate is abandoned and activation renders current state. A session that
-already activated remains active through ordinary RecyclerView cache detach and is disposed when
-the holder is recycled or the container is released.
+already activated remains active through ordinary RecyclerView cache detach. Recycling terminates
+its logical key session. A compatible, reset physical tree may then enter the bounded renderer
+cache; RecyclerView's pool receives only the empty holder shell.
+
+An `AndroidView` opts into cross-key mounted-tree reuse only by declaring `onReset`. The old logical
+session and its effects are disposed before reset. Cache eviction or final container disposal calls
+`onRelease` exactly once. A tree containing an interop View without `onReset` is released instead of
+reused.
 
 The pinned sticky copy is not registered as a second accessibility node. The ordinary list header
 remains the semantic source, avoiding duplicate TalkBack announcements.
@@ -126,16 +140,19 @@ revision change cannot temporarily expose content under a system bar or erase th
 1. Collection keys are non-null and unique within a container.
 2. A key identifies the same logical item across reorders.
 3. `contentType` groups only layout-compatible item structures.
-4. Platform callbacks publish immutable snapshots; Android types never enter `ui-contract`.
-5. Rebinding the same RecyclerView connector must not reset the scroll anchor.
-6. Save/restore persists the first visible index and offset only.
-7. Item sessions are disposed when holders, pinned headers, or containers are released.
-8. Collection, modifier, and inset padding contributions have one renderer-owned native value and
+4. `contentRevision` includes every changing ordinary capture that is not observed State.
+5. Platform callbacks publish immutable snapshots; Android types never enter `ui-contract`.
+6. Rebinding the same RecyclerView connector must not reset the scroll anchor.
+7. Save/restore persists the first visible index and offset only.
+8. Item sessions are disposed when holders, pinned headers, or containers are released.
+9. Collection, modifier, and inset padding contributions have one renderer-owned native value and
    must survive both targeted patches and full environment rebinds.
-9. Item saveable state is scoped by the container and stable logical key; duplicate providers are
+10. Item saveable state is scoped by the container and stable logical key; duplicate providers are
    rejected only within one logical item scope.
-10. Prefetch preparation is externally silent and never marks a child submission committed;
+11. Prefetch preparation is externally silent and never marks a child submission committed;
     activation and later active renders preserve the normal transactional effect order.
+12. Logical key state never enters RecyclerView pools or mounted-tree caches; reset physical trees
+    carry no remember, saveable, subscription, or effect identity.
 
 ## 6. Deliberate non-goals
 

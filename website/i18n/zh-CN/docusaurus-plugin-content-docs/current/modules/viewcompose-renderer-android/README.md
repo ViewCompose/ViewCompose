@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: c59695979bd09fbd3da3a6332b1163c5d75e3f403d99431043af52553f11d99e
+translation_source_hash: 709d2344a661e4265ff1b47649221d5d86c8a414ea6f073f574de5a5ef50a258
 translation_status: current
 ---
 
@@ -118,15 +118,16 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   `ReloadAll`，保护 RecyclerView holder 状态。
 - Horizontal 与 Vertical Pager Holder 会在复用期间保留 `Page` 源码 Session 角色。RecyclerView
   行与 Tab Item 保持 `Content`；该角色不影响 Key、差分、测量、可见性或回调。
-- Lazy item 的 `contentToken` 控制语义差分 Payload，而不是决定可见的保留 Session 能否渲染。
-  新发射的不可变 item 快照会建立一个单调递增的提交；父级 composition 提交后，Renderer 才安装
-  next item 的准确闭包，并让每个已 attach Session 渲染一次，即使 Token 相等也一样。父级回滚、
-  RecyclerView 延迟重复 Payload 以及回调对象复用都不会产生额外子渲染。
+- Lazy Item 的 `contentRevision` 与框架捕获的 `environmentRevision` 是标识和 Type 之外仅有的内容
+  失效输入。Key 与 Revision 相等时完全跳过 Item Composition 与原生 Patch，即使父层创建了新的
+  Callback 对象。Revision 变化会安装最新 Closure，并只 Render 该 Item；调用方必须使用可观察
+  State，或把每个变化普通捕获值放入 `contentRevision`。即使 Key 与 Revision 不变，只要
+  `contentType` 改变，也会终止旧 Child Session 并完整重建原生呈现。
 - Detach 且从未 Activate 的 Lazy Holder 可以在 RecyclerView Prefetch 中 Prepare 子 Composition
   与原生 View 树，但不会提交 Remember Lifecycle、Effect、原生 Commit 工作、Overlay 或诊断。
   首次 Attach 会直接 Activate 有效 Prepared Frame；如果被观察 State 已变化，则改为渲染当前
-  状态。Active 的 Detach Holder 会暂存新 Submission 并在 Reattach 时渲染。Key 缺失或重复时
-  使用保守 Reload 路径；Renderer 绝不会通过 First Match Key 查询解析有歧义 Holder。
+  状态。Active 的 Detach Holder 会暂存新 Submission 并在 Reattach 时渲染。低层 Key 重复时
+  使用保守 Reload 路径；公开 DSL 拒绝缺失或重复 Key，Renderer 绝不会通过 First Match 查询猜测。
 - Lazy Adapter 会为每个已接受提交建立一次唯一 Key 位置索引。已 attach 或重新 attach 的 Holder
   因而无需扫描 item 列表即可解析稳定 Key；已经提交当前 Revision 的 Holder 也会跳过冗余 attach
   工作。
@@ -178,9 +179,9 @@ Error 或 Fallback 使用资源，规范化图片请求就会把版本传给 Ada
 - 一个容器只有一个已挂载树所有者。不得在容器或 render session 之间共享 mounted node。
 - `collectDiagnostics = false` 会省略结构、patch、warning 和详细绑定快照；性能敏感且不消费
   诊断的路径应关闭它。
-- Lazy Prefetch 工作受 RecyclerView Deadline 控制。它可以把 Composition 与 View 创建提前到
-  Attach 帧之前，但不能保证每个 Item 都完成 Prepare；没有回收价值的连贯静态 Fixture 不应拆成
-  多个昂贵独立 Session。
+- Lazy Prefetch 工作受 RecyclerView Deadline 控制。未知或曾超出预算的 Content Type 只 Staging，
+  不同步准备原生树；已观测为便宜的 Type 才可推测 Prepare。这能把有界工作提前到 Attach 之前，
+  但不保证完成准备。
 - `LayoutPassTracker` 是进程级可选能力。它会为受监控过程增加单调时钟读取和同步聚合开销，
   应用于有限时间的诊断，而不是持续生产遥测。
 - `AndroidViewDecorationRuntime.install` 是进程级操作。应在应用初始化时安装后端；现有 View

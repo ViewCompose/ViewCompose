@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [28])
 class PagerAdapterTest {
     @Test
-    fun `horizontal pager refreshes an attached page after a move with a stable updater`() {
+    fun `horizontal pager move with stable revisions skips page render`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
@@ -46,7 +46,7 @@ class PagerAdapterTest {
         adapter.onBindViewHolder(holder, 1)
 
         assertEquals(
-            listOf("update:first", "render:first", "update:second", "render:second"),
+            listOf("update:first", "render:first"),
             events,
         )
     }
@@ -68,18 +68,20 @@ class PagerAdapterTest {
     }
 
     @Test
-    fun `horizontal pager resolves an unkeyed cached page by its bound position on attach`() {
+    fun `horizontal pager refreshes a detached keyed page on attach`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
         val adapter = HorizontalPagerAdapter()
-        adapter.submitPages(listOf(recordingPage(label = "first", key = null, events = events)))
+        adapter.submitPages(listOf(recordingPage(label = "first", key = "page", events = events)))
         val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
         adapter.onBindViewHolder(holder, 0)
         adapter.onViewAttachedToWindow(holder)
         adapter.onViewDetachedFromWindow(holder)
 
-        adapter.submitPages(listOf(recordingPage(label = "second", key = null, events = events)))
+        adapter.submitPages(
+            listOf(recordingPage(label = "second", key = "page", events = events, contentRevision = "second")),
+        )
 
         assertEquals(listOf("update:first", "render:first"), events)
         adapter.onViewAttachedToWindow(holder)
@@ -90,7 +92,7 @@ class PagerAdapterTest {
     }
 
     @Test
-    fun `vertical pager refreshes an attached page after a move with a stable updater`() {
+    fun `vertical pager move with stable revisions skips page render`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
@@ -120,24 +122,26 @@ class PagerAdapterTest {
         adapter.onBindViewHolder(holder, 1)
 
         assertEquals(
-            listOf("update:first", "render:first", "update:second", "render:second"),
+            listOf("update:first", "render:first"),
             events,
         )
     }
 
     @Test
-    fun `vertical pager resolves an unkeyed cached page by its bound position on attach`() {
+    fun `vertical pager refreshes a detached keyed page on attach`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
         val adapter = VerticalPagerAdapter()
-        adapter.submitPages(listOf(recordingPage(label = "first", key = null, events = events)))
+        adapter.submitPages(listOf(recordingPage(label = "first", key = "page", events = events)))
         val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
         adapter.onBindViewHolder(holder, 0)
         adapter.onViewAttachedToWindow(holder)
         adapter.onViewDetachedFromWindow(holder)
 
-        adapter.submitPages(listOf(recordingPage(label = "second", key = null, events = events)))
+        adapter.submitPages(
+            listOf(recordingPage(label = "second", key = "page", events = events, contentRevision = "second")),
+        )
 
         assertEquals(listOf("update:first", "render:first"), events)
         adapter.onViewAttachedToWindow(holder)
@@ -164,13 +168,14 @@ class PagerAdapterTest {
 
     private fun recordingPage(
         label: String = "",
-        key: Any?,
+        key: Any,
         events: MutableList<String>,
         sessionUpdater: ((LazyListItemSession) -> Unit)? = null,
+        contentRevision: Any? = "stable",
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = "stable",
+            contentRevision = contentRevision,
             sessionFactory = LazyListItemSessionFactory { RecordingSession(events) },
             sessionUpdater = sessionUpdater ?: { session ->
                 (session as RecordingSession).label = label
@@ -180,20 +185,21 @@ class PagerAdapterTest {
     }
 
     private fun inertPage(
-        key: Any?,
+        key: Any,
         contentType: Any? = null,
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = "stable",
+            contentRevision = "stable",
             contentType = contentType,
             sessionFactory = LazyListItemSessionFactory {
                 object : LazyListItemSession {
-                    override fun render() = Unit
+                    override fun render() = true
 
                     override fun dispose() = Unit
                 }
             },
+            sessionUpdater = {},
         )
     }
 
@@ -202,8 +208,9 @@ class PagerAdapterTest {
     ) : LazyListItemSession {
         var label: String = ""
 
-        override fun render() {
+        override fun render(): Boolean {
             events += "render:$label"
+            return true
         }
 
         override fun dispose() = Unit

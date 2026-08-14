@@ -59,6 +59,7 @@ build modes, workloads, warm-up, sampling, and statistical treatment.
 | Activity, Fragment, existing View host, lifecycle, ViewModel, or Android interop | [Hosts, lifecycle, and Android interop](compose-host-lifecycle-and-android-interop.md) | Root owner, disposal boundary, installed owners, replay-safe work, and release cleanup |
 | Navigation 2 or Navigation 3 | [Navigation](compose-navigation.md) | Source navigation model, route identity, owner scope, hidden-session policy, and Back integration |
 | Image loading | [Image loading](image-loading.md) | Source types, loader ownership, request policy, and recycled-View disposal |
+| Lazy collections and pagers | [Lazy collection revisions and reuse](lazy-collection-revision-and-reuse.md) | Semantic revisions, mounted-tree reuse, interop reset/release, and TabRow/Pager hard cuts |
 
 Read more than one page when a boundary crosses concerns. For example, `rememberSaveable` in a
 navigation destination requires both the state/restoration and navigation ownership contracts.

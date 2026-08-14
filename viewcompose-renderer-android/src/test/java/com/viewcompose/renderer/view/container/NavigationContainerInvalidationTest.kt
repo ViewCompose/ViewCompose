@@ -16,6 +16,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.viewcompose.ui.node.ImageSource
 import com.viewcompose.ui.node.NavigationBarItem
+import com.viewcompose.ui.node.collection.TabIndicatorPosition
+import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -26,6 +29,39 @@ import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class NavigationContainerInvalidationTest {
+    @Test
+    fun `tab row preserves initial selection while eager children are mounted`() {
+        val context: android.content.Context = RuntimeEnvironment.getApplication()
+        val view = DeclarativeTabRowLayout(context)
+
+        view.bind(
+            selectedIndex = 2,
+            pagerState = null,
+            indicatorColor = 0xFF000000.toInt(),
+            indicatorHeight = 4,
+            indicatorCornerRadius = 2,
+            indicatorPosition = TabIndicatorPosition.Bottom,
+            indicatorWidthMode = TabIndicatorWidthMode.MatchItem,
+            indicatorFixedWidth = 0,
+            containerColor = 0xFFFFFFFF.toInt(),
+            scrollable = true,
+            equalWidth = true,
+            rippleColor = 0,
+            itemSpacing = 0,
+            itemPaddingHorizontal = 0,
+            itemPaddingVertical = 0,
+            minItemWidth = 0,
+        )
+        repeat(3) {
+            view.childHost.addView(View(context))
+        }
+        settleLayout(view)
+
+        val selectedIndexField = DeclarativeTabRowLayout::class.java.getDeclaredField("selectedIndex")
+        selectedIndexField.isAccessible = true
+        assertEquals(2, selectedIndexField.getInt(view))
+    }
+
     @Test
     fun `tab row container only requests layout for layout-affecting changes`() {
         val view = TabRowContainer(RuntimeEnvironment.getApplication())
