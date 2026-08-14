@@ -14,7 +14,9 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * [factory] runs only when reconciliation cannot reuse an existing node. [update] and [onReset] must
  * be replay-safe because a failed frame can restore and rebind the previously committed node.
  * Non-replayable external work belongs in [onCommit], which runs only after the complete View-tree
- * transaction succeeds. [onRelease] is one-shot cleanup after committed removal or session disposal.
+ * transaction succeeds. [onRelease] is one-shot cleanup whenever a created View is permanently
+ * abandoned, including candidate rollback, committed removal, final reuse-cache eviction, or
+ * session disposal.
  *
  * @sample com.viewcompose.host.android.samples.androidViewInteropSample
  * @param factory creates a native View for a newly inserted node
@@ -22,7 +24,7 @@ import com.viewcompose.ui.foundation.UiTreeBuilder
  * @param key optional stable identity used for keyed reconciliation
  * @param modifier declarative layout, input, semantics, and native configuration
  * @param onReset optional replay-safe reset before a retained View is rebound
- * @param onRelease optional one-shot cleanup after permanent removal
+ * @param onRelease optional one-shot cleanup after any permanent abandonment
  * @param onCommit optional one-shot effect after the containing frame commits
  */
 fun UiTreeBuilder.AndroidView(

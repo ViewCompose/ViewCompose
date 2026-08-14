@@ -1,6 +1,6 @@
 ---
 translation_source: migration/compose-state-recomposition-and-restoration.md
-translation_source_hash: 2e240b161f987cf7f2fd00e8bae2dd2c8a6e9370b069de834a20c8d0324dccab
+translation_source_hash: 835be82a0c2b54cf9bcb974b4317b74d102a81c9c02a9ff535a6c3f4ac63acbb
 translation_status: current
 ---
 
@@ -10,7 +10,7 @@ translation_status: current
 迁移到 ViewCompose 所有的 Android `View` 树的路径。这是一份工程对比，而不是源码兼容承诺：
 API 名称相似，并不表示编译器、失效、Identity 或恢复行为完全相同。
 
-最后验证日期：**2026-08-06**
+最后验证日期：**2026-08-14**
 
 重新验证负责人：**`viewcompose-runtime`、`viewcompose-ui-foundation`、
 `viewcompose-android` 与 AndroidX lifecycle 集成的维护者**
@@ -24,7 +24,7 @@ API 名称相似，并不表示编译器、失效、Identity 或恢复行为完�
 | `viewcompose-runtime` | `0.1.0-alpha02` | 可变状态、派生状态、快照、观察及 `ComposerLite` |
 | `viewcompose-ui-foundation` | `0.1.0-alpha01` | `remember`、`key`、Effect、`Saver` 及 `rememberSaveable` |
 | `viewcompose-android` | `0.1.0-alpha01` | Activity/Fragment 入口与默认 Android Owner 安装 |
-| `viewcompose-host-android` | `0.1.0-alpha03` | 底层自定义容器宿主与 Android SavedState 桥接 |
+| `viewcompose-host-android` | `0.1.0-alpha04` | 底层自定义容器宿主与 Android SavedState 桥接 |
 | `viewcompose-lifecycle-androidx` | `0.1.0-alpha01` | 组合 Scope 与生命周期 Scope 的状态收集 |
 | `viewcompose-viewmodel-androidx` | `0.1.0-alpha01` | AndroidX ViewModel 与 `SavedStateHandle` Ownership |
 
@@ -271,11 +271,10 @@ ViewCompose `remember` 使用当前 `RecomposeScope` 的下一个位置 Slot。�
 Key 变化时会创建候选替换值。Prepared Composition 使替换具有事务性：提交时调用 Remember
 生命周期回调；中止时恢复旧 Slot，并放弃新值。
 
-ViewCompose `key` 会扩展 Group Signature、Remember Slot、Effect 与自动 Saveable Key 使用的
-当前 Key Namespace。它防止发生变化的结构分支无意复用不相关 Slot。但当前实现**没有**提供
-Compose 风格的 Keyed Sibling 移动：`runGroup` 首先按兄弟节点索引选择 Child；Signature
-不匹配时，会从该位置起截断它及后续 Child，再创建新 Scope。系统不会搜索并移动位于其他兄弟
-位置的匹配 Keyed Scope。
+ViewCompose `key` 会扩展 Group Signature、Remember Slot、Effect、Observation、Child Scope 与
+自动 Saveable Key 使用的当前 Key Namespace。显式 Keyed Sibling Scope 可以作为一个完整逻辑
+Identity 移动到其他兄弟位置。同一 Parent 下重复的有效 Key/Signature 会让组合尝试失败，避免条目
+串用状态。Prepared Abort 会恢复此前顺序、Observation 与 Invalidation 所有权。
 
 仓库证据：
 
@@ -285,9 +284,9 @@ Compose 风格的 Keyed Sibling 移动：`runGroup` 首先按兄弟节点索引�
 - `viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt`；
 - [`RememberTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberTest.kt)。
 
-请使用稳定 `key` Scope 隔离分支与 Effect Identity，但条目可以重排时，应使用 Lazy Container
-的 Item Key 契约。在专门的重排测试与移动实现确立契约之前，不要承诺普通 Keyed Sibling 在重排
-后仍会保留其 Remembered Object 或 Effect 实例。
+普通 Sibling 发生插入、删除或重排时，应使用稳定 `key` Scope 保留 Identity，并保证该结构边界
+内 Key 唯一。Lazy 容器仍使用独立的 Item Key、Revision、Session 与原生树复用契约；普通 Scope
+移动不能取代该契约。
 
 ## Effect 与已提交帧边界 {/* #effects-and-committed-frame-boundaries */}
 
@@ -321,8 +320,10 @@ ViewCompose 支持这些迁移层生命周期，但提交边界由宿主定义�
 - `viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RenderSessionFailureTest.kt`。
 
 Renderer 建立新原生树之后发生的失败会报告为 Committed-frame Failure，不会回滚该原生树。
-因此 Effect 必须只包含提交后工作，并自行处理失败清理。此版本的 `DisposableEffect` 与
-`LaunchedEffect` 都要求至少一个 Key。Disposable Setup 必须以 `onDispose { ... }` 结束；旧的
+因此 Effect 必须只包含提交后工作，并自行处理失败清理。Remembered 激活抛错后保持 Pending，
+并在后续成功 Commit 中重试；`DisposableEffect` Setup 在返回 Cleanup 前必须能安全重试。此版本的
+`DisposableEffect` 与 `LaunchedEffect` 都要求至少一个 Key。Disposable Setup 必须以
+`onDispose { ... }` 结束；旧的
 Lambda-return Cleanup 写法不再接受。ViewCompose 还提供带 Key 的 `SideEffect` 重载用于只在变化
 时发布，而无 Key 重载仍是每次调用都执行的形式。Launched Effect 的 Dispatcher 与 Parent Job
 来自安装的 ViewCompose Host Context，而不是 Compose `Recomposer`。
@@ -372,7 +373,8 @@ Prepare。其 Registry 使用 Claim Transaction：
 1. `rememberSaveable` 在准备组合时调用 `claimRestored`。
 2. Claimed Value 仍包含在 `performSave` 中，从而保护与进行中帧并发的 Host Save。
 3. 组合提交后，Holder 注册 Provider 并提交恢复 Claim。
-4. 组合中止、恢复失败、Abandon 或 Forget 会释放未提交 Claim，使后续尝试仍可恢复该值。
+4. Provider 注册失败时 Claim 仍可保存，并在后续 Composition Commit 重试。组合中止、恢复失败、
+   Abandon 或 Forget 会释放未提交 Claim，使后续 Owner 仍可恢复该值。
 
 仓库证据：
 
@@ -382,9 +384,8 @@ Prepare。其 Registry 使用 Claim Transaction：
 - [`RememberSaveableTest.kt` 第 39–163 行](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt#L39-L163)。
 
 自定义 ViewCompose Host Registry 必须实现这套 Claim 协议；Compose 风格的立即消费不能作为
-兼容替代。还有一个边界需要补充回归证据：`SaveableHolder.onRemembered` 会在提交 Claim 之前
-注册 Provider。如果 Runtime Transaction 已提交后 Provider 注册抛出异常，目前没有聚焦测试
-证明在 Holder 随后被 Forget 或释放之前，该 Claim 会重新变为可用。
+兼容替代。Provider 注册与恢复 Claim Commit 共同组成可重试的 Remembered 激活：注册失败不会
+消费 Claim，`performSave` 会继续包含该值，后续 Commit 无需重建 Holder 即可完成所有权交接。
 
 ## Activity、Fragment、自定义宿主与进程死亡行为
 
@@ -429,7 +430,7 @@ Recents 移除应用后恢复 Saved Instance State。
 | 编译器生成的 Restart/Skipping/Stability | **刻意不同（Intentionally different）** | 显式 `runGroup` 与观察到的读取取代 Compose 编译器 Group | [`ComposerLite.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt)；[`ComposerDiagnosticsTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/kotlin/com/viewcompose/runtime/composition/ComposerDiagnosticsTest.kt) |
 | 细粒度失效与干净兄弟节点复用 | **部分支持（Partially supported）** | 依赖显式 Group 边界；没有 Stability 推断 | [`ComposerLiteTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt)；[`SubtreeRecompositionTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SubtreeRecompositionTest.kt) |
 | 位置 `remember` | **支持（Supported）** | 结构 Key 及事务化 Commit/Abort | [`Remember.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Remember.kt)；[`ComposerLiteTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/test/java/com/viewcompose/runtime/composition/ComposerLiteTest.kt) |
-| 普通兄弟节点重排时的 `key` Identity | **部分支持（Partially supported）** | 隔离 Identity，但不会跨兄弟位置移动匹配 Scope | [`Key.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Key.kt)；[`ComposerLite.kt`](https://github.com/ViewCompose/ViewCompose/blob/fbe1614dd2a278f06517d775c373cb88ce5674a2/viewcompose-runtime/src/main/java/com/viewcompose/runtime/composition/ComposerLite.kt) Group 匹配 |
+| 普通兄弟节点重排时的 `key` Identity | **支持（Supported）** | 显式 Key 移动完整 Scope；重复有效 Identity 会失败 | [`Key.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/composition/Key.kt)；`ComposerLiteTest.kt` 的 Keyed Movement、Ownership 与 Abort 测试 |
 | `SideEffect`、`DisposableEffect`、`LaunchedEffect` 与 `produceState` | **支持（Supported）** | 在 ViewCompose Committed-frame Boundary 执行 | [Effect 源码](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/effects/SideEffect.kt)；[`RenderSession.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/session/RenderSession.kt)；[Effect 测试](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/SideEffectTest.kt) |
 | `rememberSaveable`、Input 与 `Saver` | **部分支持（Partially supported）** | 显式 Key API 和 Registry Fallback 与当前 Compose 不同 | [`RememberSaveable.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/RememberSaveable.kt)；[`Saver.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/Saver.kt)；[`RememberSaveableTest.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt) |
 | Restored Claim/Commit/Release | **刻意不同（Intentionally different）** | 用于安全放弃 Render Preparation | [`SaveableStateRegistry.kt`](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/main/java/com/viewcompose/ui/foundation/runtime/saveable/SaveableStateRegistry.kt)；[Abort 与 In-flight-save 测试](https://github.com/ViewCompose/ViewCompose/blob/main/viewcompose-ui-foundation/src/test/java/com/viewcompose/ui/foundation/runtime/RememberSaveableTest.kt) |
@@ -448,8 +449,8 @@ Recents 移除应用后恢复 Saved Instance State。
 4. 审查每个 `derivedStateOf`；相等结果抑制很重要时，添加显式结果比较。
 5. 用 `MutableState` 中的不可变值替换 Snapshot Collection；`snapshotFlow` 只用于明确拥有
    Collection Lifetime 的无副作用 State 计算。
-6. 保持 `remember` 调用顺序稳定。用 `key` 隔离分支，但不要依赖普通 Keyed Sibling 重排时
-   的移动。
+6. 保持 Unkeyed `remember` 调用顺序稳定。普通 Sibling 可能插入、删除或重排时，使用唯一且
+   稳定的 `key` 值。
 7. 把全部外部工作移入已提交 Effect。Effect 失败属于无法恢复上一棵原生树的 Committed-frame
    Failure。
 8. 优先使用自动 `rememberSaveable` Key，保持 Saver 输出精简且与 Bundle 兼容，并验证由 Input
@@ -463,8 +464,6 @@ Recents 移除应用后恢复 Saved Instance State。
 
 - 相等结果及嵌套 `derivedStateOf` 的失效行为；
 - 在只读快照中创建可变快照；
-- 普通 Keyed Sibling 重排时的 Remembered State 与 Effect；
-- 提交期间 Provider 注册失败时的 Restored Claim 恢复；
 - 不依赖导航的 Activity 根级 Process-kill 认证；
 - 直接针对官方 Compose `1.11.4` 基线的语义对比测试，而不是仓库中较旧的 `1.7.8` Fixture。
 

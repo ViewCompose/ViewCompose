@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/effects.md
-translation_source_hash: 8d2d6cba5f0ed92b7dc7118c9029f9c3c09625209560c6695325e2bba1162a35
+translation_source_hash: 841da7ab45495623c67ed264bd6132e52e261f2dad52c0d544f08ef737838af1
 translation_status: current
 ---
 
@@ -23,7 +23,8 @@ ViewCompose Effect 把成功的声明式帧连接到命令式工作。它们属�
 
 原生树提交前发生错误会 Abort 候选。候选 Effect 不会启动，之前已提交的 Effect 继续活跃。上述
 列表中发生的错误表示帧已经成为权威状态。Runtime 会按已提交帧失败报告，仍尝试每个独立同步
-操作，并允许后续渲染继续进行。
+操作，并允许后续渲染继续进行。`onRemembered` 抛错的 Remembered 值会保持 Pending；后续成功的
+Composition Commit 只重试 Pending 激活。若该值先离开组合，则会被 Abandon，而不是 Forgotten。
 
 同步 Remember 生命周期与 `SideEffect` 失败会保留原始 Throwable，并附加有界 Suppressed
 Metadata，其中包含 Effect Kind、Operation、结构 Scope、Slot 和不持有原 Key 对象的摘要。
@@ -44,17 +45,19 @@ Metadata，其中包含 Effect Kind、Operation、结构 Scope、Slot 和不持�
 | 把成对工作绑定到 Android Started/Resumed 状态 | Lifecycle 集成 Effect | Lifecycle State 与 Composition 存在性 |
 
 `DisposableEffect` Setup 返回 `onDispose { ... }`，且至少需要一个 Key。每次成功 Setup 都会收到
-一个终止 Cleanup。替换 Setup 前先运行 Cleanup。Setup 抛出异常时不存在 Cleanup；Cleanup 抛出
-异常后也不会再次调用。
+一个终止 Cleanup。替换 Setup 前先运行 Cleanup。Setup 抛出异常时不存在 Cleanup，后续
+Composition Commit 可以重试，因此 Setup 必须可安全重试；Cleanup 抛出异常后不会再次调用。
 
 `LaunchedEffect` 用于因进入一个声明式身份而产生的工作。事件处理器应通过 Remember Scope 启动
 工作，不要只是为了重启工作而把事件值塞进 Key。
 
 ## Key 与结构身份
 
-Key 使用结构相等性比较。它们决定一个位置 Effect 是被保留还是替换，并不会让无关调用点获得
-全局唯一身份。ViewCompose 没有 Compose Compiler 来生成调用点 Group。重复、条件插入或重排
-Effect 的代码必须在结构边界使用稳定 `key(...)` Group。Lazy 容器还要求自己的稳定 Item Key。
+Key 使用结构相等性比较。它们决定 Effect Scope 是在 Sibling 之间保留、移动还是替换，并不会让
+无关调用点获得全局唯一身份。ViewCompose 没有 Compose Compiler 来生成调用点 Group。重复、
+条件插入或重排 Effect 的代码必须在结构边界使用稳定 `key(...)` Group。同一 Parent 下重复的有效
+Key/Signature 会在 Scope 串用状态前失败。Lazy 容器还要求自己的稳定 Item Key 与 Item Session
+契约。
 
 无 Key 的 `SideEffect` 有意采用不同语义：每次成功调用后都会执行。只需在变化时同步发布，应
 使用带 Key 重载。
@@ -123,7 +126,7 @@ Observation。它会发出初始 Query 结果，在读取依赖变化后重新�
 - 自动调用点身份与 Changed Flag；
 - 稳定性推断与 Smart Skipping；
 - 对 Composable 和非 Composable 调用的编译期限制；
-- 任意兄弟重排的完整 Movable Group 语义；以及
+- 超出显式 Keyed Sibling Scope 的编译器生成 Movable Group；以及
 - 相同的 Recomposer Apply Dispatcher、Frame Clock、Tooling Metadata 或 Stack Trace。
 
 ViewCompose 在这些边界使用显式 DSL Group、Runtime 校验、稳定 Key 与诊断。迁移时应保留 Effect

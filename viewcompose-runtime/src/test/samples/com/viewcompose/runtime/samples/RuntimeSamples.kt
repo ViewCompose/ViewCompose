@@ -4,6 +4,7 @@ import com.viewcompose.runtime.Snapshot
 import com.viewcompose.runtime.SnapshotApplyResult
 import com.viewcompose.runtime.SnapshotMutationPolicy
 import com.viewcompose.runtime.composition.ComposerLite
+import com.viewcompose.runtime.composition.RememberObserver
 import com.viewcompose.runtime.derivedStateOf
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.runtime.observation.RuntimeObservation
@@ -110,6 +111,57 @@ fun composerLiteSample() {
     composer.commitSideEffects()
     check(committedValues == listOf("Count: 0", "Count: 1"))
 
+    composer.dispose()
+}
+
+fun rememberObserverRetrySample() {
+    val composer = ComposerLite()
+    var attempts = 0
+    val observer = object : RememberObserver {
+        override fun onRemembered() {
+            attempts += 1
+            if (attempts == 1) error("temporary activation failure")
+        }
+
+        override fun onForgotten() = Unit
+
+        override fun onAbandoned() = Unit
+    }
+
+    val firstFailure = runCatching {
+        composer.composeRoot {
+            composer.remember<RememberObserver>(keys = listOf("resource")) { observer }
+        }
+    }.exceptionOrNull()
+    check(firstFailure != null)
+
+    composer.requestRootRecompose()
+    composer.composeRoot {
+        composer.remember<RememberObserver>(keys = listOf("resource")) { observer }
+    }
+    check(attempts == 2)
+    composer.dispose()
+}
+
+fun keyedGroupMovementSample() {
+    val composer = ComposerLite()
+
+    fun compose(order: List<String>): Map<String, Any> {
+        composer.requestRootRecompose()
+        return composer.composeRoot {
+            order.associateWith { itemId ->
+                composer.withKeys(listOf(itemId)) {
+                    composer.runGroup(signature = "item") {
+                        composer.remember(emptyList()) { Any() }
+                    }
+                }
+            }
+        }
+    }
+
+    val initial = compose(listOf("A", "B", "C"))
+    val reordered = compose(listOf("C", "A", "B"))
+    check(initial.all { (key, value) -> reordered.getValue(key) === value })
     composer.dispose()
 }
 

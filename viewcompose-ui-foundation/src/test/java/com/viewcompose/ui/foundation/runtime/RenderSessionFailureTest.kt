@@ -441,6 +441,24 @@ class RenderSessionFailureTest {
     }
 
     @Test
+    fun `disposed session rejects explicit render and activation changes`() {
+        session = createSession(failures = mutableListOf())
+        session.render()
+        session.dispose()
+
+        val renderFailure = runCatching(session::render).exceptionOrNull()
+        val activationFailure = runCatching {
+            session.setRenderingActive(false)
+        }.exceptionOrNull()
+
+        assertTrue(renderFailure is IllegalStateException)
+        assertTrue(renderFailure?.message.orEmpty().contains("disposed"))
+        assertTrue(activationFailure is IllegalStateException)
+        assertTrue(activationFailure?.message.orEmpty().contains("disposed"))
+        session.dispose()
+    }
+
+    @Test
     fun `android view render failure carries operation and node key`() {
         val failures = mutableListOf<RenderFailure>()
         val cause = IllegalStateException("update failed")

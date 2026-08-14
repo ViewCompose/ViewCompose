@@ -47,6 +47,9 @@ session.dispose()
 This low-level entry does not automatically provide Lifecycle, ViewModel, saved state,
 environment, theme, or frame-clock locals. A custom host owns those providers and must dispose the
 session before abandoning its container. One container must have only one mounted-tree owner.
+Disposal is idempotent and terminal: later caller-initiated `render` or `setRenderingActive` calls
+throw `IllegalStateException`. A frame callback already queued inside the Android runtime is
+cancelled or ignored and cannot render after disposal.
 
 `AndroidEnvironmentBridge.fromContext(context)` maps density, font scale, locales, and layout
 direction to `UiEnvironmentValues`. `AndroidOverlayHostDefaults.androidOrNoOp(root)` performs an
@@ -103,15 +106,16 @@ AndroidView(
 - `onReset` opts the node into mounted-tree reuse across lazy keys. It runs only after the old
   logical session, effects, and saveable lease have ended and before the new key binds.
 - `onCommit` runs only after the complete View-tree transaction commits.
-- `onRelease` runs once after committed removal, non-reusable session disposal, or final reuse-cache
-  eviction. Omitting `onReset` prevents that mounted tree from crossing keys.
+- `onRelease` runs once whenever a created View is permanently abandoned: candidate rollback,
+  committed removal, non-reusable session disposal, or final reuse-cache eviction. Omitting
+  `onReset` prevents that mounted tree from crossing keys.
 
 ## Saved state, scheduling, and threading
 
 `viewComposeSaveableStateRegistry(owner)` binds framework saveable state to an Android
 `SavedStateRegistryOwner`. View creation, reconciliation, explicit rendering, and disposal are
 main-thread work. State invalidations coalesce onto the next Choreographer frame, while an explicit
-`RenderSession.render()` remains synchronous.
+`RenderSession.render()` remains synchronous until terminal disposal.
 
 ## Related documentation
 

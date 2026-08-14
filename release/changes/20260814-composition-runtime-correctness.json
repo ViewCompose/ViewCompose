@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "summary": "Harden remember activation recovery, keyed scope identity, render-session terminal behavior, and Fragment View-lifecycle ownership.",
+  "changes": [
+    { "artifact": "viewcompose-runtime", "impact": "fix" },
+    { "artifact": "viewcompose-ui-contract", "impact": "fix" },
+    { "artifact": "viewcompose-ui-foundation", "impact": "breaking" },
+    { "artifact": "viewcompose-host-android", "impact": "breaking" },
+    { "artifact": "viewcompose-lifecycle-androidx", "impact": "fix" },
+    { "artifact": "viewcompose-android", "impact": "breaking" }
+  ],
+  "ignored": []
+}

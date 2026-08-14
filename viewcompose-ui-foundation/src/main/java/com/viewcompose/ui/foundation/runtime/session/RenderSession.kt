@@ -44,6 +44,7 @@ class RenderSession(
     private val overlaySessionId = OverlaySessionId("render-session-${nextSessionId.incrementAndGet()}")
     private val focusManager = platform.focusManagerFactory.create(container)
     private var mountedNodes: List<Any> = emptyList()
+    private var disposalRequested: Boolean = false
     private var disposed: Boolean = false
     private var sourceRegistration: RenderSessionSourceRegistration? = null
     private val overlayRequestStore = OverlayRequestStore()
@@ -120,14 +121,19 @@ class RenderSession(
      * Requests rendering according to the installed runtime policy.
      *
      * The runtime may render synchronously or coalesce the request with a scheduled frame.
+     *
+     * @throws IllegalStateException after [dispose] has been requested
      */
     fun render() {
+        check(!disposalRequested) {
+            "RenderSession is disposed and cannot render again."
+        }
         runtime.render()
     }
 
     /** Builds an initial native tree while retaining the composition commit boundary. */
     internal fun prepareForActivation() {
-        if (disposed || committedFrameId != null || preparedFrame != null) return
+        if (disposalRequested || disposed || committedFrameId != null || preparedFrame != null) return
         awaitingActivation = true
         preparedFrame = prepareFrame()
         if (preparedFrame == null) {
@@ -137,7 +143,7 @@ class RenderSession(
 
     /** Commits a valid prepared tree, or rebuilds when observed state changed before attachment. */
     internal fun activatePrepared() {
-        if (disposed) return
+        if (disposalRequested || disposed) return
         val pending = preparedFrame
         preparedFrame = null
         awaitingActivation = false
@@ -158,8 +164,13 @@ class RenderSession(
      *
      * Pending invalidations are retained while inactive and coalesced when reactivated. Explicit
      * [render] calls remain subject to the runtime's documented behavior.
+     *
+     * @throws IllegalStateException after [dispose] has been requested
      */
     fun setRenderingActive(active: Boolean) {
+        check(!disposalRequested) {
+            "RenderSession is disposed and cannot change rendering activity."
+        }
         runtime.setRenderingActive(active)
         sourceRegistration?.let { registration ->
             runSourceToolingOperation("update source session") {
@@ -175,25 +186,29 @@ class RenderSession(
      * steps from running.
      */
     fun dispose() {
+        if (disposalRequested) return
+        disposalRequested = true
         runtime.dispose()
     }
 
     /** Disposes composition, invokes [releaseOwner], then releases the mounted native tree. */
     internal fun disposeWithLogicalOwnerRelease(releaseOwner: () -> Unit) {
-        if (disposed) {
+        if (disposalRequested || disposed) {
             releaseOwner()
             return
         }
+        disposalRequested = true
         logicalOwnerRelease = releaseOwner
         runtime.dispose()
     }
 
     /** Terminates logical ownership and returns a reset native tree when the renderer permits it. */
     internal fun disposeForReuse(releaseOwner: () -> Unit = {}): ReusableItemPresentation? {
-        if (disposed) {
+        if (disposalRequested || disposed) {
             releaseOwner()
             return null
         }
+        disposalRequested = true
         disposalMode = DisposalMode.DetachForReuse
         logicalOwnerRelease = releaseOwner
         runtime.dispose()
@@ -202,7 +217,10 @@ class RenderSession(
 
     /** Installs a detached physical tree before this session produces its first frame. */
     internal fun adoptReusablePresentation(presentation: ReusableItemPresentation): Boolean {
-        if (disposed || mountedNodes.isNotEmpty() || committedFrameId != null || preparedFrame != null) {
+        if (
+            disposalRequested || disposed || mountedNodes.isNotEmpty() ||
+            committedFrameId != null || preparedFrame != null
+        ) {
             return false
         }
         val reusable = presentation as? CoreReusableItemPresentation ?: return false
@@ -233,7 +251,7 @@ class RenderSession(
      * Renders one synchronous frame; failures attempt to roll back the composition attempt and record recovery state.
      */
     private fun renderNow() {
-        if (disposed) return
+        if (disposalRequested || disposed) return
         preparedFrame?.let { pending ->
             preparedFrame = null
             awaitingActivation = false
@@ -244,7 +262,7 @@ class RenderSession(
 
     /** Prepares composition and the native tree without crossing the commit boundary. */
     private fun prepareFrame(): PreparedRenderFrame? {
-        if (disposed) return null
+        if (disposalRequested || disposed) return null
         val frameId = nextFrameId.incrementAndGet()
         val frameFailures = mutableListOf<RenderFailure>()
         var failurePhase = RenderFailurePhase.CompositionPrepare

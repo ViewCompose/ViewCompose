@@ -132,19 +132,17 @@ private class SaveableHolder<T>(
     }
 
     override fun onRemembered() {
-        check(entry == null) {
-            "rememberSaveable holder for key '$key' is already registered."
-        }
-        val nextEntry = registry.registerProvider(key) {
-            val saved = saver.save(value)
-            require(registry.canBeSaved(saved)) {
-                val type = saved?.let { it::class.java.name } ?: "null"
-                "rememberSaveable value for key '$key' cannot be saved: $type. " +
-                    "Provide a Saver that converts it to supported values."
+        if (entry == null) {
+            entry = registry.registerProvider(key) {
+                val saved = saver.save(value)
+                require(registry.canBeSaved(saved)) {
+                    val type = saved?.let { it::class.java.name } ?: "null"
+                    "rememberSaveable value for key '$key' cannot be saved: $type. " +
+                        "Provide a Saver that converts it to supported values."
+                }
+                saved
             }
-            saved
         }
-        entry = nextEntry
         restoredClaim?.commit()
         restoredClaim = null
     }

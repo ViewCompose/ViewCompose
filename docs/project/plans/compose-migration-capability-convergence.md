@@ -5,26 +5,25 @@
 Active after a 2026-08-14 implementation and contract re-audit. The retained plan now owns proven
 ViewCompose correctness and Android-ecosystem compatibility work, not general Compose API parity.
 Diagnostics are supporting test infrastructure only; they are not a product goal or an independent
-delivery phase.
+delivery phase. The Phase 0 evidence and Phase 1-2 runtime/host correctness slice are implemented;
+Phase 3 and later retained Android compatibility work remain independently schedulable.
 
-No production slice or Maven changeset is currently owned by this plan. However, the previous claim
-that no implementation phase had started is obsolete: later work independently added partial
-ordinary keyed-sibling movement, transactional composition effects, `snapshotFlow`, deferred lazy
-session activation, and stronger Android View reuse/release behavior. Those implementations are
-audited below instead of being counted as unfinished work from this plan.
+The first production slice is recorded by
+`release/changes/20260814-composition-runtime-correctness.json`. It adds retry-safe remember and
+saveable activation, complete ordinary keyed-scope movement with duplicate rejection, fail-fast
+public session termination, and Fragment View-lifecycle ownership. Earlier independent work added
+transactional composition effects, `snapshotFlow`, deferred lazy session activation, and stronger
+Android View reuse/release behavior.
 
 Last verified: 2026-08-14.
 
-Next action: schedule the Phase 0 focused reproductions, then implement the Phase 1 runtime
-transaction and key-identity hardening slice. Do not begin a convenience API or conditional
-protocol while a retained P0 correctness defect remains open.
+Next action: schedule Phase 3 navigation owner compatibility after the higher-priority Runtime/Patch
+correctness and benchmark-Demo work has established its new baseline. Do not begin a convenience
+API or conditional protocol while a retained correctness defect remains open.
 
 ## Maven release changesets
 
-- None.
-
-The first production slice selected from this plan must add and list its immutable
-`release/changes/*.json` file before implementation is considered complete.
+- `release/changes/20260814-composition-runtime-correctness.json`
 
 ## Objective
 
@@ -143,7 +142,7 @@ must fail before state can alias. A partial identity move is not an acceptable o
 Logical start/end APIs are additive. Existing left/right padding, margin, offset, and inset calls
 must never silently change meaning under RTL.
 
-## Phase 0: Focused reproductions and contract freeze
+## Phase 0: Focused reproductions and contract freeze — completed 2026-08-14
 
 Phase 0 is a test-first gate, not a diagnostics feature phase. Add the smallest executable evidence
 for:
@@ -172,7 +171,7 @@ Phase 0 completes when every current behavior is reproduced, the intended contra
 and the first production changeset is registered. No broad logging or inspector dependency is
 allowed.
 
-## Phase 1: Runtime transaction and key-identity hardening
+## Phase 1: Runtime transaction and key-identity hardening — completed 2026-08-14
 
 ### Commit-callback recovery
 
@@ -206,7 +205,7 @@ If any invariant cannot be made reliable, revert ordinary movement, keep the tes
 `key` KDoc to positional isolation. Lazy item identity remains owned by the collection Session
 architecture and is not reverted with ordinary composition movement.
 
-## Phase 2: Host lifecycle and terminal ownership
+## Phase 2: Host lifecycle and terminal ownership — completed 2026-08-14
 
 ### Fragment View lifecycle
 

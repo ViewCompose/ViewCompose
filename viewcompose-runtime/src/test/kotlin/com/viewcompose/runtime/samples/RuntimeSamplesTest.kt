@@ -11,5 +11,7 @@ class RuntimeSamplesTest {
         snapshotMutationPolicySample()
         runtimeObservationSample()
         composerLiteSample()
+        rememberObserverRetrySample()
+        keyedGroupMovementSample()
     }
 }

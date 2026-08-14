@@ -552,6 +552,97 @@ class ComposerLiteTest {
     }
 
     @Test
+    fun `failed remember activation retries while successful siblings stay active`() {
+        val composer = ComposerLite()
+        var failingAttempts = 0
+        var successfulAttempts = 0
+        var failingForgotten = 0
+        var failingAbandoned = 0
+
+        val failing = object : RememberObserver {
+            override fun onRemembered() {
+                failingAttempts += 1
+                if (failingAttempts == 1) {
+                    error("transient activation failure")
+                }
+            }
+
+            override fun onForgotten() {
+                failingForgotten += 1
+            }
+
+            override fun onAbandoned() {
+                failingAbandoned += 1
+            }
+        }
+        val successful = object : RememberObserver {
+            override fun onRemembered() {
+                successfulAttempts += 1
+            }
+
+            override fun onForgotten() = Unit
+
+            override fun onAbandoned() = Unit
+        }
+
+        fun commit(): Throwable? {
+            composer.requestRootRecompose()
+            return runCatching {
+                composer.composeRoot {
+                    composer.remember<RememberObserver>(keys = listOf("failing")) { failing }
+                    composer.remember<RememberObserver>(keys = listOf("successful")) { successful }
+                }
+            }.exceptionOrNull()
+        }
+
+        assertTrue(commit() is IllegalStateException)
+        assertEquals(1, failingAttempts)
+        assertEquals(1, successfulAttempts)
+
+        assertTrue(commit() == null)
+        assertEquals(2, failingAttempts)
+        assertEquals(1, successfulAttempts)
+
+        composer.dispose()
+        assertEquals(1, failingForgotten)
+        assertEquals(0, failingAbandoned)
+    }
+
+    @Test
+    fun `disposing a never activated remembered value abandons it`() {
+        val composer = ComposerLite()
+        var remembered = 0
+        var forgotten = 0
+        var abandoned = 0
+        val observer = object : RememberObserver {
+            override fun onRemembered() {
+                remembered += 1
+                error("activation failed")
+            }
+
+            override fun onForgotten() {
+                forgotten += 1
+            }
+
+            override fun onAbandoned() {
+                abandoned += 1
+            }
+        }
+
+        val error = runCatching {
+            composer.composeRoot {
+                composer.remember<RememberObserver>(keys = listOf("pending")) { observer }
+            }
+        }.exceptionOrNull()
+        composer.dispose()
+
+        assertTrue(error is IllegalStateException)
+        assertEquals(1, remembered)
+        assertEquals(0, forgotten)
+        assertEquals(1, abandoned)
+    }
+
+    @Test
     fun `remember updated state isolates candidate value until commit`() {
         val composer = ComposerLite()
         var input = "committed"
@@ -1009,6 +1100,139 @@ class ComposerLiteTest {
         assertSame(first.getValue("A"), retained.getValue("A"))
         assertSame(first.getValue("B"), retained.getValue("B"))
         assertSame(first.getValue("C"), retained.getValue("C"))
+    }
+
+    @Test
+    fun `duplicate effective keyed siblings fail without saveable state`() {
+        val composer = ComposerLite()
+
+        val failure = runCatching {
+            composer.composeRoot {
+                repeat(2) {
+                    composer.withKeys(listOf("duplicate")) {
+                        composer.runGroup(signature = "item") { Any() }
+                    }
+                }
+            }
+        }.exceptionOrNull()
+
+        assertTrue(failure is IllegalArgumentException)
+        assertTrue(failure?.message.orEmpty().contains("Duplicate effective keyed group identity"))
+        composer.dispose()
+    }
+
+    @Test
+    fun `keyed insertion deletion and reversal preserve identity with balanced lifecycle`() {
+        val composer = ComposerLite()
+        val events = mutableListOf<String>()
+
+        fun compose(order: List<String>): Map<String, Any> {
+            composer.requestRootRecompose()
+            return composer.composeRoot {
+                order.associateWith { key ->
+                    composer.withKeys(listOf(key)) {
+                        composer.runGroup(signature = "item") {
+                            composer.remember<RememberObserver>(emptyList()) {
+                                object : RememberObserver {
+                                    override fun onRemembered() {
+                                        events += "remember:$key"
+                                    }
+
+                                    override fun onForgotten() {
+                                        events += "forget:$key"
+                                    }
+
+                                    override fun onAbandoned() {
+                                        events += "abandon:$key"
+                                    }
+                                }
+                            }
+                            composer.remember(emptyList()) { Any() }
+                        }
+                    }
+                }
+            }
+        }
+
+        val initial = compose(listOf("A", "B", "C"))
+        val reversed = compose(listOf("C", "B", "A"))
+        assertSame(initial.getValue("A"), reversed.getValue("A"))
+        assertSame(initial.getValue("B"), reversed.getValue("B"))
+        assertSame(initial.getValue("C"), reversed.getValue("C"))
+
+        val changed = compose(listOf("D", "C", "A"))
+        assertSame(initial.getValue("A"), changed.getValue("A"))
+        assertSame(initial.getValue("C"), changed.getValue("C"))
+        assertEquals(1, events.count { it == "remember:D" })
+        assertEquals(1, events.count { it == "forget:B" })
+        assertTrue(events.none { it.startsWith("abandon:") })
+
+        composer.dispose()
+        assertEquals(1, events.count { it == "forget:A" })
+        assertEquals(1, events.count { it == "forget:C" })
+        assertEquals(1, events.count { it == "forget:D" })
+    }
+
+    @Test
+    fun `state observation ownership follows keyed scope movement`() {
+        val composer = ComposerLite()
+        val states = listOf("A", "B", "C").associateWith { mutableStateOf(0) }
+        val runs = mutableMapOf<String, Int>()
+
+        fun compose(order: List<String>): Map<String, Int> {
+            return composer.composeRoot {
+                order.associateWith { key ->
+                    composer.withKeys(listOf(key)) {
+                        composer.runGroup(signature = "item") {
+                            runs[key] = runs.getOrDefault(key, 0) + 1
+                            states.getValue(key).value
+                        }
+                    }
+                }
+            }
+        }
+
+        assertEquals(mapOf("A" to 0, "B" to 0, "C" to 0), compose(listOf("A", "B", "C")))
+        states.getValue("B").value = 1
+        assertEquals(mapOf("C" to 0, "B" to 1, "A" to 0), compose(listOf("C", "B", "A")))
+        assertEquals(mapOf("A" to 1, "B" to 2, "C" to 1), runs)
+        composer.dispose()
+    }
+
+    @Test
+    fun `aborted keyed reorder restores structure and invalidation ownership`() {
+        val composer = ComposerLite()
+        val states = listOf("A", "B", "C").associateWith { mutableStateOf(0) }
+        val tokens = mutableMapOf<String, Any>()
+        val runs = mutableMapOf<String, Int>()
+
+        fun content(order: List<String>): Map<String, Pair<Any, Int>> {
+            return order.associateWith { key ->
+                composer.withKeys(listOf(key)) {
+                    composer.runGroup(signature = "item") {
+                        runs[key] = runs.getOrDefault(key, 0) + 1
+                        val token = composer.remember(emptyList()) { Any() }
+                        tokens.putIfAbsent(key, token)
+                        token to states.getValue(key).value
+                    }
+                }
+            }
+        }
+
+        val initial = composer.composeRoot { content(listOf("A", "B", "C")) }
+        states.getValue("B").value = 1
+        val prepared = composer.prepareRoot { content(listOf("C", "B", "A")) }
+        assertSame(initial.getValue("A").first, prepared.value.getValue("A").first)
+        assertEquals(1, prepared.value.getValue("B").second)
+        prepared.abort()
+
+        assertTrue(composer.hasPendingInvalidations())
+        val committed = composer.composeRoot { content(listOf("A", "B", "C")) }
+        assertSame(initial.getValue("A").first, committed.getValue("A").first)
+        assertSame(initial.getValue("B").first, committed.getValue("B").first)
+        assertSame(initial.getValue("C").first, committed.getValue("C").first)
+        assertEquals(mapOf("A" to 1, "B" to 3, "C" to 1), runs)
+        composer.dispose()
     }
 
     @Test

@@ -78,6 +78,30 @@ class AndroidFrameAlignedRenderSessionRuntimeTest {
         assertEquals(0, clock.postCount)
     }
 
+    @Test
+    fun `disposal cancels queued callbacks and internal requests become no ops`() {
+        val clock = FakeFrameClock()
+        var renders = 0
+        var disposals = 0
+        val runtime = AndroidFrameAlignedRenderSessionRuntime(
+            onRenderNow = { renders += 1 },
+            onDisposeNow = { disposals += 1 },
+            frameClock = clock,
+        )
+
+        runtime.requestRender()
+        runtime.dispose()
+        runtime.requestRender()
+        runtime.render()
+        runtime.setRenderingActive(false)
+        clock.fireFrame()
+        runtime.dispose()
+
+        assertEquals(0, renders)
+        assertEquals(1, disposals)
+        assertEquals(1, clock.removeCount)
+    }
+
     private class FakeFrameClock : RenderFrameClock {
         var postCount: Int = 0
         var removeCount: Int = 0

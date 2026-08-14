@@ -200,20 +200,22 @@ class LifecycleEffectsTest {
     }
 
     @Test
-    fun `setup failure during initial active commit is detached and not retried`() {
+    fun `setup failure during initial active commit retries on the next commit`() {
         val harness = WidgetCoreRuntimeHarness()
         val owner = TestLifecycleOwner()
         var attempts = 0
-        var key = 1
+        var failSetup = true
 
         owner.handle(Lifecycle.Event.ON_CREATE)
         owner.handle(Lifecycle.Event.ON_START)
         fun render(): Throwable? = runCatching {
             harness.renderTree {
-                val current = key
-                LifecycleStartEffect(current, lifecycleOwner = owner) {
+                LifecycleStartEffect(Unit, lifecycleOwner = owner) {
                     attempts += 1
-                    if (current == 1) error("setup failed")
+                    if (failSetup) {
+                        failSetup = false
+                        error("setup failed")
+                    }
                     onStopOrDispose {}
                 }
             }
@@ -221,10 +223,6 @@ class LifecycleEffectsTest {
 
         assertTrue(render() is IllegalStateException)
         assertEquals(1, attempts)
-        assertNull(render())
-        assertEquals(1, attempts)
-
-        key = 2
         assertNull(render())
         assertEquals(2, attempts)
         harness.dispose()

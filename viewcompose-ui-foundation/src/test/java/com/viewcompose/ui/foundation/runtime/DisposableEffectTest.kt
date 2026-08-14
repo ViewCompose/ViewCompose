@@ -195,17 +195,21 @@ class DisposableEffectTest {
     }
 
     @Test
-    fun `setup failure stays inactive and is not retried for an equal key`() {
+    fun `setup failure stays pending and retries for an equal key`() {
         val harness = ComposerRuntimeHarness()
         val events = mutableListOf<String>()
         var key = 1
+        var failSetup = true
 
         fun render() {
             harness.render {
                 val current = key
                 DisposableEffect(current) {
                     events += "start:$current"
-                    if (current == 1) error("setup failed")
+                    if (failSetup) {
+                        failSetup = false
+                        error("setup failed")
+                    }
                     onDispose {
                         events += "dispose:$current"
                     }
@@ -217,12 +221,15 @@ class DisposableEffectTest {
         assertTrue(firstError is IllegalStateException)
 
         render()
-        assertEquals(listOf("start:1"), events)
+        assertEquals(listOf("start:1", "start:1"), events)
 
         key = 2
         render()
         harness.dispose()
-        assertEquals(listOf("start:1", "start:2", "dispose:2"), events)
+        assertEquals(
+            listOf("start:1", "start:1", "dispose:1", "start:2", "dispose:2"),
+            events,
+        )
     }
 
     @Test

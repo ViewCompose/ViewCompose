@@ -80,9 +80,11 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   failure release it; the calculation is side-effect-free and may run more often than it emits.
 - `ComposerLite` and derived-state instances are intended for thread-confined use. Hosts serialize
   composition, prepared commit/abort, effect delivery, and disposal.
-- Remembered lifecycle objects are pending until prepared commit, active after `onRemembered`, and
-  terminal after exactly one `onForgotten` or `onAbandoned` callback. Abort cannot retire a
-  previously committed object or activate a candidate replacement.
+- Remembered lifecycle objects remain pending until `onRemembered` returns successfully. A throwing
+  activation is retried by a later successful composition commit without reactivating successful
+  siblings. Removal before activation invokes `onAbandoned`; an active value terminates through
+  exactly one `onForgotten`. Abort cannot retire a previously committed object or activate a
+  candidate replacement.
 - `ComposerLite.composeRoot` commits runtime state but does not execute one-shot side effects. The
   host calls `commitSideEffects` only after the corresponding rendered tree and remember lifecycle
   transaction have committed successfully.
@@ -94,6 +96,9 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   changing physical holders never changes the derived logical owner. Unequal active keyed groups
   that produce the same structural-path hash fail before saveable provider registration instead of
   sharing restoration state; custom saveable keys therefore require stable, collision-free hashes.
+- Explicitly keyed sibling groups may move without losing their complete scope identity, including
+  remember slots, observations, children, and saveable paths. Duplicate effective key/signature
+  pairs under one parent fail the composition attempt before either logical item can alias state.
 - Callback failures keep their original throwable and append bounded effect kind, operation,
   structural scope, slot, and non-retaining key metadata. Hosts may opt into a non-negative
   synchronous callback warning threshold through the `ComposerLite` constructor.
@@ -125,4 +130,5 @@ This release adds `snapshotFlow`, exposing Kotlin Coroutines as an API dependenc
 alpha `ComposerLite.disposableEffect` slot API. Custom composition integrations migrate owned work
 to a remembered `RememberObserver`; application UI uses the effect APIs from
 `viewcompose-ui-foundation`. Prepared composition now enforces owner-thread, terminal-disposal, and
-callback re-entry boundaries.
+callback re-entry boundaries. Remember activation failures are retryable, and explicit keyed
+siblings move as complete scopes while duplicate effective identities fail fast.

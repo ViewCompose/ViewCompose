@@ -166,7 +166,8 @@ effects are disposed.
   it only to independently rendered containers; tooling may skip `Content` sessions to keep page
   navigation precise and source-capture overhead bounded.
 - `AndroidViewNodeProps.update` and `onReset` are replay-safe transaction callbacks. External
-  one-shot work belongs in `onCommit`; resource cleanup belongs in `onRelease`.
+  one-shot work belongs in `onCommit`; resource cleanup belongs in `onRelease`. Release is one-shot
+  permanent-abandonment cleanup and also covers an uncommitted rollback candidate.
 - A mounted tree containing `AndroidView` may cross logical keys only when every interop node
   declares `onReset`. The renderer calls reset after old-session disposal and before new-key bind;
   final cache eviction calls `onRelease` exactly once.

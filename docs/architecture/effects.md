@@ -18,7 +18,9 @@ renderer makes that tree authoritative, the runtime commits remembered values an
 An error before the native tree commits aborts the candidate. Candidate effects never start and the
 previous committed effects remain active. An error in the list above occurs after the frame became
 authoritative. It is reported as a committed-frame failure, every independent synchronous operation
-is still attempted, and later rendering can continue.
+is still attempted, and later rendering can continue. A remembered value whose `onRemembered`
+throws remains pending: a later successful composition commit retries only pending activations. If
+the value leaves first, it is abandoned rather than forgotten.
 
 Synchronous remember-lifecycle and `SideEffect` failures keep the original throwable and add
 bounded suppressed metadata containing effect kind, operation, structural scope, slot, and a
@@ -41,18 +43,20 @@ no timing work.
 
 `DisposableEffect` setup returns `onDispose { ... }` and requires at least one key. Each successful
 setup receives one terminal cleanup. Cleanup runs before a replacement setup. If setup throws, no
-cleanup exists; if cleanup throws, it is not invoked a second time.
+cleanup exists and a later composition commit may retry setup; the setup must be retry-safe. If
+cleanup throws, it is not invoked a second time.
 
 `LaunchedEffect` is for work caused by entering a declarative identity. Event handlers should launch
 through a remembered scope instead of moving event values into a key merely to restart work.
 
 ## Keys and structural identity
 
-Keys compare with structural equality. They decide whether one positional effect is retained or
-replaced; they do not make unrelated call sites globally unique. ViewCompose has no Compose compiler
-to generate call-site groups. Code that repeats, conditionally inserts, or reorders effects must use
-stable `key(...)` groups at the structural boundary. Lazy containers additionally require their own
-stable item keys.
+Keys compare with structural equality. They decide whether one effect scope is retained, moved
+among its siblings, or replaced; they do not make unrelated call sites globally unique. ViewCompose
+has no Compose compiler to generate call-site groups. Code that repeats, conditionally inserts, or
+reorders effects must use stable `key(...)` groups at the structural boundary. Duplicate effective
+key/signature pairs under one parent fail before either scope can alias state. Lazy containers
+additionally require their own stable item keys and item-session contract.
 
 Unkeyed `SideEffect` is intentionally different: it runs after every successful invocation. Use a
 keyed overload for change-only synchronous publication.
@@ -129,7 +133,7 @@ and are not implied by similar API names:
 - automatic call-site identity and changed flags;
 - stability inference and smart skipping;
 - compile-time restrictions on composable and non-composable calls;
-- full movable-group semantics for arbitrary sibling reordering; and
+- compiler-generated movable groups beyond explicit keyed sibling scopes; and
 - identical recomposer apply dispatchers, frame clocks, tooling metadata, or stack traces.
 
 ViewCompose uses explicit DSL groups, runtime validation, stable keys, and diagnostics at those

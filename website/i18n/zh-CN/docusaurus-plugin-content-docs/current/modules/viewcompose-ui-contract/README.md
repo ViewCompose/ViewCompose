@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 6c444f5d88045f734bf36a00c980b0934bf78fdea6019dcc3aef608c0757e7a0
+translation_source_hash: 5b7db91ad253796892958b32782ff25abfa241cab4d3f996d85c7628032d6712
 translation_status: current
 ---
 
@@ -147,7 +147,8 @@ val gap = VNode(
 - `UiSourceSessionRole` 没有渲染或应用状态语义。Host 与 Renderer 只为独立渲染的容器分配它；
   工具可以跳过 `Content` Session，让页面导航保持准确并限制源码捕获开销。
 - `AndroidViewNodeProps.update` 与 `onReset` 是可重放的事务回调。一次性外部动作应放在
-  `onCommit`，资源清理应放在 `onRelease`。
+  `onCommit`，资源清理应放在 `onRelease`。Release 是一次性的永久放弃清理，也覆盖未提交的
+  回滚候选节点。
 - 包含 `AndroidView` 的 Mounted Tree 只有在每个互操作节点都声明 `onReset` 时才能跨逻辑 Key。
   Renderer 在旧 Session Dispose 后、新 Key Bind 前调用 Reset；最终缓存淘汰恰好调用一次
   `onRelease`。

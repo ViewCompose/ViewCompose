@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: fe02d0b088c1544e0a6887a45ec1ce146e7e21aac8dc70c79d2261d4a249f202
+translation_source_hash: ab0d6121f7c21946abe176625f60996b8953f4c0f33b54800733ffc07aa69ec4
 translation_status: current
 ---
 
@@ -148,12 +148,8 @@ Kotlin `2.0.21`，声明位置是
 
 在源码文档、实现和可执行证据就以下问题达成一致前，不要提高能力状态：
 
-- Fragment 内容当前收到 Fragment lifecycle owner，而销毁跟随 Fragment view lifecycle。
-- 一些 `renderInto` 销毁后操作会静默忽略，但公开文字描述为快速失败。
-- Android View 回滚会释放未提交候选，而当前公开 `onRelease` 文字只列出已提交移除和
-  session 销毁。
 - 导航指南与深链测试对额外未注册 query key 的行为存在冲突。
-- 相等结果与嵌套派生状态、只读快照嵌套、普通 keyed 兄弟节点重排需要专项回归覆盖。
+- 相等结果与嵌套派生状态以及只读快照嵌套需要专项回归覆盖。
 - 重复 size/padding、嵌套 inset 消费和 native-view 回调身份需要更广的可执行覆盖。
 - Lifecycle `2.11.0` 任意 UI 作用域和完整 parent factory/`CreationExtras` 继承没有
   ViewCompose 等价证据。

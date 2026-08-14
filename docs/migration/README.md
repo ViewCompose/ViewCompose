@@ -155,15 +155,9 @@ guide](../guides/navigation.md).
 Do not strengthen a capability label until source documentation, implementation, and executable
 evidence agree on these points:
 
-- Fragment content currently receives the Fragment lifecycle owner while disposal follows the
-  Fragment view lifecycle.
-- Some `renderInto` post-disposal operations no-op although public wording describes fail-fast
-  behavior.
-- Android View rollback releases an uncommitted candidate even though current public `onRelease`
-  wording names only committed removal and session disposal.
 - The navigation guide and deep-link tests disagree about additional unregistered query keys.
-- Equal-result and nested derived state, read-only snapshot nesting, and ordinary keyed-sibling
-  reorder need focused regression coverage.
+- Equal-result and nested derived state plus read-only snapshot nesting need focused regression
+  coverage.
 - Repeated size/padding rules, nested inset consumption, and native-view callback identity need
   broader executable coverage.
 - Lifecycle `2.11.0` arbitrary UI scopes and complete parent factory/`CreationExtras` inheritance

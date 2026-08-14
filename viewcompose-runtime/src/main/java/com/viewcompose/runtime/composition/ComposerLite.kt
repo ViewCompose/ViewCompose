@@ -43,6 +43,7 @@ class ComposerLite(
     private val keyStack = mutableListOf<Any?>()
     private val warningKeys = HashSet<String>()
     private val pendingSideEffects = mutableListOf<PendingSideEffect>()
+    private val pendingRememberActivations = LinkedHashSet<RecomposeScope.RememberLifecycle>()
     private var currentScope: RecomposeScope = slotTable.root
     private var composing: Boolean = false
     private var activeAttempt: CompositionAttempt? = null
@@ -214,11 +215,13 @@ class ComposerLite(
     /**
      * Runs or reuses one positional group in the current composition scope.
      *
-     * [signature] and the active [withKeys] stack identify the group at its sibling position. A
-     * mismatch replaces that group and all following siblings at the drift point. Equal [inputs]
-     * permit reuse while the scope is clean; changed inputs mark the scope dirty. When the body does
-     * run, [reuseResult] may retain the previous result identity after comparing it with the newly
-     * calculated value.
+     * [signature] and the active [withKeys] stack identify the group at its sibling position. Keyed
+     * groups may move among siblings without losing their scope identity. Their effective identity
+     * MUST be unique among siblings in one composition pass; duplicates fail the attempt before any
+     * scope can alias another logical item. An unkeyed mismatch replaces that group and all following
+     * siblings at the drift point. Equal [inputs] permit reuse while the scope is clean; changed
+     * inputs mark the scope dirty. When the body does run, [reuseResult] may retain the previous
+     * result identity after comparing it with the newly calculated value.
      *
      * @param T type of value cached for the group
      * @param signature stable structural identity at the current sibling position
@@ -226,8 +229,11 @@ class ComposerLite(
      * @param reuseResult optional predicate returning `true` to retain the previous result instance
      * @param block group body, receiving the opaque scope owned by this composer
      * @return the cached, newly calculated, or explicitly reused group result
-     * @throws IllegalStateException when called outside the actively executing composition block
-     * or from a thread other than the composer's owner
+     * @sample com.viewcompose.runtime.samples.keyedGroupMovementSample
+     * @throws IllegalArgumentException when the effective keyed identity duplicates an earlier
+     * sibling in the same pass
+     * @throws IllegalStateException when called outside the actively executing composition block or
+     * from a thread other than the composer's owner
      */
     fun <T> runGroup(
         signature: Any,
@@ -238,6 +244,13 @@ class ComposerLite(
         val attempt = currentAttempt()
         val parent = currentScope
         val index = parent.childCursor++
+        val normalizedSignature = newGroupSignature(signature)
+        if (keyStack.isNotEmpty()) {
+            require(parent.children.take(index).none { it.signature == normalizedSignature }) {
+                "Duplicate effective keyed group identity among siblings. " +
+                    "Each withKeys namespace and group signature pair must be unique."
+            }
+        }
         val existing = parent.children.getOrNull(index)
         val movableIndex = if (existing != null && keyStack.isNotEmpty()) {
             (index + 1 until parent.children.size).firstOrNull { candidateIndex ->
@@ -251,7 +264,6 @@ class ComposerLite(
         }
         val scope = when {
             existing == null -> {
-                val normalizedSignature = newGroupSignature(signature)
                 RecomposeScope(
                     signature = normalizedSignature,
                     parent = parent,
@@ -289,7 +301,6 @@ class ComposerLite(
             }
 
             keyStack.isNotEmpty() -> {
-                val normalizedSignature = newGroupSignature(signature)
                 RecomposeScope(
                     signature = normalizedSignature,
                     parent = parent,
@@ -315,7 +326,6 @@ class ComposerLite(
                 while (parent.children.size > index) {
                     parent.children.removeAt(parent.children.lastIndex)
                 }
-                val normalizedSignature = newGroupSignature(signature)
                 RecomposeScope(
                     signature = normalizedSignature,
                     parent = parent,
@@ -619,6 +629,7 @@ class ComposerLite(
         } finally {
             dispatchingCallbacks = false
         }
+        pendingRememberActivations.clear()
         failures.firstOrNull()?.let { first ->
             failures.drop(1).forEach(first::addSuppressed)
             throw first
@@ -768,6 +779,15 @@ class ComposerLite(
             }
         }
 
+        fun activate(lifecycle: RecomposeScope.RememberLifecycle) {
+            cleanup(lifecycle::activate)
+            if (lifecycle.isPending) {
+                pendingRememberActivations += lifecycle
+            } else {
+                pendingRememberActivations -= lifecycle
+            }
+        }
+
         attempt.pendingStateUpdates.forEach { update ->
             cleanup {
                 update.commit(attempt)
@@ -796,19 +816,22 @@ class ComposerLite(
             cleanup(scope::disposeRecursively)
         }
 
+        pendingRememberActivations.removeAll(RecomposeScope.RememberLifecycle::isTerminal)
+        pendingRememberActivations.toList().forEach(::activate)
+
         // Only values that remain attached after all outgoing cleanup are allowed to enter.
         attempt.checkpoints.forEach { (scope, checkpoint) ->
             if (scope !in attachedScopes) return@forEach
             scope.rememberSlots.forEachIndexed { index, currentSlot ->
                 val previousSlot = checkpoint.rememberSlots.getOrNull(index)
                 if (currentSlot !== previousSlot) {
-                    cleanup(currentSlot.lifecycle::activate)
+                    activate(currentSlot.lifecycle)
                 }
             }
         }
         attachedNewScopes.forEach { scope ->
             scope.rememberSlots.forEach { slot ->
-                cleanup(slot.lifecycle::activate)
+                activate(slot.lifecycle)
             }
         }
 

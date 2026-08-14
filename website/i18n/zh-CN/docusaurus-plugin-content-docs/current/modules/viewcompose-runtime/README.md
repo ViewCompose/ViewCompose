@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-runtime/README.md
-translation_source_hash: 83f6a48bd434a63bcec951b3e3f3222e4d1e6eaa1f6295f44fbefb4f726fa79d
+translation_source_hash: 644869b2deb959f2435eae2abe5092b7709f5eb4d73171254091eb323d440126
 translation_status: current
 ---
 
@@ -81,8 +81,9 @@ Snapshot.withMutableSnapshot {
   副作用，并且运行次数可能多于发出值的次数。
 - `ComposerLite` 与派生状态实例按线程封闭设计。宿主负责串行化组合、prepared
   commit/abort、effect 投递和释放。
-- Remembered 生命周期对象在 Prepared Commit 前处于 Pending，`onRemembered` 后处于 Active，
-  并在恰好一次 `onForgotten` 或 `onAbandoned` 后进入 Terminal。Abort 不会终止已提交对象，也
+- Remembered 生命周期对象会保持 Pending，直到 `onRemembered` 成功返回。激活抛错后，后续
+  成功的 Composition Commit 会重试它，但不会再次激活已成功的兄弟对象。激活前移除会调用
+  `onAbandoned`；Active 值则通过恰好一次 `onForgotten` 终止。Abort 不会终止已提交对象，也
   不会激活候选替换对象。
 - `ComposerLite.composeRoot` 会提交 Runtime State，但不会执行一次性 Side Effect。宿主只有在
   对应渲染树与 Remember 生命周期事务都提交成功后，才调用 `commitSideEffects`。
@@ -93,6 +94,9 @@ Snapshot.withMutableSnapshot {
   状态，因此不同逻辑条目中相同的应用 Key 不会共享状态，物理 Holder 变化也不会改变逻辑所有者。
   若两个不相等的活跃 Keyed Group 产生相同结构路径 Hash，Runtime 会在注册 Saveable Provider
   前失败，而不会共享恢复状态；因此自定义 Saveable Key 必须提供稳定且无碰撞的 Hash。
+- 显式 Keyed Sibling Group 可以移动，同时完整保留 Scope Identity，包括 Remember Slot、
+  Observation、Child 与 Saveable Path。同一 Parent 下重复的有效 Key/Signature 会让组合尝试
+  失败，防止两个逻辑条目共享状态。
 - Callback 失败会保留原始 Throwable，并附加有界 Effect Kind、Operation、结构 Scope、Slot
   与不持有 Key 对象的 Metadata。Host 可以通过 `ComposerLite` 构造参数选择非负的同步 Callback
   警告阈值。
@@ -120,4 +124,5 @@ Android 应用通常通过 `viewcompose-ui-foundation` 或 `viewcompose-host-and
 本版本新增 `snapshotFlow`，并因此把 Kotlin Coroutines 暴露为 API 依赖；同时移除 Alpha 阶段的
 `ComposerLite.disposableEffect` Slot API。自定义组合集成应把所有权工作迁移到 Remembered
 `RememberObserver`，应用 UI 则使用 `viewcompose-ui-foundation` 的 Effect API。Prepared
-Composition 现在强制执行 Owner Thread、终态释放与 Callback Re-entry 边界。
+Composition 现在强制执行 Owner Thread、终态释放与 Callback Re-entry 边界。Remember 激活失败
+可重试；显式 Keyed Sibling 会作为完整 Scope 移动，重复有效身份则快速失败。

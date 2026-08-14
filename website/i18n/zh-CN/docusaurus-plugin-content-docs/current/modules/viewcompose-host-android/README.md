@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: 42f1e7bbc88a8ee77eb521ddccd6dc6ad7380e65e346d0a7427674e96fa577c5
+translation_source_hash: 6eb5cba3a803cf912e860c1d8bdd1e327d1fc3b3c1bbb56e1514d7fa90c07b4b
 translation_status: current
 ---
 
@@ -49,6 +49,8 @@ session.dispose()
 该底层入口不会自动提供 Lifecycle、ViewModel、saved state、environment、theme 或 frame-clock
 Local。自定义宿主必须自行管理这些 Provider，并在放弃容器前释放会话。一个容器只能有一个
 mounted-tree 所有者。
+Dispose 幂等且为终态：之后由调用方发起的 `render` 或 `setRenderingActive` 会抛出
+`IllegalStateException`。Android Runtime 内已经排队的帧回调会被取消或忽略，无法在释放后渲染。
 
 `AndroidEnvironmentBridge.fromContext(context)` 会把 density、font scale、locale 与 layout
 direction 映射为 `UiEnvironmentValues`。`AndroidOverlayHostDefaults.androidOrNoOp(root)` 执行可选
@@ -100,14 +102,14 @@ AndroidView(
 - `onReset` 允许节点在 Lazy Key 之间复用 Mounted Tree。它只在旧逻辑 Session、Effect 与
   Saveable Lease 全部结束后、新 Key 绑定前运行。
 - `onCommit` 只在整棵 View tree 提交后执行。
-- `onRelease` 在正式移除、不可复用 Session 释放或复用缓存最终淘汰后执行一次。省略 `onReset`
-  会阻止该 Mounted Tree 跨 Key。
+- `onRelease` 在已创建 View 被永久放弃时执行一次，包括候选回滚、正式移除、不可复用 Session
+  释放或复用缓存最终淘汰。省略 `onReset` 会阻止该 Mounted Tree 跨 Key。
 
 ## 状态保存、调度与线程
 
 `viewComposeSaveableStateRegistry(owner)` 把框架可保存状态绑定到 Android
 `SavedStateRegistryOwner`。View 创建、协调、显式渲染与释放属于主线程工作。状态失效会合并到
-下一次 Choreographer 帧，而显式 `RenderSession.render()` 保持同步执行。
+下一次 Choreographer 帧，而显式 `RenderSession.render()` 在终态释放前保持同步执行。
 
 ## 相关文档
 
