@@ -100,26 +100,6 @@ internal fun UiTreeBuilder.GesturePage(
         rotationState.value += rotation
         transformLogState.value = "delta pan=(${panX.roundToInt()}, ${panY.roundToInt()}) delta rot=${"%.2f".format(rotation)}"
     }
-    val swipeCurrentValue = swipeState.currentValue.value
-    val swipeTargetValue = swipeState.targetValue.value
-    val swipeOffsetValue = swipeState.currentOffsetPx.value ?: 0f
-    val swipeVisualOffset = animateFloatAsState(
-        targetValue = when (swipeCurrentValue) {
-            "Left" -> -112f
-            "Right" -> 112f
-            else -> 0f
-        },
-        animationSpec = spring(durationMillis = 280),
-    )
-    val swipeVisualColor = animateColorAsState(
-        targetValue = when (swipeCurrentValue) {
-            "Left" -> 0xFFDBEAFE.toInt()
-            "Right" -> 0xFFD9FBE8.toInt()
-            else -> 0xFFF1F5F9.toInt()
-        },
-        animationSpec = tween(durationMillis = 220),
-    )
-
     val sections = when (selectedPageState.value) {
         0 -> listOf("page", "filter", "tap", "verify")
         1 -> listOf("page", "filter", "drag_swipe", "verify")
@@ -213,6 +193,25 @@ internal fun UiTreeBuilder.GesturePage(
                 title = "Drag / Swipe",
                 subtitle = "draggable 与 anchoredDraggable 在同一页共存，含方向锁、slop 与多锚点 settle。",
             ) {
+                val swipeCurrentValue = swipeState.currentValue.value
+                val swipeTargetValue = swipeState.targetValue.value
+                val swipeOffsetValue = swipeState.currentOffsetPx.value ?: 0f
+                val swipeVisualOffset = animateFloatAsState(
+                    targetValue = when (swipeCurrentValue) {
+                        "Left" -> -112f
+                        "Right" -> 112f
+                        else -> 0f
+                    },
+                    animationSpec = spring(durationMillis = 280),
+                )
+                val swipeVisualColor = animateColorAsState(
+                    targetValue = when (swipeCurrentValue) {
+                        "Left" -> 0xFFDBEAFE.toInt()
+                        "Right" -> 0xFFD9FBE8.toInt()
+                        else -> 0xFFF1F5F9.toInt()
+                    },
+                    animationSpec = tween(durationMillis = 220),
+                )
                 Surface(
                     variant = SurfaceVariant.Variant,
                     modifier = Modifier

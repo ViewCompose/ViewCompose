@@ -99,20 +99,6 @@ internal fun UiTreeBuilder.CollectionPage(
     ) {
         value = if (reversedState.value) "列表顺序: C-B-A" else "列表顺序: A-B-C"
     }
-    val keyedItems = if (reversedState.value) {
-        listOf("C", "B", "A")
-    } else {
-        listOf("A", "B", "C")
-    }.map { id ->
-        DemoListItem(
-            id = id,
-            title = if (alternateLabelsState.value) {
-                "Lazy 项 $id（替代）"
-            } else {
-                "Lazy 项 $id"
-            },
-        )
-    }
     val horizontalItems = (1..10).map { DemoListItem(id = "$it", title = "横向卡片 $it") }
     val gridItems = (1..12).map { DemoListItem(id = "$it", title = "网格项 $it") }
     val pullItems = (1..8).map { DemoListItem(id = "$it", title = "刷新列表项 $it · 刷新 ${refreshCountState.value} 次") }
@@ -245,6 +231,20 @@ internal fun UiTreeBuilder.CollectionPage(
                 title = "LazyColumn",
                 subtitle = "完整布局状态、sticky header、contentType、预取与键控 item 状态。",
             ) {
+                val keyedItems = if (reversedState.value) {
+                    listOf("C", "B", "A")
+                } else {
+                    listOf("A", "B", "C")
+                }.map { id ->
+                    DemoListItem(
+                        id = id,
+                        title = if (alternateLabelsState.value) {
+                            "Lazy 项 $id（替代）"
+                        } else {
+                            "Lazy 项 $id"
+                        },
+                    )
+                }
                 val listState = rememberLazyListState()
                 Text(
                     text = "可见 ${listState.layoutInfo.visibleItemsInfo.map { it.index }} · " +
