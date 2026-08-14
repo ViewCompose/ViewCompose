@@ -54,6 +54,12 @@
     <string name="demo_scenario_input_search_summary">Search input, clear/submit, nested scroll, pager, and refresh focus behavior.</string>
     <string name="demo_scenario_input_derived_summary_title">Derived input summary</string>
     <string name="demo_scenario_input_derived_summary_summary">A deterministic derivedStateOf projection over profile input state.</string>
+    <string name="demo_scenario_gesture_tap_title">Tap and pointer input</string>
+    <string name="demo_scenario_gesture_tap_summary">Click-family gestures and pointer consumption on two isolated targets.</string>
+    <string name="demo_scenario_gesture_drag_swipe_title">Drag and anchored swipe</string>
+    <string name="demo_scenario_gesture_drag_swipe_summary">Horizontal drag plus deterministic three-anchor settling and reset.</string>
+    <string name="demo_scenario_gesture_transform_title">Transform gesture</string>
+    <string name="demo_scenario_gesture_transform_summary">Two-pointer scale, pan, rotation, and deterministic transform state.</string>
     <string name="demo_scenario_diagnostics_runtime_title">Runtime diagnostics</string>
     <string name="demo_scenario_diagnostics_runtime_summary">Current environment, theme tokens, and local environment overrides.</string>
     <string name="demo_scenario_diagnostics_theme_title">Theme diagnostics</string>

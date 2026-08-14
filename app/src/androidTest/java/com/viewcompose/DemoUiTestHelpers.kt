@@ -89,6 +89,38 @@ internal fun <V : View> Activity.requireScenarioViewById(@IdRes id: Int): V {
     return requireNotNull(view)
 }
 
+/** Returns a visible scenario resource target, scrolling attached RecyclerViews when necessary. */
+internal fun <V : View> Activity.requireScenarioViewByIdVisible(
+    @IdRes id: Int,
+    maxScrollAttempts: Int = 24,
+): V {
+    val root = findViewById<ViewGroup>(android.R.id.content)
+    fun visibleTarget(): V? = findViewById<V>(id)?.takeIf(::isViewVisible)
+
+    visibleTarget()?.let { return it }
+    findRecyclerViews(root)
+        .filter { recyclerView -> recyclerView.isShown && recyclerView.height > 0 }
+        .forEach { recyclerView ->
+            val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
+            fun scrollUntilVisible(direction: Int): V? {
+                repeat(maxScrollAttempts) {
+                    visibleTarget()?.let { return it }
+                    if (!recyclerView.canScrollVertically(direction)) return null
+                    recyclerView.scrollBy(0, direction * delta)
+                }
+                return visibleTarget()
+            }
+
+            scrollUntilVisible(direction = 1)?.let { return it }
+            scrollUntilVisible(direction = -1)?.let { return it }
+        }
+
+    val target = visibleTarget()
+    assertNotNull("Expected visible scenario resource target: $id", target)
+    assertViewFullyVisible(requireNotNull(target))
+    return requireNotNull(target)
+}
+
 /** Clicks a required scenario-owned native resource target on the Activity thread. */
 internal fun Activity.clickScenarioViewById(@IdRes id: Int) {
     val target = requireScenarioViewById<View>(id)
@@ -378,6 +410,11 @@ internal fun Activity.tapByTestTag(tag: String) {
     tapView(requireViewByTestTagVisible(tag))
 }
 
+/** Injects a real tap at the center of a strict scenario resource target. */
+internal fun Activity.tapScenarioViewById(@IdRes id: Int) {
+    tapView(requireScenarioViewByIdVisible<View>(id))
+}
+
 /**
  * Injects real down/up touch events at the center of the supplied View.
  */
@@ -425,7 +462,25 @@ internal fun Activity.dragByTestTag(
     deltaY: Float = 0f,
     steps: Int = 8,
 ) {
-    val view = requireViewByTestTagVisible(tag)
+    dragView(requireViewByTestTagVisible(tag), deltaX, deltaY, steps)
+}
+
+/** Injects a real drag gesture into a strict scenario resource target. */
+internal fun Activity.dragScenarioViewById(
+    @IdRes id: Int,
+    deltaX: Float,
+    deltaY: Float = 0f,
+    steps: Int = 8,
+) {
+    dragView(requireScenarioViewByIdVisible(id), deltaX, deltaY, steps)
+}
+
+private fun Activity.dragView(
+    view: View,
+    deltaX: Float,
+    deltaY: Float,
+    steps: Int,
+) {
     assertTrue("Expected drag steps >= 2", steps >= 2)
     val location = IntArray(2)
     view.getLocationOnScreen(location)
@@ -473,7 +528,43 @@ internal fun Activity.transformByTestTag(
     zoomRatio: Float = 1.2f,
     steps: Int = 10,
 ) {
-    val view = requireViewByTestTagVisible(tag)
+    transformView(
+        view = requireViewByTestTagVisible(tag),
+        panX = panX,
+        panY = panY,
+        rotationDegrees = rotationDegrees,
+        zoomRatio = zoomRatio,
+        steps = steps,
+    )
+}
+
+/** Injects a two-pointer transform gesture into a strict scenario resource target. */
+internal fun Activity.transformScenarioViewById(
+    @IdRes id: Int,
+    panX: Float = 120f,
+    panY: Float = 72f,
+    rotationDegrees: Float = 28f,
+    zoomRatio: Float = 1.2f,
+    steps: Int = 10,
+) {
+    transformView(
+        view = requireScenarioViewByIdVisible(id),
+        panX = panX,
+        panY = panY,
+        rotationDegrees = rotationDegrees,
+        zoomRatio = zoomRatio,
+        steps = steps,
+    )
+}
+
+private fun Activity.transformView(
+    view: View,
+    panX: Float,
+    panY: Float,
+    rotationDegrees: Float,
+    zoomRatio: Float,
+    steps: Int,
+) {
     assertTrue("Expected transform steps >= 2", steps >= 2)
     val centerX = view.width * 0.5f
     val centerY = view.height * 0.5f

@@ -7,6 +7,7 @@ import android.graphics.drawable.LayerDrawable
 import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -1314,30 +1315,34 @@ class DemoVisualUiTest {
 
     @Test
     fun gesturesPage_tapAndDragSwipe_updateGestureSummaries() {
-        val dragSwipeIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            GesturesActivity::class.java,
-        ).putExtra(EXTRA_GESTURES_PAGE_INDEX, 1)
-        launchDemoActivity<GesturesActivity>(dragSwipeIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GesturesActivity::class.java,
+            scenarioId = "gesture.drag-swipe",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             var dragBefore = 0f
             scenario.onActivity { activity ->
-                val dragTarget = activity.requireViewByTestTagVisible(DemoTestTags.GESTURE_DRAG_TARGET)
-                val swipeTarget = activity.requireViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET)
+                val dragTarget = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_gesture_drag_swipe_target,
+                )
+                val swipeTarget = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_gesture_drag_swipe_secondary_target,
+                )
                 assertViewFullyVisible(dragTarget)
                 assertViewFullyVisible(swipeTarget)
                 dragBefore = extractFirstFloat(
                     activity.requireTextViewByTestTag(DemoTestTags.GESTURE_DRAG_VALUE).text.toString(),
                 ) ?: 0f
-                activity.dragByTestTag(
-                    tag = DemoTestTags.GESTURE_DRAG_TARGET,
+                activity.dragScenarioViewById(
+                    id = R.id.demo_gesture_drag_swipe_target,
                     deltaX = 180f,
                 )
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.dragByTestTag(
-                    tag = DemoTestTags.GESTURE_SWIPE_TARGET,
+                activity.dragScenarioViewById(
+                    id = R.id.demo_gesture_drag_swipe_secondary_target,
                     deltaX = 200f,
                 )
             }
@@ -1350,10 +1355,11 @@ class DemoVisualUiTest {
                 val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val dragAfter = extractFirstFloat(dragAfterText) ?: dragBefore
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                val rightLabel = activity.getString(R.string.demo_gesture_anchor_right)
                 rightAnchorSnapshot = "$dragAfterText, $swipeAfterText, $swipeTargetText, $swipeOffsetText"
                 abs(dragAfter - dragBefore) >= 12f &&
-                    swipeAfterText.contains("Right") &&
-                    swipeTargetText.contains("Right") &&
+                    swipeAfterText.contains(rightLabel) &&
+                    swipeTargetText.contains(rightLabel) &&
                     offset >= 60f
             }
             assertTrue(
@@ -1361,8 +1367,8 @@ class DemoVisualUiTest {
                 movedToRightAnchor,
             )
             scenario.onActivity { activity ->
-                activity.dragByTestTag(
-                    tag = DemoTestTags.GESTURE_SWIPE_TARGET,
+                activity.dragScenarioViewById(
+                    id = R.id.demo_gesture_drag_swipe_secondary_target,
                     deltaX = -420f,
                 )
             }
@@ -1373,9 +1379,10 @@ class DemoVisualUiTest {
                 val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
                 val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                val centerLabel = activity.getString(R.string.demo_gesture_anchor_center)
                 centerAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
-                swipeAfterText.contains("Center") &&
-                    swipeTargetText.contains("Center") &&
+                swipeAfterText.contains(centerLabel) &&
+                    swipeTargetText.contains(centerLabel) &&
                     abs(offset) <= 1f
             }
             assertTrue(
@@ -1384,8 +1391,8 @@ class DemoVisualUiTest {
                 movedToCenterAnchor,
             )
             scenario.onActivity { activity ->
-                activity.dragByTestTag(
-                    tag = DemoTestTags.GESTURE_SWIPE_TARGET,
+                activity.dragScenarioViewById(
+                    id = R.id.demo_gesture_drag_swipe_secondary_target,
                     deltaX = -420f,
                 )
             }
@@ -1396,8 +1403,9 @@ class DemoVisualUiTest {
                 val swipeTargetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_TARGET_VALUE).text.toString()
                 val swipeOffsetText = activity.requireTextViewByTestTagVisible(DemoTestTags.GESTURE_SWIPE_OFFSET_VALUE).text.toString()
                 val offset = extractFirstFloat(swipeOffsetText) ?: 0f
+                val leftLabel = activity.getString(R.string.demo_gesture_anchor_left)
                 leftAnchorSnapshot = "$swipeAfterText, $swipeTargetText, $swipeOffsetText"
-                swipeAfterText.contains("Left") && swipeTargetText.contains("Left") && offset <= -60f
+                swipeAfterText.contains(leftLabel) && swipeTargetText.contains(leftLabel) && offset <= -60f
             }
             assertTrue(
                 "Expected the second reverse swipe to settle at the adjacent left anchor; " +
@@ -1409,16 +1417,18 @@ class DemoVisualUiTest {
 
     @Test
     fun gesturesPage_pointerInputConsumed_shortCircuitsCombinedClickable() {
-        val tapIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            GesturesActivity::class.java,
-        ).putExtra(EXTRA_GESTURES_PAGE_INDEX, 0)
-        launchDemoActivity<GesturesActivity>(tapIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GesturesActivity::class.java,
+            scenarioId = "gesture.tap",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.GESTURE_POINTER_CONSUMED_TARGET)
+                val target = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_gesture_tap_secondary_target,
+                )
                 assertViewFullyVisible(target)
-                activity.tapByTestTag(DemoTestTags.GESTURE_POINTER_CONSUMED_TARGET)
+                activity.tapScenarioViewById(R.id.demo_gesture_tap_secondary_target)
             }
             waitForUiIdle()
             scenario.onActivity { activity ->
@@ -1426,7 +1436,7 @@ class DemoVisualUiTest {
                     activity.requireTextViewByTestTag(DemoTestTags.GESTURE_POINTER_CONSUMED_CLICK_COUNT).text.toString()
                 assertTrue(
                     "Expected consumed pointer input to suppress combinedClickable click",
-                    count.contains("0"),
+                    extractIntegers(count).firstOrNull() == 0,
                 )
             }
         }
@@ -1434,15 +1444,15 @@ class DemoVisualUiTest {
 
     @Test
     fun gesturesPage_pointerInputConsumed_andTapTargetStillReceivesClick() {
-        val tapIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            GesturesActivity::class.java,
-        ).putExtra(EXTRA_GESTURES_PAGE_INDEX, 0)
-        launchDemoActivity<GesturesActivity>(tapIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GesturesActivity::class.java,
+            scenarioId = "gesture.tap",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.tapByTestTag(DemoTestTags.GESTURE_POINTER_CONSUMED_TARGET)
-                activity.tapByTestTag(DemoTestTags.GESTURE_TAP_TARGET)
+                activity.tapScenarioViewById(R.id.demo_gesture_tap_secondary_target)
+                activity.tapScenarioViewById(R.id.demo_gesture_tap_target)
             }
             waitForUiIdle()
             val pointerAndTapStable = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
@@ -1452,13 +1462,9 @@ class DemoVisualUiTest {
                 val tapText = activity.requireTextViewByTestTag(
                     DemoTestTags.GESTURE_TAP_COUNT,
                 ).text.toString()
-                val blockedTaps = "Blocked taps:\\s*(\\d+)".toRegex()
-                    .find(consumedText)
-                    ?.groupValues
-                    ?.getOrNull(1)
-                    ?.toIntOrNull() ?: 0
-                consumedText.contains("Consumed click count: 0") &&
-                    blockedTaps >= 1 &&
+                val consumedCounts = extractIntegers(consumedText)
+                consumedCounts.getOrNull(0) == 0 &&
+                    (consumedCounts.getOrNull(1) ?: 0) >= 1 &&
                     extractCount(tapText) >= 1
             }
             assertTrue(
@@ -1470,17 +1476,19 @@ class DemoVisualUiTest {
 
     @Test
     fun gesturesPage_transform_updatesPanAndRotationSummaries() {
-        val transformIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
-            GesturesActivity::class.java,
-        ).putExtra(EXTRA_GESTURES_PAGE_INDEX, 2)
-        launchDemoActivity<GesturesActivity>(transformIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+        launchDemoScenarioActivity(
+            activityClass = GesturesActivity::class.java,
+            scenarioId = "gesture.transform",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                val target = activity.requireViewByTestTagVisible(DemoTestTags.GESTURE_TRANSFORM_TARGET)
+                val target = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_gesture_transform_target,
+                )
                 assertViewFullyVisible(target)
-                activity.transformByTestTag(
-                    tag = DemoTestTags.GESTURE_TRANSFORM_TARGET,
+                activity.transformScenarioViewById(
+                    id = R.id.demo_gesture_transform_target,
                     panX = 140f,
                     panY = 88f,
                     rotationDegrees = 36f,
@@ -1489,7 +1497,9 @@ class DemoVisualUiTest {
             }
             waitForUiIdle()
             val transformUpdated = waitUntilActivityCondition(scenario, timeoutMs = 2_000L) { activity ->
-                val text = activity.requireTextViewByTestTag(DemoTestTags.GESTURE_TRANSFORM_VALUE).text.toString()
+                val text = activity.requireScenarioViewById<TextView>(
+                    R.id.demo_gesture_transform_state,
+                ).text.toString()
                 val metrics = extractTransformMetrics(text) ?: return@waitUntilActivityCondition false
                 abs(metrics.panX) >= 8f && abs(metrics.panY) >= 8f && abs(metrics.rotation) >= 8f
             }
@@ -1634,14 +1644,23 @@ class DemoVisualUiTest {
         return "(-?\\d+(?:\\.\\d+)?)".toRegex().find(text)?.value?.toFloatOrNull()
     }
 
+    private fun extractIntegers(text: String): List<Int> {
+        return "-?\\d+".toRegex().findAll(text).mapNotNull { match ->
+            match.value.toIntOrNull()
+        }.toList()
+    }
+
     private fun extractTransformMetrics(text: String): TransformMetrics? {
-        val regex = """scale=(-?\d+(?:\.\d+)?)\s+pan=\((-?\d+),\s*(-?\d+)\)\s+rot=(-?\d+(?:\.\d+)?)""".toRegex()
-        val match = regex.find(text) ?: return null
+        val values = "-?\\d+(?:\\.\\d+)?".toRegex()
+            .findAll(text)
+            .mapNotNull { match -> match.value.toFloatOrNull() }
+            .toList()
+        if (values.size < 4) return null
         return TransformMetrics(
-            scale = match.groupValues[1].toFloatOrNull() ?: return null,
-            panX = match.groupValues[2].toFloatOrNull() ?: return null,
-            panY = match.groupValues[3].toFloatOrNull() ?: return null,
-            rotation = match.groupValues[4].toFloatOrNull() ?: return null,
+            scale = values[0],
+            panX = values[1],
+            panY = values[2],
+            rotation = values[3],
         )
     }
 

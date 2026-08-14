@@ -3,6 +3,7 @@ package com.viewcompose.demo.registry
 import android.content.Context
 import android.content.Intent
 import com.viewcompose.FeedbackActivity
+import com.viewcompose.GesturesActivity
 import com.viewcompose.CollectionsActivity
 import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.LayoutsActivity
@@ -35,6 +36,9 @@ internal object DemoScenarioIds {
     val InputStress = DemoScenarioId("input.stress")
     val InputSearch = DemoScenarioId("input.search")
     val InputDerivedSummary = DemoScenarioId("input.derived-summary")
+    val GestureTap = DemoScenarioId("gesture.tap")
+    val GestureDragSwipe = DemoScenarioId("gesture.drag-swipe")
+    val GestureTransform = DemoScenarioId("gesture.transform")
     val DiagnosticsRuntime = DemoScenarioId("diagnostics.runtime")
     val DiagnosticsTheme = DemoScenarioId("diagnostics.theme")
     val DiagnosticsRenderer = DemoScenarioId("diagnostics.renderer")
@@ -205,6 +209,62 @@ internal object DemoScenarioRegistry {
                 reset = R.id.demo_input_derived_summary_reset,
                 state = R.id.demo_input_derived_summary_state,
                 target = R.id.demo_input_derived_summary_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.GestureTap,
+            category = DemoScenarioCategory.Input,
+            titleRes = R.string.demo_scenario_gesture_tap_title,
+            summaryRes = R.string.demo_scenario_gesture_tap_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(GesturesActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_gesture_tap_root,
+                ready = R.id.demo_gesture_tap_ready,
+                primaryAction = R.id.demo_gesture_tap_primary_action,
+                reset = R.id.demo_gesture_tap_reset,
+                state = R.id.demo_gesture_tap_state,
+                target = R.id.demo_gesture_tap_target,
+                secondaryTarget = R.id.demo_gesture_tap_secondary_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.GestureDragSwipe,
+            category = DemoScenarioCategory.Input,
+            titleRes = R.string.demo_scenario_gesture_drag_swipe_title,
+            summaryRes = R.string.demo_scenario_gesture_drag_swipe_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(GesturesActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_gesture_drag_swipe_root,
+                ready = R.id.demo_gesture_drag_swipe_ready,
+                primaryAction = R.id.demo_gesture_drag_swipe_primary_action,
+                reset = R.id.demo_gesture_drag_swipe_reset,
+                state = R.id.demo_gesture_drag_swipe_state,
+                target = R.id.demo_gesture_drag_swipe_target,
+                secondaryTarget = R.id.demo_gesture_drag_swipe_secondary_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.GestureTransform,
+            category = DemoScenarioCategory.Input,
+            titleRes = R.string.demo_scenario_gesture_transform_title,
+            summaryRes = R.string.demo_scenario_gesture_transform_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(GesturesActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_gesture_transform_root,
+                ready = R.id.demo_gesture_transform_ready,
+                primaryAction = R.id.demo_gesture_transform_primary_action,
+                reset = R.id.demo_gesture_transform_reset,
+                state = R.id.demo_gesture_transform_state,
+                target = R.id.demo_gesture_transform_target,
             ),
         ),
         scenario(

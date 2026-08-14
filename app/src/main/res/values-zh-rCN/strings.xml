@@ -55,6 +55,12 @@
     <string name="demo_scenario_input_search_summary">验证搜索输入、清除与提交、嵌套滚动、Pager 和刷新容器焦点行为。</string>
     <string name="demo_scenario_input_derived_summary_title">输入派生摘要</string>
     <string name="demo_scenario_input_derived_summary_summary">基于个人资料输入状态验证可确定的 derivedStateOf 投影。</string>
+    <string name="demo_scenario_gesture_tap_title">点击与指针输入</string>
+    <string name="demo_scenario_gesture_tap_summary">在两个隔离目标上验证点击族手势与指针消费。</string>
+    <string name="demo_scenario_gesture_drag_swipe_title">拖拽与锚点滑动</string>
+    <string name="demo_scenario_gesture_drag_swipe_summary">验证水平拖拽、可确定的三锚点停靠与重置。</string>
+    <string name="demo_scenario_gesture_transform_title">变换手势</string>
+    <string name="demo_scenario_gesture_transform_summary">验证双指缩放、平移、旋转及可确定的变换状态。</string>
     <string name="demo_scenario_diagnostics_runtime_title">运行时诊断</string>
     <string name="demo_scenario_diagnostics_runtime_summary">检查当前环境、主题 Token 与局部环境覆盖。</string>
     <string name="demo_scenario_diagnostics_theme_title">主题诊断</string>

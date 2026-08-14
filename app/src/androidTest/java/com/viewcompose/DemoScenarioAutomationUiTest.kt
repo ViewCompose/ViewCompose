@@ -58,6 +58,9 @@ class DemoScenarioAutomationUiTest {
             "input.stress",
             "input.search",
             "input.derived-summary",
+            "gesture.tap",
+            "gesture.drag-swipe",
+            "gesture.transform",
             "diagnostics.runtime",
             "diagnostics.theme",
             "diagnostics.renderer",
@@ -95,6 +98,32 @@ class DemoScenarioAutomationUiTest {
                 "input.stress",
                 "input.search",
                 "input.derived-summary",
+            ).forEach { scenarioId ->
+                launchScenario(scenarioId)
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+                requireTarget(scenarioId, "primary_action").click()
+                val changed = waitForTargetTextChange(scenarioId, initial)
+                assertNotEquals("$scenarioId action must publish state", initial, changed)
+
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId reset must restore initial state",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun gestureFixturesPublishDeterministicActionAndResetState() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            listOf(
+                "gesture.tap",
+                "gesture.drag-swipe",
+                "gesture.transform",
             ).forEach { scenarioId ->
                 launchScenario(scenarioId)
                 val initial = requireTarget(scenarioId, "state").text.orEmpty()

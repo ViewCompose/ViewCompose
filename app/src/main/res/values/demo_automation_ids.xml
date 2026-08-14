@@ -63,6 +63,29 @@
     <item name="demo_input_derived_summary_state" type="id" />
     <item name="demo_input_derived_summary_target" type="id" />
 
+    <item name="demo_gesture_tap_root" type="id" />
+    <item name="demo_gesture_tap_ready" type="id" />
+    <item name="demo_gesture_tap_primary_action" type="id" />
+    <item name="demo_gesture_tap_reset" type="id" />
+    <item name="demo_gesture_tap_state" type="id" />
+    <item name="demo_gesture_tap_target" type="id" />
+    <item name="demo_gesture_tap_secondary_target" type="id" />
+
+    <item name="demo_gesture_drag_swipe_root" type="id" />
+    <item name="demo_gesture_drag_swipe_ready" type="id" />
+    <item name="demo_gesture_drag_swipe_primary_action" type="id" />
+    <item name="demo_gesture_drag_swipe_reset" type="id" />
+    <item name="demo_gesture_drag_swipe_state" type="id" />
+    <item name="demo_gesture_drag_swipe_target" type="id" />
+    <item name="demo_gesture_drag_swipe_secondary_target" type="id" />
+
+    <item name="demo_gesture_transform_root" type="id" />
+    <item name="demo_gesture_transform_ready" type="id" />
+    <item name="demo_gesture_transform_primary_action" type="id" />
+    <item name="demo_gesture_transform_reset" type="id" />
+    <item name="demo_gesture_transform_state" type="id" />
+    <item name="demo_gesture_transform_target" type="id" />
+
     <item name="demo_diagnostics_runtime_root" type="id" />
     <item name="demo_diagnostics_runtime_ready" type="id" />
     <item name="demo_diagnostics_runtime_target" type="id" />

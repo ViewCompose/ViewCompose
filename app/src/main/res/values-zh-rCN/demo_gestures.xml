@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_gesture_reset">重置场景</string>
+    <string name="demo_gesture_pointer_none">无</string>
+    <string name="demo_gesture_pointer_event">指针：%1$s</string>
+
+    <string name="demo_gesture_tap_title">单击 / 双击 / 长按</string>
+    <string name="demo_gesture_tap_summary">验证 combinedClickable 和 pointerInput 的点击族分发与指针消费。</string>
+    <string name="demo_gesture_tap_state">点击=%1$d · 已消费点击=%2$d · 已阻止=%3$d</string>
+    <string name="demo_gesture_tap_action">执行确定性点击</string>
+    <string name="demo_gesture_tap_target">点击目标（单击 + 双击 + 长按）</string>
+    <string name="demo_gesture_tap_count">点击次数：%1$d</string>
+    <string name="demo_gesture_consumed_target">PointerInput 消费目标</string>
+    <string name="demo_gesture_consumed_state">已消费点击次数：%1$d · 已阻止点击：%2$d</string>
+    <string name="demo_gesture_consumed_pointer_event">已消费指针：%1$s</string>
+
+    <string name="demo_gesture_drag_swipe_title">拖拽 / 滑动</string>
+    <string name="demo_gesture_drag_swipe_summary">draggable 和 anchoredDraggable 在同一场景内验证方向锁、slop 和三个锚点。</string>
+    <string name="demo_gesture_drag_state">拖拽=%1$d · 当前=%2$s · 目标=%3$s · 偏移=%4$d</string>
+    <string name="demo_gesture_drag_action">移动到右侧锚点</string>
+    <string name="demo_gesture_drag_target">水平拖拽</string>
+    <string name="demo_gesture_drag_value">拖拽 x = %1$d</string>
+    <string name="demo_gesture_swipe_target">水平滑动 · %1$s</string>
+    <string name="demo_gesture_swipe_current">滑动当前值 = %1$s</string>
+    <string name="demo_gesture_swipe_target_value">滑动目标值 = %1$s</string>
+    <string name="demo_gesture_swipe_offset">滑动偏移(px) = %1$d</string>
+    <string name="demo_gesture_anchor_left">左侧</string>
+    <string name="demo_gesture_anchor_center">中间</string>
+    <string name="demo_gesture_anchor_right">右侧</string>
+    <string name="demo_gesture_swipe_feedback_left">视觉反馈：卡片左移并变蓝。</string>
+    <string name="demo_gesture_swipe_feedback_center">视觉反馈：卡片居中并恢复浅灰。</string>
+    <string name="demo_gesture_swipe_feedback_right">视觉反馈：卡片右移并变绿。</string>
+
+    <string name="demo_gesture_transform_title">变换</string>
+    <string name="demo_gesture_transform_summary">通过较大的高优先级目标验证缩放、平移与旋转。</string>
+    <string name="demo_gesture_transform_state">缩放=%1$.2f · 平移=(%2$d, %3$d) · 旋转=%4$.1f</string>
+    <string name="demo_gesture_transform_action">应用确定性变换</string>
+    <string name="demo_gesture_transform_target">变换目标</string>
+    <string name="demo_gesture_transform_instruction">在蓝色块上用双指缩放、平移和旋转。</string>
+    <string name="demo_gesture_transform_delta">平移增量=(%1$d, %2$d) · 旋转增量=%3$.2f</string>
+    <string name="demo_gesture_transform_idle">尚无变换增量</string>
+    <string name="demo_gesture_transform_observation">检查变换后的块是否保持清晰且没有文字重影。</string>
+</resources>

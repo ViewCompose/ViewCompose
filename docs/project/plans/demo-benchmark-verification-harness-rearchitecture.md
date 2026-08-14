@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: continue the second-risk group with Gestures, Graphics, Animation, and Modifiers while
-reducing the remaining text-selector debt with each direct scenario slice.
+Next action: continue the second-risk group with Graphics, Animation, and Modifiers while reducing
+the remaining text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -716,6 +716,20 @@ advances to revision 2, uses scenario resource IDs end to end, and no longer nee
 Macrobenchmark bridge. Strict automation IDs also replace overlapping legacy test tags, so one
 native view has one unambiguous automation identity. The text-selector baseline fell from 16 to 12.
 Paired resources cover all Input fixture copy, and the hard-coded-copy gate now owns the domain.
+
+The Gestures domain now has three strict direct fixtures: `gesture.tap`,
+`gesture.drag-swipe`, and `gesture.transform`. `GesturesActivity` requires immutable scenario
+identity; the chapter overview, page switcher, verification copy, and `gestures_page_index`
+contract were deleted. The hard cut also fixes the former lifecycle shape in which every route
+created all three fixtures' state, the drag frame callback, and the transform recognizer. Each
+route now enters one fixture function, so inactive gesture state and effects never join its
+Session. Every fixture publishes deterministic action, state, target, and reset roles; tap and
+drag/swipe expose a secondary physical target without reusing a legacy tag identity. Paired
+resources cover the complete domain, and the hard-coded-copy gate now owns it. On the Samsung
+SM-G991B Android 13 reference device, all five registry automation tests passed, including the
+three gesture action-reset contracts in English and Simplified Chinese, followed by four focused
+real-input tests for pointer consumption, tap fallback, drag/anchor settling, and two-pointer
+transform.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 
