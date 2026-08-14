@@ -560,6 +560,14 @@ internal fun Activity.focusInputByTestTag(tag: String) {
     input!!.requestFocus()
 }
 
+/** Focuses the first EditText under a strict scenario-owned native resource target. */
+internal fun Activity.focusInputByScenarioViewId(@IdRes id: Int) {
+    val host = requireScenarioViewById<View>(id)
+    val input = findFirstEditText(host)
+    assertNotNull("Expected EditText descendant for scenario resource ID: $id", input)
+    input!!.requestFocus()
+}
+
 /**
  * 读取第一个 RecyclerView 当前首个可见 item 的位置和偏移。
  * Reads the position and offset of the first visible item in the first RecyclerView.

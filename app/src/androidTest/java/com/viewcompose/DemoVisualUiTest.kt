@@ -237,9 +237,15 @@ class DemoVisualUiTest {
             waitForUiIdle()
             captureDeviceScreenshot("input-fields-light")
             scenario.onActivity { activity ->
-                val benchmark = activity.requireTextViewByTestTag(DemoTestTags.INPUT_BENCHMARK_TOGGLE)
-                val resetBenchmark = activity.requireTextViewByTestTag(DemoTestTags.INPUT_BENCHMARK_RESET)
-                val benchmarkField = activity.requireViewByTestTag(DemoTestTags.INPUT_BENCHMARK_FIELD)
+                val benchmark = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_input_fields_primary_action,
+                )
+                val resetBenchmark = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_input_fields_reset,
+                )
+                val benchmarkField = activity.requireScenarioViewById<View>(
+                    R.id.demo_input_fields_target,
+                )
                 assertViewFullyVisible(benchmark)
                 assertViewFullyVisible(resetBenchmark)
                 assertViewFullyVisible(benchmarkField)
@@ -320,10 +326,16 @@ class DemoVisualUiTest {
             waitForUiIdle()
             captureDeviceScreenshot("input-stress-light")
             scenario.onActivity { activity ->
-                val expanded = activity.requireTextViewByTestTag(DemoTestTags.INPUT_STRESS_EXPAND)
-                val readonly = activity.requireTextViewByTestTag(DemoTestTags.INPUT_STRESS_READONLY)
+                val expanded = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_input_stress_primary_action,
+                )
+                val readonly = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_input_stress_secondary_action,
+                )
                 val error = activity.requireTextViewByTestTag(DemoTestTags.INPUT_STRESS_ERROR)
-                val protectedField = activity.requireViewByTestTag(DemoTestTags.INPUT_STRESS_PROTECTED_FIELD)
+                val protectedField = activity.requireScenarioViewById<View>(
+                    R.id.demo_input_stress_target,
+                )
                 assertViewFullyVisible(expanded)
                 assertViewFullyVisible(readonly)
                 assertViewFullyVisible(error)
@@ -345,7 +357,7 @@ class DemoVisualUiTest {
             waitForUiIdle()
             assertFocusActionRevealsInput(
                 scenario = scenario,
-                tag = DemoTestTags.INPUT_SEARCH_PRIMARY,
+                resourceId = R.id.demo_input_search_target,
             )
         }
     }
@@ -1643,14 +1655,36 @@ class DemoVisualUiTest {
     private fun assertFocusActionRevealsInput(
         scenario: ActivityScenario<InputActivity>,
         tag: String,
+    ) = assertFocusActionRevealsInput(
+        scenario = scenario,
+        targetDescription = "testTag=$tag",
+        resolveHost = { requireViewByTestTagVisible(tag) },
+        requestFocus = { focusInputByTestTag(tag) },
+    )
+
+    private fun assertFocusActionRevealsInput(
+        scenario: ActivityScenario<InputActivity>,
+        resourceId: Int,
+    ) = assertFocusActionRevealsInput(
+        scenario = scenario,
+        targetDescription = "resourceId=$resourceId",
+        resolveHost = { requireScenarioViewById(resourceId) },
+        requestFocus = { focusInputByScenarioViewId(resourceId) },
+    )
+
+    private fun assertFocusActionRevealsInput(
+        scenario: ActivityScenario<InputActivity>,
+        targetDescription: String,
+        resolveHost: InputActivity.() -> View,
+        requestFocus: InputActivity.() -> Unit,
     ) {
         var beforeAnchor: RecyclerViewportAnchor? = null
         var beforeVisibleHeight = 0
         scenario.onActivity { activity ->
-            val inputHost = activity.requireViewByTestTagVisible(tag)
+            val inputHost = activity.resolveHost()
             beforeAnchor = activity.readFirstRecyclerAnchor()
             beforeVisibleHeight = Rect().also(inputHost::getGlobalVisibleRect).height()
-            activity.focusInputByTestTag(tag)
+            activity.requestFocus()
         }
         waitForUiIdle()
         scenario.onActivity { activity ->
@@ -1660,17 +1694,21 @@ class DemoVisualUiTest {
             val before = beforeAnchor!!
             val after = afterAnchor!!
             assertEquals(before.position, after.position)
-            val focusedHost = activity.requireViewByTestTagVisible(tag)
+            val focusedHost = activity.resolveHost()
             val focusedInput = focusedHost.findFocus()
-            assertNotNull("Expected tagged input to retain focus: $tag", focusedInput)
+            assertNotNull("Expected input to retain focus: $targetDescription", focusedInput)
             assertTrue(
-                "Expected focused descendant to remain a visible text editor: $tag",
+                "Expected focused descendant to remain a visible text editor: $targetDescription",
                 focusedInput!!.onCheckIsTextEditor() && isViewVisible(focusedInput),
             )
             val visibleHeight = Rect().also(focusedHost::getGlobalVisibleRect).height()
-            assertEquals("Expected the complete focused host height to be visible: $tag", focusedHost.height, visibleHeight)
+            assertEquals(
+                "Expected the complete focused host height to be visible: $targetDescription",
+                focusedHost.height,
+                visibleHeight,
+            )
             assertTrue(
-                "Expected focus follow to preserve or improve input visibility: $tag",
+                "Expected focus follow to preserve or improve input visibility: $targetDescription",
                 visibleHeight >= beforeVisibleHeight,
             )
         }

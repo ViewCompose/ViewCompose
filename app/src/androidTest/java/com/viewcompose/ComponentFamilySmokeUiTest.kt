@@ -35,7 +35,9 @@ class ComponentFamilySmokeUiTest {
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                assertViewFullyVisible(activity.requireViewByTestTagVisible(DemoTestTags.INPUT_SEARCH_PRIMARY))
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById<android.view.View>(R.id.demo_input_search_target),
+                )
             }
         }
 

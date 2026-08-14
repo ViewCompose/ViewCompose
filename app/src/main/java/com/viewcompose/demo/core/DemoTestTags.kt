@@ -189,17 +189,10 @@ internal object DemoTestTags {
     const val FOUNDATIONS_FALLBACK_IMAGE = "foundations_fallback_image"
     const val FOUNDATIONS_PRIMARY_ICON_BUTTON = "foundations_primary_icon_button"
 
-    const val INPUT_BENCHMARK_TOGGLE = "input_benchmark_toggle"
-    const val INPUT_BENCHMARK_RESET = "input_benchmark_reset"
-    const val INPUT_BENCHMARK_FIELD = "input_benchmark_field"
-    const val INPUT_SEARCH_PRIMARY = "input_search_primary"
     const val INPUT_FOCUS_SCROLLABLE_SEARCH = "input_focus_scrollable_search"
     const val INPUT_FOCUS_VERTICAL_PAGER_SEARCH = "input_focus_vertical_pager_search"
     const val INPUT_FOCUS_PULL_REFRESH_SEARCH = "input_focus_pull_refresh_search"
-    const val INPUT_STRESS_EXPAND = "input_stress_expand"
-    const val INPUT_STRESS_READONLY = "input_stress_readonly"
     const val INPUT_STRESS_ERROR = "input_stress_error"
-    const val INPUT_STRESS_PROTECTED_FIELD = "input_stress_protected_field"
 
     const val ACTIONS_CHIP_FILTER = "actions_chip_filter"
     const val ACTIONS_ELEVATED_CARD = "actions_elevated_card"

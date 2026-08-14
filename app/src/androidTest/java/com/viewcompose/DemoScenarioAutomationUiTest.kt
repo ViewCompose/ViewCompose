@@ -87,26 +87,29 @@ class DemoScenarioAutomationUiTest {
 
     @Test
     fun inputFixturesPublishDeterministicActionAndResetState() {
-        listOf(
-            "input.fields",
-            "input.selection",
-            "input.stress",
-            "input.search",
-            "input.derived-summary",
-        ).forEach { scenarioId ->
-            launchScenario(scenarioId)
-            val initial = requireTarget(scenarioId, "state").text.orEmpty()
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            listOf(
+                "input.fields",
+                "input.selection",
+                "input.stress",
+                "input.search",
+                "input.derived-summary",
+            ).forEach { scenarioId ->
+                launchScenario(scenarioId)
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
 
-            requireTarget(scenarioId, "primary_action").click()
-            val changed = waitForTargetTextChange(scenarioId, initial)
-            assertNotEquals("$scenarioId action must publish state", initial, changed)
+                requireTarget(scenarioId, "primary_action").click()
+                val changed = waitForTargetTextChange(scenarioId, initial)
+                assertNotEquals("$scenarioId action must publish state", initial, changed)
 
-            requireTarget(scenarioId, "reset").click()
-            assertEquals(
-                "$scenarioId reset must restore initial state",
-                initial,
-                waitForTargetText(scenarioId, initial),
-            )
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId reset must restore initial state",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
         }
     }
 

@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: migrate the second-risk-group Input, Gestures, Graphics, Animation, and Modifiers
-domains while reducing the remaining text-selector debt with each direct scenario slice.
+Next action: continue the second-risk group with Gestures, Graphics, Animation, and Modifiers while
+reducing the remaining text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -637,8 +637,10 @@ visible copy through resources. A cross-locale device test verifies that the sam
 Android resource ID remains usable after an in-process locale switch without leaking the changed
 locale into later tests. `verifyDemoLocalizedVisibleCopy` prevents direct visible assignments from
 returning to already migrated source domains and expands as each domain is converted; it is not a
-legacy-literal count allowlist. The Samsung SM-G991B Android 13 reference device passed all 97 app
-instrumentation tests after this slice.
+legacy-literal count allowlist. The State, Diagnostics, Collections, Layouts, and Input domains are
+now fully resource-backed. The Samsung SM-G991B Android 13 reference device passed all 97 app
+instrumentation tests at the localization-spine milestone; after the Input slice, both locales pass
+all five action-reset contracts and all six focused Input visual and keyboard-follow regressions.
 
 ## Phase 4: Scenario migration and page simplification
 
@@ -704,6 +706,16 @@ than localized labels. The old `layouts` Macrobenchmark module bridge has no cal
 removed. All retained layout fixture copy, including dynamic counts, constraint-mode diagnostics,
 and accessibility descriptions, now resolves through paired locale resources, and the complete
 Layouts domain is protected by the hard-coded visible-copy gate.
+
+The Input domain now has five strict direct fixtures: `input.fields`, `input.selection`,
+`input.stress`, `input.search`, and `input.derived-summary`. `InputActivity` requires immutable
+scenario identity; the chapter overview, page switcher, verification copy, visible route callout,
+and `input_page_index` contract were deleted. Each fixture creates only its own state, and every
+mutable fixture publishes deterministic action, state, target, and reset roles. The fields workload
+advances to revision 2, uses scenario resource IDs end to end, and no longer needs the old `input`
+Macrobenchmark bridge. Strict automation IDs also replace overlapping legacy test tags, so one
+native view has one unambiguous automation identity. The text-selector baseline fell from 16 to 12.
+Paired resources cover all Input fixture copy, and the hard-coded-copy gate now owns the domain.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 
