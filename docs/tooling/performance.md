@@ -95,6 +95,12 @@ Regenerate from an existing result:
   -PbenchmarkResult=/path/to/current-benchmarkData.json
 ```
 
+For a thermally constrained physical device, run each ViewCompose or Compose method from the same
+`NONE`/`LIGHT` starting state, cool between methods, and place the resulting JSON files in one clean
+directory. Passing that directory as `benchmarkResult` merges the split methods only when their
+device, OS, CPU-lock, and compilation identities match. Duplicate benchmark names and context
+mismatches fail closed; the tool never selects an arbitrary newest partial run.
+
 Compare with a same-device historical baseline and apply the regression gate. The baseline input is
 the previously generated revisioned comparison report, not raw Macrobenchmark JSON:
 
@@ -171,6 +177,8 @@ Automated report and regression rules:
 1. Comparison output always includes frame CPU P50/P95, frame overrun P50/P95, heap max, and RSS anon
    max.
 2. ViewCompose and Compose for one scenario come from the same benchmark JSON.
+   That JSON may be the deterministic in-memory merge of separately cooled method results from the
+   same context.
 3. A historical comparison requires the same device model, system fingerprint, CPU-lock state, and
    compilation mode.
 4. The gate fails only when both the raw ViewCompose threshold and normalized ViewCompose/Compose

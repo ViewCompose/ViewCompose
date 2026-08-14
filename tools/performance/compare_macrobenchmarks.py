@@ -144,11 +144,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "viewcompose-benchmark/build/outputs/"
             "connected_android_test_additional_output"
         ),
-        help="Current benchmarkData.json file or directory containing one.",
+        help=(
+            "Current benchmarkData.json file or directory containing split method results. "
+            "Directory inputs merge matching contexts and reject duplicate benchmark names."
+        ),
     )
     parser.add_argument(
         "--baseline",
-        help="Previous benchmarkData.json file or directory used for regression checks.",
+        help=(
+            "Previous revisioned compose-comparison.json file or directory used for "
+            "regression checks."
+        ),
     )
     parser.add_argument(
         "--policy",
@@ -178,19 +184,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def resolve_result_path(value: str | Path) -> Path:
-    """解析 benchmarkData.json 文件路径，目录输入会选择最新结果。
-    Resolves a benchmarkData.json path, choosing the newest result when a directory is passed.
+def resolve_baseline_path(value: str | Path) -> Path:
+    """解析带工作负载修订信息的历史报告路径。
+    Resolves a revisioned historical report path.
     """
 
     path = Path(value)
     if path.is_file():
         return path
     if not path.exists():
-        raise ValueError(f"Benchmark result path does not exist: {path}")
-    candidates = list(path.rglob("*benchmarkData.json"))
+        raise ValueError(f"Benchmark baseline path does not exist: {path}")
+    candidates = list(path.rglob("*compose-comparison.json"))
     if not candidates:
-        raise ValueError(f"No benchmarkData.json found under: {path}")
+        raise ValueError(f"No revisioned compose-comparison.json found under: {path}")
     return max(candidates, key=lambda candidate: candidate.stat().st_mtime)
 
 
@@ -204,6 +210,59 @@ def load_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"Expected an object in {path}")
     return value
+
+
+def load_current_result(value: str | Path) -> tuple[Path, dict[str, Any]]:
+    """加载一个完整结果，或合并按方法冷却后产生的同上下文结果。
+    Loads one complete result or merges same-context results captured with per-method cooldown.
+
+    目录合并是确定性的：所有文件必须属于同一设备/系统/编译上下文，benchmark 方法名
+    不得重复。这样报告不会静默选择一个较新的局部结果，也不会覆盖一次失败的重跑。
+    Directory merging is deterministic: every file must share device/system/compilation context and
+    benchmark names must be unique. The report never silently selects one newer partial run or
+    overwrites a failed retry.
+    """
+
+    path = Path(value)
+    if path.is_file():
+        return path, load_json(path)
+    if not path.exists():
+        raise ValueError(f"Benchmark result path does not exist: {path}")
+    candidates = sorted(path.rglob("*benchmarkData.json"))
+    if not candidates:
+        raise ValueError(f"No benchmarkData.json found under: {path}")
+
+    results = [(candidate, load_json(candidate)) for candidate in candidates]
+    expected_context = context_identity(results[0][1])
+    merged_entries: list[dict[str, Any]] = []
+    owners: dict[str, Path] = {}
+    for candidate, result in results:
+        actual_context = context_identity(result)
+        if actual_context != expected_context:
+            raise ValueError(
+                "Split current benchmark contexts differ: "
+                f"{results[0][0]}={expected_context!r}, "
+                f"{candidate}={actual_context!r}",
+            )
+        entries = result.get("benchmarks")
+        if not isinstance(entries, list):
+            raise ValueError(f"Macrobenchmark result has no benchmarks array: {candidate}")
+        for entry in entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("name"), str):
+                raise ValueError(f"Invalid benchmark entry in: {candidate}")
+            name = entry["name"]
+            previous_owner = owners.get(name)
+            if previous_owner is not None:
+                raise ValueError(
+                    f"Duplicate benchmark name {name!r} in split results: "
+                    f"{previous_owner} and {candidate}",
+                )
+            owners[name] = candidate
+            merged_entries.append(entry)
+
+    merged = dict(results[0][1])
+    merged["benchmarks"] = merged_entries
+    return path, merged
 
 
 def benchmark_entries(result: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -719,8 +778,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     if args.enforce and not args.baseline:
         raise ValueError("--enforce requires --baseline.")
-    current_path = resolve_result_path(args.current)
-    current_result = load_json(current_path)
+    current_path, current_result = load_current_result(args.current)
     policy = load_json(Path(args.policy))
     current_entries = benchmark_entries(current_result)
     comparisons = build_comparisons(current_entries)
@@ -733,7 +791,7 @@ def main(argv: list[str] | None = None) -> int:
     baseline_path: Path | None = None
     regressions: list[Regression] = []
     if args.baseline:
-        baseline_path = resolve_result_path(args.baseline)
+        baseline_path = resolve_baseline_path(args.baseline)
         baseline_result = load_json(baseline_path)
         if not args.allow_context_mismatch:
             require_matching_context(current_result, baseline_result)

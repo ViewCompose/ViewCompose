@@ -1019,6 +1019,12 @@ cold-cache outlier and failed the `0.15` stability gate. Every method starts at 
 benchmark and target processes are stopped and the screen is turned off between methods; any batch
 ending at `SEVERE` is rejected regardless of its apparent variance.
 
+Paired ViewCompose/Compose methods are also isolated from ordering heat: each method starts from the
+same accepted thermal state and cools independently. The report tool deterministically merges their
+raw JSON only when device, OS, CPU-lock, and compilation identities match, and rejects duplicate
+method names. This preserves one revisioned paired report without making the second engine inherit
+the first engine's heat.
+
 For structurally unchanged workloads, apply the repository performance policy: P50 fails only when
 it regresses by more than both 5% and 0.3 ms; P95 fails only when it regresses by more than both 10%
 and 0.8 ms. Unstable runs are rerun rather than interpreted. A changed workload revision receives a

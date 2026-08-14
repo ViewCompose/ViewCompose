@@ -170,6 +170,63 @@ class CompareMacrobenchmarksTest(unittest.TestCase):
             {item.metric for item in stability},
         )
 
+    def test_merges_split_method_results_from_one_context(self) -> None:
+        complete = result()
+        midpoint = len(complete["benchmarks"]) // 2
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = dict(complete)
+            first["benchmarks"] = complete["benchmarks"][:midpoint]
+            second = dict(complete)
+            second["benchmarks"] = complete["benchmarks"][midpoint:]
+            (root / "first-benchmarkData.json").write_text(
+                json.dumps(first),
+                encoding="utf-8",
+            )
+            (root / "second-benchmarkData.json").write_text(
+                json.dumps(second),
+                encoding="utf-8",
+            )
+
+            source, merged = comparison.load_current_result(root)
+
+        self.assertEqual(root, source)
+        self.assertEqual(complete["benchmarks"], merged["benchmarks"])
+
+    def test_rejects_duplicate_method_in_split_results(self) -> None:
+        complete = result()
+        partial = dict(complete)
+        partial["benchmarks"] = complete["benchmarks"][:1]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("first", "second"):
+                (root / f"{name}-benchmarkData.json").write_text(
+                    json.dumps(partial),
+                    encoding="utf-8",
+                )
+
+            with self.assertRaisesRegex(ValueError, "Duplicate benchmark name"):
+                comparison.load_current_result(root)
+
+    def test_rejects_context_mismatch_in_split_results(self) -> None:
+        first = result(fingerprint="device/first")
+        first["benchmarks"] = first["benchmarks"][:1]
+        second = result(fingerprint="device/second")
+        second["benchmarks"] = second["benchmarks"][1:2]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "first-benchmarkData.json").write_text(
+                json.dumps(first),
+                encoding="utf-8",
+            )
+            (root / "second-benchmarkData.json").write_text(
+                json.dumps(second),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "contexts differ"):
+                comparison.load_current_result(root)
+
     def test_rejects_partial_scenario_without_compose_control(self) -> None:
         partial = result()
         partial["benchmarks"] = [

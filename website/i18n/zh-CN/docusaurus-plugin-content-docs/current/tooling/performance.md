@@ -83,6 +83,11 @@ instrumentation APK，可在没有设备时发现 shrink/R8/variant 回归。
   -PbenchmarkResult=/path/to/current-benchmarkData.json
 ```
 
+对容易升温的真机，应让每个 ViewCompose 或 Compose 方法都从相同的 `NONE`/`LIGHT` 温控
+等级开始，方法之间完成冷却，并把各自 JSON 放入一个干净目录。将该目录作为
+`benchmarkResult` 时，工具只会合并设备、系统、CPU 锁定和编译上下文完全一致的结果；
+benchmark 方法重名或上下文不同会直接失败，不会任意选择最新的局部结果。
+
 与同设备历史基线比较并执行回归门禁：
 
 ```bash
@@ -145,7 +150,8 @@ Compose 对照基线是 `ListPerformanceComparisonBenchmark`：
 自动报告与回归规则：
 
 1. 对照表固定输出 frame CPU P50/P95、frame overrun P50/P95、heap max 与 RSS anon max。
-2. 每个场景的 ViewCompose 与 Compose 结果必须来自同一份 benchmark JSON。
+2. 每个场景的 ViewCompose 与 Compose 结果必须来自同一份 benchmark JSON；该 JSON 可以是
+   同一上下文中分别冷却的方法结果在内存中的确定性合并结果。
 3. 历史回归只允许同设备型号、系统 fingerprint、CPU lock 状态和 compilation mode。
 4. 门禁必须同时满足“ViewCompose 原始指标超过阈值”和“ViewCompose/Compose 归一化比值超过阈值”才失败。
 5. 默认阈值维护在 `tools/performance/benchmark_policy.json`，小于绝对噪声下限的变化不会失败。
