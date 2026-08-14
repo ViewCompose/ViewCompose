@@ -1,6 +1,7 @@
 package com.viewcompose.renderer.view.container
 
 import android.widget.FrameLayout
+import androidx.viewpager2.widget.ViewPager2
 import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
@@ -15,6 +16,28 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28])
 class PagerAdapterTest {
+    @Test
+    fun `horizontal pager applies selected page when page snapshot is unchanged`() {
+        val view = DeclarativeHorizontalPagerLayout(RuntimeEnvironment.getApplication())
+        val pages = listOf(inertPage("first"), inertPage("second"))
+
+        bindHorizontalPager(view, pages, currentPage = 0)
+        bindHorizontalPager(view, pages, currentPage = 1)
+
+        assertEquals(1, (view.getChildAt(0) as ViewPager2).currentItem)
+    }
+
+    @Test
+    fun `vertical pager applies selected page when page snapshot is unchanged`() {
+        val view = DeclarativeVerticalPagerLayout(RuntimeEnvironment.getApplication())
+        val pages = listOf(inertPage("first"), inertPage("second"))
+
+        bindVerticalPager(view, pages, currentPage = 0)
+        bindVerticalPager(view, pages, currentPage = 1)
+
+        assertEquals(1, (view.getChildAt(0) as ViewPager2).currentItem)
+    }
+
     @Test
     fun `horizontal pager move with stable revisions skips page render`() {
         val context = RuntimeEnvironment.getApplication()
@@ -200,6 +223,38 @@ class PagerAdapterTest {
                 }
             },
             sessionUpdater = {},
+        )
+    }
+
+    private fun bindHorizontalPager(
+        view: DeclarativeHorizontalPagerLayout,
+        pages: List<LazyListItem>,
+        currentPage: Int,
+    ) {
+        view.bind(
+            pages = pages,
+            currentPage = currentPage,
+            onPageChanged = null,
+            offscreenPageLimit = ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT,
+            pagerState = null,
+            userScrollEnabled = true,
+            mountedTreeCacheSize = 2,
+        )
+    }
+
+    private fun bindVerticalPager(
+        view: DeclarativeVerticalPagerLayout,
+        pages: List<LazyListItem>,
+        currentPage: Int,
+    ) {
+        view.bind(
+            pages = pages,
+            currentPage = currentPage,
+            onPageChanged = null,
+            offscreenPageLimit = ViewPager2.OFFSCREEN_PAGE_LIMIT_DEFAULT,
+            pagerState = null,
+            userScrollEnabled = true,
+            mountedTreeCacheSize = 2,
         )
     }
 

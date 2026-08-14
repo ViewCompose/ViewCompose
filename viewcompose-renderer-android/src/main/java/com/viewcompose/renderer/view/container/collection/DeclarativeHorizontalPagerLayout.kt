@@ -112,7 +112,9 @@ internal class DeclarativeHorizontalPagerLayout(
         viewPager.isUserInputEnabled = userScrollEnabled
         adapter.configureMountedTreeCache(mountedTreeCacheSize)
         submission.publish {
-            if (!adapter.submitPages(pages, submission.revision)) return@publish
+            if (adapter.submitPages(pages, submission.revision) == PagerSubmissionResult.Rejected) {
+                return@publish
+            }
             if (pages.isEmpty()) return@publish
             val resolvedPage = currentPage.coerceIn(0, pages.lastIndex)
             if (viewPager.currentItem != resolvedPage) {
@@ -248,10 +250,13 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
     fun submitPages(
         newPages: List<LazyListItem>,
         submissionRevision: Long? = null,
-    ): Boolean {
+    ): PagerSubmissionResult {
         val revision = submissionRevision ?: (currentSubmissionRevision + 1L)
-        if (pages == newPages) return false
-        if (revision <= currentSubmissionRevision) return false
+        if (revision <= currentSubmissionRevision) return PagerSubmissionResult.Rejected
+        if (pages == newPages) {
+            currentSubmissionRevision = revision
+            return PagerSubmissionResult.Unchanged
+        }
         val previousPages = pages
         val previousKeyCounts = keyCounts
         val result = LazyListDiff.calculate(
@@ -305,7 +310,7 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
                 }
             }
         }
-        return true
+        return PagerSubmissionResult.Changed
     }
 
     fun disposeAll() {
@@ -406,6 +411,13 @@ internal class HorizontalPagerAdapter : RecyclerView.Adapter<HorizontalPagerView
         }
         return counts to positions
     }
+}
+
+/** Distinguishes a stale pager submission from an accepted snapshot that needs no adapter diff. */
+internal enum class PagerSubmissionResult {
+    Rejected,
+    Unchanged,
+    Changed,
 }
 
 /**

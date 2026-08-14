@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-renderer-android/README.md
-translation_source_hash: 709d2344a661e4265ff1b47649221d5d86c8a414ea6f073f574de5a5ef50a258
+translation_source_hash: 3cda6191a5624a5f396c1445a7db8fa5ea40f1932a1d4593cf44ad005edd19e0
 translation_status: current
 ---
 
@@ -132,8 +132,10 @@ ViewTreeRenderer.disposeMounted(container, mounted)
   因而无需扫描 item 列表即可解析稳定 Key；已经提交当前 Revision 的 Holder 也会跳过冗余 attach
   工作。
 - Pager 稳定 ID 使用 Renderer 分配值而不是 key hash。Pager View Type 按不兼容的
-  `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一的 holder，无 key 缓存页则保留位置
-  归属，直到 RecyclerView 派发替换 bind。
+  `contentType`/kind 组合划分；带 key 的移动只刷新归属唯一且已变化的 Holder，每个公开 Page 声明
+  都必须提供唯一稳定 Key。除非调用方显式指定 Limit，否则由 ViewPager2 原生默认策略管理离屏驻留。
+  已接受的 Pager Submission 即使 Page Snapshot 不变也必须应用 `currentPage`；页面内容 Diff 绝不能
+  阻断目标页面选择。
 - 定向 patch 和子树跳过只是优化。只有每个直接 child 都是组合所复用的完全相同 VNode 实例时，
   才能跳过完整原生子树；新构建但值相等的 child 仍需调和，因为嵌套 Session 回调可能已变化。
   自定义 host 不得从 patch 记录或诊断计数推断业务状态。

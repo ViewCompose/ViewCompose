@@ -149,7 +149,9 @@ Because the current line is alpha, the documentation site intentionally does not
 - Pager stable IDs use renderer-assigned values rather than key hashes. Pager view types partition
   incompatible `contentType`/kind pairs, keyed moves refresh only uniquely owned changed holders,
   and every public page declaration requires a unique stable key. ViewPager2's native default owns
-  offscreen residency unless callers explicitly request a limit.
+  offscreen residency unless callers explicitly request a limit. An accepted pager submission
+  applies `currentPage` even when its page snapshot is unchanged; page-content diffing never gates
+  destination selection.
 - Targeted patching and subtree skipping are optimizations. A complete native subtree is skipped
   only when every direct child is the exact VNode instance reused by composition; newly built,
   value-equal children still reconcile because nested session callbacks may have changed. Custom
