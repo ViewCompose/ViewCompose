@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_modifiers_elevation_title">Elevation comparison</string>
+    <string name="demo_modifiers_elevation_summary">Compare shadows across several elevation values.</string>
+    <string name="demo_modifiers_dp_value">%1$ddp</string>
+    <string name="demo_modifiers_border_title">Border and clip</string>
+    <string name="demo_modifiers_border_summary">Verify border width and color, then clip overflowing content.</string>
+    <string name="demo_modifiers_border_one">1dp border</string>
+    <string name="demo_modifiers_border_two">2dp primary</string>
+    <string name="demo_modifiers_border_three">3dp rounded</string>
+    <string name="demo_modifiers_clip_heading">Clip overflowing content</string>
+    <string name="demo_modifiers_clip_content">The overflowing blue block is clipped</string>
+    <string name="demo_modifiers_alpha_title">Alpha and ripple color</string>
+    <string name="demo_modifiers_alpha_summary">Verify View alpha and custom press-feedback colors.</string>
+    <string name="demo_modifiers_alpha_heading">Alpha gradient</string>
+    <string name="demo_modifiers_percent_value">%1$d%%</string>
+    <string name="demo_modifiers_ripple_heading">Custom press colors</string>
+    <string name="demo_modifiers_ripple_red">Red ripple</string>
+    <string name="demo_modifiers_ripple_green">Green ripple</string>
+    <string name="demo_modifiers_ripple_blue">Blue ripple</string>
+    <string name="demo_modifiers_drawable_title">Drawable resource background</string>
+    <string name="demo_modifiers_drawable_summary">When color and drawable backgrounds coexist, the drawable wins and cornerRadius clips it.</string>
+    <string name="demo_modifiers_drawable_color_only">Color only</string>
+    <string name="demo_modifiers_drawable_combined">Color and drawable</string>
+    <string name="demo_modifiers_drawable_note">The left sample uses only color without automatic clipping; the right sample combines a drawable with cornerRadius and clips automatically.</string>
+    <string name="demo_modifiers_corner_title">Corner radius variants</string>
+    <string name="demo_modifiers_corner_summary">Verify uniform, grouped top/bottom, and independent corner radii.</string>
+    <string name="demo_modifiers_corner_grouped">Grouped corners: top=16, bottom=0</string>
+    <string name="demo_modifiers_corner_top">Rounded top</string>
+    <string name="demo_modifiers_corner_independent">Independent corners: topStart=24, topEnd=0, bottomEnd=24, bottomStart=0</string>
+    <string name="demo_modifiers_corner_diagonal">Diagonal corners</string>
+
+    <string name="demo_modifiers_size_title">Sizing constraints</string>
+    <string name="demo_modifiers_size_summary">Verify minWidth, minHeight, fillMaxHeight, fixed dimensions, padding, and margin.</string>
+    <string name="demo_modifiers_min_width_heading">Minimum width</string>
+    <string name="demo_modifiers_min_width_100">min 100dp</string>
+    <string name="demo_modifiers_min_width_60">min 60dp</string>
+    <string name="demo_modifiers_min_height_heading">Minimum height</string>
+    <string name="demo_modifiers_min_height_80">min 80dp high</string>
+    <string name="demo_modifiers_min_height_40">min 40dp high</string>
+    <string name="demo_modifiers_fill_height_heading">Standalone fillMaxHeight</string>
+    <string name="demo_modifiers_fill_height_full">Full height</string>
+    <string name="demo_modifiers_fixed_height_60">60dp</string>
+    <string name="demo_modifiers_fill_height_note">The left sample fills its parent height; the right sample remains fixed at 60dp.</string>
+    <string name="demo_modifiers_spacing_heading">Three nested padding and margin levels</string>
+    <string name="demo_modifiers_spacing_inner">Innermost content</string>
+    <string name="demo_modifiers_spacing_note">Blue: outer padding 16; green: middle margin 8 + padding 12; red: inner margin 4 + padding 8.</string>
+
+    <string name="demo_modifiers_accessibility_title">Accessibility content description</string>
+    <string name="demo_modifiers_accessibility_summary">contentDescription supplies spoken context to Android accessibility services.</string>
+    <string name="demo_modifiers_accessibility_description">Example block with an accessibility description</string>
+    <string name="demo_modifiers_accessibility_present">Description present</string>
+    <string name="demo_modifiers_accessibility_absent">No description</string>
+    <string name="demo_modifiers_accessibility_note">The left Box has a contentDescription that TalkBack can announce; the right Box intentionally has none.</string>
+    <string name="demo_modifiers_native_title">Native View escape hatch</string>
+    <string name="demo_modifiers_native_summary">nativeView configures Android View properties outside the framework Modifier surface.</string>
+    <string name="demo_modifiers_native_sample">Bold text with letter spacing</string>
+    <string name="demo_modifiers_native_note">nativeView patches TextView typeface and letterSpacing directly.</string>
+    <string name="demo_modifiers_layering_title">Offset and z-index</string>
+    <string name="demo_modifiers_layering_summary">offset moves a View while zIndex controls draw order.</string>
+    <string name="demo_modifiers_layering_value">zIndex=%1$d</string>
+    <string name="demo_modifiers_layering_note">The three blocks use different offsets and z-index values; the higher z-index draws above the others.</string>
+</resources>

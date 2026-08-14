@@ -9,6 +9,7 @@ import com.viewcompose.GraphicsActivity
 import com.viewcompose.CollectionsActivity
 import com.viewcompose.DiagnosticsActivity
 import com.viewcompose.LayoutsActivity
+import com.viewcompose.ModifiersActivity
 import com.viewcompose.InputActivity
 import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
@@ -51,6 +52,9 @@ internal object DemoScenarioIds {
     val AnimationSpecs = DemoScenarioId("animation.specs")
     val AnimationTransition = DemoScenarioId("animation.transition")
     val AnimationInfinite = DemoScenarioId("animation.infinite")
+    val ModifierVisual = DemoScenarioId("modifier.visual")
+    val ModifierSizing = DemoScenarioId("modifier.sizing")
+    val ModifierAccessibility = DemoScenarioId("modifier.accessibility")
     val DiagnosticsRuntime = DemoScenarioId("diagnostics.runtime")
     val DiagnosticsTheme = DemoScenarioId("diagnostics.theme")
     val DiagnosticsRenderer = DemoScenarioId("diagnostics.renderer")
@@ -420,6 +424,32 @@ internal object DemoScenarioRegistry {
             reset = R.id.demo_animation_infinite_reset,
             state = R.id.demo_animation_infinite_state,
             target = R.id.demo_animation_infinite_target,
+        ),
+        modifierScenario(
+            id = DemoScenarioIds.ModifierVisual,
+            titleRes = R.string.demo_scenario_modifier_visual_title,
+            summaryRes = R.string.demo_scenario_modifier_visual_summary,
+            root = R.id.demo_modifier_visual_root,
+            ready = R.id.demo_modifier_visual_ready,
+            target = R.id.demo_modifier_visual_target,
+            secondaryTarget = R.id.demo_modifier_visual_secondary_target,
+        ),
+        modifierScenario(
+            id = DemoScenarioIds.ModifierSizing,
+            titleRes = R.string.demo_scenario_modifier_sizing_title,
+            summaryRes = R.string.demo_scenario_modifier_sizing_summary,
+            root = R.id.demo_modifier_sizing_root,
+            ready = R.id.demo_modifier_sizing_ready,
+            target = R.id.demo_modifier_sizing_target,
+        ),
+        modifierScenario(
+            id = DemoScenarioIds.ModifierAccessibility,
+            titleRes = R.string.demo_scenario_modifier_accessibility_title,
+            summaryRes = R.string.demo_scenario_modifier_accessibility_summary,
+            root = R.id.demo_modifier_accessibility_root,
+            ready = R.id.demo_modifier_accessibility_ready,
+            target = R.id.demo_modifier_accessibility_target,
+            secondaryTarget = R.id.demo_modifier_accessibility_secondary_target,
         ),
         scenario(
             id = DemoScenarioIds.DiagnosticsRuntime,
@@ -934,6 +964,31 @@ internal object DemoScenarioRegistry {
             reset = reset,
             state = state,
             target = target,
+        ),
+    )
+
+    private fun modifierScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        root: Int,
+        ready: Int,
+        target: Int,
+        secondaryTarget: Int? = null,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.Rendering,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.SharedFixture,
+        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+        route = DemoScenarioRoute(ModifiersActivity::class.java),
+        mutable = false,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            target = target,
+            secondaryTarget = secondaryTarget,
         ),
     )
 

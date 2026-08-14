@@ -165,16 +165,20 @@ class DemoVisualUiTest {
 
     @Test
     fun modifiersPage_drawableBackgroundOverridesColorBackground() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             ModifiersActivity::class.java,
-        ).putExtra(EXTRA_MODIFIERS_PAGE_INDEX, 0)
-        launchDemoActivity<ModifiersActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "modifier.visual",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("modifiers-drawable-background-light")
             scenario.onActivity { activity ->
-                val colorOnly = activity.requireViewByTestTagVisible(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_COLOR_ONLY)
-                val drawablePreferred = activity.requireViewByTestTagVisible(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_SAMPLE)
+                val colorOnly = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_modifier_visual_secondary_target,
+                )
+                val drawablePreferred = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_modifier_visual_target,
+                )
                 assertViewFullyVisible(colorOnly)
                 assertViewFullyVisible(drawablePreferred)
                 assertViewBackgroundColor(
@@ -184,6 +188,58 @@ class DemoVisualUiTest {
                 assertTrue("Expected drawable sample to use layered drawable background", drawablePreferred.background is LayerDrawable)
                 assertFalse("Expected color-only sample to keep non-clipped outline by default", colorOnly.clipToOutline)
                 assertTrue("Expected drawable sample to auto-clip when cornerRadius is set", drawablePreferred.clipToOutline)
+            }
+        }
+    }
+
+    @Test
+    fun modifiersPage_fillMaxHeightMatchesOwningRow() {
+        launchDemoScenarioActivity(
+            ModifiersActivity::class.java,
+            "modifier.sizing",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val target = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_modifier_sizing_target,
+                )
+                val parent = target.parent as View
+                assertViewFullyVisible(target)
+                assertTrue(
+                    "Expected fillMaxHeight target to match its parent: " +
+                        "target=${target.height}, parent=${parent.height}",
+                    abs(target.height - parent.height) <= 1,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun modifiersPage_accessibilityAndNativePatchRemainObservable() {
+        launchDemoScenarioActivity(
+            ModifiersActivity::class.java,
+            "modifier.accessibility",
+            themeMode = DemoThemeMode.Light,
+        ).use { scenario ->
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val accessibilityTarget = activity.requireScenarioViewByIdVisible<View>(
+                    R.id.demo_modifier_accessibility_target,
+                )
+                assertEquals(
+                    activity.getString(R.string.demo_modifiers_accessibility_description),
+                    accessibilityTarget.contentDescription?.toString(),
+                )
+
+                val nativeTarget = activity.requireScenarioViewByIdVisible<TextView>(
+                    R.id.demo_modifier_accessibility_secondary_target,
+                )
+                assertTrue("Expected nativeView to apply bold typeface", nativeTarget.typeface.isBold)
+                assertTrue(
+                    "Expected nativeView to apply letter spacing",
+                    abs(nativeTarget.letterSpacing - 0.1f) <= 0.001f,
+                )
             }
         }
     }

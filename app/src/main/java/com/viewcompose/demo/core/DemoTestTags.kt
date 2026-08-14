@@ -196,8 +196,6 @@ internal object DemoTestTags {
 
     const val ACTIONS_CHIP_FILTER = "actions_chip_filter"
     const val ACTIONS_ELEVATED_CARD = "actions_elevated_card"
-    const val MODIFIERS_DRAWABLE_BACKGROUND_SAMPLE = "modifiers_drawable_background_sample"
-    const val MODIFIERS_DRAWABLE_BACKGROUND_COLOR_ONLY = "modifiers_drawable_background_color_only"
 
     const val ANIMATION_VISIBILITY_TOGGLE = "animation_visibility_toggle"
     const val ANIMATION_VISIBILITY_TARGET = "animation_visibility_target"

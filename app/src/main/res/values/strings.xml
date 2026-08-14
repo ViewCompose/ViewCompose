@@ -80,6 +80,12 @@
     <string name="demo_scenario_animation_transition_summary">Verify coordinated transition channels and axis-aware visibility.</string>
     <string name="demo_scenario_animation_infinite_title">Infinite and animatable</string>
     <string name="demo_scenario_animation_infinite_summary">Verify infinite repetition and explicit Animatable commands in isolation.</string>
+    <string name="demo_scenario_modifier_visual_title">Visual modifiers</string>
+    <string name="demo_scenario_modifier_visual_summary">Verify elevation, borders, clipping, drawable precedence, alpha, ripple, and corners.</string>
+    <string name="demo_scenario_modifier_sizing_title">Sizing modifiers</string>
+    <string name="demo_scenario_modifier_sizing_summary">Verify minimum constraints, fill behavior, fixed dimensions, padding, and margins.</string>
+    <string name="demo_scenario_modifier_accessibility_title">Accessibility and native modifiers</string>
+    <string name="demo_scenario_modifier_accessibility_summary">Verify content descriptions, native View patching, offsets, and z-order.</string>
     <string name="demo_scenario_diagnostics_runtime_title">Runtime diagnostics</string>
     <string name="demo_scenario_diagnostics_runtime_summary">Current environment, theme tokens, and local environment overrides.</string>
     <string name="demo_scenario_diagnostics_theme_title">Theme diagnostics</string>

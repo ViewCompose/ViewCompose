@@ -160,6 +160,20 @@
     <item name="demo_animation_infinite_state" type="id" />
     <item name="demo_animation_infinite_target" type="id" />
 
+    <item name="demo_modifier_visual_root" type="id" />
+    <item name="demo_modifier_visual_ready" type="id" />
+    <item name="demo_modifier_visual_target" type="id" />
+    <item name="demo_modifier_visual_secondary_target" type="id" />
+
+    <item name="demo_modifier_sizing_root" type="id" />
+    <item name="demo_modifier_sizing_ready" type="id" />
+    <item name="demo_modifier_sizing_target" type="id" />
+
+    <item name="demo_modifier_accessibility_root" type="id" />
+    <item name="demo_modifier_accessibility_ready" type="id" />
+    <item name="demo_modifier_accessibility_target" type="id" />
+    <item name="demo_modifier_accessibility_secondary_target" type="id" />
+
     <item name="demo_diagnostics_runtime_root" type="id" />
     <item name="demo_diagnostics_runtime_ready" type="id" />
     <item name="demo_diagnostics_runtime_target" type="id" />

@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: complete the second-risk group with Modifiers while reducing the remaining
-text-selector debt with each direct scenario slice.
+Next action: begin the third-risk group with Resources and Android View interop while reducing the
+remaining text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -759,6 +759,19 @@ hard-coded-copy gate now owns the Animation source, and the old Activity extras 
 On the Samsung SM-G991B Android 13 reference device, the registry-wide root/ready sweep, all six
 action-reset contracts in English and Simplified Chinese, and seven focused animation behavior
 tests passed.
+
+The Modifiers domain now has three strict direct fixtures: `modifier.visual`,
+`modifier.sizing`, and `modifier.accessibility`. `ModifiersActivity` requires immutable scenario
+identity; the page-index extra, local page switcher, overview, copied Modifier inventory, and
+verification checklist were deleted. These fixtures are intentionally immutable, so they publish
+root/ready and visual targets without artificial action or reset roles. Visual verification owns
+separate color-only and Drawable-preferred targets, sizing targets the fill-height sample, and the
+accessibility route targets both the described Box and the native-patched TextView. Paired
+resources cover all visible and accessibility copy, and the hard-coded-copy gate owns the complete
+Modifiers directory. On the Samsung SM-G991B Android 13 reference device, all three strict routes
+passed the registry-wide root/ready sweep; focused tests also passed for Drawable precedence and
+outline clipping, fillMaxHeight parent geometry, localized contentDescription, and replayed
+nativeView typeface/letter-spacing patches.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

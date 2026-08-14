@@ -81,6 +81,12 @@
     <string name="demo_scenario_animation_transition_summary">验证协同过渡通道与按轴显隐。</string>
     <string name="demo_scenario_animation_infinite_title">无限动画与 Animatable</string>
     <string name="demo_scenario_animation_infinite_summary">隔离验证无限重复与显式 Animatable 命令。</string>
+    <string name="demo_scenario_modifier_visual_title">视觉 Modifier</string>
+    <string name="demo_scenario_modifier_visual_summary">验证高程、边框、裁切、Drawable 优先级、透明度、波纹与圆角。</string>
+    <string name="demo_scenario_modifier_sizing_title">尺寸 Modifier</string>
+    <string name="demo_scenario_modifier_sizing_summary">验证最小约束、填充、固定尺寸、内边距与外边距。</string>
+    <string name="demo_scenario_modifier_accessibility_title">无障碍与原生 Modifier</string>
+    <string name="demo_scenario_modifier_accessibility_summary">验证内容描述、原生 View patch、偏移与绘制顺序。</string>
     <string name="demo_scenario_diagnostics_runtime_title">运行时诊断</string>
     <string name="demo_scenario_diagnostics_runtime_summary">检查当前环境、主题 Token 与局部环境覆盖。</string>
     <string name="demo_scenario_diagnostics_theme_title">主题诊断</string>

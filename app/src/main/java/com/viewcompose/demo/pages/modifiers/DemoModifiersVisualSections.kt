@@ -1,6 +1,9 @@
 package com.viewcompose
 
 import com.viewcompose.preview.tooling.ViewComposePreview
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.alpha
@@ -16,7 +19,6 @@ import com.viewcompose.ui.modifier.margin
 import com.viewcompose.ui.modifier.offset
 import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.modifier.size
-import com.viewcompose.ui.modifier.testTag
 import com.viewcompose.ui.modifier.zIndex
 import com.viewcompose.ui.foundation.Box
 import com.viewcompose.ui.foundation.Button
@@ -36,8 +38,8 @@ import com.viewcompose.ui.unit.sp
 internal fun UiTreeBuilder.ModifierElevationSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "elevation 高程对比",
-        subtitle = "不同 elevation 值的阴影效果对比。",
+        title = stringResource(R.string.demo_modifiers_elevation_title),
+        subtitle = stringResource(R.string.demo_modifiers_elevation_summary),
     ) {
         Row(
             spacing = 12.dp,
@@ -54,7 +56,7 @@ internal fun UiTreeBuilder.ModifierElevationSection() {
                         .elevation(elev.dp),
                 ) {
                     Text(
-                        text = "${elev}dp",
+                        text = stringResource(R.string.demo_modifiers_dp_value, elev),
                         style = UiTextStyle(fontSizeSp = 13.sp),
                     )
                 }
@@ -67,8 +69,8 @@ internal fun UiTreeBuilder.ModifierElevationSection() {
 internal fun UiTreeBuilder.ModifierBorderClipSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "border 边框 + clip 裁切",
-        subtitle = "border 设置边框宽度和颜色，clip 裁切溢出内容。",
+        title = stringResource(R.string.demo_modifiers_border_title),
+        subtitle = stringResource(R.string.demo_modifiers_border_summary),
     ) {
         Row(
             spacing = 12.dp,
@@ -84,7 +86,7 @@ internal fun UiTreeBuilder.ModifierBorderClipSection() {
                     .border(1.dp, Theme.colors.outlineVariant)
                     .cornerRadius(8.dp),
             ) {
-                Text(text = "1dp 边框")
+                Text(text = stringResource(R.string.demo_modifiers_border_one))
             }
             Box(
                 contentAlignment = BoxAlignment.Center,
@@ -94,7 +96,7 @@ internal fun UiTreeBuilder.ModifierBorderClipSection() {
                     .border(2.dp, Theme.colors.primary)
                     .cornerRadius(12.dp),
             ) {
-                Text(text = "2dp 主色")
+                Text(text = stringResource(R.string.demo_modifiers_border_two))
             }
             Box(
                 contentAlignment = BoxAlignment.Center,
@@ -104,11 +106,11 @@ internal fun UiTreeBuilder.ModifierBorderClipSection() {
                     .border(3.dp, Theme.colors.secondary)
                     .cornerRadius(24.dp),
             ) {
-                Text(text = "3dp 圆角")
+                Text(text = stringResource(R.string.demo_modifiers_border_three))
             }
         }
         Text(
-            text = "clip 裁切溢出内容",
+            text = stringResource(R.string.demo_modifiers_clip_heading),
             style = UiTextStyle(fontSizeSp = 14.sp),
             modifier = Modifier.margin(bottom = 8.dp),
         )
@@ -127,7 +129,7 @@ internal fun UiTreeBuilder.ModifierBorderClipSection() {
                     .offset(x = (-20).dp, y = (-20).dp),
             ) {}
             Text(
-                text = "溢出的蓝色方块被裁切",
+                text = stringResource(R.string.demo_modifiers_clip_content),
                 modifier = Modifier.padding(8.dp),
             )
         }
@@ -138,11 +140,11 @@ internal fun UiTreeBuilder.ModifierBorderClipSection() {
 internal fun UiTreeBuilder.ModifierAlphaRippleSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "alpha 透明度 + rippleColor 按压颜色",
-        subtitle = "alpha 控制 View 透明度，rippleColor 自定义按压反馈颜色。",
+        title = stringResource(R.string.demo_modifiers_alpha_title),
+        subtitle = stringResource(R.string.demo_modifiers_alpha_summary),
     ) {
         Text(
-            text = "透明度梯度",
+            text = stringResource(R.string.demo_modifiers_alpha_heading),
             style = UiTextStyle(fontSizeSp = 14.sp),
             modifier = Modifier.margin(bottom = 8.dp),
         )
@@ -163,7 +165,10 @@ internal fun UiTreeBuilder.ModifierAlphaRippleSection() {
                         .alpha(a),
                 ) {
                     Text(
-                        text = "${(a * 100).toInt()}%",
+                        text = stringResource(
+                            R.string.demo_modifiers_percent_value,
+                            (a * 100).toInt(),
+                        ),
                         style = UiTextStyle(fontSizeSp = 13.sp),
                     )
                 }
@@ -171,7 +176,7 @@ internal fun UiTreeBuilder.ModifierAlphaRippleSection() {
         }
         Divider(modifier = Modifier.margin(bottom = 12.dp))
         Text(
-            text = "自定义按压颜色（点击查看效果）",
+            text = stringResource(R.string.demo_modifiers_ripple_heading),
             style = UiTextStyle(fontSizeSp = 14.sp),
             modifier = Modifier.margin(bottom = 8.dp),
         )
@@ -180,21 +185,21 @@ internal fun UiTreeBuilder.ModifierAlphaRippleSection() {
             modifier = Modifier.fillMaxWidth(),
         ) {
             Button(
-                text = "红色波纹",
+                text = stringResource(R.string.demo_modifiers_ripple_red),
                 onClick = {},
                 rippleColor = 0xFFFF0000.toInt(),
                 modifier = Modifier
                     .weight(1f),
             )
             Button(
-                text = "绿色波纹",
+                text = stringResource(R.string.demo_modifiers_ripple_green),
                 onClick = {},
                 rippleColor = 0xFF00FF00.toInt(),
                 modifier = Modifier
                     .weight(1f),
             )
             Button(
-                text = "蓝色波纹",
+                text = stringResource(R.string.demo_modifiers_ripple_blue),
                 onClick = {},
                 rippleColor = 0xFF0000FF.toInt(),
                 modifier = Modifier
@@ -205,11 +210,13 @@ internal fun UiTreeBuilder.ModifierAlphaRippleSection() {
 }
 
 @ViewComposePreview(name = "Modifiers · Background drawable", group = "Demo/Sections")
-internal fun UiTreeBuilder.ModifierBackgroundDrawableSection() {
+internal fun UiTreeBuilder.ModifierBackgroundDrawableSection(
+    scenario: DemoScenarioSpec? = null,
+) {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "backgroundDrawableRes 资源背景",
-        subtitle = "当同时设置 backgroundColor 与 backgroundDrawableRes 时，drawable 优先；配合 cornerRadius 自动裁剪。",
+        title = stringResource(R.string.demo_modifiers_drawable_title),
+        subtitle = stringResource(R.string.demo_modifiers_drawable_summary),
     ) {
         Row(
             spacing = 12.dp,
@@ -225,10 +232,10 @@ internal fun UiTreeBuilder.ModifierBackgroundDrawableSection() {
                     .backgroundColor(Theme.colors.error)
                     .cornerRadius(12.dp)
                     .border(1.dp, Theme.colors.outlineVariant)
-                    .testTag(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_COLOR_ONLY),
+                    .modifierScenarioTarget(scenario, DemoAutomationRole.SecondaryTarget),
             ) {
                 Text(
-                    text = "仅颜色",
+                    text = stringResource(R.string.demo_modifiers_drawable_color_only),
                     color = Theme.colors.onSurface,
                     style = UiTextStyle(fontSizeSp = 13.sp),
                 )
@@ -242,16 +249,16 @@ internal fun UiTreeBuilder.ModifierBackgroundDrawableSection() {
                     .backgroundDrawableRes(R.drawable.demo_media_image)
                     .cornerRadius(12.dp)
                     .border(1.dp, Theme.colors.primary)
-                    .testTag(DemoTestTags.MODIFIERS_DRAWABLE_BACKGROUND_SAMPLE),
+                    .modifierScenarioTarget(scenario, DemoAutomationRole.Target),
             ) {
                 Text(
-                    text = "颜色 + Drawable",
+                    text = stringResource(R.string.demo_modifiers_drawable_combined),
                     style = UiTextStyle(fontSizeSp = 12.sp),
                 )
             }
         }
         Text(
-            text = "左侧只应用颜色（不自动裁剪）；右侧同时配置 drawable + cornerRadius，将自动裁剪。",
+            text = stringResource(R.string.demo_modifiers_drawable_note),
             style = UiTextStyle(fontSizeSp = 13.sp),
             color = TextDefaults.secondaryColor(),
         )
@@ -262,8 +269,8 @@ internal fun UiTreeBuilder.ModifierBackgroundDrawableSection() {
 internal fun UiTreeBuilder.ModifierCornerSection() {
     ScenarioSection(
         kind = ScenarioKind.Visual,
-        title = "cornerRadius 多级圆角",
-        subtitle = "cornerRadius 支持统一、上下分组和四角独立设置。",
+        title = stringResource(R.string.demo_modifiers_corner_title),
+        subtitle = stringResource(R.string.demo_modifiers_corner_summary),
     ) {
         Row(
             spacing = 12.dp,
@@ -279,7 +286,10 @@ internal fun UiTreeBuilder.ModifierCornerSection() {
                     .backgroundColor(Theme.colors.surfaceVariant)
                     .cornerRadius(0.dp),
             ) {
-                Text(text = "0dp", style = UiTextStyle(fontSizeSp = 12.sp))
+                Text(
+                    text = stringResource(R.string.demo_modifiers_dp_value, 0),
+                    style = UiTextStyle(fontSizeSp = 12.sp),
+                )
             }
             Box(
                 contentAlignment = BoxAlignment.Center,
@@ -289,7 +299,10 @@ internal fun UiTreeBuilder.ModifierCornerSection() {
                     .backgroundColor(Theme.colors.surfaceVariant)
                     .cornerRadius(8.dp),
             ) {
-                Text(text = "8dp", style = UiTextStyle(fontSizeSp = 12.sp))
+                Text(
+                    text = stringResource(R.string.demo_modifiers_dp_value, 8),
+                    style = UiTextStyle(fontSizeSp = 12.sp),
+                )
             }
             Box(
                 contentAlignment = BoxAlignment.Center,
@@ -299,11 +312,14 @@ internal fun UiTreeBuilder.ModifierCornerSection() {
                     .backgroundColor(Theme.colors.surfaceVariant)
                     .cornerRadius(24.dp),
             ) {
-                Text(text = "24dp", style = UiTextStyle(fontSizeSp = 12.sp))
+                Text(
+                    text = stringResource(R.string.demo_modifiers_dp_value, 24),
+                    style = UiTextStyle(fontSizeSp = 12.sp),
+                )
             }
         }
         Text(
-            text = "上下分组: top=16, bottom=0",
+            text = stringResource(R.string.demo_modifiers_corner_grouped),
             style = UiTextStyle(fontSizeSp = 13.sp),
             modifier = Modifier.margin(bottom = 8.dp),
         )
@@ -316,10 +332,10 @@ internal fun UiTreeBuilder.ModifierCornerSection() {
                 .cornerRadius(top = 16.dp, bottom = 0.dp)
                 .margin(bottom = 12.dp),
         ) {
-            Text(text = "顶部圆角")
+            Text(text = stringResource(R.string.demo_modifiers_corner_top))
         }
         Text(
-            text = "四角独立: topStart=24, topEnd=0, bottomEnd=24, bottomStart=0",
+            text = stringResource(R.string.demo_modifiers_corner_independent),
             style = UiTextStyle(fontSizeSp = 13.sp),
             modifier = Modifier.margin(bottom = 8.dp),
         )
@@ -331,7 +347,7 @@ internal fun UiTreeBuilder.ModifierCornerSection() {
                 .backgroundColor(Theme.colors.surfaceVariant)
                 .cornerRadius(topStart = 24.dp, topEnd = 0.dp, bottomEnd = 24.dp, bottomStart = 0.dp),
         ) {
-            Text(text = "对角圆角")
+            Text(text = stringResource(R.string.demo_modifiers_corner_diagonal))
         }
     }
 }
