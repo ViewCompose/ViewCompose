@@ -12,9 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: begin the fourth-risk group with Material 3, custom-token, multi-design-system, and
-One UI verification while reducing the remaining text-selector debt with each direct scenario
-slice.
+Next action: continue the fourth-risk group with multi-design-system and One UI verification while
+reducing the remaining text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -820,6 +819,22 @@ group. On the Samsung SM-G991B Android 13 reference device, the bilingual action
 all three focused independent-stack, deep-link, recreation, and owner-lifetime tests, and the
 registry host-role sweep passed. The automation text reader also now reacquires a role node after
 an intentional full-Session reset instead of assuming that an old `UiObject2` remains valid.
+
+Material 3 theme-source verification now has three strict direct fixtures:
+`design.material3-xml`, `design.material3-static`, and `design.material3-custom`. Scenario identity
+is the only source selector; the permissive theme-source extra and unknown-value fallback were
+deleted. All three routes retain the same component and diagnostic shape so source attribution is
+the controlled variable, while localized ready/state/action/reset roles occupy the first item.
+Reset advances both the parent composition generation and every lazy-item key. That second
+identity boundary is required because each lazy item owns an independent logical Session and must
+not retain its old remember, text-field, or callback identity when the fixture is reset. Paired
+resources cover all human-facing source, control, diagnostic-label, and accessibility copy; stable
+token IDs, producer IDs, recipe IDs, enum names, and color-role abbreviations remain diagnostic
+data. The hard-coded-copy gate owns the page and dedicated Activity. These routes have no current
+Macrobenchmark owner, so no workload revision was added. On the Samsung SM-G991B Android 13
+reference device, the bilingual three-source action/full-reset contract, all five existing theme
+source, touch-target, native-switch, and state-layer tests, and the registry-wide host-role sweep
+passed.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

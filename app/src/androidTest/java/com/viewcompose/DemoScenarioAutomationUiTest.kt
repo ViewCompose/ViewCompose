@@ -97,6 +97,9 @@ class DemoScenarioAutomationUiTest {
             "overlay.dialog",
             "overlay.menu",
             "navigation.system",
+            "design.material3-xml",
+            "design.material3-static",
+            "design.material3-custom",
             "performance.list",
         ).forEach { scenarioId ->
             launchScenario(scenarioId)
@@ -296,6 +299,35 @@ class DemoScenarioAutomationUiTest {
                 initial,
                 waitForTargetText(scenarioId, initial),
             )
+        }
+    }
+
+    @Test
+    fun material3SourceFixturesPublishDeterministicActionAndFullSessionReset() {
+        listOf("en", "zh-CN").forEach { languageTag ->
+            setApplicationLanguageTags(languageTag)
+            listOf(
+                "design.material3-xml",
+                "design.material3-static",
+                "design.material3-custom",
+            ).forEach { scenarioId ->
+                launchScenario(scenarioId)
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+                requireTarget(scenarioId, "primary_action").click()
+                assertNotEquals(
+                    "$scenarioId action must publish state",
+                    initial,
+                    waitForTargetTextChange(scenarioId, initial),
+                )
+
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId reset must recreate the initial Material 3 fixture Session",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
         }
     }
 

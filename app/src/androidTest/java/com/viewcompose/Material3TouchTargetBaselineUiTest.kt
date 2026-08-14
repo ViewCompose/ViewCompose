@@ -151,7 +151,7 @@ class Material3TouchTargetBaselineUiTest {
                         "${source.id} · ${activity.getString(source.labelRes)}",
                         sourceValue,
                     )
-                    assertEquals("Light", modeValue)
+                    assertEquals(activity.getString(R.string.demo_material3_mode_light), modeValue)
                     assertEquals(Material3Reference.designSystem, designSystem)
                     assertEquals(Material3Reference.recipeSet, recipeSet)
                     assertTrue(componentBackends.contains("surface-card:DslComposite/Exact"))
@@ -338,7 +338,7 @@ class Material3TouchTargetBaselineUiTest {
                 waitForUiIdle()
                 scenario.onActivity { activity ->
                     assertEquals(
-                        "Default clicks: 1",
+                        activity.getString(R.string.demo_material3_default_clicks, 1),
                         activity.requireTextViewByTestTagVisible(
                             DemoTestTags.MATERIAL3_DEFAULT_BUTTON_STATUS,
                         ).text.toString(),
@@ -362,7 +362,12 @@ class Material3TouchTargetBaselineUiTest {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val intent = Material3DefaultThemeActivity.newIntent(context, 1f)
         launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
-            scrollDeviceTextIntoView("Touch target probes")
+            scenario.onActivity { activity ->
+                activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_TARGET_ADJACENT_FIRST,
+                ).centerInsideOwningRecyclerView()
+            }
+            waitForUiIdle()
             var firstTouchX = 0
             var firstTouchY = 0
             var secondTouchX = 0
@@ -401,7 +406,11 @@ class Material3TouchTargetBaselineUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertEquals(
-                    "Adjacent: true/false",
+                    activity.getString(
+                        R.string.demo_material3_adjacent_state,
+                        true.toString(),
+                        false.toString(),
+                    ),
                     activity.requireTextViewByTestTagVisible(
                         DemoTestTags.MATERIAL3_TARGET_ADJACENT_STATUS,
                     ).text.toString(),
@@ -411,7 +420,11 @@ class Material3TouchTargetBaselineUiTest {
             waitForUiIdle()
             scenario.onActivity { activity ->
                 assertEquals(
-                    "Adjacent: true/true",
+                    activity.getString(
+                        R.string.demo_material3_adjacent_state,
+                        true.toString(),
+                        true.toString(),
+                    ),
                     activity.requireTextViewByTestTagVisible(
                         DemoTestTags.MATERIAL3_TARGET_ADJACENT_STATUS,
                     ).text.toString(),
@@ -426,7 +439,12 @@ class Material3TouchTargetBaselineUiTest {
         val intent = Material3DefaultThemeActivity.newIntent(context, 1f)
         launchDemoActivity<Material3DefaultThemeActivity>(intent, DemoThemeMode.Light).use { scenario ->
             waitForUiIdle()
-            scrollDeviceTextIntoView("Interaction state layers")
+            scenario.onActivity { activity ->
+                activity.requireViewByTestTagVisible(
+                    DemoTestTags.MATERIAL3_STATE_LAYER_PRIMARY,
+                ).centerInsideOwningRecyclerView()
+            }
+            waitForUiIdle()
             var evidence = ""
             scenario.onActivity { activity ->
                 val button = activity.requireViewByTestTagVisible(

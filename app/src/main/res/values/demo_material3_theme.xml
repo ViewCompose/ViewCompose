@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_design_material3_xml_title">Material 3 · Android XML</string>
+    <string name="demo_scenario_design_material3_xml_summary">Verify tokens bridged from the host Android XML theme.</string>
+    <string name="demo_scenario_design_material3_static_title">Material 3 · Static defaults</string>
+    <string name="demo_scenario_design_material3_static_summary">Verify deterministic Material3ThemeDefaults without app overrides.</string>
+    <string name="demo_scenario_design_material3_custom_title">Material 3 · Custom tokens</string>
+    <string name="demo_scenario_design_material3_custom_summary">Verify app-owned token overrides through the same component fixture.</string>
+
+    <string name="demo_material3_ready">Material 3 source fixture ready</string>
+    <string name="demo_material3_automation_state">%1$s · actions=%2$d</string>
+    <string name="demo_material3_automation_action">Advance fixture state</string>
+    <string name="demo_material3_automation_reset">Reset fixture</string>
+    <string name="demo_material3_fixture_badge">theme-token-matrix-v2 · %1$s · %2$s</string>
+
+    <string name="demo_material3_intro_title">Theme and token verification</string>
+    <string name="demo_material3_intro_summary">The component set stays fixed while only the theme source changes. Verify source and token values before inspecting component output.</string>
+    <string name="demo_material3_section_buttons">Buttons</string>
+    <string name="demo_material3_button_default">Default</string>
+    <string name="demo_material3_button_outlined">Outlined</string>
+    <string name="demo_material3_button_disabled">Disabled</string>
+    <string name="demo_material3_default_clicks">Default clicks: %1$d</string>
+    <string name="demo_material3_section_compact">Compact controls</string>
+    <string name="demo_material3_default_icon_description">Default Material 3 icon button</string>
+    <string name="demo_material3_assist_chip">Assist chip</string>
+    <string name="demo_material3_section_navigation">Navigation</string>
+    <string name="demo_material3_navigation_home">Home</string>
+    <string name="demo_material3_navigation_search">Search</string>
+    <string name="demo_material3_navigation_profile">Profile</string>
+
+    <string name="demo_material3_state_layers_title">Interaction state layers</string>
+    <string name="demo_material3_state_layers_instruction">Long-press a control to inspect pressed state, use Focus Primary for focused state, and connect a mouse or stylus for hovered state. The state layer must cover only the visible capsule.</string>
+    <string name="demo_material3_primary">Primary</string>
+    <string name="demo_material3_tonal">Tonal</string>
+    <string name="demo_material3_state_layer_icon_description">State-layer icon button</string>
+    <string name="demo_material3_focus_primary">Focus Primary</string>
+    <string name="demo_material3_clear_focus">Clear focus</string>
+    <string name="demo_material3_focus_instruction">After focusing, inspect the Primary focused layer directly. Clearing focus must restore its default appearance.</string>
+    <string name="demo_material3_composite_controls">Composite controls</string>
+    <string name="demo_material3_state_layer_fab_description">State-layer floating action button</string>
+    <string name="demo_material3_segment_selected">Selected</string>
+    <string name="demo_material3_segment_other">Other</string>
+    <string name="demo_material3_composite_instruction">Long-press or hover the chip, floating action button, and both segments. After selection changes, the layer must follow the selected or unselected content role.</string>
+    <string name="demo_material3_state_layer_contract">Resolved state-layer contract</string>
+    <string name="demo_material3_fact_opacity">Opacity P/F/H</string>
+    <string name="demo_material3_fact_primary_base">Primary base</string>
+    <string name="demo_material3_fact_primary_states">Primary P/F/H</string>
+    <string name="demo_material3_fact_tonal_base">Tonal base</string>
+    <string name="demo_material3_fact_tonal_states">Tonal P/F/H</string>
+    <string name="demo_material3_fact_outlined_base">Outlined base</string>
+    <string name="demo_material3_fact_outlined_states">Outlined P/F/H</string>
+    <string name="demo_material3_fact_icon_base">Icon base</string>
+    <string name="demo_material3_fact_icon_states">Icon P/F/H</string>
+    <string name="demo_material3_fact_chip_base">Chip base</string>
+    <string name="demo_material3_fact_fab_base">FAB base</string>
+    <string name="demo_material3_fact_segment_base">Segment base</string>
+    <string name="demo_material3_selected_value">%1$s selected</string>
+
+    <string name="demo_material3_snapshot_title">Source and token snapshot</string>
+    <string name="demo_material3_screenshot_identity">Screenshot identity</string>
+    <string name="demo_material3_fact_fixture">Fixture</string>
+    <string name="demo_material3_fact_source">Source</string>
+    <string name="demo_material3_fact_definition">Definition</string>
+    <string name="demo_material3_fact_metadata_origin">Metadata origin</string>
+    <string name="demo_material3_fact_token_producer">Token producer</string>
+    <string name="demo_material3_fact_primary_source">Primary source</string>
+    <string name="demo_material3_fact_shape_source">Shape source</string>
+    <string name="demo_material3_fact_design_system">Design system</string>
+    <string name="demo_material3_fact_recipe_set">Recipe set</string>
+    <string name="demo_material3_fact_component_backends">Component backends</string>
+    <string name="demo_material3_fact_overlay_transport">Overlay transport</string>
+    <string name="demo_material3_fact_overlay_presenters">Overlay presenters</string>
+    <string name="demo_material3_fact_mode">Mode</string>
+    <string name="demo_material3_fact_primary">Primary</string>
+    <string name="demo_material3_fact_primary_container">PrimaryContainer</string>
+    <string name="demo_material3_fact_secondary">Secondary</string>
+    <string name="demo_material3_fact_secondary_container">SecondaryContainer</string>
+    <string name="demo_material3_fact_on_secondary_container">OnSecondaryContainer</string>
+    <string name="demo_material3_fact_surface">Surface</string>
+    <string name="demo_material3_fact_surface_container">SurfaceContainer</string>
+    <string name="demo_material3_fact_role_check">Role check</string>
+    <string name="demo_material3_mode_light">Light</string>
+    <string name="demo_material3_mode_dark">Dark</string>
+    <string name="demo_material3_primary_roles">Primary roles</string>
+    <string name="demo_material3_secondary_roles">Secondary roles</string>
+
+    <string name="demo_material3_named_title">Named Material 3 pressure slice</string>
+    <string name="demo_material3_named_summary">This slice is fixed to %1$s; these components do not use a generic renderer Material branch.</string>
+    <string name="demo_material3_named_surface">Surface · colors.surfaceContainer</string>
+    <string name="demo_material3_named_card">Card · shapes.medium</string>
+    <string name="demo_material3_named_button">Material 3 Button</string>
+    <string name="demo_material3_named_switch">Material 3 Switch</string>
+    <string name="demo_material3_named_text_field">Material 3 TextField</string>
+    <string name="demo_material3_named_text_field_support">Native Android editing core</string>
+    <string name="demo_material3_named_initial_value">Token source</string>
+
+    <string name="demo_material3_touch_targets_title">Touch target probes</string>
+    <string name="demo_material3_adjacent_first">Adjacent first</string>
+    <string name="demo_material3_adjacent_second">Adjacent second</string>
+    <string name="demo_material3_adjacent_state">Adjacent: %1$s/%2$s</string>
+    <string name="demo_material3_explicit_compact">Explicit 32dp target</string>
+    <string name="demo_material3_clipped_parent">Clipped 32dp parent</string>
+    <string name="demo_material3_selection_controls_title">Selection controls</string>
+    <string name="demo_material3_checkbox">Checkbox</string>
+    <string name="demo_material3_radio_button">Radio button</string>
+    <string name="demo_material3_switch">Switch</string>
+</resources>

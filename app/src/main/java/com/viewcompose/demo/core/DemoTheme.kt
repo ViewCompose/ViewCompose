@@ -76,11 +76,6 @@ internal enum class DemoThemeSource(
         }
     }
 
-    companion object {
-        fun fromId(id: String?): DemoThemeSource {
-            return entries.firstOrNull { source -> source.id == id } ?: Material3Defaults
-        }
-    }
 }
 
 /**

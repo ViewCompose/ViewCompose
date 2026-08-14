@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_scenario_design_material3_xml_title">Material 3 · Android XML</string>
+    <string name="demo_scenario_design_material3_xml_summary">验证从宿主 Android XML 主题桥接而来的 Token。</string>
+    <string name="demo_scenario_design_material3_static_title">Material 3 · 静态默认值</string>
+    <string name="demo_scenario_design_material3_static_summary">验证没有应用层覆盖的确定性 Material3ThemeDefaults。</string>
+    <string name="demo_scenario_design_material3_custom_title">Material 3 · 自定义 Token</string>
+    <string name="demo_scenario_design_material3_custom_summary">通过同一组件夹具验证应用自有的 Token 覆盖。</string>
+
+    <string name="demo_material3_ready">Material 3 主题来源夹具已就绪</string>
+    <string name="demo_material3_automation_state">%1$s · 操作次数=%2$d</string>
+    <string name="demo_material3_automation_action">推进夹具状态</string>
+    <string name="demo_material3_automation_reset">重置夹具</string>
+    <string name="demo_material3_fixture_badge">theme-token-matrix-v2 · %1$s · %2$s</string>
+
+    <string name="demo_material3_intro_title">主题与 Token 验证</string>
+    <string name="demo_material3_intro_summary">组件集合保持不变，只切换主题来源。请先核对来源和 Token 数值，再检查组件呈现结果。</string>
+    <string name="demo_material3_section_buttons">按钮</string>
+    <string name="demo_material3_button_default">默认</string>
+    <string name="demo_material3_button_outlined">描边</string>
+    <string name="demo_material3_button_disabled">禁用</string>
+    <string name="demo_material3_default_clicks">默认按钮点击次数：%1$d</string>
+    <string name="demo_material3_section_compact">紧凑控件</string>
+    <string name="demo_material3_default_icon_description">默认 Material 3 图标按钮</string>
+    <string name="demo_material3_assist_chip">辅助 Chip</string>
+    <string name="demo_material3_section_navigation">导航</string>
+    <string name="demo_material3_navigation_home">首页</string>
+    <string name="demo_material3_navigation_search">搜索</string>
+    <string name="demo_material3_navigation_profile">个人</string>
+
+    <string name="demo_material3_state_layers_title">交互状态层</string>
+    <string name="demo_material3_state_layers_instruction">长按控件检查 pressed 状态，点击“聚焦 Primary”固定 focused 状态，连接鼠标或触控笔检查 hovered 状态。状态层只能覆盖可见胶囊。</string>
+    <string name="demo_material3_primary">Primary</string>
+    <string name="demo_material3_tonal">Tonal</string>
+    <string name="demo_material3_state_layer_icon_description">状态层图标按钮</string>
+    <string name="demo_material3_focus_primary">聚焦 Primary</string>
+    <string name="demo_material3_clear_focus">清除焦点</string>
+    <string name="demo_material3_focus_instruction">聚焦后直接观察 Primary 的 focused 状态层；清除焦点后应恢复默认外观。</string>
+    <string name="demo_material3_composite_controls">组合控件</string>
+    <string name="demo_material3_state_layer_fab_description">状态层悬浮按钮</string>
+    <string name="demo_material3_segment_selected">已选择</string>
+    <string name="demo_material3_segment_other">其他</string>
+    <string name="demo_material3_composite_instruction">长按或悬停 Chip、悬浮按钮和两个分段。切换选择后，状态层应跟随 selected 或 unselected 内容角色。</string>
+    <string name="demo_material3_state_layer_contract">已解析的状态层契约</string>
+    <string name="demo_material3_fact_opacity">透明度 P/F/H</string>
+    <string name="demo_material3_fact_primary_base">Primary 基色</string>
+    <string name="demo_material3_fact_primary_states">Primary P/F/H</string>
+    <string name="demo_material3_fact_tonal_base">Tonal 基色</string>
+    <string name="demo_material3_fact_tonal_states">Tonal P/F/H</string>
+    <string name="demo_material3_fact_outlined_base">Outlined 基色</string>
+    <string name="demo_material3_fact_outlined_states">Outlined P/F/H</string>
+    <string name="demo_material3_fact_icon_base">图标基色</string>
+    <string name="demo_material3_fact_icon_states">图标 P/F/H</string>
+    <string name="demo_material3_fact_chip_base">Chip 基色</string>
+    <string name="demo_material3_fact_fab_base">FAB 基色</string>
+    <string name="demo_material3_fact_segment_base">分段基色</string>
+    <string name="demo_material3_selected_value">%1$s 已选择</string>
+
+    <string name="demo_material3_snapshot_title">来源与 Token 快照</string>
+    <string name="demo_material3_screenshot_identity">截图身份</string>
+    <string name="demo_material3_fact_fixture">夹具</string>
+    <string name="demo_material3_fact_source">来源</string>
+    <string name="demo_material3_fact_definition">定义</string>
+    <string name="demo_material3_fact_metadata_origin">元数据来源</string>
+    <string name="demo_material3_fact_token_producer">Token 生产者</string>
+    <string name="demo_material3_fact_primary_source">Primary 来源</string>
+    <string name="demo_material3_fact_shape_source">形状来源</string>
+    <string name="demo_material3_fact_design_system">设计系统</string>
+    <string name="demo_material3_fact_recipe_set">配方集</string>
+    <string name="demo_material3_fact_component_backends">组件后端</string>
+    <string name="demo_material3_fact_overlay_transport">Overlay 传输</string>
+    <string name="demo_material3_fact_overlay_presenters">Overlay Presenter</string>
+    <string name="demo_material3_fact_mode">模式</string>
+    <string name="demo_material3_fact_primary">Primary</string>
+    <string name="demo_material3_fact_primary_container">PrimaryContainer</string>
+    <string name="demo_material3_fact_secondary">Secondary</string>
+    <string name="demo_material3_fact_secondary_container">SecondaryContainer</string>
+    <string name="demo_material3_fact_on_secondary_container">OnSecondaryContainer</string>
+    <string name="demo_material3_fact_surface">Surface</string>
+    <string name="demo_material3_fact_surface_container">SurfaceContainer</string>
+    <string name="demo_material3_fact_role_check">角色检查</string>
+    <string name="demo_material3_mode_light">浅色</string>
+    <string name="demo_material3_mode_dark">深色</string>
+    <string name="demo_material3_primary_roles">Primary 角色</string>
+    <string name="demo_material3_secondary_roles">Secondary 角色</string>
+
+    <string name="demo_material3_named_title">具名 Material 3 压力切片</string>
+    <string name="demo_material3_named_summary">此切片固定使用 %1$s；这些组件不会经过通用渲染器的 Material 分支。</string>
+    <string name="demo_material3_named_surface">Surface · colors.surfaceContainer</string>
+    <string name="demo_material3_named_card">Card · shapes.medium</string>
+    <string name="demo_material3_named_button">Material 3 按钮</string>
+    <string name="demo_material3_named_switch">Material 3 开关</string>
+    <string name="demo_material3_named_text_field">Material 3 文本框</string>
+    <string name="demo_material3_named_text_field_support">原生 Android 编辑核心</string>
+    <string name="demo_material3_named_initial_value">Token 来源</string>
+
+    <string name="demo_material3_touch_targets_title">触控目标探针</string>
+    <string name="demo_material3_adjacent_first">相邻项一</string>
+    <string name="demo_material3_adjacent_second">相邻项二</string>
+    <string name="demo_material3_adjacent_state">相邻状态：%1$s/%2$s</string>
+    <string name="demo_material3_explicit_compact">显式 32dp 目标</string>
+    <string name="demo_material3_clipped_parent">裁剪在 32dp 父级内</string>
+    <string name="demo_material3_selection_controls_title">选择控件</string>
+    <string name="demo_material3_checkbox">复选框</string>
+    <string name="demo_material3_radio_button">单选按钮</string>
+    <string name="demo_material3_switch">开关</string>
+</resources>

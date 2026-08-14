@@ -16,6 +16,7 @@ import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
 import com.viewcompose.SystemNavigationActivity
+import com.viewcompose.Material3DefaultThemeActivity
 import com.viewcompose.demo.contract.DemoAutomationContract
 import com.viewcompose.demo.contract.DemoAutomationRole
 import com.viewcompose.demo.contract.DemoBenchmarkContract
@@ -78,6 +79,9 @@ internal object DemoScenarioIds {
     val OverlayDialog = DemoScenarioId("overlay.dialog")
     val OverlayMenu = DemoScenarioId("overlay.menu")
     val NavigationSystem = DemoScenarioId("navigation.system")
+    val DesignMaterial3Xml = DemoScenarioId("design.material3-xml")
+    val DesignMaterial3Static = DemoScenarioId("design.material3-static")
+    val DesignMaterial3Custom = DemoScenarioId("design.material3-custom")
     val PerformanceList = DemoScenarioId("performance.list")
 }
 
@@ -866,6 +870,39 @@ internal object DemoScenarioRegistry {
             ),
             benchmarkRevision = 2,
         ),
+        material3ThemeScenario(
+            id = DemoScenarioIds.DesignMaterial3Xml,
+            titleRes = R.string.demo_scenario_design_material3_xml_title,
+            summaryRes = R.string.demo_scenario_design_material3_xml_summary,
+            root = R.id.demo_design_material3_xml_root,
+            ready = R.id.demo_design_material3_xml_ready,
+            primaryAction = R.id.demo_design_material3_xml_primary_action,
+            reset = R.id.demo_design_material3_xml_reset,
+            state = R.id.demo_design_material3_xml_state,
+            target = R.id.demo_design_material3_xml_target,
+        ),
+        material3ThemeScenario(
+            id = DemoScenarioIds.DesignMaterial3Static,
+            titleRes = R.string.demo_scenario_design_material3_static_title,
+            summaryRes = R.string.demo_scenario_design_material3_static_summary,
+            root = R.id.demo_design_material3_static_root,
+            ready = R.id.demo_design_material3_static_ready,
+            primaryAction = R.id.demo_design_material3_static_primary_action,
+            reset = R.id.demo_design_material3_static_reset,
+            state = R.id.demo_design_material3_static_state,
+            target = R.id.demo_design_material3_static_target,
+        ),
+        material3ThemeScenario(
+            id = DemoScenarioIds.DesignMaterial3Custom,
+            titleRes = R.string.demo_scenario_design_material3_custom_title,
+            summaryRes = R.string.demo_scenario_design_material3_custom_summary,
+            root = R.id.demo_design_material3_custom_root,
+            ready = R.id.demo_design_material3_custom_ready,
+            primaryAction = R.id.demo_design_material3_custom_primary_action,
+            reset = R.id.demo_design_material3_custom_reset,
+            state = R.id.demo_design_material3_custom_state,
+            target = R.id.demo_design_material3_custom_target,
+        ),
         scenario(
             id = DemoScenarioIds.PerformanceList,
             category = DemoScenarioCategory.Performance,
@@ -1054,6 +1091,35 @@ internal object DemoScenarioRegistry {
             ready = ready,
             target = target,
             secondaryTarget = secondaryTarget,
+        ),
+    )
+
+    private fun material3ThemeScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        root: Int,
+        ready: Int,
+        primaryAction: Int,
+        reset: Int,
+        state: Int,
+        target: Int,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.DesignSystems,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.Dedicated,
+        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+        route = DemoScenarioRoute(Material3DefaultThemeActivity::class.java),
+        mutable = true,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            primaryAction = primaryAction,
+            reset = reset,
+            state = state,
+            target = target,
         ),
     )
 

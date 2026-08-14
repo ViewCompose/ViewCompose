@@ -305,6 +305,27 @@
     <item name="demo_navigation_system_state" type="id" />
     <item name="demo_navigation_system_target" type="id" />
 
+    <item name="demo_design_material3_xml_root" type="id" />
+    <item name="demo_design_material3_xml_ready" type="id" />
+    <item name="demo_design_material3_xml_primary_action" type="id" />
+    <item name="demo_design_material3_xml_reset" type="id" />
+    <item name="demo_design_material3_xml_state" type="id" />
+    <item name="demo_design_material3_xml_target" type="id" />
+
+    <item name="demo_design_material3_static_root" type="id" />
+    <item name="demo_design_material3_static_ready" type="id" />
+    <item name="demo_design_material3_static_primary_action" type="id" />
+    <item name="demo_design_material3_static_reset" type="id" />
+    <item name="demo_design_material3_static_state" type="id" />
+    <item name="demo_design_material3_static_target" type="id" />
+
+    <item name="demo_design_material3_custom_root" type="id" />
+    <item name="demo_design_material3_custom_ready" type="id" />
+    <item name="demo_design_material3_custom_primary_action" type="id" />
+    <item name="demo_design_material3_custom_reset" type="id" />
+    <item name="demo_design_material3_custom_state" type="id" />
+    <item name="demo_design_material3_custom_target" type="id" />
+
     <item name="demo_performance_list_root" type="id" />
     <item name="demo_performance_list_ready" type="id" />
     <item name="demo_performance_list_primary_action" type="id" />

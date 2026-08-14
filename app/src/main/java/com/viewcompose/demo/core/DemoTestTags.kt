@@ -77,7 +77,6 @@ internal object DemoTestTags {
     const val ONE_UI_7_BOTTOM_SHEET_ACTION = "one_ui_7_bottom_sheet_action"
     const val ONE_UI_7_BOTTOM_SHEET_CONTENT = "one_ui_7_bottom_sheet_content"
     const val ONE_UI_7_BOTTOM_SHEET_DISMISS = "one_ui_7_bottom_sheet_dismiss"
-    const val MATERIAL3_DEFAULT_ROOT = "material3_default_root"
     const val MATERIAL3_THEME_SOURCE = "material3_theme_source"
     const val MATERIAL3_THEME_ORIGIN = "material3_theme_origin"
     const val MATERIAL3_TOKEN_PRODUCER = "material3_token_producer"
