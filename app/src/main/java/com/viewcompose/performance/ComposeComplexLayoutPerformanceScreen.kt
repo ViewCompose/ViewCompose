@@ -26,6 +26,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 
 /**
  * Compose 对照版本的复杂布局性能场景。
@@ -34,20 +36,23 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun ComposeComplexLayoutPerformanceScreen(
     shadowsEnabled: Boolean,
+    scenario: DemoScenarioSpec,
+    fixtures: PerformanceFixtures,
 ) {
     var revision by remember { mutableIntStateOf(0) }
-    val cards = performanceDashboardCards(revision)
+    val cards = fixtures.dashboardCards(revision)
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(PERFORMANCE_BACKGROUND_COLOR)),
+            .background(Color(PERFORMANCE_BACKGROUND_COLOR))
+            .performanceScenarioTarget(
+                scenario,
+                DemoAutomationRole.Root,
+                enableResourceIds = true,
+            ),
     ) {
         ComposeComplexLayoutPerformanceHeader(
-            engineName = if (shadowsEnabled) {
-                "${PerformanceEngine.Compose.displayName} Shadow"
-            } else {
-                PerformanceEngine.Compose.displayName
-            },
+            engineName = fixtures.copy.engineName(PerformanceEngine.Compose, shadowsEnabled),
             revision = revision,
             onUpdate = {
                 revision += 1
@@ -55,6 +60,8 @@ internal fun ComposeComplexLayoutPerformanceScreen(
             onReset = {
                 revision = 0
             },
+            scenario = scenario,
+            copy = fixtures.copy,
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -62,12 +69,14 @@ internal fun ComposeComplexLayoutPerformanceScreen(
                 .fillMaxWidth()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(8.dp),
+                .padding(8.dp)
+                .performanceScenarioTarget(scenario, DemoAutomationRole.Target),
         ) {
             cards.forEach { card ->
                 ComposeDashboardCard(
                     card = card,
                     shadowsEnabled = shadowsEnabled,
+                    copy = fixtures.copy,
                 )
             }
         }
@@ -80,6 +89,8 @@ private fun ComposeComplexLayoutPerformanceHeader(
     revision: Int,
     onUpdate: () -> Unit,
     onReset: () -> Unit,
+    scenario: DemoScenarioSpec,
+    copy: PerformanceCopy,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -89,27 +100,34 @@ private fun ComposeComplexLayoutPerformanceHeader(
             .padding(12.dp),
     ) {
         PerformanceText(
-            text = "$engineName Complex Ready",
+            text = copy.complexReady(engineName),
             sizeSp = 18,
             weight = FontWeight.SemiBold,
             color = PERFORMANCE_PRIMARY_TEXT_COLOR,
+            modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         PerformanceText(
-            text = "Dashboard revision $revision",
+            text = copy.dashboardRevision(revision),
             sizeSp = 14,
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
+            modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.State),
         )
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ComposeComplexLayoutAction(
-                text = "Update dashboard",
+                text = copy.updateDashboard,
                 onClick = onUpdate,
+                modifier = Modifier.performanceScenarioTarget(
+                    scenario,
+                    DemoAutomationRole.PrimaryAction,
+                ),
             )
             ComposeComplexLayoutAction(
-                text = "Reset dashboard",
+                text = copy.resetDashboard,
                 onClick = onReset,
+                modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.Reset),
             )
         }
     }
@@ -119,10 +137,11 @@ private fun ComposeComplexLayoutPerformanceHeader(
 private fun ComposeComplexLayoutAction(
     text: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
+        modifier = modifier
             .background(
                 color = Color(PERFORMANCE_PRIMARY_COLOR),
                 shape = RoundedCornerShape(8.dp),
@@ -150,6 +169,7 @@ private fun ComposeComplexLayoutAction(
 private fun ComposeDashboardCard(
     card: PerformanceDashboardCard,
     shadowsEnabled: Boolean,
+    copy: PerformanceCopy,
 ) {
     val shape = RoundedCornerShape(12.dp)
     val shadowModifier = if (shadowsEnabled) {
@@ -188,14 +208,14 @@ private fun ComposeDashboardCard(
                     .padding(8.dp),
             ) {
                 PerformanceText(
-                    text = "Detail",
+                    text = copy.detail,
                     sizeSp = 12,
                     weight = FontWeight.Medium,
                     color = card.accentColor,
                 )
                 Box(modifier = Modifier.weight(1f)) {
                     PerformanceText(
-                        text = "Additional nested content for section ${card.id + 1}",
+                        text = copy.detailContent(card.id + 1),
                         sizeSp = 12,
                         color = PERFORMANCE_SECONDARY_TEXT_COLOR,
                     )

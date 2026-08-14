@@ -299,29 +299,20 @@ internal fun designSystemScenarioId(kind: String): String = when (kind) {
     else -> error("Unknown design-system benchmark variant: $kind")
 }
 
-/**
- * 启动性能对比 Activity 并选择指定引擎与场景。
- * Starts the performance comparison Activity with the requested engine and scenario.
- */
-internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
+/** Starts one revisioned performance workload with an explicit comparison engine. */
+internal fun MacrobenchmarkScope.startPerformanceScenarioAndWait(
+    scenarioId: String,
     engine: String,
-    scenario: String,
-    expectedText: String,
     shadowRenderPolicy: String? = null,
 ) {
-    prepareBenchmarkUiAutomation()
-    pressHome()
-    startActivityAndWait { intent ->
-        intent.removeExtra("demo_module_key")
-        intent.removeExtra("shadow_render_policy")
-        intent.putExtra("performance_engine", engine)
-        intent.putExtra("performance_scenario", scenario)
+    startDemoScenarioAndWait(scenarioId) {
+        putExtra("performance_engine", engine)
+        removeExtra("shadow_render_policy")
         shadowRenderPolicy?.let { policy ->
-            intent.putExtra("shadow_render_policy", policy)
+            putExtra("shadow_render_policy", policy)
         }
-        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
     }
-    waitForText(expectedText)
+    waitForScenarioTarget(scenarioId, DemoTargetRole.Target)
 }
 
 /**

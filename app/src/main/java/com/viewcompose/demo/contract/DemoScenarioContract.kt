@@ -130,7 +130,14 @@ internal sealed interface DemoRouteExtra {
 internal data class DemoScenarioRoute(
     val activityClass: Class<out Activity>,
     val extras: Map<String, DemoRouteExtra> = emptyMap(),
+    val callerOverrideableExtraKeys: Set<String> = emptySet(),
 ) {
+    init {
+        require(callerOverrideableExtraKeys.all(extras::containsKey)) {
+            "Caller-overridable route extras must declare a deterministic default"
+        }
+    }
+
     fun createIntent(
         context: Context,
         source: Intent? = null,
@@ -138,8 +145,13 @@ internal data class DemoScenarioRoute(
         return Intent(context, activityClass).apply {
             source?.extras?.let { sourceExtras -> putExtras(sourceExtras) }
             // Declared route values define the scenario's deterministic initial state and therefore
-            // must win over stale launcher or benchmark extras copied from a previous invocation.
-            this@DemoScenarioRoute.extras.forEach { (key, value) -> value.put(this, key) }
+            // win over stale launcher extras. A narrowly declared workload dimension may retain a
+            // caller value, but only because the route also owns its deterministic default.
+            this@DemoScenarioRoute.extras.forEach { (key, value) ->
+                if (key !in callerOverrideableExtraKeys || !hasExtra(key)) {
+                    value.put(this, key)
+                }
+            }
         }
     }
 }

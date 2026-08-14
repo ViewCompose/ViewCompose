@@ -120,10 +120,42 @@ class DemoScenarioAutomationUiTest {
             "foundations.media",
             "foundations.typography",
             "performance.list",
+            "performance.complex-layout",
+            "performance.shadow-list",
+            "performance.shadow-complex-layout",
         ).forEach { scenarioId ->
             launchScenario(scenarioId)
             requireTarget(scenarioId, "root")
             requireTarget(scenarioId, "ready")
+        }
+    }
+
+    @Test
+    fun performanceFixturesExposeTheSameContractForBothEngines() {
+        listOf(
+            "performance.list",
+            "performance.complex-layout",
+            "performance.shadow-list",
+            "performance.shadow-complex-layout",
+        ).forEach { scenarioId ->
+            listOf("viewcompose", "compose").forEach { engine ->
+                launchPerformanceScenario(scenarioId, engine)
+                requireTarget(scenarioId, "root")
+                assertTrue(requireTarget(scenarioId, "ready").text.contains(engine, ignoreCase = true))
+                requireTarget(scenarioId, "target")
+                val initial = requireTarget(scenarioId, "state").text.orEmpty()
+
+                requireTarget(scenarioId, "primary_action").click()
+                val updated = waitForTargetTextChange(scenarioId, initial)
+                assertNotEquals("$scenarioId/$engine action must publish state", initial, updated)
+
+                requireTarget(scenarioId, "reset").click()
+                assertEquals(
+                    "$scenarioId/$engine reset must restore initial state",
+                    initial,
+                    waitForTargetText(scenarioId, initial),
+                )
+            }
         }
     }
 
@@ -544,6 +576,19 @@ class DemoScenarioAutomationUiTest {
             "am start -W -n $TARGET_PACKAGE/com.viewcompose.MainActivity " +
                 "-f $NEW_CLEAR_TASK_FLAGS " +
                 "--es demo_scenario_id $scenarioId",
+        )
+    }
+
+    private fun launchPerformanceScenario(
+        scenarioId: String,
+        engine: String,
+    ) {
+        device.pressHome()
+        device.executeShellCommand(
+            "am start -W -n $TARGET_PACKAGE/com.viewcompose.MainActivity " +
+                "-f $NEW_CLEAR_TASK_FLAGS " +
+                "--es demo_scenario_id $scenarioId " +
+                "--es performance_engine $engine",
         )
     }
 

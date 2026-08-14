@@ -8,6 +8,7 @@ import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,8 +33,7 @@ class ShadowPerformanceComparisonBenchmark {
     fun viewComposeShadowListScroll() {
         measureScroll(
             engine = "viewcompose",
-            scenario = "shadow_list",
-            expectedText = "ViewCompose Shadow List Ready",
+            scenarioId = PERFORMANCE_SHADOW_LIST_SCENARIO,
         )
     }
 
@@ -41,8 +41,7 @@ class ShadowPerformanceComparisonBenchmark {
     fun composeShadowListScroll() {
         measureScroll(
             engine = "compose",
-            scenario = "shadow_list",
-            expectedText = "Compose Shadow List Ready",
+            scenarioId = PERFORMANCE_SHADOW_LIST_SCENARIO,
         )
     }
 
@@ -50,11 +49,7 @@ class ShadowPerformanceComparisonBenchmark {
     fun viewComposeShadowListMutation() {
         measureMutation(
             engine = "viewcompose",
-            scenario = "shadow_list",
-            expectedText = "ViewCompose Shadow List Ready",
-            revisionLabel = "List revision",
-            mutateAction = "Mutate list",
-            resetAction = "Reset list",
+            scenarioId = PERFORMANCE_SHADOW_LIST_SCENARIO,
         )
     }
 
@@ -62,11 +57,7 @@ class ShadowPerformanceComparisonBenchmark {
     fun composeShadowListMutation() {
         measureMutation(
             engine = "compose",
-            scenario = "shadow_list",
-            expectedText = "Compose Shadow List Ready",
-            revisionLabel = "List revision",
-            mutateAction = "Mutate list",
-            resetAction = "Reset list",
+            scenarioId = PERFORMANCE_SHADOW_LIST_SCENARIO,
         )
     }
 
@@ -74,8 +65,7 @@ class ShadowPerformanceComparisonBenchmark {
     fun viewComposeShadowComplexLayoutScroll() {
         measureScroll(
             engine = "viewcompose",
-            scenario = "shadow_complex_layout",
-            expectedText = "ViewCompose Shadow Complex Ready",
+            scenarioId = PERFORMANCE_SHADOW_COMPLEX_LAYOUT_SCENARIO,
         )
     }
 
@@ -83,8 +73,7 @@ class ShadowPerformanceComparisonBenchmark {
     fun composeShadowComplexLayoutScroll() {
         measureScroll(
             engine = "compose",
-            scenario = "shadow_complex_layout",
-            expectedText = "Compose Shadow Complex Ready",
+            scenarioId = PERFORMANCE_SHADOW_COMPLEX_LAYOUT_SCENARIO,
         )
     }
 
@@ -92,11 +81,7 @@ class ShadowPerformanceComparisonBenchmark {
     fun viewComposeShadowComplexLayoutUpdate() {
         measureMutation(
             engine = "viewcompose",
-            scenario = "shadow_complex_layout",
-            expectedText = "ViewCompose Shadow Complex Ready",
-            revisionLabel = "Dashboard revision",
-            mutateAction = "Update dashboard",
-            resetAction = "Reset dashboard",
+            scenarioId = PERFORMANCE_SHADOW_COMPLEX_LAYOUT_SCENARIO,
         )
     }
 
@@ -104,18 +89,13 @@ class ShadowPerformanceComparisonBenchmark {
     fun composeShadowComplexLayoutUpdate() {
         measureMutation(
             engine = "compose",
-            scenario = "shadow_complex_layout",
-            expectedText = "Compose Shadow Complex Ready",
-            revisionLabel = "Dashboard revision",
-            mutateAction = "Update dashboard",
-            resetAction = "Reset dashboard",
+            scenarioId = PERFORMANCE_SHADOW_COMPLEX_LAYOUT_SCENARIO,
         )
     }
 
     private fun measureScroll(
         engine: String,
-        scenario: String,
-        expectedText: String,
+        scenarioId: String,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = shadowMetrics(),
@@ -123,10 +103,9 @@ class ShadowPerformanceComparisonBenchmark {
         iterations = shadowPerformanceIterations(),
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startPerformanceComparisonAndWait(
+            startPerformanceScenarioAndWait(
+                scenarioId = scenarioId,
                 engine = engine,
-                scenario = scenario,
-                expectedText = expectedText,
                 shadowRenderPolicy = shadowRenderPolicy(),
             )
         },
@@ -141,11 +120,7 @@ class ShadowPerformanceComparisonBenchmark {
 
     private fun measureMutation(
         engine: String,
-        scenario: String,
-        expectedText: String,
-        revisionLabel: String,
-        mutateAction: String,
-        resetAction: String,
+        scenarioId: String,
     ) = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = shadowMetrics(),
@@ -153,19 +128,27 @@ class ShadowPerformanceComparisonBenchmark {
         iterations = shadowPerformanceIterations(),
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startPerformanceComparisonAndWait(
+            startPerformanceScenarioAndWait(
+                scenarioId = scenarioId,
                 engine = engine,
-                scenario = scenario,
-                expectedText = expectedText,
                 shadowRenderPolicy = shadowRenderPolicy(),
             )
-            waitForText("$revisionLabel 0")
         },
     ) {
-        clickText(mutateAction)
-        waitForText("$revisionLabel 1")
-        clickText(resetAction)
-        waitForText("$revisionLabel 0")
+        val initial = scenarioTargetText(scenarioId, DemoTargetRole.State)
+        clickScenarioTarget(scenarioId, DemoTargetRole.PrimaryAction)
+        val updated = waitForScenarioTargetTextChange(
+            scenarioId,
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget(scenarioId, DemoTargetRole.Reset)
+        val reset = waitForScenarioTargetTextChange(
+            scenarioId,
+            DemoTargetRole.State,
+            updated,
+        )
+        assertEquals(initial, reset)
     }
 
     private fun shadowMetrics() = listOf(
@@ -192,6 +175,9 @@ class ShadowPerformanceComparisonBenchmark {
         const val SHADOW_POLICY_ARGUMENT = "shadowRenderPolicy"
         const val ITERATIONS_ARGUMENT = "shadowPerformanceIterations"
         const val DEFAULT_SHADOW_POLICY = "auto"
+        const val PERFORMANCE_SHADOW_LIST_SCENARIO = "performance.shadow-list"
+        const val PERFORMANCE_SHADOW_COMPLEX_LAYOUT_SCENARIO =
+            "performance.shadow-complex-layout"
         val AllowedShadowPolicies = setOf(
             "auto",
             "exact_bitmap",

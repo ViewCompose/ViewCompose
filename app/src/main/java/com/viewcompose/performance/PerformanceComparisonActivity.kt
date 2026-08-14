@@ -21,37 +21,48 @@ class PerformanceComparisonActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val engine = PerformanceEngine.fromIntent(intent)
-        val scenario = PerformanceScenario.fromIntent(intent)
-        val demoScenario = DemoScenarioRegistry.fromIntent(intent)
+        val performanceScenario = PerformanceScenario.fromIntent(intent)
+        val demoScenario = DemoScenarioRegistry.require(performanceScenario.demoScenarioId)
+        check(DemoScenarioRegistry.fromIntent(intent) == demoScenario) {
+            "${PerformanceComparisonActivity::class.simpleName} requires " +
+                "${performanceScenario.demoScenarioId} for ${performanceScenario.wireValue}"
+        }
         val shadowPolicy = ShadowRenderPolicy.fromWireValue(
             intent.getStringExtra(EXTRA_SHADOW_RENDER_POLICY),
         )
         ShadowDecorationLayer.setRenderPolicy(shadowPolicy)
         ShadowDecorationLayer.resetBackendDiagnostics()
+        val fixtures = PerformanceFixtures(this)
         when (engine) {
             PerformanceEngine.ViewCompose -> {
                 setMaterial3UiContent(debug = false) {
-                    when (scenario) {
+                    when (performanceScenario) {
                         PerformanceScenario.List -> {
                             ViewComposeListPerformanceScreen(
                                 shadowsEnabled = false,
                                 scenario = demoScenario,
+                                fixtures = fixtures,
                             )
                         }
                         PerformanceScenario.ComplexLayout -> {
                             ViewComposeComplexLayoutPerformanceScreen(
                                 shadowsEnabled = false,
+                                scenario = demoScenario,
+                                fixtures = fixtures,
                             )
                         }
                         PerformanceScenario.ShadowList -> {
                             ViewComposeListPerformanceScreen(
                                 shadowsEnabled = true,
                                 scenario = demoScenario,
+                                fixtures = fixtures,
                             )
                         }
                         PerformanceScenario.ShadowComplexLayout -> {
                             ViewComposeComplexLayoutPerformanceScreen(
                                 shadowsEnabled = true,
+                                scenario = demoScenario,
+                                fixtures = fixtures,
                             )
                         }
                     }
@@ -65,27 +76,33 @@ class PerformanceComparisonActivity : AppCompatActivity() {
                             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed,
                         )
                         setContent {
-                            when (scenario) {
+                            when (performanceScenario) {
                                 PerformanceScenario.List -> {
                                     ComposeListPerformanceScreen(
                                         shadowsEnabled = false,
                                         scenario = demoScenario,
+                                        fixtures = fixtures,
                                     )
                                 }
                                 PerformanceScenario.ComplexLayout -> {
                                     ComposeComplexLayoutPerformanceScreen(
                                         shadowsEnabled = false,
+                                        scenario = demoScenario,
+                                        fixtures = fixtures,
                                     )
                                 }
                                 PerformanceScenario.ShadowList -> {
                                     ComposeListPerformanceScreen(
                                         shadowsEnabled = true,
                                         scenario = demoScenario,
+                                        fixtures = fixtures,
                                     )
                                 }
                                 PerformanceScenario.ShadowComplexLayout -> {
                                     ComposeComplexLayoutPerformanceScreen(
                                         shadowsEnabled = true,
+                                        scenario = demoScenario,
+                                        fixtures = fixtures,
                                     )
                                 }
                             }

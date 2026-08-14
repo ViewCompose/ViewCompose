@@ -4,17 +4,15 @@ import android.content.Intent
 import android.view.ViewGroup
 import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
 import com.viewcompose.demo.registry.DemoScenarioRegistry
-import com.viewcompose.performance.EXTRA_PERFORMANCE_ENGINE
-import com.viewcompose.performance.PerformanceComparisonActivity
 import com.viewcompose.ui.foundation.UiTreeBuilder
 
 /**
  * demo 应用入口 Activity。
  * Entry Activity for the demo app.
  *
- * 普通启动展示场景目录；严格场景与专用 benchmark extra 会转发到声明的宿主。
- * Normal launches show the scenario catalog; strict scenario and dedicated benchmark extras are
- * forwarded to their declared hosts.
+ * 普通启动展示场景目录；严格场景会转发到声明的宿主。
+ * Normal launches show the scenario catalog; strict scenarios are forwarded to their declared
+ * hosts.
  */
 class MainActivity : DemoRenderActivity() {
     override val demoTitleRes: Int = R.string.demo_activity_main_title
@@ -29,13 +27,6 @@ class MainActivity : DemoRenderActivity() {
                 scenario = scenario,
                 source = intent,
             )
-        }
-        if (intent?.hasExtra(EXTRA_PERFORMANCE_ENGINE) == true) {
-            // benchmark 入口复用主 Activity intent，保持 Macrobenchmark 的启动包名稳定。
-            // Benchmark launches reuse the main Activity intent so Macrobenchmark keeps a stable package entry.
-            return Intent(this, PerformanceComparisonActivity::class.java).apply {
-                intent?.extras?.let(::putExtras)
-            }
         }
         return null
     }

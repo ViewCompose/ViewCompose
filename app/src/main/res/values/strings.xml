@@ -133,6 +133,12 @@
     <string name="demo_scenario_navigation_system_summary">Destination ownership, independent stacks, deep links, and system Back.</string>
     <string name="demo_scenario_performance_list_title">List performance</string>
     <string name="demo_scenario_performance_list_summary">Paired keyed-list mutation and scroll workload.</string>
+    <string name="demo_scenario_performance_complex_layout_title">Complex layout performance</string>
+    <string name="demo_scenario_performance_complex_layout_summary">Paired nested-layout update and scroll workload.</string>
+    <string name="demo_scenario_performance_shadow_list_title">Shadow list performance</string>
+    <string name="demo_scenario_performance_shadow_list_summary">Paired lazy-list workload with advanced shadows and a selectable backend.</string>
+    <string name="demo_scenario_performance_shadow_complex_layout_title">Shadow complex-layout performance</string>
+    <string name="demo_scenario_performance_shadow_complex_layout_summary">Paired nested-layout workload with advanced shadows and a selectable backend.</string>
 
     <string name="resource_configuration_reset_action">Reset environment</string>
 

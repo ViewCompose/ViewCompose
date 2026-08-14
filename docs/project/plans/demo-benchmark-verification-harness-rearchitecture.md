@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-15.
 
-Next action: audit the unresolved performance-comparison scenarios against the replacement fixture
-baseline.
+Next action: audit the remaining cross-Activity environment identity and legacy selector debt
+before Phase 5 rebaseline.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -238,7 +238,7 @@ claiming a performance delta against this table.
 | `diagnostics.theme` long fling | 1 | Full item tree, tab-switch prelude, fling bounds, host chrome |
 | `interop.android-view` state patch | 1 | Native target, declarative mirror, host hierarchy, action/reset sequence |
 | `collection.stress` mutation | 1 | Item count/order, key/content revisions, action sequence |
-| `performance.list` | 1 | 240-row model, row tree/content shape, rotation/update rule, engine |
+| `performance.list` | 1 | 1,000-row model, row tree/content shape, rotation/update rule, engine |
 | `performance.complex-layout` | 1 | Dashboard-card model, nested tree, update rule, engine |
 | `navigation.system` motion | 1 | Stack seed, destinations, transition duration, gesture/action sequence |
 | `design.bundle-material3` and `design.bundle-contrast` | 2 | Component slice, state fan-out, overlay sequence, bundle |
@@ -949,6 +949,32 @@ remains in PreviewCatalog and Paparazzi, while snapshot truth remains the `qaPre
 tooling-only execution paths stay outside the on-device Demo registry because a normal Activity
 cannot validate Compose Preview session retention, Layoutlib configuration, artifact export, or
 Paparazzi baselines.
+
+The performance-comparison audit found that only `performance.list` had entered the registry and
+that its caller-supplied Compose engine was overwritten by the route default, so both sides of the
+nominal comparison could execute ViewCompose. The host now requires one of four strict workload
+identities: `performance.list`, `performance.complex-layout`, `performance.shadow-list`, or
+`performance.shadow-complex-layout`. Each identity fixes its scenario shape while declaring only
+the engine extra as a caller-overridable dimension; the shadow backend remains an additional
+explicit dimension when applicable. The Activity rejects a mismatched scenario ID and wire
+scenario, both engines publish the same root/ready/action/reset/state/target resources, and all
+comparison Macrobenchmarks use those resources instead of English copy. The obsolete
+engine-without-scenario launcher bridge was removed. Performance copy is now paired Android
+resources and the whole source domain is under the hard-coded visible-copy gate.
+
+The original frozen table's 240-row claim was corrected to 1,000 rows. Source history shows the
+fixture has used 1,000 rows since the comparison workload was introduced; changing it to 240 would
+silently create a different benchmark. Workload revision 1 therefore remains accurate because the
+canonical English row/card trees, data rules, actions, and measured content were preserved while
+route setup and synchronization moved outside the measured block.
+
+On the Samsung SM-G991B Android 13 reference device, the four scenario shapes passed the complete
+ViewCompose/Compose action and reset matrix. The audit also found that Compose's
+`testTagsAsResourceId` bridge publishes the test tag verbatim: an unqualified tag is not selectable
+through the same package-qualified `By.res(package, name)` contract as an Android View. The paired
+Compose fixtures now derive the fully qualified resource name from the scenario-owned `R.id`, so
+both engines expose one identical black-box selector. The registry-wide root/ready sweep, including
+all four default ViewCompose performance routes, passed after this correction.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 

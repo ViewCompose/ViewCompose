@@ -1,5 +1,8 @@
 package com.viewcompose.performance
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioSpec
 import com.viewcompose.runtime.mutableStateOf
 import com.viewcompose.ui.graphics.UiShadow
 import com.viewcompose.ui.layout.VerticalAlignment
@@ -28,21 +31,20 @@ import com.viewcompose.ui.foundation.remember
  */
 internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen(
     shadowsEnabled: Boolean,
+    scenario: DemoScenarioSpec,
+    fixtures: PerformanceFixtures,
 ) {
     val revisionState = remember { mutableStateOf(0) }
     val revision = revisionState.value
-    val cards = performanceDashboardCards(revision)
+    val cards = fixtures.dashboardCards(revision)
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .backgroundColor(PERFORMANCE_BACKGROUND_COLOR),
+            .backgroundColor(PERFORMANCE_BACKGROUND_COLOR)
+            .scenarioTarget(scenario, DemoAutomationRole.Root),
     ) {
         ComplexLayoutPerformanceHeader(
-            engineName = if (shadowsEnabled) {
-                "${PerformanceEngine.ViewCompose.displayName} Shadow"
-            } else {
-                PerformanceEngine.ViewCompose.displayName
-            },
+            engineName = fixtures.copy.engineName(PerformanceEngine.ViewCompose, shadowsEnabled),
             revision = revision,
             onUpdate = {
                 revisionState.value = revisionState.value + 1
@@ -50,18 +52,22 @@ internal fun UiTreeBuilder.ViewComposeComplexLayoutPerformanceScreen(
             onReset = {
                 revisionState.value = 0
             },
+            scenario = scenario,
+            copy = fixtures.copy,
         )
         ScrollableColumn(
             spacing = 8.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(8.dp),
+                .padding(8.dp)
+                .scenarioTarget(scenario, DemoAutomationRole.Target),
         ) {
             cards.forEach { card ->
                 DashboardCard(
                     card = card,
                     shadowsEnabled = shadowsEnabled,
+                    copy = fixtures.copy,
                 )
             }
         }
@@ -73,6 +79,8 @@ private fun UiTreeBuilder.ComplexLayoutPerformanceHeader(
     revision: Int,
     onUpdate: () -> Unit,
     onReset: () -> Unit,
+    scenario: DemoScenarioSpec,
+    copy: PerformanceCopy,
 ) {
     Column(
         spacing = 8.dp,
@@ -82,25 +90,32 @@ private fun UiTreeBuilder.ComplexLayoutPerformanceHeader(
             .padding(12.dp),
     ) {
         Text(
-            text = "$engineName Complex Ready",
+            text = copy.complexReady(engineName),
             style = TextDefaults.titleMediumStyle(),
             color = PERFORMANCE_PRIMARY_TEXT_COLOR,
+            modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         Text(
-            text = "Dashboard revision $revision",
+            text = copy.dashboardRevision(revision),
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
+            modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
         )
         Row(
             spacing = 8.dp,
             verticalAlignment = VerticalAlignment.Center,
         ) {
             ComplexLayoutAction(
-                text = "Update dashboard",
+                text = copy.updateDashboard,
                 onClick = onUpdate,
+                modifier = Modifier.scenarioTarget(
+                    scenario,
+                    DemoAutomationRole.PrimaryAction,
+                ),
             )
             ComplexLayoutAction(
-                text = "Reset dashboard",
+                text = copy.resetDashboard,
                 onClick = onReset,
+                modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
             )
         }
     }
@@ -109,11 +124,12 @@ private fun UiTreeBuilder.ComplexLayoutPerformanceHeader(
 private fun UiTreeBuilder.ComplexLayoutAction(
     text: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onClick,
         contentColor = 0xFFFFFFFF.toInt(),
-        modifier = Modifier
+        modifier = modifier
             .backgroundColor(PERFORMANCE_PRIMARY_COLOR)
             .cornerRadius(8.dp)
             .padding(
@@ -128,6 +144,11 @@ private fun UiTreeBuilder.ComplexLayoutAction(
     }
 }
 
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec,
+    role: DemoAutomationRole,
+): Modifier = demoAutomationTarget(scenario.automation.require(role))
+
 /**
  * 复杂布局卡片包含嵌套行列、标签和条件明细，用于放大布局与 patch 成本。
  * Complex cards include nested rows, tags, and conditional details to amplify layout and patch cost.
@@ -135,6 +156,7 @@ private fun UiTreeBuilder.ComplexLayoutAction(
 private fun UiTreeBuilder.DashboardCard(
     card: PerformanceDashboardCard,
     shadowsEnabled: Boolean,
+    copy: PerformanceCopy,
 ) {
     val baseModifier = Modifier
         .fillMaxWidth()
@@ -168,12 +190,12 @@ private fun UiTreeBuilder.DashboardCard(
                         .padding(8.dp),
                 ) {
                     Text(
-                        text = "Detail",
+                        text = copy.detail,
                         style = TextDefaults.labelMediumStyle(),
                         color = card.accentColor,
                     )
                     Text(
-                        text = "Additional nested content for section ${card.id + 1}",
+                        text = copy.detailContent(card.id + 1),
                         style = TextDefaults.bodySmallStyle(),
                         color = PERFORMANCE_SECONDARY_TEXT_COLOR,
                         maxLines = 1,

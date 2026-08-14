@@ -11,6 +11,8 @@ import com.viewcompose.demo.contract.DemoBenchmarkContract
 import com.viewcompose.demo.contract.DemoScenarioId
 import com.viewcompose.demo.contract.DemoVerificationKind
 import com.viewcompose.demo.contract.EXTRA_DEMO_SCENARIO_ID
+import com.viewcompose.performance.EXTRA_PERFORMANCE_ENGINE
+import com.viewcompose.performance.EXTRA_PERFORMANCE_SCENARIO
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.modifier.NativeViewElement
 import com.viewcompose.ui.modifier.TestTagModifierElement
@@ -67,6 +69,22 @@ class DemoScenarioRegistryTest {
         assertThrows(IllegalArgumentException::class.java) {
             DemoScenarioRegistry.require("missing.scenario")
         }
+    }
+
+    @Test
+    fun `performance route fixes workload identity but allows its engine dimension`() {
+        val context = RuntimeEnvironment.getApplication()
+        val scenario = DemoScenarioRegistry.require(DemoScenarioIds.PerformanceShadowList.value)
+        val source = Intent().apply {
+            putExtra(EXTRA_PERFORMANCE_ENGINE, "compose")
+            putExtra(EXTRA_PERFORMANCE_SCENARIO, "complex_layout")
+        }
+
+        val intent = DemoScenarioRegistry.createLaunchIntent(context, scenario, source)
+
+        assertEquals("compose", intent.getStringExtra(EXTRA_PERFORMANCE_ENGINE))
+        assertEquals("shadow_list", intent.getStringExtra(EXTRA_PERFORMANCE_SCENARIO))
+        assertEquals(scenario.id.value, intent.getStringExtra(EXTRA_DEMO_SCENARIO_ID))
     }
 
     @Test

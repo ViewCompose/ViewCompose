@@ -61,7 +61,12 @@ class DemoCatalogFilterTest {
             ).map { item -> item.scenario.id.value },
         )
         assertEquals(
-            listOf("performance.list"),
+            listOf(
+                "performance.list",
+                "performance.complex-layout",
+                "performance.shadow-list",
+                "performance.shadow-complex-layout",
+            ),
             filterDemoScenarios(
                 scenarios = scenarios,
                 query = "",

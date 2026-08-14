@@ -539,10 +539,8 @@ tasks.register("verifyDemoAutomationSelectors") {
         // any retained system/IME/third-party selector must move to a narrowly named allowlist.
         val legacySelectorBaseline = mapOf(
             "app/src/androidTest/java/com/viewcompose/DemoUiTestHelpers.kt" to 6,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ComplexLayoutPerformanceComparisonBenchmark.kt" to 3,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 18,
+            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoBenchmarkScope.kt" to 17,
             "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/DemoInteractionBenchmark.kt" to 4,
-            "viewcompose-benchmark/src/main/java/com/viewcompose/benchmark/ShadowPerformanceComparisonBenchmark.kt" to 3,
         )
         val sourceRoots = listOf(
             rootDir.resolve("app/src/androidTest"),
@@ -777,6 +775,7 @@ tasks.register("verifyDemoLocalizedVisibleCopy") {
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/activity/demo/pages/core/FoundationsActivity.kt",
             ),
+            rootDir.resolve("app/src/main/java/com/viewcompose/performance"),
             rootDir.resolve(
                 "app/src/main/java/com/viewcompose/demo/designsystem/DemoContrastDesignSystem.kt",
             ),

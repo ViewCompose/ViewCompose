@@ -9,21 +9,29 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertSame
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class PerformanceComparisonModelsTest {
+    private val fixtures = PerformanceFixtures(RuntimeEnvironment.getApplication())
+
     @Test
     fun `base list has stable unique keys`() {
-        val rows = performanceListRows(revision = 0)
+        val rows = fixtures.listRows(revision = 0)
 
         assertEquals(PERFORMANCE_LIST_ITEM_COUNT, rows.size)
         assertEquals(PERFORMANCE_LIST_ITEM_COUNT, rows.map(PerformanceListRow::id).toSet().size)
-        assertSame(rows, performanceListRows(revision = 0))
+        assertSame(rows, fixtures.listRows(revision = 0))
     }
 
     @Test
     fun `revision reorders and updates a deterministic subset`() {
-        val base = performanceListRows(revision = 0)
-        val revised = performanceListRows(revision = 1)
+        val base = fixtures.listRows(revision = 0)
+        val revised = fixtures.listRows(revision = 1)
 
         assertEquals(PERFORMANCE_LIST_ROTATION, revised.first().id)
         assertEquals(base.map(PerformanceListRow::id).toSet(), revised.map(PerformanceListRow::id).toSet())
@@ -39,8 +47,8 @@ class PerformanceComparisonModelsTest {
 
     @Test
     fun `dashboard revision preserves identities and changes nested structure`() {
-        val base = performanceDashboardCards(revision = 0)
-        val revised = performanceDashboardCards(revision = 1)
+        val base = fixtures.dashboardCards(revision = 0)
+        val revised = fixtures.dashboardCards(revision = 1)
 
         assertEquals(PERFORMANCE_DASHBOARD_CARD_COUNT, base.size)
         assertEquals(base.map(PerformanceDashboardCard::id), revised.map(PerformanceDashboardCard::id))

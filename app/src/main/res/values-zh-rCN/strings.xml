@@ -134,6 +134,12 @@
     <string name="demo_scenario_navigation_system_summary">验证页面所有权、独立返回栈、深链与系统返回。</string>
     <string name="demo_scenario_performance_list_title">列表性能</string>
     <string name="demo_scenario_performance_list_summary">ViewCompose 与 Compose 对等的键控列表变更和滚动负载。</string>
+    <string name="demo_scenario_performance_complex_layout_title">复杂布局性能</string>
+    <string name="demo_scenario_performance_complex_layout_summary">ViewCompose 与 Compose 对等的嵌套布局更新和滚动负载。</string>
+    <string name="demo_scenario_performance_shadow_list_title">阴影列表性能</string>
+    <string name="demo_scenario_performance_shadow_list_summary">使用可选后端对比高级阴影懒列表负载。</string>
+    <string name="demo_scenario_performance_shadow_complex_layout_title">阴影复杂布局性能</string>
+    <string name="demo_scenario_performance_shadow_complex_layout_summary">使用可选后端对比高级阴影嵌套布局负载。</string>
 
     <string name="resource_configuration_reset_action">重置环境</string>
 

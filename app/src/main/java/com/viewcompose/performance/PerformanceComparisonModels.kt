@@ -1,5 +1,7 @@
 package com.viewcompose.performance
 
+import android.content.Context
+
 /**
  * 列表性能场景的固定行数，保持每次 benchmark 的工作量一致。
  * Fixed row count for the list scenario so each benchmark run has the same workload.
@@ -35,16 +37,50 @@ internal data class PerformanceListRow(
     val accentColor: Int,
 )
 
-private val basePerformanceListRows: List<PerformanceListRow> =
-    List(PERFORMANCE_LIST_ITEM_COUNT) { index ->
-        PerformanceListRow(
-            id = index,
-            title = "List item $index",
-            subtitle = "Stable keyed row · group ${index % 12}",
-            badge = "${index % 100}",
-            accentColor = performanceAccentColor(index),
-        )
+internal class PerformanceFixtures(context: Context) {
+    val copy = PerformanceCopy(context)
+
+    private val basePerformanceListRows: List<PerformanceListRow> by lazy(LazyThreadSafetyMode.NONE) {
+        List(PERFORMANCE_LIST_ITEM_COUNT) { index ->
+            PerformanceListRow(
+                id = index,
+                title = copy.listItem(index),
+                subtitle = copy.stableListSubtitle(index % 12),
+                badge = "${index % 100}",
+                accentColor = performanceAccentColor(index),
+            )
+        }
     }
+
+    private val basePerformanceDashboardCards: List<PerformanceDashboardCard> by
+        lazy(LazyThreadSafetyMode.NONE) {
+            createBasePerformanceDashboardCards(copy)
+        }
+
+    fun listRows(revision: Int): List<PerformanceListRow> {
+        if (revision == 0) return basePerformanceListRows
+        val rotation = (revision * PERFORMANCE_LIST_ROTATION).mod(PERFORMANCE_LIST_ITEM_COUNT)
+        val reordered = basePerformanceListRows
+            .drop(rotation) + basePerformanceListRows.take(rotation)
+        return reordered.map { row ->
+            if (row.id % 16 == 0) {
+                row.copy(
+                    subtitle = copy.updatedListSubtitle(revision, row.id % 12),
+                    badge = copy.revisionBadge(revision),
+                )
+            } else {
+                row
+            }
+        }
+    }
+
+    fun dashboardCards(revision: Int): List<PerformanceDashboardCard> =
+        performanceDashboardCards(
+            base = basePerformanceDashboardCards,
+            copy = copy,
+            revision = revision,
+        )
+}
 
 /**
  * 根据 revision 返回确定性的列表数据。
@@ -54,23 +90,6 @@ private val basePerformanceListRows: List<PerformanceListRow> =
  * Revision 0 returns the shared base list; later revisions reorder rows and update a fixed subset
  * to measure key retention and patch updates.
  */
-internal fun performanceListRows(revision: Int): List<PerformanceListRow> {
-    if (revision == 0) return basePerformanceListRows
-    val rotation = (revision * PERFORMANCE_LIST_ROTATION).mod(PERFORMANCE_LIST_ITEM_COUNT)
-    val reordered = basePerformanceListRows
-        .drop(rotation) + basePerformanceListRows.take(rotation)
-    return reordered.map { row ->
-        if (row.id % 16 == 0) {
-            row.copy(
-                subtitle = "Updated revision $revision · group ${row.id % 12}",
-                badge = "R$revision",
-            )
-        } else {
-            row
-        }
-    }
-}
-
 private fun performanceAccentColor(index: Int): Int {
     return when (index % 4) {
         0 -> 0xFF315EFB.toInt()

@@ -59,7 +59,7 @@ class ListPerformanceComparisonBenchmark {
         iterations = RELEASE_BASELINE_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startPerformanceListAndWait(engine)
+            startPerformanceScenarioAndWait(PERFORMANCE_LIST_SCENARIO, engine)
         },
     ) {
         repeat(4) {
@@ -79,7 +79,7 @@ class ListPerformanceComparisonBenchmark {
         iterations = RELEASE_BASELINE_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startPerformanceListAndWait(engine)
+            startPerformanceScenarioAndWait(PERFORMANCE_LIST_SCENARIO, engine)
         },
     ) {
         val initial = scenarioTargetText(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.State)
@@ -96,14 +96,6 @@ class ListPerformanceComparisonBenchmark {
             mutated,
         )
         assertEquals(initial, reset)
-    }
-
-    private fun androidx.benchmark.macro.MacrobenchmarkScope.startPerformanceListAndWait(engine: String) {
-        startDemoScenarioAndWait(PERFORMANCE_LIST_SCENARIO) {
-            putExtra("performance_engine", engine)
-            putExtra("performance_scenario", "list")
-        }
-        waitForScenarioTarget(PERFORMANCE_LIST_SCENARIO, DemoTargetRole.Target)
     }
 
     private fun performanceComparisonMetrics() = listOf(

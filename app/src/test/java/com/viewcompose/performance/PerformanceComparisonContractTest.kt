@@ -12,24 +12,20 @@ import org.robolectric.annotation.Config
 @Config(sdk = [31])
 class PerformanceComparisonContractTest {
     @Test
-    fun `parses every shadow performance scenario`() {
-        val shadowList = Intent().putExtra(
-            EXTRA_PERFORMANCE_SCENARIO,
-            "shadow_list",
-        )
-        val shadowComplex = Intent().putExtra(
-            EXTRA_PERFORMANCE_SCENARIO,
-            "shadow_complex_layout",
+    fun `every wire scenario maps to one strict demo scenario`() {
+        val expected = mapOf(
+            "list" to "performance.list",
+            "complex_layout" to "performance.complex-layout",
+            "shadow_list" to "performance.shadow-list",
+            "shadow_complex_layout" to "performance.shadow-complex-layout",
         )
 
-        assertEquals(
-            PerformanceScenario.ShadowList,
-            PerformanceScenario.fromIntent(shadowList),
-        )
-        assertEquals(
-            PerformanceScenario.ShadowComplexLayout,
-            PerformanceScenario.fromIntent(shadowComplex),
-        )
+        expected.forEach { (wireValue, scenarioId) ->
+            val parsed = PerformanceScenario.fromIntent(
+                Intent().putExtra(EXTRA_PERFORMANCE_SCENARIO, wireValue),
+            )
+            assertEquals(scenarioId, parsed.demoScenarioId)
+        }
     }
 
     @Test

@@ -108,6 +108,9 @@ internal object DemoScenarioIds {
     val FoundationsMedia = DemoScenarioId("foundations.media")
     val FoundationsTypography = DemoScenarioId("foundations.typography")
     val PerformanceList = DemoScenarioId("performance.list")
+    val PerformanceComplexLayout = DemoScenarioId("performance.complex-layout")
+    val PerformanceShadowList = DemoScenarioId("performance.shadow-list")
+    val PerformanceShadowComplexLayout = DemoScenarioId("performance.shadow-complex-layout")
 }
 
 internal object DemoScenarioRegistry {
@@ -1178,30 +1181,53 @@ internal object DemoScenarioRegistry {
             state = R.id.demo_component_progress_state,
             target = R.id.demo_component_progress_target,
         ),
-        scenario(
+        performanceScenario(
             id = DemoScenarioIds.PerformanceList,
-            category = DemoScenarioCategory.Performance,
             titleRes = R.string.demo_scenario_performance_list_title,
             summaryRes = R.string.demo_scenario_performance_list_summary,
-            host = DemoHostPolicy.Benchmark,
-            verificationKinds = setOf(DemoVerificationKind.Benchmark),
-            route = DemoScenarioRoute(
-                activityClass = PerformanceComparisonActivity::class.java,
-                extras = mapOf(
-                    EXTRA_PERFORMANCE_ENGINE to DemoRouteExtra.StringValue("viewcompose"),
-                    EXTRA_PERFORMANCE_SCENARIO to DemoRouteExtra.StringValue("list"),
-                ),
-            ),
-            mutable = true,
-            ids = TargetIds(
-                root = R.id.demo_performance_list_root,
-                ready = R.id.demo_performance_list_ready,
-                primaryAction = R.id.demo_performance_list_primary_action,
-                reset = R.id.demo_performance_list_reset,
-                state = R.id.demo_performance_list_state,
-                target = R.id.demo_performance_list_target,
-            ),
-            benchmarkRevision = 1,
+            performanceScenario = "list",
+            root = R.id.demo_performance_list_root,
+            ready = R.id.demo_performance_list_ready,
+            primaryAction = R.id.demo_performance_list_primary_action,
+            reset = R.id.demo_performance_list_reset,
+            state = R.id.demo_performance_list_state,
+            target = R.id.demo_performance_list_target,
+        ),
+        performanceScenario(
+            id = DemoScenarioIds.PerformanceComplexLayout,
+            titleRes = R.string.demo_scenario_performance_complex_layout_title,
+            summaryRes = R.string.demo_scenario_performance_complex_layout_summary,
+            performanceScenario = "complex_layout",
+            root = R.id.demo_performance_complex_layout_root,
+            ready = R.id.demo_performance_complex_layout_ready,
+            primaryAction = R.id.demo_performance_complex_layout_primary_action,
+            reset = R.id.demo_performance_complex_layout_reset,
+            state = R.id.demo_performance_complex_layout_state,
+            target = R.id.demo_performance_complex_layout_target,
+        ),
+        performanceScenario(
+            id = DemoScenarioIds.PerformanceShadowList,
+            titleRes = R.string.demo_scenario_performance_shadow_list_title,
+            summaryRes = R.string.demo_scenario_performance_shadow_list_summary,
+            performanceScenario = "shadow_list",
+            root = R.id.demo_performance_shadow_list_root,
+            ready = R.id.demo_performance_shadow_list_ready,
+            primaryAction = R.id.demo_performance_shadow_list_primary_action,
+            reset = R.id.demo_performance_shadow_list_reset,
+            state = R.id.demo_performance_shadow_list_state,
+            target = R.id.demo_performance_shadow_list_target,
+        ),
+        performanceScenario(
+            id = DemoScenarioIds.PerformanceShadowComplexLayout,
+            titleRes = R.string.demo_scenario_performance_shadow_complex_layout_title,
+            summaryRes = R.string.demo_scenario_performance_shadow_complex_layout_summary,
+            performanceScenario = "shadow_complex_layout",
+            root = R.id.demo_performance_shadow_complex_layout_root,
+            ready = R.id.demo_performance_shadow_complex_layout_ready,
+            primaryAction = R.id.demo_performance_shadow_complex_layout_primary_action,
+            reset = R.id.demo_performance_shadow_complex_layout_reset,
+            state = R.id.demo_performance_shadow_complex_layout_state,
+            target = R.id.demo_performance_shadow_complex_layout_target,
         ),
     )
 
@@ -1521,6 +1547,44 @@ internal object DemoScenarioRegistry {
             secondaryTarget = secondaryTarget,
         ),
         benchmarkRevision = 2,
+    )
+
+    private fun performanceScenario(
+        id: DemoScenarioId,
+        titleRes: Int,
+        summaryRes: Int,
+        performanceScenario: String,
+        root: Int,
+        ready: Int,
+        primaryAction: Int,
+        reset: Int,
+        state: Int,
+        target: Int,
+    ): DemoScenarioSpec = scenario(
+        id = id,
+        category = DemoScenarioCategory.Performance,
+        titleRes = titleRes,
+        summaryRes = summaryRes,
+        host = DemoHostPolicy.Benchmark,
+        verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
+        route = DemoScenarioRoute(
+            activityClass = PerformanceComparisonActivity::class.java,
+            extras = mapOf(
+                EXTRA_PERFORMANCE_ENGINE to DemoRouteExtra.StringValue("viewcompose"),
+                EXTRA_PERFORMANCE_SCENARIO to DemoRouteExtra.StringValue(performanceScenario),
+            ),
+            callerOverrideableExtraKeys = setOf(EXTRA_PERFORMANCE_ENGINE),
+        ),
+        mutable = true,
+        ids = TargetIds(
+            root = root,
+            ready = ready,
+            primaryAction = primaryAction,
+            reset = reset,
+            state = state,
+            target = target,
+        ),
+        benchmarkRevision = 1,
     )
 
     private fun scenario(

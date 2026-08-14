@@ -25,9 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,22 +40,23 @@ import com.viewcompose.demo.contract.DemoScenarioSpec
 @Composable
 internal fun ComposeListPerformanceScreen(
     shadowsEnabled: Boolean,
-    scenario: DemoScenarioSpec? = null,
+    scenario: DemoScenarioSpec,
+    fixtures: PerformanceFixtures,
 ) {
     var revision by remember { mutableIntStateOf(0) }
-    val rows = performanceListRows(revision)
+    val rows = fixtures.listRows(revision)
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(PERFORMANCE_BACKGROUND_COLOR))
-            .scenarioTarget(scenario, DemoAutomationRole.Root, enableResourceIds = true),
+            .performanceScenarioTarget(
+                scenario,
+                DemoAutomationRole.Root,
+                enableResourceIds = true,
+            ),
     ) {
         ComposeListPerformanceHeader(
-            engineName = if (shadowsEnabled) {
-                "${PerformanceEngine.Compose.displayName} Shadow"
-            } else {
-                PerformanceEngine.Compose.displayName
-            },
+            engineName = fixtures.copy.engineName(PerformanceEngine.Compose, shadowsEnabled),
             revision = revision,
             onMutate = {
                 revision += 1
@@ -67,12 +65,13 @@ internal fun ComposeListPerformanceScreen(
                 revision = 0
             },
             scenario = scenario,
+            copy = fixtures.copy,
         )
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .scenarioTarget(scenario, DemoAutomationRole.Target),
+                .performanceScenarioTarget(scenario, DemoAutomationRole.Target),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
@@ -96,7 +95,8 @@ private fun ComposeListPerformanceHeader(
     revision: Int,
     onMutate: () -> Unit,
     onReset: () -> Unit,
-    scenario: DemoScenarioSpec?,
+    scenario: DemoScenarioSpec,
+    copy: PerformanceCopy,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -106,34 +106,34 @@ private fun ComposeListPerformanceHeader(
             .padding(12.dp),
     ) {
         PerformanceText(
-            text = "$engineName List Ready",
+            text = copy.listReady(engineName),
             sizeSp = 18,
             weight = FontWeight.SemiBold,
             color = PERFORMANCE_PRIMARY_TEXT_COLOR,
-            modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Ready),
+            modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.Ready),
         )
         PerformanceText(
-            text = "List revision $revision",
+            text = copy.listRevision(revision),
             sizeSp = 14,
             color = PERFORMANCE_SECONDARY_TEXT_COLOR,
-            modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+            modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.State),
         )
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ComposePerformanceAction(
-                text = "Mutate list",
+                text = copy.mutateList,
                 onClick = onMutate,
-                modifier = Modifier.scenarioTarget(
+                modifier = Modifier.performanceScenarioTarget(
                     scenario,
                     DemoAutomationRole.PrimaryAction,
                 ),
             )
             ComposePerformanceAction(
-                text = "Reset list",
+                text = copy.resetList,
                 onClick = onReset,
-                modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
+                modifier = Modifier.performanceScenarioTarget(scenario, DemoAutomationRole.Reset),
             )
         }
     }
@@ -264,18 +264,4 @@ internal fun PerformanceText(
             fontWeight = weight,
         ),
     )
-}
-
-private fun Modifier.scenarioTarget(
-    scenario: DemoScenarioSpec?,
-    role: DemoAutomationRole,
-    enableResourceIds: Boolean = false,
-): Modifier {
-    val target = scenario?.automation?.get(role) ?: return this
-    val tagged = testTag(target.resourceName)
-    return if (enableResourceIds) {
-        tagged.semantics { testTagsAsResourceId = true }
-    } else {
-        tagged
-    }
 }
