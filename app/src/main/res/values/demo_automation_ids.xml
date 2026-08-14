@@ -70,6 +70,40 @@
     <item name="demo_collection_pull_refresh_ready" type="id" />
     <item name="demo_collection_pull_refresh_reset" type="id" />
 
+    <item name="demo_layout_linear_root" type="id" />
+    <item name="demo_layout_linear_ready" type="id" />
+    <item name="demo_layout_linear_primary_action" type="id" />
+    <item name="demo_layout_linear_reset" type="id" />
+    <item name="demo_layout_linear_state" type="id" />
+    <item name="demo_layout_linear_target" type="id" />
+
+    <item name="demo_layout_stack_root" type="id" />
+    <item name="demo_layout_stack_ready" type="id" />
+    <item name="demo_layout_stack_primary_action" type="id" />
+    <item name="demo_layout_stack_reset" type="id" />
+    <item name="demo_layout_stack_state" type="id" />
+
+    <item name="demo_layout_edges_root" type="id" />
+    <item name="demo_layout_edges_ready" type="id" />
+    <item name="demo_layout_edges_primary_action" type="id" />
+    <item name="demo_layout_edges_reset" type="id" />
+    <item name="demo_layout_edges_state" type="id" />
+    <item name="demo_layout_edges_target" type="id" />
+
+    <item name="demo_layout_flow_root" type="id" />
+    <item name="demo_layout_flow_ready" type="id" />
+    <item name="demo_layout_flow_primary_action" type="id" />
+    <item name="demo_layout_flow_secondary_action" type="id" />
+    <item name="demo_layout_flow_reset" type="id" />
+    <item name="demo_layout_flow_state" type="id" />
+
+    <item name="demo_layout_scroll_root" type="id" />
+    <item name="demo_layout_scroll_ready" type="id" />
+
+    <item name="demo_layout_constraint_root" type="id" />
+    <item name="demo_layout_constraint_ready" type="id" />
+    <item name="demo_layout_constraint_reset" type="id" />
+
     <item name="demo_environment_resources_root" type="id" />
     <item name="demo_environment_resources_ready" type="id" />
     <item name="demo_environment_resources_primary_action" type="id" />

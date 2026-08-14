@@ -1,5 +1,10 @@
 package com.viewcompose
 
+import com.viewcompose.demo.automation.demoAutomationTarget
+import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
+import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.layout.BoxAlignment
 import com.viewcompose.ui.layout.HorizontalAlignment
@@ -54,41 +59,55 @@ import com.viewcompose.ui.unit.sp
 
 @ViewComposePreview(name = "Layouts · Linear", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsLinear() {
-    LayoutPage(initialPageIndex = 0)
+    LayoutPage(LayoutFixture.Linear)
 }
 
 @ViewComposePreview(name = "Layouts · Overlay", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsOverlay() {
-    LayoutPage(initialPageIndex = 1)
+    LayoutPage(LayoutFixture.Stack)
 }
 
 @ViewComposePreview(name = "Layouts · Bounds", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsBounds() {
-    LayoutPage(initialPageIndex = 2)
+    LayoutPage(LayoutFixture.Edges)
 }
 
 @ViewComposePreview(name = "Layouts · Flow", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsFlow() {
-    LayoutPage(initialPageIndex = 3)
+    LayoutPage(LayoutFixture.Flow)
 }
 
 @ViewComposePreview(name = "Layouts · Scroll", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsScroll() {
-    LayoutPage(initialPageIndex = 4)
+    LayoutPage(LayoutFixture.Scroll)
 }
 
 @ViewComposePreview(name = "Layouts · Constraint", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewLayoutsConstraint() {
-    LayoutPage(initialPageIndex = 5)
+    LayoutPage(LayoutFixture.Constraint)
 }
 
-@ViewComposePreview(name = "Layouts · Checklist", group = "Demo/Pages")
-internal fun UiTreeBuilder.PreviewLayoutsChecklist() {
-    LayoutPage(initialPageIndex = 6)
+internal enum class LayoutFixture(
+    val scenarioId: DemoScenarioId,
+) {
+    Linear(DemoScenarioIds.LayoutLinear),
+    Stack(DemoScenarioIds.LayoutStack),
+    Edges(DemoScenarioIds.LayoutEdges),
+    Flow(DemoScenarioIds.LayoutFlow),
+    Scroll(DemoScenarioIds.LayoutScroll),
+    Constraint(DemoScenarioIds.LayoutConstraint),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): LayoutFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported layout scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.LayoutPage(
-    initialPageIndex: Int = 0,
+    fixture: LayoutFixture,
+    scenario: DemoScenarioSpec? = null,
 ) {
     val boxTapState = remember { mutableStateOf(0) }
     val benchmarkState = remember { mutableStateOf(false) }
@@ -101,16 +120,13 @@ internal fun UiTreeBuilder.LayoutPage(
     val constraintVerticalChainPackedState = remember { mutableStateOf(false) }
     val constraintSetHelpersAlternateState = remember { mutableStateOf(false) }
     val constraintVirtualAlternateState = remember { mutableStateOf(false) }
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 6)) }
-    val pageItems = when (selectedPageState.value) {
-        0 -> listOf("benchmark", "page", "page_filter", "row", "column", "verify")
-        1 -> listOf("page", "page_filter", "box", "verify")
-        2 -> listOf("page", "page_filter", "edge", "verify")
-        3 -> listOf("page", "page_filter", "flow", "verify")
-        4 -> listOf("page", "page_filter", "scrollable", "verify")
-        5 -> listOf(
-            "page",
-            "page_filter",
+    val pageItems = when (fixture) {
+        LayoutFixture.Linear -> listOf("benchmark", "row", "column")
+        LayoutFixture.Stack -> listOf("box")
+        LayoutFixture.Edges -> listOf("edge")
+        LayoutFixture.Flow -> listOf("flow")
+        LayoutFixture.Scroll -> listOf("scrollable")
+        LayoutFixture.Constraint -> listOf(
             "constraint_basic",
             "constraint_helpers",
             "constraint_chain",
@@ -121,9 +137,7 @@ internal fun UiTreeBuilder.LayoutPage(
             "constraint_helpers_full",
             "constraint_vertical_chain",
             "constraint_set_helpers_mirror",
-            "verify",
         )
-        else -> listOf("page", "page_filter", "verify")
     }
     LazyColumn(
         items = pageItems,
@@ -131,43 +145,20 @@ internal fun UiTreeBuilder.LayoutPage(
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = "布局组件",
-                goal = "验证线性容器、Box 叠加、流式布局和滚动容器的测量、摆放、间距和子项覆盖的稳定性。",
-                modules = listOf(
-                    "DeclarativeLinearLayout",
-                    "DeclarativeBoxLayout",
-                    "FlowRow",
-                    "FlowColumn",
-                    "ScrollableColumn",
-                    "ScrollableRow",
-                    "DeclarativeConstraintLayout",
-                ),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf("线性", "叠加", "边界", "流式", "滚动", "约束", "清单"),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
             "benchmark" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
                 title = "布局 Benchmark 锚点",
                 subtitle = "线性布局 benchmark 路径，不依赖分页过滤器。",
             ) {
-                BenchmarkRouteCallout(
-                    route = "Launcher -> Layouts -> 线性页 -> Benchmark 锚点",
-                    stableTargets = listOf(
-                        "Layouts Benchmark Compact / Expanded",
-                        "Reset Layouts Benchmark",
-                    ),
+                Text(
+                    text = if (benchmarkState.value) "expanded" else "compact",
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
                     text = if (benchmarkState.value) "布局 Benchmark 已展开" else "布局 Benchmark 已收起",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag(DemoTestTags.LAYOUTS_BENCHMARK_TOGGLE),
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     onClick = { benchmarkState.value = !benchmarkState.value },
                 )
                 Row(
@@ -177,7 +168,8 @@ internal fun UiTreeBuilder.LayoutPage(
                         .fillMaxWidth()
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
-                        .padding(12.dp),
+                        .padding(12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 ) {
                     Text(text = "前导")
                     Button(
@@ -191,7 +183,7 @@ internal fun UiTreeBuilder.LayoutPage(
                     Button(
                         text = "重置",
                         variant = ButtonVariant.Outlined,
-                        modifier = Modifier.testTag(DemoTestTags.LAYOUTS_BENCHMARK_RESET),
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
                         onClick = { benchmarkState.value = false },
                     )
                 }
@@ -233,6 +225,10 @@ internal fun UiTreeBuilder.LayoutPage(
                 title = "Box 叠加",
                 subtitle = "默认对齐、子级覆盖、offset 和 zIndex 在同一容器中协同工作。",
             ) {
+                Text(
+                    text = "clicks=${boxTapState.value}",
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                )
                 Box(
                     contentAlignment = BoxAlignment.Center,
                     modifier = Modifier
@@ -241,7 +237,8 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.variantBackgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .clickable { boxTapState.value = boxTapState.value + 1 }
-                        .padding(12.dp),
+                        .padding(12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                 ) {
                     Text(
                         text = "居中内容 · 点击 ${boxTapState.value}",
@@ -259,6 +256,15 @@ internal fun UiTreeBuilder.LayoutPage(
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                     )
                 }
+                Button(
+                    text = "重置点击",
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(top = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = { boxTapState.value = 0 },
+                )
             }
 
             "column" -> ScenarioSection(
@@ -288,15 +294,15 @@ internal fun UiTreeBuilder.LayoutPage(
                 title = "布局边界用例",
                 subtitle = "wrap、weight 和嵌套容器 sizing 的极端组合。",
             ) {
-                BenchmarkRouteCallout(
-                    route = "Catalog -> Layouts -> 边界页",
-                    stableTargets = listOf("长标签 / 短标签", "Weighted", "Action", "Wrap"),
+                Text(
+                    text = if (useLongLabelsState.value) "long" else "short",
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Button(
                     text = if (useLongLabelsState.value) "使用短标签" else "使用长标签",
                     modifier = Modifier
                         .margin(bottom = 12.dp)
-                        .testTag(DemoTestTags.LAYOUTS_EDGE_TOGGLE),
+                        .scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                     onClick = { useLongLabelsState.value = !useLongLabelsState.value },
                 )
                 Row(
@@ -307,7 +313,8 @@ internal fun UiTreeBuilder.LayoutPage(
                         .backgroundColor(SurfaceDefaults.backgroundColor())
                         .shape(SurfaceDefaults.shape())
                         .padding(12.dp)
-                        .margin(bottom = 12.dp),
+                        .margin(bottom = 12.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
                 ) {
                     Surface(modifier = Modifier.padding(8.dp)) {
                         Icon(
@@ -334,6 +341,15 @@ internal fun UiTreeBuilder.LayoutPage(
                             .testTag(DemoTestTags.LAYOUTS_EDGE_ACTION),
                     )
                 }
+                Button(
+                    text = "重置边界场景",
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(top = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = { useLongLabelsState.value = false },
+                )
                 Row(
                     spacing = 8.dp,
                     verticalAlignment = VerticalAlignment.Center,
@@ -367,7 +383,9 @@ internal fun UiTreeBuilder.LayoutPage(
                 Text(
                     text = "FlowRow 标签云（${flowItemCountState.value} 个标签）",
                     style = UiTextStyle(fontSizeSp = 14.sp),
-                    modifier = Modifier.margin(bottom = 8.dp),
+                    modifier = Modifier
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.State),
                 )
                 Row(
                     spacing = 8.dp,
@@ -378,15 +396,26 @@ internal fun UiTreeBuilder.LayoutPage(
                     Button(
                         text = "增加标签",
                         size = ButtonSize.Compact,
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
                         onClick = { flowItemCountState.value = (flowItemCountState.value + 2).coerceAtMost(20) },
                     )
                     Button(
                         text = "减少标签",
                         size = ButtonSize.Compact,
                         variant = ButtonVariant.Outlined,
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.SecondaryAction),
                         onClick = { flowItemCountState.value = (flowItemCountState.value - 2).coerceAtLeast(2) },
                     )
                 }
+                Button(
+                    text = "重置标签",
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = { flowItemCountState.value = 8 },
+                )
                 FlowRow(
                     horizontalSpacing = 8.dp,
                     verticalSpacing = 8.dp,
@@ -496,6 +525,23 @@ internal fun UiTreeBuilder.LayoutPage(
                 title = "Constraint 基础锚点",
                 subtitle = "anchors + dimension + bias 组合，验证约束节点在 renderer 主链路可稳定布局。",
             ) {
+                Button(
+                    text = "重置 Constraint 场景",
+                    variant = ButtonVariant.Outlined,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .margin(bottom = 8.dp)
+                        .scenarioTarget(scenario, DemoAutomationRole.Reset),
+                    onClick = {
+                        constraintHelperLongState.value = false
+                        constraintSetExpandedState.value = false
+                        constraintDimensionAdvancedState.value = false
+                        constraintHelpersFullState.value = false
+                        constraintVerticalChainPackedState.value = false
+                        constraintSetHelpersAlternateState.value = false
+                        constraintVirtualAlternateState.value = false
+                    },
+                )
                 ConstraintLayout(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1574,25 +1620,12 @@ internal fun UiTreeBuilder.LayoutPage(
                 }
             }
 
-            else -> VerificationNotesSection(
-                what = "布局组件应验证线性容器、Box 叠加、流式布局和滚动容器的稳定性。",
-                howToVerify = listOf(
-                    "反复点击 Box 区域，确认点击态和固定标签不会错位。",
-                    "在不同宽度设备上观察 Row 中顶部/底部对齐文本。",
-                    "切换长短标签，确认 weighted button 与嵌套 surface 布局稳定。",
-                    "增减 FlowRow 标签数量，确认自动换行正确。",
-                    "上下滑动 ScrollableColumn，确认滚动流畅。",
-                    "左右滑动 ScrollableRow，确认横向滚动正常。",
-                    "切到约束页，按分区验证 API 覆盖矩阵：Anchor Advanced、Dimension Advanced、Guideline+Barrier Full、Vertical Chain、ConstraintSet Helper Mirror、Virtual Helpers。",
-                    "切换约束场景中的 toggle 按钮，确认状态文案、关键 marker、位置/尺寸关系有可见变化。",
-                ),
-                expected = listOf(
-                    "线性容器默认子项不会意外扩展成整行。",
-                    "FlowRow/FlowColumn 自动换行/换列，spacing 均匀。",
-                    "ScrollableColumn/ScrollableRow 滚动流畅无卡顿。",
-                    "ConstraintLayout 全部业务 API 在 demo 中均有可见锚点；场景切换后布局即时刷新，无崩溃与错位。",
-                ),
-            )
+            else -> error("Unknown layout section: $section")
         }
     }
 }
+
+private fun Modifier.scenarioTarget(
+    scenario: DemoScenarioSpec?,
+    role: DemoAutomationRole,
+): Modifier = scenario?.automation?.get(role)?.let(::demoAutomationTarget) ?: this

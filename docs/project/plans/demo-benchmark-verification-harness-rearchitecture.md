@@ -683,6 +683,15 @@ chapter page. The old `collections` Macrobenchmark module bridge has no callers 
 Nine focused device tests covering strict routes, collection behavior, localization-safe targets,
 and component smoke checks pass on the reference device.
 
+The six retained layout fixtures now use strict `layout.*` identities and direct Activity routes.
+The checklist page, chapter overview, page switcher, verification copy, visible route callouts, and
+the `layouts_page_index` contract were deleted. Linear layout advances to workload revision 2 and
+uses resource-ID roles for benchmark mutation, observation, reset, and fixture targeting. Stack,
+edge, flow, and constraint fixtures expose deterministic reset roles; scroll remains immutable.
+Layout UI tests launch scenario identities directly and assert geometry or state transitions rather
+than localized labels. The old `layouts` Macrobenchmark module bridge has no callers and was
+removed.
+
 ## Phase 5: Benchmark rebaseline and acceptance
 
 Build the release-like target, run the revised scenarios on the same device and thermal policy,

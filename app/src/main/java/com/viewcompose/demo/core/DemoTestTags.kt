@@ -124,9 +124,6 @@ internal object DemoTestTags {
 
     fun catalogModuleButton(moduleKey: String): String = "catalog_module_$moduleKey"
 
-    const val LAYOUTS_BENCHMARK_TOGGLE = "layouts_benchmark_toggle"
-    const val LAYOUTS_BENCHMARK_RESET = "layouts_benchmark_reset"
-    const val LAYOUTS_EDGE_TOGGLE = "layouts_edge_toggle"
     const val LAYOUTS_EDGE_WEIGHTED = "layouts_edge_weighted"
     const val LAYOUTS_EDGE_ACTION = "layouts_edge_action"
     const val LAYOUTS_EDGE_PROBE_ICON = "layouts_edge_probe_icon"

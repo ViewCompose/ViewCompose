@@ -93,18 +93,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "layouts",
-                expectedText = "Layouts",
-            )
-            scrollUntilText("Layouts Benchmark Compact")
-            scrollUntilText("Reset Layouts Benchmark")
+            startDemoScenarioAndWait("layout.linear")
         },
     ) {
-        clickText("Layouts Benchmark Compact")
-        waitForText("Layouts Benchmark Expanded")
-        clickText("Reset Layouts Benchmark")
-        waitForText("Layouts Benchmark Compact")
+        val initial = scenarioTargetText("layout.linear", DemoTargetRole.State)
+        clickScenarioTarget("layout.linear", DemoTargetRole.PrimaryAction)
+        val changed = waitForScenarioTargetTextChange(
+            "layout.linear",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("layout.linear", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("layout.linear", DemoTargetRole.State, changed)
     }
 
     @Test

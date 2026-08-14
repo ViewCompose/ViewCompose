@@ -5,6 +5,7 @@ import android.content.Intent
 import com.viewcompose.FeedbackActivity
 import com.viewcompose.CollectionsActivity
 import com.viewcompose.DiagnosticsActivity
+import com.viewcompose.LayoutsActivity
 import com.viewcompose.R
 import com.viewcompose.ResourceConfigurationActivity
 import com.viewcompose.StateActivity
@@ -37,6 +38,12 @@ internal object DemoScenarioIds {
     val CollectionLazyRow = DemoScenarioId("collection.lazy-row")
     val CollectionGrid = DemoScenarioId("collection.grid")
     val CollectionPullRefresh = DemoScenarioId("collection.pull-refresh")
+    val LayoutLinear = DemoScenarioId("layout.linear")
+    val LayoutStack = DemoScenarioId("layout.stack")
+    val LayoutEdges = DemoScenarioId("layout.edges")
+    val LayoutFlow = DemoScenarioId("layout.flow")
+    val LayoutScroll = DemoScenarioId("layout.scroll")
+    val LayoutConstraint = DemoScenarioId("layout.constraint")
     val EnvironmentResources = DemoScenarioId("environment.resources")
     val OverlayDialog = DemoScenarioId("overlay.dialog")
     val NavigationSystem = DemoScenarioId("navigation.system")
@@ -278,6 +285,107 @@ internal object DemoScenarioRegistry {
                 root = R.id.demo_collection_pull_refresh_root,
                 ready = R.id.demo_collection_pull_refresh_ready,
                 reset = R.id.demo_collection_pull_refresh_reset,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.LayoutLinear,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_layout_linear_title,
+            summaryRes = R.string.demo_scenario_layout_linear_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
+            route = DemoScenarioRoute(LayoutsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_layout_linear_root,
+                ready = R.id.demo_layout_linear_ready,
+                primaryAction = R.id.demo_layout_linear_primary_action,
+                reset = R.id.demo_layout_linear_reset,
+                state = R.id.demo_layout_linear_state,
+                target = R.id.demo_layout_linear_target,
+            ),
+            benchmarkRevision = 2,
+        ),
+        scenario(
+            id = DemoScenarioIds.LayoutStack,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_layout_stack_title,
+            summaryRes = R.string.demo_scenario_layout_stack_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(LayoutsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_layout_stack_root,
+                ready = R.id.demo_layout_stack_ready,
+                primaryAction = R.id.demo_layout_stack_primary_action,
+                reset = R.id.demo_layout_stack_reset,
+                state = R.id.demo_layout_stack_state,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.LayoutEdges,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_layout_edges_title,
+            summaryRes = R.string.demo_scenario_layout_edges_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(LayoutsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_layout_edges_root,
+                ready = R.id.demo_layout_edges_ready,
+                primaryAction = R.id.demo_layout_edges_primary_action,
+                reset = R.id.demo_layout_edges_reset,
+                state = R.id.demo_layout_edges_state,
+                target = R.id.demo_layout_edges_target,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.LayoutFlow,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_layout_flow_title,
+            summaryRes = R.string.demo_scenario_layout_flow_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(LayoutsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_layout_flow_root,
+                ready = R.id.demo_layout_flow_ready,
+                primaryAction = R.id.demo_layout_flow_primary_action,
+                secondaryAction = R.id.demo_layout_flow_secondary_action,
+                reset = R.id.demo_layout_flow_reset,
+                state = R.id.demo_layout_flow_state,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.LayoutScroll,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_layout_scroll_title,
+            summaryRes = R.string.demo_scenario_layout_scroll_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual),
+            route = DemoScenarioRoute(LayoutsActivity::class.java),
+            mutable = false,
+            ids = TargetIds(
+                root = R.id.demo_layout_scroll_root,
+                ready = R.id.demo_layout_scroll_ready,
+            ),
+        ),
+        scenario(
+            id = DemoScenarioIds.LayoutConstraint,
+            category = DemoScenarioCategory.Rendering,
+            titleRes = R.string.demo_scenario_layout_constraint_title,
+            summaryRes = R.string.demo_scenario_layout_constraint_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(LayoutsActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_layout_constraint_root,
+                ready = R.id.demo_layout_constraint_ready,
+                reset = R.id.demo_layout_constraint_reset,
             ),
         ),
         scenario(

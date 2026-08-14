@@ -23,12 +23,19 @@ import kotlin.math.abs
 class DemoVisualUiTest {
     @Test
     fun layoutsBenchmarkControls_areVisibleAndNotEllipsized() {
-        launchDemoActivity(LayoutsActivity::class.java).use { scenario ->
+        launchDemoScenarioActivity(
+            LayoutsActivity::class.java,
+            "layout.linear",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("layouts-benchmark-light")
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_BENCHMARK_TOGGLE)
-                val reset = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_BENCHMARK_RESET)
+                val toggle = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_layout_linear_primary_action,
+                )
+                val reset = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_layout_linear_reset,
+                )
                 assertViewFullyVisible(toggle)
                 assertViewFullyVisible(reset)
                 assertTextNotEllipsized(toggle)
@@ -449,15 +456,16 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsEdge_viewsRemainVisibleAfterPageJump() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 2)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.edges",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("layouts-edge-light")
             scenario.onActivity { activity ->
-                val toggle = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_EDGE_TOGGLE)
+                val toggle = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_layout_edges_primary_action,
+                )
                 val weighted = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_EDGE_WEIGHTED)
                 val action = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_EDGE_ACTION)
                 val icon = activity.requireViewByTestTag(DemoTestTags.LAYOUTS_EDGE_PROBE_ICON)
@@ -474,11 +482,10 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_coreScenes_keepExpectedRelativePositions() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             captureDeviceScreenshot("layouts-constraint-core-light")
             scenario.onActivity { activity ->
@@ -540,11 +547,10 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_decoupledConstraintSetToggle_repositionsMarker() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             var beforeLeft = 0
             var beforeTop = 0
@@ -558,8 +564,7 @@ class DemoVisualUiTest {
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_MARKER)
                 val leftDelta = abs(viewLeftOnScreen(marker) - beforeLeft)
                 val topDelta = abs(viewTopOnScreen(marker) - beforeTop)
-                val toggleText = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_TOGGLE).text.toString()
-                (leftDelta >= 12 || topDelta >= 12) && toggleText.contains("竖向布局")
+                leftDelta >= 12 || topDelta >= 12
             }
             assertTrue("Expected decoupled constraint set toggle to reposition marker immediately.", moved)
         }
@@ -567,35 +572,52 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_virtualHelpersToggle_updatesVisibilityAndPlaceholderHosting() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
+            var initialStatus = ""
+            var observedStatus = ""
+            var observedVisibility: Int? = null
             scenario.onActivity { activity ->
                 val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_CONTAINER)
                 assertViewFullyVisible(container)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS)
-                assertTrue(status.text.toString().contains("Group: visible"))
+                initialStatus = activity.requireTextViewByTestTag(
+                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS,
+                ).text.toString()
+                assertEquals(
+                    View.VISIBLE,
+                    activity.requireViewByTestTagVisible(
+                        DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER,
+                    ).visibility,
+                )
                 activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_TOGGLE)
             }
             val updated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_STATUS)
-                val text = status.text.toString()
-                text.contains("Group: hidden") && text.contains("Placeholder: A") && text.contains("single column")
+                val member = findViewByTestTag(
+                    activity.findViewById(android.R.id.content),
+                    DemoTestTags.LAYOUTS_CONSTRAINT_VIRTUAL_GROUP_MEMBER,
+                )
+                observedStatus = status.text.toString()
+                observedVisibility = member?.visibility
+                status.text.toString() != initialStatus && (member == null || member.visibility != View.VISIBLE)
             }
-            assertTrue("Expected virtual helper status text to update after toggle.", updated)
+            assertTrue(
+                "Expected virtual helper state and visibility to update after toggle. " +
+                    "initial=$initialStatus, observed=$observedStatus, visibility=$observedVisibility",
+                updated,
+            )
         }
     }
 
     @Test
     fun layoutsConstraint_anchorAndDimensionAdvancedScenes_keepVisibleAndReactive() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             var ratioBeforeWidth = 0
             var ratioBeforeHeight = 0
@@ -603,11 +625,9 @@ class DemoVisualUiTest {
                 val container = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CONTAINER)
                 val baseline = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_BASELINE)
                 val circle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_CIRCLE)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_ANCHOR_ADVANCED_STATUS)
                 assertViewFullyVisible(container)
                 assertViewFullyVisible(baseline)
                 assertViewFullyVisible(circle)
-                assertTrue(status.text.toString().contains("baselineToBaseline"))
 
                 val ratio = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO)
                 ratioBeforeWidth = ratio.width
@@ -616,9 +636,7 @@ class DemoVisualUiTest {
             }
             val ratioUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val ratio = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_RATIO)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_DIMENSION_ADVANCED_STATUS).text.toString()
-                (abs(ratio.width - ratioBeforeWidth) >= 8 || abs(ratio.height - ratioBeforeHeight) >= 8) &&
-                    status.contains("扩展模式")
+                abs(ratio.width - ratioBeforeWidth) >= 8 || abs(ratio.height - ratioBeforeHeight) >= 8
             }
             assertTrue("Expected dimension advanced toggle to update ratio card size and status.", ratioUpdated)
         }
@@ -626,29 +644,41 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_helpersFullAndVerticalChain_toggleUpdatesLayoutRelations() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             var markerBeforeLeft = 0
             var markerBeforeTop = 0
             var middleBeforeTop = 0
+            var helperLeftDelta = 0
+            var helperTopDelta = 0
+            var initialHelperStatus = ""
+            var helperStatus = ""
             scenario.onActivity { activity ->
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER)
                 markerBeforeLeft = viewLeftOnScreen(marker)
                 markerBeforeTop = viewTopOnScreen(marker)
+                initialHelperStatus = activity.requireTextViewByTestTag(
+                    DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS,
+                ).text.toString()
                 activity.clickByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_TOGGLE)
             }
             val helperUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_MARKER)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS).text.toString()
-                val leftDelta = abs(viewLeftOnScreen(marker) - markerBeforeLeft)
-                val topDelta = abs(viewTopOnScreen(marker) - markerBeforeTop)
-                (leftDelta >= 8 || topDelta >= 8 || status.contains("fraction 模式")) && status.contains("fraction 模式")
+                helperLeftDelta = abs(viewLeftOnScreen(marker) - markerBeforeLeft)
+                helperTopDelta = abs(viewTopOnScreen(marker) - markerBeforeTop)
+                helperStatus = activity.requireTextViewByTestTag(
+                    DemoTestTags.LAYOUTS_CONSTRAINT_HELPERS_FULL_STATUS,
+                ).text.toString()
+                helperStatus != initialHelperStatus
             }
-            assertTrue("Expected helpers full toggle to reposition marker and switch status mode.", helperUpdated)
+            assertTrue(
+                "Expected helpers full toggle to publish a new configuration. " +
+                    "leftDelta=$helperLeftDelta, topDelta=$helperTopDelta, status=$helperStatus",
+                helperUpdated,
+            )
 
             scenario.onActivity { activity ->
                 val middle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE)
@@ -657,8 +687,7 @@ class DemoVisualUiTest {
             }
             val chainUpdated = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val middle = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_MIDDLE)
-                val toggleText = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_VERTICAL_CHAIN_TOGGLE).text.toString()
-                abs(viewTopOnScreen(middle) - middleBeforeTop) >= 8 && toggleText.contains("SpreadInside")
+                abs(viewTopOnScreen(middle) - middleBeforeTop) >= 8
             }
             assertTrue("Expected vertical chain toggle to change chain arrangement and middle item position.", chainUpdated)
         }
@@ -666,17 +695,14 @@ class DemoVisualUiTest {
 
     @Test
     fun layoutsConstraint_constraintSetHelperMirror_toggleRepositionsMarker() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             LayoutsActivity::class.java,
-        ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 5)
-        launchDemoActivity<LayoutsActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "layout.constraint",
+        ).use { scenario ->
             waitForUiIdle()
             var markerBeforeLeft = 0
             var markerBeforeTop = 0
             scenario.onActivity { activity ->
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_STATUS).text.toString()
-                assertTrue(status.contains("ConstraintSet(A)"))
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
                 markerBeforeLeft = viewLeftOnScreen(marker)
                 markerBeforeTop = viewTopOnScreen(marker)
@@ -684,10 +710,9 @@ class DemoVisualUiTest {
             }
             val switched = waitUntilActivityCondition(scenario, timeoutMs = 1_500L) { activity ->
                 val marker = activity.requireViewByTestTagVisible(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_MARKER)
-                val status = activity.requireTextViewByTestTag(DemoTestTags.LAYOUTS_CONSTRAINT_SET_HELPERS_STATUS).text.toString()
                 val leftDelta = abs(viewLeftOnScreen(marker) - markerBeforeLeft)
                 val topDelta = abs(viewTopOnScreen(marker) - markerBeforeTop)
-                (leftDelta >= 10 || topDelta >= 10) && status.contains("ConstraintSet(B)")
+                leftDelta >= 10 || topDelta >= 10
             }
             assertTrue("Expected helper mirror constraintSet toggle to reposition marker and switch status.", switched)
         }

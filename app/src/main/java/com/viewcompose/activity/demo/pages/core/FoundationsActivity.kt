@@ -26,8 +26,13 @@ class FoundationsActivity : DemoRenderActivity() {
         builder.OverviewPage(
             initialPageIndex = intent?.getIntExtra(EXTRA_FOUNDATIONS_PAGE_INDEX, 0) ?: 0,
         ) { target ->
-            if (target == CollectionsActivity::class.java) {
-                val scenario = DemoScenarioRegistry.require(DemoScenarioIds.CollectionControls.value)
+            val strictScenarioId = when (target) {
+                CollectionsActivity::class.java -> DemoScenarioIds.CollectionControls
+                LayoutsActivity::class.java -> DemoScenarioIds.LayoutLinear
+                else -> null
+            }
+            if (strictScenarioId != null) {
+                val scenario = DemoScenarioRegistry.require(strictScenarioId.value)
                 startActivity(DemoScenarioRegistry.createLaunchIntent(this, scenario))
             } else {
                 startActivity(Intent(this, target))

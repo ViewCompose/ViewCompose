@@ -75,11 +75,9 @@ class ComponentFamilySmokeUiTest {
             }
         }
 
-        launchDemoActivity<LayoutsActivity>(
-            Intent(
-                ApplicationProvider.getApplicationContext(),
-                LayoutsActivity::class.java,
-            ).putExtra(EXTRA_LAYOUTS_PAGE_INDEX, 3),
+        launchDemoScenarioActivity(
+            activityClass = LayoutsActivity::class.java,
+            scenarioId = "layout.flow",
         ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->

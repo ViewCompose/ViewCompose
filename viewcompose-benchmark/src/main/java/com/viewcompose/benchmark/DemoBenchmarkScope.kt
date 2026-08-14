@@ -185,7 +185,6 @@ private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (modu
     "environment" -> "com.viewcompose.DemoEnvironmentActivity"
     "foundations" -> "com.viewcompose.FoundationsActivity"
     "state" -> "com.viewcompose.StateActivity"
-    "layouts" -> "com.viewcompose.LayoutsActivity"
     "input" -> "com.viewcompose.InputActivity"
     "interop" -> "com.viewcompose.InteropActivity"
     "diagnostics" -> "com.viewcompose.DiagnosticsActivity"
