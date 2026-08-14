@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/decisions/README.md
-translation_source_hash: d5d018122a29144c7854a5b7b1a3c3b1e6d3046ec5231bf3d0c7cf4046b824a7
+translation_source_hash: 1b8e792bb8fd342b6bc2a4cee33238b35c6fbbc722067bffa61337fdb8721f8d
 translation_status: current
 ---
 
@@ -22,6 +22,7 @@ translation_status: current
 - [ADR-0009：开发工具隔离与按请求检查](./0009-development-tooling-isolation.md)
 - [ADR-0010：分层可保存状态所有权](./0010-hierarchical-saveable-state-ownership.md)
 - [ADR-0011：预取 Session 激活边界](./0011-prefetched-session-activation-boundary.md)
+- [ADR-0012：Lazy 集合的逻辑与物理所有权](./0012-lazy-collection-logical-and-physical-ownership.md)
 
 ## 规则
 

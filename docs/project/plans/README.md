@@ -30,7 +30,6 @@ This directory contains multi-step work that is currently active and must surviv
   prioritize lifecycle, ownership, keyed identity, RTL, Insets, and atomic navigation gaps while
   preserving the native Android View engine and recording explicit test, rollback, and rejection
   decisions for high-risk Compose parity work.
-
 Completed tutorial, language-consistency, migration-sample, hosted-documentation, and
 version-retention plans are retained in the
 [archive](https://github.com/ViewCompose/ViewCompose/blob/main/docs/archive/README.md).

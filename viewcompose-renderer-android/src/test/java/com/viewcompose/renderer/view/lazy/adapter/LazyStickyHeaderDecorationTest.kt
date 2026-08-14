@@ -67,12 +67,12 @@ class LazyStickyHeaderDecorationTest {
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = key,
+            contentRevision = key,
             kind = kind,
             sessionFactory = LazyListItemSessionFactory { handle ->
                 val container = handle.nativeContainer as ViewGroup
                 object : LazyListItemSession {
-                    override fun render() {
+                    override fun render(): Boolean {
                         if (container.childCount == 0) {
                             container.addView(
                                 TextView(container.context).apply {
@@ -84,6 +84,7 @@ class LazyStickyHeaderDecorationTest {
                                 },
                             )
                         }
+                        return true
                     }
 
                     override fun dispose() {
@@ -91,6 +92,7 @@ class LazyStickyHeaderDecorationTest {
                     }
                 }
             },
+            sessionUpdater = {},
         )
     }
 

@@ -6,7 +6,8 @@ import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.ui.node.NodeType
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
-import com.viewcompose.ui.node.collection.TabRowTab
+import com.viewcompose.ui.modifier.clickable
+import com.viewcompose.ui.modifier.padding
 import com.viewcompose.ui.node.policy.CollectionMotionPolicy
 import com.viewcompose.ui.node.policy.CollectionReusePolicy
 import com.viewcompose.ui.node.policy.LazyContentPadding
@@ -28,6 +29,7 @@ fun <T> UiTreeBuilder.LazyColumn(
     items: List<T>,
     key: (T) -> Any,
     contentType: (T) -> Any? = { null },
+    contentRevision: (T) -> Any? = { it },
     contentPadding: UiDp = UiDp.Zero,
     spacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
@@ -56,6 +58,7 @@ fun <T> UiTreeBuilder.LazyColumn(
             items = items,
             key = key,
             contentType = contentType,
+            contentRevision = contentRevision,
             itemContent = itemContent,
         )
     }
@@ -110,6 +113,7 @@ fun <T> UiTreeBuilder.LazyRow(
     items: List<T>,
     key: (T) -> Any,
     contentType: (T) -> Any? = { null },
+    contentRevision: (T) -> Any? = { it },
     contentPadding: UiDp = UiDp.Zero,
     spacing: UiDp = UiDp.Zero,
     state: LazyListState? = null,
@@ -136,6 +140,7 @@ fun <T> UiTreeBuilder.LazyRow(
             items = items,
             key = key,
             contentType = contentType,
+            contentRevision = contentRevision,
             itemContent = itemContent,
         )
     }
@@ -189,6 +194,7 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
     spanCount: Int = 2,
     key: (T) -> Any,
     contentType: (T) -> Any? = { null },
+    contentRevision: (T) -> Any? = { it },
     span: (T) -> Int = { 1 },
     contentPadding: UiDp = UiDp.Zero,
     horizontalSpacing: UiDp = UiDp.Zero,
@@ -221,6 +227,7 @@ fun <T> UiTreeBuilder.LazyVerticalGrid(
             items = items,
             key = key,
             contentType = contentType,
+            contentRevision = contentRevision,
             span = span,
             itemContent = itemContent,
         )
@@ -274,23 +281,44 @@ fun UiTreeBuilder.LazyVerticalGrid(
 // HorizontalPager.
 
 /**
- * Page collection scope for HorizontalPager.
+ * Declares delayed pager pages with explicit logical identity and semantic revisions.
+ *
+ * Page keys are required and unique. A page owns remember, saveable state, observations, and
+ * effects by key while its session is resident; a recycled native presentation never owns that
+ * identity.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.pagerAndTabIdentitySample
  */
 @UiDslMarker
 class HorizontalPagerScope internal constructor() {
     private val pages = mutableListOf<HorizontalPagerPage>()
+    private val keys = linkedSetOf<Any>()
 
     /**
-     * Adds one pager page.
+     * Adds one delayed page session.
+     *
+     * Equal key, [contentRevision], and framework environment revision skip page rendering.
+     * [contentType] permits only physical-tree reuse after the old key session is disposed.
+     *
+     * @param key unique logical page identity across reorder and native recycling
+     * @param contentType physical-tree compatibility class for reset and rebind
+     * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param content page declaration evaluated when the page session renders
+     * @throws IllegalArgumentException when [key] duplicates another page in this scope
      */
     fun Page(
-        key: Any? = null,
-        contentToken: Any? = null,
+        key: Any,
+        contentType: Any? = null,
+        contentRevision: Any? = key,
         content: UiTreeBuilder.() -> Unit,
     ) {
+        require(keys.add(key)) {
+            "Pager page keys must be unique. Duplicate key: $key"
+        }
         pages += HorizontalPagerPage(
             key = key,
-            contentToken = contentToken,
+            contentType = contentType,
+            contentRevision = contentRevision,
             content = content,
         )
     }
@@ -305,7 +333,7 @@ fun UiTreeBuilder.HorizontalPager(
     currentPage: Int,
     onPageChanged: (Int) -> Unit,
     pagerState: PagerState? = null,
-    offscreenPageLimit: Int = 1,
+    offscreenPageLimit: Int = -1,
     userScrollEnabled: Boolean = true,
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
@@ -323,10 +351,9 @@ fun UiTreeBuilder.HorizontalPager(
         val saveableStateKey = saveableStateKeys[index]
         LazyListItem(
             key = page.key,
-            contentToken = capturedLazyContentToken(
-                contentToken = page.contentToken,
-                localSnapshot = localSnapshot,
-            ),
+            contentType = page.contentType,
+            contentRevision = page.contentRevision,
+            environmentRevision = localSnapshot,
             sessionFactory = LazyListItemSessionFactory { container ->
                 WidgetLazyListItemSession(
                     container = container,
@@ -337,7 +364,7 @@ fun UiTreeBuilder.HorizontalPager(
                 )
             },
             sessionUpdater = { session ->
-                (session as? WidgetLazyListItemSession)?.updateContent(
+                (session as WidgetLazyListItemSession).updateContent(
                     localSnapshot = localSnapshot,
                     content = page.content,
                 )
@@ -371,8 +398,9 @@ fun UiTreeBuilder.HorizontalPager(
  * Snapshot of one pager page declaration.
  */
 internal data class HorizontalPagerPage(
-    val key: Any?,
-    val contentToken: Any?,
+    val key: Any,
+    val contentType: Any?,
+    val contentRevision: Any?,
     val content: UiTreeBuilder.() -> Unit,
 )
 
@@ -385,7 +413,7 @@ fun UiTreeBuilder.VerticalPager(
     currentPage: Int,
     onPageChanged: (Int) -> Unit,
     pagerState: PagerState? = null,
-    offscreenPageLimit: Int = 1,
+    offscreenPageLimit: Int = -1,
     userScrollEnabled: Boolean = true,
     reusePolicy: CollectionReusePolicy = CollectionReusePolicy(),
     motionPolicy: CollectionMotionPolicy = CollectionMotionPolicy(),
@@ -404,10 +432,9 @@ fun UiTreeBuilder.VerticalPager(
         val saveableStateKey = saveableStateKeys[index]
         LazyListItem(
             key = page.key,
-            contentToken = capturedLazyContentToken(
-                contentToken = page.contentToken,
-                localSnapshot = localSnapshot,
-            ),
+            contentType = page.contentType,
+            contentRevision = page.contentRevision,
+            environmentRevision = localSnapshot,
             sessionFactory = LazyListItemSessionFactory { container ->
                 WidgetLazyListItemSession(
                     container = container,
@@ -418,7 +445,7 @@ fun UiTreeBuilder.VerticalPager(
                 )
             },
             sessionUpdater = { session ->
-                (session as? WidgetLazyListItemSession)?.updateContent(
+                (session as WidgetLazyListItemSession).updateContent(
                     localSnapshot = localSnapshot,
                     content = page.content,
                 )
@@ -452,21 +479,38 @@ fun UiTreeBuilder.VerticalPager(
 // TabRow.
 
 /**
- * Tab collection scope for TabRow.
+ * Declares eager keyed tab children in the parent composition.
+ *
+ * Tabs do not create lazy item sessions or physical reuse owners. Their keys preserve ordinary
+ * parent-tree remember/saveable identity across reorder, while selection invalidates only the old
+ * and new selected children.
+ *
+ * @sample com.viewcompose.ui.foundation.samples.pagerAndTabIdentitySample
  */
 @UiDslMarker
 class TabRowScope internal constructor() {
     private val tabs = mutableListOf<TabRowTabEntry>()
+    private val keys = linkedSetOf<Any>()
 
     /**
-     * Adds one tab content declaration.
+     * Adds one eager keyed tab child.
+     *
+     * @param key unique identity used by ordinary keyed child reconciliation
+     * @param contentRevision semantic version of every non-State value captured by [content]
+     * @param content declaration receiving whether this tab is currently selected
+     * @throws IllegalArgumentException when [key] duplicates another tab in this scope
      */
     fun Tab(
-        key: Any? = null,
+        key: Any,
+        contentRevision: Any? = key,
         content: UiTreeBuilder.(selected: Boolean) -> Unit,
     ) {
+        require(keys.add(key)) {
+            "TabRow keys must be unique. Duplicate key: $key"
+        }
         tabs += TabRowTabEntry(
-            key = key ?: tabs.size,
+            key = key,
+            contentRevision = contentRevision,
             content = content,
         )
     }
@@ -475,7 +519,7 @@ class TabRowScope internal constructor() {
 }
 
 /**
- * Emits a TabRow and creates child sessions that update with selected state.
+ * Emits a TabRow whose tabs are eager keyed children in the parent composition.
  */
 fun UiTreeBuilder.TabRow(
     selectedIndex: Int,
@@ -500,51 +544,15 @@ fun UiTreeBuilder.TabRow(
     tabs: TabRowScope.() -> Unit,
 ) {
     val builtTabs = TabRowScope().apply(tabs).build()
-    val localSnapshot = LocalContext.snapshot()
-    val saveableStateHolder = rememberSaveableStateHolder()
-    val saveableStateKeys = resolveDelayedChildSaveableStateKeys(
-        builtTabs.map(TabRowTabEntry::key),
-    )
-    val resolvedTabs = builtTabs.mapIndexed { index, entry ->
-        val selected = index == selectedIndex
-        TabRowTab(
-            item = LazyListItem(
-                key = entry.key,
-                contentToken = capturedLazyContentToken(
-                    contentToken = Pair(entry.key, selected),
-                    localSnapshot = localSnapshot,
-                ),
-                sessionFactory = LazyListItemSessionFactory { container ->
-                    WidgetLazyListItemSession(
-                        container = container,
-                        localSnapshot = localSnapshot,
-                        saveableStateHolder = saveableStateHolder,
-                        saveableStateKey = saveableStateKeys[index],
-                        content = { entry.content(this, selected) },
-                    )
-                },
-                sessionUpdater = { session ->
-                    (session as? WidgetLazyListItemSession)?.updateContent(
-                        localSnapshot = localSnapshot,
-                        content = { entry.content(this, selected) },
-                    )
-                },
-            ),
-        )
-    }
-    saveableStateHolder?.let { holder ->
-        val committedKeys = saveableStateKeys.toSet()
-        SideEffect {
-            holder.retainKeys(committedKeys)
-        }
+    val environmentRevision = LocalContext.snapshot()
+    val currentOnTabSelected = ComposerContext.currentComposer()?.let {
+        rememberUpdatedState(onTabSelected)
     }
     emit(
         type = NodeType.TabRow,
         key = key,
         spec = TabRowNodeProps(
-            tabs = resolvedTabs,
             selectedIndex = selectedIndex,
-            onTabSelected = onTabSelected,
             pagerState = pagerState,
             indicatorColor = indicatorColor,
             indicatorHeight = indicatorHeight,
@@ -562,7 +570,37 @@ fun UiTreeBuilder.TabRow(
             minItemWidth = minItemWidth,
         ),
         modifier = modifier,
-    )
+    ) {
+        builtTabs.forEachIndexed { index, entry ->
+            val selected = index == selectedIndex
+            val buildTab: () -> Unit = {
+                RecomposeBoundary(
+                    key = entry.key,
+                    inputs = listOf(entry.contentRevision, environmentRevision, selected),
+                ) {
+                    Box(
+                        key = entry.key,
+                        rippleColor = rippleColor,
+                        modifier = Modifier
+                            .clickable {
+                                (currentOnTabSelected?.value ?: onTabSelected)(index)
+                            }
+                            .padding(
+                                horizontal = itemPaddingHorizontal,
+                                vertical = itemPaddingVertical,
+                            ),
+                    ) {
+                        entry.content(this, selected)
+                    }
+                }
+            }
+            if (ComposerContext.currentComposer() == null) {
+                buildTab()
+            } else {
+                key(entry.key, block = buildTab)
+            }
+        }
+    }
 }
 
 /**
@@ -570,25 +608,16 @@ fun UiTreeBuilder.TabRow(
  */
 internal data class TabRowTabEntry(
     val key: Any,
+    val contentRevision: Any?,
     val content: UiTreeBuilder.(selected: Boolean) -> Unit,
 )
 
-/**
- * Keeps unique explicit identities across reorders and gives ambiguous or unkeyed children an
- * exact position identity. The structured list remains host-saveable without hashing user keys.
- */
-private fun resolveDelayedChildSaveableStateKeys(keys: List<Any?>): List<Any> {
-    val counts = keys.filterNotNull().groupingBy { it }.eachCount()
-    return keys.mapIndexed { index, key ->
-        if (key != null && counts[key] == 1) {
-            listOf(DELAYED_CHILD_KEY_MARKER, DELAYED_CHILD_EXPLICIT_KEY, key)
-        } else {
-            listOf(DELAYED_CHILD_KEY_MARKER, DELAYED_CHILD_POSITION_KEY, index)
-        }
+/** Keeps required explicit identities host-saveable without hashing application keys. */
+private fun resolveDelayedChildSaveableStateKeys(keys: List<Any>): List<Any> {
+    return keys.map { key ->
+        listOf(DELAYED_CHILD_KEY_MARKER, key)
     }
 }
 
 private const val DELAYED_CHILD_KEY_MARKER =
     "com.viewcompose.ui.foundation.dsl.collection.DelayedChildSaveableStateKey"
-private const val DELAYED_CHILD_EXPLICIT_KEY = 1
-private const val DELAYED_CHILD_POSITION_KEY = 2

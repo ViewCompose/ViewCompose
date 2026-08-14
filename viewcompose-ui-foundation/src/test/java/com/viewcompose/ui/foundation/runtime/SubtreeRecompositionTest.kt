@@ -167,7 +167,7 @@ class SubtreeRecompositionTest {
     }
 
     @Test
-    fun `session backed vnode refreshes changed content closures`() {
+    fun `session backed vnode skips ordinary captures absent an explicit revision`() {
         val contentVersion = mutableStateOf(0)
         val composer = ComposerLite()
 
@@ -192,15 +192,15 @@ class SubtreeRecompositionTest {
         contentVersion.value = 1
         val second = compose()
 
-        assertNotSame(first, second)
+        assertSame(first, second)
     }
 
     @Test
-    fun `new collection item snapshot invalidates a value-equal node with reused callbacks`() {
+    fun `new value equal collection snapshot reuses the committed node and item`() {
         val composer = ComposerLite()
         val factory = LazyListItemSessionFactory {
             object : LazyListItemSession {
-                override fun render() = Unit
+                override fun render() = true
 
                 override fun dispose() = Unit
             }
@@ -208,7 +208,7 @@ class SubtreeRecompositionTest {
         val updater: (LazyListItemSession) -> Unit = {}
         var item = LazyListItem(
             key = "item",
-            contentToken = "stable",
+            contentRevision = "stable",
             sessionFactory = factory,
             sessionUpdater = updater,
         )
@@ -233,14 +233,14 @@ class SubtreeRecompositionTest {
         val first = compose()
         item = LazyListItem(
             key = "item",
-            contentToken = "stable",
+            contentRevision = "stable",
             sessionFactory = factory,
             sessionUpdater = updater,
         )
         val second = compose()
 
-        assertNotSame(first, second)
-        assertNotSame(
+        assertSame(first, second)
+        assertSame(
             (first.spec as LazyColumnNodeProps).items.single(),
             (second.spec as LazyColumnNodeProps).items.single(),
         )
@@ -396,6 +396,46 @@ class SubtreeRecompositionTest {
 
         assertNotSame(first, second)
         assertEquals("second", (second.spec as TextNodeProps).document.text)
+    }
+
+    @Test
+    fun `tab selection recomposes only the previously and newly selected eager children`() {
+        val selectedIndex = mutableStateOf(0)
+        val composer = ComposerLite()
+        val tabRuns = IntArray(3)
+
+        fun compose(): VNode =
+            ComposerContext.withComposer(composer) {
+                composer.composeRoot {
+                    buildVNodeTree {
+                        TabRow(
+                            selectedIndex = selectedIndex.value,
+                            onTabSelected = {},
+                        ) {
+                            repeat(3) { index ->
+                                Tab(
+                                    key = "tab-$index",
+                                    contentRevision = "stable",
+                                ) { selected ->
+                                    tabRuns[index] += 1
+                                    Text("$index:$selected")
+                                }
+                            }
+                        }
+                    }.single()
+                }
+            }
+
+        val first = compose()
+        assertEquals(listOf(1, 1, 1), tabRuns.toList())
+
+        selectedIndex.value = 1
+        val second = compose()
+
+        assertEquals(listOf(2, 2, 1), tabRuns.toList())
+        assertNotSame(first.children[0], second.children[0])
+        assertNotSame(first.children[1], second.children[1])
+        assertSame(first.children[2], second.children[2])
     }
 
     private fun textSpec(text: String): TextNodeProps {

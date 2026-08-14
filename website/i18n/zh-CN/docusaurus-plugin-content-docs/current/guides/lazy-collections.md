@@ -1,6 +1,6 @@
 ---
 translation_source: guides/lazy-collections.md
-translation_source_hash: f8c6e5120f55bbb82745898715d76c2fe02488e73547fac4193cf0f276555f1d
+translation_source_hash: 4a95553b7a2f5fe031dc6ed1eb605ffe05f1774349dd477f2281d8d0c5ad21df
 translation_status: current
 ---
 
@@ -54,9 +54,10 @@ LazyColumn(
         vertical = 8.dp,
     ),
     prefetchPolicy = LazyLayoutPrefetchPolicy(
-        initialPrefetchItemCount = 4,
+        nestedInitialPrefetchItemCount = 4,
         itemViewCacheSize = 4,
     ),
+    reusePolicy = CollectionReusePolicy(mountedTreeCacheSize = 2),
 ) {
     stickyHeader(
         key = "contacts-header",
@@ -69,37 +70,48 @@ LazyColumn(
         items = contacts,
         key = { contact -> contact.id },
         contentType = { "contact-row" },
+        contentRevision = { contact -> contact.version },
     ) { contact ->
         ContactRow(contact)
     }
 }
 ```
 
-列表 scope 支持 `item`、`items` 和 `stickyHeader`。网格 scope 还支持逐 item span；网格
-sticky header 占满整行。均质数据便捷重载同样要求稳定 key，并委托给结构化模型。
+列表 Scope 支持 `item`、`items` 和 `stickyHeader`。网格 Scope 还支持逐 Item Span；网格 Sticky
+Header 占满整行。`contentRevision` 是正确性契约而不只是性能提示。Item Content 捕获的变化值必须
+是可观察 State，或进入该 Revision；Key 和 Revision 相等时完全跳过 Item Render。均质数据便捷
+重载同样要求稳定 Key，并委托给结构化模型。
 
 ## 4. 渲染器映射
 
 | 契约 | Android 映射 |
 | --- | --- |
 | 稳定 key | adapter 内无冲突的 stable ID |
-| content type | RecyclerView view type / 回收池分区 |
+| content type | 空 Holder 与 Reset Mounted Tree 的原生兼容分区 |
+| content revision | 调用方所有的语义 Version，用于定向 Item 失效 |
 | item span | `GridLayoutManager.SpanSizeLookup` |
 | sticky header | 与列表分离、由 Session 承载的 pinned holder，并支持下一 header 推离 |
 | pinned header 指针输入 | 坐标变换后分发给 pinned holder |
 | 非对称 content padding | RecyclerView 相对 padding |
 | reverse layout | `LinearLayoutManager/GridLayoutManager.reverseLayout` |
 | 用户滚动开关 | 触摸拦截门；程序滚动仍可用 |
-| 初始预取数量 | layout manager 初始预取 |
+| 嵌套初始预取数量 | 列表嵌套时使用的 LayoutManager Hint |
 | item 缓存大小 | RecyclerView item-view cache |
+| mounted-tree 缓存大小 | 框架所有、有界、确定性 Release 的 Reset Tree 缓存 |
 | 布局状态 | scroll、layout 和 adapter observer 推送给 `LazyListState` |
 
-Detach 且从未展示的 Holder 可以借助 RecyclerView Prefetch 组合并构建 Android View 树。这只是
-Prepared Candidate，不是已提交子帧。Remember 激活、`SideEffect`、`DisposableEffect`、
+Detach 且从未展示的 Holder 只有在 Renderer 已确认该 Content Type 的同步成本在预算内时，才会
+借助 RecyclerView Prefetch 组合并构建 Android View 树。未知或昂贵 Type 只 Staging，不做原生
+准备。这只是 Prepared Candidate，不是已提交子帧。Remember 激活、`SideEffect`、`DisposableEffect`、
 `LaunchedEffect`、原生 `AndroidView.onCommit`、Overlay 与已提交诊断都会等到首次 Attach。
 如果被观察 State 在 Attach 前变化，过期候选会被放弃，Activate 会渲染当前状态。已经激活的
-Session 在普通 RecyclerView Cache Detach 期间继续保持 Active，并在 Holder Recycle 或 Container
-释放时 Dispose。
+Session 在普通 RecyclerView Cache Detach 期间继续保持 Active。Recycle 会结束其逻辑 Key
+Session，兼容且已 Reset 的物理树随后可进入有界 Renderer 缓存；RecyclerView Pool 只收到空 Holder
+外壳。
+
+`AndroidView` 只有声明 `onReset` 才主动允许 Mounted Tree 跨 Key 复用。旧逻辑 Session 与 Effect
+先 Dispose，再执行 Reset。缓存淘汰或最终 Container Dispose 恰好调用一次 `onRelease`。包含未声明
+`onReset` 的互操作 View 的树会直接 Release。
 
 pinned 副本不登记为第二个无障碍节点，普通列表 header 仍是语义源，避免 TalkBack 重复播报。
 
@@ -115,18 +127,22 @@ Attach 或重排时按 Item Key 恢复。分离的 Pinned Header 副本是不拥
 
 ## 5. 不变量
 
-1. 容器内 key 非空且唯一，并在重排时持续标识同一逻辑 item。
-2. `contentType` 只能分组布局兼容的 item 结构。
-3. 平台回调发布不可变 snapshot；Android 类型不得进入 ui-contract。
-4. 对同一 RecyclerView connector 的重新绑定不得重置滚动锚点。
-5. 保存恢复只持久化首个可见 index 与偏移。
-6. holder、pinned header 或容器释放时必须销毁对应 item Session。
-7. 集合、Modifier 与 Insets 的 Padding 贡献由 Renderer 合成为唯一原生值，并在定向 Patch 与
+1. 容器内 Key 非空且唯一。
+2. 一个 Key 在重排期间持续标识同一逻辑 Item。
+3. `contentType` 只能分组布局兼容的 Item 结构。
+4. `contentRevision` 包含每个不由 State 观察的变化普通捕获值。
+5. 平台 Callback 发布不可变 Snapshot；Android 类型不得进入 `ui-contract`。
+6. 对同一 RecyclerView Connector 的重新绑定不得重置滚动锚点。
+7. 保存恢复只持久化首个可见 Index 与偏移。
+8. Holder、Pinned Header 或容器释放时必须销毁对应 Item Session。
+9. 集合、Modifier 与 Insets 的 Padding 贡献由 Renderer 合成为唯一原生值，并在定向 Patch 与
    完整环境重绑期间保持稳定。
-8. Item Saveable State 按容器与稳定逻辑 Key 划分 Scope；重复 Provider 只在同一逻辑 Item Scope
+10. Item Saveable State 按容器与稳定逻辑 Key 划分 Scope；重复 Provider 只在同一逻辑 Item Scope
    内被拒绝。
-9. Prefetch Prepare 对外静默，不会把子 Submission 标记为 Committed；Activate 与后续 Active
+11. Prefetch Prepare 对外静默，不会把子 Submission 标记为 Committed；Activate 与后续 Active
    Render 保持正常事务式 Effect 顺序。
+12. 逻辑 Key State 绝不进入 RecyclerView Pool 或 Mounted Tree 缓存；Reset 物理树不携带 Remember、
+    Saveable、Subscription 或 Effect 标识。
 
 ## 6. 明确不包含的能力
 

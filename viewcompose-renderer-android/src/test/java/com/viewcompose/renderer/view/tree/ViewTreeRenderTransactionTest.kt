@@ -54,6 +54,7 @@ import com.viewcompose.ui.shape.UiCornerFamily
 import com.viewcompose.ui.shape.UiCornerSize
 import com.viewcompose.ui.unit.UiDensity
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.After
@@ -694,10 +695,127 @@ class ViewTreeRenderTransactionTest {
         assertEquals(0, container.childCount)
     }
 
+    @Test
+    fun `cross owner reuse requires reset and releases only on final disposal`() {
+        val firstContainer = FrameLayout(context)
+        val secondContainer = FrameLayout(context)
+        var resets = 0
+        var releases = 0
+        val first = ViewTreeRenderer.renderInto(
+            container = firstContainer,
+            previous = emptyList(),
+            nodes = listOf(
+                androidNode(
+                    key = "first",
+                    value = "old",
+                    onReset = { resets += 1 },
+                    onRelease = { releases += 1 },
+                ),
+            ),
+        )
+        val nativeView = first.mountedNodes.single().view
+
+        assertTrue(ViewTreeRenderer.detachMountedForReuse(firstContainer, first.mountedNodes))
+        assertEquals(1, resets)
+        assertEquals(0, releases)
+        ViewTreeRenderer.attachReusableMounted(secondContainer, first.mountedNodes)
+        val rebound = ViewTreeRenderer.renderInto(
+            container = secondContainer,
+            previous = first.mountedNodes,
+            nodes = listOf(
+                androidNode(
+                    key = "second",
+                    value = "new",
+                    onReset = { resets += 1 },
+                    onRelease = { releases += 1 },
+                ),
+            ),
+        )
+
+        assertSame(nativeView, rebound.mountedNodes.single().view)
+        assertEquals("new", nativeView.tag)
+        assertEquals(1, resets)
+        assertEquals(0, releases)
+        ViewTreeRenderer.releaseReusableMounted(rebound.mountedNodes)
+        assertEquals(1, releases)
+    }
+
+    @Test
+    fun `android view without reset never participates in cross owner reuse`() {
+        val container = FrameLayout(context)
+        var releases = 0
+        val mounted = ViewTreeRenderer.renderInto(
+            container = container,
+            previous = emptyList(),
+            nodes = listOf(
+                androidNode(
+                    key = "interop",
+                    value = "value",
+                    onRelease = { releases += 1 },
+                ),
+            ),
+        )
+
+        assertFalse(ViewTreeRenderer.detachMountedForReuse(container, mounted.mountedNodes))
+        assertEquals(1, container.childCount)
+        assertEquals(0, releases)
+        ViewTreeRenderer.disposeMounted(container, mounted.mountedNodes)
+        assertEquals(1, releases)
+    }
+
+    @Test
+    fun `failed cross owner rebind releases tree without invoking disposed owner update`() {
+        val oldContainer = FrameLayout(context)
+        val newContainer = FrameLayout(context)
+        var oldUpdates = 0
+        var releases = 0
+        val mounted = ViewTreeRenderer.renderInto(
+            container = oldContainer,
+            previous = emptyList(),
+            nodes = listOf(
+                VNode(
+                    type = NodeType.AndroidView,
+                    key = "old",
+                    spec = AndroidViewNodeProps(
+                        factory = { rawContext -> View(rawContext as Context) },
+                        update = { oldUpdates += 1 },
+                        onReset = {},
+                        onRelease = { releases += 1 },
+                    ),
+                ),
+            ),
+        )
+        assertEquals(1, oldUpdates)
+        assertTrue(ViewTreeRenderer.detachMountedForReuse(oldContainer, mounted.mountedNodes))
+        ViewTreeRenderer.attachReusableMounted(newContainer, mounted.mountedNodes)
+
+        val error = runCatching {
+            ViewTreeRenderer.renderInto(
+                container = newContainer,
+                previous = mounted.mountedNodes,
+                nodes = listOf(
+                    androidNode(
+                        key = "new",
+                        value = "new",
+                        failUpdate = true,
+                        onReset = {},
+                    ),
+                ),
+            )
+        }.exceptionOrNull()
+
+        assertAndroidViewUpdateFailure(error)
+        assertEquals(1, oldUpdates)
+        assertEquals(1, releases)
+        assertEquals(0, newContainer.childCount)
+        assertTrue(mounted.mountedNodes.single().disposed)
+    }
+
     private fun androidNode(
         key: Any,
         value: String,
         failUpdate: Boolean = false,
+        onReset: (() -> Unit)? = null,
         onRelease: (() -> Unit)? = null,
         onCommit: (() -> Unit)? = null,
     ): VNode {
@@ -713,6 +831,11 @@ class ViewTreeRenderTransactionTest {
                         error("update failed")
                     }
                     (rawView as View).tag = value
+                },
+                onReset = if (onReset == null) {
+                    null
+                } else {
+                    { onReset() }
                 },
                 onRelease = if (onRelease == null) {
                     null
@@ -831,7 +954,7 @@ class ViewTreeRenderTransactionTest {
                 items = listOf(
                     LazyListItem(
                         key = "item",
-                        contentToken = "stable",
+                        contentRevision = label,
                         sessionFactory = LazyListItemSessionFactory {
                             TransactionRecordingSession(events)
                         },
@@ -850,8 +973,9 @@ class ViewTreeRenderTransactionTest {
     ) : LazyListItemSession {
         var label: String = ""
 
-        override fun render() {
+        override fun render(): Boolean {
             events += "render:$label"
+            return true
         }
 
         override fun dispose() = Unit

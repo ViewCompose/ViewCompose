@@ -2,7 +2,7 @@
 title: 从 Jetpack Compose 迁移
 slug: /migration
 translation_source: migration/README.md
-translation_source_hash: fa9f45305a554659583362953822073e0677cf7a28d4637ce48f58c5881b2552
+translation_source_hash: fe02d0b088c1544e0a6887a45ec1ce146e7e21aac8dc70c79d2261d4a249f202
 translation_status: current
 ---
 
@@ -59,6 +59,7 @@ Kotlin `2.0.21`，声明位置是
 | Activity、Fragment、现有 View 宿主、生命周期、ViewModel 或 Android 互操作 | [宿主、生命周期与 Android 互操作](compose-host-lifecycle-and-android-interop.md) | 根所有者、销毁边界、已安装 owner、可重放工作和释放清理 |
 | Navigation 2 或 Navigation 3 | [导航](compose-navigation.md) | 源导航模型、路由身份、owner 作用域、隐藏 session 策略和 Back 集成 |
 | 图片加载 | [图片加载](image-loading.md) | source 类型、loader 所有权、request 策略和回收 View 释放 |
+| Lazy 集合与 Pager | [Lazy 集合 Revision 与复用](lazy-collection-revision-and-reuse.md) | 语义 Revision、Mounted Tree 复用、互操作 Reset/Release，以及 TabRow/Pager 硬切 |
 
 一个边界跨越多个关注点时，需要阅读多份页面。例如，导航目的地中的
 `rememberSaveable` 同时受状态/恢复契约和导航所有权契约约束。

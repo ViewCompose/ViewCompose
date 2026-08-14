@@ -3,15 +3,12 @@ import com.viewcompose.ui.unit.UiDp
 
 import com.viewcompose.ui.node.collection.TabIndicatorPosition
 import com.viewcompose.ui.node.collection.TabIndicatorWidthMode
-import com.viewcompose.ui.node.collection.TabRowTab
 import com.viewcompose.ui.state.PagerState
 
 /**
  * Immutable renderer properties for a tab row and its selection indicator.
  *
- * @property tabs ordered tab models
  * @property selectedIndex externally selected tab index
- * @property onTabSelected callback receiving an accepted tab index
  * @property pagerState optional pager state used to synchronize selection and indicator progress
  * @property indicatorColor selected-tab indicator color
  * @property indicatorHeight indicator cross-axis thickness
@@ -29,9 +26,7 @@ import com.viewcompose.ui.state.PagerState
  * @property minItemWidth minimum width of each tab
  */
 data class TabRowNodeProps(
-    val tabs: List<TabRowTab>,
     val selectedIndex: Int,
-    val onTabSelected: ((Int) -> Unit)?,
     val pagerState: PagerState?,
     val indicatorColor: Int,
     val indicatorHeight: UiDp,

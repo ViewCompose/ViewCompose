@@ -12,6 +12,7 @@ import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 import com.viewcompose.renderer.reconcile.LazyListChangePayload
+import com.viewcompose.renderer.reconcile.LazyListPresentationChangedPayload
 import android.widget.FrameLayout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -103,7 +104,7 @@ class LazyListAdapterTest {
     }
 
     @Test
-    fun `new submission revision refreshes an attached holder with a stable updater instance`() {
+    fun `new submission revision skips an attached holder with stable item revisions`() {
         val context = RuntimeEnvironment.getApplication()
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
@@ -122,7 +123,7 @@ class LazyListAdapterTest {
         adapter.submitItems(listOf(recordingItem(events = events, sessionUpdater = updater)))
 
         assertEquals(
-            listOf("update:first", "render:first", "update:second", "render:second"),
+            listOf("update:first", "render:first"),
             events,
         )
     }
@@ -133,16 +134,23 @@ class LazyListAdapterTest {
         val parent = FrameLayout(context)
         val events = mutableListOf<String>()
         val adapter = LazyListAdapter()
-        adapter.submitItems(listOf(recordingItem("first", events, contentToken = 1)))
+        adapter.submitItems(listOf(recordingItem("first", events, contentRevision = 1)))
         val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
         adapter.onBindViewHolder(holder, 0)
         adapter.onViewAttachedToWindow(holder)
 
-        adapter.submitItems(listOf(recordingItem("second", events, contentToken = 2)))
+        adapter.submitItems(listOf(recordingItem("second", events, contentRevision = 2)))
         adapter.onBindViewHolder(
             holder,
             0,
-            mutableListOf(LazyListChangePayload.ContentTokenChanged(previous = 1, next = 2)),
+            mutableListOf(
+                LazyListChangePayload.RevisionChanged(
+                    previousContent = 1,
+                    nextContent = 2,
+                    previousEnvironment = null,
+                    nextEnvironment = null,
+                ),
+            ),
         )
 
         assertEquals(
@@ -180,7 +188,7 @@ class LazyListAdapterTest {
         adapter.onViewAttachedToWindow(holder)
         adapter.onViewDetachedFromWindow(holder)
 
-        adapter.submitItems(listOf(recordingItem("second", events)))
+        adapter.submitItems(listOf(recordingItem("second", events, contentRevision = "second")))
 
         assertEquals(listOf("update:first", "render:first"), events)
         adapter.onViewAttachedToWindow(holder)
@@ -212,7 +220,7 @@ class LazyListAdapterTest {
             CountingKey.equalityChecks <= 1,
         )
         assertEquals(
-            listOf("update:first", "render:first", "update:second", "render:second"),
+            listOf("update:first", "render:first"),
             events,
         )
         assertEquals(keys.lastIndex, holder.boundItemPosition)
@@ -247,8 +255,8 @@ class LazyListAdapterTest {
         assertEquals(
             listOf(
                 "update:first-A",
-                "update:first-B",
                 "render:first-A",
+                "update:first-B",
                 "render:first-B",
             ),
             events,
@@ -271,6 +279,28 @@ class LazyListAdapterTest {
         assertEquals(listOf("update:first", "render:first"), events)
     }
 
+    @Test
+    fun `span change requests layout without rendering stable item content`() {
+        val context = RuntimeEnvironment.getApplication()
+        val parent = FrameLayout(context)
+        val events = mutableListOf<String>()
+        val adapter = LazyListAdapter()
+        adapter.submitItems(listOf(recordingItem("first", events, span = 1)))
+        val holder = adapter.onCreateViewHolder(parent, adapter.getItemViewType(0))
+        adapter.onBindViewHolder(holder, 0)
+        adapter.onViewAttachedToWindow(holder)
+
+        adapter.submitItems(listOf(recordingItem("second", events, span = 2)))
+        adapter.onBindViewHolder(
+            holder,
+            0,
+            mutableListOf(LazyListPresentationChangedPayload),
+        )
+
+        assertEquals(listOf("update:first", "render:first"), events)
+        assertEquals(2, adapter.itemSpanAt(0))
+    }
+
     private fun item(
         key: Any,
         contentType: Any? = null,
@@ -278,29 +308,32 @@ class LazyListAdapterTest {
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = key,
+            contentRevision = key,
             contentType = contentType,
             kind = kind,
             sessionFactory = LazyListItemSessionFactory {
                 object : LazyListItemSession {
-                    override fun render() = Unit
+                    override fun render() = true
                     override fun dispose() = Unit
                 }
             },
+            sessionUpdater = {},
         )
     }
 
     private fun recordingItem(
         label: String,
         events: MutableList<String>,
-        key: Any? = "stable",
-        contentToken: Any? = "stable",
+        key: Any = "stable",
+        contentRevision: Any? = "stable",
         contentType: Any? = null,
+        span: Int = 1,
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = contentToken,
+            contentRevision = contentRevision,
             contentType = contentType,
+            span = span,
             sessionFactory = LazyListItemSessionFactory {
                 RecordingSession(events)
             },
@@ -317,7 +350,7 @@ class LazyListAdapterTest {
     ): LazyListItem {
         return LazyListItem(
             key = "stable",
-            contentToken = "stable",
+            contentRevision = "stable",
             sessionFactory = LazyListItemSessionFactory { RecordingSession(events) },
             sessionUpdater = sessionUpdater,
         )
@@ -328,8 +361,9 @@ class LazyListAdapterTest {
     ) : LazyListItemSession {
         var label: String = ""
 
-        override fun render() {
+        override fun render(): Boolean {
             events += "render:$label"
+            return true
         }
 
         override fun dispose() = Unit

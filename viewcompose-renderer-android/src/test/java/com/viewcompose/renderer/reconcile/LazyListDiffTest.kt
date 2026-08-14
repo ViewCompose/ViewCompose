@@ -7,6 +7,7 @@ package com.viewcompose.renderer.reconcile
 
 import com.viewcompose.ui.modifier.Modifier
 import com.viewcompose.ui.node.LazyListItem
+import com.viewcompose.ui.node.LazyListItemKind
 import com.viewcompose.ui.node.LazyListItemSession
 import com.viewcompose.ui.node.LazyListItemSessionFactory
 import org.junit.Assert.assertEquals
@@ -50,19 +51,9 @@ class LazyListDiffTest {
     }
 
     @Test
-    fun `falls back to reload when keys are missing`() {
-        val result = LazyListDiff.calculate(
-            previous = listOf(item(null)),
-            next = listOf(item(null)),
-        )
-
-        assertEquals(listOf(LazyListUpdate.ReloadAll), result.updates)
-    }
-
-    @Test
     fun `keeps latest lazy item instances when keyed diff produces no updates`() {
-        val previous = item("A", contentToken = "stable")
-        val next = item("A", contentToken = "stable")
+        val previous = item("A", contentRevision = "stable")
+        val next = item("A", contentRevision = "stable")
 
         val result = LazyListDiff.calculate(
             previous = listOf(previous),
@@ -75,8 +66,8 @@ class LazyListDiffTest {
 
     @Test
     fun `keeps latest page instances when pager pages are structurally stable`() {
-        val previous = item("page-1", contentToken = "stable")
-        val next = item("page-1", contentToken = "stable")
+        val previous = item("page-1", contentRevision = "stable")
+        val next = item("page-1", contentRevision = "stable")
 
         val result = LazyListDiff.calculate(
             previous = listOf(previous),
@@ -89,8 +80,8 @@ class LazyListDiffTest {
 
     @Test
     fun `keeps latest grid item instances when grid rows are structurally stable`() {
-        val previous = item("grid-1", contentToken = "stable")
-        val next = item("grid-1", contentToken = "stable")
+        val previous = item("grid-1", contentRevision = "stable")
+        val next = item("grid-1", contentRevision = "stable")
 
         val result = LazyListDiff.calculate(
             previous = listOf(previous),
@@ -102,36 +93,55 @@ class LazyListDiffTest {
     }
 
     @Test
-    fun `emits content token payload on change updates`() {
+    fun `emits content and environment revision payload on change updates`() {
         val result = LazyListDiff.calculate(
-            previous = listOf(item("A", contentToken = 1)),
-            next = listOf(item("A", contentToken = 2)),
+            previous = listOf(item("A", contentRevision = 1)),
+            next = listOf(item("A", contentRevision = 2)),
         )
 
         assertEquals(1, result.updates.size)
         val update = result.updates.first()
         assertTrue(update is LazyListUpdate.Change)
         val payload = (update as LazyListUpdate.Change).payload
-        assertTrue(payload is LazyListChangePayload.ContentTokenChanged)
-        payload as LazyListChangePayload.ContentTokenChanged
-        assertEquals(1, payload.previous)
-        assertEquals(2, payload.next)
+        assertTrue(payload is LazyListChangePayload.RevisionChanged)
+        payload as LazyListChangePayload.RevisionChanged
+        assertEquals(1, payload.previousContent)
+        assertEquals(2, payload.nextContent)
+        assertEquals(null, payload.previousEnvironment)
+        assertEquals(null, payload.nextEnvironment)
+    }
+
+    @Test
+    fun `layout metadata change does not claim item content revision changed`() {
+        val result = LazyListDiff.calculate(
+            previous = listOf(item("A", span = 1)),
+            next = listOf(item("A", span = 2)),
+        )
+
+        assertEquals(
+            LazyListPresentationChangedPayload,
+            (result.updates.single() as LazyListUpdate.Change).payload,
+        )
     }
 
     private fun item(
-        key: String?,
-        contentToken: Any? = key,
+        key: String,
+        contentRevision: Any? = key,
+        span: Int = 1,
     ): LazyListItem {
         return LazyListItem(
             key = key,
-            contentToken = contentToken,
+            contentRevision = contentRevision,
+            kind = LazyListItemKind.Item,
+            span = span,
             sessionFactory = LazyListItemSessionFactory {
                 object : LazyListItemSession {
-                    override fun render() = Unit
+                    override fun render() = true
 
                     override fun dispose() = Unit
                 }
             },
+            sessionUpdater = {},
         )
     }
 }

@@ -1,6 +1,6 @@
 ---
 translation_source: architecture/session-containers.md
-translation_source_hash: 265676e29c9b78f222cffc535d6ed1812906ba9fcba290d50fac5bf56753a93c
+translation_source_hash: 8afe2bffd42b13b258a6efd78dd291f015e71ff4c156dbd0d5b241e31a38a23f
 translation_status: current
 ---
 
@@ -25,15 +25,16 @@ translation_status: current
 3. `LazyVerticalGrid`
 4. `HorizontalPager`
 5. `VerticalPager`
-6. `TabRow + pager page`（页面内容通过 `LazyListItemSession` 承载）
-7. Navigation destination page（页面内容通过 `NavDestinationSession` 承载）
+6. Navigation destination page（页面内容通过 `NavDestinationSession` 承载）
+
+`TabRow` 被明确排除：数量少且常驻的 Tab 作为父组合中的普通 Eager Keyed Child 渲染。
 
 ## 3. 架构硬约束
 
 每个延迟 session 容器都必须满足：
 
 1. diff 为空时，不能回退到旧 item/page 实例
-2. 已绑定 holder/session 必须有“无结构变化刷新”路径
+2. Key、Content Revision 与 Environment Revision 相等时，必须完全跳过 Item Session
 3. `localSnapshot`、主题、环境、父层闭包在 update 路径重新注入
 4. 延迟创建路径可以 Prepare 原生子树，但只有 Activate 或 Active Update 才能跨越子 Composition/
    Effect Commit 边界
@@ -46,35 +47,41 @@ translation_status: current
 9. 一次父级集合提交对应一个单调递增的子 Session 修订。保留子项的更新只能由父渲染帧的
    commit effect 在 composition commit 之后发布；父帧回滚会直接丢弃更新，不得运行子 composition
    或 effect
-10. 回调对象身份不是修订。Renderer 提交新发射的不可变 item/page 快照，只抑制同一提交修订下
-    平台重复派发的 bind
+10. Callback 对象身份不是 Revision。变化的普通捕获值必须成为 State 或进入
+    `contentRevision`；仅 Callback 分配绝不刷新内容
 11. Detach 且从未激活的 Holder 可以 Prepare 已由父级提交的 Submission，但不得运行 Remember
     激活、Effect、原生 Commit Callback、Overlay 或已提交帧诊断。Activate 会提交有效候选而不重建。
     已 Active 的 Detach Holder 只暂存最新修订并在 Reattach 时渲染；重复 Key 存在歧义时，绝不能
     通过 First Match 查询猜测 Holder 归属
-12. Pager 对唯一 key 使用无碰撞稳定 ID，并按 `contentType`/kind 组合划分结构不兼容的原生
-    View Type。无 key 缓存页保留位置归属；带 key 的移动只有在前后快照中 key 均唯一时才解析
+12. Pager 对唯一 Key 使用无碰撞稳定 ID，并按 `contentType`/Kind 组合划分结构不兼容的原生
+    View Type。所有公开 Page 都要求唯一且稳定的 Key
 13. 每个独立组合的 Item/Page 都必须接收由父组合 Holder 和稳定逻辑 Key 持有的子
     `SaveableStateRegistry`。回收会保留该 Registry 的 Saved Map，重排跟随 Key，嵌套容器递归
     应用同一层级
 14. Renderer 并发创建的 Presentation 副本可以恢复逻辑 Owner 当前的 Saveable Snapshot，但不得
     为相同逻辑 Key 注册第二个持久化 Owner
+15. Recycle 必须先结束逻辑 Key Session，再 Reset 物理树。兼容 Mounted Tree 只存在于框架所有、
+    有界且可确定淘汰的缓存中；原生 Pool 只保留空 Holder 外壳
+16. `AndroidView` 只有声明 `onReset` 才参与跨 Key 复用；最终淘汰必须恰好调用一次 `onRelease`
 
 ## 4. 必测场景
 
 每个容器至少覆盖以下 8 类场景：
 
-1. 结构稳定、闭包变化：`key` 不变时，可见内容在父级成功提交后更新
+1. 结构稳定、闭包变化但 Revision 相等：不执行 Item Render；非 State 内容变化必须显式改变
+   Revision
 2. 结构稳定、局部上下文变化：主题/local/environment 更新可见
-3. `contentToken` 变化：复用或受控重建语义符合预期
+3. `contentRevision` 变化：复用或受控重建语义符合预期
 4. keyed reorder：顺序正确、状态不串位
 5. prepare/attach/detach/recycle：从未激活的缓存不运行子 Commit 工作，Attach 展示最新已提交修订，
    Active Detach 不重启生命周期工作，Recycle 不泄漏状态
-6. 空 diff 刷新：已 attach holder 对每个已提交修订只刷新一次
+6. 空 Diff 提交：Attached Holder 不执行 Item Render 或原生 Patch
 7. 父帧失败：保留子项的 update/render/effect 均不运行
-8. key 缺失或重复：保守 reload，不猜测 holder 身份
+8. 低层 Item Key 重复：保守 Reload，不猜测 Holder 身份；公开 DSL 在构建快照时拒绝缺失或重复 Key
 9. 可保存状态所有权：兄弟项 Local Key 不冲突，Keyed 回收恢复不串状态，Presentation 副本不能
    覆盖逻辑 Owner
+10. 跨 Key 物理复用：旧 Effect 先 Dispose 再 Reset，新逻辑状态从空开始，失败 Rebind 不能调用旧
+    Updater，淘汰只 Release 一次
 
 ## 5. 当前测试映射（2026-08）
 
@@ -91,9 +98,9 @@ translation_status: current
 
 1. `LazyColumn`：`collectionsStress_toggleUpdatesVisibleControls`（UI）
 2. `LazyVerticalGrid`：`collectionsGrid_spanToggle_refreshesVisibleItemContent`（UI）
-3. `TabRow + HorizontalPager`：`statePatchStress_refreshesStableTabContent`（UI）
-4. `HorizontalPager`：`statePatchStress_horizontalPagerContentUpdatesAcrossAdvances`（UI）
-5. `VerticalPager`：`statePatchStress_verticalPagerContentUpdatesAcrossAdvances`（UI）
+3. `TabRow + HorizontalPager`：Eager Keyed Tab 状态与 Pager Revision 场景（UI）
+4. `HorizontalPager`：`statePatchStress_horizontalPagerContentUpdatesAcrossExplicitRevisions`（UI）
+5. `VerticalPager`：`statePatchStress_verticalPagerContentUpdatesAcrossExplicitRevisions`（UI）
 6. `LazyVerticalGrid/HorizontalPager/VerticalPager`：`NodeBindingDifferTest` 容器 patch 单测（U）
 7. `LazyColumn`：`collectionsStress_rotateOrder_refreshesVisibleIdsAcrossToggles`（UI）
 8. Navigation destination：`NavDestinationSessionStoreTest` 覆盖候选离屏首帧、失败回滚、
@@ -111,7 +118,7 @@ translation_status: current
    `UiLocalSnapshot` 与内容闭包，回滚/移除按 session → owner 顺序释放。
 4. 事务导航更新（2026-07-26）：返回栈只在候选首帧或揭页刷新成功后提交；失败候选产生的
    重入命令不会泄漏到旧栈。
-5. 基线更新（2026-08-12）：Lazy、Pager 与 Tab 的子提交统一进入父级 commit-effect 边界。
+5. 基线更新（2026-08-12）：Lazy 与 Pager 子提交统一进入父级 Commit-Effect 边界。
    已 attach holder 对每个显式提交修订只渲染一次；detach 缓存与回滚父帧不会运行子 render/effect。
 6. Pager 移动会在提交后主动刷新已 attach 且 key 唯一的页面。Hash 冲突 key 仍保持不同稳定 ID；
    无 key 的 detach 页面在再次 attach 时按已绑定位置解析已提交快照。
@@ -119,6 +126,10 @@ translation_status: current
    RecyclerView Prefetch 可以在 Attach 前构建 Composition 与原生树，而既有 Transaction 会推迟
    Remember 激活、Effect、原生 Commit 工作、Overlay 与诊断。被观察 State 变化会在 Activate 前
    使候选失效。
+8. 基线更新（2026-08-14）：Item/Page 快照使用调用方 Content Revision 与框架 Environment
+   Revision。相等 Revision 跳过 Child Render，变化 Revision 只定向一个 Item。
+9. 基线更新（2026-08-14）：逻辑 Session 与物理 Mounted Tree 分离所有权。TabRow 使用 Eager
+   Keyed Child；只有可 Reset 树能通过有界 Renderer 缓存跨 Lazy Key。
 
 ## 6. 新容器接入流程
 
@@ -126,7 +137,7 @@ translation_status: current
 
 1. 架构登记：在 [overview.md](overview.md) 标记该容器
 2. 清单登记：加入本文档并补测试映射
-3. 单测：至少覆盖“diff empty but closure changed”、父帧回滚与 detach holder 再 attach
+3. 单测：至少覆盖相等 Revision 跳过、显式 Revision 更新、父帧回滚与 Detach Holder 再 Attach
 4. instrumentation：补真实 Activity 交互回归
 5. diagnostics：确认 render/layout 诊断可观测
 

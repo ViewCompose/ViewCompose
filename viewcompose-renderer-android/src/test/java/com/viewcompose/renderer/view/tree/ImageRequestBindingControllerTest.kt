@@ -161,13 +161,14 @@ class ImageRequestBindingControllerTest {
         val mounted = mountedImageNode()
         val item = LazyListItem(
             key = "item",
-            contentToken = "content",
+            contentRevision = "content",
             sessionFactory = LazyListItemSessionFactory { error("unused") },
+            sessionUpdater = {},
         )
         val controller = LazyItemSessionController(
             createSession = {
                 object : LazyListItemSession {
-                    override fun render() = Unit
+                    override fun render() = true
 
                     override fun dispose() {
                         ViewTreeDisposer.disposeMountedNode(mounted)

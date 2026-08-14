@@ -25,11 +25,15 @@ class LazyListPerformanceTutorialActivity : ComponentActivity() {
                 items = rows,
                 key = { row -> row },
                 contentType = { "text-row" },
+                contentRevision = { row -> row },
                 prefetchPolicy = LazyLayoutPrefetchPolicy(
-                    initialPrefetchItemCount = 4,
+                    nestedInitialPrefetchItemCount = 4,
                     itemViewCacheSize = 4,
                 ),
-                reusePolicy = CollectionReusePolicy(sharePool = true),
+                reusePolicy = CollectionReusePolicy(
+                    sharePool = true,
+                    mountedTreeCacheSize = 2,
+                ),
                 modifier = Modifier.fillMaxSize().padding(16.dp),
             ) { row ->
                 Text(row, modifier = Modifier.fillMaxWidth().padding(8.dp))

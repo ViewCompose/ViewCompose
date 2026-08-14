@@ -17,6 +17,7 @@ architecture pages describe how the system works now.
 - [ADR-0009: Development tooling isolation and request-driven inspection](./0009-development-tooling-isolation.md)
 - [ADR-0010: Hierarchical saveable-state ownership](./0010-hierarchical-saveable-state-ownership.md)
 - [ADR-0011: Prefetched session activation boundary](./0011-prefetched-session-activation-boundary.md)
+- [ADR-0012: Lazy collection logical and physical ownership](./0012-lazy-collection-logical-and-physical-ownership.md)
 
 ## Rules
 

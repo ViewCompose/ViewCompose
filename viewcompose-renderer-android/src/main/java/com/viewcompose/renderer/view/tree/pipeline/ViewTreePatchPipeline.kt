@@ -207,6 +207,53 @@ internal object ViewTreePatchPipeline {
         transaction.patchRecords.clear()
     }
 
+    /**
+     * Abandons a failed tree adopted from another logical owner without rebinding the old owner.
+     *
+     * Cross-owner reuse has no previous frame in the receiving session. Checkpoint metadata is
+     * restored only so physical release uses the factory owner's release contract; rollback binding
+     * is intentionally skipped because it would invoke callbacks from an already disposed key.
+     */
+    internal fun abandonCrossOwnerTransaction(
+        transaction: RenderTransaction,
+        adoptedRoots: List<MountedNode>,
+        cause: Throwable,
+    ) {
+        fun bestEffort(block: () -> Unit) {
+            try {
+                block()
+            } catch (cleanupError: Throwable) {
+                cause.addSuppressed(cleanupError)
+            }
+        }
+
+        transaction.mountedCheckpoints.values.forEach { checkpoint ->
+            checkpoint.mountedNode.vnode = checkpoint.vnode
+            checkpoint.mountedNode.children = checkpoint.children
+            checkpoint.mountedNode.disposed = checkpoint.disposed
+            checkpoint.mountedNode.view.layoutParams = checkpoint.layoutParams
+            ViewNodeToolingRegistry.bind(checkpoint.mountedNode.view, checkpoint.vnode)
+        }
+        val releaseCandidates = LinkedHashSet<MountedNode>().apply {
+            addAll(adoptedRoots)
+            addAll(transaction.insertedNodes)
+            addAll(transaction.deferredRemovals)
+        }
+        releaseCandidates.forEach { node ->
+            bestEffort {
+                ViewTreeDisposer.disposeMountedNode(node)
+                (node.view.parent as? ViewGroup)?.let { parent ->
+                    parent.removeView(node.view)
+                    DecorationChildDrawingOrder.invalidate(parent)
+                }
+            }
+        }
+        transaction.deferredRemovals.clear()
+        transaction.insertedNodes.clear()
+        transaction.commitEffects.clear()
+        transaction.patchRecords.clear()
+    }
+
     fun execute(
         container: ViewGroup,
         reconcileResult: ReconcileResult<MountedNode>,
@@ -357,7 +404,8 @@ internal object ViewTreePatchPipeline {
                     )
                 }
                 if (patch.nextVNode.type == NodeType.AndroidView &&
-                    mountedNode.vnode.spec != patch.nextVNode.spec
+                    mountedNode.vnode.spec != patch.nextVNode.spec &&
+                    !mountedNode.requiresCrossOwnerRebind
                 ) {
                     // AndroidView spec changes trigger Reset before rebind or patch and the later commit effect.
                     // AndroidView spec changes trigger Reset before rebind/patch and the later commit effect.
@@ -428,6 +476,7 @@ internal object ViewTreePatchPipeline {
                 }
                 mountedNode.children = childResult.mountedNodes
                 mountedNode.vnode = patch.nextVNode
+                mountedNode.requiresCrossOwnerRebind = false
                 ViewNodeToolingRegistry.bind(
                     view = mountedNode.view,
                     node = patch.nextVNode,
@@ -619,10 +668,14 @@ internal object ViewTreePatchPipeline {
                 is ReusePatch -> {
                     val nextNode = patch.nextVNode
                     val previousNode = patch.payload.vnode
-                    val bindingPlan = NodeBindingDiffer.plan(
-                        previous = previousNode,
-                        next = nextNode,
-                    )
+                    val bindingPlan = if (patch.payload.requiresCrossOwnerRebind) {
+                        NodeBindingPlan.Rebind
+                    } else {
+                        NodeBindingDiffer.plan(
+                            previous = previousNode,
+                            next = nextNode,
+                        )
+                    }
                     if (nextNode.type == NodeType.AndroidView) {
                         nextNode.requireSpec<AndroidViewNodeProps>()
                     }

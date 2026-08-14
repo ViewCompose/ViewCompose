@@ -319,8 +319,8 @@ class ExperimentalComponentRecipesTest {
             switch = first.switch.copy(trackWidth = 60.dp),
         )
 
-        assertEquals(recipeDelayedContentToken(first), recipeDelayedContentToken(equalValue))
-        assertNotEquals(recipeDelayedContentToken(first), recipeDelayedContentToken(changed))
+        assertEquals(recipeDelayedContentRevision(first), recipeDelayedContentRevision(equalValue))
+        assertNotEquals(recipeDelayedContentRevision(first), recipeDelayedContentRevision(changed))
     }
 
     private fun recipeTree(
@@ -416,13 +416,13 @@ class ExperimentalComponentRecipesTest {
         )
     }
 
-    private fun recipeDelayedContentToken(recipes: ExperimentalComponentRecipes): Any? {
+    private fun recipeDelayedContentRevision(recipes: ExperimentalComponentRecipes): Any? {
         val tree = buildVNodeTree {
             ProvideExperimentalComponentRecipes(recipes) {
                 LazyColumn {
                     item(
                         key = "recipe-action",
-                        contentToken = "stable-action",
+                        contentRevision = "stable-action",
                     ) {
                         ExperimentalRecipeAction(text = "Deferred")
                     }
@@ -430,7 +430,7 @@ class ExperimentalComponentRecipesTest {
             }
         }
 
-        return (tree.single().spec as LazyColumnNodeProps).items.single().contentToken
+        return (tree.single().spec as LazyColumnNodeProps).items.single().environmentRevision
     }
 
     private fun com.viewcompose.ui.node.VNode.flatten(): List<com.viewcompose.ui.node.VNode> {

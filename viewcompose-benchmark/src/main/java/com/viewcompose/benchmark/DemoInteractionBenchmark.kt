@@ -215,6 +215,32 @@ class DemoInteractionBenchmark {
     }
 
     @Test
+    fun diagnosticsTabSwitchThenImmediateLongFling() = benchmarkRule.measureRepeated(
+        packageName = TARGET_PACKAGE,
+        metrics = listOf(FrameTimingMetric()),
+        compilationMode = CompilationMode.Partial(),
+        iterations = DEFAULT_ITERATIONS,
+        startupMode = StartupMode.WARM,
+        setupBlock = {
+            startDiagnosticsThemeAndWait()
+        },
+    ) {
+        listOf("渲染器", "缺口", "主题").forEach { tab ->
+            clickChapterTab(tab, waitForIdle = false)
+            // The first forceful gesture intentionally overlaps the tab's initial mount and layout.
+            flingPageUp()
+            repeat(DIAGNOSTICS_THEME_FLING_COUNT - 1) {
+                flingPageUp()
+            }
+            assertVisibleText("Expected")
+            repeat(DIAGNOSTICS_THEME_FLING_COUNT) {
+                flingPageDown()
+            }
+            assertVisibleText("Chapter Pages")
+        }
+    }
+
+    @Test
     fun interopBenchmarkAnchor() = benchmarkRule.measureRepeated(
         packageName = TARGET_PACKAGE,
         metrics = listOf(FrameTimingMetric()),

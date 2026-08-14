@@ -39,12 +39,11 @@ fun childReconciliationSample() {
 
 fun lazyListIdentitySample() {
     val analysis = LazyListIdentityInspector.analyze(
-        listOf(lazyItem("account"), lazyItem("account"), lazyItem(null)),
+        listOf(lazyItem("account"), lazyItem("account")),
     )
 
     check(!analysis.supportsKeyedDiff)
     check(analysis.duplicateKeys == listOf("account"))
-    check(analysis.missingKeyIndexes == listOf(2))
 }
 
 fun lazyListDiffSample() {
@@ -106,14 +105,15 @@ private fun vnode(key: Any): VNode = VNode(
     spec = EmptyNodeSpec,
 )
 
-private fun lazyItem(key: Any?): LazyListItem = LazyListItem(
+private fun lazyItem(key: Any): LazyListItem = LazyListItem(
     key = key,
-    contentToken = key,
+    contentRevision = key,
     sessionFactory = LazyListItemSessionFactory {
         object : LazyListItemSession {
-            override fun render() = Unit
+            override fun render() = true
 
             override fun dispose() = Unit
         }
     },
+    sessionUpdater = {},
 )

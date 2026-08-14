@@ -37,6 +37,25 @@ object ChildReconciler {
     fun <T> reconcile(
         previous: List<ReconcileNode<T>>,
         nodes: List<VNode>,
+    ): ReconcileResult<T> = reconcile(
+        previous = previous,
+        nodes = nodes,
+        reuseByTypeAtSamePosition = false,
+    )
+
+    internal fun <T> reconcileForCrossOwnerReuse(
+        previous: List<ReconcileNode<T>>,
+        nodes: List<VNode>,
+    ): ReconcileResult<T> = reconcile(
+        previous = previous,
+        nodes = nodes,
+        reuseByTypeAtSamePosition = true,
+    )
+
+    private fun <T> reconcile(
+        previous: List<ReconcileNode<T>>,
+        nodes: List<VNode>,
+        reuseByTypeAtSamePosition: Boolean,
     ): ReconcileResult<T> {
         val usedPrevious = BooleanArray(previous.size)
         val keyedIndex = buildKeyedIndex(previous)
@@ -48,6 +67,7 @@ object ChildReconciler {
                     keyedIndex = keyedIndex,
                     targetIndex = index,
                     node = node,
+                    reuseByTypeAtSamePosition = reuseByTypeAtSamePosition,
                 )
                 val previousNode = reusableIndex?.let(previous::get)
                 if (previousNode != null) {
@@ -107,7 +127,16 @@ object ChildReconciler {
         keyedIndex: Map<Any, MutableList<Int>>,
         targetIndex: Int,
         node: VNode,
+        reuseByTypeAtSamePosition: Boolean,
     ): Int? {
+        if (reuseByTypeAtSamePosition) {
+            val candidate = previous.getOrNull(targetIndex) ?: return null
+            return if (!usedPrevious[targetIndex] && candidate.vnode.type == node.type) {
+                targetIndex
+            } else {
+                null
+            }
+        }
         if (node.key != null) {
             // Keyed nodes may be reused across indexes, preserving platform Views during reorder.
             val candidates = keyedIndex[node.key] ?: return null

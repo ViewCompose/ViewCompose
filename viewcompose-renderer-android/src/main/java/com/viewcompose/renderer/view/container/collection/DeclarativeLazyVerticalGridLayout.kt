@@ -69,6 +69,7 @@ internal class DeclarativeLazyVerticalGridLayout(
         reverseLayout: Boolean,
         userScrollEnabled: Boolean,
         prefetchPolicy: LazyLayoutPrefetchPolicy,
+        mountedTreeCacheSize: Int,
         submission: RetainedSessionSubmission = RetainedSessionSubmission.immediate(),
     ) {
         val lm = layoutManager as? LazyGridLayoutManager
@@ -84,13 +85,14 @@ internal class DeclarativeLazyVerticalGridLayout(
             )
         }
         val gridLayoutManager = checkNotNull(layoutManager as? LazyGridLayoutManager)
-        gridLayoutManager.initialPrefetchItemCount = prefetchPolicy.initialPrefetchItemCount
+        gridLayoutManager.initialPrefetchItemCount = prefetchPolicy.nestedInitialPrefetchItemCount
         gridLayoutManager.spanSizeLookup = object : androidx.recyclerview.widget.GridLayoutManager.SpanSizeLookup() {
             override fun getSpanSize(position: Int): Int {
                 return gridAdapter.itemSpanAt(position).coerceAtMost(spanCount)
             }
         }
         setItemViewCacheSize(prefetchPolicy.itemViewCacheSize)
+        gridAdapter.configureMountedTreeCache(mountedTreeCacheSize)
         this.userScrollEnabled = userScrollEnabled
         updateSpacingDecoration(horizontalSpacing, verticalSpacing, spanCount)
         ModifierInsetsApplier.applyLazyContentPadding(this, contentPadding)

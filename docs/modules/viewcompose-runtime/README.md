@@ -88,6 +88,12 @@ alpha, the documentation site intentionally does not expose a stable `latest` al
   transaction have committed successfully.
 - `ComposerLite.rememberUpdatedState` exposes a candidate value only to the active composing thread,
   publishes it before committed lifecycle callbacks, and discards it on abort.
+- `ComposerLite.scopedExplicitSaveableKey` derives an explicit `rememberSaveable` registry key from
+  the current structural key path. Lazy lists, pagers, and other child-session owners use this
+  boundary so equal application keys in different logical items cannot share restoration state;
+  changing physical holders never changes the derived logical owner. Unequal active keyed groups
+  that produce the same structural-path hash fail before saveable provider registration instead of
+  sharing restoration state; custom saveable keys therefore require stable, collision-free hashes.
 - Callback failures keep their original throwable and append bounded effect kind, operation,
   structural scope, slot, and non-retaining key metadata. Hosts may opt into a non-negative
   synchronous callback warning threshold through the `ComposerLite` constructor.

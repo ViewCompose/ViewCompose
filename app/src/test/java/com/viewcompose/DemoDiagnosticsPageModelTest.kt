@@ -20,12 +20,30 @@ class DemoDiagnosticsPageModelTest {
     }
 
     @Test
-    fun `theme diagnostics keeps its coherent static fixture in one lazy item`() {
+    fun `theme diagnostics splits its fixture into independently virtualized sections`() {
         val items = diagnosticsPageItems(selectedPage = 1)
 
         assertEquals(
-            listOf("page", "page_filter", "theme", "theme_verify"),
+            listOf("page", "page_filter") + DIAGNOSTICS_THEME_PAGE_ITEMS + "theme_verify",
             items,
+        )
+    }
+
+    @Test
+    fun `renderer diagnostics splits expensive inspector groups into independent items`() {
+        assertEquals(
+            listOf(
+                "page",
+                "page_filter",
+                "renderer_actions",
+                "renderer_probe",
+                "renderer_snapshots",
+                "renderer_tree",
+                "renderer_composition",
+                "renderer_layout",
+                "verify",
+            ),
+            diagnosticsPageItems(selectedPage = 2),
         )
     }
 }

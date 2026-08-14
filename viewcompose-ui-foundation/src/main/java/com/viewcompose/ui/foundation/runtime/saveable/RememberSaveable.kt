@@ -69,7 +69,10 @@ private fun resolveSaveableKey(explicitKey: String?): String {
         require(explicitKey.isNotBlank()) {
             "rememberSaveable key must not be blank."
         }
-        return "user:$explicitKey"
+        val composer = checkNotNull(ComposerContext.currentComposer()) {
+            "rememberSaveable requires an active composition."
+        }
+        return composer.scopedExplicitSaveableKey(explicitKey)
     }
     val composer = checkNotNull(ComposerContext.currentComposer()) {
         "rememberSaveable without an explicit key requires an active composition."

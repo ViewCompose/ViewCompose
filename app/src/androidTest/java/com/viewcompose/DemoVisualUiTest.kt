@@ -859,7 +859,7 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun statePatchStress_refreshesStableTabContent() {
+    fun statePatchStress_explicitRevisionRefreshesStableTabPage() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             StateActivity::class.java,
@@ -882,7 +882,7 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun statePatchStress_horizontalPagerContentUpdatesAcrossAdvances() {
+    fun statePatchStress_horizontalPagerContentUpdatesAcrossExplicitRevisions() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             StateActivity::class.java,
@@ -906,7 +906,7 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun statePatchStress_verticalPagerContentUpdatesAcrossAdvances() {
+    fun statePatchStress_verticalPagerContentUpdatesAcrossExplicitRevisions() {
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
             StateActivity::class.java,

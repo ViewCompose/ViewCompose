@@ -52,11 +52,15 @@ class LazyListPerformanceTutorialActivity : ComponentActivity() {
                 items = rows,
                 key = { row -> row },
                 contentType = { "text-row" },
+                contentRevision = { row -> row },
                 prefetchPolicy = LazyLayoutPrefetchPolicy(
-                    initialPrefetchItemCount = 4,
+                    nestedInitialPrefetchItemCount = 4,
                     itemViewCacheSize = 4,
                 ),
-                reusePolicy = CollectionReusePolicy(sharePool = true),
+                reusePolicy = CollectionReusePolicy(
+                    sharePool = true,
+                    mountedTreeCacheSize = 2,
+                ),
                 modifier = Modifier.fillMaxSize().padding(16.dp),
             ) { row ->
                 Text(row, modifier = Modifier.fillMaxWidth().padding(8.dp))
@@ -67,9 +71,11 @@ class LazyListPerformanceTutorialActivity : ComponentActivity() {
 ```
 {/* tutorial-sample-end */}
 
-Prefetch and cache sizes are hints to the native collection renderer; they never change item
-semantics. Shared pools are useful only for compatible list structures, and reused rows must still
-be fully rebound. Measure before increasing either value because larger caches consume more memory.
+Prefetch and cache sizes are bounded renderer policies; they never define business state. Shared
+pools retain only empty holder shells. The mounted-tree cache retains reset physical trees by
+`contentType` and releases them deterministically on eviction. `contentRevision` does define item
+semantics: when a captured non-State value changes, its revision must change too. Measure before
+increasing either cache because larger values consume more memory.
 
 ## Verify the result
 

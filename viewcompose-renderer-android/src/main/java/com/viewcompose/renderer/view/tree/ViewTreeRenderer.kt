@@ -93,6 +93,7 @@ object ViewTreeRenderer {
         val renderNodes = AnimatedSizeNodeWrapper.wrapTree(
             NestedScrollNodeWrapper.wrapTree(nodes),
         )
+        val crossOwnerReuse = previous.any(MountedNode::requiresCrossOwnerRebind)
         val transaction = ViewTreePatchPipeline.beginTransaction()
         val result = try {
             renderIntoTransaction(
@@ -104,13 +105,22 @@ object ViewTreeRenderer {
                 collectStructure = collectDiagnostics,
                 collectWarnings = collectDiagnostics && onReconcile != null,
                 parentNodeKey = null,
+                crossOwnerReuse = crossOwnerReuse,
             )
         } catch (error: Throwable) {
-            ViewTreePatchPipeline.rollbackTransaction(
-                transaction = transaction,
-                cause = error,
-                defaultRippleColor = DEFAULT_RIPPLE_COLOR,
-            )
+            if (crossOwnerReuse) {
+                ViewTreePatchPipeline.abandonCrossOwnerTransaction(
+                    transaction = transaction,
+                    adoptedRoots = previous,
+                    cause = error,
+                )
+            } else {
+                ViewTreePatchPipeline.rollbackTransaction(
+                    transaction = transaction,
+                    cause = error,
+                    defaultRippleColor = DEFAULT_RIPPLE_COLOR,
+                )
+            }
             throw error
         }
         val commitEffects = transaction.commitEffects.toList()
@@ -136,16 +146,25 @@ object ViewTreeRenderer {
         collectStructure: Boolean,
         collectWarnings: Boolean,
         parentNodeKey: Any?,
+        crossOwnerReuse: Boolean,
     ): RenderTreeResult {
-        val reconcileResult = ChildReconciler.reconcile(
-            previous = previous.map { mountedNode ->
-                ReconcileNode(
-                    vnode = mountedNode.vnode,
-                    payload = mountedNode,
-                )
-            },
-            nodes = nodes,
-        )
+        val previousReconcileNodes = previous.map { mountedNode ->
+            ReconcileNode(
+                vnode = mountedNode.vnode,
+                payload = mountedNode,
+            )
+        }
+        val reconcileResult = if (crossOwnerReuse) {
+            ChildReconciler.reconcileForCrossOwnerReuse(
+                previous = previousReconcileNodes,
+                nodes = nodes,
+            )
+        } else {
+            ChildReconciler.reconcile(
+                previous = previousReconcileNodes,
+                nodes = nodes,
+            )
+        }
         val pipelineResult = ViewTreePatchPipeline.execute(
             container = container,
             reconcileResult = reconcileResult,
@@ -165,6 +184,7 @@ object ViewTreeRenderer {
                     collectStructure = false,
                     collectWarnings = false,
                     parentNodeKey = childParentKey,
+                    crossOwnerReuse = childPrevious.any(MountedNode::requiresCrossOwnerRebind),
                 )
             },
         )
@@ -195,6 +215,90 @@ object ViewTreeRenderer {
             patches = if (collectStructure) transaction.patchRecords.toList() else emptyList(),
         )
     }
+
+    /** Resets every interop node and detaches roots without releasing their physical Views. */
+    fun detachMountedForReuse(
+        container: ViewGroup,
+        mountedNodes: List<MountedNode>,
+    ): Boolean {
+        if (!mountedNodes.all(::isReusableMountedNode)) return false
+        mountedNodes.forEach(::resetMountedNode)
+        mountedNodes.forEach { node ->
+            container.removeView(node.view)
+            markCrossOwnerRebind(node)
+        }
+        return true
+    }
+
+    /** Attaches reset roots to a new exclusive item container. */
+    fun attachReusableMounted(
+        container: ViewGroup,
+        mountedNodes: List<MountedNode>,
+    ) {
+        mountedNodes.forEach { node ->
+            (node.view.parent as? ViewGroup)?.removeView(node.view)
+            container.addView(node.view)
+        }
+    }
+
+    /** Permanently releases a detached reusable tree. */
+    fun releaseReusableMounted(mountedNodes: List<MountedNode>): List<RenderTreeCommitFailure> {
+        val failures = mutableListOf<RenderTreeCommitFailure>()
+        mountedNodes.forEach { node ->
+            try {
+                ViewTreeDisposer.disposeMountedNode(node)
+            } catch (error: Throwable) {
+                failures += error.toRenderTreeCommitFailures(node.vnode.key)
+                // A detached cache entry no longer has a logical RenderSession that can receive
+                // failures. Report through renderer diagnostics without retaining the old owner.
+                Log.e(
+                    WARNING_TAG,
+                    "Failed to release cached ${node.vnode.type} node.",
+                    error,
+                )
+            } finally {
+                (node.view.parent as? ViewGroup)?.removeView(node.view)
+            }
+        }
+        return failures
+    }
+
+    private fun isReusableMountedNode(node: MountedNode): Boolean {
+        if (node.vnode.type in sessionOwningNodeTypes) return false
+        if (node.vnode.type == com.viewcompose.ui.node.NodeType.AndroidView &&
+            node.vnode.requireSpec<com.viewcompose.ui.node.spec.AndroidViewNodeProps>().onReset == null
+        ) {
+            return false
+        }
+        return node.children.all(::isReusableMountedNode)
+    }
+
+    private fun resetMountedNode(node: MountedNode) {
+        node.children.forEach(::resetMountedNode)
+        if (node.vnode.type == com.viewcompose.ui.node.NodeType.AndroidView) {
+            val reset = checkNotNull(
+                node.vnode.requireSpec<com.viewcompose.ui.node.spec.AndroidViewNodeProps>().onReset,
+            )
+            node.vnode.runAndroidViewOperation(
+                com.viewcompose.ui.node.spec.AndroidViewOperation.Reset,
+            ) {
+                reset(node.view)
+            }
+        }
+    }
+
+    private fun markCrossOwnerRebind(node: MountedNode) {
+        node.requiresCrossOwnerRebind = true
+        node.children.forEach(::markCrossOwnerRebind)
+    }
+
+    private val sessionOwningNodeTypes = setOf(
+        com.viewcompose.ui.node.NodeType.LazyColumn,
+        com.viewcompose.ui.node.NodeType.LazyRow,
+        com.viewcompose.ui.node.NodeType.LazyVerticalGrid,
+        com.viewcompose.ui.node.NodeType.HorizontalPager,
+        com.viewcompose.ui.node.NodeType.VerticalPager,
+    )
 
     private fun cappedModifierWarnings(): MutableSet<String> {
         if (emittedModifierWarnings.size >= MAX_WARNING_ENTRIES) {

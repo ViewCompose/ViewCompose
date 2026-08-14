@@ -2,7 +2,6 @@ package com.viewcompose.renderer.view.tree.patch
 
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.viewcompose.ui.node.LazyListItem
 import com.viewcompose.renderer.view.container.DeclarativeBoxLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedSizeHostLayout
 import com.viewcompose.renderer.view.container.DeclarativeAnimatedVisibilityHostLayout
@@ -205,9 +204,7 @@ internal object ContainerNodePatchApplier {
                 LinearLayoutManager.VERTICAL,
             )
         }
-        if (previous.items != next.items || previous.items.hasNewSnapshots(next.items)) {
-            // New immutable item snapshots form one explicit child-session submission even when
-            // their semantic diff tokens remain equal.
+        if (previous.items != next.items) {
             val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
                 view.adapter = it
             }
@@ -219,6 +216,7 @@ internal object ContainerNodePatchApplier {
         val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
             view.adapter = it
         }
+        adapter.configureMountedTreeCache(next.reusePolicy.mountedTreeCacheSize)
         submission.publish {
             adapter.bindState(
                 recyclerView = view,
@@ -273,7 +271,7 @@ internal object ContainerNodePatchApplier {
                 LinearLayoutManager.HORIZONTAL,
             )
         }
-        if (previous.items != next.items || previous.items.hasNewSnapshots(next.items)) {
+        if (previous.items != next.items) {
             val adapter = view.adapter as? LazyListAdapter
                 ?: LazyListAdapter(LinearLayoutManager.HORIZONTAL).also {
                     view.adapter = it
@@ -287,6 +285,7 @@ internal object ContainerNodePatchApplier {
             ?: LazyListAdapter(LinearLayoutManager.HORIZONTAL).also {
                 view.adapter = it
             }
+        adapter.configureMountedTreeCache(next.reusePolicy.mountedTreeCacheSize)
         submission.publish {
             adapter.bindState(
                 recyclerView = view,
@@ -470,9 +469,7 @@ internal object ContainerNodePatchApplier {
         PagerViewBinder.bindTabRow(
             view = view,
             spec = PagerViewBinder.TabRowSpec(
-                tabs = patch.next.tabs,
                 selectedIndex = patch.next.selectedIndex,
-                onTabSelected = patch.next.onTabSelected,
                 pagerState = patch.next.pagerState,
                 indicatorColor = patch.next.indicatorColor,
                 indicatorHeight = environment.roundToPx(patch.next.indicatorHeight),
@@ -558,11 +555,4 @@ internal object ContainerNodePatchApplier {
         }
     }
 
-    private fun List<LazyListItem>.hasNewSnapshots(next: List<LazyListItem>): Boolean {
-        if (size != next.size) return true
-        for (index in indices) {
-            if (this[index] !== next[index]) return true
-        }
-        return false
-    }
 }

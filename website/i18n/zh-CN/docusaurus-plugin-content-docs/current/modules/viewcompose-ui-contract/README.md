@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-ui-contract/README.md
-translation_source_hash: 8a58336d861fb90530d592fd754dec87a626811dd2f64bc502ca90bdec7816b1
+translation_source_hash: 6c444f5d88045f734bf36a00c980b0934bf78fdea6019dcc3aef608c0757e7a0
 translation_status: current
 ---
 
@@ -62,12 +62,14 @@ val gap = VNode(
   捕获子树的密度、语言标签与逻辑布局方向。
 - [`LazyListState`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.state/-lazy-list-state/)
   与 Pager 状态把平台滚动能力桥接到可观察的 Runtime 状态。
-- `LazyListItem` 是 Q3、渲染器中立的 Item/Session 契约。`contentToken` 驱动集合语义差分，回调
-  身份则有意排除在值相等判断与提交身份之外。Renderer 把每个新提交的不可变 item 快照视为一个
-  逻辑修订，只在父帧提交后安装其准确 Updater，并保证 Active 的保留 Session 对该修订最多渲染
-  一次。其 Q3 `prepare` → `activate` → `render` → `dispose` 协议允许 Renderer 在展示前构建对外
-  静默的候选；不预构建的自定义 Session 通过默认方法保持源码兼容。编译样例
-  `lazyListItemSessionUpdateSample` 展示 Prepare 与等 Token 闭包替换。
+- `LazyListItem` 是 Q3、Renderer 中立的 Snapshot/Session 契约。逻辑相等由 Key、`contentType`、
+  调用方 `contentRevision`、框架 `environmentRevision`、Kind 与 Span 构成，Callback 身份被明确
+  排除。Key 与 Revision 相等时完全跳过 Session；Revision 变化只更新该 Session，而
+  `contentType` 变化会终止旧 Session 并要求完整重建呈现。Q3
+  `prepare` → `activate` → `render` → `disposeForReuse`/`dispose` 协议允许 Renderer 构建对外静默
+  的候选、结束 Key 所有状态，并只转移已 Reset 的物理呈现。编译样例
+  `lazyListItemSessionUpdateSample` 展示此生命周期。`activate` 与 `render` 的 Boolean 结果只在
+  已安装内容 Commit 后推进语义 Revision；Rollback 返回 `false` 并保持可重试。
 - [`FocusRequester`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.focus/-focus-requester/)
   与 [`NestedScrollDispatcher`](https://docs.viewcompose.com/api/viewcompose-ui-contract/0.1.0-alpha03/viewcompose-ui-contract/com.viewcompose.ui.gesture/-nested-scroll-dispatcher/)
   为焦点和嵌套滚动定义明确的渲染器连接边界。
@@ -130,9 +132,9 @@ val gap = VNode(
   全局密度、语言或方向状态。
 - `LazyListState`、Pager 状态、焦点请求器与嵌套滚动分发器只连接一个当前渲染器 Connector。
   替换或释放时，宿主必须断开旧 Connector。
-- Renderer 保留 `LazyListItem` Session 时，只要父级刷新到达已绑定 Item，就必须安装最新的
-  `sessionUpdater`，即使 `contentToken` 相等也一样。新 updater 必须准确渲染一次，而同一个
-  updater 与 Token 的重复投递不能重复一次逻辑渲染或其 Effect。
+- Renderer 保留 `LazyListItem` Session 时，若 Key 和两个 Revision 相等，必须忽略新的 Callback
+  对象。任一 Revision 改变时，安装最新 Updater 并恰好 Render 一次。Key 不同则始终创建不同逻辑
+  Session；兼容物理呈现只能在旧 State 与 Effect Dispose 后转移。
 - 状态与 Connector 命令按所属渲染器线程封闭。Android 集成使用主线程；除非具体契约另有
   说明，回调都会同步执行。
 - 不存在任何工具捕获 Scope 时，每次 VNode 发射只执行一次 Atomic 非活动检查，不读取工具
@@ -146,6 +148,9 @@ val gap = VNode(
   工具可以跳过 `Content` Session，让页面导航保持准确并限制源码捕获开销。
 - `AndroidViewNodeProps.update` 与 `onReset` 是可重放的事务回调。一次性外部动作应放在
   `onCommit`，资源清理应放在 `onRelease`。
+- 包含 `AndroidView` 的 Mounted Tree 只有在每个互操作节点都声明 `onReset` 时才能跨逻辑 Key。
+  Renderer 在旧 Session Dispose 后、新 Key Bind 前调用 Reset；最终缓存淘汰恰好调用一次
+  `onRelease`。
 - 图片加载是可选能力。`UiImageLoader` 由调用方所有，在所属 UI 线程执行，并为已经启动的工作
   返回句柄。渲染器负责为挂载的图片 View 替换和释放句柄；loader 在释放后不得继续持有该 View。
 - `ImageSource.Url` 仅接受绝对 HTTP(S) URL；`ImageSource.Uri` 接受使用其他 loader 支持 scheme
@@ -181,6 +186,10 @@ val gap = VNode(
 新增 `LazyListItemSession.prepare` 与 `activate` 是 Q3 生命周期硬切。Kotlin 源码实现可以继承安全
 默认值，但接口 JVM 形状已经变化，因此预编译自定义 Session 与 Renderer 必须重新构建。覆写
 Prepare 来构建原生内容时，必须推迟全部 Commit Bound Callback，并支持 Activate 前 Dispose。
+
+把 `LazyListItemSession.activate` 与 `render` 改为返回 Commit 成功状态，补全了该 Q3 硬切。自定义
+实现必须对 Rollback 返回 `false`，让相同 Submission Revision 仍可重试；预编译 Session 与
+Renderer 必须重新构建。
 
 新增 `ButtonNodeProps.visualHeight` 属于 Q2 不可变快照契约变更。源码默认值等于 `minHeight`，
 但预编译的构造调用点和自定义渲染器仍必须随对应 Alpha 版本重新构建。

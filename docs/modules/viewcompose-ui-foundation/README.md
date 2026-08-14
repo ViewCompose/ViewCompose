@@ -123,6 +123,11 @@ by a later renderer or child render session.
   provider stack; ordinary application code uses the standard effect APIs.
 - [`rememberSaveable` and `SaveableStateRegistry`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-saveable-state-registry/)
   preserve state through composition disposal and host recreation with transactional restoration.
+- `LazyColumn`, `LazyRow`, `LazyVerticalGrid`, and pager page declarations use an explicit Q3
+  revision contract. Bulk overloads accept `contentRevision = { model.version }`; ordinary captured
+  values must be observed State or participate in that revision. Pager pages also declare
+  `contentType`. `TabRow` uses eager keyed children in the parent composition rather than lazy item
+  sessions.
 - [`RenderSession`](https://docs.viewcompose.com/api/viewcompose-ui-foundation/0.1.0-alpha01/viewcompose-ui-foundation/com.viewcompose.ui.foundation/-render-session/)
   coordinates composition, renderer reconciliation, native commit effects, overlays, diagnostics,
   failure recovery, and disposal for one opaque `RenderContainerHandle`. Standard applications use
@@ -152,9 +157,13 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   newly installed emitted-content closure therefore rebuilds that group even when the node spec is
   value-equal; only the exact retained closure may reuse a clean child result. This favors correct
   captured values and child-session callbacks over an unsafe value-equality subtree skip.
-- Collection item snapshots, rather than their callback object identities, delimit logical child
-  submissions. Rebuilding a value-equal item therefore invalidates its collection group even when
-  a caller deliberately reuses the same session factory or updater instance.
+- Collection item snapshots, rather than callback object identities, delimit logical child
+  submissions. Equal key plus content/environment revisions perform no child composition or native
+  patch. A non-State capture that can change must enter `contentRevision`; omitting it promises the
+  capture remains stable for that key.
+- Lazy item and pager child revisions advance only when their `activate` or `render` attempt reports
+  a committed frame. Composition or native-tree rollback retains the logical session and retries
+  the same semantic revision; failures after frame commit remain observable without undoing it.
 - `remember` and effects require an active composition. Positional identity follows the structural
   call path; use stable `key` groups and lazy-item keys when content can move.
 - Candidate effect changes are transactional. A failed composition or native tree render starts no
@@ -175,14 +184,18 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
 - `rememberSaveable` registers providers only after composition commit. A failed or abandoned
   composition releases its restored claim so a later attempt can still restore the value.
 - Delayed child compositions do not share the host registry's flat provider-key namespace. Lazy,
-  Pager, tab, and overlay containers remember hierarchical child registries by logical key, retain
-  them across recycling, and restore them without moving state across keyed reorders. Concurrent
-  visual replicas are non-owning and cannot overwrite the logical child's persisted state.
+  Pager, and overlay containers remember hierarchical child registries by logical key, retain them
+  across recycling, and restore them without moving state across keyed reorders. Tab children use
+  the parent composition's keyed saveable namespace. Concurrent visual replicas are non-owning and
+  cannot overwrite the logical child's persisted state.
 - A never-activated lazy child session may retain a prepared composition and already-built native
   tree for RecyclerView prefetch. It uses the same transaction as a normal frame, so remember
   activation, user effects, native commit callbacks, overlays, and diagnostics remain deferred
   until attachment. State invalidation abandons the stale candidate before activation; an active
   cached session keeps its lifecycle until recycle rather than treating viewport detach as stop.
+- Recycling terminates the logical key session before a compatible mounted tree enters the bounded
+  renderer-owned cache. Only resettable native trees cross keys; eviction releases native resources
+  deterministically. RecyclerView pools empty holder shells, not logical state or mounted trees.
 - `UiTheme` accepts platform-independent tokens. Android resource observation belongs to
   `viewcompose-host-android`; a named design system such as Material maps the resulting host
   revision into its own token refresh policy.
@@ -206,8 +219,9 @@ outside UI Foundation in `viewcompose-host-android`; no named design system owns
   previously committed request dismisses it. Platform presentation requires
   `viewcompose-overlay-android`, a named adapter such as
   `viewcompose-overlay-material3-android`, or a custom `OverlayHost`.
-- Lazy collection keys must remain stable and unique. Reuse, prefetch, and motion policies are
-  renderer hints; they must not be used as business state.
+- Lazy collection keys must remain stable and unique. `contentType` must group structurally
+  compatible native trees, and `mountedTreeCacheSize` bounds reset physical presentations retained
+  per container. Prefetch and motion policies remain renderer hints and must not be business state.
 - Image components keep source identity and request options in the `NodeSpec`. A loader is looked up
   while emitting the node, so changing the provider is an explicit render input. The renderer
   replaces the previous operation before starting the next one and disposes it when the node or

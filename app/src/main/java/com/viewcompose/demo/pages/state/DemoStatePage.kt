@@ -402,7 +402,7 @@ internal fun UiTreeBuilder.StatePage(
                         onPageChanged = { patchTabIndexState.value = it },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Page(key = "summary", contentToken = "summary-$step") {
+                        Page(key = "summary", contentRevision = "summary-$step") {
                             Column(
                                 spacing = 8.dp,
                                 modifier = Modifier
@@ -417,7 +417,7 @@ internal fun UiTreeBuilder.StatePage(
                                 )
                             }
                         }
-                        Page(key = "details", contentToken = "details-$step") {
+                        Page(key = "details", contentRevision = "details-$step") {
                             Column(
                                 spacing = 8.dp,
                                 modifier = Modifier
@@ -435,7 +435,7 @@ internal fun UiTreeBuilder.StatePage(
                     }
                 }
                 Text(
-                    text = "稳定 token 的 Tab Pager 保持页面标识不变，同时页面闭包仍会反映最新的外部状态。",
+                    text = "稳定 key 的 Tab Pager 保持页面标识不变；显式 revision 负责刷新普通捕获值。",
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(top = 12.dp, bottom = 4.dp),
@@ -463,7 +463,7 @@ internal fun UiTreeBuilder.StatePage(
                         onPageChanged = { stableTabIndexState.value = it },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Page(key = "stable-summary", contentToken = "stable-summary") {
+                        Page(key = "stable-summary", contentRevision = step) {
                             Column(
                                 spacing = 8.dp,
                                 modifier = Modifier
@@ -476,12 +476,12 @@ internal fun UiTreeBuilder.StatePage(
                                     modifier = Modifier.testTag(DemoTestTags.STATE_STABLE_SUMMARY),
                                 )
                                 Text(
-                                    text = "即使 Tab 页面 token 保持稳定，推进 Patch 状态后此页面仍应刷新。",
+                                    text = "推进 Patch 状态会改变显式 revision，因此此页面应定向刷新。",
                                     color = TextDefaults.secondaryColor(),
                                 )
                             }
                         }
-                        Page(key = "stable-details", contentToken = "stable-details") {
+                        Page(key = "stable-details", contentRevision = step) {
                             Column(
                                 spacing = 8.dp,
                                 modifier = Modifier
@@ -491,7 +491,7 @@ internal fun UiTreeBuilder.StatePage(
                             ) {
                                 Text(text = "稳定详情 $step")
                                 Text(
-                                    text = "使用此页面捕获当 key 页面元数据不变时 Tab 页面闭包是否过期。",
+                                    text = "使用此页面验证 key 稳定且 revision 改变时不会遗留旧闭包。",
                                     color = TextDefaults.secondaryColor(),
                                 )
                             }
@@ -499,7 +499,7 @@ internal fun UiTreeBuilder.StatePage(
                     }
                 }
                 Text(
-                    text = "VerticalPager 在稳定 token 下也应在 patch 推进时刷新页面闭包内容。",
+                    text = "VerticalPager 也通过稳定 key 与显式 revision 定向刷新页面内容。",
                     color = TextDefaults.secondaryColor(),
                     modifier = Modifier
                         .padding(top = 12.dp, bottom = 4.dp),
@@ -511,7 +511,7 @@ internal fun UiTreeBuilder.StatePage(
                         .fillMaxWidth()
                         .height(180.dp),
                 ) {
-                    Page(key = "vertical-summary", contentToken = "vertical-summary") {
+                    Page(key = "vertical-summary", contentRevision = step) {
                         Column(
                             spacing = 8.dp,
                             modifier = Modifier
@@ -529,7 +529,7 @@ internal fun UiTreeBuilder.StatePage(
                             )
                         }
                     }
-                    Page(key = "vertical-details", contentToken = "vertical-details") {
+                    Page(key = "vertical-details", contentRevision = step) {
                         Column(
                             spacing = 8.dp,
                             modifier = Modifier

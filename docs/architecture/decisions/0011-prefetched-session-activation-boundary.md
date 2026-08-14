@@ -21,9 +21,10 @@ without the holder ever becoming visible, so it cannot cross that commit boundar
 ## Decision
 
 1. `LazyListItemSession` is a Q3 three-phase lifecycle: optional `prepare`, one `activate`, then zero
-   or more active `render` operations, followed by terminal `dispose`. Default implementations keep
-   existing custom sessions source-compatible: `prepare` does nothing and `activate` delegates to
-   `render`.
+   or more active `render` operations, followed by terminal `dispose`. At ADR-0011 adoption,
+   `prepare` defaulted to no work and `activate` delegated to `render`. ADR-0012 later hard-cut both
+   commit operations to return whether their installed revision committed, so custom sessions must
+   now implement the explicit Boolean commit contract.
 2. A detached, never-activated RecyclerView holder may call `prepare`. The standard widget session
    composes its candidate VNode tree and establishes the native View tree, but retains the prepared
    composition transaction instead of committing it.
@@ -50,14 +51,17 @@ without the holder ever becoming visible, so it cannot cross that commit boundar
 
 ## Public API and compatibility impact
 
-`LazyListItemSession.prepare` and `LazyListItemSession.activate` are additive Q3 lifecycle methods
-in `viewcompose-ui-contract`. Their default bodies preserve existing session implementations.
-Custom renderers can opt into native-tree preparation, but must keep preparation free of externally
-observable committed work and must make `dispose` safe before activation.
+`LazyListItemSession.prepare` and `LazyListItemSession.activate` were additive Q3 lifecycle methods
+in `viewcompose-ui-contract` when this decision was adopted. Custom renderers can opt into
+native-tree preparation, but must keep preparation free of externally observable committed work
+and must make `dispose` safe before activation. ADR-0012 subsequently made `activate` and `render`
+return Boolean commit success; that intentional hard cut allows rollback to remain retryable instead
+of falsely advancing an item revision.
 
-The standard Android renderer and UI Foundation integration adopt the full protocol. No application
-DSL signature changes, and collection keys, `contentToken`, saveable-state ownership, effect
-ordering, and post-activation rendering semantics remain unchanged.
+The standard Android renderer and UI Foundation integration adopt the full protocol. ADR-0012 later
+hard-cuts the item revision, logical-session, and physical-tree ownership rules; those newer rules
+supersede this record's original refresh assumptions while retaining the prepared-activation
+boundary defined here.
 
 ## Consequences
 
@@ -103,6 +107,6 @@ The architecture requires deterministic coverage for:
 2. no remember, side, native commit, overlay, or diagnostics work before activation;
 3. state invalidation between prepare and attach aborting the stale candidate;
 4. replacement, duplicate revision, recycle-before-attach, and active detached reattach behavior;
-5. unchanged key and `contentToken` refresh semantics;
+5. unchanged key and revision behavior, as superseded by ADR-0012;
 6. a forceful, long-running Diagnostics Theme fling that reaches the list bottom and returns to the
    top under `FrameTimingMetric`, rather than a short top-of-page swipe.

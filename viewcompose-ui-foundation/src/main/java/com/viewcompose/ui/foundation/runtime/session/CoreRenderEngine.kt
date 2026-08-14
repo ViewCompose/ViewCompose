@@ -28,7 +28,30 @@ interface CoreRenderEngine {
         container: RenderContainerHandle,
         mountedNodes: List<Any>,
     ): List<CoreRenderCommitFailure>
+
+    /**
+     * Resets and detaches a mounted tree for reuse by another logical owner.
+     *
+     * The default declines reuse. Implementations return `null` when any node cannot be reset
+     * safely; the caller then disposes the mounted tree normally.
+     */
+    fun detachMountedForReuse(
+        container: RenderContainerHandle,
+        mountedNodes: List<Any>,
+    ): CoreReusableRenderTree? = null
+
+    /** Attaches a compatible detached tree and returns its opaque mounted nodes. */
+    fun attachReusableMounted(
+        container: RenderContainerHandle,
+        tree: CoreReusableRenderTree,
+    ): List<Any> = emptyList()
+
+    /** Permanently releases a detached tree after cache eviction. */
+    fun releaseReusableMounted(tree: CoreReusableRenderTree): List<CoreRenderCommitFailure> = emptyList()
 }
+
+/** Opaque renderer-owned native tree detached from a render container and logical session. */
+interface CoreReusableRenderTree
 
 /**
  * Output prepared by a renderer for one frame.

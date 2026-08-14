@@ -26,6 +26,7 @@
 
 | 文档 | 归档原因 |
 | --- | --- |
+| `lazy-collection-three-layer-hard-cut.md` | Lazy 集合的逻辑快照、Key Session 与物理树三层所有权已经硬切完成；AndroidView Reset/Release、Pager 驻留、TabRow eager children、失败重试与真机长 Fling 门禁已闭环 |
 | `android-resource-environment.md` | Android 资源 API、宿主配置失效、设计系统中立的修订传播、保留 Session 与 Preview 收敛已经闭环；事务式子 Session 修复及 Demo 96 项真机回归、仓库 `qaFull` 全部通过 |
 | `effect-runtime-convergence.md` | 事务式 Remember/Effect 生命周期、候选回滚、协程所有权、Lifecycle Effect、公共 API 硬切与完整测试矩阵已经闭环；Demo 96 项设备回归及仓库 `qaFull` 全部通过 |
 | `maven-dependency-contract-convergence.md` | AndroidX 风格依赖暴露契约、Host-only 消费验证、Maven 元数据门禁和模块治理标准已经完成；Central 发布与发布后文档切换移交正式发布流程，BOM 在具备独立版本兼容性证据前继续延期 |

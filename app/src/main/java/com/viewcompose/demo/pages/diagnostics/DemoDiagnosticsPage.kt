@@ -38,6 +38,14 @@ import java.util.Locale
 
 private const val SNAPSHOT_STABLE_FRAME_THRESHOLD = 2
 private val DIAGNOSTICS_COMMON_PAGE_ITEMS = listOf("page", "page_filter")
+private val DIAGNOSTICS_RENDERER_PAGE_ITEMS = listOf(
+    "renderer_actions",
+    "renderer_probe",
+    "renderer_snapshots",
+    "renderer_tree",
+    "renderer_composition",
+    "renderer_layout",
+)
 
 @ViewComposePreview(name = "Diagnostics · Runtime", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewDiagnosticsRuntime() {
@@ -74,8 +82,8 @@ internal fun UiTreeBuilder.PreviewDiagnosticsGaps() {
 internal fun diagnosticsPageItems(selectedPage: Int): List<String> {
     return DIAGNOSTICS_COMMON_PAGE_ITEMS + when (selectedPage) {
         0 -> listOf("benchmark", "runtime", "verify")
-        1 -> listOf("theme", "theme_verify")
-        2 -> listOf("renderer_actions", "renderer", "verify")
+        1 -> DIAGNOSTICS_THEME_PAGE_ITEMS + "theme_verify"
+        2 -> DIAGNOSTICS_RENDERER_PAGE_ITEMS + "verify"
         else -> listOf("gaps", "verify")
     }
 }
@@ -287,7 +295,7 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 }
             }
 
-            "theme" -> DiagnosticsThemeSections(root)
+            in DIAGNOSTICS_THEME_PAGE_ITEMS -> DiagnosticsThemeSection(section, root)
 
             "renderer_actions" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
@@ -339,10 +347,10 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                 )
             }
 
-            "renderer" -> ScenarioSection(
+            "renderer_probe" -> ScenarioSection(
                 kind = ScenarioKind.Core,
-                title = "渲染器钩子",
-                subtitle = "示例现在手动暴露最近的渲染快照，以便检查 patch/rebind/skip 行为和树深度。",
+                title = "渲染器重组探针",
+                subtitle = "优先显示 patch/rebind/skip 的轻量探针，详细快照按后续条目延迟创建。",
             ) {
                 if (!entryHint.isNullOrBlank()) {
                     Text(
@@ -416,6 +424,17 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         "最近回调历史" to DemoTestTags.DIAGNOSTICS_RENDER_HISTORY,
                     ),
                 )
+            }
+
+            "renderer_snapshots" -> ScenarioSection(
+                kind = ScenarioKind.Core,
+                title = "渲染器快照",
+                subtitle = "展示最近的完整帧与 Patch-Active 帧统计。",
+            ) {
+                val snapshot = renderSnapshotState.value
+                val patchSnapshot = patchSnapshotState.value
+                val patchCapturedAt = patchSnapshot?.updatedAtMillis?.formatDiagnosticsTime() ?: "尚未捕获"
+                val patchPatchedCount = patchSnapshot?.stats?.patchedNodes ?: 0
                 DiagnosticFactGroup(
                     title = "最近渲染快照（只用于辅助阅读）",
                     facts = listOf(
@@ -462,6 +481,15 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         },
                     )
                 }
+            }
+
+            "renderer_tree" -> ScenarioSection(
+                kind = ScenarioKind.Core,
+                title = "渲染树与 Patch 时间线",
+                subtitle = "仅在滚动到此条目时创建树和时间线诊断内容。",
+            ) {
+                val snapshot = renderSnapshotState.value
+                val patchSnapshot = patchSnapshotState.value
                 val inspectorSnapshot = patchSnapshot ?: snapshot
                 if (inspectorSnapshot.patches.isNotEmpty()) {
                     DiagnosticFactGroup(
@@ -486,6 +514,16 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         facts = treeFacts,
                     )
                 }
+            }
+
+            "renderer_composition" -> ScenarioSection(
+                kind = ScenarioKind.Core,
+                title = "重组与 Local",
+                subtitle = "检查失效范围、重组原因以及捕获的 CompositionLocal。",
+            ) {
+                val snapshot = renderSnapshotState.value
+                val patchSnapshot = patchSnapshotState.value
+                val inspectorSnapshot = patchSnapshot ?: snapshot
                 val composition = inspectorSnapshot.composition
                 DiagnosticFactGroup(
                     title = "重组原因",
@@ -521,6 +559,14 @@ internal fun UiTreeBuilder.DiagnosticsPage(
                         facts = localFacts,
                     )
                 }
+            }
+
+            "renderer_layout" -> ScenarioSection(
+                kind = ScenarioKind.Core,
+                title = "布局与渲染模型",
+                subtitle = "汇总布局采样、当前渲染模型和手动验证路径。",
+            ) {
+                val layoutSnapshot = layoutSnapshotState.value
                 DiagnosticFactGroup(
                     title = "布局 Pass 计数器",
                     facts = listOf(

@@ -1,6 +1,6 @@
 ---
 translation_source: modules/viewcompose-host-android/README.md
-translation_source_hash: d2db3b936674c52ba866be6e4d4c0726733ef9c5317a6049ac5025bb9ca4b4ff
+translation_source_hash: 42f1e7bbc88a8ee77eb521ddccd6dc6ad7380e65e346d0a7427674e96fa577c5
 translation_status: current
 ---
 
@@ -89,6 +89,7 @@ AndroidView(
     factory = { context -> PlayerView(context) },
     update = { view -> configurePlayer(view as PlayerView, state) },
     key = playerId,
+    onReset = { view -> resetPlayer(view as PlayerView) },
     onCommit = { view -> (view as PlayerView).play() },
     onRelease = { view -> (view as PlayerView).release() },
 )
@@ -96,8 +97,11 @@ AndroidView(
 
 - `factory` 只在创建新原生节点时执行。
 - `update`、`onReset` 与 `Modifier.nativeView` 必须是可重放配置。
+- `onReset` 允许节点在 Lazy Key 之间复用 Mounted Tree。它只在旧逻辑 Session、Effect 与
+  Saveable Lease 全部结束后、新 Key 绑定前运行。
 - `onCommit` 只在整棵 View tree 提交后执行。
-- `onRelease` 在正式移除或 session 释放后执行一次。
+- `onRelease` 在正式移除、不可复用 Session 释放或复用缓存最终淘汰后执行一次。省略 `onReset`
+  会阻止该 Mounted Tree 跨 Key。
 
 ## 状态保存、调度与线程
 

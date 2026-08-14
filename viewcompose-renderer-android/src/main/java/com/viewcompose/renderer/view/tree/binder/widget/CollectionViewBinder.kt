@@ -109,6 +109,7 @@ internal object CollectionViewBinder {
         val adapter = view.adapter as? LazyListAdapter ?: LazyListAdapter().also {
             view.adapter = it
         }
+        adapter.configureMountedTreeCache(spec.reusePolicy.mountedTreeCacheSize)
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.VERTICAL)
         submission.publish {
@@ -152,6 +153,7 @@ internal object CollectionViewBinder {
             ?: LazyListAdapter(LinearLayoutManager.HORIZONTAL).also {
                 view.adapter = it
             }
+        adapter.configureMountedTreeCache(spec.reusePolicy.mountedTreeCacheSize)
         ContainerViewBinder.applyLazyListPadding(view, spec.contentPadding)
         ContainerViewBinder.applyLazyListSpacing(view, spec.spacing, LinearLayoutManager.HORIZONTAL)
         submission.publish {
@@ -218,6 +220,7 @@ internal object CollectionViewBinder {
             reverseLayout = spec.reverseLayout,
             userScrollEnabled = spec.userScrollEnabled,
             prefetchPolicy = spec.prefetchPolicy,
+            mountedTreeCacheSize = spec.reusePolicy.mountedTreeCacheSize,
             submission = submission,
         )
     }
@@ -305,7 +308,7 @@ internal object CollectionViewBinder {
     ) {
         (view.layoutManager as? LinearLayoutManager)?.apply {
             this.reverseLayout = reverseLayout
-            initialPrefetchItemCount = prefetchPolicy.initialPrefetchItemCount
+            initialPrefetchItemCount = prefetchPolicy.nestedInitialPrefetchItemCount
         }
         (view as? DeclarativeLazyListView)?.userScrollEnabled = userScrollEnabled
         view.setItemViewCacheSize(prefetchPolicy.itemViewCacheSize)

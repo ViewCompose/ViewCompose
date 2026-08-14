@@ -239,6 +239,16 @@ class ComposerLite(
         val parent = currentScope
         val index = parent.childCursor++
         val existing = parent.children.getOrNull(index)
+        val movableIndex = if (existing != null && keyStack.isNotEmpty()) {
+            (index + 1 until parent.children.size).firstOrNull { candidateIndex ->
+                groupSignatureMatches(
+                    existing = parent.children[candidateIndex].signature,
+                    signature = signature,
+                )
+            }
+        } else {
+            null
+        }
         val scope = when {
             existing == null -> {
                 val normalizedSignature = newGroupSignature(signature)
@@ -269,6 +279,33 @@ class ComposerLite(
                 existing = existing.signature,
                 signature = signature,
             ) -> existing
+
+            movableIndex != null -> {
+                checkpointScope(parent)
+                parent.children.removeAt(movableIndex).also { moved ->
+                    parent.children.add(index, moved)
+                    attempt.addReason(moved, RecompositionReason.StructureChanged)
+                }
+            }
+
+            keyStack.isNotEmpty() -> {
+                val normalizedSignature = newGroupSignature(signature)
+                RecomposeScope(
+                    signature = normalizedSignature,
+                    parent = parent,
+                    saveablePath = childSaveablePath(
+                        parent = parent,
+                        index = index,
+                        signature = normalizedSignature,
+                    ),
+                    sourceCallSites = sourceCallSiteCollector?.invoke().orEmpty(),
+                ).also { inserted ->
+                    checkpointScope(parent)
+                    parent.children.add(index, inserted)
+                    attempt.newScopes += inserted
+                    attempt.addReason(inserted, RecompositionReason.StructureChanged)
+                }
+            }
 
             else -> {
                 warnStructureDriftOnce(
@@ -434,7 +471,9 @@ class ComposerLite(
      *
      * The key combines the structural group path, local slot position, and a hash of active
      * [withKeys] values. Call order is therefore part of the saveable-state contract. Custom key
-     * objects MUST keep equal values and stable `hashCode` results across host recreation.
+     * objects MUST keep equal values and stable, collision-free `hashCode` results across host
+     * recreation. A collision between simultaneously composed unequal keyed siblings fails before
+     * either can register the same saveable provider identity.
      *
      * @return an opaque key stable for the same structure, slot position, and explicit keys
      * @throws IllegalStateException when called outside the actively executing composition block
@@ -442,9 +481,34 @@ class ComposerLite(
      */
     fun nextSaveableKey(): String {
         currentAttempt()
+        validateSaveablePathIdentity()
         val slot = currentScope.saveableCursor++
         val explicitKeyHash = stableHash(keyStack)
         return "auto:${currentScope.saveablePath}:$slot:${explicitKeyHash.toUInt().toString(16)}"
+    }
+
+    /**
+     * Returns a deterministic registry key for a caller-supplied saveable-state identity.
+     *
+     * Explicit identities remain unique within the current restart-group and [withKeys] namespace,
+     * so equal names may safely appear in distinct keyed siblings. The root namespace retains the
+     * historical `user:<key>` form. Callers must still keep [explicitKey] unique inside one scope.
+     *
+     * @sample com.viewcompose.runtime.samples.scopedExplicitSaveableKeySample
+     * @param explicitKey non-blank application identity validated by the higher-level saveable API
+     * @return opaque registry key stable while the logical keyed scope remains active
+     * @throws IllegalStateException when called outside an active composition attempt
+     * @throws IllegalArgumentException when unequal keyed siblings produce the same saveable path
+     */
+    fun scopedExplicitSaveableKey(explicitKey: String): String {
+        currentAttempt()
+        validateSaveablePathIdentity()
+        val scopePath = currentScope.saveablePath
+        if (scopePath == "root" && keyStack.isEmpty()) {
+            return "user:$explicitKey"
+        }
+        val explicitKeyHash = stableHash(keyStack).toUInt().toString(16)
+        return "user:$scopePath:$explicitKeyHash:$explicitKey"
     }
 
     /**
@@ -868,7 +932,12 @@ class ComposerLite(
         signature: GroupSignature,
     ): String {
         val signatureHash = stableHash(signature).toUInt().toString(16)
-        return "${parent.saveablePath}/$index:$signatureHash"
+        val segment = if (signature.keyStack.isEmpty()) {
+            "$index:$signatureHash"
+        } else {
+            "key:$signatureHash"
+        }
+        return "${parent.saveablePath}/$segment"
     }
 
     private fun newGroupSignature(signature: Any): GroupSignature {
@@ -901,6 +970,29 @@ class ComposerLite(
                 31 * result + stableHash(item)
             }
             else -> value.hashCode()
+        }
+    }
+
+    /** Rejects a hash collision before unequal logical keys can address one saveable namespace. */
+    private fun validateSaveablePathIdentity() {
+        var scope: RecomposeScope? = currentScope
+        while (scope?.parent != null) {
+            val current = scope
+            val collision = current.parent.children.firstOrNull { sibling ->
+                sibling !== current &&
+                    sibling.saveablePath == current.saveablePath &&
+                    sibling.signature != current.signature
+            }
+            require(collision == null) {
+                val currentKeys = (current.signature as? GroupSignature)?.keyStack.orEmpty()
+                val collidingKeys = (checkNotNull(collision).signature as? GroupSignature)
+                    ?.keyStack
+                    .orEmpty()
+                "Unequal keyed groups produced the same saveable path hash: " +
+                    "$currentKeys and $collidingKeys. Custom keys used with rememberSaveable " +
+                    "must provide stable, collision-free hashCode values."
+            }
+            scope = current.parent
         }
     }
 
