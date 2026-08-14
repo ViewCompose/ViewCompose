@@ -5,18 +5,11 @@
     <string name="demo_state_summary_odd">奇数次点击: %1$d</string>
     <string name="demo_state_timeline_waiting">最近更新: 等待中</string>
     <string name="demo_state_timeline_committed">最近更新: 已提交 %1$d 次点击</string>
-    <string name="demo_state_overview_title">状态与副作用</string>
-    <string name="demo_state_overview_goal">直接操练运行时基元，以便手动检查 remember、derivedState、produceState 和 key 标识的行为。</string>
-    <string name="demo_state_page_core">核心</string>
-    <string name="demo_state_page_identity">标识</string>
-    <string name="demo_state_page_patch">Patch</string>
-    <string name="demo_state_page_checklist">清单</string>
     <string name="demo_state_benchmark_title">State Benchmark 锚点</string>
-    <string name="demo_state_benchmark_summary">此区块固定在默认的核心页面，让 benchmark 控件始终保持在首屏可见。</string>
+    <string name="demo_state_benchmark_summary">为人工检查和 Macrobenchmark 提供可确定重放的状态变更与重置控件。</string>
     <string name="demo_state_benchmark_step">Benchmark 步骤 %1$d</string>
     <string name="demo_state_benchmark_advance">推进 State Benchmark %1$d</string>
     <string name="demo_state_benchmark_reset">重置 State Benchmark</string>
-    <string name="demo_state_benchmark_stable_path">稳定路径: 启动器 → State 场景 → benchmark 锚点</string>
     <string name="demo_state_counter_title">remember + derivedStateOf + produceState</string>
     <string name="demo_state_counter_summary">展示本地状态、派生标签和 produceState 生成的状态文本。</string>
     <string name="demo_state_click_count">点击次数: %1$d</string>
@@ -28,6 +21,9 @@
     <string name="demo_state_viewmodel_increment">ViewModel 计数 +1</string>
     <string name="demo_state_panel_title">key 作用域 + 条件 UI</string>
     <string name="demo_state_panel_summary">临时面板在可见时保持自身状态，切走后再切回时会完全重建。</string>
+    <string name="demo_state_identity_visible">面板状态：可见</string>
+    <string name="demo_state_identity_hidden">面板状态：已隐藏</string>
+    <string name="demo_state_identity_reset">重置 Key 标识 fixture</string>
     <string name="demo_state_panel_hide">隐藏面板</string>
     <string name="demo_state_panel_show">显示面板</string>
     <string name="demo_state_panel_visibility">Visibility 示例: 面板关闭时隐藏</string>
@@ -72,15 +68,4 @@
     <string name="demo_state_vertical_summary_note">用于验证 VerticalPager 在无结构变化时也会刷新可见页面内容。</string>
     <string name="demo_state_vertical_details">Vertical 详情 %1$d</string>
     <string name="demo_state_vertical_details_note">切换到第二页后继续推进 patch，页面文案也应与外部状态同步。</string>
-    <string name="demo_state_verify_what">State 章节应揭示根重渲染、本地标识和条件重建在反复操作下是否行为可预测。</string>
-    <string name="demo_state_verify_step_counter">连续点击递增和重置，确认派生文案与 timeline 一起更新。</string>
-    <string name="demo_state_verify_step_panel">隐藏再显示临时面板，确认面板内点击计数会被重建。</string>
-    <string name="demo_state_verify_step_patch">进入 Patch 页面，连续点击推进 Patch 状态，确认 Text、Button、TextField、SegmentedControl 和 TabRow 都同步更新。</string>
-    <string name="demo_state_verify_step_theme">切换 theme mode 后再继续点击，确认状态值不受主题刷新影响。</string>
-    <string name="demo_state_verify_expected_identity">remember 状态在同一 identity 下保留，在 key 变化后重建。</string>
-    <string name="demo_state_verify_expected_derived">derivedStateOf 和 produceState 不会落后于源状态。</string>
-    <string name="demo_state_verify_expected_patch">Patch 页面里的第一批节点会优先走 patch，而不是退回全量重绑。</string>
-    <string name="demo_state_verify_expected_visibility">条件 UI 显隐不会留下脏状态。</string>
-    <string name="demo_state_verify_gap_subtree">还没有更细粒度的通用 subtree recomposition。</string>
-    <string name="demo_state_verify_gap_metrics">还没有把 patch、rebind 和 skipped 统计直接可视化到页面上。</string>
 </resources>

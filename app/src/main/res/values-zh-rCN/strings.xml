@@ -41,6 +41,8 @@
 
     <string name="demo_scenario_runtime_state_title">运行时状态</string>
     <string name="demo_scenario_runtime_state_summary">验证状态观察、派生、副作用与确定性变更。</string>
+    <string name="demo_scenario_runtime_key_identity_title">Key 标识</string>
+    <string name="demo_scenario_runtime_key_identity_summary">验证键控条件内容的移除、重建与状态重置。</string>
     <string name="demo_scenario_runtime_view_patch_title">Android View Patch</string>
     <string name="demo_scenario_runtime_view_patch_summary">集中验证文本、输入、选择、布局与分页器 Patch 负载。</string>
     <string name="demo_scenario_diagnostics_runtime_title">运行时诊断</string>

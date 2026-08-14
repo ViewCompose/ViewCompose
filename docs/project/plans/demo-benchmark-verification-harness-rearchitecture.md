@@ -12,8 +12,8 @@ selector contract, or enter a measured benchmark hierarchy.
 
 Last verified: 2026-08-14.
 
-Next action: continue migrating high-risk scenario copy and expand the hard-coded-copy gate with
-each migrated domain before the Phase 4 fixture-first route hard cut.
+Next action: migrate the second-risk-group Input, Gestures, Graphics, Animation, and Modifiers
+domains while reducing the remaining text-selector debt with each direct scenario slice.
 
 Do not benchmark or begin a performance-only slice from the
 [Runtime data propagation and Android View patch optimization plan](./runtime-data-propagation-and-view-patch-optimization.md)
@@ -657,6 +657,17 @@ callers migrate. Retain a small reusable guide presentation only for localized h
 
 Do not preserve a chapter tab merely to reduce diff size. A hard cut is preferred when direct
 scenario identity produces a simpler and more reliable model.
+
+The State domain now has three strict direct fixtures: `runtime.state`,
+`runtime.key-identity`, and `runtime.view-patch`. `StateActivity` requires immutable scenario
+identity; the chapter page index, local page switcher, overview, checklist, verification prose,
+and visible benchmark route metadata were deleted. Each fixture creates only its own runtime
+state and observers. Mutable fixtures expose deterministic resets: Core resets benchmark, local,
+and ViewModel state; Key Identity recreates its keyed subtree; View Patch resets text, selection,
+and both pager positions. The Core and View Patch hierarchy changes advance their workload
+revisions to 2. Their Macrobenchmarks now use scenario resource roles, the old `state` module
+bridge has no callers, and the legacy selector baseline fell from 27 to 16. Eight focused State
+device tests plus the registry-wide root/ready device sweep pass on the reference device.
 
 In progress on 2026-08-14. `diagnostics.runtime`, `diagnostics.theme`, and
 `diagnostics.renderer` now have strict registry identities, direct Activity routes, and

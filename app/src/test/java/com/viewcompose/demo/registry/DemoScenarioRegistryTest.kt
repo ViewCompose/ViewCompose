@@ -48,11 +48,10 @@ class DemoScenarioRegistryTest {
     }
 
     @Test
-    fun `strict route carries scenario identity and declared extras`() {
+    fun `strict route carries scenario identity and preserves external extras`() {
         val context = RuntimeEnvironment.getApplication()
         val scenario = DemoScenarioRegistry.require(DemoScenarioIds.RuntimeViewPatch.value)
         val source = Intent().apply {
-            putExtra("state_page_index", 0)
             putExtra("preserved_external_value", "kept")
         }
 
@@ -60,8 +59,11 @@ class DemoScenarioRegistryTest {
 
         assertEquals(StateActivity::class.java.name, intent.component?.className)
         assertEquals(scenario.id.value, intent.getStringExtra(EXTRA_DEMO_SCENARIO_ID))
-        assertEquals(2, intent.getIntExtra("state_page_index", -1))
         assertEquals("kept", intent.getStringExtra("preserved_external_value"))
+        assertEquals(
+            StateActivity::class.java,
+            DemoScenarioRegistry.require(DemoScenarioIds.RuntimeKeyIdentity.value).route.activityClass,
+        )
         assertThrows(IllegalArgumentException::class.java) {
             DemoScenarioRegistry.require("missing.scenario")
         }

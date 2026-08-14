@@ -49,6 +49,8 @@ class DemoScenarioAutomationUiTest {
     fun ordinaryDedicatedOverlayNavigationAndBenchmarkHostsExposeRoleTargets() {
         listOf(
             "runtime.state",
+            "runtime.key-identity",
+            "runtime.view-patch",
             "diagnostics.runtime",
             "diagnostics.theme",
             "diagnostics.renderer",

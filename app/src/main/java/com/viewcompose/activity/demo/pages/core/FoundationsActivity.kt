@@ -29,6 +29,7 @@ class FoundationsActivity : DemoRenderActivity() {
             val strictScenarioId = when (target) {
                 CollectionsActivity::class.java -> DemoScenarioIds.CollectionControls
                 LayoutsActivity::class.java -> DemoScenarioIds.LayoutLinear
+                StateActivity::class.java -> DemoScenarioIds.RuntimeState
                 else -> null
             }
             if (strictScenarioId != null) {

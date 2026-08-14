@@ -5,18 +5,11 @@
     <string name="demo_state_summary_odd">Odd click count: %1$d</string>
     <string name="demo_state_timeline_waiting">Latest update: waiting</string>
     <string name="demo_state_timeline_committed">Latest update: committed %1$d clicks</string>
-    <string name="demo_state_overview_title">State and effects</string>
-    <string name="demo_state_overview_goal">Exercise runtime primitives directly to verify remember, derived state, produced state, and keyed identity behavior.</string>
-    <string name="demo_state_page_core">Core</string>
-    <string name="demo_state_page_identity">Identity</string>
-    <string name="demo_state_page_patch">Patch</string>
-    <string name="demo_state_page_checklist">Checklist</string>
     <string name="demo_state_benchmark_title">State benchmark anchor</string>
-    <string name="demo_state_benchmark_summary">This block stays on the default core page so benchmark controls remain visible in the initial viewport.</string>
+    <string name="demo_state_benchmark_summary">Deterministic state mutation and reset controls for manual checks and Macrobenchmark.</string>
     <string name="demo_state_benchmark_step">Benchmark step %1$d</string>
     <string name="demo_state_benchmark_advance">Advance State benchmark %1$d</string>
     <string name="demo_state_benchmark_reset">Reset State benchmark</string>
-    <string name="demo_state_benchmark_stable_path">Stable path: launcher → State scenario → benchmark anchor</string>
     <string name="demo_state_counter_title">remember + derivedStateOf + produceState</string>
     <string name="demo_state_counter_summary">Shows local state, a derived label, and text produced from source state.</string>
     <string name="demo_state_click_count">Click count: %1$d</string>
@@ -28,6 +21,9 @@
     <string name="demo_state_viewmodel_increment">Increment ViewModel count</string>
     <string name="demo_state_panel_title">Key scope and conditional UI</string>
     <string name="demo_state_panel_summary">The temporary panel keeps its own state while visible and is rebuilt after removal.</string>
+    <string name="demo_state_identity_visible">Panel state: visible</string>
+    <string name="demo_state_identity_hidden">Panel state: hidden</string>
+    <string name="demo_state_identity_reset">Reset identity fixture</string>
     <string name="demo_state_panel_hide">Hide panel</string>
     <string name="demo_state_panel_show">Show panel</string>
     <string name="demo_state_panel_visibility">Visibility example: hidden when the panel is closed</string>
@@ -72,15 +68,4 @@
     <string name="demo_state_vertical_summary_note">Verifies that VerticalPager refreshes visible content without a structural change.</string>
     <string name="demo_state_vertical_details">Vertical details %1$d</string>
     <string name="demo_state_vertical_details_note">After switching to page two, advancing Patch must keep its copy synchronized with external state.</string>
-    <string name="demo_state_verify_what">The State chapter should expose whether root rendering, local identity, and conditional reconstruction remain predictable under repeated interaction.</string>
-    <string name="demo_state_verify_step_counter">Increment and reset repeatedly; confirm the derived label and timeline update together.</string>
-    <string name="demo_state_verify_step_panel">Hide and show the temporary panel; confirm its internal click count is rebuilt.</string>
-    <string name="demo_state_verify_step_patch">Open Patch, advance repeatedly, and confirm Text, Button, TextField, SegmentedControl, and TabRow update together.</string>
-    <string name="demo_state_verify_step_theme">Switch theme mode and continue interacting; confirm state values survive the theme refresh.</string>
-    <string name="demo_state_verify_expected_identity">remember state survives under the same identity and is rebuilt after a key change.</string>
-    <string name="demo_state_verify_expected_derived">derivedStateOf and produceState never lag behind their source state.</string>
-    <string name="demo_state_verify_expected_patch">The first Patch nodes prefer targeted patching instead of full rebinding.</string>
-    <string name="demo_state_verify_expected_visibility">Conditional UI visibility leaves no stale state behind.</string>
-    <string name="demo_state_verify_gap_subtree">Generic subtree recomposition is not yet more granular.</string>
-    <string name="demo_state_verify_gap_metrics">Patch, rebind, and skipped metrics are not yet visualized directly on the page.</string>
 </resources>

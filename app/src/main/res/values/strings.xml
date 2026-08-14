@@ -40,6 +40,8 @@
 
     <string name="demo_scenario_runtime_state_title">Runtime state</string>
     <string name="demo_scenario_runtime_state_summary">State observation, derivation, effects, and deterministic mutation.</string>
+    <string name="demo_scenario_runtime_key_identity_title">Key identity</string>
+    <string name="demo_scenario_runtime_key_identity_summary">Conditional keyed content removal, recreation, and state reset.</string>
     <string name="demo_scenario_runtime_view_patch_title">Android View patch</string>
     <string name="demo_scenario_runtime_view_patch_summary">Focused text, input, selection, layout, and pager patch workload.</string>
     <string name="demo_scenario_diagnostics_runtime_title">Runtime diagnostics</string>

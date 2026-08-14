@@ -13,6 +13,13 @@
     <item name="demo_runtime_state_state" type="id" />
     <item name="demo_runtime_state_target" type="id" />
 
+    <item name="demo_runtime_key_identity_root" type="id" />
+    <item name="demo_runtime_key_identity_ready" type="id" />
+    <item name="demo_runtime_key_identity_primary_action" type="id" />
+    <item name="demo_runtime_key_identity_reset" type="id" />
+    <item name="demo_runtime_key_identity_state" type="id" />
+    <item name="demo_runtime_key_identity_target" type="id" />
+
     <item name="demo_runtime_view_patch_root" type="id" />
     <item name="demo_runtime_view_patch_ready" type="id" />
     <item name="demo_runtime_view_patch_primary_action" type="id" />

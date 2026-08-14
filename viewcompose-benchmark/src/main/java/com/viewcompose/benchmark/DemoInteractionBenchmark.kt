@@ -35,10 +35,7 @@ class DemoInteractionBenchmark {
             )
         },
     ) {
-        startDemoActivityAndWait(
-            moduleKey = "state",
-            expectedText = "State Benchmark Anchor",
-        )
+        startDemoScenarioAndWait("runtime.state")
     }
 
     @Test
@@ -159,18 +156,18 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "state",
-                expectedText = "State Benchmark Anchor",
-            )
-            scrollUntilText("Advance State Benchmark 0")
-            scrollUntilText("Reset State Benchmark")
+            startDemoScenarioAndWait("runtime.state")
         },
     ) {
-        clickText("Advance State Benchmark 0")
-        waitForText("Advance State Benchmark 1")
-        clickText("Reset State Benchmark")
-        waitForText("Advance State Benchmark 0")
+        val initial = scenarioTargetText("runtime.state", DemoTargetRole.State)
+        clickScenarioTarget("runtime.state", DemoTargetRole.PrimaryAction)
+        val changed = waitForScenarioTargetTextChange(
+            "runtime.state",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("runtime.state", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("runtime.state", DemoTargetRole.State, changed)
     }
 
     @Test
@@ -290,21 +287,24 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "state",
-                expectedText = "Patch Stress",
-                extras = mapOf("state_page_index" to 2),
-            )
-            waitForText("Advance patch state 0")
-            waitForText("Reset patch state")
+            startDemoScenarioAndWait("runtime.view-patch")
         },
     ) {
-        clickText("Advance patch state 0")
-        waitForText("Advance patch state 1")
-        clickText("Advance patch state 1")
-        waitForText("Advance patch state 2")
-        clickText("Reset patch state")
-        waitForText("Advance patch state 0")
+        val initial = scenarioTargetText("runtime.view-patch", DemoTargetRole.State)
+        clickScenarioTarget("runtime.view-patch", DemoTargetRole.PrimaryAction)
+        val first = waitForScenarioTargetTextChange(
+            "runtime.view-patch",
+            DemoTargetRole.State,
+            initial,
+        )
+        clickScenarioTarget("runtime.view-patch", DemoTargetRole.PrimaryAction)
+        val second = waitForScenarioTargetTextChange(
+            "runtime.view-patch",
+            DemoTargetRole.State,
+            first,
+        )
+        clickScenarioTarget("runtime.view-patch", DemoTargetRole.Reset)
+        waitForScenarioTargetTextChange("runtime.view-patch", DemoTargetRole.State, second)
     }
 
     @Test
@@ -315,13 +315,10 @@ class DemoInteractionBenchmark {
         iterations = DEFAULT_ITERATIONS,
         startupMode = StartupMode.WARM,
         setupBlock = {
-            startDemoActivityAndWait(
-                moduleKey = "state",
-                expectedText = "State Benchmark Anchor",
-            )
-            scrollUntilText("Advance State Benchmark 0")
-            clickText("Advance State Benchmark 0")
-            waitForText("Advance State Benchmark 1")
+            startDemoScenarioAndWait("runtime.state")
+            val initial = scenarioTargetText("runtime.state", DemoTargetRole.State)
+            clickScenarioTarget("runtime.state", DemoTargetRole.PrimaryAction)
+            waitForScenarioTargetTextChange("runtime.state", DemoTargetRole.State, initial)
         },
     ) {
         startDemoScenarioAndWait("diagnostics.renderer")

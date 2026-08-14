@@ -837,11 +837,10 @@ class DemoVisualUiTest {
 
     @Test
     fun statePage_viewModelCounter_updatesThroughLifecycleAwareCollection() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 0)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.state",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_VM_COUNTER)
@@ -861,19 +860,55 @@ class DemoVisualUiTest {
     }
 
     @Test
-    fun statePatchStress_segmentedControlSummary_updatesAcrossAdvances() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+    fun stateKeyIdentity_actionAndReset_recreateDeterministicFixtureState() {
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.key-identity",
+        ).use { scenario ->
+            waitForUiIdle()
+            var initialState = ""
+            scenario.onActivity { activity ->
+                initialState = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_runtime_key_identity_state,
+                ).text.toString()
+                activity.clickScenarioViewById(R.id.demo_runtime_key_identity_primary_action)
+            }
+            waitForUiIdle()
+            var hiddenState = ""
+            scenario.onActivity { activity ->
+                hiddenState = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_runtime_key_identity_state,
+                ).text.toString()
+                assertNotEquals(initialState, hiddenState)
+                activity.clickScenarioViewById(R.id.demo_runtime_key_identity_reset)
+            }
+            waitForUiIdle()
+            scenario.onActivity { activity ->
+                val resetState = activity.requireScenarioViewById<android.widget.TextView>(
+                    R.id.demo_runtime_key_identity_state,
+                ).text.toString()
+                assertEquals(initialState, resetState)
+                assertNotEquals(hiddenState, resetState)
+                assertViewFullyVisible(
+                    activity.requireScenarioViewById(R.id.demo_runtime_key_identity_target),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun statePatchStress_segmentedControlSummary_updatesAcrossAdvances() {
+        launchDemoScenarioActivity(
+            StateActivity::class.java,
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_PATCH_SEGMENT_SUMMARY)
                 assertViewFullyVisible(summary)
                 assertTrue(summary.text.toString().contains("0"))
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-segmented-step2-light")
@@ -888,11 +923,10 @@ class DemoVisualUiTest {
 
     @Test
     fun statePatchStress_tabRowSelection_updatesSummary() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
                 val summary = activity.requireTextViewByTestTag(DemoTestTags.STATE_PATCH_TAB_SUMMARY)
@@ -915,14 +949,13 @@ class DemoVisualUiTest {
 
     @Test
     fun statePatchStress_explicitRevisionRefreshesStableTabPage() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-stable-tab-light")
@@ -938,15 +971,14 @@ class DemoVisualUiTest {
 
     @Test
     fun statePatchStress_horizontalPagerContentUpdatesAcrossExplicitRevisions() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-stable-tab-step2-light")
@@ -962,15 +994,14 @@ class DemoVisualUiTest {
 
     @Test
     fun statePatchStress_verticalPagerContentUpdatesAcrossExplicitRevisions() {
-        val intent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(intent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
             captureDeviceScreenshot("state-patch-vertical-pager-step2-light")
@@ -1541,15 +1572,14 @@ class DemoVisualUiTest {
     @Test
     fun statePatchStress_openDiagnostics_showsPatchActiveSnapshotProbe() {
         DemoRenderDiagnosticsStore.reset()
-        val stateIntent = Intent(
-            ApplicationProvider.getApplicationContext(),
+        launchDemoScenarioActivity(
             StateActivity::class.java,
-        ).putExtra(EXTRA_STATE_PAGE_INDEX, 2)
-        launchDemoActivity<StateActivity>(stateIntent, themeMode = DemoThemeMode.Light).use { scenario ->
+            "runtime.view-patch",
+        ).use { scenario ->
             waitForUiIdle()
             scenario.onActivity { activity ->
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
-                activity.clickByTestTag(DemoTestTags.STATE_PATCH_ADVANCE)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
+                activity.clickScenarioViewByIdVisible(R.id.demo_runtime_view_patch_primary_action)
             }
             waitForUiIdle()
         }

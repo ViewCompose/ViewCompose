@@ -27,6 +27,7 @@ import com.viewcompose.performance.PerformanceComparisonActivity
 
 internal object DemoScenarioIds {
     val RuntimeState = DemoScenarioId("runtime.state")
+    val RuntimeKeyIdentity = DemoScenarioId("runtime.key-identity")
     val RuntimeViewPatch = DemoScenarioId("runtime.view-patch")
     val DiagnosticsRuntime = DemoScenarioId("diagnostics.runtime")
     val DiagnosticsTheme = DemoScenarioId("diagnostics.theme")
@@ -59,10 +60,7 @@ internal object DemoScenarioRegistry {
             summaryRes = R.string.demo_scenario_runtime_state_summary,
             host = DemoHostPolicy.SharedFixture,
             verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
-            route = DemoScenarioRoute(
-                activityClass = StateActivity::class.java,
-                extras = mapOf("state_page_index" to DemoRouteExtra.IntValue(0)),
-            ),
+            route = DemoScenarioRoute(StateActivity::class.java),
             mutable = true,
             ids = TargetIds(
                 root = R.id.demo_runtime_state_root,
@@ -72,7 +70,25 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_runtime_state_state,
                 target = R.id.demo_runtime_state_target,
             ),
-            benchmarkRevision = 1,
+            benchmarkRevision = 2,
+        ),
+        scenario(
+            id = DemoScenarioIds.RuntimeKeyIdentity,
+            category = DemoScenarioCategory.Runtime,
+            titleRes = R.string.demo_scenario_runtime_key_identity_title,
+            summaryRes = R.string.demo_scenario_runtime_key_identity_summary,
+            host = DemoHostPolicy.SharedFixture,
+            verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Visual),
+            route = DemoScenarioRoute(StateActivity::class.java),
+            mutable = true,
+            ids = TargetIds(
+                root = R.id.demo_runtime_key_identity_root,
+                ready = R.id.demo_runtime_key_identity_ready,
+                primaryAction = R.id.demo_runtime_key_identity_primary_action,
+                reset = R.id.demo_runtime_key_identity_reset,
+                state = R.id.demo_runtime_key_identity_state,
+                target = R.id.demo_runtime_key_identity_target,
+            ),
         ),
         scenario(
             id = DemoScenarioIds.RuntimeViewPatch,
@@ -81,10 +97,7 @@ internal object DemoScenarioRegistry {
             summaryRes = R.string.demo_scenario_runtime_view_patch_summary,
             host = DemoHostPolicy.SharedFixture,
             verificationKinds = setOf(DemoVerificationKind.Manual, DemoVerificationKind.Benchmark),
-            route = DemoScenarioRoute(
-                activityClass = StateActivity::class.java,
-                extras = mapOf("state_page_index" to DemoRouteExtra.IntValue(2)),
-            ),
+            route = DemoScenarioRoute(StateActivity::class.java),
             mutable = true,
             ids = TargetIds(
                 root = R.id.demo_runtime_view_patch_root,
@@ -94,7 +107,7 @@ internal object DemoScenarioRegistry {
                 state = R.id.demo_runtime_view_patch_state,
                 target = R.id.demo_runtime_view_patch_target,
             ),
-            benchmarkRevision = 1,
+            benchmarkRevision = 2,
         ),
         scenario(
             id = DemoScenarioIds.DiagnosticsRuntime,

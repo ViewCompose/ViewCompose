@@ -2,7 +2,9 @@ package com.viewcompose
 
 import com.viewcompose.demo.automation.demoAutomationTarget
 import com.viewcompose.demo.contract.DemoAutomationRole
+import com.viewcompose.demo.contract.DemoScenarioId
 import com.viewcompose.demo.contract.DemoScenarioSpec
+import com.viewcompose.demo.registry.DemoScenarioIds
 import com.viewcompose.host.android.resources.stringResource
 import com.viewcompose.preview.tooling.ViewComposePreview
 import com.viewcompose.ui.modifier.Modifier
@@ -48,39 +50,49 @@ import com.viewcompose.viewmodel.savedStateHandle
 
 @ViewComposePreview(name = "State · Core", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStateCore() {
-    StatePage(initialPageIndex = 0, onOpenDiagnostics = {})
+    StatePage(StateFixture.RuntimeState, onOpenDiagnostics = {})
 }
 
 @ViewComposePreview(name = "State · Identity", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStateIdentity() {
-    StatePage(initialPageIndex = 1, onOpenDiagnostics = {})
+    StatePage(StateFixture.KeyIdentity, onOpenDiagnostics = {})
 }
 
 @ViewComposePreview(name = "State · Patch", group = "Demo/Pages")
 internal fun UiTreeBuilder.PreviewStatePatch() {
-    StatePage(initialPageIndex = 2, onOpenDiagnostics = {})
+    StatePage(StateFixture.ViewPatch, onOpenDiagnostics = {})
 }
 
-@ViewComposePreview(name = "State · Checklist", group = "Demo/Pages")
-internal fun UiTreeBuilder.PreviewStateChecklist() {
-    StatePage(initialPageIndex = 3, onOpenDiagnostics = {})
+internal enum class StateFixture(
+    val scenarioId: DemoScenarioId,
+) {
+    RuntimeState(DemoScenarioIds.RuntimeState),
+    KeyIdentity(DemoScenarioIds.RuntimeKeyIdentity),
+    ViewPatch(DemoScenarioIds.RuntimeViewPatch),
+    ;
+
+    companion object {
+        fun from(scenarioId: DemoScenarioId): StateFixture =
+            entries.singleOrNull { fixture -> fixture.scenarioId == scenarioId }
+                ?: error("Unsupported state scenario: $scenarioId")
+    }
 }
 
 internal fun UiTreeBuilder.StatePage(
-    initialPageIndex: Int = 0,
+    fixture: StateFixture,
     scenario: DemoScenarioSpec? = null,
     onOpenDiagnostics: () -> Unit,
 ) {
+    when (fixture) {
+        StateFixture.RuntimeState -> RuntimeStateFixture(scenario)
+        StateFixture.KeyIdentity -> KeyIdentityFixture(scenario)
+        StateFixture.ViewPatch -> ViewPatchFixture(scenario, onOpenDiagnostics)
+    }
+}
+
+private fun UiTreeBuilder.RuntimeStateFixture(scenario: DemoScenarioSpec?) {
     val benchmarkStepState = remember { mutableStateOf(0) }
     val clickCountState = remember { mutableStateOf(0) }
-    val panelVisibleState = remember { mutableStateOf(true) }
-    val selectedPageState = remember { mutableStateOf(initialPageIndex.coerceIn(0, 3)) }
-    val patchStepState = remember { mutableStateOf(0) }
-    val patchFieldValueState = rememberTextFieldState("value-0")
-    val patchSegmentIndexState = remember { mutableStateOf(0) }
-    val patchTabIndexState = remember { mutableStateOf(0) }
-    val stableTabIndexState = remember { mutableStateOf(0) }
-    val stableVerticalPagerIndexState = remember { mutableStateOf(0) }
     val summaryState = remember {
         derivedStateOf { clickCountState.value }
     }
@@ -94,36 +106,13 @@ internal fun UiTreeBuilder.StatePage(
     val vmCounterState = vmStateHandle
         .getStateFlow("counter", 0)
         .collectAsStateWithLifecycle()
-    val pageItems = when (selectedPageState.value) {
-        0 -> listOf("benchmark", "page", "page_filter", "counter", "viewmodel", "verify")
-        1 -> listOf("page", "page_filter", "panel", "verify")
-        2 -> listOf("page", "page_filter", "patch", "verify")
-        else -> listOf("page", "page_filter", "verify")
-    }
 
     LazyColumn(
-        items = pageItems,
+        items = listOf("benchmark", "counter", "viewmodel"),
         key = { it },
         modifier = Modifier.fillMaxSize(),
     ) { section ->
         when (section) {
-            "page" -> ChapterPageOverviewSection(
-                title = stringResource(R.string.demo_state_overview_title),
-                goal = stringResource(R.string.demo_state_overview_goal),
-                modules = listOf("ui-runtime", "remember", "effects", "key scopes"),
-            )
-
-            "page_filter" -> ChapterPageFilterSection(
-                pages = listOf(
-                    stringResource(R.string.demo_state_page_core),
-                    stringResource(R.string.demo_state_page_identity),
-                    stringResource(R.string.demo_state_page_patch),
-                    stringResource(R.string.demo_state_page_checklist),
-                ),
-                selectedIndex = selectedPageState.value,
-                onSelectionChange = { selectedPageState.value = it },
-            )
-
             "benchmark" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
                 title = stringResource(R.string.demo_state_benchmark_title),
@@ -159,23 +148,9 @@ internal fun UiTreeBuilder.StatePage(
                         .scenarioTarget(scenario, DemoAutomationRole.Reset),
                     onClick = {
                         benchmarkStepState.value = 0
+                        clickCountState.value = 0
+                        vmStateHandle["counter"] = 0
                     },
-                )
-                BenchmarkRouteCallout(
-                    route = "Launcher -> MainActivity(extra=state) -> State -> State Benchmark Anchor",
-                    stableTargets = listOf(
-                        "Advance State Benchmark 0",
-                        "Reset State Benchmark",
-                    ),
-                )
-                Text(
-                    text = stringResource(R.string.demo_state_benchmark_stable_path),
-                    style = UiTextStyle(fontSizeSp = 12.sp),
-                    color = TextDefaults.secondaryColor(),
-                    modifier = Modifier.scenarioTarget(
-                        scenario,
-                        DemoAutomationRole.Target,
-                    ),
                 )
             }
 
@@ -185,7 +160,10 @@ internal fun UiTreeBuilder.StatePage(
                 subtitle = stringResource(R.string.demo_state_counter_summary),
             ) {
                 val summary = summaryState.value
-                Text(text = stringResource(R.string.demo_state_click_count, clickCountState.value))
+                Text(
+                    text = stringResource(R.string.demo_state_click_count, clickCountState.value),
+                    modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Target),
+                )
                 Text(
                     text = when {
                         summary == 0 -> stringResource(R.string.demo_state_summary_none)
@@ -245,56 +223,118 @@ internal fun UiTreeBuilder.StatePage(
                 )
             }
 
+            else -> error("Unsupported runtime state section: $section")
+        }
+    }
+}
+
+private fun UiTreeBuilder.KeyIdentityFixture(scenario: DemoScenarioSpec?) {
+    val panelVisibleState = remember { mutableStateOf(true) }
+    val panelGenerationState = remember { mutableStateOf(0) }
+
+    LazyColumn(
+        items = listOf("panel"),
+        key = { it },
+        modifier = Modifier.fillMaxSize(),
+    ) { section ->
+        when (section) {
             "panel" -> ScenarioSection(
                 kind = ScenarioKind.Visual,
                 title = stringResource(R.string.demo_state_panel_title),
                 subtitle = stringResource(R.string.demo_state_panel_summary),
             ) {
-                Button(
-                    text = if (panelVisibleState.value) {
-                        stringResource(R.string.demo_state_panel_hide)
-                    } else {
-                        stringResource(R.string.demo_state_panel_show)
-                    },
-                    modifier = Modifier.margin(bottom = 12.dp),
-                    onClick = {
-                        panelVisibleState.value = !panelVisibleState.value
-                    },
-                )
-                Text(
-                    text = stringResource(R.string.demo_state_panel_visibility),
+                Column(
+                    spacing = 8.dp,
                     modifier = Modifier
-                        .visibility(
+                        .fillMaxWidth()
+                        .scenarioTarget(scenario, DemoAutomationRole.Target),
+                ) {
+                    Text(
+                        text = stringResource(
                             if (panelVisibleState.value) {
-                                Visibility.Visible
+                                R.string.demo_state_identity_visible
                             } else {
-                                Visibility.Gone
+                                R.string.demo_state_identity_hidden
                             },
-                        )
-                        .padding(bottom = 8.dp),
-                )
-                if (panelVisibleState.value) {
-                    key("transient-panel") {
-                        val panelTapState = remember { mutableStateOf(0) }
-                        Column(
-                            spacing = 8.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .backgroundColor(SurfaceDefaults.variantBackgroundColor())
-                                .padding(12.dp),
-                        ) {
-                            Text(text = stringResource(R.string.demo_state_panel_keyed))
-                            Button(
-                                text = stringResource(R.string.demo_state_panel_taps, panelTapState.value),
-                                onClick = {
-                                    panelTapState.value = panelTapState.value + 1
+                        ),
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.State),
+                    )
+                    Button(
+                        text = if (panelVisibleState.value) {
+                            stringResource(R.string.demo_state_panel_hide)
+                        } else {
+                            stringResource(R.string.demo_state_panel_show)
+                        },
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.PrimaryAction),
+                        onClick = {
+                            panelVisibleState.value = !panelVisibleState.value
+                        },
+                    )
+                    Button(
+                        text = stringResource(R.string.demo_state_identity_reset),
+                        modifier = Modifier.scenarioTarget(scenario, DemoAutomationRole.Reset),
+                        onClick = {
+                            panelVisibleState.value = true
+                            panelGenerationState.value = panelGenerationState.value + 1
+                        },
+                    )
+                    Text(
+                        text = stringResource(R.string.demo_state_panel_visibility),
+                        modifier = Modifier
+                            .visibility(
+                                if (panelVisibleState.value) {
+                                    Visibility.Visible
+                                } else {
+                                    Visibility.Gone
                                 },
                             )
+                            .padding(bottom = 8.dp),
+                    )
+                    if (panelVisibleState.value) {
+                        key("transient-panel-${panelGenerationState.value}") {
+                            val panelTapState = remember { mutableStateOf(0) }
+                            Column(
+                                spacing = 8.dp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .backgroundColor(SurfaceDefaults.variantBackgroundColor())
+                                    .padding(12.dp),
+                            ) {
+                                Text(text = stringResource(R.string.demo_state_panel_keyed))
+                                Button(
+                                    text = stringResource(R.string.demo_state_panel_taps, panelTapState.value),
+                                    onClick = {
+                                        panelTapState.value = panelTapState.value + 1
+                                    },
+                                )
+                            }
                         }
                     }
                 }
             }
 
+            else -> error("Unsupported key identity section: $section")
+        }
+    }
+}
+
+private fun UiTreeBuilder.ViewPatchFixture(
+    scenario: DemoScenarioSpec?,
+    onOpenDiagnostics: () -> Unit,
+) {
+    val patchStepState = remember { mutableStateOf(0) }
+    val patchFieldValueState = rememberTextFieldState("value-0")
+    val patchSegmentIndexState = remember { mutableStateOf(0) }
+    val patchTabIndexState = remember { mutableStateOf(0) }
+    val stableTabIndexState = remember { mutableStateOf(0) }
+    val stableVerticalPagerIndexState = remember { mutableStateOf(0) }
+
+    LazyColumn(
+        items = listOf("patch"),
+        key = { it },
+        modifier = Modifier.fillMaxSize(),
+    ) { section ->
+        when (section) {
             "patch" -> ScenarioSection(
                 kind = ScenarioKind.Benchmark,
                 title = stringResource(R.string.demo_state_patch_title),
@@ -337,6 +377,8 @@ internal fun UiTreeBuilder.StatePage(
                             patchFieldValueState.setTextAndPlaceCursorAtEnd("value-0")
                             patchSegmentIndexState.value = 0
                             patchTabIndexState.value = 0
+                            stableTabIndexState.value = 0
+                            stableVerticalPagerIndexState.value = 0
                         },
                     )
                 }
@@ -593,25 +635,7 @@ internal fun UiTreeBuilder.StatePage(
                 }
             }
 
-            else -> VerificationNotesSection(
-                what = stringResource(R.string.demo_state_verify_what),
-                howToVerify = listOf(
-                    stringResource(R.string.demo_state_verify_step_counter),
-                    stringResource(R.string.demo_state_verify_step_panel),
-                    stringResource(R.string.demo_state_verify_step_patch),
-                    stringResource(R.string.demo_state_verify_step_theme),
-                ),
-                expected = listOf(
-                    stringResource(R.string.demo_state_verify_expected_identity),
-                    stringResource(R.string.demo_state_verify_expected_derived),
-                    stringResource(R.string.demo_state_verify_expected_patch),
-                    stringResource(R.string.demo_state_verify_expected_visibility),
-                ),
-                relatedGaps = listOf(
-                    stringResource(R.string.demo_state_verify_gap_subtree),
-                    stringResource(R.string.demo_state_verify_gap_metrics),
-                ),
-            )
+            else -> error("Unsupported view patch section: $section")
         }
     }
 }

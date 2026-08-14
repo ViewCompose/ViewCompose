@@ -95,6 +95,46 @@ internal fun Activity.clickScenarioViewById(@IdRes id: Int) {
     assertTrue("Expected resource target to accept click: $id", target.performClick())
 }
 
+/** Scrolls a RecyclerView as needed before clicking a scenario-owned resource target. */
+internal fun Activity.clickScenarioViewByIdVisible(
+    @IdRes id: Int,
+    maxScrollAttempts: Int = 24,
+) {
+    val root = findViewById<ViewGroup>(android.R.id.content)
+    fun visibleTarget(): View? = findViewById<View>(id)?.takeIf(::isViewVisible)
+
+    visibleTarget()?.let { target ->
+        assertTrue("Expected resource target to accept click: $id", target.performClick())
+        return
+    }
+    findRecyclerViews(root)
+        .filter { recyclerView -> recyclerView.isShown && recyclerView.height > 0 }
+        .forEach { recyclerView ->
+            val delta = (recyclerView.height * 0.7f).toInt().coerceAtLeast(1)
+            fun scrollUntilVisible(direction: Int): View? {
+                repeat(maxScrollAttempts) {
+                    visibleTarget()?.let { return it }
+                    if (!recyclerView.canScrollVertically(direction)) return null
+                    recyclerView.scrollBy(0, direction * delta)
+                }
+                return visibleTarget()
+            }
+
+            scrollUntilVisible(direction = 1)?.let { target ->
+                assertTrue("Expected resource target to accept click: $id", target.performClick())
+                return
+            }
+            scrollUntilVisible(direction = -1)?.let { target ->
+                assertTrue("Expected resource target to accept click: $id", target.performClick())
+                return
+            }
+        }
+
+    val target = visibleTarget()
+    assertNotNull("Expected visible resource target: $id", target)
+    assertTrue("Expected resource target to accept click: $id", target!!.performClick())
+}
+
 /**
  * 使用自定义 Intent 启动 demo Activity，并设置测试主题模式。
  * Launches a demo Activity from a custom Intent with the test theme mode.

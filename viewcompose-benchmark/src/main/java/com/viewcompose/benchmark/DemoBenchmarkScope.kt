@@ -33,7 +33,6 @@ internal fun MacrobenchmarkScope.startDemoScenarioAndWait(
     startActivityAndWait { intent ->
         intent.removeExtra("demo_module_key")
         intent.removeExtra("demo_scenario_id")
-        intent.removeExtra("state_page_index")
         intent.removeExtra("performance_engine")
         intent.removeExtra("performance_scenario")
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -163,7 +162,6 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
         // Clear app-specific extras from previous test methods while preserving framework extras.
         intent.removeExtra("demo_module_key")
         intent.removeExtra("demo_scenario_id")
-        intent.removeExtra("state_page_index")
         intent.removeExtra("performance_engine")
         intent.removeExtra("performance_scenario")
         // 带 extra 时清空任务栈以强制重建；无 extra 时移除标记，避免后续测试继承强清理行为。
@@ -184,7 +182,6 @@ internal fun MacrobenchmarkScope.startDemoActivityAndWait(
 private fun legacyBenchmarkActivityClass(moduleKey: String): String = when (moduleKey) {
     "environment" -> "com.viewcompose.DemoEnvironmentActivity"
     "foundations" -> "com.viewcompose.FoundationsActivity"
-    "state" -> "com.viewcompose.StateActivity"
     "input" -> "com.viewcompose.InputActivity"
     "interop" -> "com.viewcompose.InteropActivity"
     "diagnostics" -> "com.viewcompose.DiagnosticsActivity"
@@ -228,7 +225,6 @@ internal fun MacrobenchmarkScope.startPerformanceComparisonAndWait(
     pressHome()
     startActivityAndWait { intent ->
         intent.removeExtra("demo_module_key")
-        intent.removeExtra("state_page_index")
         intent.removeExtra("shadow_render_policy")
         intent.putExtra("performance_engine", engine)
         intent.putExtra("performance_scenario", scenario)
