@@ -690,7 +690,9 @@ uses resource-ID roles for benchmark mutation, observation, reset, and fixture t
 edge, flow, and constraint fixtures expose deterministic reset roles; scroll remains immutable.
 Layout UI tests launch scenario identities directly and assert geometry or state transitions rather
 than localized labels. The old `layouts` Macrobenchmark module bridge has no callers and was
-removed.
+removed. All retained layout fixture copy, including dynamic counts, constraint-mode diagnostics,
+and accessibility descriptions, now resolves through paired locale resources, and the complete
+Layouts domain is protected by the hard-coded visible-copy gate.
 
 ## Phase 5: Benchmark rebaseline and acceptance
 
